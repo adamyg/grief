@@ -1,0 +1,116 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: hpcalc.mandoc,v 1.1 2014/11/27 18:19:39 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt HPCALC 1
+.Os
+.Sh NAME
+.Nm hpcalc
+.Nd HP Calculator, RPN based calculator.
+.Sh DESCRIPTION
+The hpcalc macro is an attempt to emulate an HP calculator, hopefully
+to eventually contain many of the more sophisticated features. Currently,
+this calculator is simply an RPN based calculator similar to the
+\fIcalc\fR macro. This calculator also supports floating point arithmetic
+as well as base conversions.
+.Pp
+This macro displays a popup window, emulating the HP stack display.
+As numbers are typed in, and the <Enter> key is pressed, the numbers
+are pushed onto the calculation stack.
+.Pp
+Typing an operator key causes the calculation to be performed
+straightaway. For example, to add two numbers together, type:
+.Bd -literal
+	'1' <Space> '2' '+'
+.Ed
+.Pp
+.Pp
+(Thats four keystrokes - the number '1', the space bar, the number '2'
+and the plus key to add the numbers together.
+.Pp
+The hpcalc macro supports octal, hexadecimal and decimal arithmetic.
+Non-decimal based numbers may be typed in using the 'C' notation
+(i.e. 0 followed by an octal number, or 0x followed by a hexadecimal
+one), or using the HP notation of a '#' character followed by the
+number and suffixed by a 'd', 'o', or 'h' character to indicate the
+base.
+.Pp
+Base conversions are accomplished with the following commands:
+.Bl -tag -offset 1 -width xxxxxxxxxx
+.It B->R
+Convert binary number to real.
+.It R->B
+Convert real number to binary in the current base.
+.El
+.Pp
+The current base is set by typing one of: OCT - octal, DEC - decimal,
+HEX - hexadecimal, or BIN - binary (not currently supported).
+.Pp
+Typing DEPTH pushes the current number of items on the stack onto the
+stack.
+.Pp
+The calculator also supports the following trig and logarithmic functions:
+.Bd -literal
+	sin, cos, tan
+	asin, acos, atan,
+	sinh, cosh, tanh,
+	sqrt,
+	exp, log, log10
+.Ed
+.Pp
+.Sh MENU/KEYS
+This macro can be accessed from the GRIEF features menu or by typing
+\f(HBhpcalc\fR at the command prompt.
+.Sh BUGS
+This calculator demonstrates the use of certain esoteric crunch language
+features. It is a very trivial calculator but useful. Needs a lot
+of work to compare to anybody elses.
+.Pp
+All trig functions assume value is in radians.
+.Pp
+Out of range for trig functions generate NaN numbers. Should really
+give complex results.

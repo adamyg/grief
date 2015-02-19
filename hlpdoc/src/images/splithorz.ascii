@@ -1,0 +1,24 @@
++---------------------------- builtin.c -----------------------------+
+|        {                                                           |
+|            accfloat_t fval;                                        |
+|            accint_t ival;                                          |
+|            int ret, len = 0;                                       |
+|                                                                    |
+|            ret = str_numparse(cp, &fval, &ival, &len);             |
+|            switch (ret) {                                          |
+|            case NUMPARSE_INTEGER:              /* integer-constant |
+|            case NUMPARSE_FLOAT:                /* float-constant */|
+|                cp += len;                                          |
++---------------------------- \fBbuiltin.c\fR -----------------------------+
+|        {                                                           *
+|            accfloat_t fval;                                        :
+|            accint_t ival;                                          :
+|            int ret, len = 0;                                       :
+|                                                                    :
+|            ret = str_numparse(cp, &fval, &ival, &len);             :
+|            switch (ret) {                                          :
+|            case NUMPARSE_INTEGER:              /* integer-constant :
+|            case NUMPARSE_FLOAT:                /* float-constant */:
++*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::+
+Command:                               [ ]  Line: 251  Col: 1  11:39am
+

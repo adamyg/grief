@@ -1,0 +1,81 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: detab.mandoc,v 1.1 2014/11/27 18:19:37 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt DETAB 1
+.Os
+.Sh NAME
+.Nm detab
+.Nd detabs, tab replace support.
+.Sh SYNOPSIS
+detab, detab_buffer, detab_region and detab_str
+.br
+entab, entab_buffer, entab_region and entab_str
+.br
+show_tabs
+.br
+.Sh DESCRIPTION
+Theses macro deal with tabs within the current buffer or marked region.
+.Bl -bullet -offset 1 -width xxxx
+.It
+detab functions
+Replaces each hard-tab with the equivlent number of spaces.
+.It
+entab functions
+Replaces white-space with the equivlent number of hard-tab and spaces.
+.It
+show_tabs
+Enable hilighting of hard-tabs within the buffer.
+.El
+.Sh MENU/KEYS
+detab and entab can be accessed from the GRIEF features menu, these and
+all others are available at the command prompt.
+.Sh SEE ALSO
+.Xr tabs ,
+.Xr set_indent ,
+.Xr set_ruler ,
+.Xr use_tab_char

@@ -1,0 +1,539 @@
+
+           ---------------------------------------------------------
+
+Title:          Preprocessor
+
+        The C preprocessor is a text processor which operates on the C source
+        before it is actually parsed by the compiler. It provides macro and
+        conditional features very closed to the ones available with most of
+        the existing assemblers.
+
+        The preprocessor modifies the C program source according to special
+        directives found in the program itself. Preprocessor directives start
+        with a sharp sign # when found as the first significant character of
+        a line. Preprocessor directives are line based, and all the text of a
+        directive must be placed on a single logical line. Several physical
+        lines can be used if all of them but the last one end with the
+        continuation character backslash \.
+
+        There are three basic kinds of directives: macro directives, 
+        conditional directives and control directives. The macro directives
+        allow text sequences to be replaced by some other text sequences, 
+        depending on possible parameters. The conditional directives allow
+        selective compiling of the code depending on conditions most of the
+        time based on symbols defined by some macro directives.
+
+        The control directives allow passing of information to the compiler
+        in order to configure or modify its behaviour.
+
+           ---------------------------------------------------------
+
+Topic:          Implementation
+
+        Grief utilises 'ucpp' as it's preprocessor; it is designed to be
+        quick and light, but fully compliant to the ISO standard 9899:1999,
+        also known as C99.
+
+        'uccp' is distributed under the following license. The current source
+        is available on Google Code, version 1.3, at
+
+        http://code.google.com/p/ucpp
+
+(code)
+ *
+ * (c) Thomas Pornin 2002
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 4. The name of the authors may not be used to endorse or promote
+ *    products derived from this software without specific prior written
+ *    permission.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+ * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+ * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+(end)
+
+
+           ---------------------------------------------------------
+
+Topic:          Directives
+
+        The preprocessing directives control the behaviour of the
+        preprocessor. Each directive occupies one line and has the following
+        format:
+
+>            # character
+
+        The current implementation follows the "ISO standard 9899:1999", also
+        known as C99.
+
+        A preprocessing directive consists of a sequence of preprocessing
+        tokens that begins with a # preprocessing token that is either the
+        first character in the source file (optionally after white space
+        containing no new-line characters) or that follows white space
+        containing at least one new-line character, and is ended by the next
+        new-line character. A new-line character ends the preprocessing
+        directive even if it occurs within what would otherwise be an
+        invocation of a function-like macro.
+
+        Preprocessing instruction (one of define, undef, include, if, ifdef,
+        ifndef, else, elif, endif, line, error, warning, pragma) arguments
+        (depends on the instruction) line break
+
+        The null directive (# followed by a line break) is allowed and has no
+        effect.
+
+        The following directive classes as available
+
+        o Conditional Compilation
+
+                Compile of parts of source file (controlled by directive #if, #ifdef,
+                #ifndef, #else, #elif and #endif).
+
+        o Replacement
+
+                Text macros while possibly concatenating or quoting identifiers
+                (controlled by directives #define and #undef, and operators # and ##).
+
+        o Include
+
+                Inclusion of other files (controlled by directive #include).
+
+        o Message generation
+
+                Controlled by directive #warning, #error and #pragma.
+
+        o Pragmas
+
+                Special purpose controls.
+
+
+    Preprocessor Lexical grammar:
+
+(code)
+    preprocessing-file      : [group]
+                            ;
+
+    group:                  : group-part
+                            | group group-part
+                            ;
+
+    group-part              : if-section
+                            | control-line
+                            | text-line
+                            | '#' non-directive
+                            ;
+
+    if-section              : if-group [elif-groups] [else-group] endif-line
+
+    if-group                : '#' 'if' constant-expression new-line [group]
+                            | '#' 'ifdef' identifier new-line [group]
+                            | '#' 'ifndef' identifier new-line [group]
+                            ;
+
+    elif-groups             : elif-group
+                            | elif-groups elif-group
+                            ;
+
+    elif-group              : '#' 'elif' constant-expression new-line [group]
+                            ;
+
+    else-group              : '#' 'else' new-line [group]
+                            ;
+
+    endif-line              : '#' 'endif' new-line
+                            ;
+
+    control-line            : '#' 'include' pp-tokens new-line
+                            | '#' 'define' identifier replacement-list new-line
+                            | '#' 'define' identifier lparen [identifier-list] )
+                            | replacement-list new-line
+                            | '#' 'define' identifier lparen ... ) replacement-list new-line
+                            | '#' 'define' identifier lparen identifier-list , ... )
+                            | replacement-list new-line
+                            | '#' 'undef' identifier new-line
+                            | '#' 'line' pp-tokens new-line
+                            | '#' 'error' [pp-tokens] new-line
+                            | '#' 'pragma' [pp-tokens] new-line
+                            | '#' new-line
+
+    text-line               : [pp-tokens] new-line
+
+    non-directive           : pp-tokens new-line
+
+    lparen                  : '(' not immediately preceded by white-space
+
+    replacement-list        : [pp-tokens]
+
+    pp-tokens               : preprocessing-token
+                            | pp-tokens preprocessing-token
+                            ;
+(end)
+
+           ---------------------------------------------------------
+
+Topic:          Conditional Compilation
+
+        The preprocessor supports conditional compilation of parts of source
+        file. This behaviour is controlled by #if, #else, #elif, #ifdef, #ifndef
+        and #endif directives.
+
+    Syntax:
+
+>       #if expression
+>       #ifdef expression
+>       #ifndef expression
+>       #elif expression
+>       #else
+>       #endif
+
+        The conditional preprocessing block starts with #if, #ifdef or #ifndef
+        directive, then optionally includes any number of #elif directives, then
+        optionally includes at most one #else directive and is terminated with
+        #endif directive. Any inner conditional preprocessing blocks are
+        processed separately.
+
+        Each of #if, #elif, #else, #ifdef and #ifndef directives control code
+        block until first #elif, #else, #endif directive not belonging to any
+        inner conditional preprocessing blocks.
+
+        #if, #ifdef and #ifndef directives test the specified condition (see
+        below) and if it evaluates to true, compiles the controlled code block.
+        In that case subsequent #else and #elif directives are ignored. Otherwise,
+        if the specified condition evaluates false, the controlled code block is
+        skipped and the subsequent #else or #elif directive (if any) is
+        processed. In the former case, the code block controlled by the #else
+        directive is unconditionally compiled. In the latter case, the #elif
+        directive acts as if it was #if directive: checks for condition, compiles
+        or skips the controlled code block based on the result, and in the latter
+        case processes subsequent #elif and #else directives. The conditional
+        preprocessing block is terminated by #endif directive.
+
+           ---------------------------------------------------------
+
+Topic:          Condition evaluation
+
+>           #if expression
+>           #elif expression
+
+        The expression is a constant expression, using only literals and
+        identifiers, defined using #define directive. Any identifier, which
+        is not literal, non defined using #define directive, evaluates to 0.
+
+        The expression may contain unary operators in form defined identifier
+        or defined (identifier) which return 1 if the identifier was defined
+        using #define directive and 0 otherwise. If the expression evaluates
+        to nonzero value, the controlled code block is included and skipped
+        otherwise. If any used identifier is not a constant, it is replaced
+        with 0.
+
+    Syntax:
+
+>           #ifdef expression
+>           #ifndef expression
+
+        Checks if the identifier was defined using #define directive.
+
+        #ifdef identifier is essentially equivalent to #if defined( identifier).
+
+        #ifndef identifier is essentially equivalent to #if !defined( identifier).
+
+
+Topic:          Replacment Macros
+
+        The preprocessor supports text macro replacement. Function-like text
+        macro replacement is also supported.
+
+
+  #define directives:
+
+>       #define identifier replacement-list               (1)
+>       #define identifier( parameters ) replacement-list (2)
+
+        The #define directives define the identifier as macro, that is
+        instruct the compiler to replace all successive occurrences of
+        identifier with replacement-list, which can be optionally
+        additionally processed. If the identifier is already defined as any
+        type of macro, the program is ill-formed.
+
+        Object-like macros - Object-like macros replace every occurrence of
+                defined identifier withreplacement-list. Version (1) of the
+                #define directive behaves exactly like that.
+
+        Function-like macros - Function-like macros replace each occurrence
+                of defined identifier with replacement-list, additionally
+                taking a number of arguments, which then replace
+                corresponding occurrences of any of the parameters in the
+                replacement-list. The number of arguments must be the same as
+                the number of arguments in macro definition (parameters) or
+                the program is ill-formed. If the identifier is not in
+                functional-notation, i.e. does not have parentheses after
+                itself, it is not replaced at all.
+
+        Version (2) of the #define directive defines a simple function-like
+        macro.
+
+
+   #undef directive:
+
+>           #undef identifier
+
+        The #undef directive undefines the identifier, that is cancels
+        previous definition of the identifier by #define directive.
+
+        If the identifier does not have associated macro, the directive is
+        ignored.
+
+
+   # and ## operators:
+
+        In function-like macros, a '#' operator before an identifier in the
+        replacement-list runs the identifier through parameter replacement
+        and encloses the result in quotes, effectively creating a string
+        literal. In addition, the preprocessor adds backslashes to escape the
+        quotes surrounding embedded string literals, if any, and doubles the
+        backslashes within the string as necessary.
+
+        All leading and trailing whitespace is removed, and any sequence of
+        whitespace in the middle of the text (but not inside embedded string
+        literals) is collapsed to a single space. This operation is called
+        "stringification". If the result of stringification is not a valid
+        string literal, the behaviour is undefined.
+
+        A *##* operator between any two successive identifiers in the
+        replacement-list runs parameter replacement on the two identifiers
+        and then concatenates the result. This operation is called
+        "concatenation" or "token pasting". Only tokens that form a valid
+        token together may be pasted: identifiers that form a longer
+        identifier, digits that form a number, or operators '+' and '=' that
+        form a '+='. A comment cannot be created by pasting '/' and '*'
+        because comments are removed from text before macro substitution is
+        considered. If the result of concatenation is not a valid token, the
+        behaviour is undefined.
+
+           ---------------------------------------------------------
+
+Topic:          Predefined Symbols
+
+        The following macro names are predefined in any translation unit.
+
+        The preprocessor predefines a few symbols with a built-in behaviour.
+        Those symbols cannot be undefined by a #undef directive and then
+        cannot be redefined to any other behaviour.
+
+        __FILE__  -        expands to a text string containing the name of the
+                           file being compiled.
+
+        __LINE__  -        expands to a numerical value equal to the current
+                           line number in the current source file.
+
+        __DATE__  -        expands to a text string containing the date you
+                           compiled the program. The date format is mmm dd yyyy,
+                           where mmm is the month abbreviated name, dd is the
+                           day and yyyy the year.
+
+        __TIME__  -        expands to a text string containing the time you
+                           compiled the program. The time format is hh:mm:ss,
+                           where hh is the hours, mm the minutes and ss the
+                           seconds.
+
+        __FUNCTION__ -     current function name.
+
+
+        The values of these macros (except for '__ FILE __' and '__ LINE __')
+        remain constant throughout the translation unit. Attempts to redefine
+        or undefine these managed macros results in undefined behaviour.
+
+        The value of '__ FUNCTION __' changes dynamiclly based upon the
+        current function scope.
+
+        The following additional macro names may be predefined by the
+        implementations.
+
+        __VERSION__  -    expands to a text string containing the
+                          compiler version.
+
+        __PROTOTYPES__ -  defined when Grief prototype support is enabled.
+
+        __TIMESTAMP__ -   current unix time, represented by the number of
+                          seconds since 1/1/1970.
+
+           ---------------------------------------------------------
+
+Topic:          File Inclusion
+
+   Syntax:
+
+>       #include <filename>             (1)
+>       #include "filename"             (2)
+
+>       #include_next "filename"        (3)
+
+        Includes source file, identified by filename into the current source
+        file at the line immediately after the directive.
+
+        The first version of the directive searches only standard include
+        directories. The standard C++ library, as well as standard C library,
+        is implicitly included in standard include directories. The standard
+        include directories can be controlled by the user through compiler
+        options.
+
+        The second version firstly searches the directory where the current
+        file resides and, only if the file is not found, searches the
+        standard include directories.
+
+        The third form, directive #include_next instructs the preprocessor to
+        continue searching for the specified file name, and to include the
+        subsequent instance encountered after the current directory. The
+        syntax of the directive is similar to that of #include. The language
+        feature is an extension to C and C++. It extends the techniques
+        available to address the issue of duplicate file names among
+        applications and shared libraries.
+
+        In all cases if the file is not found, program is ill-formed.
+
+           ---------------------------------------------------------
+
+Topic:          Message Generation
+
+>       #error [error_message]
+>       #warning [warning_message]
+
+        Message generation directives include the following.
+
+        The #error directive, which defines text for a compile-time error message
+        After encountering #error directive, diagnostic message error_message is
+        shown and the program is rendered ill-formed (the compilation is stopped).
+
+        'error_message' can consist of several words not necessarily in quotes.
+
+        The #warning directive, which defines text for a compile-time warning
+        message. After encountering #warning directive, a diagnostic message.
+
+        Like the #error directive, 'warning_message' is shown. warning_message
+        can consist of several words not necessarily in quotes.
+
+           ---------------------------------------------------------
+
+Topic:          Source Information
+
+>       #line lineno                    (1)
+>       #line lineno "filename"         (2)
+
+        The #line directive, which supplies a line number for compiler
+        messages.
+
+        Changes the current preprocessor line number to lineno. Expansions of
+        the macro ____LINE____ beyond this point will expand to lineno plus the
+        number of actual source code lines encountered since.
+
+        The second form also changes the current preprocessor file name to
+        filename. Expansions of the macro ____FILE____ from this point will
+        produce filename.
+
+        Any preprocessing tokens (macro constants or expressions) are
+        permitted as arguments to #line as long as they expand to a valid
+        decimal integer optionally following a valid character string.
+
+        Notes, This directive is used by some automatic code generation tools
+        which produce C++ source files from a file written in another
+        language. In that case, #line directives may be inserted in the
+        generated C++ file referencing line numbers and the file name of the
+        original (human-editable) source file.
+
+
+Pragmas:
+
+        The #pragma preprocessor directive is used to change various options
+        during the course of a compile.
+
+>       #pragma token-string
+
+        The token-string is a series of characters that gives a specific
+        compiler instruction and arguments, if any. The number sign (#) must
+        be the first non-white-space character on the line containing the
+        pragma; white-space characters can separate the number sign and the
+        word pragma.
+
+        Following #pragma, write any text that the translator can parse as
+        preprocessing tokens. The argument to #pragma is subject to macro
+        expansion.
+
+        If the compiler encounters a pragma it does not recognize, a warring is
+        issued, yet the compilation shall continue.
+
+        Grief offers the following pragma's.
+
+  Message:
+
+>       #pragma message (message-string)
+
+        A typical use of the message pragma is to display informational
+        messages at compile time.
+
+        The message-string parameter can be a macro that expands to a string
+        literal, and you can concatenate such macros with string literals in
+        any combination.
+
+    Example:
+
+>       #pragma message("Compiling " __FILE__ ", at " __TIME__)
+>       #if defined(TEST)
+>       #pragma message("Notice: TEST enable")
+>       #endif
+
+
+   Warning:
+
+>       #pragma warning (once|default|disable|enable|error : <list>)
+>       #pragma warning (level : <level>)
+>       #pragma warning (push)
+
+        The pragma warning( push ) stores the current warning state for all warnings.
+
+>       #pragma warning (pop)
+
+        The pragma warning( pop ) pops the last warning state pushed onto the
+        stack. Any changes made to the warning state between push and pop are
+        undone.
+
+
+   Diagnostic message control:
+
+>       #pragma enable_message message-number
+
+        The enable_message enables the specified warning message 'message-number'.
+
+>       #pragma disable_message message-number
+
+        The disable_message disables the specified warning message
+        'message-number'.
+
+
+   Autoload Managment:
+
+>       #pragma autoload ("function1" ...)
+
+        Autoload managment, experimental feature at this time.
+
+           ---------------------------------------------------------
+
+        $Id: preprocessor.txt,v 1.3 2014/10/31 01:09:05 ayoung Exp $
+-*- mode: txt; margin: 75; -*-
+

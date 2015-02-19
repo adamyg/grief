@@ -1,0 +1,185 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: modeline.mandoc,v 1.1 2014/11/27 18:19:41 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt MODELINE 1
+.Os
+.Sh NAME
+.Nm modeline
+.Nd embedded mode line processing.
+.Sh DESCRIPTION
+This set of macros give GRIEF a modelines feature ala (the true
+BSD) vi. You can embed commands in either the first 5 or last 25
+lines. These commands are executed whenever the file is edited,
+the trigger being the REG_EDIT registry.
+.Pp
+The supported format of the commands are either native or
+Emac emulation.
+.Sh Native
+.Bd -literal
+	cr:<command-1>:<command-2>:...:<command-n>:".
+.Ed
+.Pp
+.Pp
+It is important to remember the final colon. The modeline can be
+on the line by itself or surrounded by comments; the key is to
+start and end with a single colon.  It is permissible to have
+multiple modelines, both at the top and the bottom, up to the
+number in the lines scanned.
+.Sh Emac Emulation
+You can specify the major mode for editing a given file by the
+following special text in the first nonblank line of the file.
+The modeline can be on the line by itself or surrounded by comments.
+For example:
+.Bd -literal
+	; -*-Lisp-*
+.Ed
+.Pp
+If the first line is the name of a recongnised style, such as 'perl'
+or 'lisp', GRIEF uses a editor style approapriate to the mode.
+The above tells GRIEF to use Lisp mode. Note how the semicolon is
+used to make Lisp treat this line as a comment. Such an explicit
+specification overrides any defaulting based on the file name.
+.Pp
+Another format of the mode specification is:
+.Bd -literal
+	-*- mode: modename; -*-
+.Ed
+.Pp
+which allows you to specify local variables as well, using the
+following syntax:
+.Bd -literal
+	-*- mode: modename; var: value; .... -*-
+.Ed
+.Pp
+.Pp
+the emulation checks for the following mode statements, currently
+only mode and several local var's are understood, ignoring
+the other listed constructs:
+.Bd -literal
+	-*- mode: NAME -*-        set mode to NAME
+	-*- VAR: VALUE -*-        set VAR = VALUE
+	-*- evalfile: FILE -*-    evaluate file FILE
+	-*- eval: expression -*-  evaluate expression
+.Ed
+.Pp
+.Pp
+The following local variables are supported:
+.Bl -bullet -offset 1 -width xxxxxxxx
+.It
+"hard-tabs:"
+.Pp
+(Tab vs Spaces). Explicity set the hard or soft tab setting.
+Value should be either 'yes' or 'no'.
+.It
+"tab-width:"
+.Pp
+(Display tab setting). Normally a tab character witin a
+buffer is displayed as whitespace which extends to the next
+display tab stop position, and the display tab stops come
+at an interval equal to eight spaces. 'tab-width' controls
+the tab width, being a value between 1 and 999 inclusive.
+Note, that how the tab character is displayed in the buffer
+has nothing to do with the definition of the 'indent-width'
+setting.
+.It
+"indent-tabs-mode:"
+.Pp
+(Tab vs Spaces). Normally used both tabs and spaces to
+indent lines.  If preferred, all indentation can be made
+from spaces only by setting the value as 'nil'.
+.It
+"tabs:"
+.It
+"indent-width:"
+.It
+"c-basic-offset:"
+.Pp
+(Indentation width) Typing a tab moves the cursor to the
+next tab stop, padding either spaces or tabs, based on the
+hard-tabs settings, normally at an internal of eight.
+'tabs' controls the width of the indentation, being a
+value between 1 and 999 inclusive.  A value of zero
+shall clear the current indentation setting and use the
+current tab-width setting.
+.It
+"line-numbers:"
+.Pp
+Enable/disable line number display in the left column(s).
+.El
+.Pp
+Example:
+.Bd -literal
+	-*- mode: c; tab-width: 8; indent-tabs-mode: nil; tabs: 4 -*-
+.Ed
+.Pp
+.Pp
+In addition a local variables list may be specified near the end
+of the file, in the last 25 lines (a page). The declaration list
+starts with a line containing the string 'Local Variables:', and
+ends with a line containing the string 'End:'. In between come the
+variables names and values, one set per line. as 'variable: value'.
+If the file has both a local varaiables list and a -*- line, GRIEF
+processes everything in the -*- line first, and everything in the
+local variables list secondly. For example;
+.Bd -literal
+	## Local Variables: ***
+	## mode: perl ***
+	## End: ***
+.Ed
+.Pp
+In the above example, each line starts with the prefix ## and each
+line ends with the suffix '***'.  These are recongised as the prefix
+and suffix based on the first line, by finding them located surronding
+the magic string 'Local Variables:', then it automaticlly discards
+them from the other lines of the declaration.  The usual reason for
+using prefix/suffix markers, is to embed the declaration into a
+comment construct as supported by language file of type.
+.Sh SEE ALSO
+.Xr program ,
+.Xr package ,
+.Xr mode

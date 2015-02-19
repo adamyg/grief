@@ -1,0 +1,15 @@
+ * Copyright (c) 1998 - 2014, Adam Young.
+ * All rights reserved.
+ *
+ * This file is part of the Grief Editor.
+ *
+ * The Grief Editor is free software: you can redistribute it
+ * and/or modify it under the terms of the Grief Editor License.
+ *
+ * The Grief Editor is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * License for more details.
+ * ==end==
+
+

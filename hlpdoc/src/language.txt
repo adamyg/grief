@@ -1,0 +1,3212 @@
+
+Title:          Language Specification
+
+        The syntax utilised by the *Grief* macro language allows one
+        to create macros using commands written in a C based
+        programming language.
+
+        In addition, *Grief* contains some constructs from other
+        environments including C++.
+
+              --------------------------------------------
+
+Section:        Lexical elements
+
+        Source is broken down into a number of tokens classes,
+        identifiers, expression operators, and other separators.
+
+        In general blanks, tabs, newlines, and comments as described
+        below are ignored except as they serve to separate tokens. At
+        least one of these characters is required to separate otherwise
+        adjacent identifiers, constants, and certain operator pairs.
+
+        If the input stream has been parsed into tokens up to a given
+        character, the next token is taken to include the longest string
+        of characters which could possibly constitute a token.
+
+              --------------------------------------------
+
+Topic:          Notation
+
+        The syntax is specified using Backus-Naur Form (BNF).
+
+        Each BNF is a set of derivation rules, written as
+
+    BNF specification:
+
+>       <symbol>:
+>             <expression>      // comment
+>           | <expression2>     // second choice or branch.
+>           ;                   // terminator, optional.
+
+        where <symbol> is a non-terminal, and the <expression>
+        consists of one or more sequences of symbols; more sequences
+        are separated by the vertical bar, '|', indicating a choice,
+        the whole being a possible substitution for the symbol on the
+        left.
+
+        The '::' (sometime only ':') means that the symbol on the left
+        must be replaced with the expression on the right, with ';'
+        terminating the current sequence.
+
+        Comments within the expressions are started with the sequence
+        "//" and stop at the end of the line; and do not form part of
+        the expression being described.
+
+        White space, formed from spaces, horizontal tabs, carriage
+        returns, and newlines, should be ignored except when stated
+        explicity as either a literal or terminator, for example ' ' or
+        new-line.
+
+(table "Backus Naur Form", format=cvs, justify=center)
+"Syntax",             "Description"
+": (double colon)",   "Definition"
+"| (vertical bar)",   "or"
+"{...}*",             "0 or more"
+"{...}+",             "1 or more"
+"[....]",             "optional"
+"(...)",              "selection"
+"'...'",              "literal character or string"
+"<...>",              "terminal or non-terminal"
+"//",                 "end-of-line comment"
+(end)
+
+        Within the right expressions a grouped set of tokens enclosed in
+        round brackets, indicating one or alternative selections, with
+        only one of the available at any time, for example.
+
+>       a_or_b_plus_word:: ('a', 'b') word ;
+
+        for expressions which only represent a single token the bracket
+        shall be omitted, as such.
+
+>       letter::
+>           'a' .. 'f', 'A' .. 'F'
+>           ;
+
+        Optional items enclosed in square brackets, for example
+
+>       optionalword:: [word] ;
+
+        Items repeating 0 or more times are enclosed in curly brackets,
+        for example
+
+>       one_or_more_letters::
+>           letter {letter}
+>           ;
+
+        and the annotated short-hand form
+
+>       one_or_more_letters::
+>           {letter}+
+>           ;
+>
+>       none_or_more_letters::
+>           {letter}*
+>           ;
+
+        standard patterns only using the bases operators ':' and '|'.
+        The follow are there longer forms.
+
+>       optionalword::
+>             word
+>           |               // empty choice.
+>           ;
+
+>       word::
+>             letter_list
+>           ;
+>
+>       letter_list::
+>             letter        // recursive list definition.
+>           | letter_list letter
+>           ;
+
+>       a_or_b_plus_wor::
+>             a_or_b word
+>           ;
+>
+>       a_or_b::
+>             'a'
+>           | 'b'
+>           ;
+
+
+              --------------------------------------------
+
+Topic:          Source Code
+
+        Macro source code is ASCII text encoded; note UTF-8 is a planned
+        feature.
+
+        Each code point is distinct; for instance, upper and lower case
+        letters are different characters.
+
+        Like C, the *Grief* Macro language is case sensitive.
+
+              --------------------------------------------
+
+Topic:          Comments
+
+        Comments serve as a form of in-code documentation. When
+        inserted into the source code, they are effectively ignored
+        by the preprocessor and compiler; they are solely intended
+        to be used as notes by the developers that maintain the
+        source code.
+
+        There are two forms of comments, "Multi-line" and "Single-Line"
+        comments.
+
+   Syntax:
+
+>           /* comment */       (1)
+>           // comment\n        (2)
+
+   Multi-line comments:
+
+        General comments start with the character sequence "/*" and
+        continue through the character sequence "*/". A general comment
+        containing one or more newlines acts like a newline, otherwise
+        it acts like a space.
+
+        These are often known as "C-style" or "multi-line" comments.
+
+   Single-line comments:
+
+        The second form are line comments, which start with the
+        character sequence "//" and stop at the end of the line, however,
+        multiple line comments can be placed together to form multi-line
+        comments. A line comment acts like a newline.
+
+        These are often known as "C++-style" or "single-line" comments.
+
+        Comments are recognized anywhere in a program, except inside
+        a character constant or strings.
+
+   Grammar rules employed imply the following:
+
+        o Comments do not nest, that is a comment opens '/*' is matched
+          with the next '*/' encountered; within the comment body any
+          additional '/*' or '//' tokens are simply treated as part of
+          the comment text and have no special meaning.
+
+        o "/*" and */ have no special meaning inside "//" comments.
+
+        o "//" has no special meaning in either single-line or
+          multi-line comments.
+
+   Examples:
+
+        The following code fragment, using a mix of block and line
+        comments;
+
+>       /* Insert the list of string */
+>       for (i = 0; i < scount; ++i) {          // loop through list
+>               insert( slist[s] );             /* close the file */
+>       }
+
+        is equivalent to,
+
+>       for (s = 0; s < scount; ++s) {
+>               insert( slist[s] );
+>       }
+
+        Comments have several uses, which includes the documentation of
+        your source. Another use can be to temporarily remove a section
+        of code during testing or debugging of macros, as example:
+
+>       /* -- disable
+>       for( i = 0; i < fcount; ++i) {
+>               fclose( flist[i] );
+>       }
+>       */
+
+              --------------------------------------------
+
+Topic:          Statements
+
+        *Grief* statements are constructed in the same manner as the
+        statements in the C language.
+
+        The semicolon (;) represents a statement terminator. The
+        semicolon should be used at the end of all complete statements.
+
+   Syntax:
+
+>               <expression>;
+
+        The expression shall be none or more statements, constructed of
+        identifiers, literals, keywords and operators.
+
+        Note that the expression maybe empty, also referred as a null
+        expression, which can be used as a no-op or no-operation
+        place holder, as such;
+
+>               ;
+
+
+              --------------------------------------------
+
+Topic:          Braces
+
+        Curly braces are used to define the beginning and end of
+        functions definitions, to group multiple statements together
+        within a single function, for example.
+
+    Block statement:
+
+>       {
+>               <expression>;
+>               <expression>;
+>       }
+
+        Secondary braces are used to delimit data contained within
+        initialisation lists.
+
+              --------------------------------------------
+
+Topic:          Line Numbers
+
+        When reporting errors and warnings, a *Grief* compiler uses a
+        source-code location that includes a file name and line number.
+        *Grief* numbers the lines in a compilation unit starting from
+        one. The end of a line is marked by a newline character.
+
+        To facilitate interoperability with other tools, a line
+        directive can be used to associate source code lines to a
+        location in a different file.
+
+   Line directive form:
+
+>               # number "file"
+
+        A line directive must be on a line of its own and must start
+        with the '#' character; number is a decimal number in the file
+        name 'file'. One or more space or tab characters must be used to
+        delimit the three tokens of a line directive.
+
+        The syntax of the line directive is the one used by the C
+        preprocessor cpp. The line directive associates the following
+        line in the source code with line 'line' within the specified
+        source 'file'.
+
+        Line numbering continues from there on linearly and thus all
+        subsequent lines are considered to be from 'file'.
+
+              --------------------------------------------
+              --------------------------------------------
+
+Section:        Tokens
+
+        Tokens form the vocabulary of the *Grief* language.
+
+        There are several classes:
+
+                o <Identifiers>
+                o <Keywords>
+                o <Literals>
+                o <Operators>
+                o <Punctuators>
+
+        Tokens are only processes as full words. As the macro source is
+        scanned, tokens are extracted in such a way that the longest
+        possible token from the character sequence is selected. For
+        example, external would be parsed as a single identifier rather
+        than as the keyword 'extern' followed by the identifier 'al'.
+
+        White space, formed from spaces, horizontal tabs, carriage
+        returns, and newlines, are ignored except when they separate
+        tokens that would otherwise combine into a single token.
+
+              --------------------------------------------
+
+Topic:          Identifiers
+
+        An identifier is used to give a name to an object. It begins
+        with a letter, and is followed by none or more letters or digits.
+
+        An identifier may have up to 255 characters.
+
+   Syntax:
+
+>       identifier::
+>               identifier-letter { identifier-letter | identifier-digit }
+>
+>       identifier-letter::
+>               (a' .. 'z', 'A' ... 'Z',  '_')
+>
+>       identifier-digit::
+>               ('0' .. '9')
+
+   Case sensitive:
+
+        Within *Grief* identifiers are case sensitive, so that
+        'Add', 'add' and 'ADD' are all distinct identifiers.
+
+   Uniqueness and Scope:
+
+        Although identifier names are arbitrary within the above
+        syntax, errors shall result if the same name is used for
+        more than one identifier within the same scope and sharing
+        the same name-space. Duplicate names are legal for
+        different name spaces regardless of scope. The scope rules
+        are covered later (See: <Scope>).
+
+              --------------------------------------------
+
+Topic:          Keywords
+
+        A keyword is a reserved identifier used by the language to
+        describe a special feature. It is used in declarations to
+        describe the basic type of an object, or in a function body to
+        describe the statements executed. A keyword name cannot be used
+        as an object name.
+
+        Upper and lower case letters are considered different, as such
+        all keywords are case sensitive.
+
+        Based on the current C language specifications, the following
+        keywords are reserved and may not be used as identifiers.
+
+        This list includes all keywords used and reserved for future use.
+
+    C89 keywords:
+
+>       auto            double          into            strict
+>       break           else            long            switch
+>       case            enum            register        typedef
+>       char            extern          return          union
+>       const           float           short           unsigned
+>       continue        for             signed          void
+>       default         goto            sizeof          volatile
+>       do              if              static          while
+
+    C99 keywords:
+
+>       _Bool           _Imaginary      inline          restrict
+>       _Complex
+
+    C11 keywords:
+
+>       _Alignas        _Atomic         _Noreturn       _Thread_local
+>       _Alignof        _Generic        _Static_assert
+
+    Grief specific keywords:
+
+>       array           foreach         list            string
+>       declare         global          replacement
+
+   Reserved future/experimental keywords:
+
+>       _command        delete          hash            throw
+>       catch           finally         new             try
+
+   Implementation Notes:
+
+        Note that the *Grief* compiler is based upon a C11 grammar which
+        may successfully compile in some cases which are not explicitly
+        supported resulting in unexpected execution; please consult the
+        'Macro compatibility' Section for specific details.
+
+Topic:          Punctuators
+
+        The punctuation and special characters in the C character set
+        have various uses, from organizing program text to defining
+        the tasks that the compiler or the compiled program carries
+        out.
+
+   *Punctuators Characters:*
+
+>               [ ]   ( )   { }   *   ,   :   =   ;   ... #
+
+        Note that some sequences are used as operators and as
+        punctuation, such as *, =, :, # and ,.
+
+        They do not specify an operation to be performed. Some
+        punctuators symbols are also operators see <Operators>. The
+        compiler determines their use from context
+
+        Finally several punctuators have to be used by pairs, such as
+          "( )", "[ ]" and "{ }".
+
+            --------------------------------------------------------
+            --------------------------------------------------------
+
+Section:        Literals
+
+        A literal is the source code representation of a value of a primitive
+        type, the String type , or the list type.
+
+   Syntax:
+
+>       literal::
+>             integer-literal
+>           | floating-point-literal
+>           | boolean-literal
+>           | character-literal
+>           | string-literal
+>           | null-literal
+>           ;
+
+              --------------------------------------------
+
+Topic:          Integer Literals
+
+        The most commonly used type is the integer. Integers are used
+        for storing most numbers that do not require a decimal point,
+        such as counters, sizes and indices into arrays.
+
+        An integer literal may be expressed in decimal (base 10),
+        hexadecimal (base 16), octal (base 8), or binary (base 2).
+
+        Unlike a 'C' value, an integer literal is always signed 32-bit
+        values, and represent value in the range.
+
+>           -2,147,483,648 to 2,147,483,647
+
+        An integer literal is a sequence of digits representing an
+        integer constant.
+
+    Decimal:
+
+        Decimal constants from (-2, 147, 483, 648) to (2, 147, 483,
+        647) are allowed. Constants exceeding this limit are
+        truncated. Decimal constants must not use an initial zero. An
+        integer constant that has an initial zero is interpreted as
+        an octal constant, as above.
+
+    Octal:
+
+        All constants with an initial zero are taken to be octal. If an
+        octal constant contains the illegal digits 8 or 9, an error is
+        reported. Octal constants exceeding 037777777777 are truncated.
+
+    Hexadecimal:
+
+        All constants starting with 0x (or 0X) are taken to be
+        hexadecimal. Hexadecimal constants exceeding 0xFFFFFFFF are
+        truncated.
+
+    Syntax:
+
+>       integer-literal::
+>           | decimal-integer-literal
+>           | hex-integer-literal
+>           | octal-integer-literal
+>           | binary-integer-literal
+>           ;
+>
+>       decimal-integer-literal::
+>           decimal-numeral [{integer-type-suffix}]
+>
+>       hex-integer-literal::
+>           hexnumeral [{integer-typesuffix}]
+>
+>       octal-integer-literal::
+>           octalnumeral [{integer-type-suffix}]
+>
+>       binary-integer-literal::
+>           binarynumeral [{integer-type-suffix}]
+>
+>       integer-type-suffix::
+>           'l', 'l', 'u', 'U'
+
+        As denoted above, an integer literal may be notated in
+        several ways; the notation determines the base of the
+        literal. and whether it is signed or unsigned.
+
+    Rules:
+
+        1.  A literal starting with '0x' or '0X' is in hexadecimal
+            notation (base 16).
+
+        2.  A literal starting with 0 is in octal notation (base 8).
+
+        3.  A literal starting any of the digits '1' through '9' and
+            ending in the letter u or U is in decimal notation (base
+            10) and is unsigned. Also, a literal '0u' or '0U' is in
+            decimal notation.
+
+        4.  A literal starting with any of the digits 1 through 9 and
+            ending in a digit is in decimal notation (base 10).
+
+        5.  A literal starting with a minus sign, followed by any of
+            the digits 1 through 9, and ending in a digit, is in
+            decimal notation (base 10).
+
+   Suffixes:
+
+        For portability with the C language, suffixes are permitted;
+        these currently have little effect as the underlying integer
+        storage and associated representations is fixed yet may play
+        more of a role in the future.
+
+        The suffix 'L' (or 'l') attached to any constant forces the
+        constant to be represented as a 'long', with 'LL' ('ll') forcing
+        the constant to be represented as a 'long long'.
+
+        Similarly the suffix 'U' (or 'u') forces the constant to be
+        'unsigned'.
+
+        It is 'unsigned long' if the value of the number itself is
+        greater than decimal '65,535', regardless of which base is used.
+
+        You can mix both 'L' and 'U' suffixes on the same constant in
+        any order or case.
+
+              --------------------------------------------
+
+Topic:          String Literals
+
+        A 'string literal' is a sequence of characters from the
+        source character set enclosed in double quotation marks ("").
+
+        String literals are used to represent a sequence of
+        characters which, taken together, form a null-terminated
+        string.
+
+        There are a number of string modifiers, allowing the
+        specification of wide-string literals and raw-string literals.
+
+        All escape codes listed in the Escape Sequences table
+         (See: <Escape Sequences>) are valid in string literals.
+
+        To represent a double quotation mark in a string literal, use
+        the escape sequence '\"'. The single quotation mark (') can
+        be represented without an escape sequence. The backslash (\)
+        must be followed with a second backslash (\\) when it appears
+        within a string. When a backslash appears at the end of a
+        line, it is always interpreted as a line-continuation
+        character.
+
+    Standard Strings:
+
+>       "string"
+
+    Wide Strings:
+
+>       L"wide-string content"
+
+    Raw Strings:
+
+>       R"raw-string content"
+>       `raw string content`
+
+        Raw string provide a method of specifying that a literal is to
+        be processed without any language-specific interpretation,
+        either by marking with a prefix, or by allowing in special
+        sections. This avoids the need for escaping, and can yield more
+        legible strings.
+
+        Raw strings are particularly useful when dealing with regular
+        expressions and path, avoid the need to escape any embedded
+        backslashes.
+
+     Example, escaped and raw pathnames::
+
+>       "The path is C:\\Foo\\Bar\\"
+>       R"The path is C:\Foo\Bar\"
+
+              --------------------------------------------
+
+Topic:          Character Literals
+
+        A 'character literal' is a single character from the source
+        character set enclosed in single quotation marks ('').
+
+        A character literal is a value of type 'int'.
+
+        There are a number of character modifiers, allowing the
+        specification of wide-character literals and raw-character
+        literals.
+
+        All escape codes listed in the Escape Sequences table
+        (See: <Escape Sequences>) are valid in character literals.
+
+    Standard Character:
+
+>       'a'
+
+    wide Character:
+
+>       L'\u1234'
+
+    Raw Character:
+
+>       R'\'
+
+              --------------------------------------------
+
+Topic:          Escape Sequences
+
+        In order to encode the character codes of non-printing
+        characters, Unicode character codes within non-Unicode source,
+        allow references to platform specific control characters and
+        the allow literal delimiters within literals, these special
+        symbols need to be denoted with an escape mechanism.
+
+        Character combinations consisting of a backslash (\) followed
+        by a letter or by a combination of digits are called "escape
+        sequences."
+
+    Syntax:
+
+>       escape-value::
+>             '\' escape-sequence
+>           | '\' '\'
+>
+>       escape-sequence::
+>             unicode-escape
+>           | hex-escape
+>           | octal-escape
+>           | decimal-escape
+>           | control-escape
+>           | binary-escape
+>
+>       unicode-escape::
+>             'u' '{' {digit}+ '}'              // unrestricted length
+>           | 'U' {digit}+                      // 4 digit form
+>           | 'u' {digit}+                      // 8 digit form
+>
+>       hex-escape::
+>             'x' '{' {hex-digit}+ '}'          // unrestricted length
+>           | 'x' {hex-digit}+
+>
+>       decimal-escape::
+>             'd' '{' {decimal-digit}+ '}'      // unrestricted length
+>           | decimal-nonzero {decimal-digits}*
+>
+>       octal-escape::
+>             'o' '{' {octal-digit}+ '}'        // unrestricted length
+>           | '0' {octal-digit}*
+>
+>       control-escape::
+>             'c' control-letter
+>
+>       binary-escape::
+>             'b' '{' {binary-digit}+ '}'
+>
+>       hex-digit::
+>             '0' .. '9', 'a' .. 'f', 'A' .. 'F'
+>
+>       decimal-digit::
+>             '0' .. '9'
+>
+>       decimal-nonzero::
+>             '1' .. '9'
+>
+>       octal-digit::
+>             '0' .. '7'
+>
+>       control-letter::
+>             'A' .. 'Z'
+>
+>       binary-digit::
+>             '0', '1'
+>
+
+        An escape sequence is regarded as a single character and is
+        therefore valid as a character constant and within string
+        literals.
+
+        In several cases escape sequence cannot be avoided. To
+        represent a newline, single quotation mark (') within
+        character constants, double quotation mark (") within string
+        literal and a backslash (\) within either, you must use an
+        escape sequence. These are in addition to all non-ASCII or
+        non-printable character codes.
+
+        The following table lists the escape sequences and what they
+        represent. A backslash followed by one or more digits or
+        letters is interpreted according to the following table:
+
+    Escape Sequence Interpretation:
+
+(code, hilite=c)
+        \a              Alert (Bell).
+
+        \b              Backspace.
+
+        \e              Escape.
+
+        \f              Form feed.
+
+        \n              Newline.
+
+        \r              Carriage return.
+
+        \t              Horizontal tab.
+
+        \\              Backslash.
+
+        \'              Single quote.
+
+        \"              Double quote.
+
+        \?              Question mark.
+
+        \xhh            The value of the hexdigit sequence, which
+                        must contain at least one and at most two
+                        hexdigits (0..f).
+
+        \x{h..}         Is an unrestricted hexidecimal value, which
+                        may contain one of more hex digits enclosed
+                        within brackets.
+
+        \O[O..]         The value of the octdigit sequence, which
+                        must contain at least one and at most three
+                        octal digits (0..7)
+
+        \o{O..}         An unrestricted length octal value, which may
+                        contain one of more octal digits enclosed
+                        within brackets.
+
+        \u####          16 bit Unicode character value, values must
+                        be complete; disallowing nul's, surrogates
+                        and reserved constants.
+
+        \U########      32 bit Unicode character value, values must
+                        be complete; disallowing nul's, surrogates
+                        and reserved constants.
+(end)
+
+    Octal and Hexadecimal Character Specifications:
+
+        The sequence '\ooo' means you can specify any character in
+        the ASCII character set as a three-digit octal character
+        code. The numerical value of the octal integer specifies the
+        value of the desired character or wide character.
+
+        Similarly, the sequence '\xhhh' allows you to specify any
+        ASCII character as a hexadecimal character code. For example,
+        you can give the ASCII backspace character as the normal C
+        escape sequence (\b), or you can code it as '\010' (octal) or
+        '\x008' (hexadecimal).
+
+        You can use only the digits 0 through 7 in an octal escape
+        sequence. Octal escape sequences can never be longer than
+        three digits and are terminated by the first character that
+        is not an octal digit. Although you do not need to use all
+        three digits, you must use at least one. For example, the
+        octal representation is '\10' for the ASCII backspace
+        character and '\101' for the letter A, as given in an ASCII
+        chart.
+
+        Similarly, you must use at least one digit for a hexadecimal
+        escape sequence, but you can omit the second and third
+        digits. Therefore you could specify the hexadecimal escape
+        sequence for the backspace character as either '\x8', '\x08',
+        or '\x008'.
+
+        The value of the octal or hexadecimal escape sequence should
+        be in the range of representable values (1 .. 255) for a
+        character constant and (1 .. 3^32) for a wide-character
+        constant.
+
+        Note that the question mark proceeded by a backslash (\?)
+        specifies a literal question mark, which under C has the
+        intended use to guard against being misinterpreted as a
+        trigraph; *Grief* does not support trigraph, as such its use
+        is optional.
+
+   Examples:
+
+>       '\a', '\r'
+>       '\x0', '\x12ab, '\x{1234abcd}'
+>       '\x0', '\010', '\o{1234567}',
+
+        Note, If a backslash precedes a character that does not
+        appear in the table, the compiler handles the undefined
+        character as the character itself. For example, '\c' is
+        treated as a 'c'.
+
+              --------------------------------------------
+
+Topic:          Floating Point Literals
+
+        A floating-point number is a number which may contain a
+        decimal point and digits following the decimal point. The
+        range of floating-point numbers is usually considerably
+        larger than that of integers, but the efficiency of integers
+        is usually much greater. Integers are always exact quantities,
+        whereas floating-point numbers sometimes suffer from
+        round-off error and loss of precision.
+
+        A floating-point literal is a decimal representation of a
+        floating-point constant. It has an integer part, a decimal
+        point, a fractional part, and an exponent part. The integer
+        and fractional part comprise decimal digits; the exponent
+        part is an e or E followed by an optionally signed decimal
+        exponent. One of the integer part or the fractional part may
+        be elided; one of the decimal point or the exponent may be
+        elided.
+
+  Syntax:
+
+>       float_lit      :: decimals '. [decimals] [exponent]
+>                       | decimals exponent
+>                       | '.' decimals [exponent] .
+>
+>       decimals       :: decimal_digit {decimal_digit} .
+>
+>       exponent       :: ('e'|'E') ['+'|'-'] decimals .
+
+              --------------------------------------------
+              --------------------------------------------
+
+Section:        Types
+
+        Each object, reference, and function in *Grief* is associated
+        with a type, which is defined at the point of declaration and
+        cannot change.
+
+        The type of an entity defines its possible values, possible
+        operations, and their meaning.
+
+        Types in *Grief* are nominal: two types may define exact same
+        range of values and allowed operations, but if they are named
+        differently, objects of those types are generally not compatible
+        and must be converted during comparison and assignment operations.
+
+    Basic Types:
+
+        o <Integer Types>
+        o <Float Types>
+        o <String Types>
+        o <Character Types>
+        o <List Types>
+        o <Polymorphic Types>
+        o <Enumerated Types>
+
+    Declarations:
+
+        Within a *Grief* macro is a set of tokens defining objects or
+        variables, and functions to operate on these variables.
+
+        The *Grief* macro language uses a declaration to associate a
+        type to a name. A type may be a simple type or a complex type.
+
+        A simple type is numerical, and may be integer or real.
+
+    Parameter Coercion:
+
+        *Grief* provides automatic conversion between string and
+        number values at run time.
+
+        Any arithmetic operation applied to a string tries to convert
+        this string to a number, following the usual conversion rules.
+
+        Conversely, whenever a number is used where a string is
+        expected, the number is converted to a string, in a
+        reasonable format.
+
+              --------------------------------------------
+
+Topic:          Integer Types
+
+        An integer is just a number.
+
+        Integers can reliably be from -2147483648 to +2147483647.
+
+        An integer is true if it is not zero.
+
+        Integer typed declarations use the 'int' keyword.
+
+   Examples:
+
+>       int a;
+>       int b, c;
+>       int d = 1;
+
+   Primitives:
+
+        The following primitives can act on integer data types.
+
+                o <atoi>
+                o <is_integer>
+                o <sprintf>
+                o <strtol>
+
+              --------------------------------------------
+
+Topic:          Float Types
+
+        Floating point number, which internal is represented using a
+        double-precision float.
+
+        Floating point number typed declarations use the either the
+        'float' or the 'double' keyword.
+
+    Examples:
+
+>       float a;
+>       float b, c;
+>       float d = 1.0;
+
+        A floating-point number is a number which may contain a
+        decimal point and digits following the decimal point. The
+        range of floating-point numbers is usually considerably
+        larger than that of integers, but the efficiency of integers
+        is usually much greater.
+
+        Integers are always exact quantities, whereas floating-point
+        numbers sometimes suffer from round-off error and loss of
+        precision.
+
+        *Grief* allows both 'float' and 'double' yet both refer to
+        the same internal type, normally corresponding to a 64-bit
+        quantity.
+
+>                        Lower           Upper           Precision
+>
+>        float           2.2E-308        1.7E+308        15
+>        double          2.2E-308        1.7E+308        15
+
+        Note, floating point constants compiled into macros are *not*
+        currently stored in a machine independent manner, as such
+        compiled macros may not be portable to different machines.
+
+        Future, floats shall be manage within objects using an IEEE
+        float point representation allowing macros to be machine
+        independent.
+
+    Primitives:
+
+        The following primitives can act on float data types.
+
+                o <strtod>
+                o <strtof>
+                o <acos>
+                o <asin>
+                o <atan>
+                o <atan2>
+                o <ceil>
+                o <cos>
+                o <cosh>
+                o <exp>
+                o <fabs>
+                o <floor>
+                o <fmod>
+                o <frexp>
+                o <ldexp>
+                o <log>
+                o <log10>
+                o <modf>
+                o <pow>
+                o <sin>
+                o <sinh>
+                o <sqrt>
+                o <tan>
+                o <tanh>
+
+                     -------------------------------------
+
+Topic:          String Types
+
+        A string is a sequence of printable characters.
+
+        A string is true if it is not empty.
+
+        String typed declarations use the 'string' keyword.
+
+   Examples:
+
+>       string a;
+>       string b, c;
+>       string d = "1.0";
+
+        Any character may be used in a string, except for the "NUL"
+        character, though some will need to be escaped
+          (See: <Escape Sequences>).
+
+        The length of a string is only limited by available script
+        memory.
+
+        Strings can be concatenated (joined together) using the +
+        operator. Note that concatenation cannot be done when
+        defining a string as a global variable, as + is treated as an
+        executable instruction, it's not handled by the compiler.
+        Concatenation can only be done within executable code.
+
+    Primitives:
+
+        The following primitives can act on string data types.
+
+                o <characterat>
+                o <compress>
+                o <format>
+                o <index>
+                o <is_string>
+                o <lower>
+                o <ltrim>
+                o <rindex>
+                o <rtrim>
+                o <split>
+                o <sprintf>
+                o <sscanf>
+                o <strcasestr>
+                o <strcasecmp>
+                o <strfilecmp>
+                o <strlen>
+                o <strpbrk>
+                o <strpop>
+                o <strstr>
+                o <strtod>
+                o <substr>
+                o <tokenize>
+                o <trim>
+                o <upper>
+
+                     -------------------------------------
+
+Topic:          Character Types
+
+        There is no specific character type, instead an <integer type>
+        can be used to handle character data.
+
+        Any character constant may be used in a integer, including the
+        "NUL" character, though some will need to be escaped
+        (See: <Escape Sequences>).
+
+        As character types use an integer as their underlying storage,
+        declarations use the 'int' keyword.
+
+    Examples:
+
+>       int a = 'a';
+>       int backspace = '\b';
+
+    Primitives:
+
+        The following primitives can act on character data types.
+
+                o <characterat>
+                o <isdigit>
+                o <isalnum>
+                o <isalpha>
+                o <isascii>
+                o <isblank>
+                o <iscntrl>
+                o <isdigit>
+                o <isgraph>
+                o <islower>
+                o <isprint>
+                o <ispunct>
+                o <isspace>
+                o <isupper>
+                o <isword>
+                o <iscsym>
+                o <isxdigit>
+
+              --------------------------------------------
+
+Topic:          List Types
+
+        A list is a collection of objects of any type.
+
+        Lists are useful for manipulating several objects at once.
+
+        A list is true if it is not empty.
+
+        List typed declarations use the 'list' keyword.
+
+   Examples:
+
+>       list a;
+>       list b, c;
+>       list d = {1, 2};
+
+        You can initialise a list value by enclosing a
+        comma-separated series of expressions in curly brackets.
+
+   Examples:
+
+>       list d = {1, 2};
+
+        To retrieve an element of a list, you can use a list
+        selection expression.
+
+   Syntax:
+
+>       list[element]
+
+   Examples:
+
+>       x = d[1];
+
+    Primitives:
+
+        The following primitives can act on list data types.
+
+                o <arg_list>
+                o <car>
+                o <cdr>
+                o <delete_nth>
+                o <get_nth>
+                o <is_list>
+                o <length_of_list>
+                o <list_each>
+                o <list_extract>
+                o <make_list>
+                o <nth>
+                o <pop>
+                o <push>
+                o <put_nth>
+                o <quote_list>
+                o <search_list>
+                o <shift>
+                o <sort_list>
+                o <splice>
+
+                     -------------------------------------
+
+Topic:          Polymorphic Types
+
+        A polymorphic type is one in which the type of the variable
+        stored can be changed.
+
+        The 'declare' keyword is used to create a polymorphic variable.
+
+   Examples:
+
+>       declare a;
+>       declare b, c;
+
+        These are normally used as function parameters when it is
+        not known until run-time what the actual type will be, or
+        for looking at elements in a list.
+
+   Null Type:
+
+        On declaration 'declared' variables are assigned as type of
+        undefined.
+
+        The Null type has exactly one value, called null.
+
+        The actual type of a polymorphic variable is 'set' upon
+        assignment and remains that type until the next assignment.
+
+   Examples:
+
+>       declare a;      // upon declare, is the 'null' type.
+>       a = 0;          // integer constant assignment, type 'int'
+>       a = 1.0;        // float  constant assignment, type 'float'
+
+   Primitives:
+
+        The following primitives can act on polymorphic types.
+
+                o <cvt_to_object>
+                o <is_float>
+                o <is_integer>
+                o <is_list>
+                o <is_null>
+                o <is_string>
+                o <is_type>
+
+              --------------------------------------------
+
+Topic:          Enumerated Types
+
+        At times it is desirable to have a list of constant values
+        representing different items, and the exact values are not
+        relevant nor can code easy to neither read nor understand.
+        They may need to be unique or may have duplicates. For
+        example, a set of actions, colours or keys might be
+        represented in such a list.
+
+        An enumerated type allows the creation of a list of items.
+
+   Enumeration Form:
+
+>       enumeration     : enum identifieror
+>                       | enum { enumeration-constant-list }
+>                       | enum identifier { enumeration-constant-list }
+>                       ;
+
+   Integer Enumerations:
+
+        An enumerated type is a set of identifiers that correspond
+        to constants of type integer constant expression.
+
+        By default, the first enumerator has a value of 0, and each
+        successive enumerator is one larger than the value of the
+        previous one, unless you explicitly specify a value for a
+        particular enumerator. Enumerators need not have unique
+        values within an enumeration. The name of each enumerator is
+        treated as a constant and must be unique within the scope
+        where the enum is defined.
+
+        For example, the four suits in a deck of playing cards may
+        be four enumerators named CLUB, DIAMOND, HEART, SPADE, as
+        follows;
+
+>               enum suits { CLUB, DIAMOND, HEART, SPADE };
+
+        An enumerated type may be given an optional tag (name) with
+        which it may be identified elsewhere in the program. In the
+        example above, the tag of the enumerated type is 'suits',
+        which becomes a new type. If no tag is given, then only those
+        objects listed following the definition of the type may have
+        the enumerated type.
+
+        Enumeration constants may be given a specific value by
+        specifying a 'tag =' followed by the value.
+
+   Examples:
+
+>               enum suits { CLUB = 1, DIAMOND = 2, HEART = 3, SPADE = 4 };
+
+        creates the constants CLUB, DIAMOND, HEART and SPADE with values 1, 2
+        and 4 respectively.
+
+>               enum fruits { WHITE = 1, RED, GREEN = 6, BLUE, BLACK = 0 };
+
+        creates constants with values 1, 2, 6, 7 and 0.
+
+
+   String Enumerations:
+
+        *Grief* also supports enumerations which are maybe assigned
+        string-literals. Yet unlike integer enumeration lists, once a
+        string is assigned all following enumerated values must be
+        explicitly stated as it is not possible to automatically assign
+        the next value in the sequence.
+
+              --------------------------------------------
+              --------------------------------------------
+
+Section:        Expressions
+
+        An expression is a sequence of operators and operands that
+        describes how to,
+
+                o calculate a value (e.g. addition)
+                o create side-effects (e.g. assignment, increment) or both.
+
+        The order of execution of the expression is usually
+        determined by a mixture of,
+
+                1. parentheses (), which indicate to the compiler the
+                desired grouping of operations,
+
+                2. the precedence of operators, which describes the
+                relative priority of operators in the absence of
+                parentheses,
+
+                3. the common algebraic ordering,
+
+                4. the associatively of operators.
+
+        In most other cases, the order of execution is determined by
+        the compiler and may not be relied upon. Exceptions to this
+        rule are described in the relevant section. Most users will
+        find that the order of execution is well-defined and
+        intuitive. However, when in doubt, use parentheses. The table
+        below summarizes the levels of precedence in expressions.
+
+              --------------------------------------------
+
+Topic:          Operators
+
+        An operator is used to describe an operation applied to one
+        or several objects. It is mainly meaningful in expressions,
+        but also in declarations. It is generally a short sequence
+        using non alphanumeric characters.
+
+        *Grief* supports a rich set of operators, which are symbols
+        used within an expression to specify the manipulations to be
+        performed while evaluating that expression.
+
+    Available operators:
+
+                o <Array Subscripting>
+                o <Function Calls>
+                o <Increment and Decrement Operators>
+                o <Unary Arithmetic Operators>
+                o <Arithmetic Operators>
+                o <Bitwise Shift Operators>
+                o <Relational Operators>
+                o <Equality Operators>
+                o <Bitwise Logical Operators>
+                o <Relational Operators>
+                o <Logical Operators>
+                o <Conditional Operators>
+                o <Assignment Operators>
+                o <Comma Operator>
+
+    Scalar Types:
+
+        Most operators act on expressions and/or scalar types.
+
+        A scalar (or base type) is a single unit of data. Scalar data
+        types are single-valued data types, that can be used for
+        individual variables, constants, etc.
+
+        The following types are
+
+           o <int>
+           o <float> or <double>
+           o <string>
+           o <bool>
+
+        String is a bit of a hybrid. A string is made up of multiple
+        characters, that can be manipulated individually. It still
+        counts as a scalar type, though, since a string can be
+        treated as a single data value.
+
+              --------------------------------------------
+
+Topic:          Operator Precedence
+
+        The following is a table that lists the precedence and
+        associatively of all the operators in the *Grief* language.
+
+        Operators are listed top to bottom, in descending precedence.
+        Descending precedence refers to the priority of evaluation.
+        Considering an expression, an operator which is listed on some
+        row will be evaluated prior to any operator that is listed on a
+        row further below it. Operators that are in the same cell are
+        evaluated with the same precedence, in the given direction.
+
+(code, hilite=c)
+        Operators                                          Association
+
+        ::                                                 None
+
+        ()  []  ->  .                                      L -> R
+
+        !   ~   ++  --  -                                  R -> L
+
+        *   /   %                                          L -> R
+
+        +   -                                              L -> R
+
+        <<  >>                                             L -> R
+
+        <   <=  >   >=                                     L -> R
+
+        ==  !=                                             L -> R
+
+        &                                                  L -> R
+
+        ^                                                  L -> R
+
+        |                                                  L -> R
+
+        &&                                                 L -> R
+
+        ||                                                 L -> R
+
+        ?:                                                 R -> L
+
+        =   +=  -=  *=  /=  %=  >>= <<= &=  ^=  |=  <=>    R -> L
+
+        ,                                                  L -> R
+(end)
+
+              --------------------------------------------
+
+Topic:          Array Subscripting
+
+        'Array Subscripting' Operations are executed by the following
+        operators.
+
+>               [ ]
+
+        *General form*
+
+>               array[index]
+
+        where array must have the type 'list' or 'array', and index
+        must have an integral type. The result has type "type".
+
+        Note that index is scaled automatically to account for the
+        size of the elements of array.
+
+              --------------------------------------------
+
+Topic:          Function Calls
+
+        'Function' calls executed by the following operators
+
+>               ( )
+
+    Syntax:
+
+>               function-expression:
+>                       function-name (argument-list)
+>
+>               argument-list:
+>                       one or more <expression> separated by commas
+
+        A 'function-name' followed by a set of parentheses'(' , ')'
+        containing zero or more comma-separated expressions is a
+        function-expression.
+
+        The function-name denotes the function to be called, and must
+        be known function. The simplest form of this expression is an
+        identifier which is the name of a function. For example,
+        function() calls the function 'function'.
+
+(code, hilite=c)
+                function()
+
+                function1(1)
+
+                function2(1, 2)
+(end)
+
+              --------------------------------------------
+
+Topic:          Increment and Decrement Operators
+
+        'Increment and Decrement' operations are executed by the
+        following operators.
+
+>               ++, --
+
+    Syntax:
+
+>               unary-expression:
+>                         '++' expression
+>                       | '--' expression
+>                       | expression '++'
+>                       | expression '--
+
+        The operand of the increment and decrement operators must be a
+        modifiable value, generally a 'int' or 'float' data types.
+
+        They are two forms, either prefix or postfix.
+
+        prefix  -       *Prefix Increment/Decrement*,
+            The operand is incremented or decremented by 1, with the
+            result of the operation returned.
+
+        postfix -       *Postfix Increment/Decrement*,
+            The effect of the operation is that the operand is
+            incremented or decremented by 1, with the original value
+            prior to the operation returned. In other words, the
+            original value of the operand is used in the expression,
+            and then it is incremented or decremented.
+
+              --------------------------------------------
+
+Topic:          Unary Arithmetic Operators
+
+        'Unary Arithmetic' operations are executed by the following
+        operators.
+
+>               +, -, ~, !
+
+    Syntax:
+
+>               unary-expression:
+>                         '+' expression
+>                       | '-  expression
+>                       | '~' expression
+>                       | '!' expression
+
+        '+'         - *Unary positive*,
+                simply returns the value of its operand. The type of its
+                operand must be an arithmetic type (character, integer or
+                floating-point). Integral promotion is performed on the
+                operand, and the result has the promoted type.
+
+        '-'         - *Unary minus*,
+                is the negation or negative operator. The type of its
+                operand must be an arithmetic type (character, integer or
+                floating-point). The result is the negative of the
+                operand. Integral promotion is performed on the operand,
+                and the result has the promoted type. The expression -obj
+                is equivalent to (0-obj).
+
+        '~'         - *Bitwise complement*,
+                1's complement or bitwise not operator. The type of the
+                operand must be an integral type, and integral promotion
+                is performed on the operand. The type of the result is
+                the type of the promoted operand. Each bit of the result
+                is the complement of the corresponding bit in the operand,
+                effectively turning 0 bits to 1, and 1 bits to 0. The !
+                symbol is the logical not operator. Its operand must be a
+                scalar type (not a structure, union or array). The result
+                type is int. If the operand has the value zero, then the
+                result value is 1. If the operand has some other value,
+                then the result is 0.
+
+        '!'         - *Not*;
+                Its operand must be a numeric type. The result type is
+                int. If the operand has the value zero, then the result
+                value is 1. If the operand has some other value, then
+                the result is 0.
+
+              --------------------------------------------
+
+Topic:          Arithmetic Operators
+
+        'Arithmetic' operations are executed by the following operators.
+
+>               *, /, %, +, -
+
+    Syntax:
+
+>               arithmetic-expression:
+>                         expression '*' expression
+>                       | expression '/' expression
+>                       | expression '%' expression
+>                       | expression '+' expression
+>                       | expression '-' expression
+
+        '*'         - *Multiplication*,
+                yields the product of its operands. The operands must
+                have arithmetic types.
+
+        '/'         - *Division*,
+                yields the quotient from the division of the first
+                operand by the second operand. The operands must have
+                numeric types.
+
+        '%'         - *Modulus*,
+                yields the remainder from the division of the first
+                operand by the second operand. The operands of must have
+                numeric types.
+
+        '+'         - *Addition*,
+                yields the sum of its operands resulting from the
+                addition of the first operand with the second.
+
+        '-'         - *Subtraction*,
+                yields the difference resulting from the subtraction of
+                the second operand from the first.
+
+              --------------------------------------------
+
+Topic:          Bitwise Shift Operators
+
+        'Bitwise Shift' operations are executed by the following operators
+
+>               <<, >>
+
+    Syntax:
+
+>               bitwise-shift:
+>                         expression '<<' expression
+>                       | expression '>>' expression
+>                       ;
+
+        '<<'        - *Left-shift Operator*;
+                Both operands must have an integral type, and the
+                integral promotions are performed on them. The type of
+                the result is the type of the promoted left operand.
+
+        '>>'        - *Right-shift Operator*;
+                Both operands must have an integral type, and the
+                integral promotions are performed on them. The type of
+                the result is the type of the promoted left operand.
+
+              --------------------------------------------
+
+Topic:          Relational Operators
+
+        'Relational' operations are executed by the following operators
+
+>              <, >, <=, =>
+
+    Syntax:
+
+>              relational-expression:
+>                          expression '<'   expression
+>                        | expression '>'   expression
+>                        | expression '<='  expression
+>                        | expression '>='  expression
+>                        | expression '<=>' expression
+
+
+        '<'         - *Less than*,
+                yields the value 1 if the relation is true, and 0 if the
+                relation is false. The result type is int.
+
+        '>'         - *Greater than*,
+                yields the value 1 if the relation is true, and 0 if the
+                relation is false. The result type is int.
+
+        '<='        - *Less than or equal to*,
+                yields the value 1 if the relation is true, and 0 if the
+                relation is false. The result type is int.
+
+        '=>'        - *Greater than or equal to*,
+                yields the value 1 if the relation is true, and 0 if the
+                relation is false. The result type is int.
+
+        '<=>'       - *Comparison*.
+                yields the value -1 if the first expression is less then
+                the second, 0 if the equals, and 1 the greater than. The
+                result type is int.
+
+              --------------------------------------------
+
+Topic:          Equality Operators.
+
+        'Equality' operations are executed by the following operators
+
+>               ==, !=
+
+    Syntax:
+
+>               equality-expression:
+>                          expression '==' expression
+>                        | expression '!=' expression
+>
+
+
+        '=='        - *Equals*,
+                yields the value 1 if the relation is true, and 0 if the
+                relation is false. The result type is int
+
+        '!='        - *Not equals*.
+                yields the value 1 if the relation is true, and 0 if the
+                relation is false. The result type is int
+
+              --------------------------------------------
+
+Topic:          Bitwise Logical Operators.
+
+        'Bitwise Logical' operations are executed by the following operators
+
+>               ~, &, |, ^
+
+        '~'         - *Bitwise complement*,
+                1's complement or bitwise not operator. The type of the
+                operand must be an integral type, and integral promotion is
+                performed on the operand. The type of the result is the type
+                of the promoted operand. Each bit of the result is the
+                complement of the corresponding bit in the operand,
+                effectively turning 0 bits to 1, and 1 bit to 0.
+
+        '&'         - *Bitwise AND operator*,
+                The result is the bitwise AND of the two operands. That is,
+                the bit in the result is set if and only if each of the
+                corresponding bits in the operands are set.
+
+        '|'         - *Bitwise inclusive OR operator*,
+                The result is the bitwise inclusive OR of the two operands.
+                That is, the bit in the result is set if at least one of the
+                corresponding bits in the operands is set.
+
+        '^'         - *Bitwise exclusive OR operator*,
+               The result is the bitwise exclusive OR of the two
+               operands. That is, the bit in the result is set if and
+               only if exactly one of the corresponding bits in the
+               operands are set.
+
+
+Topic:          Logical Operators
+
+        'Logical' operations are executed by the following operators
+
+>               &&, ||
+
+    Syntax:
+
+>               logicalexpression:
+>                         '&&' expression
+>                       | '||' expression
+
+
+        '&&'        - *Logical AND operator*,
+                Each of the operands must have scalar type. If both of
+                the operands are not equal to zero, then the result is 1.
+                Otherwise, the result is zero. The result type is int.
+
+        '||'        - *Logical OR operator*,
+                Each of the operands must have scalar type. If one or both
+                of the operands is not equal to zero, then the result is 1.
+                Otherwise, the result is zero (both operands are zero). The
+                result type is int.
+
+   Short Circuit Evaluation:
+
+        Logical operators are executed using 'short-circuit' semantics
+        whereby the second argument is only executed or evaluated if
+        the first argument does not suffice to determine the value of
+        the expression:
+
+        o Logical ADD - If the first operand is zero, then the second
+            operand is not evaluated. Any side effects that would have
+            happened if the second operand had been executed do not
+            happen. Any function calls encountered in the second operand
+            do not take place.
+
+        o Logical OR - If the first operand is not zero, then the second
+            operand is not evaluated. Any side effects that would have
+            happened if the second operand had been executed do not
+            happen. Any function calls encountered in the second operand
+            shall not take place.
+
+              --------------------------------------------
+
+Topic:          Conditional Operator
+
+        Inline 'Conditional' operation are executed by the following operators
+
+>               ? :
+
+    Syntax:
+
+>               conditional-expression '?' expression ':' expression
+
+        The '?' token separates the first two parts of a conditional
+        operator, and the ':' token separates the second and third parts.
+
+        The first operand is evaluated. If its value is not equal to zero,
+        then the second operand is evaluated and its value is the result.
+        Otherwise, the third operand is evaluated and its value is the
+        result. Whichever operand is evaluated, the other is not
+        evaluated. Any side effects that might have happened during the
+        evaluation of the other operand shall not happen.
+
+              --------------------------------------------
+
+Topic:          Assignment Operators
+
+        'Assignment' operations are executed by the following operators
+
+>               =
+>               +=, -=, *=, /=, %=, &=, |=, ^=, <<=, >>=
+
+        Assignment operators store a value in the object designated by the
+        left operand.
+
+        There are two kinds of assignment operations;
+
+                o simple assignment, in which the value of the second
+                operand is stored in the object specified by the first
+                operand
+
+                o augmented assignment, in which an arithmetic, shift,
+                or bitwise operation is performed prior to storing the
+                result.
+
+        All assignment operators in the following table are augmented
+        except the simple '=' operator;
+
+        '='     - Store the value of the second operand in the object
+                  specified by the first operand (simple assignment).
+
+        '*='    - Multiply the value of the first operand by the value of
+                  the second operand; store the result in the object
+                  specified by the first operand.
+
+        '/='    - Divide the value of the first operand by the value of the
+                  second operand; store the result in the object specified
+                  by the first operand.
+
+        '%='    - Take the modulus of the first operand specified by the
+                  value of the second operand; store the result in the
+                  object specified by the first operand.
+
+        '+='    - Add the value of the second operand to the value of the
+                  first operand; store the result in the object specified
+                  by the first operand.
+
+        '-='    - Subtract the value of the second operand from the value
+                  of the first operand; store the result in the object
+                  specified by the first operand.
+
+        '<<='   - Shift the value of the first operand left the number of
+                  bits specified by the value of the second operand; store
+                  the result in the object specified by the first operand.
+
+        '>>='   - Shift the value of the first operand right the number of
+                  bits specified by the value of the second operand; store
+                  the result in the object specified by the first operand.
+
+        '&='    - Obtain the bitwise AND of the first and second operands;
+                  store the result in the object specified by the first
+                  operand.
+
+        '^='    - Obtain the bitwise exclusive OR of the first and second
+                  operands; store the result in the object specified by the
+                  first operand.
+
+        '|='    - Obtain the bitwise inclusive OR of the first and second
+                  operands; store the result in the object specified by the
+                  first operand.
+
+Topic:          Comma Operator
+
+        The 'Comma' Operator.
+
+>               ,
+
+    Syntax:
+
+>               expression ',' expression
+
+        At the lowest precedence, the comma operator evaluates the
+        left operand as a void expression (it is evaluated and its
+        result, if any, is discarded), and then evaluates the right
+        operand. The result has the type and value of the second
+        operand.
+
+        In contexts where the comma is also used as a separator
+        (function argument lists and initialiser lists), a comma
+        expression must be placed in parentheses.
+
+              --------------------------------------------
+              --------------------------------------------
+
+Section:        Declarations
+
+        Variables and functions are declared in the same way in *Grief*
+        as they are defined in C.
+
+Topic:          Storage Class
+
+        A storage class defines the scope (visibility) and life time
+        of variables and/or functions within a C Program. These
+        specifiers precede the type that they modify.
+
+        There are following storage classes which can be used within
+        a Grief macro.
+
+    auto:
+
+        The auto storage class is the default storage class for all
+        local variables.
+
+    static:
+
+        The 'static' storage class instructs the compiler to keep a
+        local variable in existence during the lifetime of the
+        program instead of creating and destroying it each time it
+        comes into and goes out of scope. Therefore, making local
+        variables static allows them to maintain their values between
+        function calls.
+
+        When applied to a local variable any initialisation shall
+        occur upon the first execution of its parent function. This
+        is implemented using the <first_time> primitive.
+
+        The 'static' modifier may also be applied to global variables.
+        When this is done, it causes that variable's scope to be
+        restricted to the file in which it is declared.
+
+        When applied to a global variable any initialisation shall occur
+        upon the macro loader executed an internally defined and managed
+        function _init().
+
+    extern:
+
+        The extern storage class is used to give a reference of a
+        global variable that is visible to ALL the program files.
+        When you use 'extern' the variable cannot be initialized as
+        all it does is point the variable name at a storage location
+        that has been previously defined.
+
+        When you have multiple files and you define a global variable
+        or function which will be used in other files also, then
+        extern will be used in another file to give reference of
+        defined variable or function.
+
+        The extern modifier is most commonly used when there are two
+        or more files sharing the same global variables or functions.
+
+        *Grief* has an additional usage related to dynamically scoped
+        variables. As an aid to guard against the use of "dynamic
+        scoping" as the result of a coding bug rather than by design
+        the *Grief* Macro compiler enforces "static scoping" on all
+        variable references. For an example (See: <Scope>).
+
+    replacement:
+
+        The 'replacement' keyword is used to explicitly declare
+        overloaded interface, which is a macro that supersedes (or
+        complements) another macro of the same name.
+
+              --------------------------------------------
+
+Topic:          Function Declarations
+
+        A function is a group of statements that together perform a
+        task. Every *Grief* macro shall have at least one function
+        being its primary entry point, either as main() or the name
+        of the functionality to implemented; the general convention
+        is that entry point match the macro object name, allowing the
+        autoload function to locate the macro at runtime..
+
+        You can divide up your code into separate functions. How you
+        divide up your code among different functions is up to you,
+        but logically the division usually is so each function
+        performs a specific task.
+
+        A function declaration tells the compiler about a function's
+        name, return type, and parameters. A function definition
+        provides the actual body of the function.
+
+    General Form:
+
+>               [class] type
+>               name( parameters )
+>               {
+>                       // body of the function
+>               }
+
+
+        class           - *Storage class*;
+                A functions storage class defines the scope
+                (visibility) of the function. If omitted by functions
+                are visible to all macros.
+
+        type            - *Return type*;
+                A function must have a return a value. The 'return
+                type' is the data type of the value the function
+                returns. Some functions perform the desired operations
+                without returning a value. In this case, the
+                return_type is the keyword void.
+
+        name            - *Function name*;
+                This is the actual name of the function. The function
+                name and the parameter list together constitute the
+                function signature.
+
+        parameters      - *Parameter list*;
+                A parameter is like a placeholder. When a function is
+                invoked, you pass a value to the parameter. This value
+                is referred to as actual parameter or argument. The
+                parameter list refers to the type, order, and number of
+                the parameters of a function.
+
+        body            - *Function body*;
+                The function body contains a collection of statements
+                that define what the function does.
+
+        Note, care should be taken to manage the global function
+        namespace and unless they are intended as macro entry points
+        or as library functions to other macros, a macro function
+        should be declared as 'static'.
+
+        Global functions are managed within a namespace where the
+        function name is assumed to be unique, with only the last
+        loaded image of any given function name shall be remembered,
+        overwriting any previous with the same name.
+
+    Main function:
+
+        Every macro source may have a 'main()' function; where you
+        place it is a matter of preference. Like all functions, their
+        location of order of function declarations contained the
+        macro source has not effect of the execution order.
+
+        As such like C, some programmers place main at the beginning
+        of the file, others at the very end. But regardless of its
+        location, the following points about main always apply.
+
+              --------------------------------------------
+
+Topic:          Parameter List
+
+        Parameters are optional is that the list can be given as
+        either 'void' or empty, meaning the function takes no
+        parameters, or a comma-separated list of declarations of the
+        objects, including both type and parameter name (identifier).
+
+        If multiple arguments of the same type are specified, the
+        type of each argument must be given individually.
+
+        If the parameter-type-list ends with '...' then the function
+        will accept a variable number of arguments; futhermore unlike
+        'C' which requires at least one parameter before the '...',
+        within *Grief* '...' is permitted as the only parameter
+        specification.
+
+>           function(...)
+
+    Parameter Syntax:
+
+        Components within the parameter-list should have one of the
+        following forms.
+
+>       type name
+
+                Argument is mandatory, and of type string and is
+                referred to as name in the function.
+
+>       ~type name
+
+                Argument is optional (can be omitted in the call or
+                passed as NULL), and is referred to as name in the
+                function.
+
+>       type name = constant-expression
+
+                Argument is optional. If omitted from the function call,
+                then constant expression shall be used as a default value.
+
+>       type &name
+
+                Argument is mandatory of the specified type and is
+                referred to as name in the function as reference bound
+                by the <ref_parm()> primitive.
+
+>       ~type
+
+                Argument is optional/unnamed and is not directly
+                accessible in the defining function by name. Typically
+                this is used for place-holder arguments.
+
+                The actual argument can be accessed by calling the
+                <get_parm()> primitive.
+
+              --------------------------------------------
+
+Topic:          Lazy Evaluation
+
+        To fully understand the Grief calling convention, examples of
+        parameter implementation are required.
+
+        At the source level macros have a very similar look and feel
+        in C functions, yet this can be little deceiving. All
+        functions parameters are implemented using the set of
+        primitives <get_parm>, <put_parm> and <ref_parm>, includes
+        ones which are declared within parameter lists.
+
+        For example given the following function declaration, which
+        takes three parameters, an 'integer', secondary a 'string'
+        and thirdly a 'list'.
+
+(code, hilite=c)
+            void
+            function(int i, string s, list l)
+            {
+            }
+(end)
+
+        Internally the compiler implements the parameter list using
+        the <get_parm> primitive, with the result being parameters
+        are not directly evaluation upon the macro execution; only as
+        a result of an explicit <get_parm> execution.
+
+(code, hilite=c)
+            void
+            function()
+            {
+                int     i;
+                string  s;
+                list    l;
+
+                get_parm(0, i);         // 1st argument
+                get_parm(1, s);         // 2nd argument
+                get_parm(2, l);         // 3th argument
+
+                        :
+            }
+(end)
+
+        If not all parameters are named it shall then become the
+        macros writers responsibility to retrieve the parameter
+        values, which does not necessary need to done in the order of
+        there declaration nor at all if the parameters are not
+        required.
+
+        For example, within the following function the second and
+        third arguments are optionally evaluated, based upon the
+        value of the first.
+
+(code, hilite=c)
+            void
+            function(~int, ~string, ~list)
+            {
+                int     i;
+
+                get_parm(0, i);         // evaluate and retrieve 1st arg.
+
+                if (2 == i) {
+                    string s;
+
+                    get_parm(1, s);     // optional 2nd arg processing.
+
+                        :
+
+                } else if (3 == i) {
+                    list l;
+
+                    get_parm(2, s);     // optional 3nd arg processing.
+
+                        :
+                }
+            }
+(end)
+
+    Lazy Evaluation:
+
+        The side effect that parameters may or may not be evaluated
+        in addition the order of evaluation is not always predefined
+        can seem that macros have miss-behaving. In general care must
+        be taken when calling non-builtin macros that non named
+        arguments have no side effects. Consider the following macro
+
+(code, hilite=c)
+            static void
+            printit(string str, ~int)
+            {
+                if (str != "") {
+                    int pos;
+                    get_parm(1, pos);
+                    message(%d: %s\n", str, pos);
+                }
+            }
+
+            int
+            print_tokens(string str)
+            {
+                list tokens;
+                int len, i;
+
+                tokens = split(str, ","):
+                len = length_of_list(tokens);
+                while (len > 0) {
+                    echoit(tokens[i++], --len);
+                }
+            }
+(end)
+
+        In the call to the function 'echoit', the second parameter is
+        specified as '++i'. This will not cause 'i' to be incremented
+        until it is 'referenced' in the function 'printit()'. This
+        shall only occur upon the get_parm().
+
+>               get_parm(1, pos);
+
+        Note, as a result of lazy evaluation in the above example the
+        second argument may not always be executed, in this case upon
+        an empty string, resulting in the '--len' not occurred. Worst
+        in this case as the associated variable 'len' is a part of
+        the loop expression which would in turn the loop to never exit.
+
+              --------------------------------------------
+
+Topic:          Function Prototypes
+
+        Function prototypes provide the compiler with type
+        information about a function without providing any code.
+
+        *Grief* removes the need for explicit prototypes for builtin
+        function, yet user defined functions should be prototyped. Both
+        prototype forms allow compile time checks against the required
+        function arguments and the supplied values.
+
+        The syntax for defining a function prototype is identical to
+        defining a function except that a semicolon (;) is placed after
+        the closing parentheses of the parameter list.
+
+        Within macro source the preprocessor constant *__PROTOTYPES__*
+        signals that prototype checks are enabled and maybe used for
+        conditional prototype definitions.
+
+        Unlike C++, default arguments in prototypes have no effect,
+        instead they must be stated within the function declaration.
+
+        Examples:
+
+(code, hilite=c)
+        #if defined(__PROTOTYPES__)
+        extern int box(int lx, int by, int rx, int ty, ~ string, ~string);
+        extern int beep(void);
+        #endif
+(end)
+
+              --------------------------------------------
+
+Topic:          Scope
+
+        Variables and functions can be used only in certain regions
+        of a program. This area is called the "scope" of the name.
+        Scope determines the "lifetime" of a name that does not
+        denote an object of static extent. Scope also determines
+        the visibility of a name, when module constructors, and
+        when variables local to the scope is initialized.
+
+        *Grief* supports the concepts of multiple storage classes
+        for variables, supported thru the 'extern' and 'static'
+        keywords plus the 'module()' and 'make_local_variable()'
+        primitives.
+
+        Furthermore variable access utilises "dynamic scoping" at
+        run-time. Dynamic scoping is similar to the scoping rules
+        of 'Lisp' rather than 'C'.
+
+        Internally the *Grief* macro byte-code is a Lisp like
+        interpreted language. As with Lisp it supports "dynamic
+        scoping". Using this scoping rule, the interpreter first look
+        for a local definition of a variable. If it is not found, it
+        searches a number of other resources, including look up the
+        calling stack for a definition (See: <Scope Rules>).
+
+        As an aid to guard against the use of "dynamic scoping" as
+        the result of a coding bug rather than by design the *Grief*
+        Macro compiler enforces "static scoping" on all variable
+        references.
+
+        Like C, all Variables which are referenced must be visible to
+        that block of code, either as a global or an explicit extern
+        declaration. As such you should avoid the use of public
+        'extern' declaration at a global level where possible.
+
+(code, hilite=c)
+        void
+        func1()
+        {
+            int x = 99;             // locally defined type
+            func2();
+            message("x1 = %d", x);
+        }
+
+        static void
+        func()
+        {
+            extern int x;           // extern type
+            message("x2 = %d", x);  // references 'x' within func1()
+            ++x;
+        }
+
+   output:
+        x2 = 99
+        x1 = 100
+
+(end)
+
+        The above example shows "dynamic scoping" in action. Being
+        a simple case, the full power of dynamic scoping is not
+        truly visible. One design pattern for the use of dynamic
+        scoping would be for a highly recursive set of macros,
+        reducing the need to pass parameters between callers and
+        allowing the call-chain to automatically act as a variable
+        stack.
+
+            --------------------------------------------
+
+Topic:          Scope Rules
+
+        The four kinds of scope.
+
+   Local scope:
+
+        A name declared within a block is accessible only within
+        that block and blocks enclosed by it, and only after the
+        point of declaration.
+
+        The names of formal arguments to a function in the scope of
+        the outermost block of the function have local scope, as if
+        they had been declared inside the block enclosing the
+        function body.
+
+        These go out of scope when the associated block is
+        terminated.
+
+   Buffer scope:
+
+        Variables which are declared and then acted upon using
+        <make_local_variable> primitive.
+
+        Which go out of scope when the current buffer is changed.
+
+        Buffer-local variables are useful for saving state
+        information on a per buffer basis.
+
+   File scope:
+
+        Any name declared outside all blocks or functions has file
+        scope. It is accessible anywhere in the translation unit
+        after its declaration.
+
+        Names with file scope that do not declare static objects
+        are often called global names.
+
+   Module scope:
+
+        Global scope variables which are declared in objects which
+        are associated using the <module> primitive.
+
+   Rules:
+
+        When searching for a variable, *Grief* searches the symbol tables
+        in the following order:
+
+        1. static variable definition in the current function.
+
+        2. buffer local variable.
+
+        3. local variables of a current block.
+
+        4. nested stack frames to the outermost function call "dynamic scope".
+
+        5. global variable.
+
+   Example:
+
+        As the result of these rules care should be taken when
+        overloading symbol names.
+
+        *Grief* shall permit local variables, global variables and
+        buffer variables to all be visible at once, in which case
+        the variable at the highest level in the above list shall
+        be the only one accessible.
+
+        A specific example it is possible to confuse *Grief* by
+        declaring static variables inside local blocks (i.e.
+        instead of at the start of a function) and an outer block
+        define variables with the same name but with different
+        attributes inside the nested block.
+
+        For example, the following code on the output of the int
+        'variable' it shall have the value of '1' on the first
+        execution then '2' on the each subsequent call:
+
+(code, hilite=c)
+        void
+        myfunction(void)
+        {
+            int variable;
+
+            // On the first call shall access the local version of
+            // 'variable' as the static has been yet to be
+            // defined, but on each subsequent calls the static
+            // version of 'variable' is referenced.
+            //
+            variable = 2;
+
+            {
+                // On first execution its initial value shall be
+                // one and be defined at function NOT block scope
+                // like C/C++.
+                //
+                static int variable = 1;
+            }
+
+            // The variable with the highest level shall be
+            // accessed, being the function level static
+            // declaration.
+            //
+            message("%d", variable);
+        }
+
+        output:
+            1
+            2
+(end)
+
+              --------------------------------------------
+
+Topic:          Modules
+
+        *Grief* provides a mechanism for alternative namespaces, 
+        being an abstract container providing context for the items, 
+        to protect modules from accessing on each other's variables.
+        The purpose of this functionality is to provide data hiding
+        within a set of common macro files (objects), by allowed
+        separate function and variables namespaces, in effect
+        reducing naming conflicts in unrelated objects (See: <Scope>).
+
+        The module statement declares the object as being in the
+        given namespace. The scope of the module declaration is from
+        the declaration itself and effects all current and future
+        declarations within the associated object.
+
+        The intended usage of the module() primitive is the within
+        the main function in all of the related objects.
+
+    Namespaces:
+
+        The namespace specification should be a string containing a
+        valid sequence of identifier symbols
+        (e.g. [A-Za-z_][A-Za-z_0-9]* describes the set of valid
+        identifiers).
+
+        Namespaces are in conjunction with static scoping of
+        members (See: <static>). If you are writing a set of macros
+        some of which are internal and some for external use, then
+        you can use the 'static' declaration specifier to restrict
+        the visibility of a member variable or function.
+
+        However as static functions are hidden from usage outside
+        their own macro file (or module), this can present a
+        problem with functionality which involves the usage of
+        call-backs (e.g. assign_to_key). In this case, the ::
+        (scope resolution) operator is used to qualify hidden names
+        so that they can still be used.
+
+        Multiple objects can be contained within the same namespace.
+        The module primitive allows you to refer to static functions
+        defined in another macro file explicitly, using the "::"
+        naming modifier, and also allows static macro functions to be
+        accessed in call-backs. Upon a module being associated, it is
+        possible to use the syntax "<module-name>::<function>" to
+        reference functions in call-backs.
+
+    Example:
+
+(code, hilite=c)
+        void
+        main()
+        {
+                module("my_module");
+                assign_to_key("<Alt-D>", "my_module::doit");
+
+                /* which to has the identical behaviour as */
+                assign_to_key("<Alt-D>", "::doit");
+
+                /* and */
+                assign_to_key("<Alt-D>", inq_module() + "::doit");
+        }
+
+        static void
+        doit()
+        {
+                :
+                :
+        }
+(end)
+
+              --------------------------------------------
+              --------------------------------------------
+
+Section:        Statements
+
+        A statement describes what actions are to be performed.
+        Statements may only be placed inside functions. Statements
+        are executed in sequence, except where described below.
+
+    Syntax:
+
+>               statement:
+>                         compound-statement
+>                       | expression-statement
+>                       | selection-statement
+>                       | iteration-statement
+>                       | jump-statement
+
+              --------------------------------------------
+
+Topic:          Compound Statements
+
+        A compound statement is a set of statements grouped
+        together inside braces. It may have its own declarations of
+        objects, with or without initializations, and may or may
+        not have any executable statements. A compound statement is
+        also called a 'block' or 'block statement'.
+
+    Compound statement general format:
+
+>               { declaration-list statement-list }
+
+        where declaration-list is a list of zero or more declarations
+        of objects to be used in the block (See: <Declarations>).
+
+        statement-list is a list of zero or more statements to be
+        executed when the block is entered.
+
+              --------------------------------------------
+
+Topic:          Expression Statement
+
+        A statement that is an expression is evaluated as a void
+        expression for its side effects, such as the assigning of a
+        value with the assignment operator. The result of the
+        expression is discarded. This discarding may be made
+        explicit by casting the expression as a void.
+
+    Example:
+
+>               count = 3;
+
+        consists of the expression count = 3, which has the side
+        effect of assigning the value 3 to the object count. The
+        result of the expression is 3, with the type the same as
+        the type of count. The result is not used any further.
+
+              --------------------------------------------
+
+Topic:          Selection Statements
+
+        A selection statement evaluates an expression, called the
+        controlling expression, then based on the result selects
+        from a set of statements are then executed.
+
+        The general form of a typical selection structure is a
+        follows:
+
+(start ditaa -S)
+                   *
+                   |
+                   |
+             /-----------\    false
+             | Condition |--------------+
+             \-----+-----/              |
+                   |            /------------------\
+                   |            | False Code Block |
+                   |            \------------------/
+                   | true               |
+                   |                    |
+          /-----------------\           |
+          | True Code Block |           |
+          \-----------------/           |
+                   |                    |
+                   +--------------------+
+                   |
+                   |
+                   *
+(end ditaa)
+
+        There are two primary forms of Selection Statements,
+
+            o <if statement> -
+                An if statement consists of a boolean expression
+                followed by one or more statements, followed by an
+                optional else statement, which executes when the
+                boolean expression is false.
+
+            o <switch statement> -
+                A switch statement allows a variable to be tested
+                for equality against a list of values.
+
+              --------------------------------------------
+
+Topic:          Iteration Statements
+
+        Iteration statements control looping.
+
+        An iteration or loop statement allows us to execute a
+        statement or group of statements multiple times and the
+        following is the general form of a loop statement:
+
+(start ditaa -S)
+                   *
+                   |
+                   | <-------------------+
+                   |                     |
+                   |            /-------------------\
+                   |            |  Conditional Code |
+                   |            \-------------------/
+                   |                     ^
+             /-----------\    true       |
+             | Condition |---------------+
+             \-----+-----/
+                   |
+                   | false
+                   |
+                   *
+(end ditaa)
+
+
+        There are three forms of iteration Statements,
+
+            o <while statement> -
+                Repeats a statement or group of statements while a
+                given condition is true. It tests the condition
+                before executing the loop body.
+
+            o <do-while statement> -
+                Like a while statement, except that it tests the
+                condition at the end of the loop body
+
+            o <for statement> -
+                Execute a sequence of statements multiple times and
+                abbreviates the code that manages the loop variable.
+
+        The controlling expression must have a scalar type. The
+        loop body (often a compound statement or block) is executed
+        repeatedly until the controlling expression is equal to zero.
+
+              --------------------------------------------
+
+Topic:          Jump Statements
+
+        A jump statement causes execution to continue at a specific
+        place in a program, without executing any other intervening
+        statements.
+
+        There are three jump statements,
+
+            o <continue statement>
+            o <break statement>
+            o <return statement>
+            o <returns statement>
+
+    Note: C/C++ 'goto' and 'label' constructs are not supported.
+
+              --------------------------------------------
+
+Topic:          if statement
+
+        if-else selection clause.
+
+    General Form:
+
+>           if ( expression ) statement
+>   or
+>           if ( expression ) statement else statement
+
+        In the first form, if expression is true (nonzero), statement
+        is executed. If expression is false, statement is ignored.
+
+        In the second form, the 'else' is executed if the controlling
+        expression evaluates to zero. Each statement may be a
+        compound statement. For example,
+
+(code)
+        if (returncode <= 0) {
+            message("error: %d", returncode);
+            ret = FALSE;
+        } else {
+            ret = TRUE;
+        }
+(end)
+
+    Dangling Else:
+
+        As in C and C++, the 'if' statement suffers from what is
+        generally referred to as the "dangling else problem".
+
+        Within an 'if-else' construct a seemingly well-defined
+        statement can become 'ambiguous' as the result of an miss
+        assumed association between an opening 'if' and a trailing
+        'else' when 'if' are nested. This problem shall be
+        illustrated by this misleadingly formatted example:
+
+(code)
+        if (returncode <= 0)
+            if (display_errors)
+                message("error: %d", returncode);
+
+        else message("success");        // dangling "else"
+(end)
+
+        The issue is that both the outer 'if' statement and the
+        inner 'if' statement might conceivably own the 'else' clause.
+
+        In this example, one might surmise that the programmer
+        intended the 'else' clause to belong to the outer 'if'
+        statement.
+
+        The *Grief* language, like C and C++, arbitrarily decree
+        that an 'else' clause belongs to the innermost 'if' to
+        which it might possibly belong.
+
+        A corrected implementation.
+
+(code)
+        if (returncode <= 0) {
+            if (display_errors) {
+                message("error: %d", returncode);
+            }    
+        } else {
+            message("success");
+        }
+(end)
+
+    If-else Style:
+
+        On the matter of macro coding style, this example
+        illustrates why it is a sound idea to always use braces to
+        explicitly state the subject of the control structures.
+
+(code)
+        if (returncode <= 0) {
+            if (display_errors) {
+                message("error: %d", returncode);
+            }
+        } else {
+            message("success");
+        }
+(end)
+
+        where all subjects of the control structures are contained
+        within braces, leaving no doubt about the meaning. A
+        dangling else cannot occur if braces are always used
+
+              --------------------------------------------
+
+Topic:          switch statement
+
+        switch selection clause.
+
+    General Form:
+
+>               switch( expression ) statement
+
+        The switch and case statements help control complex
+        conditional and branching operations. The switch statement
+        transfers control to a statement within its body.
+
+        Usually a statement is a compound statement or block.
+        Embedded within the statement are case labels and possibly
+        a default label, of the following form:
+
+>           case expression : statement
+>           default : statement
+
+        Control passes to the statement whose 'case' expression
+        matches the value of 'switch (expression)'. The 'switch'
+        statement can include any number of case instances, but no
+        two case constants within the same switch statement can
+        have the same value.
+
+        Execution of the statement body begins at the selected
+        statement and proceeds until the end of the body or until a
+        break statement transfers control out of the body.
+
+        The default statement is executed if no case
+        constant-expression is equal to the value of switch
+        expression. If the default statement is omitted, and no
+        case match is found, none of the statements in the switch
+        body are executed. There can be at most one default
+        statement. The default statement need not come at the end;
+        it can appear anywhere in the body of the switch statement.
+
+        The 'default' label may appear at most once in any switch
+        block.
+
+        A 'case' or 'default' label can only appear inside a switch
+        statement.
+
+(start ditaa -S)
+
+             /------------\
+             | Expression |
+             \-----+------/
+                   |
+                   |   case 1   /--------------\
+                   +----------->| Code block 1 |----+
+                   |            \--------------/    |
+                   |                                |
+                   |   case 2   /--------------\    |
+                   +----------->| Code block 2 |----*
+                   |            \--------------/    |
+                   |                                |
+                   |   case 3   /--------------\    |
+                   +----------->| Code block 3 |----*
+                   |            \--------------/    |
+                   |                                |
+
+                                      ::
+
+                   |                                |
+                   |   case N   /--------------\    |
+                   +----------->| Code block N |----+
+                                \--------------/    |
+                                                    |
+                                                    *
+(end ditaa)
+
+        The controlling expression and the expressions on each case
+        label all must have integral type. Unlike c/C++, 'case'
+        expressions need not be constant, yet when constant no two
+        of the case constant-expressions may be the same value.
+
+    Example:
+
+(code)
+        void
+        echonumber(int num)
+        {
+            switch (num) {
+            case 1:
+            case 2:
+            case 3:
+                message( "less than 4" );
+                break;
+            case 5:
+            case 7:
+            case 9:
+                message( "old" );
+                break;
+            case 4:
+            case 6:
+            case 8:
+                message( "even" );
+                break;
+            default:
+                message( "greater then 9" );
+            }
+        }
+(end)
+
+    Case Blocks:
+
+        The statements associated with which label may contain their
+        own block, allowing local declaration of variables and other
+        resources, for example:
+
+(code)
+            switch (num) {
+            case 5:
+            case 7:
+            case 9: {
+                    string msg1 = old(num);
+                    message( msg1 );
+                }
+                break;
+            case 4:
+            case 6:
+            case 8: {
+                    string msg2 = even(num);
+                    message( msg2 );
+                }
+                break;
+(end)
+
+    Case Flow:
+
+        Unlike C/C++ and more similar to C#, there is no implicit
+        fall-through behaviour between case blocks. That is, on the
+        completion of the statements associated with the matching
+        case or block of case labels, the switch statement shall be
+        exited ignoring any following statements; in other words
+        each set of statements end with an implied 'break'.
+
+        This behaviour is unlike C/C++ which shall continue until
+        either a 'break' or the end of the 'switch' statement is
+        encountered, for example:
+
+(code)
+            void
+            echonumber(int num)
+            {
+                switch (num) {
+                case 1:
+                case 2:
+                case 3:
+                    message( "less than 4" );
+                                // implied break;
+                case 5:
+                case 7:
+                case 9:
+                    message( "old" );
+                    break;      // explicit break;
+                case 4:
+                case 6:
+                case 8:
+                    message( "even" );
+                    break;
+                default:
+                    message( "greater then 9" );
+                                // implied break
+                }
+            }
+(end)
+
+        Note: at this time there is no means of implementing explicit
+        drop-through within 'switch' statements. A 'C#' style 'goto
+        case' extension is a possible future language extension,
+        though the use of sub-function's to handle common
+        functionality shall generally remove the need.
+
+    Case Style:
+
+        On the matter of macro coding style, there is no additional
+        overhead including an explicit 'break' as the end of each 'case'
+        block, as a reminder case statements do not drop through.
+
+              --------------------------------------------
+
+Topic:          while statement
+
+        while iteration clause.
+
+    General Form:
+
+>               while ( expression ) statement
+
+        The evaluation of the controlling expression takes place
+        before each execution of the loop body (statement). If the
+        expression evaluates to zero the first time, the loop body is
+        not executed at all.
+
+        The statement may be a compound statement.
+
+        Use of the <continue> within a 'while' statement, the jumps
+        to the next execution of while 'expression'.
+
+        A <break> shall cause execution to exit the statement body,
+        and continue at the statement(s) following the 'while' body.
+
+    Example:
+
+(code, hilite=c)
+            int
+            polluser(int iterations, string match)
+            {
+                string str;
+
+                while (iterations-- > 0) {
+
+                    if (get_parm(NULL, str, "value?") <= 0) {
+                        break;          // error, exit
+                    }
+
+                    if (str == "") {
+                        continue;       // empty reply, ignore
+                    }
+
+                    if (str == match) {
+                        return 1;       // string match
+                    }
+                }
+
+                return 0;               // no match
+            }
+(end)
+
+        The 'while' loop shall be executed while the expression
+        '(iterations-- > 0)' is true, prompting the user for input.
+
+            o Upon an error the loop is exited using <break>.
+
+            o Empty prompt replies ignored using <continue> which moves
+            into the next while expression.
+
+            o On a match, the loop and the function is exiting using
+            'return'.
+
+              --------------------------------------------
+
+Topic:          do-while statement
+
+        do-while iteration clause.
+
+    General Form:
+
+>               do statement while ( expression );
+
+        The evaluation of the controlling expression takes place
+        after each execution of the loop body (statement);
+        therefore, the body of the loop is always executed at least
+        once. If the expression evaluates to zero the first time,
+        the loop body is executed exactly once.
+
+        The statement may be a compound statement.
+
+        Use of the <continue> within a 'do-while' statement, the
+        jumps to the next execution of while 'expression'.
+
+        A <break> shall cause execution to exit the statement body,
+        and continue at the statement(s) following the 'do-while'
+        body.
+
+              --------------------------------------------
+
+Topic:          for statement
+
+        for iteration clause.
+
+    General Form:
+
+>           for ( [initialization]; [conditional]; [post] ) statement
+
+        'initialisation-expression' is an optional initialization
+        expression and may be omitted, is which case nothing is
+        executed in its place.
+
+        'condition-expression' is the optional controlling
+        expression, and specifies an evaluation to be made before
+        each iteration of the loop body. If the expression
+        evaluates to zero, the loop body is not executed, and
+        control is passed to the statement following the loop body.
+        If the 'condition-expression' is omitted, then a non-zero
+        (true) value is assumed in its place. In this case, the
+        statements in the loop must cause an explicit break from
+        the loop, using a <break> or <return>.
+
+        'post-expression' specifies the optional operation to be
+        performed after each iteration. A common operation would be
+        the incrementing of a counter. As the 'post-expression' is
+        optional it may be omitted, nothing is executed in its place.
+
+        The statement may be a compound statement.
+
+        Use of the <continue> within a 'for' statement, the jumps
+        to the next execution of the 'post-expression', followed by
+        the next 'conditional-expression' evaluation.
+
+        A <break> shall cause execution to exit the statement body,
+        and continue at the statement(s) following the 'for' body.
+
+    Example:
+
+(code, hilite=c)
+            int
+            polluser(int iterations, string match)
+            {
+                string str;
+                int i;
+
+                for (i = 0; i < iterations; ++i) {
+
+                    if (get_parm(NULL, str, "value?") <= 0) {
+                        break;          // error, exit
+                    }
+
+                    if (str == "") {
+                        continue;       // empty reply, ignore
+                    }
+
+                    if (str == match) {
+                        return 1;       // string match
+                    }
+                }
+
+                return 0;               // no match
+            }
+(end)
+
+        The <for> loop shall be executed whilst the expression
+        '(i < iterations)' is true, with the initial value of 'i'
+        being set to one prior to the first conditional expression
+        test, prompting the user for input.
+
+            o Upon an error the loop is exited using <break>.
+
+            o Empty prompt replies ignored using <continue> which
+                jumps to the end of for statement executing the
+                completion statement, and then moves upon the next for
+                expression evaluation.
+
+            o On a match, the loop and the function is exiting using
+                'return'.
+
+    Valid Forms:
+
+        The following are all valid usage of the 'for' loop, with
+        one or all of the expression being optional, for example.
+
+>           for (;;)
+>               statement;
+
+        All statements in the body of the loop will be executed
+        until a 'break' statement is executed which passes control
+        outside of the loop, or a 'return' statement is executed
+        which exits the function. This is sometimes called loop
+        forever
+
+>           for ( ; i > 0, --i)
+>               statement;
+
+        The counter 'i' is assumed to be already initialized, and the
+        loop will continue until i is zero or below. After each
+        iteration of the loop, 'i' shall be decremented.
+
+              --------------------------------------------
+
+Topic:          continue statement
+
+        continue clause.
+
+    General Form:
+
+>               continue;
+
+        A 'continue' statement may only appear within a loop body,
+        and causes a jump to the inner-most loop-continuation
+        statement (the end of the loop body).
+
+        In a <while> loop, the jump is effectively back to the while.
+
+        In a <do> loop, the jump is effectively down to the while
+
+        In a <for> statement, the jump is effectively to the
+        closing brace of the compound-statement that is the subject
+        of the for loop. The third expression in the for statement,
+        which is often an increment or decrement operation, is then
+        executed before control is returned to the loop's
+        conditional expression.
+
+              --------------------------------------------
+
+Topic:          break statement
+
+        break clause.
+
+    General Form:
+
+>               break;
+
+        A 'break' statement may only appear in an iteration body or a
+        switch statement.
+
+        In a iteration construct, <for>, <do>, and <while>, a break
+        will cause execution to continue at the statement following
+        the loop body.
+
+        In a <switch> statement, a break will cause execution to
+        continue at the statement following the switch. If the loop
+        or switch that contains the break is enclosed inside
+        another loop or switch, only the inner-most loop or switch
+        is terminated.
+
+              --------------------------------------------
+
+Topic:          return statement
+
+        return clause.
+
+    General Form:
+
+>               return [expression];
+
+        The 'return' statement causes execution of the current
+        function to be terminated, and control is passed to the
+        caller. A function may contain any number of return
+        statements.
+
+        If the function is declared with a return type of void then
+        no return statement within that function may return a value.
+
+        If the function is declared as having a return type of
+        other than void, then any return statement with an
+        expression will evaluate the expression and convert it to
+        the return type. That value will be the value returned by
+        the function.
+
+        If a return is executed without an expression, and the
+        caller uses the value returned by the function, the
+        behaviour is undefined since no value was returned;
+        generally the value of previous statement shall be returned
+        to the caller, yet it is not portable and may change in
+        future versions.
+
+        Reaching the closing brace '}' that terminates the function
+        is equivalent to executing a return statement without an
+        expression; which shall return in the value of the last
+        statement being returned, yet it is not portable and may
+        change in future versions.
+
+              --------------------------------------------
+
+Topic:          returns statement
+
+        returns clause.
+
+    General Form:
+
+>               returns(expression);
+
+        This primitive is similar to the <return> statement, except
+        it doesn't cause the current macro to terminate. It simply
+        sets *Grief's* internal accumulator with the value of the
+        expression.
+
+        This primitive is not strictly compatible with the
+        'returns()' macro of BRIEF and is not recommended as
+        statements following may have side effects, if any other
+        statements follow the execution of 'returns', then the
+        accumulator will be overwritten changing the returned value.
+
+              --------------------------------------------
+              --------------------------------------------
+
+        $Id: language.txt,v 1.6 2014/10/31 01:09:05 ayoung Exp $
+-*- mode: txt; margin: 75; -*-
+-ND- code=strict -ND-
+
+

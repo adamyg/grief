@@ -1,0 +1,69 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: zoom.mandoc,v 1.1 2014/11/27 18:19:45 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt ZOOM 1
+.Os
+.Sh NAME
+.Nm zoom
+.Nd make current window fill screen.
+.Sh DESCRIPTION
+The zoom macro is used to make the current window fill the entire screen.
+The current window layout is remembered so that on the next zoom
+command, the window layout is restored to what it was. The zoomed
+window can be split further. Attempting to unzoom a split window
+will cause a zoom to occur. An unzoom will only occur if there is
+one window on the screen.
+.Pp
+You can use the zoom command as a quick way of deleting all other windows
+on the screen.
+.Sh MENU/KEYS
+This macro can be accessed from the GRIEF features menu or by typing
+\f(HB<Ctrl-A><Ctrl-A>\fR, or executing \f(HBzoom\fR at the command prompt.
+.Sh BUGS
+The <Ctrl-A> key is used to avoid a conflict with the <Ctrl-Z>
+key on systems that support job control.

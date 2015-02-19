@@ -1,0 +1,7 @@
+# $Id: makelib.def,v 1.2 2012/09/21 17:32:50 ayoung Exp $
+# win32 makelib configuration
+#
+lbl=LIBICONV
+lib=libcitrus.lib
+def=HAVE_LIBCITRUS
+def=HAVE_ICONVL_H

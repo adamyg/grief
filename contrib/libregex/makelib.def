@@ -1,0 +1,6 @@
+# $Id: makelib.def,v 1.2 2012/09/21 17:32:56 ayoung Exp $
+# win32 makelib configuration
+#
+inc=../include
+lib=libregex.lib
+def=HAVE_REGEX_H

@@ -1,0 +1,101 @@
+# -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
+# $Id: Makefile.in,v 1.4 2015/02/18 22:48:05 ayoung Exp $
+# Help documentation.
+#
+#
+#
+
+@SET_MAKE@
+ROOT=		@top_builddir@
+top_builddir=	@top_builddir@
+
+# File extensions
+
+C=		.c
+
+CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+
+# Compilers, programs
+
+RM=		@RM@
+GREP=		@GREP@
+AWK=		@AWK@
+SED=		@SED@
+PERL=		@PERL@
+LANG=C
+export LANG	#RH 8 has a LANG=en_US.UTF-8
+
+RMFLAGS=	-f
+
+# Directories
+
+D_BIN=		$(ROOT)/bin
+D_LIB=		$(ROOT)/lib
+D_GR=		$(ROOT)/gr
+D_HELP=		$(ROOT)/help
+
+############################################################
+
+MANDOC=		$(D_BIN)/grmandoc
+GRUNCH=		$(D_BIN)/grunch
+
+OUTDIR=		$(D_HELP)
+CSOUTDIR=	$(OUTDIR)/cshelp
+FEATOUTDIR=	$(OUTDIR)/features
+
+CSSOURCE=	$(shell ls mansrc/cshelp/*.mandoc) INDEX
+FEATSOURCE=	$(shell ls mansrc/features/*.mandoc) INDEX
+ 
+OBJS=		$(OUTDIR)/prim.000
+CSOBJS=		$(addprefix $(CSOUTDIR)/,$(patsubst %.mandoc,%.hlp,$(notdir $(CSSOURCE))))
+FEATOBJS=	$(addprefix $(FEATOUTDIR)/,$(patsubst %.mandoc,%.hlp,$(notdir $(FEATSOURCE))))
+
+all:			help
+
+help:			outdirs $(OBJS) prog user cshelp features
+
+outdirs:		$(OUTDIR)/.created $(CSOUTDIR)/.created $(FEATOUTDIR)/.created
+
+prog:
+	@$(PERL) ./makehelp.pl prog
+	@$(GRUNCH) $(OUTDIR)/prog.cr
+
+user:
+	@$(PERL) ./makehelp.pl user
+	@$(GRUNCH) $(OUTDIR)/user.cr
+
+pdf:
+	@$(PERL) ./makehelp.pl html
+	@$(PERL) ./makepdf.pl
+
+cshelp:		$(CSOBJS)
+
+features:	$(FEATOBJS)
+
+%/.created:
+	-@mkdir $(@D)
+	@echo "++ do not delete, managed content ++" > $@
+
+$(OUTDIR)/prim.000:
+	@-$(RM) $(RMFLAGS) $(OUTDIR)/prim.000 $(OUTDIR)/prim???.hlp
+	@$(PERL) ./makehelp.pl -I src/library.txt.src -F mansrc/features -F mansrc/cshelp prim
+
+$(OUTDIR)/cshelp/INDEX:		mansrc/cshelp/INDEX
+	@cp $< $@
+
+$(OUTDIR)/cshelp/%.hlp:		mansrc/cshelp/%.mandoc
+	@$(PERL) ./makehelp.pl hlp $< $@
+
+$(OUTDIR)/features/INDEX:	mansrc/features/INDEX
+	@cp $< $@
+
+$(OUTDIR)/features/%.hlp:	mansrc/features/%.mandoc
+	@$(PERL) ./makehelp.pl hlp $< $@
+
+clean:
+	-$(RM) $(RMFLAGS) $(CSOUTDIR)/* $(FEATOUTDIR)/*
+	-rmdir $(CSOUTDIR) $(FEATOUTDIR)
+	-$(RM) $(RMFLAGS) $(OUTDIR)/*
+	-rmdir $(OUTDIR)
+
+#end

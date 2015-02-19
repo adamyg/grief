@@ -1,0 +1,11 @@
+# $Id: makelib.def,v 1.4 2012/09/21 17:32:50 ayoung Exp $
+# win32 makelib configuration
+#
+inc=../include
+lbl=LIBSPELL
+lib=libhunspell.lib
+def=HAVE_LIBHUNSPELL
+def=HAVE_HUNSPELL_H
+def=HAVE_HUNSPELL_HXX
+def=HAVE_LIBHUNSPELL_DLL="libhunspell.1.3.dll"
+

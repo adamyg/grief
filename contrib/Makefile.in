@@ -1,0 +1,86 @@
+# -*- mode: mak; -*-
+# $Id: Makefile.in,v 1.9 2014/10/22 02:32:35 ayoung Exp $
+# External packages.
+#
+#
+# Copyright (c) 1998 - 2014, Adam Young.
+# All rights reserved.
+# 
+# This file is part of the GRIEF Editor.
+# 
+# The GRIEF Editor is free software: you can redistribute it
+# and/or modify it under the terms of the GRIEF Editor License.
+# 
+# Redistributions of source code must retain the above copyright
+# notice, and must be distributed with the license document above.
+# 
+# Redistributions in binary form must reproduce the above copyright
+# notice, and must include the license document above in
+# the documentation and/or other materials provided with the
+# distribution.
+# 
+# The GRIEF Editor is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# License for more details.
+# ==end==
+#
+
+@SET_MAKE@
+
+D_OBJ=		../objects
+D_LIB=		../lib
+
+define contrib-all
+	$(MAKE) -C makedepend
+	$(MAKE) -C libregex
+	$(MAKE) -C libz
+	$(MAKE) -C libbzip2
+	$(MAKE) -C libmagic
+	$(MAKE) -C libguess
+	$(MAKE) -C libarchive
+	$(MAKE) -C hunspell
+endef
+ifeq ("win32","@build_os@")
+define contrib-allx
+	$(MAKE) -C libcitrus
+	$(MAKE) -C libintl
+	$(MAKE) -C libiconv
+endef
+endif
+
+define contrib-clean
+	$(MAKE) -C makedepend  clean
+	$(MAKE) -C libregex    clean
+	$(MAKE) -C libz        clean
+	$(MAKE) -C libbzip2    clean
+	$(MAKE) -C libmagic    clean
+	$(MAKE) -C libguess    clean
+	$(MAKE) -C libarchive  clean
+	$(MAKE) -C hunspell    clean
+endef
+ifeq ("win32","@build_os@")
+define contrib-cleanx
+	$(MAKE) -C libcitrus   clean
+	$(MAKE) -C libintl     clean
+	$(MAKE) -C libiconv    clean
+endef
+endif
+
+.PHONY:		all
+all:			directories
+		$(contrib-all)
+		$(contrib-allx)
+
+.PHONY:		clean
+clean:
+		$(contrib-clean)
+		$(contrib-cleanx)
+
+directories:		./include/.created $(D_OBJ)/.created $(D_LIB)/.created
+
+%/.created:
+		-@mkdir $(@D)
+		@echo "do not delete, managed directory" > $@
+
+#end

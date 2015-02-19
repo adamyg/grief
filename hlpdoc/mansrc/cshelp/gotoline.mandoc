@@ -1,0 +1,87 @@
+.\" | -- Mandoc template
+.\" | $Id: gotoline.mandoc,v 1.1 2014/11/27 18:19:34 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt GOTOLINE 1
+.Os
+.Sh NAME
+.Nm gotoline
+.Nd Goto (old) line.
+.Sh DESCRIPTION
+This command is used to jump to an absolute line in the current buffer,
+an \fIold\fR line number, a particular character position, or a field
+on the current line.
+.Pp
+By default, just typing in a number goes to the line specified.
+The following syntax may be used to go to specific parts of the file.
+.Pp
+The value for the line (or column/character position) may be specified
+in decimal or hex (by preceding it with 0x).
+.Pp
+.TS
+center allbox;
+cB cB
+lw(1i) lw(4i).
+Syntax	Description
+=
+nn	Jump to line nn
+-nn	Goto the \fIold\fR line numbered nn. Each line in CRISP has two line
+	numbers: the current line number, and its old line number. When a file
+	is read into a buffer, both the old and current line numbers are the same.
+	As lines get inserted or deleted, the current line number changes but
+	the old one doesn\(oqt. This feature exists to specifically handle the case
+	where the user is correcting syntax errors in a file, whilst referring
+	to a list of lines emitted by the compiler. As lines are inserted and
+	deleted, the old line number stays constant so that the lines referred
+	to by the compiler can be used without the user having to keep track of
+	insertions and deletions.
+|nn	Go to column position nn.
+nn.	Go to the character position nn, with 0 being the start of the buffer.
+#nn	Go to the start of field nn on the current line. A field is similar to an
+	\fIawk(1)\fR field. Fields are delimited by a field separator (default
+	is tab). The field separator character can be changed by executing
+	the macro \fIset_fs\fR from the command line.
+.TE
+.Sh MENU/KEYS
+This command is accessed via the \f(HB<Alt-G>\fR key sequence.

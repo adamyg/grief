@@ -1,0 +1,18 @@
+#!/bin/sh
+# -*- mode: sh; -*-
+# $Id: config_withmost,v 1.5 2014/10/25 17:37:20 ayoung Exp $
+#       auto select the terminal interface (ncurses, tinfo, curse, termcap and termlib)
+#       enable most other third-party library support
+#
+
+./configure_new \
+	--with-8bit		\
+	--with-icu		\
+	--with-apriconv		\
+	--with-iconv		\
+	--with-enca		\
+	--with-dlmalloc		\
+	$*
+
+#end
+

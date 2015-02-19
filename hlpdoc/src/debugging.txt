@@ -1,0 +1,60 @@
+
+Title:          Debugging
+
+   Macro Errors:
+
+        Grief run-time diagnostics using the 'debug' primitive.
+
+        Example trace output
+
+(code)
+        todo ...
+(end)
+
+        These primitive allow visible inspection of specific macro resources.
+                
+                o vars          - Display global variables.
+                o bvars         - Display all buffer variables.
+                o mvars         - Display all modules variables.
+
+        The following diagnostics functions are provided for macro
+        writers to echo trace information to either the command
+        prompt or the trace log.
+
+                o debug         - Debug trace.
+                o error         - Issue an error message.
+                o message       - Display a message on the command line.
+                o dprintf       - Diagnostic log output.
+
+
+   Compiler Errors:
+
+        The following Macro compiler options maybe of help then errors are encountered
+
+(code)
+                -d[d]           Enable internal debugging features.
+
+                -c              Leave temporary files.
+(end)
+
+
+        Macro object decompiler allows
+
+(code)
+        Grief macro decompiler.
+        gm v2.6.1 compiled Jul  8 2013 01:27:27 (cm version 20)
+
+        Usage: gm [options] <file> ...
+
+        options:
+          -a              Print atom percentages.
+          -l              List macro expansions.
+          -L              Print detailed disassembly info.
+          -q              Quiet error messages.
+          -s              Print size of .cm file only.
+          -o file         Name of compiled output file.
+          -h              Command line help.
+(end)
+
+        $Id: debugging.txt,v 1.3 2014/10/31 01:09:05 ayoung Exp $
+-*- mode: txt; margin: 75; -*-

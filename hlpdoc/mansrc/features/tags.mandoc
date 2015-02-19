@@ -1,0 +1,89 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: tags.mandoc,v 1.1 2014/11/27 18:19:43 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt TAGS
+.Os
+.Sh NAME
+.Nm tags
+.Nd tags database search.
+.Sh SYNOPSIS
+tags [options] pattern
+.Sh DESCRIPTION
+The tags macro locates all tag references matching the specified 'pattern'.
+.Pp
+In order for this macro to function, it is necessary to have a '\f(HBtags\fR' file
+in the the current directory or within a subdirectory relative to the source file
+in question. The tag database is created by the one of the utilities from the
+ctags family, either \fIctags(1)\fR, \fIetags(1)\fR or \fIextags(1)\fR dependent on
+the current host.
+.Pp
+Upon mutliple matches <Ctrl-N> and <Ctrl-P> keys are remapped to the search
+results, with <Ctrl-N> navigating to the next file/line and <Ctrl-P> to the
+previous. <Ctrl-L> shall represent the search results.
+.Pp
+.Sh OPTIONS
+The valid options are:
+.Bl -tag -offset 1 -width xxxx
+.It /a
+Match all files, including specials.
+.It /b
+Allow binaries.
+.It /c
+Case sensitve matches.
+.It /i
+Case insenstive matches.
+.It /p
+Perform partion matches.
+.El
+.Pp
+.Sh MENU/KEYS
+This macro can be accessed by typing '\f(HBtags <function>\fR' at the command
+prompt, using \f(HB<Ctrl-]>\fR on the name of the function in the current buffer,
+or by selecting the "\fBFind function\fR" entry in the features menu.
+.Sh SEE ALSO
+.Xr routines

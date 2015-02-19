@@ -1,0 +1,49 @@
+
+Section:        Library Reference
+
+        This section contains the description for the all the *Grief*
+        macro primitives. At last count over 600 primitives including
+        operators are published by the macro library.
+
+                  --------------------------------------------
+
+Topic:          Return Value
+
+        The return value for most builtin functions which return an
+        integer have the following
+
+           o Less then zero (generally '-1') the function did not
+           complete successfully, and an error message was displayed.
+
+           o Zero, the call failed yet no error message was displayed.
+
+           o One or greater, the function execution was successful.
+
+     System Call Macros:
+
+        Primitives which are based on underlying POSIX system calls
+        shall set the global variable <errno> to the result of the
+        underlying system call upon a '-1' return.
+
+        For example, if the 'remove()' function fails, then the
+        global variable 'errno' will be set to the value set by the
+        underlying system call. The primitive 'strerror()' maybe used
+        to decode the error code. For a complete list (See: <errno>)
+        and <grief.h>.
+
+        Within their descriptions the key words "MUST", "MUST NOT", 
+        "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", 
+        "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to
+        be interpreted as described in 'RFC 2119'.
+
+                  --------------------------------------------
+
+Topic:          Function Reference
+
+        Builtin constant and function reference.
+
+        --MACRO--INDEX--
+
+                  --------------------------------------------
+
+-*- mode: txt; margin: 75; -*-

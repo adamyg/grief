@@ -1,0 +1,136 @@
+# -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
+# $Id: Makefile.in,v 1.9 2013/05/12 21:35:56 cvsuser Exp $
+# libiconv/iconv makefile
+#
+#
+#
+
+@SET_MAKE@
+ROOT=		@abs_top_builddir@
+top_builddir=	@top_builddir@
+
+# File extensions
+
+E=
+O=		.o
+A=		.a
+LP=		lib
+
+CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+
+# Compilers, programs
+
+CC=		@CC@
+AR=		@AR@
+RANLIB=		@RANLIB@
+RM=		@RM@
+PERL=		@PERL@
+LIBTOOL=	@LIBTOOL@
+
+# Common flags
+
+ARFLAGS=	rcv
+XFLAGS=		
+COPT=		@CFLAGS@
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+LDEBUG=		@LDEBUG@
+CINCLUDE=	-I. -I../libcitrus/src -I$(D_INC) @CINCLUDE@
+CEXTRA=		@DEFS@
+CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDEBUG) @LDFLAGS@
+LDLIBS=		@LIBS@ @LIBM@ @EXTRALIBS@
+
+RMFLAGS=	-f
+
+# Directories
+
+D_BIN=		$(ROOT)/bin
+D_I18N=		$(ROOT)/bin/i18n
+D_I18N_ICONV=	$(D_I18N)/iconv
+D_INC=		$(ROOT)/include
+D_OBJ=		$(ROOT)/objects/libiconv
+D_LIB=		$(ROOT)/lib
+
+
+############################################################
+
+# Targets
+
+ICONVLIB=	$(D_LIB)/$(LP)iconv_static$(A)
+ICONVDLL=	$(D_LIB)/$(LP)iconv.la
+
+VERSION=	1.0.1
+VERSIONSPEC=	$(subst .,:,$(VERSION))
+VPATH=		.
+
+LIBOBJS=\
+	$(D_OBJ)/libiconv$(O)
+
+DLLOBJS=\
+	$(D_OBJ)/dllmain.lo			\
+	$(subst $(O),.lo,$(LIBOBJS))
+
+OBJS=		$(LIBOBJS) $(DLLOBJS)
+LIBS=		$(ICONVLIB) $(ICONVDLL)
+
+# Rules
+
+all:			directories $(LIBS) installinc components installcfg
+
+components:
+		$(MAKE) -C iconv
+		$(MAKE) -C mkesdb
+		$(MAKE) -C mkcsmapper
+		$(MAKE) -C esdb
+		$(MAKE) -C csmapper
+
+.PHONY:		directories
+directories:		$(D_OBJ)/.created $(D_LIB)/.created $(D_I18N)/.created $(D_I18N_ICONV)/.created
+
+$(ICONVLIB):		CEXTRA += -DLIBICONV_STATIC -D_WIN32 -D_WIN32_WINNT=0X601
+$(ICONVLIB):		$(LIBOBJS)
+		$(RM) $(RMFLAGS) $@ >nul 2>&1
+		$(AR) $(ARFLAGS) $@ $(subst /,\,$^)
+		$(RANLIB) $@
+
+$(ICONVDLL):		CEXTRA += -D__LIBICONV_BUILD -D_WIN32 -D_WIN32_WINNT=0X601
+$(ICONVDLL):		$(DLLOBJS)
+		$(LIBTOOL) --mode=link $(CC) -o $@ $^ -version-number $(VERSIONSPEC) \
+			-rpath $(D_LIB) -bindir $(D_BIN) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+.PHONY:		installinc installcfg
+installinc:		../include/.created
+		@echo publishing headers ...
+		-cp iconv.h ../include
+
+installcfg:
+		@echo.exe publishing libraries ...
+		-cp.exe iconv.dir $(D_I18N_ICONV)
+
+.PHONY:			clean cleancomponents
+
+clean:			cleancomponents
+		-@$(RM) $(RMFLAGS) $(LIBS) $(CLEAN) $(XCLEAN) >nul 2>&1
+		-@$(LIBTOOL) --mode=clean $(RM) $(DLLOBJS) >nul 2>&1
+		-@$(RM) $(LIBOBJS) >nul 2>&1
+
+cleancomponents:
+		$(MAKE) -C iconv	clean
+		$(MAKE) -C mkesdb	clean
+		$(MAKE) -C mkcsmapper	clean
+		$(MAKE) -C esdb		clean
+		$(MAKE) -C csmapper	clean
+
+%/.created:
+		-@mkdir $(@D)
+		@echo "do not delete, managed directory" > $@
+
+$(D_OBJ)/%$(O):		%.c
+		$(CC) $(CFLAGS) -o $@ -c $<
+
+$(D_OBJ)/%.lo:		%.c
+		$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -o $@ -c $<
+
+#end

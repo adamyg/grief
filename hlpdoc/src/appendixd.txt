@@ -1,0 +1,195 @@
+
+    Title: Appendix D - BRIEF Macros
+
+        The following is the list of available macros for Brief
+        compatibility, formally known as CBRIEF following the 
+        later 3.x releases.
+
+(start table, format=simple)
+        | Macro                   | Description                                        |
+        | <abort>                 | Unconditionally abort BRIEF.
+        | <above>                 | Tests greater than for unsigned ints.
+        | <above_eq>              | Tests greater than or equal for unsigned ints.
+        | <assign_to_key>         | Assign command to key or key sequence.
+        | <atoi>                  | Convert character to ascii or string to integer.
+        | <attach_buffer>         | Attach a buffer to the current window.
+        | <autoload>              | Notify which file macros or globals are in.
+        | <backspace>             | Move left and delete char.
+        | <beep>                  | Make a noise.
+        | <beginning_of_line>     | Move cursor to first column of current line.
+        | <below>                 | Tests less than for unsigned ints.
+        | <below_eq>              | Tests less than or equal for unsigned ints.
+        | <borders>               | Toggle window borders.
+        | <call_registered_macro> | Invokes all registered macros of a given type.
+        | <cd>                    | Change current directory.
+        | <change_window>         | Make a different window active.
+        | <close_window>          | Close a window.
+        | <color>                 | Set BRIEF screen colors.
+        | <compress>              | Compress consecutive whitespace characters.
+        | <copy>                  | Copy marked area to scrap.
+        | <copy_keyboard>         | Copy all or part of a keyboard map.
+        | <create_buffer>         | Create a buffer.
+        | <create_edge>           | Create a new window.
+        | <create_tiled_window>   | Creates a tiled window.
+        | <create_window>         | Create an overlapping window.
+        | <cut>                   | Cut the marked area to scrap.
+        | <date>                  | Get the system date and time.
+        | <del>                   | Delete file.
+        | <delete_block>          | Delete the marked block.
+        | <delete_buffer>         | Remove a buffer.
+        | <delete_char>           | Delete character at cursor location.
+        | <delete_edge>           | Deletes a tiled window edge, closing a window.
+        | <delete_line>           | Deletes current line.
+        | <delete_macro>          | Delete all macros in a macro file from memory.
+        | <delete_to_eol>         | Deletes from cursor to end of line.
+        | <delete_window>         | Delete an overlapping window.
+        | <display_windows>       | Displays tiled windows.
+        | <distance_to_tab>       | Give the number of characters to next tab stop.
+        | <dos>                   | Execute a DOS command.
+        | <down>                  | Move cursor down one row.
+        | <drop_anchor>           | Begin a marked area.
+        | <drop_bookmark>         | Make a bookmark at the current location.
+        | <edit_file>             | Edit a file.
+        | <end_of_buffer>         | Move to the end of the buffer.
+        | <end_of_line>           | Move to the last character on the current line.
+        | <end_of_window>         | Move to the last line in the window.
+        | <error>                 | Show error message on prompt line.
+        | <execute_macro>         | Run a macro.
+        | <exist>                 | Check to see if a file exists.
+        | <exit>                  | Exit to DOS or return to BRIEF.
+        | <file_pattern>          | Set up a pattern for file searching.
+        | <find_file>             | Search for file names matching file_pattern.
+        | <first_time>            | Detects the first time a macro is executed.
+        | <get_parm>              | Get a passed parameter, prompting if needed.
+        | <getwd>                 | Get the working directory name.
+        | <goto_bookmark>         | Move to bookmark, or just get the location.
+        | <goto_line>             | Move to a particular line.
+        | <goto_old_line>         | Move to line before buffer modification.
+        | <index>                 | Locate first occurrence of one string in another.
+        | <inq_assignment>        | Get key assignment for function.
+        | <inq_borders>           | Get borders setting.
+        | <inq_brief_level>       | Get number of copies of BRIEF in memory.
+        | <inq_buffer>            | Get current buffer id.
+        | <inq_called>            | Get name of calling macro.
+        | <inq_btn2_action>       | Get the action attached to mouse button 2.
+        | <inq_cmd_line>          | Get text currently on prompt line.
+        | <inq_command>           | Get name of last command invoked from keyboard.
+        | <inq_ctrl_state>        | Get the state of window controls.
+        | <inq_environment>       | Get a value from the DOS environment.
+        | <inq_idle_default>      | Get the default amount of idle time.
+        | <inq_idle_time>         | Get number of seconds since user pressed a key.
+        | <inq_kbd_char>          | Get status of keyboard input buffer.
+        | <inq_kbd_flags>         | Get BIOS keyboard flags.
+        | <inq_keyboard>          | Get current keyboard id.
+        | <inq_keystroke_macro>   | Is keystroke macro record/playback active?.
+        | <inq_line_length>       | Get max line length.
+        | <inq_local_keyboard>    | Get local keyboard id for current buffer.
+        | <inq_macro>             | Find out if a macro exists.
+        | <inq_mark_size>         | Get number of characters in marked area.
+        | <inq_marked>            | Get the boundaries and type of a marked area.
+        | <inq_message>           | Get current message displayed on the prompt line.
+        | <inq_mode>              | Get typing mode: insert or overstrike.
+        | <inq_modified>          | Get modified status for buffer.
+        | <inq_mouse_action>      | Get the name of the current mouse event handler.
+        | <inq_msg_level>         | Get current message level.
+        | <inq_names>             | Get file and buffer name.
+        | <inq_position>          | Get current position.
+        | <inq_scrap>             | Get scrap buffer id and mark type.
+        | <inq_screen_size>       | Get screen size.
+        | <inq_system>            | Find out if a buffer is a system buffer.
+        | <inq_top_left>          | Get buffer positioning information.
+        | <inq_views>             | Get number of windows containing a buffer.
+        | <inq_window>            | Get window id.
+        | <inq_window_color>      | Get window color (borderless only).
+        | <inq_window_info>       | Get buffer id, size and type for a given window id.
+        | <inq_window_size>       | Get height, width, and horiz scroll amount.
+        | <insert>                | Insert a formatted string into current buffer.
+        | <insert_mode>           | Toggle insert/overstrike mode.
+        | <int_to_key>            | Convert an integer to mnemonic key string.
+        | <key_to_int>            | Convert mnemonic key string to an integer.
+        | <keyboard_flush>        | Clear all waiting keyboard input.
+        | <keyboard_pop>          | Pop a keyboard from the keyboard stack.
+        | <keyboard_push>         | Push a keyboard onto the keyboard stack.
+        | <keyboard_typeables>    | Assign self_insert to all typeable keys.
+        | <left>                  | Move cursor left.
+        | <load_macro>            | Load a macro file.
+        | <lower>                 | Convert a string to all lower case characters.
+        | <ltrim>                 | Remove leading white space from string.
+        | <mark>                  | Toggle mark state.
+        | <message>               | Display a status message on the prompt line.
+        | <move_abs>              | Move to an absolute location in the buffer.
+        | <move_edge>             | Move a tiled window boundary.
+        | <move_rel>              | Move to a relative location in the buffer.
+        | <next_buffer>           | Get buffer id of next buffer.
+        | <next_char>             | Move cursor to next character.
+        | <next_window>           | Get window id of next tiled window.
+        | <nothing>               | Do nothing; bound to unassigned keys.
+        | <output_file>           | Set name of output file for current buffer.
+        | <page_down>             | Move down a page.
+        | <page_up>               | Move up a page.
+        | <paste>                 | Insert scrap buffer at cursor location.
+        | <pause_on_error>        | Toggle pausing execution on every error.
+        | <playback>              | Playback remembered keystrokes.
+        | <prev_char>             | Move to previous character.
+        | <print>                 | Print the marked area.
+        | <printf>                | Print message to DOS standard output (debug).
+        | <process>               | Process keystrokes until exit.
+        | <push_back>             | Push back a keystroke for processing elsewhere.
+        | <put_parm>              | Set the value of a passed parameter.
+        | <raise_anchor>          | Remove a marked area.
+        | <read>                  | Get characters starting at current location.
+        | <read_char>             | Get the character from the current location.
+        | <read_file>             | Insert a copy of a file into current buffer.
+        | <redo>                  | Redo the last undo command.
+        | <refresh>               | Redraw the screen.
+        | <register_macro>        | Add a new registered macro.
+        | <remember>              | Start recording keystrokes.
+        | <restore_position>      | Go back to most recent save_position location.
+        | <returns>               | Just set return value.
+        | <right>                 | Move cursor right.
+        | <rindex>                | Locate last occurrence of one string in another.
+        | <save_keystroke_macro>  | Save keystroke macro to file.
+        | <save_position>         | Save a position for use by restore_position.
+        | <search_back>           | Search backward for a pattern.
+        | <search_case>           | Change the case-sensitivity flag.
+        | <search_fwd>            | Search forward for a pattern.
+        | <search_string>         | Search a string for another string.
+        | <self_insert>           | Insert key value (assigned to typeable keys).
+        | <set_backup>            | Controls creation of backup files.
+        | <set_btn2_action>       | Sets the action for mouse button 2.
+        | <set_buffer>            | Sets the current buffer.
+        | <set_calling_name>      | Sets the name of calling function.
+        | <set_ctrl_state>        | Sets the state of window controls.
+        | <set_mouse_action>      | Sets the name of the mouse event handler.
+        | <set_mouse_type>        | Sets the type of mouse.
+        | <set_msg_level>         | Sets the message level.
+        | <set_scrap_info>        | Sets the scrap information.
+        | <set_top_left>          | Position buffer in a window.
+        | <set_window>            | Sets the current window.
+        | <sprintf>               | Formatted print into a string.
+        | <strlen>                | Get length of a string.
+        | <substr>                | Extract a sub-string from a string.
+        | <swap_anchor>           | Exchange cursor and anchor locations.
+        | <tabs>                  | Set tab stops.
+        | <time>                  | Get current system time.
+        | <top_of_buffer>         | Move to top of buffer.
+        | <top_of_window>         | Move to top of window.
+        | <transfer>              | Direct buffer-to-buffer text transfer.
+        | <translate>             | Translate pattern to a replacement string.
+        | <trim>                  | Remove trailing whitespace from string.
+        | <undo>                  | Undo the last command.
+        | <unregister_macro>      | Remove a registered macro.
+        | <up>                    | Move cursor up one line.
+        | <upper>                 | Convert string to upper case characters.
+        | <use_local_keyboard>    | Attaches a local keyboard to current buffer.
+        | <use_tab_char>          | Controls whether tabs or spaces are used.
+        | <version>               | Get version number of BRIEF.
+        | <window_color>          | Set background color for borderless window.
+        | <write_block>           | Write marked block to a file.
+(end table)
+
+                     ------------------------------
+
+        $Id: appendixd.txt,v 1.4 2014/10/31 01:09:05 ayoung Exp $
+-*- mode: txt; margin: 75; -*-
+

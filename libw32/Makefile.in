@@ -1,0 +1,149 @@
+# -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
+# $Id: Makefile.in,v 1.15 2015/02/19 00:17:25 ayoung Exp $
+# libwin32 makefile.
+#
+#
+# Copyright (c) 1998 - 2015, Adam Young.
+# All rights reserved.
+# 
+# This file is part of the GRIEF Editor.
+# 
+# The GRIEF Editor is free software: you can redistribute it
+# and/or modify it under the terms of the GRIEF Editor License.
+# 
+# Redistributions of source code must retain the above copyright
+# notice, and must be distributed with the license document above.
+# 
+# Redistributions in binary form must reproduce the above copyright
+# notice, and must include the license document above in
+# the documentation and/or other materials provided with the
+# distribution.
+# 
+# The GRIEF Editor is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# License for more details.
+# ==end==
+#
+
+@SET_MAKE@
+ROOT=		@abs_top_builddir@
+top_builddir=	@top_builddir@
+
+# File extensions
+
+O=		.o
+H=		.h
+A=		.a
+LP=		lib
+
+CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+
+# Compilers, programs
+
+CC=		@CC@
+AR=		@AR@
+RANLIB=		@RANLIB@
+RM=		@RM@
+
+# Common flags
+
+ARFLAGS=	rcv
+XFLAGS=		
+COPT=		@CFLAGS@
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+LDEBUG=		@LDEBUG@
+CINCLUDE=	-I$(D_INC) @CINCLUDE@ -I.
+CEXTRA=		@DEFS@ -D_WIN32_WINNT=0x601
+CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+YFLAGS=		-d
+LDFLAGS=	$(LDEBUG) @LDFLAGS@
+LXFLAGS=	$(LDLIBS) @LIBS@ @LIBMALLOC@
+
+RMFLAGS=	-f
+
+# Directories
+
+D_BIN=		$(ROOT)/bin
+D_INC=		$(ROOT)/include
+D_OBJ=		$(ROOT)/objects/libw32
+D_LIB=		$(ROOT)/lib
+
+############################################################
+
+LIBROOT=	w32
+
+LIBOBJS=\
+	$(D_OBJ)/w32_check$(O)		\
+	$(D_OBJ)/w32_child$(O)		\
+	$(D_OBJ)/w32_chown$(O)		\
+	$(D_OBJ)/w32_close$(O)		\
+	$(D_OBJ)/w32_dir$(O)		\
+	$(D_OBJ)/w32_dirent$(O)		\
+	$(D_OBJ)/w32_dlfcn$(O)		\
+	$(D_OBJ)/w32_errno$(O)		\
+	$(D_OBJ)/w32_fcntl$(O)		\
+	$(D_OBJ)/w32_fsync$(O)		\
+	$(D_OBJ)/w32_getcwd$(O)		\
+	$(D_OBJ)/w32_gethostname$(O)	\
+	$(D_OBJ)/w32_getlocale$(O)	\
+	$(D_OBJ)/w32_gistrerror$(O)	\
+	$(D_OBJ)/w32_grp$(O)		\
+	$(D_OBJ)/w32_hunspell$(O)	\
+	$(D_OBJ)/w32_iconv$(O)		\
+	$(D_OBJ)/w32_ino$(O)		\
+	$(D_OBJ)/w32_io$(O)		\
+	$(D_OBJ)/w32_langinfo$(O)	\
+	$(D_OBJ)/w32_link$(O)		\
+	$(D_OBJ)/w32_mknod$(O)		\
+	$(D_OBJ)/w32_mkstemp$(O)	\
+	$(D_OBJ)/w32_mmap$(O)		\
+	$(D_OBJ)/w32_neterr$(O)		\
+	$(D_OBJ)/w32_popen$(O)		\
+	$(D_OBJ)/w32_pwd$(O)		\
+	$(D_OBJ)/w32_read$(O)		\
+	$(D_OBJ)/w32_rwlock$(O)		\
+	$(D_OBJ)/w32_select$(O)		\
+	$(D_OBJ)/w32_shell$(O)		\
+	$(D_OBJ)/w32_signal$(O)		\
+	$(D_OBJ)/w32_socket$(O)		\
+	$(D_OBJ)/w32_statfs$(O)		\
+	$(D_OBJ)/w32_strftime$(O)	\
+	$(D_OBJ)/w32_strptime$(O)	\
+	$(D_OBJ)/w32_string$(O)		\
+	$(D_OBJ)/w32_strlcat$(O)	\
+	$(D_OBJ)/w32_strlcpy$(O)	\
+	$(D_OBJ)/w32_strsep$(O)		\
+	$(D_OBJ)/w32_strtoll$(O)	\
+	$(D_OBJ)/w32_strtoull$(O)	\
+	$(D_OBJ)/w32_sysdir$(O)		\
+	$(D_OBJ)/w32_time$(O)		\
+	$(D_OBJ)/w32_truncate$(O)	\
+	$(D_OBJ)/w32_uname$(O)		\
+	$(D_OBJ)/w32_unlink$(O)		\
+	$(D_OBJ)/w32_user$(O)		\
+	$(D_OBJ)/w32_util$(O)		\
+	$(D_OBJ)/w32_write$(O)
+
+LIBRARY=	$(D_LIB)/$(LP)$(LIBROOT)$(A)
+
+all:			$(LIBRARY)
+
+$(LIBRARY):		$(D_OBJ)/.created $(LIBOBJS)
+		$(RM) $(RMFLAGS) $@
+		$(AR) $(ARFLAGS) $@ $(LIBOBJS)
+		$(RANLIB) $@
+
+$(D_OBJ)/.created:
+		-@mkdir $(D_OBJ)
+		@echo "do not create" > $@
+
+clean:
+		-@$(RM) $(RMFLAGS) $(BAK) $(LIBRARY) $(LIBOBJS) $(CLEAN) $(XCLEAN)
+
+$(D_OBJ)/%$(O):		%.c
+		$(CC) $(CFLAGS) -o $@ -c $<
+
+#end

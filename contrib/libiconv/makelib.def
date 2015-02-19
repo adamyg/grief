@@ -1,0 +1,10 @@
+# $Id: makelib.def,v 1.3 2012/09/21 17:32:53 ayoung Exp $
+# win32 makelib configuration
+#
+inc=../include
+lbl=LIBICONV
+lib=libiconv.lib
+def=HAVE_LIBICONV
+def=HAVE_ICONVL_H
+def=HAVE_LIBICONVL_DLL="libiconv.1.0.dll"
+

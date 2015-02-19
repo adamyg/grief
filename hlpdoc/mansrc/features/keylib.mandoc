@@ -1,0 +1,82 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: keylib.mandoc,v 1.1 2014/11/27 18:19:40 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt KEYLIB 1
+.Os
+.Sh NAME
+.Nm keylib
+.Nd show/load/save keystroke macros.
+.Sh DESCRIPTION
+The key library macro may be used to look at the currently defined
+keystroke macros, and allows the user to execute any of them, or
+save them to a file, or reload a keystroke macro from a file.
+.Pp
+Saving and reloading keystroke macros allows the user to build up
+a personal collection of macros for performing simple and non-conditional
+editing tasks. Tasks which require a degree of decision making need
+to be written in the crunch language.
+.Pp
+When this option is selected, a popup window is displayed showing the
+currently defined keystroke macros.
+.Pp
+If no keystroke macros are defined at the time keylib is invoked,
+then the user is prompted for the name of a keystroke macro file.
+.Pp
+Keystroke macro files have a .km extension, and is optional when loading
+or saving.
+.Pp
+When a keystroke macro is saved, the file extension should not be specified.
+When the macro is saved, two files are created -- one with a '.cr' extension
+and one with a '.km' extension. The '.cr' file contains the actual
+macros executed as part of the keystroke sequence, and may be useful
+to users who want to use the keystroke macro as a starting point
+for writing their own macros. The '.km' file is in a format
+suitable for reloading directly back into GRIEF.
+.Sh MENU/KEYS
+This macro can be accessed from the GRIEF features menu or by typing
+\f(HBkeylib\fR at the command prompt.

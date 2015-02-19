@@ -1,0 +1,186 @@
+# -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
+# $Id: Makefile.in,v 1.20 2014/10/27 23:27:58 ayoung Exp $
+# GRIEF macro compiler.
+#
+#
+# Copyright (c) 1998 - 2014, Adam Young.
+# All rights reserved.
+# 
+# This file is part of the GRIEF Editor.
+# 
+# The GRIEF Editor is free software: you can redistribute it
+# and/or modify it under the terms of the GRIEF Editor License.
+# 
+# Redistributions of source code must retain the above copyright
+# notice, and must be distributed with the license document above.
+# 
+# Redistributions in binary form must reproduce the above copyright
+# notice, and must include the license document above in
+# the documentation and/or other materials provided with the
+# distribution.
+# 
+# The GRIEF Editor is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# License for more details.
+# ==end==
+#
+
+@SET_MAKE@
+ROOT=		@abs_top_builddir@
+top_builddir=	@top_builddir@
+
+# File extensions
+
+C=		.c
+E=
+O=		.o
+H=		.h
+Y=		.y
+
+CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+
+# Compilers, programs
+
+ifdef PURIFY
+CC=		purify @CC@
+else
+CC=		@CC@
+endif
+HAVE_BISON=	1
+YACC=		@YACC@
+GREP=		@GREP@
+RM=		@RM@
+PERL=		@PERL@
+LANG=C
+export LANG	#RH 8 has a LANG=en_US.UTF-8
+
+# Common flags
+
+XFLAGS=		
+COPT=		@CFLAGS@
+
+ifdef WALL2
+WALL+=1
+COPT+=		-Wcast-qual
+endif
+ifdef WALL
+COPT+=		-Wall \
+		-Wextra \
+		-Wformat \
+		-Wuninitialized \
+		-Wwrite-strings \
+		-Wbad-function-cast \
+		-Wpointer-arith \
+		-Wstrict-prototypes \
+		-Wmissing-prototypes \
+		-Wmissing-declarations \
+		-Wnested-externs \
+		-Wcomment \
+		-Wcast-align \
+		-Winline \
+		-Wshadow \
+		-Wredundant-decls \
+		-Wconversion
+ifndef WALL2
+COPTS+=		-Wno-sign-conversion
+endif
+endif
+
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+LDEBUG=		@LDEBUG@
+CINCLUDE=	-I$(D_INC) @CINCLUDE@
+CEXTRA=		@DEFS@
+CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+YFLAGS=		-d
+LDFLAGS=	$(LDEBUG) @LDFLAGS@
+LXFLAGS=	$(LDLIBS) @LIBS@ @LIBYACC@ @LIBM@ @LIBMALLOC@
+
+RMFLAGS=	-f
+
+YTAB=		y.tab
+
+# Directories
+
+D_BIN=		$(ROOT)/bin
+D_INC=		$(ROOT)/include
+D_OBJ=		$(ROOT)/objects/grunch
+D_LIB=		$(ROOT)/lib
+D_GR=		$(ROOT)/gr
+
+
+############################################################
+
+TARGET=		grunch$(E)
+
+OBJS=		$(D_OBJ)/crmain$(O)		\
+		$(D_OBJ)/$(YTAB)$(O)		\
+		$(D_OBJ)/crasc$(O)		\
+		$(D_OBJ)/crbin$(O)		\
+		$(D_OBJ)/crlex$(O)		\
+		$(D_OBJ)/crpragma$(O)		\
+		$(D_OBJ)/crautoload$(O)		\
+		$(D_OBJ)/crsubs$(O)		\
+		$(D_OBJ)/crgen$(O)		\
+		$(D_OBJ)/crdebug$(O)		\
+		$(D_OBJ)/crmsg$(O)		\
+		$(D_OBJ)/symtab$(O)		\
+		$(D_OBJ)/keywd$(O)		\
+		$(D_OBJ)/version$(O)		\
+		$(D_OBJ)/word$(O)
+
+LDLIBS=		-L$(D_LIB)			\
+		-lsplay				\
+		-lllist				\
+		-lmisc
+
+XCLEAN=		$(YTAB)$(C) $(YTAB)$(H) $(YTAB)$(C) yygen$(H) crntypes$(H)
+
+all:			$(D_BIN)/$(TARGET)
+
+$(D_BIN)/$(TARGET):	MAPFILE=$(basename $@).map
+$(D_BIN)/$(TARGET):	$(D_OBJ)/.created crntypes$(H) $(OBJS)
+		$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LXFLAGS) @LDMAPFILE@
+
+$(D_OBJ)/.created:
+		-@mkdir $(D_OBJ)
+		@echo "do not delete" > $@
+
+clean:
+		$(RM) $(RMFLAGS) $(BAK) $(D_BIN)/$(TARGET) $(TARGET) $(OBJS) $(CLEAN) $(XCLEAN)
+
+$(D_OBJ)/%$(O):		%$(C)
+		$(CC) $(CFLAGS) -o $@ -c $<
+
+$(D_OBJ)/%$(O):		$(D_GR)/%$(C)
+		$(CC) $(CFLAGS) -o $@ -c -DGRUNCH $<
+
+ifdef HAVE_BISON
+crntypes$(H):		grunch$(H) $(YTAB)$(C) makentypes.pl
+		@perl makentypes.pl --bison
+
+$(YTAB)$(C):		cry$(Y)
+		@echo "Expect 3 shift/reduce conflicts."
+		@echo "bison 2.2 (or greater) is assumed,"
+		@echo "  in the event of 'Broken Pipe' errors check the version and update as needed."
+		$(YACC) $(YFLAGS) --defines=yygen.h cry$(Y)
+		@$(RM) $(RMFLAGS) crntypes$(H)
+
+else
+crntypes$(H):		grunch$(H) $(YTAB)$(C) makentypes.pl
+		@perl makentypes.pl
+
+$(YTAB)$(C):		cry$(Y)
+		@echo "Expect 3 shift/reduce conflicts."
+		$(YACC) $(YFLAGS) cry$(Y)
+		echo "/* Lexical tokens generated from cry.y */" >yygen$(H)
+		echo "/*" `date` " */" >>yygen$(H)
+		echo "" >>yygen$(H)
+		$(GREP) $(GRFLAGS) "^# *define  *[OKU]" $(YTAB)$H >>yygen$(H)
+		@$(RM) $(RMFLAGS) $(YTAB)$(H) crntypes$(H)
+endif
+
+#end
+

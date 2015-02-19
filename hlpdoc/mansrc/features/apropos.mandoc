@@ -1,0 +1,81 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: apropos.mandoc,v 1.1 2014/11/27 18:19:34 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt APROPOS 1
+.Os
+.Sh NAME
+.Nm apropos
+.Nd locate commands by keyword lookup.
+.Sh SYNOPSIS
+apropos keyword ...
+.Sh DESCRIPTION
+The apropos macro is similar to the BSD command \fIapropos\fR
+(or \fIman -k\fR). It displays a popup window showing a list
+of manual entries which mention the word specified.
+.Pp
+You can use the cursor keys to select an entry, and the manual
+entry for that command will displayed.
+.Pp
+The apropos utility displays the man page name, section number,
+and a short description for each man page whose NAME line
+contains keyword. This information is contained in the
+/usr/share/man/windex database created by catman(1M). If catman(1M)
+was not run, or was run with the -n option, apropos fails. Each
+word is considered separately and the case of letters is ignored.
+Words which are part of other words are considered; for example,
+when looking for `compile', apropos also finds all instances of
+`compiler'. apropos is actually just the '?' option to the man
+macro.
+.Sh MENU/KEYS
+This macro can be accessed from the features menu or by
+typing \f(HBapropos\fR at the command prompt.
+.Sh SEE ALSO
+.Xr explain ,
+.Xr man
+.Sh BUGS
+Should work with the GRIEF documentation as well.

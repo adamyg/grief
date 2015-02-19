@@ -1,0 +1,28 @@
++-------------------- \fBBuffer Information and Options\fR --------------------+
+|                                                                        |
+| File Name:   builtin.c                                                 |
+| Buffer Name: /devl/src/gr/builtin.c                                    |
+|                                                                        |
+| Permissions: -rw-rw-rw-                  Size:       30028             |
+| Timestamp:   08/25/14 10:24:34           Edit:       09/26/14 21:18:48 |
+| File Type:   DOS (2) - us-ascii-dos      Terminator: 0x0D0x0A (3)      |
+| Char Map:    normal                                                    |
+| Backup:      /home/.backup                                             |
+|  Versions:   0           Limits: 10240/0                               |
+| Margins:     1    - 72   Style:  1    Color Column: 0                  |
+|                                                                        |
+|+----------------------------------------------------------------------+|
+||[x]Auto-indent    [ ]Ruler           [ ]Spell      [ ]Title Scroll    ||
+||[x]Auto-save      [ ]Line numbers    [ ]Read-Only  [ ]Title Left      ||
+||[ ]Auto-wrap      [ ]Oldline numbers [ ]Modified   [ ]Title Right     ||
+||[x]Backups        [ ]Line status     [x]Lock       [ ]Title Full      ||
+||[ ]No Undo        [ ]EOF markers     [ ]Volatile   [ ]Read-only suffix||
+||[x]Syntax hilite  [ ]Tilde markers   [ ]Cursor Row [ ]Modified suffix ||
+||[ ]Hilite White   [ ]ANSI Mode       [ ]Cursor Col [ ]LF/CR           ||
+||[ ]Hilite Literal [ ]MAN Mode        [ ]EOL Cursor [ ]Trim whitespace ||
+||[ ]EOL Hilite     [ ]Hard Tabs       [ ]EOF Cursor                    ||
+|+----------------------------------------------------------------------+|
+|                                                                        |
+|                      [\fBDone\fR]  [ Apply ]  [ Help ]                     |
++------------------------------------------------------------------------+
+

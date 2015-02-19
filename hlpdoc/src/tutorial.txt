@@ -1,0 +1,422 @@
+
+Title:          Macro Tutorial
+
+        An overview and quick tutorial of GRIEF's macro system.
+
+        The GRIEF macro language enables the customization of
+        GRIEFEdit, and enables the creation of new functionality.
+        Many of the actions performed using GRIEF are performed using
+        macros. GRIEF functions are mapped to keys, dialogs and menus,
+        and perform the action behind an event.
+
+        The language API is extensive, covering many actions normally
+        performed in a code editor, including navigation and buffer
+        modification plus POSIX inspired system calls. Much of the
+        code in high level functionality of GRIEF is written in the
+        macro language and this source is provided when GRIEF is
+        installed. This enables the customization of the product, and
+        the use of the macro source as an example for writing new
+        macros. After installation, the compiled macros and the
+        associated source are located in the 'macros' and 'src'
+        subdirectories of the installation directory.
+
+            --------------------------------------------------------
+
+Topic:          GRIEF Macros
+
+        *GRIEF* follows a C-style development model with the distinction
+        that macros can be loaded dynamically.
+
+        Macros are stored in files ending in the *.cr* extension. The
+        GRIEF macro translator compiles these files to byte code which
+        is saved in a corresponding file with the *.cm* extension.
+
+        *GRIEF* uses the a C style preprocessor, with all primary
+        definitions available using,
+
+(code, hilite=c)
+        #include <grief.h>
+        //or
+        #include <crisp.h>              // Crisp compatibility
+(end)
+
+    Functions:
+
+        Basic structure of a function or macro.
+
+(code, hilite=c)
+        int
+        function (parameter1, parameter2)
+        {
+        }
+(end)
+
+        Firstly the functions return type is given, with the function
+        name followed by the parameter declaration, if any are
+        required. Parameters are surrounded by round brackets
+        (parentheses) and separated by commas.
+
+        The body of the function is then encased by curly braces.
+
+            --------------------------------------------------------
+
+Topic:      Compilation Model
+
+        We will briefly highlight key features of the GRIEF Compilation model
+
+(start ditaa -S)
+                +--------------+        +--------------+
+                |    Source    |------->| preprocessor |
+                |           {d}|        |              |
+                +--------------+        +------+-------+
+                                               :
+                                               :    preprocessed source
+                                               v
+                                        +--------------+
+                                        |   compiler   |
+                                        |              |
+                                        +------+-------+
+                                               :
+                                               :    macro byte-code
+                                               V
+                                        +--------------+
+                Macro Library           | Macro Object |
+                                        |           {d}|
+                *--------------*        +------+-------+
+                | Macro Object |               :
+                |           {d}|               :    loader stream
+                *------+-------*               v
+                       :                /--------------\
+                       :                |    GRIEF     |
+                       ---------------->|              |
+                                        \--------------/
+(end ditaa)
+
+    Preprocessor:
+
+        The Preprocessor accepts source code as input and is responsible for
+
+            o Comment filtering
+
+            o Interpreting special preprocessor directives denoted by a
+              leading '#'.
+
+        *Preprocessor Example*
+
+            #include -  includes contents of a named file. Files usually
+                        called header files.
+
+>               #include <grief.h>
+
+            #define -   defines a symbolic name or constant. Macro
+                        substitution.
+
+>               #define MAX_ARRAY_SIZE 100
+
+    Compiler:
+
+        The *GRIEF* Macro compiler translates source to a type of
+        byte-code/assembly code.
+
+        The source code is received from the preprocessor.
+
+    Loader:
+
+        Upon macro execution, each macro goes through a number steps
+
+        Validation -    Checks permissions, memory requirements etc.
+
+        Copy -          Copies the macro image from the disk into main
+                        memory;
+
+        Relocation -    Associates the macro image with the memory into
+                        which it is loaded, by adjusting pointer
+                        references in the macro to compensate for
+                        variations in the objects base addresses.
+
+        Initialise -    Execute the macro initialisation and main entry
+                        point.
+
+        Note that the initialisation of any given macro may in turn
+        load additional resources.
+
+        A macro that is loaded may itself contain components that
+        have not really been loaded themselves, as such one macro may
+        trigger the loading of one or more additional macro until all
+        dependences are met.
+
+        This process is controlled using *GRIEF's* autoload
+        primitives (See: <autoload>).
+
+    Development Tools:
+
+        *GRIEF* is packaged with a number of tools, including the
+        'processor' and 'compiler' which aid with the development of
+        macros; these shall be demo'ed in the following tutorial.
+
+          o grunch -    GRIEF Macro Compiler.
+
+          o grcpp -     Macro language preprocessor, which is C/C++ style
+                        preprocessor. It is usually only utilised by
+                        the 'grunch' compiler, yet can be invoked
+                        manually during code debugging.
+
+          o gm -        Macro byte-code compiler/decompiler, which
+                        deals with '.m' source and '.cm' objects.
+
+
+Topic:          A Quick Macro Tutorial
+
+        Most *GRIEF* macros consist of function definitions and data
+        structures. Here is a simple macro that defines a single
+        function, called main.
+
+(code, hilite=c)
+        //  Source: helloworld.cr
+        //
+        //      GRIEF Macro Tutorial, working example.
+        //
+        #include <grief.h>              // public header
+
+        void    // user macro
+        helloworld()
+        {
+                message("Prompt: Hello, world!");
+        }
+
+        void    // macro initialisation
+        main()
+        {
+                message("Prompt: Welcome");
+                sleep(2);
+        }
+(end)
+
+        Opening the macro source are a number of comments line, which
+        service as documentation to the macros purpose; like with all
+        comments the content has on effect on the definition nor
+        execution of the macro.
+
+        Following one is the first statement, being the '#include'
+        directive. In this case the system include file 'grief.h' is
+        referenced; which defines all the global constants, variables
+        and function which are accessible to macros. Generally all
+        macros shall be started in this way.
+
+        Next is the macro entry function. All functions must have a
+        return value; that is, the value that they return when they
+        finish execution. 'hello' has a return value type of void. Other
+        types include integers (int), floating point numbers (float) and
+        lists (list) . This function declaration information must
+        precede each function definition. Immediately following the
+        function declaration is the function's name (in this case, hello).
+
+        Next, in parentheses, are any arguments (or inputs) to the
+        function. 'helloworld' has none, but a empty set of parentheses is
+        still required. After the function arguments is an open
+        curly-brace '{'. This signifies the start of the actual function
+        code. Curly-braces signify program blocks, or chunks of code.
+
+        Next comes a series of *GRIEF* statements. Statements demand
+        that some action be taken. Our demonstration program has a
+        single statement, a message (formatted printf). This shall echo
+        the message "Hello, world!" at the command prompt.
+
+        The message statement ends with a semicolon (";"). All
+        statements must be ended by a semicolon. The main function is
+        ended by the close curly-brace '}'.
+
+   Compiling and Loading Macros:
+
+        There are several methods which by macros can be compiled and
+        then executed, the primary being via the command line 'Macro
+        Compiler' *grunch*.
+
+        The 'grunch' compiler translates the module specified into a
+        binary encoded byte-code object.
+
+(code)
+        $grunch helloworld.cr
+(end)
+
+        The result should be the byte-code object named by default as
+        'helloworld.cm', an alternative name maybe given using the 
+        '-o' option.
+
+        *GRIEF* can now be started and using '<F9>' *load macro* and
+        '<F10>' *execute command*, the macro object can be loaded and
+        executed.
+
+        Upon the macro loading using F9, the macro object shall loaded
+        and initialised which in turn executes the main() function (if
+        any) within the associated macro, the result shall be as such.
+
+(code)
+        Prompt: Welcome
+(end)
+
+        Once loading the command prompt shall return, from this point
+        the macro can be executed using 'F10'.
+
+(code)
+        Prompt: Hello world!
+(end)
+
+   Macro Objects:
+
+        Macro objects represented by files using the .cm extension
+        are a compact form of a Lisp-like language. The original
+        Brief(tm) used a similar Lisp-like language using the .m
+        extension.
+
+        This lisp dialect should be considered as the 'assembly
+        language' or 'byte-code' of GRIEF, and the grunch compiler
+        can be made to generate the equivalent output for diagnostics
+        of the underlying compiler logic.
+
+        It is feasible possible to directly utilise the language to
+        write macros (See: <cm>), however the higher level C-style
+        language provides much of the same functionality with the
+        added benefits of a more structured and portable interface.
+        Furthermore the syntax and features of the *GRIEF* byte-code
+        may change without notice, as such its direct use is not
+        advised.
+
+(code)
+    GRIEF macro decompiler.
+    gm 3.2.0 compiled Jul 17 2014 03:16:30 (engine version 20)
+
+    Usage: gm [options] <file> ...
+
+    options:
+       -a              Print atom percentages.
+       -l              List macro expansions.
+       -L              Print detailed disassembly info.
+       -q              Quiet error messages.
+       -s              Print size of .cm file only.
+       -o file         Name of compiled output file.
+       -I path         Include path.
+       -h              Command line help.
+(end)
+
+
+        Using the 'gm' tool the internals of the macros can be
+        studied, as following is a sample of the output from the
+        'helloworld' object from above.
+
+(code)
+        $ gm -l helloworld.cm
+
+                :
+
+        *** Macro 0:
+
+        Atom 0000: F_ID    macro
+        Atom 0003: F_STR   "helloworld"
+        Atom 0008: F_LIST  --> 14
+        Atom 000b: F_ID    message
+        Atom 000e: F_LIT   "Hello, world!"
+        Atom 0013: F_HALT
+        Atom 0014: F_HALT
+
+        *** Macro 1:
+
+        Atom 0015: F_ID    macro
+        Atom 0018: F_INT   1
+        Atom 001d: F_STR   "_init"
+        Atom 0022: F_LIST  --> 45
+        Atom 0025: F_LIST  --> 31
+        Atom 0028: F_ID    message
+        Atom 002b: F_LIT   "Welcome"
+        Atom 0030: F_HALT
+        Atom 0031: F_LIST  --> 38
+        Atom 0034: F_ID    beep
+        Atom 0037: F_HALT
+        Atom 0038: F_LIST  --> 44
+        Atom 003b: F_ID    sleep
+        Atom 003e: F_INT   2
+        Atom 0043: F_HALT
+        Atom 0044: F_HALT
+        Atom 0045: F_HALT
+        Atom 0046: F_END   *** End ***
+
+                :
+(end)
+
+            --------------------------------------------------------
+
+Topic:          Compiler Usage
+
+        The macro compiler grunch command line usage.
+
+(code)
+    GRIEF Macro Compiler.
+    grunch 3.2.0 compiled Jul 17 2014 03:16:33
+
+    Usage: grunch [-acfgmnpqSWw] [-Dvar[=value]] [-Uvar] [-Ipath]
+               [-o output_file] [+struct] file-name ...
+
+    Options:
+       -a              Create core file on exit (for debugging).
+       -c              Leave temporary files (.m etc).
+       -Dvar           Define var as in #define.
+       -d[d]           Enable internal debugging features.
+       -f              Flush output for debugging.
+       -Ipath          Add 'path' to the #include search path.
+       -g              Compile with debug on.
+       -m[m]           Compile only if out of date (make option)
+       -n              Don't do anything but tell us what you would do.
+       -o file         Name of compiled output file.
+       -e file         Error output file.
+       -A file         Autoload macro file.
+       -p cpp          Specify name of C pre-processor to use.
+       -q              Dont print filenames during compilation.
+       -S              Dump symbol table.
+       -Uvar           Undefine var as in #undef.
+       -UUNUSED        Remove internal UNUSED definition.
+       -V              Print version of grunch.
+       -w              Enable warnings.
+       -v              Verbose.
+       -warn_errors    Treat warnings as errors.
+       -wproto         Disable prototype checks.
+       -stages         Watch compiler passes.
+       +struct         Pretty print structure offsets for easy parsing.
+       -h              Command line help.
+
+   Variables:
+        GRCPP=<cpp>    Preprocessor override (grcpp).
+        GRARG=<args>   Preprocessor argument override.
+        GRPATH=<path>  GRIEF include path.
+(end)
+
+            --------------------------------------------------------
+
+Topic:          Compatibility
+
+        Compatibility with the original Borland Brief and the current
+        CRiSP(tm) Edit implementation; when known at the time of
+        writing, details of possible porting issues have been
+        documented.
+
+        GRIEF and CRiSP(tm) have both evolved independently and at this
+        time no explicit testing has been performed to verify the
+        compatibility between either the legacy Borland(tm) Brief macro
+        language or the current commercial CRiSP(tm) Edit macro language.
+
+        Future effort may be directed towards a formal statement of
+        compatibility if the need is warranted, possibility including
+        the development of a compatibility layer, yet I would guess
+        except in cases where the more enhanced features are
+        leveraged most macros should run directly with only minor
+        changes.
+
+        Any assistance and effort you can contribute towards confirmed
+        the current level of cross compatibility would be greatly
+        appreciated and excepted.
+
+            --------------------------------------------------------
+
+        $Id: tutorial.txt,v 1.7 2014/11/27 18:08:41 ayoung Exp $
+-*- mode: txt; margin: 75; -*-
+
+

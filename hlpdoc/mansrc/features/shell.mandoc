@@ -1,0 +1,83 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: shell.mandoc,v 1.1 2014/11/27 18:19:42 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt SHELL 1
+.Os
+.Sh NAME
+.Nm shell
+.Nd Shell buffer, execute a shell inside a window.
+.Sh DESCRIPTION
+A shell buffer is a buffer which has a \fBPTY\fR or process
+attached, and acts like a window onto the process underneath.
+The user can type in any normal shell commands.
+The cursor movement keys can be used to scroll through the
+buffer and the editing keys can be used to edit any part of
+the current command line using the full power and flexibility
+of GRIEF.
+In addition, the <Ctrl-N> and <Ctrl-P> keys are mapped to
+allow easy access to previously typed in commands. The shell
+macro saves the last 20 commands typed in, and these keys can
+be used to scroll through the commands typed in. (This is
+similar to the history editing facility of the Korn-shell).
+Selecting this option from the menu automatically creates a
+shell window using the C-shell. GRIEF also has builtin macros
+which will invoke the Bourne shell (/bin/sh), the Korn shell (/bin/ksh)
+or the GNU Bash shell (bash). Type 'sh', 'ksh' or 'bash' at the shell
+prompt to run these shells.
+(The Korn and bash shell options
+will only work if you have them installed on your
+system).
+.Pp
+Note that the shell macros shouldn't be used with programs
+which operate in single character input mode, eg vi, telnet,
+etc. GRIEF does not know that these program operate in single
+character input mode, and the input will get mangled.
+.Sh MENU/KEYS
+This macro can be accessed from the GRIEF features menu or by typing
+one of \f(HBsh\fR, \f(HBcsh\fR, \f(HBksh\fR, or
+\f(HBbash\fR at the command prompt.

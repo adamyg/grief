@@ -1,0 +1,249 @@
+# -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
+# $Id: Makefile.in,v 1.5 2014/12/04 02:56:51 ayoung Exp $
+# libbsdmdoc and grmanddoc
+#
+#
+# Copyright (c) 2014, Adam Young.
+# All rights reserved.
+# 
+# This file is part of the GRIEF Editor.
+# 
+# The GRIEF Editor is free software: you can redistribute it
+# and/or modify it under the terms of the GRIEF Editor License.
+# 
+# Redistributions of source code must retain the above copyright
+# notice, and must be distributed with the license document above.
+# 
+# Redistributions in binary form must reproduce the above copyright
+# notice, and must include the license document above in
+# the documentation and/or other materials provided with the
+# distribution.
+# 
+# The GRIEF Editor is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# License for more details.
+# ==end==
+#
+
+@SET_MAKE@
+ROOT=		@abs_top_builddir@
+top_builddir=	@top_builddir@
+
+# File extensions
+
+C=		.c
+O=		.o
+H=		.h
+A=		.a
+LP=		lib
+
+CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+
+# Compilers, programs
+
+CC=		@CC@
+CXX=		@CXX@
+AR=		@AR@
+RANLIB=		@RANLIB@
+PERL=		@PERL@
+RM=		@RM@
+
+# Common flags
+
+ARFLAGS=	rcv
+XFLAGS=		
+COPT=		@CFLAGS@
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+LDEBUG=		@LDEBUG@
+CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
+ifeq ("mingw32","@build_os@")
+CINCLUDE+=	-I../libw32
+endif
+CEXTRA=		@DEFS@ -DOSNAME="\"GRIEF Edit 3.2\""
+CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+YFLAGS=		-d
+LDFLAGS=	$(LDEBUG) @LDFLAGS@
+ifeq (gcc,$(findstring gcc,$(CC)))
+ifeq ("linux","@build_os@")
+LDFLAGS+=	-rdynamic
+endif
+endif
+LDLIBS=		-L$(D_LIB) -lbsdmdoc -lmisc @LIBS@ @LIBM@ @EXTRALIBS@
+ifeq ("mingw32","@build_os@")
+LDLIBS+=	-lw32 -lshlwapi -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
+endif
+LDLIBS+=	@LIBMALLOC@ @LIBTHREAD@
+
+RMFLAGS=	-f
+
+# Directories
+
+D_BIN=		$(ROOT)/bin
+D_INC=		$(ROOT)/include
+D_OBJ=		$(ROOT)/objects/grmandoc
+D_LIB=		$(ROOT)/lib
+
+############################################################
+
+VERSION=	1.12.3
+VDATE=		31 December 2013
+
+PACKED=		mdocml-$(VERSION).tgz
+VPATH=		./mdocml-$(VERSION)
+
+	#---------------------------------------------------
+
+COMPAT_OBJS=\
+	$(D_OBJ)/compat_fgetln$(O)	\
+	$(D_OBJ)/compat_getsubopt$(O)	\
+	$(D_OBJ)/compat_strlcat$(O)	\
+	$(D_OBJ)/compat_strlcpy$(O)
+
+LIBMAN_OBJS=\
+	$(D_OBJ)/man$(O)		\
+	$(D_OBJ)/man_hash$(O)		\
+	$(D_OBJ)/man_macro$(O)		\
+	$(D_OBJ)/man_validate$(O)
+
+LIBMDOC_OBJS=\
+	$(D_OBJ)/arch$(O)		\
+	$(D_OBJ)/att$(O)		\
+	$(D_OBJ)/lib$(O)		\
+	$(D_OBJ)/mdoc$(O)		\
+	$(D_OBJ)/mdoc_argv$(O)		\
+	$(D_OBJ)/mdoc_hash$(O)		\
+	$(D_OBJ)/mdoc_macro$(O)		\
+	$(D_OBJ)/mdoc_validate$(O)	\
+	$(D_OBJ)/st$(O)			\
+	$(D_OBJ)/vol$(O)
+
+LIBROFF_OBJS=\
+	$(D_OBJ)/eqn$(O)		\
+	$(D_OBJ)/roff$(O)		\
+	$(D_OBJ)/tbl$(O)		\
+	$(D_OBJ)/tbl_data$(O)		\
+	$(D_OBJ)/tbl_layout$(O)		\
+	$(D_OBJ)/tbl_opts$(O)
+
+LIBMANDOC_OBJS=\
+	$(LIBMAN_OBJS)			\
+	$(LIBMDOC_OBJS)			\
+	$(LIBROFF_OBJS)			\
+	$(COMPAT_OBJS)			\
+	$(D_OBJ)/chars$(O)		\
+	$(D_OBJ)/mandoc$(O)		\
+	$(D_OBJ)/msec$(O)		\
+	$(D_OBJ)/read$(O)		\
+	$(D_OBJ)/libsupport$(O)
+
+LIBMANDOC=	$(D_LIB)/$(LP)bsdmdoc$(A)
+
+	#---------------------------------------------------
+
+MANDOC_HTML_OBJS=\
+	$(D_OBJ)/eqn_html$(O)		\
+	$(D_OBJ)/html$(O)		\
+	$(D_OBJ)/man_html$(O)		\
+	$(D_OBJ)/mdoc_html$(O)		\
+	$(D_OBJ)/tbl_html$(O)
+
+MANDOC_MAN_OBJS=\
+	$(D_OBJ)/mdoc_man$(O)
+
+MANDOC_TERM_OBJS=\
+	$(D_OBJ)/eqn_term$(O)		\
+	$(D_OBJ)/man_term$(O)		\
+	$(D_OBJ)/mdoc_term$(O)		\
+	$(D_OBJ)/term$(O)		\
+	$(D_OBJ)/term_ascii$(O)		\
+	$(D_OBJ)/term_ps$(O)		\
+	$(D_OBJ)/tbl_term$(O)
+
+MANDOC_OBJS=\
+	$(MANDOC_HTML_OBJS)		\
+	$(MANDOC_MAN_OBJS)		\
+	$(MANDOC_TERM_OBJS)		\
+	$(D_OBJ)/main$(O)		\
+	$(D_OBJ)/out$(O)		\
+	$(D_OBJ)/tree$(O)
+
+MANDOC=		$(D_BIN)/grmandoc$(E)
+
+	#---------------------------------------------------
+
+PRECONV_OBJS=\
+	$(D_OBJ)/preconv$(O)
+
+PRECONV=	$(D_BIN)/grpreconv$(E)
+
+	#---------------------------------------------------
+
+DEMANDOC_OBJS=\
+	$(D_OBJ)/demandoc$(O)
+
+DEMANDOC=	$(D_BIN)/grdemandoc$(E)
+
+	#---------------------------------------------------
+
+OBJS=\
+	$(LIBMANDOC_OBJS)		\
+	$(MANDOC_OBJS)			\
+	$(PRECONV_OBJS)			\
+	$(DEMANDOC_OBJS)
+
+############################################################
+
+ifeq ("cygwin","@build_os@")
+LDLIBS:=	$(filter-out -liberty, $(LDLIBS))
+endif
+
+all:			source unpacked
+unpacked:		mdocversion.h $(LIBMANDOC) $(MANDOC) $(PRECONV) $(DEMANDOC)
+
+$(MANDOC):		MAPFILE=$(basename $@).map
+$(MANDOC):		$(MANDOC_OBJS)
+		$(CC) $(LDFLAGS) -o $@ $(MANDOC_OBJS) $(LDLIBS) @LDMAPFILE@
+
+$(DEMANDOC):		MAPFILE=$(basename $@).map
+$(DEMANDOC):		$(DEMANDOC_OBJS)
+		$(CC) $(LDFLAGS) -o $@ $(DEMANDOC_OBJS) $(LDLIBS) @LDMAPFILE@
+
+$(PRECONV):		MAPFILE=$(basename $@).map
+$(PRECONV):		$(PRECONV_OBJS)
+		$(CC) $(LDFLAGS) -o $@ $(PRECONV_OBJS) $(LDLIBS) @LDMAPFILE@
+
+$(LIBMANDOC):		$(D_OBJ)/.created $(LIBMANDOC_OBJS)
+		$(RM) $(RMFLAGS) $@
+		$(AR) $(ARFLAGS) $@ $(LIBMANDOC_OBJS)
+		$(RANLIB) $@
+
+mdocversion.h:		Makefile
+	@sh -c "\
+echo // Auto-generated by Makefile >$@; \
+echo \#define VERSION \\\"$(VERSION)\\\" >>$@; \
+"
+
+source:			.unpacked.$(VERSION)
+		$(MAKE) unpacked
+
+.unpacked.$(VERSION):	$(PACKED)
+		@echo "do not delete, managed file" > $@
+		@echo "unpacking source $(PACKED)"
+		@gzip -c -d $(PACKED) | tar -xvf -
+
+CLEAN +=	
+
+$(D_OBJ)/.created:
+		-@mkdir $(D_OBJ)
+		@echo "do not create" > $@
+
+clean:
+		-@$(RM) $(RMFLAGS) $(BAK) $(LIBRARY) $(LIBOBJS) $(OBJS) $(CLEAN) $(XCLEAN)
+
+$(D_OBJ)/%$(O):		%$(C)
+		$(CC) $(CFLAGS) -o $@ -c $<
+
+#end

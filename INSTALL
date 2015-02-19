@@ -1,0 +1,262 @@
+
+    For installation notes relating to specific systems, please skip to the next
+    section of this document.
+
+                                   -------
+
+    This is GRIEF 3.2.0, a derivative of the Crisp editor for various UNIX platforms
+    written and released by Paul Fox some 22 years ago and made available on the
+    Internet. This editor is in no way, shape or form derived from the Crisp editor
+    published by the folks who subsequently purchased the copyright to the Fox code.
+
+    Compilation under some variety of UNIX should be easiest since the build is
+    supported by a GNU autoconf configure script, which figures out most of what it
+    needs to know from your system.
+
+    Building under WIN32 and DJGPP requires a special makefile set and config.h
+    (normally built by configure), which you can find in the "djgpp" and "win32"
+    subdirectores respectively. The makefiles are then generated similar to autoconf,
+    using the makelib.pl perl script.
+
+    On WIN32 using Visual C/C++, build by the following these steps:
+
+      Note: At present only tested against MSVC 2005, 2010 and 2012,
+        yet other versions should functiom with little effort.
+
+      a. Install the gnuwin32 tool set or similar. (optional) set the
+        PATH environment variable to include the win32 sub-directory
+        which contains console versions of several GNU tools,
+        including gmake.
+
+            Source, http://unxutils.sourceforge.net/
+
+      b. Run the `makelib.pl' perl script by typing:
+
+            perl makelib.pl [--gnuwin32=<path-gnuwin32-bin>] vc
+
+         Note: If you dont have perl available, download and install the WIN32 
+         version of ActivePerl.
+
+      c. Build the entire tree with:
+
+            gmake
+
+      d. Note that the default installation paths (compiled into GRIEF, but 
+       may be overridden with environment variables or command line) are:
+
+            executables         /Program Files/Grief/bin
+            help files          /Program Files/Grief/help
+            compiled macros     /Program Files/Grief/macros
+            macro source        /Program Files/Grief/macsrc
+
+         These can be modified in the makefiles after configure has run and 
+         before 'make'. Makefiles using these paths are the main Makefile, 
+         and the one within gr/Makefile.
+
+      f. To install, type:
+
+            gmake install
+
+
+    On WIN32 using OpenWatcom, build by the following these steps:
+
+      Follow the MSVC build notes, but execute 'makelib.lib' stating
+      the use of the OpenWatcom tool chain.
+
+            perl makelib.pl vc
+
+
+    On DOS using DJGPP, build by the following these steps:
+
+      a. Run the `makelib.pl' perl script by typing:
+
+            perl makelib.pl dj
+
+      b. Build the entire tree with:
+
+            make
+
+      c. To install, type:
+
+            make install
+
+
+    On OS2 using gcc, build by the following these steps:
+
+      a. Install the entire set of makefiles:
+
+            cd OS
+            config.cmd
+            cd ..
+
+      b. Build the entire tree with:
+
+            sh
+            gmake
+            exit
+
+      c. To install, type:
+
+            sh
+            gmake install
+            exit
+
+      Note:
+         The OS2 build has not been tested for some time and will
+         most likely require work.
+
+
+    On UNIX variations (including cygwin), build by following these steps:
+
+      a. (optional) set the CFLAGS environment variable according to
+        your preference. If you are using a GNU compiler, then -O or -O2 (there is
+        little advantage in using -O2 and it usually builds larger executables) is fine.
+
+      b. If you're building with a non-standard compiler or one known, by something
+       other than "cc" or "gcc" then you can set the environment variable "CC" to that.
+
+      c. Run the `configure' script by typing:
+
+            ./configure_new
+
+         Alternatively select one the available preset configurations
+
+            ./configure_withmost
+            ./configure_withcurses
+            ./configure_withncurses
+            ./configure_withncursesw
+            ./configure_withtermcap
+            ./configure_withtermlib
+            ./configure_withtinfo
+
+      d. Note any errors. Please get back to me at the address below if you have any
+      configure problems.
+
+      e. This should built the entire set of makefiles and one include file in
+      include/config.h. You may wish to examine this file since there are some settable
+      options at the top (don't fool with what configure has done below that unless you
+      know what you're doing).
+
+      f. Build the entire tree with:
+
+            make
+
+      g. Note that the default installation paths (compiled into GRIEF, but may be
+       overridden with environment variables or command line) are:
+
+            executables         /usr/local/bin
+            rootdata            /usr/local/lib/grief
+            help files          /usr/local/lib/grief/help
+            compiled macros     /usr/local/lib/grief/macros
+            macro source        /usr/local/lib/grief/src
+
+         These can be modified in the makefiles after configure has run and before
+         MAKE. Makefiles using these paths are the main Makefile in ., and the one in
+         gr/Makefile.
+
+      h. To install, type:
+
+            make install
+
+                                         -------
+
+Notes compiling on specific operating systems and configuring for
+optimal performance and ease of use on the console:
+
+    Linux
+
+        The Linux console has a fairly complete/full keyboard implementation and the
+        supplied linux.cr terminal features/support macro should work without
+        modification, except if you load alternative keymaps at boot. If you do, then I
+        would suggest overriding keybindings in a separate function within linux.cr,
+        then setting GRTERM to linux-(fnname) where "(fnname)" is the name of the
+        function that does the additional (re)mappings.
+
+
+    AIX
+
+        The compile for AIX will be pretty much "out of the box".
+
+        If the termcap/terminfo libraries are installed, build using:
+
+            --with-curses
+
+
+    HP/UX
+
+        Use either curses or ncurses, both are functional.
+
+
+    FreeBSD
+
+        This version of GRIEF has only been tested with the syscons console driver, and
+        not pcvt. The notes below apply only to use with syscons.
+
+        The FreeBSD console is pretty much SCO compatible, so $GRTERM should be set to
+        "sco" (or sco-vga50 if you run in 50 line mode on a VGA or better adaptor).
+        However, unlike the latter SCO operating systems, FreeBSD does not set the
+        Alt-<keys> to reasonable defaults - in fact, they are set to their ascii
+        equivalents. Fortunately, a solution is provided in the form of
+        (sco-compatible) loadable keymaps, and a keymap that will make GRIEF usable on
+        the console can be found in macsrc/tty/us.sco.kbd. Move this into your keymaps
+        directory (normally /usr/share/syscons/keymaps) and load this by setting the
+        keymap name in /etc/sysconfig.
+
+        One other step may be helpful. syscons maps the keypad grey minus, plus and
+        asterisk keys to their ascii keys. These keys need to be remapped to
+        escape-functions kbdcontrol. To do this, simply add the following to an
+        appropriate place in /etc/sysconfig:
+
+            keychange="52 [- 56 [+"
+
+        This change should not cause any conflicts with other keys. If you wish to use
+        some other values, then modify the sco.cr macro to suit.
+
+        Finally, since Alt-<Fn> keys are used for switching between virtual consoles,
+        the syscons configuration for crisp instead maps Alt-<Fn> key functions to
+        Ctrl-Shift-<Fn>.
+
+        Compiling
+
+        The compile for FreeBSD will be pretty much "out of the box". If you run an
+        older version of FreeBSD than 2.2-RELEASE, you may wish to include the supplied
+        malloc package (configure --with-malloc : see configure --help for details) for
+        improved performance. With 2.2-RELEASE or later, this no longer applies as the
+        system supplied malloc and related routines as they will be the superior. If
+        you supply a package name instead: eg. --with-malloc=malloc_db, for example,
+        then this library is linked in instead. Note that the routines used here are
+        the malloc() etc. functions described in the standard c headers.
+
+                                         -------
+Terminals
+
+    xterm
+
+        GRIEF works well in an xterm, but requires a little more work. The default
+        xterm setup rarely offers enough key/modifier combinations to cope with GRIEF's
+        rather full keyboard mapping; for example, Shift/Ctrl function keys rarely work
+        by default. Fortunately, X provides a solution via the ability to remap the
+        keyboard to suit the application. To provide functionality equivalent to a
+        console/DOS/OS2 GRIEF, paste contents of the file
+
+             EXTRA/xterm.dot.Xresources
+
+        into your .Xresources. Depending on your hardware and the version of X you're
+        running under, you may need to modify some of the keysym names to reflect your
+        keyboard. This should, however, work fine for an xterm running under XFree86.
+        Ensure that this file is merged via xrdb in your .xinitrc and/or .xsession
+        scripts.
+
+    rxvt
+
+        rxvt is one of the better supported terminal environments.
+
+See the Configuration Guide in the "hlpdoc/" subdirectory for information on setting up
+GRIEF completely for your environment, in particular setting environment variables and
+setting up terminal features.
+
+*Some* of this information may be obsolete, but most of it will be
+fine.
+
+$Id: INSTALL,v 1.10 2015/02/19 00:16:50 ayoung Exp $
+

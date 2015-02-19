@@ -1,0 +1,154 @@
+# -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
+# $Id: Makefile.in,v 1.6 2013/05/12 21:35:56 cvsuser Exp $
+# libbz2 makefile
+#
+#
+#
+
+@SET_MAKE@
+ROOT=		@abs_top_builddir@
+top_builddir=	@top_builddir@
+
+# File extensions
+
+E=
+O=		.o
+A=		.a
+LP=		lib
+
+CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+
+# Compilers, programs
+
+CC=		@CC@
+AR=		@AR@
+RANLIB=		@RANLIB@
+RM=		@RM@
+PERL=		@PERL@
+LIBTOOL=	@LIBTOOL@
+RC=		@RC@
+
+# Common flags
+
+ARFLAGS=	rcv
+XFLAGS=		
+COPT=		@CFLAGS@
+CXXOPT=		@CXXFLAGS@
+ifeq "" "$(CXXOPT)"
+CXXOPT=		$(COPT)
+endif
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+LDEBUG=		@LDEBUG@
+CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
+CEXTRA=		@DEFS@
+CFLAGS=		$(CPPFLAGS) $(CDEBUG) $(COPT) $(CWARN) $(CEXTRA) $(CINCLUDE) $(XFLAGS)
+CXXFLAGS=	$(CPPFLAGS) $(CDEBUG) $(CXXOPT) $(CWARN) $(CEXTRA) $(CINCLUDE) $(XFLAGS)
+YFLAGS=		-d
+LDFLAGS=	$(LDEBUG) @LDFLAGS@
+LDLIBS=		-L$(D_LIB) @LIBS@ @LIBM@ @EXTRALIBS@
+
+RMFLAGS=	-f
+
+# Directories
+
+D_BIN=		$(ROOT)/bin
+D_INC=		$(ROOT)/include
+D_OBJ=		$(ROOT)/objects/libbz2
+D_LIB=		$(ROOT)/lib
+
+############################################################
+
+# Targets
+
+BZ2LIB=		$(D_LIB)/$(LP)bz2_static$(A)
+BZ2DLL=		$(D_LIB)/$(LP)bz2.la
+
+VERSION=	1.0.6
+VERSIONSPEC=	$(subst .,:,$(VERSION))
+BZ2PACKED=	bzip2-1.0.6.tgz
+BZ2SRC=		./bzip2-1.0.6
+VPATH=		$(BZ2SRC)
+
+LIBOBJS=\
+	$(D_OBJ)/blocksort$(O)		\
+	$(D_OBJ)/huffman$(O)		\
+	$(D_OBJ)/crctable$(O)		\
+	$(D_OBJ)/randtable$(O)		\
+	$(D_OBJ)/compress$(O)		\
+	$(D_OBJ)/decompress$(O)		\
+	$(D_OBJ)/bzlib$(O)
+
+DLLOBJS=\
+	$(subst $(O),.lo,$(LIBOBJS))
+
+ifeq ("yes","@ISWIN32@")
+ifeq ("mingw32","@build_os@")
+DLLOBJS+=	$(D_OBJ)/libbz2_res.o
+else
+DLLOBJS+=	$(D_OBJ)/libbz2.res
+endif
+endif
+
+OBJS=		$(LIBOBJS) $(DLLOBJS)
+LIBS=		$(BZ2LIB) $(BZ2DLL)
+TSKS=
+
+# Rules
+
+all:			source unpacked
+unpacked:		object $(LIBS) $(TSKS) installinc
+
+CEXTRA	+=	-I$(BZ2SRC) -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
+
+$(BZ2LIB):		$(LIBOBJS)
+		$(RM) $(RMFLAGS) $@ >/dev/null 2>&1
+		$(AR) $(ARFLAGS) $@ $^
+		$(RANLIB) $@
+
+$(BZ2DLL):		CEXTRA += -DBZ2LIB_DLL
+ifeq ("yes","@ISWIN32@")
+$(BZ2DLL):		BZ2DEF = -export-symbols libbz2_win32.def
+endif
+$(BZ2DLL):		$(DLLOBJS)
+		$(LIBTOOL) --mode=link $(CC) -version-number $(VERSIONSPEC) \
+			-rpath $(D_LIB) -bindir $(D_BIN) $(BZ2DEF) -o $@ $^ $(LDLIBS)
+
+source:			.unpacked.$(VERSION)
+		$(MAKE) unpacked
+
+.unpacked.$(VERSION):	$(BZ2PACKED)
+		@echo "do not delete, managed file" > $@
+		@echo "unpacking source $BZ2PACKED"
+		@gzip -c -d $(BZ2PACKED) | tar -xvf -
+
+.PHONY:		object
+object:			$(D_OBJ)/.created
+
+.PHONY:		installinc
+installinc:		../include/.created
+		@echo publishing headers ...
+		-cp $(BZ2SRC)/bzlib.h ../include
+
+%/.created:
+		-@mkdir $(@D)
+		@echo "do not delete, managed directory" > $@
+
+clean:
+		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
+		-@$(LIBTOOL) --mode=clean $(RM) $(DLLOBJS) >/dev/null 2>&1
+		-@$(RM) $(LIBOBJS) >/dev/null 2>&1
+
+$(D_OBJ)/%$(O):		%.c
+		$(CC) $(CFLAGS) -o $@ -c $<
+
+$(D_OBJ)/%.lo:		%.c
+		$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -o $@ -c $<
+
+$(D_OBJ)/%.res:		%.rc
+		$(RC) -Fo $@ $<
+
+$(D_OBJ)/%_res.o:	%.rc
+		$(RC) -o $@ $<
+
+#end

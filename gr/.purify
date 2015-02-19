@@ -1,0 +1,11 @@
+suppress miu malloc; realloc; get_pri_dirs; _ttyname_common; ttyname_r; ttyslot; getlogin_r
+suppress miu malloc; chk_alloc; regcomp
+suppress miu malloc; chk_alloc; print_formatted
+suppress miu malloc; chk_salloc; mac_bpath
+suppress miu malloc; _nss_XbyY_buf_alloc; getpwnam; sys_homedir
+suppress miu malloc; chk_salloc; sys_homedir
+suppress miu malloc; strdup; GeTcWd; getcwd
+suppress miu malloc; getlogin; sys_homedir
+suppress miu malloc; _nss_XbyY_buf_alloc; gethostbyname; sys_hostname
+suppress miu malloc; calloc; fgetnetconfig; getnetlist; setnetconfig; __rpc_getconfip; gethostbyname_r; sys_hostname
+suppress miu malloc; chk_salloc; sys_tmpdir

@@ -1,0 +1,351 @@
+#include <edidentifier.h>
+__CIDENT_RCSID(gr_w32_user_c,"$Id: w32_user.c,v 1.10 2015/02/19 00:17:33 ayoung Exp $")
+
+/* -*- mode: c; indent-width: 4; -*- */
+/*
+ * win32 user identification functionality
+ *
+ * Copyright (c) 1998 - 2015, Adam Young.
+ * All rights reserved.
+ *
+ * This file is part of the GRIEF Editor.
+ *
+ * The GRIEF Editor is free software: you can redistribute it
+ * and/or modify it under the terms of the GRIEF Editor License.
+ *
+ * Redistributions of source code must retain the above copyright
+ * notice, and must be distributed with the license document above.
+ *
+ * Redistributions in binary form must reproduce the above copyright
+ * notice, and must include the license document above in
+ * the documentation and/or other materials provided with the
+ * distribution.
+ *
+ * The GRIEF Editor is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * License for more details.
+ * ==end==
+ *
+ * Notice: Portions of this text are reprinted and reproduced in electronic form. from
+ * IEEE Portable Operating System Interface (POSIX), for reference only. Copyright (C)
+ * 2001-2003 by the Institute of. Electrical and Electronics Engineers, Inc and The Open
+ * Group. Copyright remains with the authors and the original Standard can be obtained
+ * online at http://www.opengroup.org/unix/online.html.
+ * ==extra==
+ */
+
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT        0x0501              /* enable xp+ features */
+#endif
+
+#include "win32_internal.h"
+#include <unistd.h>
+
+#pragma comment(lib, "Advapi32.lib")
+
+
+/*
+//  NAME
+//      getuid - get a real user ID
+//
+//  SYNOPSIS
+//      #include <unistd.h>
+//
+//      uid_t getuid(void);
+//
+//  DESCRIPTION
+//      The getuid() function shall return the real user ID of the calling process.
+//
+//  RETURN VALUE
+//      The getuid() function shall always be successful and no return value is reserved to
+//      indicate the error.
+//
+//  ERRORS
+//      No errors are defined.
+*/
+int
+w32_getuid (void)
+{
+    return 42;
+}
+
+
+/*
+//  NAME
+//      geteuid - get the effective user ID
+//
+//  SYNOPSIS
+//      #include <unistd.h>
+//
+//      uid_t geteuid(void);
+//
+//  DESCRIPTION
+//      The geteuid() function shall return the effective user ID of the calling process.
+//
+//  RETURN VALUE
+//      The geteuid() function shall always be successful and no return value
+//      is reserved to indicate an error.
+//
+//  ERRORS
+//      No errors are defined.
+*/
+int
+w32_geteuid (void)
+{
+    return 42;
+}
+
+
+/*
+//  NAME
+//      getgid - get the real group ID
+//
+//  SYNOPSIS
+//      #include <unistd.h>
+//
+//      gid_t getgid(void);
+//
+//  DESCRIPTION
+//      The getgid() function shall return the real group ID of the calling process.
+//
+//  RETURN VALUE
+//      The getgid() function shall always be successful and no return value is reserved to
+//      indicate an error.
+//
+//  ERRORS
+//      No errors are defined.
+*/
+int
+w32_getgid (void)
+{
+    return 42;
+}
+
+
+
+/*
+//  NAME
+//      getegid - get the effective group ID
+//
+//  SYNOPSIS
+//      #include <unistd.h>
+//
+//      gid_t getegid(void);
+//
+//  DESCRIPTION
+//      The getegid() function shall return the effective group ID of the calling process.
+//
+//  RETURN VALUE
+//      The getegid() function shall always be successful and no return value is reserved
+//      to indicate an error.
+//
+//  ERRORS
+//      No errors are defined.
+*/
+int
+w32_getegid (void)
+{
+    return 42;
+}
+
+
+/*
+//  NAME
+//      issetugid -  determine if current executable is running setuid or setgid
+//
+//  SYNOPSIS
+//      #include <unistd.h>
+//
+//      int issetugid(void);
+//
+//  DESCRIPTION
+//      The issetugid() function should be used to  determine if a path name returned
+//      from a getenv(3C) call can be used safely to open the specified file. It is
+//      often  not safe to open such a file because the status of the effective uid
+//      is not known.
+//
+//  RETURN VALUE
+//      The issetugid() function returns 1 if the process  was  made setuid or setgid
+//      as  the result of the last or a previous call to execve(). Otherwise it returns 0.
+//
+//  ERRORS
+//      No errors are defined.
+*/
+int
+issetugid (void)
+{
+    return 0;
+}
+
+
+
+/*
+//  NAME
+//      getlogin, getlogin_r - get login name
+//
+//  SYNOPSIS
+//
+//      #include <unistd.h>
+//
+//      char *getlogin(void);
+//      int getlogin_r(char *name, size_t namesize);
+//
+//  DESCRIPTION
+//
+//      The getlogin() function shall return a pointer to a string containing the user name
+//      associated by the login activity with the controlling terminal of the current
+//      process. If getlogin() returns a non-null pointer, then that pointer points to the
+//      name that the user logged in under, even if there are several login names with the
+//      same user ID.
+//
+//      The getlogin() function need not be reentrant. A function that is not required to
+//      be reentrant is not required to be thread-safe.
+//
+//      The getlogin_r() function shall put the name associated by the login activity with
+//      the controlling terminal of the current process in the character array pointed to
+//      by name. The array is namesize characters long and should have space for the name
+//      and the terminating null character. The maximum size of the login name is
+//      {LOGIN_NAME_MAX}.
+//
+//      If getlogin_r() is successful, name points to the name the user used at login, even
+//      if there are several login names with the same user ID. [Option End]
+//
+//  RETURN VALUE
+//
+//      Upon successful completion, getlogin() shall return a pointer to the login name or
+//      a null pointer if the user's login name cannot be found. Otherwise, it shall return
+//      a null pointer and set errno to indicate the error.
+//
+//      The return value from getlogin() may point to static data whose content is
+//      overwritten by each call.
+//
+//      If successful, the getlogin_r() function shall return zero; otherwise, an error
+//      number shall be returned to indicate the error. [Option End]
+//
+//  ERRORS
+//
+//      The getlogin() and getlogin_r() functions may fail if:
+//
+//      [EMFILE]
+//          {OPEN_MAX} file descriptors are currently open in the calling process.
+//
+//      [ENFILE]
+//          The maximum allowable number of files is currently open in the system.
+//
+//      [ENXIO]
+//          The calling process has no controlling terminal.
+//
+//      The getlogin_r() function may fail if:
+//
+//      [ERANGE]
+//          The value of namesize is smaller than the length of the string to be returned
+//          including the terminating null character.
+*/
+const char *
+getlogin (void)
+{
+    static char buffer[100];                    /* one-shot */
+    DWORD size = sizeof(buffer);
+    const char *p = buffer;
+
+    if (!*p) {
+        p = getenv("USER");
+
+        if (p == NULL) p = getenv("USERNAME");  /* NT */
+
+        if (GetUserName(buffer, &size))         /* requires: advapi32.lib */
+            p = buffer;
+
+        if (p == NULL)
+            p = "dosuser";                      /* default */
+
+        if (p != buffer) {
+            strncpy(buffer, p, sizeof(buffer));
+            buffer[ sizeof(buffer)-1 ] = '\0';
+            p = buffer;
+        }
+    }
+    return p;
+}
+
+
+int
+getlogin_r (char *name, size_t namesize)
+{
+    const char *login = getlogin();
+    size_t length = strlen(login);
+
+    if (namesize >= length) {
+        errno = ERANGE;
+        return -1;
+    }
+    memcpy(name, login, length + 1);
+    return length;
+}
+
+
+#if defined(_MSC_VER) && (_MSC_VER < 1600)
+#define TokenElevation          20
+typedef struct _TOKEN_ELEVATION {
+    DWORD TokenIsElevated;
+} TOKEN_ELEVATION;
+typedef TOKEN_ELEVATION *PTOKEN_ELEVATION;
+#endif
+
+int
+w32_IsElevated(void)
+{
+    BOOL fRet = FALSE;
+    HANDLE hToken = NULL;
+
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
+        TOKEN_ELEVATION Elevation;
+        DWORD cbSize = sizeof(TOKEN_ELEVATION);
+
+        if (GetTokenInformation(hToken, TokenElevation, &Elevation, sizeof(Elevation), &cbSize)) {
+            fRet = Elevation.TokenIsElevated;
+        }
+        CloseHandle(hToken);
+    }
+    return fRet;
+}
+
+
+/*  Function:           w32_IsAdministrator
+ *      This routine returns TRUE if the caller's process is a member of the
+ *      Administrators local group.
+ *
+ *      Caller is NOT expected to be impersonating anyone and is expected
+ *      to be able to open its own process and process token.
+ *
+ *  Arguments:
+ *      None
+ *
+ *  Return Value:
+ *      TRUE    - Caller has Administrators local group.
+ *      FALSE   - Caller does not have Administrators local group.
+ */
+int
+w32_IsAdministrator(void)
+{
+    SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
+    PSID AdministratorsGroup;
+    BOOL b;
+
+    b = AllocateAndInitializeSid(
+            &NtAuthority, 2,
+            SECURITY_BUILTIN_DOMAIN_RID,
+            DOMAIN_ALIAS_RID_ADMINS,
+            0, 0, 0, 0, 0, 0,
+            &AdministratorsGroup);
+
+    if (b) {
+        if (! CheckTokenMembership(NULL, AdministratorsGroup, &b)) {
+            b = FALSE;
+        }
+        FreeSid(AdministratorsGroup);
+    }
+    return b;
+}
+/*end*/

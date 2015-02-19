@@ -1,0 +1,158 @@
+NAME
+        cdb - format of the constant database
+
+DESCRIPTION
+        The cdb database format provides a space-efficient (key, value) database. The
+        format doesn't allow updates in any convenient form. The file overhead is
+        around 5 bytes per key and 5 bytes per entry. Keys are not stored and it is the
+        responsibility of the caller to validate matches. The index structure is based
+        on a minimal perfect hash table, so exactly one entry has to be checked for a
+        match.
+
+        General Format:
+
+                The header record of a cdb database consists of the following:
+
+                struct header_cdb {
+                        uint8_t  magic[7];
+                        uint8_t  version;
+                        uint8_t  description[16];
+                        uint32_t data_size;
+                        uint32_t entries;
+                        uint32_t entries_index;
+                        uint32_t seed;
+                };
+
+        All fields are in Little Endian byte order.
+
+        This is followed by a description of the hash function of entries_index
+        records. The size of each index entry is the logarithm of entries to base 256, 
+        rounded up.
+
+        The index records are followed by the start offsets of the entries, followed by
+        data_size. The offsets are relative to the end of the offset record table and
+        are monotically increasing. The size of each offset record is the logarithm of
+        data_size to base 256, rounded up.
+
+        The offset table is followed by the entries in order. No separation or padding
+        is added. Limitations
+
+        The cdb file format is by design intended for a database that can be mapped
+        into memory. The hard limit for the number of entries and keys is 3435973836.
+        The total size of all values must be smaller than 4GiB.
+
+SEE ALSO
+        cdbr(3), cdbw(3)
+
+HISTORY
+        Support for the cdb format first appeared in NetBSD6.0.
+
+AUTHORS
+        The cdbr and cdbw functions have been written by Joerg Sonnenberger
+        <joerg@NetBSD.org>
+
+--------------------
+
+NAME
+
+        cdbr cdbr_open, cdbr_entries, cdbr_get, cdbr_find, cdbr_close, 
+                cdbr_write - constant database access methods
+
+SYNOPSIS
+
+        struct cdbr *   cdbr_open(const char *path, int flags)
+
+        uint32_t        cdbr_entries(struct cdbr *cdbr)
+
+        int             cdbr_get(struct cdbr *cdbr, uint32_t index, const void **data, size_t *datalen)
+
+        int             cdbr_find(struct cdbr *cdbr, const void *key, 
+                                size_t keylen const, void **data size_t *datalen)
+
+        void            cdbr_close(struct cdbr *cdbr)
+
+
+DESCRIPTION
+        The cdbr library provides a space efficient (key, value) database based on
+        perfect hashing.
+
+        A cdb database is opened for reading by calling cdbr_open(). The only supported
+        value for flags is CDBR_DEFAULT. The function returns a handle to pass to the
+        other functions. The database is closed by invoking cdbr_close(). All resources
+        associated with the handle are freed and the memory returned by cdbr_get() and
+        cdbr_find() is invalidated.
+
+        The number of records in the database can be obtained by calling
+        cdbr_entries(). Records can be obtained by record number using cdbr_get() or by
+        key using cdbr_find(). Both functions return 0 on success and update data and
+        datalen accordingly. The location *data remains valid until cdbr_close() is
+        called. It is the responsibility of the caller of cdbr_find() to ensure that
+        the key matches the returned data. The function returns the only possible match, 
+        but the database doesn't store the keys to minimize overhead.
+
+SEE ALSO
+        nbperf(1), cdbw(3), db(3), cdb(5)
+
+HISTORY
+        Support for the cdb format first appeared in NetBSD6.0.
+
+AUTHORS
+        The cdbr and cdbw functions have been written by Joerg Sonnenberger
+        <joerg@NetBSD.org>
+
+--------------------
+
+NAME
+        cdbw_open, cdbw_put, cdbw_put_data, cdbw_put_key, cdbw_close - create constant databases
+
+SYNOPSIS
+
+        struct cdbw *   cdbw_open(void)
+
+        int             cdbw_put(struct cdbw *cdbw, const void *key, 
+                                size_t keylen const void *data size_t datalen )
+
+        int             cdbw_put_data(struct cdbw *cdbw, const void *data,      
+                                 size_t datalen uint32_t *index)
+
+        int             cdbw_put_key( struct cdbw *cdbw, const void *key,       
+                                 size_t keylen uint32_t index)
+
+        int             cdbw_output(struct cdbw *cdbw, int output const char descr[16],
+                                 uint32_t (*seedgen)(void))
+
+        void            cdbw_close(struct cdbw *cdbw)
+
+DESCRIPTION
+        The cdbw functions are used to create a constant databases for use with
+        cdbr(3). Details about the file format, including overhead and limitations, can
+        be found in cdb(5).
+
+        cdbw_open() prepares a new cdb writer. The function returns a handle to pass to
+        the other functions.
+
+        cdbw_close() frees all resources associated with the handle.
+
+        cdbw_put() adds the given (key, value) pair after checking for a duplicate key.
+        cdbw_put_data() adds the given value to the writer without adding a key
+        reference. The returned index can be used in subsequent calls to cdbw_put_key()
+        to add one or more keys pointing to this value. cdbw_put_key() checks for
+        duplicate keys and valid index arguments. On success it adds the given key.
+
+        cdbw_output() computes the database file and writes it to the given descriptor.
+        The function returns an error if the file cannot be written correctly. The
+        descr() parameter provides a human readable description of the database
+        content. The seedgen() parameter can be used to override the default PRNG. The
+        function should return a different value for each invokation. The bitwise
+        layout of the output depends on the chosen seed.
+
+SEE ALSO
+        cdbr(3), cdb(5)
+
+HISTORY
+        Support for the cdb format first appeared in NetBSD6.0.
+
+AUTHORS
+        The cdbr and cdbw functions have been written by Joerg Sonnenberger
+        <joerg@NetBSD.org>
+

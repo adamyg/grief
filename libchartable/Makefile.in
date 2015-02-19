@@ -1,0 +1,171 @@
+# -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
+# $Id: Makefile.in,v 1.14 2015/02/19 00:17:02 ayoung Exp $
+# libchartable makefile.
+#
+#
+# Copyright (c) 2010 - 2015, Adam Young.
+# All rights reserved.
+# 
+# This file is part of the GRIEF Editor.
+# 
+# The GRIEF Editor is free software: you can redistribute it
+# and/or modify it under the terms of the GRIEF Editor License.
+# 
+# Redistributions of source code must retain the above copyright
+# notice, and must be distributed with the license document above.
+# 
+# Redistributions in binary form must reproduce the above copyright
+# notice, and must include the license document above in
+# the documentation and/or other materials provided with the
+# distribution.
+# 
+# The GRIEF Editor is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# License for more details.
+# ==end==
+#
+
+@SET_MAKE@
+ROOT=		@abs_top_builddir@
+top_builddir=	@abs_top_builddir@
+top_srcdir=	@abs_top_srcdir@
+
+# File extensions
+
+C=		.c
+O=		.o
+H=		.h
+A=		.a
+LP=		lib
+
+CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+
+# Compilers, programs
+
+CC=		@CC@
+AR=		@AR@
+RANLIB=		@RANLIB@
+RM=		@RM@
+PERL=		@PERL@
+LIBTOOL=	@LIBTOOL@
+##SHELL=	bash
+LT_OBJDIR=	@LT_OBJDIR@
+
+# Common flags
+
+ARFLAGS=	rcv
+XFLAGS=		
+COPT=		@CFLAGS@
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+LDEBUG=		@LDEBUG@
+CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
+ifeq ("mingw32","@build_os@")
+CINCLUDE+=	-I../libw32
+endif
+CEXTRA=		@DEFS@
+CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+YFLAGS=		-d
+LDFLAGS=	$(LDEBUG) @LDFLAGS@
+LXFLAGS=	$(LDLIBS) @LIBS@ @LIBMALLOC@
+RMFLAGS=	-f
+
+# Directories
+
+D_BIN=		$(ROOT)/bin
+D_BINCTBL=	$(ROOT)/bin/ctbl
+D_INC=		$(ROOT)/include
+D_OBJ=		$(ROOT)/objects/libchartable
+D_LIB=		$(ROOT)/lib
+
+OBJMKDIR :=	$(shell test -d $(ROOT)/objects) || mkdir $(ROOT)/objects)
+LIBMKDIR :=	$(shell test -d $(ROOT)/lib) || mkdir $(ROOT)/lib)
+
+############################################################
+
+CTBLLIB=	$(D_LIB)/$(LP)chartable$(A)
+
+CTBLOBJS=\
+	$(D_OBJ)/charseticonv$(O)		\
+	$(D_OBJ)/charsetstream$(O)		\
+	$(D_OBJ)/charsetistream$(O)		\
+	$(D_OBJ)/charsetfstream$(O)		\
+	$(D_OBJ)/charsettable$(O)		\
+	$(D_OBJ)/charsetutil$(O)		\
+	$(D_OBJ)/charsetalias$(O)		\
+	$(D_OBJ)/charsetlocale$(O)		\
+	$(D_OBJ)/charsetutf32$(O)		\
+	$(D_OBJ)/charsetutf16$(O)		\
+	$(D_OBJ)/charsetutf8$(O)		\
+	$(D_OBJ)/charsetwidth$(O)		\
+	$(D_OBJ)/charsetwidth_cjk$(O)
+
+MODULES=	$(notdir $(basename $(wildcard cnvtables/cx*.c)))
+
+MODULEOBJS=	$(addprefix $(D_OBJ)/,$(addsuffix .lo,$(MODULES)))
+MODULELIBS=	$(addprefix $(D_LIB)/,$(addsuffix .la,$(MODULES)))
+
+OBJS=		$(CTBLOBJS) $(MODULEOBJS)
+LIBS=		$(CITRUSLIB) $(MODULELIBS)
+TSKS=
+
+# Rules
+
+all:			data/.created $(CTBLLIB)
+		$(MAKE) modules
+
+$(CTBLLIB):		charsetlocales.h		\
+			charsettable.c			\
+			$(D_OBJ)/.created		\
+			$(CTBLOBJS)
+		$(RM) $(RMFLAGS) $@
+		$(AR) $(ARFLAGS) $@ $(CTBLOBJS)
+		$(RANLIB) $@
+
+XCLEAN=		charsettables.h charsetnames.h charsetdesc.h charsetlocales.h
+
+clean:
+		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(CLEAN) $(XCLEAN)
+		-@$(LIBTOOL) --mode=clean $(RM) $(MODULELIBS)
+
+charsetlocales.h:	makelocale.pl
+		$(PERL) makelocale.pl > charsetlocales.h
+
+charsettable.c:		charsettables.h
+
+charsettables.h:	makechartable.pl cnvtables/.created
+		@echo building character tables
+		$(PERL) makechartable.pl --crunch --dynamic --packaged
+
+modules:		$(D_BINCTBL)/.created		\
+			$(MODULELIBS)
+		@echo dynamic character conversion modules built ...
+
+data/.created:
+		-@mkdir data
+		(cd data; \
+	wget -r -nv -nH --cut-dirs=1 ftp://ftp.unicode.org/Public/MAPPINGS/;	\
+	wget -nv ftp://ftp.unicode.org/Public/UNIDATA/Unihan.zip;		\
+	wget -nv ftp://ftp.unicode.org/Public/UNIDATA/UCD.zip;			\
+	wget -nv http://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz;		\
+	wget -nv http://de.selfhtml.org/html/referenz/zeichen.htm;		\
+	cd ..)
+		@echo "++ do not delete, managed content ++" > $@
+
+%/.created:
+		-@mkdir $(@D)
+		@echo "++ do not delete, managed content ++" > $@
+
+$(D_LIB)/%.la:		%.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ $(D_OBJ)/$< \
+			-module -avoid-version -bindir $(D_BINCTBL)
+
+%.lo:			cnvtables/%.c
+		$(LIBTOOL) --mode=compile $(CC) -DMODULE_LOADABLE $(CFLAGS) -o $(D_OBJ)/$@ -c $<
+
+$(D_OBJ)/%$(O):		%.c
+		$(CC) $(CFLAGS) -o $@ -c $<
+
+#end

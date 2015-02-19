@@ -1,0 +1,96 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: region.mandoc,v 1.1 2014/11/27 18:19:42 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt REGION 1
+.Os
+.Sh NAME
+.Nm region
+.Nd region support.
+.Sh DESCRIPTION
+This section describes the macros which can be used on marked areas
+of the buffer.
+.Bl -tag -offset 1 -width xxxxxxxxxx
+.It "Justifying Text"
+This macro can used to format and justify text. This macro can be used
+with text files or C programs for pretty comments (see format).
+.Pp
+The text to be justified should be first highlited. Justifying text can
+be done to produce ragged margins or right justified margins. The margin
+is set to a default of 60. This can be altered by setting the option in
+the Options menu, under Documents (see options).
+.Pp
+Text with C comments can be justified as well. This is done by first stripping
+off any comment characters at the start and end of each line in the
+region, justifying the raw text, and then putting back the start and end
+of line characters. Currently justification of C comments can only be performed
+for comments which are to appear at the start of the line, ie it cannot be
+done with comments which are to maintain alignment with C code.
+.Pp
+This macro is usually mapped to the <Ctrl-F> key.
+.It "Lower and Uppercasing Text"
+Text highlited by a marker can be turned to lower or upper case using
+the 'Lower case region' or 'Upper case region' options from the Features
+menu (see tolower, toupper).
+.It "Indenting Block"
+Text  which  has  been  highlited can be indented or unindented by
+selecting the 'Indent Block' or 'Unindent Block' options from the
+features menu.  Indenting is performed by inserting a <Tab> character
+at the start of each line in the block.  Unindenting is performed by
+removing the first <Tab> at the start of each line.
+.Pp
+The indent and unindent macros do not currently support files
+using soft tabs.
+.Pp
+This feature calls the (<<) and (>>) macros. (These macros are so named because
+they are the names for the same feature in 'vi').
+.It "Sort"
+Sorts the selected region (see sort).
+.El
+.Sh SEE ALSO
+.Xr program ,
+.Xr docopts

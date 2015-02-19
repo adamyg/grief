@@ -1,0 +1,9 @@
+# $Id: makelib.def,v 1.3 2012/09/21 17:32:52 ayoung Exp $
+# win32 makelib configuration
+#
+inc=../include
+lbl=LIBGUESS
+lib=libguess.lib
+def=HAVE_LIBGUESS
+def=HAVE_LIBGUESS_EXTENSIONS
+def=HAVE_LIBGUESS_H

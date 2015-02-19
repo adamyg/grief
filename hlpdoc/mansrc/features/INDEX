@@ -1,0 +1,79 @@
+ASCII Chart                :ascii
+Ansi mode toggle           :ansi
+Auto indent                :auto_indent=autoind
+Auto wrap                  :autowrap
+Buffer List                :buffer_list=buflist
+Buffer Search              :bs
+C Hierarchy chart          :chier=chier
+CRISP Demonstration        :demo
+Calender                   :cal
+Calculator (infix)         :calc
+Center text                :center
+Change Log                 :change
+Color mappings             :setcolor
+Current file name          :display_file_name=filenam
+Define abbreviation        :abbrev
+Delete blank lines         :delete_blank_lines=delblank
+Delete trailing space      :delete_trailing_spaces=delspace
+Detab buffer               :detab,detab_buffer=detab
+Detab region               :detab,detab_region=detab
+Document options           :docopts
+Dump global variables      :vars
+Edit file again            :edit_again=edagain
+Edit mode                  :mode
+Explain CRISP macro        :explain
+Extra features             :extra
+Features menu              :feature
+File find                  :ff
+Find function              :tags,tag=tags
+Find manual entry          :apropos
+Format Region              :format
+GREP                       :grep
+Game of Tetris             :tetris
+Game of Invaders           :invaders
+HEX mode editing           :hex
+HP Calculator (RPN)        :hpcalc
+Help                       :help
+Hierarchy charts           :hier
+Indent region              :indent
+Insert date                :insdate
+Interactive Search         :isearch
+Join next line             :joinline
+Keyboard Summary           :kbdsum
+Keystroke Library          :keylib
+Language packages          :package
+Lint                       :lint
+List functions/sections    :routines
+Literal display mode       :literal
+Lower case region          :block_lower_case=tolower
+Mail                       :mail
+Make                       :make
+Make buffer writeable      :make_writeable,rw=mkwrite
+Manual page                :man
+Match brackets             :match
+Mode line processing       :modeline
+Norton Commander Style GUI :nc
+Options                    :options
+Outdent region             :outdent
+Pipe region                :pipereg
+Print buffer               :print
+Programming support        :program
+Save window layout         :layout
+Scroll lock window         :scroll
+Set right hand margin      :margin
+Shell buffer               :shell
+Show tabs                  :show_tabs=detab
+Sort                       :sort
+Spell                      :spell
+Sub-shell                  :subshell
+Sum column of numbers      :sum
+Syntax mode                :mode
+TODO Log                   :todo=change
+Tab of buffer              :entab=detab
+Texinfo                    :texinfo
+Text search                :ts
+Tower of Hanoi             :hanoi
+Upper case region          :block_upper_case=toupper
+Use tabs or spaces         :use_tab_char
+Word count                 :wc
+Zoom/unzoom window         :zoom

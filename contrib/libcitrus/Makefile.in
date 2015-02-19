@@ -1,0 +1,173 @@
+# -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
+# $Id: Makefile.in,v 1.6 2013/05/12 21:35:56 cvsuser Exp $
+# libcitrus and modules makefile
+#
+#
+#
+
+@SET_MAKE@
+ROOT=		@abs_top_builddir@
+top_builddir=	@top_builddir@
+
+# File extensions
+
+E=
+O=		.o
+H=		.h
+A=		.a
+LP=		lib
+
+CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+
+# Compilers, programs
+
+CC=		@CC@
+AR=		@AR@
+RANLIB=		@RANLIB@
+RM=		@RM@
+PERL=		@PERL@
+LIBTOOL=	@LIBTOOL@
+
+# Common flags
+
+ARFLAGS=	rcv
+XFLAGS=		
+COPT=		@CFLAGS@
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+LDEBUG=		@LDEBUG@
+CINCLUDE=	-I. -I./src -I$(D_INC) @CINCLUDE@
+CEXTRA=		@DEFS@ -DI18NMODULE_MAJOR=$(major) -DI18NMODULE_MINOR=$(minor)
+CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+YFLAGS=		-d
+LDFLAGS=	$(LDEBUG) @LDFLAGS@
+LDLIBS=		@LIBS@ @LIBM@ @EXTRALIBS@
+
+RMFLAGS=	-f
+
+# Directories
+
+D_BIN=		$(ROOT)/bin
+D_INC=		$(ROOT)/include
+D_OBJ=		$(ROOT)/objects/libcitrus
+D_LIB=		$(ROOT)/lib
+
+D_I18N=		$(ROOT)/bin/i18n
+D_I18N_MODULE=	$(D_I18N)/module
+
+############################################################
+
+# Targets
+
+CITRUSLIB=	$(D_LIB)/$(LP)citrus$(A)
+
+CITRUSSRC=	./src
+MODULESRC=	./modules
+VPATH=		. $(CITRUSSRC) $(MODULESRC)
+
+#	$(D_OBJ)/citrus_lc_ctype$(O)		\
+#	$(D_OBJ)/citrus_lc_messages$(O)		\
+#	$(D_OBJ)/citrus_lc_monetary$(O)		\
+#	$(D_OBJ)/citrus_lc_numeric$(O)		\
+#	$(D_OBJ)/citrus_lc_time$(O)		\
+
+LIBOBJS=\
+	$(D_OBJ)/citrus_bcs$(O)			\
+	$(D_OBJ)/citrus_bcs_strtol$(O)		\
+	$(D_OBJ)/citrus_bcs_strtoul$(O)		\
+	$(D_OBJ)/citrus_csmapper$(O)		\
+	$(D_OBJ)/citrus_ctype$(O)		\
+	$(D_OBJ)/citrus_ctype_fallback$(O)	\
+	$(D_OBJ)/citrus_db$(O)			\
+	$(D_OBJ)/citrus_db_factory$(O)		\
+	$(D_OBJ)/citrus_db_hash$(O)		\
+	$(D_OBJ)/citrus_esdb$(O)		\
+	$(D_OBJ)/citrus_hash$(O)		\
+	$(D_OBJ)/citrus_iconv$(O)		\
+	$(D_OBJ)/citrus_lookup$(O)		\
+	$(D_OBJ)/citrus_lookup_factory$(O)	\
+	$(D_OBJ)/citrus_mapper$(O)		\
+	$(D_OBJ)/citrus_memstream$(O)		\
+	$(D_OBJ)/citrus_mmap$(O)		\
+	$(D_OBJ)/citrus_module$(O)		\
+	$(D_OBJ)/citrus_none$(O)		\
+	$(D_OBJ)/citrus_pivot_factory$(O)	\
+	$(D_OBJ)/citrus_prop$(O)		\
+	$(D_OBJ)/citrus_stdenc$(O)		\
+	$(D_OBJ)/libpaths$(O)
+
+
+MODULES=\
+	BIG5			\
+	DECHanyu		\
+	EUC			\
+	EUCTW			\
+	GBK2K			\
+	HZ			\
+	ISO2022			\
+	JOHAB			\
+	MSKanji			\
+	UES			\
+	UTF1632			\
+	UTF7			\
+	UTF8			\
+	VIQR			\
+	ZW			\
+	iconv_none		\
+	iconv_std		\
+	mapper_646		\
+	mapper_none		\
+	mapper_parallel		\
+	mapper_serial		\
+	mapper_std		\
+	mapper_zone
+
+MODULEOBJS=	$(addprefix $(D_OBJ)/,$(addsuffix .lo,$(MODULES)))
+MODULELIBS=	$(addprefix $(D_LIB)/lib,$(addsuffix .la,$(MODULES)))
+
+OBJS=		$(LIBOBJS) $(MODULEOBJS)
+LIBS=		$(CITRUSLIB) $(MODULELIBS)
+TSKS=
+
+include ./shlib_version
+
+CEXTRA+=	-DI18NMODULE_MAJOR=$(major) -DI18NMODULE_MINOR=$(minor)
+
+# Rules
+
+all:			directories $(LIBS) $(TSKS) $(MODULELIBS)
+
+$(CITRUSLIB):		CEXTRA += -I$(CITRUSSRC) -DLIBCITRUS_STATIC -D_WIN32 -D_WIN32_WINNT=0X601
+
+
+$(CITRUSLIB):		$(LIBOBJS)
+		$(RM) $(RMFLAGS) $@ >nul 2>&1
+		$(AR) $(ARFLAGS) $@ $(subst /,\,$^)
+		$(RANLIB) $@
+
+.PHONY:		directories
+directories:		$(D_OBJ)/.created $(D_I18N)/.created $(D_I18N_MODULE)/.created
+
+%/.created:
+		-@mkdir $(@D)
+		@echo "do not delete, managed directory" > $@
+
+clean:
+		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(CLEAN) $(XCLEAN) >nul 2>&1
+		-@$(LIBTOOL) --mode=clean $(RM) $(MODULELIBS) >nul 2>&1
+		-@$(RM) $(LIBOBJS) >nul 2>&1
+
+$(D_LIB)/libmapper_parallel.la::	$(D_OBJ)/citrus_mapper_serial.lo
+
+$(D_LIB)/lib%.la:	$(D_OBJ)/citrus_%.lo $(D_LIB)/libcitrus.lib
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_OBJ)/%.lo:		%.c
+		$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -Fo$@ -Fd$(@D)/ -c $<
+
+$(D_OBJ)/%$(O):		%.c
+		$(CC) $(CFLAGS) -o $@ -c $<
+
+#end

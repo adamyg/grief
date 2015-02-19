@@ -1,0 +1,673 @@
+dnl $Id: configure.in,v 1.45 2014/11/02 20:08:54 cvsuser Exp $
+dnl Process this file with autoconf to produce a configure script.
+dnl -*- mode: Autoconf; tabs: 8; -*-
+dnl
+dnl
+
+AC_REVISION($Revision: 1.45 $)
+##	AC_COPYRIGHT(Adam Young 1995-2014, Paul Fox 1989-1991)
+AC_INIT([Grief], [3.2.0], [griefedit@gmail.com])
+AC_PREREQ(2.68)
+
+AC_CONFIG_SRCDIR([include/edheaders.h])
+AC_CONFIG_HEADER(include/config.h:include/config.hin)
+AC_CONFIG_MACRO_DIR([m4])
+
+AC_MSG_RESULT([-])
+AC_MSG_RESULT([- You may set the CC/CXX and CFLAGS/CXXFLAGS environment variables prior running this])
+AC_MSG_RESULT([- to predetermine the C and C++ compilers and associated options used.])
+AC_MSG_RESULT([-])
+
+AC_CANONICAL_TARGET
+AC_CANONICAL_BUILD
+CF_CANONICAL_HOST
+AC_PROG_MAKE_SET
+AC_EXEEXT
+
+LT_INIT([dlopen win32-dll])
+
+AC_SUBST([LIBTOOL_DEPS])
+AC_SUBST([LT_OBJDIR])
+AC_PROG_LIBTOOL
+LT_OBJDIR="$lt_cv_objdir"
+LIBTOOL='/bin/bash $(top_builddir)/libtool'
+
+AC_SUBST(PROGS)
+AC_PROG_CC(gcc cc clang c1 egcs)
+AC_PROG_CXX(g++ CC clang++)
+AC_PROG_GCC_TRADITIONAL
+
+AC_PROG_CPP
+AC_SUBST(CPPDEP)
+CPPDEP=${CPPDEP-"gcc -MM"}
+
+AC_SUBST([ABS_ROOT])
+ABS_ROOT="`pwd`/"
+
+AC_PATH_PROG(RM,rm,rm)
+AC_PATH_PROG(SED,sed,sed)
+AC_PATH_PROG(TAR,tar,tar)
+AC_PATH_PROG(PERL,perl,perl)
+AC_PATH_PROG(GREP,egrep,egrep)
+AC_PATH_PROG(NROFF,nroff,nroff)
+AC_PATH_PROG(TROFF,troff,troff)
+AC_PATH_PROG(RANLIB,ranlib,echo)
+
+AC_SUBST(LIBPROGS)
+AC_SUBST(EXTRALIBS)
+AC_SUBST(EXTRA_CFLAGS)
+AC_SUBST(EXTRA_CXXFLAGS)
+AC_SUBST(CWARN)
+AC_SUBST(CXXWARN)
+AC_SUBST(CINCLUDE)
+
+EXTRALIBS=""
+EXTRA_CFLAGS=""
+EXTRA_CXXFLAGS=""
+CWARN=""
+CXXWARN=""
+CINCLUDE=""
+
+AC_ARG_WITH(gcc,
+	[  --with-gcc              force use of gcc for compilation],
+	with_gcc=1)
+if test -z "$with_gcc" ; then
+	CC=${CC-cc}
+else
+	CC="gcc"
+fi
+if test "x$CC" = "xgcc"; then
+	AC_ARG_WITH(warnings,
+	[  --with-warnings         enable verbose warnings (gcc only)],
+			with_wall=1)
+	if test "x$with_wall" = "x1"; then
+		AC_MSG_RESULT([enabling verbose gcc warnings])
+		CF_GCC_WARNINGS
+	fi
+fi
+
+CF_GCC_VERSION
+CF_GCC_ATTRIBUTES
+CF_C_INLINE(yes,1200)
+CF_WARNING_UNUSED_RESULT
+CF_LDMAPFILE
+
+AC_MSG_CHECKING(whether to enable 8bit handling)
+AC_ARG_WITH(8bit,
+	[  --with-8bit             enable full 8bit display],
+			[with_8bit=$withval],
+			[with_8bit=no])
+AC_MSG_RESULT($with_8bit)
+if test "x$with_8bit" = "xyes"; then
+	AC_DEFINE(HAVE_EIGHTBIT, 1,
+			[Define to enable 8bit character support])
+fi
+
+AC_MSG_CHECKING(whether to enable float-point maths)
+AC_ARG_WITH(floating,
+	[  --with-float            enable floating point macro support (default=yes)],
+	[with_floating=$withval],
+	[with_floating=yes])
+AC_MSG_RESULT($with_floating)
+if test "x$with_floating" = "xno"; then
+	AC_DEFINE(NO_FLOAT_MATH, 1,
+			[Define to disable float maths functions])
+fi
+
+BUILD_CONTRIB=0
+AC_SUBST(BUILD_CONTRIB)
+AC_MSG_CHECKING(whether to enable contrib components)
+with_contribdefault=no
+	case $host_os in
+	ming*)
+		with_contribdefault=yes;;
+	esac
+AC_ARG_WITH(contrib,
+	[  --with-contrib          enable contrib components (default=$with_contribdefault)],
+	[case "$withval" in
+		yes)  with_contrib=yes;;
+		no)   with_contrib=no;;
+		*)    AC_MSG_ERROR(bad value ${withval} for --with-contrib);;
+	esac],[
+	AC_DEFINE(BUILD_CONTRIB,1)
+	with_contrib=$with_contribdefault])
+AC_MSG_RESULT($with_floating)
+
+dnl
+dnl Types
+dnl
+AC_TYPE_LONG_LONG_INT
+AC_TYPE_UNSIGNED_LONG_LONG_INT
+
+AC_CHECK_HEADERS(endian.h machine/endian.h arpa/nameser_compat.h)
+AC_C_BIGENDIAN(
+	[AC_DEFINE(IS_BIG_ENDIAN, 1, [big endian])],
+	[AC_DEFINE(IS_LITTLE_ENDIAN, 1, [little endian])],
+	[AC_DEFINE(IS_UNKOWN_ENDIAN, 1, [unknown])],
+	[AC_DEFINE(IS_UNIVERSAL_BUILD, 1, [universal])])
+
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(void *)
+AC_CHECK_SIZEOF(long)
+AC_CHECK_SIZEOF(double)
+AC_CHECK_SIZEOF(long long)
+
+
+dnl If stdint.h or inttypes.h does not define the given type, then define a
+dnl suitable unsigned type of the correct size.
+dnl
+dnl     [u]intmax_t
+dnl             The C99 intmax_t and uintmax_t types are capable of representing any
+dnl             value representable by any other integer types of the same signedness.
+dnl
+dnl     [u]intptr_t
+dnl             Datatype suitable to store either a integer or pointer.
+dnl
+AC_CHECK_HEADERS( \
+	inttypes.h \
+	stdint.h )
+AC_TYPE_INT8_T
+AC_TYPE_INT16_T
+AC_TYPE_INT32_T
+AC_TYPE_INTMAX_T
+AC_TYPE_INTPTR_T
+
+AC_TYPE_UINT8_T
+AC_TYPE_UINT16_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINTMAX_T
+AC_TYPE_UINTPTR_T
+
+
+dnl Checks for system services
+dnl
+dnl     AC_SYS_LARGEFILE
+dnl             Arrange for 64-bit file offsets.
+dnl
+dnl             Large-file support can be disabled by configuring with the
+dnl             --disable-largefile option.
+dnl
+dnl             Applications should be tested with >32bit offsets, including
+dnl             printf of offset values.
+dnl
+dnl     AC_SYS_LONG_FILENAMES
+dnl             Support file-names greater then 14 characters.
+dnl
+AC_SYS_LARGEFILE
+AC_SYS_LONG_FILE_NAMES
+CF_MIXEDCASE_FILENAMES
+CF_PATHSEP
+
+AC_CHECK_HEADERS(sys/sendfile.h)
+AC_CHECK_FUNCS(sendfile)
+AC_CHECK_HEADERS(sys/prctl.h)
+AC_CHECK_FUNCS(prctl)
+
+
+dnl terminal interface
+dnl
+LIBTERM_CHECK_CONFIG()
+
+
+dnl third-party libraries
+dnl     libicu
+dnl     libapriconv
+dnl     libaprutil
+dnl     libiconv/libcharset
+dnl     libcharudet     (Mozilla universal character detector)
+dnl     libenca
+dnl     libmagic and optional libz
+dnl     libguess        (www.atheme.org)
+dnl     libintl
+dnl     libcurl
+dnl     libltdl
+dnl     liberty
+dnl     libbfd
+dnl
+dnl TODO:
+dnl     libpcre
+dnl     libtre
+dnl
+LIBMALLOC_CHECK_CONFIG()
+LIBSPELL_CHECK_CONFIG()
+
+CF_WITH_LIBICU(3)
+CF_WITH_LIBAPRICONV
+AC_CHECK_LIB(aprutil,main)
+CF_WITH_LIBICONV
+dnl CF_WITH_LIBUTF8
+
+dnl CF_LIB_CHARUDET
+CF_WITH_LIBENCA
+CF_WITH_LIBMAGIC
+AC_CHECK_LIB(guess,libguess_determine_encoding, [LIBGUESS=['-lguess']])
+AC_CHECK_HEADERS(libguess/libguess.h)
+AC_CHECK_HEADERS(libguess.h)
+
+AC_CHECK_HEADERS(dlfcn.h)
+AC_CHECK_FUNCS(dlvsym dladdr dlopen_preflight)
+
+AC_CHECK_LIB(ltdl, lt_dlinit, [
+	AC_DEFINE(HAVE_LIBLTDL, 1,
+		[Define to enable libltdl support])
+	AC_CHECK_HEADERS(ltdl.h)
+	CF_ADD_EXTRALIBS("-lltdl")
+	])
+
+AC_CHECK_LIB(iberty, cplus_demangle, [
+	AC_DEFINE(HAVE_LIBIBERTY, 1,
+		[Define to enable libiberty support])
+	AC_DEFINE(HAVE_CPLUS_DEMANGLE, 1,
+		[Whether or not we have to demangle names])
+	AC_CHECK_HEADERS(libiberty.h demangle.h)
+	CF_ADD_EXTRALIBS("-liberty")
+	])
+
+AC_CHECK_LIB(bfd, bfd_openr, [
+	AC_DEFINE(HAVE_LIBBFD, 1,
+		[Define to enable libbfd support])
+	AC_CHECK_HEADERS(bfd.h)
+	CF_ADD_EXTRALIBS("-lbfd")
+	])
+
+LIBCURL_CHECK_CONFIG([yes], [7.15.1], [
+	if test "$libcurl_protocol_FTP" != yes; then
+		AC_MSG_RESULT(["we need libcurl with support for FTP protocol."])
+	fi
+	], [AC_MSG_RESULT(["libcurl not found"])])
+
+dnl CF_WITHPCRE
+dnl CF_WITHTRE
+
+CF_WITH_LIBCLANG
+
+dnl
+dnl Check for mouse support
+dnl
+mouse_lib="none"
+AC_MSG_CHECKING(whether to enable mouse handling)
+AC_ARG_WITH(mouse,
+	[  --with-mouse            enable mouse support],
+			[with_mouse=$withval],
+			[with_mouse=no])
+AC_MSG_RESULT($with_mouse)
+if test "$with_mouse" = yes ; then
+	AC_DEFINE(HAVE_MOUSE, 1,
+			[Define to enable mouse support])
+	mouse_lib="xterm only"
+fi
+
+AC_MSG_CHECKING(whether to enable gpm mouse support)
+AC_ARG_WITH(gpm,
+	[  --with-gpm              use gpm mouse library],
+			[with_gpm=$withval],
+			[with_gpm=no])
+AC_MSG_RESULT($with_gpm)
+AC_CHECK_HEADERS(gpm.h)
+if test "$with_gpm" = yes ; then
+	AC_CHECK_LIB(gpm,Gpm_Open,[
+		CF_ADD_EXTRALIBS("-lgpm")
+		AC_DEFINE(HAVE_LIBGPM, 1,
+			[Define to enable gpm mouse support])
+		AC_CHECK_HEADERS(gpm.h)
+		mouse_lib="gpm and xterm"
+	],AC_MSG_WARN(cannot link with gpm library, missing or maybe old))
+fi
+
+
+AC_SUBST(LDEBUG)
+AC_SUBST(CDEBUG)
+AC_SUBST(CXXDEBUG)
+AC_ARG_WITH(debug,
+	[  --with-debug            compile with debugging information],
+			[with_debug=$withval],
+			[with_debug=no])
+if test "$with_debug" = yes ; then
+	CDEBUG="-g"
+	CXXDEBUG="-g"
+	LDEBUG="-g"
+else
+	CDEBUG=""
+	CXXDEBUG=""
+	LDEBUG=""
+fi
+
+
+AC_MSG_CHECKING(whether to enable runtime assertions)
+AC_ARG_WITH(assert,
+	[  --with-assert           generate assertion code (default=yes)],
+			[with_assert=$withval],
+			[with_assert=yes])
+AC_MSG_RESULT($with_assert)
+if test "$with_assert" = no ; then
+	AC_DEFINE(HAVE_NOASSERTS, 1,
+			[Define to disable assertions])
+	if test -n "$GCC" ; then
+		AC_DEFINE([NDEBUG], 1, [disable debug.])
+		CFLAGS="$CFLAGS -DNDEBUG"
+		CXXFLAGS="$CXXFLAGS -DNDEBUG"
+	fi
+fi
+
+
+dnl TODO
+dnl	AC_MSG_CHECKING([For a working C99 __func__])
+dnl	   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],
+dnl	   	[[const char *foo = __func__;]])],
+dnl	   	[ac_cv_cpp_func=yes],
+dnl	   	[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],
+dnl	   		[[const char *foo = __FUNCTION__;]])],
+dnl	   		[ac_cv_cpp_func=__FUNCTION__],
+dnl	   		[ac_cv_cpp_func="\"no\""])]
+dnl	   )
+dnl	   
+dnl	   if test "X$ac_cv_cpp_func" = "X__FUNCTION__"; then
+dnl	   	AC_MSG_RESULT([__FUNCTION__])
+dnl	   elif test "x$ac_cv_cpp_func" = "xyes" ; then
+dnl	   	AC_MSG_RESULT([__func__])
+dnl	   else
+dnl	   	AC_MSG_RESULT([no])
+dnl	   fi
+dnl	   if test "X$ac_cv_cpp_func" != "Xyes" ; then
+dnl	   	AC_DEFINE_UNQUOTED([__func__], [$ac_cv_cpp_func], [Define to be a __func__ replacement])
+dnl	   fi
+
+dnl
+dnl Checks for programs.
+dnl
+AC_PROG_INSTALL
+AC_PATH_PROG(AR,ar,ar)
+AC_PROG_YACC
+AC_PROG_LN_S
+AC_PROG_AWK
+AC_PROG_LEX
+
+dnl
+dnl System libraries.
+dnl
+AC_CHECK_LIB(c_s,main)
+AC_SUBST([LIBM])
+if test "x$with_floating" != "xno"; then
+	CF_NEED_LIBM(LIBM)
+fi
+AC_CHECK_LIB(socket,main)
+AC_CHECK_LIB(inet,main)
+AC_CHECK_LIB(nsl,main)
+AC_CHECK_LIB(posix,main)
+AC_CHECK_LIB(PW,main)
+AC_CHECK_LIB(dir,main)
+AC_CHECK_LIB(x,main)
+AC_SEARCH_LIBS([strerror],[cposix])
+CF_WITH_THREADS
+
+dnl
+dnl Misc libraries.
+dnl
+dnl     libarchive
+dnl     libexplain
+dnl     yacc/bison
+dnl
+AC_CHECK_HEADERS(archive.h)
+AC_SUBST(LIBARCHIVE)
+AC_CHECK_LIB(archive,main,[LIBARCHIVE="-larchive"],[LIBARCHIVE=""])
+
+AC_CHECK_HEADERS(libexplain/libexplain.h)
+AC_CHECK_HEADERS(libexplain.h)
+AC_SUBST(LIBEXPLAIN)
+AC_CHECK_LIB(explain,explain_open,[LIBEXPLAIN="-lexplain"],[LIBEXPLAIN=""])
+
+AC_SUBST(LIBYACC)
+AC_CHECK_LIB(y,main,[LIBYACC="-ly"],[LIBYACC=""])
+
+dnl
+dnl Checks for header files.
+dnl
+AC_HEADER_STDC
+AC_HEADER_DIRENT
+AC_CHECK_HEADERS(direct.h)
+AC_HEADER_SYS_WAIT
+AC_HEADER_STAT
+AC_CHECK_HEADERS(time.h sys/time.h utime.h sys/utime.h)
+AC_HEADER_TIME
+AC_STRUCT_TM
+AC_STRUCT_TIMEZONE
+CF_ENVIRON
+
+AC_CHECK_HEADERS( \
+	sys/types.h sys/cdefs.h sys/param.h sys/bsdtypes.h \
+	sys/ioctl.h sys/ioctl_compat.h sys/kd.h \
+	sys/select.h sys/socket.h \
+	sys/stat.h sys/statfs.h sys/statvfs.h sys/vfs.h \
+	stdarg.h stdlib.h stdio.h limits.h \
+	sys/utsname.h \
+	fcntl.h \
+	errno.h \
+	poll.h \
+	io.h \
+	locale.h \
+	memory.h strings.h \
+	process.h \
+	pwd.h \
+	libgen.h )
+
+dnl Argument processing
+AC_CHECK_HEADERS(getopt.h argz.h)
+AC_CHECK_FUNCS(getopt getopt_long)
+AC_CHECK_FUNCS(getsubopt)
+AC_DEFINE([HAVE_STRUCT_OPTION], 1, [struct option])
+
+dnl see: feature_test_macros (linux/glibc-library specific header)
+AC_CHECK_HEADERS( \
+	features.h )
+
+dnl C99 headers
+AC_CHECK_HEADERS( \
+	fenv.h )
+
+dnl C1X headers
+AC_CHECK_HEADERS( \
+	stdalign.h \
+	stdatomic.h \
+	threads.h )
+
+dnl Terminal specific headers
+AC_CHECK_HEADERS( \
+	sys/at_ansi.h \
+	machine/console.h \
+	sgtty.h \
+	termio.h \
+	termios.h)
+
+dnl Signal support
+AC_CHECK_HEADERS( \
+	signal.h )
+AC_CHECK_FUNCS(\
+	sigsetmask \
+	siginterrupt \
+	sigaction \
+	sigfillset \
+	strsignal )
+
+dnl
+dnl Checks for typedefs, structures, and compiler characteristics.
+dnl
+dnl     AC_C_CONST -            defunct
+dnl     AC_C_VOLATILE -         defunct
+dnl
+AC_TYPE_MODE_T
+AC_TYPE_OFF_T
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+CF_TYPE_SSIZE_T
+AC_TYPE_UID_T
+AC_CHECK_TYPE(gid_t, int)
+AC_CHECK_TYPE(u_char, unsigned char)
+
+dnl Wide character support
+AC_CHECK_HEADERS(wchar.h wctype.h)
+AC_CHECK_FUNCS(mbrtowc wcrtomb wcscmp wcscpy wcslen wctomb wmemcmp wmemmove wmemcpy)
+
+dnl Checks for library functions
+dnl
+AC_FUNC_CLOSEDIR_VOID
+AC_FUNC_GETPGRP
+
+AC_FUNC_VPRINTF
+CF_FUNC_ISASCII
+CF_FUNC_ISBLANK
+CF_FUNC_MKSTEMP
+CF_LANGINFO_CODESET
+CF_FUNC_MEMMOVE
+
+AC_CHECK_HEADERS(wait.h sys/wait.h)
+AC_FUNC_FORK
+AC_CHECK_HEADERS(spawn.h)
+AC_CHECK_FUNCS(\
+	waitpid wait3 wait4 \
+	posix_spawn posix_spawnp)
+AC_FUNC_WAIT3
+
+AC_FUNC_STRFTIME
+AC_FUNC_VPRINTF
+
+dnl TTY interface
+AC_CHECK_HEADERS(pty.h grp.h stropts.h)
+AC_CHECK_HEADERS(sys/stream.h sys/termios)
+AC_CHECK_HEADERS(sys/ptem.h, [], [], [
+#ifdef HAVE_SYS_STREAM_H
+#include <sys/stream.h>     /* Solaris 8, sys/stream.h is a prerequisite. */
+#endif
+])
+AC_CHECK_FUNCS(posix_openpt, , [AC_CHECK_FUNCS(getpt)])
+AC_CHECK_FUNCS(ptsname_r, , [AC_CHECK_FUNCS(ptsname)])
+AC_CHECK_FUNCS(grantpt, , [AC_CHECK_LIB(pt, grantpt)])
+AC_CHECK_FUNCS(unlockpt, , [AC_CHECK_LIB(pt, unlockpt)])
+
+dnl libX11 and friends
+CF_WITH_LIBX11
+
+dnl replacing lstat with statlstat on sco makes it more portable between sco clones
+AC_CHECK_FUNCS(statlstat)
+
+dnl library functions.
+CF_MALLOC_OPT
+
+AC_CHECK_FUNCS(\
+	bcmp bzero memcmp memset memmove \
+	vprintf snprintf vsnprintf _vsnprintf \
+	getlogin getexecname \
+	fgetpos fsetpos fgetln \
+	select poll \
+	setlocale \
+	link symlink \
+	lstat \
+	chown chroot \
+	matherr)
+
+AC_CHECK_FUNCS(\
+	strchr strrchr strdup \
+	stricmp strcasecmp __strcasecmp strncasecmp __strncasecmp strcasestr \
+	strverscmp __strverscmp \
+	strtof strtoll strtold \
+	strftime \
+	strerror)
+
+AC_CHECK_FUNCS(\
+	setsid \
+	issetugid \
+	setpgrp \
+	setpgid)
+
+AC_CHECK_FUNCS(\
+	ctime_r \
+	localtime_r \
+	gmtime_r \
+	asctime_r \
+	timegm)
+
+AC_CHECK_FUNCS(\
+	mergesort \
+	heapsort \
+	versionsort)
+
+AC_CHECK_FUNCS(\
+	round \
+	neatbyintf)
+
+dnl BSD extensions
+AC_CHECK_FUNCS(\
+	index rindex \
+	setproctitle \
+	setprocname)
+
+AC_CONFIG_FILES([\
+	Makefile \
+	include/edpackage.h \
+	libllist/Makefile \
+	libmisc/Makefile \
+	libsplay/Makefile \
+	libmalloc/Makefile \
+	libvfs/Makefile \
+	libbsdio/Makefile \
+	libbsddb/Makefile \
+	libbsdfetch/Makefile \
+	libterm/Makefile \
+	libteken/Makefile \
+	libonigrx/Makefile \
+	libtre/Makefile \
+	libchartable/Makefile \
+	libcharudet/Makefile \
+	gr/Makefile \
+	gm/Makefile \
+	grcpp/Makefile \
+	grmandoc/Makefile \
+	grunch/Makefile \
+	hlpdoc/Makefile \
+	macsrc/Makefile])
+
+case $host_os in
+mingw*)
+	AC_CONFIG_FILES([libw32/Makefile])
+	;;
+esac
+
+if test "x$with_contrib" = "xyes"; then
+AC_CONFIG_FILES([\
+	contrib/Makefile \
+	contrib/makedepend/Makefile \
+	contrib/libregex/Makefile \
+	contrib/libbzip2/Makefile \
+	contrib/libz/Makefile \
+	contrib/hunspell/Makefile \
+	contrib/libmagic/Makefile \
+	contrib/libguess/Makefile \
+	contrib/libarchive/Makefile \
+	contrib/extags/Makefile])
+fi
+
+AC_MSG_RESULT([-  Configuration:])
+AC_MSG_RESULT([-])
+AC_MSG_RESULT([-         Compiler: $CC / $CXX])
+AC_MSG_RESULT([-           Depend: $CPPDEP])
+AC_MSG_RESULT([-           CFLAGS: $CFLAGS $EXTRA_CFLAGS $CWARN $CDEBUG])
+AC_MSG_RESULT([-         CXXFLAGS: $CXXFLAGS $EXTRA_CPPFLAGS $CXXWARN $CXXDEBUG])
+AC_MSG_RESULT([-          LDFLAGS: $LDFLAGS])
+AC_MSG_RESULT([-     Preprocessor: $EXTRA_CPPFLAGS $LIBCURL_CPPFLAGS])
+AC_MSG_RESULT([-    Mouse support: ${mouse_lib}])
+AC_MSG_RESULT([-   Termap support: ${termlib_name}])
+AC_MSG_RESULT([-    Spell Support: $LIBSPELL])
+AC_MSG_RESULT([-       Conversion: $LIBICU $LIBAPRICONV $LIBICONV])
+AC_MSG_RESULT([-        Detection: $LIBENCA $LIBCHARUDET $LIBGUESS $LIBMAGIC])
+AC_MSG_RESULT([-   Other Features: $LIBCURL $LIBARCHIVE $LIBEXPLAIN])
+AC_MSG_RESULT([-        Libraries: $LIBS $LIBX11 $LIBTHREAD])
+AC_MSG_RESULT([-            Extra: $LIBCLANG $LIBM $EXTRALIBS])
+AC_MSG_RESULT([-        Allocator: $LIBMALLOC])
+AC_MSG_RESULT([-             Yacc: $LIBYACC])
+AC_MSG_RESULT([-])
+
+dnl Keep copy of working definitions
+cp confdefs.h acdefines.h
+
+AC_OUTPUT
+
+dnl end

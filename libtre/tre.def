@@ -1,0 +1,23 @@
+; TRE regular expression library
+EXPORTS
+	tre_regaexec
+	tre_reganexec
+	tre_regcomp
+	tre_regerror
+	tre_regexec
+	tre_regfree
+	tre_regncomp
+	tre_regnexec
+	tre_regawexec
+	tre_regawnexec
+	tre_regwcomp
+	tre_regwexec
+	tre_regwncomp
+	tre_regwnexec
+	tre_regaparams_default
+	tre_version
+	tre_config
+	tre_have_backrefs
+	tre_have_approx
+	tre_reguexec
+

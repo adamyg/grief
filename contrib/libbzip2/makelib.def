@@ -1,0 +1,8 @@
+# $Id: makelib.def,v 1.1 2012/09/19 02:57:32 ayoung Exp $
+# win32 makelib configuration
+#
+inc=../include
+lbl=LIBBZ2
+lib=libbz2.lib
+def=HAVE_LIBBZ2
+def=HAVE_BZLIB_H

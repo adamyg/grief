@@ -1,0 +1,162 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: nc.mandoc,v 1.1 2014/11/27 18:19:41 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt NC 1
+.Os
+.Sh NAME
+.Nm nc
+.Nd Norton Commanber style shell.
+.Sh DESCRIPTION
+.Pp
+The nc macro gives you capabilities similar to those found in the
+NORTON COMMANDER, with a few exceptions.  Virtually all of the
+function key assignments are the same except for F2 which allows
+you to change what drive you are on.  To EDIT a file just select it
+with the highlight bar and hit <Enter>.  You can mark files with the
+<Ins> key, or the <+> or <-> keys to use a mask to select multiple
+files.
+.Pp
+Once selected files may be deleted, or loaded into the editor.  <F9>
+allows you to change how the directory is sorted: Filename, Extension,
+Size, Date, or Reverse-date.  <F10> or <Esc> EXIT "dir".  Hitting the
+<Enter> key when a Directory is highlighted will take you into that
+directory.  Press the <F1> key to get his help.
+.Pp
+The following is a list of all legal commands and their function:
+.Bl -tag -offset 1 -width xxxxxxxx
+.It F1
+Is to read the HELP INFO. (You are now reading the HELP information).
+.It F4
+Is to EDIT the selected (marked) files.  If NO file is marked (with
+the þ) then ONLY the HIGHLIGHTED file will be loaded for editing,
+otherwise; ALL marked files will be loaded for editing.
+.It F7
+Is to CREATE a NEW SUBDIRECTORY.  Simply enter the name that you want
+and the SUBDIRECTORY will be created in the current directory (the
+one that you see with the DIR macro).
+.It F8
+Is to DELETE one or more files.  Files being edited by GRIEF WILL
+NOT BE DELETED.  Select the desired files by marking (See the <+>
+and <-> commands) or use the HIGHLIGHT BAR if you ONLY want to
+DELETE one file, and then HIT the F8 key.  You will be asked to
+confirm that you want to delete these files.  If you respond with
+"Y" then the files selected will be deleted.
+.It F9
+Is to change how the files are SORTED.  Hit F9 and then select
+(with the First letter of the desired choice, or by using the
+cursor keys) your choice and Hit the <Enter> key. The nc macro
+will now display the files in the desired format.
+.It F10
+Exit the nc macro.
+.It Alt-F1
+(MSDOS only) Is to CHANGE our current drive.  You MAY hit ESC if you
+decide NOT to change the drive, or HIT the letter of the drive you
+want [A-Z]. No colon or return is needed, ONLY the drive letter.
+.It Alt-F7
+File find
+.It Alt-F7
+Directory tree
+.It ESC
+Performs the same function as F10 when NOT withing a prompt for
+drive letter, SUBDIRECTORY name, etc.  In these cases ESC will
+exit the function.
+.It <+>
+Is for Selecting (marking) ALL files that fit a certain description.
+For instance "f*.as?" would Select all files starting with "f"
+with a three letter extension of which the first two letters
+must be "as".
+.It <->
+Is for Unselecting (unmarking) files.  It works just like the
+<+> command described above, but for unselecting !
+.It <Ins>
+Is to toggle the Selection (marking) of the HIGHLIGHTED file. For
+instance, you may have used the <+> and <-> keys to select a
+certain group of files and want to add / remove certain files
+from the group.  Just position the HIGHLIGHT bar over the desired
+files and HIT the <Ins> key.  Hitting the <Ins> key again will
+toggle the Mark (selected/unselected) back to it's original value.
+.It <Enter>
+Is used to Move up or down in the directory tree by selecting
+"<DIR>" and hitting <Enter>, whereby you will then move into
+the selected Directory.  If you have Selected a file instead
+of a directory then that file will be loaded for editing into
+GRIEF and the macro will exit. You will then be in the selected
+file.
+.It <Ctrl-\> or <\>
+Will move you to the ROOT DIRECTORY on the Current Drive.
+.It <Ctrl-PgUp>
+Will move you UP one LEVEL in the DIRECTORY tree.  If you
+are in the ROOT then no change will take place.
+.It <Ctrl-d>
+Change the current working directory.
+.It <Ctrl-r>
+Will re-read the currently selected Directory.
+.It <Home>, <End>, <PgUp>, <PgDn>, <Up> and <Down>
+Work as expected.  Hitting <Home> moves you to the TOP
+of the current directory, <End> the BOTTOM of the current
+directory.  <PgUp> and <PgDn> move you one page UP or DOWN
+in the directory respectively.  The <Up> and <Down> move the
+HIGHLIGHT BAR up or down one item.  If at the TOP or bottom
+of the nc window then the window will be scrolled by one
+item until either the TOP or BOTTOM of the directory is
+reached.
+.It <Alt-[a-z_A-Z0-9]>
+The ALT key MAY also be used exactly as in the NORTON COMMANDER.
+To go to a particular location in your DIRECTORY simply hold down
+the <Alt> key and hit as many letters as you need to identify the
+file that you want (how the directory is sorted will affect what
+happens when you perform this action).  For example, you could
+hold down the <Alt> key and hit "br".  The HIGHLIGHT BAR will then
+move to the first SUBDIRECTORY ( FILE if no SUBDIRECTORY match )
+that begins with "br".  If NO SUBDIRECTORY and NO FILE exist then
+the HIGHLIGHT BAR will NOT move.  As long as the <Alt> key is held
+down the keys will be added to the search string.  As soon as you
+release the <Alt> key the search string will be cleared and ready
+to start a new search.  This function is implemented EXACTLY as it
+is implemented in the NORTON COMMANDER.
+.El

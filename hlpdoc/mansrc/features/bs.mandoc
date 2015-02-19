@@ -1,0 +1,118 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: bs.mandoc,v 1.1 2014/11/27 18:19:36 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt BS
+.Os
+.Sh NAME
+.Nm bs
+.Nd buffer search.
+.Sh SYNOPSIS
+bs pattern [/isl]
+.Sh DESCRIPTION
+The bs searchs all existing buffers against the regular expression 'pattern'
+for matching text.
+.Pp
+Whilst ts is operating it prints the message:
+.Bd -literal
+	Matches: total/this-file file-name ...
+.Ed
+.Pp
+The search results shall be presented within a selection dialog. The user can
+move around this dialog with the usual cursor movement keys. The current
+entry is highlited. Pressing <Enter> on any particular line result in its
+selection being toggled denoted by a marker in the left column. Upon exiting
+by <F10> all marked files are then loaded with the line on which the match
+occurred being selected.
+.Pp
+Dialog example:
+.Bd -literal
+	File: ./firstfile.txt Pattern: hello
+	  10,   helloworld
+	  12,   hello again
+	File: ./secondfile.txt Pattern: hello
+	  12,   hello to the second coming
+.Ed
+.Pp
+Also if the dialog was exited using <F10>, regardless whether any files
+where marked, the follwing navigation services are enabled.
+.Bl -tag -offset 1
+.It Previous and next
+The <Ctrl-N> and <Ctrl-P> keys are remapped to the search results. Pressing
+<Ctrl-N> will take you to the next file/line in the output from the search.
+<Ctrl-P> takes you to the previous line. Thus, repeated use of <Ctrl-N>
+allows the user to easily see the context (lines around the matching
+pattern) within each file.
+.It Result caching
+The previous search results can be reloaded using the syntax (ts <) or the
+remapped <Ctrl-B> key.
+.El
+.Pp
+.Sh ARGUMENTS
+.Bl -tag -offset 1
+.It pattern
+The regular expression for which to search the matching files. The pattern
+should either be escaped or quoted when special characters are included.
+.It options
+One or more options (see below).
+.El
+.Sh OPTIONS
+The valid options are:
+.Bl -tag -offset 1
+.It /i
+Ignore case.
+.It /s
+Include system buffers (use with caution).
+.El
+.Sh MENU/KEYS
+This macro can be accessed from the GRIEF features menu or by typing
+\f(HBts\fR at the command prompt, with or without the required arguments.
+.Sh SEE ALSO
+.Xr grep ,
+.Xr routines ,
+.Xr ff ,
+.Xr ts

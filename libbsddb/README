@@ -1,0 +1,14 @@
+
+This is version 1.85+ of the Berkeley DB code.
+
+============================================
+Distribution contents:
+
+btree		The B+tree routines.
+db		The dbopen(3) interface routine.
+hash		The extended linear hashing routines.
+man		The unformatted manual pages.
+mpool		The memory pool routines.
+recno		The fixed/variable length record routines.
+test		Test package.
+

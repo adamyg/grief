@@ -1,0 +1,9 @@
+# $Id: makelib.def,v 1.2 2012/09/21 17:32:56 ayoung Exp $
+# win32 makelib configuration
+#
+inc=../include
+lbl=LIBMAGIC
+lib=libmagic.lib
+ext=libregex.lib
+def=HAVE_LIBMAGIC
+def=HAVE_MAGIC_H

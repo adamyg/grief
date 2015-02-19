@@ -1,0 +1,158 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: ts.mandoc,v 1.1 2014/11/27 18:19:45 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt TS
+.Os
+.Sh NAME
+.Nm ts
+.Nd text search.
+.Sh SYNOPSIS
+ts [options] pattern [path]
+.br
+ts /p file
+.Sh DESCRIPTION
+The ts macro locates all files contained within 'path', recursively
+descends the directory hierarchy if requested, searching the matching files
+against the regular expression 'pattern' for matching text.
+.Pp
+ts will be able to descend to arbitrary depths in a file hierarchy and will
+not fail due to path length limitations (unless a path operand specified by
+the application exceeds PATH_MAX requirements).
+.Pp
+Whilst ts is operating it prints the message:
+.Bd -literal
+	Matches: total/this-file file-name ...
+.Ed
+.Pp
+Unless the /l option is specified, the search results shall be presented
+within a selection dialog. The user can move around this dialog with the
+usual cursor movement keys. The current entry is highlited. Pressing
+<Enter> on any particular line result in its selection being toggled
+denoted by a marker in the left column. Upon exiting by <F10> all marked
+files are then loaded with the line on which the match occurred being
+selected.
+.Pp
+Dialog example:
+.Bd -literal
+	File: ./firstfile.txt Pattern: hello
+	  10,   helloworld
+	  12,   hello again
+	File: ./secondfile.txt Pattern: hello
+	  12,   hello to the second coming
+.Ed
+.Pp
+Also if the dialog was exited using <F10>, regardless whether any files
+where marked, the following navigation services are enabled.
+.Bl -tag -offset 1 -width x
+.It Previous and next
+The <Ctrl-N> and <Ctrl-P> keys are remapped to the search results. Pressing
+<Ctrl-N> will take you to the next file/line in the output from the search.
+<Ctrl-P> takes you to the previous line. Thus, repeated use of <Ctrl-N>
+allows the user to easily see the context (lines around the matching
+pattern) within each file.
+.It Result caching
+The previous search results can be reloaded using the syntax (ts <) or the
+remapped <Ctrl-B> key.
+.El
+.Pp
+.Sh ARGUMENTS
+.Bl -tag -offset 1 -width xxxxxxxx
+.It options
+One or more options (see OPTIONS section).
+.It pattern
+The regular expression for which to search the matching files. The pattern
+should either be escaped or quoted when special characters are included.
+(see file_match) for more details.
+.It path
+File pattern match with optional starting point in the directory hierarchy.
+(eg. ../*.c). The trailing slash (/) is used to seperate the starting
+directory and the file pattern expression.
+.El
+.Sh OPTIONS
+The valid options are:
+.Bl -tag -offset 1 -width xxxxxxxx
+.It /a
+Match all files, including specials.
+.It /b
+Allow binaries.
+.It /r
+Recursively descends the directory hierarchy for each path seeking files
+that match expression written in the primaries given below.
+.It /i
+Ignore case.
+.It /l
+Auto load matching files, without prompting.
+.It "/p <filename>"
+Pipe/load a previously saved search results. Note, if used this should be
+last argument.
+.It //
+End switch processing.
+.El
+.Pp
+Unless the /b option is stated upon a possible binary image being
+encountered (ie non-ascii contained within the 1st block of the file image)
+the following shall be prompted (binary [ynai]?), where:
+.Bl -tag -offset 1 -width xxxxxxxx
+.It y
+search the image
+.It n
+Dont search the image.
+.It a
+Search this and all other binary images encountered.
+.It i
+Ignore this and all other binary images encountered.
+.El
+.Pp
+.Sh MENU/KEYS
+This macro can be accessed from the GRIEF features menu or by typing
+\f(HBts\fR at the command prompt, with or without the required arguments.
+.Sh SEE ALSO
+.Xr grep ,
+.Xr routines ,
+.Xr ff ,
+.Xr bs

@@ -1,0 +1,45 @@
+ICONV(1)                NetBSD General Commands Manual                ICONV(1)
+
+NAME
+     iconv -- codeset conversion utility
+
+SYNOPSIS
+     iconv [-cs] -f from_name -t to_name [file ...]
+     iconv -f from_name [-cs] [-t to_name] [file ...]
+     iconv -t to_name [-cs] [-f from_name] [file ...]
+     iconv -l
+
+DESCRIPTION
+     The iconv utility converts the codeset of file (or from standard input if
+     no file is specified) from codeset from_name to codeset to_name and out-
+     puts the converted text on standard output.
+
+     The following options are available:
+
+     -c    Prevent output of any invalid characters.  By default, iconv out-
+           puts an ``invalid character'' specified by the to_name codeset when
+           it encounters a character which is valid in the from_name codeset
+           but does not have a corresponding character in the to_name codeset.
+
+     -f    Specifies the source codeset name as from_name.
+
+     -l    Lists available codeset names.  Note that not all combinations of
+           from_name and to_name are valid.
+
+     -s    Silent.  By default, iconv outputs the number of ``invalid
+           characters'' to standard error if they exist.  This option prevents
+           this behaviour.
+
+     -t    Specifies the destination codeset name as to_name.
+
+EXIT STATUS
+     The iconv utility exits 0 on success, and >0 if an error occurs.
+
+SEE ALSO
+     iconv(3)
+
+STANDARDS
+     iconv conform to IEEE Std 1003.1-2001 (``POSIX.1'').
+
+HISTORY
+     iconv first appeared in NetBSD 2.0.

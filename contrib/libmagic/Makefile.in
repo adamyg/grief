@@ -1,0 +1,149 @@
+# -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
+# $Id: Makefile.in,v 1.7 2014/06/27 00:55:45 ayoung Exp $
+# libmagic makefile
+#
+#
+#
+
+@SET_MAKE@
+ROOT=		@abs_top_builddir@
+top_builddir=	@top_builddir@
+
+# File extensions
+
+C=		.c
+E=
+O=		.o
+H=		.h
+A=		.a
+LP=		lib
+
+CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+
+# Compilers, programs
+
+CC=		@CC@
+AR=		@AR@
+RANLIB=		@RANLIB@
+RM=		@RM@
+
+# Common flags
+
+ARFLAGS=	rcv
+XFLAGS=		
+COPT=		@CFLAGS@
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+LDEBUG=		@LDEBUG@
+CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
+ifeq ("mingw32","@build_os@")
+CINCLUDE+=	-I../include -I../../libw32
+endif
+CEXTRA=		@DEFS@
+CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+YFLAGS=		-d
+LDFLAGS=	$(LDEBUG) @LDFLAGS@
+LDLIBS=		$(D_LIB)/$(LP)regex$(A) -L$(D_LIB) @LIBS@
+ifeq ("mingw32","@build_os@")
+LDLIBS+=	-lw32 -lshlwapi -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
+endif
+LDLIBS+=	@LIBM@ @EXTRALIBS@
+
+RMFLAGS=	-f
+
+# Directories
+
+D_BIN=		$(ROOT)/bin
+D_INC=		$(ROOT)/include
+D_OBJ=		$(ROOT)/objects/libmagic
+D_LIB=		$(ROOT)/lib
+
+############################################################
+
+# targets
+
+MAGICLIB=	$(D_LIB)/$(LP)magic$(A)
+MAGICUTIL=	$(D_BIN)/grfile$(E)
+MAGICDB=	$(D_BIN)/magic.mgc
+
+VERSION=	5.1.1
+VERSIONSPEC=	$(subst .,:,$(VERSION))
+MAGICPACKED=	file-511.tgz
+MAGICSRC=	./file-511
+VPATH=		$(MAGICSRC)
+
+LIBOBJS=\
+	$(D_OBJ)/apprentice$(O)		\
+	$(D_OBJ)/ascmagic$(O)		\
+	$(D_OBJ)/cdf$(O)		\
+	$(D_OBJ)/cdf_time$(O)		\
+	$(D_OBJ)/compress$(O)		\
+	$(D_OBJ)/encoding$(O)		\
+	$(D_OBJ)/fsmagic$(O)		\
+	$(D_OBJ)/funcs$(O)		\
+	$(D_OBJ)/getline$(O)		\
+	$(D_OBJ)/is_tar$(O)		\
+	$(D_OBJ)/magic$(O)		\
+	$(D_OBJ)/print$(O)		\
+	$(D_OBJ)/readcdf$(O)		\
+	$(D_OBJ)/softmagic$(O)		\
+	$(D_OBJ)/getopt_long$(O)	\
+	$(D_OBJ)/asprintf$(O)		\
+	$(D_OBJ)/vasprintf$(O)		\
+	$(D_OBJ)/strlcpy$(O)		\
+	$(D_OBJ)/strlcat$(O)
+
+UTILOBJS=\
+	$(D_OBJ)/file$(O)
+
+OBJS=		$(LIBOBJS) $(UTILOBJS)
+LIBS=		$(MAGICLIB)
+TSKS=		$(MAGICUTIL)
+
+# Rules
+
+all:			source unpacked
+unpacked:		$(LIBS) $(TSKS) $(MAGICDB) installinc
+
+$(MAGICLIB):		$(D_OBJ)/.created $(LIBOBJS)
+		$(RM) $(RMFLAGS) $@ >/dev/null 2>&1
+		$(AR) $(ARFLAGS) $@ $(LIBOBJS)
+		$(RANLIB) $@
+
+$(MAGICUTIL):		$(UTILOBJS) $(LIBOBJS)
+		$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
+
+MSRC=		$(shell ls $(MAGICSRC)/Magdir/*)
+
+$(MAGICDB):		magic
+		$(MAGICUTIL) -C -m magic
+
+magic:
+		cat $(MAGICSRC)/Header $(MAGICSRC)/Localstuff $(MSRC) > $@
+
+source:			.unpacked.$(VERSION)
+		$(MAKE) unpacked
+
+.unpacked.$(VERSION):	$(MAGICPACKED)
+		@echo "do not delete, managed file" > $@
+		@echo "unpacking source $(MAGICPACKED)"
+		@gzip -c -d $(MAGICPACKED) | tar -xvf -
+
+installinc:		../include/.created
+		@echo publishing headers ...
+		-cp $(MAGICSRC)/magic.h ../include
+		@echo publishing magicdb ...
+		-cp magic.mgc $(D_BIN)
+
+%/.created:
+		-@mkdir $(@D)
+		@echo "do not delete, managed directory" > $@
+
+clean:
+		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(OBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
+
+$(D_OBJ)/%$(O):		%$(C)
+		$(CC) $(CFLAGS) -D_CRT_SECURE_NO_DEPRECATE -o $@ -c $<
+
+#end

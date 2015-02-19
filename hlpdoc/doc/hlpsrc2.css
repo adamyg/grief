@@ -1,0 +1,296 @@
+//
+// GRIEF NaturalDoc's Style Sheet, Version 1.02
+//
+
+body {
+	color: #333;
+	font-family: "Lucida Grande",Arial,Helvetica,"sans-serif";
+	line-height: 1.255em;
+	background: none                !important;
+}
+
+ul li {
+	margin:0.5em 5ex 1ex 0;		// override item spacing
+}
+
+ol li {
+	margin:0.5em 5ex 1ex 0;		// override item spacing
+}
+
+p {
+	padding-left: 1.5em;
+	margin-bottom: 1em;
+	text-indent: 0;
+}
+
+.ContentSection a:link, .ContentSection a:visited {
+	color:#1CAEE0;
+	border-bottom: 1px solid #BFDDEF;
+}
+
+.ContentSection a:hover {
+	background-color: #1CAEE0;
+	text-decoration: none;
+	color: white;
+}
+
+#MainTopic a:link, #MainTopic a:visited {
+	border: none;
+}
+
+body > div {
+	// max-width: 67.5em;
+	max-width: 62.5em;
+	margin: 0 auto 0 auto;
+	// padding-top: 150px;
+	// background: transparent url('../images/grieflogo2.png') no-repeat 0 45px;
+	padding-top: 20px;
+}
+
+body div.IE {
+	// width: 67.5em;
+	width: 62.50em;
+	margin: 0 auto 0 auto;
+	// padding-top: 150px;
+	// background: transparent url('../images/grieflogo2.png') no-repeat 0 45px;
+	padding-top: 20px;
+}
+
+#Menu {
+	background: url('../images/grieflogo2.png') no-repeat 0 45px;
+	background-position: center top;
+	padding-top: 100px;
+}
+
+.MTitle {
+	border: none;
+	font-size: 14px;
+	font-variant: small-caps;
+	font-weight: bold;
+	margin-bottom: 10px;
+	padding: 0 0 1em 0;
+	text-align: center;
+}
+
+.ContentSection {
+	border: none;
+}
+
+body.FramedMenuPage, .MenuSection {
+	// background-image: url('../images/background.png');
+	// background-attachment: fixed;
+	background-color: white;
+	padding-top: 0;
+}
+
+body.FramedContentPage {
+	// background-image: url('../images/background.png');
+	// background-attachment: fixed;
+	background-color: white;
+}
+
+body.UnframedPage {
+	// background-image: url('../images/background.png');
+	// background-attachment: fixed;
+	background-color: white;
+}
+
+.MenuSection .MEntry #MSelected {
+	border: none;
+	color: white;
+	background-color: #1CAEE0;
+	font-weight: bold;
+	border-radius: 0;
+}
+
+.MGroup {
+	font-variant: inherit;
+	margin: 0.25em 0 0 10px;
+}
+
+.MGroup > a:after {
+	content: ' >';
+	font-size: 80%;
+}
+.MGroup a:hover { color: #1CAEE0; }
+
+
+/* Sections */
+.CClass .CTitle, .CSection .CTitle {
+	border-bottom:1px solid #999999;
+	color:#111;
+	padding:5px 10px;
+	text-shadow:2px 2px 5px rgba(0, 0, 0, 0.3)
+}
+
+.CSection .CTitle {
+	// background-color: #ddd;
+	background-color: white;
+	color: #666;
+	text-shadow: none;
+}
+
+
+/* Code sections */
+.CCode {
+	background-color: #FDFDFD;
+	padding: 15px;
+	border: 1px solid #C0C0C0;
+	border-width: 1px 1px 1px 6px;
+	border-style: dashed dashed dashed solid;
+	color: #707070;
+	margin: 15px 5ex;
+}
+
+
+/* Only top-level menu headers */
+.MenuSection > .MEntry > .MGroup {
+	margin-top: 1em;
+}
+.MenuSection > .MEntry > .MGroup > a {
+	font-size: 120%;
+}
+
+.CTopic {
+	font-size: inherit;
+}
+.CTitle {
+	color: #000;
+	border-color: #333 !important;
+}
+
+.CGroup .CTopic .CTitle, .CGeneric .CTopic .CTitle  {
+	padding-left: 1.4em;
+	padding-bottom:0.2em;
+	border-color: #004689;
+}
+
+.CGroup .CTopic .CTitle {
+	border: none;
+	padding-left: 0.2em;
+}
+
+.CGroup .CTopic {
+	padding-bottom: 1em;
+}
+
+.CHeading {
+	padding-left: 0.4em;
+	color: #800517; 			// Firebrick
+}
+
+.CSubHeading {
+	padding-left: 1em;
+	// color: #004689;
+	color: #05806D; 			// Firebrick complementary
+}
+
+.CServicemethod, .CType {
+	padding-bottom: 1em;
+}
+
+
+/* Summary at top of page */
+.Summary {
+	margin: 1em 1em 0;
+}
+
+.STable {
+	font-size: inherit;
+}
+.STable a, .STable a:link, .STable a:visited { color: #004689; }
+.STable a:hover, .STable a:active { background-color: #004689; color: white !important; }
+.STable td {
+	border-bottom: solid #DDD 1px;
+}
+.SEntry .SIndent1 {
+	margin-left: 0.5ex;
+}
+
+.SEntrySize {
+	width: 20%;
+}
+
+.SMarked {
+	background-color: #F6F6F6;
+}
+
+.SBorder {
+	border: none;
+	background-color: white;
+	padding: 0 0 0 1em;
+}
+
+#MainTopic .CTitle {
+	background-image: none;
+	background-color: #004689;
+	color: white;
+	border: 0 none;
+	padding: 0.6em;
+}
+
+#MainTopic .CBody {
+	background: white;
+	margin: 0.5em 0;
+}
+
+.SEntry, .SDescription {
+	margin: 0.25em 0 0.25em 0;
+}
+
+.SGroup .SEntry, .CGroup .CTitle {
+	font-variant: normal;
+}
+
+.SMain .SEntry {
+	font-size: 18px;
+}
+
+/* Glossary */
+.IndexSection {
+	border: none;
+}
+
+.IPageTitle {
+	color: white;
+	background-color: #004689;
+	border: none;
+}
+
+.IndexSection a:link, .IndexSection a:visited {
+	color: #004689;
+	border-bottom: 0 solid #1CAEE0;
+}
+
+.IndexSection a:hover {
+	background-color: #004689;
+	text-decoration: none;
+	color: white;
+}
+
+.IndexSection .ISymbol {
+	color: #6F6F6F;
+}
+
+.INavigationBar {
+	background-color: #F6F6F6;
+	border: 1px solid #DDD;
+	color: #333;
+}
+
+.ISymbolPrefix {
+	border-color: #DDD !important;
+	background: #F6F6F6 !important;
+}
+
+div.Footer {
+	height: 3ex;
+	padding: 0 0 0 27ex;
+	background-image: none !important;
+	margin: 0 auto 0 auto !important;
+	text-align: right !important;
+	font-size: 9pt !important;
+}
+
+.SDescription a, .SDescription a:link, .SDescription a:visited {color: #1CAEE0;}
+.SDescription a:hover, .SDescription a:active {background-color: #1CAEE0;}

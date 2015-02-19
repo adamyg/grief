@@ -1,0 +1,173 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: regexp.mandoc,v 1.1 2014/11/27 18:19:34 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt REGEXP 1
+.Os
+.Sh NAME
+.Nm regexp
+.Nd Regular expressions.
+.Sh DESCRIPTION
+\fBSearch expression syntax:\fR
+.Pp
+GRIEF offers standard facilities for searching and replacing text. The
+replacing of text (known as translating) searches for the text and prompts
+the user for a number of actions, allowing the user to interactively change
+each matching string.
+.Pp
+A Regular expression is a term used to describe a string of characters used
+in pattern matching. Regular expressions allow certain classes of strings to
+be matched, and provide a flexible way of matching \'token's. GRIEF provides
+a variety of features when performing pattern matching:
+.Pp
+Many non-alphanumeric characters have a special purpose in a regular
+expression, indicating a special action to perform. The following table shows
+the regular expression matching idioms available, with the highest priority
+at the top of the table, are as follows. The differences between UNIX and
+GRIEF style regular expressions are denoted, type U=Unix and C=GRIEF:
+.Pp
+.TS
+center box;
+cB cB cB
+lw(.8i) lw(.8i) lw(3.5i).
+Symbol	Type	Usage
+=
+@	 C	matches zero or more of the previous expressions.
+*	U	matches zero or more of the previous expressions.
++	UC	one or more previous expressions
+|	UC	OR expression, performs alternation
+{.}	 C	nested expression open/close
+\(rs(.\(rs)	U	nested expression open/close
+<, %	 C	beginning of line
+^	UC	beginning of line
+>	 C	end of line
+$	UC	end of line
+\(rs<	U	beginning of word
+\(rs>	U	end of word
+\(rs.	U	any one character
+?	 C	matches any single character
+*	 C	matches zero or more characters
+[.]	UC	Character class open/close
+		        ~      Not
+		        ^      Not
+		        -      Range
+		        \(rsn    Newline
+		        \(rsr    CR
+		        \(rsf    Formfeed
+		        \(rst    Tab
+		        \(rsx??  Hex digit
+		        \(rs0??  Octal digit
+		        \(rsd??  Decimal digit
+		        [:class:]      Character class
+\(rsc	UC	set position
+.TE
+.Pp
+\fBCharacter Classes:\fR
+.Pp
+Within a bracket expression, the name of a character class enclosed in [:
+and :] stands for the list of all characters (not all collating elements!)
+belonging to that class.
+.Pp
+Standard (POSIX style) character classes are:
+.Pp
+.Bl -tag -offset 1 -width xxxxxxxxxxxx
+.It alnum
+An alphanumeric (letter or digit).
+.It alpha
+A letter.
+.It blank
+A space or tab character.
+.It cntrl
+A control character.
+.It csym
+An alphanumeric (letter or digit) or or underscore character.
+.It digit
+A decimal digit.
+.It graph
+A character with a visible representation.
+.It lower
+A lower-case letter.
+.It print
+An alphanumeric (same as alnum).
+.It punct
+A punctuation character.
+.It space
+A character producing white space in displayed text.
+.It upper
+An upper-case letter.
+.It xdigit
+A hexadecimal digit.
+.El
+.Pp
+also for GRIEFEdit(TM) compatiblity the following are supported:
+.Bl -tag -offset 1 -width xxxxxxxxxxxx
+.It isalnum
+An alphanumeric (letter or digit).
+.It isalpha
+A letter.
+.It iscsym
+An alphanumeric (letter or digit) or or underscore character.
+.It isdigit
+A decimal digit.
+.It isgraph
+A character with a visible representation.
+.It islower
+A lower-case letter.
+.It isprint
+An alphanumeric (same as alnum).
+.It ispunct
+A punctuation character.
+.It isspace
+A character producing white space in displayed text.
+.It isupper
+An upper-case letter.
+.It isxdigit
+A hexadecimal digit.
+.El
+.Pp
+.Sh SEE ALSO
+.Xr command

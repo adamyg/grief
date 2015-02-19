@@ -1,0 +1,71 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: isearch.mandoc,v 1.1 2014/11/27 18:19:39 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt ISEARCH 1
+.Os
+.Sh NAME
+.Nm isearch
+.Nd Interactively search for string.
+.Sh DESCRIPTION
+The isearch macro is used to interactively search for a string
+whilst it is being typed in. The intelligent search macro only
+supports looking for fixed strings (regular expressions are not allowed).
+.Pp
+As the string is being typed in, the window changes to show where the entry
+is. Hitting the <Backspace> key allows the user to delete characters
+that are incorrect.
+If the current string cannot be found, then GRIEF will beep and refuse
+to accept any new characters.
+.Pp
+Hit the <Alt-S> key to search for a subsequent occurence, or <Alt-U> to
+back up to the previously matched string.
+.Pp
+Interactive search mode can be aborted by pressing <Esc> or <Enter>.
+.Sh MENU/KEYS
+This macro can be accessed from the GRIEF features menu or by typing
+\f(HBi_search\fR at the command prompt.

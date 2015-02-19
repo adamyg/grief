@@ -1,0 +1,23 @@
++----------- builtin.c -----------+----------- \fBbuiltin.c\fR ------------+
+|        {                        |        {                         :
+|            accfloat_t fval;     |            accfloat_t fval;      *
+|            accint_t ival;       |            accint_t ival;        :
+|            int ret, len = 0;    |            int ret, len = 0;     :
+|                                 |                                  :
+|            ret = str_numparse(cp|            ret = str_numparse(cp,:
+|            switch (ret) {       |            switch (ret) {        :
+|            case NUMPARSE_INTEGER|            case NUMPARSE_INTEGER::
+|            case NUMPARSE_FLOAT: |            case NUMPARSE_FLOAT:  :
+|                cp += len;       |                cp += len;        :
+|                if (0 == *cp || i|                if (0 == *cp || is:
+|                    if (ret == NU|                    if (ret == NUM:
+|                        lp = atom|                        lp = atom_:
+|                    } else {     |                    } else {      :
+|                        lp = atom|                        lp = atom_:
+|                    }            |                    }             :
+|                    break;       |                    break;        :
+|                }                |                }                 :
++---------------------------------+*:::::::::::::::::::::::::::::::::+
+Command:                               [ ]  Line: 251  Col: 1  11:39am
+
+

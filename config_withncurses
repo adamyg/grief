@@ -1,0 +1,14 @@
+#!/bin/sh
+# -*- mode: sh; -*-
+# $Id: config_withncurses,v 1.4 2014/10/25 17:37:21 ayoung Exp $
+#   Basic configuration enabled using ncurses
+#
+
+./configure_new \
+	--with-8bit \
+	--with-mouse \
+	--with-termlib=ncurses \
+	--with-dlmalloc \
+	--with-contrib \
+	$*
+

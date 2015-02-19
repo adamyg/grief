@@ -1,0 +1,219 @@
+
+Title:          Introduction
+
+Topic:          GRIEF - The Glorious Reconfigurable Interactive Editing Facility
+
+        Firstly *GRIEF* is primarily a source editor and is designed
+        for manipulating pieces of code, although it is capable of
+        formatting and printing documents like a word processor.
+
+                     (See images/grieflogo1.png)
+
+        It provides commands to manipulate words and paragraphs, 
+        syntax highlighting for making source easier to read, and
+        'macros' for performing user-defined batches of editing
+        commands.
+
+   Supported Platforms:
+
+        Current support platforms.
+
+           o Works on most POSIX-like systems (Linux, Solaris, AIX, HP/UX)
+                in either a console or X11/xlib.
+
+           o Windows (Native, Cygwin and MinGW).
+
+           o Mac OS/X (last build 2012).
+
+           o DOS (DJPGPP - last build 2002; minor work required).
+
+   What is a Macro:
+
+        The 'GRIEF' 'Macro' 'language' gives you the ability to
+        modify and secondary extend much of this editing environment
+        to suit your needs.
+
+        The language syntax is based on a C-style module which should
+        allow most users to quickly familiarise themselves.
+
+   Sections:
+
+        The following sections detail the specifics.
+
+                o <History>
+
+                o <Quick Start>
+
+                o <Macro Tutorial>
+
+                o <Language Specification>
+
+                o <Library Reference>
+
+                o <Preprocessor>
+
+   Goals:
+
+        *GRIEF* has a long history and is being maintained and
+        developed with the primary goal of being an enhanced console
+        based *BRIEF* clone.
+
+        The development of GRIEF is an on going process, with these
+        some of the expected additional features.
+
+        *Future Features*
+
+            o LUA language binding; providing access to the large set
+                of pre-existing LUA based applications.
+
+            o Macro debugger; similar to the functionality available
+                within the original BRIEF implementation.
+
+            o Minimal GUI interface, most likely QT5+ based.
+
+            o Alternative syntax highlighting engine(s); examples
+                include 'GtkSourceView', 'highlighter' and 'Kate'.
+
+            o Code Folding.
+
+            o CLang integration, code completion.
+
+            o JavaScript binding, most likely SpiderMonkey or V8; the
+                long term goal making Javascript the primary language
+                for new macros.
+
+            o EditorConfig support (http://editorconfig.org)
+
+            o plus may more ...
+
+
+Topic:          Macro Language differences
+
+        On the face of things *GRIEF* looks and feelings like
+        standard 'C', yet the following differences between the
+        standard implementation of the 'C' language and the *GRIEF*
+        Macro language should be observed.
+
+    Data Types:
+
+        Only the standard 'C' data-types 'int' and 'float/double' are
+        supported.
+
+        In addition to these *GRIEF* supports a 'list' and 'string'
+        type, plus a polymorphic container type 'declare' which may
+        hold any of the supported data-types.
+
+        No pointers, complex types ('struct, 'unions' and bit-fields)
+        nor typedefs are supported.
+
+        The 'register' storage class is not supported.
+
+        *GRIEF* does not support the C style cast mechanisms; note
+        automatic 'parameter coercion' shall occur when passing
+        arguments to functions.
+
+    External declarations:
+
+        Both function and variable declarations maybe hidden within
+        the scope of a named module. There is no equivalent construct
+        of module's in C, yet these can be compared to C++ namespaces.
+
+    Function declarations:
+
+        A functions parameter maybe declared as optional regardless
+        of their position within the parameter list, unlike C which
+        only allows the trailing.
+
+        The NULL value is passed by the caller to represent an
+        argument which was omitted.
+
+        Similar to C++, parameters maybe declared as references and
+        assigned default values.
+
+    Function parameters:
+
+        A functions parameter can be declared without specifying its
+        names. Instead parameters can be retrieved and optionally
+        prompt the user anywhere in the function with the primitive
+        'get_parm'; optional parameters may only be handled in this
+        fashion.
+
+        In addition passed parameters can be modified using the
+        <put_parm> primitive.
+
+        Similar to C++, reference parameters can be created using the
+        primitive <ref_parm>.
+
+        Furthermore, as the result of this interface parameters are
+        passed using 'lazy evaluation'. That is the arguments to a
+        function are not evaluated at the time a function is called, as
+        is the case with the 'C' language. Instead they are evaluated at
+        the time they are referenced within the invoked function, like
+        with most Lisp style languages. This may leading to what may
+        seem at times unexpected results, so time should taken to
+        understand this concept (See: <Lazy Evaluation>).
+
+    Replacement Functions:
+
+        There is no equivalent construct of replacement functions in the
+        C language. C++ function overloading is a similar construct.
+
+    GRIEF Function declarations:
+
+        Internal primitives need not be prototyped, as their
+        definitions are builtin to the compiler.
+
+    Variable Scoping:
+
+        Within *GRIEF* variable access utilises 'dynamic scoping' at
+        run-time; dynamic scoping is similar to the scoping rules of
+        'Pascal' rather than 'C' permitting macros to access
+        variables declared within their callers (See: <Scope>).
+
+    Goto Statement:
+
+        The 'goto' statement is not implemented.
+
+    Switch Statement:
+
+        Unlike the C language, switch statement control does not flow
+        from one case group to next. In other words there is an
+        implied 'break' at the end of each case group; when the
+        statements executed against the group are complete the switch
+        statement is exited.
+
+        The <break> statement can be used at the end of each case
+        group to denote this fact; yet is only needed to terminate
+        loops constructs (ie. 'for', 'foreach', 'do' and 'while').
+
+        Unlike C, string literals maybe be used for either the
+        switch-expression or the case-expressions.
+
+    Enumerations:
+
+        *GRIEF* permits both integer and string-literals to be assigned
+        to an enumeration constant.
+
+    sizeof:
+
+        The 'sizeof' statement is not implemented.
+
+    Dynamic memory allocation and pointers:
+
+        Either the memory allocation functions 'malloc', 'calloc',
+        'realloc' nor 'free' are available, in addition pointers are
+        not supported.
+
+        Dynamic components can be managed using list's.
+
+    Miscellaneous:
+
+        Both C multi-line and C++ single-line comments are supported.
+
+        Trigraphs are not supported.
+
+               --------------------------------------------------
+
+        $Id: introduction.txt,v 1.6 2014/11/27 18:08:41 ayoung Exp $
+-*- mode: txt; margin: 75; -*-
+

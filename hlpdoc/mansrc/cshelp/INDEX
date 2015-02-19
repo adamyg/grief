@@ -1,0 +1,9 @@
+Abbreviation string:abbstr
+Expansion string:abbexp
+Command:command
+Goto (old) line:gotoline
+Edit file:command
+Search for:regexp
+Translate:regexp
+Pattern:regexp
+Go to bookmark:bookmark

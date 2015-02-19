@@ -1,0 +1,75 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: lint.mandoc,v 1.1 2014/11/27 18:19:40 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt LINT 1
+.Os
+.Sh NAME
+.Nm lint
+.Nd execute a 'make lint' and capture errors.
+.Sh DESCRIPTION
+This macro executes a '\f(HBmake lint\fR' command in the current
+directory.
+The lint macro is provided to overcome the problems of
+getting reams of output from lint, and having to continually
+flick backwards and forwards between the output from lint and
+the source files with portability problems.
+.Pp
+During execution of the command, a popup window is
+displayed showing the progress of the command.
+.Pp
+The (lint) macro firstly performs a 'make lint' in the make
+compilation window, and then masturbates the output from lint
+so that each line of output from lint looks like a
+warning/error message from the compiler. Once the lint macro
+has finished, the user can scan through the errors via
+<Ctrl-N> and <Ctrl-P>. These keys take the user to the next (Ctrl-N)
+or previous (Ctrl-P) file/line with
+a warning or error attached to it.
+.Sh MENU/KEYS
+This macro can be accessed from the GRIEF features menu or by typing
+\f(HBlint\fR at the command prompt.

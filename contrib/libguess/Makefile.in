@@ -1,0 +1,123 @@
+# -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
+# $Id: Makefile.in,v 1.5 2013/05/12 21:35:56 cvsuser Exp $
+# libguess makefile
+#
+#
+#
+
+@SET_MAKE@
+ROOT=		@abs_top_builddir@
+top_builddir=	@top_builddir@
+
+# File extensions
+
+E=
+O=		.o
+A=		.a
+LP=		lib
+
+CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+
+# Compilers, programs
+
+CC=		@CC@
+AR=		@AR@
+RANLIB=		@RANLIB@
+RM=		@RM@
+PERL=		@PERL@
+LIBTOOL=	@LIBTOOL@
+
+# Common flags
+
+ARFLAGS=	rcv
+XFLAGS=		
+COPT=		@CFLAGS@
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+LDEBUG=		@LDEBUG@
+CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
+ifeq ("mingw32","@build_os@")
+CINCLUDE+=	-I../include -I../../libw32
+endif
+CEXTRA=		@DEFS@
+CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDEBUG) @LDFLAGS@
+LDLIBS=		-L$(D_LIB) @LIBS@ @LIBM@ @EXTRALIBS@
+
+RMFLAGS=	-f
+
+# Directories
+
+D_BIN=		$(ROOT)/bin
+D_INC=		$(ROOT)/include
+D_OBJ=		$(ROOT)/objects/libguess
+D_LIB=		$(ROOT)/lib
+
+
+############################################################
+
+# Targets
+
+GUESSLIB=	$(D_LIB)/$(LP)guess_static$(A)
+GUESSDLL=	$(D_LIB)/$(LP)guess.la
+
+VERSION=	1.1
+VERSIONSPEC=	$(subst .,:,$(VERSION))
+VPATH=		. ./libguess-1.1
+
+LIBOBJS=\
+	$(D_OBJ)/libguess$(O)			\
+	$(D_OBJ)/guess_impl$(O)			\
+	$(D_OBJ)/dfa$(O)
+
+DLLOBJS=\
+	$(subst $(O),.lo,$(LIBOBJS))
+ifeq ("yes","@ISWIN32@")
+DLLOBJS+=\
+	$(D_OBJ)/dllmain.lo
+endif
+
+OBJS=		$(LIBOBJS) $(DLLOBJS)
+LIBS=		$(GUESSLIB) $(GUESSDLL)
+
+# Rules
+
+all:			directories $(LIBS) installinc
+
+.PHONY:		directories
+directories:		$(D_OBJ)/.created $(D_LIB)/.created
+
+$(GUESSLIB):		CEXTRA += -D__LIBGUESS_BUILD -DLIBGUESS_STATIC -D_WIN32
+$(GUESSLIB):		$(LIBOBJS)
+		$(RM) $(RMFLAGS) $@ >nul 2>&1
+		$(AR) $(ARFLAGS) $@ $^
+		$(RANLIB) $@
+
+$(GUESSDLL):		CEXTRA += -D__LIBGUESS_BUILD -DLIBGUESS_DYNAMIC -D_WIN32
+$(GUESSDLL):		$(DLLOBJS)
+		$(LIBTOOL) --mode=link $(CC) -o $@ $^ -version-number $(VERSIONSPEC) \
+			-rpath $(D_LIB) -bindir $(D_BIN) $(LDLIBS)
+
+.PHONY:		installinc
+installinc:		../include/.created
+		@echo publishing headers ...
+		-cp libguess.h ../include
+
+.PHONY:		clean
+clean:
+		-@$(RM) $(RMFLAGS) $(LIBS) $(CLEAN) $(XCLEAN) >nul 2>&1
+		-@$(LIBTOOL) --mode=clean $(RM) $(DLLOBJS) >nul 2>&1
+		-@$(RM) $(LIBOBJS) >nul 2>&1
+
+%/.created:
+		-@mkdir $(@D)
+		@echo "do not delete, managed directory" > $@
+
+$(D_OBJ)/%$(O):		%.c
+		$(CC) $(CFLAGS) -o $@ -c $<
+
+$(D_OBJ)/%.lo:		%.c
+		$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -o $@ -c $<
+
+#end

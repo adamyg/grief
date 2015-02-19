@@ -1,0 +1,830 @@
+
+Title:          Third Party Packages
+
+        *GRIEF* development would not be possible without the work of
+        others.
+
+        The following packages are normally only required for Windows
+        builds as all are generally available on other targets, either as
+        standard or optional installations.
+
+         -------------------------------------------------------------
+
+Topic:          Common Modules
+
+        A number of source modules have been sourced from current BSD
+        distributions, which are under the 'BSD-License'.
+
+        The specific modules are located thru-out the code base.
+
+(code)
+    Copyright (c) 1991, 1993
+        The Regents of the University of California.  All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions
+    are met:
+    1. Redistributions of source code must retain the above copyright
+       notice, this list of conditions and the following disclaimer.
+    2. Redistributions in binary form must reproduce the above copyright
+       notice, this list of conditions and the following disclaimer in the
+       documentation and/or other materials provided with the distribution.
+    4. Neither the name of the University nor the names of its contributors
+    may be used to endorse or promote products derived from this software
+    without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+    ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+    OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+    HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+    OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+    SUCH DAMAGE.
+(end)
+
+         -------------------------------------------------------------
+
+Topic:          Crisp
+
+        CRISP-Custom Reduced Instruction Set Programmers Editor.
+
+        Available on a number of archive sites.
+
+        Source: http://www.filewatcher.com (crisp2.2e-src.tar.gz)
+
+(code)
+        /pub/Linux/apps/editors
+
+        crisp2.2e-bin.tar.gz    clone of the DOS programmer's editor BRIEF [bin]
+        crisp2.2e-src.tar.gz    clone of the DOS programmer's editor BRIEF [src]
+(end)
+
+    Crisp Copyright:
+
+(code)
+        The code in this file is part of the CRISP package which is (C) P Fox.
+
+        This code may be freely used in any product but the copyright
+        remains that of the author.
+
+        This copyright notice is present to avoid a conflict of interest and
+        to ensure that CRISP can continue to be a part of the public domain.
+(end)
+
+         -------------------------------------------------------------
+
+Topic:          ND+ - Natural Docs Plus
+
+        *ND+* is an open-source documentation generator for multiple
+        programming languages.
+
+        The html version of the *GRIEF* documentation is generated using ND+.
+
+        Source: http://sourceforge.net/projects/ndplus/
+
+
+         -------------------------------------------------------------
+
+Topic:          ucpp
+
+        *GRIEF* utilises 'ucpp' as its preprocessor, integrated into the
+        Macro Compiler as an external stand-alone program as the initial
+        stage of macro compilation.
+
+        A C preprocessor is a part of a C compiler responsible for macro
+        replacement, conditional compilation and inclusion of header files.
+        It is often found as a stand-alone program on Unix systems.
+
+        ucpp is such a preprocessor; it is designed to be quick and light,
+        but anyway fully compliant to the ISO standard 9899:1999, also known
+        as C99.
+
+        ucpp can be compiled as a stand-alone program, or linked to some
+        other code; in the latter case, ucpp will output tokens, one at a
+        time, on demand, as an integrated lexer.
+
+    Operational Modes:
+
+        lexer mode - ucpp
+            is linked to some other code and outputs a stream of tokens (each
+            call to the lex() function will yield one token)
+
+        on-lexer - ucpp
+            preprocesses text and outputs the resulting text to a file
+            descriptor; if linked to some other code, the cpp() function must
+            be called repeatedly, otherwise ucpp is a stand-alone binary.
+            ucpp was written by Thomas Pornin.
+
+    Source: http://code.google.com/p/ucpp
+
+(code)
+    (c) Thomas Pornin 2002
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions
+    are met:
+    1. Redistributions of source code must retain the above copyright
+        notice, this list of conditions and the following disclaimer.
+    2. Redistributions in binary form must reproduce the above copyright
+        notice, this list of conditions and the following disclaimer in the
+        documentation and/or other materials provided with the distribution.
+    4. The name of the authors may not be used to endorse or promote
+        products derived from this software without specific prior written
+        permission.
+
+    THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
+    IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+    ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE
+    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+    OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+    BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+    WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+    OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+    EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+(end)
+
+         -------------------------------------------------------------
+
+Topic:          makedepend
+
+        Modified version of makedepend 1.0.4
+
+        'makedepend' was developed as part of MIT's Project Athena. It was
+        used extensively in building X11 and ancillary packages, but has
+        since become superseded by the dependency generation facilities of
+        various compilers, and is now used primarily as a worst-case
+        fallback, e.g. by depcomp and GNU Automake.
+
+        The master development code repository can be found at.
+
+           o git://anongit.freedesktop.org/git/xorg/util/makedepend
+
+           o http://cgit.freedesktop.org/xorg/util/makedepend
+
+(code)
+    Copyright (c) 1993, 1994, 1998 The Open Group
+
+    Permission to use, copy, modify, distribute, and sell this software and its
+    documentation for any purpose is hereby granted without fee, provided that
+    the above copyright notice appear in all copies and that both that
+    copyright notice and this permission notice appear in supporting
+    documentation.
+
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+    THE OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+    AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+    Except as contained in this notice, the name of The Open Group shall not be
+    used in advertising or otherwise to promote the sale, use or other dealings
+    in this Software without prior written authorization from The Open Group.
+(end)
+
+         -------------------------------------------------------------
+
+Topic:          extags
+
+        Exuberant Ctags.
+
+        Author, Darren Hiebert <dhiebert at users.sourceforge.net>
+
+        Exuberant Ctags is a multilanguage reimplementation of the
+        much-underused ctags(1) program and is intended to be the mother of
+        all ctags programs. It generates indexes of source code definitions
+        which are used by a number of editors and tools. The motivation
+        which drove the development of Exuberant Ctags was the need for a
+        ctags program which supported generation of tags for all possible C
+        language constructs (which no other ctags offers), and because most
+        were easily fooled by a number of preprocessor contructs.
+
+        No components of Exuberant Ctags are included within GRIEF, other
+        then the 'public domain' readtags.c module, which is utilised to
+        read tags file generated by Exuberant.
+
+        Exuberant Ctags is seperately licensed under the GNU GPL; see the
+        source for details.
+
+        Source: http://ctags.sourceforge.net
+
+         -------------------------------------------------------------
+
+Topic:          dlmalloc
+
+        This is a version (aka dlmalloc) of malloc/free/realloc written by
+        Doug Lea and released to the public domain.
+
+        Source: http://g.oswego.edu/dl/html/malloc.html
+
+    Dlmalloc Copyright:
+
+(code)
+    The person who associated a work with this deed has dedicated the work to
+    the public domain by waiving all of his or her rights to the work
+    worldwide under copyright law, including all related and neighboring
+    rights, to the extent allowed by law.
+(end)
+
+         -------------------------------------------------------------
+
+Topic:          Oniguruma
+
+        Oniguruma is a regular expressions library.
+
+        Oniguruma by K. Kosako is a BSD licensed regular expression
+        library that supports a variety of character encodings.
+
+        The Ruby programming language, since version 1.9, as well as
+        PHP's multi-byte string module (since PHP5), use Oniguruma as
+        their regular expression engine. It is also used in products
+        such as Tera Term, TextMate, Sublime Text and SubEthaEdit.
+
+        Oniguruma is Japanese for "Devil's Chariot".
+
+        Source: http://www.geocities.jp/kosako3/oniguruma
+
+    TODO!:
+
+        Migrate to 'Oniguruma-mod'
+
+        Onigmo is a regular expressions library forked from
+        Oniguruma. Some of new features introduced in Perl 5.10+ can
+        be used.
+
+        Source: https://github.com/k-takata/Onigmo
+
+    Oniguruma Copyright:
+
+(code)
+    Copyright (c) 2002-2007  K.Kosako (sndgk393@ybb.ne.jp)
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions
+    are met:
+    1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+    2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+    ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+    OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+    HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+    OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+    SUCH DAMAGE.
+(end)
+
+         -------------------------------------------------------------
+
+Topic:          TRE
+
+        TRE, The free and portable approximate regex matching library.
+
+        TRE is a lightweight, robust, and efficient POSIX compliant
+        regexp matching library with some exciting features such as
+        approximate (fuzzy) matching.
+
+        The matching algorithm used in TRE uses linear worst-case
+        time in the length of the text being searched, and quadratic
+        worst-case time in the length of the used regular expression.
+        In other words, the time complexity of the algorithm is
+        O(M2N), where M is the length of the regular expression and N
+        is the length of the text. The used space is also quadratic
+        on the length of the regex, but does not depend on the
+        searched string. This quadratic behaviour occurs only on
+        pathological cases which are probably very rare in practice.
+
+        Source: http://laurikari.net/tre/
+
+    Features:
+
+        TRE is not just yet another regexp matcher. TRE has some
+        features which are not there in most free POSIX compatible
+        implementations. Most of these features are not present in
+        non-free implementations either, for that matter.
+
+          o Approximate matching.
+
+          o Strict standard conformance.
+
+          o Predictable matching speed.
+
+          o Portable.
+
+          o Free.
+
+    TRE Copyright:
+
+(code)
+    This is the license, copyright notice, and disclaimer for TRE, a regex
+    matching package (library and tools) with support for approximate
+    matching.
+
+    Copyright (c) 2001-2009 Ville Laurikari <vl@iki.fi>
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions
+    are met:
+
+      1. Redistributions of source code must retain the above copyright
+         notice, this list of conditions and the following disclaimer.
+
+      2. Redistributions in binary form must reproduce the above copyright
+         notice, this list of conditions and the following disclaimer in the
+         documentation and/or other materials provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS
+    ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+    A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+    HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+    LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+(end)
+
+         -------------------------------------------------------------
+
+Topic:          libz
+
+        Zlib Data compress library.
+
+        A Massively Spiffy Yet Delicately Unobtrusive Compression
+        Library (Also Free, Not to Mention Unencumbered by Patents)
+
+        zlib 1.2.7 is a general purpose data compression library. All
+        the code is thread safe. The data format used by the zlib
+        library is described by RFCs (Request for Comments) 1950 to
+        1952 in the files http://tools.ietf.org/html/rfc1950 (zlib
+        format), rfc1951 (deflate format) and rfc1952 (gzip format).
+
+        Source: http://www.zlib.net/
+
+    Acknowledgement:
+
+        The deflate format used by zlib was defined by Phil Katz. The
+        deflate and zlib specifications were written by L. Peter
+        Deutsch. Thanks to all the people who reported problems and
+        suggested various improvements in zlib; they are too numerous
+        to cite here.
+
+    Libz Copyright:
+
+(code)
+    (C) 1995-2012 Jean-loup Gailly and Mark Adler
+
+    This software is provided 'as-is', without any express or implied
+    warranty.  In no event will the authors be held liable for any damages
+    arising from the use of this software.
+
+    Permission is granted to anyone to use this software for any purpose,
+    including commercial applications, and to alter it and redistribute it
+    freely, subject to the following restrictions:
+
+    1. The origin of this software must not be misrepresented; you must not
+       claim that you wrote the original software. If you use this software
+       in a product, an acknowledgment in the product documentation would be
+       appreciated but is not required.
+    2. Altered source versions must be plainly marked as such, and must not be
+       misrepresented as being the original software.
+    3. This notice may not be removed or altered from any source distribution.
+
+    Jean-loup Gailly        Mark Adler
+    jloup@gzip.org          madler@alumni.caltech.edu
+
+    If you use the zlib library in a product, we would appreciate *not*
+    receiving lengthy legal documents to sign. The sources are provided for
+    free but without warranty of any kind. The library has been entirely
+    written by Jean-loup Gailly and Mark Adler; it does not include
+    third-party code.
+
+    If you redistribute modified sources, we would appreciate that you
+    include in the file ChangeLog history information documenting your
+    changes. Please read the FAQ for more information on the distribution of
+    modified source versions.
+(end)
+
+         -------------------------------------------------------------
+
+Topic:          libregex
+
+        Henry Spencer's libregex
+
+        Source: http://www.arglist.com/regex
+
+    Libregex Copyright:
+
+(code)
+    Copyright 1992, 1993, 1994 Henry Spencer.  All rights reserved.
+    This software is not subject to any license of the American Telephone
+    and Telegraph Company or of the Regents of the University of California.
+
+    Permission is granted to anyone to use this software for any purpose on
+    any computer system, and to alter it and redistribute it, subject
+    to the following restrictions:
+
+    1. The author is not responsible for the consequences of use of this
+    software, no matter how awful, even if they arise from flaws in it.
+
+    2. The origin of this software must not be misrepresented, either by
+    explicit claim or by omission.  Since few users ever read sources,
+    credits must appear in the documentation.
+
+    3. Altered versions must be plainly marked as such, and must not be
+    misrepresented as being the original software.  Since few users
+    ever read sources, credits must appear in the documentation.
+
+    4. This notice may not be removed or altered.
+(end)
+
+         -------------------------------------------------------------
+
+Topic:          libteken
+
+        libteken: terminal emulator library
+
+        It is currently used by FreeBSD's console driver. libteken is
+        a terminal emulator, which implements a fair amount of escape
+        sequences used by VT100, xterm and cons25.
+
+        Traditionally the FreeBSD console driver (syscons) uses the
+        cons25 terminal type. This terminal type is basically a very
+        compact subset of later VT-devices or graphical terminals
+        like xterm. There are two problems with this approach.
+
+            o Many other operating systems do not ship cons25 termcap
+                entries.
+
+            o Many embedded devices with serial or telnet interfaces
+                only support VT100-style escape sequences.
+
+        Source: http://80386.nl/projects/
+
+    Libteken Copyright:
+
+(code)
+    Copyright (c) 2008-2009 Ed Schouten <ed@@FreeBSD.org>
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions
+    are met:
+    1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+    2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+    ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+    OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+    HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+    OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+    SUCH DAMAGE.
+(end)
+
+
+         -------------------------------------------------------------
+
+Topic:          libmagic
+
+        file-5.11, sourced from OpenBSD.
+
+        This is Release 5.x of Ian Darwin's (copyright but
+        distributable) file(1) command, an implementation of the Unix
+        File(1) command.
+
+        It knows the 'magic number' of several thousands of file types.
+
+        This version is the standard "file" command for Linux, *BSD,
+        and other systems.
+
+    Libmagic Copyright:
+
+(code)
+    Copyright (c) Ian F. Darwin 1986, 1987, 1989, 1990, 1991, 1992, 1994, 1995.
+    Software written by Ian F. Darwin and others;
+    maintained 1994- Christos Zoulas.
+
+    This software is not subject to any export provision of the United States
+    Department of Commerce, and may be exported to any country or planet.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions
+    are met:
+    1. Redistributions of source code must retain the above copyright
+    notice immediately at the beginning of the file, without modification,
+    this list of conditions, and the following disclaimer.
+    2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+    ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
+    ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+    OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+    HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+    OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+    SUCH DAMAGE.
+(end)
+
+         -------------------------------------------------------------
+
+Topic:          libcharudet
+
+        Mozilla Universal Charset Detector.
+
+        This library provides a highly accurate set of heuristics
+        that attempt to determine the character set used to encode
+        some input text. This is extremely useful when your program
+        has to handle an input file which is supplied without any
+        encoding metadata.
+
+        Recognised character set.
+
+           o UTF-8.
+           o UTF-16 (BE and LE).
+           o UTF-32 (BE and LE).
+           o windows-1252 (mostly equivalent to iso8859-1).
+           o windows-1251 and ISO-8859-5 (cyrillic).
+           o windows-1253 and ISO-8859-7 (greek).
+           o windows-1255 (logical hebrew. Includes ISO-8859-8-I and most of x-mac-hebrew).
+           o ISO-8859-8 (visual hebrew).
+           o Big-5.
+           o gb18030 (superset of gb2312).
+           o HZ-GB-2312.
+           o Shift-JIS.
+           o EUC-KR, EUC-JP, EUC-TW.
+           o ISO-2022-JP, ISO-2022-KR, ISO-2022-CN.
+           o KOI8-R.
+           o x-mac-cyrillic.
+           o IBM855 and IBM866.
+           o X-ISO-10646-UCS-4-3412 and X-ISO-10646-UCS-4-2413 (unusual BOM).
+           o ASCII.
+
+        The original code and documentation of the universalchardet
+        library are available at,
+
+           o http://www-archive.mozilla.org/projects/intl/chardet.html
+
+           o http://lxr.mozilla.org/seamonkey/source/extensions/universalchardet/
+
+        This port exposes a C interface and dependency-free interface
+        to the Mozilla C++ UCSD library.
+
+    Libcharudet Copyright:
+
+(code)
+        The library is subject to the Mozilla Public License Version
+        1.1 (the "License").
+
+        Alternatively, it may be used under the terms of either the
+        GNU General Public License Version 2 or later (the "GPL"), or
+        the GNU Lesser General Public License Version 2.1 or later
+        (the "LGPL").
+(end)
+
+        Usage within GRIEF is under the LGPL 2.1.
+
+         -------------------------------------------------------------
+
+Topic:          libguess
+
+        High-speed character set detection.
+
+        libguess-1.1 employs discrete-finite automata to deduce the
+        character set of the input buffer. The advantage of this is
+        that all character sets can be checked in parallel, and
+        quickly. Right now, libguess passes a byte to each DFA on the
+        same pass, meaning that the winning character set can be
+        deduced as efficiently as possible.
+
+    Libguess Copyright:
+
+(code)
+    Copyright (c) 2000-2003 Shiro Kawai
+    Copyright (c) 2005-2010 Yoshiki Yazawa
+    Copyright (c) 2007-2010 William Pitcock
+
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions
+    are met:
+
+    1. Redistributions of source code must retain the above copyright
+        notice, this list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright
+        notice, this list of conditions and the following disclaimer in the
+        documentation and/or other materials provided with the distribution.
+
+    3. Neither the name of the authors nor the names of its contributors
+        may be used to endorse or promote products derived from this
+        software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+    A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+    OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+    TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+    PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+    LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+(end)
+
+         -------------------------------------------------------------
+
+Topic:          hunspell
+
+        hunspell 1.3.2
+
+        Hunspell is the spell checker of LibreOffice, OpenOffice.org,
+        Mozilla Firefox 3 & Thunderbird, Google Chrome, and it is
+        also used by proprietary software packages, like Mac OS X,
+        InDesign, memoQ, Opera and SDL Trados.
+
+        Source: http://hunspell.sourceforge.net
+
+   Main features:
+
+        o Extended support for language peculiarities; Unicode character
+          encoding, compounding and complex morphology.
+
+        o Improved suggestion using n-gram similarity, rule and dictionary
+          based pronunciation data.
+
+        o Morphological analysis, stemming and generation.
+
+        o Hunspell is based on MySpell and works also with MySpell dictionaries.
+
+        o C++ library under GPL/LGPL/MPL tri-license.
+
+        o Interfaces and ports: AndroidHunspellService (for Android, based on
+          he Chromium fork of Hunspell), Enchant (Generic spelling library
+          from the Abiword project), XSpell (Mac OS X port, but Hunspell is
+          part of the OS X from version 10.6 (Snow Leopard), and now it is
+          enough to place the Hunspell dictionary files into ~/Library/Spelling
+          or /Library/Spelling for spell checking), Delphi, Java (JNA, JNI),
+          Perl, .NET, Python, Ruby ([1], [2], [3]), UNO, RichEdit.
+
+    hunspell Copyright:
+
+(code)
+    Author of Hunspell:
+    László Németh (nemethl (at) gyorsposta.hu)
+
+    Hunspell based on OpenOffice.org's Myspell. MySpell's author:
+    Kevin Hendricks (kevin.hendricks (at) sympatico.ca)
+
+    License: GPL 2.0/LGPL 2.1/MPL 1.1 tri-license
+
+    The contents of this library may be used under the terms of
+    the GNU General Public License Version 2 or later (the "GPL"), or
+    the GNU Lesser General Public License Version 2.1 or later (the "LGPL",
+    see http://gnu.org/copyleft/lesser.html) or the Mozilla Public License
+    Version 1.1 or later (the "MPL", see http://mozilla.org/MPL/MPL-1.1.html).
+
+    Software distributed under these licenses is distributed on an "AS IS" basis,
+    WITHOUT WARRANTY OF ANY KIND, either express or implied. See the licences
+    for the specific language governing rights and limitations under the licenses.
+(end)
+
+        Usage within GRIEF is under the LGPL 2.1, dynamically linked.
+
+         -------------------------------------------------------------
+
+Topic:          libarchive
+
+        libarchive 3.0.4
+
+        C library and command-line tools for reading and writing tar, cpio,
+        zip, ISO, and other archive formats.
+
+        Source: http://www.libarchive.org
+
+    Library features:
+
+        o Support for a variety of archive and compression formats.
+
+        o Robust automatic format detection, including archive/compression
+          combinations such as tar.gz.
+
+        o Zero-copy internal architecture for high performance.
+
+        o Streaming architecture eliminates all limits on size of archive,
+          limits on entry sizes depend on particular formats.
+
+        o Carefully factored code to minimize bloat when programs are
+          statically linked.
+
+        o Growing test suite to verify correctness of new ports.
+
+        o Works on most POSIX-like systems (including FreeBSD,
+          Linux, Solaris, etc.)
+
+        o Supports Windows, including Cygwin, MinGW, and Visual Studio.
+
+    Libarchive Copyright:
+
+(code)
+    Copyright (c) 2003-2009 <author(s)>
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions
+    are met:
+    1. Redistributions of source code must retain the above copyright
+        notice, this list of conditions and the following disclaimer
+        in this position and unchanged.
+    2. Redistributions in binary form must reproduce the above copyright
+        notice, this list of conditions and the following disclaimer in the
+        documentation and/or other materials provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE AUTHOR(S) ``AS IS'' AND ANY EXPRESS OR
+    IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+    OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+    IN NO EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY DIRECT, INDIRECT,
+    INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+    NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+    THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+(end)
+
+         -------------------------------------------------------------
+
+Topic:          iconv
+
+        NetBSD intl/iconv implementation from the Citrus Project
+
+        libcitrus, libintl, libiconv and iconv.
+
+    Iconv Copyright:
+
+(code)
+    Copyright (c) 2003 Citrus Project,
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions
+    are met:
+    1. Redistributions of source code must retain the above copyright
+        notice, this list of conditions and the following disclaimer.
+    2. Redistributions in binary form must reproduce the above copyright
+        notice, this list of conditions and the following disclaimer in the
+        documentation and/or other materials provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+    ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+    OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+    HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+    OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+    SUCH DAMAGE.
+(end)
+
+         -------------------------------------------------------------
+
+        $Id: contrib.txt,v 1.5 2014/11/27 18:08:41 ayoung Exp $
+-*- mode: txt; margin: 75; -*-
+

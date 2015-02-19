@@ -1,0 +1,193 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: options.mandoc,v 1.1 2014/11/27 18:19:42 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt OPTIONS 1
+.Os
+.Sh NAME
+.Nm options
+.Nd Options menu.
+.Sh DESCRIPTION
+The options menu allows the user to temporarily change various modes and
+flags in GRIEF during the course of the current editing session. Permanent
+changes can be placed in one of the GRIEF start-up macros.
+.Pp
+These options are collected together in one menu, since it is usually
+difficult to remember the particular macro name or options to these
+macros. These options tend to get changed when the user has to perform a
+task which is out of the ordinary. For example, a programmer will normally
+have his keyboard layout set up for easy manipulation of programs, but
+occasionally (yes I know its difficult) will have to produce a memo or
+write some documentation.
+.Pp
+Because writing documentation is something which may not be performed
+often the user may forget which macros and options are available to them.
+Therefore the options menu is designed to have all those easy to forget
+features to hand.
+.Pp
+The options menu currently has the following selections:
+.Bl -bullet -offset 1 -width xxxx
+.It
+Autoindenting
+.It
+Documents
+.It
+Status Line
+.It
+Searching
+.It
+Tabs
+.It
+Indent
+.It
+Buffer flags (use with caution)
+.El
+.Sh Autoindenting
+GRIEF provides a macro for performing auto-indenting. Auto-indenting comes
+into operation when the user hits the <Enter> key.
+.Pp
+The auto-indent macro works by going to the beginning of the current line
+to find out in which column the current line starts. It then moves the cursor
+to the next line with the cursor underneath the first white space character
+in the line above.
+.Pp
+The auto-indenting macro understands about whether you have selected hard or
+soft tabs. This is necessary, since if you need to un-indent on a successive
+line, you will press the <Backspace> key. Therefore to allow <Backspace>
+to operate properly, the auto-indent macro inserts enough spaces or tabs to
+take the cursor to the same column as the first non-space character in the
+previous line.
+.Pp
+Auto indenting is implemented via the (autoindent) macro which is automatically
+called from the Options menu. When the autoindent option is selected, the
+macro asks whether you want autoindenting on or off:
+.Bd -literal
+        Turn autoindent on (y/n) ?
+.Ed
+.Pp
+If you specify 'y', then autoindenting is turned on. If you specify any other
+response then autoindenting is turned off. If you wish to abort the
+selection, just type <Esc>.
+.Sh Documents Option
+The documents option collects together some of the preferred options for editing
+text files. There are three options available at present - the setting of the right
+hand margin where word wrap is to appear, whether text is to be filled to have
+an even right hand margin or whether the margins are to be left ragged, and
+auto word-wrap.
+.Pp
+There are two ways to do word-processing like justification of input text -
+autowrap and manual reformatting. Autowrap causes the cursor to wrap around to
+the next line when the right hand margin is reached.  Autowrap is a very CPU
+intensive activity. Manual reformatting occurs by selecting a paragraph or a
+group of paragraphs highlited with <Alt-A>, <Alt-M> or <Alt-L>).  Once the region
+has been highlited, the area can be reformatted with the <Ctrl-F> key or from
+the 'Region Manipulation' option in the Features menu. See the section on Region
+Manipulation in the Features section (see feature).
+.Sh Status Line Option
+This option lets the user turn on and off various fields on the status line. This
+macro is simply an interface to the (echo_line) macro primitive which actually controls
+the appearance of the status fields.
+.Pp
+There are four fields on the status line which may be turned on and off:
+.Bd -literal
+        Line field
+        Colume field
+        Percentage field
+        Time field
+.Ed
+.Pp
+By default, GRIEF displays the line, column and time fields.
+.Bl -bullet -offset 1 -width xxxxxxxxxx
+.It
+Line field, is used to display the current line number
+in the file.
+.It
+Column field, displays the current column position.
+.It
+Percentage field, displays how far through the file you are as a percentage.
+If you are on the first line of a buffer, then this is displayed as 0%; the
+last line of the buffer displays as 'END'.
+.It
+Time field, current time of day.
+.El
+.Pp
+It is useful to display the line and column number, but some people may prefer
+to turn these options off. On slow terminals, it is useful to avoid displaying
+all fields, as they cause a lot of cursor movement.
+.Sh Searching Option
+The searching option controls three parameters when
+searching:
+.Bd -literal
+        Regular expressions
+        case sensitivity
+        block searching
+        regular expression syntax mode
+.Ed
+.Pp
+The regular expressions option control whether strings entered at the search
+prompts should be treated as regular expressions or whether they should be
+treated as literal string patterns.
+.Pp
+Case sensitivity controls whether alphabetic characters should be compared as
+equivalent if they only differ in their case, ie whether 'A' should match 'a'.
+.Pp
+Block searching controls what happens when a search is requested and the current
+buffer is highlited. If this option is turned off then the search is performed as if
+the buffer was not highlited. If this option is on then the search starts from
+the beginning of the currently selected region and continues until a pattern is
+found or the end of the region is reached.
+.Pp
+Regular expression syntax mode indicates whether regular expressions typed at
+the 'Search fwd:' and 'Search back:' prompts are to be GRIEF style regular
+expressions or Unix style regular expressions.
+.Sh Tabs Option
+This option is used to turn on or off hard or soft tabs.
+.Sh SEE ALSO
+.Xr extra ,
+.Xr feature ,
+.Xr package ,
+.Xr program

@@ -1,0 +1,149 @@
+# -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
+# $Id: Makefile.in,v 1.6 2013/05/12 21:35:54 cvsuser Exp $
+# extags makefile
+#
+#
+#
+
+@SET_MAKE@
+ROOT=		@abs_top_builddir@
+top_builddir=	@top_builddir@
+
+# File extensions
+
+E=
+O=		.o
+H=		.h
+A=		.a
+LP=		lib
+
+CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+
+# Compilers, programs
+
+CC=		@CC@
+AR=		@AR@
+RANLIB=		@RANLIB@
+RM=		@RM@
+
+# Common flags
+
+ARFLAGS=	rcv
+XFLAGS=		
+COPT=		@CFLAGS@
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+LDEBUG=		@LDEBUG@
+CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
+CEXTRA=		@DEFS@
+CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+YFLAGS=		-d
+LDFLAGS=	$(LDEBUG) @LDFLAGS@
+LDLIBS=		-L$(D_LIB) @LIBS@ @LIBM@ @EXTRALIBS@
+
+RMFLAGS=	-f
+
+# Directories
+
+D_BIN=		$(ROOT)/bin
+D_INC=		$(ROOT)/include
+D_OBJ=		$(ROOT)/objects/extags
+D_LIB=		$(ROOT)/lib
+
+############################################################
+
+# targets
+
+EXTSK=		$(D_BIN)/extags$(E)
+
+VERSION=	5.8
+VERSIONSPEC=	$(subst .,:,$(VERSION))
+PACKED=		ctags-5.8.tgz
+EXSRC=		./ctags-5.8
+VPATH=		$(EXSRC)
+
+EXOBJS=\
+	$(D_OBJ)/args$(O)		\
+	$(D_OBJ)/ant$(O)		\
+	$(D_OBJ)/asm$(O)		\
+	$(D_OBJ)/asp$(O)		\
+	$(D_OBJ)/awk$(O)		\
+	$(D_OBJ)/basic$(O)		\
+	$(D_OBJ)/beta$(O)		\
+	$(D_OBJ)/c$(O)			\
+	$(D_OBJ)/cobol$(O)		\
+	$(D_OBJ)/dosbatch$(O)		\
+	$(D_OBJ)/eiffel$(O)		\
+	$(D_OBJ)/entry$(O)		\
+	$(D_OBJ)/erlang$(O)		\
+	$(D_OBJ)/flex$(O)		\
+	$(D_OBJ)/fortran$(O)		\
+	$(D_OBJ)/get$(O)		\
+	$(D_OBJ)/html$(O)		\
+	$(D_OBJ)/jscript$(O)		\
+	$(D_OBJ)/keyword$(O)		\
+	$(D_OBJ)/lisp$(O)		\
+	$(D_OBJ)/lregex$(O)		\
+	$(D_OBJ)/lua$(O)		\
+	$(D_OBJ)/main$(O)		\
+	$(D_OBJ)/make$(O)		\
+	$(D_OBJ)/matlab$(O)		\
+	$(D_OBJ)/ocaml$(O)		\
+	$(D_OBJ)/options$(O)		\
+	$(D_OBJ)/parse$(O)		\
+	$(D_OBJ)/pascal$(O)		\
+	$(D_OBJ)/perl$(O)		\
+	$(D_OBJ)/php$(O)		\
+	$(D_OBJ)/python$(O)		\
+	$(D_OBJ)/read$(O)		\
+	$(D_OBJ)/rexx$(O)		\
+	$(D_OBJ)/routines$(O)		\
+	$(D_OBJ)/ruby$(O)		\
+	$(D_OBJ)/scheme$(O)		\
+	$(D_OBJ)/sh$(O) 		\
+	$(D_OBJ)/slang$(O)		\
+	$(D_OBJ)/sml$(O)		\
+	$(D_OBJ)/sort$(O)		\
+	$(D_OBJ)/sql$(O)		\
+	$(D_OBJ)/strlist$(O)		\
+	$(D_OBJ)/tcl$(O)		\
+	$(D_OBJ)/tex$(O)		\
+	$(D_OBJ)/verilog$(O)		\
+	$(D_OBJ)/vhdl$(O)		\
+	$(D_OBJ)/vim$(O)		\
+	$(D_OBJ)/yacc$(O)		\
+	$(D_OBJ)/vstring$(O)
+
+OBJS=		$(EXOBJS)
+TSKS=		$(EXTSK)
+
+# Rules
+
+all:			source unpacked
+unpacked:		object $(TSKS)
+
+object:			$(D_OBJ)/.created
+
+$(EXTSK):		$(EXOBJS)
+		$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
+
+source:			.unpacked.$(VERSION)
+		$(MAKE) unpacked
+
+.unpacked.$(VERSION):	$(PACKED)
+		@echo "do not delete, managed file" > $@
+		@echo "unpacking source $(PACKED)"
+		@gzip -c -d $(PACKED) | tar -xvf -
+
+%/.created:
+		-@mkdir $(@D)
+		@echo "do not delete, managed directory" > $@
+
+clean:
+		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(OBJS) $(CLEAN) $(XCLEAN) >nul 2>&1
+
+$(D_OBJ)/%$(O):		%.c
+		$(CC) $(CFLAGS) -o $@ -c $<
+
+#end

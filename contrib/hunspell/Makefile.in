@@ -1,0 +1,183 @@
+# -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
+# $Id: Makefile.in,v 1.13 2015/02/18 23:44:45 ayoung Exp $
+# libhunspell, hunspell, hzip and hunzip makefile
+#
+#
+#
+
+@SET_MAKE@
+ROOT=		@abs_top_builddir@
+top_builddir=	@top_builddir@
+
+# File extensions
+
+E=
+O=		.o
+H=		.h
+A=		.a
+LP=		lib
+
+CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+
+# Compilers, programs
+
+CC=		@CC@
+CXX=		@CXX@
+AR=		@AR@
+RANLIB=		@RANLIB@
+RM=		@RM@
+PERL=		@PERL@
+LIBTOOL=	@LIBTOOL@
+
+# Common flags
+
+ARFLAGS=	rcv
+COPT=		@CFLAGS@
+CXXOPT=		@CXXFLAGS@
+CWARN=		@CWARN@
+CXXWARN=	@CXXWARN@
+CDEBUG=		@CDEBUG@
+CXXDEBUG=	@CXXDEBUG@
+LDEBUG=		@LDEBUG@
+CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
+CEXTRA=		@DEFS@
+CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA)
+CXXFLAGS=	$(CXXDEBUG) $(CXXOPT) $(CXXWARN) $(CINCLUDE) $(CEXTRA)
+YFLAGS=		-d
+LDFLAGS=	$(LDEBUG) @LDFLAGS@
+LDLIBS=		-L$(D_LIB) @LIBS@ @TERMLIB@ @LIBM@ @EXTRALIBS@
+
+RMFLAGS=	-f
+
+# Directories
+
+D_BIN=		$(ROOT)/bin
+D_INC=		$(ROOT)/include
+D_OBJ=		$(ROOT)/objects/libhunspell
+D_LIB=		$(ROOT)/lib
+
+############################################################
+
+# Targets
+
+HUNSPELLLIB=	$(D_LIB)/$(LP)hunspell_static$(A)
+HUNSPELLDLL=	$(D_LIB)/$(LP)hunspell.la
+
+VERSION=	1.3.3
+VERSIONSPEC=	$(subst .,:,$(VERSION))
+HUNSPELLSRC=	./hunspell-$(VERSION)/src/hunspell
+PARSERSSRC=	./hunspell-$(VERSION)/src/parsers
+TOOLSSRC=	./hunspell-$(VERSION)/src/tools
+
+LIBOBJS=\
+	$(D_OBJ)/lib_affentry$(O)		\
+	$(D_OBJ)/lib_affixmgr$(O)		\
+	$(D_OBJ)/lib_csutil$(O)			\
+	$(D_OBJ)/lib_dictmgr$(O)		\
+	$(D_OBJ)/lib_filemgr$(O)		\
+	$(D_OBJ)/lib_hashmgr$(O)		\
+	$(D_OBJ)/lib_hunspell$(O)		\
+	$(D_OBJ)/lib_hunzip$(O)			\
+	$(D_OBJ)/lib_phonet$(O)			\
+	$(D_OBJ)/lib_replist$(O)		\
+	$(D_OBJ)/lib_suggestmgr$(O)
+
+DLLOBJS=\
+	$(D_OBJ)/hunspell_dllmain.lo		\
+	$(D_OBJ)/hunspell_dllc.lo		\
+	$(D_OBJ)/hunspell_dlls.lo		\
+	$(subst $(O),.lo,$(LIBOBJS))
+
+HUNSPELLOBJS=\
+	$(D_OBJ)/hunspell$(O)			\
+	$(D_OBJ)/firstparser$(O)		\
+	$(D_OBJ)/htmlparser$(O)			\
+	$(D_OBJ)/latexparser$(O)		\
+	$(D_OBJ)/manparser$(O)			\
+	$(D_OBJ)/textparser$(O)
+
+ifeq ("1.3.3","$(VERSION)")
+HUNSPELLOBJS+=\
+	$(D_OBJ)/xmlparser$(O)			\
+	$(D_OBJ)/odfparser$(O)
+endif
+
+OBJS=		$(LIBOBJS) $(DLLOBJS)
+LIBS=		$(HUNSPELLLIB) $(HUNSPELLDLL)
+TSKS=		$(D_BIN)/hunspell$(E) $(D_BIN)/hzip$(E) $(D_BIN)/hunzip$(E)
+
+# Rules
+
+all:			source unpacked
+unpacked:		object $(LIBS) $(TSKS) $(HUNSPELLDB) installinc
+
+$(HUNSPELLLIB):		CEXTRA += -I$(HUNSPELLSRC) -DHUNSPELL_STATIC
+$(HUNSPELLLIB):		$(LIBOBJS)
+		$(RM) $(RMFLAGS) $@ >/dev/null 2>&1
+		$(AR) $(ARFLAGS) $@ $(LIBOBJS)
+		$(RANLIB) $@
+
+#note build as static, only exported are via hunspell_dlls./c modules
+$(HUNSPELLDLL):		CEXTRA += -I$(HUNSPELLSRC) -DHUNSPELL_STATIC
+$(HUNSPELLDLL):		$(DLLOBJS)
+		$(LIBTOOL) --mode=link $(CC) -version-number $(VERSIONSPEC) -rpath $(D_LIB) -bindir $(D_BIN) \
+			-o $@ $^ $(LDLIBS)
+
+$(D_BIN)/hunspell$(E):	CEXTRA += -I$(TOOLSSRC) -I$(PARSERSSRC) -I$(HUNSPELLSRC) -DHUNSPELL_STATIC
+$(D_BIN)/hunspell$(E):	$(HUNSPELLOBJS)
+		$(CXX) $(LDFLAGS) -o $@ $^ $(D_LIB)/libhunspell_static$(A) $(LDLIBS)
+
+$(D_BIN)/hzip$(E):	CEXTRA += -I$(TOOLSSRC) -I$(HUNSPELLSRC) -DHUNSPELL_STATIC
+$(D_BIN)/hzip$(E):	$(D_OBJ)/hzip$(O)
+		$(CXX) $(LDFLAGS) -o $@ $^ $(D_LIB)/libhunspell_static$(A) $(LDLIBS)
+
+$(D_BIN)/hunzip$(E):	CEXTRA += -I$(TOOLSSRC) -I$(HUNSPELLSRC) -DHUNSPELL_STATIC
+$(D_BIN)/hunzip$(E):	$(D_OBJ)/hunzip$(O)
+		$(CXX) $(LDFLAGS) -o $@ $^ $(D_LIB)/libhunspell_static$(A) $(LDLIBS)
+
+source:			.unpacked.$(VERSION)
+		$(MAKE) unpacked
+
+.unpacked.$(VERSION):	hunspell-$(VERSION).patched.tgz
+		@echo "do not delete, managed file" > $@
+		@echo "unpacking source"
+		@gzip -c -d hunspell-$(VERSION).patched.tgz | tar -xvf -
+
+.PHONY:		object
+object:			$(D_OBJ)/.created
+
+.PHONY:		installinc
+installinc:		../include/.created
+		@echo publishing headers ...
+		-cp $(HUNSPELLSRC)/hunspell.h   ../include
+		-cp $(HUNSPELLSRC)/hunspell.hxx ../include
+		-cp $(HUNSPELLSRC)/hunvisapi.h  ../include
+
+%/.created:
+		-@mkdir $(@D)
+		@echo "do not delete, managed directory" > $@
+
+clean:
+		-@$(RM) $(RMFLAGS) $(TSKS) $(LIBS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
+		-@$(LIBTOOL) --mode=clean $(RM) $(DLLOBJS) >/dev/null 2>&1
+		-@$(RM) $(LIBOBJS) >/dev/null 2>&1
+
+$(D_OBJ)/lib_%$(O):	$(HUNSPELLSRC)/%.cxx
+		$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(D_OBJ)/lib_%.lo:	$(HUNSPELLSRC)/%.cxx
+		$(LIBTOOL) --mode=compile $(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(D_OBJ)/%.lo:		%.cxx
+		$(LIBTOOL) --mode=compile $(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(D_OBJ)/%$(O):		$(TOOLSSRC)/%.cxx
+		$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(D_OBJ)/%$(O):		$(PARSERSSRC)/%.cxx
+		$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(D_OBJ)/%$(O):		$(TOOLSSRC)/%.c
+		$(CC) $(CFLAGS) -o $@ -c $<
+
+#end

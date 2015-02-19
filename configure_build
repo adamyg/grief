@@ -1,0 +1,23 @@
+#!/bin/sh
+# -*- mode: sh; -*-
+# $Id: configure_build,v 1.5 2012/03/08 22:53:32 cvsuser Exp $
+#
+
+if [ ! -f "install-sh" ]; then
+	cp auto/install-sh .
+fi
+if [ ! -f "config.guess" ]; then
+	cp auto/config.guess .
+fi
+if [ ! -f "config.sub" ]; then
+	cp auto/config.sub .
+fi
+if [ ! -f "missing" ]; then
+	cp auto/missing .
+fi
+if [ ! -f "ltmain.sh" ]; then
+	cp auto/ltmain.sh .
+fi
+auto/config.status
+
+#end

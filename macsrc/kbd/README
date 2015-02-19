@@ -1,0 +1,20 @@
+
+        This directory contains the macros which are loaded as a
+        result of setting the 'GRKBDPATH' environment variable.
+
+ These
+        files set the global list variable, kbd_labels, which is used
+        by Grief in the int_to_key() primitive if the labels on your
+        keyboard are not necessarily in correspondence with a PC
+        keyboard.
+
+        For example, you might have a META key rather than an ALT key.
+
+        The format of this list is a sequence of pairs, where the
+        first element of the pair is the internal key-code (an int)
+        and the second part of the pair is the string to use for that
+        keycode.
+
+        Only the key-sequences not compatible with the default
+        characteristics of int_to_key() should be defined.
+

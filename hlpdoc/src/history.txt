@@ -1,0 +1,96 @@
+
+Title:          History
+
+        The *GRIEF* Editor, despite the fact this package was only
+        formally released in 2013, its development has its roots from
+        the 80's as a Brief clone. This version of the editor has
+        been actively used since the 1998.
+
+               --------------------------------------------------
+
+Topic:          Authors
+
+        As for it development the main history milestones and authors
+        are as follows.
+
+   Dave Conroy:
+
+        Author of the public domain *MicroEmacs* upon which *GRIEF*
+        was originally based.
+
+        *MicroEMACS* is supported on a variety of machines and
+        operating systems, including MS-DOS VMS and UNIX (several
+        versions); which can be found within CUG archives.
+
+        Since that time a number of variations have been developed, 
+        such as MicroGNUEmacs (or mg) and uEmacs/PK.
+
+   Paul Fox:
+
+        Using MicroEmacs as a basis *Paul* *Fox* developed the
+        original Crisp as an UnderWare Inc's, later Borland 3.1
+        BRIEF(tm) clone/emulation, targeted for Unix(tm) and VMS.
+
+        This packages was known as *CRISP*, the 'Custom' 'Reduced'
+        'Instruction' 'Set' 'Programmers' 'Editor'.
+
+        The last public release was Crisp 2.2 in 1991 prior to
+        becoming that is now *CRiSP* Visual Text Editor, 
+
+        Paul Fox's personal site is <http://www.crisp.demon.co.uk>, 
+        with the commercial site being <http://www.crisp.com>.
+
+(code)
+        CRiSP is a programmers text editor designed to give user the
+        power and flexibility to edit large files on multiple Unix, 
+        Linux, Windows and Mac platforms.
+
+        CRiSP started life as a programmers text editor with BRIEF
+        emulation, however after 15+ years of development, it now
+        includes just about every conceivable editing feature that
+        you could ever feel a need for, while still maintaining BRIEF
+        keyboard and macro emulation.
+(end)
+        
+        Paul Fox no longer maintains nor supports the Crisp 2.2 version.
+
+        Crisp was based in part on a mix of public domain and
+        specialised components, included MicroEmacs.
+
+        The final source and several earlier versions can be found on
+        old mail archive sites.
+
+        *GRIEF* has no connection with the current commercial product.
+
+   Adam Young:
+
+        Heavily modified, replaced and extended the publicly released
+        crisp2.2 to become what is now the *GRIEF* Editor.
+
+               --------------------------------------------------
+
+Topic:          Brief
+
+        *Brief*, *BRIEF*, or *B.R.I.E.F.*, an acronym for 'Basic'
+        'Reconfigurable' 'Interactive' 'Editing' 'Facility', was a
+        programmer's text editor in the 1980s and early 1990s.
+
+        It was designed and developed by UnderWare Inc, a company
+        founded in Providence, Rhode Island by 'David Nanian' and
+        'Michael Strickman', and was published by 'Solution Systems'
+        and later Borland.
+
+        In 1990, UnderWare sold BRIEF to Solution Systems which
+        released version 3.1.
+
+        Borland later purchasing BRIEF and the full suite of software
+        tools from Solutions Systems.
+
+        Solution Systems closed permanently after the sale to
+        Borland. Much to our loss, BRIEF is no longer sold by Borland.
+
+                    ---------------------------------------
+
+        $Id: history.txt,v 1.3 2014/10/31 01:09:05 ayoung Exp $
+-*- mode: txt; margin: 75; -*-
+

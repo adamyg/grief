@@ -1,0 +1,94 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: grep.mandoc,v 1.1 2014/11/27 18:19:37 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt GREP 1
+.Os
+.Sh NAME
+.Nm grep
+.Nd search for text in multiple files.
+.Sh DESCRIPTION
+.Pp
+This macro is used to overcome the usual problems of grep displaying more
+than a screen full of output, and forgetting to use 'more' or 'pg' to
+capture the output. In addition the grep macro allows the user to visit
+each file which contains the pattern selected.
+.Pp
+The grep macro takes two arguments -- the string to search for and the
+files to look at. If these aren't specified then they are prompted for. The
+grep macro issues a standard Unix grep command and displays the output in a
+popup window.
+.Pp
+Whilst grep is operating it prints the message:
+.Bd -literal
+	Locating text...
+.Ed
+.Pp
+.Pp
+The user can move around this buffer with the usual cursor movement keys.
+The current entry is highlited. Pressing <Enter> on any particular line
+will cause the grep macro to edit the file in which that line occurs and go
+directly to the line selected.
+.Pp
+The grep macro also re-maps the <Ctrl-N> and <Ctrl-P> keys. Pressing
+<Ctrl-N> will take you to the next file/line in the output from grep.
+<Ctrl-P> takes you to the previous line. Thus, repeated use of <Ctrl-N>
+allows the user to easily see the context (lines around the matching
+pattern) within each file.
+.Pp
+The grep macro also supports a 'Change-Mode'. In this mode, the user can
+modify the lines in the grep pop up window, eg to make global
+substitutions, and by hitting the <Esc> key, all the changes can be made to
+the different files in one go. This is useful for example, in order to make
+a change to a variable name across all source files.
+.Sh MENU/KEYS
+This macro can be accessed from the GRIEF features menu or by typing
+\f(HBgrep\fR at the command prompt, with or without the required arguments.
+.Sh SEE ALSO
+.Xr routines ,
+.Xr ff ,
+.Xr ts

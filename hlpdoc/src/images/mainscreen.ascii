@@ -1,0 +1,22 @@
++---------------------------- \fBm_ruler.c\fR -----------------------------+
+|                                                                    :
+|    Macro See Also:                                                 :
+|        inq_tabs, set_indent, distance_to_tab, distance_to_indent   :
+| */                                                                 *
+|void                                                                :
+|do_tabs(void)                   /* int ([string tabs | list tabs | i:
+|{                                                                   :
+|    LINENO newtabs[BUFFER_NTABS + 1] = {0};                         :
+|    int tabi = 0;                                                   :
+|                                                                    :
+|    tabi = ruler_import("tabs", 1, newtabs, BUFFER_NTABS);          :
+|    if (tabi >= 0 && curbp) {                                       :
+|        memcpy(curbp->b_tabs, (const void *)newtabs, sizeof(curbp->b:
+|    }                                                               :
+|    win_modify(WFHARD);                                             :
+|    acc_assign_int((accint_t)tabi);                                 :
+|}                                                                   :
+|                                                                    :
++*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::+
+Command:                               [ ]  Line: 251  Col: 1  11:39am
+

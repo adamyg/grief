@@ -1,0 +1,75 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: scroll.mandoc,v 1.1 2014/11/27 18:19:42 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt SCROLL 1
+.Os
+.Sh NAME
+.Nm scroll
+.Nd Scroll lock, lock cursor and allow side by side scrolling.
+.Sh DESCRIPTION
+The scroll lock macro provides two useful pieces of functionality.
+If there is only one window on display, then the cursor is locked
+into position, so that the window onto the current buffer pans
+around the cursor. Normally the cursor is moved until it moves off
+of an extremity of the window. When this happens the 'window' pans the
+buffer. With scroll locking enabled, this panning happens all the time
+even if the cursor is not at a window edge.
+.Pp
+The other way scroll locking works is if there are two windows on
+display. In this case, the two buffers in the windows are scrolled
+together. For example, moving the cursor down in one window will cause
+the buffer in the other window to be scrolled with it.
+This feature is specifically designed to allow two files to be
+compared with each other, without the user having to keep switching
+windows in order to keep the two files in sync with each other.
+.Pp
+Scroll-lock is accessed via the <Keypad-ScrollLock> key. This key acts
+as a toggle -- alternately enabling and disabling this feature.
+.Sh MENU/KEYS
+This macro can be accessed from the GRIEF features menu or by pressing
+the \f(HB<Keypad-Scroll>\fR key.

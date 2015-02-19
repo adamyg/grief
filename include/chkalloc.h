@@ -1,0 +1,118 @@
+#ifndef GR_CHKALLOC_H_INCLUDED
+#define GR_CHKALLOC_H_INCLUDED
+#include <edidentifier.h>
+__CIDENT_RCSID(gr_chkalloc_h,"$Id: chkalloc.h,v 1.16 2015/02/19 00:16:53 ayoung Exp $")
+__CPRAGMA_ONCE
+
+/* -*- mode: c; indent-width: 4; -*- */
+/* $Id: chkalloc.h,v 1.16 2015/02/19 00:16:53 ayoung Exp $
+ * Memory management interface.
+ *
+ *  #define CHKALLOC_DEBUG 1
+ *
+ *      Enable memory management features, as defined below.
+ *
+ *      Warning usage maybe mixed across source modules, yet buffers allocated under
+ *      CHKALLOC_DEBUG *must* also only be managed, realloced and freed within the same
+ *      or other CHKALLOC_DEBUG enabled modules.
+ *
+ *  Memory profiling/checks are enable using check_configure(), as follows
+ *
+ *      CHKALLOC_TAIL
+ *          Enable heap tail checks post memory operations.
+ *
+ *      CHKALLOC_FILL
+ *          Force malloc'ed memory regions to be initialised with a non-zero pattern.
+ *
+ *      CHKALLOC_ZERO
+ *          Force malloc'ed memory regions to be zero initialised.
+ *
+ *      CHKALLOC_UNINIT
+ *          Force freee memory regions to be 0xDEADBEEF filled.
+ *
+ *      CHKALLOC_WHERE
+ *          Extended trace information.
+ *
+ * Copyright (c) 1998 - 2015, Adam Young.
+ * All rights reserved.
+ *
+ * This file is part of the GRIEF Editor.
+ *
+ * The GRIEF Editor is free software: you can redistribute it
+ * and/or modify it under the terms of the GRIEF Editor License.
+ *
+ * Redistributions of source code must retain the above copyright
+ * notice, and must be distributed with the license document above.
+ *
+ * Redistributions in binary form must reproduce the above copyright
+ * notice, and must include the license document above in
+ * the documentation and/or other materials provided with the
+ * distribution.
+ *
+ * The GRIEF Editor is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * License for more details.
+ * ==end==
+ */
+
+#include <stdlib.h>
+#include <edsym.h>
+
+/*
+ *  Memory management ...
+ */
+
+__CBEGIN_DECLS
+
+extern void             chk_native(void);
+extern void             chk_rtc(void);
+extern void             chk_stats(void);
+extern void *           chk_alloc(size_t len);
+extern void *           chk_calloc(size_t elem, size_t len);
+extern void             chk_free(void *p);
+extern void             chk_leak(const void *p);
+extern int              chk_isleak(const void *p);
+extern void *           chk_realloc(void *p, size_t len);
+extern size_t           chk_expand(void *p, size_t len);
+extern void *           chk_salloc(const char *s);
+extern void *           chk_snalloc(const char *s, size_t len);
+
+__CEND_DECLS
+
+/*
+ *  Memory tracing ...
+ */
+
+#if defined(CHKALLOC_DEBUG) && (CHKALLOC_DEBUG)
+#define chk_alloc(size)             check_alloc(size, __FILE__, __LINE__)
+#define chk_calloc(elem, size)      check_calloc(elem, size, __FILE__, __LINE__)
+#define chk_realloc(ptr, size)      check_realloc(ptr, size, __FILE__, __LINE__)
+#define chk_expand(ptr, size)       check_expand(ptr, size, __FILE__, __LINE__)
+#define chk_leak(ptr)               check_leak(ptr, __FILE__, __LINE__)
+#define chk_free(ptr)               check_free(ptr, __FILE__, __LINE__)
+#define chk_salloc(ptr)             check_salloc(ptr, __FILE__, __LINE__)
+#define chk_snalloc(ptr, len)       check_salloc(ptr, len, __FILE__, __LINE__)
+#define chk_snalloc(ptr, size)      check_salloc(ptr, NULL, 0)
+#endif
+
+__CBEGIN_DECLS
+
+#define CHKALLOC_TAIL   0x01
+#define CHKALLOC_FILL   0x02
+#define CHKALLOC_ZERO   0x04
+#define CHKALLOC_WHERE  0x08
+#define CHKALLOC_UNINIT 0x10
+
+extern unsigned         check_configure(unsigned flags);
+extern void *           check_alloc(size_t len, char const * file, size_t line);
+extern void *           check_calloc(size_t elem, size_t len, char const * file, size_t line);
+extern void *           check_realloc(void *p, size_t len, char const * file, size_t line);
+extern size_t           check_expand(void *p, size_t newlen, char const * file, size_t line);
+extern void             check_free(void *p, char const * file, size_t line);
+extern void *           check_salloc(char const *s, char const * file, size_t line);
+extern void *           check_snalloc(char const *s, size_t len, char const * file, size_t line);
+
+__CEND_DECLS
+
+#endif /*GR_CHKALLOC_H_INCLUDED*/

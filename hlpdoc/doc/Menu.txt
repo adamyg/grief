@@ -1,0 +1,93 @@
+Format: Development Release 7-18-2013 (1.4 base)
+
+
+Title: Grief Edit
+SubTitle: Programmers Guide
+
+Footer: Copyright (c) 1998 - 2014
+Timestamp: Generated on mon day, year
+#   m     - One or two digit month.  January is "1"
+#   mm    - Always two digit month.  January is "01"
+#   mon   - Short month word.  January is "Jan"
+#   month - Long month word.  January is "January"
+#   d     - One or two digit day.  1 is "1"
+#   dd    - Always two digit day.  1 is "01"
+#   day   - Day with letter extension.  1 is "1st"
+#   yy    - Two digit year.  2006 is "06"
+#   yyyy  - Four digit year.  2006 is "2006"
+#   year  - Four digit year.  2006 is "2006"
+
+PageFooter: 'To' 'send' 'feedback' 'on' 'this' 'topic' *email:* griefedit@gmail.com
+PageFooter: <Copyright> (c) 'Adam Young' 'All Rights Reserved.'
+
+
+# --------------------------------------------------------------------------
+# 
+# Cut and paste the lines below to change the order in which your files
+# appear on the menu.  Don't worry about adding or removing files, Natural
+# Docs will take care of that.
+# 
+# You can further organize the menu by grouping the entries.  Add a
+# "Group: [name] {" line to start a group, and add a "}" to end it.
+# 
+# You can add text and web links to the menu by adding "Text: [text]" and
+# "Link: [name] ([URL])" lines, respectively.
+# 
+# The formatting and comments are auto-generated, so don't worry about
+# neatness when editing the file.  Natural Docs will clean it up the next
+# time it is run.  When working with groups, just deal with the braces and
+# forget about the indentation and comments.
+# 
+# --------------------------------------------------------------------------
+
+
+File: Copyright  (copyright.txt)
+File: History  (history.txt)
+File: Introduction  (introduction.txt)
+File: Quick Start  (quickstart.txt)
+File: Macro Tutorial  (tutorial.txt)
+File: Macros  (macros.txt)
+File: Language Specification  (language.txt)
+File: Preprocessor  (preprocessor.txt)
+File: Debugging  (debugging.txt)
+File: Library Reference  (library.txt)
+
+Group: Primitives  {
+
+   File: Arithmetic Operators  (prim_arith.txt)
+   File: Buffer Primitives  (prim_buffer.txt)
+   File: Debugging Primitives  (prim_debug.txt)
+   File: Environment Primitives  (prim_env.txt)
+   File: File Primitives  (prim_file.txt)
+   File: Keyboard Primitives  (prim_kbd.txt)
+   File: Macro Language Primitives  (prim_macro.txt)
+   File: Miscellaneous Primitives  (prim_misc.txt)
+   File: Movement Primitives  (prim_movement.txt)
+   File: Process Management Primitives  (prim_proc.txt)
+   File: Screen Primitives  (prim_screen.txt)
+   File: Search and Translate Primitives  (prim_search.txt)
+   File: Spell Checker Primitives  (prim_spell.txt)
+   File: String Primitives  (prim_string.txt)
+   File: Variable Declaration Primitives  (prim_var.txt)
+   File: Window Primitives  (prim_window.txt)
+   File: Scrap Primitives  (prim_scrap.txt)
+   File: Dialog Primitives  (prim_dialog.txt)
+   File: Callbacks  (prim_callback.txt)
+   File: List Primitives  (prim_list.txt)
+   File: Syntax Highlighting Primitives  (prim_syntax.txt)
+   }  # Group: Primitives
+
+File: Third Party Packages  (contrib.txt)
+File: Appendix A - Error Codes  (appendixa.txt)
+File: Appendix B - Backus Naur Form  (appendixb.txt)
+File: Appendix C - ASCII Chart  (appendixc.txt)
+File: Appendix D - BRIEF Macros  (appendixd.txt)
+
+Group: Index  {
+
+   Index: Everything
+   Constant Index: Constants
+   Function Index: Functions
+   Macro Index: Macros
+   }  # Group: Index
+

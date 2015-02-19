@@ -1,0 +1,162 @@
+# -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
+# $Id: Makefile.in,v 1.11 2014/10/27 04:20:14 ayoung Exp $
+# libarchive makefile
+#
+#
+#
+
+@SET_MAKE@
+ROOT=		@abs_top_builddir@
+top_builddir=	@top_builddir@
+
+# File extensions
+
+E=
+O=		.o
+A=		.a
+LP=		lib
+
+CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+
+# Compilers, programs
+
+CC=		@CC@
+AR=		@AR@
+RANLIB=		@RANLIB@
+RM=		@RM@
+PERL=		@PERL@
+LIBTOOL=	@LIBTOOL@
+RC=		@RC@
+
+# Common flags
+
+ARFLAGS=	rcv
+XFLAGS=		
+COPT=		@CFLAGS@
+CXXOPT=		@CXXFLAGS@
+ifeq "" "$(CXXOPT)"
+CXXOPT=		$(COPT)
+endif
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+LDEBUG=		@LDEBUG@
+CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
+CEXTRA=		@DEFS@
+CFLAGS=		$(CPPFLAGS) $(CDEBUG) $(COPT) $(CWARN) $(CEXTRA) $(CINCLUDE) $(XFLAGS)
+CXXFLAGS=	$(CPPFLAGS) $(CDEBUG) $(CXXOPT) $(CWARN) $(CEXTRA) $(CINCLUDE) $(XFLAGS)
+YFLAGS=		-d
+LDFLAGS=	$(LDEBUG) @LDFLAGS@
+LDLIBS=		-L$(D_LIB) @LIBS@ @LIBM@ @EXTRALIBS@
+
+RMFLAGS=	-f
+
+# Directories
+
+D_BIN=		$(ROOT)/bin
+D_INC=		$(ROOT)/include
+D_OBJ=		$(ROOT)/objects/libz
+D_LIB=		$(ROOT)/lib
+
+############################################################
+
+# Targets
+
+ZLIB=		$(D_LIB)/$(LP)z_static$(A)
+ZDLL=		$(D_LIB)/$(LP)z.la
+
+#VERSION=	1.2.7
+VERSION=	1.2.8
+VERSIONSPEC=	$(subst .,:,$(VERSION))
+VERPACKED=	zlib-$(VERSION).tgz
+
+ZSRC=		./zlib-$(VERSION)
+VPATH=		$(ZSRC) $(ZSRC)/win32
+
+LIBOBJS=\
+	$(D_OBJ)/adler32$(O)		\
+	$(D_OBJ)/compress$(O)		\
+	$(D_OBJ)/crc32$(O)		\
+	$(D_OBJ)/deflate$(O)		\
+	$(D_OBJ)/gzclose$(O)		\
+	$(D_OBJ)/gzlib$(O)		\
+	$(D_OBJ)/gzread$(O)		\
+	$(D_OBJ)/gzwrite$(O)		\
+	$(D_OBJ)/infback$(O)		\
+	$(D_OBJ)/inflate$(O)		\
+	$(D_OBJ)/inftrees$(O)		\
+	$(D_OBJ)/inffast$(O)		\
+	$(D_OBJ)/trees$(O)		\
+	$(D_OBJ)/uncompr$(O)		\
+	$(D_OBJ)/zutil$(O)
+
+DLLOBJS=\
+	$(subst $(O),.lo,$(LIBOBJS))
+ifeq ("mingw32","@build_os@")
+DLLOBJS+=	$(D_OBJ)/zlib_res.o
+else
+DLLOBJS+=	$(D_OBJ)/zlib.res
+endif
+
+OBJS=		$(LIBOBJS) $(DLLOBJS)
+LIBS=		$(ZLIB) $(ZDLL)
+TSKS=
+
+# Rules
+
+all:			source unpacked
+unpacked:		object $(LIBS) $(TSKS) installinc
+
+CEXTRA	+=	-I$(ZSRC) -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
+
+$(ZLIB):		$(LIBOBJS)
+		$(RM) $(RMFLAGS) $@ >/dev/null 2>&1
+		$(AR) $(ARFLAGS) $@ $^
+		$(RANLIB) $@
+
+$(ZDLL):		CEXTRA += -DZLIB_DLL
+ifeq ("yes","@ISWIN32@")
+$(ZDLL):		ZDEF = -export-symbols $(ZSRC)/win32/zlib.def -export-fastcall
+endif
+$(ZDLL):		$(DLLOBJS)
+		$(LIBTOOL) --mode=link $(CC) -version-number $(VERSIONSPEC) \
+			-rpath $(D_LIB) -bindir $(D_BIN) $(ZDEF) -o $@ $^ $(LDLIBS)
+
+source:			.unpacked.$(VERSION)
+		$(MAKE) unpacked
+
+.unpacked.$(VERSION):	$(VERPACKED)
+		@echo "do not delete, managed file" > $@
+		@echo "unpacking source $BZ2PACKED"
+		@gzip -c -d $(VERPACKED) | tar.exe -xvf -
+
+.PHONY:		object
+object:			$(D_OBJ)/.created
+
+.PHONY:		installinc
+installinc:		../include/.created
+		@echo publishing headers ...
+		-cp $(ZSRC)/zlib.h ../include
+		-cp $(ZSRC)/zconf.h ../include
+
+%/.created:
+		-@mkdir $(@D)
+		@echo "do not delete, managed directory" > $@
+
+clean:
+		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
+		-@$(LIBTOOL) --mode=clean $(RM) $(DLLOBJS) >/dev/null 2>&1
+		-@$(RM) $(LIBOBJS) >/dev/null 2>&1
+
+$(D_OBJ)/%$(O):		%.c
+		$(CC) $(CFLAGS) -o $@ -c $<
+
+$(D_OBJ)/%.lo:		%.c
+		$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -o $@ -c $<
+
+$(D_OBJ)/%.res:		%1.rc
+		$(RC) -fo $@ $<
+
+$(D_OBJ)/%_res.o:	%1.rc
+		$(RC) -o $@ $<
+
+#end

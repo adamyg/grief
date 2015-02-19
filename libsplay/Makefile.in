@@ -1,0 +1,122 @@
+# -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
+# $Id: Makefile.in,v 1.13 2015/02/19 00:17:17 ayoung Exp $
+# libsplay makefile.
+#
+#
+# Copyright (c) 1998 - 2015, Adam Young.
+# All rights reserved.
+# 
+# This file is part of the GRIEF Editor.
+# 
+# The GRIEF Editor is free software: you can redistribute it
+# and/or modify it under the terms of the GRIEF Editor License.
+# 
+# Redistributions of source code must retain the above copyright
+# notice, and must be distributed with the license document above.
+# 
+# Redistributions in binary form must reproduce the above copyright
+# notice, and must include the license document above in
+# the documentation and/or other materials provided with the
+# distribution.
+# 
+# The GRIEF Editor is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# License for more details.
+# ==end==
+#
+
+@SET_MAKE@
+ROOT=		@abs_top_builddir@
+top_builddir=	@top_builddir@
+
+# File extensions
+
+C=		.c
+O=		.o
+H=		.h
+A=		.a
+LP=		lib
+
+CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+
+# Compilers, programs
+
+CC=		@CC@
+AR=		@AR@
+RANLIB=		@RANLIB@
+RM=		@RM@
+
+# Common flags
+
+ARFLAGS=	rcv
+XFLAGS=		
+COPT=		@CFLAGS@
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+LDEBUG=		@LDEBUG@
+CINCLUDE=	-I$(D_INC) @CINCLUDE@
+CEXTRA=		@DEFS@
+CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+YFLAGS=		-d
+LDFLAGS=	$(LDEBUG) @LDFLAGS@
+LXFLAGS=	$(LDLIBS) @LIBS@
+
+RMFLAGS=	-f
+
+# Directories
+
+D_BIN=		$(ROOT)/bin
+D_INC=		$(ROOT)/include
+D_OBJ=		$(ROOT)/objects/libsplay
+D_LIB=		$(ROOT)/lib
+
+############################################################
+
+LIBROOT=	splay
+
+LIBOBJS=	$(D_OBJ)/spblk$(O)		\
+		$(D_OBJ)/spdeq$(O)		\
+		$(D_OBJ)/spempty$(O)		\
+		$(D_OBJ)/spenq$(O)		\
+		$(D_OBJ)/sphead$(O)		\
+		$(D_OBJ)/spinit$(O)		\
+		$(D_OBJ)/splay$(O)		\
+		$(D_OBJ)/splookup$(O)		\
+		$(D_OBJ)/spplook$(O)		\
+		$(D_OBJ)/spstats$(O)		\
+		$(D_OBJ)/sptree$(O)		\
+		$(D_OBJ)/spflat$(O)		\
+		$(D_OBJ)/spsize$(O)		\
+		$(D_OBJ)/spwalk$(O)		\
+		$(D_OBJ)/sputil$(O)		\
+		$(D_OBJ)/spzap$(O)
+
+XCLEAN=		$(D_OBJ)/sptest$(O) $(D_OBJ)/sptest$(SO) sptest
+
+LIBRARY=	$(D_LIB)/$(LP)$(LIBROOT)$(A)
+
+all:			$(LIBRARY)
+
+$(LIBRARY):		$(D_OBJ)/.created $(LIBOBJS)
+		$(RM) $(RMFLAGS) $@
+		$(AR) $(ARFLAGS) $@ $(LIBOBJS)
+		$(RANLIB) $@
+
+$(D_OBJ)/.created:
+		-@mkdir $(D_OBJ)
+		@echo "do not delete" > $@
+
+clean:
+		-@$(RM) $(RMFLAGS) $(BAK) $(LIBRARY) $(LIBOBJS) $(CLEAN) $(XCLEAN)
+
+LDLIBS= 	-L$(D_LIB) -l$(LIBROOT) -lmisc
+
+sptest$(E):		$(D_OBJ)/sptest$(O) $(LIBRARY)
+		$(CC) $(LDFLAGS) -o $@ $(D_OBJ)/sptest$(O) $(LXFLAGS)
+
+$(D_OBJ)/%$(O):		%$(C)
+		$(CC) $(CFLAGS) -o $@ -c $<
+
+#end

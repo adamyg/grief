@@ -1,0 +1,736 @@
+
+Title:          Macros
+
+        Grief is built on the concept of extensibility and
+        programmability. Macros are so ingrained in the design of
+        BRIEF that many of the standard editing functions are
+        implemented in the macro language, rather than in compiled
+        code.
+
+        By writing your own macros, you can tailor the standard
+        editor in both small ways (such as setting start-up colors,
+        tab settings, or window positions), and large ways (such as
+        modifying existing commands or creating new commands of your
+        own design).
+
+Section:        Types of Macros
+
+        A function can be called from the macro language. *Grief* has
+        a number of different kinds of macros or functions;
+
+                o <Commands>
+                o <Startup and main>
+                o <File Extension Macros>
+                o <Registered Macros>
+                o <Replacement Macros>
+                o <Special Purpose Macros>
+                o <Built-in Functions>
+
+        The following sections describe each of the function types.
+
+         --------------------------------------------------------
+
+Topic:          Commands
+
+        Prompt line and keyword command macros.
+
+        A command function is a macro which are assigned to a key or key
+        sequence. As these are normally explicitly designed to be called
+        directly by the user from the keyboard, these shall be referred to
+        as 'commands'.
+
+        There is no specific differences between command macros and other
+        macros, as commands can be called also from other macros.
+
+        Note!:
+        The '_command' keyword has been reserved for a possible extension
+        to the macro language, whereby command macros must be explicity
+        declared, hiding all not command macros from direct user usage.
+
+         --------------------------------------------------------
+
+Topic:          Startup and main
+
+        Every macro source may have a 'main()' function; where you place it
+        is a matter of preference.
+
+(code, hilite=c)
+        static int buffer;
+
+        void
+        main()
+        {                       // initial our private working buffer
+                buffer = create_buffer("--working-buffer--", NULL, 1);
+        }
+(end)
+
+        Note!:
+        As such like C, some programmers place main at the
+        beginning of the file, others at the very end. Like all macros,
+        their location of order of function declarations contained the
+        macro source has not effect of the execution order.
+
+         --------------------------------------------------------
+
+Topic:          File Extension Macros
+
+        File extension callbacks are executed whenever GriefEdit
+        edits a file via the <edit_file> primitive.
+
+        It is provided to allow macros to hooks buffer loads, for
+        example to setup defaults tabs before any extension specific
+        settings are applied.
+
+        Once executed if defined the extension specific handler shall
+        be executed, which should be named as _ext. If not available
+        the default extension handler <_default> shall be executed.
+
+        The extension case shall be preserved on case sensitive
+        file-systems otherwise the extension is converted to lower
+        case.
+
+                o <register_macro>
+                o <_extension>
+                o <_default>
+
+         --------------------------------------------------------
+
+Topic:          Registered Macros
+
+        A registered macro is one that is executed when an associated
+        event ocurrs.
+
+        Types of events which can be registered include;
+
+                o A character has been typed.
+                o A invalid key is typed.
+                o A new user buffer is created.
+                o The current buffer is changed.
+                o Exiting the editor.
+
+        These events are registered using the <register_macro()>
+        primitive and can then be unregistered using the
+        <unregister_macro()> primitive. One or more macros can be
+        registered against any given event, in which case each macro
+        shall be executed upon the event, in the same order as there
+        were registered.
+
+        Registered macro primitive include;
+
+                o <register_macro>
+                o <unregister_macro>
+                o <call_registered_macro>
+
+         --------------------------------------------------------
+
+Topic:          Replacement Macros
+
+        A replacement macros is an overloaded function, whereby an
+        existing macro or builtin can be replaced and extended, yet
+        allowing the replacment macro to then execute the origin
+
+(start ditaa -S)
+                                function
+                +-------------+
+                | replacement |
+                |             |
+                +-----+-------+
+                        :                 function
+                        :         +-------------+
+                        +-------->|   orginal   |
+                                  |             |
+                                  +-------------+
+(end ditaa)
+
+        The 'replacement' keyword is used to explicity declare
+        overloaded interfaces, which is a macro that supersedes (or
+        complements) another macro of the same name.
+
+         --------------------------------------------------------
+
+Topic:          Special Purpose Macros
+
+        Similar to registered macros, special purpose macros act a
+        signal handlers.
+
+        These macros are execute upon a specific event occurring,
+        allowing macros to trail these events.
+
+        Special purpose macros include;
+
+                o <_startup_complete>
+                o <_prompt_begin>
+                o <_prompt_end>
+                o <_bad_key>
+                o <_invalid_key>
+                o <_extension>
+                o <_fatal_error>
+                o <_chg_properties>
+
+Topic:          Built-in Functions
+
+        A built-in function is a function that was implemented in
+        the interpreter and was not written in the *Grief* language.
+
+        See the <Library Reference> for the list of built-in
+        functions.
+
+         --------------------------------------------------------
+         --------------------------------------------------------
+
+Section:        Macro Resources
+
+                o <Keyboards>
+                o <Buffers>
+
+                     o <Buffer Identifiers>
+                     o <Buffer List>
+                     o <Marked Regions>
+                     o <System Buffers>
+                     o <Scrap Buffers>
+
+                o <Windows>
+                o <Dialogs>
+                o <Dictionaries>
+                o <Regular Expressions>
+
+         --------------------------------------------------------
+
+Topic:          Keyboards
+
+        Most of Grief's keyboard input is either via the command
+        prompt <get_parm> or executed through the use of keyboard
+        resources.
+
+        Keyboard resources map key strokes to actions allowing
+
+                o Assignment of any commands to a virtual key-code.
+
+                o Manage individual keyboards on a keyboard stack.
+
+                o Provide local keyboards for a buffer.
+
+                o Tie keyboards to macros.
+
+    Primitives:
+
+        The following primitives are used to manage keyboards.
+
+                o <assign_to_key>
+                o <copy_keyboard>
+                o <inq_assignment>
+                o <inq_kbd_char>
+                o <inq_keyboard>
+                o <inq_local_keyboard>
+                o <keyboard_flush>
+                o <keyboard_pop>
+                o <keyboard_push>
+                o <keyboard_typeables>
+                o <pause>
+                o <process>
+                o <push_back>
+                o <read_char>
+                o <remember>
+                o <self_insert>
+                o <use_local_keyboard>
+
+     Command Prompt:
+
+        Prompts are used to request direct user input, either
+        indirectly then invoking a primitive or directly through the
+        use of <get_parm>. The command prompt has a number of macro
+        callbacks which are invoked during the prompt session, which
+        may be replaced to modify and/or extend the prompt behaviour.
+
+        The following special macros <_prompt_begin>,
+        <_bad_key> and <_prompt_end>:
+
+        _prompt_begin - This callback is invoked priot to prompt
+            display. If the macro <_prompt_begin> has been loaded, it
+            is executed with a string parameter containing the value
+            of prompt to be presented on the prompt.
+
+            This macro may set the default response, use the prompt
+            as key to load previous values or other similar functions.
+
+        _bad_key - This callback may be invoked one or more times
+            during the command line edit session upon an
+            invalid/unknown key being used during the edit. The
+            <read_char> primitive retrieves the associated bad key,
+            which can be ignored, processed or replaced.
+
+        _prompt_end - This callback is invoked during the prompt
+            completion process. The primitive <inq_cmd_line>
+            retrieves the value entered during the edit session.
+
+         --------------------------------------------------------
+
+Topic:          Buffers
+
+        Buffers are the basic editing construct utilised by *Grief*.
+        One buffer corresponds to one piece of text being edited. You
+        can have several buffers open at once, but can edit only one
+        at a time.
+
+        Each buffer may hold text only limited by the available
+        system memory with as many buffers active at any given time
+        in memory as desired, again only limited by system resources.
+
+        Several buffers can be visible at the same time when you're
+        splitting your window, see <Windows>.
+
+    Primitives:
+
+        The following primitives are used to create and delete buffers
+
+                o <create_buffer>
+                o <attach_buffer>
+                o <delete_buffer>
+                o <edit_file>
+
+         --------------------------------------------------------
+
+Topic:          Buffer Identifiers
+
+        Buffers can are identfied by one of two means, firstly by
+        name and secondary its associated unique buffer handle or
+        identifier.
+
+   Primitives:
+
+        The following primitives are used to select buffers
+
+                o <inq_buffer>
+                o <set_buffer>
+
+         --------------------------------------------------------
+
+Topic:          Marked Regions
+
+        Many commands work on certain regions of text. A region is
+        defined by two points, the first being the anchor and the
+        other the cursor position. Each buffer may have their own
+        region, yet commands generally only work on the marked region
+        within the current buffer.
+
+    Primitives:
+
+        The following primitives are used to manage regions
+
+                o <inq_marked>
+                o <drop_anchor>
+                o <end_anchor>
+                o <raise_anchor>
+                o <swap_anchor>
+                o <delete_block>
+
+         --------------------------------------------------------
+
+Topic:          Scrap Buffer
+
+        The scrap is a special buffer used for moving or copying
+        blocks of text. A scrap buffer differs from a regular buffer
+        because:
+
+            * Blocks of text can only be copied into it or pasted
+                from it; the content cannot be modified by the user.
+
+            * It is automatically managed whenever the user cuts or
+                copies text.
+
+    Primitives:
+
+        The following primitives are used to manage the scrap buffer.
+
+                o <cut>
+                o <copy>
+                o <paste>
+                o <delete_block>
+                o <transfer>
+                o <inq_scrap>
+                o <set_scrap_info>
+
+         --------------------------------------------------------
+
+Topic:          BookMarks
+
+        A bookmark allows a record of the current buffer position to
+        be saved for quick navigation to the same location at a later
+        time.
+
+        There is no visible indication of where bookmarks are set.
+
+    Primitives:
+
+                o <drop_bookmark>
+                o <delete_bookmark>
+                o <goto_bookmark>
+                o <bookmark_list>
+
+         --------------------------------------------------------
+
+Topic:          Buffer List
+
+        Buffers are maintained in a circular list, refered to as the
+        buffer list. New buffers are automaticly inserted into the
+        list on creation. To locate a buffer that is not current, the
+        <next_buffer> and <previous_buffer> primitives along with
+        <set_buffer> can be use to manipulate the current buffer.
+
+    Primitives:
+
+                o <inq_buffer>
+                o <next_buffer>
+                o <previous_buffer>
+
+         --------------------------------------------------------
+
+Topic:          System Buffer
+
+        There are two primary categories of buffers, user and system
+        buffers. System buffers are similar to user buffer except
+        thery are normally skipped by user level buffer functions.
+
+    Primitives:
+
+                o <set_buffer_flags>
+                o <inq_system>
+
+         --------------------------------------------------------
+
+Topic:          Scrap Buffers
+
+        Scrap buffers are buffers which have been assigned the job
+        of cut and paste storage.
+
+    Primitives:
+
+        The cut and paste working storage is a special scape buffer
+        which is controlled using the following primitives.
+
+                o <inq_scrap>
+                o <set_scrap_info>
+                o <transfer>
+                o <cut>
+                o <get_region>
+                o <paste>
+
+         --------------------------------------------------------
+
+Topic:          Buffer Content
+
+    Primitives:
+
+        The following primitives are used to manage buffer content.
+
+                o <insert>
+                o <insertf>
+                o <insert_buffer>
+
+         --------------------------------------------------------
+
+Topic:          Buffer Attributes
+
+        As buffers are the basic editing construct utilised by
+        *Grief*, they also represent the primary user interface. Each
+        buffer has many run-time attributes which effect the way
+        content is presented to the user.
+
+        These attributes include.
+
+                o Built-in features.
+                o Display effects.
+                o Tabs and filling.
+
+    Primitives:
+
+        The following primitives are used to manage buffer attributes.
+
+        Built-in features::
+
+                o <inq_buffer_flags>
+                o <set_buffer_flags>
+
+        Display effects::
+
+                o <set_attribute>
+                o <inq_attribute>
+
+        Tabs and filling::
+
+                o <tabs>
+                o <inq_tabs>
+                o <set_ruler>
+                o <inq_ruler>
+                o <set_indent>
+                o <inq_indent>
+                o <set_margins>
+                o <inq_margins>
+
+         --------------------------------------------------------
+
+Topic:          Encoding
+
+        Grief supports both explicit and auto-detection of most file
+        encoding types including;
+
+                o UTF-8.
+                o UTF-16.
+                o UTF-32.
+                o Latin1 (ISO8859-1).
+                o Extended ASCII.
+                o ASCII.
+
+    Primitives:
+
+        The following primitives are used to manage character maps
+        and buffer encodings.
+
+                o <set_encoding>
+                o <inq_encoding>
+
+        Character Map::
+
+                o <create_char_map>
+                o <set_buffer_cmap>
+                o <inq_char_map>
+
+        Line termination support::
+
+                o <set_terminator>
+                o <inq_terminator>
+
+        Auto detection support::
+
+                o <set_file_magic>
+                o <inq_file_magic>
+
+         --------------------------------------------------------
+
+Topic:          Hilite Regions
+
+        Similar to marked regions, buffers may have one or more
+        special highlighting regions defined, allowing macros to show
+        specific buffer content.
+
+    Primitives:
+
+        The following primitives are used to manage hiliting
+        resources.
+
+                o <hilite_create>
+                o <hilite_destroy>
+
+         --------------------------------------------------------
+
+Topic:          Syntax Highlighting
+
+        Syntax highlighting allow different colors and text styles to
+        be given to dozens of different lexical sub-elements of
+        syntax. These include keywords, comments, control-flow
+        statements, variables, and other elements
+
+        There are several forms of highlighting engines.
+
+                o Simple tokeniser.
+                o DFA regular expression tokeniser.
+
+    Primitives:
+
+        The following primitives are used to manage syntax resources.
+
+                o <attach_syntax>
+                o <create_syntax>
+                o <define_keywords>
+                o <syntax_token>
+                o <detach_syntax>
+                o <get_color_pair>
+                o <syntax_build>
+                o <syntax_rule>
+                o <inq_syntax>
+                o <set_color_pair>
+                o <set_syntax_flags>
+                o <syntax_column_ruler>
+
+         --------------------------------------------------------
+
+Topic:          Process Buffers
+
+        An external, for example a command shell, may be attached to
+        specific buffer providing a tty style view for the
+        underlining process.
+
+    Primitives:
+
+        The following primitives are used to manage processes.
+
+                o <connect>
+                o <disconnect>
+                o <insert_process>
+                o <set_process_position>
+                o <inq_process_position>
+                o <wait>
+                o <wait_for>
+                o <send_signal>
+
+         --------------------------------------------------------
+
+Topic:          Dictionaries
+
+        A dictionary is a collections of associations. Dictionaries
+        consist of pairs of keys and their corresponding values,
+        both arbitrary data values. Dictionaries are also known as
+        associative arrays or hash tables.
+
+        Dictionaries require more space than lists, yet allow fast
+        searches. Only one association in a dictionary may have a
+        given key, that item keys must be unique.
+
+        You can iterate over a dictionary's associations using the
+        <dict_each> primitive; at each step of the statement, the loop
+        index will contain a list [key, value] for the current association.
+
+    Primitives:
+
+        The following primitives are used to manage dictionary
+        resources; see the descriptions of each function for details.
+
+                o <create_dictionary>
+                o <delete_dictionary>
+                o <set_property>
+                o <get_property>
+                o <dict_delete>
+                o <dict_each>
+                o <dict_exists>
+                o <dict_keys>
+                o <dict_values>
+                o <dict_list>
+                o <dict_name>
+                o <list_of_dictionaries>
+
+         --------------------------------------------------------
+
+Topic:              Windows
+
+        Windows are used to create views into buffers. Windows are
+        either tiled or popup.
+
+    Tiled windows:
+
+        Tiled windows are the normal user views into buffers,
+        allowing direct user interaction so that they may edit the
+        buffer content.
+
+        The Grief window manager organises the screen into mutually
+        non-overlapping frames. Tiled windows are not permitted to be
+        overlapped with other tiled windows, as such are sized and
+        positioned to own a specified rectangled area of the display.
+
+        The following primitives are used to create and delete tiled
+        windows.
+
+                o <create_tiled_window>
+                o <display_windows>
+                o <change_window>
+                o <move_edge>
+                o <create_edge>
+                o <delete_edge>
+                o <inq_top_left>
+                o <inq_window>
+                o <inq_window_info>
+                o <set_top_left>
+                o <set_window>
+                o <next_window>
+
+    Popup windows:
+
+        Unlike Tiled windows, Popup Windows when displayed overlay
+        any tiled windows positioned behind and maybe sized and
+        positions anywhere within the visible arena.
+
+        Usually, popup windows are utilised to display temporary
+        information, for example the results of a command. They are
+        generally created dynamically and managed by macros and are
+        destroyed on completion of that macro.
+
+        In addition popup windows stack, allowing multiple popups to
+        represent nested structures; one example being the help
+        system which allows the user to drill down thru command
+        relationships and then backout in reverse.
+
+    Primitives:
+
+        The following primitives are used to create and delete popup
+        windows.
+
+                o <create_window>
+                o <delete_window>
+                o <inq_window>
+                o <set_window>
+
+        Like buffers each windows has a set of attributes which
+        effect the presentation of connected buffer contentt, these
+        are managed using the following primitives.
+
+                o <set_window_flags>
+                o <inq_window_flags>
+
+         --------------------------------------------------------
+
+Topic:      Dialogs
+
+        A dialog is a small window resource that prompts the user to
+        make a decision or enter additional information. A dialog
+        does not fill the screen and is normally used for modal
+        events that require users to take an action before they can
+        proceed.
+
+    Primitives:
+
+        The following primitives are used to manage dialogs.
+
+                o <dialog_create>
+                o <dialog_delete>
+                o <dialog_exit>
+                o <dialog_run>
+                o <inq_dialog>
+                o <widget_get>
+                o <widget_set>
+
+         --------------------------------------------------------
+
+Section:    Regular Expressions
+
+        A regular expression is a pattern that the regular expression
+        engine attempts to match in input text. A pattern consists of
+        one or more character literals, operators, or constructs.
+
+    Primitives:
+
+        The following primitives are used to utilise regular
+        expressions.
+
+                o <quote_regexp>
+                o <re_comp>
+                o <re_delete>
+                o <re_result>
+                o <re_search>
+                o <re_syntax>
+                o <re_translate>
+                o <search_case>
+
+        in addition the following are Brief compatible interfaces
+        which also support regular expressions.
+
+                o <search_back>
+                o <search_fwd>
+                o <search_list>
+                o <search_string>
+                o <translate>
+
+         --------------------------------------------------------
+
+        $Id: macros.txt,v 1.4 2014/10/31 01:09:05 ayoung Exp $
+-*- mode: txt; margin: 75; -*-
+
+

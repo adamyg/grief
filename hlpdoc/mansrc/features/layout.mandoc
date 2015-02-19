@@ -1,0 +1,85 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: layout.mandoc,v 1.1 2014/11/27 18:19:40 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt LAYOUT 1
+.Os
+.Sh NAME
+.Nm layout
+.Nd Save window layout between invocations.
+.Sh DESCRIPTION
+Executing this macro causes a flag to be set so that when you
+exit GRIEF, it will remember the buffers you were editing and the
+screen layout. When you next run GRIEF the screen will look exactly
+the same as when you last exited.
+.Pp
+This macro works by creating a file called '\f(HB.crstate\fR' in the
+current directory. This means that saving the window layout can be
+enabled or disabled on a per directory basis. This was done to
+avoid polluting users directories with individual state files.
+Having a state file per directory is also useful when you keep shifting work
+between different projects -- you don't have to lose all you're
+state information just because you temporarily edit other files.
+This macro has a separate state file rather than keeping one in the
+users home directory to avoid slowing down startup by having to parse
+a large file.
+.Pp
+In order to turn off state file processing, it is simply necessary to
+delete the \f(HB.crstate\fR file in the current directory.
+.Pp
+Even if you do not want window layout information saved on a per
+directory basis, GRIEF will remember the last file you edited in
+the current directory. This information is stored in the file
+~/.GRIEF. It may be worth truncating this file every so often as
+it can grow quite large and slow down startup time.
+.Pp
+When starting up, GRIEF verifies that the current screen size or window size
+is the same as that recorded in the state file. If it is not, then the
+state file is ignored. This is done to avoid problems with impossible
+or implausible screen layouts when moving from large to smaller windows.
+.Sh MENU/KEYS
+This macro can be accessed from the GRIEF features menu.

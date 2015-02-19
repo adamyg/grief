@@ -1,0 +1,178 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: package.mandoc,v 1.1 2014/11/27 18:19:42 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt PACKAGE 1
+.Os
+.Sh NAME
+.Nm package
+.Nd language packages.
+.Sh DESCRIPTION
+Structured programming requires indenting and a powerful programmers
+toolt should make indenting easy.  GRIEF goes even further by
+providing a feature that practically enters the statements for you,
+calling template editing, plus language specific syntax hilite`s.
+.Pp
+Within GRIEF, the set of features tailoring a specific language is
+called a 'language package' with the editor suppporting many
+popular language syntaxs.
+.Pp
+The builtin language packages provide the following features:
+.Bl -bullet -offset 1 -width xxxxxxxxxx
+.It
+Regular indenting
+.Pp
+is the basic support providing for all programming languages;
+when you press Enter,the cursor moves down one line and returns
+to the indenting level of the previous non-blank line.
+.It
+Smart indenting
+.Pp
+recognizes statements that require a change in the current
+indenting level and automaticly positions the cursor.
+.It
+Template editing
+.Pp
+adds further to the features of smart identing by automatically
+completing frequently used statements.
+.It
+Syntax hilite's
+.Pp
+which recognizes keywords and language specific constructions
+and displays them in diffing colors.
+.El
+.Pp
+You attach these packages by one of three means:
+.Bl -bullet -offset 1 -width xxxxxxxxxxxxxxxxxxxx
+.It
+Package specification
+.It
+Embedded mode lines
+.It
+Manual mode selection
+.El
+.Pp
+.Sh Package specification
+.Pp
+'package' is configuration tag used by all file extension
+dependent packages, including simple text formating (word
+processing) and syntax hilite`s.  The tag is defined within
+the `\fBcrinit\fR` file that is processed during startup
+located with the HOME directory.
+.Pp
+The format of the 'package' tag is as follows:
+.Bd -literal
+    package: extension[,extension]...[-equivalent]:\\\\
+       package [args],package...;extension...
+.Ed
+.Pp
+\fIextension\fR is the file extension that will invoke a
+specific style. One or more comma seperated extension can be
+specified for each style. Note: the special extension "default"
+is used to specify all extensions not specifically included
+in the package specification.
+.Pp
+\fIequivalent\fR the optional value specifies that the
+preceding extensions should be treated the same as the
+"equivalent extension" by the language sensitive features,
+an extension override.
+.Pp
+All extensions preceding the equivalent extension back to
+preceding semicolon, another equivalent extension, or the
+beginning of the package definition are affected by the command.
+Hence given:
+.Bd -literal
+	package: .asm:.r;.cpp.hpp.h-c:smart
+.Ed
+.Pp
+GRIEF would consider extensions '.cpp', '.hpp' and '.h'
+equivlent to the extension '.c', and would use .c the smart
+editing package for all three. Note also that since isn't
+specified as an extension, no packages are assigned to it.
+The following is required:
+.Bd -literal
+	package: .asm:r;.cpp.hpp.h,.c-c:smart
+.Ed
+.Pp
+GRIEF shall first check for the package using the actual
+extension before for one with the equivalent extension. If in
+the previous example, 'smart' identing was available for .cpp
+files, GRIEF would use the .cpp support over the .c support.
+.Pp
+This feature is useful when the extension is no automaticlly
+recongnised and is unable to provide 'smart' indenting. Using
+extension equivalence, inform GRIEF that an unsupported extension
+should be treated like an equivalent supported one.
+.Bd -literal
+	package: .default:hilite;.c:hilite,t 1 1 0 1
+.Ed
+.Pp
+The extension '.default' is used as a wild card (or default),
+to any match an extension not explicity listed. The above
+example enables the hilite package on implicity supported
+file types, plus an explicit configuration for the '.c'
+extension.
+.Pp
+\fIpackage\fR is the macro package attached to the extension.
+Each extension can have multiple packages associated with it,
+as long as the package don't conflict.
+.Sh SEE ALSO
+.Xr template ,
+.Xr smart ,
+.Xr regular
+.Pp
+.Sh SEE ALSO
+.Xr docopts ,
+.Xr javamode ,
+.Xr makmode ,
+.Xr htmlmode ,
+.Xr shmode ,
+.Xr perlmode ,
+.Xr cmode ,
+.Xr program ,
+.Xr modeline ,
+.Xr mode

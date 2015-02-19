@@ -1,0 +1,181 @@
+# -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
+# $Id: Makefile.in,v 1.2 2014/10/22 02:33:34 ayoung Exp $
+# libbsdio makefile.
+#
+#
+# Copyright (c) 1998 - 2014, Adam Young.
+# All rights reserved.
+# 
+# This file is part of the GRIEF Editor.
+# 
+# The GRIEF Editor is free software: you can redistribute it
+# and/or modify it under the terms of the GRIEF Editor License.
+# 
+# Redistributions of source code must retain the above copyright
+# notice, and must be distributed with the license document above.
+# 
+# Redistributions in binary form must reproduce the above copyright
+# notice, and must include the license document above in
+# the documentation and/or other materials provided with the
+# distribution.
+# 
+# The GRIEF Editor is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# License for more details.
+# ==end==
+#
+
+@SET_MAKE@
+ROOT=		@abs_top_builddir@
+top_builddir=	@top_builddir@
+
+# File extensions
+
+C=		.c
+O=		.o
+H=		.h
+A=		.a
+LP=		lib
+
+CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+
+# Compilers, programs
+
+CC=		@CC@
+CXX=		@CXX@
+AR=		@AR@
+RANLIB=		@RANLIB@
+PERL=		@PERL@
+RM=		@RM@
+
+# Common flags
+
+ARFLAGS=	rcv
+XFLAGS=		
+COPT=		@CFLAGS@
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+LDEBUG=		@LDEBUG@
+CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
+ifeq ("mingw32","@build_os@")
+CINCLUDE+=	-I../libw32
+endif
+CEXTRA=		@DEFS@
+CEXTRA+=	-D__POSIX_VISIBLE=199506 -D__BSTDIO_INTERNAL -DFLOATING_POINT
+CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+YFLAGS=		-d
+LDFLAGS=	$(LDEBUG) @LDFLAGS@
+ifeq (gcc,$(findstring gcc,$(CC)))
+ifeq ("linux","@build_os@")
+LDFLAGS+=	-rdynamic
+endif
+endif
+LDLIBS=		-L$(D_LIB) -lbsdio -lmisc @LIBS@ @LIBM@ @EXTRALIBS@
+ifeq ("mingw32","@build_os@")
+LDLIBS+=	-lw32 -lshlwapi -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
+endif
+LDLIBS+=	@LIBMALLOC@ @LIBTHREAD@
+
+RMFLAGS=	-f
+
+# Directories
+
+D_BIN=		$(ROOT)/bin
+D_INC=		$(ROOT)/include
+D_OBJ=		$(ROOT)/objects/libbsdio
+D_LIB=		$(ROOT)/lib
+
+############################################################
+
+TARGET=		bstdio$(E)
+LIBROOT=	bsdio
+
+OBJS=\
+	$(D_OBJ)/bstdio$(O)
+
+LIBOBJS=\
+	$(D_OBJ)/asprintf$(O)		\
+	$(D_OBJ)/clrerr$(O)		\
+	$(D_OBJ)/fclose$(O)		\
+	$(D_OBJ)/fdopen$(O)		\
+	$(D_OBJ)/feof$(O)		\
+	$(D_OBJ)/ferror$(O)		\
+	$(D_OBJ)/fflush$(O)		\
+	$(D_OBJ)/fgetc$(O)		\
+	$(D_OBJ)/fgetln$(O)		\
+	$(D_OBJ)/fgetpos$(O)		\
+	$(D_OBJ)/fgets$(O)		\
+	$(D_OBJ)/fileno$(O)		\
+	$(D_OBJ)/flags$(O)		\
+	$(D_OBJ)/flockfile$(O)		\
+	$(D_OBJ)/fopen$(O)		\
+	$(D_OBJ)/fprintf$(O)		\
+	$(D_OBJ)/fpurge$(O)		\
+	$(D_OBJ)/fputc$(O)		\
+	$(D_OBJ)/fputs$(O)		\
+	$(D_OBJ)/fread$(O)		\
+	$(D_OBJ)/freopen$(O)		\
+	$(D_OBJ)/fscanf$(O)		\
+	$(D_OBJ)/fseek$(O)		\
+	$(D_OBJ)/fsetpos$(O)		\
+	$(D_OBJ)/ftell$(O)		\
+	$(D_OBJ)/funopen$(O)		\
+	$(D_OBJ)/fvwrite$(O)		\
+	$(D_OBJ)/fwalk$(O)		\
+	$(D_OBJ)/fwrite$(O)		\
+	$(D_OBJ)/getc$(O)		\
+	$(D_OBJ)/getline$(O)		\
+	$(D_OBJ)/putc$(O)		\
+	$(D_OBJ)/putw$(O)		\
+	$(D_OBJ)/rewind$(O)		\
+	$(D_OBJ)/setbuf$(O)		\
+	$(D_OBJ)/setbuffer$(O)		\
+	$(D_OBJ)/setvbuf$(O)		\
+	$(D_OBJ)/stdio$(O)		\
+	$(D_OBJ)/ungetc$(O)		\
+	$(D_OBJ)/vasprintf$(O)		\
+	$(D_OBJ)/vsnprintf$(O)		\
+	$(D_OBJ)/vsprintf$(O)		\
+	$(D_OBJ)/vsscanf$(O)		\
+	\
+	$(D_OBJ)/snprintf$(O)		\
+	$(D_OBJ)/sprintf$(O)		\
+	$(D_OBJ)/vfprintf$(O)		\
+	$(D_OBJ)/sscanf$(O)		\
+	$(D_OBJ)/vfscanf$(O)		\
+	\
+	$(D_OBJ)/findfp$(O)		\
+	$(D_OBJ)/makebuf$(O)		\
+	$(D_OBJ)/refill$(O)		\
+	$(D_OBJ)/rget$(O)		\
+	$(D_OBJ)/wbuf$(O)		\
+	$(D_OBJ)/wsetup$(O)
+
+LIBRARY=	$(D_LIB)/$(LP)$(LIBROOT)$(A)
+
+all:			$(LIBRARY) $(D_BIN)/$(TARGET)
+
+$(D_BIN)/$(TARGET):	MAPFILE=$(basename $@).map
+$(D_BIN)/$(TARGET):	$(OBJS)
+		$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS) @LDMAPFILE@
+
+$(LIBRARY):		$(D_OBJ)/.created $(LIBOBJS)
+		$(RM) $(RMFLAGS) $@
+		$(AR) $(ARFLAGS) $@ $(LIBOBJS)
+		$(RANLIB) $@
+
+CLEAN +=	
+
+$(D_OBJ)/.created:
+		-@mkdir $(D_OBJ)
+		@echo "do not create" > $@
+
+clean:
+		-@$(RM) $(RMFLAGS) $(BAK) $(LIBRARY) $(LIBOBJS) $(OBJS) $(CLEAN) $(XCLEAN)
+
+$(D_OBJ)/%$(O):		%$(C)
+		$(CC) $(CFLAGS) -o $@ -c $<
+
+#end

@@ -1,0 +1,1557 @@
+-*- encoding: utf-8; -*-
+
+Fri Dec 01 18:35:53 2014 ayoung
+
+	* Public release, BUILD7
+
+	* XXX snapshot
+
+	    o inq_sysdir() CYGWIN incorrectly returned a new style WIN32 paths.
+
+	    o tag improvements.
+
+	* BHELP override
+
+	* X11 driver published.
+
+	* I/O interface refactored.
+
+	* Mingw builds
+
+	* regexp, 2^16 string length, previously limited to 256 bytes.
+
+Sat May  4 07:38:36 2013 ayoung
+
+	* read(), status argument
+
+Thu Dec 20 01:27:32 2012 User
+
+	* Dec 2012 snapshot
+
+	    o doxygen markup support, markup keyword table.
+
+	    o regdfa anchors \\c.
+
+	    o POSIX1 symbol tables.
+
+	    o syntaxdfa, section continuation qweaks.
+
+	    o Cygwin raw-key logic enhancements.
+
+	    o seperate colorscheme256/colorscheme configuration elements.
+
+	    o mintty display and tty profiles tweaks and 256 color selection logic fixes.
+
+	    o xterm mouse-wheel support.
+
+	    o set_color_pair() minor syntax parser fixes.
+
+	    o grunch literal-string.
+
+	    o tabdb cache.
+
+	    o background spell initialisation.
+
+	    o inq_font.
+ 
+	    o inq_profile (beta).
+
+Tue Oct  2 09:21:05 2012 User
+
+	* tags, minor UI improvements
+
+Fri Aug 17 19:11:15 2012 ayoung
+
+	* UNC support
+
+	* Alternative build
+
+		- Visual Studio Express 2010
+		- mingw32/msys
+
+	* Win32 layer cleaup
+
+Jul 2012 User
+
+	* Recent changes
+
+	    o color
+
+		- WIN32 256 color support.
+		- coloriser() completion.
+		- colorscheme editor.
+
+	    o WATCOM build support.
+	    o iconv improvements.
+	    o encoding/guess improvements.
+	    o colorscheme improvements.
+	    o errno/signal systems constants.
+
+		- strerror, perror, errnos macros.
+		- strsignal, signos macros.
+
+	    o general bug fixes.
+
+	    o macros
+
+		- move_abs(), clip attribute.
+
+	* crcpp, imported ucpp-1.3.2
+
+	    ucpp-1.3 is a C preprocessor compliant to ISO-C99.
+
+		Basically a BSD license, without the advertising subclause and with no
+		reference to Berkeley.
+
+	* grunch
+
+		o autoload pragma (work in progress).
+		o __FUNCTION__ definition.
+
+Fri Dec  2 16:52:01 2011 user
+
+	* Dec 2011 snapshot
+
+	    * indent/tab ruler enhancements
+
+		o set_tab/inq_tab, primitives.
+		o common tabs()/set_ruler() interface.
+
+Fri Nov  4 09:00:47 2011 user
+
+	* Nov 2011 snapshot
+
+	    o General UI/dialog improvements
+
+		o combo-field implementation.
+		o edit-field enhancments.
+		o list-box enhancements.
+
+	    o colorscheme enhancements.
+
+	    o format_region/
+		    break on either space or comma (new).
+
+	    o User mesage query hilite support (e.g. [^Yes|^No]).
+
+	    o Spell enhancements/
+		
+		o enchant integration.
+		o auto-conf.
+
+	    o Debug-flags visible on top-left corner.
+
+	    o inq_window_flags/
+		    enumeration and export functionality published.
+
+	    o inq_buffer_flags/
+		    enumeration and export functionality published.
+
+	    o inq_display_mode/
+		    functionality published.
+
+	    o list_extract/
+		    functionality published (beta).
+
+Feb 2010
+
+	* foreach()
+		under development.
+
+Nov 2010
+
+	* encoding
+		o buffer.cr - Extended description to include encoding.
+		o inq_buffer_type()/set_buffer_type() 'encoding' argument.
+
+	* CM version 20 (2.0),
+		header elements promoted to 32bit.
+
+	* try/catch/finally/throw compiler support,
+		engine work incomplete/under development.
+
+	* is_float() published
+
+Nov 2010 user
+
+	Recent changes summary
+
+	* UTF8 (multiple character support stage 1)
+
+		o UTF8 encode/decode.
+		o File detection rewrite
+		o Line content primitive rewrite
+			finally removed global_lp/dot
+		o UTF term support.
+			combined character
+		o width character/cursor movement.
+		o stable virtual character status.
+		o echo-line
+			E_VIRTUAL and E_CHARVALUE.
+		o region/character-mapping.
+		o command line option --utf
+		o buffer-type, line-teminator and encoding seperation.
+		o multibyte primitive support, including,
+
+			next_char/prev_char/delete_char
+			right/left/up/down
+			inq_line_length
+			inq_buffer_type
+
+		o new primitives
+
+			set_encoding
+			inq_encoding
+			edit_file2
+
+		o grunch enhancements (\u and \U support)
+
+	* Terminals changes
+
+		o terminfo/termcap interface build options
+			--termcap
+		o xterm (device attribute checks).
+		o mintty (beta)
+		o urxvt (beta)
+
+	* Buffer/line
+
+		o buffer grunch implementation
+		o reworked line edit functionality
+		o replaced line queue management and numline logic (off by one logic removed),
+		    all changes marked /*NEWLINE*/.
+
+	* General
+
+		o debug enhancments
+			trace_hex, trace_line2 and trace_character
+			command line argument --test
+			CR_LEVEL/CR_TRACE[#]/CR_DATA[#] macros
+
+		o vm allocator
+			reference/unreference interface published.
+
+		o insert_mode/inq_mode
+			allow buffer specific assignment.
+			default system buffers as insert.
+			inq_mode() - 'localised' argument.
+
+	* Configure
+
+		o locale.h, wctype.h
+		o AM_LANGINFO_CODESET
+		o libterm (terminfo support)
+		o libmagic
+		o libutf8
+		o libmemory
+		o libiconv
+		o isascii()
+
+	* New macros
+
+		o characterat
+		o strpop
+		o strpbrk
+		o inq_terminator and set_terminator
+		o __regress_replacement
+
+	* First draft for 64bit build support (additional work needed).
+
+	* Macro enhancements
+
+		o search_fwd/bck - implemented 'length' argument.
+		o move_abs - 'bufnum' argument.
+		o inq_buffer_type - 'encoding' argument.
+		o select - directory sort order.
+
+	* General
+
+		o search, major cleanup
+		o echo, allow full use of the command-line arena
+		    (temporary col/line display disabled) upon large echo/edit usage.
+		o modification suffix on buffer titles (*)
+		o psuedo tty support upgraded to current standards.
+		o pty driver command set upgraded.
+		o shell
+		    - posix_spawn() integration
+		    - stderr and mode parameters
+		    - outfile and errfile stream modifiers ">" and ">>"
+
+
+Sat Jun  4 18:23:30 2011 user
+
+	* strverscmp primitive
+
+Mon May 30 23:17:07 2011 user
+	
+	* _fatal_error
+		o expanded interface _fatal_error(int signum, [string signame])
+
+Mon May 23 19:35:12 2011 user
+
+	* strstr and strcasestr primitives
+
+Thu May 19 19:55:12 2011 user
+
+	* modeline.cr
+		o process #! lines in the event of no explicit mode specification.
+
+Thu May  5 21:02:51 2011 user
+
+	* help.cr
+		o basic coloriser enabled
+
+Mon May  3 12:59:40 2010 user
+
+	* calc
+		o binary support
+
+Thu Apr  8 15:48:22 2010 user
+
+	* split_arguments() published
+
+Wed Apr  7 13:52:20 2010 user
+
+	* grunch, improved switch/case diagnostics
+
+		o break outside of case
+		o duplicate cases
+		o multiple defaults
+		o mixed types
+		o non constant values
+
+	    break/breaksw selection logic corrected
+
+	    constant string multiple and errors on invalid operations.
+
+Sun Apr  4 17:21:31 2010 user
+
+	* eval.cr
+	
+		get_xfloat() and isa_xxxx functions
+
+Sat Apr  3 13:34:42 2010 user
+
+	* Linux build changes
+
+	* getopt() published
+
+	* message()
+
+		List conversion support within %s specifications. Invalid argument handling
+		improvements.
+
+	* lisp.c/regress.cr
+
+		arg_list() implemented, plus bug-fixes within argv_xxx() support functions
+		additional sprintf() test cases.
+
+Mon Feb 15 14:52:49 2010 user
+
+	* stat, lstat and find_file,
+	
+		extended returned arguments to include atime, owner and group
+		identifiers.
+
+Thu Feb  4 22:33:38 2010 user
+
+	* key_to_int, cygwin support.
+
+Sun Jan 17 15:48:27 2010 user
+
+	* set_/get_team_feature, support description as key.
+
+	* m_color, 256 color improvements.
+
+	* tty/rxvt-cygwin-native suport added.
+
+	* ttyterm.c, bx termination attribute (AIX).
+
+Tue Jan  5 21:15:42 2010 user
+
+	* mrxvt support
+
+	* ttyterm.c
+
+	    o cursor control enhancements/fixes.
+	    o source level documentation.
+	    o updated supported ctrlseq's
+	
+Mon Jan  4 19:12:53 2010 user
+
+	* -E command line argument.
+
+Thu Dec 17 12:55:07 2009 user
+
+	* regress, optional test case specification; for example regress dict.
+
+Thu Dec 10 13:22:13 2009 user
+
+	* inq_char_timeout() and sysinfo usage()
+
+	* inq_echo_line()
+	
+	* set_echo_line() documented and basic regress.
+	
+Thu Dec  3 20:07:44 2009 user
+	
+	* exposed gmtime()
+
+	* exposed file io functionality (alpha)
+
+		fopen, fclose, fread, fwrite, fseek, ftell, fstat, flock, fioctl and ftruncate.
+
+Tue Dec  1 20:08:53 2009 user
+
+	* list_extract (beta)
+
+Tue Nov 24 20:17:31 2009 user
+
+	* time functionality moved to m_time, split from mac1.c
+
+	* gmtime() implemented
+
+Tue Oct 27 14:22:22 2009 user
+
+	* list_each implement, general usage
+
+		int idx;
+		declare value;
+		while ((idx = dict_list(lst, value, increment)) >= 0) {
+		}
+
+Mon Oct 19 19:05:12 2009 user
+
+	* dict_each implemented, general usage
+	
+		int idx;
+		string key;
+		declare value;
+		while ((idx = dict_each(dict, key, value)) >= 0) {
+			.. process element ..
+		}
+
+Thu Oct  1 20:01:04 2009 user
+
+	* m_tokensize.c/regress.cr
+
+		- tokensize released.
+
+		- split numeric options published SPLIT_xxx.
+
+	* m_file.c
+
+		- override CR_MODE upon buffer type change.
+
+	* extra.cr/crisp.cr
+
+		- toggle_buffer_type(), note UFT8/16 modes listed yet not
+		fully supported within the primary engine.
+
+Wed Sep  6 19:59:59 2009 user
+
+	* prelim vfs support released
+
+		- tar file reasdonly
+
+Tue Jun 16 19:59:59 2009 user
+
+	* restore.cr
+
+		- Dont restore CRLOG_FILE when logging is enabled.
+
+Wed May  6 14:34:43 2009 user
+
+	* ff.cr
+
+		- allow both new and older style "/r" argument processing
+		
+		- bs() option processing mirrors ts().
+			
+Wed Apr 15 19:42:08 2009  user
+
+	* change.cr
+	
+		- seek start of the first change entry, allowing leading text within
+		the file image, for example a HTML header.
+
+	* regress.cr
+	
+		- Save and restore tabs settings
+
+Tue Aug 11 23:58:09 2009 user
+
+	* grunch change summary (last months)
+
+	    o general
+
+		- enum support, including numeric and string.
+		- struct/union support.
+		- enhanced basic types types (unsigned/signed etc) plus validations.
+		- C++ style variable non-block based declarations (beta).
+
+	    o crmsg.c
+
+		- rebuilt message handling/reporting.
+
+	    o crpragma.c
+
+		- basic pragma support.
+
+	    o crlex.c
+
+		- rebuilt lexer numeric support.
+
+	    o gram.y
+
+		- corrected set_property arguments.
+
+	* autoconf updates.
+
+Thu Feb 19 22:57:28 2009  user
+
+	* display.c
+
+		- initialise global color table using startup.
+
+Thu Nov 20 23:19:15 2008  user
+
+	* autoconf 2.63 updates
+
+	* TF_FEATURES
+
+		- TF_FGRAPHICCHARACTERS
+
+Tue Nov 18 01:10:16 2008  user
+
+	* sys_unix.c
+
+		- CYWGIN removed 1001 ESC usage, as these are not supported which
+		in-turn caused corruption during terminal resets.
+
+Thu Nov 13 21:54:53 2008  user
+
+	* debug.cr
+
+		- mvars, module variables.
+
+	* debug.c/macros.c
+
+		- Module variable access functionality.
+
+	* symbol.c
+
+		- sym_access() implementation common indirection support, supporting
+		both references and dynamic internal variables.
+
+Tue Nov 11 00:46:08 2008  user
+
+	* set_margins/inq_margins implemented.
+
+	* Scroll bars
+
+		- set_ctrl_state() implemented.
+
+		- New terminal characters.
+
+	* Additional Mac OSX built support
+
+	* restore.cr
+
+		- reworked 'newfile' (BFILE) processing.
+
+	* rxvt.cr
+
+		- Additional keys added.
+
+	* crisp.cr
+
+		- altfunckeys(), using 'xterm-altfunckeys' remaps Alt-[0-9] to become
+		the function keys to support environments without mapped functions keys.
+
+Sun Oct 26 18:25:17 2008  user
+
+	* Mac OSX built support (tested using 10.4.x)
+
+		- renamed regcomp and regexp to avoid clashes within the system
+		implementation.
+
+		- __APPLE__ compile option (neither unix nor __UNIX__ are defined).
+
+			Ref: http://developer.apple.com/technotes/tn2002/tn2071.html#Section5
+
+		- set_buffer_type/inq_buffer_type() implemented.
+
+Thu Oct 23 01:44:00 2008  user
+
+	* mouse support enhanced
+
+		- get_mouse_pos([x], [y], [win], [line], [col], [where], [event])
+
+			New arguments win, line, col, where and event.
+
+		- mouse.cr reworked
+
+Sun Oct 19 22:52:00 2008  user
+
+	Summary for past months work -
+
+	* New globals symbols
+
+		- S_IFxxx mode values.
+
+		- CRSTATE_FILE, CRINIT_FILE etc.
+
+		- current_line, current_col.
+
+		- current_window, current_buffer.
+
+		- O_xxx file modes (not currently used, future usage fopen()).
+
+	* main (-a) switch
+
+	* default arguments
+
+		- get_parm() extended to assign default when prompt is NULL and not
+		value is available (should consider a new parameter/function).
+
+		- regress.
+
+	* references
+
+		- ref_parm primitive.
+
+		- grunch enhancements.
+
+		- regress.
+
+	* m_symbol.c
+
+		- error handling improved.
+
+	* eval.c
+
+		Created get_xchar
+
+Wed Aug 27 01:16:45 2008  user
+
+	* cry.y (summary for past months work) -
+
+		Grammar rewritten/updated
+
+			- References.
+
+			- Default arguments (beta).
+
+			- Prototypes.
+
+			- c99 extensions, allowing variable declarations to be
+			intermixed with statements (internally the variables are
+			*still* declared at the start of the block).
+
+		Function prototypes, major rework.
+
+			- Function now create symbols.
+
+			- Automatic declarations for all builtins.
+
+			- Corrected scoping errors during parameter declarations.
+
+			- Function redeclaration errors.
+
+		'array' base type added (to language; yet not supported by engine).
+
+Thu Aug  7 22:12:24 2008  user
+
+	* autosave.cr, audit.cr
+
+		autosave_state() implementation.
+
+Thu Jul 24 22:54:31 2008  user
+
+	* grunch (cry.y, crsubs.c and crgen.c)
+
+		Property support (i.e. dictionary.property), both get and set/assignment supported.
+
+	* keywd
+
+		Published dictionary primitives.
+
+	* pfloat
+
+		When processing only a single '.' the following character was incorrectly
+		consumed, uncovered whilst processing 'object.property' constructs.
+
+Mon Jul 21 21:47:22 2008  user
+
+	* prim.mm
+
+		restore_position() documentation updated to reflect functionality.
+
+	* main.c
+
+		V = version
+		V = version and configuration
+
+Sun Jul  6 16:52:25 2008  user
+
+	* dprintf
+
+		diagnostic print function
+
+Thu Jul  3 23:23:35 2008  user
+
+	* restore.cr
+
+		reworked res_db_clean().
+
+Mon Jun 30 23:58:15 2008  user
+
+	* features.cr
+
+		sysinfo, bufinfo.
+
+Sun Dec 16 20:32:51 2007  user
+
+	* change.cr
+
+		New macros:
+
+		- change (shall log first encountered Changes or ChangeLog).
+		- changelog.
+		- changes.
+
+Sat Nov 10 13:33:25 2007  user
+
+	* nc.cr
+
+		- Position cursor at parent directory when cd (..).
+
+Mon Nov  5 23:57:15 2007  user
+
+	* language.c
+
+		- Unstack all input files upon an error condition. Failure to do so
+		caused next compile to fail unconditionaly.
+
+Sun Nov  4 19:18:48 2007  user
+
+	Summary of previous changes;
+
+	* auditlog.cr, audit log support which was used to test the new
+	  trigger and write_buffer functionality.
+
+	* save_position()/restore_position() primitive
+
+		- Save and optionally restore the current window and top-line.
+
+	* reregister_macro() primitive
+
+		- Only register if unique.
+
+	* new triggers,
+
+		Support for new triggers;
+
+		- REG_STARTUP,			Startup complete.
+		- REG_BOOKMARK,			Bookmark has been dropped/deleted.
+		- REG_INSERT_MODE,		Insert mode has changed.
+		- REG_BUFFER_MOD,		Buffer has been modified.
+		- REG_BUFFER_WRITE,		Buffer write operation.
+		- REG_BUFFER_RENAME,		Buffer rename operation.
+		- REG_BUFFER_DELETE,		buffer delete operation.
+		- REG_FILE_SAVE,		File write request (*).
+		- REG_FILE_WRITTEN,		File write completion.
+		- REG_FILE_CHANGE,		File external change (*).
+		- REG_SIGUSR,			User signal (*).
+		- REG_UNDEFINED_MACRO,		Undefined macro.
+
+		Note: Not all are implemented at this time.
+
+	* localtime()
+
+		- NULL implies current time.
+
+	* inq_system([int bufnum])
+
+		- [bufnum] support.
+
+	* write_buffer([string file-name], [int flags]),
+
+		- extended flags (WRITE_xxx).
+
+	* get_mouse_pos([int x], [int y], [int event])
+
+		- Added event parameter
+
+	* replacement keyword/grunch
+
+	* cftime()
+
+		- default format changed from %C to %c.
+
+	* lisp.c,
+
+		- Append list operations incorrectly adjusted the list storage
+		  size, resulting to list asserts on next operation.
+
+	* crisp.cr,
+
+		- Save and restore untouched unknown configuration entries
+		  within crinit.
+
+		- Allow criget interfaces to return a list of entries.
+
+	* backup.cr,
+
+		Allow backup directory selection based on the root of source
+		file, hence each project can have a seperate backup tree.
+
+	* ls.cr,
+
+		Modified select_buffer() usage.
+		General cleanup
+
+Thu Mar 15 22:24:59 2007  user
+
+	* created 'menuoff' command.
+
+Tue Mar 13 10:34:43 2007  user
+
+	* enhanced color support,
+
+		- set_color()/get_color().
+		- inq_color() documentation.
+		- set_color_pair()/get_color_pair() documentation.
+
+	* ts/fs,
+
+		- standardised parameter parsing.
+
+Mon Feb 26 19:11:41 2007  user
+
+	* tty driver,
+
+		- underline support, --nounderline switch.
+		- enhanced cursor.
+
+		* macro source, removed warnings regarding nested comments.
+
+		wininfo.cr text.cr spell.cr history.cr bufinfo.cr change.cr
+		command.cr uspell.cr backup.cr sysinfo.cr
+
+	* xterm.c, improved AIX support.
+
+		- uname() usage
+
+	* version () primitive,
+
+		- upgraded parameter list.
+
+			version([maj], [min], [edit], [release], [machine], [compile], [compiler], [features])
+
+		   was	version([maj], [min], [edit], [compiled], [compiler], [features])
+
+		- sysinfo() version usage modified.
+
+	* uname () primitive created
+
+Thu Feb 22 20:52:05 2007  user
+
+	* lock
+
+		- use and validate against full domain name, previouly it was stripped
+		durng processed and not exported.
+		- retry fuse within lock_ask() in case of broken tty during shutdown.
+		- include host/pid information within ask message.
+
+Fri Feb  9 19:51:47 2007  user
+
+	* mode_string() primitive,
+		Encodes permission bits in a system-independent manor, this
+		the same/similar output to the Unix(tm) 'ls' command.
+		Updated nc and bufinfo macros.
+
+		TODO - Makes S_IFDIR (and others) a system defined 'const int'.
+		
+	* cftime primitive()
+
+	* backup() macro
+		Allow subtree (dir) specific backup storage/configuration.
+		set_backup_option()/inq_backup_option() improvements.
+
+Wed Jan 31 19:22:42 2007  user
+
+	* split,
+		- 'empties' option.
+
+Thu Jan 25 19:33:33 2007  user
+
+	* file_match(),
+		character-class support
+
+	* register_name(),
+		must resolve macro, overlooked.
+
+	* backup.cr created
+
+		- crinit backup configuration support.
+		- rooted backup tree, allowing maintain of multiple backup arenas.
+		- recover() macro.
+
+	* end_anchor() testing/bugfixes/doco.
+
+Tue Jan 16 23:16:47 2007  user
+
+	* crinit, backup entry,
+		set_backup_option() testing.
+
+	* sym_assign_fval,
+		removed implicit acc_assign_float which broke modf(), converted into
+		explicit assignment by callers.
+
+	* put_parm
+
+		- const checks.
+		- float support.
+		- conversion error message.
+
+	* const keyword (beta).
+
+	* <=> operator and compare() primitive.
+
+	* sort_list (beta).
+
+	* LPUT32/16 => LPUT_INT/PTR/ID/LEN conversion.
+
+	* lst_length.
+
+	* get_parm() and eval()
+
+		- improved error (conversion) handling.
+		- support for F_RSTR.
+
+Wed Jan 10 21:39:33 2007  user
+
+	* uspell improvements (GUI Beta).
+
+	* spell_distance() primitive (for uspell usage).
+
+	* dialog bug-fixes.
+
+Sun Dec 10 21:50:16 2006  user
+
+	* mktemp()
+
+Sat Dec  9 01:27:13 2006  user
+
+	* inq_dialog()
+
+Fri Dec  8 20:39:01 2006  user
+
+	* vim style modeline support (prelim)
+
+		- 'set xxx' support only.
+
+	* additional CrispEdit(tm) compatiblity (untested),
+
+		- filename_match() (aka file_match)
+
+		- filename_realpath() (aka realpath)
+
+		- require() (aka load_macro(noreload))
+
+		- inq_prompt() and inq_line_col()
+
+		- debug(.. [time])
+
+		- exist(.. [canon])
+
+		- inq_macro_history/set_macro_history,
+
+			modified home/end macros (misc.cr).
+
+		- command_list(),
+
+			flipped arg1 usage to match (was [include-macros]).
+
+			modes/cr.cr, command_list() usage.
+
+	* additional isaxxx() plus documentation,
+
+		- isalpha
+		- isascii
+		- iscsym
+		- isgraph
+		- isprint
+
+	* read(), eol/eof handling.
+
+Wed Dec  6 20:07:19 2006  user
+
+	* basename() and dirname()
+
+	* file_expand cleanup
+
+	* set_backup_options/inq_backup_options,
+
+		- usage (what, [bufnum], parameter)
+
+Sun Dec  3 14:25:14 2006  user
+
+	* set_echo_line() (alpha),
+		usage (format)
+
+Sat Dec  2 13:09:11 2006  user
+
+	* set_buffer_flags(),
+
+		- new usage ([bufnum], [or_mask], [and_mask])
+
+		- macros updated
+
+	* set_window_flags() and inq_window_flags()
+
+	* widget_set()/widget_get() implementation.
+
+	* wininfo and bufinfo macros,
+		beta test env for widget_set()/widget_set().
+
+Mon Nov 27 20:32:15 2006  user
+
+	* detab_region(), detab.c
+
+	* ninfo tbl improvements
+
+	* prim documentation
+
+	* additional CrispEdit(tm) compatiblity (untested),
+
+		- set_buffer_title, inq_buffer_title
+
+		- set_char_timeout
+
+		- set_kbd_name, set_kbd_name,
+
+		- set_ruler, inq_ruler
+
+	* scanf implementation (beta)
+
+	* sprintf, '%n' implemented
+
+Mon Nov 20 22:26:13 2006  user
+
+	* additional CrispEdit(tm) compatiblity (untested),
+
+		- format()
+
+		- get_nth()
+
+		- insert_buffer()
+
+		- inq_debug()
+
+	* scanf implementation (alpha)
+
+	* several fixes to the dialog module
+
+	* additional assert() within symbol module, uncovered minor issues.
+
+Sat Nov 11 18:43:08 2006  user
+
+	* file_match flags
+
+	* memory leaks
+
+		- WIN32 memcheck support
+
+		- -P mem command line option
+
+		- demo [sleep]
+
+		- sym_donate_list usage replaced several sym_assign_list.
+
+		- x_putenv/env.c wrapper
+
+Tue Nov  7 23:17:15 2006  user
+
+	* corrected several memory leaks
+
+	* file_match primitive (aka unix fmatch)
+
+Wed Nov  1 23:57:50 2006  user
+
+	* summary of the last six months changes;
+
+		- static and module support.
+
+		- advisory file locking (unix/win32)
+
+		- refactored echoline support.
+
+		- refactored region/anchor support.
+
+		- dialog and line attribute (beta).
+
+		- tabdb subsystems (stable).
+
+		- spell (alpha/work in progress).
+
+		- buffer diff (alpha/work in progress).
+
+		- dictionary (alpha/work in progress).
+
+		- EOL white-space syntax hiliting (sh and mak modes).
+
+	* new primitives
+
+		- inq_module(), module() and "::" operator.
+
+		- isaxxxx().
+
+		- ftest().
+
+		- create_nested_buffer().
+
+		- diff_buffers() and compare_file().
+
+		- dialog_xxx() and widget_xxx().
+
+		- tabdb_xxx().
+
+		- pop(), push(), splice() and delete_nth().
+
+		- inq_tmpdir(), inq_hostname() and inq_username().
+
+		- inq_time().
+
+	* major macro improvements
+
+		- restore database directory/cache.
+
+		- new 'bs' buffer search.
+
+		- 'ts' binary file checks.
+
+		- regress, test for new features.
+
+		- man, search order.
+
+		- fortran mode.
+
+		- cal, scrolling and colorisation.
+
+Thu Apr 27 01:13:45 2006  user
+
+	* win32 Ctrl-[0-9] support
+
+	* get_parm/put_parm,
+		static variable support .. must restore callers scope
+		(module/function) prior to evaluting callers arguments.
+
+	* isprint etc primitives.
+
+	* ff.cr, general enhancements.
+
+Mon Apr 24 21:14:03 2006
+
+	* inq_time()
+	
+	* create_nested_buffer() primitive.
+
+	* modeline/package,
+		Ignore binary file images.
+
+	* index/rindex,
+		Support character/int parameters.
+
+Fri Apr 21 20:08:32 2006  user
+
+	* man.cr,
+		alt-l option.
+		enhanced sun (sman) support.
+		preprocess MANPATH removing duplicates.
+
+	* ff, binary search options.
+
+	* index & rindex extensions
+		support to int/char parameters.
+
+Tue Apr 18 20:31:56 2006  user
+
+	* function static variables.
+
+	* set_backup,
+		'askbackup' and 'nobackup' options.
+
+Mon Apr 17 18:59:35 2006  user
+
+	* additional warnings,
+		unsupported types.
+		bad storage classes.
+		variables being hidden.
+
+Sun Apr 16 19:34:50 2006  user
+
+	* static variable support grunch,
+		global and function.
+
+	* macro reloaded warning
+
+	* sxprint
+
+	* static function testing,
+		module() and inq_module() primitives.
+
+Wed Apr 12 22:23:06 2006  user
+
+	* static function support,
+		grunch complete
+		"_init" made static
+
+	* push and pop list primitives (beta).
+
+Mon Apr 10 21:03:08 2006  user
+
+	* get_list() and get_str() made const.
+
+	* strtol
+
+Fri Apr  7 20:19:07 2006  user
+
+	* delete_nth
+
+Wed Apr  5 23:03:12 2006  user.
+
+	* splice primitive (beta).
+
+	* help,
+		Support "See Also" of the the "aaa and bbb[.]" within CRISP
+		help pages.
+
+Tue Apr  4 22:20:57 2006  user
+
+	* curses.h/term.h support.
+
+	* xterm terminal interface enhancements,
+		- Placed all support and command functionality within the
+		  shared moduled 'xterm_util'.
+
+		- auto-load 'kdb/xterm' if no other.
+
+	* word.c,
+		Recoded "double" encoding/encoding due to previous solution
+		failing under GCC 4.x and -O2.
+
+Mon Apr  3 00:49:33 2006  user
+
+	* tab_backfill,
+		rewrote using lreplace, required for correct undo processing which
+		previously resulted in line corruption and text loss on undo's.
+
+	* sleep, optional millisecond parameter.
+
+	* canonicalize_filename improved.
+
+	* rxvt Shift-Tab support/documentation.
+
+	* sort_buffer (beta),
+		callback parameter .. use with caution.
+
+			callback( int l1, string s1, int l2, string, s2 )
+
+		Note: Do not change the underlying buffer content during the sort
+		operation as the sort operation works on a cached image of line
+		references.
+
+	* ninfo, embedded double quote handling improved.
+
+	* global cleanup of typedefs, required for curses.h/term.h integration.
+
+Sat Mar 25 00:06:23 2006  user
+
+	* key_learn macro
+
+	* insert, sprintf and insertf now return length of output image.
+
+	* insertf primitive,
+		formatted insert, like printf and sprintf.
+
+	* wp/reformat,
+		corrected long line handling and including run-away paragraph
+		checks. Verify and enforce min limit for lmargin.
+
+	* delete_buffer incorrectly assigned new buffer within inc reference
+	  count.
+
+	* tty cleanup,
+		dtterm and TF_NOALTSCREEN attribute
+		rxvt added.
+		xterm uniform interface.
+
+Tue Mar 21 22:59:32 2006  user
+
+	* ascii enhanced, radix parameter
+
+Sat Mar 18 22:20:38 2006  user
+
+	* fortran support
+
+Sun Mar 12 18:56:56 2006  user
+
+	* grunch multi-dim fixes, incorrectly handled expressions.
+
+	* regress cleanup
+
+	* EDIT_SYSTEM,
+		edit_file() EDIT_SYSTEM attribute.  Most internal packages
+		ignore system buffers (eg language and modeline).
+
+Thu Mar  9 00:57:37 2006  user
+
+	* (un)comment_block macro cleanup.
+
+	* inq_variable() primitive require for buffer local variable support.
+
+	* direct cr mode support,
+		Get commands_list, keyword only option modes/cr.cr
+
+	* fortran support,
+		syntax.c
+		modes/fortran.cr
+
+Mon Mar  6 00:37:37 2006  user
+
+	* file locking (alpha).
+
+	* put_nth and nth, grunch fixes.
+
+	* prim namespace cleanup (math and string functions)
+
+	* abs, implemented.
+
+	* time, msec parameter.
+
+Fri Mar  3 00:46:43 2006  user
+
+	* corrected percentage display for large files.
+
+	* strxcpy and strncat.
+
+	* ascii invaders (alpha), main test application for put_nth implementation.
+
+	* replaced vm_alloc.
+
+	* put_nth and nth primitives,
+		enhanced to support multiple dim
+
+		ie.	list a[x][y][z];
+
+Thu Feb 23 04:35:17 2006  user
+
+	* main.c, file.c
+		resolve all user configured paths using realpath prior to
+		use, addressed condition where working directory is changed
+		during an edit session.
+
+	* man.cr
+		Scan sun-solaris (sman) man subtree.
+
+	* dialog support,
+		beta release
+
+	* cr/tags, macsrc/tags,
+		tagdb primitives
+
+	* restore.cr
+		crinit restore configuration.
+
+		cache directory option for storage of directory specific save state
+		information.
+
+	* realpath
+		new primitive
+		
+		
+Fri Sep 16 11:52:16 2005  user
+
+	* cr/lisp.c
+		append_to_list wasn't handling case when an empty list was being
+		appended to special case of single referenced list.
+
+	* cr/m_msg.c
+		Local version of Ultoa required under Linux/gcc.
+
+	* cr/word.c
+		Created internal GETFLOAT function is address issues with register
+		optimisation and alising of the 'dval' under gcc.
+
+	* cr/search.c
+		Correctly handle case of searching file images with zero length lines.
+
+	* cr/display.c, echo.c
+		Previous echo_line was based on the console sizing yet is populated
+		with the full path of loaded images etc) which can be MAX_PATH in
+		length. Made static and fixed length of MAX_PATH.
+
+Mon Mar 14 15:02:44 2005  user
+
+	* cr/m_msg.c
+		extended format specification, added
+
+		*	Width and precision as parameters
+		X	Upper case hex
+		#	Alternative form (prefixs)
+		b	Binary
+		B	Binary special
+
+Thu Jul 22 12:22:44 2004  user
+
+	* help.cr/mac1.cr
+		help_about implemented,  Extended version() primitive, returning
+		both the compiled string and cm version.
+
+	* restore.cr
+		Mini status extended to save/restore all files within the current
+		buffer list. Plus close 'newfile' if other files exists.
+
+	* modeline.cr,
+		Made line processing more forgiving to tabs and spaces.
+		Added line-number option
+
+	* display.c,
+		Added buffer line number display.
+		Smarter EOL handling for BINARY views.
+
+	* select.cr,
+		dynamic buffer list frame sizing
+		multifile selection, via +/-
+
+2004/07/06 06:31:31  user
+
+	* ttyterm.c/kbdmap.c
+		Added set_term_feature directive
+
+	* ttyterm.c,
+		xterm dynamic color map support
+
+2004/06/07 03:29:50  user
+
+	* ttyterm.c,
+		ttmove rework, enabling additional term features. Plus it
+		wasn't handling condition of ttrow/ttcol being HUGE, causing
+		random screen corruptions. This seems to have fixed the last
+		of the known/agnoring display issues.
+
+2004/05/17 10:32:49  user
+
+	* trim/ltrim/rtrim and compress rework
+
+2004/03/04 11:21:29  user
+
+	* menu.cr/window.c,
+		Menu bar released (v0.1)
+
+	* mouse.c/mouse.cr
+		xterm mouse support
+
+2004/03/03 09:24:40  user
+
+	* implemented get_term_keyboard
+
+2004/03/01 15:17:24  user
+
+	* MAX_PATH cleanup
+		replaced explicit buffer sizes to system global MAX_PATH.
+
+2004/02/29 15:48:02  user
+
+	* help.cr
+		Major reconstruction of help, creating common engine for
+		cshelp, explain and help_display. General improvements on the
+		MAN and related refer interfaces.
+
+2004/02/26 07:04:45  user
+
+	* get_syntax_colour
+
+2002/03/07 17:18:09  user
+
+	* window.c
+		create_menu_window and W_MENU support
+
+	* display.c
+		Major reconstruction of vtdraw and underlying draw_line, to include
+			tab highlighting,
+			man style mode
+			plus several incorrect display redraw conditions.
+
+----------------
+
+Wed Aug 15 21:35:24 2001  user
+
+	* inq/set_window_priority,
+		Window display priority management primitives.
+
+	* dialog.cr,
+		Width/lines dialog sizing option.
+
+Tue Aug 14 22:56:06 2001  user
+
+	* help.cr
+		cshelp() help_display syntax corrected.
+
+	* tetris.cr
+		Modified display characters.
+		Display updates.
+
+	* crisp.cr,
+		autoload demos.
+
+	* help.cr/keywd.c,
+		Syntax highlighting help section.
+
+Wed Aug  8 21:23:12 2001  user
+
+	* keywd.c/file.c,
+		mkdir() macro
+
+	* nc.cr/features.cr/nc.hlp,
+		Norton Command style interface released
+
+	* ascii.cr,
+		Window sizing
+
+	* select.cr,
+		Popup keys extended.
+		<Esc> option.
+
+Thu Aug  9 18:19:07 2001  user
+
+	* configure,
+		force HAVE_TERMCAP_H under SunOS.
+
+	* HAVE_TERM_H,
+		Started support
+
+	* mouse.c, sys_unix.c
+		Linux mouse support
+
+Fri Jul 28 10:26:59 2000  user
+
+	* mac1.c,
+		str_nicmp() required by syntax.c
+
+Thu Jul 27 00:32:43 2000  user
+
+	* mac1.c,
+		Corrected do_cd() return value.
+
+	* select.cr,
+		Added 'start_line' to select_list macro.
+
+/*
+ * Local Variables: ***
+ * mode: changelog ***
+ * End: ***
+ */

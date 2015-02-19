@@ -1,0 +1,141 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: cal.mandoc,v 1.1 2014/11/27 18:19:36 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt CAL 1
+.Os
+.Sh NAME
+.Nm cal
+.Nd displays a calender.
+.Sh SYNOPSIS
+cal [[month] year]
+.Sh DESCRIPTION
+The cal macro displays a simple Gregorian calendar calendar. If the year
+operand is specified, a calendar for that year is written. If no operands
+are specified, a calendar for the current month is written.
+.Sh ARGUMENTS
+.Bl -tag -offset 1
+.It month
+Specify the month to be displayed, represented as a decimal integer from 1
+(January) to 12 (December). The default is the current month.
+.It year
+Specify the year for which the calendar is displayed, represented as a
+decimal integer from 1 to 9999. The default is the current year.
+A single parameter specifies the year (1 - 9999) to be displayed. Note the
+year must be fully specified; i.e. \"cal 89\" will not display the calender
+for the year 1989. Two parameters denote the current month (1 - 12) and year.
+Note, the year is always considered to start in January regardless of
+calender reform in 1752.
+.El
+.Sh The Gregorian Calendar
+An unusual calendar is printed for September 1752, being the month 11 days
+were skipped to make up for lack of leap year adjustments. To see this
+calendar, type:
+.Bd -literal
+	cal 9 1752
+.Ed
+.Pp
+The calendar as we know it only came into effect (in England) in 1752. In
+September 1752 the Julian calendar was replaced with the Gregorian calendar
+in Great Britain and its American colonies. The Julian calendar was 11 days
+behind the Gregorian calendar, so 14 September got to follow 2 September on
+the day of the change.
+.Pp
+This change was as a result of an Act of Parliament - the "Calendar Act" of
+1751 An Act for Regulating the Commencement of the Year; and for Correcting
+the Calendar now in Use.
+.Pp
+Unfortunately, not everyone agreed to the change at the same time. The
+change was in fact officially enacted in 1582, but only some catholic
+countries actually did change at this time. After this other countries took
+their time before accepting the change. Great Britain in 1752, Japan in
+1873 and China (the last) in 1949. In several cases, such as Germany, only
+some regions changed at a time, and Sweden removed the days one by one over
+a long time.
+.Pp
+The overall result of this is that for centuries, each country had its own
+system, and dates did not fall on the same day. if you are looking at a
+date, you need to take into account if it was before the changeover in that
+country, and take into account the 10 (or more) days removed from the
+calendar, the the fact that the years used to start on a different day.
+.Sh ADDITIONAL
+What isn't so widely known is a second change which the Act introduced - as
+named in the first part of the Act's title. The Act changed the first day
+of the year (or, if you want to impress your friends with a new word, the
+Supputation of the Year). Prior to 1752 in England, the year began on 25
+March (Lady Day). Lady Day is one of the Quarter Days, which are still used
+in legal circles.
+.Pp
+Hence, in England, the day after 24 March 1642 was 25 March 1643. The Act
+changed this, so that the day after 31 December 1751 was 1 January 1752. As
+a consequence, 1751 was a short year - it ran only from 25 March to 31
+December.
+.Pp
+The Quarter Days divide the year in quarters, and the Quarter Days are:
+.Bl -dash -offset 1 -width xxxxxxxx
+.It
+Lady Day (25 March)
+.It
+Midsummers Day (24 June)
+.It
+Michaelmas Day (29 September)
+.It
+Christmas Day (25 December)
+.El
+.Pp
+Lady Day was one of the days when rents were traditionally due. In fact,
+this practice must have continued will beyond the 18th century as I've seen
+paintings of large meals for farm workers on Lady Day. Taxes were also due
+on Lady Day. With the 'loss' of 11 days in September 1752 and the stories
+of riots on the street, people weren't impressed with having to pay their
+taxes in March 1753 like nothing had happened (in fact, as 25 March 1753
+was a Sunday the taxes were due on Monday 26 March 1753 ) - so the taxman
+skipped the 11 days and decreed that taxes were due on 6 April 1753. And,
+to this day, the UK tax year starts on 6 April.
+.Sh SEE ALSO
+.Xr feature ,
+.Xr date

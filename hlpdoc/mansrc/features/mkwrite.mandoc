@@ -1,0 +1,83 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: mkwrite.mandoc,v 1.1 2014/11/27 18:19:40 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt MKWRITE 1
+.Os
+.Sh NAME
+.Nm mkwrite
+.Nd make writeable, clear the read-only buffer flag.
+.Sh SYNOPIS
+make_writeable
+.br
+rw
+.br
+.Sh DESCRIPTION
+These macros are provided for the times when you have started to edit a
+file, which has read-only status. When GRIEF reads in a read-only file, it
+sets an internal flag on the buffer to stop the user making any changes
+to the buffer, to avoid the common \fIvi(1)\fR situation where you make
+a whole load of edits, and then find you cannot save the file.
+.Pp
+\f(HBmake_writeable\fR clears the flag and allows you to edit the buffer.
+However, it is your responsibility to do whatever is necessary to ensure
+that you can actually save the file.
+(You can either change the buffer name -- via \f(HB<Alt-O>\fR, or do
+a shell escape and do a \fIchmod(1)\fR on the file). Note that when
+the file is written away, it will be written away with the same protection
+mode as when the file was read in, NOT the protection of the file
+at the time of the write.
+.Pp
+\f(HBrw\fR conditionaly clears the write flags upon successfully
+chmod'ing the underlying file to give read/write access.
+.Sh MENU/KEYS
+These macros can be accessed from the GRIEF features menu or by typing
+\f(HB<Ctrl-A><Ctrl-W>\fR at the command prompt.
+.Sh BUGS
+Writing the buffer away after having done a chmod will cause the file
+to not be writeable a second time because the newly written file
+will also be read-only.

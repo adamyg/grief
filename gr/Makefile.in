@@ -1,0 +1,349 @@
+# -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
+# $Id: Makefile.in,v 1.69 2015/02/19 00:16:50 ayoung Exp $
+# GRIEF editor makefile.
+#
+#
+# Copyright (c) 1998 - 2014, Adam Young.
+# All rights reserved.
+#
+# This file is part of the GRIEF Editor.
+#
+# The GRIEF Editor is free software: you can redistribute it
+# and/or modify it under the terms of the GRIEF Editor License.
+#
+# Redistributions of source code must retain the above copyright
+# notice, and must be distributed with the license document above.
+#
+# Redistributions in binary form must reproduce the above copyright
+# notice, and must include the license document above in
+# the documentation and/or other materials provided with the
+# distribution.
+#
+# The GRIEF Editor is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# License for more details.
+# ==end==
+#
+
+@SET_MAKE@
+ROOT=		@abs_top_builddir@
+top_builddir=	@top_builddir@
+
+# File extensions
+
+E=
+O=		.o
+
+CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+
+# Compilers, programs
+
+CC=		@CC@
+CXX=		@CXX@
+RM=		@RM@
+
+CCDEPEND=	@echo "\#no depend" > $(D_OBJDEP)/$<.Po
+
+ifeq ("win32","@build_os@")
+CCPROFILE=msvc.profile
+ifeq ("wcl386","@CC@")
+CCPROFILE=wc.profile
+endif
+ifeq ("gcc","@CC@")
+CCPROFILE=mingw.profile
+endif
+CCDEPEND=	@$(ROOT)/bin/makedepend \
+			-MM -MC $(ROOT)/win32/$(CCPROFILE) -MG -MP \
+				-f$(D_OBJDEP)/$(basename $(<F)).Po -MT$@ $(CDEPFLAGS) $<
+CXXDEPEND=	@$(ROOT)/bin/makedepend \
+			-MM -MC $(ROOT)/win32/$(CCPROFILE) -MG -MP -D__cplusplus \
+				-f$(D_OBJDEP)/$(basename $(<F)).Po -MT$@ $(CDEPFLAGS) $<
+endif
+
+ifndef CCDEPEND
+ifeq (gcc,$(findstring gcc,$(CC)))
+ifdef PURIFY
+CC=		purify $(CC)
+else
+ifdef LANG
+	LANG=C
+	export LANG
+endif
+endif
+depcomp=	$(SHELL) $(ROOT)/auto/depcomp
+CCDEPEND=	@source='$<' object='$@' libtool=no \
+			DEPDIR=$(D_DEP) depmode=gcc3 $(depcomp) $(CC) $(CDEPFLAGS) $(COPT) $(CINCLUDE) -o $@ -c $< 2>&1 >/dev/null
+endif
+endif	#CCDEPEND
+
+CXXDEPEND?=	$(CCDEPEND)
+
+# Common flags
+
+CWALL=
+ifeq (gcc,$(findstring gcc,$(CC)))
+ifdef WALL2
+WALL+=1
+endif
+ifdef WALL
+CWALL+=		-Wall \
+		-Wextra \
+		-Wformat \
+		-Wuninitialized \
+		-Wwrite-strings \
+		-Wbad-function-cast \
+		-Wpointer-arith \
+		-Wstrict-prototypes \
+		-Wmissing-prototypes \
+		-Wmissing-declarations \
+		-Wnested-externs \
+		-Wcomment \
+		-Wcast-align \
+		-Winline \
+		-Wshadow \
+		-Wredundant-decls \
+		-Wconversion
+ifdef WALL2
+CWALL+=		-Wstrict-overflow=5 \
+		-Wcast-qual
+else
+CWALL+=		-Wno-sign-conversion \
+		-Wno-missing-braces \
+		-Wno-missing-field-initializers \
+		-Wstrict-overflow=2
+endif	#wall2
+endif	#wall
+endif	#gcc
+
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+LDEBUG=		@LDEBUG@
+COPT=		@CFLAGS@
+CXXOPT=		@CXXFLAGS@
+ifeq "" "$(CXXOPT)"
+CXXOPT=		$(COPT)
+endif
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+LDEBUG=		@LDEBUG@
+CINCLUDE=	-I$(D_INC) @CINCLUDE@
+ifeq ("mingw32","@build_os@")
+CINCLUDE+=	-I../libw32
+endif
+CPPFLAGS=	@DEFS@ @LIBCURL_CPPFLAGS@
+ifdef PURIFY
+CPPFLAGS+=	-DUSING_PURIFY
+endif
+CFLAGS=		$(CPPFLAGS) $(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(XFLAGS)
+CXXFLAGS=	$(CPPFLAGS) $(CDEBUG) $(CXXOPT) $(CWARN) $(CINCLUDE) $(XFLAGS)
+CDEPFLAGS=	$(CPPFLAGS) $(CINCLUDE)
+LDFLAGS=	$(LDEBUG) @LDFLAGS@
+ifeq (gcc,$(findstring gcc,$(CC)))
+ifeq ("linux","@build_os@")
+LDFLAGS+=	-rdynamic
+endif
+endif
+LDLIBS=		-L$(D_LIB) -lbsddb -lbsdfetch -lbsdio -lchartable -lvfs -lsplay -lllist -lmisc -lonigrx -ltre
+LDLIBS+=	@LIBS@ @LIBENCA@ @LIBSPELL@ @LIBICU@ @LIBICONV@ @LIBCURL@ @LIBARCHIVE@ @LIBMAGIC@ @LIBM@ @EXTRALIBS@
+ifeq ("mingw32","@build_os@")
+LDLIBS+=	-lw32 -lshlwapi -lshell32 -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
+else ifneq ("win32","@build_os@")
+LDLIBS+=	@TERMLIB@ @LIBX11@
+endif
+LDLIBS+=	@LIBMALLOC@ @LIBTHREAD@
+
+RMFLAGS=	-f
+
+# Directories
+
+D_BIN=		$(ROOT)/bin
+D_INC=		$(ROOT)/include
+D_OBJ=		$(ROOT)/objects
+D_LIB=		$(ROOT)/lib
+D_DEP=		.deps
+D_OBJDEP=	$(D_OBJ)/$(D_DEP)
+
+############################################################
+
+TARGET=		gr$(E)
+VPATH=		.
+
+CPPSRC=\
+	main.cpp
+
+CSRC=\
+	cmain.c			\
+	accum.c			\
+	anchor.c		\
+	arg.c			\
+	basic.c			\
+	bookmark.c		\
+	border.c		\
+	buffer.c		\
+	builtin.c		\
+	chunk.c			\
+	cmap.c			\
+	config.c		\
+	debug.c			\
+	dict.c			\
+	display.c		\
+	echo.c			\
+	eval.c			\
+	file.c			\
+	getkey.c		\
+	hilite.c		\
+	keyboard.c		\
+	keywd.c			\
+	kill.c			\
+	language.c		\
+	line.c			\
+	lisp.c			\
+	lock.c			\
+	mac1.c			\
+	macrolib.c		\
+	macros.c		\
+	map.c			\
+	math.c			\
+	mouse.c			\
+	object.c		\
+	playback.c		\
+	position.c		\
+	prntf.c			\
+	procspawn.c		\
+	regdfa.c		\
+	regexp.c		\
+	regrpl.c		\
+	region.c		\
+	register.c		\
+	ruler.c			\
+	search.c		\
+	sh_unix.c		\
+	sh_win32.c		\
+	signals.c		\
+	symbol.c		\
+	undo.c			\
+	version.c		\
+	wild.c			\
+	window.c		\
+	word.c			\
+	\
+	dialog.c		\
+	dialog_tty.c		\
+	widgets_tty.c		\
+	\
+	m_backup.c		\
+	m_brief.c		\
+	m_buf.c			\
+	m_caller.c		\
+	m_color.c		\
+	m_debug.c		\
+	m_display.c		\
+	m_errno.c		\
+	m_feature.c		\
+	m_file.c		\
+	m_fileio.c		\
+	m_float.c		\
+	m_ftp.c			\
+	m_getopt.c		\
+	m_hilite.c		\
+	m_ini.c			\
+	m_line.c		\
+	m_macro.c		\
+	m_main.c		\
+	m_mchar.c		\
+	m_msg.c			\
+	m_random.c		\
+	m_region.c		\
+	m_regress.c		\
+	m_ruler.c		\
+	m_scan.c		\
+	m_screen.c		\
+	m_signal.c		\
+	m_sort.c		\
+	m_string.c		\
+	m_symbol.c		\
+	m_sysinfo.c		\
+	m_system.c		\
+	m_terminal.c		\
+	m_time.c		\
+	m_tokenize.c		\
+	m_userprofile.c		\
+	m_vfs.c			\
+	m_window.c		\
+	\
+	m_pty.c			\
+	pty_unix.c		\
+	pty_win32.c		\
+	\
+	m_spell.c		\
+	spell_enchant.c		\
+	spell_hunspell.c	\
+	spell_aspell.c		\
+	\
+	diff.c			\
+	diff_hash.c		\
+	\
+	syntax.c		\
+	syntaxhl.c		\
+	syntaxdfa.c		\
+	syntaxcol.c		\
+	\
+	tags.c			\
+	tagsex.c		\
+	tagse.c			\
+	\
+	tty.c			\
+	ttyrgb.c		\
+	ttyterm.c		\
+	ttyvio.c		\
+	ttyncurses.c		\
+	ttydos.c		\
+	ttywin32.c		\
+	ttyx11.c		\
+	ttyx11if.c		\
+	\
+	mchar_guess.c		\
+	mchar_util.c		\
+	mchar_info.c		\
+	mchar_iconv.c		\
+	\
+	sysinfo.c		\
+	sysfile.c		\
+	sys_dos.c		\
+	sys_os2.c		\
+	sys_unix.c		\
+	sys_vms.c		\
+	sys_win32.c
+
+OBJS=		$(addprefix $(D_OBJ)/,$(patsubst %.c,%$(O),$(CSRC)))
+OBJS+=		$(addprefix $(D_OBJ)/,$(patsubst %.cpp,%$(O),$(CPPSRC)))
+
+all:		directories $(D_BIN)/$(TARGET)
+
+clean:
+		-@$(RM) $(RMFLAGS) $(BAK) $(D_BIN)/$(TARGET) $(TARGET) $(OBJS) $(CLEAN) $(XCLEAN)
+
+.PHONY:		directories
+directories:		$(D_OBJDEP)/.created $(OBJS)
+
+$(D_BIN)/$(TARGET):	MAPFILE=$(basename $@).map
+$(D_BIN)/$(TARGET):	$(OBJS)
+		$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS) @LDMAPFILE@
+
+%/.created:
+		-@mkdir $(@D)
+		@echo "++ do not delete, managed content ++" > $@
+
+-include $(CSRC:%.c=$(D_OBJDEP)/%.Po)
+-include $(CPPSRC:%.cpp=$(D_OBJDEP)/%.Po)
+
+$(D_OBJ)/%$(O):		%.c
+		$(CC) $(CFLAGS) -o $@ -c $<
+		$(CCDEPEND)
+
+$(D_OBJ)/%$(O):		%.cpp
+		$(CXX) $(CXXFLAGS) -o $@ -c $<
+		$(CXXDEPEND)
+
+#end

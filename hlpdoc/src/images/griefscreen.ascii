@@ -1,0 +1,33 @@
+
+    \fBv- Borders\fR                     \fBv- File Name\fR
+                                  
+   +---------------------------- date.cr ---------------------------+
+   |                                                                :
+   |void                                                            :
+   |insert_date()                                                   :
+   |{                                            \fB[ Window Arena ]\fR   :
+   |    string day, month, buf;                                     :
+   |    int month_num, day_num, year;                               :
+   |    int hr, min;                                                :
+   |    int type;                                                   :
+   |                                                                :
+   |    date(year, month_num, day_num, month, day);                 :
+   |    if (!get_parm(0, type)) {                                   :
+   |        type = 0;                                               *\fB <+\fR
+   |    }                                                           :  \fB|\fR
+   |                                                                :  \fB|\fR
+   |    switch (type) {                                             :  \fB|\fR
+   |    case 4:         /* MM/DD/YY */                              :  \fB|\fR
+   |        sprintf(buf, "%02d/%02d/%02d", month_num, day_num, year :  \fB|\fR
+   |        break;                                                  :  \fB|\fR
+   |                                                                :  \fB|\fR
+   |    case 3:         /* YY/DD/MM */                              :  \fB|\fR
+   |        sprintf(buf, "%02d/%02d/%02d", year % 100, day_num, mon_:  \fB|\fR
+   |        break;                                                  :  \fB|\fR
+\fB+>\fR +:*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::+  \fB|\fR
+\fB|\fR  Command:                           [ ]  Line: 251  Col: 1  11:39am  \fB|\fR
+\fB|\fR                                                                      \fB|\fR
+\fB|\fR  \fB^- Command Line\fR                    \fB^- Status Area\fR                   \fB|
+\fB|\fR                                                                      \fB|\fR
+\fB+- Horizontal Scroll                                  \fBVertical Scroll -+\fR
+

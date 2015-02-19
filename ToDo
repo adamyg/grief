@@ -1,0 +1,285 @@
+Sun Apr 28 20:19:40 2013 developer
+
+        * stream functions, for example; could model from php interface? (http://php.net/manual/en/ref.stream.php)
+
+             Description of Stream Functions
+                stream_create
+                    STREAM stream_create(string filename,int read,int append);
+
+                    Creates a file stream, a tcp stream, an udp stream a syslog stream
+                    or a RS232/RS485 stream (see example 2 and example 3)
+
+                    filename:   Stream specification
+
+                        Value                       Description
+                        /path/filename              File-Stream
+                        #tcp:/server-address/port   TCP-Stream
+                        #udp:/server-address/port   UDP-Stream
+
+                    read:       If stream is a file stream: 1 = read file; 0 = write file
+                    append:     1 = append text to file; 0 = overwrite text in file
+
+                stream_printf
+                    void stream_printf(STREAM stream,string format, ...);
+
+                    Writes to the output buffer of the specified stream a sequence of
+                    data formatted as the format argument specifies. After the format
+                    parameter, the function expects at least as many additional
+                    arguments as specified in format.
+
+                 stream_write
+                    int stream_write(STREAM stream,void* ptr,int size);
+
+                    Writes an array of size elements, from the block of memory pointed
+                    by ptr to the to the output buffer of the specified stream (see
+                    example 2).
+
+                    The postion indicator of the stream is advanced by the total number
+                    of bytes written.
+
+                    The total number of elements successfully written is returned. If
+                    this number differs from the size parameter, it indicates an error.
+
+                stream_flush
+                    void stream_flush(STREAM stream);
+
+                    If the given stream is a file stream and the file was opened for
+                    writing any unwritten data in the output buffer is written to the
+                    file (see example 2).
+
+                    If the given stream is a tcp stream, an udp stream or a syslog
+                    stream any data in the output buffer is sent to the server.
+
+                stream_read
+                    int stream_read(STREAM stream,void* ptr,int size,int timeout);
+
+                    Reads an array of size elements from the input buffer of the
+                    specified stream and stores them in the block of memory specified
+                    by ptr (see example 2).
+
+                    The timeout is given in milliseconds. The postion indicator of the
+                    stream is advanced by the total amount of bytes read. The total
+                    number of elements successfully read is returned.
+
+                stream_readline
+                    int stream_readline(STREAM stream,void* ptr,int maxsize,int timeout);
+
+                    If the given stream is a file stream the next line of the file is
+                    read. The maximal number of elements to read is specified with
+                    parameter maxsize. The timeout is given in milliseconds.
+
+                stream_close
+                    void stream_close(STREAM stream)
+
+                    Closes the specified stream and deallocates all memory used by the stream.
+
+
+Tue Jun 26 17:34:35 2012 User
+
+        * pdf/printer support, conbined with syntax hiliting.
+
+                PDFLib-Lite -
+                        PDFlib is a development tool for PDF-enabling your software, or
+                        generating PDF on your server. PDFlib saves you the intricate
+                        details of PDF generation by offering a simple-to-use API for
+                        programmatically creating PDF files from within your own
+                        server- or client-side software. PDFlib doesn't make use of
+                        third-party software for generating PDF, nor does it require
+                        any other tools.
+
+                        The PDFlib software in this release is PDFlib Lite, an
+                        Open-source edition for basic PDF generation, free for personal
+                        use.
+
+Mon Mar 19 12:06:56 2012 developer
+
+        * review dll loaders
+
+                FlexDLL -       Flexiable DLL's (alian.frisch.fr/flexdll.html).
+                libtool -       gnuWin32 toolchain.
+                efll -          Enhanced Dynamic Linking Library (sourceforge).
+
+        * pdf support/print
+
+                libHaru -
+                PoDoFo -
+
+        * general
+
+                libReOffice -
+
+Fri Oct  7 08:56:07 2011 developer
+
+        * memo/calender
+
+                Simple memo/notepad functionality
+
+                Also need calender/event reminders.
+
+Thu Sep 15 18:32:40 2011 developer
+
+        * Allow C/C++ style string concat operations (i.e. "string1" "string2")
+
+Wed Aug 31 11:00:42 2011 developer
+
+        * Geshi integration?
+
+        * External data representation
+
+                floats/int's libxdr
+                convert objects on load and ulities native format at run-time
+
+        * Content guess         (libwww - the w3c protocol library)
+
+                http://www.w3.org./Library/src/HTGuess.c
+
+        * URL parser
+
+                http://www.w3.org./Library/src/HTParse.c
+
+Sun May  1 18:27:58 2011 developer
+
+        * unicode input support
+
+                o uint32_t keytype_t
+                o modification of key definitions
+                o modification of key macros
+
+Mon Feb 26 19:21:13 2007  developer
+
+        * startup splash screen,
+
+                                Grief (version)
+
+                GriefEdit is an open source and freely distributable for
+                Derived from ..............., Grief link.
+
+                        Sponsor Grief development !
+
+                type: <Alt-H> or <F10>help<Enter> for on-line help.
+                type: <F10>sysinfo<Enter> for system information.
+                type: <F10>help sponser<Enter>
+
+        * sponsor help,
+        * rs_search,
+
+                - 'step' option.
+
+Fri Feb 16 11:35:39 2007  developer
+
+        * scrapper save limits
+
+                - bytes or lines ?
+
+                - ask and/or dont ?
+
+Wed Jan 17 00:58:40 2007  developer
+
+        * overload keyword (done)
+
+        * const keyword (done)
+
+        * echo command,
+                executes the command an echos the result if called from the command-line
+
+Wed Dec  6 19:46:56 2006  developer
+
+        * strftime (done)
+
+Tue Nov 28 21:01:01 2006  developer
+
+        * --escdelay should have priority over set_char_timeout()
+
+        * add inq_char_timeout( [source] ),
+
+                source/
+                0: default
+                1: ESCDELAY
+                2: set_char_timeout
+                3: --escdelay
+
+        * set_buffer_flags/inq_buffer_flags - REWORKED
+
+                create "buffer flags" section and/or inq_buffer_flags refs (->) set_buffer_flags
+
+        * set_echo_line() / inq_echo_line()
+
+                To customise the echo line, you may use this command:
+
+                        set_echo_line ("Grief %v: %b (%m%n) (%l %c) %t", 1);
+
+                If unspecified, the format is cleared and the echo_line() set taken effect.
+
+                        % [width] [conversion]
+
+                The meaning of the fields is:
+
+                        %b      buffer name.
+                        %t      buffer title.
+                        %f      buffer flags (ie. ----).
+                        %n      file name with directory.
+                        %N      file name without the directory.
+                        %p      percent string.
+                        %c      column number.
+                        %m      mode string (ie. --------rw).
+                        %o      If overwrite mode, expands to "OV" otherwise " ".
+                        %O      overwrite/insert flag - like %o, but shows OV/RE.
+                        %l      current line number.
+                        %L      number of lines in the file.
+                        %T      current time --- only used if variable DISPLAY_TIME is non-zero.
+                        %v      crisp version.
+                        %%      literal '%' character.
+
+                all other characters are quoted.
+
+                Note:   Once set only FROZEN or flags=0 (disable) has effect.
+
+        * drap&drop for WIN32,
+                Note:   Must be a OLE application :( unsure if avaiable when a
+                        console application.
+
+        * rulers (done)
+
+                        set_ruler(bufname, ruler),
+                and     inq_ruler(bufnum)
+
+                        set_margins(bufnum, lmargin, rmargin)
+                and     inq_margins(bufnum, lmargin, rmargin)
+
+           possible representations
+
+                -----[---+1--+---+--2+---+---+3--+---+--4+---+---+5--+---+--6+---+---+7--+-]---8-----
+
+                _____[___+1__+___+__2+___+___+3__+___+__4+___+___+5__+___+__6+___+___+7__+_]___8_____
+
+                -----[---|1--|---|--2|---|---|3--|---|--4|---|---|5--|---|--6|---|---|7--|-]---8-----
+
+                _____[___|1__|___|__2|___|___|3__|___|__4|___|___|5__|___|__6|___|___|7__|_]___8_____
+
+
+Fri Apr 28 01:48:25 2006  developer
+
+        * // -*- C++ -*- (done)
+
+        * mak/sh etc, white-space at EOL hiliting (done)
+
+        * dont detab mode switch
+
+Fri Mar 11 10:52:31 2005  developer
+
+        * Update existing primitives (done),
+                 insert, change to printf() style format support
+
+        * New primitives,
+                dirname (done)
+                realpath (done)
+                basename (done)
+
+$Id: ToDo,v 1.15 2014/10/27 23:27:52 ayoung Exp $
+
+/*
+ *  Local Variables: ***
+ *  mode: changelog ***
+ *  End: ***
+ */
+

@@ -1,0 +1,17 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+> The (display_file_name) Macro
+This  macro  is  a utility macro to display the current file
+name  on  the  status  line.  When  editing  a buffer, it is
+sometimes  difficult  to  distinguish between two buffers if
+they  contain  files  with  the  same filename but different
+path  names.  Since  the  title of a window is the file-name
+part   of  the  full  path,  it  helps  to  have  a  command
+available to display the full unambiguous name.
+The   (display_file_name)   macro  is  selectable  from  the
+features menu (The 'Current Filename' option).
+If  the  filename  is  too  long  to fit on the status line,
+then  the  filename is truncated at the right and three dots
+'...'  are  inserted  to  show  that  the  filename has been
+truncated.

@@ -1,0 +1,37 @@
+-*- encoding: utf-8; -*-
+
+Thu Feb 19 00:35:01 2015 ayoung
+
+	* BUILD8 released.
+
+Mon Dec 15 02:55:34 2014 ayoung
+
+	* installer, corrected PATH 'bin' path.
+
+	* full-screen console,
+
+		- ega(), minimise/maximize emulation (aka <Alt-Enter>) under win32 console.
+
+		- <Ctrl-Enter>, 'fullscreen' default mapping.
+
+		- explain fullscreen
+
+	* ReadConsoleOutputA() ERROR_NOT_ENOUGH_MEMORY handling
+
+Mon Dec 15 02:55:34 2014 ayoung
+
+	* Corrected primitive sort order.
+
+Fri Dec 12 18:35:53 2014 ayoung
+
+	* Corrected license within about/welcome dialogs.
+
+Fri Dec 01 18:35:53 2014 ayoung
+
+	* Public release, BUILD7.
+
+/*
+ * Local Variables: ***
+ * mode: changelog ***
+ * End: ***
+ */

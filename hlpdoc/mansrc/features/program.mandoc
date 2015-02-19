@@ -1,0 +1,110 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: program.mandoc,v 1.1 2014/11/27 18:19:42 ayoung Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt PROGRAM 1
+.Os
+.Sh NAME
+.Nm program
+.Nd programming support.
+.Sh DESCRIPTION
+GRIEF is a programmers editor, this section overviews the features
+in the programming utilities suite of macros.  Most of these macros
+are normally mapped to the keyboard but can be difficult to
+remember where on the keyboard they are.
+.Pp
+Inbuilt features include:
+.Bl -bullet -offset 1 -width xxxx
+.It
+Ascii and precedences charts (see ascii, chier)
+.Pp
+These macro gives the user a reminder of the familiar table.
+.It
+Automatic indenting and region formatting (see autoind, format)
+.It
+Compiling programs from within the editor
+plus Automatic error location (see make)"
+.It
+Language specific packages and Statement completion (see package)
+.It
+Bracket matching (see match)
+.Pp
+This macro emulates the vi '%' function. If the cursor is currently
+located on a bracket - either open or close (round, curly or
+square - (), [], {}), then the cursor is moved to the matching
+bracket. Alternate calls to this macro take you back to where
+you started.
+.It
+Change log (see change)
+.Pp
+The change macro is used to allow the user to keep track of changes
+to files in a manner similar to the GNU \fHChangeLog\fR.
+files.
+.It
+Routine index (see routines)
+.Pp
+This  macro is used to generate an index of all the functions or
+sections in the current buffer. This function implements the
+macro.
+.It
+Tags (see tag)
+.Pp
+This macro relies on the standard Unix utility 'ctags' to generate
+a tags file. A tags file is a file which contains a list of all
+functions in all the files in the current directory together with
+a line used to select that file.
+.El
+.Pp
+.Sh SEE ALSO
+.Xr tag ,
+.Xr routines ,
+.Xr change ,
+.Xr package ,
+.Xr chier ,
+.Xr make ,
+.Xr autoind ,
+.Xr ascii
