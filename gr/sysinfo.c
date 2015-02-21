@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.42 2015/02/19 00:13:40 ayoung Exp $")
+__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.43 2015/02/19 22:11:05 ayoung Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sysinfo.c,v 1.42 2015/02/19 00:13:40 ayoung Exp $
+/* $Id: sysinfo.c,v 1.43 2015/02/19 22:11:05 ayoung Exp $
  * System information services.
  *
  *
@@ -157,12 +157,12 @@ sysinfo_homedir(char *buf, int len)
             t_path[0] = 0;                      /* XP+ */
             if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_PROFILE, NULL, 0, t_path)) && *t_path) {
                 t_path[sizeof(t_path) - 1] = 0;
-                if (0 == _access(t_path, 0)) {
+                if (0 == fileio_access(t_path, 0)) {
                     p = t_path;
                 } else {
                     char buffer[MAX_PATH*2];
 
-                    _snprintf(buffer, sizeof(buffer), "Home directory is not accessible\n<%s>", t_path);
+                    sxprintf(buffer, sizeof(buffer), "Home directory is not accessible\n<%s>", t_path);
                     MessageBoxA(0, buffer, "Error", MB_OK);
                 }
             }
@@ -253,7 +253,7 @@ sysinfo_tmpdir(void)
             t_path[0] = 0;                      /* XP+ */
             if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, t_path)) && *t_path) {
                 t_path[sizeof(t_path) - 1] = 0;
-                if (0 == _access(t_path, 0)) {
+                if (0 == fileio_access(t_path, 0)) {
                     p = t_path;
                 }
             } else {
@@ -263,7 +263,7 @@ sysinfo_tmpdir(void)
                         --pathlen;              /* remove trailing delimiter */
                     }
                     t_path[pathlen] = 0;
-                    if (0 == _access(t_path, 0)) {
+                    if (0 == fileio_access(t_path, 0)) {
                         p = t_path;
                     }
                 }

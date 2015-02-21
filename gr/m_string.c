@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.36 2014/10/27 23:27:55 ayoung Exp $")
+__CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.37 2015/02/21 22:47:27 ayoung Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_string.c,v 1.36 2014/10/27 23:27:55 ayoung Exp $
+/* $Id: m_string.c,v 1.37 2015/02/21 22:47:27 ayoung Exp $
  * String primitives.
  *
  *
@@ -2973,7 +2973,6 @@ string_mul(const char *str, int len, int multiple)
     char *nstr;
     int i;
 
-    assert(sizeof(int) == sizeof(size_t));
     if (len <= 0 || multiple <= 0 ||
             NULL == (nstr = acc_expand((multiple * len) + 1))) {
         acc_assign_str("", 1);

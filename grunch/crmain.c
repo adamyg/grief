@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.48 2014/10/22 02:33:28 ayoung Exp $")
+__CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.49 2015/02/19 22:11:05 ayoung Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crmain.c,v 1.48 2014/10/22 02:33:28 ayoung Exp $
+/* $Id: crmain.c,v 1.49 2015/02/19 22:11:05 ayoung Exp $
  * grunch command line.
  *
  *
@@ -134,7 +134,8 @@ __CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.48 2014/10/22 02:33:28 ayoung Exp 
         #define CC_OSARG    "-DUNIX -DLINUX"
 
     #elif defined(__CYGWIN__)
-        #if defined(__CYGWIN32__)
+        #if defined(__CYGWIN32__) || \
+               defined(__CYGWIN64__) || (!defined(__CYGWIN32__) && (SIZEOF_LONG == 8))
           #define CC_OSARG  "-DUNIX -DCYGWIN"
         #else
           #error crmain: Unknown CYGWIN environment ...

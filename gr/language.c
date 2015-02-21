@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_language_c,"$Id: language.c,v 1.42 2014/10/27 23:27:53 ayoung Exp $")
+__CIDENT_RCSID(gr_language_c,"$Id: language.c,v 1.44 2015/02/21 22:46:35 ayoung Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: language.c,v 1.42 2014/10/27 23:27:53 ayoung Exp $
+/* $Id: language.c,v 1.44 2015/02/21 22:46:35 ayoung Exp $
  * Module loader and inline compiler for lisp source.
  *
  *
@@ -1282,7 +1282,7 @@ gr_loadobject(struct fp *fp, void (*execute)(const LIST *lp, int size))
     /*
      *  Load the object image
      */
-    if (fp->size > MAX_CM_SIZE ||
+    if (fp->size > (MAX_CM_SIZE*2) ||           /* FIXME */
             NULL == (node = chk_alloc(sizeof(CMNODE_t) + (unsigned)fp->size))) {
         errorf("Macro file too big to read");
         return -1;
@@ -1360,7 +1360,7 @@ gr_loadobject(struct fp *fp, void (*execute)(const LIST *lp, int size))
     lpend = base_list + cm->cm_num_atoms;
     for (lp = base_list; lp < lpend; lp += sizeof_atoms[*lp]) {
         if (F_STR == *lp || F_LIT == *lp) {
-            uint32_t offset = LGET32(lp);      /* 32/64 */
+            accint_t offset = LGET_INT(lp);
 
             assert(offset < cm->cm_num_strings);
             LPUT_PTR(lp, (str_table + soffsets[offset]));

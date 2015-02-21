@@ -1,11 +1,11 @@
 #ifndef GR_WORD_H_INCLUDED
 #define GR_WORD_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_word_h,"$Id: word.h,v 1.15 2014/10/22 02:33:25 ayoung Exp $")
+__CIDENT_RCSID(gr_word_h,"$Id: word.h,v 1.17 2015/02/19 23:28:48 ayoung Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: word.h,v 1.15 2014/10/22 02:33:25 ayoung Exp $
+/* $Id: word.h,v 1.17 2015/02/19 23:28:48 ayoung Exp $
  * External data representation.
  *
  *
@@ -63,8 +63,15 @@ extern double               LGET_FLOAT(const LIST *lp);
 #define                     LPUT_ID(lp, i)      LPUT16((lp), (i))
 #define                     LGET_ID(lp)         LGET16(lp)
 
+#if (SIZEOF_LONG == 8)
+#define                     LPUT_INT(lp, n)     LPUT64((lp), (int64_t)(n))
+#define                     LGET_INT(lp)        LGET64(lp)
+#elif (SIZEOF_LONG == 4)
 #define                     LPUT_INT(lp, n)     LPUT32((lp), (int32_t)(n))
 #define                     LGET_INT(lp)        LGET32(lp)
+#else
+#error unsupported SIZEOF_LONG szie
+#endif
 
 #define                     LGET_PTR2(type, lp) ((type *)LGET_PTR(lp))
 

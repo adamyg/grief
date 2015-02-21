@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crbin_c,"$Id: crbin.c,v 1.21 2014/10/27 23:27:58 ayoung Exp $")
+__CIDENT_RCSID(gr_crbin_c,"$Id: crbin.c,v 1.22 2015/02/19 22:11:05 ayoung Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crbin.c,v 1.21 2014/10/27 23:27:58 ayoung Exp $
+/* $Id: crbin.c,v 1.22 2015/02/19 22:11:05 ayoung Exp $
  * Binary back end code generator.
  *
  *
@@ -147,13 +147,14 @@ genb_int(accint_t ival)
     LIST buf[sizeof(accint_t)+1];
     unsigned i;
 
-    assert(4 == sizeof(accint_t));              /* verify env */
+    assert(SIZEOF_LONG == sizeof(accint_t));   /* verify env */
     gen_byte(F_INT);
-    LPUT32(buf, ival);
+    LPUT_INT(buf, ival);
     for (i = 1; i < sizeof(buf); ++i) {
         gen_byte(buf[i]);
     }
 }
+
 
 
 void
@@ -381,12 +382,22 @@ gen_str(const char *str, int type)
     }
 
     assert(F_STR == type || F_LIT == type);
-    gen_byte(type);
-    gen_byte(0);
-    gen_byte(0);
-    gen_byte(0);
-    gen_byte(0);
-    LPUT32((LIST *) (byte_ptr - 5), (uint32_t) strp->str_index);
+    assert(strp->str_index <= 0x0001ffff);      /* 128k limit */
+//  gen_byte(type);
+//  gen_byte(0);
+//  gen_byte(0);
+//  gen_byte(0);
+//  gen_byte(0);
+//  LPUT32((LIST *) (byte_ptr - 5), strp->str_index);
+    {  LIST buf[sizeof(accint_t)+1];
+       unsigned i;
+
+       gen_byte(type);
+       LPUT_INT(buf, strp->str_index);
+       for (i = 1; i < sizeof(buf); ++i) {
+           gen_byte(buf[i]);
+       }
+    }
 }
 
 

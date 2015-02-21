@@ -1,11 +1,11 @@
 #ifndef GR_CHKALLOC_H_INCLUDED
 #define GR_CHKALLOC_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_chkalloc_h,"$Id: chkalloc.h,v 1.16 2015/02/19 00:16:53 ayoung Exp $")
+__CIDENT_RCSID(gr_chkalloc_h,"$Id: chkalloc.h,v 1.17 2015/02/21 22:43:25 ayoung Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: chkalloc.h,v 1.16 2015/02/19 00:16:53 ayoung Exp $
+/* $Id: chkalloc.h,v 1.17 2015/02/21 22:43:25 ayoung Exp $
  * Memory management interface.
  *
  *  #define CHKALLOC_DEBUG 1
@@ -68,15 +68,16 @@ __CBEGIN_DECLS
 extern void             chk_native(void);
 extern void             chk_rtc(void);
 extern void             chk_stats(void);
-extern void *           chk_alloc(size_t len);
-extern void *           chk_calloc(size_t elem, size_t len);
+extern void *           chk_alloc(size_t size);
+extern void *           chk_calloc(size_t elem, size_t size);
 extern void             chk_free(void *p);
 extern void             chk_leak(const void *p);
 extern int              chk_isleak(const void *p);
-extern void *           chk_realloc(void *p, size_t len);
-extern size_t           chk_expand(void *p, size_t len);
+extern void *           chk_realloc(void *p, size_t size);
+extern size_t           chk_shrink(void *p, size_t size);
+extern size_t           chk_expand(void *p, size_t size);
 extern void *           chk_salloc(const char *s);
-extern void *           chk_snalloc(const char *s, size_t len);
+extern void *           chk_snalloc(const char *s, size_t size);
 
 __CEND_DECLS
 
@@ -88,6 +89,7 @@ __CEND_DECLS
 #define chk_alloc(size)             check_alloc(size, __FILE__, __LINE__)
 #define chk_calloc(elem, size)      check_calloc(elem, size, __FILE__, __LINE__)
 #define chk_realloc(ptr, size)      check_realloc(ptr, size, __FILE__, __LINE__)
+#define chk_shrink(ptr, size)       check_shrink(ptr, size, __FILE__, __LINE__)
 #define chk_expand(ptr, size)       check_expand(ptr, size, __FILE__, __LINE__)
 #define chk_leak(ptr)               check_leak(ptr, __FILE__, __LINE__)
 #define chk_free(ptr)               check_free(ptr, __FILE__, __LINE__)
@@ -108,6 +110,7 @@ extern unsigned         check_configure(unsigned flags);
 extern void *           check_alloc(size_t len, char const * file, size_t line);
 extern void *           check_calloc(size_t elem, size_t len, char const * file, size_t line);
 extern void *           check_realloc(void *p, size_t len, char const * file, size_t line);
+extern size_t           check_shrink(void *p, size_t newlen, char const * file, size_t line);
 extern size_t           check_expand(void *p, size_t newlen, char const * file, size_t line);
 extern void             check_free(void *p, char const * file, size_t line);
 extern void *           check_salloc(char const *s, char const * file, size_t line);

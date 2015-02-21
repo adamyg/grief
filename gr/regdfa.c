@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_regdfa_c,"$Id: regdfa.c,v 1.27 2014/11/16 17:28:43 ayoung Exp $")
+__CIDENT_RCSID(gr_regdfa_c,"$Id: regdfa.c,v 1.28 2015/02/21 22:46:35 ayoung Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: regdfa.c,v 1.27 2014/11/16 17:28:43 ayoung Exp $
+/* $Id: regdfa.c,v 1.28 2015/02/21 22:46:35 ayoung Exp $
  * DFA regular expression engine.
  * Streamlined engine for use by the syntax hiliting code.
  *
@@ -99,7 +99,7 @@ __CIDENT_RCSID(gr_regdfa_c,"$Id: regdfa.c,v 1.27 2014/11/16 17:28:43 ayoung Exp 
  *          xdigit -        A hexadecimal digit.
  *
  *
- * Copyright (c) 1998 - 2014, Adam Young.
+ * Copyright (c) 1998 - 2015, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -142,7 +142,9 @@ typedef union {                                 /* system alignment */
     int                     x_int;
     long                    x_long;
 #if defined(HAVE_LONG_LONG_INT)
+#if (SIZEOF_LONG < 8)
     long long               x_long_long;
+#endif
 #endif
     float                   x_float;
     double                  x_double;
@@ -157,6 +159,7 @@ typedef struct dfaheapnode {
 } dfaheapnode_t;
 
 typedef struct dfaheap {
+#define HEAP_MAGIC          MKMAGIC('D','f','a','H')
     MAGIC_t                 h_magic;
     unsigned                h_size;
     dfaheapnode_t *         h_head;
@@ -178,7 +181,13 @@ typedef struct dfaheap {
  */
 #define INT_BYTES           (sizeof(unsigned int))
 #define INT_BITS            (INT_BYTES * CHAR_BIT)
+#if (SIZEOF_INT == 4)
 #define INT_SHIFT           5                   /* / 32 */
+#elif (SIZEOF_INT == 8)
+#define INT_SHIFT           6
+#else
+#error unknown SIZEOF_INT ...
+#endif
 
 #define CSET_MAX            (256)               /* assumes 2^x size */
 #define CSET_SIZE           (CSET_MAX/INT_BITS)
@@ -380,6 +389,7 @@ heap_create(unsigned size)
 
     if (NULL != (heap =
             (dfaheap_t *)chk_calloc(sizeof(dfaheap_t) + size, 1))) {
+        heap->h_magic = HEAP_MAGIC;
         heap->h_size = size;
         heap->h_head = NULL;
         if (size) {
@@ -408,20 +418,19 @@ heap_create(unsigned size)
  *      nothing
  */
 static int
-heap_strink(dfaheap_t *heap)
+heap_shrink(dfaheap_t *heap)
 {
     unsigned used, size;
 
     assert(heap);
     if (NULL != heap->h_cursor) {
-        char *nheap, *base = (char *)(heap + 1);
+        char *base = (char *)(heap + 1);
 
         assert(NULL == heap->h_head);
         size = heap->h_size;
         used = heap->h_cursor - base;
 #if !defined(USING_PURIFY)
-        nheap = chk_realloc((void *)heap, sizeof(dfaheap_t) + used);
-        assert(nheap == (char *)heap);
+        chk_shrink((void *)heap, sizeof(dfaheap_t) + used);
 #endif
         heap->h_size = used;
         heap->h_end = base + used;
@@ -431,7 +440,7 @@ heap_strink(dfaheap_t *heap)
         used = size = heap->h_size;
     }
 
-    DFA_DEBUG(("regdfa: heap_strink(%u of %u)\n", used, size))
+    DFA_DEBUG(("regdfa: heap_shrink(%u of %u)\n", used, size))
     return 0;
 }
 
@@ -485,10 +494,12 @@ heap_alloc(dfaheap_t *heap, unsigned size)
     char *block = NULL;
 
     assert(heap);
+    assert(size);
     if (size) {
+        assert(heap->h_magic == HEAP_MAGIC);
         if (NULL != heap->h_cursor) {
             assert(NULL == heap->h_head);
-            if (heap->h_cursor + alignedsize >= heap->h_end) {
+            if ((heap->h_cursor + alignedsize) >= heap->h_end) {
                 block = NULL;
             } else {
                 block = heap->h_cursor;
@@ -1436,8 +1447,9 @@ dfa_new(recompile_t *re, const bitmap_t bm)
             (dfastate_t *)heap_alloc(re->heap, sizeof(dfastate_t)))) {
         return NULL;
     }
-
-    dfa->bits = bm_create(re->temp, bm->bits);
+    if (NULL == (dfa->bits = bm_create(re->temp, bm->bits))) {
+        return NULL;
+    }
     bm_copy(dfa->bits, bm);
 
     if (RB_INSERT(dfatree, rbtree, dfa) != NULL) {
@@ -1648,8 +1660,13 @@ error:;
 struct regdfa *
 regdfa_create(const char **patterns, int num_patterns, unsigned flags)
 {
+#if (SIZEOF_VOID_P == 8) || (SIZEOF_LONG == 8)
+#define WORK_SIZE   (256 * 1024)                /* ~200 states */
+#define TEMP_SIZE   (128 * 1024)
+#else
 #define WORK_SIZE   (128 * 1024)                /* ~200 states */
 #define TEMP_SIZE   (64 * 1024)
+#endif
 
     recompile_t recomp;
     dfaheap_t *heap, *temp = NULL;
@@ -1786,7 +1803,7 @@ regdfa_create(const char **patterns, int num_patterns, unsigned flags)
                 }
             }
             heap_destroy(temp);
-            heap_strink(heap);
+            heap_shrink(heap);
             return regex;
         }
     }

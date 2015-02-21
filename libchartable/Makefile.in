@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.14 2015/02/19 00:17:02 ayoung Exp $
+# $Id: Makefile.in,v 1.15 2015/02/19 22:11:05 ayoung Exp $
 # libchartable makefile.
 #
 #
@@ -146,9 +146,9 @@ modules:		$(D_BINCTBL)/.created		\
 data/.created:
 		-@mkdir data
 		(cd data; \
-	wget -r -nv -nH --cut-dirs=1 ftp://ftp.unicode.org/Public/MAPPINGS/;	\
-	wget -nv ftp://ftp.unicode.org/Public/UNIDATA/Unihan.zip;		\
-	wget -nv ftp://ftp.unicode.org/Public/UNIDATA/UCD.zip;			\
+	wget -r -nv -nH -e robots=off --cut-dirs=1 --no-parent --reject "index.html.*" http://ftp.unicode.org/Public/MAPPINGS/; \
+	wget -nv http://ftp.unicode.org/Public/UNIDATA/Unihan.zip;		\
+	wget -nv http://ftp.unicode.org/Public/UNIDATA/UCD.zip;			\
 	wget -nv http://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz;		\
 	wget -nv http://de.selfhtml.org/html/referenz/zeichen.htm;		\
 	cd ..)

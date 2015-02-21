@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_word_c,"$Id: word.c,v 1.21 2014/10/22 02:33:25 ayoung Exp $")
+__CIDENT_RCSID(gr_word_c,"$Id: word.c,v 1.22 2015/02/19 22:11:05 ayoung Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: word.c,v 1.21 2014/10/22 02:33:25 ayoung Exp $
+/* $Id: word.c,v 1.22 2015/02/19 22:11:05 ayoung Exp $
  * Portable mappings to and from internal word and byte order.
  *
  *
@@ -33,34 +33,46 @@ __CIDENT_RCSID(gr_word_c,"$Id: word.c,v 1.21 2014/10/22 02:33:25 ayoung Exp $")
 #error Unsupported target architecture ...
 #endif
 
+#if (SIZEOF_VOID_P != 4 && SIZEOF_VOID_P != 8)
+#error unsupported sizeof(void *)
+#endif
+#if (SIZEOF_LONG != SIZEOF_VOID_P)
+#error unsupported sizeof(long)
+#endif
+#if (SIZEOF_DOUBLE != 8)
+#error unsupported sizeof(double)
+#endif
+
+#define ATOMSIZE           SIZEOF_LONG
+
 const unsigned sizeof_atoms[] = {
-    1,          /* F_HALT  */
-    5,          /* F_INT   -- integer. */
-    5,          /* F_STR   -- symbol/macro name. */
-    3,          /* F_LIST  */
-    1,          /* F_NULL  */
-    3,          /* F_ID    -- keyword/primitive. */
-    1,          /* F_END   */
-    1,          /* F_POLY  */
-    5,          /* F_LIT   -- literal string */
-    5,          /* F_RSTR  -- string reference */
-    9,          /* F_FLOAT -- stored in native format. */
-    5,          /* F_RLIST */
+    1,                      /* F_HALT  */
+    ATOMSIZE+1,             /* F_INT   -- integer. */
+    ATOMSIZE+1,             /* F_STR   -- symbol/macro name. */
+    3,                      /* F_LIST  */
+    1,                      /* F_NULL  */
+    3,                      /* F_ID    -- keyword/primitive. */
+    1,                      /* F_END   */
+    1,                      /* F_POLY  */
+    ATOMSIZE+1,             /* F_LIT   -- literal string */
+    ATOMSIZE+1,             /* F_RSTR  -- string reference */
+    9,                      /* F_FLOAT -- stored in native format. */
+    ATOMSIZE+1,             /* F_RLIST */
     };
 
 const char * nameof_atoms[] = {
-    "HALT",     /* F_HALT  */
-    "INT",      /* F_INT   -- integer. */
-    "STR",      /* F_STR   -- symbol/macro name. */
-    "LIST",     /* F_LIST  */
-    "NULL",     /* F_NULL  */
-    "ID",       /* F_ID    -- keyword/primitive. */
-    "END",      /* F_END   */
-    "POLY",     /* F_POLY  */
-    "LIT",      /* F_LIT   -- literal string */
-    "RSTR",     /* F_RSTR  -- string reference */
-    "FLOAT",    /* F_FLOAT -- stored in native format. */
-    "RLIST"     /* F_RLIST */
+    "HALT",                 /* F_HALT  */
+    "INT",                  /* F_INT   -- integer. */
+    "STR",                  /* F_STR   -- symbol/macro name. */
+    "LIST",                 /* F_LIST  */
+    "NULL",                 /* F_NULL  */
+    "ID",                   /* F_ID    -- keyword/primitive. */
+    "END",                  /* F_END   */
+    "POLY",                 /* F_POLY  */
+    "LIT",                  /* F_LIT   -- literal string */
+    "RSTR",                 /* F_RSTR  -- string reference */
+    "FLOAT",                /* F_FLOAT -- stored in native format. */
+    "RLIST"                 /* F_RLIST */
     };
 
 static int16_t              one       = 1;
@@ -133,19 +145,12 @@ WGET32(const uint32_t n)
     union double_int32 uval = {{0}};
     uint32_t l = *(uint32_t *) one234;
 
-#if defined(SIZEOF_DOUBLE)
-#if (SIZEOF_DOUBLE != 8)
-#error unsupported sizeof(double) ...
-#endif
-#endif
-
     assert(8 == sizeof(uval));
     assert(4 == sizeof(one234));
     assert(sizeof(double) == sizeof(union double_int32));
-    assert(sizeof(void *) == sizeof(uint32_t));
 
     if (sizeof(void *) != sizeof(accint_t)) {
-        printf("WGET32: sizeof pointer not sizeof accint_t\n");
+        printf("WGET32: panic, sizeof(void *) not sizeof(accint_t)\n");
         sys_abort();
     }
 
@@ -267,16 +272,28 @@ LGET64(register const LIST *lp)
 void
 LPUT_PTR(LIST *lp, const void *p)
 {
-    register uint32_t n = (uint32_t)p;
-    register uint8_t  *cp = (uint8_t *)lp;
-
-#if (SIZEOF_VOID_P > 4)
-#error unsupported sizeof(void *) ...
-#endif
+    register uint8_t *cp = (uint8_t *)lp;
+#if (SIZEOF_VOID_P == 8)
+    register uint64_t n = (uint64_t)p;
+    *++cp = (uint8_t) (n >> (8*7));
+    *++cp = (uint8_t) (n >> (8*6));
+    *++cp = (uint8_t) (n >> (8*5));
+    *++cp = (uint8_t) (n >> (8*4));
     *++cp = (uint8_t) (n >> (8*3));
     *++cp = (uint8_t) (n >> (8*2));
     *++cp = (uint8_t) (n >> (8*1));
     *++cp = (uint8_t) n;
+
+#elif (SIZEOF_VOID_P == 4)
+    register uint32_t n = (uint32_t)p;
+    *++cp = (uint8_t) (n >> (8*3));
+    *++cp = (uint8_t) (n >> (8*2));
+    *++cp = (uint8_t) (n >> (8*1));
+    *++cp = (uint8_t) n;
+
+#else
+#error LPUT_PTR: missing implementation
+#endif
 }
 
 
@@ -284,11 +301,27 @@ void *
 LGET_PTR(register const LIST *lp)
 {
     register const uint8_t *cp = (const uint8_t *)lp;
+#if (SIZEOF_VOID_P == 8)
+    register uint64_t n =
+            (((uint64_t) cp[1] << (8*7)) |
+             ((uint64_t) cp[2] << (8*6)) |
+             ((uint64_t) cp[2] << (8*5)) |
+             ((uint64_t) cp[3] << (8*4)) |
+             ((uint64_t) cp[4] << (8*3)) |
+             ((uint64_t) cp[5] << (8*2)) |
+             ((uint64_t) cp[6] << (8*1)) |
+             ((uint64_t) cp[7]));
+
+#elif (SIZEOF_VOID_P == 4)
     register uint32_t n =
             (((uint32_t) cp[1] << (8*3)) |
              ((uint32_t) cp[2] << (8*2)) |
              ((uint32_t) cp[3] << (8*1)) |
              ((uint32_t) cp[4]));
+
+#else
+#error LGET_PTR: missing implementation
+#endif
     return ((void *)n);
 }
 

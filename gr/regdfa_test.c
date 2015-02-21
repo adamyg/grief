@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_regdfa_test_c,"$Id: regdfa_test.c,v 1.9 2014/10/22 02:33:16 ayoung Exp $")
+__CIDENT_RCSID(gr_regdfa_test_c,"$Id: regdfa_test.c,v 1.10 2015/02/21 22:46:35 ayoung Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: regdfa_test.c,v 1.9 2014/10/22 02:33:16 ayoung Exp $
+/* $Id: regdfa_test.c,v 1.10 2015/02/21 22:46:35 ayoung Exp $
  *
  *
  *
@@ -75,7 +75,8 @@ static void
 test(void)
 {
     struct regdfa *regdfa;
-    const char *nm, *data = x_code;
+    const char *data = x_code, *dataend = x_code + sizeof(x_code);
+    const char *nm;
     int sol, idx;
 
     printf("COMP:\n");
@@ -88,7 +89,7 @@ test(void)
     for (sol = 1; *data;) {
         const char *start = data, *end;
 
-        if ((idx = regdfa_match(regdfa, data, sol, &start, &end)) >= 0) {
+        if ((idx = regdfa_match(regdfa, data, dataend, sol, &start, &end)) >= 0) {
             const char *nl = strchr(start, '\n');
             int len = (end - data) + 1;
 
@@ -150,6 +151,47 @@ main(int argc, char **argv)
 }
 
 
+void *
+chk_malloc(size_t size)
+{
+    assert(size);
+    return malloc(size);
+}
+
+
+void *
+chk_calloc(size_t size)
+{
+    assert(size);
+    return calloc(size, 1);
+}
+
+
+size_t
+chk_shrink(void *p, size_t size)
+{
+    assert(p);
+    assert(size);
+    return 0;
+}
+
+
+void *
+chk_realloc(void *p, size_t size)
+{
+    assert(size);
+    return realloc(p, size);
+}
+
+
+void
+chk_free(void *p)
+{
+    assert(p);
+    free(p);
+}
+
+
 void
 ewprintf(const char *fmt, ...)
 {
@@ -158,7 +200,7 @@ ewprintf(const char *fmt, ...)
     fflush(stdout);
     va_start(ap, fmt);
     vfprintf(stdout, fmt, ap);
-    vfprintf(stdout, "\n");
+    fprintf(stdout, "\n");
     va_end(ap);
 }
 

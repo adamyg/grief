@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_chkalloc_c,"$Id: chkalloc.c,v 1.20 2015/02/19 00:17:10 ayoung Exp $")
+__CIDENT_RCSID(gr_chkalloc_c,"$Id: chkalloc.c,v 1.21 2015/02/21 22:43:01 ayoung Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: chkalloc.c,v 1.20 2015/02/19 00:17:10 ayoung Exp $
+/* $Id: chkalloc.c,v 1.21 2015/02/21 22:43:01 ayoung Exp $
  * Memory allocation front end.
  *
  *
@@ -289,7 +289,7 @@ check_realloc(void *p, size_t size, const char *filename, size_t line)
 
             TAILQ_INSERT_TAIL(&x_memtail, ip, node);
 
-            memcpy(end, (const char *)x_tail, sizeof(uint32_t));
+            memcpy(end, (const char *)&x_tail, sizeof(uint32_t));
 
             if (fnsize) {
                 memcpy(end + sizeof(uint32_t), (const void *)fntmp, fnsize);
@@ -303,6 +303,17 @@ check_realloc(void *p, size_t size, const char *filename, size_t line)
 
 size_t
 check_expand(void *p, size_t size, const char *filename, size_t line)
+{
+    __CUNUSED(p);
+    __CUNUSED(size);
+    __CUNUSED(filename);
+    __CUNUSED(line);
+    return 0;
+}
+
+
+size_t
+check_shrink(void *p, size_t size, const char *filename, size_t line)
 {
     __CUNUSED(p);
     __CUNUSED(size);
@@ -562,8 +573,9 @@ chk_alloc(size_t size)
 
 #if defined(HAVE_NATIVE_ALLOC)
     if (x_native) {
-        if (NULL != (result = malloc(size)))
+        if (NULL != (result = malloc(size))) {
             ++x_inuse;
+        }
         return result;
     }
 #endif /*HAVE_NATIVE_ALLOC*/
@@ -587,8 +599,9 @@ chk_calloc(size_t elem, size_t elsize)
 
 #if defined(HAVE_NATIVE_ALLOC)
     if (x_native) {
-        if (NULL != (result = calloc(elem, elsize)))
+        if (NULL != (result = calloc(elem, elsize))) {
             ++x_inuse;
+        }
         return result;
     }
 #endif /*HAVE_NATIVE_ALLOC*/
@@ -605,7 +618,9 @@ chk_realloc(void *p, size_t size)
     if (NULL == p) return chk_alloc(size);
 
 #if defined(HAVE_NATIVE_ALLOC)
-    if (x_native) return realloc(p, size);
+    if (x_native) {
+        return realloc(p, size);
+    }
 #endif /*HAVE_NATIVE_ALLOC*/
 
     return REALLOC(p, size);
@@ -613,12 +628,38 @@ chk_realloc(void *p, size_t size)
 
 
 size_t
-chk_expand(void *p, size_t newsize)
+chk_shrink(void *p, size_t size)
+{
+    if (NULL == p) return 0;
+
+#if defined(HAVE_NATIVE_ALLOC)
+    if (x_native) {
+        return 0;
+    }
+#endif /*HAVE_NATIVE_ALLOC*/
+
+#if defined(HAVE_NATIVE_ALLOC)
+    if (p && size && NULL != dlrealloc_in_place(p, size)) {
+        return size;
+    }
+#elif defined(_MSC_VER)
+    if (p && size && size && NULL != _expand(p, size)) {
+        return _msize(p);
+    }
+#else
+    __CUNUSED(size);
+#endif
+    return 0;
+}
+
+
+size_t
+chk_expand(void *p, size_t size)
 {
 #if defined(HAVE_NATIVE_ALLOC)
     if (x_native) {
 #if defined(_MSC_VER)
-        if (p && newsize && NULL != _expand(p, newsize)) {
+        if (p && size && NULL != _expand(p, size)) {
             return _msize(p);
         }
 #endif
@@ -627,16 +668,22 @@ chk_expand(void *p, size_t newsize)
 #endif /*HAVE_NATIVE_ALLOC*/
 
 #if defined(HAVE_NATIVE_ALLOC)
-    if (p && newsize && NULL != dlrealloc_in_place(p, newsize)) {
-        return newsize;
+    if (p && size && NULL != dlrealloc_in_place(p, size)) {
+        return size;
     }
 #elif defined(_MSC_VER)
-    if (p && newsize && NULL != _expand(p, newsize)) {
+    if (p && size && NULL != _expand(p, size)) {
         return _msize(p);
+    }
+#elif defined(__GNUC__)
+    if (p && size && size <= malloc_usage_size(p)) {
+        void *newptr = realloc(p, size);
+        assert(newptr == p);
+        return size;
     }
 #else
     __CUNUSED(p);
-    __CUNUSED(newsize);
+    __CUNUSED(size);
 #endif
     return 0;
 }

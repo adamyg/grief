@@ -1,11 +1,11 @@
 #ifndef GR_VTYPE_H_INCLUDED
 #define GR_VTYPE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vtype_h,"$Id: vtype.h,v 1.7 2015/02/19 00:17:00 ayoung Exp $")
+__CIDENT_RCSID(gr_vtype_h,"$Id: vtype.h,v 1.8 2015/02/21 22:38:36 ayoung Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vtype.h,v 1.7 2015/02/19 00:17:00 ayoung Exp $
+/* $Id: vtype.h,v 1.8 2015/02/21 22:38:36 ayoung Exp $
  * Self-organising integer vector data structure.
  *
  *
@@ -41,7 +41,7 @@ typedef struct {
 typedef struct {
     unsigned int        i1;
     unsigned int        i2;
-} vtable_interator_t;
+} vtable_iterator_t;
 
 int                     vt_init(vtable_t *va, unsigned membsize);
 int                     vt_reinit(vtable_t *va);
@@ -51,7 +51,7 @@ int                     vt_del(void *va);
 int                     vt_release(vtable_t *va, unsigned int from);
 void *                  vt_get(vtable_t *va, unsigned int idx);
 int                     vt_index(vtable_t *va, void *elem);
-void                    vt_iterate(void *va, vtable_interator_t *iter);
-void *                  vt_next(void *va, vtable_interator_t *iter);
+void                    vt_iterate(void *va, vtable_iterator_t *iter);
+void *                  vt_next(void *va, vtable_iterator_t *iter);
 
 #endif /*GR_VTYPE_H_INCLUDED*/

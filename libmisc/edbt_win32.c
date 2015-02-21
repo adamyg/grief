@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.17 2015/02/19 00:17:11 ayoung Exp $")
+__CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.18 2015/02/19 22:11:08 ayoung Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edbt_win32.c,v 1.17 2015/02/19 00:17:11 ayoung Exp $
+/* $Id: edbt_win32.c,v 1.18 2015/02/19 22:11:08 ayoung Exp $
  * win32 (include cygwin) backtrace implementation.
  *
  *
@@ -121,7 +121,7 @@ typedef BOOL    (__stdcall *SymGetLineFromAddr_t)(HANDLE hProcess, DWORD dwAddr,
                                 PDWORD pdwDisplacement, PIMAGEHLP_LINE Line);
 #endif
 
-long __stdcall                  __edbt_exceptionfilter(EXCEPTION_POINTERS *rec);
+LONG WINAPI                     __edbt_exceptionfilter(EXCEPTION_POINTERS *rec);
 
 static HINSTANCE                hDbghelpDll = NULL;
 static HINSTANCE                hKernel32Dll = NULL;
@@ -676,21 +676,21 @@ exception_description(const EXCEPTION_RECORD *ex)
  *        called by LdrRemoveLoadAsDataTable(+0xd22) - 771fb42b
  *        called by KiUserExceptionDispatcher(+0xf) - 771b0133
  *              <exception>
- *        called by execute_xmacro_(+0xb60) - 00408aa4 [cr\builtin.c, line 719]
- *        called by execute_xmacro_(+0x22c) - 00408170 [cr\builtin.c, line 356]
- *        called by execute_macro_(+0xdb) - 00407f33 [cr\builtin.c, line 278]
- *        called by execute_nmacro_(+0x43) - 00407dc5 [cr\builtin.c, line 211]
- *        called by execute_str_(+0x30c) - 00407ce2 [cr\builtin.c, line 176]
- *        called by do_execute_macro_(+0x56) - 004350c2 [cr\mac1.c, line 328]
- *        called by execute_xmacro_(+0xb60) - 00408aa4 [cr\builtin.c, line 719]
- *        called by execute_xmacro_(+0x22c) - 00408170 [cr\builtin.c, line 356]
- *        called by execute_macro_(+0xdb) - 00407f33 [cr\builtin.c, line 278]
- *        called by execute_nmacro_(+0x43) - 00407dc5 [cr\builtin.c, line 211]
- *        called by execute_str_(+0x30c) - 00407ce2 [cr\builtin.c, line 176]
- *        called by key_execute_(+0x17e) - 00428622 [cr\keyboard.c, line 1692]
- *        called by do_process_(+0x3c) - 0046b722 [cr\m_main.c, line 66]
- *        called by main_loop_(+0x3a) - 0046b6a3 [cr\m_main.c, line 31]
- *        called by main_(+0x363) - 0043a547 [cr\main.c, line 527]
+ *        called by execute_xmacro_(+0xb60) - 00408aa4 [gr\builtin.c, line 719]
+ *        called by execute_xmacro_(+0x22c) - 00408170 [gr\builtin.c, line 356]
+ *        called by execute_macro_(+0xdb) - 00407f33 [gr\builtin.c, line 278]
+ *        called by execute_nmacro_(+0x43) - 00407dc5 [gr\builtin.c, line 211]
+ *        called by execute_str_(+0x30c) - 00407ce2 [gr\builtin.c, line 176]
+ *        called by do_execute_macro_(+0x56) - 004350c2 [gr\mac1.c, line 328]
+ *        called by execute_xmacro_(+0xb60) - 00408aa4 [gr\builtin.c, line 719]
+ *        called by execute_xmacro_(+0x22c) - 00408170 [gr\builtin.c, line 356]
+ *        called by execute_macro_(+0xdb) - 00407f33 [gr\builtin.c, line 278]
+ *        called by execute_nmacro_(+0x43) - 00407dc5 [gr\builtin.c, line 211]
+ *        called by execute_str_(+0x30c) - 00407ce2 [gr\builtin.c, line 176]
+ *        called by key_execute_(+0x17e) - 00428622 [gr\keyboard.c, line 1692]
+ *        called by do_process_(+0x3c) - 0046b722 [gr\m_main.c, line 66]
+ *        called by main_loop_(+0x3a) - 0046b6a3 [gr\m_main.c, line 31]
+ *        called by main_(+0x363) - 0043a547 [gr\main.c, line 527]
  *
  *      The write instruction at 0x0046bf05 referenced memory at 0x00000000
  *      EAX=0x00000000 EBX=0x000cd580 ECX=0x00000380 EDX=0x000cd580
@@ -698,7 +698,7 @@ exception_description(const EXCEPTION_RECORD *ex)
  *      EIP=0x0046bf05 EFL=0x00010246 CS =0x00000023 SS =0x0000002b
  *      DS =0x0000002b ES =0x0000002b FS =0x00000053 GS =0x0000002b
  */
-long __stdcall
+LONG WINAPI
 __edbt_exceptionfilter(EXCEPTION_POINTERS *rec)
 {
     static int edbt_nesting = 0;                // guard recursive entries
@@ -720,7 +720,11 @@ __edbt_exceptionfilter(EXCEPTION_POINTERS *rec)
             fputs(message, stderr);
         }
         fflush(stderr);
+#if defined(__CYGWIN__)
+        (void) write(fd, buf, len);
+#else
         (void) _write(fd, buf, len);
+#endif
         edbt_stackdump(stderr, 1);
     } else {
         len = prt(buf, "Exception %s:\n", exception_description(ex));
@@ -837,7 +841,11 @@ __edbt_exceptionfilter(EXCEPTION_POINTERS *rec)
                     (unsigned)ex->ExceptionCode, ex->ExceptionAddress);
         break;
     }
+#if defined(__CYGWIN__)
+    (void) write(fd, buf, len);
+#else
     (void) _write(fd, buf, len);
+#endif
 
 #if defined(_M_IX86)
     len = 0;
@@ -865,7 +873,11 @@ __edbt_exceptionfilter(EXCEPTION_POINTERS *rec)
                 (void *)context->SegFs,
                 (void *)context->SegGs);
     }
+#if defined(__CYGWIN__)
+    (void) write(fd, buf, len);
+#else
     (void) _write(fd, buf, len);
+#endif
 #endif /*_M_IX86*/
 
     return EXCEPTION_EXECUTE_HANDLER;
@@ -1019,7 +1031,7 @@ edbt_init(const char *progname, int options, FILE *out)
         }
 
 #if (0)     //basic stacktrace
-        if (out) {   
+        if (out) {
             void *stack[ 64 ] = {0};
             SYMBOL_INFO *symbol;
         //  HANDLE hProcess;
@@ -1031,7 +1043,7 @@ edbt_init(const char *progname, int options, FILE *out)
             symbol = (SYMBOL_INFO *) calloc(sizeof( SYMBOL_INFO ) + 256 * sizeof( char ), 1 );
             symbol->MaxNameLen = 255;
             symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
-        
+
             fprintf(out, "StackTrace\n");
             for (i = frames - 1; i >= 0; --i) {
                 SymFromAddr(hProcess, (DWORD64)(stack[i]), 0, symbol);
@@ -1042,6 +1054,7 @@ edbt_init(const char *progname, int options, FILE *out)
 #endif
     }
 }
+
 
 void
 edbt_auto(void)
@@ -1384,7 +1397,11 @@ LastError(void)
 
     len = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, 0, rc, 0, errtxt, sizeof(errtxt), NULL);
     if (len > 2) errtxt[len - 2] = 0;           // remove trailing \r\n
+#if defined(_MSC_VER)
     _snprintf(errbuf, sizeof(errbuf), ": %u (%s)", (unsigned)rc, errtxt);
+#else
+    snprintf(errbuf, sizeof(errbuf), ": %u (%s)", (unsigned)rc, errtxt);
+#endif
     errbuf[sizeof(errbuf) - 1] = 0;
     return errbuf;
 }

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vtype_c,"$Id: vtype.c,v 1.7 2015/02/19 00:17:16 ayoung Exp $")
+__CIDENT_RCSID(gr_vtype_c,"$Id: vtype.c,v 1.8 2015/02/21 22:38:30 ayoung Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vtype.c,v 1.7 2015/02/19 00:17:16 ayoung Exp $
+/* $Id: vtype.c,v 1.8 2015/02/21 22:38:30 ayoung Exp $
  * Self-organising integer vector data structure.
  *
  *
@@ -208,7 +208,7 @@ vt_get(vtable_t *va, unsigned int idx)
 
 
 void
-vt_iterate(void *va, vtable_interator_t *iter)
+vt_iterate(void *va, vtable_iterator_t *iter)
 {
     if (va && iter)
         iter->i1 = iter->i2 = 0;
@@ -216,7 +216,7 @@ vt_iterate(void *va, vtable_interator_t *iter)
 
 
 void *
-vt_next(void *va0, vtable_interator_t *iter)
+vt_next(void *va0, vtable_iterator_t *iter)
 {
     vtable_t *va = va0;
     unsigned int n;

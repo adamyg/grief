@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntaxdfa_c,"$Id: syntaxdfa.c,v 1.29 2015/02/19 00:16:52 ayoung Exp $")
+__CIDENT_RCSID(gr_syntaxdfa_c,"$Id: syntaxdfa.c,v 1.30 2015/02/21 22:47:27 ayoung Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntaxdfa.c,v 1.29 2015/02/19 00:16:52 ayoung Exp $
+/* $Id: syntaxdfa.c,v 1.30 2015/02/21 22:47:27 ayoung Exp $
  * Deterministic Finite Automata (DFA) based syntax highlighting.
  *
  *
- * Copyright (c) 1998 - 2014, Adam Young.
+ * Copyright (c) 1998 - 2015, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it

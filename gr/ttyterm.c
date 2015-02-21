@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.98 2015/02/19 00:11:50 ayoung Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.99 2015/02/19 22:11:05 ayoung Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.98 2015/02/19 00:11:50 ayoung Exp $
+/* $Id: ttyterm.c,v 1.99 2015/02/19 22:11:05 ayoung Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -881,7 +881,7 @@ static Term_t term_numbers[] = {                /* numeric - termcap/terminfo el
      */
     { "Co",  "colors",      TC_DESC("max color"), &tf_Colors },
     { "pa",  "pairs",       TC_DESC("max of color-pairs"), &tf_Pairs },
-    { "NC",  "ncv",         TC_DESC("video attributes that cannot be used with colors"), TC_TOKEN(&tn_NC) },
+    { "NC",  "ncv",         TC_DESC("video attributes that cannot be used with colors"), &tn_NC },
 
     /*
      *  The following numeric capabilities are present in the SVr4.0 term structure,
