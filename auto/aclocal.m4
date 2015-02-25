@@ -1,4 +1,4 @@
-# $Id: aclocal.m4,v 1.14 2013/04/05 19:52:09 ayoung Exp $
+# $Id: aclocal.m4,v 1.15 2015/02/25 00:34:18 cvsuser Exp $
 # -*- mode: Autoconf; tabs: 8; -*-
 # local packages
 #
@@ -7,6 +7,7 @@ m4_include([m4/environ.m4])
 ##	m4_include([m4/depend.m4])
 m4_include([m4/ax_check_compile_flag.m4])
 m4_include([m4/ax_check_link_flag.m4])
+m4_include([m4/ax_check_openssl.m4])
 m4_include([m4/ax_pthread.m4])
 m4_include([m4/acx_nanosleep.m4])
 m4_include([m4/libthread.m4])

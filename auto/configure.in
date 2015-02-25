@@ -1,12 +1,12 @@
-dnl $Id: configure.in,v 1.45 2014/11/02 20:08:54 cvsuser Exp $
+dnl $Id: configure.in,v 1.46 2015/02/25 00:34:18 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl
 
-AC_REVISION($Revision: 1.45 $)
+AC_REVISION($Revision: 1.46 $)
 ##	AC_COPYRIGHT(Adam Young 1995-2014, Paul Fox 1989-1991)
-AC_INIT([Grief], [3.2.0], [griefedit@gmail.com])
+AC_INIT([GRIEF], [3.2.0], [griefedit@gmail.com])
 AC_PREREQ(2.68)
 
 AC_CONFIG_SRCDIR([include/edheaders.h])
@@ -245,7 +245,12 @@ AC_CHECK_HEADERS(libguess/libguess.h)
 AC_CHECK_HEADERS(libguess.h)
 
 AC_CHECK_HEADERS(dlfcn.h)
-AC_CHECK_FUNCS(dlvsym dladdr dlopen_preflight)
+AC_CHECK_LIB(dl, dladdr, [
+	AC_DEFINE(HAVE_DLADDR, 1,
+		[Define if we have dladdr])
+	CF_ADD_EXTRALIBS("-ldl")
+	])
+AC_CHECK_FUNCS(dlvsym dlopen_preflight)
 
 AC_CHECK_LIB(ltdl, lt_dlinit, [
 	AC_DEFINE(HAVE_LIBLTDL, 1,
@@ -269,6 +274,18 @@ AC_CHECK_LIB(bfd, bfd_openr, [
 	AC_CHECK_HEADERS(bfd.h)
 	CF_ADD_EXTRALIBS("-lbfd")
 	])
+
+AX_CHECK_OPENSSL([
+	AC_DEFINE(HAVE_OPENSSL, 1,
+		[Define to enable openssl support])
+	AC_CHECK_HEADERS(openssl/crypto.h)
+	AC_CHECK_HEADERS(openssl/ssl.h)
+	LIBOPENSSL="$OPENSSL_LIBS"
+	],[
+	AC_MSG_RESULT(["libopenssl not found"])
+	LIBOPENSSL=""
+	])
+AC_SUBST([LIBOPENSSL])
 
 LIBCURL_CHECK_CONFIG([yes], [7.15.1], [
 	if test "$libcurl_protocol_FTP" != yes; then
@@ -360,7 +377,7 @@ dnl	   		[[const char *foo = __FUNCTION__;]])],
 dnl	   		[ac_cv_cpp_func=__FUNCTION__],
 dnl	   		[ac_cv_cpp_func="\"no\""])]
 dnl	   )
-dnl	   
+dnl	
 dnl	   if test "X$ac_cv_cpp_func" = "X__FUNCTION__"; then
 dnl	   	AC_MSG_RESULT([__FUNCTION__])
 dnl	   elif test "x$ac_cv_cpp_func" = "xyes" ; then
@@ -440,6 +457,7 @@ AC_CHECK_HEADERS( \
 	sys/stat.h sys/statfs.h sys/statvfs.h sys/vfs.h \
 	stdarg.h stdlib.h stdio.h limits.h \
 	sys/utsname.h \
+	sys/resource.h \
 	fcntl.h \
 	errno.h \
 	poll.h \
@@ -623,7 +641,8 @@ AC_CONFIG_FILES([\
 	grmandoc/Makefile \
 	grunch/Makefile \
 	hlpdoc/Makefile \
-	macsrc/Makefile])
+	macsrc/Makefile \
+	util/Makefile])
 
 case $host_os in
 mingw*)
@@ -658,6 +677,7 @@ AC_MSG_RESULT([-   Termap support: ${termlib_name}])
 AC_MSG_RESULT([-    Spell Support: $LIBSPELL])
 AC_MSG_RESULT([-       Conversion: $LIBICU $LIBAPRICONV $LIBICONV])
 AC_MSG_RESULT([-        Detection: $LIBENCA $LIBCHARUDET $LIBGUESS $LIBMAGIC])
+AC_MSG_RESULT([-         Security: $LIBOPENSSL])
 AC_MSG_RESULT([-   Other Features: $LIBCURL $LIBARCHIVE $LIBEXPLAIN])
 AC_MSG_RESULT([-        Libraries: $LIBS $LIBX11 $LIBTHREAD])
 AC_MSG_RESULT([-            Extra: $LIBCLANG $LIBM $EXTRALIBS])

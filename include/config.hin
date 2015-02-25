@@ -1,11 +1,11 @@
 #ifndef CR_CONFIG_H_INCLUDED
 #define CR_CONFIG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(config_h, "$Id: config.hin,v 1.43 2014/10/25 17:37:23 ayoung Exp $")
+__CIDENT_RCSID(config_h, "$Id: config.hin,v 1.44 2015/02/25 00:44:58 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; set-indent: 4; -*- */
-/* $Id: config.hin,v 1.43 2014/10/25 17:37:23 ayoung Exp $
+/* $Id: config.hin,v 1.44 2015/02/25 00:44:58 cvsuser Exp $
  * Machine configuration.
  *
  *
@@ -125,6 +125,7 @@ __CPRAGMA_ONCE
 #undef HAVE_POLL_H
 #undef HAVE_SYS_PRCTL_H
 #undef HAVE_SYS_MOUNT_H
+#undef HAVE_SYS_RESOURCE_H
 
 #undef HAVE_FENV_H
 #undef HAVE_FECLEAREXCEPT
@@ -379,6 +380,7 @@ __CPRAGMA_ONCE
 #undef HAVE_LOCALTIME_R
 #undef HAVE_GMTIME_R
 #undef HAVE_ASCTIME_R
+#undef HAVE_TIMEGM
 
 #undef HAVE_SIGSETMASK
 #undef HAVE_SIGACTION
@@ -568,6 +570,11 @@ __CPRAGMA_ONCE
 #undef HAVE_LIBLTDL
 #undef HAVE_LTDL_H
 
+        /* openssl */
+#undef HAVE_OPENSSL
+#undef HAVE_OPENSSL_SSL_H
+#undef LIBCURL_FEATURE_SSL
+
         /* libcurl */
 #undef HAVE_LIBCURL
 #undef GNUWIN32_LIBCURL
@@ -585,8 +592,8 @@ __CPRAGMA_ONCE
  */
 
 #if defined(__MINGW32__) && \
-	!defined(PACKAGE_NAME)
-#include <../acdefines.h>			/* configure #define dump */
+        !defined(PACKAGE_NAME)
+#include <../acdefines.h>                       /* configure #define dump */
 #endif
 
 /*
@@ -621,3 +628,4 @@ __CPRAGMA_ONCE
 #define GRIEF_DATADIR "/usr/local/lib/grief/"
 
 #endif  /*CR_CONFIG_H_INCLUDED*/
+
