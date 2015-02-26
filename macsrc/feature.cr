@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: feature.cr,v 1.30 2015/02/19 00:17:40 ayoung Exp $
+/* $Id: feature.cr,v 1.31 2015/02/26 23:17:17 ayoung Exp $
  * Features menu.
  *
  *
@@ -20,6 +20,7 @@
 
 static list             feature_list = {
                 "Features", "",                 /*title, help topic*/
+/*<<START-INDEX>>*/
     "ASCII/UNICODE Chart",          "ascii",
     "Ansi mode toggle",             "ansi",
     "Auto indent",                  "autoindent",
@@ -29,6 +30,7 @@ static list             feature_list = {
     "Buffer search",                "bs",
     "C Hierarchy chart",            "chier",
     "Calculator (infix)",           "calc",
+    "Calender",                     "cal",
     "Center text",                  "center",
     "Change Log",                   "change",
     "Color labels",                 "colorlabels",
@@ -43,9 +45,10 @@ static list             feature_list = {
     "Display Information",          "dispinfo",
     "Document options",             "options",
     "Edit file again",              "edit_again",
+    "Edit mode",                    "mode",
     "Error number (errno) chart",   "errnos",
     "Execute macro/command",        "execute_macro",
-    "Explain an macro",             "explain",
+    "Explain a macro",              "explain",
     "Extra features",               "extra",
     "File find",                    "ff",
     "Find function",                "tag",
@@ -77,14 +80,17 @@ static list             feature_list = {
     "Manual page",                  "man",
     "Match brackets",               "find_matching_brace",
     "Maximize the console",         "fullscreen",
+    "Mode line processing",         "modeline",
     "Norton Commander Style GUI",   "nc",
     "Outdent region",               "shiftl",
     "Pipe region",                  "<Ctrl-A><Ctrl-P>",
     "Print buffer",                 "print_buffer",
+    "Remove buffer tabs",           "detab",
     "Save window layout",           "save_state",
     "Scroll lock window",           "scroll",
     "Set right hand margin",        "margin",
     "Shell buffer",                 LOCALSHELL,
+    "Show buffer tabs",             "show_tabs",
     "Signal number chart",          "signos",
     "Sort",                         "sort",
     "Spell checker",                "spell",
@@ -92,6 +98,8 @@ static list             feature_list = {
     "Sum column of numbers",        "sum",
     "Syntax mode",                  "mode",
     "System information",           "sysinfo",
+    "TODO Log",                     "todo",
+    "Tab buffer",                   "entab",
     "Texinfo",                      "texinfo",
     "Text search",                  "ts",
     "Tower of Hanoi",               "hanoi",
@@ -103,6 +111,7 @@ static list             feature_list = {
     "Write all buffers",            "write_buffers",
     "Write buffer as ..",           "write_buffer_as",
     "Zoom/unzoom window",           "zoom"
+/*<<END-INDEX>>*/
     };
 
 static string           printkeys(string keys);
@@ -293,3 +302,4 @@ feature_menukeys()
 }
 
 /*eof*/
+

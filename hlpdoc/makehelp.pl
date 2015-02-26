@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makehelp.pl,v 1.13 2015/02/18 22:47:53 ayoung Exp $
+# $Id: makehelp.pl,v 1.14 2015/02/26 23:16:03 ayoung Exp $
 # -*- tabs: 8; indent-width: 4; -*-
 # Help collection tool.
 #
@@ -225,7 +225,7 @@ Options:
     -P,--prmdir <dir>       Primitive source directory (default '../gr').
     -N,--ndbin <dir>        NaturalDoc binary path.
     -M,--manbin <path>      Mandoc binary path.
-    -F,--feature <file>     Features directory.
+    -F,--feature <file>     Features directory (one or more).
 
     --debug                 Enable runtime diagnostics.
     --help                  Help.
@@ -821,13 +821,15 @@ sub
 ParseFeatures($)        #(featuredir)
 {
     my ($featuredir) = @_;
+    my %titles;
 
+    # import index
     open(SRC, "<${featuredir}/INDEX") or
         die "cannot open <${featuredir}/INDEX> : $!\n";
-
     while (defined (my $line = <SRC>)) {
-        if ($line =~ /^.*:(.*)$/) {
-            my @sects = split(/[ ,]+/, $1);
+        if ($line =~ /^(.*):(.*)$/) {
+            $titles{lc(Trim($1))} = 1;
+            my @sects = split(/[ ,]+/, $2);
             foreach (@sects) {
                 if (/^.*=(.*)$/) {              # alias=xxx
                     $x_features{lc($1)} = 1;
@@ -838,6 +840,35 @@ ParseFeatures($)        #(featuredir)
         }
     }
     close(SRC);
+
+    # check against features
+    if ($featuredir =~ 'features$' && $o_warning) {
+        my $featurescr = '../macsrc/feature.cr';
+        my $state = 0;
+
+        print "checking <$featurescr>\n";
+        open(SRC, "<$featurescr") or
+            die "cannot open <$featurescr> : $!\n";
+        while (defined (my $line = <SRC>)) {
+            if (!$state) {
+                $state = 1
+                    if ($line =~ /\<\<START-INDEX\>\>/);
+
+            } elsif ($state) {
+                last if ($line =~ /\<\<END-INDEX\>\>/);
+                if ($line =~ /\"([^\"]+)\"/) {
+                    my $item = lc($1);
+
+                    if (exists $titles{$item}) {
+                        delete $titles{$item};
+                    } else {
+                        Warning("feature: '${item}' missing");
+                    }
+                }
+            }
+        }
+        close(SRC);
+    }
 }
 
 
