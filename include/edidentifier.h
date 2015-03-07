@@ -2,7 +2,7 @@
 #define GR_EDIDENTIFIER_H_INCLUDED
 
 /* -*- mode: c; indent-width: 4; -*- */
-/*  $Id: edidentifier.h,v 1.14 2015/02/19 00:16:55 ayoung Exp $
+/*  $Id: edidentifier.h,v 1.15 2015/03/07 23:34:43 ayoung Exp $
  *  Compiler specific object identify functionality.
  *
  *      __CIDENT(description)
@@ -184,7 +184,9 @@ static void __CIDENT_JOIN(RCSFN_,__tag)(const char *tag) {          \
 #endif
 #endif  /*__CIDENT_RCSID*/
 
+#ifndef __RCSID
 #define __RCSID(__rcsid) __CIDENT_RCSID(rcsid_,__rcsid)
+#endif
 
 __CPRAGMA_ONCE
 
