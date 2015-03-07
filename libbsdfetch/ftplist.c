@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ftplist.c,v 1.3 2014/11/24 23:50:02 ayoung Exp $
+/* $Id: ftplist.c,v 1.5 2015/03/07 23:39:04 ayoung Exp $
  * FTP LIST command reply parser.
  *
  *
@@ -45,7 +45,7 @@
 #define DLIST2(__x)
 #endif
 
-static int		getmode(const char *umode, int *endp);
+static int		getfilemode(const char *umode, int *endp);
 static int		getnetware(const char *umode, int mode, int *endp);
 static long		getnumeric(const char *buf, int len);
 static int		getmonth(const char *buf, int len);
@@ -169,7 +169,7 @@ fetch_unix_entry(struct url_list *ue, struct url *base, struct url_stat *us, con
 	int namelen = 0;
 
 	i = j = 0;
-	if ((sb.mode = getmode(buf, &j)) < 0) {
+	if ((sb.mode = getfilemode(buf, &j)) < 0) {
 		return -1;
 	}
 
@@ -573,7 +573,7 @@ fetch_mnet_entry(struct url_list *ue, struct url *base, struct url_stat *us, con
  *  Decode a unix permission specifiation.
  */
 static int
-getmode(const char *umode, int *endp)
+getfilemode(const char *umode, int *endp)
 {
 	int mode = 0;
 
@@ -730,7 +730,7 @@ getmode(const char *umode, int *endp)
 	}
 
 	*endp = 10;
-	DLIST2(("getmode(%.*s)=%o\n", *endp, umode, mode))
+	DLIST2(("getfilemode(%.*s)=%o\n", *endp, umode, mode))
 	return mode;
 }
 
@@ -926,13 +926,19 @@ mtime(int year, int mon, int day, int hour, int min)
 #include "ftpeplf.c"
 #include "ftputil.c"
 
-
 int
-fetch_add_entry(struct url_list *ue, struct url *base, const char *name, int pre_quoted)
+fetch_add_entry(struct url_list *ue, struct url *base, 
+	const char *name, int pre_quoted)
 {
 	return -1;
 }
 
+int
+fetch_add_entry2(struct url_list *ue, struct url *base,
+	const char *name, const struct url_stat *sb, int pre_quoted)
+{
+	return -1;
+}
 
 void
 main(void)
