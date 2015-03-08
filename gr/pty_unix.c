@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_pty_unix_c,"$Id: pty_unix.c,v 1.21 2014/10/22 02:33:16 ayoung Exp $")
+__CIDENT_RCSID(gr_pty_unix_c,"$Id: pty_unix.c,v 1.22 2015/02/24 23:10:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: pty_unix.c,v 1.21 2014/10/22 02:33:16 ayoung Exp $
+/* $Id: pty_unix.c,v 1.22 2015/02/24 23:10:08 cvsuser Exp $
  * PTY interface for Unix and Unix-like environments.
  *
  *      Linux
@@ -358,9 +358,12 @@ create_pty(int *sendfd, int *recvfd, int lines, int cols, const char *shell, con
 
         close(master);                          /* child closes master */
 
-        setuid(getuid());
-        setgid(getgid());
-
+        if (setuid(getuid()) < 0) {
+            fprintf(stderr, "could not set user identifier (pid=%d) : %d\n", pid, errno);
+        }
+        if (setgid(getgid()) < 0) {
+            fprintf(stderr, "could not set group identifier (pid=%d) : %d\n", pid, errno);
+        }
 #if defined(HAVE_SETSID)
         if (setsid() < 0) {                     /* create a new session */
             fprintf(stderr, "could not set session leader (pid=%d) : %d\n", pid, errno);

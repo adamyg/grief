@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: libpaths.c,v 1.5 2015/02/19 00:17:00 ayoung Exp $
+/* $Id: libpaths.c,v 1.6 2015/03/01 01:53:54 cvsuser Exp $
  *
  * libbsddb <libpath.c>
  *
@@ -83,10 +83,13 @@ libbsddb_PATH_TMP(void)
 #endif
         const char *p = NULL;
 
-        p = tmpdir2("BTMP");                    /* brief/crisp */
+        p = tmpdir2("GRTMP");                   /* GRIEF override */
+        if (NULL == p || !*p) {
+            p = tmpdir2("BTMP");                /* BRIEF override */
+        }
 
 #if defined(WIN32)
-        if (NULL == p) {
+        if (NULL == p || !*p) {
             DWORD pathlen;
 
             if ((pathlen = GetTempPath(sizeof(t_path), t_path)) > 0) {
@@ -101,7 +104,7 @@ libbsddb_PATH_TMP(void)
         }
 #endif
 
-        if (NULL == p
+        if ((NULL == p || !*p)
                 && NULL == (p = tmpdir2("TMP")) /* standard unix tmp */
 #if defined(__MSDOS__) || defined(__CYGWIN32__)
                 && NULL == (p = tmpdir2("TEMP"))

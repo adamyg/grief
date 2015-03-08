@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_getopt_c,"$Id: m_getopt.c,v 1.22 2014/11/24 22:03:53 ayoung Exp $")
+__CIDENT_RCSID(gr_m_getopt_c,"$Id: m_getopt.c,v 1.23 2015/02/24 23:10:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_getopt.c,v 1.22 2014/11/24 22:03:53 ayoung Exp $
+/* $Id: m_getopt.c,v 1.23 2015/02/24 23:10:08 cvsuser Exp $
  * Command line/argument option processing.
  *
  *
@@ -238,7 +238,7 @@ do_getopt(void)                 /* (string value, [[string shortoptions], list l
          */
         if (longoptions) {
             if (NULL == (x_getopt_longoptions = longdecode(longoptions, &longcount))) {
-                ED_TRACE(("getopt() : -99\n", ret))
+                ED_TRACE(("getopt() : -99\n"))
                 acc_assign_int(-99);
                 return;
             }
@@ -405,7 +405,7 @@ do_getopt(void)                 /* (string value, [[string shortoptions], list l
         }
 
     } else {
-        ED_TRACE(("getopt() : -1\n", ret))
+        ED_TRACE(("getopt() : -1\n"))
         acc_assign_int(-1);
     }
 }

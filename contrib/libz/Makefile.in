@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.11 2014/10/27 04:20:14 ayoung Exp $
+# $Id: Makefile.in,v 1.14 2015/03/01 02:41:03 cvsuser Exp $
 # libarchive makefile
 #
 #
@@ -17,6 +17,7 @@ A=		.a
 LP=		lib
 
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+XCLEAN=
 
 # Compilers, programs
 
@@ -93,7 +94,7 @@ DLLOBJS=\
 	$(subst $(O),.lo,$(LIBOBJS))
 ifeq ("mingw32","@build_os@")
 DLLOBJS+=	$(D_OBJ)/zlib_res.o
-else
+else ifeq ("win32","@build_os@")
 DLLOBJS+=	$(D_OBJ)/zlib.res
 endif
 
@@ -127,7 +128,7 @@ source:			.unpacked.$(VERSION)
 .unpacked.$(VERSION):	$(VERPACKED)
 		@echo "do not delete, managed file" > $@
 		@echo "unpacking source $BZ2PACKED"
-		@gzip -c -d $(VERPACKED) | tar.exe -xvf -
+		@gzip -c -d $(VERPACKED) | tar -xvf -
 
 .PHONY:		object
 object:			$(D_OBJ)/.created

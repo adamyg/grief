@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.74 2015/02/19 00:16:50 ayoung Exp $
+# $Id: makelib.pl,v 1.77 2015/02/27 00:54:54 ayoung Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -76,10 +76,10 @@ my %x_environment   = (
             XSWITCH         => '-o',
             AR              => 'ar',
             RC              => 'windres -DGCC_WINDRES',
-            DEFS            => '-DHAVE_CONFIG_H',
+            DEFS            => '-DHAVE_CONFIG_H -DWIN32_LEAN_AND_MEAN -D_WIN32_WINNT=0x501',
             CINCLUDE        => '-I$(ROOT)/libw32',
-            CFLAGS          => '-std=c99 -g -fno-strength-reduce',
-            CXXFLAGS        => '-g -fno-strength-reduce',
+            CFLAGS          => '-std=gnu11 -g -fno-strength-reduce',
+            CXXFLAGS        => '-std=c++11 -g -fno-strength-reduce',
             CWARN           => '-W -Wall -Wshadow -Wmissing-prototypes',
             CXXWARN         => '-W -Wall -Wshadow',
             LDEBUG          => '',
@@ -173,7 +173,7 @@ my %x_environment   = (
             AR              => 'lib',
             CINCLUDE        => '-I$(ROOT)/libw32',
             CFLAGS          => '-q -j -ei -4r -d2 -hc -db -ofr -zlf -bt=nt -bm -aa',
-            CXXFLAGS        => '-q -j -ei -4r -d2i    -db -ofr -zlf -bt=nt -bm -xs -cc++',
+            CXXFLAGS        => '-q -j -ei -4r -d2i    -db -ofr -zlf -bt=nt -bm -xs -xr -cc++',
             CWARN           => '-W3',
             CXXWARN         => '-W3',
             LDEBUG          => '-q -4r -d2 -hc -ofr -zlf -bt=nt -bm',
@@ -191,7 +191,7 @@ my %win_entries     = (
         RMDIR               => '@BINPATH@rmdir.exe',
 
         ISWIN32             => 'yes',
-        DEFS                => '-DHAVE_CONFIG_H -DWIN32=0x400',
+        DEFS                => '-DHAVE_CONFIG_H -DWIN32=0x501',
 
         INSTALL             => '@PERLPATH@perl '."${CWD}/win32/install.pl",
         INSTALL_PROGRAM     => '@PERLPATH@perl '."${CWD}/win32/install.pl",
@@ -212,7 +212,8 @@ my %win_entries     = (
         EXTRALIBS           => 'advapi32.lib gdi32.lib'.
                                   ' shlwapi.lib shell32.lib psapi.lib ole32.lib'.
                                   ' userenv.lib user32.lib ws2_32.lib wsock32.lib',
-        LIBMALLOC           => 'libdlmalloc.lib'
+        LIBMALLOC           => 'libdlmalloc.lib',
+        LIBOPENSSL          => ''
         );
 
 my %x_tokens        = (
@@ -342,6 +343,7 @@ my @x_headers       = (
         'stdatomic.h',                          # c11
         'stdalign.h',                           # c11
         'threads.h',                            # c11
+        'pthread.h',                            # MINGW
         'string.h', 'strings.h',
         'errno.h',
         'wchar.h', 'wctype.h',
@@ -1791,7 +1793,8 @@ Makefile($$$)           # (type, dir, file)
         $text =~ s/(\nARFLAGS=)[^\n]+/$1-nologo/g;
         $text =~ s/(\$\(ARFLAGS\))\s+(\$\@)/$1 \/OUT:$2/g;
 
-        my $clean = '*.pdb *.ilk';
+        my $clean = '';
+        my $xclean = '*.pdb *.ilk';
 
         if ($type ne 'owc') {
             $text =~ s/(\$\(CFLAGS\).*) -o \$\@/$1 -Fo\$@ -Fd\$(\@D)\//g;
@@ -1826,10 +1829,17 @@ Makefile($$$)           # (type, dir, file)
                 $text =~ s/-l${library}([\n\t \\])/lib${library}.lib$1/g;
             }
 
-            $clean .= '*.err';
+            $clean .= ' *.err';
+            $xclean .= ' $(D_OBJ)/*.mbr';
         }
 
-        $text =~ s/(\nCLEAN=\s+)/$1${clean} /g; # addition clean targets
+        # addition clean targets
+        $text =~ s/(\nCLEAN=\s+)/$1${clean} /g 
+            if ($clean);
+        if ($xclean) {
+            $text =~ s/(\nXCLEAN=[\t ]+)/$1${xclean} /;
+            $text =~ s/(\nXCLEAN=[\t ]*)\n/$1\t\t${xclean}\n/;
+        }
     }
 
     # replace tags

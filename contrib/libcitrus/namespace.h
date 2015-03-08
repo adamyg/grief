@@ -1,10 +1,10 @@
 #ifndef LOCAL_NAMESPACE_H_INCLUDED
 #define LOCAL_NAMESPACE_H_INCLUDED
-/* $Id: namespace.h,v 1.5 2013/04/05 19:52:14 ayoung Exp $
+/* $Id: namespace.h,v 1.6 2015/03/01 02:56:37 cvsuser Exp $
  *
  * libcitrus <namespace.h>
  *
- * Copyright (c) 2012 Adam Young.
+ * Copyright (c) 2012-2015 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

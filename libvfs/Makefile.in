@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.8 2015/02/19 00:17:20 ayoung Exp $
+# $Id: Makefile.in,v 1.9 2015/02/22 22:14:20 ayoung Exp $
 # libvfs makefile.
 #
 #
@@ -39,6 +39,7 @@ A=		.a
 LP=		lib
 
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+XCLEAN=
 
 # Compilers, programs
 
@@ -95,8 +96,6 @@ LIBOBJS=	$(D_OBJ)/vfs$(O)		\
 		$(D_OBJ)/vfs_vops$(O)		\
 		$(D_OBJ)/vfs_glob$(O)
 
-XCLEAN=
-
 LIBRARY=	$(D_LIB)/$(LP)$(LIBROOT)$(A)
 
 all:			$(LIBRARY)
@@ -111,9 +110,9 @@ $(D_OBJ)/.created:
 		@echo "do not delete" > $@
 
 clean:
-		-@$(RM) $(RMFLAGS) $(BAK) $(LIBRARY) $(LIBOBJS) $(CLEAN) $(XCLEAN)
+		-@$(RM) $(RMFLAGS) $(BAK) $(LIBRARY) $(LIBOBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
 
-LDLIBS= 	-L$(D_LIB) -l$(LIBROOT) -lmisc
+LDLIBS=		-L$(D_LIB) -l$(LIBROOT) -lmisc
 
 vfstest$(E):		$(D_OBJ)/vfstest$(O) $(LIBRARY)
 		$(CC) $(LDFLAGS) -o $@ $(D_OBJ)/sptest$(O) $(LXFLAGS)

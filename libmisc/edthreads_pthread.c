@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_pthread_c,"$Id: edthreads_pthread.c,v 1.8 2015/02/19 00:17:11 ayoung Exp $")
+__CIDENT_RCSID(gr_edthreads_pthread_c,"$Id: edthreads_pthread.c,v 1.9 2015/03/08 00:57:20 ayoung Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads_pthread.c,v 1.8 2015/02/19 00:17:11 ayoung Exp $
+/* $Id: edthreads_pthread.c,v 1.9 2015/03/08 00:57:20 ayoung Exp $
  * C11 threads implementation, for/using pthreads
  * based on ISO/IEC 9899:201x Committee Draft, April 12, 2011
  *
@@ -44,6 +44,9 @@ edthreads_pthreads_native(void)
 #elif defined(HAVE_PTHREAD_H) || defined(__CYGWIN__)
 
 #include <stdlib.h>
+#if defined(HAVE_TIME_H)
+#include <time.h>
+#endif
 #include <assert.h>
 #include <errno.h>
 #if defined(sun) || defined(HAVE_SCHED_H)
@@ -350,8 +353,65 @@ int
 mtx_timedlock(mtx_t *mtx, const struct timespec *ts)
 {
     if (!mtx || !ts) return thrd_error;
-#if defined(__CYGWIN__)
-    assert(0);                                  // TODO
+
+#if defined(__CYGWIN__) || defined(__APPLE__)
+    /*
+     *  pthread_mutex_timedlock() is optional ...
+     */
+    int rc = EINVAL;
+
+    if (ts && EBUSY == (rc = pthread_mutex_trylock(mtx))) {
+
+#define ONESECOND_NSEC          (1000000000L)
+#define ONEMILLISECOND_NSEC     (ONESECOND_NSEC/1000L)
+        struct timespec end, cur, dur;
+
+        end = *ts;
+        while (end.tv_nsec < 0) { /*normalise*/
+            --end.tv_sec; end.tv_nsec += ONESECOND_NSEC;
+        }
+        while (end.tv_nsec >= ONESECOND_NSEC) { /*normalise*/
+            ++end.tv_sec; end.tv_nsec -= ONESECOND_NSEC;
+        }
+
+        while (EBUSY == (rc = pthread_mutex_trylock(mtx))) {
+
+#if defined(CLOCK_REALTIME)
+            clock_gettime(CLOCK_REALTIME, &cur);
+#elif defined(TIME_UTC)
+            timespec_get(&cur, TIME_UTC);
+#else
+#error unsupported environment ...
+#endif
+
+            if ((cur.tv_sec > end.tv_sec) ||
+                    ((cur.tv_sec == end.tv_sec) && (cur.tv_nsec >= end.tv_nsec))) {
+                break; /*expired*/
+            }
+
+            dur.tv_sec = end.tv_sec - cur.tv_sec;
+            dur.tv_nsec = end.tv_nsec - cur.tv_nsec;
+            if (dur.tv_nsec < 0) {
+                --dur.tv_sec; dur.tv_nsec += ONESECOND_NSEC;
+            }
+            if (dur.tv_sec || (dur.tv_nsec > (ONEMILLISECOND_NSEC*5))) {
+                dur.tv_sec = 0; dur.tv_nsec = (ONEMILLISECOND_NSEC*5);
+            }
+
+            nanosleep(&dur, NULL);
+        }
+    }
+
+    switch (rc) {
+    case 0:
+        return thrd_success;
+    case ETIMEDOUT:
+    case EBUSY:
+        return thrd_timedout;
+    default:
+        return thrd_error;
+    }
+
 #else
     switch (pthread_mutex_timedlock(mtx, ts)) {
     case 0:
@@ -724,3 +784,4 @@ edthreads_pthreads_notimplemented(void)
 
 #endif
 /*end*/
+

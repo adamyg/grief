@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.9 2013/05/12 21:35:56 cvsuser Exp $
+# $Id: Makefile.in,v 1.10 2015/02/22 22:13:56 ayoung Exp $
 # libiconv/iconv makefile
 #
 #
@@ -17,6 +17,7 @@ A=		.a
 LP=		lib
 
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+XCLEAN=
 
 # Compilers, programs
 
@@ -91,7 +92,7 @@ directories:		$(D_OBJ)/.created $(D_LIB)/.created $(D_I18N)/.created $(D_I18N_IC
 
 $(ICONVLIB):		CEXTRA += -DLIBICONV_STATIC -D_WIN32 -D_WIN32_WINNT=0X601
 $(ICONVLIB):		$(LIBOBJS)
-		$(RM) $(RMFLAGS) $@ >nul 2>&1
+		$(RM) $(RMFLAGS) $@ >/dev/null 2>&1
 		$(AR) $(ARFLAGS) $@ $(subst /,\,$^)
 		$(RANLIB) $@
 
@@ -112,9 +113,9 @@ installcfg:
 .PHONY:			clean cleancomponents
 
 clean:			cleancomponents
-		-@$(RM) $(RMFLAGS) $(LIBS) $(CLEAN) $(XCLEAN) >nul 2>&1
-		-@$(LIBTOOL) --mode=clean $(RM) $(DLLOBJS) >nul 2>&1
-		-@$(RM) $(LIBOBJS) >nul 2>&1
+		-@$(RM) $(RMFLAGS) $(LIBS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
+		-@$(LIBTOOL) --mode=clean $(RM) $(DLLOBJS) >/dev/null 2>&1
+		-@$(RM) $(LIBOBJS) >/dev/null 2>&1
 
 cleancomponents:
 		$(MAKE) -C iconv	clean

@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.71 2015/02/21 22:47:27 ayoung Exp $
+# $Id: Makefile.in,v 1.73 2015/02/24 23:10:08 cvsuser Exp $
 # GRIEF editor makefile.
 #
 #
@@ -36,6 +36,7 @@ E=
 O=		.o
 
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+XCLEAN=
 
 # Compilers, programs
 
@@ -142,7 +143,7 @@ LDFLAGS+=	-rdynamic
 endif
 endif
 LDLIBS=		-L$(D_LIB) -lbsddb -lbsdfetch -lbsdio -lchartable -lvfs -lsplay -lllist -lmisc -lonigrx -ltre
-LDLIBS+=	@LIBS@ @LIBENCA@ @LIBSPELL@ @LIBICU@ @LIBICONV@ @LIBCURL@ @LIBARCHIVE@ @LIBMAGIC@ @LIBM@ @EXTRALIBS@
+LDLIBS+=	@LIBS@ @LIBENCA@ @LIBSPELL@ @LIBICU@ @LIBICONV@ @LIBCURL@ @LIBOPENSSL@ @LIBARCHIVE@ @LIBMAGIC@ @LIBM@ @EXTRALIBS@
 ifeq ("mingw32","@build_os@")
 LDLIBS+=	-lw32 -lshlwapi -lshell32 -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
 else ifneq ("win32","@build_os@")
@@ -319,7 +320,7 @@ OBJS+=		$(addprefix $(D_OBJ)/,$(patsubst %.cpp,%$(O),$(CPPSRC)))
 all:		directories $(D_BIN)/$(TARGET)
 
 clean:
-		-@$(RM) $(RMFLAGS) $(BAK) $(D_BIN)/$(TARGET) $(TARGET) $(OBJS) $(CLEAN) $(XCLEAN)
+		-@$(RM) $(RMFLAGS) $(BAK) $(D_BIN)/$(TARGET) $(TARGET) $(OBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
 
 .PHONY:		directories
 directories:		$(D_OBJDEP)/.created $(OBJS)

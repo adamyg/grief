@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.6 2013/05/12 21:35:56 cvsuser Exp $
+# $Id: Makefile.in,v 1.7 2015/02/22 22:13:55 ayoung Exp $
 # libbz2 makefile
 #
 #
@@ -17,6 +17,7 @@ A=		.a
 LP=		lib
 
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+XCLEAN=
 
 # Compilers, programs
 

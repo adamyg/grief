@@ -1,11 +1,11 @@
 #ifndef GR_EDDEBUG_H_INCLUDED
 #define GR_EDDEBUG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_eddebug_h,"$Id: eddebug.h,v 1.24 2015/02/19 00:16:53 ayoung Exp $")
+__CIDENT_RCSID(gr_eddebug_h,"$Id: eddebug.h,v 1.25 2015/02/25 00:45:28 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: eddebug.h,v 1.24 2015/02/19 00:16:53 ayoung Exp $
+/* $Id: eddebug.h,v 1.25 2015/02/25 00:45:28 cvsuser Exp $
  * Debug functions.
  *
  *
@@ -47,7 +47,9 @@ extern const int            x_dflags;
  *
  *      ED_TRACE(("my trace message\n"))
  */
+
 extern int                  trace_log(const char *str, ...) __ATTRIBUTE_FORMAT__((printf, 1, 2));
+extern int                  trace_logv(const char *fmt, va_list ap);
 extern void                 trace_term(const char *str, ...) __ATTRIBUTE_FORMAT__((printf, 1, 2));
 extern void                 trace_ilog(const char *fmt, ...) __ATTRIBUTE_FORMAT__((printf, 1, 2));
 extern void                 trace_data(const void *data, int length, const char *term);

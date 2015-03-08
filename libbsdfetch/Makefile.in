@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.8 2015/02/19 00:17:01 ayoung Exp $
+# $Id: Makefile.in,v 1.9 2015/02/22 22:14:12 ayoung Exp $
 # libbsdfetch makefile.
 #
 #
@@ -104,10 +104,10 @@ $(LIBRARY):		$(D_OBJ)/.created $(LIBOBJS)
 CLEAN +=	ftperr.h httperr.h
 generate:	ftperr.h httperr.h
 
-ftperr.h:		ftp.errors Makefile
+ftperr.h:		ftp_errors.in Makefile
 		@$(PERL) mkerrors.pl -o $@ $<
 
-httperr.h:		http.errors Makefile
+httperr.h:		http_errors.in Makefile
 		@$(PERL) mkerrors.pl -o $@ $<
 
 $(D_OBJ)/.created:
@@ -115,7 +115,7 @@ $(D_OBJ)/.created:
 		@echo "do not create" > $@
 
 clean:
-		-@$(RM) $(RMFLAGS) $(BAK) $(LIBRARY) $(LIBOBJS) $(CLEAN) $(XCLEAN)
+		-@$(RM) $(RMFLAGS) $(BAK) $(LIBRARY) $(LIBOBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
 
 $(D_OBJ)/%$(O):		%$(C)
 		$(CC) $(CFLAGS) -o $@ -c $<

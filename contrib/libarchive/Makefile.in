@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.9 2014/10/27 03:53:39 ayoung Exp $
+# $Id: Makefile.in,v 1.10 2015/02/22 22:13:55 ayoung Exp $
 # libarchive makefile
 #
 #
@@ -17,6 +17,7 @@ A=		.a
 LP=		lib
 
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+XCLEAN=
 
 # Compilers, programs
 

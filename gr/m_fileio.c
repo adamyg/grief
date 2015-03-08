@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_fileio_c,"$Id: m_fileio.c,v 1.18 2014/11/16 17:28:40 ayoung Exp $")
+__CIDENT_RCSID(gr_m_fileio_c,"$Id: m_fileio.c,v 1.19 2015/02/24 23:10:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_fileio.c,v 1.18 2014/11/16 17:28:40 ayoung Exp $
+/* $Id: m_fileio.c,v 1.19 2015/02/24 23:10:08 cvsuser Exp $
  * File i/o primitives.
  *
  *
@@ -97,9 +97,9 @@ static int              importflags(const char *flags);
         bufsiz - Optionally stream buffer size, in bytes.
 
     Macro Returns:
-        Upon successful completion, fopen() shall return a handle to
-        the the stream. Otherwise, -1 shall be returned, and 'errno'
-        shall be set to indicate the error.
+        Upon successful completion, fopen() shall return a handle to the
+        stream. Otherwise, -1 shall be returned, and 'errno' shall be set
+        to indicate the error.
 
     Macro Portability:
         A Grief extension.
@@ -210,25 +210,25 @@ importflags(const char *flags)
 
     Macro Description:
         The 'fmktemp()' primitive shall replace the contents of the
-        string 'template' by a unique filename, and return a stream
-        for the file open for reading and writing.
+        string 'template' by a unique filename, and return a stream for
+        the file open for reading and writing.
 
         The primitive is equivalent to the 'mkstemp()'.
 
-        The function thus prevents any possible race condition
-        between testing whether the file exists and opening it for
-        use. The string in template should look like a filename with
-        six trailing 'X' s; 'fmktemp' replaces each 'X' with a
-        character from the portable filename character set.
+        The function thus prevents any possible race condition between
+        testing whether the file exists and opening it for use. The
+        string in template should look like a filename with six trailing
+        'X' s; 'fmktemp' replaces each 'X' with a character from the
+        portable filename character set.
 
-        The characters are chosen such that the resulting name does
-        not duplicate the name of an existing file at the time of a
-        call to 'fmktemp'.
+        The characters are chosen such that the resulting name does not
+        duplicate the name of an existing file at the time of a call to
+        'fmktemp'.
 
     Macro Returns:
-        Upon successful completion, fmktemp() shall return an open
-        stream and return the resulting 'filename'. Otherwise, -1
-        shall be returned if no suitable file could be created.
+        Upon successful completion, fmktemp() shall return an open stream
+        and return the resulting 'filename'. Otherwise, -1 shall be
+        returned if no suitable file could be created.
 
     Macro Portability:
         A Grief extension.

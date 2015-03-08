@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.5 2014/12/04 02:56:51 ayoung Exp $
+# $Id: Makefile.in,v 1.6 2015/02/22 22:14:09 ayoung Exp $
 # libbsdmdoc and grmanddoc
 #
 #
@@ -39,6 +39,7 @@ A=		.a
 LP=		lib
 
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+XCLEAN=
 
 # Compilers, programs
 
@@ -241,7 +242,7 @@ $(D_OBJ)/.created:
 		@echo "do not create" > $@
 
 clean:
-		-@$(RM) $(RMFLAGS) $(BAK) $(LIBRARY) $(LIBOBJS) $(OBJS) $(CLEAN) $(XCLEAN)
+		-@$(RM) $(RMFLAGS) $(BAK) $(LIBRARY) $(LIBOBJS) $(OBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
 
 $(D_OBJ)/%$(O):		%$(C)
 		$(CC) $(CFLAGS) -o $@ -c $<

@@ -1,11 +1,11 @@
 #ifndef GR_EDTRACE_H_INCLUDED
 #define GR_EDTRACE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edtrace_h,"$Id: edtrace.h,v 1.25 2015/02/19 00:16:58 ayoung Exp $")
+__CIDENT_RCSID(gr_edtrace_h,"$Id: edtrace.h,v 1.26 2015/02/25 00:43:54 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edtrace.h,v 1.25 2015/02/19 00:16:58 ayoung Exp $
+/* $Id: edtrace.h,v 1.26 2015/02/25 00:43:54 cvsuser Exp $
  * trace log.
  *
  *
@@ -35,6 +35,7 @@ __CPRAGMA_ONCE
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <edtypes.h>
 
 __CBEGIN_DECLS
 

@@ -264,7 +264,7 @@ fetchListFile(struct url_list *ue, struct url *u, const char *pattern, const cha
 		if (pattern && patmatch(pattern, de->d_name, 0) != 0)
 #endif
 			continue;
-		if (snprintf(fn, sizeof(fn), "%s/%s", dir, de->d_name) < (int)sizeof(fn) &&
+		if (snprintf(fn, sizeof(fn), "%s/%s", path, de->d_name) < (int)sizeof(fn) &&
 				-1 != stat(fn, &sb)) {
 			us.mode = sb.st_mode;
 			us.size = sb.st_size;

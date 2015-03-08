@@ -13,7 +13,7 @@
  *
  *          Download (FTP):     ftp://ftp.x.org/pub/individual/util/makedepend-1.0.4.tar.bz2
  *
- * Copyright (c) 2012 Adam Young.
+ * Copyright (c) 2012-2015 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

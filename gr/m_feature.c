@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_feature_c,"$Id: m_feature.c,v 1.21 2014/11/16 17:28:40 ayoung Exp $")
+__CIDENT_RCSID(gr_m_feature_c,"$Id: m_feature.c,v 1.23 2015/02/28 11:39:05 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_feature.c,v 1.21 2014/11/16 17:28:40 ayoung Exp $
+/* $Id: m_feature.c,v 1.23 2015/02/28 11:39:05 cvsuser Exp $
  * Features.
  *
  *
@@ -260,13 +260,16 @@ const char * const      x_features[] = {
 #if defined(HAVE_CURL_CURL_H) && defined(HAVE_LIBCURL)
         "+libcurl",
 #endif
+#if defined(HAVE_OPENSSL)
+        "+libopenssl",
+#endif
 
         /* regular expressions */
 #if defined(ONIGURUMA_VERSION_MAJOR)
         "+libonigurma (" STRINGIZE(ONIGURUMA_VERSION_MAJOR) "." STRINGIZE(ONIGURUMA_VERSION_MINOR) "." STRINGIZE(ONIGURUMA_VERSION_TEENY) ")",
 #endif
 #if defined(TRE_VERSION)
-        "+libtre " TRE_VERSION ")",
+        "+libtre (" TRE_VERSION ")",
 #endif
 
         /* malloc */

@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.4 2015/02/18 22:48:05 ayoung Exp $
+# $Id: Makefile.in,v 1.5 2015/02/22 22:14:11 ayoung Exp $
 # Help documentation.
 #
 #
@@ -14,6 +14,7 @@ top_builddir=	@top_builddir@
 C=		.c
 
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+XCLEAN=
 
 # Compilers, programs
 

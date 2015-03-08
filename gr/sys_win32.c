@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.53 2015/02/17 23:26:17 ayoung Exp $")
+__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.54 2015/02/24 23:31:09 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_win32.c,v 1.53 2015/02/17 23:26:17 ayoung Exp $
+/* $Id: sys_win32.c,v 1.54 2015/02/24 23:31:09 cvsuser Exp $
  * WIN32 system support.
  *
  *
@@ -31,7 +31,9 @@ __CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.53 2015/02/17 23:26:17 ayoun
 #include "keyboard.h"
 #include "m_pty.h"
 #include "main.h"
+#if !defined(HAVE_MOUSE)
 #define  HAVE_MOUSE                             /* enable prototypes */
+#endif
 #include "mouse.h"
 #include "system.h"
 #include "tty.h"

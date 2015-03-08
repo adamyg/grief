@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.19 2014/10/23 01:36:07 ayoung Exp $
+# $Id: Makefile.in,v 1.20 2015/02/22 22:14:07 ayoung Exp $
 # Grief Macro Compiler makefile.
 #
 #
@@ -38,6 +38,7 @@ O=		.o
 H=		.h
 
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+XCLEAN=
 
 # Compilers, programs
 
@@ -96,7 +97,7 @@ $(D_OBJ)/.created:
 		@echo "do not delete" > $@
 
 clean:
-		$(RM) $(RMFLAGS) $(BAK) $(D_BIN)/$(TARGET) $(TARGET) $(OBJS) $(CLEAN) $(XCLEAN)
+		-@$(RM) $(RMFLAGS) $(BAK) $(D_BIN)/$(TARGET) $(TARGET) $(OBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
 
 $(D_OBJ)/%$(O):		%$(C)
 		$(CC) $(CFLAGS) -o $@ -c $<

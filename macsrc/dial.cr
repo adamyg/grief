@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: dial.cr,v 1.7 2014/10/27 23:28:20 ayoung Exp $
+/* $Id: dial.cr,v 1.8 2015/02/25 01:14:33 cvsuser Exp $
  * Legacy Modem interface
  *
  *
@@ -98,9 +98,9 @@ dial(~string, ~string, ~int, ...)               // ~system-name, ~number, ~speed
     if (!get_parm(2, speed, "Speed : ", NULL, 1200))
         return;
 
-    dial_buf = create_shell("/bin/sh", system_name + "-Window", PF_ECHO | PF_WAIT);
-    assign_to_key("<Ctrl-S>", "dial_send");
-    assign_to_key("<Ctrl-R>", "dial_recv");
+    dial_buf = create_shell("/bin/sh", system_name + "-Window", /*PF_ECHO |*/PF_WAIT);
+    assign_to_key("<Ctrl-S>", "::dial_send");
+    assign_to_key("<Ctrl-R>", "::dial_recv");
     wait_for(10, "$", SF_NOT_REGEXP);
     insert("cu -l /dev/cua0 -t -s 1200\n");
     inq_position(line, col);

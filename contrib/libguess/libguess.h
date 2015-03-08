@@ -5,7 +5,7 @@
  *   Copyright (c) 2000-2003 Shiro Kawai
  *   Copyright (c) 2005-2010 Yoshiki Yazawa
  *   Copyright (c) 2007-2010 William Pitcock
- *   Copyright (c) 2012-2014 Adam Young
+ *   Copyright (c) 2012-2015 Adam Young
  *
  *   All rights reserved.
  *

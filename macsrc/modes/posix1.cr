@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: posix1.cr,v 1.3 2014/10/22 02:34:35 ayoung Exp $
+/* $Id: posix1.cr,v 1.4 2015/02/25 00:49:08 cvsuser Exp $
  * posix1 markup.
  *
  *
@@ -85,7 +85,7 @@ static list posix_function = {
     // POSIX.1b function calls Function POSIX Description
     "access",                           // Tests for file accessibility
     "alarm",                            // Schedules an alarm
-    "asctime ",                         // Converts a time structure to a string
+    "asctime",                          // Converts a time structure to a string
     "cfgetispeed",                      // Reads terminal input baud rate
     "cfgetospeed",                      // Reads terminal output baud rate
     "cfsetispeed",                      // Sets terminal input baud rate
@@ -96,10 +96,10 @@ static list posix_function = {
     "close",                            // Closes a file
     "closedir",                         // Ends directory read operation
     "creat",                            // Creates a new file or rewrites an existing one
-    "ctermid ",                         // Generates terminal pathname
-    "cuserid ",                         // Gets user name
-    "dup  ",                            // Duplicates an open file descriptor
-    "dup2 ",                            // Duplicates an open file descriptor
+    "ctermid",                          // Generates terminal pathname
+    "cuserid",                          // Gets user name
+    "dup",                              // Duplicates an open file descriptor
+    "dup2",                             // Duplicates an open file descriptor
     "execl",                            // Executes a file
     "execle",                           // Executes a file
     "execlp",                           // Executes a file
@@ -109,69 +109,69 @@ static list posix_function = {
     "_exit",                            // Terminates a process
     "fcntl",                            // Manipulates an open file descriptor
     "fdopen",                           // Opens a stream on a file descriptor
-    "fork ",                            // Creates a process
+    "fork",                             // Creates a process
     "fpathconf",                        // Gets configuration variable for an open file
     "fstat",                            // Gets file status
     "getcwd",                           // Gets current working directory
-    "getegid ",                         // Gets effective group ID
+    "getegid",                          // Gets effective group ID
     "getenv",                           // Gets environment variable
-    "geteuid ",                         // Gets effective user ID
+    "geteuid",                          // Gets effective user ID
     "getgid",                           // Gets real group ID
     "getgrgid",                         // Reads groups database based on group ID
     "getgrnam",                         // Reads groups database based on group name
     "getgroups",                        // Gets supplementary group IDs
     "getlogin",                         // Gets user name
-    "getpgrp ",                         // Gets process group ID
+    "getpgrp",                          // Gets process group ID
     "getpid",                           // Gets process ID
-    "getppid ",                         // Gets parent process ID
+    "getppid",                          // Gets parent process ID
     "getpwnam",                         // Reads user database based on user name
     "getpwuid",                         // Reads user database based on user ID
     "getuid",                           // Gets real user ID
     "isatty",                           // Determines if a file descriptor is associated with a terminal
-    "kill ",                            // Sends a kill signal to a process
-    "link ",                            // Creates a link to a file
-    "longjmp ",                         // Restores the calling environment
+    "kill",                             // Sends a kill signal to a process
+    "link",                             // Creates a link to a file
+    "longjmp",                          // Restores the calling environment
     "lseek",                            // Repositions read/write file offset
     "mkdir",                            // Makes a directory
     "mkfifo",                           // Makes a FIFO special file
-    "open ",                            // Opens a file
-    "opendir ",                         // Opens a directory
+    "open",                             // Opens a file
+    "opendir",                          // Opens a directory
     "pathconf",                         // Gets configuration variables for a path
     "pause",                            // Suspends a process execution
-    "pipe ",                            // Creates an interprocess channel
-    "read ",                            // Reads from a file
-    "readdir ",                         // Reads a directory
+    "pipe",                             // Creates an interprocess channel
+    "read",                             // Reads from a file
+    "readdir",                          // Reads a directory
     "rename",                           // Renames a file
     "rewinddir",                        // Resets the readdir() pointer
     "rmdir",                            // Removes a directory
     "setgid",                           // Sets group ID
     "setjmp",                           // Saves the calling environment for use by longjmp()
     "setlocale",                        // Sets or queries a program's locale
-    "setpgid ",                         // Sets a process group ID for job control
+    "setpgid",                          // Sets a process group ID for job control
     "setuid",                           // Sets the user ID
     "sigaction",                        // Examines and changes signal action
     "sigaddset",                        // Adds a signal to a signal set
     "sigdelset",                        // Removes a signal to a signal set
     "sigemptyset",                      // Creates an empty signal set
-    "sigfillset ",                      // Creates a full set of signals
+    "sigfillset",                       // Creates a full set of signals
     "sigismember",                      // Tests a signal for a selected member
-    "siglongjmp ",                      // Goes to and restores signal mask
-    "sigpending ",                      // Examines pending signals
+    "siglongjmp",                       // Goes to and restores signal mask
+    "sigpending",                       // Examines pending signals
     "sigprocmask",                      // Examines and changes blocked signals
     "sigsetjmp",                        // Saves state for siglongjmp()
-    "sigsuspend ",                      // Waits for a signal
+    "sigsuspend",                       // Waits for a signal
     "sleep",                            // Delays process execution
-    "stat ",                            // Gets information about a file
-    "sysconf ",                         // Gets system configuration information
-    "tcdrain ",                         // Waits for all output to be transmitted to the terminal
+    "stat",                             // Gets information about a file
+    "sysconf",                          // Gets system configuration information
+    "tcdrain",                          // Waits for all output to be transmitted to the terminal
     "tcflow",                           // Suspends/restarts terminal output
-    "tcflush ",                         // Discards terminal data
+    "tcflush",                          // Discards terminal data
     "tcgetattr",                        // Gets terminal attributes
     "tcgetpgrp",                        // Gets foreground process group ID
     "tcsendbreak",                      // Sends a break to a terminal
     "tcsetattr",                        // Sets terminal attributes
     "tcsetpgrp",                        // Sets foreground process group ID
-    "time ",                            // Determines the current calendar time
+    "time",                             // Determines the current calendar time
     "times",                            // Gets process times
     "ttyname",                          // Determines a terminal pathname
     "tzset",                            // Sets the timezone from environment variables
@@ -179,7 +179,7 @@ static list posix_function = {
     "uname",                            // Gets system name
     "unlink",                           // Removes a directory entry
     "utime",                            // Sets file access and modification times
-    "waitpid ",                         // Waits for process termination
+    "waitpid",                          // Waits for process termination
     "write",                            // Writes to a file
 
     // POSIX.1b function calls Function POSIX Description
@@ -193,7 +193,7 @@ static list posix_function = {
     "clock_gettime",
     "clock_settime",
     "fdatasync",
-    "fsync   ",
+    "fsync",
     "kill,",
     "sigqueue",
     "lio_listio",
@@ -204,7 +204,7 @@ static list posix_function = {
     "mq_close",
     "mq_getattr",
     "mq_notify",
-    "mq_open ",
+    "mq_open",
     "mq_receive",
     "mq_send",
     "mq_setattr",
@@ -217,7 +217,7 @@ static list posix_function = {
     "sched_get_priority_min",
     "sched_getparam",
     "sched_getscheduler",
-    "sched_rr_get_interval ",
+    "sched_rr_get_interval",
     "sched_setparam",
     "sched_setscheduler",
     "sched_yield",
@@ -243,7 +243,7 @@ static list posix_function = {
     "pthread_atfork",
     "pthread_attr_destroy",
     "pthread_attr_getdetachstate",
-    "pthread_attr_getinheritsched ",
+    "pthread_attr_getinheritsched",
     "pthread_attr_getschedparam",
     "pthread_attr_getschedpolicy",
     "pthread_attr_getscope",
@@ -374,7 +374,7 @@ static list posix_function = {
     "posix_spawnattr_getschedpolicy",
     "posix_spawnattr_getsigdefault",
     "posix_spawnattr_getsigmask",
-    "posix_spawnattr_init ",
+    "posix_spawnattr_init",
     "posix_spawnattr_setflags",
     "posix_spawnattr_setpgroup",
     "posix_spawnattr_setschedparam",
@@ -395,7 +395,7 @@ static list posix_function = {
 
     //POSIX.1j
     "posix_typed_mem_open",
-    "posix_mem_offset ",
+    "posix_mem_offset",
     "posix_typed_mem_get_info",
     "pthread_spin_init",
     "pthread_spin_destroy",

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_unix_c,"$Id: sys_unix.c,v 1.58 2014/11/24 23:31:25 ayoung Exp $")
+__CIDENT_RCSID(gr_sys_unix_c,"$Id: sys_unix.c,v 1.60 2015/02/25 01:06:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_unix.c,v 1.58 2014/11/24 23:31:25 ayoung Exp $
+/* $Id: sys_unix.c,v 1.60 2015/02/25 01:06:58 cvsuser Exp $
  * System dependent functionality - UNIX.
  *
  *
@@ -28,6 +28,9 @@ __CIDENT_RCSID(gr_sys_unix_c,"$Id: sys_unix.c,v 1.58 2014/11/24 23:31:25 ayoung 
 #endif
 #if defined(HAVE_SYS_TIME_H)
 #include <sys/time.h>                           /* timeval */
+#endif
+#if defined(HAVE_SYS_RESOURCE_H)
+#include <sys/resource.h>
 #endif
 #if defined(HAVE_TIME_H)
 #include <time.h>
@@ -958,17 +961,17 @@ sys_core(const char *msg, const char *path, const char *fname)
      *  stackdump (if available)
      *  /usr/bin/dumper [OPTION] <filename> <win32pid>
      *
-     *      cr.<pid>.stackdump
-     *      cr.<pid>.core
+     *      gr.<pid>.stackdump
+     *      gr.<pid>.core
      *
      *  Note: It turns out that dumper will work with a Windows process, but only 32-bit processes.
      */
-    sxprintf(cmd, sizeof(cmd), "cr.%u.stackdump", (unsigned)pid);
+    sxprintf(cmd, sizeof(cmd), "gr.%u.stackdump", (unsigned)pid);
     if (NULL != (out = fopen(cmd, "w"))) {
         edbt_stackdump(out, 2);
         fclose(out);
     }
-    cmdlen = sxprintf(cmd, sizeof(cmd), "/usr/bin/dumper --quiet %scr.%u %u\n",
+    cmdlen = sxprintf(cmd, sizeof(cmd), "/usr/bin/dumper --quiet %sgr.%u %u\n",
                 outbase, (unsigned)pid, (unsigned)pid);
 
 #elif defined(_AIX)
@@ -985,18 +988,18 @@ sys_core(const char *msg, const char *path, const char *fname)
      *  pstack <pid> > <file> 2>&1
      *  gcore -o <file> <pid>
      *
-     *      cr.<pid>.stackdump
-     *      cr.<pid>.core
+     *      gr.<pid>.stackdump
+     *      gr.<pid>.core
      *
      *  Note, generally all optmisation should be disabled for pstack and gcore to
      *      correctly report the active callback trace.
      */
 #if defined(HAVE_PRCTL_SYSTEM)
-    cmdlen = sxprintf(cmd, sizeof(cmd), "sleep 4; pstack %d > %scr.pstack.%d 2>&1; gcore -o %scr.core %d\n",
-                pid, outbase, pid, outbase, pid, pid);
+    cmdlen = sxprintf(cmd, sizeof(cmd), "sleep 4; pstack %d > %sgr.pstack.%d 2>&1; gcore -o %sgr.core %d\n",
+                pid, outbase, pid, outbase, pid);
 #else
-    cmdlen = sxprintf(cmd, sizeof(cmd), "pstack %d > %scr.pstack.%d 2>&1; gcore -o %scr.core %d\n",
-                pid, outbase, pid, outbase, pid, pid);
+    cmdlen = sxprintf(cmd, sizeof(cmd), "pstack %d > %sgr.pstack.%d 2>&1; gcore -o %sgr.core %d\n",
+                pid, outbase, pid, outbase, pid);
 #endif
 #endif
 

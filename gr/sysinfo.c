@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.43 2015/02/19 22:11:05 ayoung Exp $")
+__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.44 2015/03/01 01:54:03 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sysinfo.c,v 1.43 2015/02/19 22:11:05 ayoung Exp $
+/* $Id: sysinfo.c,v 1.44 2015/03/01 01:54:03 cvsuser Exp $
  * System information services.
  *
  *
@@ -242,12 +242,12 @@ sysinfo_tmpdir(void)
         const char *p = NULL;
 
         p = tmpdir2("GRTMP");                   /* GRIEF override */
-        if (NULL == p) {
+        if (NULL == p || !*p) {
             p = tmpdir2("BTMP");                /* BRIEF override */
         }
 
 #if defined(WIN32) && !defined(__CYGWIN__)
-        if (NULL == p) {
+        if (NULL == p || !*p) {
             int pathlen;
 
             t_path[0] = 0;                      /* XP+ */
@@ -271,7 +271,7 @@ sysinfo_tmpdir(void)
         }
 #endif
 
-        if (NULL == p
+        if ((NULL == p || !*p)
                 && NULL == (p = tmpdir2("TMP")) /* standard unix tmp */
 #if defined(__MSDOS__) || defined(__CYGWIN__)
                 && NULL == (p = tmpdir2("TEMP"))

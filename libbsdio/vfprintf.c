@@ -42,9 +42,13 @@
 #endif
 
 //disabled functionality
-//	USE_MBRTOWC
-//	USE_MMAP
-//	USE_DTOA
+//  USE_MBRTOWC
+//	 USE_MMAP
+//	 USE_DTOA
+
+#ifdef HAVE_STDARG_H
+#include <stdarg.h>
+#endif
 
 #ifndef VA_COPY
 # if defined(HAVE_VA_COPY) || defined(va_copy)

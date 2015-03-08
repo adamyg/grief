@@ -1,5 +1,5 @@
 #!/bin/perl
-#$Id: mkerrors.pl,v 1.2 2014/11/20 18:26:35 cvsuser Exp $
+#$Id: mkerrors.pl,v 1.3 2015/02/22 22:14:12 ayoung Exp $
 # Construct error include, libbsdfetch support script
 #
 #
@@ -27,7 +27,7 @@ Usage("expected source") if (! scalar @ARGV);
 my $source = $ARGV[0];
 
 Usage("unknown source type '$source', .error extension expected")
-	if ($source !~ /^(.*)\.errors$/);
+	if ($source !~ /^(.*)\.errors$/ && $source !~ /^(.*)_errors\.in$/);
 
 my $type = $1;
 

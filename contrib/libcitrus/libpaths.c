@@ -1,8 +1,8 @@
-/* $Id: libpaths.c,v 1.7 2014/07/11 21:24:46 ayoung Exp $
+/* $Id: libpaths.c,v 1.8 2015/03/01 02:56:37 cvsuser Exp $
  *
  * libcitrus <paths.h> implementation
  *
- * Copyright (c) 2012 Adam Young.
+ * Copyright (c) 2012-2015 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makehelp.pl,v 1.14 2015/02/26 23:16:03 ayoung Exp $
+# $Id: makehelp.pl,v 1.15 2015/03/01 23:45:33 cvsuser Exp $
 # -*- tabs: 8; indent-width: 4; -*-
 # Help collection tool.
 #
@@ -349,7 +349,7 @@ ExportNINFO($$)         #(image, filesRef, [title])
     my $asctime = asctime(localtime());
     chop($asctime);
 
-    Info("Generating NINFO documentation");
+    Info("Generating NINFO documentation <$title>");
 
     my @files;
     my @hlpidx;
@@ -823,6 +823,9 @@ ParseFeatures($)        #(featuredir)
     my ($featuredir) = @_;
     my %titles;
 
+##  $o_warning = 1;
+    Info("Parsing ${featuredir}/INDEX");
+
     # import index
     open(SRC, "<${featuredir}/INDEX") or
         die "cannot open <${featuredir}/INDEX> : $!\n";
@@ -830,12 +833,14 @@ ParseFeatures($)        #(featuredir)
         if ($line =~ /^(.*):(.*)$/) {
             $titles{lc(Trim($1))} = 1;
             my @sects = split(/[ ,]+/, $2);
-            foreach (@sects) {
-                if (/^.*=(.*)$/) {              # alias=xxx
-                    $x_features{lc($1)} = 1;
-                } else {
-                    $x_features{lc($_)} = 1;
-                }
+            foreach my $feat (@sects) {
+                $feat = $1                      # alias=xxx
+                    if ($feat =~ /^.*=(.*)$/);
+                $feat = lc($feat);
+                $x_features{$feat} = 1;
+
+                Warning("feature: ${feat}.mandoc missing")
+                    if (! -f "${featuredir}/${feat}.mandoc");
             }
         }
     }
@@ -1376,4 +1381,5 @@ Debug
 }
 
 #end
+
 

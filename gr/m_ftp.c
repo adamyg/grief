@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_ftp_c,"$Id: m_ftp.c,v 1.12 2014/11/24 11:26:12 ayoung Exp $")
+__CIDENT_RCSID(gr_m_ftp_c,"$Id: m_ftp.c,v 1.13 2015/02/24 23:10:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_ftp.c,v 1.12 2014/11/24 11:26:12 ayoung Exp $
+/* $Id: m_ftp.c,v 1.13 2015/02/24 23:10:08 cvsuser Exp $
  * FTP/HTTP connection primitives -- beta/undocumented.
  *
  *
@@ -762,7 +762,7 @@ do_ftp_mkdir(void)                  /* int (int id, string dir) */
     if (iftp) {
         struct url *url;
 
-        ED_TRACE(("ftp_mkdir(cwd:%s,new:)\n", (iftp->cwd ? iftp->cwd : ""), dir))
+        ED_TRACE(("ftp_mkdir(cwd:%s,new:%s)\n", (iftp->cwd ? iftp->cwd : ""), dir))
         if (NULL != (url = iftp->url)) {
             switch (iftp->proto) {
             case PROTOCOL_FTP:

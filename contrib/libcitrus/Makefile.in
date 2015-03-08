@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.6 2013/05/12 21:35:56 cvsuser Exp $
+# $Id: Makefile.in,v 1.7 2015/02/22 22:13:55 ayoung Exp $
 # libcitrus and modules makefile
 #
 #
@@ -18,6 +18,7 @@ A=		.a
 LP=		lib
 
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+XCLEAN=
 
 # Compilers, programs
 
@@ -142,7 +143,7 @@ $(CITRUSLIB):		CEXTRA += -I$(CITRUSSRC) -DLIBCITRUS_STATIC -D_WIN32 -D_WIN32_WIN
 
 
 $(CITRUSLIB):		$(LIBOBJS)
-		$(RM) $(RMFLAGS) $@ >nul 2>&1
+		$(RM) $(RMFLAGS) $@ >/dev/null 2>&1
 		$(AR) $(ARFLAGS) $@ $(subst /,\,$^)
 		$(RANLIB) $@
 
@@ -154,9 +155,9 @@ directories:		$(D_OBJ)/.created $(D_I18N)/.created $(D_I18N_MODULE)/.created
 		@echo "do not delete, managed directory" > $@
 
 clean:
-		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(CLEAN) $(XCLEAN) >nul 2>&1
-		-@$(LIBTOOL) --mode=clean $(RM) $(MODULELIBS) >nul 2>&1
-		-@$(RM) $(LIBOBJS) >nul 2>&1
+		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
+		-@$(LIBTOOL) --mode=clean $(RM) $(MODULELIBS) >/dev/null 2>&1
+		-@$(RM) $(LIBOBJS) >/dev/null 2>&1
 
 $(D_LIB)/libmapper_parallel.la::	$(D_OBJ)/citrus_mapper_serial.lo
 

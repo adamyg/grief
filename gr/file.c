@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.80 2014/11/16 17:28:38 ayoung Exp $")
+__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.81 2015/02/24 23:10:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: file.c,v 1.80 2014/11/16 17:28:38 ayoung Exp $
+/* $Id: file.c,v 1.81 2015/02/24 23:10:08 cvsuser Exp $
  * File-buffer primitives and support.
  *
  *
@@ -3679,7 +3679,7 @@ file_tilder(const char *file, char *path, int len)
  *
  *  Parameters:
  *      mode - Permissions mode.
- *      format - Output format (0 = standard, 1=extended).
+ *      format - Output format (0 = standard, 1=extended; ls -lF style).
  *      buffer - Destination buffer.
  *      len - Length of buffer, in bytes.
  *
@@ -3697,21 +3697,21 @@ file_modedesc(mode_t mode, const char *source, int format, char *buffer, int len
     if (S_ISDIR(mode)) {
         t_buffer[0] = (format ? '/' : 'd');     /* directory */
 
-#if defined(S_ISCHR)  && (S_ISCHR)
+#if defined(S_ISCHR)
     } else if (S_ISCHR(mode)) {
         t_buffer[0] = (format ? '-' : 'c');     /* character device */
 #endif
-#if defined(S_ISBLK)  && (S_ISBLK)
+#if defined(S_ISBLK)
     } else if (S_ISBLK(mode)) {
         t_buffer[0] = (format ? '+' : 'b');     /* block device */
 #endif
-#if defined(S_ISLNK)  && (S_ISLNK)
+#if defined(S_ISLNK)
     } else if (S_ISLNK(mode)) {
         if (format && source && source[0]) {
             /*
              *  ~   - directory link.
              *  @   - link.
-             *  !   - broken link.
+             *  !   - broken linkOB.
              */
             struct stat st = {0};
 
@@ -3726,35 +3726,27 @@ file_modedesc(mode_t mode, const char *source, int format, char *buffer, int len
             t_buffer[0] = (format ? '@' : 'l'); /* link */
         }
 #endif
-#if defined(S_ISFIFO) && (S_ISFIFO)
+#if defined(S_ISFIFO)
     } else if (S_ISFIFO(mode)) {
         t_buffer[0] = (format ? '|' : 'p');     /* fifo/pipe */
 #endif
-#if defined(S_ISSOCK) && (S_ISSOCK)
+#if defined(S_ISSOCK)
     } else if (S_ISSOCK(mode)) {
         t_buffer[0] = (format ? '=' : 's');     /* sockets */
 #endif
-#if defined(S_ISNAM)  && (S_ISNAM)
+#if defined(S_ISNAM)
     } else if (S_ISNAM(mode)) {
         t_buffer[0] = (format ? '$' : 'n');     /* name */
 #endif
-#if defined(S_ISDOOR) && (S_ISDOOR)
+#if defined(S_ISDOOR)
     } else if (S_ISDOOR(mode)) {
         t_buffer[0] = (format ? '$' : 'D');     /* door */
 #endif
+#if defined(S_ISWHT)
+    } else if (S_ISWHT(mode)) {
+        t_buffer[0] = (format ? '$' : 'w');     /* whiteout */
+#endif
     } else {
-
-#if !defined(S_IWGRP)                           /* MINGW32 etc */
-#define S_IRGRP         S_IRUSR
-#define S_IWGRP         S_IWUSR
-#define S_IXGRP         S_IXUSR
-#endif
-#if !defined(S_IROTH)
-#define S_IROTH         S_IRUSR
-#define S_IWOTH         S_IWUSR
-#define S_IXOTH         S_IXUSR
-#endif
-
         if (format) {
             if (mode & (S_IXUSR|S_IXGRP|S_IXOTH)) {
                 t_buffer[0] = '*';              /* executable */
@@ -3767,6 +3759,16 @@ file_modedesc(mode_t mode, const char *source, int format, char *buffer, int len
     }
 
     /* permissions */
+#if !defined(S_IWGRP)                           /* MINGW32 etc */
+#define S_IRGRP         S_IRUSR
+#define S_IWGRP         S_IWUSR
+#define S_IXGRP         S_IXUSR
+#endif
+#if !defined(S_IROTH)
+#define S_IROTH         S_IRUSR
+#define S_IWOTH         S_IWUSR
+#define S_IXOTH         S_IXUSR
+#endif
     t_buffer[1] = (mode & S_IRUSR ? 'r' : '-'); /* read permission: owner */
     t_buffer[2] = (mode & S_IWUSR ? 'w' : '-'); /* write permission: owner */
     t_buffer[3] = (mode & S_IXUSR ? 'x' : '-'); /* execute permission: owner */

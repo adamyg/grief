@@ -1,8 +1,8 @@
-/* $Id: libguess.c,v 1.3 2013/11/02 00:55:05 ayoung Exp $
+/* $Id: libguess.c,v 1.4 2015/03/01 02:46:47 cvsuser Exp $
  *
  * libguess implementation for windows.
  *
- * Copyright (c) 2012-2013 Adam Young.
+ * Copyright (c) 2012-2015 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

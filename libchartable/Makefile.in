@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.15 2015/02/19 22:11:05 ayoung Exp $
+# $Id: Makefile.in,v 1.16 2015/02/22 22:14:14 ayoung Exp $
 # libchartable makefile.
 #
 #
@@ -40,6 +40,7 @@ A=		.a
 LP=		lib
 
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+XCLEAN=
 
 # Compilers, programs
 
@@ -124,10 +125,10 @@ $(CTBLLIB):		charsetlocales.h		\
 		$(AR) $(ARFLAGS) $@ $(CTBLOBJS)
 		$(RANLIB) $@
 
-XCLEAN=		charsettables.h charsetnames.h charsetdesc.h charsetlocales.h
+XCLEAN+=	charsettables.h charsetnames.h charsetdesc.h charsetlocales.h
 
 clean:
-		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(CLEAN) $(XCLEAN)
+		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
 		-@$(LIBTOOL) --mode=clean $(RM) $(MODULELIBS)
 
 charsetlocales.h:	makelocale.pl

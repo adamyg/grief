@@ -1,11 +1,11 @@
 #ifndef GR_EDMACROS_H_INCLUDED
 #define GR_EDMACROS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edmacros_h,"$Id: edmacros.h,v 1.14 2015/02/19 00:16:56 ayoung Exp $")
+__CIDENT_RCSID(gr_edmacros_h,"$Id: edmacros.h,v 1.15 2015/02/25 01:13:11 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edmacros.h,v 1.14 2015/02/19 00:16:56 ayoung Exp $
+/* $Id: edmacros.h,v 1.15 2015/02/25 01:13:11 cvsuser Exp $
  * Macro and symbolic interpreter information.
  *
  *
@@ -44,6 +44,9 @@ __CBEGIN_DECLS
 #define MAX_CMDLINE         512                 /* prompt command line limit */
 
 enum __macrotype {
+/*
+ *  Also see trace_triggger
+ */
 /*--export--enum--*/
 /*
  *  Registered macro types

@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.13 2015/02/19 00:17:17 ayoung Exp $
+# $Id: Makefile.in,v 1.14 2015/02/22 22:14:17 ayoung Exp $
 # libsplay makefile.
 #
 #
@@ -39,6 +39,7 @@ A=		.a
 LP=		lib
 
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+XCLEAN=
 
 # Compilers, programs
 
@@ -93,7 +94,7 @@ LIBOBJS=	$(D_OBJ)/spblk$(O)		\
 		$(D_OBJ)/sputil$(O)		\
 		$(D_OBJ)/spzap$(O)
 
-XCLEAN=		$(D_OBJ)/sptest$(O) $(D_OBJ)/sptest$(SO) sptest
+XCLEAN+=	$(D_OBJ)/sptest$(O) $(D_OBJ)/sptest$(SO) sptest
 
 LIBRARY=	$(D_LIB)/$(LP)$(LIBROOT)$(A)
 
@@ -109,7 +110,7 @@ $(D_OBJ)/.created:
 		@echo "do not delete" > $@
 
 clean:
-		-@$(RM) $(RMFLAGS) $(BAK) $(LIBRARY) $(LIBOBJS) $(CLEAN) $(XCLEAN)
+		-@$(RM) $(RMFLAGS) $(BAK) $(LIBRARY) $(LIBOBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
 
 LDLIBS= 	-L$(D_LIB) -l$(LIBROOT) -lmisc
 

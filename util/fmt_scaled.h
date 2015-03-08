@@ -1,6 +1,8 @@
 #ifndef FMT_SCALED_H_INCLUDED
 #define FMT_SCALED_H_INCLUDED
 
+#include <edtypes.h>
+
 #define FMT_SCALED_STRSIZE      7               /* minus sign, 4 digits, suffix, null byte */
 
 __CBEGIN_DECLS

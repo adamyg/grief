@@ -1,10 +1,10 @@
 #ifndef ICONV_PATHS_H_INCLUDED
 #define ICONV_PATHS_H_INCLUDED
-/* $Id: paths.h,v 1.3 2012/09/03 23:10:15 ayoung Exp $
+/* $Id: paths.h,v 1.4 2015/03/01 02:58:51 cvsuser Exp $
  *
  * libiconv <paths.h>
  *
- * Copyright (c) 2012 Adam Young.
+ * Copyright (c) 2012-2015 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

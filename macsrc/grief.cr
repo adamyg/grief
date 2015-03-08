@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: grief.cr,v 1.82 2015/02/19 00:17:41 ayoung Exp $
+/* $Id: grief.cr,v 1.83 2015/02/25 01:15:06 cvsuser Exp $
  * GRIEF startup macro.
  *
  *
@@ -55,9 +55,9 @@ string                  translate__replacement;
 /*
  *  Global save/restore objects.
  *
- *      For each property listed, a macro called _griget_OBJECT' and
+ *      For each listed property, the macros named '_griget_OBJECT' and
  *      '_griset_OBJECT' should be defined which understands how to get and set
- *      the attribute.
+ *      the attribute value.
  *
  *      Care should be taken when adding additional, avoid autoloading macros
  *      which are not going to be utilised most of the time.

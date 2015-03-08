@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.7 2014/06/27 00:55:45 ayoung Exp $
+# $Id: Makefile.in,v 1.8 2015/02/22 22:14:01 ayoung Exp $
 # libmagic makefile
 #
 #
@@ -19,6 +19,7 @@ A=		.a
 LP=		lib
 
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+XCLEAN=
 
 # Compilers, programs
 

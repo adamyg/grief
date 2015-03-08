@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.13 2015/02/18 23:44:45 ayoung Exp $
+# $Id: Makefile.in,v 1.14 2015/02/22 22:13:53 ayoung Exp $
 # libhunspell, hunspell, hzip and hunzip makefile
 #
 #
@@ -18,6 +18,7 @@ A=		.a
 LP=		lib
 
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+XCLEAN=
 
 # Compilers, programs
 

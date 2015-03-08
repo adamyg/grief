@@ -1,10 +1,10 @@
 #ifndef ERR_H_INCLUDED
 #define ERR_H_INCLUDED
-/* $Id: err.h,v 1.2 2012/09/03 23:10:14 ayoung Exp $
+/* $Id: err.h,v 1.3 2015/03/01 02:58:51 cvsuser Exp $
  *
  * win32 <err.h> implementation
  *
- * Copyright (c) 2012 Adam Young.
+ * Copyright (c) 2012-2015 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

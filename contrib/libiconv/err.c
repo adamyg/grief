@@ -1,7 +1,7 @@
-/* $Id: err.c,v 1.2 2012/08/31 16:13:35 ayoung Exp $
+/* $Id: err.c,v 1.3 2015/03/01 02:58:51 cvsuser Exp $
  * win32 <err.h> implementation
  *
- * Copyright (c) 2012 Adam Young.
+ * Copyright (c) 2012-2015 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

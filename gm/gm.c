@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: gm.c,v 1.25 2014/10/03 01:03:34 ayoung Exp $
+/* $Id: gm.c,v 1.26 2015/02/24 23:14:37 cvsuser Exp $
  * Grief LISP macro compiler.
  *
  *
@@ -631,7 +631,7 @@ loadmacro(const LIST *lp, int size)
     }
 
     if (F_STR != *lpn && F_ID != *lpn) {
-        cm_error("Macro must start with a name\n", NULL);
+        cm_error("Macro must start with a name\n");
         exit(1);
     }
 

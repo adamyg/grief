@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: mail.cr,v 1.10 2014/10/27 23:28:24 ayoung Exp $
+/* $Id: mail.cr,v 1.11 2015/02/25 01:17:03 cvsuser Exp $
  * Macro to send and receive mail
  *
  *
@@ -9,12 +9,17 @@
 #include "mode.h"
 
 #if defined(MSDOS) || defined(OS2)
+#define GRSIGNATURE     "_grsignature"
+#define GRMAIL          "_grmail"
 #define MAILPROG        "rmail"
 #else
+#define GRSIGNATURE     ".grsignature"
+#define GRMAIL          ".grmail"
 #define MAILPROG        "mail"
 #endif
 
 #if defined(__PROTOTYPES__)
+static string           mail_signature(void);
 static void             mail_watch(void);
 static int              mail_changed(void);
 static void             mail_send(string whom);
@@ -112,6 +117,13 @@ mail_watch(void)
 }
 
 
+static string
+mail_signature(void)
+{
+    return format("%s/%s", inq_home(), GRSIGNATURE);
+}
+
+
 /*
  *  Function returning TRUE if mail file has been modified.
  */
@@ -194,7 +206,7 @@ mail(void)
 static void
 mail_send(string whom)
 {
-    string subject, answer, filename, signfile;
+    string subject, answer, filename;
     string month_name, day_name, date_string;
     string mail_cmd;
     int hours, mins, secs, year, mon, day;
@@ -207,7 +219,7 @@ mail_send(string whom)
     get_parm(NULL, subject, "Subject: ");
     message("");
 
-    sprintf(filename, "%s/CR-mail.%d", inq_tmpdir(), getpid());
+    sprintf(filename, "%s/%s.%d", inq_tmpdir(), GRMAIL, getpid());
 
     mail_buf = create_buffer("Mail-Buffer", filename, 0);
     mail_win = sized_window(24, 76, "Type <Esc> to terminate entry.");
@@ -231,8 +243,7 @@ mail_send(string whom)
     /* Insert users signature if he's got one. */
     end_of_buffer();
     insert("\n--\n");
-    sprintf(signfile, "%s/.signature", inq_home());
-    read_file(signfile);
+    read_file(mail_signature());
     refresh();
     delete_window();
 
@@ -537,7 +548,7 @@ mail_reply(void)
     goto_line(start_line);
     drop_anchor(MK_LINE);
     goto_line(end_line);
-    sprintf(tmpfile, "%s/CRmail.%d", inq_tmpdir(), getpid());
+    sprintf(tmpfile, "%s/%s.%d", inq_tmpdir(), GRMAIL, getpid());
     write_block(tmpfile);
     buf = create_buffer(title, tmpfile, 1);
     set_buffer(buf);
@@ -600,7 +611,7 @@ mail_reply(void)
     /* Insert users .signature if he's got one */
     end_of_buffer();
     insert("\n");
-    read_file(inq_home() + "/.signature");
+    read_file(mail_signature());
     refresh();
     delete_window();
 
@@ -696,7 +707,7 @@ mail_select(void)
     goto_line(start_line);
     drop_anchor(MK_LINE);
     goto_line(end_line);
-    sprintf(tmpfile, "%s/CRmail.%d", inq_tmpdir(), getpid());
+    sprintf(tmpfile, "%s/%s.%d", inq_tmpdir(), GRMAIL, getpid());
     write_block(tmpfile);
     raise_anchor();
     buf = create_buffer(title, tmpfile, 1);

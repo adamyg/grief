@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_chkalloc_c,"$Id: chkalloc.c,v 1.21 2015/02/21 22:43:01 ayoung Exp $")
+__CIDENT_RCSID(gr_chkalloc_c,"$Id: chkalloc.c,v 1.22 2015/02/23 01:20:45 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: chkalloc.c,v 1.21 2015/02/21 22:43:01 ayoung Exp $
+/* $Id: chkalloc.c,v 1.22 2015/02/23 01:20:45 cvsuser Exp $
  * Memory allocation front end.
  *
  *
@@ -36,6 +36,7 @@ __CIDENT_RCSID(gr_chkalloc_c,"$Id: chkalloc.c,v 1.21 2015/02/21 22:43:01 ayoung 
 
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 #include <chkalloc.h>
 #if defined(_MSC_VER)
 #include <malloc.h>                             /* _expand */
@@ -675,7 +676,7 @@ chk_expand(void *p, size_t size)
     if (p && size && NULL != _expand(p, size)) {
         return _msize(p);
     }
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) && defined(HAVE_MALLOC_USAGE_SIZE)
     if (p && size && size <= malloc_usage_size(p)) {
         void *newptr = realloc(p, size);
         assert(newptr == p);

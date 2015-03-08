@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyx11_c,"$Id: ttyx11.c,v 1.9 2014/11/24 23:31:25 ayoung Exp $")
+__CIDENT_RCSID(gr_ttyx11_c,"$Id: ttyx11.c,v 1.10 2015/02/24 23:10:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyx11.c,v 1.9 2014/11/24 23:31:25 ayoung Exp $ */
+/* $Id: ttyx11.c,v 1.10 2015/02/24 23:10:08 cvsuser Exp $ */
 /*
  * Copyright (c) 2012-2014 Adam Young.
  * Copyright (c) 2009 Jeremy Cooper.
@@ -423,7 +423,7 @@ xgr_display(void)
 printf("x11: display\n");
     strxcpy(x_pt.pt_name, "curses-x11", sizeof(x_pt.pt_name));
 
-    sxprintf(x_pt.pt_encoding, sizeof(x_pt.pt_encoding), "x11",
+    sxprintf(x_pt.pt_encoding, sizeof(x_pt.pt_encoding), "x11%s",
                 (DISPTYPE_UTF8 == xf_disptype ? ".utf-8" : ""));
 
     grXGCSetup(x_disp, x_win, x_fontID, x_italicID);

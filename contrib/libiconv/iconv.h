@@ -1,10 +1,10 @@
 #ifndef ICONV_H_INCLUDED
 #define ICONV_H_INCLUDED
-/* $Id: iconv.h,v 1.3 2012/09/03 23:10:14 ayoung Exp $
+/* $Id: iconv.h,v 1.4 2015/03/01 02:58:51 cvsuser Exp $
  *
  * win32 <iconv.h> - libiconv
  *
- * Copyright (c) 2012 Adam Young.
+ * Copyright (c) 2012-2015 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

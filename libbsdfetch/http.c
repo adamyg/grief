@@ -1165,9 +1165,9 @@ out:
 #define OUT
 
 #define HASHLEN 16
-typedef char HASH[HASHLEN];
+typedef unsigned char HASH[HASHLEN];
 #define HASHHEXLEN 32
-typedef char HASHHEX[HASHHEXLEN+1];
+typedef unsigned char HASHHEX[HASHHEXLEN+1];
 
 static const char *hexchars = "0123456789abcdef";
 static void

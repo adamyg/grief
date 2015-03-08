@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.5 2013/05/12 21:35:56 cvsuser Exp $
+# $Id: Makefile.in,v 1.6 2015/02/22 22:13:55 ayoung Exp $
 # libguess makefile
 #
 #
@@ -17,6 +17,7 @@ A=		.a
 LP=		lib
 
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+XCLEAN=
 
 # Compilers, programs
 
@@ -90,7 +91,7 @@ directories:		$(D_OBJ)/.created $(D_LIB)/.created
 
 $(GUESSLIB):		CEXTRA += -D__LIBGUESS_BUILD -DLIBGUESS_STATIC -D_WIN32
 $(GUESSLIB):		$(LIBOBJS)
-		$(RM) $(RMFLAGS) $@ >nul 2>&1
+		$(RM) $(RMFLAGS) $@ >/dev/null 2>&1
 		$(AR) $(ARFLAGS) $@ $^
 		$(RANLIB) $@
 
@@ -106,9 +107,9 @@ installinc:		../include/.created
 
 .PHONY:		clean
 clean:
-		-@$(RM) $(RMFLAGS) $(LIBS) $(CLEAN) $(XCLEAN) >nul 2>&1
-		-@$(LIBTOOL) --mode=clean $(RM) $(DLLOBJS) >nul 2>&1
-		-@$(RM) $(LIBOBJS) >nul 2>&1
+		-@$(RM) $(RMFLAGS) $(LIBS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
+		-@$(LIBTOOL) --mode=clean $(RM) $(DLLOBJS) >/dev/null 2>&1
+		-@$(RM) $(LIBOBJS) >/dev/null 2>&1
 
 %/.created:
 		-@mkdir $(@D)
