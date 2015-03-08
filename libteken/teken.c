@@ -26,9 +26,12 @@
  * $FreeBSD$
  */
 
-#define __unused
 #include <config.h>
 #include <editor.h>
+
+#ifndef __unused
+#define __unused
+#endif
 
 #if !defined(__WATCOMC__) && \
         (!defined(_MSC_VER) || (_MSV_VER >= 1600))
