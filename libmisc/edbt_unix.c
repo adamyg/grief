@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edbt_unix_c,"$Id: edbt_unix.c,v 1.5 2015/02/19 00:17:11 ayoung Exp $")
+__CIDENT_RCSID(gr_edbt_unix_c,"$Id: edbt_unix.c,v 1.6 2015/03/08 02:51:24 ayoung Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edbt_unix.c,v 1.5 2015/02/19 00:17:11 ayoung Exp $
+/* $Id: edbt_unix.c,v 1.6 2015/03/08 02:51:24 ayoung Exp $
  * unix backtrace implementation
  *
  *
@@ -233,7 +233,29 @@ edbt_stackdump(FILE *out, int level)
 }
 
 #endif  /*!__CYGWIN__ && !linux */
-#endif  /*unix*/
+#else   /*unix*/
+#if defined(__APPLE__)
+void 
+edbt_init(const char *progname, int options, FILE *out)
+{
+    __CUNUSED(progname)
+    __CUNUSED(options)
+    __CUNUSED(out)
+}
+
+void 
+edbt_auto(void)
+{
+}
+
+void 
+edbt_stackdump(FILE *out, int level)
+{
+    __CUNUSED(out)
+    __CUNUSED(level)
+}
+#endif  /*__APPLE__*/
+#endif  /*!unix*/
 
 /*quiet archivers*/
 extern int edbt_unix(void);
