@@ -1,10 +1,10 @@
-dnl $Id: configure.in,v 1.46 2015/02/25 00:34:18 cvsuser Exp $
+dnl $Id: configure.in,v 1.48 2015/03/10 00:19:39 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl
 
-AC_REVISION($Revision: 1.46 $)
+AC_REVISION($Revision: 1.48 $)
 ##	AC_COPYRIGHT(Adam Young 1995-2014, Paul Fox 1989-1991)
 AC_INIT([GRIEF], [3.2.0], [griefedit@gmail.com])
 AC_PREREQ(2.68)
@@ -588,7 +588,10 @@ AC_CHECK_FUNCS(\
 	strverscmp __strverscmp \
 	strtof strtoll strtold \
 	strftime \
-	strerror)
+	strerror \
+	strnlen )
+CF_CHECK_STRLCPY
+CF_CHECK_STRLCAT
 
 AC_CHECK_FUNCS(\
 	setsid \

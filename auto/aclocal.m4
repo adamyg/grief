@@ -1,4 +1,4 @@
-# $Id: aclocal.m4,v 1.15 2015/02/25 00:34:18 cvsuser Exp $
+# $Id: aclocal.m4,v 1.16 2015/03/09 22:36:38 ayoung Exp $
 # -*- mode: Autoconf; tabs: 8; -*-
 # local packages
 #
@@ -30,5 +30,8 @@ m4_include([m4/ltoptions.m4])
 m4_include([m4/ltsugar.m4])
 m4_include([m4/ltversion.m4])
 m4_include([m4/lt~obsolete.m4])
-m4_include([m4/misc.m4])
 m4_include([m4/ssize_t.m4])
+m4_include([m4/string.m4])
+m4_include([m4/misc.m4])
+
+#
