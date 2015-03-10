@@ -305,12 +305,12 @@ LGET_PTR(register const LIST *lp)
     register uint64_t n =
             (((uint64_t) cp[1] << (8*7)) |
              ((uint64_t) cp[2] << (8*6)) |
-             ((uint64_t) cp[2] << (8*5)) |
-             ((uint64_t) cp[3] << (8*4)) |
-             ((uint64_t) cp[4] << (8*3)) |
-             ((uint64_t) cp[5] << (8*2)) |
-             ((uint64_t) cp[6] << (8*1)) |
-             ((uint64_t) cp[7]));
+             ((uint64_t) cp[3] << (8*5)) |
+             ((uint64_t) cp[4] << (8*4)) |
+             ((uint64_t) cp[5] << (8*3)) |
+             ((uint64_t) cp[6] << (8*2)) |
+             ((uint64_t) cp[7] << (8*1)) |
+             ((uint64_t) cp[8]));
 
 #elif (SIZEOF_VOID_P == 4)
     register uint32_t n =
