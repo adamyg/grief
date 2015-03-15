@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.27 2015/02/19 00:17:29 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.28 2015/03/14 22:44:03 ayoung Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -711,19 +711,19 @@ w32_symlink(const char *name1, const char *name2)
 {
     int ret = -1;
 
-    if (name1 == NULL || name2 == NULL)
+    if (name1 == NULL || name2 == NULL) {
         errno = ENAMETOOLONG;
 
-    else if (strlen(name1) > MAX_PATH || strlen(name2) > MAX_PATH)
+    } else if (strlen(name1) > MAX_PATH || strlen(name2) > MAX_PATH) {
         errno = ENAMETOOLONG;
 
-    else if (GetFileAttributes(name2) != 0xffffffff)
-        errno = EACCES;
+    } else if (GetFileAttributes(name2) != INVALID_FILE_ATTRIBUTES /*0xffffffff*/) {
+	errno = EEXIST;
 
-    else if (CreateShortcut(name2, name1, "", name1) == FALSE)
+    } else if (CreateShortcut(name2, name1, "", name1) == FALSE) {
         errno = EIO;
 
-    else {
+    } else {
         ret = 0;
     }
 
