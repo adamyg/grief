@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.61 2015/02/19 00:11:09 ayoung Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.62 2015/03/14 23:14:50 ayoung Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.61 2015/02/19 00:11:09 ayoung Exp $
+/* $Id: ttyvio.c,v 1.62 2015/03/14 23:14:50 ayoung Exp $
  * TTY VIO implementation.
  *
  *
@@ -806,8 +806,8 @@ term_print(int row, int col, int len, const VCELL_t *vvp)
             const vbyte_t attr = VBYTE_ATTR_GET(vvp->primary);
             vbyte_t c = VBYTE_CHAR_GET(vvp->primary);
 
-            if (attr != cattr) {                /* attribute change */
-                term_attribute(attr), cattr = attr;
+            if (cattr != attr) {		/* attribute change */
+                cattr = attr, term_attribute(cattr);
             }
 
             if (c >= CH_MIN && c <= CH_MAX) {   /* drawing characters */
@@ -827,6 +827,7 @@ term_print(int row, int col, int len, const VCELL_t *vvp)
             ++p;
             ++vvp;
         }
+	term_attribute(ATTR_NORMAL);
     }
 }
 
@@ -1154,10 +1155,10 @@ term_attribute(const vbyte_t attr)
         term_hue(term_colvalue(ca.fg, tt_defaultfg), term_colvalue(ca.bg, tt_defaultbg));
 #if defined(VIO_UNDERLINE)
         if (COLORSTYLE_UNDERLINE & ca.sf) {
-            tt_style = VIO_UNDERLINE;
+            tt_style |= VIO_UNDERLINE;
         }
         if (COLORSTYLE_ITALIC & ca.sf) {
-            tt_style = VIO_ITALIC;
+            tt_style |= VIO_ITALIC;
         }
 #endif
 

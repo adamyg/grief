@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.40 2015/02/19 00:12:08 ayoung Exp $")
+__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.41 2015/03/14 23:14:50 ayoung Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttywin32.c,v 1.40 2015/02/19 00:12:08 ayoung Exp $
+/* $Id: ttywin32.c,v 1.41 2015/03/14 23:14:50 ayoung Exp $
  * WIN32 VIO driver.
  *
  *  Notes,
@@ -1408,23 +1408,20 @@ CopyOut(const VIOCELL *buffer, size_t pos, size_t cnt)
 #endif
 
 #if defined(WIN32_CONSOLEEXT)
-    if (0 == style && vio.style) {              // refresh accumulator
-        uint16_t t_style = 0;
-
-        t_buffer = buffer, t_end = t_buffer + vio.size;
+    if (0 == style && 0 == vio.style) {		// initialise accumulator
+	t_buffer = buffer, t_end = t_buffer + vio.size;
         while (t_buffer < t_end) {              // accumulate extended colors/styles
-            if (((0xf0 << VIO_BG_SHIFT)|(0xf0 << VIO_FG_SHIFT)) & t_buffer->attribute) {
-                t_style |= VIO_COLOR256;
+	    if (((0xf0 << VIO_BG_SHIFT)|(0xf0 << VIO_FG_SHIFT)) & t_buffer->attribute) {
+		style |= VIO_COLOR256;
             }
-            t_style |= t_buffer->style;
+            style |= t_buffer->style;
             ++t_buffer;
         }
-        vio.style = t_style;
     }
-    vio.style |= style;
+    vio.style |= style;				// accumulate styles
 
 #if defined(WIN32_CONSOLE256)
-    if (256 == vio.maxcolors && ((VIO_COLOR256|VIO_ITALIC) & style)) {
+    if (256 == vio.maxcolors && ((VIO_COLOR256|VIO_ITALIC) & vio.style)) {
         //
         //  cursor-get
         //  cursor-hide
@@ -1436,21 +1433,20 @@ CopyOut(const VIOCELL *buffer, size_t pos, size_t cnt)
         //
         CONSOLE_CURSOR_INFO cinfo = {0};
         BOOL omode;
-                                                // update console buffer
+						// update console buffer
         GetConsoleCursorInfo(vio.cHandle, &cinfo);
         if (0 != (omode = cinfo.bVisible)) {
             cinfo.bVisible = FALSE;             // hide cursor
             SetConsoleCursorInfo(cHandle, &cinfo);
         }
                                                 // flush changes, disable updates
-        SendMessage(vio.wHandle, WM_SETREDRAW, FALSE, 0);
-        WriteConsoleOutputW(cHandle, vio.shadow + pos, imgSize, imgCoord, &rect);
-        SendMessage(vio.wHandle, WM_SETREDRAW, TRUE, 0);
+	SendMessage(vio.wHandle, WM_SETREDRAW, FALSE, 0);
+	WriteConsoleOutputW(cHandle, vio.shadow + pos, imgSize, imgCoord, &rect);
+	SendMessage(vio.wHandle, WM_SETREDRAW, TRUE, 0);
 
-	CopyOutEx(buffer, pos, cnt);            // export text
-
-        if (0 != (cinfo.bVisible = omode)) {    // restore cursor
-            SetConsoleCursorInfo(cHandle, &cinfo);
+	CopyOutEx(buffer, pos, cnt);		// export text
+	if (0 != (cinfo.bVisible = omode)) {	// restore cursor
+	    SetConsoleCursorInfo(cHandle, &cinfo);
         }
 
     } else {
@@ -1466,6 +1462,46 @@ CopyOut(const VIOCELL *buffer, size_t pos, size_t cnt)
 
 
 #if defined(WIN32_CONSOLE256)
+/*private*/
+/*  Function:           SameAttribute
+ *      Determine whether the same attribute,  ignore foreground colors for spaces 
+ *	allowing correct italic display.
+ */
+static __CINLINE int
+IsSpace(const uint32_t ch)
+{
+    switch (ch) {
+    case ' ':    // SPACE
+    case 0x00A0: // NO-BREAK SPACE
+    case 0x2000: // EN QUAD
+    case 0x2001: // EM QUAD
+    case 0x2002: // EN SPACE
+    case 0x2003: // EM SPACE
+    case 0x2004: // THREE-PER-EM SPACE
+    case 0x2005: // FOUR-PER-EM SPACE
+    case 0x2006: // SIX-PER-EM SPACE
+    case 0x2007: // FIGURE SPACE
+    case 0x2008: // PUNCTUATION SPACE
+    case 0x2009: // THIN SPACE
+    case 0x200A: // HAIR SPACE
+    case 0x200B: // ZERO WIDTH SPACE
+    case 0x202F: // NARROW NO-BREAK SPACE
+        return 1;
+    }
+    return 0;
+}
+
+
+static __CINLINE int
+SameAttributes(const VIOCELL cell, const uint32_t attribute, const uint32_t style)
+{
+    if (IsSpace(cell.character)) {  
+        return ((cell.attribute & VIO_BK_MASK) == (attribute & VIO_BK_MASK));
+    }
+    return ((cell.attribute == attribute) && (cell.style & ~VIO_UNDERLINE) == style);
+}
+
+
 /*private*/
 /*  Function:           TextOut
  *      Export characters within the specified region to the console window.
@@ -1487,7 +1523,7 @@ CopyOutEx(const VIOCELL *buffer, size_t pos, size_t cnt)
     float fcwidth, fcheight;                    // proportional sizing
     int row = pos / cols;
     RECT rect = {0};
-    WCHAR text[1024];
+    WCHAR text[1024];				// ExtTextOut limit 8192
     HFONT oldfont;
     HDC wdc;
 
@@ -1510,43 +1546,42 @@ CopyOutEx(const VIOCELL *buffer, size_t pos, size_t cnt)
 
     t_buffer = buffer + pos, t_end = t_buffer + cnt;
     do {
-        uint32_t attribute = 0xff000000, style = 0;
+	uint32_t attribute = 0xff000000, style = 0;
+
         int start = -1, col = 0, len = 0;
 
         while (col < cols) {
-            while (col < cols) {
+	    while (col < cols) {
                 const VIOCELL cell = *t_buffer++;
 
-                if (cell.attribute == attribute &&
-                        (cell.style & ~VIO_UNDERLINE) == style) {
-                    text[len] = (WCHAR)cell.character;
-                    ++col;
-                    if (++len >= (int)(sizeof(text)/sizeof(text[0]))) {
-                        break;                  // flush
-                    }
-                    continue;
-
-                } else if (start >= 0) {
-                    --t_buffer;
-                    break;                      // flush
-                }
+		if (start >= 0) {
+		    if (SameAttributes(cell, attribute,  style)) {
+			text[len] = (WCHAR)cell.character;
+			++col;
+			if (++len >= (int)(sizeof(text)/sizeof(text[0]))-1) {
+                            break;		// flush
+	                }
+	                continue;
+		    } else {
+			--t_buffer;
+			break;			// flush
+		    }
+		}
                 text[0] = (WCHAR)cell.character;
                 attribute = cell.attribute;
                 style = (~VIO_UNDERLINE) & cell.style;
                 start = col++;
                 len = 1;
-            }
+	    }
 
-            if (start >= 0) {                   // write text
-                const COLORREF bk = vio.colors256[(attribute >> VIO_BG_SHIFT) & VIO_FB_MASK],
+            if (start >= 0) {			// write text
+                const COLORREF bg = vio.colors256[(attribute >> VIO_BG_SHIFT) & VIO_FB_MASK],
                         fg = vio.colors256[(attribute >> VIO_FG_SHIFT) & VIO_FB_MASK];
 
-                if (vio.fiHandle) {
-                    SelectObject(wdc, (VIO_ITALIC & style) ? vio.fiHandle : vio.fnHandle);
-                }
-
-                SetBkColor(wdc, bk);
-                SetTextColor(wdc, fg);
+		if (vio.fiHandle) {
+		    SelectObject(wdc, (VIO_ITALIC & style) ? vio.fiHandle : vio.fnHandle);
+		}
+		text[len] = 0;
 
                 if (FCNPRO & vio.fcflags) {
                     //
@@ -1559,24 +1594,30 @@ CopyOutEx(const VIOCELL *buffer, size_t pos, size_t cnt)
                     const WCHAR *ch = text;
                     int idx;
 
-                    oldbrush = SelectObject(wdc, CreateSolidBrush(bk));
-                    oldpen = SelectObject(wdc, CreatePen(PS_SOLID, 0, bk));
+                    oldbrush = SelectObject(wdc, CreateSolidBrush(bg));
+                    oldpen = SelectObject(wdc, CreatePen(PS_SOLID, 0, bg));
                     Rectangle(wdc, left, top, left + (int)(fcwidth * len), top + (int)fcheight);
                     oldpen = SelectObject(wdc, oldpen);
                     oldbrush = SelectObject(wdc, oldbrush);
                     DeleteObject(oldpen);
                     DeleteObject(oldbrush);
 
+		    SetBkColor(wdc, bg);
+		    SetTextColor(wdc, fg);
                     SetTextAlign(wdc, GetTextAlign(wdc) | TA_CENTER);
                     for (idx = 0; idx < len; ++idx) {
-                        if (*ch) ExtTextOutW(wdc, left + (int)(fcwidth * (0.5 + idx)), top, ETO_OPAQUE, NULL, ch, 1, NULL);
-                        ++ch;
+			const WCHAR t_ch = *ch++;
+			if (t_ch && !IsSpace(t_ch)) {
+			    ExtTextOutW(wdc, left + (int)(fcwidth * (0.5 + idx)), top, ETO_OPAQUE, NULL, &t_ch, 1, NULL);
+			}
                     }
 
                 } else {
                     const int left = vio.fcwidth * start;
                     const int top = vio.fcheight * row;
 
+		    SetBkColor(wdc, bg);
+		    SetTextColor(wdc, fg);
                     ExtTextOutW(wdc, left, top, ETO_OPAQUE, NULL, text, len, NULL);
                 }
                 start = -1;
@@ -1989,9 +2030,9 @@ consolefontcreate(int height, int width, int weight, int italic, const char *fac
             FALSE,
         DEFAULT_CHARSET,                        // DEFAULT, ANSI, OEM ...
         (0 == strcmp(facename, "Terminal") ? OUT_RASTER_PRECIS : OUT_TT_PRECIS),
-        CLIP_DEFAULT_PRECIS,
+        CLIP_DEFAULT_PRECIS,			// default clipping behavior.
         ANTIALIASED_QUALITY,                    // PROOF
-        FF_MODERN,                              // DEFAULT, FIXED_PITCH
+        FF_MODERN,                              // DECORATIVE, DONTCARE, MODERN, ROMAN, SCRIPT, SWISS
         facename);
 }
 

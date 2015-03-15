@@ -1,11 +1,11 @@
 #ifndef GR_VIO_H_INCLUDED
 #define GR_VIO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vio_h,"$Id: vio.h,v 1.23 2014/10/26 22:13:14 ayoung Exp $")
+__CIDENT_RCSID(gr_vio_h,"$Id: vio.h,v 1.24 2015/03/14 23:14:50 ayoung Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vio.h,v 1.23 2014/10/26 22:13:14 ayoung Exp $
+/* $Id: vio.h,v 1.24 2015/03/14 23:14:50 ayoung Exp $
  * Video I/O interface header.
  *
  *
@@ -320,6 +320,7 @@ typedef struct {                                /* VIO cell unit (extended unico
 #define VIO_FG_SHIFT        0                   /* 0x00ff */
 #define VIO_BG_SHIFT        8                   /* 0xff00 */
 #define VIO_FB_MASK         0xff
+#define VIO_BK_MASK	    0xff00
 #define VIO_FG(_f)          ((_f) << VIO_FG_SHIFT)
 #define VIO_BG(_b)          ((_b) << VIO_BG_SHIFT)
 #define VIO_FGBG(_f, _b)    ((VIOHUE)(VIO_FG(_f)|VIO_BG(_b)))
