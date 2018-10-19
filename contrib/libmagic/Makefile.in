@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.8 2015/02/22 22:14:01 ayoung Exp $
+# $Id: Makefile.in,v 1.11 2017/01/29 04:52:26 cvsuser Exp $
 # libmagic makefile
 #
 #
@@ -27,6 +27,8 @@ CC=		@CC@
 AR=		@AR@
 RANLIB=		@RANLIB@
 RM=		@RM@
+PERL=		@PERL@
+LIBTOOL=	@LIBTOOL@
 
 # Common flags
 
@@ -64,14 +66,22 @@ D_LIB=		$(ROOT)/lib
 
 # targets
 
-MAGICLIB=	$(D_LIB)/$(LP)magic$(A)
+MAGICLIB=	$(D_LIB)/$(LP)magic_static$(A)
+MAGICDLL=	$(D_LIB)/$(LP)magic.la
+
 MAGICUTIL=	$(D_BIN)/grfile$(E)
 MAGICDB=	$(D_BIN)/magic.mgc
 
-VERSION=	5.1.1
+#VERSION=	5.1.1
+#MAGICPACKED=	file-511.tgz
+#MAGICSRC=	./file-511
+#MAGDIR=	./file-511/src/magic
+VERSION=	5.29
+MAGICPACKED=	file-5.29.gr.tgz
+MAGICSRC=	./file-5.29/src
+MAGDIR=		./file-5.29/magic
+
 VERSIONSPEC=	$(subst .,:,$(VERSION))
-MAGICPACKED=	file-511.tgz
-MAGICSRC=	./file-511
 VPATH=		$(MAGICSRC)
 
 LIBOBJS=\
@@ -83,45 +93,71 @@ LIBOBJS=\
 	$(D_OBJ)/encoding$(O)		\
 	$(D_OBJ)/fsmagic$(O)		\
 	$(D_OBJ)/funcs$(O)		\
-	$(D_OBJ)/getline$(O)		\
 	$(D_OBJ)/is_tar$(O)		\
 	$(D_OBJ)/magic$(O)		\
 	$(D_OBJ)/print$(O)		\
 	$(D_OBJ)/readcdf$(O)		\
 	$(D_OBJ)/softmagic$(O)		\
-	$(D_OBJ)/getopt_long$(O)	\
+	$(D_OBJ)/getline$(O)		\
 	$(D_OBJ)/asprintf$(O)		\
 	$(D_OBJ)/vasprintf$(O)		\
 	$(D_OBJ)/strlcpy$(O)		\
 	$(D_OBJ)/strlcat$(O)
+ifeq ($(VERSION),5.29)
+LIBOBJS+=\
+	$(D_OBJ)/fmtcheck$(O)		\
+	$(D_OBJ)/der$(O)		\
+	$(D_OBJ)/pread$(O)		\
+	$(D_OBJ)/strcasestr$(O)		\
+	$(D_OBJ)/ctime_r$(O)		\
+	$(D_OBJ)/asctime_r$(O)		\
+	$(D_OBJ)/localtime_r$(O)	\
+	$(D_OBJ)/gmtime_r$(O)
+endif
+
+DLLOBJS=\
+	$(subst $(O),.lo,$(LIBOBJS))
 
 UTILOBJS=\
-	$(D_OBJ)/file$(O)
+	$(D_OBJ)/file$(O)		\
+	$(D_OBJ)/getopt_long$(O)	\
+	$(D_OBJ)/getline$(O)
 
-OBJS=		$(LIBOBJS) $(UTILOBJS)
-LIBS=		$(MAGICLIB)
+XCLEAN+=	$(MAGICDB) magic.mgc
+OBJS=		$(LIBOBJS) $(DLLOBJS) $(UTILOBJS)
+LIBS=		$(MAGICLIB) $(MAGICDLL)
 TSKS=		$(MAGICUTIL)
 
 # Rules
 
 all:			source unpacked
-unpacked:		$(LIBS) $(TSKS) $(MAGICDB) installinc
+unpacked:		$(LIBS) $(TSKS) $(MAGICDB) installinc 
 
+$(MAGICLIB):		CEXTRA += -D__LIBMAGIC_BUILD -DLIBMAGIC_STATIC -D_WIN32
 $(MAGICLIB):		$(D_OBJ)/.created $(LIBOBJS)
 		$(RM) $(RMFLAGS) $@ >/dev/null 2>&1
 		$(AR) $(ARFLAGS) $@ $(LIBOBJS)
 		$(RANLIB) $@
 
-$(MAGICUTIL):		$(UTILOBJS) $(LIBOBJS)
-		$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
+$(MAGICDLL):		CEXTRA += -D__LIBMAGIC_BUILD -DLIBMAGIC_DYNAMIC -D_WIN32
+$(MAGICDLL):		$(DLLOBJS)
+		$(LIBTOOL) --mode=link $(CC) -o $@ $^ -version-number $(VERSIONSPEC) \
+			-rpath $(D_LIB) -bindir $(D_BIN) $(LDLIBS)
 
-MSRC=		$(shell ls $(MAGICSRC)/Magdir/*)
+$(MAGICUTIL):		$(UTILOBJS)
+		$(CC) $(LDFLAGS) $^ -o $@ $(D_LIB)/libmagic$(A) $(LDLIBS)
 
-$(MAGICDB):		magic
+$(MAGICDB):		magic.mgc
+		@echo publishing magicdb $(MAGICDB) ...
+		@-cp.exe magic.mgc $(MAGICDB)
+
+MSRC=		$(shell ls $(MAGDIR)/Magdir/*)
+magic.mgc:		$(MSRC) Makefile
+		@rm -fr magic
+		@-mkdir magic
+		@cp $(MAGDIR)/Magdir/* magic
 		$(MAGICUTIL) -C -m magic
-
-magic:
-		cat $(MAGICSRC)/Header $(MAGICSRC)/Localstuff $(MSRC) > $@
+		@rm -fr magic
 
 source:			.unpacked.$(VERSION)
 		$(MAKE) unpacked
@@ -132,19 +168,22 @@ source:			.unpacked.$(VERSION)
 		@gzip -c -d $(MAGICPACKED) | tar -xvf -
 
 installinc:		../include/.created
-		@echo publishing headers ...
-		-cp $(MAGICSRC)/magic.h ../include
-		@echo publishing magicdb ...
-		-cp magic.mgc $(D_BIN)
+		@echo publishing headers 'magic.h' ...
+		@-cp $(MAGICSRC)/magic.h ../include
 
 %/.created:
 		-@mkdir $(@D)
 		@echo "do not delete, managed directory" > $@
 
 clean:
-		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(OBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
+		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(CLEAN) $(XCLEAN) >nul 2>&1
+		-@$(LIBTOOL) --mode=clean $(RM) $(DLLOBJS) >nul 2>&1
+		-@$(RM) $(LIBOBJS) $(UTILOBJS) >nul 2>&1
 
 $(D_OBJ)/%$(O):		%$(C)
 		$(CC) $(CFLAGS) -D_CRT_SECURE_NO_DEPRECATE -o $@ -c $<
+
+$(D_OBJ)/%.lo:		%.c
+		$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -D_CRT_SECURE_NO_DEPRECATE -o $@ -c $<
 
 #end

@@ -6,8 +6,8 @@
 
 #define PACKAGE_NAME "file"
 #define PACKAGE_TARNAME "file"
-#define PACKAGE_VERSION "5.11"
-#define PACKAGE_STRING "file 5.11"
+#define PACKAGE_VERSION "5.29"
+#define PACKAGE_STRING "file 5.29"
 #define PACKAGE_BUGREPORT "christos@astron.com"
 #define PACKAGE_URL ""
 #define VERSION PACKAGE_VERSION
