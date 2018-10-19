@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.14 2015/03/01 02:41:03 cvsuser Exp $
+# $Id: Makefile.in,v 1.15 2017/01/23 21:09:08 cvsuser Exp $
 # libarchive makefile
 #
 #
@@ -66,7 +66,8 @@ ZLIB=		$(D_LIB)/$(LP)z_static$(A)
 ZDLL=		$(D_LIB)/$(LP)z.la
 
 #VERSION=	1.2.7
-VERSION=	1.2.8
+#VERSION=	1.2.8
+VERSION=	1.2.11
 VERSIONSPEC=	$(subst .,:,$(VERSION))
 VERPACKED=	zlib-$(VERSION).tgz
 
