@@ -32,6 +32,14 @@
 __RCSID("$NetBSD: gettext.c,v 1.28 2012/07/30 23:04:42 yamt Exp $");
 
 #include "namespace.h"
+#if defined(WIN32)
+#ifndef WINDOWS_MEAN_AND_LEAN
+#define WINDOWS_MEAN_AND_LEAN
+#endif
+#include <windows.h>
+#pragma comment(lib, "Kernel32.lib")
+#endif	//WIN32
+
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -503,7 +511,11 @@ mapit(const char *path, struct domainbinding *db)
 		goto fail;
 	if ((st.st_mode & S_IFMT) != S_IFREG || st.st_size > GETTEXT_MMAP_MAX)
 		goto fail;
+#if defined(WIN32)
+	fd = open(path, O_RDONLY | O_BINARY);
+#else
 	fd = open(path, O_RDONLY);
+#endif
 	if (fd < 0)
 		goto fail;
 	if (read(fd, &magic, sizeof(magic)) != sizeof(magic) ||
@@ -834,6 +846,18 @@ get_lang_env(const char *category_name)
 	if (!lang)
 		lang = getenv("LANG");
 
+#if defined(WIN32)
+	if (!lang)
+	{	static char ISO639_LanguageName[32]; //FIXME: tls
+
+		ISO639_LanguageName[0] = 0;
+		if (GetLocaleInfoA(GetUserDefaultLCID(), LOCALE_SISO639LANGNAME,
+				ISO639_LanguageName, sizeof(ISO639_LanguageName)) && ISO639_LanguageName[0]) {
+			lang = ISO639_LanguageName;
+		}
+	}
+#endif	//WIN32
+
 	if (!lang)
 		return 0; /* error */
 
@@ -897,15 +921,21 @@ dcngettext(const char *domainname, const char *msgid1, const char *msgid2,
 	/* resolve relative path */
 	/* XXX not necessary? */
 	if (db->path[0] != '/') {
-		char buf[PATH_MAX];
+#if defined(WIN32)
+		if (db->path[0] == 0 || db->path[1] != ':') {
+#endif
+			char buf[PATH_MAX];
 
-		if (getcwd(buf, sizeof(buf)) == 0)
-			goto fail;
-		if (strlcat(buf, "/", sizeof(buf)) >= sizeof(buf))
-			goto fail;
-		if (strlcat(buf, db->path, sizeof(buf)) >= sizeof(buf))
-			goto fail;
-		strlcpy(db->path, buf, sizeof(db->path));
+			if (getcwd(buf, sizeof(buf)) == 0)
+				goto fail;
+			if (strlcat(buf, "/", sizeof(buf)) >= sizeof(buf))
+				goto fail;
+			if (strlcat(buf, db->path, sizeof(buf)) >= sizeof(buf))
+				goto fail;
+			strlcpy(db->path, buf, sizeof(db->path));
+#if defined(WIN32)
+		}
+#endif
 	}
 
 	/* don't bother looking it up if the values are the same */
