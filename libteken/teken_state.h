@@ -81,6 +81,9 @@ teken_state_2(teken_t *t, teken_char_t c)
 	case 'u': /* DECRC: Restore cursor */
 		teken_subr_restore_cursor(t);
 		break;
+	case 'x': /* C25SGR: Cons25 set graphic rendition */
+		teken_subr_cons25_set_graphic_rendition(t, t->t_curnum < 1 ? 0 : t->t_nums[0], t->t_curnum < 2 ? 0 : t->t_nums[1]);
+		break;
 	case 'z': /* C25VTSW: Cons25 switch virtual terminal */
 		teken_subr_cons25_switch_virtual_terminal(t, t->t_curnum < 1 ? 0 : t->t_nums[0]);
 		break;

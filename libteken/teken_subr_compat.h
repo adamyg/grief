@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2008-2009 Ed Schouten <ed@@FreeBSD.org>
+ * Copyright (c) 2008-2009 Ed Schouten <ed@FreeBSD.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD$
+ * $FreeBSD: head/sys/teken/teken_subr_compat.h 214817 2010-11-05 00:56:21Z ed $
  */
 
 static void
@@ -85,6 +85,20 @@ teken_subr_cons25_set_bell_pitch_duration(teken_t *t, unsigned int pitch,
 
 	teken_funcs_param(t, TP_SETBELLPD, (pitch << 16) |
 	    (duration & 0xffff));
+}
+
+static void
+teken_subr_cons25_set_graphic_rendition(teken_t *t, unsigned int cmd,
+    unsigned int param __unused)
+{
+
+	switch (cmd) {
+	case 0: /* Reset. */
+		t->t_curattr = t->t_defattr;
+		break;
+	default:
+		teken_printf("unsupported attribute %u\n", cmd);
+	}
 }
 
 static void

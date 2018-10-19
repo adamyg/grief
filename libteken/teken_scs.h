@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2009 Ed Schouten <ed@@FreeBSD.org>
+ * Copyright (c) 2009 Ed Schouten <ed@FreeBSD.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD$
+ * $FreeBSD: head/sys/teken/teken_scs.h 203659 2010-02-08 09:16:59Z ed $
  */
 
 static __CINLINE teken_char_t

@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2008-2009 Ed Schouten <ed@@FreeBSD.org>
+ * Copyright (c) 2008-2009 Ed Schouten <ed@FreeBSD.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD$
+ * $FreeBSD: head/sys/teken/demo/teken_demo.c 286797 2015-08-15 08:29:13Z ed $
  */
 
 #define  __unused
@@ -47,7 +47,7 @@
 #include <util.h>
 #endif
 
-#include "teken.h"
+#include <teken.h>
 
 static tf_bell_t	test_bell;
 static tf_cursor_t	test_cursor;
@@ -74,7 +74,7 @@ struct pixel {
 
 #define NCOLS	80
 #define NROWS	24
-struct pixel buffer[NCOLS][NROWS];
+static struct pixel buffer[NCOLS][NROWS];
 
 static int ptfd;
 
@@ -88,9 +88,10 @@ printchar(const teken_pos_t *p)
 	assert(p->tp_row < NROWS);
 	assert(p->tp_col < NCOLS);
 
-	getyx(stdscr, y, x);
-
- 	px = &buffer[p->tp_col][p->tp_row];
+	px = &buffer[p->tp_col][p->tp_row];
+	/* No need to print right hand side of CJK character manually. */
+	if (px->a.ta_format & TF_CJK_RIGHT)
+		return;
 
 	/* Convert Unicode to UTF-8. */
 	if (px->c < 0x80) {
@@ -120,8 +121,8 @@ printchar(const teken_pos_t *p)
 
 	bkgdset(attr | COLOR_PAIR(teken_256to8(px->a.ta_fgcolor) +
 	      8 * teken_256to8(px->a.ta_bgcolor)));
+	getyx(stdscr, y, x);
 	mvaddstr(p->tp_row, p->tp_col, str);
-
 	move(y, x);
 }
 
@@ -171,10 +172,10 @@ test_copy(void *s __unused, const teken_rect_t *r, const teken_pos_t *p)
 	 * Copying is a little tricky. We must make sure we do it in
 	 * correct order, to make sure we don't overwrite our own data.
 	 */
-	
+
 	nrow = r->tr_end.tp_row - r->tr_begin.tp_row;
 	ncol = r->tr_end.tp_col - r->tr_begin.tp_col;
-	
+
 	if (p->tp_row < r->tr_begin.tp_row) {
 		/* Copy from top to bottom. */
 		if (p->tp_col < r->tr_begin.tp_col) {
