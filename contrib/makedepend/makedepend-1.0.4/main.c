@@ -136,11 +136,11 @@ const char	**systemdirs = NULL;            /*APY*/
 const char	*mtarget = NULL;                /*APY*/
 int		mflags = 0;                     /*APY*/
 
-static void     profile(const char *name);      /*APY*/
-static void     setfile_cmdinc(struct filepointer *filep, long count, char **list);
-static void     redirect(const char *line, const char *makefile);
-static void     help(void);
-static void     copyright(void);
+static void	profile(const char *name);      /*APY*/
+static void	setfile_cmdinc(struct filepointer *filep, long count, char **list);
+static void	redirect(const char *line, const char *makefile);
+static void	help(void);
+static void	copyright(void);
 
 static
 #if defined(RETSIGTYPE)
@@ -346,12 +346,32 @@ main(int argc, char *argv[])
 					mflags |= MFLAG_NOSYSTEM;
 					break;
 				case 'G': /* -MG */
+					//  In conjunction with an option such as -M requesting dependency generation, -MG assumes missing header files are
+					//  generated files and adds them to the dependency list without raising an error. The dependency filename is taken
+					//  directly from the #include directive without prepending any path. -MG also suppresses preprocessed output, as a
+					//  missing header file renders this useless.
+					//
+					//	This feature is used in automatic updating of makefiles.
+					//
 					mflags |= MFLAG_GENERATED;
 					break;
 				case 'P': /* -MP */
+					//  This option instructs CPP to add a phony target for each dependency other than the main file, causing each to
+					//  depend on nothing. These dummy rules work around errors make gives if you remove header files without updating
+					//  the Makefile to match.
+					//
+					//  This is typical output:
+					//
+					//	test.o: test.c test.h
+					//
 					mflags |= MFLAG_PHONY;
 					break;
 				case 'F': /* -MF <filename> */
+					//  When used with -M or -MM, specifies a file to write the dependencies to. If no -MF switch is given the
+					//  preprocessor sends the rules to the same place it would have sent preprocessed output.
+					//
+					//  When used with the driver options -MD or -MMD, -MF overrides the default dependency output file.
+					//
 					makefile = ++p;
 					if (!*makefile) {
 						makefile = *(++argv);
@@ -359,9 +379,27 @@ main(int argc, char *argv[])
 					}
 					p = NULL;
 					break;
-                                case 'Q': /* -MQ <target> */
-					mflags |= MFLAG_QUOTE;
+				case 'Q': /* -MQ <target> */
+					//  Same as -MT, but it quotes any characters which are special to Make.
+					//
+					//  For example -MQ '$(objpfx)foo.o' gives
+					//
+					//	$$(objpfx)foo.o: foo.c
+					//
+					mflags |= MFLAG_QUOTE; //TODO
+					/*FALLTHRU*/
 				case 'T': /* -MT <target> */ {
+					//  Change the target of the rule emitted by dependency generation. By default CPP takes the name of the main input
+					//  file, deletes any directory components and any file suffix such as ‘.c’, and appends the platform's usual object
+					//  suffix. The result is the target.
+					//
+					//  An -MT option will set the target to be exactly the string you specify. If you want multiple targets, you can
+					//  specify them as a single argument to -MT, or use multiple -MT options.
+					//
+					//  For example, -MT '$(objpfx)foo.o' might give
+					//
+					//	$(objpfx)foo.o: foo.c
+					//
 						const char *target = ++p;
 
 						mflags |= MFLAG_TARGET;
@@ -401,7 +439,7 @@ main(int argc, char *argv[])
 					warning("ignoring option -M%c\n", *p);
 					break;
 				}
-                        }
+			}
 			break;
 
 		/* do not use if endmarker processing */
@@ -414,7 +452,7 @@ main(int argc, char *argv[])
 					name = *(++argv);
 					--argc;
 				}
-			        for (p = (char *)name; *p; ++p)
+				for (p = (char *)name; *p; ++p)
 					if ('=' == *p) {
 					        *p++ = 0;
 					        if (*p) alias = p;
@@ -429,7 +467,7 @@ main(int argc, char *argv[])
 				} else {
 					fatalerr("-alias should be of the form name=alias\n");
 				}
-		        } else {
+			} else {
 				if (endmarker) break;
 				append = TRUE;
 			}
@@ -1291,10 +1329,10 @@ help(void)
 	    "            specified include directory; you can omit the includedir to simply",
 	    "            prevent searching the standard include directories.",
 	    "",
-            "            (extension) If includedir is prefixed with @@, the value shall be",
-            "            taken to be the name of an environment variable, of the form",
-            "            '@@name', which will be imported and treated as a ';' seperated",
-            "            list of directories.",
+	    "            (extension) If includedir is prefixed with @@, the value shall be",
+	    "            taken to be the name of an environment variable, of the form",
+	    "            '@@name', which will be imported and treated as a ';' seperated",
+	    "            list of directories.",
 	    "",
 	    "       -a   Append  the dependencies to the end of the file instead of replac-",
 	    "            ing them.",
@@ -1461,7 +1499,7 @@ copyright(void)
 	    "",
 	    "",
 	    "       Copyright (c) 1993, 1994, 1998 The Open Group",
-	    "       Copyright (c) 2012-2013, Adam Young.",
+	    "       Copyright (c) 2012 - 2018, Adam Young.",
 	    "",
 	    "       Permission to use, copy, modify, distribute, and sell this software and its",
 	    "       documentation for any purpose is hereby granted without fee, provided that",

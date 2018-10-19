@@ -51,7 +51,7 @@ add_include(struct filepointer *filep, struct inclist *file,
 		show_where_not = TRUE;
 		newfile = inc_path(file->i_file, include, type);
 		show_where_not = FALSE;
-		if (MFLAG_GENERATED & mflags) { /*APY*/
+		if (MFLAG_GENERATED & mflags) {        /*APY*/
 			warning1("assumed as generated \"%s\"\n", include);
 			newfile = newinclude(include, include);
 			newfile->i_flags |= SEARCHED;
@@ -86,6 +86,7 @@ pr(struct inclist *ip, const char *file, const char *base)
 		for (pp = systemdirs; *pp; ++pp) {
 			if (0 == strncmp(*pp, ip->i_file, strlen(*pp)))
 				return;
+//TODO
 //			(void) strncpy(path, *pp, sizeof(path));
 //			path[sizeof(path)-1] = 0;
 //			remove_dotdot(path);
@@ -105,10 +106,25 @@ pr(struct inclist *ip, const char *file, const char *base)
 	if (current_len + len > width || file != lastfile) {
 		lastfile = file;
 		if (MFLAG_TARGET & mflags) {		/*APY*/
-			len = fprintf(stdout, "\n%s: %s", mtarget, ip->i_file);
+			len = fprintf(stdout, "\n%s: ", mtarget);
 		} else {
-			len = fprintf(stdout, "\n%s%s%s: %s", objprefix, base, objsuffix, ip->i_file);
+			len = fprintf(stdout, "\n%s%s%s: ", objprefix, base, objsuffix);
 		}
+
+		if (NULL == strchr(ip->i_file, ' ')) {	/*APY, quote embedded spaces*/
+		} else {
+		    const char *i_file;
+		    char ch;
+		    for (i_file = ip->i_file; 0 != (ch = *i_file); ++i_file) {
+			if (ch == ' ') {
+			    fputc('\\', stdout);
+			    ++len;
+			}
+			fputc(ch, stdout);
+			++len;
+		    }
+		}
+
 		current_len = len;
 	}
 	else {

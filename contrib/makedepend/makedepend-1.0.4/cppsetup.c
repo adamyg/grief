@@ -49,12 +49,14 @@ my_if_errors (IfParser *ip, const char *cp, const char *expecting)
     prefixlen = strlen(prefix);
     fprintf (stderr, "%s:  %s", prefix, pd->line);
     i = cp - pd->line;
+//  fprintf (stderr, "%d:", i);
     if (i > 0 && pd->line[i-1] != '\n') {
 	putc ('\n', stderr);
     }
-    for (i += prefixlen + 3; i > 0; i--) {
-	putc (' ', stderr);
-    }
+//FIXME: cp reference incorrect at times.
+//  for (i += prefixlen + 3; i > 0; i--) {
+//	   putc (' ', stderr);
+//  }
     fprintf (stderr, "^--- expecting %s\n", expecting);
     return NULL;
 }
