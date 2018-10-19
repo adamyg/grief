@@ -15,10 +15,15 @@
 //  #define LIBARCHIVE_VERSION_STRING "3.0.4"
 //  #define LIBARCHIVE_VERSION_NUMBER "3000004"
 
-#define PACKAGE_VERSION "3.1.2"
-#define PACKAGE_STRING "libarchive 3.1.2"
-#define LIBARCHIVE_VERSION_STRING "3.1.2"
-#define LIBARCHIVE_VERSION_NUMBER "3001002"
+//  #define PACKAGE_VERSION "3.1.2"
+//  #define PACKAGE_STRING "libarchive 3.1.2"
+//  #define LIBARCHIVE_VERSION_STRING "3.1.2"
+//  #define LIBARCHIVE_VERSION_NUMBER "3001002"
+
+#define PACKAGE_VERSION "3.3.3"
+#define PACKAGE_STRING "libarchive 3.3.3"
+#define LIBARCHIVE_VERSION_STRING "3.3.3"
+#define LIBARCHIVE_VERSION_NUMBER "3003003"
 
 #include "../contrib_config.h"
 
@@ -29,7 +34,7 @@
 
 #if defined(__WATCOMC__)
 /*
- *  patches required:
+ *  patches required: (WATCOMC < 1300)
  *   archive_entry.h:
  *
  *   -   #elif defined(_WIN32) && !defined(__CYGWIN__) && !defined(__BORLANDC__)
@@ -49,6 +54,7 @@
 #undef S_ISGID
 #undef S_ISVTX
 #undef S_IRWXG
+
 #undef S_IXGRP
 #undef S_IWGRP
 #undef S_IRGRP
@@ -56,6 +62,20 @@
 #undef S_IXOTH
 #undef S_IWOTH
 #undef S_IROTH
+
+#if (__WATCOMC__ >= 1300)
+#undef _S_IXGRP
+#undef _S_IWGRP
+#undef _S_IRGRP
+#undef _S_IRWXO
+#undef _S_IXOTH
+#undef _S_IWOTH
+#undef _S_IROTH
+#undef _S_IFBLK
+#undef _S_IFLNK
+#undef _S_IFSOCK
+#endif
+
 #endif /*__WATCOMC__*/
 
 #endif /*CONFIG_H_INCLUDED*/

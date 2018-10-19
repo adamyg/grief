@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.10 2015/02/22 22:13:55 ayoung Exp $
+# $Id: Makefile.in,v 1.12 2018/10/18 00:38:42 cvsuser Exp $
 # libarchive makefile
 #
 #
@@ -41,6 +41,9 @@ CEXTRA=		@DEFS@
 ifeq ("mingw32","@build_os@")
 CEXTRA+=	-D__USE_MINGW_ANSI_STDIO
 endif
+ifeq ("win32","@build_os@")
+CEXTRA+=	-D_CRT_SECURE_NO_WARNINGS
+endif
 CEXTRA+=	-D_WIN32 -D_WIN32_WINNT=0X501
 CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
 CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
@@ -64,16 +67,16 @@ D_LIB=		$(ROOT)/lib
 ARCHIVELIB=	$(D_LIB)/$(LP)archive_static$(A)
 ARCHIVEDLL=	$(D_LIB)/$(LP)archive.la
 
-VERSION=	3.1.2
+VERSION=	3.3.3
 VERSIONSPEC=	$(subst .,:,$(VERSION))
-PACKED=		libarchive-3.1.2a.tgz
-ARCHIVESRC=	./libarchive-3.1.2/libarchive
+PACKED=		libarchive-$(VERSION).gr.tgz
+ARCHIVESRC=	./libarchive-$(VERSION)/libarchive
 VPATH=		$(ARCHIVESRC)
 
 LIBOBJS=\
 	$(D_OBJ)/archive_acl$(O)				\
 	$(D_OBJ)/archive_check_magic$(O)			\
-	$(D_OBJ)/archive_crypto$(O)				\
+	$(D_OBJ)/archive_cryptor$(O)				\
 	$(D_OBJ)/archive_entry$(O)				\
 	$(D_OBJ)/archive_entry_copy_bhfi$(O)			\
 	$(D_OBJ)/archive_entry_copy_stat$(O)			\
@@ -158,7 +161,6 @@ LIBOBJS=\
 
 #3.1.2
 LIBOBJS+=\
-	$(D_OBJ)/archive_read_support_filter_all$(O)		\
 	$(D_OBJ)/archive_read_support_filter_lrzip$(O)		\
 	$(D_OBJ)/archive_read_support_filter_lzop$(O)		\
 	$(D_OBJ)/archive_read_support_filter_grzip$(O)		\
@@ -167,6 +169,35 @@ LIBOBJS+=\
 	$(D_OBJ)/archive_write_add_filter_uuencode$(O)		\
 	$(D_OBJ)/archive_write_set_format_v7tar$(O)		\
 	$(D_OBJ)/archive_cmdline$(O)
+
+#3.3.3
+LIBOBJS+=\
+	$(D_OBJ)/archive_digest$(O)				\
+	$(D_OBJ)/archive_disk_acl_darwin$(O)			\
+	$(D_OBJ)/archive_disk_acl_freebsd$(O)			\
+	$(D_OBJ)/archive_disk_acl_linux$(O)			\
+	$(D_OBJ)/archive_disk_acl_sunos$(O)			\
+	$(D_OBJ)/archive_hmac$(O)				\
+	$(D_OBJ)/archive_pack_dev$(O)				\
+	$(D_OBJ)/archive_random$(O)				\
+	$(D_OBJ)/archive_read_add_passphrase$(O)		\
+	$(D_OBJ)/archive_read_extract2$(O)			\
+	$(D_OBJ)/archive_read_support_filter_lz4$(O)		\
+	$(D_OBJ)/archive_read_support_filter_zstd$(O)		\
+	$(D_OBJ)/archive_read_support_format_warc$(O)		\
+	$(D_OBJ)/archive_version_details$(O)			\
+	$(D_OBJ)/archive_write_add_filter_lz4$(O)		\
+	$(D_OBJ)/archive_write_add_filter_zstd$(O)		\
+	$(D_OBJ)/archive_write_set_format_filter_by_ext$(O)	\
+	$(D_OBJ)/archive_write_set_format_raw$(O)		\
+	$(D_OBJ)/archive_write_set_format_warc$(O)		\
+	$(D_OBJ)/archive_write_set_passphrase$(O)		\
+	$(D_OBJ)/xxhash$(O)
+
+#special 3.3.3
+# XXX:  crypt32.dll dynamic loader ...
+LIBOBJS+=\
+	$(D_OBJ)/w32_crypto$(O)
 
 ifeq ("yes","@ISWIN32@")
 LIBOBJS+=\
@@ -189,19 +220,34 @@ TSKS=
 
 # Rules
 
-all:			source unpacked
+all:			checkversion source unpacked
 unpacked:		object $(LIBS) $(TSKS) installinc
+
+# gmake 4.0; file operator required
+verneeded :=	4.0
+verreported :=	$(filter $(verneeded),$(firstword $(sort $(MAKE_VERSION) $(verneeded))))
+
+.PHONY:			checkversion
+checkversion:
+ifeq ($(verreported),)
+		$(error Unsupported Make version. \
+ The build system does not work properly with GNU Make $(MAKE_VERSION), GNU Make ${verneeded} or above required.)
+endif
 
 $(ARCHIVELIB):		CEXTRA += -I$(ARCHIVESRC) -DLIBARCHIVE_STATIC
 $(ARCHIVELIB):		$(LIBOBJS)
 		$(RM) $(RMFLAGS) $@ >/dev/null 2>&1
-		$(AR) $(ARFLAGS) $@ $^
+		$(file >libtool.cmd) $(foreach O,$^,$(file >>libtool.cmd, $O))
+		$(AR) $(ARFLAGS) $@ @libtool.cmd
+		@$(RM) libtool.cmd
 		$(RANLIB) $@
 
 $(ARCHIVEDLL):		CEXTRA += -I$(ARCHIVESRC) -D__LIBARCHIVE_BUILD -DZLIB_DLL
 $(ARCHIVEDLL):		$(DLLOBJS)
+		$(file >libtool.cmd) $(foreach O,$^,$(file >>libtool.cmd, $O))
 		$(LIBTOOL) --mode=link $(CC) -version-number $(VERSIONSPEC) \
-			-rpath $(D_LIB) -bindir $(D_BIN) -o $@ $^ libz$(A) libbz2$(A) $(LDLIBS)
+			-rpath $(D_LIB) -bindir $(D_BIN) -o $@ @libtool.cmd libz$(A) libbz2$(A) $(LDLIBS)
+		@$(RM) libtool.cmd
 
 source:			.unpacked.$(VERSION)
 		$(MAKE) unpacked
