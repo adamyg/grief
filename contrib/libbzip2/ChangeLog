@@ -1,0 +1,25 @@
+-*- encoding: utf-8; -*-
+
+Fri Jan 27 16:48:25 2017 adamy
+
+	* imported 1.0.6
+
+		- bzip2.h modifications
+
+		#if ((defined __WIN32__) || (defined _WIN32) || defined(__CYGWIN__)) && !defined(LIBBZIP2_STATIC)
+			:
+			:
+		#   ifdef __LIBBZIP2_BUILD
+		#      define BZ_API(func) WINAPI func
+		#      define BZ_EXTERN __declspec(dllexport)
+		#   else
+		#      define BZ_API(func) WINAPI func
+		#      define BZ_EXTERN __declspec(dllimport)
+		#   endif
+
+/*
+ * Local Variables: ***
+ * mode: changelog ***
+ * End: ***
+ */
+

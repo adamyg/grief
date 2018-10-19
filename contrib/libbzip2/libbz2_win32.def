@@ -1,57 +1,6 @@
-;$Id: libbz2_win32.def,v 1.2 2013/04/05 19:52:12 ayoung Exp $
+;$Id: libbz2_win32.def,v 1.3 2018/10/14 21:47:12 cvsuser Exp $
 ;  Windows libbz2 definition file ...
 ;  Note verify map file if any link issues
-;  TODO: auto internal-name resolver using map-file
 ;
-DESCRIPTION	"libbzip2: library for data compression"
-EXPORTS
-	BZ2_bzCompressInit         =_BZ2_bzCompressInit@16
-	BZ2_bzCompress             =_BZ2_bzCompress@8
-	BZ2_bzCompressEnd          =_BZ2_bzCompressEnd@4
-	BZ2_bzDecompressInit       =_BZ2_bzDecompressInit@12
-	BZ2_bzDecompress           =_BZ2_bzDecompress@4
-	BZ2_bzDecompressEnd        =_BZ2_bzDecompressEnd@4
-	BZ2_bzReadOpen             =_BZ2_bzReadOpen@24
-	BZ2_bzReadClose            =_BZ2_bzReadClose@8
-	BZ2_bzReadGetUnused        =_BZ2_bzReadGetUnused@16
-	BZ2_bzRead                 =_BZ2_bzRead@16
-	BZ2_bzWriteOpen            =_BZ2_bzWriteOpen@20
-	BZ2_bzWrite                =_BZ2_bzWrite@16
-	BZ2_bzWriteClose           =_BZ2_bzWriteClose@20
-	BZ2_bzWriteClose64         =_BZ2_bzWriteClose64@28
-	BZ2_bzBuffToBuffCompress   =_BZ2_bzBuffToBuffCompress@28
-	BZ2_bzBuffToBuffDecompress =_BZ2_bzBuffToBuffDecompress@24
-	BZ2_bzlibVersion           =_BZ2_bzlibVersion@0
-	BZ2_bzopen                 =_BZ2_bzopen@8
-	BZ2_bzdopen                =_BZ2_bzdopen@8
-	BZ2_bzread                 =_BZ2_bzread@12
-	BZ2_bzwrite                =_BZ2_bzwrite@12
-	BZ2_bzflush                =_BZ2_bzflush@4
-	BZ2_bzclose                =_BZ2_bzclose@4
-	BZ2_bzerror                =_BZ2_bzerror@8
-
-        _BZ2_bzCompressInit@16     =_BZ2_bzCompressInit@16
-        _BZ2_bzCompress@8          =_BZ2_bzCompress@8
-        _BZ2_bzCompressEnd@4       =_BZ2_bzCompressEnd@4
-        _BZ2_bzDecompressInit@12   =_BZ2_bzDecompressInit@12
-        _BZ2_bzDecompress@4        =_BZ2_bzDecompress@4
-        _BZ2_bzDecompressEnd@4     =_BZ2_bzDecompressEnd@4
-        _BZ2_bzReadOpen@24         =_BZ2_bzReadOpen@24
-        _BZ2_bzReadClose@8         =_BZ2_bzReadClose@8
-        _BZ2_bzReadGetUnused@16    =_BZ2_bzReadGetUnused@16
-        _BZ2_bzRead@16             =_BZ2_bzRead@16
-        _BZ2_bzWriteOpen@20        =_BZ2_bzWriteOpen@20
-        _BZ2_bzWrite@16            =_BZ2_bzWrite@16
-        _BZ2_bzWriteClose@20       =_BZ2_bzWriteClose@20
-        _BZ2_bzWriteClose64@28     =_BZ2_bzWriteClose64@28
-        _BZ2_bzBuffToBuffCompress@28  =_BZ2_bzBuffToBuffCompress@28
-        _BZ2_bzBuffToBuffDecompress@24 =_BZ2_bzBuffToBuffDecompress@24
-        _BZ2_bzlibVersion@0        =_BZ2_bzlibVersion@0
-        _BZ2_bzopen@8              =_BZ2_bzopen@8
-        _BZ2_bzdopen@8             =_BZ2_bzdopen@8
-        _BZ2_bzread@12             =_BZ2_bzread@12
-        _BZ2_bzwrite@12            =_BZ2_bzwrite@12
-        _BZ2_bzflush@4             =_BZ2_bzflush@4
-        _BZ2_bzclose@4             =_BZ2_bzclose@4
-        _BZ2_bzerror@8             =_BZ2_bzerror@8
+DESCRIPTION "libbzip2: library for data compression"
 
