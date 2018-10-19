@@ -1,12 +1,12 @@
-dnl $Id: configure.in,v 1.48 2015/03/10 00:19:39 cvsuser Exp $
+dnl $Id: configure.in,v 1.57 2018/10/01 14:39:07 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl
 
-AC_REVISION($Revision: 1.48 $)
-##	AC_COPYRIGHT(Adam Young 1995-2014, Paul Fox 1989-1991)
-AC_INIT([GRIEF], [3.2.0], [griefedit@gmail.com])
+AC_REVISION($Revision: 1.57 $)
+##	AC_COPYRIGHT(Adam Young 1995-2018, Paul Fox 1989-1991)
+AC_INIT([GRIEF], [3.2.1], [griefedit@gmail.com])
 AC_PREREQ(2.68)
 
 AC_CONFIG_SRCDIR([include/edheaders.h])
@@ -178,7 +178,6 @@ AC_TYPE_UINT32_T
 AC_TYPE_UINTMAX_T
 AC_TYPE_UINTPTR_T
 
-
 dnl Checks for system services
 dnl
 dnl     AC_SYS_LARGEFILE
@@ -203,11 +202,34 @@ AC_CHECK_FUNCS(sendfile)
 AC_CHECK_HEADERS(sys/prctl.h)
 AC_CHECK_FUNCS(prctl)
 
+dnl regex
+LIBREGEX=""
+AC_SUBST(LIBREGEX)
+AC_MSG_CHECKING(whether to enable librexgex POSIX regular expression; otherwise libc)
+AC_ARG_WITH(regex,
+	[  --with-regex            use libregex],
+			[with_libregex=$withval],
+			[with_libregex=no])
+AC_MSG_RESULT($with_libregex)
+AC_CHECK_HEADERS(regex.h)
+if test "$with_regex" = yes ; then
+	AC_CHECK_LIB(regex,regcomp,[
+		LIBREGEX=['-lregex']
+		],AC_MSG_WARN(cannot link with libregex; libc assumed))
+fi
+
+dnl compression libraries
+dnl	libz
+dnl     liblzma
+dnl	libbz2
+dnl
+CF_WITH_LIBZ
+CF_WITH_LIBLZMA
+CF_WITH_LIBBZ2
 
 dnl terminal interface
 dnl
 LIBTERM_CHECK_CONFIG()
-
 
 dnl third-party libraries
 dnl     libicu
@@ -478,6 +500,9 @@ dnl see: feature_test_macros (linux/glibc-library specific header)
 AC_CHECK_HEADERS( \
 	features.h )
 
+AC_CHECK_HEADERS( \
+	fts.h err.h vis.h )
+
 dnl C99 headers
 AC_CHECK_HEADERS( \
 	fenv.h )
@@ -530,7 +555,6 @@ dnl
 AC_FUNC_CLOSEDIR_VOID
 AC_FUNC_GETPGRP
 
-AC_FUNC_VPRINTF
 CF_FUNC_ISASCII
 CF_FUNC_ISBLANK
 CF_FUNC_MKSTEMP
@@ -570,17 +594,22 @@ AC_CHECK_FUNCS(statlstat)
 dnl library functions.
 CF_MALLOC_OPT
 
+AC_FUNC_STRTOD
+AC_FUNC_STRTOLD
 AC_CHECK_FUNCS(\
 	bcmp bzero memcmp memset memmove \
 	vprintf snprintf vsnprintf _vsnprintf \
 	getlogin getexecname \
 	fgetpos fsetpos fgetln \
+	getline getdelim \
+	truncate ftruncate \
 	select poll \
 	setlocale \
 	link symlink \
-	lstat \
+	stat lstat \
 	chown chroot \
 	matherr)
+AC_FUNC_FSEEKO
 
 AC_CHECK_FUNCS(\
 	strchr strrchr strdup \
@@ -589,7 +618,8 @@ AC_CHECK_FUNCS(\
 	strtof strtoll strtold \
 	strftime \
 	strerror \
-	strnlen )
+	strnlen \
+	strvis strnvis strvisx strunvix unvis )
 CF_CHECK_STRLCPY
 CF_CHECK_STRLCAT
 
@@ -600,11 +630,19 @@ AC_CHECK_FUNCS(\
 	setpgid)
 
 AC_CHECK_FUNCS(\
-	ctime_r \
-	localtime_r \
-	gmtime_r \
+	strtok_r strerror_l strerror_r \
+	readdir_r \
+	rand_r \
+	pread pwrite \
+	getlogin_r \
 	asctime_r \
+	ctime_r \
+	gmtime_r \
+	localtime_r \
 	timegm)
+
+AC_CHECK_FUNCS(\
+	opendir )
 
 AC_CHECK_FUNCS(\
 	mergesort \
@@ -619,7 +657,13 @@ dnl BSD extensions
 AC_CHECK_FUNCS(\
 	index rindex \
 	setproctitle \
-	setprocname)
+	setprocname getprocname \
+	err \
+	mkdtemp \
+	pledge \
+	strtonum strcasestr strsep \
+	stringlist \
+	reallocarray)
 
 AC_CONFIG_FILES([\
 	Makefile \
@@ -681,7 +725,8 @@ AC_MSG_RESULT([-    Spell Support: $LIBSPELL])
 AC_MSG_RESULT([-       Conversion: $LIBICU $LIBAPRICONV $LIBICONV])
 AC_MSG_RESULT([-        Detection: $LIBENCA $LIBCHARUDET $LIBGUESS $LIBMAGIC])
 AC_MSG_RESULT([-         Security: $LIBOPENSSL])
-AC_MSG_RESULT([-   Other Features: $LIBCURL $LIBARCHIVE $LIBEXPLAIN])
+AC_MSG_RESULT([-      Compression: $LIBBZ2 $LIBLZMA $LIBZ])
+AC_MSG_RESULT([-   Other Features: $LIBCURL $LIBARCHIVE $LIBEXPLAIN $LIBREGEX])
 AC_MSG_RESULT([-        Libraries: $LIBS $LIBX11 $LIBTHREAD])
 AC_MSG_RESULT([-            Extra: $LIBCLANG $LIBM $EXTRALIBS])
 AC_MSG_RESULT([-        Allocator: $LIBMALLOC])

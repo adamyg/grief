@@ -1,4 +1,4 @@
-dnl $Id: libmagic.m4,v 1.4 2012/12/31 01:33:54 cvsuser Exp $
+dnl $Id: libmagic.m4,v 1.5 2017/01/30 04:03:27 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -45,7 +45,7 @@ AC_DEFUN([CF_LIB_MAGIC],[
 		AC_CHECK_HEADERS($LIBMAGIC_H_DIR/magic,h,[
 			CFLAGS="$CFLAGS -I$LIBMAGIC_H_DIR"
 			libmagic_header=yes],
-			[AC_MSG_ERROR([magic.h not found a specified location])])
+			[AC_MSG_ERROR([magic.h not found at specified location])])
 	else
 		AC_CHECK_HEADERS(magic.h,[libmagic_header=yes])
 	fi
@@ -70,17 +70,24 @@ AC_DEFUN([CF_LIB_MAGIC],[
 	])
 
 	LIBMAGIC=
+	if test "$LIBZ" = "" ; then
+		LIBZ=
+	fi
 	if test "$cf_cv_libmagic" != "no" ; then
 		if test "$cf_cv_libmagic" = "yes" ; then
 			LIBMAGIC="-lmagic"
 
 		elif test "$cf_cv_libmagic" = "yes, along with libz" ; then
 			LIBMAGIC="-lmagic -lz"
-			AC_DEFINE([HAVE_LIBZ], 1, [Define if the system has liblibz])
+			LIBZ="-lz"
+			AC_DEFINE([HAVE_LIBZ], 1, [Define if libz is available])
 		fi
 		AC_DEFINE(HAVE_LIBMAGIC, 1, [<magic.h> and magic_open().])
 		AC_DEFINE(HAVE_MAGIC_H, 1, [magic.h available.])
 	fi
 	AC_SUBST(LIBMAGIC)
-])dnl
+	AC_SUBST(LIBZ)
+])
+
+dnl end
 

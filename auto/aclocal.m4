@@ -1,4 +1,4 @@
-# $Id: aclocal.m4,v 1.16 2015/03/09 22:36:38 ayoung Exp $
+# $Id: aclocal.m4,v 1.17 2017/01/30 04:03:27 cvsuser Exp $
 # -*- mode: Autoconf; tabs: 8; -*-
 # local packages
 #
@@ -18,12 +18,15 @@ m4_include([m4/libcurl.m4])
 m4_include([m4/libenca.m4])
 m4_include([m4/libiconv.m4])
 m4_include([m4/libicu.m4])
-m4_include([m4/libm.m4])
+m4_include([m4/liblzma.m4])
+m4_include([m4/libbz2.m4])
+m4_include([m4/libz.m4])
 m4_include([m4/libmagic.m4])
 m4_include([m4/libmalloc.m4])
+m4_include([m4/libm.m4])
+m4_include([m4/libspell.m4])
 m4_include([m4/libterm.m4])
 m4_include([m4/libtool.m4])
-m4_include([m4/libspell.m4])
 m4_include([m4/libx11.m4])
 m4_include([m4/longlong.m4])
 m4_include([m4/ltoptions.m4])
