@@ -2,7 +2,7 @@
 // ftp interface test
 //
 
-#include "grief.h"
+#include "../grief.h"
 
 #if !defined(PROTOCOL_FTP)
 #define PROTOCOL_FTP    0

@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: colors.cr,v 1.15 2014/11/27 15:54:09 ayoung Exp $
+/* $Id: colors.cr,v 1.16 2018/10/01 21:05:01 cvsuser Exp $
  * Enhanced colour/colorscheme support.
  *
  *
@@ -1629,12 +1629,12 @@ void
 vim_groupmap(string name)
 {
     // Constant [constant]
-    //     *Constant	    any constant
-    //      String	    a string constant: "this is a string"
-    //      Character	    a character constant: 'c', '\n'
-    //      Number	    a number constant: 234, 0xff
-    //      Boolean	    a boolean constant: TRUE, false
-    //      Float	    a floating point constant: 2.3e10
+    //     *Constant        any constant
+    //      String          a string constant: "this is a string"
+    //      Character       a character constant: 'c', '\n'
+    //      Number          a number constant: 234, 0xff
+    //      Boolean         a boolean constant: TRUE, false
+    //      Float           a floating point constant: 2.3e10
     //
     if (0 == strlen(name) || 0 == strcasecmp(name, "Constant")) {
         const string link = "=clear:link@constant";
@@ -1647,7 +1647,7 @@ vim_groupmap(string name)
 
     // Identifier [n/a]
     //      *Identifier     any variable name
-    //       Function	    function name (also: methods for classes)
+    //       Function       function name (also: methods for classes)
     //
     if (0 == strlen(name) || 0 == strcasecmp(name, "Identifier")) {
         set_color("word=clear:link@normal");
@@ -1743,3 +1743,4 @@ vim_attrmap(string attr)
     return "";
 }
 /*eof*/
+

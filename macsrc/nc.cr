@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: nc.cr,v 1.30 2014/11/24 11:10:51 ayoung Exp $
+/* $Id: nc.cr,v 1.31 2018/10/01 21:05:01 cvsuser Exp $
  * Norton Commander (NC) style directory services
  *
  *
@@ -1011,7 +1011,7 @@ NcEnter(void)
         } else {
             NcCd(DIR_DOWN + ncfilebuf);
         }
-						/* File selection */
+                                                /* File selection */
     } else if (substr(nclinebuf, TYPEPOS, 1) == "F") {
         ncfilebuf = "./" + trim(substr(nclinebuf, NAMEPOS));
         exit();

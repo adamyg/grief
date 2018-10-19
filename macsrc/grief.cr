@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: grief.cr,v 1.83 2015/02/25 01:15:06 cvsuser Exp $
+/* $Id: grief.cr,v 1.84 2018/10/01 21:05:01 cvsuser Exp $
  * GRIEF startup macro.
  *
  *
@@ -70,7 +70,7 @@ static list             gri_properties = {
     "colorscheme256",           /* Color scheme (colors >= 256) */
     "colorscheme88",            /* Color scheme (colors >= 88) */
     "colorscheme16",            /* Color scheme (colors >= 16) */
-    "colorscheme",	        /* Color scheme */
+    "colorscheme",              /* Color scheme */
     "colors",                   /* Default colors */
     "color_index",              /* Default new window color index */
     "window_color",             /* Default first window color */
@@ -104,11 +104,11 @@ static list             gri_values;             // cached values
  */
 static string           gri_profile;
 
-static int		gri_packageloaded = 0;  // whether language is loaded?
-string			gri_package = "";
+static int              gri_packageloaded = 0;  // whether language is loaded?
+string                  gri_package = "";
 
 static int              gri_modeline = FALSE;
-static int		gri_mouse = FALSE;
+static int              gri_mouse = FALSE;
 static int              gri_menubar = FALSE;
 static int              gri_changed = FALSE;
 
@@ -116,12 +116,12 @@ static string           gri_coloriser256 = "";
 static string           gri_coloriser88 = "";
 static string           gri_coloriser16 = "";
 static string           gri_coloriser = "";
-static int		gri_window_color = 0;
+static int              gri_window_color = 0;
 static int              gri_color_index = 0;
 
 static string           gri_tabs;
 static string           gri_hardtabs;
-static string		gri_indents;
+static string           gri_indents;
 
 static list             tabs_list;
 static list             hardtabs_list;
@@ -178,8 +178,8 @@ main(void)
  *      The following macro is executed on startup and is responsible for setting up the
  *      initial environment.
  *
- *	In addition, it sets up several global variables which are utilised by the other
- *	macros to allow portability between operating systems.
+ *      In addition, it sets up several global variables which are utilised by the other
+ *      macros to allow portability between operating systems.
  */
 void
 grief(void)
@@ -1120,7 +1120,7 @@ _griget_tabs(void)
 string
 _griget_hard_tabs(void)
 {
-    return gri_hardtabs +			/* grinit setting, plus global setting */
+    return gri_hardtabs +                       /* grinit setting, plus global setting */
             "default=" + (use_tab_char(-1, 1) ? "yes" : "no");
 }
 
@@ -1154,7 +1154,7 @@ _griset_hard_tabs(string arg)
 {
     int i;
 
-    gri_hardtabs = "";				/* clear grinit value */
+    gri_hardtabs = "";                          /* clear grinit value */
     hardtabs_list = split(arg, " =.", 1);       /* import parameters */
     for (i = 0; i < length_of_list(hardtabs_list); i += 2) {
         if (hardtabs_list[i] == "default") {    /* set global setting */
@@ -1171,7 +1171,7 @@ _griset_indents(string arg)
 {
     int i;
 
-    gri_indents = "";				/* clear grinit value */
+    gri_indents = "";                           /* clear grinit value */
     indents_list = split(arg, " =.", 1);        /* import parameters */
     for (i = 0; i < length_of_list(indents_list); i += 2) {
         if (indents_list[i] != "default") {     /* export grinit */
@@ -1199,9 +1199,9 @@ _griset_profile(string arg)
         string func = macros[i];
 
         if (strlen(gri_profile)) {
-	    gri_profile += ",";
+            gri_profile += ",";
         }
-	execute_macro(func);
+        execute_macro(func);
     }
     gri_profile = arg;
 }
@@ -1383,10 +1383,10 @@ void
 _griset_colors(string arg)
 {
     if (inq_macro("inq_coloriser", 2) > 0) {
-	string scheme = inq_coloriser();
-	if (scheme) {			        /* colorscheme active, ignore */
-	    return;
-	}
+        string scheme = inq_coloriser();
+        if (scheme) {                           /* colorscheme active, ignore */
+            return;
+        }
     }
 
     if (strlen(arg)) {
@@ -1443,10 +1443,10 @@ _griset_colorscheme256(string arg)
     if (strlen(arg)) {
         int depth;
 
-	gri_coloriser256 = arg;
-	inq_screen_size(NULL, NULL, depth);
+        gri_coloriser256 = arg;
+        inq_screen_size(NULL, NULL, depth);
         if (depth >= 256) {
-	    colorscheme(arg);
+            colorscheme(arg);
         }
     }
 }
@@ -1458,11 +1458,11 @@ _griset_colorscheme88(string arg)
     if (strlen(arg)) {
         int depth;
 
-	gri_coloriser88 = arg;
+        gri_coloriser88 = arg;
         inq_screen_size(NULL, NULL, depth);
         if (88 == depth ||
                 (depth > 88 && !gri_coloriser256)) {
-	    colorscheme(arg);
+            colorscheme(arg);
         }
     }
 }
@@ -1474,11 +1474,11 @@ _griset_colorscheme16(string arg)
     if (strlen(arg)) {
         int depth;
 
-	gri_coloriser16 = arg;
-	inq_screen_size(NULL, NULL, depth);
+        gri_coloriser16 = arg;
+        inq_screen_size(NULL, NULL, depth);
         if (16 == depth ||
                 (depth > 16 && !gri_coloriser256 && !gri_coloriser88)) {
-	    colorscheme(arg);
+            colorscheme(arg);
         }
     }
 }
@@ -1491,10 +1491,10 @@ _griset_colorscheme(string arg)
         int depth;
 
         gri_coloriser = arg;
-	inq_screen_size(NULL, NULL, depth);
-	if (!gri_coloriser256 && !gri_coloriser88 && !gri_coloriser16) {
-	    colorscheme(arg);
-	}
+        inq_screen_size(NULL, NULL, depth);
+        if (!gri_coloriser256 && !gri_coloriser88 && !gri_coloriser16) {
+            colorscheme(arg);
+        }
     }
 }
 
@@ -1523,10 +1523,10 @@ string
 _griget_colorscheme(void)
 {
     if (inq_macro("inq_coloriser", 2) > 0) {
-	string scheme = inq_coloriser();
-	if (scheme) {
-	    return scheme;		        // active colorscheme
-	}
+        string scheme = inq_coloriser();
+        if (scheme) {
+            return scheme;                      // active colorscheme
+        }
     }
     return gri_coloriser;
 }
@@ -1590,3 +1590,4 @@ clear_buffer(void)
 }
 
 /*end*/
+

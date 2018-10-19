@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: view.cr,v 1.12 2014/10/27 23:28:30 ayoung Exp $
+/* $Id: view.cr,v 1.13 2018/10/01 21:05:01 cvsuser Exp $
  * Buffer view manipulation.
  *
  *
@@ -295,31 +295,31 @@ view(string arg)
 //      set_buffer_flags(NULL, "oct_mode");
         break;
 
-	  case "ebcdic":
-		  if (ebcdic_cmap < 0) {
-			   ebcdic_cmap = create_char_map(NULL, NULL, ebcdic_view, NULL, "view::ebcdic");
-		  }
+    case "ebcdic":
+        if (ebcdic_cmap < 0) {
+            ebcdic_cmap = create_char_map(NULL, NULL, ebcdic_view, NULL, "view::ebcdic");
+        }
         set_buffer_cmap(ebcdic_cmap, inq_buffer());
-		  break;
+        break;
 
     case "literal":
         literal();
         break;
 
     case "eol":
-		  if (eol_cmap < 0) {
+        if (eol_cmap < 0) {
             if (DC_UNICODE == ((DC_UNICODE|DC_ASCIIONLY) & inq_display_mode())) {
                 eol_cmap = create_char_map(NULL, CMAP_EOL, quote_list(0x23CE), NULL, "view::eol");
             } else {
                 eol_cmap = create_char_map(NULL, CMAP_EOL, quote_list("$"), NULL, "view::eol");
             }
-		  }
+        }
         set_buffer_cmap(eol_cmap, inq_buffer());
-		  break;
+        break;
 
     case "normal":
         set_buffer_cmap(NULL, inq_buffer());
-		  set_window_cmap(NULL, inq_window());
+        set_window_cmap(NULL, inq_window());
 //      set_buffer_flags(NULL, NULL, "hex_mode,oct_mode");
         break;
 
@@ -387,3 +387,4 @@ literal(void)
 }
 
 /*eof*/
+

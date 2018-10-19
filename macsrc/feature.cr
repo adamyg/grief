@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: feature.cr,v 1.31 2015/02/26 23:17:17 ayoung Exp $
+/* $Id: feature.cr,v 1.32 2015/07/10 21:33:53 cvsuser Exp $
  * Features menu.
  *
  *
@@ -302,4 +302,3 @@ feature_menukeys()
 }
 
 /*eof*/
-

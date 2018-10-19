@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: ls.cr,v 1.10 2014/10/27 23:28:24 ayoung Exp $
+/* $Id: ls.cr,v 1.11 2018/10/01 21:05:01 cvsuser Exp $
  * Directory & File manager
  *
  *
@@ -98,7 +98,7 @@ ls(string dir)
         if (S_IFDIR & mode) {
             if (substr(name, 1, 1) == ".") {
                 if (".." != name) {
-	                 continue;                   /* current directory */
+                    continue;                   /* current directory */
                 }
             }
             top_of_buffer();

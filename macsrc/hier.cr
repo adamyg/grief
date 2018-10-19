@@ -1,4 +1,4 @@
-/* $Id: hier.cr,v 1.6 2014/10/22 02:34:18 ayoung Exp $
+/* $Id: hier.cr,v 1.7 2018/10/01 21:05:01 cvsuser Exp $
  * Language support macro.
  *
  *
@@ -7,13 +7,13 @@
 #include "grief.h"
 #include "mode.h"
 
-static list	        hierarchies = {
+static list         hierarchies = {
     "C",                "hier_show \"c\"",
-	"C++",              "hier_show \"cpp\"",
-	"GRIEF",            "hier_show \"grief\"",
+    "C++",              "hier_show \"cpp\"",
+    "GRIEF",            "hier_show \"grief\"",
     "c#",               "hier_show \"csharp\"",
-	"Javascript",       "hier_show \"java\"",
-	"Perl",             "hier_show \"perl\"",
+    "Javascript",       "hier_show \"java\"",
+    "Perl",             "hier_show \"perl\"",
     };
 
 static list         grief_hier_list =  {
@@ -83,3 +83,4 @@ hier_show(string what)
  *  tabs: 4 ***
  *  End: ***
  */
+

@@ -1,5 +1,5 @@
 /* -*- indent-width: 4; -*- */
-/* $Id: license.cr,v 1.7 2014/12/08 13:46:55 ayoung Exp $
+/* $Id: license.cr,v 1.9 2018/10/01 21:05:01 cvsuser Exp $
  * License information.
  *
  *
@@ -31,7 +31,7 @@ main()
             "",
             "         1000111 1110010 1101001 1100101 1100110",
             "",
-            "Copyright (c) 1998 - 2014, Adam Young.",
+            "Copyright (c) 1998 - 2018, Adam Young.",
             "All Rights Reserved.",
             "",
             "Derived from Crisp2.2, by Paul Fox, 1991.",
