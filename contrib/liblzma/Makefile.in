@@ -1,0 +1,259 @@
+# -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
+# $Id: Makefile.in,v 1.3 2017/02/03 03:22:17 cvsuser Exp $
+# liblzma makefile and grxz
+#
+#
+#
+
+@SET_MAKE@
+ROOT=		@abs_top_builddir@
+top_builddir=	@top_builddir@
+
+# File extensions
+
+C=		.c
+E=
+O=		.o
+H=		.h
+A=		.a
+LP=		lib
+
+CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
+XCLEAN=
+
+# Compilers, programs
+
+CC=		@CC@
+AR=		@AR@
+RANLIB=		@RANLIB@
+RM=		@RM@
+PERL=		@PERL@
+LIBTOOL=	@LIBTOOL@
+
+# Common flags
+
+ARFLAGS=	rcv
+XFLAGS=		
+COPT=		@CFLAGS@
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+LDEBUG=		@LDEBUG@
+CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
+ifeq ("mingw32","@build_os@")
+CINCLUDE+=	-I../include -I../../libw32
+endif
+CEXTRA=		@DEFS@
+CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+YFLAGS=		-d
+LDFLAGS=	$(LDEBUG) @LDFLAGS@
+LDLIBS=		$(D_LIB)/$(LP)regex$(A) -L$(D_LIB) @LIBS@
+ifeq ("mingw32","@build_os@")
+LDLIBS+=	-lw32 -lshlwapi -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
+endif
+LDLIBS+=	@LIBM@ @EXTRALIBS@
+
+RMFLAGS=	-f
+
+# Directories
+
+D_BIN=		$(ROOT)/bin
+D_INC=		$(ROOT)/include
+D_OBJ=		$(ROOT)/objects/liblzma
+D_LIB=		$(ROOT)/lib
+
+############################################################
+
+# targets
+
+LZMALIB=	$(D_LIB)/$(LP)lzma_static$(A)
+LZMADLL=	$(D_LIB)/$(LP)lzma.la
+LZMAUTIL=	$(D_BIN)/grxz$(E)
+
+VERSION=	5.2.3
+LZMAPACKED=	xz-$(VERSION).tgz
+LZMASRC=	./xz-$(VERSION)/src
+LIBLZMASRC=	./xz-$(VERSION)/src/liblzma
+LIBINC=		\
+	-I$(LZMASRC)/common \
+	-I$(LIBLZMASRC)/api \
+	-I$(LIBLZMASRC)/common \
+	-I$(LIBLZMASRC)/check \
+	-I$(LIBLZMASRC)/lz \
+	-I$(LIBLZMASRC)/lzma \
+	-I$(LIBLZMASRC)/rangecoder \
+	-I$(LIBLZMASRC)/delta \
+	-I$(LIBLZMASRC)/simple
+
+VERSIONSPEC=	$(subst .,:,$(VERSION))
+
+VPATH=		$(LIBLZMASRC)/common
+LIBOBJS=\
+	$(D_OBJ)/common$(O) \
+	$(D_OBJ)/block_util$(O) \
+	$(D_OBJ)/easy_preset$(O) \
+	$(D_OBJ)/filter_common$(O) \
+	$(D_OBJ)/index$(O) \
+	$(D_OBJ)/stream_flags_common$(O) \
+	$(D_OBJ)/vli_size$(O) \
+	$(D_OBJ)/alone_encoder$(O) \
+	$(D_OBJ)/block_buffer_encoder$(O) \
+	$(D_OBJ)/block_encoder$(O) \
+	$(D_OBJ)/block_header_encoder$(O) \
+	$(D_OBJ)/easy_buffer_encoder$(O) \
+	$(D_OBJ)/easy_encoder$(O) \
+	$(D_OBJ)/easy_encoder_memusage$(O) \
+	$(D_OBJ)/filter_buffer_encoder$(O) \
+	$(D_OBJ)/filter_encoder$(O) \
+	$(D_OBJ)/filter_flags_encoder$(O) \
+	$(D_OBJ)/index_encoder$(O) \
+	$(D_OBJ)/stream_buffer_encoder$(O) \
+	$(D_OBJ)/stream_encoder$(O) \
+	$(D_OBJ)/stream_flags_encoder$(O) \
+	$(D_OBJ)/vli_encoder$(O) \
+	$(D_OBJ)/alone_decoder$(O) \
+	$(D_OBJ)/auto_decoder$(O) \
+	$(D_OBJ)/block_buffer_decoder$(O) \
+	$(D_OBJ)/block_decoder$(O) \
+	$(D_OBJ)/block_header_decoder$(O) \
+	$(D_OBJ)/easy_decoder_memusage$(O) \
+	$(D_OBJ)/filter_buffer_decoder$(O) \
+	$(D_OBJ)/filter_decoder$(O) \
+	$(D_OBJ)/filter_flags_decoder$(O) \
+	$(D_OBJ)/index_decoder$(O) \
+	$(D_OBJ)/index_hash$(O) \
+	$(D_OBJ)/stream_buffer_decoder$(O) \
+	$(D_OBJ)/stream_decoder$(O) \
+	$(D_OBJ)/stream_flags_decoder$(O) \
+	$(D_OBJ)/vli_decoder$(O) \
+	$(D_OBJ)/outqueue$(O) \
+	\
+	$(D_OBJ)/hardware_physmem$(O) \
+	$(D_OBJ)/tuklib_physmem$(O)
+##	$(D_OBJ)/hardware_cputhreads$(O) \
+##	$(D_OBJ)/stream_encoder_mt$(O) \
+
+VPATH+=		$(LIBLZMASRC)/check
+LIBOBJS+=\
+	$(D_OBJ)/check$(O) \
+	$(D_OBJ)/crc32_table$(O) \
+	$(D_OBJ)/crc64_table$(O) \
+	$(D_OBJ)/sha256$(O) \
+	$(D_OBJ)/crc32_fast$(O) \
+	$(D_OBJ)/crc64_fast$(O)
+
+VPATH+=		$(LIBLZMASRC)/lz
+LIBOBJS+=\
+	$(D_OBJ)/lz_encoder$(O) \
+	$(D_OBJ)/lz_encoder_mf$(O) \
+	$(D_OBJ)/lz_decoder$(O)
+
+VPATH+=		$(LIBLZMASRC)/lzma
+LIBOBJS+=\
+	$(D_OBJ)/lzma_encoder$(O) \
+	$(D_OBJ)/lzma_encoder_presets$(O) \
+	$(D_OBJ)/lzma_encoder_optimum_fast$(O) \
+	$(D_OBJ)/lzma_encoder_optimum_normal$(O) \
+	$(D_OBJ)/fastpos_table$(O) \
+	$(D_OBJ)/lzma_decoder$(O) \
+	$(D_OBJ)/lzma2_encoder$(O) \
+	$(D_OBJ)/lzma2_decoder$(O)
+
+VPATH+=		$(LIBLZMASRC)/rangecoder
+LIBOBJS+=\
+	$(D_OBJ)/price_table$(O)
+
+VPATH+=		$(LIBLZMASRC)/delta
+LIBOBJS+=\
+	$(D_OBJ)/delta_common$(O) \
+	$(D_OBJ)/delta_encoder$(O) \
+	$(D_OBJ)/delta_decoder$(O)
+
+VPATH+=		$(LIBLZMASRC)/simple
+LIBOBJS+=\
+	$(D_OBJ)/simple_coder$(O) \
+	$(D_OBJ)/simple_encoder$(O) \
+	$(D_OBJ)/simple_decoder$(O) \
+	$(D_OBJ)/x86$(O) \
+	$(D_OBJ)/powerpc$(O) \
+	$(D_OBJ)/ia64$(O) \
+	$(D_OBJ)/arm$(O) \
+	$(D_OBJ)/armthumb$(O) \
+	$(D_OBJ)/sparc$(O)
+
+DLLOBJS=\
+	$(subst $(O),.lo,$(LIBOBJS))
+
+VPATH+=		$(LZMASRC)/xz $(LZMASRC)/common ./win32
+LIBINC+=	-I./win32
+UTILOBJS=\
+	$(D_OBJ)/getopt_long$(O) \
+	$(D_OBJ)/args$(O) \
+	$(D_OBJ)/coder$(O) \
+	$(D_OBJ)/file_io$(O) \
+	$(D_OBJ)/hardware$(O) \
+	$(D_OBJ)/list$(O) \
+	$(D_OBJ)/main$(O) \
+	$(D_OBJ)/message$(O) \
+	$(D_OBJ)/options$(O) \
+	$(D_OBJ)/signals$(O) \
+	$(D_OBJ)/suffix$(O) \
+	$(D_OBJ)/util$(O) \
+	$(D_OBJ)/mytime$(O) \
+	$(D_OBJ)/tuklib_open_stdxxx$(O) \
+	$(D_OBJ)/tuklib_progname$(O) \
+	$(D_OBJ)/tuklib_exit$(O) \
+	$(D_OBJ)/tuklib_mbstr_width$(O) \
+	$(D_OBJ)/tuklib_mbstr_fw$(O)
+
+OBJS=		$(LIBOBJS) $(DLLOBJS) $(UTILOBJS)
+LIBS=		$(LZMALIB) $(LZMADLL)
+TSKS=		$(LZMAUTIL)
+
+# Rules
+
+all:			source unpacked
+unpacked:		$(LIBS) $(TSKS) installinc
+
+$(LZMALIB):		CEXTRA += -D__LIBLZMA_BUILD -DLIBLZMA_STATIC -D_WIN32
+$(LZMALIB):		$(D_OBJ)/.created $(LIBOBJS)
+		$(RM) $(RMFLAGS) $@ >/dev/null 2>&1
+		$(AR) $(ARFLAGS) $@ $(LIBOBJS)
+		$(RANLIB) $@
+
+$(LZMADLL):		CEXTRA += -D__LIBLZMA_BUILD -DLIBLZMA_DYNAMIC -D_WIN32
+$(LZMADLL):		$(DLLOBJS) liblzma.sym
+		$(LIBTOOL) --mode=link $(CC) -o $@ $^ -version-number $(VERSIONSPEC) \
+			-rpath $(D_LIB) -bindir $(D_BIN) -export-symbols=liblzma.sym $(LDLIBS)
+
+$(LZMAUTIL):		$(UTILOBJS)
+		$(CC) $(LDFLAGS) $^ -o $@ $(D_LIB)/liblzma$(A) $(LDLIBS)
+
+source:			.unpacked.$(VERSION)
+		$(MAKE) unpacked
+
+.unpacked.$(VERSION):	$(LZMAPACKED)
+		@echo "do not delete, managed file" > $@
+		@echo "unpacking source $(LZMAPACKED)"
+		@gzip -c -d $(LZMAPACKED) | tar -xvf -
+
+installinc:		../include/.created
+		@echo publishing headers 'lzma.h' ...
+		@-cp $(LZMASRC)/lzma.h ../include
+
+%/.created:
+		-@mkdir $(@D)
+		@echo "do not delete, managed directory" > $@
+
+clean:
+		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(CLEAN) $(XCLEAN) >nul 2>&1
+		-@$(LIBTOOL) --mode=clean $(RM) $(DLLOBJS) >nul 2>&1
+		-@$(RM) $(LIBOBJS) $(UTILOBJS) >nul 2>&1
+
+$(D_OBJ)/%$(O):		%$(C)
+		$(CC) $(LIBINC) $(CFLAGS) -D_CRT_SECURE_NO_DEPRECATE -o $@ -c $<
+
+$(D_OBJ)/%.lo:		%.c
+		$(LIBTOOL) --mode=compile $(CC) $(LIBINC) $(CFLAGS) -D_CRT_SECURE_NO_DEPRECATE -o $@ -c $<
+
+#end
