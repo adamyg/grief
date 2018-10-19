@@ -1,6 +1,6 @@
 #ifndef LOCAL_NAMESPACE_H_INCLUDED
 #define LOCAL_NAMESPACE_H_INCLUDED
-/* $Id: namespace.h,v 1.6 2015/03/01 02:56:37 cvsuser Exp $
+/* $Id: namespace.h,v 1.8 2018/09/29 02:25:20 cvsuser Exp $
  *
  * libcitrus <namespace.h>
  *
@@ -48,6 +48,7 @@
 #include <sys/utypes.h>                         /* unix/bsd types */
 #include <sys/param.h>                          /* system parameters */
 #include <sys/endian.h>
+#include <sys/socket.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -84,38 +85,46 @@
 #endif
 
 #if defined(_MSC_VER)
-#define __restrict              /**/
+#define __restrict      /**/
 #endif
 
 #ifndef u_int32_t
-#define u_int64_t               uint64_t
-#define u_int32_t               uint32_t
-#define u_int16_t               uint16_t
-#define u_int8_t                uint8_t
-#define __uint8_t               uint8_t
+#define u_int64_t       uint64_t
+#define u_int32_t       uint32_t
+#define u_int16_t       uint16_t
+#define u_int8_t        uint8_t
+#define __uint8_t       uint8_t
 #endif
 
 #ifndef snprintf
-#define snprintf                _snprintf
-#define vsnprintf               _vsnprintf
+#if (_MSC_VER != 1500)  /* MSVC 2008 (v9.0) */
+#define vsnprintf       _vsnprintf
+#endif /*1500*/
+#define snprintf        _snprintf
 #endif
 
 #ifndef open
-#define open                    _open
-#define read                    _read
-#define write                   _write
+#if (_MSC_VER != 1500)  /* MSVC 2008 (v9.0) */
+#define open            _open
+#define read            _read
+#define write           _write
+#endif
 #endif
 
 #ifndef strdup
-#define strdup                  _strdup
+#define strdup          _strdup
 #endif
 
-#define bcopy(_s,_d,_l)         memmove(_d,_s,_l)
+#define bcopy(_s,_d,_l) memmove(_d,_s,_l)
 
-#define EFTYPE                  EPROTONOSUPPORT
+#ifdef  EPROTONOSUPPORT
+#define EFTYPE          EPROTONOSUPPORT
+#else
+#define EFTYPE          WSAEPROTONOSUPPORT
+#endif
 
 #if defined(_MSC_VER)
-#define LC_MESSAGES             (LC_MAX + 1)
+#define LC_MESSAGES     (LC_MAX + 1)
 #endif
 
 #endif  /*LOCAL_NAMESPACE_H_INCLUDED*/
