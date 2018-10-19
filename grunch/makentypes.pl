@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makentypes.pl,v 1.8 2014/10/22 02:33:30 ayoung Exp $
+# $Id: makentypes.pl,v 1.11 2018/10/03 23:46:32 cvsuser Exp $
 # Generate crntypes.h from the gen and grunch symbols.
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 #
@@ -244,8 +244,13 @@ Export()
                     push @$values, "${1}\n${enum_value}"
                         if ($values);
 
-                    ++$enum_value               # increment enum value
-                        if (defined($1));
+                    if (defined($1)) {          # increment enum value
+                        if ($enum_value =~ /^0[xX]/) {
+                            $enum_value = sprintf("0x%X", hex($enum_value)  + 1);
+                        } else {
+                            ++$enum_value;
+                        }
+                    }
 
                 } elsif ($export >= 3) {
                     #

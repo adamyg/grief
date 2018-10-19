@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.49 2015/02/19 22:11:05 ayoung Exp $")
+__CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.50 2017/01/23 00:22:38 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crmain.c,v 1.49 2015/02/19 22:11:05 ayoung Exp $
+/* $Id: crmain.c,v 1.50 2017/01/23 00:22:38 cvsuser Exp $
  * grunch command line.
  *
  *
@@ -284,7 +284,7 @@ main(int argc, char *argv[])
     } else {
         x_progname = argv[0];
     }
-    sprintf(cc_timestamp, "%s=%ld", CC_COMPILETIME, time(NULL));
+    sprintf(cc_timestamp, "%s=%ld", CC_COMPILETIME, (long)time(NULL));
     resolve_self(argv[0]);
 
     if (NULL != (ev = getenv("GRCPP"))) {       /* cpp override builtin defaults */
