@@ -1,6 +1,6 @@
 #ifndef CONTRIB_CONFIG_H_INCLUDED
 #define CONTRIB_CONFIG_H_INCLUDED
-/* $Id: contrib_config.h,v 1.7 2014/10/27 04:51:15 ayoung Exp $
+/* $Id: contrib_config.h,v 1.12 2018/10/18 00:52:41 cvsuser Exp $
  * contrib <config.h> ...
  *
  *
@@ -45,10 +45,16 @@
 #endif
 
 #if !defined(HAVE_STRTOUL)
-#define HAVE_STRTOUL                            /* FIXME */
+#error  HAVE_STRTOUL
+#define HAVE_STRTOUL
 #endif
 #if !defined(HAVE_RENAME)
-#define HAVE_RENAME                             /* FIXME */
+#error  HAVE_RENAME
+#define HAVE_RENAME
+#endif
+#if !defined(HAVE_STRERROR)
+#error  HAVE_STRERROR
+#define HAVE_STRERROR
 #endif
 
 /*warnings*/
@@ -131,8 +137,8 @@ typedef unsigned char u_int8_t;
 
     /*others*/
 #if !defined(HAVE_PID_T)
-typedef int pid_t;
 #define HAVE_PID_T
+typedef int pid_t;
 #endif
 #if defined(_MSC_VER)
 #if !defined(HAVE_UID_T)
@@ -159,15 +165,21 @@ typedef int id_t;                               /* general identifier; can conta
 /*function mappings*/
 #if !defined(__cplusplus)
 #if defined(_MSC_VER) || defined(__WATCOMC__)
-#define snprintf _snprintf
+#if (_MSC_VER < 1500)	/* MSVC 2008 */
 #define vsnprintf _vsnprintf
+#endif
+#if (_MSC_VER < 1700)	/* MSVC 2012 */
+#define snprintf _snprintf
+#endif /*1500*/
 #define strdup _strdup
 #define stricmp _stricmp
 #define mktemp _mktemp
+#if (_MSC_VER < 1500)	/* MSVC 2008 */
 #define open _open
 #define close _close
 #define read _read
 #define write _write
+#endif /*1500*/
 #define access _access
 #define lseek _lseek
 #define unlink _unlink

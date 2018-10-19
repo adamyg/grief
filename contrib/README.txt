@@ -57,6 +57,32 @@
 
             Source: http://ctags.sourceforge.net
 
+  libregex/
+
+        o Henry Spencer's libregex
+
+                                -------------
+
+            Copyright 1992, 1993, 1994 Henry Spencer.  All rights reserved.
+            This software is not subject to any license of the American Telephone
+            and Telegraph Company or of the Regents of the University of California.
+
+            Permission is granted to anyone to use this software for any purpose on
+            any computer system, and to alter it and redistribute it, subject
+            to the following restrictions:
+
+            1. The author is not responsible for the consequences of use of this
+            software, no matter how awful, even if they arise from flaws in it.
+
+            2. The origin of this software must not be misrepresented, either by
+            explicit claim or by omission.  Since few users ever read sources,
+            credits must appear in the documentation.
+
+            3. Altered versions must be plainly marked as such, and must not be
+            misrepresented as being the original software.  Since few users
+            ever read sources, credits must appear in the documentation.
+
+            4. This notice may not be removed or altered.
 
   libz/
 
@@ -109,38 +135,134 @@
             the file ChangeLog history information documenting your changes.  Please read
             the FAQ for more information on the distribution of modified source versions.
 
+  libbzip2/
+  
+        o bzip2 1.0.6
 
-  libregex/
+            The bzip2 file compression program was developed by Julian Seward and
+            launched on the 18th of July in 1996. It has remained an open source
+            program, available to all for free, for over twenty two years now. The last
+            stable release was seven years ago.
 
-        o Henry Spencer's libregex
+            The version 1.0.6 was released on the 20th of September in 2010. bzip2
+            compression program is based on BurrowsWheeler algorithm. The program can
+            compress files but cannot archive them. Julian Seward is still in charge of
+            maintaining the program.
+  
+            The compression application works on all major operating systems and is
+            available as a BSD-like license. The program uses .bz2 as its filename
+            extension, application/x-bzip2 as the media type on internet and
+            public.archive.bzip2 as the uniform type identifier.
 
-                                -------------
+        Copyright notice:
 
-            Copyright 1992, 1993, 1994 Henry Spencer.  All rights reserved.
-            This software is not subject to any license of the American Telephone
-            and Telegraph Company or of the Regents of the University of California.
+            This program, "bzip2", the associated library "libbzip2", and all
+            documentation, are copyright (C) 1996-2010 Julian R Seward.  All
+            rights reserved.
 
-            Permission is granted to anyone to use this software for any purpose on
-            any computer system, and to alter it and redistribute it, subject
-            to the following restrictions:
+            Redistribution and use in source and binary forms, with or without
+            modification, are permitted provided that the following conditions
+            are met:
 
-            1. The author is not responsible for the consequences of use of this
-            software, no matter how awful, even if they arise from flaws in it.
+            1. Redistributions of source code must retain the above copyright
+               notice, this list of conditions and the following disclaimer.
 
-            2. The origin of this software must not be misrepresented, either by
-            explicit claim or by omission.  Since few users ever read sources,
-            credits must appear in the documentation.
+            2. The origin of this software must not be misrepresented; you must 
+               not claim that you wrote the original software.  If you use this 
+               software in a product, an acknowledgment in the product 
+               documentation would be appreciated but is not required.
 
-            3. Altered versions must be plainly marked as such, and must not be
-            misrepresented as being the original software.  Since few users
-            ever read sources, credits must appear in the documentation.
+            3. Altered source versions must be plainly marked as such, and must
+               not be misrepresented as being the original software.
 
-            4. This notice may not be removed or altered.
+            4. The name of the author may not be used to endorse or promote 
+               products derived from this software without specific prior written 
+               permission.
 
+            THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
+            OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+            WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+            ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+            DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+            DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+            GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+            INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+            WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+            NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+            SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+            Julian Seward, jseward@bzip.org
+            bzip2/libbzip2 version 1.0.6 of 6 September 2010
+
+  liblzma/
+
+        o xz utils 5.2.3
+
+            XZ Utils is free general-purpose data compression software with a high
+            compression ratio. XZ Utils were written for POSIX-like systems, but also
+            work on some not-so-POSIX systems. XZ Utils are the successor to LZMA Utils.
+
+            The core of the XZ Utils compression code is based on LZMA SDK, but it has
+            been modified quite a lot to be suitable for XZ Utils. The primary
+            compression algorithm is currently LZMA2, which is used inside the .xz
+            container format. With typical files, XZ Utils create 30 % smaller output
+            than gzip and 15 % smaller output than bzip2.
+
+         XZ Utils consist of several components::
+
+             o liblzma is a compression library with an API similar to that of zlib.
+
+             o xz is a command line tool with syntax similar to that of gzip.
+
+             o xzdec is a decompression-only tool smaller than the full-featured xz tool.
+
+             o  A set of shell scripts (xzgrep, xzdiff, etc.) have been adapted from gzip to ease viewing, grepping, and comparing compressed files.
+
+             o Emulation of command line tools of LZMA Utils eases transition from LZMA Utils to XZ Utils.
+
+            While liblzma has a zlib-like API, liblzma doesn't include any file I/O
+            functions. A separate I/O library is planned, which would abstract handling
+            of .gz, .bz2, and .xz files with an easy to use API.
+
+          Copyright notice:
+
+            Different licenses apply to different files in this package. Here is a
+            rough summary of which licenses apply to which parts of this package (but
+            check the individual files to be sure!):
+
+                - liblzma is in the public domain.
+
+                - xz, xzdec, and lzmadec command line tools are in the public domain
+                unless GNU getopt_long had to be compiled and linked in from the lib
+                directory. The getopt_long code is under GNU LGPLv2.1+.
+
+                - The scripts to grep, diff, and view compressed files have been
+                adapted from gzip. These scripts and their documentation are under GNU
+                GPLv2+.
+
+                - All the documentation in the doc directory and most of the XZ Utils
+                specific documentation files in other directories are in the public
+                domain.
+
+                - Translated messages are in the public domain.
+
+                - The build system contains public domain files, and files that are
+                under GNU GPLv2+ or GNU GPLv3+. None of these files end up in the
+                binaries being built.
+
+                - Test files and test code in the tests directory, and debugging
+                utilities in the debug directory are in the public domain.
+
+                - The extra directory may contain public domain files, and files that
+                are under various free software licenses.
 
   libmagic/
 
-        o file-5.11, sourced from OpenBSD.
+        o file-5.29, sourced from OpenBSD.
+
+            libmagic - Magic Number Recognition Library.
+
+                http://www.darwinsys.com/file/
 
             This is Release 5.x of Ian Darwin's (copyright but distributable)
             file(1) command, an implementation of the Unix File(1) command. It
@@ -185,11 +307,18 @@
 
             libguess - high-speed character set detection
 
+            libguess is a high speed, open source character set encoding detector.
             libguess employs discrete-finite automata to deduce the character set of
             the input buffer. The advantage of this is that all character sets can be
-            checked in parallel, and quickly. Right now, libguess passes a byte to each
-            DFA on the same pass, meaning that the winning character set can be deduced
-            as efficiently as possible.
+            checked in parallel, and quickly.
+
+            libguess is fully reentrant, using only local stack memory for DFA operations.
+
+            Right now, libguess passes a byte to each DFA on the same pass, meaning
+            that the winning character set can be deduced as efficiently as possible.
+
+            Source: http://atheme.org/projects/libguess.html
+            Atheme GitHub.: https://github.com/kaniini/libguess
 
                                 --------------------------
 
@@ -309,4 +438,6 @@
             LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
             OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
             SUCH DAMAGE.
+
+
 
