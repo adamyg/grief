@@ -1,16 +1,16 @@
 #ifndef MANDOC_CONFIG_H_INCLUDED
 #define MANDOC_CONFIG_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: config.h,v 1.3 2014/07/17 00:47:14 cvsuser Exp $
+/* $Id: config.h,v 1.11 2017/01/26 01:25:37 cvsuser Exp $
  * mandoc config.h
  *
- * Copyright (c) 2014, Adam Young.
+ * Copyright (c) 201 - 2017, Adam Young.
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHORS DISCLAIM ALL WARRANTIES
  * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR
@@ -28,31 +28,84 @@
 #if defined(WIN32) && !defined(__MINGW32__)
 #include "../libw32/config.h"
 #include <malloc.h>
+#include <unistd.h>
+#ifndef  snprintf
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
+#define  snprintf _snprintf    /*2015+*/
+#endif
+#endif
+#define  mktemp _mktemp
+#ifndef  chdir
+#define  chdir w32_chdir
+#endif
+#ifndef  getcwd
+#define  getcwd w32_getcwd
+#endif
+#ifndef  realpath
+#define  realpath w32_realpath
+#endif
+#ifndef  lstat
+#define  lstat w32_lstat
+#endif
 #define  inline _inline
-#define  snprintf _snprintf
+#include "../libw32/win32_child.h"
+
 #else
 #include "../include/config.h"
 #endif
-#include "mdocversion.h"        /*VERSION*/
 
+#include "mdocversion.h"        /*VERSION and binary names*/
 
 /*
+ *  compat_err.c (1.13.4)
  *  compat_fgetln.c
  *  compat_getsubopt.c
- *  compat_strlcpy.c
+ *  compat_reallocarray.c (1.13.4)
  *  compat_strlcat.c
+ *  compat_strcasestr.c
+ *  compat_strlcpy.c
+ *  compat_strtonum (1.13.4)
  */
 
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
+
+#if !defined(HAVE_PROG)
+extern void                     setprogname(const char *);
+extern const char *             getprogname(void);
+#endif
+
+#if !defined(HAVE_MKDTEMP)
+extern char *                   mkdtemp(char *path);
+#endif
+
+#if !defined(HAVE_ERR)
+extern void                     err(int eval, const char *fmt, ...);
+extern void                     errx(int eval, const char *fmt, ...);
+extern void                     warn(const char *fmt, ...);
+extern void                     warnx(const char *fmt, ...);
+#endif
 
 #if !defined(HAVE_FGETLN)
 extern char *                   fgetln(FILE *fp, size_t *len);
 #endif
 
+#if !defined(GAVE_GETLINE)
+extern ssize_t                  getline(char **buf, size_t *bufsz, FILE *fp);
+#endif
+
 #if !defined(HAVE_GETSUBOPT)
 extern char *suboptarg;
 extern int                      getsubopt(char **optionp, char * const *tokens, char **valuep);
+#endif
+
+#if !defined(HAVE_REALLOCARRAY)
+void *                          reallocarray(void *optr, size_t nmemb, size_t size);
+#endif
+
+#if !defined(HAVE_STRCASESTR) || defined(__CYGWIN__) /*missing?*/
+extern char *                   strcasestr(const char *s, const char *find);
 #endif
 
 #if !defined(HAVE_STRLCPY)
@@ -63,6 +116,9 @@ extern size_t                   strlcpy(char *dst, const char *src, size_t siz);
 extern size_t                   strlcat(char *dst, const char *src, size_t siz);
 #endif
 
+#if !defined(HAVE_STRTONUM)
+extern long long                strtonum(const char *numstr, long long minval, long long maxval, const char **errstrp);
+#endif
 
 /*
  *  libsupport
@@ -119,3 +175,5 @@ extern int                      isblank(int ch);
 
 #endif  /*MANDOC_CONFIG_H_INCLUDED*/
 /*end*/
+
+

@@ -3,7 +3,8 @@
 
         The mandoc UNIX manpage compiler toolset (http://mdocml.bsd.lv/)
 
-        Current version 1.12.3 (December 31, 2013)
+        Current version 1.13.4 (July 10, 2016) using sqlite3 (version 3.16.2)
+        Previous version 1.12.3 (December 31, 2013)
 
         mandoc is a suite of tools compiling mdoc, the roff macro
         language of choice for BSD manual pages, and man, the
@@ -24,8 +25,8 @@
 
    License:
 
+        Copyright (c) 2011, 2012, 2013 - 2016 Ingo Schwarze <schwarze@openbsd.org>
         Copyright (c) 2008, 2009, 2010, 2011 Kristaps Dzonsons <kristaps@bsd.lv>
-        Copyright (c) 2011, 2012, 2013 Ingo Schwarze <schwarze@openbsd.org>
 
         Permission to use, copy, modify, and distribute this software for any
         purpose with or without fee is hereby granted, provided that the above
@@ -39,6 +40,7 @@
         ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
         OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+
    Build Notes:
 
        o Under Cygwin the use of '-liberty' can result in getopt() crashes since
@@ -51,6 +53,5 @@
 
        o pdf support requires a c99 compliant snprintf() implementation,
            for example "%zn".
-
 
 ===

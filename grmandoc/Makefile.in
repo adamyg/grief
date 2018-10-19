@@ -1,24 +1,24 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.7 2015/03/08 18:27:33 cvsuser Exp $
+# $Id: Makefile.in,v 1.14 2018/10/16 22:36:02 cvsuser Exp $
 # libbsdmdoc and grmanddoc
 #
 #
-# Copyright (c) 2014 - 2015, Adam Young.
+# Copyright (c) 2014 - 2018, Adam Young.
 # All rights reserved.
-# 
+#
 # This file is part of the GRIEF Editor.
-# 
+#
 # The GRIEF Editor is free software: you can redistribute it
 # and/or modify it under the terms of the GRIEF Editor License.
-# 
+#
 # Redistributions of source code must retain the above copyright
 # notice, and must be distributed with the license document above.
-# 
+#
 # Redistributions in binary form must reproduce the above copyright
 # notice, and must include the license document above in
 # the documentation and/or other materials provided with the
 # distribution.
-# 
+#
 # The GRIEF Editor is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
@@ -72,7 +72,7 @@ ifeq ("linux","@build_os@")
 LDFLAGS+=	-rdynamic
 endif
 endif
-LDLIBS=		-L$(D_LIB) -lbsdmdoc -lmisc @LIBS@ @LIBM@ @EXTRALIBS@
+LDLIBS=		-L$(D_LIB) -lbsdmdoc -lmisc @LIBZ@ @LIBREGEX@ @LIBS@ @LIBM@ @EXTRALIBS@
 ifeq ("mingw32","@build_os@")
 LDLIBS+=	-lw32 -lshlwapi -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
 endif
@@ -89,19 +89,31 @@ D_LIB=		$(ROOT)/lib
 
 ############################################################
 
-VERSION=	1.12.3
-VDATE=		31 December 2013
+VERSION=	1.13.4.gr
+VDATE=		10 July 2016
 
 PACKED=		mdocml-$(VERSION).tgz
-VPATH=		./mdocml-$(VERSION)
+VPATH=		./mdocml-$(VERSION) ./sqlite3
 
 	#---------------------------------------------------
 
 COMPAT_OBJS=\
-	$(D_OBJ)/compat_fgetln$(O)	\
+	$(D_OBJ)/compat_err$(O)		\
+	$(D_OBJ)/compat_fts$(O)		\
+	$(D_OBJ)/compat_getline$(O)	\
 	$(D_OBJ)/compat_getsubopt$(O)	\
+	$(D_OBJ)/compat_mkdtemp$(O)	\
+	$(D_OBJ)/compat_ohash$(O)	\
+	$(D_OBJ)/compat_progname$(O)	\
+	$(D_OBJ)/compat_reallocarray$(O) \
+	$(D_OBJ)/compat_sqlite3_errstr$(O) \
+	$(D_OBJ)/compat_strcasestr$(O)	\
+	$(D_OBJ)/compat_stringlist$(O)	\
 	$(D_OBJ)/compat_strlcat$(O)	\
-	$(D_OBJ)/compat_strlcpy$(O)
+	$(D_OBJ)/compat_strlcpy$(O)	\
+	$(D_OBJ)/compat_strsep$(O)	\
+	$(D_OBJ)/compat_strtonum$(O)	\
+	$(D_OBJ)/libsupport$(O)
 
 LIBMAN_OBJS=\
 	$(D_OBJ)/man$(O)		\
@@ -110,16 +122,15 @@ LIBMAN_OBJS=\
 	$(D_OBJ)/man_validate$(O)
 
 LIBMDOC_OBJS=\
-	$(D_OBJ)/arch$(O)		\
 	$(D_OBJ)/att$(O)		\
 	$(D_OBJ)/lib$(O)		\
 	$(D_OBJ)/mdoc$(O)		\
 	$(D_OBJ)/mdoc_argv$(O)		\
 	$(D_OBJ)/mdoc_hash$(O)		\
 	$(D_OBJ)/mdoc_macro$(O)		\
+	$(D_OBJ)/mdoc_state$(O)		\
 	$(D_OBJ)/mdoc_validate$(O)	\
-	$(D_OBJ)/st$(O)			\
-	$(D_OBJ)/vol$(O)
+	$(D_OBJ)/st$(O)
 
 LIBROFF_OBJS=\
 	$(D_OBJ)/eqn$(O)		\
@@ -136,9 +147,11 @@ LIBMANDOC_OBJS=\
 	$(COMPAT_OBJS)			\
 	$(D_OBJ)/chars$(O)		\
 	$(D_OBJ)/mandoc$(O)		\
+	$(D_OBJ)/mandoc_aux$(O)		\
+	$(D_OBJ)/mandoc_ohash$(O)	\
 	$(D_OBJ)/msec$(O)		\
 	$(D_OBJ)/read$(O)		\
-	$(D_OBJ)/libsupport$(O)
+	$(D_OBJ)/preconv$(O)
 
 LIBMANDOC=	$(D_LIB)/$(LP)bsdmdoc$(A)
 
@@ -163,22 +176,36 @@ MANDOC_TERM_OBJS=\
 	$(D_OBJ)/term_ps$(O)		\
 	$(D_OBJ)/tbl_term$(O)
 
+MANDOC_DB_OBJS=\
+	$(D_OBJ)/mandocdb$(O)		\
+	$(D_OBJ)/mansearch$(O)		\
+	$(D_OBJ)/mansearch_const$(O)	\
+	$(D_OBJ)/sqlite3$(O)
+
 MANDOC_OBJS=\
 	$(MANDOC_HTML_OBJS)		\
 	$(MANDOC_MAN_OBJS)		\
 	$(MANDOC_TERM_OBJS)		\
 	$(D_OBJ)/main$(O)		\
+	$(D_OBJ)/manpath$(O)		\
 	$(D_OBJ)/out$(O)		\
-	$(D_OBJ)/tree$(O)
+	$(D_OBJ)/tag$(O)		\
+	$(D_OBJ)/tree$(O)		\
+	$(MANDOC_DB_OBJS)
 
 MANDOC=		$(D_BIN)/grmandoc$(E)
 
 	#---------------------------------------------------
 
-PRECONV_OBJS=\
-	$(D_OBJ)/preconv$(O)
+CGI_OBJS=\
+	$(MANDOC_HTML_OBJS)		\
+	$(D_OBJ)/cgi$(O)		\
+	$(D_OBJ)/mansearch$(O)		\
+	$(D_OBJ)/mansearch_const$(O)	\
+	$(D_OBJ)/out$(O)		\
+	$(D_OBJ)/sqlite3$(O)
 
-PRECONV=	$(D_BIN)/grpreconv$(E)
+CGI=	$(D_BIN)/grman.cgi$(E)
 
 	#---------------------------------------------------
 
@@ -189,11 +216,24 @@ DEMANDOC=	$(D_BIN)/grdemandoc$(E)
 
 	#---------------------------------------------------
 
+SOELIM_OBJS=\
+	$(D_OBJ)/soelim$(O)		\
+	$(D_OBJ)/compat_err$(O) 	\
+	$(D_OBJ)/compat_getline$(O)	\
+	$(D_OBJ)/compat_progname$(O)	\
+	$(D_OBJ)/compat_reallocarray$(O) \
+	$(D_OBJ)/compat_stringlist$(O)	\
+	$(D_OBJ)/sqlite3$(O)
+
+SOELIM=		$(D_BIN)/grsoelim$(E)
+
+	#---------------------------------------------------
+
 OBJS=\
 	$(LIBMANDOC_OBJS)		\
 	$(MANDOC_OBJS)			\
-	$(PRECONV_OBJS)			\
-	$(DEMANDOC_OBJS)
+	$(DEMANDOC_OBJS)		\
+	$(SOELIM_OBJS)
 
 LIBRARIES=	$(LIBMANDOC)
 
@@ -204,19 +244,23 @@ LDLIBS:=	$(filter-out -liberty, $(LDLIBS))
 endif
 
 all:			source unpacked
-unpacked:		mdocversion.h $(LIBRARIES) $(MANDOC) $(PRECONV) $(DEMANDOC)
+unpacked:		mdocversion.h $(LIBRARIES) $(MANDOC) $(CGI) $(DEMANDOC) $(SOELIM)
 
 $(MANDOC):		MAPFILE=$(basename $@).map
 $(MANDOC):		$(MANDOC_OBJS)
 		$(CC) $(LDFLAGS) -o $@ $(MANDOC_OBJS) $(LDLIBS) @LDMAPFILE@
 
+$(CGI):			MAPFILE=$(basename $@).map
+$(CGI):			$(CGI_OBJS)
+		$(CC) $(LDFLAGS) -o $@ $(CGI_OBJS) $(LDLIBS) @LDMAPFILE@
+
 $(DEMANDOC):		MAPFILE=$(basename $@).map
 $(DEMANDOC):		$(DEMANDOC_OBJS)
 		$(CC) $(LDFLAGS) -o $@ $(DEMANDOC_OBJS) $(LDLIBS) @LDMAPFILE@
 
-$(PRECONV):		MAPFILE=$(basename $@).map
-$(PRECONV):		$(PRECONV_OBJS)
-		$(CC) $(LDFLAGS) -o $@ $(PRECONV_OBJS) $(LDLIBS) @LDMAPFILE@
+$(SOELIM):		MAPFILE=$(basename $@).map
+$(SOELIM):		$(SOELIM_OBJS)
+		$(CC) $(LDFLAGS) -o $@ $(SOELIM_OBJS) $(LDLIBS) @LDMAPFILE@
 
 $(LIBMANDOC):		$(D_OBJ)/.created $(LIBMANDOC_OBJS)
 		$(RM) $(RMFLAGS) $@
@@ -227,6 +271,13 @@ mdocversion.h:		Makefile
 	@sh -c "\
 echo // Auto-generated by Makefile >$@; \
 echo \#define VERSION \\\"$(VERSION)\\\" >>$@; \
+echo \#define BINM_APROPOS \\\"grapropos\\\" >>$@; \
+echo \#define BINM_MAKEWHATIS \\\"grmakewhatis\\\" >>$@; \
+echo \#define BINM_MAN \\\"grman\\\" >>$@; \
+echo \#define BINM_SOELIM \\\"grsoelim\\\" >>$@; \
+echo \#define BINM_WHATIS \\\"grwhatis\\\" >>$@; \
+echo \#define MAN_CONF_FILE \\\"/etc/grman.conf\\\" >>$@; \
+echo \#define MANPATH_DEFAULT \\\"/usr/share/man:/usr/X11R6/man:/usr/local/man\\\" >>$@; \
 "
 
 source:			.unpacked.$(VERSION)
@@ -246,7 +297,10 @@ $(D_OBJ)/.created:
 clean:
 		-@$(RM) $(RMFLAGS) $(BAK) $(LIBRARIES) $(LIBOBJS) $(OBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
 
+$(D_OBJ)/sqlite3$(O):	CFLAGS := $(filter-out -hw,$(CFLAGS))
+	# open-watcom debug breaks due to the module size
+
 $(D_OBJ)/%$(O):		%$(C)
-		$(CC) $(CFLAGS) -o $@ -c $<
+		$(CC) $(CFLAGS) -o $@ -I ./sqlite3 -DHAVE_SQLITE3 -c $<
 
 #end
