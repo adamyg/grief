@@ -1,4 +1,4 @@
-/* $Id: namespace.h,v 1.4 2015/03/01 02:58:51 cvsuser Exp $
+/* $Id: namespace.h,v 1.5 2017/01/23 00:22:37 cvsuser Exp $
  *
  * libiconv <namespace.h>
  *
@@ -52,14 +52,20 @@
 #endif
 
 #ifndef snprintf
-#define snprintf        _snprintf
+#if (_MSC_VER != 1500)  /* MSVC 2008 (v9.0) */
 #define vsnprintf       _vsnprintf
-#endif
+#endif /*1500*/
+#define snprintf        _snprintf
+#endif /*snprintf*/
+
 #ifndef open
+#if (_MSC_VER != 1500)  /* MSVC 2008 (v9.0) */
 #define open            _open
 #define read            _read
 #define write           _write
-#endif
+#endif /*1500*/
+#endif /*open*/
+
 #ifndef strdup
 #define strdup          _strdup
 #endif
