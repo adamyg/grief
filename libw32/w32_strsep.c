@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_strsep_c,"$Id: w32_strsep.c,v 1.3 2014/10/22 02:34:07 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_strsep_c,"$Id: w32_strsep.c,v 1.4 2018/10/12 00:24:41 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*-
@@ -45,7 +45,7 @@ __CIDENT_RCSID(gr_w32_strsep_c,"$Id: w32_strsep.c,v 1.3 2014/10/22 02:34:07 ayou
  *
  * If *stringp is NULL, strsep returns NULL.
  */
-char *
+LIBW32_API char *
 strsep(char **stringp, const char *delim)
 {
 	char *s;

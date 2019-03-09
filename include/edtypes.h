@@ -1,16 +1,16 @@
 #ifndef GR_EDTYPES_H_INCLUDED
 #define GR_EDTYPES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edtypes_h,"$Id: edtypes.h,v 1.25 2015/02/19 00:16:58 ayoung Exp $")
+__CIDENT_RCSID(gr_edtypes_h,"$Id: edtypes.h,v 1.28 2018/10/04 01:28:00 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edtypes.h,v 1.25 2015/02/19 00:16:58 ayoung Exp $
+/* $Id: edtypes.h,v 1.28 2018/10/04 01:28:00 cvsuser Exp $
  * Editor base types.
  *
  *
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -144,8 +144,11 @@ typedef unsigned char LINEATTR;                 /* line attribute management */
  *          Example:
  *              void foo(int __CUNUSEDARGUMENT(bar)) { ... }
  *
+ *      __CEXPORT
+ *              void __CEXPORT function() { }
+ *
  *      __CUNUSEDFUNCTION
- *          Example: 
+ *          Example:
  *              static void __CUNUSEDFUNCTION(foo)(int bar) { ... }
  *
  *      __CPUBLIC
@@ -199,6 +202,29 @@ typedef unsigned char LINEATTR;                 /* line attribute management */
 #define __CINLINE
 #endif
 #endif  /*___CINLINE*/
+
+#if !defined(__CEXPORT)
+#   if defined(__CSTATICLIB)                    /* building static library */
+#       define __CEXPORT        /**/
+#   else
+#       if !defined(__CIMPORTLIB) && !defined(__CEXPORTLIB)
+#           define __CEXPORTLIB                 /* default, export symbols */
+#       endif
+#       if defined(__CEXPORTLIB)                /* export marked symbols */
+#           if defined(__GNUC__)
+#               define __CEXPORT __attribute__((dllexport)) extern
+#           else
+#               define __CEXPORT extern __declspec(dllexport)
+#           endif
+#       else
+#           if defined(__GNUC__)
+#               define __CEXPORT /**/
+#           else
+#               define __CEXPORT extern __declspec(dllimport)
+#           endif
+#       endif   /*__CIMPORT*/
+#   endif
+#endif  /*__CEXPORT*/
 
 #if !defined(___CBOOL)
 #if defined(HAVE_BOOL) || defined(HAVE_STDBOOL) || \
@@ -406,6 +432,3 @@ typedef uint32_t MAGIC_t;
 
 /*end*/
 #endif /*GR_EDTYPES_H_INCLUDED*/
-
-
-

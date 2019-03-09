@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.14 2015/02/22 22:14:17 ayoung Exp $
+# $Id: Makefile.in,v 1.15 2018/10/16 22:40:21 cvsuser Exp $
 # libsplay makefile.
 #
 #
-# Copyright (c) 1998 - 2015, Adam Young.
+# Copyright (c) 1998 - 2018, Adam Young.
 # All rights reserved.
 # 
 # This file is part of the GRIEF Editor.

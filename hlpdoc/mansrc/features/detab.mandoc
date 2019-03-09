@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: detab.mandoc,v 1.1 2014/11/27 18:19:37 ayoung Exp $
+.\" | $Id: detab.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -59,7 +59,8 @@ entab, entab_buffer, entab_region and entab_str
 show_tabs
 .br
 .Sh DESCRIPTION
-Theses macro deal with tabs within the current buffer or marked region.
+Theses macros deal with tabs within the current buffer or marked
+region.
 .Bl -bullet -offset 1 -width xxxx
 .It
 detab functions

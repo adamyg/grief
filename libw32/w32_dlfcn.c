@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_dlfcn_c,"$Id: w32_dlfcn.c,v 1.8 2015/02/19 00:17:28 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_dlfcn_c,"$Id: w32_dlfcn.c,v 1.11 2018/10/11 01:46:31 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -7,7 +7,7 @@ __CIDENT_RCSID(gr_w32_dlfcn_c,"$Id: w32_dlfcn.c,v 1.8 2015/02/19 00:17:28 ayoung
  *
  *  dlopen, dlsym, dlclose and dlerror
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -202,7 +202,7 @@ static void                     dlerror_last(const char *file);
 //  ERRORS
 //      No errors are defined.
 */
-void *
+LIBW32_API void *
 dlopen(const char *file, int mode)
 {
     HMODULE hm = 0;
@@ -295,7 +295,7 @@ dlopen(const char *file, int mode)
 //  ERRORS
 //      No errors are defined.
 */
-void *
+LIBW32_API void *
 dlsym(void *__restrict handle, const char *__restrict name)
 {
     HMODULE hm = (HMODULE) handle;
@@ -363,7 +363,7 @@ dlsym(void *__restrict handle, const char *__restrict name)
 //  ERRORS
 //      No errors are defined.
 */
-int
+LIBW32_API int
 dlclose(void *handle)
 {
     HMODULE hm = (HMODULE) handle;
@@ -423,7 +423,7 @@ dlclose(void *handle)
 //  ERRORS
 //      No errors are defined.
 */
-char *
+LIBW32_API char *
 dlerror(void)
 {
     return x_dlerror;

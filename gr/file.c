@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.81 2015/02/24 23:10:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.82 2019/01/26 22:27:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: file.c,v 1.81 2015/02/24 23:10:08 cvsuser Exp $
+/* $Id: file.c,v 1.82 2019/01/26 22:27:08 cvsuser Exp $
  * File-buffer primitives and support.
  *
  *
@@ -585,6 +585,9 @@ inq_byte_pos(void)              /* int ([int bufnum], [int line], [int col], [in
     Macro Parameters:
         size - Optional integer number, if omitted the current size is
             not changed.
+
+    Macro Returns:
+        The 'set_binary_size()' primitive returns the previous chunk size.
 
     Macro Portability:
         n/a

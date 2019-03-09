@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_regdfa_c,"$Id: regdfa.c,v 1.28 2015/02/21 22:46:35 ayoung Exp $")
+__CIDENT_RCSID(gr_regdfa_c,"$Id: regdfa.c,v 1.31 2018/10/11 22:37:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: regdfa.c,v 1.28 2015/02/21 22:46:35 ayoung Exp $
+/* $Id: regdfa.c,v 1.31 2018/10/11 22:37:23 cvsuser Exp $
  * DFA regular expression engine.
  * Streamlined engine for use by the syntax hiliting code.
  *
@@ -99,7 +99,7 @@ __CIDENT_RCSID(gr_regdfa_c,"$Id: regdfa.c,v 1.28 2015/02/21 22:46:35 ayoung Exp 
  *          xdigit -        A hexadecimal digit.
  *
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -329,41 +329,48 @@ static dfastate_t *         dfa_find(recompile_t *re, const bitmap_t bits);
 #if defined(__cplusplus)
 extern "C" {
 #endif
-#if !defined(HAVE_ISASCII) && !defined(HAVE___ISASCII)
-    static int              isascii(int c);
-#endif
-#if !defined(HAVE_ISBLANK) && !defined(HAVE___ISBLANK)
-    static int              isblank(int c);
-#endif
-    static int              is_word(int c);
+    /*
+     *  character class interface adapters, resolve calling convention issues.
+     */
+    static int is_ascii(int c);
+    static int is_alnum(int c);
+    static int is_alpha(int c); 
+    static int is_blank(int c); 
+    static int is_cntrl(int c); 
+    static int is_csym(int ch);
+    static int is_digit(int c); 
+    static int is_graph(int c); 
+    static int is_lower(int c); 
+    static int is_print(int c); 
+    static int is_punct(int c); 
+    static int is_space(int c); 
+    static int is_upper(int c); 
+    static int is_word(int c);
+    static int is_xdigit(int c);
 
+    /*
+     *  character class implementation.
+     */
     static const struct {                       /* character classes */
         const char *    name;
         int             len;
         int           (*isa)(int);              /* Test function */
     } charclasses[] = {
-#if defined(HAVE___ISASCII)
-        { "ascii",  5,  __isascii },            /* ASCII character. */
-#else
-        { "ascii",  5,  isascii   },
-#endif
-        { "alnum",  5,  isalnum   },            /* An alphanumeric (letter or digit). */
-        { "alpha",  5,  isalpha   },            /* A letter. */
-#if defined(HAVE___ISBLANK)
-        { "blank",  5,  __isblank },            /* A space or tab character. */
-#else
-        { "blank",  5,  isblank   },
-#endif
-        { "cntrl",  5,  iscntrl   },            /* A control character. */
-        { "digit",  5,  isdigit   },            /* A decimal digit. */
-        { "graph",  5,  isgraph   },            /* A character with a visible representation. */
-        { "lower",  5,  islower   },            /* A lower-case letter. */
-        { "print",  5,  isprint   },            /* An alphanumeric (same as alnum). */
-        { "punct",  5,  ispunct   },            /* A punctuation character. */
-        { "space",  5,  isspace   },            /* A character producing white space in displayed text. */
-        { "upper",  5,  isupper   },            /* An upper-case letter. */
-        { "word",   4,  is_word   },            /* A "word" character (alphanumeric plus "_"). */
-        { "xdigit", 6,  isxdigit  }             /* A hexadecimal digit. */
+        { "ascii",  5,  is_ascii },
+        { "alnum",  5,  is_alnum },             /* An alphanumeric (letter or digit). */
+        { "alpha",  5,  is_alpha },             /* A letter. */
+        { "blank",  5,  is_blank },
+        { "cntrl",  5,  is_cntrl },             /* A control character. */
+        { "csym",   4,  is_csym },              /* Symbol character. */
+        { "digit",  5,  is_digit },             /* A decimal digit. */
+        { "graph",  5,  is_graph },             /* A character with a visible representation. */
+        { "lower",  5,  is_lower },             /* A lower-case letter. */
+        { "print",  5,  is_print },             /* An alphanumeric (same as alnum). */
+        { "punct",  5,  is_punct },             /* A punctuation character. */
+        { "space",  5,  is_space },             /* A character producing white space in displayed text. */
+        { "upper",  5,  is_upper },             /* An upper-case letter. */
+        { "word",   4,  is_word },              /* A "word" character (alphanumeric plus "_"). */
+        { "xdigit", 6,  is_xdigit }             /* A hexadecimal digit. */
         };
 #if defined(__cplusplus)
 };
@@ -820,30 +827,42 @@ parse_charset(recompile_t *re, const char *cursor)
 }
 
 
-#if !defined(HAVE_ISASCII)
-static int
-isascii(int c)
+static int is_ascii(int c)      
 {
+#if defined(HAVE___ISASCII)
+    return  __isascii((unsigned char)c);
+#elif defined(HAVE_ISASCII)
+    return isascii((unsigned char)c);
+#else
     return (c > 0 && c <= 0x7f);
-}
 #endif
+}
 
+static int is_alnum(int c)      { return isalnum((unsigned char)c); }
+static int is_alpha(int c)      { return isalpha((unsigned char)c); }
 
-#if !defined(HAVE_ISBLANK)
-static int
-isblank(int c)
+static int is_blank(int c)      
 {
+#if defined(HAVE___ISBLANK)
+    return __isblank((unsigned char)c);
+#elif defined(HAVE_ISBLANK)
+    return isblank((unsigned char)c);
+#else
     return (' ' == c || '\t' == c);
-}
 #endif
-
-
-static int
-is_word(int c)
-{
-    return ('_' == c || isalnum(c));
 }
 
+static int is_cntrl(int c)      { return iscntrl((unsigned char)c); }
+static int is_csym(int ch)      { return ('_' == ch || isalnum((unsigned char)ch)); }
+static int is_digit(int c)      { return isdigit((unsigned char)c); }
+static int is_graph(int c)      { return isgraph((unsigned char)c); }
+static int is_lower(int c)      { return islower((unsigned char)c); }
+static int is_print(int c)      { return isprint((unsigned char)c); }
+static int is_punct(int c)      { return ispunct((unsigned char)c); }
+static int is_space(int c)      { return isspace((unsigned char)c); }
+static int is_upper(int c)      { return isupper((unsigned char)c); }
+static int is_word(int c)       { return ('_' == c || isalnum((unsigned char)c)); }
+static int is_xdigit(int c)     { return isxdigit((unsigned char)c); }
 
 static int
 charset_alias(recompile_t *re, int value, const char *alias, int length)

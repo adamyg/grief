@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_prntf_c,"$Id: prntf.c,v 1.12 2014/10/22 02:33:14 ayoung Exp $")
+__CIDENT_RCSID(gr_prntf_c,"$Id: prntf.c,v 1.13 2017/01/19 17:09:30 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: prntf.c,v 1.12 2014/10/22 02:33:14 ayoung Exp $
+/* $Id: prntf.c,v 1.13 2017/01/19 17:09:30 cvsuser Exp $
  * Print formatter.
  *
  *

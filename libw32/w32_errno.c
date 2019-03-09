@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_errno_c,"$Id: w32_errno.c,v 1.12 2015/02/19 00:17:28 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_errno_c,"$Id: w32_errno.c,v 1.18 2018/10/18 12:58:49 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 errno mapping support
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -40,15 +40,14 @@ __CIDENT_RCSID(gr_w32_errno_c,"$Id: w32_errno.c,v 1.12 2015/02/19 00:17:28 ayoun
 #include <time.h>
 
 /*
- *  Mapping for the first 255 system error messages (ie. base error codes),
- *  with all others are mapped to EIO.
+ *  Mapping for the first 499 system error messages (ie. base error codes), with all others are mapped to EIO.
  *
- *  Note, the follow represent a 'general' error code mapping, logic may require
- *  explicit mapping when error conditions are being replied upon.
+ *      https://docs.microsoft.com/en-us/windows/desktop/debug/system-error-codes--0-499-
+ *
+ *  Note, the follow represent a 'general' error code mapping, logic may require explicit mapping when error conditions are being replied upon.
  */
-
-static const int    xlat256[256] = {
- /* errno values    Win32 error values */
+static const int    xlaterrno[] = {
+ /* errno              Win32          Mnemonic                                 Description */
     0,              /* 0 (0x0)        ERROR_SUCCESS                            The operation completed successfully. */
     EINVAL,         /* 1 (0x1)        ERROR_INVALID_FUNCTION                   Incorrect function. */
     ENOENT,         /* 2 (0x2)        ERROR_FILE_NOT_FOUND                     The system cannot find the file specified. */
@@ -84,22 +83,22 @@ static const int    xlat256[256] = {
     EACCES,         /* 32 (0x20)      ERROR_SHARING_VIOLATION                  The process cannot access the file because it is being used by another process. */
     EACCES,         /* 33 (0x21)      ERROR_LOCK_VIOLATION                     The process cannot access the file because another process has locked a portion of the file. */
     -1,             /* 34 (0x22)      ERROR_WRONG_DISK                         The wrong diskette is in the drive. Insert %2 (Volume Serial Number: %3) into drive %1. */
-    -1,             /* 35 N/A */
+    -1,             /* 35             N/A */
     EACCES,         /* 36 (0x24)      ERROR_SHARING_BUFFER_EXCEEDED            Too many files opened for sharing. */
-    -1,             /* 37 N/A */
+    -1,             /* 37             N/A */
     -1,             /* 38 (0x26)      ERROR_HANDLE_EOF                         Reached the end of the file. */
     ENOSPC,         /* 39 (0x27)      ERROR_HANDLE_DISK_FULL                   The disk is full. */
-    -1,             /* 40 N/A */
-    -1,             /* 41 N/A */
-    -1,             /* 42 N/A */
-    -1,             /* 43 N/A */
-    -1,             /* 44 N/A */
-    -1,             /* 45 N/A */
-    -1,             /* 46 N/A */
-    -1,             /* 47 N/A */
-    -1,             /* 48 N/A */
-    -1,             /* 49 N/A */
-    -1,             /* 50 (0x32)      ERROR_NOT_SUPPORTED                      The request is not supported. */
+    -1,             /* 40             N/A */
+    -1,             /* 41             N/A */
+    -1,             /* 42             N/A */
+    -1,             /* 43             N/A */
+    -1,             /* 44             N/A */
+    -1,             /* 45             N/A */
+    -1,             /* 46             N/A */
+    -1,             /* 47             N/A */
+    -1,             /* 48             N/A */
+    -1,             /* 49             N/A */
+    ENOSYS,         /* 50 (0x32)      ERROR_NOT_SUPPORTED                      The request is not supported. */
     -1,             /* 51 (0x33)      ERROR_REM_NOT_LIST                       Windows cannot find the network path. Verify that the network path is correct and the destination computer is not busy or turned off. If Windows still cannot find the network path, contact your network administrator. */
     -1,             /* 52 (0x34)      ERROR_DUP_NAME                           You were not connected because a duplicate name exists on the network. If joining a domain, go to System in Control Panel to change the computer name and try again. If joining a workgroup, choose another workgroup name. */
     -1,             /* 53 (0x35)      ERROR_BAD_NETPATH                        The network path was not found. */
@@ -122,15 +121,15 @@ static const int    xlat256[256] = {
     -1,             /* 70 (0x46)      ERROR_SHARING_PAUSED                     The remote server has been paused or is in the process of being started. */
     -1,             /* 71 (0x47)      ERROR_REQ_NOT_ACCEP                      No more connections can be made to this remote computer at this time because there are already as many connections as the computer can accept. */
     -1,             /* 72 (0x48)      ERROR_REDIR_PAUSED                       The specified printer or disk device has been paused. */
-    -1,             /* 73 N/A */
-    -1,             /* 74 N/A */
-    -1,             /* 75 N/A */
-    -1,             /* 76 N/A */
-    -1,             /* 77 N/A */
-    -1,             /* 78 N/A */
-    -1,             /* 79 N/A */
+    -1,             /* 73             N/A */
+    -1,             /* 74             N/A */
+    -1,             /* 75             N/A */
+    -1,             /* 76             N/A */
+    -1,             /* 77             N/A */
+    -1,             /* 78             N/A */
+    -1,             /* 79             N/A */
     EEXIST,         /* 80 (0x50)      ERROR_FILE_EXISTS                        The file exists. */
-    -1,             /* 81 N/A */
+    -1,             /* 81             N/A */
     ENOENT,         /* 82 (0x52)      ERROR_CANNOT_MAKE                        The directory or file cannot be created. */
     -1,             /* 83 (0x53)      ERROR_FAIL_I24                           Fail on INT 24. */
     ENOMEM,         /* 84 (0x54)      ERROR_OUT_OF_STRUCTURES                  Storage to process this request is not available. */
@@ -139,16 +138,16 @@ static const int    xlat256[256] = {
     EINVAL,         /* 87 (0x57)      ERROR_INVALID_PARAMETER                  The parameter is incorrect. */
     EFAULT,         /* 88 (0x58)      ERROR_NET_WRITE_FAULT                    A write fault occurred on the network. */
     EBUSY,          /* 89 (0x59)      ERROR_NO_PROC_SLOTS                      The system cannot start another process at this time. */
-    -1,             /* 90 N/A */
-    -1,             /* 91 N/A */
-    -1,             /* 92 N/A */
-    -1,             /* 93 N/A */
-    -1,             /* 94 N/A */
-    -1,             /* 95 N/A */
-    -1,             /* 96 N/A */
-    -1,             /* 97 N/A */
-    -1,             /* 98 N/A */
-    -1,             /* 99 N/A */
+    -1,             /* 90             N/A */
+    -1,             /* 91             N/A */
+    -1,             /* 92             N/A */
+    -1,             /* 93             N/A */
+    -1,             /* 94             N/A */
+    -1,             /* 95             N/A */
+    -1,             /* 96             N/A */
+    -1,             /* 97             N/A */
+    -1,             /* 98             N/A */
+    -1,             /* 99             N/A */
     -1,             /* 100 (0x64)     ERROR_TOO_MANY_SEMAPHORES                Cannot create another system semaphore. */
     EPERM,          /* 101 (0x65)     ERROR_EXCL_SEM_ALREADY_OWNED             The exclusive semaphore is owned by another process. */
     EACCES,         /* 102 (0x66)     ERROR_SEM_IS_SET                         The semaphore is set and cannot be closed. */
@@ -164,8 +163,8 @@ static const int    xlat256[256] = {
     ENOSPC,         /* 112 (0x70)     ERROR_DISK_FULL                          There is not enough space on the disk. */
     EMFILE,         /* 113 (0x71)     ERROR_NO_MORE_SEARCH_HANDLES             No more internal file identifiers available. */
     EBADF,          /* 114 (0x72)     ERROR_INVALID_TARGET_HANDLE              The target internal file identifier is incorrect. */
-    -1,             /* 115 N/A */
-    -1,             /* 116 N/A */
+    -1,             /* 115            N/A */
+    -1,             /* 116            N/A */
     -1,             /* 117 (0x75)     ERROR_INVALID_CATEGORY                   The IOCTL call made by the application program is not correct. */
     -1,             /* 118 (0x76)     ERROR_INVALID_VERIFY_SWITCH              The verify-on-write switch parameter value is not correct. */
     -1,             /* 119 (0x77)     ERROR_BAD_DRIVER_LEVEL                   The system does not support the command requested. */
@@ -272,7 +271,7 @@ static const int    xlat256[256] = {
     -1,             /* 220 (0xDC)     ERROR_FILE_CHECKED_OUT                   This file is checked out or locked for editing by another user. */
     -1,             /* 221 (0xDD)     ERROR_CHECKOUT_REQUIRED                  The file must be checked out before saving changes. */
     -1,             /* 222 (0xDE)     ERROR_BAD_FILE_TYPE                      The file type being saved or retrieved has been blocked. */
-    -1,             /* 223 (0xDF)     ERROR_FILE_TOO_LARGE                     The file size exceeds the limit allowed and cannot be saved. */
+    ENOSPC,         /* 223 (0xDF)     ERROR_FILE_TOO_LARGE                     The file size exceeds the limit allowed and cannot be saved. */
     -1,             /* 224 (0xE0)     ERROR_FORMS_AUTH_REQUIRED                Access Denied. Before opening files in this location, you must first add the web site to your trusted sites list, browse to the web site, and select the option to login automatically. */
     ENOEXEC,        /* 225 (0xE1)     ERROR_VIRUS_INFECTED                     Operation did not complete successfully because the file contains a virus or potentially unwanted software. */
     ENOEXEC,        /* 226 (0xE2)     ERROR_VIRUS_DELETED                      This file contains a virus or potentially unwanted software and cannot be opened. Due to the nature of this virus or potentially unwanted software, the file has been removed from this location. */
@@ -303,40 +302,202 @@ static const int    xlat256[256] = {
     -1,             /* 251            N/A */
     -1,             /* 252            N/A */
     -1,             /* 253            N/A */
-    -1,             /* 254 (0xFE)     ERROR_INVALID_EA_NAME                    The specified extended attribute name was invalid. */
-    -1              /* 255 (0xFF)     ERROR_EA_LIST_INCONSISTENT               The extended attributes are inconsistent. */
+    EINVAL,         /* 254 (0xFE)     ERROR_INVALID_EA_NAME                    The specified extended attribute name was invalid. */
+    -1,             /* 255 (0xFF)     ERROR_EA_LIST_INCONSISTENT               The extended attributes are inconsistent. */
+    -1,             /* 256            N/A */
+    -1,             /* 257            N/A */
+    EAGAIN,         /* 258 (0x102)    WAIT_TIMEOUT                             The wait operation timed out. */
+    -1,             /* 259 (0x103)    ERROR_NO_MORE_ITEMS                      No more data is available. */
+    -1,             /* 260            N/A */
+    -1,             /* 261            N/A */
+    -1,             /* 262            N/A */
+    -1,             /* 263            N/A */
+    -1,             /* 264            N/A */
+    -1,             /* 265            N/A */
+    -1,             /* 266 (0x10A)    ERROR_CANNOT_COPY                        The copy functions cannot be used. */
+    ENOTDIR,        /* 267 (0x10B)    ERROR_DIRECTORY                          The directory name is invalid. */
+    -1,             /* 268            N/A */
+    -1,             /* 269            N/A */
+    -1,             /* 270            N/A */
+    -1,             /* 271            N/A */
+    -1,             /* 272            N/A */
+    -1,             /* 273            N/A */
+    -1,             /* 274            N/A */
+    -1,             /* 275 (0x113)    ERROR_EAS_DIDNT_FIT                      The extended attributes did not fit in the buffer. */
+    -1,             /* 276 (0x114)    ERROR_EA_FILE_CORRUPT                    The extended attribute file on the mounted file system is corrupt. */
+    -1,             /* 277 (0x115)    ERROR_EA_TABLE_FULL                      The extended attribute table file is full. */
+    EBADF,          /* 278 (0x116)    ERROR_INVALID_EA_HANDLE                  The specified extended attribute handle is invalid. */
+    -1,             /* 279            N/A */
+    -1,             /* 280            N/A */
+    -1,             /* 281            N/A */
+    ENOSYS,         /* 282 (0x11A)    ERROR_EAS_NOT_SUPPORTED                  The mounted file system does not support extended attributes. */
+    -1,             /* 283            N/A */
+    -1,             /* 284            N/A */
+    -1,             /* 285            N/A */
+    -1,             /* 286            N/A */
+    -1,             /* 287            N/A */
+    EPERM,          /* 288 (0x120)    ERROR_NOT_OWNER                          Attempt to release mutex not owned by caller. */
+    -1,             /* 289            N/A */
+    -1,             /* 290            N/A */
+    -1,             /* 291            N/A */
+    -1,             /* 292            N/A */
+    -1,             /* 293            N/A */
+    -1,             /* 294            N/A */
+    -1,             /* 295            N/A */
+    -1,             /* 296            N/A */
+    -1,             /* 297            N/A */
+    -1,             /* 298 (0x12A)    ERROR_TOO_MANY_POSTS                     Too many posts were made to a semaphore. */
+    -1,             /* 299 (0x12B)    ERROR_PARTIAL_COPY                       Only part of a ReadProcessMemory or WriteProcessMemory request was completed. */
+    EACCES,         /* 300 (0x12C)    ERROR_OPLOCK_NOT_GRANTED                 The oplock request is denied. */
+    EINVAL,         /* 301 (0x12D)    ERROR_INVALID_OPLOCK_PROTOCOL            An invalid oplock acknowledgment was received by the system. */
+    -1,             /* 302 (0x12E)    ERROR_DISK_TOO_FRAGMENTED                The volume is too fragmented to complete this operation. */
+    EBUSY,          /* 303 (0x12F)    ERROR_DELETE_PENDING                     The file cannot be opened because it is in the process of being deleted. */
+    -1,             /* 304 (0x130)    ERROR_INCOMPATIBLE_WITH_GLOBAL_SHORT_NAME_REGISTRY_SETTING - Short name settings may not be changed on this volume due to the global registry setting. */
+    -1,             /* 305 (0x131)    ERROR_SHORT_NAMES_NOT_ENABLED_ON_VOLUME  Short names are not enabled on this volume. */
+    -1,             /* 306 (0x132)    ERROR_SECURITY_STREAM_IS_INCONSISTENT    The security stream for the given volume is in an inconsistent state.Please run CHKDSK on the volume. */
+    EINVAL,         /* 307 (0x133)    ERROR_INVALID_LOCK_RANGE                 A requested file lock operation cannot be processed due to an invalid byte range. */
+    -1,             /* 308 (0x134)    ERROR_IMAGE_SUBSYSTEM_NOT_PRESENT        The subsystem needed to support the image type is not present. */
+    -1,             /* 309 (0x135)    ERROR_NOTIFICATION_GUID_ALREADY_DEFINED  The specified file already has a notification GUID associated with it. */
+    EINVAL,         /* 310 (0x136)    ERROR_INVALID_EXCEPTION_HANDLER          An invalid exception handler routine has been detected. */
+    -1,             /* 311 (0x137)    ERROR_DUPLICATE_PRIVILEGES               Duplicate privileges were specified for the token. */
+    ERANGE,         /* 312 (0x138)    ERROR_NO_RANGES_PROCESSED                No ranges for the specified operation were able to be processed. */
+    EACCES,         /* 313 (0x139)    ERROR_NOT_ALLOWED_ON_SYSTEM_FILE         Operation is not allowed on a file system internal file. */
+    ENOSPC,         /* 314 (0x13A)    ERROR_DISK_RESOURCES_EXHAUSTED           The physical resources of this disk have been exhausted. */
+    EINVAL,         /* 315 (0x13B)    ERROR_INVALID_TOKEN                      The token representing the data is invalid. */
+    ENOSYS,         /* 316 (0x13C)    ERROR_DEVICE_FEATURE_NOT_SUPPORTED       The device does not support the command feature. */
+    -1,             /* 317 (0x13D)    ERROR_MR_MID_NOT_FOUND                   The system cannot find message text for message number 0x % 1 in the message file for %2. */
+    ENOENT,         /* 318 (0x13E)    ERROR_SCOPE_NOT_FOUND                    The scope specified was not found. */
+    -1,             /* 319 (0x13F)    ERROR_UNDEFINED_SCOPE                    The Central Access Policy specified is not defined on the target machine. */
+    EINVAL,         /* 320 (0x140)    ERROR_INVALID_CAP                        The Central Access Policy obtained from Active Directory is invalid. */
+    ENXIO,          /* 321 (0x141)    ERROR_DEVICE_UNREACHABLE                 The device is unreachable. */
+    -1,             /* 322 (0x142)    ERROR_DEVICE_NO_RESOURCES                The target device has insufficient resources to complete the operation. */
+    -1,             /* 323 (0x143)    ERROR_DATA_CHECKSUM_ERROR                A data integrity checksum error occurred.Data in the file stream is corrupt. */
+    -1,             /* 324 (0x144)    ERROR_INTERMIXED_KERNEL_EA_OPERATION     An attempt was made to modify both a KERNEL and normal Extended Attribute(EA) in the same operation. */
+    ENOSYS,         /* 326 (0x146)    ERROR_FILE_LEVEL_TRIM_NOT_SUPPORTED      Device does not support file - level TRIM. */
+    EFAULT,         /* 327 (0x147)    ERROR_OFFSET_ALIGNMENT_VIOLATION         The command specified a data offset that does not align to the device's granularity/alignment. */
+    -1,             /* 328 (0x148)    ERROR_INVALID_FIELD_IN_PARAMETER_LIST    The command specified an invalid field in its parameter list. */
+    EBUSY,          /* 329 (0x149)    ERROR_OPERATION_IN_PROGRESS              An operation is currently in progress with the device. */
+    ENXIO,          /* 330 (0x14A)    ERROR_BAD_DEVICE_PATH                    An attempt was made to send down the command via an invalid path to the target device. */
+    ENFILE,         /* 331 (0x14B)    ERROR_TOO_MANY_DESCRIPTORS               The command specified a number of descriptors that exceeded the maximum supported by the device. */
+    -1,             /* 332 (0x14C)    ERROR_SCRUB_DATA_DISABLED                Scrub is disabled on the specified file. */
+    ENOSYS,         /* 333 (0x14D)    ERROR_NOT_REDUNDANT_STORAGE              The storage device does not provide redundancy. */
+    ENOSYS,         /* 334 (0x14E)    ERROR_RESIDENT_FILE_NOT_SUPPORTED        An operation is not supported on a resident file. */
+    ENOSYS,         /* 335 (0x14F)    ERROR_COMPRESSED_FILE_NOT_SUPPORTED      An operation is not supported on a compressed file. */
+    EISDIR,         /* 336 (0x150)    ERROR_DIRECTORY_NOT_SUPPORTED            An operation is not supported on a directory. */
+    -1,             /* 337 (0x151)    ERROR_NOT_READ_FROM_COPY                 The specified copy of the requested data could not be read. */
+#if (0)
+    -1,             /* 350 (0x15E)    ERROR_FAIL_NOACTION_REBOOT               No action was taken as a system reboot is required. */
+    -1,             /* 351 (0x15F)    ERROR_FAIL_SHUTDOWN                      The shutdown operation failed. */
+    -1,             /* 352 (0x160)    ERROR_FAIL_RESTART                       The restart operation failed. */
+    -1,             /* 353 (0x161)    ERROR_MAX_SESSIONS_REACHED               The maximum number of sessions has been reached. */
+    -1,             /* 400 (0x190)    ERROR_THREAD_MODE_ALREADY_BACKGROUND     The thread is already in background processing mode. */
+    -1,             /* 401 (0x191)    ERROR_THREAD_MODE_NOT_BACKGROUND         The thread is not in background processing mode. */
+    -1,             /* 402 (0x192)    ERROR_PROCESS_MODE_ALREADY_BACKGROUND    The process is already in background processing mode. */
+    -1,             /* 403 (0x193)    ERROR_PROCESS_MODE_NOT_BACKGROUND        The process is not in background processing mode. */
+    -1,             /* 487 (0x1E7)    ERROR_INVALID_ADDRESS                    Attempt to access invalid address. */
+#endif
     };
 
 
-int
+LIBW32_API int
 w32_errno_cnv(unsigned rc)
 {
-    int t_errno;
+    const unsigned maprange = (sizeof(xlaterrno) / sizeof(xlaterrno[0]));
+    int t_errno = -1;
 
-    if (rc > 255) rc = EIO;
-    if (-1 == (t_errno = xlat256[rc])) {
-        t_errno = EIO;
+    if (rc < maprange) {
+        t_errno = xlaterrno[rc];                /* map */
+    }
+
+    if (-1 == t_errno) {
+        t_errno = EIO;                          /* default */
+        if (rc >= maprange) {
+            switch (rc) {
+            case ERROR_INVALID_ADDRESS:         /* 487          - Attempt to access invalid address. */
+                t_errno = EFAULT; break;
+            case ERROR_ARITHMETIC_OVERFLOW:     /* 534          - Arithmetic result exceeded 32 bits. */
+                t_errno = ERANGE; break;
+            case ERROR_PIPE_CONNECTED:          /* 535          - There is a process on other end of the pipe. */
+                t_errno = EPIPE; break;
+            case ERROR_PIPE_LISTENING:          /* 536          - Waiting for a process to open the other end of the pipe. */
+                t_errno = EPIPE; break;
+            case ERROR_CANT_WAIT:               /* 554 (0x22A)  - Used to indicate that an operation cannot continue without blocking for I/O. */
+                t_errno = EAGAIN; break;
+            case ERROR_OPERATION_ABORTED:       /* 995          - The I/O operation has been aborted because of either a thread exit or an application request. */
+                t_errno = EINTR; break;
+            case ERROR_IO_INCOMPLETE:           /* 996          - Overlapped I/O event is not in a signaled state. */
+                t_errno = EINTR; break;
+            case ERROR_NOACCESS:                /* 998          - Invalid access to memory location. */
+                t_errno = EFAULT; break;
+            case ERROR_SWAPERROR:               /* 999          - Error performing inpage operation. */
+                t_errno = ENOENT; break;
+            case ERROR_STACK_OVERFLOW:          /* 1001         - Recursion too deep; the stack overflowed. */
+                t_errno = ENOMEM; break;
+            case ERROR_INVALID_FLAGS:           /* 1004         - Invalid flags. */
+                t_errno = EINVAL; break;
+            case ERROR_UNRECOGNIZED_VOLUME:     /* 1005         - The volume does not contain a recognized file system. */
+                t_errno = ENODEV; break;
+            case ERROR_FILE_INVALID:            /* 1006         - The volume for a file has been externally altered so that the opened file is no longer valid. */
+                t_errno = ENODEV; break;
+            case ERROR_IO_DEVICE:               /* 1117         - The request could not be performed because of an I/O device error. */
+                t_errno = EIO; break;
+            case ERROR_MAPPED_ALIGNMENT:        /* 1132         - The base address or the file offset specified does not have the proper alignment. */
+                t_errno = EINVAL; break;
+            case ERROR_PRIVILEGE_NOT_HELD:      /* 1314 (0X522) - A required privilege is not held by the client. */
+                t_errno = EPERM;  break;
+            case ERROR_ACCOUNT_DISABLED:        /* 1331         - This user can't sign in because this account is currently disabled. */
+                t_errno = EACCES; break;
+            case ERROR_LOGON_FAILURE:           /* 1326         - The user name or password is incorrect. */
+                t_errno = EACCES; break;
+            case ERROR_ACCOUNT_RESTRICTION:     /* 1327         - Account restrictions are preventing this user from signing in. */
+                t_errno = EACCES; break;
+            case ERROR_UNRECOGNIZED_MEDIA:      /* 1785         - The disk media is not recognized. It may not be formatted. */
+                t_errno = ENXIO;  break;
+            case ERROR_BAD_DEVICE:              /* 1200         - The specified device name is invalid. */
+                t_errno = ENODEV; break;
+            case ERROR_INVALID_OWNER:           /* 1307         - This security ID may not be assigned as the owner of this object. */
+                t_errno = EINVAL; break;
+            case ERROR_INVALID_PRIMARY_GROUP:   /* 1308         - This security ID may not be assigned as the primary group of an object. */
+                t_errno = EINVAL; break;
+            case ERROR_NO_SUCH_PRIVILEGE:       /* 1313         - A specified privilege does not exist. */
+                t_errno = EACCES; break;
+            case ERROR_INVALID_LOGON_HOURS:     /* 1328         - Your account has time restrictions that keep you from signing in right now. */
+                t_errno = EACCES; break;
+            case ERROR_INVALID_WORKSTATION:     /* 1329         - This user isn't allowed to sign in to this computer. */
+                t_errno = EACCES; break;
+            case ERROR_PASSWORD_EXPIRED:        /* 1330         - The password for this account has expired. */
+                t_errno = EACCES; break;
+            case ERROR_NONE_MAPPED:             /* 1332         - No mapping between account names and security IDs was done. */
+                t_errno = EINVAL; break;
+            case ERROR_OPEN_FILES:              /* 2401         - This network connection has files open or requests pending. */
+                t_errno = EBUSY; break;
+            case ERROR_BAD_USERNAME:            /* 2202L        - The specified username is invalid. */
+                t_errno = EINVAL; break;
+            case ERROR_DEVICE_IN_USE:           /* 2404L        - The device is in use by an active process and cannot be disconnected. */
+                t_errno = EBUSY; break;
+            }
+        }
     }
     return t_errno;
 }
 
 
-int
+LIBW32_API int
 w32_errno_setas(unsigned rc)
 {
     errno = w32_errno_cnv(rc);
-    return -1;
+    return -1; //REVIEW/FIXME
 }
 
 
-int
+LIBW32_API int
 w32_errno_set(void)
 {
     return w32_errno_setas(GetLastError());
 }
 
 
-const char *
+LIBW32_API const char *
 w32_strerror(int errnum)
 {
     const char *err = NULL;
@@ -346,6 +507,7 @@ w32_strerror(int errnum)
     if (errnum >= 0 && errnum < _sys_nerr) {
         return strerror(errnum);
     }
+
     switch (errnum) {
     /* Standard library */
     case EPERM:             err = "Operation not permitted"; break;
@@ -390,64 +552,318 @@ w32_strerror(int errnum)
     case EDEADLOCK:         err = "Deadlock condition"; break;
 #endif
 
-    /* Socket/extended */
-    case EADDRINUSE:        err = "Address already in use"; break;
-    case EADDRNOTAVAIL:     err = "EADDRNOTAVAIL"; break;
-    case EAFNOSUPPORT:      err = "Family cannot be used with this socket"; break;
-    case EALREADY:          err = "Already"; break;
-    case EBADMSG:           err = "Bad message"; break;
-    case ECANCELED:         err = "Operation cancelled"; break;
-    case ECONNABORTED:      err = "Connection was aborted"; break;
-    case ECONNREFUSED:      err = "Connection refused"; break;
-    case ECONNRESET:        err = "Connection reset by peer"; break;
-    case EDESTADDRREQ:      err = "EDESTADDRREQ"; break;
-    case EHOSTUNREACH:      err = "Host unreachable"; break;
-    case EIDRM:             err = "Identifier removed"; break;
-    case EINPROGRESS:       err = "In progress"; break;
-    case EISCONN:           err = "Socket is already connected"; break;
-    case ELOOP:             err = "Too many symbolic links"; break;
-    case EMSGSIZE:          err = "Message size"; break;
-    case ENETDOWN:          err = "Network down."; break;
-    case ENETRESET:         err = "Network reset"; break;
-    case ENETUNREACH:       err = "Network cannot be reached"; break;
-    case ENOBUFS:           err = "No buffer space availabled"; break;
-    case ENODATA:           err = "No data"; break;
-    case ENOLINK:           err = "Virtual circuit is gone"; break;
-    case ENOMSG:            err = "No message"; break;
-    case ENOPROTOOPT:       err = "This option is unsupported"; break;
-    case ENOSR:             err = "No stream resources"; break;
-    case ENOSTR:            err = "Not a stream"; break;
-    case ENOTCONN:          err = "Socket is not connected"; break;
-    case ENOTRECOVERABLE:   err = "Not recoverable"; break;
-    case ENOTSOCK:          err = "Not a socket"; break;
-    case ENOTSUP:           err = "Not supported"; break;
-    case EOPNOTSUPP:        err = "Operation not supported on transport"; break;
-    case EOTHER:            err = "Other error"; break;
-    case EOVERFLOW:         err = "Overflow"; break;
-    case EOWNERDEAD:        err = "Owner dead"; break;
-    case EPROTO:            err = "Protocol error"; break;
-    case EPROTONOSUPPORT:   err = "Protocol not supported"; break;
-    case EPROTOTYPE:        err = "Protype error"; break;
-    case ETIME:             err = "Stream ioctl timeout"; break;
-    case ETIMEDOUT:         err = "Connection timed out"; break;
-    case ETXTBSY:           err = "Text file busy"; break;
-    case EWOULDBLOCK:       err = "Operation would block"; break;
+    /* Socket */
+    case WSAEINTR:          /*10004*/ err = "Interrupted system call"; break;
+    case WSAEBADF:          /*10009*/ err = "Bad file number"; break;
+    case WSAEACCES:         /*10013*/ err = "Permission denied"; break;
+    case WSAEFAULT:         /*10014*/ err = "Bad address"; break;
+    case WSAEINVAL:         /*10022*/ err = "Invalid argument"; break;
+    case WSAEMFILE:         /*10024*/ err = "Too many open files"; break;
+    case WSAEWOULDBLOCK:    /*10035*/ err = "Operation would block"; break;
+    case WSAEINPROGRESS:    /*10036*/ err = "Operation now in progress"; break;
+    case WSAEALREADY:       /*10037*/ err = "Operation already in progress"; break;
+    case WSAENOTSOCK:       /*10038*/ err = "Socket operation on non-socket"; break;
+    case WSAEDESTADDRREQ:   /*10039*/ err = "Destination address required"; break;
+    case WSAEMSGSIZE:       /*10040*/ err = "Message too long"; break;
+    case WSAEPROTOTYPE:     /*10041*/ err = "Protocol wrong type for socket"; break;
+    case WSAENOPROTOOPT:    /*10042*/ err = "Bad protocol option"; break;
+    case WSAEPROTONOSUPPORT:/*10043*/ err = "Protocol not supported"; break;
+    case WSAESOCKTNOSUPPORT:/*10044*/ err = "Socket type not supported"; break;
+    case WSAEOPNOTSUPP:     /*10045*/ err = "Operation not supported on socket"; break;
+    case WSAEPFNOSUPPORT:   /*10046*/ err = "Protocol family not supported"; break;
+    case WSAEAFNOSUPPORT:   /*10047*/ err = "Address family not supported by protocol family"; break;
+    case WSAEADDRINUSE:     /*10048*/ err = "Address already in use"; break;
+    case WSAEADDRNOTAVAIL:  /*10049*/ err = "Can't assign requested address"; break;
+    case WSAENETDOWN:       /*10050*/ err = "Network is down"; break;
+    case WSAENETUNREACH:    /*10051*/ err = "Network is unreachable"; break;
+    case WSAENETRESET:      /*10052*/ err = "Net dropped connection or reset"; break;
+    case WSAECONNABORTED:   /*10053*/ err = "Software caused connection abort"; break;
+    case WSAECONNRESET:     /*10054*/ err = "Connection reset by peer"; break;
+    case WSAENOBUFS:        /*10055*/ err = "No buffer space available"; break;
+    case WSAEISCONN:        /*10056*/ err = "Socket is already connected"; break;
+    case WSAENOTCONN:       /*10057*/ err = "Socket is not connected"; break;
+    case WSAESHUTDOWN:      /*10058*/ err = "Can't send after socket shutdown"; break;
+    case WSAETOOMANYREFS:   /*10059*/ err = "Too many references, can't splice"; break;
+    case WSAETIMEDOUT:      /*10060*/ err = "Connection timed out"; break;
+    case WSAECONNREFUSED:   /*10061*/ err = "Connection refused"; break;
+    case WSAELOOP:          /*10062*/ err = "Too many levels of symbolic links"; break;
+#if (ENAMETOOLONG != WSAENAMETOOLON)
+    case WSAENAMETOOLONG:   /*10063*/ err = "File name too long"; break;
+#endif
+    case WSAEHOSTDOWN:      /*10064*/ err = "Host is down"; break;
+    case WSAEHOSTUNREACH:   /*10065*/ err = "No Route to Host"; break;
+#if (ENOTEMPTY != WSAENOTEMPTY)
+    case WSAENOTEMPTY:      /*10066*/ err = "Directory not empty"; break;
+#endif
+    case WSAEPROCLIM:       /*10067*/ err = "Too many processes"; break;
+    case WSAEUSERS:         /*10068*/ err = "Too many users"; break;
+    case WSAEDQUOT:         /*10069*/ err = "Disc Quota Exceeded"; break;
+    case WSAESTALE:         /*10070*/ err = "Stale NFS file handle"; break;
+    case WSASYSNOTREADY:    /*10091*/ err = "Network SubSystem is unavailable"; break;
+    case WSAVERNOTSUPPORTED:/*10092*/ err = "WINSOCK DLL Version out of range"; break;
+    case WSANOTINITIALISED: /*10093*/ err = "Successful WSASTARTUP not yet performed"; break;
+    case WSAEREMOTE:        /*10071*/ err = "Too many levels of remote in path"; break;
+    case WSAHOST_NOT_FOUND: /*11001*/ err = "Host not found"; break;
+    case WSATRY_AGAIN:      /*11002*/ err = "Non-Authoritative Host not found"; break;
+    case WSANO_RECOVERY:    /*11003*/ err = "Non-Recoverable errors"; break;
+    case WSANO_DATA:        /*11004*/ err = "Valid name, no data record of requested type"; break;
+#if (WSANO_DATA != WSANO_DATA)
+    case WSANO_ADDRESS:     /*11004*/ err = "No address, look for MX record "; break;
+#endif
 
-    case ENOTINITIALISED:   err = "Winsock not initialised"; break;
+    /* BSD/POSIX Socket Errors */
+//  case EINTR:             err = "Interrupted system call"; break;
+//  case EBADF:             err = "Bad file number"; break;
+//  case EACCES:            err = "Permission denied"; break;
+//  case EFAULT:            err = "Bad address"; break;
+//  case EINVAL:            err = "Invalid argument"; break;
+//  case EMFILE:            err = "Too many open files"; break;
+#if (EWOULDBLOCK != WSAEWOULDBLOCK)
+    case EWOULDBLOCK:       err = "Operation would block"; break;
+#endif
+#if (EINPROGRESS != WSAEINPROGRESS)
+    case EINPROGRESS:       err = "Operation now in progress"; break;
+#endif
+#if (EALREADY != WSAEALREADY)
+    case EALREADY:          err = "Operation already in progress"; break;
+#endif
+#if (ENOTSOCK != WSAENOTSOCK)
+    case ENOTSOCK:          err = "Socket operation on non-socket"; break;
+#endif
+#if (EDESTADDRREQ != WSAEDESTADDRREQ)
+    case EDESTADDRREQ:      err = "Destination address required"; break;
+#endif
+#if (EMSGSIZE != WSAEMSGSIZE)
+    case EMSGSIZE:          err = "Message too long"; break;
+#endif
+#if (EPROTOTYPE != WSAEPROTOTYPE)
+    case EPROTOTYPE:        err = "Protocol wrong type for socket"; break;
+#endif
+#if (ENOPROTOOPT != WSAENOPROTOOPT)
+    case ENOPROTOOPT:       err = "Bad protocol option"; break;
+#endif
+#if (EPROTONOSUPPORT != WSAEPROTONOSUPPORT)
+    case EPROTONOSUPPORT:   err = "Protocol not supported"; break;
+#endif
+#if (ESOCKTNOSUPPORT != WSAESOCKTNOSUPPORT)
+    case ESOCKTNOSUPPORT:   err = "Socket type not supported"; break;
+#endif
+#if (EOPNOTSUPP != WSAEOPNOTSUPP)
+    case EOPNOTSUPP:        err = "Operation not supported on socket"; break;
+#endif
+#if (EPFNOSUPPORT != WSAEPFNOSUPPORT)
     case EPFNOSUPPORT:      err = "Protocol family not supported"; break;
-    case ESHUTDOWN:         err = "Connection shutdown"; break;
-    case EHOSTDOWN:         err = "Host down"; break;
-    case ESOCKTNOSUPPORT:   err = "Socket no support"; break;
-    case ETOOMANYREFS:      err = "Too many references"; break;
+#endif
+#if (EAFNOSUPPORT != WSAEAFNOSUPPORT)
+    case EAFNOSUPPORT:      err = "Address family not supported by protocol family"; break;
+#endif
+#if (EADDRINUSE != WSAEADDRINUSE)
+    case EADDRINUSE:        err = "Address already in use"; break;
+#endif
+#if (EADDRNOTAVAIL != WSAEADDRNOTAVAIL)
+    case EADDRNOTAVAIL:     err = "Can't assign requested address"; break;
+#endif
+#if (ENETDOWN != WSAENETDOWN)
+    case ENETDOWN:          err = "Network is down"; break;
+#endif
+#if (ENETUNREACH != WSAENETUNREACH)
+    case ENETUNREACH:       err = "Network is unreachable"; break;
+#endif
+#if (ENETRESET != WSAENETRESET)
+    case ENETRESET:         err = "Net dropped connection or reset"; break;
+#endif
+#if (ECONNABORTED != WSAECONNABORTED)
+    case ECONNABORTED:      err = "Software caused connection abort"; break;
+#endif
+#if (ECONNRESET != WSAECONNRESET)
+    case ECONNRESET:        err = "Connection reset by peer"; break;
+#endif
+#if (ENOBUFS != WSAENOBUFS)
+    case ENOBUFS:           err = "No buffer space available"; break;
+#endif
+#if (EISCONN != WSAEISCONN)
+    case EISCONN:           err = "Socket is already connected"; break;
+#endif
+#if (ENOTCONN != WSAENOTCONN)
+    case ENOTCONN:          err = "Socket is not connected"; break;
+#endif
+#if (ESHUTDOWN != WSAESHUTDOWN)
+    case ESHUTDOWN:         err = "Can't send after socket shutdown"; break;
+#endif
+#if (ETOOMANYREFS != WSAETOOMANYREFS)
+    case ETOOMANYREFS:      err = "Too many references, can't splice"; break;
+#endif
+#if (ETIMEDOUT != WSAETIMEDOUT)
+    case ETIMEDOUT:         err = "Connection timed out"; break;
+#endif
+#if (ECONNREFUSED != WSAECONNREFUSED)
+    case ECONNREFUSED:      err = "Connection refused"; break;
+#endif
+#if (ELOOP != WSAELOOP)
+    case ELOOP:             err = "Too many levels of symbolic links"; break;
+#endif
+//#if (ENAMETOOLONG != WSAENAMETOOLONG)
+//  case ENAMETOOLONG:      err = "File name too long"; break;
+//#endif
+#if (EHOSTDOWN != WSAEHOSTDOWN)
+    case EHOSTDOWN:         err = "Host is down"; break;
+#endif
+#if (EHOSTUNREACH != WSAEHOSTUNREACH)
+    case EHOSTUNREACH:      err = "No Route to Host"; break;
+#endif
+//#if (ENOTEMPTY != WSAENOTEMPTY)
+//  case ENOTEMPTY:         err = "Directory not empty"; break;
+//#endif
+#if (EPROCLIM != WSAEPROCLIM)
     case EPROCLIM:          err = "Too many processes"; break;
-    case EUSERS:            err = "User quota exceeded"; break;
-    case EDQUOT:            err = "Disk quota exceeded"; break;
-    case ESTALE:            err = "Stale file handle reference"; break;
-    case EREMOTE:           err = "Item is remote"; break;
-    case EDISCON:           err = "Graceful shutdown in progress"; break;
-    case ENOMORE:           err = "No more results"; break;
-    case ECANCELLED:        err = "Operation cancelled"; break;
-    case EREFUSED:          err = "Refused"; break;
+#endif
+#if (EUSERS != WSAEUSERS)
+    case EUSERS:            err = "Too many users"; break;
+#endif
+#if (EDQUOT != WSAEDQUOT)
+    case EDQUOT:            err = "Disc Quota Exceeded"; break;
+#endif
+#if (ESTALE != WSAESTALE)
+    case ESTALE:            err = "Stale NFS file handle"; break;
+#endif
+#if (ENOTINITIALISED != WSANOTINITIALISED)
+    case ENOTINITIALISED:   err = "Successful WSASTARTUP not yet performed"; break;
+#endif
+
+    /* POSIX */
+//  case EADDRINUSE:        /*100*/ err = "Address already in use"; break;
+//  case EADDRNOTAVAIL:     /*101*/ err = "EADDRNOTAVAIL"; break;
+//  case EAFNOSUPPORT:      /*102*/ err = "Family cannot be used with this socket"; break;
+//  case EALREADY:          /*103*/ err = "Already"; break;
+    case EBADMSG:           /*104*/ err = "Bad message"; break;
+    case ECANCELED:         /*105*/ err = "Operation cancelled"; break;
+//  case ECONNABORTED:      /*106*/ err = "The connection was aborted"; break;
+//  case ECONNREFUSED:      /*107*/ err = "Connection refused"; break;
+//  case ECONNRESET:        /*108*/ err = "Connection reset by peer"; break;
+//  case EDESTADDRREQ:      /*109*/ err = "EDESTADDRREQ"; break;
+//  case EHOSTUNREACH:      /*110*/ err = "Host unreachable"; break;
+    case EIDRM:             /*111*/ err = "Identifier removed"; break;
+//  case EINPROGRESS:       /*112*/ err = "In progress"; break;
+//  case EISCONN:           /*113*/ err = "Socket is already connected"; break;
+//  case ELOOP:             /*114*/ err = "Too many symbolic links"; break;
+//  case EMSGSIZE:          /*115*/ err = "Message size"; break;
+//  case ENETDOWN:          /*116*/ err = "Network down"; break;
+//  case ENETRESET:         /*117*/ err = "Network reset"; break;
+//  case ENETUNREACH:       /*118*/ err = "The network can't be reached"; break;
+//  case ENOBUFS:           /*119*/ err = "No buffer space availabled"; break;
+    case ENODATA:           /*120*/ err = "No data (for no delay io)"; break;
+    case ENOLINK:           /*121*/ err = "Virtual circuit is gone"; break;
+    case ENOMSG:            /*122*/ err = "No message"; break;
+//  case ENOPROTOOPT:       /*123*/ err = "This option is unsupported"; break;
+    case ENOSR:             /*124*/ err = "No stream resources"; break;
+    case ENOSTR:            /*125*/ err = "Not a stream"; break;
+//  case ENOTCONN:          /*126*/ err = "Socket is not connected"; break;
+//  case ENOTRECOVERABLE:   /*127*/ err = "Not recoverable"; break;
+//  case ENOTSOCK:          /*128*/ err = "Not a socket"; break;
+    case ENOTSUP:           /*129*/ err = "Not supported"; break;
+//  case EOPNOTSUPP:        /*130*/ err = "Operation not supported on transport"; break;
+    case EOTHER:            /*131*/ err = "Other error"; break;
+    case EOVERFLOW:         /*132*/ err = "Overflow"; break;
+    case EOWNERDEAD:        /*133*/ err = "Owner dead"; break;
+    case EPROTO:            /*134*/ err = "Protocol error"; break;
+//  case EPROTONOSUPPORT:   /*135*/ err = "Protocol not supported"; break;
+//  case EPROTOTYPE:        /*136*/ err = "Protype error"; break;
+    case ETIME:             /*137*/ err = "Stream ioctl timeout"; break;
+//  case ETIMEDOUT:         /*138*/ err = "Connection timed out"; break;
+    case ETXTBSY:           /*139*/ err = "Text file busy"; break;
+//  case EWOULDBLOCK:       /*140*/ err = "Operation would block"; break;
+
+    /* BSD/SysV messages */
+#if defined(ENOTBLK)
+    case ENOTBLK:           err = "Block device required"; break;
+#endif
+#if defined(EUCLEAN)
+    case EUCLEAN:           err = "UCLEAN"; break;
+#endif
+#if defined(ECHRNG)
+    case ECHRNG:            err = "Channel number out of range"; break;
+#endif
+#if defined(EL2NSYNC)
+    case EL2NSYNC:          err = "Level 2 not synchronized"; break;
+#endif
+#if defined(EL3HLT)
+    case EL3HLT:            err = "Level 3 halted"; break;
+#endif
+#if defined(EL3RST)
+    case EL3RST:            err = "Level 3 reset"; break;
+#endif
+#if defined(ELNRNG)
+    case ELNRNG:            err = "Link number out of range"; break;
+#endif
+#if defined(EUNATCH)
+    case EUNATCH:           err = "Protocol driver not attached"; break;
+#endif
+#if defined(ENOCSI)
+    case ENOCSI:            err = "No CSI structure available"; break;
+#endif
+#if defined(EL2HLT)
+    case EL2HLT:            err = "Level 2 halted"; break;
+#endif
+#if defined(EBADE)
+    case EBADE:             err = "Invalid exchange"; break;
+#endif
+#if defined(EBADR)
+    case EBADR:             err = "Invalid request descriptor"; break;
+#endif
+#if defined(EXFULL)
+    case EXFULL:            err = "Exchange full"; break;
+#endif
+#if defined(ENOANO)
+    case ENOANO:            err = "No anode"; break;
+#endif
+#if defined(EBADRQC)
+    case EBADRQC:           err = "Invalid request code"; break;
+#endif
+#if defined(EBADSLT)
+    case EBADSLT:           err = "Invalid slot"; break;
+#endif
+#if defined(EBFONT)
+    case EBFONT:            err = "Bad font file fmt"; break;
+#endif
+#if defined(ENOPKG)
+    case ENOPKG:            err = "No package"; break;
+#endif
+#if defined(EADV)
+    case EADV:              err = "Advertise error"; break;
+#endif
+#if defined(ESRMNT)
+    case ESRMNT:            err = "Srmount error"; break;
+#endif
+#if defined(ECOMM)
+    case ECOMM:             err = "Communication error"; break;
+#endif
+#if defined(EMULTIHOP)
+    case EMULTIHOP:         err = "Multihop attempted"; break;
+#endif
+#if defined(ELBIN)
+    case ELBIN:             err = "Inode is remote"; break;
+#endif
+#if defined(EDOTDOT)
+    case EDOTDOT:           err = "Cross mount point"; break;
+#endif
+#if defined(ENOTUNIQ)
+    case ENOTUNIQ:          err = "Name not unique"; break;
+#endif
+#if defined(EBADFD)
+    case EBADFD:            err = "Invalid file descriptor"; break;
+#endif
+#if defined(EREMCHG)
+    case EREMCHG:           err = "Remote address changed"; break;
+#endif
+#if defined(ENMFILE)
+    case ENMFILE:           err = "No more files"; break;
+#endif
+#if defined(ENOMEDIUM)
+    case ENOMEDIUM:         err = "No medium"; break;
+#endif
+#if defined(ENOSHARE)
+    case ENOSHARE:          err = "No such host or network path"; break;
+#endif
 
     default:
         _snprintf(errbuffer, sizeof(errbuffer),
@@ -470,3 +886,4 @@ w32_strerror(int errnum)
     return (err);
 }
 
+/*end*/

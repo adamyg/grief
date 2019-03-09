@@ -122,7 +122,7 @@ main(int argc, char *argv[])
 			print_counts(tlinect, twordct, tcharct, "total");
 	}
 
-	exit(rval);
+	return rval;
 }
 
 void

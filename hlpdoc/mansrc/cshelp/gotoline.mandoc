@@ -1,5 +1,5 @@
 .\" | -- Mandoc template
-.\" | $Id: gotoline.mandoc,v 1.1 2014/11/27 18:19:34 ayoung Exp $
+.\" | $Id: gotoline.mandoc,v 1.2 2018/10/01 21:19:56 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -66,7 +66,7 @@ lw(1i) lw(4i).
 Syntax	Description
 =
 nn	Jump to line nn
--nn	Goto the \fIold\fR line numbered nn. Each line in CRISP has two line
+-nn	Goto the \fIold\fR line numbered nn. Each line in GRIEF has two line
 	numbers: the current line number, and its old line number. When a file
 	is read into a buffer, both the old and current line numbers are the same.
 	As lines get inserted or deleted, the current line number changes but

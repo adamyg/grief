@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_truncate_c,"$Id: w32_truncate.c,v 1.6 2015/02/19 00:17:33 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_truncate_c,"$Id: w32_truncate.c,v 1.9 2018/10/01 00:00:04 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 ftruncate()/truncate() system calls.
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -225,3 +225,6 @@ truncate(const char *path, off_t length)
 //      errno = EIO;
 //      return -1;
 //  }
+
+/*end*/
+

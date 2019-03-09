@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: isearch.mandoc,v 1.1 2014/11/27 18:19:39 ayoung Exp $
+.\" | $Id: isearch.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -52,18 +52,19 @@
 .Nm isearch
 .Nd Interactively search for string.
 .Sh DESCRIPTION
-The isearch macro is used to interactively search for a string
+The \fIisearch\fR macro is used to interactively search for a string
 whilst it is being typed in. The intelligent search macro only
-supports looking for fixed strings (regular expressions are not allowed).
+supports looking for fixed strings (regular expressions are not
+allowed).
 .Pp
-As the string is being typed in, the window changes to show where the entry
-is. Hitting the <Backspace> key allows the user to delete characters
-that are incorrect.
-If the current string cannot be found, then GRIEF will beep and refuse
-to accept any new characters.
+As the string is being typed in, the window changes to show where the
+entry is. Hitting the <Backspace> key allows the user to delete
+characters that are incorrect.
+If the current string cannot be found, then GRIEF will beep and
+refuse to accept any new characters.
 .Pp
-Hit the <Alt-S> key to search for a subsequent occurence, or <Alt-U> to
-back up to the previously matched string.
+Hit the <Alt-S> key to search for a subsequent occurence, or <Alt-U>
+to back up to the previously matched string.
 .Pp
 Interactive search mode can be aborted by pressing <Esc> or <Enter>.
 .Sh MENU/KEYS

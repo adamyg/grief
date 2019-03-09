@@ -4,7 +4,7 @@ Format: Development Release 7-18-2013 (1.4 base)
 Title: Grief Edit
 SubTitle: Programmers Guide
 
-Footer: Copyright (c) 1998 - 2014
+Footer: Copyright (c) 1998 - 2018
 Timestamp: Generated on mon day, year
 #   m     - One or two digit month.  January is "1"
 #   mm    - Always two digit month.  January is "01"

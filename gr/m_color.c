@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_color_c,"$Id: m_color.c,v 1.39 2015/02/21 22:47:27 ayoung Exp $")
+__CIDENT_RCSID(gr_m_color_c,"$Id: m_color.c,v 1.42 2019/01/26 22:27:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_color.c,v 1.39 2015/02/21 22:47:27 ayoung Exp $
+/* $Id: m_color.c,v 1.42 2019/01/26 22:27:08 cvsuser Exp $
  * Color configuration.
  *
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -713,7 +713,7 @@ inq_color(void)                 /* string ([background], [normal], [selected], [
  *<<GRIEF>>
     Macro: set_color_pair - Set a specific color.
 
-        int
+        void
         set_color_pair(string|int ident,
             [int|string fg], [int|string bg], [int|string sf])
 

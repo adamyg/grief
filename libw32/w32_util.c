@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_util_c,"$Id: w32_util.c,v 1.13 2015/02/19 00:17:33 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_util_c,"$Id: w32_util.c,v 1.17 2018/10/12 00:30:31 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 util unix functionality.
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -49,7 +49,7 @@ __CIDENT_RCSID(gr_w32_util_c,"$Id: w32_util.c,v 1.13 2015/02/19 00:17:33 ayoung 
  *  w32_getshell ---
  *      Retrieve the default shell.
  */
-const char *
+LIBW32_API const char *
 w32_getshell(void)
 {
     const char *shname;
@@ -73,8 +73,8 @@ w32_getshell(void)
  *  w32_gethome ---
  *      Retrieve the default home directory.
  */
-const char *
-w32_gethome(void)
+LIBW32_API const char *
+w32_gethome(int ignore_env)
 {
     static const char *x_home = NULL;
 
@@ -84,7 +84,7 @@ w32_gethome(void)
         int len, done = FALSE;
 
         // <HOME>
-        if ((env = getenv("HOME")) != NULL && (len = strlen(env)) > 0) {
+        if (!ignore_env && (env = getenv("HOME")) != NULL && (len = (int)strlen(env)) > 0) {
             t_path[sizeof(t_path) - 1] = 0;
             if (0 == _access(t_path, 0)) {
                 t_path[len+1] = 0;
@@ -98,12 +98,12 @@ w32_gethome(void)
         //      X:/Documents and Settings/<user>/
         //
         //  o Windows7+
-        //      X:/Users/<user/home/
-        //      X:/Users/<user/
+        //      X:/Users/<user>/home/
+        //      X:/Users/<user>/
         //
         if (! done) {
             if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_PROFILE, NULL, 0, t_path)) &&
-                        (len = strlen(t_path)) > 0) {
+                        (len = (int)strlen(t_path)) > 0) {
                 t_path[sizeof(t_path) - 1] = 0;
                 if (0 == _access(t_path, 0)) {
                     _snprintf(t_path + len, sizeof(t_path) - len, "/home/");
@@ -118,7 +118,7 @@ w32_gethome(void)
 
         // <USERPROFILE>
         if (! done) {
-            if ((env = getenv("USERPROFILE")) != NULL && (len = strlen(env)) > 0) {
+            if ((env = getenv("USERPROFILE")) != NULL && (len = (int)strlen(env)) > 0) {
                 t_path[sizeof(t_path) - 1] = 0;
                 if (0 == _access(t_path, 0)) {
                     _snprintf(t_path + len, sizeof(t_path) - len, "/home/");
@@ -188,7 +188,7 @@ char *
 w32_unix2dos(char *path)
 {
     if (path) {
-	char *p;
+        char *p;
         for (p = path; *p; ++p) {
             if ('/' == *p) *p = '\\';               /* Unix<>DOS */
         }
@@ -210,7 +210,8 @@ w32_strslash(const char *path)
     return NULL;
 }
 
-enum w32ostype
+
+LIBW32_API enum w32ostype
 w32_ostype(void)
 {
     static int platform = 0;
@@ -219,6 +220,7 @@ w32_ostype(void)
         OSVERSIONINFO ovi = {0};
         ovi.dwOSVersionInfoSize = sizeof(ovi);
         GetVersionEx(&ovi);
+            // TODO: replace with RtlGetVersion() as GetVersionEx() is now defunct; 8.1+.
         switch (ovi.dwPlatformId) {
         case VER_PLATFORM_WIN32s:
         case VER_PLATFORM_WIN32_WINDOWS:
@@ -230,31 +232,38 @@ w32_ostype(void)
             break;
 #endif
         case VER_PLATFORM_WIN32_NT:
-            //  Operating system    Version dw??Version	    Other
-            //                              Major   Minor
+            //  Operating system        Version     Version         Other
+            //                          Number      Major   Minor
             //
-            //  8	            6.2	    6	    2	    OSVERSIONINFOEX.wProductType == VER_NT_WORKSTATION
-            //  Server 2012         6.2	    6       2	    OSVERSIONINFOEX.wProductType != VER_NT_WORKSTATION
-            //  7	            6.1	    6	    1	    OSVERSIONINFOEX.wProductType == VER_NT_WORKSTATION
-            //  Server 2008 R2	    6.1	    6	    1	    OSVERSIONINFOEX.wProductType != VER_NT_WORKSTATION
-            //  Server 2008	    6.0	    6	    0	    OSVERSIONINFOEX.wProductType != VER_NT_WORKSTATION
-            //  Vista	            6.0     6       0	    OSVERSIONINFOEX.wProductType == VER_NT_WORKSTATION
-            //  Server 2003 R2	    5.2	    5	    2	    GetSystemMetrics(SM_SERVERR2) != 0
-            //  Home Server	    5.2	    5	    2	    OSVERSIONINFOEX.wSuiteMask & VER_SUITE_WH_SERVER
-            //  Server 2003	    5.2	    5	    2	    GetSystemMetrics(SM_SERVERR2) == 0
-            //  XP Professional x64 5.2	    5	    2	    (OSVERSIONINFOEX.wProductType == VER_NT_WORKSTATION) &&
-	    //                                                  (SYSTEM_INFO.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
-            //  XP	            5.1	    5	    1	    Not applicable
-            //  2000	            5.0	    5	    0	    Not applicable
+            //  Windows 10              10.0*       10      0       OSVERSIONINFOEX.wProductType == VER_NT_WORKSTATION
+            //  Windows Server 2016     10.0*       10      0       OSVERSIONINFOEX.wProductType != VER_NT_WORKSTATION
+            //  Windows 8.1             6.3*        6       3       OSVERSIONINFOEX.wProductType == VER_NT_WORKSTATION
+            //  Windows Server 2012 R2  6.3*        6       3       OSVERSIONINFOEX.wProductType != VER_NT_WORKSTATION
+            //  8                       6.2         6       2       OSVERSIONINFOEX.wProductType == VER_NT_WORKSTATION
+            //  Server 2012             6.2         6       2       OSVERSIONINFOEX.wProductType != VER_NT_WORKSTATION
+            //  7                       6.1         6       1       OSVERSIONINFOEX.wProductType == VER_NT_WORKSTATION
+            //  Server 2008 R2          6.1         6       1       OSVERSIONINFOEX.wProductType != VER_NT_WORKSTATION
+            //  Server 2008             6.0         6       0       OSVERSIONINFOEX.wProductType != VER_NT_WORKSTATION
+            //  Vista                   6.0         6       0       OSVERSIONINFOEX.wProductType == VER_NT_WORKSTATION
+            //  Server 2003 R2          5.2         5       2       GetSystemMetrics(SM_SERVERR2) != 0
+            //  Home Server             5.2         5       2       OSVERSIONINFOEX.wSuiteMask & VER_SUITE_WH_SERVER
+            //  Server 2003             5.2         5       2       GetSystemMetrics(SM_SERVERR2) == 0
+            //  XP Professional x64     5.2         5       2       (OSVERSIONINFOEX.wProductType == VER_NT_WORKSTATION) &&
+            //                                                      (SYSTEM_INFO.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
+            //  XP                      5.1         5       1       Not applicable
+            //  2000                    5.0         5       0       Not applicable
+            //
+            //      * For applications that have been manifested for Windows 8.1 or Windows 10.  Applications not manifested
+            //      for Windows 8.1 or Windows 10 will return the Windows 8 OS version value (6.2). To manifest your applications
+            //      for Windows 8.1 or Windows 10, refer to Targeting your application for Windows.
             //
             platform = OSTYPE_WIN_NT;               // or 2000
 
-            if (ovi.dwMajorVersion > 6) {
-                platform = OSTYPE_WIN_8;            // at least Windows 8
+            if (ovi.dwMajorVersion >= 10) {
+                platform = OSTYPE_WIN_10;           // Windows 10+
 
             } else if (6 == ovi.dwMajorVersion) {
                 platform = OSTYPE_WIN_VISTA;
-
                 if (ovi.dwMajorVersion >= 2) {
                     platform = OSTYPE_WIN_8;        // or Server 2012
 
@@ -273,20 +282,22 @@ w32_ostype(void)
 }
 
 
-int
+LIBW32_API int
 w32_getexedir(char *buf, int maxlen)
 {
-    if (GetModuleFileName(NULL, buf, maxlen)) {
-        const int len = strlen(buf);
+    if (GetModuleFileNameA(NULL, buf, maxlen)) {
+        const int len = (int)strlen(buf);
         char *cp;
 
         for (cp = buf + len; (cp > buf) && (*cp != '\\'); cp--)
             /*cont*/;
         if ('\\' == *cp) {
             cp[1] = '\0';                       // remove program
-            return (cp - buf) + 1;
+            return (int)((cp - buf) + 1);
         }
         return len;
     }
     return -1;
 }
+
+/*end*/

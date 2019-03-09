@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_os2_c,"$Id: sys_os2.c,v 1.26 2014/10/22 02:33:20 ayoung Exp $")
+__CIDENT_RCSID(gr_sys_os2_c,"$Id: sys_os2.c,v 1.27 2018/10/04 15:39:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_os2.c,v 1.26 2014/10/22 02:33:20 ayoung Exp $
+/* $Id: sys_os2.c,v 1.27 2018/10/04 15:39:29 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -429,7 +429,7 @@ scr_windowsize(int * nrow, int * ncol)
 static void
 scr_cursor(int insmode, int v_space)
 {
-    VIOCURSORINFO cursorinfo;
+    VIOCURSORINFO cursorinfo = { sizeof(VIOCURSORINFO) };
 
     VioGetCurType(&cursorinfo, 0);
     if (insmode) {
@@ -639,7 +639,7 @@ static int          mouse_is_visible = 0;
 int
 sys_mouseinit(const char *dev)
 {
-    VIOMODEINFO mi;
+    VIOMODEINFO mi = { sizeof(VIOMODEINFO) };
     USHORT evt = MOUSE_BN1_DOWN | MOUSE_MOTION_WITH_BN1_DOWN | \
                     MOUSE_BN2_DOWN | MOUSE_MOTION_WITH_BN2_DOWN | \
                     MOUSE_BN3_DOWN | MOUSE_MOTION_WITH_BN3_DOWN;

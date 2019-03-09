@@ -1,14 +1,14 @@
-#ifndef GR_NETDB_H_INCLUDED
-#define GR_NETDB_H_INCLUDED
+#ifndef LIBW32_NETDB_H_INCLUDED
+#define LIBW32_NETDB_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_netdb_h,"$Id: netdb.h,v 1.8 2015/02/19 00:17:26 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_netdb_h,"$Id: netdb.h,v 1.10 2018/09/29 02:25:21 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 <netdb.h> implementation
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -37,12 +37,11 @@ __CPRAGMA_ONCE
 __BEGIN_DECLS
 
 #if (defined(_MSC_VER) && (_MSC_VER < 1400)) || \
-        defined(__WATCOMC__)
-const char *            gai_strerror(int ecode);
-#else
-const char *            w32_gai_strerror(int ecode);
+	defined(__WATCOMC__)
+LIBW32_API const char * gai_strerror(int ecode);
 #endif
+LIBW32_API const char * w32_gai_strerror(int ecode);
 
 __END_DECLS
 
-#endif /*GR_NETDB_H_INCLUDED*/
+#endif /*LIBW32_NETDB_H_INCLUDED*/

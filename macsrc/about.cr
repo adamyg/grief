@@ -1,5 +1,5 @@
 /* -*- indent-width: 4; -*- */
-/* $Id: about.cr,v 1.8 2018/10/01 21:05:01 cvsuser Exp $
+/* $Id: about.cr,v 1.9 2019/01/25 16:28:12 cvsuser Exp $
  * About box.
  *
  *
@@ -29,7 +29,7 @@ main()
             "",
             "         1000111 1110010 1101001 1100101 1100110",
             "",
-            "Copyright (c) 1998 - 2018, Adam Young.",
+            "Copyright (c) 1998 - 2019, Adam Young.",
             "All Rights Reserved.",
             "",
             "Derived from crisp2.2, Paul Fox, 1991.",

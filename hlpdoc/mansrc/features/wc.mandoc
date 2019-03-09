@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: wc.mandoc,v 1.1 2014/11/27 18:19:45 ayoung Exp $
+.\" | $Id: wc.mandoc,v 1.2 2018/10/01 21:19:58 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -52,9 +52,12 @@
 .Nm wc
 .Nd Word count, display count of words in current buffer.
 .Sh DESCRIPTION
-This macro counts how many words there are in the current
-buffer and displays the average word length. This macro uses
-the Unix '\fIwc(1)\fR' program to perform the word counting.
+The \fIwc\fR macro counts how many words there are in the current
+buffer and displays the average word length. This macro uses the Unix
+'\fIwc(1)\fR' program to perform the word counting.
 .Sh MENU/KEYS
 This macro can be accessed from the GRIEF features menu or by typing
 \f(HBwc\fR at the command prompt.
+.Sh SEE ALSO
+.Xr feature
+

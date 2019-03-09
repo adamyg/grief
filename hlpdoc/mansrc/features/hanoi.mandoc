@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: hanoi.mandoc,v 1.1 2014/11/27 18:19:38 ayoung Exp $
+.\" | $Id: hanoi.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -65,3 +65,6 @@ how long it takes GRIEF to execute the macro.
 .Sh MENU/KEYS
 This macro can be accessed from the GRIEF features menu or by typing
 \f(HBhanoi\fR at the command prompt.
+.Sh SEE ALSO
+.Xr feature
+

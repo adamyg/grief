@@ -1,14 +1,14 @@
-#ifndef GR_WIN32_MISC_H_INCLUDED
-#define GR_WIN32_MISC_H_INCLUDED
+#ifndef LIBW32_WIN32_MISC_H_INCLUDED
+#define LIBW32_WIN32_MISC_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_misc_h,"$Id: win32_misc.h,v 1.7 2015/02/19 00:17:34 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_win32_misc_h,"$Id: win32_misc.h,v 1.10 2018/10/11 01:49:38 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 public interface.
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -36,6 +36,7 @@ __CPRAGMA_ONCE
 __BEGIN_DECLS
 
 enum w32ostype {            /* generalised machine types, ignoring server */
+    OSTYPE_WIN_10,
     OSTYPE_WIN_8,
     OSTYPE_WIN_7,
     OSTYPE_WIN_VISTA,
@@ -49,19 +50,19 @@ enum w32ostype {            /* generalised machine types, ignoring server */
 #define WIN32_PATH_MAX      1024                /* 255, unless UNC names are used */
 #define WIN32_LINK_DEPTH    8
 
-enum w32ostype              w32_ostype(void);
-int                         w32_getexedir(char *buf, int maxlen);
-int                         w32_getsysdir(int id, char *buf, int maxlen);
+LIBW32_API enum w32ostype   w32_ostype (void);
+LIBW32_API int              w32_getexedir (char *buf, int maxlen);
+LIBW32_API int              w32_getsysdir (int id, char *buf, int maxlen);
 
-int                         w32_regstrget(const char *subkey, const char *valuename, char *buf, int len);
-int                         w32_regstrgetx(HKEY hkey, const char *subkey, const char *valuename, char *buf, int len);
-const char *                w32_getlanguage(char *buffer, int len);
+LIBW32_API int              w32_regstrget(const char *subkey, const char *valuename, char *buf, int len);
+LIBW32_API int              w32_regstrgetx(HKEY hkey, const char *subkey, const char *valuename, char *buf, int len);
+LIBW32_API const char *     w32_getlanguage(char *buffer, int len);
 
-const char *                w32_selectfolder(const char *strMessage, char *szBuffer);
+LIBW32_API const char *     w32_selectfolder(const char *strMessage, char *szBuffer);
 
-int                         w32_IsElevated(void);
-int                         w32_IsAdministrator(void);
+LIBW32_API int              w32_IsElevated(void);
+LIBW32_API int              w32_IsAdministrator(void);
 
 __END_DECLS
 
-#endif /*GR_WIN32_MISC_H_INCLUDED*/
+#endif /*LIBW32_WIN32_MISC_H_INCLUDED*/

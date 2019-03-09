@@ -1,14 +1,14 @@
-#ifndef GR_UNISTD_H_INCLUDED
-#define GR_UNISTD_H_INCLUDED
+#ifndef LIBW32_UNISTD_H_INCLUDED
+#define LIBW32_UNISTD_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_unistd_h,"$Id: unistd.h,v 1.32 2015/02/19 00:17:26 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_unistd_h,"$Id: unistd.h,v 1.44 2018/10/16 10:39:49 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 <unistd.h> header (_MSC_VER, __WATCOMC__ and __MINGW32__)
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -32,18 +32,29 @@ __CPRAGMA_ONCE
  */
 
 #if defined(_MSC_VER)
+#ifndef __MAKEDEPEND__
 #if (_MSC_VER != 1200)                          /* MSVC 6 */
 #if (_MSC_VER != 1400)                          /* MSVC 8/2005 */
+#if (_MSC_VER != 1500)                          /* MSVC 9/2008 */
 #if (_MSC_VER != 1600)                          /* MSVC 10/2010 */
-#error unistd.h: Untested MSVC C/C++ Version (CL 12.xx - 16.xx) only ...
-#endif
-#endif
-#endif
+#if (_MSC_VER != 1900)                          /* MSVC 19/2015 */
+#if (_MSC_VER <  1910 || _MSC_VER > 1914)       /* MSVC 19.10 .. 14/2017 */
+#error unistd.h: untested MSVC Version (2005 -- 2017) only ...
+	//see: https://en.wikipedia.org/wiki/Microsoft_Visual_C%2B%2B
+#endif //2017
+#endif //2015
+#endif //2010
+#endif //2008
+#endif //2005
+#endif //__MAKEDEPEND__
+#endif //_MSC_VER
 
 #pragma warning(disable:4115)
+
 #if defined(_POSIX_)
 #error unistd.h: _POSIX_ enabled
 #endif
+
 #if !defined(_CRT_SECURE_NO_DEPRECATE)
 #define _CRT_SECURE_NO_DEPRECATE                /* disable deprecate warnings */
 #endif
@@ -52,15 +63,28 @@ __CPRAGMA_ONCE
 #if (__WATCOMC__ < 1200)
 #error unistd.h: old WATCOM Version, upgrade to OpenWatcom ...
 #endif
+#ifndef __MAKEDEPEND__
+#if (__WATCOMC__ != 1290)                       /* 1.9 */
+#if (__WATCOMC__ != 1300)                       /* 2.0 */
+#error unistd.h: untested OpenWatcom Version (1.9 -- 2.0) only ...
+        //see: https://sourceforge.net/p/predef/wiki/Compilers/
+#endif
+#endif
+#endif
 
 #elif defined(__MINGW32__)
 
 #else
+#error unistd.h: unsupported compiler
 #endif
 
 #if !defined(_WIN32_WINCE)                      /* require winsock2.h */
 #if !defined(_WIN32_WINNT)
-#define _WIN32_WINNT        0x400               /* entry level */
+#if defined(WIN32) && (WIN32 > 0x100)
+#define _WIN32_WINNT WIN32
+#else
+#define _WIN32_WINNT 0x400                      /* entry level */
+#endif
 #elif (_WIN32_WINNT) < 0x400
 //  Minimum system required Minimum value for _WIN32_WINNT and WINVER
 //  Windows 7                                           (0x0601)
@@ -72,17 +96,23 @@ __CPRAGMA_ONCE
 #pragma message("unistd: _WIN32_WINNT < 0400")
 #endif
 #endif   /*_WIN32_WINCE*/
+#ifndef _WIN32
+#define _WIN32 WIN32                           /* WIN32 and _WIN32 generally required */
+#endif
 
 
 /*
  *  avoid importing <win32_include.h>
  *      which among others includes <ctype.h>
  */
+#include <win32_errno.h>
 
 #include <sys/cdefs.h>                          /* __BEGIN_DECLS, __PDECL */
 #include <sys/utypes.h>
 #include <sys/stat.h>
-
+//  #include <sys/statfs.h>
+#include <time.h>                               /* required to replace strfime() */
+//  #include <utime.h>
 #include <stddef.h>                             /* offsetof() */
 #include <dirent.h>                             /* MAXPATHLENGTH, MAXNAMELENGTH */
 #include <limits.h>                             /* _MAX_PATH */
@@ -90,7 +120,6 @@ __CPRAGMA_ONCE
 
 #include <stdio.h>                              /* FILE */
 #include <stdlib.h>
-#include <errno.h>
 #include <malloc.h>
 #include <string.h>                             /* memset, memmove ... */
 #include <fcntl.h>
@@ -133,7 +162,7 @@ __BEGIN_DECLS
 #endif
 #else
 #define S_IFFMT         0170000
-#endif
+#endif  /*S_IFFMT*/
 
 #if defined(__WATCOMC__)                        /* note, defined as 0 */
 #undef  S_IFSOCK
@@ -142,11 +171,15 @@ __BEGIN_DECLS
 #undef  S_ISLNK
 #undef  S_ISBLK
 #undef  S_ISFIFO
+#if (__WATCOMC__ >= 1300)
+#undef  S_IFBLK         /*open-watcom 2.0*/
 #endif
+#endif  /*__WATCOMC__*/
+
 #if defined(__MINGW32__)
 #undef  S_IFBLK
 #undef  S_ISBLK
-#endif
+#endif  /*__MINGW32__*/
 
 #if defined(S_IFSOCK)
 #if S_IFSOCK != 0140000
@@ -154,7 +187,7 @@ __BEGIN_DECLS
 #endif
 #else
 #define S_IFSOCK        0140000                 /* socket */
-#endif
+#endif  /*S_IFSOCK*/
 
 #if defined(S_IFLNK)
 #if S_IFLNK != 0120000
@@ -162,7 +195,7 @@ __BEGIN_DECLS
 #endif
 #else
 #define S_IFLNK         0120000                 /* symbolic link */
-#endif
+#endif  /*S_IFLNK*/
 
 #if defined(S_IFREG)                            /* regular file */
 #if (S_IFREG != 0100000)
@@ -170,15 +203,15 @@ __BEGIN_DECLS
 #endif
 #else
 #define S_IFREG         0100000
-#endif
+#endif  /*S_IFREG*/
 
 #if defined(S_IFBLK)                            /* block device */
-#if (S_IFBLK != 0060000)
+#if (S_IFBLK != 0060000) && (S_IFBLK != 060000)
 #error  S_IFBLK redefinition error ...
 #endif
 #else
 #define S_IFBLK         0060000
-#endif
+#endif  /*S_IFBLK*/
 
 #if defined(S_IFDIR)                            /* regular file */
 #if (S_IFDIR != 0040000)
@@ -186,7 +219,7 @@ __BEGIN_DECLS
 #endif
 #else
 #define S_IFDIR         0040000
-#endif
+#endif  /*S_IFDIR*/
 
 #if defined(S_IFCHR)                            /* character special device */
 #if (S_IFCHR != 0020000)
@@ -194,7 +227,7 @@ __BEGIN_DECLS
 #endif
 #else
 #define S_IFCHR         0020000
-#endif
+#endif  /*S_IFCHR*/
 
 #if defined(S_IFIFO)                            /* fifo */
 #if (S_IFIFO != 0010000)
@@ -202,74 +235,135 @@ __BEGIN_DECLS
 #endif
 #else
 #define S_IFIFO         0010000
-#endif
+#endif  /*S_IFIFO*/
+
 #if defined(S_IFFIFO)                           /* fifo??? */
 #error  S_IFFIFO is defined ??? ...
 #endif
 
-
 /* de facto standard definitions */
-#if !defined(S_ISUID)
-#define S_ISUID         0002000                 /* set user id on execution */
+#if defined(S_ISUID)
+#if (S_ISUID != 0004000)
+#error  S_ISUID redefinition error ...
+#endif
+#else
+#define	S_ISUID	        0004000			/* set user id on execution */
 #endif
 
-#if !defined(S_ISGID)
-#define S_ISGID         0001000                 /* set group id on execution */
+#if defined(S_ISGID)
+#if (S_ISGID != 0002000)
+#error  S_ISGID redefinition error ...
+#endif
+#else
+#define	S_ISGID	        0002000			/* set group id on execution */
+#endif
+
+#ifndef _POSIX_SOURCE
+#if defined(S_ISTXT)
+#if (S_ISTXT != 0001000)
+#endif
+#else
+#define S_ISTXT         0001000                 /* sticky bit */
+#endif /*S_ISTXT*/
+#endif /*_POSIX_SOURCE*/
+
+#ifndef S_ISVTX
+#define S_ISVTX         0                       /* on directories, restricted deletion flag; not supported */
 #endif
 
 #if defined(S_IRWXU)
-#if (S_IRWXU != 0000700)
+#if (S_IRWXU != 0000700) && (S_IRWXU != 000700)
 #error  S_IRWXU redefinition error ...
 #endif
 #else
 #define S_IRWXU         0000700                 /* read, write, execute: owner */
-#endif
+#endif  /*S_IRWXU*/
+
 #if defined(S_IRUSR)
-#if (S_IRUSR != 0000400)
+#if (S_IRUSR != 0000400) && (S_IRUSR != 000400)
 #error  S_IRUSR redefinition error ...
 #endif
 #else
 #define S_IRUSR         0000400                 /* read permission: owner */
 #define S_IWUSR         0000200                 /* write permission: owner */
 #define S_IXUSR         0000100                 /* execute permission: owner */
-#endif
+#endif  /*S_IRUSR*/
 
+#ifdef  _S_IREAD        /*verify environment*/
+#if (_S_IREAD  != 0000400)
+#error  _S_IREAD definition error ...
+#endif
+#if (_S_IWRITE != 0000200)
+#error  _S_IWRITE definition error ...
+#endif
+#if (_S_IEXEC  != 0000100)
+#error  _S_IEXEC definition error ...
+#endif
+#endif /*_S_IREAD*/
+
+#ifndef _POSIX_SOURCE
+#ifndef S_IREAD
+#define	S_IREAD		S_IRUSR
+#define	S_IWRITE	S_IWUSR
+#define	S_IEXEC		S_IXUSR
+#endif /*S_IREAD*/
+#endif /*_POSIX_SOURCE*/
+
+#if defined(S_IRWXG)
+#if (S_IRWXG != 0000070) && (S_IRWXG != 000070)
+#error  S_IRWXG redefinition error ...
+#endif
+#else
 #define S_IRWXG         0000070                 /* read, write, execute: group */
 #define S_IRGRP         0000040                 /* read permission: group */
 #define S_IWGRP         0000020                 /* write permission: group */
 #define S_IXGRP         0000010                 /* execute permission: group */
+#endif
 
+#if defined(S_IRWXO)
+#if (S_IRWXO != 0000007) && (S_IRWXO != 000007)
+#error  S_IRWXO redefinition error ...
+#endif
+#else
 #define S_IRWXO         0000007                 /* read, write, execute: other */
 #define S_IROTH         0000004                 /* read permission: other */
 #define S_IWOTH         0000002                 /* write permission: other */
 #define S_IXOTH         0000001                 /* execute permission: other */
+#endif
 
 #define __S_ISTYPE(__mode,__mask) \
                         (((__mode) & S_IFFMT) == __mask)
 
-#ifndef S_ISBLK
+#ifndef S_ISBLK                                 /* test for a block special */
 #define S_ISBLK(m)      __S_ISTYPE(m, S_IFBLK)
 #endif
 #if !defined(__MINGW32__)
-#ifndef S_ISFIFO
+#ifndef S_ISFIFO                                /* test for a pipe or FIFO special file */
 #define S_ISFIFO(m)     __S_ISTYPE(m, S_IFIFO)
 #endif
-#endif
-#ifndef S_ISDIR
+#endif /*__MINGW32__*/
+#ifndef S_ISDIR                                 /* test for a directory */
 #define S_ISDIR(m)      __S_ISTYPE(m, S_IFDIR)
 #endif
 #ifndef S_ISCHR
 #define S_ISCHR(m)      __S_ISTYPE(m, S_IFCHR)
 #endif
-#ifndef S_ISREG
+#ifndef S_ISREG                                 /* test for a regular file */
 #define S_ISREG(m)      __S_ISTYPE(m, S_IFREG)
 #endif
-#ifndef S_ISLNK
+#ifndef S_ISLNK                                 /* test for a symbolic link */
 #define S_ISLNK(m)      __S_ISTYPE(m, S_IFLNK)
 #endif
 #ifndef S_ISSOCK
-#define S_ISSOCK(m)     __S_ISTYPE(m, S_IFSOCK)
+#define S_ISSOCK(m)     __S_ISTYPE(m, S_IFSOCK) /* test for a socket */
 #endif
+
+#ifndef _POSIX_SOURCE
+#define ACCESSPERMS     (S_IRWXU|S_IRWXG|S_IRWXO) /* 0777 */
+#define ALLPERMS        (S_ISUID|S_ISGID|S_ISTXT|S_IRWXU|S_IRWXG|S_IRWXO) /* 7777 */
+#define DEFFILEMODE     (S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH) /* 0666 */
+#endif
+
 
 /*stdio.h*/
 #if !defined(STDIN_FILENO)
@@ -277,72 +371,6 @@ __BEGIN_DECLS
 #define STDOUT_FILENO   1
 #define STDERR_FILENO   2
 #endif
-
-
-/*errno.h, also see sys/socket.h*/
-/*
- *  Addition UNIX style errno's, also see <sys/socket.h>
- */
-#if !defined(_MSC_VER) || (_MSC_VER < 1600)
-#define EADDRINUSE      100
-#define EADDRNOTAVAIL   101
-#define EAFNOSUPPORT    102
-#define EALREADY        103
-#define EBADMSG         104
-#define ECANCELED       105
-#define ECONNABORTED    106
-#define ECONNREFUSED    107
-#define ECONNRESET      108
-#define EDESTADDRREQ    109
-#define EHOSTUNREACH    110
-#define EIDRM           111
-#define EINPROGRESS     112
-#define EISCONN         113
-#define ELOOP           114
-#define EMSGSIZE        115
-#define ENETDOWN        116
-#define ENETRESET       117
-#define ENETUNREACH     118
-#define ENOBUFS         119
-#define ENODATA         120
-#define ENOLINK         121
-#define ENOMSG          122
-#define ENOPROTOOPT     123
-#define ENOSR           124
-#define ENOSTR          125
-#define ENOTCONN        126
-#define ENOTRECOVERABLE 127
-#define ENOTSOCK        128
-#define ENOTSUP         129
-#define EOPNOTSUPP      130
-#define EOTHER          131
-#define EOVERFLOW       132
-#define EOWNERDEAD      133
-#define EPROTO          134
-#define EPROTONOSUPPORT 135
-#define EPROTOTYPE      136
-#define ETIME           137
-#define ETIMEDOUT       138
-#ifndef ETXTBSY                                 /*watcomc*/
-#define ETXTBSY         139
-#endif
-#define EWOULDBLOCK     140
-#endif
-#define ENOTINITIALISED 150
-#define EPFNOSUPPORT    151
-#define ESHUTDOWN       152
-#define EHOSTDOWN       153
-#define ESOCKTNOSUPPORT 154
-#define ETOOMANYREFS    155
-#define EPROCLIM        156
-#define EUSERS          157
-#define EDQUOT          158
-#define ESTALE          159
-#define EREMOTE         160
-#define EDISCON         161
-#define ENOMORE         162
-#define ECANCELLED      163
-#define EREFUSED        164
 
 /*signal.h*/
 #define SIGCHLD         -101
@@ -361,17 +389,17 @@ struct sigaction {
     sigset_t            sa_mask;
 };
 
-int                     sigemptyset(sigset_t *);
-int                     sigaction(int, struct sigaction *, struct sigaction *);
-#endif
+LIBW32_API int          sigemptyset (sigset_t *);
+LIBW32_API int          sigaction (int, struct sigaction *, struct sigaction *);
+#endif /*__MINGW32__*/
 
 /*shell support*/
 #if !defined(WNOHANG)
 #define WNOHANG         1
 #endif
 
-int                     w32_waitpid(int, int *, int);
-int                     w32_kill(int pid, int sig);
+LIBW32_API int          w32_waitpid (int, int *, int);
+LIBW32_API int          w32_kill (int pid, int sig);
 
 #if defined(WIN32_UNISTD_MAP)
 #define                 kill(__pid, __val) \
@@ -379,52 +407,60 @@ int                     w32_kill(int pid, int sig);
 #endif /*WIN32_UNISTD_MAP*/
 
 #if !defined(WEXITSTATUS)
-int                     WEXITSTATUS(int status);
-int                     WIFEXITED(int status);
-int                     WIFSIGNALED(int status);
-int                     WTERMSIG(int status);
-int                     WCOREDUMP(int status);
-int                     WIFSTOPPED(int status);
+LIBW32_API int          WEXITSTATUS (int status);
+LIBW32_API int          WIFEXITED (int status);
+LIBW32_API int          WIFSIGNALED (int status);
+LIBW32_API int          WTERMSIG (int status);
+LIBW32_API int          WCOREDUMP (int status);
+LIBW32_API int          WIFSTOPPED(int status);
 #endif
 
 /* <stdlib.h> */
-extern int              getsubopt(char **optionp, char * const *tokens, char **valuep);
+LIBW32_API int          getsubopt (char **optionp, char * const *tokens, char **valuep);
 
 /* <string.h> */
-#if defined(_MSC_VER)
-extern int              strcasecmp(const char *s1, const char *s2);
-extern int              strncasecmp(const char *s1, const char *s2, size_t len);
-#endif
+#if defined(_MSC_VER) || defined(__WATCOMC__)
+LIBW32_API int          strcasecmp(const char *s1, const char *s2);
+LIBW32_API int          strncasecmp(const char *s1, const char *s2, size_t len);
+#endif /*_MSC_VER*/
 
 #if (defined(_MSC_VER) && (_MSC_VER < 1400)) || \
             defined(__MINGW32__) || defined(__WATCOMC__)
 #define NEED_STRNLEN                            /*see: w32_string.c*/
 #endif
 #if defined(NEED_STRNLEN)
-extern size_t           strnlen(const char *s, size_t maxlen);
-#endif
+LIBW32_API size_t       strnlen(const char *s, size_t maxlen);
+#endif /*NEED_STRNLEN*/
 
 /* <unistd.h> */
-unsigned int            sleep(unsigned int secs);
-int                     w32_gethostname(char *name, size_t namelen);
+LIBW32_API int          gettimeofday (struct timeval *tv, struct timezone *tz);
+LIBW32_API int          w32_utime (const char *path, const struct utimbuf *times);
 
 #if defined(WIN32_UNISTD_MAP)
 #if !defined(_WINSOCKAPI_) && !defined(_WINSOCK2API_)
 #define gethostname(__name,__namelen) \
                 w32_gethostname (__name, __namelen)
 #endif
+#define getdomainname(__name,__namelen) \
+                w32_getdomainname (__name, __namelen)
 #endif /*WIN32_UNISTD_MAP*/
 
-const char *            getlogin(void);
-int                     getlogin_r(char *name, size_t namesize);
+LIBW32_API int          w32_gethostname (char *name, size_t namelen);
+LIBW32_API int          w32_getdomainname (char *name, size_t namelen);
 
-int                     issetugid(void);
+LIBW32_API const char * getlogin (void);
+LIBW32_API int          getlogin_r (char *name, size_t namesize);
 
-int                     w32_getuid(void);
-int                     w32_geteuid(void);
-int                     w32_getgid(void);
-int                     w32_getegid(void);
-int                     w32_getgpid(void);
+LIBW32_API void         setprogname (const char *name);
+LIBW32_API const char * getprogname (void);
+
+LIBW32_API int          issetugid (void);
+
+LIBW32_API int          w32_getuid (void);
+LIBW32_API int          w32_geteuid (void);
+LIBW32_API int          w32_getgid (void);
+LIBW32_API int          w32_getegid (void);
+LIBW32_API int          w32_getgpid (void);
 
 #if defined(WIN32_UNISTD_MAP)
 #define getuid()        w32_getuid()
@@ -432,13 +468,14 @@ int                     w32_getgpid(void);
 #define getgid()        w32_getgid()
 #define getegid()       w32_getegid()
 #define getgpid()       w32_getgpid()
-#endif
+#endif /*WIN32_UNISTD_MAP*/
 
-int                     getgroups(int gidsetsize, gid_t grouplist[]);
+LIBW32_API int          getgroups (int gidsetsize, gid_t grouplist[]);
 
 /* time.h */
-unsigned int            w32_sleep(unsigned int secs);
-size_t                  w32_strftime(char *buf, size_t buflen, const char *fmt, const struct tm *tm);
+LIBW32_API unsigned int sleep (unsigned int secs);
+LIBW32_API unsigned int w32_sleep (unsigned int secs);
+LIBW32_API size_t       w32_strftime (char *buf, size_t buflen, const char *fmt, const struct tm *tm);
 
 #if defined(WIN32_UNISTD_MAP)
 #define strftime(a,b,c,d) \
@@ -446,16 +483,19 @@ size_t                  w32_strftime(char *buf, size_t buflen, const char *fmt, 
 #endif /*WIN32_UNISTD_MAP*/
 
 /* i/o */
-int                     w32_open(const char *path, int, ...);
-int                     w32_stat(const char *path, struct stat *sb);
-int                     w32_lstat(const char *path, struct stat *sb);
-int                     w32_fstat(int fd, struct stat *sb);
-int                     w32_read(int fd, void *buffer, unsigned int cnt);
-int                     w32_write(int fd, const void *buffer, unsigned int cnt);
-int                     w32_close(int fd);
-const char *            w32_strerror(int errnum);
-int                     w32_link(const char *from, const char *to);
-int                     w32_unlink(const char *fname);
+LIBW32_API int          w32_open (const char *path, int, ...);
+LIBW32_API int          w32_stat (const char *path, struct stat *sb);
+LIBW32_API int          w32_lstat (const char *path, struct stat *sb);
+LIBW32_API int          w32_fstat (int fd, struct stat *sb);
+LIBW32_API int          w32_read (int fd, void *buffer, size_t cnt);
+LIBW32_API int          w32_write (int fd, const void *buffer, size_t cnt);
+LIBW32_API int          w32_close (int fd);
+LIBW32_API const char * w32_strerror (int errnum);
+LIBW32_API int          w32_link (const char *from, const char *to);
+LIBW32_API int          w32_unlink (const char *fname);
+
+LIBW32_API ssize_t      pread (int fildes, void *buf, size_t nbyte, off_t offset);
+LIBW32_API ssize_t      pwrite (int fildes, const void *buf, size_t nbyte, off_t offset);
 
 #if defined(WIN32_UNISTD_MAP)
 #define open            w32_open
@@ -465,17 +505,21 @@ int                     w32_unlink(const char *fname);
 #define read(a,b,c)     w32_read(a, b, c)
 #define write(a,b,c)    w32_write(a, b, c)
 #define close(a)        w32_close(a)
-#define strerror(a)     w32_strerror(a)
-#define g_strerror(a)   w32_strerror(a)         /* must also replace libglib version */
 #define link(f,t)       w32_link(f,t)
 #define unlink(p)       w32_unlink(p)
+#endif /*WIN32_UNISTD_MAP*/
+
+#if defined(WIN32_UNISTD_MAP) || \
+    defined(WIN32_SOCKET_MAP_FD) || defined(WIN32_SOCKET_MAP_NATIVE)
+#define strerror(a)     w32_strerror(a)
+	//#define g_strerror(a)   w32_strerror(a)         /* must also replace libglib version */
 #endif
 
-int                     w32_mkdir(const char *fname, int mode);
-int                     w32_chdir(const char *fname);
-int                     w32_rmdir(const char *fname);
-char *                  w32_getcwd(char *path, int size);
-char *                  w32_getcwdd(char drive, char *path, int size);
+LIBW32_API int          w32_mkdir (const char *fname, int mode);
+LIBW32_API int          w32_chdir (const char *fname);
+LIBW32_API int          w32_rmdir (const char *fname);
+LIBW32_API char *       w32_getcwd (char *path, int size);
+LIBW32_API char *       w32_getcwdd (char drive, char *path, int size);
 
 #if defined(WIN32_UNISTD_MAP)
 #define mkdir(d,m)      w32_mkdir(d, m)
@@ -485,19 +529,29 @@ char *                  w32_getcwdd(char drive, char *path, int size);
 #define utime(p,t)      w32_utime(p,t)
 
 #if defined(_MSC_VER)
+#ifndef vsnprintf
 #define vsnprintf       _vsnprintf
+#endif
+#ifndef snprintf
 #define snprintf        _snprintf
 #endif
+#endif /*_MSC_VER*/
 #endif /*WIN32_UNISTD_MAP*/
 
-int                     w32_mkstemp(char *path);
-int                     w32_mkstempx(char *path);
+LIBW32_API int          w32_mkstemp(char *path);
+#if defined(_MSC_VER)
+LIBW32_API int          mkstemp (char *path);
+#endif
+LIBW32_API int          w32_mkstempx (char *path);
 
-int                     ftruncate(int fildes, off_t size);
-int                     truncate(const char *path, off_t length);
+LIBW32_API int          ftruncate (int fildes, off_t size);
+LIBW32_API int          truncate (const char *path, off_t length);
 
-int                     w32_readlink(const char *path, char *name, int sz);
-int                     w32_symlink(const char *from, const char *to);
+LIBW32_API int          w32_readlink (const char *path, char *name, int sz);
+LIBW32_API int          w32_symlink (const char *from, const char *to);
+
+LIBW32_API char *       w32_realpath (const char *path, char *resolved_path /*PATH_MAX*/);
+LIBW32_API char *       w32_realpath2 (const char *path, char *resolved_path, int maxlen);
 
 #if defined(WIN32_UNISTD_MAP)
 #define readlink(__path,__name, __sz) \
@@ -506,28 +560,31 @@ int                     w32_symlink(const char *from, const char *to);
                 w32_symlink (__from, __to)
 #endif
 
-int                     chown(const char *, uid_t, gid_t);
-int                     mknod(const char *path, int mode, int dev);
+LIBW32_API int          chown (const char *, uid_t, gid_t);
+LIBW32_API int          mknod (const char *path, int mode, int dev);
 
 #if !defined(F_GETFL)
 #define F_GETFL                         1
 #define F_SETFL                         2
 #endif
 
-int                     w32_fcntl(int fildes, int ctrl, int val);
-int                     w32_fsync(int fildes);
-
+#if !defined(fcntl)
+LIBW32_API int          fcntl (int fd, int ctrl, int);
+#endif
+LIBW32_API int          w32_fcntl (int fd, int ctrl, int);
+LIBW32_API int          w32_fsync (int fildes);
 
 /*string.h*/
-char *                  strsep(char **stringp, const char *delim);
+LIBW32_API char *       strsep (char **stringp, const char *delim);
 #if defined(_MSC_VER)
-size_t                  strlcat(char *dst, const char *src, size_t siz);
-size_t                  strlcpy(char *dst, const char *src, size_t siz);
+LIBW32_API size_t       strlcat (char *dst, const char *src, size_t siz);
+LIBW32_API size_t       strlcpy (char *dst, const char *src, size_t siz);
 #if (_MSC_VER <= 1600)
-unsigned long long      strtoull(const char * nptr, char ** endptr, int base);
+LIBW32_API unsigned long long strtoull (const char * nptr, char ** endptr, int base);
+LIBW32_API long long    strtoll(const char * nptr, char ** endptr, int base);
 #endif
-#endif
+#endif /*_MSC_VER*/
 
 __END_DECLS
 
-#endif /*GR_UNISTD_H_INCLUDED*/
+#endif /*LIBW32_UNISTD_H_INCLUDED*/

@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.16 2015/02/22 22:14:20 ayoung Exp $
+# $Id: Makefile.in,v 1.22 2018/10/12 00:24:39 cvsuser Exp $
 # libwin32 makefile.
 #
 #
-# Copyright (c) 1998 - 2015, Adam Young.
+# Copyright (c) 1998 - 2018, Adam Young.
 # All rights reserved.
 # 
 # This file is part of the GRIEF Editor.
@@ -46,19 +46,26 @@ CC=		@CC@
 AR=		@AR@
 RANLIB=		@RANLIB@
 RM=		@RM@
+PERL=		@PERL@
+LIBTOOL=	@LIBTOOL@
+RC=		@RC@
 
 # Common flags
 
 ARFLAGS=	rcv
 XFLAGS=		
 COPT=		@CFLAGS@
+CXXOPT=		@CXXFLAGS@
+ifeq "" "$(CXXOPT)"
+CXXOPT=		$(COPT)
+endif
 CWARN=		@CWARN@
 CDEBUG=		@CDEBUG@
 LDEBUG=		@LDEBUG@
 CINCLUDE=	-I$(D_INC) @CINCLUDE@ -I.
 CEXTRA=		@DEFS@ -D_WIN32_WINNT=0x601
 CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CXXFLAGS=	$(CPPFLAGS) $(CDEBUG) $(CXXOPT) $(CWARN) $(CEXTRA) $(CINCLUDE) $(XFLAGS)
 YFLAGS=		-d
 LDFLAGS=	$(LDEBUG) @LDFLAGS@
 LXFLAGS=	$(LDLIBS) @LIBS@ @LIBMALLOC@
@@ -74,77 +81,127 @@ D_LIB=		$(ROOT)/lib
 
 ############################################################
 
-LIBROOT=	w32
+W32LIB=		$(D_LIB)/$(LP)w32_static$(A)
+W32DLL=		$(D_LIB)/$(LP)w32.la
+
+VERSION=	1.1.0
+VERSIONSPEC=	$(subst .,:,$(VERSION))
+
+CSOURCES=\
+	w32_check.c \
+	w32_child.c \
+	w32_chown.c \
+	w32_close.c \
+	w32_dir.c \
+	w32_dirent.c \
+	w32_dlfcn.c \
+	w32_domainname.c \
+	w32_errno.c \
+	w32_fcntl.c \
+	w32_fsync.c \
+	w32_getcwd.c \
+	w32_gethostname.c \
+	w32_getopt.c \
+	w32_getsubopt.c \
+	w32_getlocale.c \
+	w32_gistrerror.c \
+	w32_glob.c \
+	w32_grp.c \
+	w32_hunspell.c \
+	w32_iconv.c \
+	w32_iconv_native.c \
+	w32_ino.c \
+	w32_io.c \
+	w32_langinfo.c \
+	w32_link.c \
+	w32_mknod.c \
+	w32_mkstemp.c \
+	w32_mmap.c \
+	w32_neterr.c \
+	w32_poll.c \
+	w32_popen.c \
+	w32_progname.c \
+	w32_pwd.c \
+	w32_read.c \
+	w32_realpath.c \
+	w32_reparse.c \
+	w32_rwlock.c \
+	w32_select.c \
+	w32_shell.c \
+	w32_signal.c \
+	w32_sockbase.c \
+	w32_socket.c \
+	w32_socket2.c \
+	w32_sockfd.c \
+	w32_sockpair.c \
+	w32_statfs.c \
+	w32_strftime.c \
+	w32_string.c \
+	w32_strlcat.c \
+	w32_strlcpy.c \
+	w32_strptime.c \
+	w32_strsep.c \
+	w32_strtoll.c \
+	w32_strtoull.c \
+	w32_sysdir.c \
+	w32_time.c \
+	w32_truncate.c \
+	w32_uname.c \
+	w32_unlink.c \
+	w32_user.c \
+	w32_util.c \
+	w32_write.c
 
 LIBOBJS=\
-	$(D_OBJ)/w32_check$(O)		\
-	$(D_OBJ)/w32_child$(O)		\
-	$(D_OBJ)/w32_chown$(O)		\
-	$(D_OBJ)/w32_close$(O)		\
-	$(D_OBJ)/w32_dir$(O)		\
-	$(D_OBJ)/w32_dirent$(O)		\
-	$(D_OBJ)/w32_dlfcn$(O)		\
-	$(D_OBJ)/w32_errno$(O)		\
-	$(D_OBJ)/w32_fcntl$(O)		\
-	$(D_OBJ)/w32_fsync$(O)		\
-	$(D_OBJ)/w32_getcwd$(O)		\
-	$(D_OBJ)/w32_gethostname$(O)	\
-	$(D_OBJ)/w32_getlocale$(O)	\
-	$(D_OBJ)/w32_gistrerror$(O)	\
-	$(D_OBJ)/w32_grp$(O)		\
-	$(D_OBJ)/w32_hunspell$(O)	\
-	$(D_OBJ)/w32_iconv$(O)		\
-	$(D_OBJ)/w32_ino$(O)		\
-	$(D_OBJ)/w32_io$(O)		\
-	$(D_OBJ)/w32_langinfo$(O)	\
-	$(D_OBJ)/w32_link$(O)		\
-	$(D_OBJ)/w32_mknod$(O)		\
-	$(D_OBJ)/w32_mkstemp$(O)	\
-	$(D_OBJ)/w32_mmap$(O)		\
-	$(D_OBJ)/w32_neterr$(O)		\
-	$(D_OBJ)/w32_popen$(O)		\
-	$(D_OBJ)/w32_pwd$(O)		\
-	$(D_OBJ)/w32_read$(O)		\
-	$(D_OBJ)/w32_rwlock$(O)		\
-	$(D_OBJ)/w32_select$(O)		\
-	$(D_OBJ)/w32_shell$(O)		\
-	$(D_OBJ)/w32_signal$(O)		\
-	$(D_OBJ)/w32_socket$(O)		\
-	$(D_OBJ)/w32_statfs$(O)		\
-	$(D_OBJ)/w32_strftime$(O)	\
-	$(D_OBJ)/w32_strptime$(O)	\
-	$(D_OBJ)/w32_string$(O)		\
-	$(D_OBJ)/w32_strlcat$(O)	\
-	$(D_OBJ)/w32_strlcpy$(O)	\
-	$(D_OBJ)/w32_strsep$(O)		\
-	$(D_OBJ)/w32_strtoll$(O)	\
-	$(D_OBJ)/w32_strtoull$(O)	\
-	$(D_OBJ)/w32_sysdir$(O)		\
-	$(D_OBJ)/w32_time$(O)		\
-	$(D_OBJ)/w32_truncate$(O)	\
-	$(D_OBJ)/w32_uname$(O)		\
-	$(D_OBJ)/w32_unlink$(O)		\
-	$(D_OBJ)/w32_user$(O)		\
-	$(D_OBJ)/w32_util$(O)		\
-	$(D_OBJ)/w32_write$(O)
+	$(addprefix $(D_OBJ)/,$(subst .c,$(O),$(CSOURCES)))
 
-LIBRARY=	$(D_LIB)/$(LP)$(LIBROOT)$(A)
+DLLOBJS=\
+	$(subst $(O),.lo,$(LIBOBJS))
+ifeq ("mingw32","@build_os@")
+DLLOBJS+=	$(D_OBJ)/libw32_res.o
+else ifeq ("win32","@build_os@")
+DLLOBJS+=	$(D_OBJ)/libw32.res
+endif
 
-all:			$(LIBRARY)
+OBJS=		$(LIBOBJS) $(DLLOBJS)
+LIBS=		$(W32LIB) $(W32DLL)
+TSKS=
 
-$(LIBRARY):		$(D_OBJ)/.created $(LIBOBJS)
+# Rules
+
+all:			$(LIBS) $(TSKS)
+
+$(W32LIB):		CEXTRA += -DLIBW32_STATIC -DLIBW32_LIBRARY
+$(W32LIB):		$(D_OBJ)/.created $(LIBOBJS)
 		$(RM) $(RMFLAGS) $@
 		$(AR) $(ARFLAGS) $@ $(LIBOBJS)
 		$(RANLIB) $@
+
+$(W32DLL):		CEXTRA += -DLIBW32_DYNAMIC -DLIBW32_LIBRARY
+$(W32DLL):		DLLDEF = -export-symbols libw32.def
+$(W32DLL):		$(DLLOBJS)
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -version-number $(VERSIONSPEC) \
+			-rpath $(D_LIB) -bindir $(D_BIN) $(DLLDEF) -o $@ $^ $(LDLIBS)
 
 $(D_OBJ)/.created:
 		-@mkdir $(D_OBJ)
 		@echo "do not create" > $@
 
 clean:
-		-@$(RM) $(RMFLAGS) $(BAK) $(LIBRARY) $(LIBOBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
+		-@$(LIBTOOL) --mode=clean $(RM) $(W32DLL) $(DLLOBJS) >/dev/null 2>&1
+		-@$(RM) $(RMFLAGS) $(BAK) $(W32LIB) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
+		-@$(RM) $(RMFLAGS) $(LIBOBJS) >/dev/null 2>&1
 
 $(D_OBJ)/%$(O):		%.c
 		$(CC) $(CFLAGS) -o $@ -c $<
+
+$(D_OBJ)/%.lo:		%.c
+		$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -o $@ -c $<
+
+$(D_OBJ)/%.res:		%.rc
+		$(RC) -fo $@ $<
+
+$(D_OBJ)/%_res.o:	%.rc
+		$(RC) -o $@ $<
 
 #end

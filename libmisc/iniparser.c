@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_iniparser_c,"$Id: iniparser.c,v 1.11 2015/02/19 00:17:12 ayoung Exp $")
+__CIDENT_RCSID(gr_iniparser_c,"$Id: iniparser.c,v 1.13 2019/01/28 00:23:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: iniparser.c,v 1.11 2015/02/19 00:17:12 ayoung Exp $
+/* $Id: iniparser.c,v 1.13 2019/01/28 00:23:56 cvsuser Exp $
  * INI parser.
  *
  *
- * Copyright (c) 2012 - 2015, Adam Young.
+ * Copyright (c) 2012 - 2017, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -789,7 +789,7 @@ next:;  switch(ch) {
             break;
 
         case '\\':          /* backslash, quotes next character */
-            if (IFILE_EXTENDED & flags) {
+            if (IFILE_BACKSLASH & flags) {
                 if ((ch = iniGetc(ifile)) < 0) {
                     done = -1;
                 } else if ('\n' == ch) {
@@ -815,6 +815,7 @@ next:;  switch(ch) {
                     case '=':  ch = '=';  break;
                     case ':':  ch = ':';  break;
                     default:
+                        /*XXX: unicode and hex*/
                         ch = 0;
                         break;
                     }

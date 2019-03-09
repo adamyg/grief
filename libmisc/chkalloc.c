@@ -1,13 +1,13 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_chkalloc_c,"$Id: chkalloc.c,v 1.22 2015/02/23 01:20:45 cvsuser Exp $")
+__CIDENT_RCSID(gr_chkalloc_c,"$Id: chkalloc.c,v 1.23 2017/01/29 04:33:31 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: chkalloc.c,v 1.22 2015/02/23 01:20:45 cvsuser Exp $
+/* $Id: chkalloc.c,v 1.23 2017/01/29 04:33:31 cvsuser Exp $
  * Memory allocation front end.
  *
  *
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2017, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

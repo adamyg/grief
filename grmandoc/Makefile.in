@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.14 2018/10/16 22:36:02 cvsuser Exp $
+# $Id: Makefile.in,v 1.15 2018/11/12 01:56:06 cvsuser Exp $
 # libbsdmdoc and grmanddoc
 #
 #
@@ -89,11 +89,11 @@ D_LIB=		$(ROOT)/lib
 
 ############################################################
 
-VERSION=	1.13.4.gr
-VDATE=		10 July 2016
+VERSION=	1.14.4.gr
+VDATE=		8 August 2018
 
-PACKED=		mdocml-$(VERSION).tgz
-VPATH=		./mdocml-$(VERSION) ./sqlite3
+PACKED=		mandoc-$(VERSION).tgz
+VPATH=		./mandoc-$(VERSION) ./sqlite3
 
 	#---------------------------------------------------
 
@@ -106,18 +106,18 @@ COMPAT_OBJS=\
 	$(D_OBJ)/compat_ohash$(O)	\
 	$(D_OBJ)/compat_progname$(O)	\
 	$(D_OBJ)/compat_reallocarray$(O) \
-	$(D_OBJ)/compat_sqlite3_errstr$(O) \
+	$(D_OBJ)/compat_recallocarray$(O) \
 	$(D_OBJ)/compat_strcasestr$(O)	\
 	$(D_OBJ)/compat_stringlist$(O)	\
 	$(D_OBJ)/compat_strlcat$(O)	\
 	$(D_OBJ)/compat_strlcpy$(O)	\
+	$(D_OBJ)/compat_strndup$(O)	\
 	$(D_OBJ)/compat_strsep$(O)	\
 	$(D_OBJ)/compat_strtonum$(O)	\
 	$(D_OBJ)/libsupport$(O)
 
 LIBMAN_OBJS=\
 	$(D_OBJ)/man$(O)		\
-	$(D_OBJ)/man_hash$(O)		\
 	$(D_OBJ)/man_macro$(O)		\
 	$(D_OBJ)/man_validate$(O)
 
@@ -126,15 +126,17 @@ LIBMDOC_OBJS=\
 	$(D_OBJ)/lib$(O)		\
 	$(D_OBJ)/mdoc$(O)		\
 	$(D_OBJ)/mdoc_argv$(O)		\
-	$(D_OBJ)/mdoc_hash$(O)		\
 	$(D_OBJ)/mdoc_macro$(O)		\
 	$(D_OBJ)/mdoc_state$(O)		\
 	$(D_OBJ)/mdoc_validate$(O)	\
+	$(D_OBJ)/mdoc_markdown$(O)	\
 	$(D_OBJ)/st$(O)
 
 LIBROFF_OBJS=\
 	$(D_OBJ)/eqn$(O)		\
 	$(D_OBJ)/roff$(O)		\
+	$(D_OBJ)/roff_term$(O)		\
+	$(D_OBJ)/roff_validate$(O)	\
 	$(D_OBJ)/tbl$(O)		\
 	$(D_OBJ)/tbl_data$(O)		\
 	$(D_OBJ)/tbl_layout$(O)		\
@@ -149,6 +151,7 @@ LIBMANDOC_OBJS=\
 	$(D_OBJ)/mandoc$(O)		\
 	$(D_OBJ)/mandoc_aux$(O)		\
 	$(D_OBJ)/mandoc_ohash$(O)	\
+	$(D_OBJ)/mandoc_xr$(O)		\
 	$(D_OBJ)/msec$(O)		\
 	$(D_OBJ)/read$(O)		\
 	$(D_OBJ)/preconv$(O)
@@ -162,6 +165,7 @@ MANDOC_HTML_OBJS=\
 	$(D_OBJ)/html$(O)		\
 	$(D_OBJ)/man_html$(O)		\
 	$(D_OBJ)/mdoc_html$(O)		\
+	$(D_OBJ)/roff_html$(O)		\
 	$(D_OBJ)/tbl_html$(O)
 
 MANDOC_MAN_OBJS=\
@@ -174,13 +178,21 @@ MANDOC_TERM_OBJS=\
 	$(D_OBJ)/term$(O)		\
 	$(D_OBJ)/term_ascii$(O)		\
 	$(D_OBJ)/term_ps$(O)		\
+	$(D_OBJ)/term_tab$(O)		\
 	$(D_OBJ)/tbl_term$(O)
 
-MANDOC_DB_OBJS=\
+MANDOC_SEARCH_OBJS=\
 	$(D_OBJ)/mandocdb$(O)		\
-	$(D_OBJ)/mansearch$(O)		\
-	$(D_OBJ)/mansearch_const$(O)	\
-	$(D_OBJ)/sqlite3$(O)
+	$(D_OBJ)/mansearch$(O)
+
+MANDOC_DB_OBJS=\
+	$(D_OBJ)/sqlite3$(O)		\
+	$(D_OBJ)/dba$(O)		\
+	$(D_OBJ)/dba_read$(O)		\
+	$(D_OBJ)/dba_write$(O)		\
+	$(D_OBJ)/dba_array$(O)		\
+	$(D_OBJ)/dbm$(O)		\
+	$(D_OBJ)/dbm_map$(O)
 
 MANDOC_OBJS=\
 	$(MANDOC_HTML_OBJS)		\
@@ -191,6 +203,8 @@ MANDOC_OBJS=\
 	$(D_OBJ)/out$(O)		\
 	$(D_OBJ)/tag$(O)		\
 	$(D_OBJ)/tree$(O)		\
+	$(D_OBJ)/mandocdb$(O)		\
+	$(D_OBJ)/mansearch$(O)		\
 	$(MANDOC_DB_OBJS)
 
 MANDOC=		$(D_BIN)/grmandoc$(E)
@@ -201,9 +215,8 @@ CGI_OBJS=\
 	$(MANDOC_HTML_OBJS)		\
 	$(D_OBJ)/cgi$(O)		\
 	$(D_OBJ)/mansearch$(O)		\
-	$(D_OBJ)/mansearch_const$(O)	\
 	$(D_OBJ)/out$(O)		\
-	$(D_OBJ)/sqlite3$(O)
+	$(MANDOC_DB_OBJS)
 
 CGI=	$(D_BIN)/grman.cgi$(E)
 
@@ -277,6 +290,7 @@ echo \#define BINM_MAN \\\"grman\\\" >>$@; \
 echo \#define BINM_SOELIM \\\"grsoelim\\\" >>$@; \
 echo \#define BINM_WHATIS \\\"grwhatis\\\" >>$@; \
 echo \#define MAN_CONF_FILE \\\"/etc/grman.conf\\\" >>$@; \
+echo \#define MANPATH_BASE \\\"/usr/share/man:/usr/X11R6/man\\\" >>$@; \
 echo \#define MANPATH_DEFAULT \\\"/usr/share/man:/usr/X11R6/man:/usr/local/man\\\" >>$@; \
 "
 

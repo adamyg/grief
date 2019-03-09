@@ -1331,7 +1331,7 @@ http_digest_auth(conn_t *conn, const char *hdr, http_auth_challenge_t *c,
 		    parms->password, c->nonce, cnonce, HA1);
 	ED_TRACE(("HA1: [%s]\n", HA1))
 	DigestCalcResponse(HA1, c->nonce, noncecount, cnonce, c->qop,
-			"GET", url->doc, "", digest);
+			"GET", url->doc, (const unsigned char *)"", digest);
 
 	if (c->qop[0]) {
 		r = http_cmd(conn, "%s: Digest username=\"%s\",realm=\"%s\","
@@ -1568,7 +1568,7 @@ http_print_html(FILE *out, fetchIO *in)
 	getln_t ln = {0};
 	char *line, *p, *q;
 	int comment, tag;
-	size_t len;
+	int len = 0;
 
 	comment = tag = 0;
 	while ((line = http_getln(in, &len, &ln)) != NULL) {

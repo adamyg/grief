@@ -1,17 +1,17 @@
 #ifndef GR_EDFILEIO_H_INCLUDED
 #define GR_EDFILEIO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edfileio_h,"$Id: edfileio.h,v 1.13 2015/02/19 00:16:55 ayoung Exp $")
+__CIDENT_RCSID(gr_edfileio_h,"$Id: edfileio.h,v 1.14 2018/10/04 01:27:59 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edfileio.h,v 1.13 2015/02/19 00:16:55 ayoung Exp $
+/* $Id: edfileio.h,v 1.14 2018/10/04 01:27:59 cvsuser Exp $
  * File input/output functionality system api names.
  * Required by non-posix environments (ie. WIN32).
  *
  *
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

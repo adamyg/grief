@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_system_c,"$Id: m_system.c,v 1.16 2015/02/17 23:26:17 ayoung Exp $")
+__CIDENT_RCSID(gr_m_system_c,"$Id: m_system.c,v 1.20 2018/10/22 00:05:00 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_system.c,v 1.16 2015/02/17 23:26:17 ayoung Exp $
+/* $Id: m_system.c,v 1.20 2018/10/22 00:05:00 cvsuser Exp $
  * Basic system primitives.
  *
  *
@@ -260,7 +260,7 @@ do_getuid(void)                 /* int (void) */
     Macro See Also:
         getpid, getuid
  */
-void                 
+void
 do_geteuid(void)                /* int (void) */
 {
     acc_assign_int((accint_t) sys_geteuid());
@@ -291,6 +291,8 @@ do_geteuid(void)                /* int (void) */
         the number of seconds used, divide by the system constant
         *CLOCKS_PER_SEC*.
 
+        Note loops every 72 minutes.
+
     Macro Parameters:
         none
 
@@ -314,21 +316,31 @@ inq_clock(void)                 /* (void) */
 #undef  CLOCKS_PER_SEC
 #define CLOCKS_PER_SEC          1000
 #endif
-    accint_t value;
+    accint_t value = 0;
+
+#if defined(__MAKEDEPEND__)
+#undef  CLOCKS_PER_SEC
+#define CLOCKS_PER_SEC          1000
+#endif
 
 #if !defined(CLOCKS_PER_SEC)
 #error inq_clock: CLOCK_PER_SEC is undefined ...
-
-#elif (1000000 == CLOCKS_PER_SEC)               /* POSIX standard */
-    value = clock();
-
-#elif (1000 == CLOCKS_PER_SEC)                  /* WIN32/DOS */
-    value = (clock() * 1000);
-
+    
 #else
-#error inq_clock: unsupported CLOCK_PER_SEC configuration ...
+    if (1000000 == CLOCKS_PER_SEC) {            /* POSIX standard */
+        value = clock();
+
+    } else if (1000 == CLOCKS_PER_SEC) {        /* WIN32/DOS */
+        value = (clock() * 1000);
+
+    } else {
+        // POSIX requires that CLOCKS_PER_SEC equals 1000000 independent of the actual resolution.
+        value = clock();
+    }
 #endif
 
     acc_assign_int(value);
 }
 /*end*/
+
+

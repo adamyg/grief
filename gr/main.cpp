@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_main_cpp,"$Id: main.cpp,v 1.12 2014/10/22 02:33:13 ayoung Exp $")
+__CIDENT_RCSID(gr_main_cpp,"$Id: main.cpp,v 1.14 2018/10/18 01:27:44 cvsuser Exp $")
 
 /* -*- mode: cpp; indent-width: 4; -*- */
-/* $Id: main.cpp,v 1.12 2014/10/22 02:33:13 ayoung Exp $
+/* $Id: main.cpp,v 1.14 2018/10/18 01:27:44 cvsuser Exp $
  * main(), address c/c++ linkage for several environments.
  * Regardless of configuration force binding to the C++ runtime library.
  *
@@ -13,17 +13,22 @@ __CIDENT_RCSID(gr_main_cpp,"$Id: main.cpp,v 1.12 2014/10/22 02:33:13 ayoung Exp 
 #include <chkalloc.h>
 #include "signals.h"
 
-#include <string>
+#if defined(_CRT_NO_POSIX_ERROR_CODES)
+#if (_MSC_VER >= 1900)
+#undef _CRT_NO_POSIX_ERROR_CODES                /* <system_error> is incompatible with _CRT_NO_POSIX_ERROR_CODES */
+    // additional research required, yet there is limited information detailing _CRT_NO_POSIX_ERROR_CODES usage and how these interact with winsocks.
+#endif //_MSC_VER
+#endif //_CRT_NO_POSIX_ERROR_CODES
+
 #include <iostream>
 #include <exception>
+    // XXX: avoid std::string, open-watcom linker issues resulting in debug symbol issues.
+
 
 extern "C" {
     int cmain(int argc, char **argv);           /* cmain.c */
+    void cpp_linkage(const char *str);
 }
-
-
-void
-cpp_linkage(const std::string &str);
 
 
 static void
@@ -90,9 +95,10 @@ main(int argc, char **argv)
 
 
 void
-cpp_linkage(const std::string &str)
+cpp_linkage(const char *str)
 {
     std::ostream *out = &std::cout;
-    *out << str.c_str();
+    *out << str;
 }
+
 /*end*/

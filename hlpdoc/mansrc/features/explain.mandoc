@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: explain.mandoc,v 1.1 2014/11/27 18:19:37 ayoung Exp $
+.\" | $Id: explain.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -50,19 +50,17 @@
 .Os
 .Sh NAME
 .Nm explain
-.Nd describe a CRISP primitive function.
+.Nd describe a GRIEF primitive function.
 .Sh DESCRIPTION
-The explain macro is used to present a popup window containing help
-on a particular GRIEF primitive function. It prompts for the name of
-the macro on the command line. You can use the <Tab> key to present a list
-of primitives. Note that this will only work if you type at least the
-first letter.
+The \fIexplain\fR macro is used to present a popup window containing
+help on a particular GRIEF primitive function. It prompts for the
+name of the macro on the command line. You can use the <Tab> key to
+present a list of primitives. Note that this will only work if you
+type at least the first letter.
 .Pp
 Press \f(HB<Esc>\fR from within the popup menu to exit from the macro.
 .Sh MENU/KEYS
 This macro can be accessed from the GRIEF features menu or by typing
 \f(HBexplain\fR at the command prompt.
-.Sh BUGS
-Does not currently support the libraries of macros built out of the primitives,
-i.e. explain is like a 'man 2' Unix command. It ought to incorporate
-the section 3 stuff as well.
+.Sh SEE ALSO
+.Xr feature

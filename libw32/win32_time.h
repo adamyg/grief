@@ -1,14 +1,14 @@
-#ifndef GR_WIN32_TIME_H_INCLUDED
-#define GR_WIN32_TIME_H_INCLUDED
+#ifndef LIBW32_WIN32_TIME_H_INCLUDED
+#define LIBW32_WIN32_TIME_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_time_h,"$Id: win32_time.h,v 1.7 2015/02/19 00:17:34 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_win32_time_h,"$Id: win32_time.h,v 1.10 2018/10/11 01:49:38 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 time functionality.
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -33,19 +33,19 @@ __CPRAGMA_ONCE
 
 #include <sys/cdefs.h>
 
-__CBEGIN_DECLS
+__BEGIN_DECLS
 
-unsigned int            sleep(unsigned int);
+LIBW32_API unsigned int sleep(unsigned int);
 
 struct timeval;
 struct timezone;
 
-int                     gettimeofday(struct timeval *tv, struct timezone *tz);
+LIBW32_API int          gettimeofday(struct timeval *tv, struct timezone *tz);
 
 struct utimbuf;
 
-int                     w32_utime(const char *path, const struct utimbuf *times);
+LIBW32_API int          w32_utime(const char *path, const struct utimbuf *times);
 
-__CEND_DECLS
+__END_DECLS
 
-#endif /*GR_WIN32_TIME_H_INCLUDED*/
+#endif /*LIBW32_WIN32_TIME_H_INCLUDED*/

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_anchor_c,"$Id: anchor.c,v 1.42 2015/02/19 00:16:50 ayoung Exp $")
+__CIDENT_RCSID(gr_anchor_c,"$Id: anchor.c,v 1.44 2019/01/26 22:27:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: anchor.c,v 1.42 2015/02/19 00:16:50 ayoung Exp $
+/* $Id: anchor.c,v 1.44 2019/01/26 22:27:08 cvsuser Exp $
  * Anchor primitives.
  *
  *
@@ -253,7 +253,7 @@ anchor_adjust(int ins)
 
 
 /*  Function:           anchor_get
- *      retrieve the normalised region associated with the current anchor.
+ *      Retrieve the normalised region associated with the current anchor.
  *
  *  Parameters:
  *      wp - Window object address.
@@ -619,7 +619,7 @@ do_raise_anchor(void)           /* int () */
 (end table)
 
     Macro Returns:
-        nothing
+        The 'mark' returns 1 if successful, otherwise 0 on error.
 
     Macro Portability:
         Unlike BRIEF the anchor status is always toggled.

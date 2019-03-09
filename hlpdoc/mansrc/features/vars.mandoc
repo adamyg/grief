@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: vars.mandoc,v 1.1 2014/11/27 18:19:45 ayoung Exp $
+.\" | $Id: vars.mandoc,v 1.2 2018/10/01 21:19:58 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -64,6 +64,7 @@ The vars() macro will not show the value of static variables as these are module
 specific, use the mvars() interface for module variables.
 .Pp
 .Sh SEE ALSO
+.Xr feature ,
 .Xr message ,
 .Xr error ,
 .Xr debug ,

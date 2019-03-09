@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_string_c,"$Id: w32_string.c,v 1.8 2015/02/19 00:17:32 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_string_c,"$Id: w32_string.c,v 1.12 2018/10/11 02:42:15 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 string functions.
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -41,7 +41,7 @@ __CIDENT_RCSID(gr_w32_string_c,"$Id: w32_string.c,v 1.8 2015/02/19 00:17:32 ayou
 #include <unistd.h>
 
 
-int
+LIBW32_API int
 strcasecmp(const char *s1, const char *s2)
 {
 #if defined(_MSC_VER) && (_MSC_VER >= 1400)
@@ -53,7 +53,7 @@ strcasecmp(const char *s1, const char *s2)
 
 
 
-int
+LIBW32_API int
 strncasecmp(const char *s1, const char *s2, size_t len)
 {
 #if defined(_MSC_VER) && (_MSC_VER >= 1400)
@@ -65,7 +65,7 @@ strncasecmp(const char *s1, const char *s2, size_t len)
 
 
 #if defined(NEED_STRNLEN)
-size_t
+LIBW32_API size_t
 strnlen(const char *s, size_t maxlen)
 {
     register const char *e;
@@ -78,3 +78,4 @@ strnlen(const char *s, size_t maxlen)
 #endif
 
 /*end*/
+

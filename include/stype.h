@@ -1,11 +1,11 @@
 #ifndef GR_STYPE_H_INCLUDED
 #define GR_STYPE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_stype_h,"$Id: stype.h,v 1.9 2015/02/19 00:16:59 ayoung Exp $")
+__CIDENT_RCSID(gr_stype_h,"$Id: stype.h,v 1.10 2018/10/04 01:28:00 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: stype.h,v 1.9 2015/02/19 00:16:59 ayoung Exp $
+/* $Id: stype.h,v 1.10 2018/10/04 01:28:00 cvsuser Exp $
  * Self-organising integer data structure
  *
  *  library of routines for storing a data structure where the primary key is an integer. 
@@ -15,7 +15,7 @@ __CPRAGMA_ONCE
  *  The implementation maintains an array of integer/pointer pairs, which is sorted 
  *  into order every when necessary; allowing access in numerical order.
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

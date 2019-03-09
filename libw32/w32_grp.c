@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_grp_c,"$Id: w32_grp.c,v 1.7 2015/02/19 00:17:29 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_grp_c,"$Id: w32_grp.c,v 1.10 2018/10/12 00:24:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 pwd() implementation
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -83,7 +83,7 @@ static int                  counter;
 //      [ENFILE]
 //          The maximum allowable number of files is currently open in the system.
 */
-struct group *
+LIBW32_API struct group *
 getgrgid(int gid)
 {
     fillin();
@@ -130,7 +130,7 @@ getgrgid(int gid)
 //      [ENFILE]
 //          The maximum allowable number of files is currently open in the system.
 */
-struct group *
+LIBW32_API struct group *
 getgrnam(const char * n)
 {
     fillin();
@@ -196,14 +196,14 @@ getgrnam(const char * n)
 //      [ENFILE]
 //          The maximum allowable number of files is currently open in the system.
 */
-void
+LIBW32_API void
 setgrent(void)
 {
     counter = 0;
 }
 
 
-struct group *
+LIBW32_API struct group *
 getgrent(void)
 {
     if (counter++ == 0) {
@@ -214,7 +214,7 @@ getgrent(void)
 }
 
 
-void
+LIBW32_API void
 endgrent(void)
 {
     counter = 1;
@@ -267,7 +267,7 @@ fillin(void)
 //          The gidsetsize argument is non-zero and less than the number of group IDs that
 //          would have been returned.
 */
-int
+LIBW32_API int
 getgroups(int gidsetsize, gid_t grouplist[])
 {
     if (gidsetsize >= 1) {
@@ -280,5 +280,5 @@ getgroups(int gidsetsize, gid_t grouplist[])
     return -1;
 }
 
-
+/*end*/
 

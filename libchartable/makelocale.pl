@@ -1,9 +1,9 @@
 #!/usr/bin/perl
-# $Id: makelocale.pl,v 1.6 2015/02/19 00:17:06 ayoung Exp $
+# $Id: makelocale.pl,v 1.8 2018/10/01 22:10:53 cvsuser Exp $
 # Character set locale table generation
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 #
-# Copyright (c) 2010 - 2015, Adam Young.
+# Copyright (c) 2010 - 2018, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.

@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_uname_c,"$Id: w32_uname.c,v 1.9 2015/02/19 00:17:33 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_uname_c,"$Id: w32_uname.c,v 1.13 2018/10/01 00:00:04 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 uname() system calls
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -94,6 +94,7 @@ uname(struct utsname *u)
 
         /* osmajor, osminor, osbuild */
         if (FALSE == GetVersionEx(&ovi)) {
+                // TODO: replace with RtlGetVersion() as GetVersionEx() is now defunct; 8.1+
             /*
              *  Error ... try the old way
              */
@@ -152,6 +153,8 @@ uname(struct utsname *u)
                  *  The following table summarizes the most recent operating system version numbers.
                  *
                  *      Operating system            Version number
+                 *      Windows 10                  10.0
+                 *      Windows 8.1                 6.3
                  *      Windows 8                   6.2
                  *      Windows Server 2012         6.2
                  *      Windows 7                   6.1
@@ -171,10 +174,17 @@ uname(struct utsname *u)
                         oviex.dwMajorVersion = 0;
                     }
 
-                    if (ovi.dwMajorVersion >= 6) {
+                    if (ovi.dwMajorVersion >= 10) {
+                        osname = "Windows 10";  // Windows 10
+
+                        if (oviex.dwMinorVersion > 0) {
+                            osname = "Windows 10+";
+                        }
+
+                    } else if (ovi.dwMajorVersion >= 6) {
                         osname = "Vista";       // vista or greater
 
-                        if (0 == oviex.dwMinorVersion) {
+                        if (0 == oviex.dwMinorVersion) { // 6.0
                             if (VER_NT_WORKSTATION == oviex.wProductType) {
                                 osname = "Windows Vista";
 #if defined(VER_SUITE_ENTERPRISE)
@@ -189,25 +199,26 @@ uname(struct utsname *u)
                             } else {
                                 osname = "Windows Server 2008";
                             }
-                        } else if (1 == oviex.dwMinorVersion) {
+                        } else if (1 == oviex.dwMinorVersion) { //6.1
                             if (VER_NT_WORKSTATION == oviex.wProductType) {
                                 osname = "Windows 7";
                             } else {
                                 osname = "Windows Server 2008 R2";
                             }
-                        } else if (2 == oviex.dwMinorVersion) {
+                        } else if (2 == oviex.dwMinorVersion) { //6.2
                             if (VER_NT_WORKSTATION == oviex.wProductType) {
                                 osname = "Windows 8";
                             } else {
                                 osname = "Windows Server 2012";
                             }
-                        } else {
+                        } else {                // 6.3
                             if (VER_NT_WORKSTATION == oviex.wProductType) {
-                                osname = "Windows 8+";
+                                osname = "Windows 8.1";
                             } else {
                                 osname = "Windows Server 2012+";
                             }
                         }
+
 #if defined(TODO)
                         pGPI = (PGPI) GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "GetProductInfo");
                         pGPI(osvi.dwMajorVersion, osvi.dwMinorVersion, 0, 0, &dwType);
@@ -429,4 +440,6 @@ uname(struct utsname *u)
     }
     return 0;
 }
+
 /*end*/
+

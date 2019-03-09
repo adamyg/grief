@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: delblank.mandoc,v 1.1 2014/11/27 18:19:37 ayoung Exp $
+.\" | $Id: delblank.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -52,7 +52,10 @@
 .Nm delblank
 .Nd Delete blank lines in current buffer.
 .Sh DESCRIPTION
-This macro is a simple macro to delete all blank lines in
-the current buffer.
+The \fIdelblank\fR macro is a simple macro to delete all blank lines
+in the current buffer.
 .Sh MENU/KEYS
 This macro can be accessed from the GRIEF features menu.
+.Sh SEE ALSO
+.Xr feature
+

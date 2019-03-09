@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_getcwd_c,"$Id: w32_getcwd.c,v 1.7 2015/02/19 00:17:28 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_getcwd_c,"$Id: w32_getcwd.c,v 1.10 2018/10/12 00:24:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 getcwd() system call
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -86,7 +86,7 @@ __CIDENT_RCSID(gr_w32_getcwd_c,"$Id: w32_getcwd.c,v 1.7 2015/02/19 00:17:28 ayou
 //      [ENOMEM]
 //          Insufficient storage space is available.
 */
-char *
+LIBW32_API char *
 w32_getcwd(char *path, int size)
 {
     char t_path[1024];
@@ -116,16 +116,16 @@ w32_getcwd(char *path, int size)
         }
 
         //  If the function succeeds, the return value is the length, in characters,
-        //  of the string copied to lpszLongPath, not including the terminating
+        //  of the string copied to lpszLongPath, not including the terminating 
         //  null character.
         //
-        //  If the lpBuffer buffer is too small to contain the path, the return value
-        //  is the size, in characters, of the buffer that is required to hold
+        //  If the lpBuffer buffer is too small to contain the path, the return value 
+        //  is the size, in characters, of the buffer that is required to hold 
         //  the path and the terminating null character.
         //
-        if ((ret = GetCurrentDirectory(sizeof(t_path), t_path)) == 0) {
+        if ((ret = GetCurrentDirectoryA(sizeof(t_path), t_path)) == 0) {
             w32_errno_set();
-
+            
         } else if (ret >= (DWORD)size || ret >= sizeof(t_path)) {
             errno = ENOMEM;
 
@@ -135,7 +135,7 @@ w32_getcwd(char *path, int size)
 
             for (in = t_path, out = path; *in; ++in) {
                 if ('~' == *in) {               /* shortname expand */
-                    (void) GetLongPathName(t_path, t_path, sizeof(t_path));
+                    (void) GetLongPathNameA(t_path, t_path, sizeof(t_path));
                     for (in = t_path, out = path; *in; ++in) {
                         *out++ = ('\\' == *in ? '/' : *in);
                     }
@@ -152,10 +152,10 @@ w32_getcwd(char *path, int size)
 }
 
 
-char *
+LIBW32_API char *
 w32_getcwdd(char drive, char *path, int size)
 {
-    const unsigned nDrive =
+    const unsigned nDrive = 
             (isalpha((unsigned char)drive) ? (toupper(drive) - 'A') : 0xff);
 
     if (NULL == path || size <= 0) {
@@ -188,28 +188,28 @@ w32_getcwdd(char drive, char *path, int size)
         }
 
         //  If the function succeeds, the return value is the length, in characters,
-        //  of the string copied to lpszLongPath, not including the terminating
+        //  of the string copied to lpszLongPath, not including the terminating 
         //  null character.
         //
-        //  If the lpBuffer buffer is too small to contain the path, the return value
-        //  is the size, in characters, of the buffer that is required to hold
+        //  If the lpBuffer buffer is too small to contain the path, the return value 
+        //  is the size, in characters, of the buffer that is required to hold 
         //  the path and the terminating null character.
         //
         pathrel[0] = ('A' + nDrive);            /* A ... Z */
 
-        if ((ret = GetFullPathName(pathrel, sizeof(t_path), t_path, &file)) == 0) {
+        if ((ret = GetFullPathNameA(pathrel, sizeof(t_path), t_path, &file)) == 0) {
             w32_errno_set();
 
         } else if (ret >= (DWORD)size || ret >= sizeof(t_path)) {
             errno = ENOMEM;
-
+            
         } else {
             const char *in;
             char *out;
-
+            
             for (in = t_path, out = path; *in; ++in) {
                 if ('~' == *in) {               /* shortname expand */
-                    (void) GetLongPathName(t_path, t_path, sizeof(t_path));
+                    (void) GetLongPathNameA(t_path, t_path, sizeof(t_path));
                     for (in = t_path, out = path; *in; ++in) {
                         *out++ = ('\\' == *in ? '/' : *in);
                     }
@@ -225,3 +225,6 @@ w32_getcwdd(char drive, char *path, int size)
     if (path && size > 0) path[0] = 0;
     return NULL;
 }
+
+/*end*/
+

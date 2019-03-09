@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: extra.mandoc,v 1.1 2014/11/27 18:19:37 ayoung Exp $
+.\" | $Id: extra.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -84,6 +84,7 @@ Zoom window                 (see zoom)
 .El
 .Pp
 .Sh SEE ALSO
+.Xr feature ,
 .Xr options ,
 .Xr feature ,
 .Xr package ,

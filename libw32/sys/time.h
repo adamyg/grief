@@ -1,14 +1,14 @@
-#ifndef GR_TIME_H_INCLUDED
-#define GR_TIME_H_INCLUDED
+#ifndef LIBW32_SYS_TIME_H
+#define LIBW32_SYS_TIME_H
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_time_h,"$Id: time.h,v 1.8 2015/02/19 00:17:39 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_sys_time_h,"$Id: time.h,v 1.12 2019/03/03 15:26:28 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 sys/time.h implementation.
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -114,28 +114,33 @@ struct itimerval {
 
 __BEGIN_DECLS
 
-int                     getitimer(int, struct itimerval *);
-int                     setitimer(int, const struct itimerval *, struct timeval *);
+#define ITIMER_REAL     0               /* Decrements in real time. */
+    //#define ITIMER_VIRTUAL  1               /* unsupported - Decrements in process virtual time. */
+    //#define ITIMER_PROF     2               /* unsupported - Decrements both in process virtual time and when the system is running on behalf of the process. */
+
+LIBW32_API int          getitimer(int which, struct itimerval *value);
+LIBW32_API int          setitimer(int which, const struct itimerval *value, struct itimerval *ovalue);
 
 #if defined(_WINSOCKAPI_) || defined(_WINSOCK2API_)
-int                     w32_gettimeofday(struct timeval *, /*struct timezone*/ void *);
-int                     w32_select(int, fd_set *, fd_set *, fd_set *, struct timeval *timeout);
+LIBW32_API int          w32_gettimeofday(struct timeval *, /*struct timezone*/ void *);
+LIBW32_API int          w32_select(int, fd_set *, fd_set *, fd_set *, struct timeval *timeout);
 #endif
 
 #if defined(NEED_TIMEVAL) || \
         defined(_WINSOCKAPI_) || defined(_WINSOCK2API_)
-int                     utimes(const char *, const struct timeval[2]);
+LIBW32_API int          utimes(const char *, const struct timeval[2]);
 #endif
 
 /*
  *  POSIX 1003.1c -- <time.h>
+ *
+LIBW32_API char *       ctime_r(const time_t *ctm, char *buf);
+LIBW32_API char *       asctime_r(const struct tm *tm, char *buf);
+LIBW32_API struct tm *  localtime_r(const time_t *ctm, struct tm *res);
+LIBW32_API struct tm *  gmtime_r(const time_t *ctm, struct tm *res);
  */
-
-char * __PDECL          ctime_r(const time_t *ctm, char *buf);
-char * __PDECL          asctime_r(const struct tm *tm, char *buf);
-struct tm * __PDECL     localtime_r(const time_t *ctm, struct tm *res);
-struct tm * __PDECL     gmtime_r(const time_t *ctm, struct tm *res);
 
 __END_DECLS
 
-#endif /*GR_TIME_H_INCLUDED*/
+#endif  /*LIBW32_SYS_TIME_H*/
+

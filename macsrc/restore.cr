@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: restore.cr,v 1.30 2014/10/27 23:28:26 ayoung Exp $
+/* $Id: restore.cr,v 1.31 2018/11/15 23:24:25 cvsuser Exp $
  * Save and restore editing session.
  *
  *
@@ -20,7 +20,7 @@ static int              crlogfile(string file);
 
 /*
  *  ss_flag             Set to TRUE to save and restore the total editing state. This
- *                      is more expensive and can litter .crstate files in the current
+ *                      is more expensive and can litter .grstate files in the current
  *                      directory, but many people like this feature.
  *
  *  ss_cache            If this variable is not set, then the restore file is stored in
@@ -32,7 +32,7 @@ static int              crlogfile(string file);
  *
  *  ss_version          Imported interface version.
  *
- *  ss_age              Age at which time crstate are considered stale.
+ *  ss_age              Age at which time .grstate are considered stale.
  */
 static int              ss_flag = FALSE;
 static string           ss_cache = "";
@@ -233,7 +233,7 @@ _startup_complete(int files_read_in)
     }
 
     /*
-     * Try and restore from the .crstate file in current directory.
+     * Try and restore from the .grstate file in current directory.
      * If that fails we'll use the restore file in the home directory.
      */
     if (ss_flag) {

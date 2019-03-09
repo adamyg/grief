@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: pipereg.mandoc,v 1.1 2014/11/27 18:19:42 ayoung Exp $
+.\" | $Id: pipereg.mandoc,v 1.2 2018/10/01 21:19:58 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -52,14 +52,15 @@
 .Nm pipereg
 .Nd Pipe a region into a Unix filter.
 .Sh DESCRIPTION
-This macro can be used to pipe a hilighted region into a filter program
-(a program which reads from stdin and writes to stdout).
-The filtered data is read back into the buffer replacing the hilighted
-region. If no region is hilighted then the entire buffer is written.
+The \fIpipereg\fR macro can be used to pipe a hilighted region into a
+filter program (a program which reads from stdin and writes to
+stdout). The filtered data is read back into the buffer replacing the
+hilighted region. If no region is hilighted then the entire buffer is
+written.
 .Pp
-This command should only be used on line-marked regions. Trying
-to replace data which only occupies a fraction of a line will
-cause the replaced data to be read into a line by itself.
+This command should only be used on line-marked regions. Trying to
+replace data which only occupies a fraction of a line will cause the
+replaced data to be read into a line by itself.
 .Sh MENU/KEYS
 This macro can be accessed from the GRIEF features menu or by typing
 \f(HB<Ctrl-A><Ctrl-P>\fR at the command prompt.

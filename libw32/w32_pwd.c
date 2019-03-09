@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_pwd_c,"$Id: w32_pwd.c,v 1.7 2015/02/19 00:17:30 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_pwd_c,"$Id: w32_pwd.c,v 1.11 2018/10/12 00:24:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 pwd(2) implementation
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -108,7 +108,7 @@ static int                  counter;
 //      The return value may point to a static area which is overwritten by a subsequent
 //      call to getpwuid(), getpwnam(), or getpwent().
 */
-struct passwd *
+LIBW32_API struct passwd *
 getpwent(void)
 {
     if (counter == 0) {
@@ -187,7 +187,7 @@ getpwent(void)
 //          Insufficient storage was supplied via buffer and bufsize to contain the data to
 //          be referenced by the resulting passwd structure. [Option End]
 */
-struct passwd *
+LIBW32_API struct passwd *
 getpwuid(int uid)
 {
     fillin();
@@ -265,7 +265,7 @@ getpwuid(int uid)
 //          Insufficient storage was supplied via buffer and bufsize to contain the data to
 //          be referenced by the resulting passwd structure. [Option End]
 */
-struct passwd *
+LIBW32_API struct passwd *
 getpwnam(const char *name)
 {
     fillin();
@@ -276,14 +276,14 @@ getpwnam(const char *name)
 }
 
 
-void
+LIBW32_API void
 setpwent(void)
 {
     counter = 0;
 }
 
 
-void
+LIBW32_API void
 endpwent(void)
 {
     counter = 0;
@@ -300,10 +300,11 @@ fillin(void)
     pw.pw_age       = "";
     pw.pw_comment   = "";
     pw.pw_gecos     = "pc User";
-    pw.pw_dir       = w32_gethome();
+    pw.pw_dir       = w32_gethome(FALSE);
     pw.pw_shell     = w32_getshell();
     pw.pw_audid     = -1;
     pw.pw_audflg    = -1;
 }
 
+/*end*/
 

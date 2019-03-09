@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_playback_c,"$Id: playback.c,v 1.31 2014/10/27 23:27:56 ayoung Exp $")
+__CIDENT_RCSID(gr_playback_c,"$Id: playback.c,v 1.32 2019/01/26 22:27:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: playback.c,v 1.31 2014/10/27 23:27:56 ayoung Exp $
+/* $Id: playback.c,v 1.32 2019/01/26 22:27:08 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -211,7 +211,7 @@ do_pause(void)                  /* void () */
  *<<GRIEF>>
     Macro: remember - Start remembering keystrokes.
 
-        void
+        int
         remember([string|int overwrite], [int macroid])
 
     Macro Description:
@@ -223,12 +223,12 @@ do_pause(void)                  /* void () */
         macro.
 
         The 'remember()' primitive is not usually called as part of a
-        macro but is usually bound to a keyboard key (<F7>).
+        macro but is usually bound to a keyboard key, for example (<F7>).
 
         Unlike BRIEF multiple keystroke macros can be maintained.
         Each remember execution shall create a buffer named
         'KBD-MACRO-#' where '#' is the associated keyboard macro
-        identifier. This buffer maybe then edited and/or saved to
+        identifier. This buffer maybe then edited and/or saved for
         later use. The <inq_remember_buffer> primitive shall derive
         the buffer name.
 
@@ -407,7 +407,7 @@ inq_remember_buffer(void)       /* ([int macroid]) */
  *<<GRIEF>>
     Macro: playback - Replay a keystroke macro.
 
-        void
+        int
         playback([int macroid])
 
     Macro Description:

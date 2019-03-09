@@ -1,0 +1,44 @@
+-*- encoding: utf-8; -*-
+
+Fri Jan 25 17:33:55 2019 adamy
+
+	* imported 2.3,0
+
+		- duk_config.h modifications
+
+		o Optional dll support.
+
+			+	#if defined(DUKTAPE_DLL_BUILD) /*APY*/
+			+	#define DUK_F_DLL_BUILD
+			+	#else
+				/* not configured for DLL build */
+				#undef DUK_F_DLL_BUILD
+			+	#endif
+
+		o OpenWatcom
+
+						----------------------------
+
+			+	/* WATCOMC */
+			+	#if defined(__WATCOMC__) /*APY*/
+			+	#define DUK_F_WATCOMC
+			+	#endif
+
+						----------------------------
+
+			+	/* ------------------------------------------------------------------------------------------------------------------- */
+			+	#elif defined(DUK_F_WATCOMC) /*APY*/
+			+		:
+			+		:
+
+			-	#if defined(DUK_F_C99) || defined(DUK_F_CPP11)
+			+	#if defined(DUK_F_C99) || defined(DUK_F_CPP11) || defined(va_copy) /*APY*/
+
+	* created Changelog
+
+/*
+ * Local Variables: ***
+ * mode: changelog ***
+ * End: ***
+ */
+

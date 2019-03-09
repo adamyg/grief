@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: autowrap.mandoc,v 1.1 2014/11/27 18:19:35 ayoung Exp $
+.\" | $Id: autowrap.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -52,18 +52,20 @@
 .Nm autowrap
 .Nd start new line when cursor nears right hand column.
 .Sh DESCRIPTION
-This mode is used to simulate the autowrap feature of many word processors.
-When autowrap is set, then GRIEF will automatically start a new line
-without the user having to hit <Enter> and move the partially typed
-word to the new line. The default right hand column is set to about 60
+The \fIautowrap\fR macro toggles the auto-wrap mode, which is used to
+simulate the autowrap feature of many word processors. When autowrap
+is set, then GRIEF will automatically start a new line without the
+user having to hit <Enter> and move the partially typed word to the
+new line. The default right hand column is set to about 60
 characters. This mode is useful when typing in documentation, but
 should be disabled whilst typing in code.
 .Pp
 Selecting this option toggles the current autowrap state.
 .Sh MENU/KEYS
-This macro can be accessed from the GRIEF features menu (\f(HB<Alt-F>\fR), the
-document options menu (\f(HB<Ctrl-O>\fR), or by typing
-\f(HBautowrap\fR at the command prompt.
+This macro can be accessed from the GRIEF features menu (\f(HB<Alt-F>\fR), 
+the document options menu (\f(HB<Ctrl-O>\fR), or by typing \f(HBautowrap\fR
+at the command prompt.
 .Sh SEE ALSO
+.Xr feature ,
 .Xr docopts ,
 .Xr autoind

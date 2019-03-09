@@ -1,16 +1,16 @@
 #ifndef GR_EDENDIAN_H_INCLUDED
 #define GR_EDENDIAN_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edendian_h,"$Id: edendian.h,v 1.12 2015/02/19 00:16:54 ayoung Exp $")
+__CIDENT_RCSID(gr_edendian_h,"$Id: edendian.h,v 1.13 2018/10/04 01:27:59 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edendian.h,v 1.12 2015/02/19 00:16:54 ayoung Exp $
+/* $Id: edendian.h,v 1.13 2018/10/04 01:27:59 cvsuser Exp $
  * Endian interface.
  *
  *
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

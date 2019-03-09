@@ -1,12 +1,12 @@
-#ifndef GR_VFS_H_INCLUDED
-#define GR_VFS_H_INCLUDED
+#ifndef LIBW32_SYS_VFS_H
+#define LIBW32_SYS_VFS_H
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_vfs_h,"$Id: vfs.h,v 1.5 2015/02/19 00:17:39 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_sys_vfs_h,"$Id: vfs.h,v 1.7 2018/09/29 02:25:24 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 2012 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -23,4 +23,4 @@ __CPRAGMA_ONCE
 
 #include <sys/statvfs.h>
 
-#endif /*GR_VFS_H_INCLUDED*/
+#endif /*LIBW32_SYS_VFS_H*/

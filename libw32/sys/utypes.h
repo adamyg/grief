@@ -1,14 +1,14 @@
-#ifndef GR_UTYPES_H_INCLUDED
-#define GR_UTYPES_H_INCLUDED
+#ifndef LIBW32_SYS_UTYPES_H_INCLUDED
+#define LIBW32_SYS_UTYPES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_utypes_h,"$Id: utypes.h,v 1.20 2015/02/19 00:17:39 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_sys_utypes_h,"$Id: utypes.h,v 1.25 2018/10/16 22:38:20 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* 
  * win32 unix types
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -26,11 +26,19 @@ __CPRAGMA_ONCE
 #if defined(_MSC_VER)
 #if (_MSC_VER != 1200)                          /* MSVC 6 */
 #if (_MSC_VER != 1400)                          /* MSVC 8/2005 */
+#if (_MSC_VER != 1500)                          /* MSVC 9/2008 */
 #if (_MSC_VER != 1600)                          /* MSVC 10/2010 */
-#error utypes.h: untested MSVC c/c++ Version (CL 12.xx - 16.xx) only ...
-#endif
-#endif
-#endif
+#if (_MSC_VER != 1900)                          /* MSVC 19/2015 */
+#if (_MSC_VER <  1910 || _MSC_VER > 1914)       /* MSVC 19.10 .. 14/2017 */
+#error utypes.h: untested MSVC Version (2005 -- 2017) only ...
+ //see: https://en.wikipedia.org/wiki/Microsoft_Visual_C%2B%2B
+#endif	//2017
+#endif	//2015
+#endif	//2010
+#endif	//2008
+#endif	//2005
+#endif	//_MSC_VER
+
 #pragma warning(disable:4115)
 
 #elif defined(__WATCOMC__)
@@ -87,6 +95,12 @@ typedef unsigned __int32 uint32_t;
 #endif  /*1300*/
 typedef signed __int64 int64_t;
 typedef unsigned __int64 uint64_t;
+#if (_MSC_VER < 1800)
+typedef uint8_t uint_fast8_t;                   /* optional C11 */
+typedef uint16_t uint_fast16_t;
+typedef uint32_t uint_fast32_t;
+typedef uint64_t uint_fast64_t;
+#endif
 #define _MSC_STDINT_H_TYPES
 #endif  /*_MSC_STDINT_H_TYPES*/
 #endif  /*stdint.h*/
@@ -111,7 +125,13 @@ typedef unsigned long fixpt_t;                  /* fixed point number */
 #endif  /*BSD_SOURCE*/
 
 /* system identifiers */
+#if !defined(HAVE_PID_T)
+#if !defined(__WATCOMC__) || \
+        (defined(__WATCOMC__) && (__WATCOMC__ < 1300 /*owc20*/))
 typedef int pid_t;                              /* process identifier */
+#endif
+#define HAVE_PID_T
+#endif
 
 typedef long suseconds_t;                       /* sys/types.h */
 
@@ -120,9 +140,17 @@ typedef long suseconds_t;                       /* sys/types.h */
 typedef int uid_t;
 typedef int gid_t;
 #endif
+#if !defined(id_t)
 typedef int id_t;                               /* used as a general identifier; can contain least a pid_t, uid_t, or gid_t. */
+#endif
+#if !defined(ssize_t)
 typedef int ssize_t;
+#define ssize_t ssize_t                         /* see libssh */
+#endif
+#if !defined(mode_t)
 typedef unsigned short mode_t;
+#define mode_t mode_t
+#endif
 
 #elif defined(__MINGW32__)
 #if !defined(uid_t) && !defined(gid_t)
@@ -131,7 +159,13 @@ typedef int gid_t;
 #endif
 #endif
 
+#if !defined(HAVE_NLINK_T)
+#if !defined(__WATCOMC__) || \
+        (defined(__WATCOMC__) && (__WATCOMC__ < 1300 /*owc20*/))
 typedef unsigned nlink_t;                       /* link count */
+#endif
+#define HAVE_NLINK_T
+#endif
 
 #ifndef major
 #define major(devnum)   (((devnum) >> 8) & 0xff)
@@ -144,4 +178,4 @@ typedef unsigned nlink_t;                       /* link count */
                         ((((major) & 0xff) << 8) | ((minor) & 0xff))
 #endif
 
-#endif /*GR_UTYPES_H_INCLUDED*/
+#endif /*LIBW32_SYS_UTYPES_H_INCLUDED*/

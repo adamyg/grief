@@ -33,7 +33,7 @@ Topic:          Documentation
 
 Topic:          GRIEF Software License
 
-        *GRIEF* is (C) 1998-2014 Adam Young.
+        *GRIEF* is (C) 1998-2018 Adam Young.
 
         *GRIEF* is distributed under the terms of the 'Q' 'Public'
         'License' 'version' '1.0' *(QPL-1.0)*; with a change to
@@ -165,5 +165,5 @@ Topic:          GRIEF Software License
 
                 -----------------------------------------------
 
-        $Id: copyright.txt,v 1.3 2014/10/31 01:09:05 ayoung Exp $
+        $Id: copyright.txt,v 1.6 2018/10/18 21:48:31 cvsuser Exp $
 -*- mode: txt; margin: 75; -*-

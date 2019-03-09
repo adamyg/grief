@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: center.mandoc,v 1.1 2014/11/27 18:19:36 ayoung Exp $
+.\" | $Id: center.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -52,12 +52,16 @@
 .Nm center
 .Nd Center text, center lines within the current margin.
 .Sh DESCRIPTION
-The center macro is used to center lines of text. If an argument
-is specified to this macro, then that number of lines are centered.
-If no argument is specified and a region is hilighted then the lines
+The center macro is used to center lines of text. If an argument is
+specified to this macro, then that number of lines are centered. If
+no argument is specified and a region is hilighted then the lines
 within the region will be centered.
+.Pp
 If no argument and no region is specified, then the current line will
 be centered.
 .Sh MENU/KEYS
 This macro can be accessed from the GRIEF features menu or by typing
 \f(HBcenter\fR at the command prompt.
+.Sh SEE ALSO
+.Xr feature
+

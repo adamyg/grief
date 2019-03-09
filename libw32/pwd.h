@@ -1,12 +1,12 @@
-#ifndef GR_PWD_H_INCLUDED
-#define GR_PWD_H_INCLUDED
+#ifndef LIBW32_PWD_H_INCLUDED
+#define LIBW32_PWD_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_pwd_h,"$Id: pwd.h,v 1.4 2015/02/19 00:17:26 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_pwd_h,"$Id: pwd.h,v 1.6 2018/09/29 02:25:21 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -47,26 +47,26 @@ __BEGIN_DECLS
 struct passwd {
     const char *        pw_name;
     const char *        pw_passwd;
-    int			pw_uid;
-    int			pw_gid;
+    int                 pw_uid;
+    int                 pw_gid;
     const char *        pw_age;
     const char *        pw_comment;
     const char *        pw_gecos;
     const char *        pw_dir;
     const char *        pw_shell;
-    long		pw_audid;
-    int			pw_audflg;
+    long                pw_audid;
+    int                 pw_audflg;
 };
 
-struct passwd *         getpwent(void);
-struct passwd *         getpwuid(int);
-struct passwd *         getpwnam(const char *);
-void                    setpwent(void);
-void                    endpwent(void);
+LIBW32_API struct passwd *getpwent(void);
+LIBW32_API struct passwd *getpwuid(int);
+LIBW32_API struct passwd *getpwnam(const char *);
+LIBW32_API void         setpwent(void);
+LIBW32_API void         endpwent(void);
 
-//  int                 getpwnam_r(const char *, struct passwd *, char *, size_t, struct passwd **);
-//  int                 getpwuid_r(uid_t, struct passwd *, char *, size_t, struct passwd **);
+//LIBW32_API int        getpwnam_r(const char *, struct passwd *, char *, size_t, struct passwd **);
+//LIBW32_API int        getpwuid_r(uid_t, struct passwd *, char *, size_t, struct passwd **);
 
 __END_DECLS
 
-#endif /*GR_PWD_H_INCLUDED*/
+#endif /*LIBW32_PWD_H_INCLUDED*/

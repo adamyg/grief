@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_getlocale_c,"$Id: w32_getlocale.c,v 1.9 2015/02/19 00:17:28 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_getlocale_c,"$Id: w32_getlocale.c,v 1.12 2018/10/11 01:46:32 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 getlocale() system calls
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -299,7 +299,7 @@ const static struct sLocaleMap {
 #endif  /*XXX_NOTUSED*/
 
 
-const char *
+LIBW32_API const char *
 w32_getlanguage(char *buffer, int len)
 {
     const char *subkey = "Control Panel\\International";
@@ -339,7 +339,7 @@ w32_getlanguage(char *buffer, int len)
 }
 
 
-int
+LIBW32_API int
 w32_regstrget(const char *subkey, const char *valuename, char *buf, int len)
 {
     int ret;
@@ -351,7 +351,7 @@ w32_regstrget(const char *subkey, const char *valuename, char *buf, int len)
 }
 
 
-int
+LIBW32_API int
 w32_regstrgetx(HKEY hkey, const char *subkey, const char *valuename, char *buf, int len)
 {
     HKEY handle;
@@ -364,7 +364,7 @@ w32_regstrgetx(HKEY hkey, const char *subkey, const char *valuename, char *buf, 
                 (type == REG_SZ || type == REG_EXPAND_SZ)) {
             ret = (int)datalen;
         }
-	RegCloseKey(handle);
+        RegCloseKey(handle);
     }
     return ret;
 }

@@ -1,0 +1,99 @@
+
+    Getting Started:
+
+        Depending on the operating system, the name of the *GRIEF* executable 
+        is generally.
+
+                o gr (console)
+                o xgr (x11)
+
+        The following command line switch are available:
+
+>       GRIEF 3.2.0 compiled Aug  9 2014 18:19:22 (cm version 3.0)
+>
+>       Usage: cr [options] [+line-number] file ..
+>
+>       Options:
+>         -a, --add                     Add file to current profile.
+>         -b, --nobackup                Disable backup creation.
+>         --noautosave                  Disable autosave.
+>         -c, --compat                  Compatability mode (dont enable nodelay).
+>         -E, --display                 Enable display on startup.
+>         -D, --define var[=value]      Define an environment variable.
+>         -e, --echoflags charval,virt,col,percent,time,remember,cursor
+>                                       Echo line state information.
+>         --echofmt <format-spec>       Echo line format definition.
+>         -i, --timer N                 Set interval timer to N seconds.
+>         -M, --vm #                    Set virtual memory size to # lines.
+>         --mouse                       Enable mouse.
+>         --nomouse                     Disable mouse support.
+>         --scroll                      Enable xterm scrolling.
+>         --noscroll                    Disable xterm scrolling.
+>         --color [=<depth>]            Force color mode.
+>         --nocolor                     Force black and white display.
+>         --visbell                     Enable visable bell.
+>         --light                       Light color scheme.
+>         --dark                        or dark color scheme.
+>         --utf8 [=[no|yes],[[no]combined,seperate],[subst|ncr|ucn|hex]]
+>                                       UTF8 features.
+>         --8bit [=<encoding>]          Eight bit terminal encoding, with optional encoding.
+>         --7bit                        Seven bit terminal encoding.
+>         --guess charset,chardet,mark,bom,magic,utf...
+>                                       File encoding search specification.
+>         --buftype dos|unix|mac|ansi   Default buffer-type.
+>         --encoding <encoding>         Default file encoding.
+>         --nograph                     Disable use of graphic characters.
+>         --nounicode                   Disable use of UNICODE graphic characters.
+>         --nounderline                 Disable use of underline mode.
+>         --nohilite                    Disable syntax hiliting.
+>         --nocygwinkb                  Disable use of cygwin raw scancodes.
+>         --nosigtrap                   Disable signal trapping (for debugging).
+>         --term <termname>             Override the TERM setting.
+>         --grterm <termname>           Override the GRTERM setting.
+>         --grhelp <path>               Override the GRHELP setting.
+>         --grprofile <user-profile>    Override the GRPROFILE setting.
+>         --termcap                     Use termcap if available, otherwise terminfo.
+>         --curses                      Enable/force use of curses tty driver.
+>         --noinit                      Disable termcap init/deinit strings.
+>         --nokeypad                    Disable termcap keypad init/deinit strings.
+>         --noborders                   Disable use of borders (main windows/non-popup).
+>         --notitle                     Disable use/update of console title.
+>         --lazy [=lines]               Limit vt updates to # lines, delayed until stable; for slow links.
+>         --jump [=lines]               Scroll jump, paging content not scolling; for slow links.
+>         --visible [=lines]            Visible lines above/below cursor.
+>         --escdelay value              ESC delay in milliseconds.
+>         -m, --exec <macro-name>       Execute named macro.
+>         -R, --readonly                Read-only mode.
+>         --lockstrict                  Enable strict file-locking.
+>         --spell                       Spell check.
+>         --nospell                     Disable spell.
+>         -t, --spaces                  Use spaces to fill out tabs.
+>         -d, --log                     Create `grief.log` diagnostics log.
+>         -f, --logflush                Flush log file as created.
+>         -P, --dflags regexp,undo,prompt,memory,native,rtc,purify,terminal,vfs,refs
+>                                       Debugging/profiling flags, comma separated.
+>         -W, --warnings                Enable warnings.
+>         -s, --logstats                Report statistics on exit.
+>         -p, --profile                 Turn profiling on.
+>         -r, --statsref                Dump macro reference statistics.
+>         -w, --readchar                Allow read_char to return -1.
+>         --test [value]                test mode.
+>         --restrict                    restrictive mode.
+>         -?, --help                    Usage information.
+>         -V, --config                  Configuration details.
+>         -v, --version                 Version.
+>         --authors                     Developer details.
+>         --license                     License information.
+>         +nn                           Goto line nn.
+
+        Note!:
+        Options can be system/configuration dependant and shall be
+        disregarded if not applicable.
+
+    X11:
+
+        xgr accepts additional switches.
+
+    Startup Files:
+
+        When GRIEF starts up, it loads an initialization file, grief.cm.

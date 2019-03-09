@@ -1,4 +1,6 @@
 /*-
+ * SPDX-License-Identifier: BSD-2-Clause-FreeBSD
+ *
  * Copyright (c) 2008-2009 Ed Schouten <ed@FreeBSD.org>
  * All rights reserved.
  *
@@ -23,7 +25,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD: head/sys/teken/stress/teken_stress.c 226100 2011-10-07 12:42:03Z ed $
+ * $FreeBSD: head/sys/teken/stress/teken_stress.c 326272 2017-11-27 15:23:17Z pfg $
  */
 
 #include <sys/cdefs.h>

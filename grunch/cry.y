@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cry.y,v 1.31 2014/10/22 02:33:28 ayoung Exp $
+/* $Id: cry.y,v 1.32 2019/01/28 02:49:44 cvsuser Exp $
  * grunch/crunch grammer, extended c99
  *
  *
@@ -399,6 +399,7 @@ postfix_expression:
                 | postfix_expression O_DOT O_SYMBOL     /* 27/07/08, get_property */
                     { $$ = node(K_GETPROPERTY, $1, new_string($3)); }
                 | postfix_expression O_ARROW O_SYMBOL
+		    { crerror(RC_UNSUPPORTED_POINTER, "pointer dereferencing not supported"); }
                 | postfix_expression O_PLUS_PLUS
                     { $$ = node(O_POST_PLUS_PLUS, $1, NULL); }
                 | postfix_expression O_MINUS_MINUS

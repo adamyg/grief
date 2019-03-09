@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: zoom.mandoc,v 1.1 2014/11/27 18:19:45 ayoung Exp $
+.\" | $Id: zoom.mandoc,v 1.2 2018/10/01 21:19:58 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -52,18 +52,22 @@
 .Nm zoom
 .Nd make current window fill screen.
 .Sh DESCRIPTION
-The zoom macro is used to make the current window fill the entire screen.
-The current window layout is remembered so that on the next zoom
-command, the window layout is restored to what it was. The zoomed
-window can be split further. Attempting to unzoom a split window
-will cause a zoom to occur. An unzoom will only occur if there is
-one window on the screen.
+The \fIzoom\fR macro is used to make the current window fill the
+entire screen. The current window layout is remembered so that on the
+next zoom command, the window layout is restored to what it was. The
+zoomed window can be split further. Attempting to unzoom a split
+window will cause a zoom to occur. An unzoom will only occur if there
+is one window on the screen.
 .Pp
-You can use the zoom command as a quick way of deleting all other windows
-on the screen.
+You can use the zoom command as a quick way of deleting all other
+windows on the screen.
 .Sh MENU/KEYS
-This macro can be accessed from the GRIEF features menu or by typing
-\f(HB<Ctrl-A><Ctrl-A>\fR, or executing \f(HBzoom\fR at the command prompt.
+This macro can be accessed from the GRIEF features menu or by 
+typing \f(HB<Ctrl-A><Ctrl-A>\fR, or executing \f(HBzoom\fR at the
+command prompt.
+.Sh SEE ALSO
+.Xr feature
 .Sh BUGS
-The <Ctrl-A> key is used to avoid a conflict with the <Ctrl-Z>
-key on systems that support job control.
+The <Ctrl-A> key is used to avoid a conflict with the <Ctrl-Z> key on
+systems that support job control.
+

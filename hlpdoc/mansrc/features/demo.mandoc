@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: demo.mandoc,v 1.1 2014/11/27 18:19:37 ayoung Exp $
+.\" | $Id: demo.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -50,15 +50,19 @@
 .Os
 .Sh NAME
 .Nm demo
-.Nd perform a running demo of CRISP features.
+.Nd perform a running demo of GRIEF features.
 .Sh DESCRIPTION
-This macro is a demonstration macro. It runs through the facilities and
-features of GRIEF automatically. This macro is designed to show the
-user whats available without having to burrow through the documentation.
-Also can be used as a continuously running demo when the terminal is
-unattended.
+The \fIdemo\fR macro is a demonstration macro. It runs through the
+facilities and features of GRIEF automatically. This macro is
+designed to show the user whats available without having to burrow
+through the documentation. Also can be used as a continuously running
+demo when the terminal is unattended.
 .Pp
-The demo can be aborted by pressing the <Space> key whilst it is running.
+The demo can be aborted by pressing the <Space> key whilst it is
+running.
 .Sh MENU/KEYS
 This macro can be accessed from the GRIEF features menu or by typing
 \f(HBdemo\fR at the command prompt.
+.Sh SEE ALSO
+.Xr feature
+

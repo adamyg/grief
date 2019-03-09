@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: calc.mandoc,v 1.1 2014/11/27 18:19:36 ayoung Exp $
+.\" | $Id: calc.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -116,7 +116,8 @@ Pressing 'C' clears the calculator accumulator.
 The calculator is available from the features menu, or by typing \f(HBcalc\fR
 at the command prompt.
 .Sh SEE ALSO
-.Xr hpcalc (an RPN based calculator supporting floating point)
+.Xr feature ,
+.Xr hpcalc 
 .Sh BUGS
 This calculator does not currently support floating point.
 It would be nice to have a popup help window to make it easier to use.

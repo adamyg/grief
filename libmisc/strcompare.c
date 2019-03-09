@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strcompare_c,"$Id: strcompare.c,v 1.11 2015/02/19 00:17:13 ayoung Exp $")
+__CIDENT_RCSID(gr_strcompare_c,"$Id: strcompare.c,v 1.12 2017/01/29 04:33:31 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strcompare.c,v 1.11 2015/02/19 00:17:13 ayoung Exp $
+/* $Id: strcompare.c,v 1.12 2017/01/29 04:33:31 cvsuser Exp $
  * libstr - String compare utility functions.
  *
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2017, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

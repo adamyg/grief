@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.37 2015/02/21 22:47:27 ayoung Exp $")
+__CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.38 2015/07/08 21:08:14 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_string.c,v 1.37 2015/02/21 22:47:27 ayoung Exp $
+/* $Id: m_string.c,v 1.38 2015/07/08 21:08:14 cvsuser Exp $
  * String primitives.
  *
  *
@@ -23,6 +23,7 @@ __CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.37 2015/02/21 22:47:27 ayoung 
 #include <stdlib.h>
 #include <math.h>                               /* HUGE_VAL */
 #include <libstr.h>                             /* str_...()/sxprintf() */
+#include <edalt.h>
 
 #include "m_string.h"                           /* public interface */
 
@@ -1487,7 +1488,7 @@ isa(int (*isacmp)(int))         /* (string str|int character) */
     if (isa_integer(1)) {                       /* 27/04/06 */
         const int ch = get_xinteger(1, 0);
 
-        if (ch > 0 && ch < 255) {
+        if (ch > 0x00 && ch <= 0xff) {
             ret = isacmp(get_xinteger(1, 0));
         }
 
@@ -1544,6 +1545,75 @@ iscsym(int c)
     return ('_' == c || isalnum(c));
 }
 #endif
+
+
+/*  Function:           do_isgold
+ *      isgold primitive.
+ *
+ *  Parameters:
+ *      none
+ *
+ *  Returns:
+ *      nothing
+ *
+ *<<GRIEF>>
+    Macro: isgold - Alphanumeric character predicate.
+
+        int
+        isgold(string |int object, [int index])
+
+    Macro Description:
+        The 'isgold()' primitive determines whether the specified
+        object 'object' belongs to either the function, keypad or
+        special character-classes.
+
+        The specified object can be an integer (whose ASCII code
+        represents a single character), or a string, in which case
+        the first character of the string is tested.
+
+        The optional 'index' allows an alternative character within
+        the string to be tested, with the first character represented
+        by offset 'one'.
+
+    Macro Parameters:
+        object - Character or string object.
+
+        [index] - If a string, an optional character index within the
+            string, starting at offset one being the first character.
+            if the index denotes a character out-of-bounds, the
+            function returns 0.
+
+    Macro Returns:
+        The 'isgold()' primitive returns non-zero if 'object' is a
+        meta/gold key character; otherwise it returns 0.
+
+    Macro Portability:
+        A Grief extension.
+
+    Macro Example:
+
+>       if (isgold(read(1)))
+>           message("Next character is gold.");
+
+    Macro See Also:
+        ctype
+ */
+void
+do_isgold(void)                 /* int (string str|int character) */
+{
+    int ret = 0;
+
+    if (isa_integer(1)) {
+        const int ch = get_xinteger(1, 0);
+
+        if (ch > 0) {
+            if (ch & (RANGE_FN|RANGE_KEYPAD|RANGE_MISC|RANGE_MULTIKEY|
+                        RANGE_PRIVATE|RANGE_BUTTON|RANGE_MASK)) {
+                ret = 1;
+            }
+        }
+    }
+}
 
 
 /*  Function:           do_isalnum

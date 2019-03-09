@@ -1,16 +1,16 @@
 #ifndef GR_EDHANDLES_H_INCLUDED
 #define GR_EDHANDLES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edhandles_h,"$Id: edhandles.h,v 1.5 2015/02/19 00:16:55 ayoung Exp $")
+__CIDENT_RCSID(gr_edhandles_h,"$Id: edhandles.h,v 1.6 2018/10/04 01:27:59 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edhandles.h,v 1.5 2015/02/19 00:16:55 ayoung Exp $
+/* $Id: edhandles.h,v 1.6 2018/10/04 01:27:59 cvsuser Exp $
  * Internal handle base identifiers.
  *
  *
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

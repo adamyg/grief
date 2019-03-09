@@ -55,32 +55,34 @@ int	__sdidinit;
 
 #define NDYNAMIC 10				/* add ten more whenever necessary */
 
-//  #define std(flags, file) \
-//  	{0,0,0,flags,file,{0,0},0,__sF+file,__sclose,__sread,__sseek,__swrite, \
-//  	 {(unsigned char *)(__sFext+file), 0},NULL,0,{0,0,0},{0},{0,0},0,0}
-//  /*	 p r w flags file _bf z  cookie      close    read    seek    write
-//  	 ext */
+#if (0) /*notused*/
+#define std(flags, file) \
+	{0,0,0,flags,file,{0,0},0,__sF+file,__sclose,__sread,__sseek,__swrite, \
+	 {(unsigned char *)(__sFext+file), 0},NULL,0,{0,0,0},{0},{0,0},0,0}
+/*	 p r w flags file _bf z  cookie      close    read    seek    write
+	 ext */
 
 /* the usual - (stdin + stdout + stderr) */
-//  static BFILE usual[FOPEN_MAX - 3];
-//  static struct __sfileext usualext[FOPEN_MAX - 3];
-//  static struct glue uglue = { 0, FOPEN_MAX - 3, usual };
-//  static struct glue *lastglue = &uglue;
-//  _THREAD_PRIVATE_MUTEX(__sfp_mutex);
+static BFILE usual[FOPEN_MAX - 3];
+static struct __sfileext usualext[FOPEN_MAX - 3];
+static struct glue uglue = { 0, FOPEN_MAX - 3, usual };
+static struct glue *lastglue = &uglue;
+_THREAD_PRIVATE_MUTEX(__sfp_mutex);
 
-//  static struct __sfileext __sFext[3] = {
-//  	_FILEEXT_INITIALIZER,
-//  	_FILEEXT_INITIALIZER,
-//  	_FILEEXT_INITIALIZER,
-//  };
+static struct __sfileext __sFext[3] = {
+	_FILEEXT_INITIALIZER,
+	_FILEEXT_INITIALIZER,
+	_FILEEXT_INITIALIZER,
+};
 
-//  static FILE __sF[3] = {
-//  	std(__BSRD, STDIN_FILENO),		/* stdin  */
-//  	std(__BSWR, STDOUT_FILENO),		/* stdout */
-//  	std(__BSWR|__BSNBF, STDERR_FILENO)	/* stderr */
-//  };
+static FILE __sF[3] = {
+	std(__BSRD, STDIN_FILENO),		/* stdin  */
+	std(__BSWR, STDOUT_FILENO),		/* stdout */
+	std(__BSWR|__BSNBF, STDERR_FILENO)	/* stderr */
+};
 
-//  struct glue __sglue = { &uglue, 3, __sF };
+struct glue __sglue = { &uglue, 3, __sF };
+#endif
 
 static BFILE usual[BOPEN_MAX];
 static struct __sfileext usualext[BOPEN_MAX];

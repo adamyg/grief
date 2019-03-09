@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_strptime_c,"$Id: w32_strptime.c,v 1.2 2014/08/14 01:58:06 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_strptime_c,"$Id: w32_strptime.c,v 1.4 2018/10/12 00:23:31 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -261,7 +261,7 @@ static	const unsigned char *_find_string(const unsigned char *, int *, const cha
 //      No errors are defined.
 */
 
-char *
+LIBW32_API char *
 w32_strptime(const char *buf, const char *fmt, struct tm *tm)
 {
 	return(_strptime(buf, fmt, tm, 1));
@@ -339,43 +339,43 @@ literal:
 
 		case 'D':	/* The date as "%m/%d/%y". */
 			_LEGAL_ALT(0);
-			if (!(bp = _strptime(bp, "%m/%d/%y", tm, 0)))
+			if (!(bp = (unsigned char *)_strptime((const char *)bp, "%m/%d/%y", tm, 0)))
 				return (NULL);
 			break;
 
 		case 'F':	/* The date as "%Y-%m-%d". */
 			_LEGAL_ALT(0);
-			if (!(bp = _strptime(bp, "%Y-%m-%d", tm, 0)))
+			if (!(bp = (unsigned char *)_strptime((const char *)bp, "%Y-%m-%d", tm, 0)))
 				return (NULL);
 			continue;
 
 		case 'R':	/* The time as "%H:%M". */
 			_LEGAL_ALT(0);
-			if (!(bp = _strptime(bp, "%H:%M", tm, 0)))
+			if (!(bp = (unsigned char *)_strptime((const char *)bp, "%H:%M", tm, 0)))
 				return (NULL);
 			break;
 
 		case 'r':	/* The time as "%I:%M:%S %p". */
 			_LEGAL_ALT(0);
-			if (!(bp = _strptime(bp, "%I:%M:%S %p", tm, 0)))
+			if (!(bp = (unsigned char *)_strptime((const char *)bp, "%I:%M:%S %p", tm, 0)))
 				return (NULL);
 			break;
 
 		case 'T':	/* The time as "%H:%M:%S". */
 			_LEGAL_ALT(0);
-			if (!(bp = _strptime(bp, "%H:%M:%S", tm, 0)))
+			if (!(bp = (unsigned char *)_strptime((const char *)bp, "%H:%M:%S", tm, 0)))
 				return (NULL);
 			break;
 
 //		case 'X':	/* The time, using the locale's format. */
 //			_LEGAL_ALT(_ALT_E);
-//			if (!(bp = _strptime(bp, _ctloc(t_fmt), tm, 0)))
+//			if (!(bp = (unsigned char *)_strptime((const char *)bp, _ctloc(t_fmt), tm, 0)))
 //				return (NULL);
 //			break;
 
 //		case 'x':	/* The date, using the locale's format. */
 //			_LEGAL_ALT(_ALT_E);
-//			if (!(bp = _strptime(bp, _ctloc(d_fmt), tm, 0)))
+//			if (!(bp = (unsigned char *)_strptime((const char *)bp, _ctloc(d_fmt), tm, 0)))
 //				return (NULL);
 //			break;
 
@@ -598,7 +598,11 @@ literal:
 				bp += 3;
 			} else {
 				ep = _find_string(bp, &i,
+#if defined(_MSC_VER) && (_MSC_VER >= 1900)
+						 (const char * const *)_tzname,
+#else
 						 (const char * const *)tzname,
+#endif
 						  NULL, 2);
 				if (ep != NULL) {
 					tm->tm_isdst = i;

@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: mode.mandoc,v 1.1 2014/11/27 18:19:40 ayoung Exp $
+.\" | $Id: mode.mandoc,v 1.2 2018/10/01 21:19:58 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -54,7 +54,9 @@
 .Sh SYNOPSIS
 mode mode-name
 .Sh DESCRIPTION
-This macro provides a way to manually setting the current sytnax mode.
+\fI
+The \fImode\fR macro provides a way to manually setting the current
+sytnax mode.
 .Sh SEE ALSO
 .Xr program ,
 .Xr package ,

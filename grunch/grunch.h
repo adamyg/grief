@@ -1,11 +1,11 @@
 #ifndef GR_GRUNCH_H_INCLUDED
 #define GR_GRUNCH_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_grunch_h,"$Id: grunch.h,v 1.32 2014/10/29 21:27:49 ayoung Exp $")
+__CIDENT_RCSID(gr_grunch_h,"$Id: grunch.h,v 1.33 2018/10/20 01:05:45 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: grunch.h,v 1.32 2014/10/29 21:27:49 ayoung Exp $
+/* $Id: grunch.h,v 1.33 2018/10/20 01:05:45 cvsuser Exp $
  * grunch language compiler, structures etc
  *
  *
@@ -35,6 +35,36 @@ __CPRAGMA_ONCE
 #include "../gr/word.h"
 #include "../gr/keywd.h"
 #include "crmsg.h"
+
+/* y.tab.c support:
+//
+//  Macro: YYSTACK_USE_ALLOCA (default = 0)
+//      Macro used to control the use of alloca when the deterministic parser in C needs to extend its stacks.
+//      If defined to 0, the parser will use malloc to extend its stacks. If defined to 1, the parser will use alloca.
+//      Values other than 0 and 1 are reserved for future Bison extensions. If not defined, YYSTACK_USE_ALLOCA defaults to 0.
+//
+//      In the all-too-common case where your code may run on a host with a limited stack and with unreliable stack-overflow checking,
+//      you should set YYMAXDEPTH to a value that cannot possibly result in unchecked stack overflow on any of your target hosts when
+//      alloca is called. You can inspect the code that Bison generates in order to determine the proper numeric values.
+//      This will require some expertise in low-level implementation details.
+//
+//  Macro: YYINITDEPTH (default = 200)
+//      Macro for specifying the initial size of the parser stack. See Memory Management.
+//
+//  Macro: YYMAXDEPTH (default = 10000)
+//      Macro for specifying the maximum size of the parser stack. See Memory Management.
+//
+*/
+#ifdef  HAVE_STDLIB_H
+#define _STDLIB_H
+#endif
+#ifdef  HAVE_ALLOCA_H
+#define _ALLOCA_H
+#endif
+#ifdef  HAVE_STRING_H
+#define _STRING_H
+#endif
+
 
 enum node_types {
     /*0*/ node_keywd,
@@ -201,8 +231,7 @@ enum _Torg {
 /*
  *  Enumeration and YYSTYLE
  *
- *      MYYSTYPE *must* match the construct within cry.y, 
- *      yet shall is no longer be needed under bison 2.x
+ *      MYYSTYPE *must* match the construct within cry.y; yet shall is no longer be needed under bison 2.x
  */
 #include "crntypes.h"                           /* Node type */
 
@@ -615,3 +644,4 @@ extern const char *     x_compiled;
 #endif
 
 #endif /*GR_GRUNCH_H_INCLUDED*/
+

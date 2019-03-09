@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_strftime_c,"$Id: w32_strftime.c,v 1.8 2015/02/19 00:17:32 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_strftime_c,"$Id: w32_strftime.c,v 1.11 2018/10/01 00:00:04 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -12,7 +12,7 @@ __CIDENT_RCSID(gr_w32_strftime_c,"$Id: w32_strftime.c,v 1.8 2015/02/19 00:17:32 
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -64,28 +64,28 @@ typedef struct {
 
 static const _TimeLocale _DefaultTimeLocale = {
     {                       // abday
-        "Sun","Mon","Tue","Wed","Thu","Fri","Sat",
+	"Sun","Mon","Tue","Wed","Thu","Fri","Sat",
     },
-    {                       // day
-        "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday",
-        "Friday", "Saturday"
+    {
+	"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday",
+	"Friday", "Saturday"
     },
-    {                       // abmon
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    {
+	"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+	"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     },
-    {                       // mon
-        "January", "February", "March", "April", "May", "June", "July",
-        "August", "September", "October", "November", "December"
+    {
+	"January", "February", "March", "April", "May", "June", "July",
+	"August", "September", "October", "November", "December"
     },
-    {                       // am_pm
-        "AM", "PM"
+    {
+	"AM", "PM"
     },
-    "%a %b %d %H:%M:%S %Y", // d_t_fmt
-    "%m/%d/%y",             // d_fmt
-    "%H:%M:%S",             // t_fmt
-    "%I:%M:%S %p"           // t_fmt_ampm
-    };
+    "%a %b %d %H:%M:%S %Y",
+    "%m/%d/%y",
+    "%H:%M:%S",
+    "%I:%M:%S %p"
+};
 
 static const _TimeLocale *  _CurrentTimeLocale = &_DefaultTimeLocale;
 
@@ -519,3 +519,6 @@ _add (const char *str)
             return(1);
     }
 }
+
+/*end*/
+

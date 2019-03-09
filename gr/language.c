@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_language_c,"$Id: language.c,v 1.44 2015/02/21 22:46:35 ayoung Exp $")
+__CIDENT_RCSID(gr_language_c,"$Id: language.c,v 1.45 2018/09/29 02:25:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: language.c,v 1.44 2015/02/21 22:46:35 ayoung Exp $
+/* $Id: language.c,v 1.45 2018/09/29 02:25:20 cvsuser Exp $
  * Module loader and inline compiler for lisp source.
  *
  *
@@ -1390,4 +1390,3 @@ gr_loadobject(struct fp *fp, void (*execute)(const LIST *lp, int size))
     return 0;
 }
 /*end*/
-

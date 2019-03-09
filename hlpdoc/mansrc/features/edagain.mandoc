@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: edagain.mandoc,v 1.1 2014/11/27 18:19:37 ayoung Exp $
+.\" | $Id: edagain.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -52,11 +52,11 @@
 .Nm edagain
 .Nd Edit again, reread new copy of file from disk.
 .Sh DESCRIPTION
-This option is used to reread a file into the current buffer. This
-option is useful when you are looking at a file which is currently being
-written to, e.g. a log file or a GRIEF debug trace. Rather than having to
-delete the current buffer and re-edit the file, this option does it
-automatically for you.
+The \fIedagain\fR macro is used to reread a file into the current
+buffer. This option is useful when you are looking at a file which is
+currently being written to, e.g. a log file or a GRIEF debug trace.
+Rather than having to delete the current buffer and re-edit the file, 
+this option does it automatically for you.
 .Pp
 If the current buffer has been modified, then you are prompted to see
 if you are sure that you want to lose your edits.
@@ -64,3 +64,7 @@ if you are sure that you want to lose your edits.
 This command is available by typing \f(HB<Ctrl-A><Ctrl-E>\fR or
 from the features menu, or from the \f(HB<Ctrl-A>\fR popup (displayed
 if you take more than .5 sec after hitting <Ctrl-A>).
+.Sh SEE ALSO
+.Xr feature
+
+

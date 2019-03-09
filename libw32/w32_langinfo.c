@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_langinfo_c,"$Id: w32_langinfo.c,v 1.6 2015/02/19 00:17:30 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_langinfo_c,"$Id: w32_langinfo.c,v 1.9 2018/10/11 01:46:32 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 langinfo() implementation
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -76,7 +76,7 @@ __CIDENT_RCSID(gr_w32_langinfo_c,"$Id: w32_langinfo.c,v 1.6 2015/02/19 00:17:30 
 //  ERRORS
 //      No errors are defined.
 */
-const char *
+LIBW32_API const char *
 nl_langinfo(nl_item item)
 {
     switch (item) {
@@ -87,3 +87,4 @@ nl_langinfo(nl_item item)
 }
 
 /*end*/
+

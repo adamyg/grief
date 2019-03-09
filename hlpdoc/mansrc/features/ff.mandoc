@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: ff.mandoc,v 1.1 2014/11/27 18:19:37 ayoung Exp $
+.\" | $Id: ff.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -63,6 +63,7 @@ hierarchy and will not fail due to path length limitations (unless
 a path operand specified by the application exceeds PATH_MAX
 requirements).
 .Sh SEE ALSO
+.Xr feature ,
 .Xr grep ,
 .Xr routines ,
 .Xr ts ,

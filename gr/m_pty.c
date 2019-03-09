@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_pty_c,"$Id: m_pty.c,v 1.21 2014/10/22 02:33:06 ayoung Exp $")
+__CIDENT_RCSID(gr_m_pty_c,"$Id: m_pty.c,v 1.22 2019/01/26 22:27:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_pty.c,v 1.21 2014/10/22 02:33:06 ayoung Exp $
+/* $Id: m_pty.c,v 1.22 2019/01/26 22:27:08 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -346,7 +346,7 @@ inq_connection(void)            /* int (int cid, int &flags, int &pid) */
         none
 
     Macro Returns:
-        nothing
+        Returns 1 on success otherwise 0.
 
     Macro Portability:
         n/a
@@ -358,13 +358,15 @@ void
 do_disconnect(void)             /* int () */
 {
     DISPLAY_t *dp = (curbp ? curbp->b_display : NULL);
+    int ret = 0;
 
     ED_TRACE(("discount()\n"))
     if (dp) {
         pty_cleanup(curbp);
         pty_poll();
+        ret = 1;
     }
-    acc_assign_int(0);
+    acc_assign_int(ret);
 }
 
 

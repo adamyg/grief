@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_time_c,"$Id: w32_time.c,v 1.14 2015/02/19 00:17:33 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_time_c,"$Id: w32_time.c,v 1.17 2018/10/01 00:00:04 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 time system calls
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -35,6 +35,7 @@ __CIDENT_RCSID(gr_w32_time_c,"$Id: w32_time.c,v 1.14 2015/02/19 00:17:33 ayoung 
  * ==extra==
  */
 
+#include <sys/cdefs.h>
 #include "win32_internal.h"
 #include <win32_time.h>
 #if defined(HAVE_SYS_UTIME_H) ||\
@@ -99,6 +100,13 @@ __CIDENT_RCSID(gr_w32_time_c,"$Id: w32_time.c,v 1.14 2015/02/19 00:17:33 ayoung 
 //
 //      No errors are defined.
 */
+unsigned int
+sleep (unsigned int secs)
+{
+    Sleep((DWORD)secs * 1000);
+    return (0);
+}
+
 unsigned int
 w32_sleep (unsigned int secs)
 {
@@ -252,4 +260,6 @@ w32_utime(const char *path, const struct utimbuf *times)
     return _utime(path, (struct _utimbuf *)times);
 #endif
 }
+
 /*end*/
+

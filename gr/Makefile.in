@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.73 2015/02/24 23:10:08 cvsuser Exp $
+# $Id: Makefile.in,v 1.76 2018/10/11 11:28:23 cvsuser Exp $
 # GRIEF editor makefile.
 #
 #
-# Copyright (c) 1998 - 2015, Adam Young.
+# Copyright (c) 1998 - 2018, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -55,10 +55,10 @@ ifeq ("gcc","@CC@")
 CCPROFILE=mingw.profile
 endif
 CCDEPEND=	@$(ROOT)/bin/makedepend \
-			-MM -MC $(ROOT)/win32/$(CCPROFILE) -MG -MP \
+			-MM -MC $(ROOT)/win32/$(CCPROFILE) -MG -MP -D__MAKEDEPEND__ \
 				-f$(D_OBJDEP)/$(basename $(<F)).Po -MT$@ $(CDEPFLAGS) $<
 CXXDEPEND=	@$(ROOT)/bin/makedepend \
-			-MM -MC $(ROOT)/win32/$(CCPROFILE) -MG -MP -D__cplusplus \
+			-MM -MC $(ROOT)/win32/$(CCPROFILE) -MG -MP -D__MAKEDEPEND__ -D__cplusplus \
 				-f$(D_OBJDEP)/$(basename $(<F)).Po -MT$@ $(CDEPFLAGS) $<
 endif
 
@@ -129,7 +129,7 @@ CINCLUDE=	-I$(D_INC) @CINCLUDE@
 ifeq ("mingw32","@build_os@")
 CINCLUDE+=	-I../libw32
 endif
-CPPFLAGS=	@DEFS@ @LIBCURL_CPPFLAGS@
+CPPFLAGS=	@DEFS@ @LIBCURL_CPPFLAGS@ -DLIBTRE_DLL
 ifdef PURIFY
 CPPFLAGS+=	-DUSING_PURIFY
 endif

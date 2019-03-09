@@ -1,15 +1,15 @@
 #ifndef GR_EDASSERT_H_INCLUDED
 #define GR_EDASSERT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edassert_h,"$Id: edassert.h,v 1.12 2015/02/19 00:16:53 ayoung Exp $")
+__CIDENT_RCSID(gr_edassert_h,"$Id: edassert.h,v 1.13 2018/10/04 01:27:59 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edassert.h,v 1.12 2015/02/19 00:16:53 ayoung Exp $
+/* $Id: edassert.h,v 1.13 2018/10/04 01:27:59 cvsuser Exp $
  * Custom assert interface
  *
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

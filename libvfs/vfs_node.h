@@ -1,15 +1,15 @@
 #ifndef GR_VFS_NODE_H_INCLUDED
 #define GR_VFS_NODE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_node_h,"$Id: vfs_node.h,v 1.7 2015/02/19 00:17:23 ayoung Exp $")
+__CIDENT_RCSID(gr_vfs_node_h,"$Id: vfs_node.h,v 1.9 2018/10/01 22:16:28 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_node.h,v 1.7 2015/02/19 00:17:23 ayoung Exp $
+/* $Id: vfs_node.h,v 1.9 2018/10/01 22:16:28 cvsuser Exp $
  * Virtual File System Interface -- node definitions.
  *
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

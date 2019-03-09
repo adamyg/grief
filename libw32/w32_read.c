@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_read_c,"$Id: w32_read.c,v 1.8 2015/02/19 00:17:30 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_read_c,"$Id: w32_read.c,v 1.13 2018/10/12 00:24:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 read() implementation
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -43,6 +43,7 @@ __CIDENT_RCSID(gr_w32_read_c,"$Id: w32_read.c,v 1.8 2015/02/19 00:17:30 ayoung E
 #include "win32_misc.h"
 #include <unistd.h>
 
+#pragma comment(lib, "Ws2_32.lib")
 
 /*
 //  NAME
@@ -286,29 +287,30 @@ __CIDENT_RCSID(gr_w32_read_c,"$Id: w32_read.c,v 1.8 2015/02/19 00:17:30 ayoung E
 //      [ESPIPE]
 //          fildes is associated with a pipe or FIFO. [Option End]
 */
-int
-w32_read(int fildes, void *buf, unsigned int nbyte)
+LIBW32_API int
+w32_read(int fildes, void *buf, size_t nbyte)
 {
-    HANDLE handle;
+    SOCKET s = -1;
     int ret;
 
     if (fildes < 0) {
         errno = EBADF;
         ret = -1;
-    } else if (fildes >= WIN32_FILDES_MAX ||
-            (handle = (HANDLE) _get_osfhandle(fildes)) == INVALID_HANDLE_VALUE) {
-        if ((ret = recvfrom((SOCKET)fildes, buf, nbyte, 0, NULL, 0)) == SOCKET_ERROR) {
-            w32_errno_net();
+
+    } else if (w32_issockfd(fildes, &s)) {
+        if ((ret = recvfrom(s, buf, (int)nbyte, 0, NULL, 0)) == SOCKET_ERROR) {
+            w32_neterrno_set();
             ret = -1;
         }
+
     } else {
-        ret = _read(fildes, buf, nbyte);
+        ret = _read(fildes, buf, (int)nbyte);
     }
     return ret;
 }
 
 
-ssize_t
+LIBW32_API ssize_t
 pread(int fildes, void *buf, size_t nbyte, off_t offset)
 {
 #if defined(DO_NONBINARY)
@@ -324,8 +326,8 @@ pread(int fildes, void *buf, size_t nbyte, off_t offset)
     if (fildes < 0) {
         errno = EBADF;
         ret = -1;
-    } else if (fildes >= WIN32_FILDES_MAX ||
-            (handle = (HANDLE) _get_osfhandle(fildes)) == INVALID_HANDLE_VALUE) {
+    } else if (fildes >= WIN32_FILDES_MAX ||    // socket
+            (handle = (HANDLE) _get_osfhandle(fildes)) != INVALID_HANDLE_VALUE) {
         errno = EBADF;
         ret = -1;
     } else {
@@ -341,7 +343,7 @@ pread(int fildes, void *buf, size_t nbyte, off_t offset)
             }
         }
 
-        if (! ReadFile(handle, buf, nbyte, &nread, NULL)) {
+        if (! ReadFile(handle, buf, (DWORD)nbyte, &nread, NULL)) {
             ret = w32_errno_set();
         } else {
             ret = (ssize_t)nread;
@@ -350,3 +352,6 @@ pread(int fildes, void *buf, size_t nbyte, off_t offset)
     return ret;
 #endif
 }
+
+/*end*/
+

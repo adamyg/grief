@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.6 2015/02/22 22:14:03 ayoung Exp $
+# $Id: Makefile.in,v 1.7 2018/11/19 03:05:27 cvsuser Exp $
 # makedepend makefile
 #
 #
@@ -58,7 +58,7 @@ D_LIB=		$(ROOT)/lib
 
 MKDEPENDUTIL=	$(D_BIN)/makedepend$(E)
 
-MKDEPENDSRC=		./makedepend-1.0.4
+MKDEPENDSRC=		./makedepend-1.0.5
 VPATH=		$(MKDEPENDSRC)
 
 UTILOBJS=\

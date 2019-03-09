@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_gethostname_c,"$Id: w32_gethostname.c,v 1.7 2015/02/19 00:17:28 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_gethostname_c,"$Id: w32_gethostname.c,v 1.10 2018/10/12 00:24:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 gethostname
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -66,13 +66,13 @@ __CIDENT_RCSID(gr_w32_gethostname_c,"$Id: w32_gethostname.c,v 1.7 2015/02/19 00:
 //
 //      The following sections are informative.
 */
-int
+LIBW32_API int
 w32_gethostname(char *name, size_t namelen)
 {
     const char *host;
 
 #undef gethostname
-    if (0 == gethostname(name, namelen)) {
+    if (0 == gethostname(name, (int)namelen)) {
         return 0;
     }
 
@@ -89,3 +89,6 @@ w32_gethostname(char *name, size_t namelen)
     strncpy(name, (const char *)host, namelen);
     return 0;
 }
+
+/*end*/
+

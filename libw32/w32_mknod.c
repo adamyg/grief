@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_mknod_c,"$Id: w32_mknod.c,v 1.8 2015/02/19 00:17:30 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_mknod_c,"$Id: w32_mknod.c,v 1.12 2018/10/12 00:24:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 mknod() system calls.
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -40,6 +40,8 @@ __CIDENT_RCSID(gr_w32_mknod_c,"$Id: w32_mknod.c,v 1.8 2015/02/19 00:17:30 ayoung
 #endif
 
 #include "win32_internal.h"
+
+#include <sys/cdefs.h>
 #include <unistd.h>
 
 /*
@@ -186,7 +188,7 @@ __CIDENT_RCSID(gr_w32_mknod_c,"$Id: w32_mknod.c,v 1.8 2015/02/19 00:17:30 ayoung
 //          Pathname resolution of a symbolic link produced an intermediate result whose
 //          length exceeds {PATH_MAX}.
 */
-int
+LIBW32_API int
 mknod(const char *path, int mode, int dev)
 {
     __CUNUSED(path)
@@ -195,4 +197,6 @@ mknod(const char *path, int mode, int dev)
     errno = EIO;
     return -1;
 }
+
 /*end*/
+

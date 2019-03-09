@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_hunspell_c,"$Id: w32_hunspell.c,v 1.12 2015/02/19 00:17:29 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_hunspell_c,"$Id: w32_hunspell.c,v 1.15 2018/10/11 01:46:32 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 hunspell dynamic loader.
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -44,6 +44,10 @@ __CIDENT_RCSID(gr_w32_hunspell_c,"$Id: w32_hunspell.c,v 1.12 2015/02/19 00:17:29
 #include "win32_include.h"
 #include "win32_hunspell.h"
 
+#if defined(LIBW32_STATIC)
+#define DO_TRACE_LOG                            // trace_log()
+#endif
+
 #if defined(HAVE_LIBHUNSPELL_DLL)
 #define DLLLINKAGE      __cdecl
 #else
@@ -71,9 +75,11 @@ static free_listfn_t    x_free_list;
 static addfn_t          x_add;
 static add_with_affixfn_t x_add_with_affix;
 
+static void             strxcopy(char *dest, const char *src, int len);
 static FARPROC          hunspell_resolve(const char *name);
 
-int
+
+LIBW32_API int
 w32_hunspell_connect(int verbose)
 {
    static const char *hunspellnames[] = {
@@ -100,9 +106,11 @@ w32_hunspell_connect(int verbose)
     }
 
     for (i = 0; NULL != (name = hunspellnames[i]); ++i) {
+#if defined(DO_TRACE_LOG)
         trace_log("hunspell_dll(%s)\n", name);
+#endif
         if (end) {
-            strxcpy(end, name, sizeof(fullname) - (end - fullname));
+            strxcopy(end, name, sizeof(fullname) - (end - fullname));
             if (NULL != (x_hunspelldll = LoadLibraryA(fullname))) {
                 break;                          // relative to task
             }
@@ -116,7 +124,9 @@ w32_hunspell_connect(int verbose)
         const char *env;
 
         if (NULL != (env = getenv("HUNSPELLDLL"))) {
+#if defined(DO_TRACE_LOG)
             trace_log("hunspell_dll(%s)\n", env);
+#endif
             x_hunspelldll = LoadLibraryA(env);
         }
     }
@@ -148,6 +158,7 @@ w32_hunspell_connect(int verbose)
     x_add              = (addfn_t)              hunspell_resolve("add");
     x_add_with_affix   = (add_with_affixfn_t)   hunspell_resolve("add_with_affix");
 
+#if defined(DO_TRACE_LOG)
     trace_log("hunspell Functions (%p, %s)\n", x_hunspelldll, fullname);
     trace_log("\thunspell_initialise:       %p\n", x_initialise);
     trace_log("\thunspell_initialise_key:   %p\n", x_initialise_key);
@@ -158,6 +169,7 @@ w32_hunspell_connect(int verbose)
     trace_log("\thunspell_free_list:        %p\n", x_free_list);
     trace_log("\thunspell_add:              %p\n", x_add);
     trace_log("\thunspell_add_with_affix:   %p\n", x_add_with_affix);
+#endif
 
     if (NULL == x_initialise ||
             NULL == x_initialise_key ||
@@ -182,7 +194,17 @@ w32_hunspell_connect(int verbose)
 }
 
 
-void
+static void
+strxcopy(char *dest, const char *src, int len)
+{
+    (void) strncpy(dest, src, len);
+    if (len > 0) {
+        dest[len - 1] = '\0';
+    }
+}
+
+
+LIBW32_API void
 w32_hunspell_shutdown(void)
 {
     x_initialise = NULL;
@@ -252,7 +274,7 @@ w32_hunspell_initialise_key(const char *aff, const char *dic, const char *key)
 }
 
 
-void
+LIBW32_API void
 w32_hunspell_uninitialise(void *handle)
 {
     if (x_uninitialise) {
@@ -261,7 +283,7 @@ w32_hunspell_uninitialise(void *handle)
 }
 
 
-const char *
+LIBW32_API const char *
 w32_hunspell_get_dic_encoding(void *handle)
 {
     if (x_get_dic_encoding) {
@@ -271,7 +293,7 @@ w32_hunspell_get_dic_encoding(void *handle)
 }
 
 
-int
+LIBW32_API int
 w32_hunspell_spell(void *handle, const char *word)
 {
     if (x_spell) {
@@ -281,7 +303,7 @@ w32_hunspell_spell(void *handle, const char *word)
 }
 
 
-int
+LIBW32_API int
 w32_hunspell_suggest(void *handle, char ***sugglist, const char *word)
 {
     if (x_suggest) {
@@ -291,7 +313,7 @@ w32_hunspell_suggest(void *handle, char ***sugglist, const char *word)
 }
 
 
-void
+LIBW32_API void
 w32_hunspell_free_list(void *handle, char ***sugglist, int suggcnt)
 {
     if (x_free_list) {
@@ -300,7 +322,7 @@ w32_hunspell_free_list(void *handle, char ***sugglist, int suggcnt)
 }
 
 
-int
+LIBW32_API int
 w32_hunspell_add(void *handle, const char *word)
 {
     if (x_add) {
@@ -310,7 +332,7 @@ w32_hunspell_add(void *handle, const char *word)
 }
 
 
-int
+LIBW32_API int
 w32_hunspell_add_with_affix(void *handle, const char *word, const char *affix)
 {
     if (x_add_with_affix) {

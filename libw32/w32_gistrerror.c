@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_gistrerror_c,"$Id: w32_gistrerror.c,v 1.7 2015/02/19 00:17:28 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_gistrerror_c,"$Id: w32_gistrerror.c,v 1.10 2018/10/12 00:24:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 gi_strerror()
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -77,14 +77,17 @@ __CIDENT_RCSID(gr_w32_gistrerror_c,"$Id: w32_gistrerror.c,v 1.7 2015/02/19 00:17
 //      No errors are defined.
 */
 
-const char *
 #if (defined(_MSC_VER) && (_MSC_VER < 1400)) || \
 	defined(__WATCOMC__)
+LIBW32_API const char * 
 gai_strerror(int ecode)
-#else
-w32_gai_strerror(int ecode)
+{
+    return w32_gai_strerror(ecode);
+}
+#endif //NEED_GAI_STRERROR
 
-#endif
+const char *
+w32_gai_strerror(int ecode)
 {
     switch (ecode) {
 #if defined(EAI_ADDRFAMILY)
@@ -98,7 +101,7 @@ w32_gai_strerror(int ecode)
 #if defined(EAI_NOSECURENAME)
     case EAI_NOSECURENAME:  return "no such host is known securely";
 #endif
-    case EAI_NONAME:        return "host nor service provided, or not known";
+    case EAI_NONAME:        return "name does not resolve for the supplied parameters or host nor service provided";
     case EAI_SERVICE:       return "service not supported for socket type";
     case EAI_SOCKTYPE:      return "socket type not supported";
 #if defined(EAI_IPSECPOLICY)
@@ -117,5 +120,4 @@ w32_gai_strerror(int ecode)
     return "unknown error, gai_strerror";
 }
 /*end*/
-
 

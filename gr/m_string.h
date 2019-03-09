@@ -1,11 +1,11 @@
 #ifndef GR_M_STRING_H_INCLUDED
 #define GR_M_STRING_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_string_h,"$Id: m_string.h,v 1.13 2014/10/22 02:33:08 ayoung Exp $")
+__CIDENT_RCSID(gr_m_string_h,"$Id: m_string.h,v 1.14 2015/07/08 21:08:15 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_string.h,v 1.13 2014/10/22 02:33:08 ayoung Exp $
+/* $Id: m_string.h,v 1.14 2015/07/08 21:08:15 cvsuser Exp $
  * String primitives.
  *
  *
@@ -30,6 +30,7 @@ extern void                 do_characterat(void);
 extern void                 do_compress(void);
 extern void                 do_firstof(void);
 extern void                 do_index(void);
+extern void                 do_isgold(void);
 extern void                 do_isalnum(void);
 extern void                 do_isalpha(void);
 extern void                 do_isascii(void);

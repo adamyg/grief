@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: modeline.mandoc,v 1.1 2014/11/27 18:19:41 ayoung Exp $
+.\" | $Id: modeline.mandoc,v 1.2 2018/10/01 21:19:58 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -118,14 +118,13 @@ Value should be either 'yes' or 'no'.
 .It
 "tab-width:"
 .Pp
-(Display tab setting). Normally a tab character witin a
-buffer is displayed as whitespace which extends to the next
-display tab stop position, and the display tab stops come
-at an interval equal to eight spaces. 'tab-width' controls
-the tab width, being a value between 1 and 999 inclusive.
-Note, that how the tab character is displayed in the buffer
-has nothing to do with the definition of the 'indent-width'
-setting.
+(Display tab setting). Normally a tab character witin a buffer is
+displayed as whitespace which extends to the next display tab stop
+position, and the display tab stops come at an interval equal to
+eight spaces. 'tab-width' controls the tab width, being a value
+between 1 and 999 inclusive. Note, that how the tab character is
+displayed in the buffer has nothing to do with the definition of the
+'indent-width' setting.
 .It
 "indent-tabs-mode:"
 .Pp
@@ -180,6 +179,7 @@ them from the other lines of the declaration.  The usual reason for
 using prefix/suffix markers, is to embed the declaration into a
 comment construct as supported by language file of type.
 .Sh SEE ALSO
+.Xr feature ,
 .Xr program ,
 .Xr package ,
 .Xr mode

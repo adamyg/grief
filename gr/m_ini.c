@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_ini_c,"$Id: m_ini.c,v 1.5 2014/11/16 17:28:40 ayoung Exp $")
+__CIDENT_RCSID(gr_m_ini_c,"$Id: m_ini.c,v 1.6 2019/01/28 00:24:41 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_ini.c,v 1.5 2014/11/16 17:28:40 ayoung Exp $
+/* $Id: m_ini.c,v 1.6 2019/01/28 00:24:41 cvsuser Exp $
  * INI interface.
  *
  *
@@ -77,7 +77,7 @@ void
 do_iniopen(void)                /* int ([string filename = NULL], [int flags = IFILE_STANDARD]) */
 {
     const char *filename = get_xstr(1);
-    const int flags = get_xinteger(2, IFILE_STANDARD);
+    int flags = get_xinteger(2, IFILE_STANDARD);
     IIFILE *iifile;
     int ret = -1;
 
@@ -85,6 +85,9 @@ do_iniopen(void)                /* int ([string filename = NULL], [int flags = I
         x_inis = stype_alloc();
         x_iniseq = GRBASE_INI;
     }
+
+    if (flags & IFILE_STANDARDEOL) flags |= IFILE_STANDARD;
+    if (flags & IFILE_EXTENDEDEOL) flags |= IFILE_EXTENDED;
 
     if (NULL != (iifile = chk_calloc(sizeof(IIFILE), 1))) {
         if (NULL != (iifile->file = IniOpen(filename, flags|IFILE_CREATE))) {

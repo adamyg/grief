@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mac1_c,"$Id: mac1.c,v 1.68 2015/02/11 23:25:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_mac1_c,"$Id: mac1.c,v 1.69 2018/11/18 00:20:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mac1.c,v 1.68 2015/02/11 23:25:13 cvsuser Exp $
+/* $Id: mac1.c,v 1.69 2018/11/18 00:20:40 cvsuser Exp $
  * Basic primitives.
  *
  *
@@ -1925,7 +1925,7 @@ do_insertf(void)                /* int (string fmt, ...) */
         error.
 
     Macro Portability:
-        The CrispEdit version has a void declaration and returns
+        The CRiSPEdit(tm) version has a void declaration and returns
         nothing.
 
     Macro See Also:

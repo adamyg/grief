@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_getopt_c,"$Id: w32_getopt.c,v 1.4 2014/10/22 02:34:04 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_getopt_c,"$Id: w32_getopt.c,v 1.6 2018/10/12 00:24:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -31,17 +31,19 @@ __CIDENT_RCSID(gr_w32_getopt_c,"$Id: w32_getopt.c,v 1.4 2014/10/22 02:34:04 ayou
  * SUCH DAMAGE.
  */
 
+#include <sys/cdefs.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-int	opterr = 1,				/* if error message should be printed */
-	optind = 1,				/* index into parent argv vector */
-	optopt,					/* character checked for validity */
-	optreset;				/* reset getopt */
-char	*optarg;				/* argument associated with option */
+int     opterr = 1,                             /* if error message should be printed */
+        optind = 1,                             /* index into parent argv vector */
+        optopt = '?',                           /* character checked for validity */
+        optreset = 0;                           /* reset getopt */
+char *  optarg = NULL;                          /* argument associated with option */
 
-const char *__progname = "";
+static const char *__progname = "";             /* derived progname */
 
 #define	BADCH	(int)'?'
 #define	BADARG	(int)':'
@@ -51,7 +53,7 @@ const char *__progname = "";
  *  getopt --
  *      Parse argc/argv argument vector.
  */
-int
+LIBW32_API int
 getopt(int nargc, char * const *nargv, const char *ostr)
 {
 	static char *place = EMSG;		/* option letter processing */
@@ -117,3 +119,6 @@ getopt(int nargc, char * const *nargv, const char *ostr)
 	}
 	return (optopt);			/* dump back option letter */
 }
+
+/*end*/
+

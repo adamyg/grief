@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_fsync_c,"$Id: w32_fsync.c,v 1.8 2015/02/19 00:17:28 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_fsync_c,"$Id: w32_fsync.c,v 1.11 2018/10/12 00:24:39 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 fsync() system calls
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -91,7 +91,7 @@ __CIDENT_RCSID(gr_w32_fsync_c,"$Id: w32_fsync.c,v 1.8 2015/02/19 00:17:28 ayoung
 //      In the event that any of the queued I/O operations fail, fsync() shall return the
 //      error conditions defined for read() and write().
 */
-int
+LIBW32_API int
 w32_fsync(int fd)
 {
     HANDLE handle;
@@ -111,3 +111,6 @@ w32_fsync(int fd)
     }
     return ret;
 }
+
+/*end*/
+

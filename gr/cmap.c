@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmap_c,"$Id: cmap.c,v 1.29 2015/02/11 23:25:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmap_c,"$Id: cmap.c,v 1.30 2018/11/18 00:20:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmap.c,v 1.29 2015/02/11 23:25:13 cvsuser Exp $
+/* $Id: cmap.c,v 1.30 2018/11/18 00:20:40 cvsuser Exp $
  * Character map management/primitives.
  *
  *
@@ -613,7 +613,7 @@ cmapchr_int(cmapchr_t *mc, unsigned val)
 
         By default, all specials are simple spaces as such invisible.
 
-        Note, for CrispEdit compatibility the 'char' list may
+        Note, for CRiSPEdit compatibility the 'char' list may
         reference 257 characters with the 257th entry being
         equivalent to CMAP_EOL.
 

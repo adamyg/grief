@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_scan_c,"$Id: m_scan.c,v 1.23 2015/02/11 23:25:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_scan_c,"$Id: m_scan.c,v 1.24 2018/10/11 22:37:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_scan.c,v 1.23 2015/02/11 23:25:13 cvsuser Exp $
+/* $Id: m_scan.c,v 1.24 2018/10/11 22:37:23 cvsuser Exp $
  * scanf implementation.
  *
  *
@@ -716,39 +716,52 @@ bad_match:;
 }
 
 
+/*
+ *  character class interface adapters, resolve calling convention issues.
+ */
+
 static int
 is_ascii(int c)
 {
 #if defined(HAVE___ISASCII)
-    return __isascii(c);
+    return __isascii((unsigned char)c);
 #elif defined(HAVE_ISASCII)
-    return isascii(c);
+    return isascii((unsigned char)c);
 #else
     return (c >= 0 && c <= 0x7f);
 #endif
 }
 
+static int is_alnum(int ch)     { return isalnum((unsigned char)ch);  }
+static int is_alpha(int ch)     { return isalpha((unsigned char)ch);  }
 
-static int
-is_blank(int ch)
+static int is_blank(int c)      
 {
-    return (' ' == ch || '\t' == ch);
+#if defined(HAVE___ISBLANK)
+    return __isblank((unsigned char)c));
+#elif defined(HAVE_ISBLANK)
+    return isblank((unsigned char)c);
+#else
+    return (' ' == c || '\t' == c);
+#endif
 }
 
+static int is_cntrl(int ch)     { return iscntrl((unsigned char)ch);  } 
+static int is_csym(int ch)      { return ('_' == ch || isalnum((unsigned char)ch)); }
+static int is_digit(int ch)     { return isdigit((unsigned char)ch);  } 
+static int is_graph(int ch)     { return isgraph((unsigned char)ch);  } 
+static int is_lower(int ch)     { return islower((unsigned char)ch);  } 
+static int is_print(int ch)     { return isprint((unsigned char)ch);  } 
+static int is_punct(int ch)     { return ispunct((unsigned char)ch);  } 
+static int is_space(int ch)     { return isspace((unsigned char)ch);  } 
+static int is_upper(int ch)     { return isupper((unsigned char)ch);  } 
+static int is_word(int ch)      { return ('_' == ch || '-' == ch || isalnum((unsigned char)ch)); }
+static int is_xdigit(int ch)    { return isxdigit((unsigned char)ch); }
 
-static int
-is_word(int ch)
-{
-    return ('_' == ch || '-' == ch || isalnum((unsigned char)ch));
-}
 
-
-static int
-is_csym(int ch)
-{
-    return ('_' == ch || isalnum((unsigned char)ch));
-}
-
+/*
+ *  character class implementation.
+ */
 
 static const unsigned char *
 setcook(const unsigned char *fmt, unsigned char *tab)
@@ -759,20 +772,20 @@ setcook(const unsigned char *fmt, unsigned char *tab)
         int               (*isa)(int);
     } character_classes[] = {
         { "ascii",  5,  is_ascii },             /* ASCII character. */
-        { "alnum",  5,  isalnum  },             /* An alphanumeric (letter or digit). */
-        { "alpha",  5,  isalpha  },             /* A letter. */
+        { "alnum",  5,  is_alnum },             /* An alphanumeric (letter or digit). */
+        { "alpha",  5,  is_alpha },             /* A letter. */
         { "blank",  5,  is_blank },             /* A space or tab character. */
-        { "cntrl",  5,  iscntrl  },             /* A control character. */
+        { "cntrl",  5,  is_cntrl },             /* A control character. */
         { "csym",   4,  is_csym  },             /* A language symbol. */
-        { "digit",  5,  isdigit  },             /* A decimal digit. */
-        { "graph",  5,  isgraph  },             /* A character with a visible representation. */
-        { "lower",  5,  islower  },             /* A lower-case letter. */
-        { "print",  5,  isprint  },             /* An alphanumeric (same as alnum). */
-        { "punct",  5,  ispunct  },             /* A punctuation character. */
-        { "space",  5,  isspace  },             /* A character producing white space in displayed text. */
-        { "upper",  5,  isupper  },             /* An upper-case letter. */
+        { "digit",  5,  is_digit },             /* A decimal digit. */
+        { "graph",  5,  is_graph },             /* A character with a visible representation. */
+        { "lower",  5,  is_lower },             /* A lower-case letter. */
+        { "print",  5,  is_print },             /* An alphanumeric (same as alnum). */
+        { "punct",  5,  is_punct },             /* A punctuation character. */
+        { "space",  5,  is_space },             /* A character producing white space in displayed text. */
+        { "upper",  5,  is_upper },             /* An upper-case letter. */
         { "word",   4,  is_word  },             /* A "word" character (alphanumeric plus "_"). */
-        { "xdigit", 6,  isxdigit }              /* A hexadecimal digit. */
+        { "xdigit", 6,  is_xdigit }             /* A hexadecimal digit. */
         };
 
     const unsigned char *start = fmt;
@@ -805,8 +818,7 @@ setcook(const unsigned char *fmt, unsigned char *tab)
         if (']' == c)                           /* end */
             return fmt;
 
-/*
-//      if (c == '[' && fmt[0] == '.') {        // collating symbols (eg [.<.])
+/*      if (c == '[' && fmt[0] == '.') {        // collating symbols (eg [.<.])
 //          c = fmt[1];
 //          if (0 == c || '.' != fmt[2] || ']' != fmt[3]) {
 //              errorf("regexp: Unmatched character-symbol '.]'");

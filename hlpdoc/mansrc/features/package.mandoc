@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: package.mandoc,v 1.1 2014/11/27 18:19:42 ayoung Exp $
+.\" | $Id: package.mandoc,v 1.2 2018/10/01 21:19:58 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -53,8 +53,8 @@
 .Nd language packages.
 .Sh DESCRIPTION
 Structured programming requires indenting and a powerful programmers
-toolt should make indenting easy.  GRIEF goes even further by
-providing a feature that practically enters the statements for you,
+toolt should make indenting easy. GRIEF goes even further by
+providing a feature that practically enters the statements for you, 
 calling template editing, plus language specific syntax hilite`s.
 .Pp
 Within GRIEF, the set of features tailoring a specific language is
@@ -62,7 +62,7 @@ called a 'language package' with the editor suppporting many
 popular language syntaxs.
 .Pp
 The builtin language packages provide the following features:
-.Bl -bullet -offset 1 -width xxxxxxxxxx
+.Bl -bullet -offset 1 -width xxxx
 .It
 Regular indenting
 .Pp

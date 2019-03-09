@@ -1,13 +1,13 @@
-#ifndef GR_TELNET_H_INCLUDED
-#define GR_TELNET_H_INCLUDED
+#ifndef LIBW32_ARPA_TELNET_H_INCLUDED
+#define LIBW32_ARPA_TELNET_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_arpa_telnet_h,"$Id: telnet.h,v 1.4 2015/02/19 00:17:36 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_arpa_telnet_h,"$Id: telnet.h,v 1.6 2018/09/29 02:25:24 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: telnet.h,v 1.4 2015/02/19 00:17:36 ayoung Exp $ */
+/* $Id: telnet.h,v 1.6 2018/09/29 02:25:24 cvsuser Exp $ */
 /*
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2017, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -341,4 +341,5 @@ extern char *enctype_names[];
 #ifdef WIN32
 typedef unsigned long u_long;
 #endif
-#endif /*GR_TELNET_H_INCLUDED*/
+
+#endif /*LIBW32_ARPA_TELNET_H_INCLUDED*/

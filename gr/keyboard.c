@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.58 2015/02/19 00:14:30 ayoung Exp $")
+__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.60 2019/01/26 22:27:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keyboard.c,v 1.58 2015/02/19 00:14:30 ayoung Exp $
+/* $Id: keyboard.c,v 1.60 2019/01/26 22:27:08 cvsuser Exp $
  * Manipulate key maps and bindings.
  *
  *
@@ -1343,7 +1343,7 @@ do_keyboard_typeables(void)     /* int (void) */
  *<<GRIEF>>
     Macro: push_back - Push back a character into the keyboard.
 
-        int
+        void
         push_back(int key,
             [int front], [int x], [int y])
 
@@ -2594,11 +2594,11 @@ key_mapwin32(unsigned dwCtrlKeyState, unsigned wVirtKeyCode, unsigned AsciiChar)
                 ((key->mods == MOD_ALL) ||
                  (key->mods == MOD_ENHANCED && (dwCtrlKeyState & (ENHANCED_KEY))) ||
                  (key->mods >= 0 && key->mods == mod) )) {
-       if ((ch = key->code) >= 0) {
-      if (key->mods == MOD_ALL) {
-          ch |= mod;       /* apply modifiers */
-      }
-       }
+            if ((ch = key->code) >= 0) {
+                if (key->mods == MOD_ALL) {
+                    ch |= mod;                  /* apply modifiers */
+                }
+            }
             break;
         }
 
@@ -2620,7 +2620,7 @@ key_mapwin32(unsigned dwCtrlKeyState, unsigned wVirtKeyCode, unsigned AsciiChar)
 
     trace_log("W32KEY %c%c%c = %d (%s=%s)\n",
         (mod & MOD_META  ? 'M' : '.'), (mod & MOD_CTRL  ? 'C' : '.'), (mod & MOD_SHIFT ? 'S' : '.'),
-   ch, (ch == -1 ? "n/a" : (key >= w32Keys ? key->desc : "ASCII")), key_code2name(ch));
+        ch, (ch == -1 ? "n/a" : (key >= w32Keys ? key->desc : "ASCII")), key_code2name(ch));
     return (ch);
 }
 #endif  /*WIN32 || __CYGWIN__*/

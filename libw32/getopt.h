@@ -1,14 +1,14 @@
-#ifndef GR_GETOPT_H_INCLUDED
-#define GR_GETOPT_H_INCLUDED
+#ifndef LIBW32_GETOPT_H_INCLUDED
+#define LIBW32_GETOPT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_getopt_h,"$Id: getopt.h,v 1.3 2015/02/19 00:17:25 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_getopt_h,"$Id: getopt.h,v 1.5 2018/09/29 02:25:21 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win <getopt.h>
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -31,14 +31,38 @@ __CPRAGMA_ONCE
  * ==end==
  */
 
-__BEGIN_DECLS
-extern int              getopt(int argc, char *const *argv, const char *opts);
+#include <sys/cdefs.h>
 
-extern int              optind;
-extern int              opterr;
-extern char *           optarg;
-extern int              optopt;
-extern int              optreset;
+__BEGIN_DECLS
+
+LIBW32_API extern int   opterr;                 /* if error message should be printed */
+LIBW32_API extern int   optind;                 /* index into parent argv vector */
+LIBW32_API extern int   optopt;                 /* character checked for validity */
+LIBW32_API extern int   optreset;               /* reset getopt */
+LIBW32_API extern char *optarg;
+
+/*
+ *  GNU like getopt_long() and BSD4.4 getsubopt()/optreset extensions.
+ */
+#define no_argument         0
+#define required_argument   1
+#define optional_argument   2
+
+struct option {
+        const char *name;                       /* name of long option */
+        /*
+         *  one of no_argument, required_argument, and optional_argument:
+         *  whether option takes an argument
+         */
+        int has_arg;
+        int *flag;                              /* if not NULL, set *flag to val when option found */
+        int val;                                /* if flag not NULL, value to set *flag to; else return value */
+};
+
+LIBW32_API int          getopt(int nargc, char * const *nargv, const char *options);
+LIBW32_API int          getopt_long(int argvc, char * const *argv, const char *options, const struct option *long_options, int *idx);
+
 __END_DECLS
 
-#endif /*GR_GETOPT_H_INCLUDED*/
+#endif /*LIBW32_GETOPT_H_INCLUDED*/
+

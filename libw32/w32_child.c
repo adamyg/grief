@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_child_c,"$Id: w32_child.c,v 1.8 2015/02/19 00:17:27 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_child_c,"$Id: w32_child.c,v 1.11 2018/10/12 00:24:39 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 sub-process support
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -26,22 +26,23 @@ __CIDENT_RCSID(gr_w32_child_c,"$Id: w32_child.c,v 1.8 2015/02/19 00:17:27 ayoung
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * License for more details.
  * ==end==
- *
- * Notice: Portions of this text are reprinted and reproduced in electronic form. from
- * IEEE Portable Operating System Interface (POSIX), for reference only. Copyright (C)
- * 2001-2003 by the Institute of. Electrical and Electronics Engineers, Inc and The Open
- * Group. Copyright remains with the authors and the original Standard can be obtained
- * online at http://www.opengroup.org/unix/online.html.
- * ==extra==
  */
 
 #include "win32_internal.h"
 #include "win32_child.h"
 
+#include <sys/cdefs.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <assert.h>
 #include <unistd.h>
+
+#pragma comment(lib, "user32.lib")
+
+#if defined(_MSC_VER)
+#pragma warning(disable : 4244) // conversion from 'xxx' to 'xxx', possible loss of data
+#pragma warning(disable : 4312) // type cast' : conversion from 'xxx' to 'xxx' of greater size
+#endif
 
 struct procdata {
     int                 type;
@@ -67,7 +68,7 @@ static int              BuildVectors(win32_spawn_t *args, char **argblk, char **
 static char *           Getpath(const char *src, char *dst, unsigned maxlen);
 static const char *     Getenv(const char *const *envp, const char *val);
 static HANDLE           ExecChild(win32_spawn_t *args,
-                            const char *arg0, char *argv, char *envp, STARTUPINFO *si, PROCESS_INFORMATION *pi);
+                            const char *arg0, char *argv, char *envp, STARTUPINFOA *si, PROCESS_INFORMATION *pi);
 static void             DisplayError(HANDLE hOutput, const char *pszAPI, const char *args);
 static void             InternalError(const char *pszAPI);
 
@@ -281,7 +282,7 @@ static void             InternalError(const char *pszAPI);
 //      [EINVAL]
 //          The options argument is not valid.
 */
-int
+LIBW32_API int
 w32_waitpid(int pid, int *status, int options)
 {
     int ret = -1;
@@ -304,14 +305,14 @@ w32_waitpid(int pid, int *status, int options)
 }
 
 
-int
+LIBW32_API int
 WEXITSTATUS(int status)
 {
     return ((status) >> 8) & 0xff;
 }
 
 
-int
+LIBW32_API int
 WCOREDUMP(int status)
 {
     __CUNUSED(status)
@@ -319,28 +320,28 @@ WCOREDUMP(int status)
 }
 
 
-int
+LIBW32_API int
 WTERMSIG(int status)
 {
     return (status & 0xff);
 }
 
 
-int
+LIBW32_API int
 WIFSIGNALED(int status)
 {
     return (WTERMSIG (status) != 0);
 }
 
 
-int
+LIBW32_API int
 WIFEXITED(int status)
 {
     return (WTERMSIG (status) == 0);
 }
 
 
-int
+LIBW32_API int
 WIFSTOPPED(int status)
 {
     __CUNUSED(status)
@@ -420,7 +421,7 @@ WIFSTOPPED(int status)
 //      [ESRCH]
 //          No process or process group can be found corresponding to that specified by pid.
 */
-int
+LIBW32_API int
 w32_kill(int pid, int value)
 {
     if (pid > 0) {
@@ -507,10 +508,10 @@ SendCloseMessage(HANDLE hProc)
  *  w32_iscommand ---
  *      Determine the given shell is a DOS/WIN command processor
  */
-int
+LIBW32_API int
 w32_iscommand(const char *shell)
 {
-    int slen = strlen(shell);
+    const int slen = (int)strlen(shell);
 
     if (cmdis(shell, slen, "cmd") ||
             cmdis(shell, slen, "cmd.exe") ||
@@ -526,8 +527,8 @@ w32_iscommand(const char *shell)
 static int
 cmdis(const char *shell, int slen, const char *cmd)
 {
-    int clen = strlen(cmd);
-    const char *p = shell+slen-clen;
+    const int clen = (int)strlen(cmd);
+    const char *p = shell + slen - clen;
 
     if (slen == clen || (slen > clen && (p[-1] == '\\' || p[-1] == '/'))) {
         if (_stricmp(p, cmd) == 0) {
@@ -546,34 +547,49 @@ cmdis(const char *shell, int slen, const char *cmd)
  *      This is a low level interface and expects the caller has setup the
  *      calling environment.
  */
-HANDLE
+LIBW32_API HANDLE
 w32_child_exec(
     struct win32_spawn *args, HANDLE hStdIn, HANDLE hStdOut, HANDLE hStdErr)
 {
     PROCESS_INFORMATION pi = {0};
-    STARTUPINFO si = {0};
+    STARTUPINFOA si = {0};
     HANDLE hProc = 0;
     char *argblk;
     char *envblk;
 
-    /* Set up the start up info struct */
+    /* 
+     *  Set up the start up info struct 
+     *      USESTDHANDLES,
+     *          The hStdInput, hStdOutput, and hStdError members contain additional information.
+     *
+     *          If this flag is specified when calling one of the process creation functions, 
+     *          the handles must be inheritable and the function's bInheritHandles parameter 
+     *          must be set to TRUE. For more information;
+     */
     (void) memset(&si, 0, sizeof(STARTUPINFO));
     si.cb = sizeof(STARTUPINFO);
+    si.wShowWindow = SW_HIDE;                   //SW_NORMAL, SW_SHOWMINIMIZED
+    si.hStdInput  = hStdIn;
+    si.hStdOutput = hStdOut;
+    si.hStdError  = hStdErr;
+
+    if (hStdIn)  { DWORD flags; assert(GetHandleInformation(hStdIn,  &flags) && (HANDLE_FLAG_INHERIT & flags)); }
+    if (hStdOut) { DWORD flags; assert(GetHandleInformation(hStdOut, &flags) && (HANDLE_FLAG_INHERIT & flags)); }
+    if (hStdErr) { DWORD flags; assert(GetHandleInformation(hStdErr, &flags) && (HANDLE_FLAG_INHERIT & flags)); }
 
     si.dwFlags = STARTF_USESTDHANDLES;
-    si.hStdOutput  = hStdOut;
-    si.hStdInput   = hStdIn;
-    si.hStdError   = hStdErr;
+    si.dwFlags |= STARTF_USESHOWWINDOW;
 
-    si.dwFlags    |= STARTF_USESHOWWINDOW;
-    si.wShowWindow = SW_HIDE;                   //SW_NORMAL, SW_SHOWMINIMIZED
-
-    /* Build env and command line. */
+    /* 
+     *  Build env and command line. 
+     */
     if (BuildVectors(args, &argblk, &envblk) != 0) {
         InternalError("building arg and env");
     }
 
-    /* Launch the process that you want to redirect. */
+    /* 
+     *  Launch the process that you want to redirect. 
+     */
     if (0 == (hProc = ExecChild(args, NULL, argblk, envblk, &si, &pi))) {
         const char *path, *cmd =
                         (args->argv ? args->argv[0] : args->cmd);
@@ -636,11 +652,11 @@ done:;  if (buf != NULL) {
 
 static HANDLE
 ExecChild(win32_spawn_t *args,
-    const char *arg0, char *argv, char *envp, STARTUPINFO *si, PROCESS_INFORMATION *pi)
+    const char *arg0, char *argv, char *envp, STARTUPINFOA *si, PROCESS_INFORMATION *pi)
 {
     HANDLE hProc = 0;
 
-    if (CreateProcess(
+    if (CreateProcessA(
             arg0, argv,                         // [in]  application name/args.
             NULL, NULL,                         // [in]  SD's.
             TRUE,                               // [in]  handle inheritance options.
@@ -651,6 +667,7 @@ ExecChild(win32_spawn_t *args,
             pi)) {                              // [out] process information.
         args->_dwProcessId = pi->dwProcessId;
         hProc = pi->hProcess;
+
     } else if (WASNOT_ENOENT()) {               // XXX, current or hStdError ??
         DisplayError(GetStdHandle(STD_OUTPUT_HANDLE), "CreateProcess", argv);
     }
@@ -693,7 +710,7 @@ WASNOT_ENOENT(void)
  *      for termstat, the return code of the specified process will not be
  *      stored.
  */
-BOOL
+LIBW32_API BOOL
 w32_child_wait(HANDLE hProc, int *status, int nowait)
 {
     DWORD dwStatus, rc;
@@ -702,10 +719,10 @@ w32_child_wait(HANDLE hProc, int *status, int nowait)
     /*
      *  Explicitly check for process_id being -1 or -2.
      *
-     *  In Windows NT, -1 is a handle on the current process, -2 is a h
+     *  In Windows NT, -1 is a handle on the current process, -2 is a handle to the
      *  current thread, and it is perfectly legal to to wait (forever) on either.
      */
-    if ((int)hProc == -1 || (int)hProc == -2) {
+    if (hProc == (HANDLE)-1 || hProc == (HANDLE)-2) {
         errno = ECHILD;
 
     /*
@@ -754,7 +771,7 @@ BuildVectors(win32_spawn_t *args, char **argblk, char **envblk)
             (args->envp ? args->envp : (const char **)_environ);
 #endif
     const char * const *vp;
-    unsigned tmp;
+    int tmp;
     char *cptr;
 
     /*
@@ -765,7 +782,7 @@ BuildVectors(win32_spawn_t *args, char **argblk, char **envblk)
     if (args->cmd) {
         tmp = (int)strlen(args->cmd) + 1;
     } else {
-        for (vp = args->argv, tmp = 2+2; *vp; tmp += strlen(*vp++) + 1)
+        for (vp = args->argv, tmp = 2+2; *vp; tmp += (int)strlen(*vp++) + 1)
             /**/;
     }
 
@@ -784,7 +801,7 @@ BuildVectors(win32_spawn_t *args, char **argblk, char **envblk)
      *  Allocate space for environment strings tmp counts the number of bytes
      *  in the environment strings including nulls between strings
      */
-    for (vp = envp, tmp = 2; *vp; tmp += strlen(*vp++) + 1)
+    for (vp = envp, tmp = 2; *vp; tmp += (int)strlen(*vp++) + 1)
         /**/;
 
     /* Allocate space for the environment strings plus extra null byte */
@@ -969,17 +986,17 @@ DisplayError(
 {
     const DWORD rc = GetLastError();
     LPVOID  lpvMessageBuffer;
-    CHAR    szPrintBuffer[512];
+    char    szPrintBuffer[512];
     DWORD   nCharsWritten;
 
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM,
-        NULL, rc, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),(LPTSTR)&lpvMessageBuffer, 0, NULL);
+    FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM,
+        NULL, rc, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),(LPSTR)&lpvMessageBuffer, 0, NULL);
 
     _snprintf(szPrintBuffer, sizeof(szPrintBuffer),
         "Internal Error: %s = %d (%s).\n%s%s", pszAPI, rc, (char *)lpvMessageBuffer,
             args ? args : "", args ? "\n" : "" );
 
-    WriteConsole(hOutput, szPrintBuffer, lstrlen(szPrintBuffer), &nCharsWritten, NULL);
+    WriteConsoleA(hOutput, szPrintBuffer, lstrlenA(szPrintBuffer), &nCharsWritten, NULL);
     LocalFree(lpvMessageBuffer);
 }
 
@@ -991,4 +1008,6 @@ InternalError(
     DisplayError(GetStdHandle(STD_OUTPUT_HANDLE), pszAPI, NULL);
     ExitProcess(GetLastError());
 }
+
+/*end*/
 

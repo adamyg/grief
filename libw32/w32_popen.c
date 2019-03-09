@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_popen_c,"$Id: w32_popen.c,v 1.7 2015/02/19 00:17:30 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_popen_c,"$Id: w32_popen.c,v 1.11 2018/10/12 00:24:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 popen implementation
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -140,7 +140,7 @@ static struct pipe *    pipe_queue = (void *)-1;
 //      if cmd contains '2>&1', we connect the standard error file handle to the standard
 //      output file handle, otherwise create a STDERR stream.
 */
-FILE *
+LIBW32_API FILE *
 w32_popen(const char *cmd, const char *mode)
 {
 #if (defined(_MSVC_VER) || defined(__WATCOMC__)) && \
@@ -246,7 +246,7 @@ w32_popen(const char *cmd, const char *mode)
     //
     args.argv = argv;                           // argument vector
     args._dwFlags =                             // creation flags
-            CREATE_DEFAULT_ERROR_MODE|CREATE_NO_WINDOW;
+        CREATE_DEFAULT_ERROR_MODE|CREATE_NO_WINDOW;
 
     if ((void *)-1 == pipe_queue) {
         InitializeCriticalSection(&pipe_guard);
@@ -290,7 +290,7 @@ pipe_error:
  *  Note:
  *      WIN32 pipes are blocking.
  */
-int
+LIBW32_API int
 w32_pread_err(FILE *file, char *buf, int length)
 {
     if (file) {
@@ -298,11 +298,11 @@ w32_pread_err(FILE *file, char *buf, int length)
 
         if ((void *)-1 != pipe_queue) {
             struct pipe **p2;                   // list pointers
-
+            
             EnterCriticalSection(&pipe_guard);
             for (p2 = &pipe_queue; *p2; p2 = &(*p2)->next) {
                 struct pipe *p = *p2;
-
+            
                 assert(p->magic == PIPE_MAGIC);
                 if (p->file == file) {
                     handle = p->hErr;
@@ -316,7 +316,7 @@ w32_pread_err(FILE *file, char *buf, int length)
             DWORD result;
             if (ReadFile(handle, buf, length, &result, NULL)) {
                 return (int)result;
-            }
+            }   
         }
     }
     return -1;                                  // done
@@ -377,7 +377,7 @@ w32_pread_err(FILE *file, char *buf, int length)
 //      [ECHILD]
 //          The status of the child process could not be obtained, as described above.
 */
-int
+LIBW32_API int
 w32_pclose(FILE *file)
 {
 #if (defined(_MSVC_VER) || defined(__WATCOMC__)) && \
@@ -390,7 +390,7 @@ w32_pclose(FILE *file)
 
         if ((void *)-1 != pipe_queue) {
             struct pipe **p2;                       // list pointers
-
+            
             EnterCriticalSection(&pipe_guard);
             for (p2 = &pipe_queue; *p2; p2 = &(*p2)->next) {
                 struct pipe *t_p = *p2;
@@ -481,7 +481,6 @@ Pipe2(HANDLE *read, HANDLE *write, int inherit)
 }
 
 
-
 /*
  *  Close ---
  *      Close a handle.
@@ -518,15 +517,15 @@ Close2(HANDLE handle, const char *desc)
  */
 static void
 DisplayError(
-    HANDLE hOutput, const char *pszAPI, const char *args )
+    HANDLE hOutput, const char *pszAPI, const char *args)
 {
     DWORD   rc = GetLastError();
     LPVOID  lpvMessageBuffer;
-    CHAR    szPrintBuffer[512];
+    char    szPrintBuffer[512];
     DWORD   nCharsWritten;
 
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM,
-        NULL, rc, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpvMessageBuffer, 0, NULL);
+    FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM,
+        NULL, rc, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&lpvMessageBuffer, 0, NULL);
 
     _snprintf(szPrintBuffer, sizeof(szPrintBuffer),
         "Internal Error: %s = %d (%s).\n%s%s", pszAPI, rc, (char *)lpvMessageBuffer,
@@ -536,14 +535,13 @@ DisplayError(
         hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
     }
 
-    WriteConsole(hOutput, szPrintBuffer, lstrlen(szPrintBuffer), &nCharsWritten, NULL);
+    WriteConsoleA(hOutput, szPrintBuffer, lstrlenA(szPrintBuffer), &nCharsWritten, NULL);
     LocalFree(lpvMessageBuffer);
 }
 
 
 static void
-InternalError(
-    const char *pszAPI)
+InternalError(const char *pszAPI)
 {
     DisplayError(INVALID_HANDLE_VALUE, pszAPI, NULL);
     ExitProcess(GetLastError());

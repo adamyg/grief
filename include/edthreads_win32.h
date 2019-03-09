@@ -1,11 +1,11 @@
 #ifndef GR_EDTHREADS_WIN32_H_INCLUDED
 #define GR_EDTHREADS_WIN32_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_win32_h,"$Id: edthreads_win32.h,v 1.7 2015/02/19 00:16:58 ayoung Exp $")
+__CIDENT_RCSID(gr_edthreads_win32_h,"$Id: edthreads_win32.h,v 1.13 2018/10/18 15:32:24 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads_win32.h,v 1.7 2015/02/19 00:16:58 ayoung Exp $
+/* $Id: edthreads_win32.h,v 1.13 2018/10/18 15:32:24 cvsuser Exp $
  * Threads interface
  * ISO/IEC 9899:201x Committee Draft
  * April 12, 2011 N1570
@@ -47,7 +47,6 @@ __CPRAGMA_ONCE
  *          which is the function pointer type int (*)(void*) that is passed to
  *          thrd_create to create a new thread; and
  *
-
  *      once_flag
  *          which is a complete object type that holds a flag for use by call_once.
  *
@@ -87,7 +86,7 @@ __CPRAGMA_ONCE
  *          which is returned by a function to indicate that the requested operation
  *          failed because it was unable to allocate memory.
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -121,10 +120,28 @@ __CPRAGMA_ONCE
 #include <time.h>
 
 //Mutex and conditional time specificiation <time.h>
+    //TODO: #include <win32_timespec.h>
+#if !defined(HAVE_TIMESPEC)
+#if (defined(_MSC_VER) && (_MSC_VER < 1900)) || \
+    (defined(__WATCOMC__) && (__WATCOMC__ < 1300)) || \
+        (!defined(__WATCOMC__) && !defined(_MSC_VER))
 struct timespec {
     time_t tv_sec;
     long tv_nsec;
 };
+
+#elif (defined(__WATCOMC__) && (__WATCOMC__ == 1300))
+#ifndef _TIMESPEC_DEFINED   /*open-watcom*/
+#define _TIMESPEC_DEFINED
+struct timespec {
+    time_t tv_sec;
+    long tv_nsec;
+};
+#endif //_TIMESPEC_DEFINED
+#endif
+#endif /*TODO - HAVE_TIMESPEC*/
+
+#define TIME_UTC            0x01
 
 #define TSS_DTOR_ITERATIONS 4
 
@@ -153,7 +170,9 @@ typedef void *tss_t;
 
 __CBEGIN_DECLS
 
-extern void                 timespec_get(struct timespec *ts);
+#if !defined(_MSC_VER) || (_MSC_VER < 1900)
+extern void                 timespec_get(struct timespec *ts, int base);
+#endif /*FIXME - HAVE_TIMESPEC_GET*/
 
 __CEND_DECLS
 

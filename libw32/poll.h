@@ -1,14 +1,14 @@
-#ifndef GR_POLL_H_INCLUDED
-#define GR_POLL_H_INCLUDED
+#ifndef LIBW32_POLL_H_INCLUDED
+#define LIBW32_POLL_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_poll_h,"$Id: poll.h,v 1.7 2015/02/19 00:17:26 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_poll_h,"$Id: poll.h,v 1.9 2018/09/29 02:25:21 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win <poll.h>
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -47,7 +47,7 @@ struct w32_pollfd {
 
 #if !defined(POLLIN)
 #if (defined(_MSC_VER) && (_MSC_VER >= 1400)) || \
-	defined(__MINGW32__)
+        defined(__MINGW32__) || defined(__WATCOMC__)
 /*
  *  POLLRDNORM          Data on priority band 0 may be read.
  *  POLLRDBAND          Data on priority bands greater than 0 may be read.
@@ -78,15 +78,25 @@ struct pollfd {
 #define POLLERR         0x0001
 #define POLLHUP         0x0002
 #define POLLNVAL        0x0004
-#endif /*_MSC_VER || __MINGW32__*/
+#endif /*_MSC_VER || __MINGW32__ || __WATCOMC__ */
 #endif /*POLLING*/
 
 __BEGIN_DECLS
 
-#if !defined(CR_SYS_SOCKET_H_INCLUDED)
-int                     w32_poll(struct pollfd *fds, int cnt, int timeout);
+LIBW32_API int          w32_poll_fd(struct pollfd *fds, int cnt, int timeout);
+LIBW32_API int          w32_poll_native(struct pollfd *fds, int cnt, int timeout);
+
+#if defined(WIN32_SOCKET_MAP_FD)
+#if !defined(WIN32_SOCKET_H_INCLUDED)
+#define poll(a,b,c)             w32_poll_fd(a,b,c)
 #endif
+
+#elif defined(WIN32_SOCKET_MAP_NATIVE)
+#if !defined(WIN32_SOCKET_H_INCLUDED)
+#define poll(a,b,c)             w32_poll_native(a,b,c)
+#endif
+#endif /*WIN32_SOCKET_MAP_FD|NATIVE*/
 
 __END_DECLS
 
-#endif /*GR_POLL_H_INCLUDED*/
+#endif /*LIBW32_POLL_H_INCLUDED*/

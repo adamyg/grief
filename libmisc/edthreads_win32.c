@@ -1,14 +1,14 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_win32_c,"$Id: edthreads_win32.c,v 1.12 2015/02/19 00:17:11 ayoung Exp $")
+__CIDENT_RCSID(gr_edthreads_win32_c,"$Id: edthreads_win32.c,v 1.15 2018/10/18 15:32:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads_win32.c,v 1.12 2015/02/19 00:17:11 ayoung Exp $
+/* $Id: edthreads_win32.c,v 1.15 2018/10/18 15:32:24 cvsuser Exp $
  * C11 threads implementation, for windows
  * based on ISO/IEC 9899:201x Committee Draft, April 12, 2011 N1570
  *
  *
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2017, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -103,6 +103,8 @@ nanosleep(const struct timespec *rqtp, struct timespec *rmtp /*notused*/)
 #define ED_ASSERT
 #include <edassert.h>
 #include <tailqueue.h>
+
+
 
 #define MTX_MAGIC               MKMAGIC('W','M','t','x')
 
@@ -298,7 +300,7 @@ internal(const struct timespec *ts)
     struct timespec now;
     long long diff;
 
-    timespec_get(&now);
+    timespec_get(&now, TIME_UTC);
     diff = ts->tv_sec - now.tv_sec;
     diff += ts->tv_nsec - now.tv_nsec;
     return (diff > 0 ? (DWORD)(diff/1000000) : 1);
@@ -875,8 +877,9 @@ tss_set(tss_t key, void *val)
 }
 
 
+#if !defined(_MSC_VER) || (_MSC_VER < 1900)
 void
-timespec_get(struct timespec *ts)
+timespec_get(struct timespec *ts, int __unused_based)
 {
     LARGE_INTEGER val;
     unsigned long long now;
@@ -891,6 +894,7 @@ timespec_get(struct timespec *ts)
     ts->tv_sec = now / 1000000000;
     ts->tv_nsec = (long)(now % 1000000000);
 }
+#endif	/*FIXME - HAVE_TIMESPEC_GET*/
 
 
 static void WINAPI

@@ -1,6 +1,6 @@
 #ifndef DBHASH_NAMESPACE_H_INCLUDED
 #define DBHASH_NAMESPACE_H_INCLUDED
-/* $Id: namespace.h,v 1.7 2015/02/19 00:17:00 ayoung Exp $
+/* $Id: namespace.h,v 1.8 2018/09/29 02:25:20 cvsuser Exp $
  *
  * libbsdb <namespace.h>
  *
@@ -55,6 +55,7 @@
 #ifdef HAVE_SYS_PARAM_H
 #include <sys/param.h>
 #endif
+#include <sys/socket.h>
 #include <edendian.h>
 #if defined(WIN32)
 #include <sys/utypes.h>
@@ -133,5 +134,4 @@
 #endif
 
 #endif /*DBHASH_NAMESPACE_H_INCLUDED*/
-
 

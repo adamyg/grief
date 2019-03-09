@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_iconv_c,"$Id: w32_iconv.c,v 1.9 2015/02/19 00:17:29 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_iconv_c,"$Id: w32_iconv.c,v 1.13 2018/10/12 00:30:31 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 iconv dynamic loader.
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -46,6 +46,10 @@ __CIDENT_RCSID(gr_w32_iconv_c,"$Id: w32_iconv.c,v 1.9 2015/02/19 00:17:29 ayoung
 
 #define ICONV_NULL      ((void *)-1)
 
+#if defined(LIBW32_STATIC)
+#define DO_TRACE_LOG                            // trace_log()
+#endif
+
 #if defined(HAVE_LIBICONV_DLL)
 #define DLLLINKAGE      __cdecl
 #else
@@ -64,7 +68,7 @@ static iconvfn_t        x_iconv;
 static void *           x_iconvctl;
 static void *           x_iconv_errno;
 
-int
+LIBW32_API int
 w32_iconv_connect(int verbose)
 {
 #ifndef MSVCRTDLL_NAME
@@ -98,7 +102,9 @@ w32_iconv_connect(int verbose)
     }
 
     for (i = 0; NULL != (name = iconvnames[i]); ++i) {
+#if defined(DO_TRACE_LOG)
         trace_log("iconv_dll(%s)\n", name);
+#endif
         if (end) {
             strncpy(end, name, sizeof(fullname) - (end - fullname));
             fullname[sizeof(fullname)-1] = 0;
@@ -116,7 +122,9 @@ w32_iconv_connect(int verbose)
         const char *env;
 
         if (NULL != (env = getenv("ICONVDLL"))) {
+#if defined(DO_TRACE_LOG)
             trace_log("iconv_dll(%s)\n", env);
+#endif
             x_iconvdll = LoadLibraryA(env);
         }
     }
@@ -148,12 +156,14 @@ w32_iconv_connect(int verbose)
         x_iconv_errno = (void *)GetProcAddress(x_msvcrtdll, "_errno");
     }
 
+#if defined(DO_TRACE_LOG)
     trace_log("iconv Functions (%s)\n", fullname);
     trace_log("\ticonv:       %p\n", x_iconv);
     trace_log("\ticonv_open:  %p\n", x_iconv_open);
     trace_log("\ticonv_close: %p\n", x_iconv_close);
     trace_log("\ticonv_errno: %p\n", x_iconv_errno);
     trace_log("\ticonvctl:    %p\n", x_iconvctl);
+#endif
 
     if (NULL == x_iconv || NULL== x_iconv_open || NULL == x_iconv_close || NULL == x_iconv_errno) {
         if (verbose) {
@@ -169,7 +179,7 @@ w32_iconv_connect(int verbose)
 }
 
 
-void
+LIBW32_API void
 w32_iconv_shutdown(void)
 {
     x_iconv = NULL;
@@ -188,7 +198,7 @@ w32_iconv_shutdown(void)
 }
 
 
-void *
+LIBW32_API void *
 w32_iconv_open(const char *to, const char *from)
 {
     if (w32_iconv_connect(TRUE) && x_iconv_open) {
@@ -198,7 +208,7 @@ w32_iconv_open(const char *to, const char *from)
 }
 
 
-void
+LIBW32_API void
 w32_iconv_close(void *fd)
 {
     if (x_iconv_close) {
@@ -207,7 +217,7 @@ w32_iconv_close(void *fd)
 }
 
 
-int
+LIBW32_API int
 w32_iconv(void * fd, const char **from, size_t *fromlen, char **to, size_t *tolen)
 {
     if (x_iconv) {
@@ -219,3 +229,4 @@ w32_iconv(void * fd, const char **from, size_t *fromlen, char **to, size_t *tole
 
 #endif  /*WIN32*/
 /*end*/
+

@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: bvars.mandoc,v 1.1 2014/11/27 18:19:36 ayoung Exp $
+.\" | $Id: bvars.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -52,11 +52,13 @@
 .Nm bvars
 .Nd display buffer variables.
 .Sh DESCRIPTION
-The \f(HBbvars\fR macro is a utility function which you can execute at the Command:
-prompt to display the current values of all buffer specific variables. This can be
-useful if your macro is using buffer variables.
+The \fIvars\fR macro is a utility function which you can execute at
+the Command: prompt to display the current values of all buffer
+specific variables. This can be useful if your macro is using buffer
+variables.
 .Pp
 .Sh SEE ALSO
+.Xr feature ,
 .Xr message ,
 .Xr error ,
 .Xr debug ,

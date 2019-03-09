@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_refobj_c,"$Id: refobj.c,v 1.27 2015/02/19 00:17:12 ayoung Exp $")
+__CIDENT_RCSID(gr_refobj_c,"$Id: refobj.c,v 1.28 2017/01/29 04:33:31 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: refobj.c,v 1.27 2015/02/19 00:17:12 ayoung Exp $
+/* $Id: refobj.c,v 1.28 2017/01/29 04:33:31 cvsuser Exp $
  * Reference counted objects.
  *
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2017, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

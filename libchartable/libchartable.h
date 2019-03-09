@@ -1,14 +1,14 @@
 #ifndef GR_LIBCHARTABLE_H_INCLUDED
 #define GR_LIBCHARTABLE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libchartable_h,"$Id: libchartable.h,v 1.10 2015/02/19 00:17:04 ayoung Exp $")
+__CIDENT_RCSID(gr_libchartable_h,"$Id: libchartable.h,v 1.12 2018/10/01 22:10:53 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* libchartable.
  *
  *
- * Copyright (c) 2010 - 2015, Adam Young.
+ * Copyright (c) 2010 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

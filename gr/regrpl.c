@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_regrpl_c,"$Id: regrpl.c,v 1.13 2015/02/21 22:47:27 ayoung Exp $")
+__CIDENT_RCSID(gr_regrpl_c,"$Id: regrpl.c,v 1.15 2018/10/01 20:59:48 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: regrpl.c,v 1.13 2015/02/21 22:47:27 ayoung Exp $
+/* $Id: regrpl.c,v 1.15 2018/10/01 20:59:48 cvsuser Exp $
  * Regular expression replacement.
  *
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -357,9 +357,9 @@ rpl_text(regrpl_t *rpl, REGRPL *rp, uint8_t token,
     const size_t len = (end - start) - escaped;
 
     assert(end > start);
-    assert(len);
+    assert(len > 0 && len < 0x7fff);
 
-    *storage += len;
+    *storage += (uint16_t)len;
 
      rp = rpl_more(rpl, rp, len);
     *rp = token;
@@ -477,7 +477,7 @@ regrpl_exec(const struct regprog *prog, regrpl_t *rpl)
                     const size_t dlen = (dst - (char *)rpl->_dmem);
                     char *mem;
 
-                    siz += rpl->_dsiz + dlen + (len | 0x1f);
+                    siz += (uint16_t)(rpl->_dsiz + dlen + (len | 0x1f));
                     if (NULL == (mem = (char *)chk_realloc(rpl->_dmem, siz + 0x20))) {
                         goto error;
                     }

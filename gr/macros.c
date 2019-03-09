@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_macros_c,"$Id: macros.c,v 1.51 2014/11/16 17:28:42 ayoung Exp $")
+__CIDENT_RCSID(gr_macros_c,"$Id: macros.c,v 1.52 2018/11/18 00:20:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: macros.c,v 1.51 2014/11/16 17:28:42 ayoung Exp $
+/* $Id: macros.c,v 1.52 2018/11/18 00:20:40 cvsuser Exp $
  * Manipulating macro definitions.
  *
  *
@@ -2254,7 +2254,7 @@ do_find_macro(void)             /* string (string filename) */
         <autoload> and 'require' usage should generally be exclusive for
         any given macro object.
 
-        Within CrispEdit documentation it is stated that the results
+        Within CRiSPEdit(tm) documentation it is stated that the results
         are undefined due to the tables maintained for each are
         separate which can result in the macro being mistakenly
         loaded more then once. As such the side-effect of the reload

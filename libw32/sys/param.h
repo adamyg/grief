@@ -1,14 +1,14 @@
-#ifndef GR_PARAM_H_INCLUDED
-#define GR_PARAM_H_INCLUDED
+#ifndef LIBW32_SYS_PARAM_H_INCLUDED
+#define LIBW32_SYS_PARAM_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_param_h,"$Id: param.h,v 1.11 2015/02/19 00:17:39 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_sys_param_h,"$Id: param.h,v 1.13 2018/09/29 02:25:24 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 <sys/param.h>
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -39,4 +39,4 @@ __CPRAGMA_ONCE
 #define _POSIX2_LINE_MAX	2048
 #define LINE_MAX		2048
 
-#endif /*GR_PARAM_H_INCLUDED*/
+#endif /*LIBW32_SYS_PARAM_H_INCLUDED*/

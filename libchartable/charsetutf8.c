@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetutf8_c,"$Id: charsetutf8.c,v 1.11 2015/02/19 00:17:04 ayoung Exp $")
+__CIDENT_RCSID(gr_charsetutf8_c,"$Id: charsetutf8.c,v 1.13 2018/10/01 22:10:53 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* Multibyte character - UTF8 utility functionality.
  *
  *
- * Copyright (c) 2010 - 2015, Adam Young.
+ * Copyright (c) 2010 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

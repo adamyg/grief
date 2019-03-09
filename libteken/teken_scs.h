@@ -23,11 +23,11 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD: head/sys/teken/teken_scs.h 203659 2010-02-08 09:16:59Z ed $
+ * $FreeBSD: head/sys/teken/teken_scs.h 332297 2018-04-08 19:23:50Z phk $
  */
 
 static __CINLINE teken_char_t
-teken_scs_process(teken_t *t, teken_char_t c)
+teken_scs_process(const teken_t *t, teken_char_t c)
 {
 
 	return (t->t_scs[t->t_curscs](t, c));
@@ -50,7 +50,7 @@ static const uint8_t teken_boxdrawing_8bit[31] = {
 };
 
 static teken_char_t
-teken_scs_special_graphics(teken_t *t, teken_char_t c)
+teken_scs_special_graphics(const teken_t *t, teken_char_t c)
 {
 
 	/* Box drawing. */
@@ -62,7 +62,7 @@ teken_scs_special_graphics(teken_t *t, teken_char_t c)
 }
 
 static teken_char_t
-teken_scs_uk_national(teken_t *t, teken_char_t c)
+teken_scs_uk_national(const teken_t *t, teken_char_t c)
 {
 
 	/* Pound sign. */
@@ -72,9 +72,10 @@ teken_scs_uk_national(teken_t *t, teken_char_t c)
 }
 
 static teken_char_t
-teken_scs_us_ascii(teken_t *t __unused, teken_char_t c)
+teken_scs_us_ascii(const teken_t *t, teken_char_t c)
 {
 
 	/* No processing. */
+	(void)t;
 	return (c);
 }

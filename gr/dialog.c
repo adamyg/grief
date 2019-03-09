@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dialog_c,"$Id: dialog.c,v 1.28 2014/10/22 02:32:55 ayoung Exp $")
+__CIDENT_RCSID(gr_dialog_c,"$Id: dialog.c,v 1.29 2019/01/26 22:27:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dialog.c,v 1.28 2014/10/22 02:32:55 ayoung Exp $
+/* $Id: dialog.c,v 1.29 2019/01/26 22:27:08 cvsuser Exp $
  * Dialog manager.
  *
  *
@@ -725,7 +725,7 @@ do_dialog_delete(void)          /* int (int dialog) */
  *<<GRIEF>>
     Macro: dialog_exit - Exit a dialog resource
 
-        void
+        int
         dialog_exit(int retval = 0, [int dialog])
 
     Macro Description:
@@ -739,7 +739,7 @@ do_dialog_delete(void)          /* int (int dialog) */
             current dialog is referenced.
 
     Macro Returns:
-        nothing
+        Returns 1 on success otherwise 0.
 
     Macro Portability:
         A Grief extension.
@@ -815,7 +815,7 @@ inq_dialog(void)                /* int () */
  *<<GRIEF>>
     Macro: widget_set - Set a widget attribute
 
-        void
+        declare
         widget_set([int dialog],
                 [int name|string name], declare value,
                 [int attr = DLGA_VALUE], [int index = 0])

@@ -1,10 +1,10 @@
 #!/usr/bin/perl
-# $Id: makehelp.pl,v 1.15 2015/03/01 23:45:33 cvsuser Exp $
+# $Id: makehelp.pl,v 1.18 2018/10/18 15:14:02 cvsuser Exp $
 # -*- tabs: 8; indent-width: 4; -*-
 # Help collection tool.
 #
 #
-# Copyright (c) 1998 - 2015, Adam Young.
+# Copyright (c) 1998 - 2018, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -43,7 +43,8 @@ use Prototype;
 
 my $CWD         = getcwd();
 my $o_version   = undef;
-my $o_ndbin     = 'http://sourceforge.net/projects/ndplus/files/nd+_beta8';
+my $o_ndbin     = 'https://sourceforge.net/projects/ndplus/files/nd+_stable';
+
 my $o_ndwk      = './doc';
 my $o_srcdir    = './src';
 my $o_prmdir    = '../gr';
@@ -244,42 +245,59 @@ EOT
 sub
 NDPLUSDownload()
 {
-    my $ndsrc = 'http://sourceforge.net/projects/ndplus/files/latest/download';
+ ## my $ndauto = 'http://sourceforge.net/projects/ndplus/files/latest/download';
+
+    my @sfmirrors = (
+        'https://ayera.dl.sourceforge.net',     # Astute Internet / Vancouver, BC
+        'https://netix.dl.sourceforge.net',     # NetIX / Bulgaria
+        );
+
     my $nddir = 'ndplus';
     my $ndbin = './ndplus/bin/NaturalDocs';
 
     if ($o_ndbin =~ /^http/) {
 
         if (! -f $ndbin) {
+            my $ext =                           # tgz or zip (ActivePerl/Win32)
+                ($^O eq 'MSWin32' ? 'zip' : 'tgz');
+
+            my $name = 'ndplus.'.$ext;          # local destination
 
             (-d $nddir || mkdir($nddir, 0777)) or
                 die "hlp: cannot create directory <${nddir}> : $!\n";
 
-            if ($^O eq 'MSWin32') {             # ActivePerl/Win32
-                my $name = 'ndplus.zip';
+            #
+            # Pull the package
+            if (! -f "$nddir/$name") {
+                                                # download
+                system("wget --no-check-certificate -O $nddir/$name ${o_ndbin}.${ext}");
 
-                if (! -f "$nddir/$name") {
-                    system("wget -O $nddir/$name ${o_ndbin}.zip");
-                    system("wget -O $nddir/$name ${ndsrc}")
-                        if (! -f "$nddir/$name");
+                                                # mirrors
+                foreach my $sfmirror (@sfmirrors) {
+                   system("wget --no-check-certificate -O $nddir/$name \"${sfmirror}/project/ndplus/nd+_stable.${ext}\"")
+                        if (! -f "$nddir/$name" || -z "$nddir/$name");
                 }
-                chdir($nddir);
-                system("unzip $name");
-                chdir('..');
 
-            } else {                            # others
-                my $name = 'ndplus.tgz';
-
-                if (! -f "$nddir/$name") {
-                    system("wget -O $nddir/$name ${o_ndbin}.tgz");
-                    system("wget -O $nddir/$name ${ndsrc}")
-                        if (! -f "$nddir/$name");
-                }
-                chdir($nddir);
-                system("gzip -d -c $name | tar -xvf -");
-                chdir('..');
-
+						# auto direct -- no longer functional
+            ##  system("wget --no-check-certificate -O $nddir/$name ${ndauto}")
+            ##      if (! -f "$nddir/$name" || -z "$nddir/$name");
             }
+
+            #
+            # FIXME: external unzip, gzip/tar requirements
+            unlink("$nddir/$name")              # cleanup on error; wget may leave an empty image
+                if (-z "$nddir/$name");
+
+            die "hlp: cannot to download <${name}>"
+                if (! -f "$nddir/$name");
+
+            chdir($nddir);
+            if ($ext eq 'zip') {
+                system("unzip $name");
+            } else {
+                system("gzip -d -c $name | tar -xvf -");
+            }
+            chdir('..');
         }
 
         $o_ndbin = $ndbin;
@@ -1381,5 +1399,7 @@ Debug
 }
 
 #end
+
+
 
 

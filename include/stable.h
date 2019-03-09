@@ -1,11 +1,11 @@
 #ifndef GR_STABLE_H_INCLUDED
 #define GR_STABLE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_stable_h,"$Id: stable.h,v 1.9 2015/02/19 00:16:59 ayoung Exp $")
+__CIDENT_RCSID(gr_stable_h,"$Id: stable.h,v 1.10 2018/10/04 01:28:00 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: stable.h,v 1.9 2015/02/19 00:16:59 ayoung Exp $
+/* $Id: stable.h,v 1.10 2018/10/04 01:28:00 cvsuser Exp $
  * Self-organising string hash data structure.
  *
  *  This is a library of routines for storing a data structure where the
@@ -13,7 +13,7 @@ __CPRAGMA_ONCE
  *  hash using chaining to address clashes. Upon the key count exceeding the
  *  fill factory, the hash shall extend by doubling in size.
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

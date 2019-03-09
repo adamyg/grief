@@ -1,14 +1,14 @@
-#ifndef GR_DIRENT_H_INCLUDED
-#define GR_DIRENT_H_INCLUDED
+#ifndef LIBW32_DIRENT_H_INCLUDED
+#define LIBW32_DIRENT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_dirent_h,"$Id: dirent.h,v 1.14 2015/02/19 00:17:25 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_dirent_h,"$Id: dirent.h,v 1.17 2018/10/01 09:41:27 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
- * win32 <dirent.h> header file.
+ * win32 <dirent.h> implementation
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -103,17 +103,18 @@ typedef struct _dirdesc {
 
 __BEGIN_DECLS
 
-extern DIR *            opendir __P((const char *));
-extern int              closedir __P((DIR *));
-extern struct dirent *  readdir __P((DIR *));
-extern void             rewinddir __P((DIR *));
+LIBW32_API DIR *        opendir __P((const char *));
+LIBW32_API int          closedir __P((DIR *));
+LIBW32_API struct dirent * readdir __P((DIR *));
+LIBW32_API void         rewinddir __P((DIR *));
 #ifndef _POSIX_SOURCE
-extern void             seekdir __P((DIR *, long));
-extern long             telldir __P((DIR *));
-extern int              alphasort __P((const void *, const void *));
-extern int              getdirentries __P((int, char *, int, long *));
+LIBW32_API void         seekdir __P((DIR *, long));
+LIBW32_API long         telldir __P((DIR *));
+LIBW32_API int          alphasort __P((const void *, const void *));
+LIBW32_API int          scandir __P((void));
+LIBW32_API int          getdirentries __P((int, char *, int, long *));
 #endif  /*_POSIX_SOURCE*/
 
 __END_DECLS
 
-#endif /*GR_DIRENT_H_INCLUDED*/
+#endif /*LIBW32_DIRENT_H_INCLUDED*/

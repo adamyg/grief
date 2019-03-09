@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: texinfo.mandoc,v 1.1 2014/11/27 18:19:44 ayoung Exp $
+.\" | $Id: texinfo.mandoc,v 1.2 2018/10/01 21:19:58 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -46,9 +46,13 @@
 .\" |         Gotchas and caveats.
 .\" | --
 .Dd $Mdocdate$
-.Dt EXPLAIN 1
+.Dt TEXINFO 1
 .Os
 .Sh NAME
-.Nm explain
-.Nd Texinfo, GNU texi on-line.
+.Nm texinfo
+.Nd GNU texi on-line.
 .Sh DESCRIPTION
+Work in progress.
+.Sh SEE ALSO
+.Xr feature
+

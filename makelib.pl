@@ -1,11 +1,11 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.77 2015/02/27 00:54:54 ayoung Exp $
+# $Id: makelib.pl,v 1.91 2019/01/27 00:15:27 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
 #
 #
-# Copyright (c) 1998 - 2015, Adam Young.
+# Copyright (c) 1998 - 2019, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -54,12 +54,15 @@ my $CWD                     = getcwd();
 my $BINPATH                 = '';
 my $PERLPATH                = '';
 my $BUSYBOX                 = 'busybox';
+my $LIBTOOL                 = '';
 my $PROGRAMFILES            = ProgramFiles();
 
 my $x_libw32                = 'libw32';
 
 my %x_environment   = (
         'dj'            => {    # DJGPPP
+            TOOLCHAIN       => 'dj',
+            TOOLCHAINEXT    => '.dj',
             CC              => 'gcc',
             CXX             => 'g++',
             AR              => 'ar',
@@ -69,6 +72,8 @@ my %x_environment   = (
 
         'mingw'         => {    # MingW
             build_os        => 'mingw32',
+            TOOLCHAIN       => 'mingw',
+            TOOLCHAINEXT    => '.mingw',
             CC              => 'gcc',
             CXX             => 'g++',
             OSWITCH         => '',
@@ -92,6 +97,8 @@ my %x_environment   = (
             },
 
         'vc1200'        => {    # Visual Studio 7
+            TOOLCHAIN       => 'vs70',
+            TOOLCHAINEXT    => '.vs70',
             CC              => 'cl',
             COMPILERPATH    => '%VCINSTALLDIR%/bin',
             OSWITCH         => '-Fo',
@@ -108,6 +115,8 @@ my %x_environment   = (
             },
 
         'vc1400'        => {    # 2005, Visual Studio 8
+            TOOLCHAIN       => 'vs80',
+            TOOLCHAINEXT    => '.vs80',
             CC              => 'cl',
             COMPILERPATH    => '%VCINSTALLDIR%/bin',
             VSWITCH         => '',
@@ -117,8 +126,36 @@ my %x_environment   = (
             XSWITCH         => '-Fe',
             AR              => 'lib',
             CINCLUDE        => '-I$(ROOT)/libw32 -I$(ROOT)/libw32/msvc',
-            CFLAGS          => '-nologo -Zi -RTC1 -MTd',
-            CXXFLAGS        => '-nologo -Zi -RTC1 -MTd -EHsc',
+            CFLAGS          => '-nologo -Zi -RTC1 -MDd',
+            CXXFLAGS        => '-nologo -Zi -RTC1 -MDd -EHsc',
+            CWARN           => '-W3',
+            CXXWARN         => '-W3',
+            LDEBUG          => '-nologo -Zi -RTC1 -MDd',
+            LDMAPFILE       => '-MAP:$(MAPFILE)',
+
+            MFCDIR          => '',
+            MFCCFLAGS       => '-nologo -Zi -RTC1 -MD$(USE_DEBUG)',
+            MFCCXXFLAGS     => '-nologo -Zi -RTC1 -MD$(USE_DEBUG) -EHsc',
+            MFCCOPT         => '-Zc:wchar_t- -Zc:forScope -Gm',
+            MFCCXXOPT       => '-Zc:wchar_t- -Zc:forScope -Gm',
+            MFCCINCLUDE     => '',
+            MFCLIBS         => ''
+            },
+
+        'vc1500'        => {    # 2008, Visual Studio 9
+            TOOLCHAIN       => 'vs90',
+            TOOLCHAINEXT    => '.vs90',
+            CC              => 'cl',
+            COMPILERPATH    => '%VCINSTALLDIR%/bin',
+            VSWITCH         => '',
+            VPATTERN        => undef,
+            OSWITCH         => '-Fo',
+            LSWITCH         => '',
+            XSWITCH         => '-Fe',
+            AR              => 'lib',
+            CINCLUDE        => '-I$(ROOT)/libw32 -I$(ROOT)/libw32/msvc',
+            CFLAGS          => '-nologo -Zi -RTC1 -MDd',
+            CXXFLAGS        => '-nologo -Zi -RTC1 -MDd -EHsc',
             CWARN           => '-W3',
             CXXWARN         => '-W3',
             LDEBUG          => '-nologo -Zi -RTC1 -MTd',
@@ -126,6 +163,8 @@ my %x_environment   = (
             },
 
         'vc1600'        => {    # 2010, Visual Studio 10
+            TOOLCHAIN       => 'vs100',
+            TOOLCHAINEXT    => '.vs100',
             CC              => 'cl',
             COMPILERPATH    => '%VCINSTALLDIR%/bin',
             VSWITCH         => '',
@@ -135,15 +174,76 @@ my %x_environment   = (
             XSWITCH         => '-Fe',
             AR              => 'lib',
             CINCLUDE        => '-I$(ROOT)/libw32 -I$(ROOT)/libw32/msvc',
-            CFLAGS          => '-nologo -Zi -RTC1 -MTd',
-            CXXFLAGS        => '-nologo -Zi -RTC1 -MTd -EHsc',
+            CFLAGS          => '-nologo -Zi -RTC1 -MDd',
+            CXXFLAGS        => '-nologo -Zi -RTC1 -MDd -EHsc',
+            CWARN           => '-W3',
+            CXXWARN         => '-W3',
+            LDEBUG          => '-nologo -Zi -RTC1 -MDd',
+            LDMAPFILE       => '-MAP:$(MAPFILE)',
+
+            MFCDIR          => '/tools/WinDDK/7600.16385.1',
+            MFCCFLAGS       => '-nologo -Zi -RTC1 -MD$(USE_DEBUG)',
+            MFCCXXFLAGS     => '-nologo -Zi -RTC1 -MD$(USE_DEBUG) -EHsc',
+            MFCCOPT         => '-Zc:wchar_t- -Zc:forScope -Gm',
+            MFCCXXOPT       => '-Zc:wchar_t- -Zc:forScope -Gm',
+            MFCCINCLUDE     => '-I$(MFCDIR)/inc/atl71 -I$(MFCDIR)/inc/mfc42',
+            MFCLIBS         => '/LIBPATH:$(MFCDIR)\lib\atl\i386 /LIBPATH:$(MFCDIR)\lib\mfc\i386'
+            },
+
+       'vc1900'        => {    # 2015, Visual Studio 19
+            TOOLCHAIN       => 'vs140',
+            TOOLCHAINEXT    => '.vs140',
+            CC              => 'cl',
+            COMPILERPATH    => '%VCINSTALLDIR%/bin',
+            VSWITCH         => '',
+            VPATTERN        => undef,
+            OSWITCH         => '-Fo',
+            LSWITCH         => '',
+            XSWITCH         => '-Fe',
+            AR              => 'lib',
+            CINCLUDE        => '-I$(ROOT)/libw32 -I$(ROOT)/libw32/msvc',
+            CFLAGS          => '-nologo -Zi -RTC1 -MDd -fp:precise -D_CRT_NO_POSIX_ERROR_CODES',
+            CXXFLAGS        => '-nologo -Zi -RTC1 -MDd -EHsc -fp:precise',
+            CWARN           => '-W3',
+            CXXWARN         => '-W3',
+            LDEBUG          => '-nologo -Zi -RTC1 -MDd',
+            LDMAPFILE       => '-Fm$(MAPFILE)',
+            },
+
+       # See: VsDevCmd.bat
+       #  The VsDevCmd.bat file is a new file delivered with Visual Studio 2017.
+       #  Visual Studio 2015 and earlier versions used VSVARS32.bat for the same purpose.
+       #  This file was stored in \Program Files\Microsoft Visual Studio\[Version]\Common7\Tools
+       #                       or \Program Files (x86)\Microsoft Visual Studio\Version\Common7\Tools.
+       #
+       #  pushd "C:/Program Files (x86)/Microsoft Visual Studio/2017/Enterprise/Common7/Tools"
+       #  call  VsDevCmd.bat
+       #  call  VsDevCmd.bat -test
+       #  popd
+       #
+       'vc1910'        => {    # 2017, Visual Studio 19.10 -- 19.1x
+            TOOLCHAIN       => 'vs141',
+            TOOLCHAINEXT    => '.vs141',
+            CC              => 'cl',
+            COMPILERPATH    => '%VCToolsInstallDir%/bin/Hostx86/x86',
+            VSWITCH         => '',
+            VPATTERN        => undef,
+            OSWITCH         => '-Fo',
+            LSWITCH         => '',
+            XSWITCH         => '-Fe',
+            AR              => 'lib',
+            CINCLUDE        => '-I$(ROOT)/libw32 -I$(ROOT)/libw32/msvc',
+            CFLAGS          => '-nologo -Zi -RTC1 -MDd -fp:precise',
+            CXXFLAGS        => '-nologo -Zi -RTC1 -MDd -EHsc -fp:precise',
             CWARN           => '-W3',
             CXXWARN         => '-W3',
             LDEBUG          => '-nologo -Zi -RTC1 -MTd',
-            LDMAPFILE       => '-MAP:$(MAPFILE)',
+            LDMAPFILE       => '-Fm$(MAPFILE)',
             },
 
         'wc1300'        => {    # Watcom 11
+            TOOLCHAIN       => 'wc11',
+            TOOLCHAINEXT    => '.wc11',
             CC              => 'wcl386',
             COMPILERPATH    => '%WATCOM%/binnt',
             VSWITCH         => '-c',
@@ -162,6 +262,8 @@ my %x_environment   = (
             },
 
         'owc1900'       => {    # Open Watcom 1.9
+            TOOLCHAIN       => 'owc19',
+            TOOLCHAINEXT    => '.owc19',
             CC              => 'wcl386',
             COMPILERPATH    => '%WATCOM%/binnt',
             VSWITCH         => '-c',
@@ -172,12 +274,63 @@ my %x_environment   = (
             XSWITCH         => '-fe=',
             AR              => 'lib',
             CINCLUDE        => '-I$(ROOT)/libw32',
-            CFLAGS          => '-q -j -ei -4r -d2 -hc -db -ofr -zlf -bt=nt -bm -aa',
-            CXXFLAGS        => '-q -j -ei -4r -d2i    -db -ofr -zlf -bt=nt -bm -xs -xr -cc++',
+
+                # -q        Operate quietly.
+                # -6r       Register calling conventions.
+                #               warning: dont not mix module calling conventions.
+                # -j        Signed character (default unsigned).
+                # -ei       Force enum base type to use at least an int;
+                #               otherwise smallest data-type to fit data-range.
+                # -ri       Return chars/shorts as ints; removed
+                # -d2       Full symbolic debugging information
+                #   -d2i        C++ only; d2 and debug inlines.
+                # -hc       Generate Codeview debugging information.
+                #   or -hw  Generate Watcomc debugging information.
+                # -db       Generate browsing information (.mbr).
+                # -o..      Optimization(s)
+                #   f           -> generate traceable stack frames as needed
+                #   f+          -> always generate traceable stack frames
+                #   i           -> expand intrinsic functions inline
+                #   r           -> reorder instructions for best pipeline usage
+                #   u           -> all functions must have unique addresses
+                #
+                # -zlf      Add default library information to objects.
+                # -aa       Allow non-constant initialisation expressions.
+                # -bt=nt    Build target Windows NT (or greater).
+                # -bm       Multi-threaded environment.
+                # -br       Build with dll run-time library.
+                # -sg       Enable stack guard management (for functions with >= 4K of local variables).
+                # -zc       The zc option causes the code generator to place literal strings and const items in the code segment.
+                #
+                # -cc++     Treat source files as C++ code.
+                # -xs       Exception handling: balanced (C++).
+                # -xr       Enable RTTI (C++).
+                #
+                # Others:
+                # -za       Disable extensions, helps to ensure modules match the ANSI C programming language specification; NO_EXT_KEYS is predefined.
+                # -za99     Enable C99 ANSI compliance (1).
+                # -ecc      __cdecl (2).
+                #
+                # see:      wcpp386 -?
+                #
+                #   (1) Use with caution, beta undocumented feature and not 100% stable.
+                #   (2) Avoid changing the call convention from #r/#s, otherwise runtime library issues.
+                #
+            CFLAGS          => '-q -6r -j -ei -d2  -hw -db -of+ru -zlf -bt=nt -bm -br -aa -zc',
+            CXXFLAGS        => '-q -6r -j -ei -d2i -hw -db -of+ru -zlf -bt=nt -bm -br -cc++ -xs -xr -zc',
             CWARN           => '-W3',
             CXXWARN         => '-W3',
-            LDEBUG          => '-q -4r -d2 -hc -ofr -zlf -bt=nt -bm',
-            LDMAPFILE       => '-fm=$(MAPFILE)'
+            LDEBUG          => '-q -6r -d2 -hw -db -bt=nt -bm -br',
+            LDMAPFILE       => '-fm=$(MAPFILE)',
+
+            # not-supported
+            MFCDIR          => '/tools/WinDDK/7600.16385.1',
+          # MFCCOPT         => '-q -j -ei -4r -d2  -hc -db -ofr -zlf -bt=nt -bm -aa',
+          # MFCCXXOPT       => '-q -j -ei -4r -d2i     -db -ofr -zlf -bt=nt -bm -xs -xr -cc++',
+            MFCCOPT         => '-q -j -ei -6r -d2  -hw -db -ofr -zlf -bt=nt -bm -br -aa',
+            MFCCXXOPT       => '-q -j -ei -6r -d2i     -db -ofr -zlf -bt=nt -bm -br -xs -xr -cc++',
+            MFCCINCLUDE     => '-I$(MFCDIR)/inc/atl71 -I$(MFCDIR)/inc/mfc42',
+            MFCLIBS         => '/LIBPATH:$(MFCDIR)\lib\atl\i386 /LIBPATH:$(MFCDIR)\lib\mfc\i386'
             }
         );
 
@@ -204,7 +357,7 @@ my %win_entries     = (
         AWK                 => '@BINPATH@awk',
         SED                 => '@BINPATH@sed',
         PERL                => '@PERLPATH@perl',
-        LIBTOOL             => '@PERLPATH@perl '."${CWD}/win32/libtool_win32.pl",
+        LIBTOOL             => '@PERLPATH@perl '.'$<LIBTOOL>',
         LT_OBJDIR           => '.libs/',
         RC                  => 'rc',
 
@@ -218,7 +371,7 @@ my %win_entries     = (
 
 my %x_tokens        = (
         #host, build etc
-        PACKAGE             => 'GRIEF',
+        PACKAGE             => '',
         PACKAGE_BUGREPORT   => '',
         PACKAGE_NAME        => '',
         PACKAGE_STRING      => '',
@@ -309,6 +462,10 @@ my %x_tokens        = (
         LIBCURL             => '',
         LIBMAGIC            => '',
         LIBARCHIVE          => '',
+        LIBZ                => '',
+        LIBBZ2              => '',
+        LIBLZMA             => '',
+        LIBREGEX            => '',
         EXTRALIBS           => '',
         TERMLIB             => '',
         LIBM                => '',
@@ -322,9 +479,9 @@ my @x_headers       = (
         'sys/cdefs.h',
         'sys/bsdtypes.h',
         'sys/param.h',
+        'sys/socket.h',
         'sys/time.h',
         'sys/select.h',
-        'sys/socket.h',
         'sys/wait.h',
         'sys/mman.h',
         'sys/utime.h',
@@ -353,6 +510,7 @@ my @x_headers       = (
         'fcntl.h',
         'fenv.h',
         'float.h',
+        'poll.h',
         'io.h',
         'memory.h',
         'process.h',
@@ -362,48 +520,76 @@ my @x_headers       = (
         'signal.h',
         'utime.h',
         'wait.h',
-      # 'argz.h',
-      # 'lzma.h',                               # libzme
-      # 'copyfile.h',
 
-        #windows
         'windows.h',
         'wincrypt.h',
+        'bcrypt.h',
 
-        #libw32
       # 'getopt.h',                             # NOTE, dont include (see: edgetopt.h)
         'unistd.h',
         'dirent.h',
         'dlfcn.h',                              # dlopen()
         'pwd.h',
-        'grp.h',
-      # 'poll.h'                                # functionality incomplete
+        'grp.h'
         );
 
-my @x_types         = (
+my @x_decls         = (     #stdint/intypes.h
+        'SIZE_MAX',
+        'SSIZE_MAX',
+        'INT16_C',
+        'INT16_MIN',
+        'INT16_MAX',
+        'UINT16_MAX',
+        'INT32_C',
+        'INT32_MIN',
+        'INT32_MAX',
+        'UINT32_MAX',
+        'INT64_C',
+        'INT64_MIN',
+        'INT64_MAX',
+        'UINT64_MAX',
+        'INTPTR_MIN',
+        'INTPTR_MAX',
+        'UINTPTR_MAX',
+        'WCHAR_MIN',
+        'WCHAR_MAX',
+        'INTMAX_MIN',
+        'INTMAX_MAX',
+        'UINTMAX_MAX',
+        );
+
+my @x_types         = (     #stdint/inttypes/types.h
         'inline',
         '__inline',
         '__int8',
         '__int16',
         '__int32',
         '__int64',
-        'int64_t',
         'intmax_t',
         'uintmax_t',
         'intptr_t',
         'uintptr_t',
         'long long int',
         'unsigned long long int',
+        'int8_t',
+        'int16_t',
+        'int32_t',
+        'int64_t',
+        'uint8_t',
+        'uint16_t',
+        'uint32_t',
+        'uint64_t',
+        'uint_fast8_t',
+        'uint_fast16_t',
+        'uint_fast32_t',
+        'uint_fast64_t',
+        'wchar_t',
+        'char16_t',
+        'char32_t',
         'bool',
+        '_Bool:C99BOOL',
         '_bool',
-      # 'mode_t',                               # TODO, need 'native' test
-      # 'off_t',
-      # 'pid_t',
-      # 'size_t',
         'ssize_t',
-      # 'uid_t',
-      # 'gid_t',
-      # 'fpos_t'
         );
 
 my @x_sizes         = (
@@ -424,18 +610,24 @@ my @x_functions     = (
         'rename',
         'bcmp', 'bzero',
         'memcmp', 'memset', 'memmove',
-        'index', 'rindex',
+        'index', 'rindex',                      # bsd
         'strcasecmp', '__strcasecmp', 'stricmp',
         'strtoul',
         'strnlen',
         'strerror',
         'strftime',
         'strchr', 'strrchr', 'strdup',
-        'strlcpy', 'strlcat',                   # BSD
+        'strlcpy', 'strlcat',                   # bsd/linux
+            'strsep', 'strnstr', 'strcasestr', 'strcasestr_l', 'strtonum',
         'strtof', 'strtold', 'strtoll',
         'strverscmp', '__strverscmp',
+        'mkdtemp',                              # bsd/linux
+        'err',                                  # bsd/linux: err, warn etc
+             'setprocname', 'getprocname',
+        'setproctitle',                         # bsd
         'alloca',
         '_alloca',                              # msvc
+        'reallocarray', 'stringlist',           # bsd
         'isascii',
         '__isascii',                            # msvc
         'isblank',
@@ -448,19 +640,21 @@ my @x_functions     = (
         'asnprintf', 'vasnprintf',
         'mbrtowc', 'wcrtomb', 'wcscmp', 'wcscpy', 'wcslen', 'wctomb', 'wmemcmp', 'wmemmove', 'wmemcpy',
         'fgetpos', 'fsetpos',
-      # 'fgetattr', 'flistattr', 'ftruncate', 'fchdir',
         'fseeko', 'fgetln',                     # bsd/linux extensions
-        'ctime_r', 'localtime_r', 'gmtime_r', 'asctime_r',
-        'mktime', 
+        'truncate', 'ftruncate',
+        'getline', 'getdelim',                  # bsd/linux
+        'ctime_r', 'localtime_r', 'gmtime_r', 'asctime_r', #posix.1
+        'mktime',
         'timegm',                               # bsd/linux extensions
         'feclearexpect',                        # fenv.h/c99
         'round',                                # c99
         'nearbyintf',
-        'va_copy', '__va_copy'                  # c99/gnu
+        'va_copy', '__va_copy',                 # c99/gnu
+        'opendir',
+        'findfirst', '_findfirst',              # msvc
         );
 
 my @x_commands      = (
-      # 'echo',
         'mkdir',
         'rmdir',
         'tar',
@@ -468,78 +662,20 @@ my @x_commands      = (
         'cp'
         );
 
-my @x_libraries     = (         #local libraries -l<xxx> lib<xxx>.lib
-        'vfs',
-        'charudet',
-        'chartable',
-        'teken',
-        'llist',
-        'splay',
-        'onigrx',                               # Oniguruma - Regular expressions library.
-        'tre',                                  # TRE - The free and portable approximate regex matching library.
-        'misc',
-        'w32',
-        'iconv',
-        'citrus',
-        'bsdio',
-        'bsdfetch',
-        'bsddb',
-        'bsdmdoc',
-        'dlmalloc'
+our $PACKAGE        = undef;
+our $PACKAGE_PATH   = $x_libw32;
+our $PACKAGE_H      = 'package.h';
+
+our @x_libraries    = ();   # local libraries -l<xxx> lib<xxx>.lib
+our @x_libraries2   = ();   # local libraries -l<xxx> xxx.lib
+our @x_optlibraries = ();   # optional libraries
+our @x_makefiles    = ();   # local makefiles; build order
+
+my %CONFIG_O        = (     # optional config.h values
+        HAVE_EIGHTBIT           => '1'
         );
 
-my @x_optlibraries  = (
-        'aspell',
-        'iconv',
-        'intl',
-        'charset',
-        'expat'
-        );
-
-my @x_makefiles     = (
-        '.',                                    # build order
-        'libw32',
-        '^contrib',
-        '^contrib/makedepend',
-        '^contrib/extags',
-        '^contrib/libz',
-        '^contrib/libbzip2',
-        '^contrib/libregex',
-        '^contrib/libmagic',
-        '^contrib/libguess',
-        '^contrib/libarchive',
-        '^contrib/libcitrus',
-            '!^contrib/libiconv',               # optional/recursive
-            '^contrib/libintl',
-        '^contrib/hunspell',
-      # '^contrib/liblua',
-        '!^contrib/icu',                        # optional local ICU installation
-        'libvfs',
-        'libchartable',
-        'libcharudet',
-        'libteken',
-        'libonigrx',
-        'libtre',
-        'libmisc',
-        'libllist',
-        'libsplay',
-        'libterm',
-        'libmalloc',
-        'libbsdio',
-        'libbsddb',
-        'libbsdfetch',
-        'gr',
-        'grcpp',
-        'grmandoc',
-        'grunch',
-        'gm',
-        'macsrc',
-        'hlpdoc',
-        'util',
-        'win32/AutoUpdater'
-        );
-
-my %CONFIG_H        = (
+my %CONFIG_H        = (     # predefined config.h values
         IS_LITTLE_ENDIAN        => '1',         # TODO
         STDC_HEADERS            => '1',
         HAVE_EIGHTBIT           => '1',
@@ -551,6 +687,7 @@ my %CONFIG_H        = (
 
 our @HEADERS        = ();
 our @EXTHEADERS     = ();
+our %DECLS          = ();
 our %TYPES          = ();
 our %SIZES          = ();
 our %FUNCTIONS      = ();
@@ -585,6 +722,7 @@ my $o_libmagic      = undef;
 sub Configure($$);
 sub LoadContrib($$$);
 sub CheckCompiler($$);
+sub CheckDecl($$);
 sub CheckType($$);
 sub CheckSize($$);
 sub CheckFunction($$);
@@ -609,6 +747,11 @@ main()
     my $o_clean         = 0;
     my $o_help          = 0;
 
+    require "makelib.in";
+        die "makelib.in: PACKAGE not defined\n"
+            if (! $PACKAGE);
+        $x_tokens{PACKAGE}      = $PACKAGE;
+
     my $ret
         = GetOptions(
                 'binpath=s'     => \$BINPATH,
@@ -619,6 +762,7 @@ main()
                 'gnuwin32=s'    => \$o_gnuwin32,
                 'gnulibs'       => \$o_gnulibs,
                 'contrib'       => \$o_contrib,
+                'libtool'       => \$LIBTOOL,
                 'libhunspell=s' => \$o_libhunspell,
                 'libarchive=s'  => \$o_libarchive,
                 'libmagic=s'    => \$o_libmagic,
@@ -633,22 +777,37 @@ main()
 
     my $cmd = $ARGV[0];
 
+    # see: https://en.wikipedia.org/wiki/Microsoft_Visual_C%2B%2B
+    #
+    #   MSVC++ 9.0   _MSC_VER == 1500 (Visual Studio 2008 version 9.0)
+    #   MSVC++ 10.0  _MSC_VER == 1600 (Visual Studio 2010 version 10.0)
+    #   MSVC++ 11.0  _MSC_VER == 1700 (Visual Studio 2012 version 11.0)
+    #   MSVC++ 12.0  _MSC_VER == 1800 (Visual Studio 2013 version 12.0)
+    #   MSVC++ 14.0  _MSC_VER == 1900 (Visual Studio 2015 version 14.0)
+    #   MSVC++ 14.1  _MSC_VER == 1910 (Visual Studio 2017 version 15.0)
+    #   MSVC++ 14.11 _MSC_VER == 1911 (Visual Studio 2017 version 15.3)
+    #   MSVC++ 14.12 _MSC_VER == 1912 (Visual Studio 2017 version 15.5)
+    #   MSVC++ 14.13 _MSC_VER == 1913 (Visual Studio 2017 version 15.6)
+    #   MSVC++ 14.14 _MSC_VER == 1914 (Visual Studio 2017 version 15.7)
+    #
     if ('vc12' eq $cmd)         { $o_version = 1200, $cmd = 'vc' }
-    elsif ('vc14' eq $cmd)      { $o_version = 1400; $cmd = 'vc' }
-    elsif ('vc2005' eq $cmd)    { $o_version = 1400; $cmd = 'vc' }
-    elsif ('vc2010' eq $cmd)    { $o_version = 1600; $cmd = 'vc' }
+    elsif ('vc14' eq $cmd)      { $o_version = 1400; $cmd = 'vc' } elsif ('vc2005' eq $cmd) { $o_version = 1400; $cmd = 'vc' }
+    elsif ('vc15' eq $cmd)      { $o_version = 1400; $cmd = 'vc' } elsif ('vc2008' eq $cmd) { $o_version = 1500; $cmd = 'vc' }
+    elsif ('vc16' eq $cmd)      { $o_version = 1600; $cmd = 'vc' } elsif ('vc2010' eq $cmd) { $o_version = 1600; $cmd = 'vc' }
+    elsif ('vc19' eq $cmd)      { $o_version = 1900; $cmd = 'vc' } elsif ('vc2015' eq $cmd) { $o_version = 1900; $cmd = 'vc' }
+    elsif ('vc1910' eq $cmd)    { $o_version = 1910; $cmd = 'vc' } elsif ('vc2017' eq $cmd) { $o_version = 1910; $cmd = 'vc' }
     if (! $o_version) {
         if ($cmd eq 'vc')       { $o_version = 1400; }
         elsif ($cmd eq 'wc')    { $o_version = 1300; }
         elsif ($cmd eq 'owc')   { $o_version = 1900; }
-        else                    { $o_version = 0; }
+        else { $o_version = 0; }
     }
 
     if ($cmd eq 'vc' ||
             $cmd eq 'owc' || $cmd eq 'wc' ||
             $cmd eq 'dj' || $cmd eq 'mingw') {
 
-        my $cache = "${x_tmpdir}/${cmd}.cache";
+        my $cache = "${x_tmpdir}/${cmd}${o_version}.cache";
 
         eval {
             do "$cache" if (! $o_clean && -f $cache);
@@ -660,7 +819,7 @@ main()
         foreach (@x_makefiles) {
             Makefile($cmd, $_, 'Makefile');
         }
-        Makefile($cmd, 'include', 'edpackage.h');
+        Makefile($cmd, $PACKAGE_PATH, $PACKAGE_H);
         Config($cmd, $x_libw32);
 
         #cache
@@ -672,6 +831,7 @@ main()
         print CACHE Data::Dumper->Dump([\%CONFIG_H],   [qw(*XXCONFIG_H)]);
         print CACHE Data::Dumper->Dump([\@HEADERS],    [qw(*XXHEADERS)]);
         print CACHE Data::Dumper->Dump([\@EXTHEADERS], [qw(*XXEXTHEADERS)]);
+        print CACHE Data::Dumper->Dump([\%DECLS],      [qw(*DECLS)]);
         print CACHE Data::Dumper->Dump([\%TYPES],      [qw(*TYPES)]);
         print CACHE Data::Dumper->Dump([\%SIZES],      [qw(*SIZES)]);
         print CACHE Data::Dumper->Dump([\%FUNCTIONS],  [qw(*FUNCTIONS)]);
@@ -722,8 +882,9 @@ Usage: perl makelib.pl [options] <command>
 Options:
     --help                  command line help.
 
-    --binpath=<path>        path of support binaries (gmake etc), otherwise
-                            these are assumed to be in the path.
+    --libtool=<path>        path to libtool_win32.pl.
+
+    --binpath=<path>        path of support binaries (gmake etc), otherwise these are assumed to be in the path.
 
     --perlpath=<path>       PERL binary path, otherwise assumed in the path.
 
@@ -781,6 +942,16 @@ Configure($$)           # (type, version)
         $PERLPATH .= '/';
     }
 
+    if (! $LIBTOOL) {                           # derive libtool location
+        if (-f "${CWD}/win32/libtool_win32.pl") {
+            $LIBTOOL = "${CWD}/win32/libtool_win32.pl";
+        } elsif (-f "${CWD}/libtool_win32.pl") {
+            $LIBTOOL = "${CWD}/libtool_win32.pl";
+        } else {
+            $LIBTOOL = "libtool_win32.pl";
+        }
+    }
+
     # environment
     my $signature =                             # ie. vc1600
             ($version ? sprintf("%s%d", $type, $version) : $type);
@@ -793,7 +964,10 @@ Configure($$)           # (type, version)
 
     if ('dj' ne $type) {                        # WIN32 profile
         foreach my $entry (keys %win_entries) {
-            $x_tokens{$entry} = $win_entries{$entry};
+            my $token = $win_entries{$entry};
+
+            $token =~ s/\$\<LIBTOOL>/${LIBTOOL}/;
+            $x_tokens{$entry} = $token;
         }
     }
 
@@ -868,19 +1042,54 @@ Configure($$)           # (type, version)
         print "\n";
     }
 
+    # decls
+    foreach my $declspec (@x_decls) {
+        my $name   = $declspec;
+        my $define = uc($declspec);
+        $define =~ s/ /_/g;
+        if ($declspec =~ /^(.+):(.+)$/) {
+            $name   = $1;
+            $define = $2;                       # optional explicit #define
+        }
+
+        my $cached = (exists $DECLS{$name});
+        my $status = ($cached ? $DECLS{$name} : -1);
+
+        print "decl:     ${name} ...";
+        print " " x (28 - length($name));
+
+        if (1 == $status ||
+                (-1 == $status && 0 == CheckDecl($type, $name))) {
+            $DECLS{$name} = 1;
+            $CONFIG_H{"HAVE_DECL_${define}"} = 1;
+            print ($cached ? "[yes, cached]" : "[yes]");
+        } else {
+            $DECLS{$name} = 0;
+            print ($cached ? "[no, cached]" : "[no]");
+        }
+        print "\n";
+    }
+
     # types
-    foreach my $name (@x_types) {
+    foreach my $typespec (@x_types) {
+        my $name   = $typespec;
+        my $define = uc($typespec);
+        $define =~ s/ /_/g;
+        if ($typespec =~ /^(.+):(.+)$/) {
+            $name   = $1;
+            $define = $2;                       # optional explicit #define
+        }
+
         my $cached = (exists $TYPES{$name});
         my $status = ($cached ? $TYPES{$name} : -1);
 
         print "type:     ${name} ...";
         print " " x (28 - length($name));
+
         if (1 == $status ||
                 (-1 == $status && 0 == CheckType($type, $name))) {
             $TYPES{$name} = 1;
-            $name = uc($name);
-            $name =~ s/ /_/g;
-            $CONFIG_H{"HAVE_${name}"} = 1;
+            $CONFIG_H{"HAVE_${define}"} = 1;
             print ($cached ? "[yes, cached]" : "[yes]");
         } else {
             $TYPES{$name} = 0;
@@ -980,7 +1189,7 @@ Configure($$)           # (type, version)
         }
 
         #libarchive
-        if (! exists $contribs{libarchive}) {
+        if (! exists $contribs{libarchive} && defined $o_libarchive) {
             $o_libarchive =~ s/\\/\//g;
             my $libarchivelib = "${o_libarchive}/lib";
             my $libarchiveinc = "${o_libarchive}/include";
@@ -1011,7 +1220,7 @@ Configure($$)           # (type, version)
         }
 
         #libhunspell
-        if (! exists $contribs{hunspell}) {
+        if (! exists $contribs{hunspell} && defined $o_libhunspell) {
             $o_libhunspell =~ s/\\/\//g;
             my $libhunspelllib = "${o_libhunspell}/lib";
             my $libhunspellinc = "${o_libhunspell}/include";
@@ -1042,7 +1251,7 @@ Configure($$)           # (type, version)
         }
 
         #libmagic
-        if (! exists $contribs{libmagic}) {
+        if (! exists $contribs{libmagic} && defined $o_libmagic) {
             $o_libmagic =~ s/\\/\//g;
             my $libmagiclib = "${o_libmagic}/lib";
             my $libmagicinc = "${o_libmagic}/include";
@@ -1072,8 +1281,8 @@ Configure($$)           # (type, version)
             }
         }
 
-        # ICU
-        if (! exists $contribs{icu} && $o_icu) {
+        #ICU
+        if (! exists $contribs{icu} && defined $o_icu) {
             $o_icu =~ s/\\/\//g;
 
             if (-f "${o_icu}/makelib.def") {
@@ -1202,6 +1411,9 @@ LoadContrib($$$)        # (name, dir, refIncludes)
 }
 
 
+#   Function: CheckCompiler
+#       Check whether the stated compiler exists.
+#
 sub
 CheckCompiler($$)       # (type, env)
 {
@@ -1261,8 +1473,8 @@ CheckCompiler($$)       # (type, env)
            (exists $$env{ISWITCH} ? $$env{ISWITCH} : '-I').$_.' ';
     }
 
-    $CONFIG_H{GRIEF_CC_COMPILER} = "\"".basename(${x_compiler})."\"";
-    $CONFIG_H{GRIEF_CC_VERSION} = "\"${x_version}\"";
+    $CONFIG_H{MAKELIB_CC_COMPILER} = "\"".basename(${x_compiler})."\"";
+    $CONFIG_H{MAKELIB_CC_VERSION} = "\"${x_version}\"";
 
     print "compiler: ${x_compiler}\n";
     print "version:  ${x_version}\n";
@@ -1284,6 +1496,56 @@ CheckCompiler($$)       # (type, env)
 }
 
 
+#   Function: CheckDecl
+#       Determine whether of the stated 'devl' exists.
+#
+sub
+CheckDecl($$)           # (type, name)
+{
+    my ($type, $name) = @_;
+
+    my $t_name = $name;
+    $t_name =~ s/ /_/g;
+
+    my $BASE   = "${type}_${t_name}";
+    my $SOURCE = "${BASE}.c";
+    my ($cmd, $cmdparts)
+            = CheckCommand($BASE, $SOURCE);
+    my $config = CheckConfig();
+
+    $name = 'void *'
+        if ($name eq 'void_p');
+
+    my $asctime = asctime(localtime());
+    chop($asctime);
+    open(TMP, ">${x_tmpdir}/$SOURCE") or
+            die "cannot create ${x_tmpdir}/$SOURCE : $!\n";
+    print TMP<<EOT;
+/*
+ *  Generated by makelib.pl, $asctime (CheckSize)
+$cmdparts
+ */
+${config}
+int main(int argc, char **argv) {
+#if !defined($name)
+#error $name is not defined ....
+#endif
+#define __STRIZE(__x) #__x
+#define STRIZE(__x)  __STRIZE(__x)
+    const int ret = strlen(STRIZE($name));
+    printf("${name}=%s : ", STRIZE($name));
+    return ret ? 0 : 1;
+}
+EOT
+    close TMP;
+
+    return CheckExec($BASE, $cmd, 1);
+}
+
+
+#   Function: CheckType
+#       Determine whether the stated 'type' exists.
+#
 sub
 CheckType($$)           # (type, name)
 {
@@ -1295,7 +1557,8 @@ CheckType($$)           # (type, name)
     my $BASE   = "${type}_${t_name}";
     my $SOURCE = "${BASE}.c";
     my ($cmd, $cmdparts)
-              = CheckCommand($BASE, $SOURCE);
+            = CheckCommand($BASE, $SOURCE);
+    my $config = CheckConfig();
 
     my $asctime = asctime(localtime());
     chop($asctime);
@@ -1303,20 +1566,11 @@ CheckType($$)           # (type, name)
             die "cannot create ${x_tmpdir}/$SOURCE : $!\n";
     print TMP<<EOT;
 /*
- *  Generated by makelib.pl, $asctime
+ *  Generated by makelib.pl, $asctime (CheckType)
 $cmdparts
  */
-#if defined(__STDC__)
-#include <sys/types.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#endif
+${config}
 EOT
-
-    foreach my $header (@HEADERS) {
-        print TMP "#include <$header>\n";       # list should be more selective
-    }
 
     if ($t_name =~ /inline/) {
         print TMP<<EOT;
@@ -1343,6 +1597,9 @@ EOT
 }
 
 
+#   Function: CheckSize
+#       Determine size of the stated 'type' exists.
+#
 sub
 CheckSize($$)           # (type, name)
 {
@@ -1354,7 +1611,8 @@ CheckSize($$)           # (type, name)
     my $BASE   = "${type}_${t_name}";
     my $SOURCE = "${BASE}.c";
     my ($cmd, $cmdparts)
-               = CheckCommand($BASE, $SOURCE);
+            = CheckCommand($BASE, $SOURCE);
+    my $config = CheckConfig();
 
     $name = 'void *'
         if ($name eq 'void_p');
@@ -1365,14 +1623,10 @@ CheckSize($$)           # (type, name)
             die "cannot create ${x_tmpdir}/$SOURCE : $!\n";
     print TMP<<EOT;
 /*
- *  Generated by makelib.pl, $asctime
+ *  Generated by makelib.pl, $asctime (CheckSize)
 $cmdparts
  */
-#if defined(__STDC__)
-#include <sys/types.h>
-#include <stdio.h>
-#include <stdlib.h>
-#endif
+${config}
 int main(int argc, char **argv) {
     return sizeof($name);
 }
@@ -1396,7 +1650,8 @@ CheckFunction($$)       # (type, name)
     my $BASE   = "${type}_${name}";
     my $SOURCE = "${BASE}.c";
     my ($cmd, $cmdparts)
-               = CheckCommand($BASE, $SOURCE);
+            = CheckCommand($BASE, $SOURCE);
+    my $config = CheckConfig();
 
     my $tmpsource = "${x_tmpdir}/$SOURCE";
     my $asctime = asctime(localtime());
@@ -1406,9 +1661,59 @@ CheckFunction($$)       # (type, name)
             die "cannot create ${tmpsource} : $!\n";
     print TMP<<EOT;
 /*
- *  Generated by makelib.pl, $asctime
+ *  Generated by makelib.pl, $asctime (CheckFunction)
 $cmdparts
  */
+EOT
+
+    ##############################################################################
+    #   alloca -- possible intrusive
+    #
+    if ($name =~ /alloca$/) {
+        $config  = "/*see: AC_FUNC_ALLOCA for details*/\n";
+        $config .= "\n#define HAVE_STDLIB_H"
+            if (exists $CONFIG_H{HAVE_STDLIB_H});
+        $config .= "\n#define HAVE_ALLOCA_H"
+            if (exists $CONFIG_H{HAVE_ALLOCA_H});
+
+        print TMP<<EOT;
+${config}
+#if defined(STDC_HEADERS)
+#   include <stdlib.h>
+#   include <stddef.h>
+#else
+#   if defined(HAVE_STDLIB_H)
+#       include <stdlib.h>
+#   endif
+#endif
+#if defined(HAVE_ALLOCA_H)
+#   include <alloca.h>
+#elif !defined(alloca)
+#   if defined(__GNUC__)
+#        define alloca          __builtin_alloca
+#   elif defined(_AIX)
+#       define alloca           __alloca
+#   elif defined(_MSC_VER) || defined(__WATCOMC__)
+#       include <malloc.h>
+#   else
+#       ifdef __cplusplus
+extern "C"
+#       endif
+void *alloca (size_t);
+#   endif
+#endif
+int main(int argc, char **argv) {
+    const char *mem = ${name}(1024);
+    return (mem ? 1 : 0);
+}
+EOT
+
+    ##############################################################################
+    #   generic
+    #
+    } else {
+        print TMP<<EOT;
+${config}
 #if defined(__STDC__)
 #include <stdio.h>
 #include <stdlib.h>
@@ -1420,7 +1725,7 @@ EOT
         print TMP "#include <$header>\n";
     }
 
-    print TMP<<EOT;
+        print TMP<<EOT;
 typedef void (*function_t)(void);
 static function_t function;
 int main(int argc, char **argv) {
@@ -1428,6 +1733,7 @@ int main(int argc, char **argv) {
     return 1;
 }
 EOT
+    }
     close TMP;
 
     return CheckExec($BASE, $cmd);
@@ -1447,7 +1753,7 @@ CheckICUFunction($)     # (type, name)
     my $BASE   = "icufunction_${name}";
     my $SOURCE = "${BASE}.cpp";
     my ($cmd, $cmdparts)
-               = CheckCommand($BASE, $SOURCE, 'icu');
+            = CheckCommand($BASE, $SOURCE, 'icu');
 
     my $tmpsource = "${x_tmpdir}/$SOURCE";
     my $asctime = asctime(localtime());
@@ -1549,6 +1855,64 @@ EOT
     return CheckExec($BASE, $cmd, 1);
 }
 
+
+#   Function: CheckConfig
+#       Build the <config.h> definition to use during check commands.
+#   Returns:
+#       config_h
+#
+sub
+CheckConfig()
+{
+    my $config = '';
+
+    $config = "
+#if defined(__STDC__)
+#include <sys/types.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#endif";
+    $config .= "\n#define HAVE_INTTYPES_H"
+            if (exists $CONFIG_H{HAVE_INTTYPES_H});
+    $config .= "\n#define HAVE_STDINT_H"
+            if (exists $CONFIG_H{HAVE_STDINT_H});
+    $config .= "\n#define HAVE_STDBOOL_H"
+            if (exists $CONFIG_H{HAVE_STDBOOL_H});
+    $config .= "\n#define HAVE_STDIO_H"
+            if (exists $CONFIG_H{HAVE_STDIO_H});
+    $config .= "\n#define HAVE_LIMITS_H"
+            if (exists $CONFIG_H{HAVE_LIMITS_H});
+    $config .= "\n#define HAVE_STRING_H"
+            if (exists $CONFIG_H{HAVE_STRING_H});
+    $config .= "\n#define HAVE_WCHAR_H"
+            if (exists $CONFIG_H{HAVE_WCHAR_H});
+    $config .= "
+#if defined(HAVE_INTTYPES_H)
+#include <inttypes.h>       /* <stdint.h> plus printf/scanf format facilities */
+#elif defined(HAVE_STDINT_H)
+#include <stdint.h>
+#endif
+#if defined(HAVE_STDBOOL_H)
+#include <stdbool.h>
+#endif
+#if !defined(__STDC__) && defined(HAVE_STDIO_H)
+#include <stdio.h>
+#endif
+#if defined(HAVE_LIMITS_H)
+#include <limits.h>         /* XXX_MAX/MIN etc */
+#endif
+#if defined(HAVE_STRING_H)
+#include <string.h>         /* strlen()/memcpy() etc */
+#endif
+#if defined(HAVE_WCHAR_H)
+#include <wchar.h>          /* wcxxx */
+#endif
+";
+    return $config;
+}
+
+
 #   Function: CheckCommand
 #       Build the compile check exec command.
 #   Returns:
@@ -1612,8 +1976,7 @@ CheckCommand($$;$)      # (base, source, pkg)
 #   Parameters:
 #       base - Base application name.
 #       cmd - Compiler command.
-#       exec - Optional boolean flag, if *true* the resulting application
-#           is executed.
+#       exec - Optional boolean flag, if *true* the resulting application is executed.
 #   Returns:
 #       cmd, cmdparts
 #
@@ -1805,10 +2168,6 @@ Makefile($$$)           # (type, dir, file)
         if ($type eq 'vc') {                    # LIBPATH usage
             $text =~ s/-L/\/link \/LIBPATH:/g;
 
-            foreach my $library (@x_libraries) {
-                $text =~ s/-l${library}([\n\t \\])/lib${library}.lib$1/g;
-            }
-
         } else {
             $text =~ s/-L([^\s]+)/-"LIBPATH $1"/g;
 
@@ -1820,21 +2179,31 @@ Makefile($$$)           # (type, dir, file)
                 $text =~ s/-Fe(.*) \$\(([A-Z_]*OBJS)\)/-Fe$1 \$(subst \/,\\,\$($2))/g;
 
                 # directory slash conversion
-                $text =~ s/-I([^\s]+)/-i="$1"/g;
+              # $text =~ s/-I([^\s]+)/-i="$1"/g;
+              # $text =~ s/-I ([^\s]+)/-i="$1"/g;
+                    #gnuwin32 make quotes would be retained; this can not guaranteed under an alt instance.
+                $text =~ s/-I([^\s]+)/-i=\$(subst \/,\\,$1)/g;
+                $text =~ s/-I ([^\s]+)/-i=\$(subst \/,\\,$1)/g;
+
                 $text =~ s/\$</\$(subst \/,\\,\$<)/g;
                 $text =~ s/\$\^/\$(subst \/,\\,\$^)/g;
-            }
-
-            foreach my $library (@x_libraries) {
-                $text =~ s/-l${library}([\n\t \\])/lib${library}.lib$1/g;
             }
 
             $clean .= ' *.err';
             $xclean .= ' $(D_OBJ)/*.mbr';
         }
 
+        # libraries
+        foreach my $library (@x_libraries) {
+            $text =~ s/-l${library}([\n\t \\])/lib${library}.lib$1/g;
+        }
+
+        foreach my $library (@x_libraries2) {
+            $text =~ s/-l${library}([\n\t \\])/${library}.lib$1/g;
+        }
+
         # addition clean targets
-        $text =~ s/(\nCLEAN=\s+)/$1${clean} /g 
+        $text =~ s/(\nCLEAN=\s+)/$1${clean} /g
             if ($clean);
         if ($xclean) {
             $text =~ s/(\nXCLEAN=[\t ]+)/$1${xclean} /;
@@ -1845,8 +2214,13 @@ Makefile($$$)           # (type, dir, file)
     # replace tags
     $x_tokens{top_builddir} = ($dir eq '.' ? '.' : '..');
     $x_tokens{top_srcdir} = ($dir eq '.' ? '.' : '..');
-    if ('-i=' eq $x_tokens{ISWITCH}) {
-        $x_tokens{CINCLUDE} =~ s/-I([^\s]+)/-i="$1"/g;
+    if ($type eq 'owc') {                      # OpenWatcom
+       if ('-i=' eq $x_tokens{ISWITCH}) {
+         #  $x_tokens{CINCLUDE} =~ s/-I([^\s]+)/-i="$1"/g;
+                #gnuwin32 make quotes would be retained; this can not be guaranteed under an alt instance.
+            $x_tokens{CINCLUDE} =~ s/-I([^\s]+)/-i=\$(subst \/,\\,$1)/g;
+            $x_tokens{CINCLUDE} =~ s/-I ([^\s]+)/-i=\$(subst \/,\\,$1)/g;
+        }
     }
 
     $x_tokens{CXX} = $x_tokens{CC}              # CXX=CC
@@ -1868,6 +2242,9 @@ Makefile($$$)           # (type, dir, file)
     $text =~ s/\@BINPATH\@/${BINPATH}/g;
     $text =~ s/\@PERLPATH\@/${PERLPATH}/g;
     $text =~ s/\@BUSYBOX\@/${BUSYBOX}/g;
+
+    $text =~ s/(\$\(RM\)) (.*)/$1 \$(subst \/,\\,$2)/g;
+    $text =~ s/(\$\(RMDIR\)) (.*)/$1 \$(subst \/,\\,$2)/g;
 
     # export
     my $asctime = asctime(localtime());
@@ -1927,9 +2304,14 @@ Config($$)              # (type, dir)
     my $file = 'config.h';
     my $text = "";
 
+    # import
+    if ($dir =~ /libw32/) {                     # override 'w32config.h'
+        $file = 'w32config.h'
+            if (-f "${dir}/w32config.hin" || "${dir}/w32config.h.in");
+    }
+
     printf "building: $dir/$file\n";
 
-    # import
     if (! open(CONFIG, "${dir}/${file}.in")) {
         open(CONFIG, "${dir}/${file}in") or
             die "cannot open ${dir}/${file}[.]in : $!";
@@ -1942,14 +2324,23 @@ Config($$)              # (type, dir)
 
     # update characteristics
     my @MISSING = ();
+    my @MULTIPLE = ();
 
     foreach my $config (sort keys %CONFIG_H) {
         my $value = $CONFIG_H{$config};
 
-        if ($text =~ /undef[\s]+${config}.*\n/) {
-            $text =~ s/undef[\s]+${config}.*\n/define ${config} ${value}\n/;
+        if ($text =~ /^([ \t]*#[ \t]*undef[ \t]+${config})([ \t]*|[ \t]+.+)$/m) {
+            my $count = 0;
+
+            while ($text =~ s/^([ \t]*#[ \t]*undef[ \t]+${config})([ \t]*|[ \t]+.+)$/#define ${config} ${value}/m) {
+                ++$count;
+            }
+            push @MULTIPLE, $config
+                if ($count > 1);
+
         } else {
-            push @MISSING, $config;
+            push @MISSING, $config
+                if (!exists $CONFIG_O{$config});
         }
     }
     $text =~ s/(#undef[^*\n]+)\n/\/* $1 *\/\n/g;
@@ -1959,6 +2350,13 @@ Config($$)              # (type, dir)
             print "missing:  $config\n";
         }
     }
+
+    if (scalar @MULTIPLE) {
+        foreach my $config (@MULTIPLE) {
+            print "multiple: $config\n";
+        }
+    }
+
 
     # export
     my $asctime = asctime(localtime());

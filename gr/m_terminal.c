@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.15 2014/10/22 02:33:10 ayoung Exp $")
+__CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.16 2018/11/18 00:20:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_terminal.c,v 1.15 2014/10/22 02:33:10 ayoung Exp $
+/* $Id: m_terminal.c,v 1.16 2018/11/18 00:20:40 cvsuser Exp $
  * Terminal screen and keyboard primitives.
  *
  *
@@ -812,7 +812,7 @@ do_get_term_feature(void)       /* int (string | int feature, value) */
         Many of the return values are only meaningful on systems that
         use a 'tty' based console interface.
 
-        The CrispEdit(tm) version is similar to <get_term_feature>.
+        The CRiSPEdit(tm) version is similar to <get_term_feature>.
 
     Macro See Also:
         get_term_keyboard, get_term_feature

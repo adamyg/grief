@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttydos_c,"$Id: ttydos.c,v 1.16 2014/10/22 02:33:22 ayoung Exp $")
+__CIDENT_RCSID(gr_ttydos_c,"$Id: ttydos.c,v 1.17 2018/10/04 15:39:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttydos.c,v 1.16 2014/10/22 02:33:22 ayoung Exp $
+/* $Id: ttydos.c,v 1.17 2018/10/04 15:39:29 cvsuser Exp $
  * TTY dos implementation.
  *
  *
@@ -493,7 +493,7 @@ VioPutChar(
 void
 VioRefresh(void)
 {
-    VioShowBuf( 0, vio.size, -1 );
+    VioShowBuf(0, vio.size, -1);
 }
 
 

@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_select_c,"$Id: w32_select.c,v 1.7 2015/02/19 00:17:31 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_select_c,"$Id: w32_select.c,v 1.10 2018/10/01 00:00:04 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  *  Windows 'select' compat interface
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -37,6 +37,7 @@ __CIDENT_RCSID(gr_w32_select_c,"$Id: w32_select.c,v 1.7 2015/02/19 00:17:31 ayou
 
 #include "win32_internal.h"
 
+#include <sys/cdefs.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #define  WIN32_SOCKET_H_CLEAN                   // disable mapping
@@ -102,7 +103,7 @@ w32_select(
         return -1;
     }
 
-    invalid = sel_build( T_READ, readfds, &selcnt, selfds );
+    invalid =  sel_build( T_READ, readfds, &selcnt, selfds );
     invalid += sel_build( T_WRITE, writefds, &selcnt, selfds );
     invalid += sel_build( T_EXCEPT, exceptfds, &selcnt, selfds );
 
@@ -229,7 +230,7 @@ sel_wait( u_int cnt, Select_t *selfds, DWORD timeout )
         }
 
         // Timeout
-	if (ret == WAIT_TIMEOUT) {
+        if (ret == WAIT_TIMEOUT) {
             break;
         }
 
@@ -337,4 +338,5 @@ sel_unknown(Select_t *selfd)
     ++selfd->s_error;
 }
 
+/*end*/
 

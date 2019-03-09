@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: hpcalc.mandoc,v 1.1 2014/11/27 18:19:39 ayoung Exp $
+.\" | $Id: hpcalc.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -52,11 +52,11 @@
 .Nm hpcalc
 .Nd HP Calculator, RPN based calculator.
 .Sh DESCRIPTION
-The hpcalc macro is an attempt to emulate an HP calculator, hopefully
-to eventually contain many of the more sophisticated features. Currently,
-this calculator is simply an RPN based calculator similar to the
-\fIcalc\fR macro. This calculator also supports floating point arithmetic
-as well as base conversions.
+The \fIhpcalc\fR macro is an attempt to emulate an HP calculator, 
+hopefully to eventually contain many of the more sophisticated
+features. Currently, this calculator is simply an RPN based
+calculator similar to the \fIcalc\fR macro. This calculator also
+supports floating point arithmetic as well as base conversions.
 .Pp
 This macro displays a popup window, emulating the HP stack display.
 As numbers are typed in, and the <Enter> key is pressed, the numbers
@@ -114,3 +114,6 @@ All trig functions assume value is in radians.
 .Pp
 Out of range for trig functions generate NaN numbers. Should really
 give complex results.
+.Sh SEE ALSO
+.Xr feature
+

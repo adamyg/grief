@@ -1,12 +1,12 @@
 #ifndef GR_GNUWIN32_MAGIC_H_INCLUDED
 #define GR_GNUWIN32_MAGIC_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_gnuwin32_magic_h,"$Id: gnuwin32_magic.h,v 1.5 2015/02/19 00:17:25 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_gnuwin32_magic_h,"$Id: gnuwin32_magic.h,v 1.7 2018/09/29 02:25:21 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

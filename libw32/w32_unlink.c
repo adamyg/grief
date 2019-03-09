@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_unlink_c,"$Id: w32_unlink.c,v 1.6 2015/02/19 00:17:33 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_unlink_c,"$Id: w32_unlink.c,v 1.10 2018/10/11 01:49:01 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win2 unlink() system calls
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -132,38 +132,65 @@ __CIDENT_RCSID(gr_w32_unlink_c,"$Id: w32_unlink.c,v 1.6 2015/02/19 00:17:33 ayou
 int
 w32_unlink(const char *path)
 {
-    DWORD rc = 0;
+    int ret = -1;                               // success=0, otherwise=-1
 
-    if (! DeleteFile(path) &&
-                (rc = GetLastError()) == ERROR_ACCESS_DENIED) {
-        WIN32_CHMOD(path, S_IWRITE);
-        rc = 0;
-        if (! DeleteFile(path)) {
+    if (!path) {
+        errno = EFAULT;
+
+    } else if (!*path) {
+        errno = ENOENT;
+
+    } else {
+        DWORD attrs, rc = 0;                    // completion code
+
+#ifndef ERROR_DIRECTORY_NOT_SUPPORTED
+#define ERROR_DIRECTORY_NOT_SUPPORTED 336L      // An operation is not supported on a directory.
+#endif
+
+        if (INVALID_FILE_ATTRIBUTES /*0xffffffff*/
+                    == (attrs = GetFileAttributesA(path)) ) {
             rc = GetLastError();
+        } else {
+            if (FILE_ATTRIBUTE_DIRECTORY & attrs) {
+                if (FILE_ATTRIBUTE_REPARSE_POINT & attrs) {
+                    if (! RemoveDirectoryA(path)) {
+                        rc = GetLastError();
+                    }
+                } else {
+                    rc = ERROR_DIRECTORY_NOT_SUPPORTED;
+                }
+            } else {
+                if (! DeleteFileA(path) &&
+                        ERROR_ACCESS_DENIED == (rc = GetLastError())) {
+                    (void) WIN32_CHMOD(path, S_IWRITE);
+                    rc = (DeleteFileA(path) ? 0 : GetLastError());
+                }
+            }
         }
-    }
 
-    if (rc) {
-        switch (rc) {
-        case ERROR_FILE_NOT_FOUND:
-            errno = ENOENT;
-            break;
-        case ERROR_PATH_NOT_FOUND:
-            errno = ENOTDIR;
-            break;
-        case ERROR_NOT_ENOUGH_MEMORY:
-            errno = ENOMEM;
-            break;
-        case ERROR_ACCESS_DENIED:
-        case ERROR_SHARING_VIOLATION:
-            errno = EACCES;
-            break;
-        default:
-            errno = w32_errno_cnv(rc);
-            break;
+        if (0 == rc) {
+            ret = 0;                            // success
+        } else {
+            switch (rc) {
+            case ERROR_ACCESS_DENIED:
+            case ERROR_SHARING_VIOLATION:
+            case ERROR_PRIVILEGE_NOT_HELD:
+                errno = EACCES;  break;
+            case ERROR_FILE_NOT_FOUND:
+                errno = ENOENT;  break;
+            case ERROR_PATH_NOT_FOUND:
+                errno = ENOTDIR; break;
+            case ERROR_DIRECTORY_NOT_SUPPORTED:
+                errno = EISDIR;  break;
+            case ERROR_NOT_ENOUGH_MEMORY:
+                errno = ENOMEM;  break;
+            default:
+                errno = w32_errno_cnv(rc);
+                break;
+            }
         }
-        return -1;
     }
-    return 0;
+    return ret;
 }
 
+/*end*/

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyrgb_c,"$Id: ttyrgb.c,v 1.14 2014/11/24 22:04:21 ayoung Exp $")
+__CIDENT_RCSID(gr_ttyrgb_c,"$Id: ttyrgb.c,v 1.16 2018/10/18 01:49:26 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyrgb.c,v 1.14 2014/11/24 22:04:21 ayoung Exp $
+/* $Id: ttyrgb.c,v 1.16 2018/10/18 01:49:26 cvsuser Exp $
  * Color RGB support.
  *
  *
@@ -96,8 +96,8 @@ static const struct rgbdef win_basic16[16] = {
     };
 
 
-#if defined(__WATCOMC__) || \
-        defined(_MSC_VER) && (_MSC_VER <= 1600)
+#if (defined(__WATCOMC__) && (__WATCOMC__ < 1300)) || \
+        (defined(_MSC_VER) && (_MSC_VER <= 1600))
 static double
 round(const double x)   //middle value point test
 {
@@ -108,8 +108,11 @@ round(const double x)   //middle value point test
     }
     return floor(x + 0.5);
 }
+#endif
 
 
+#if defined(__WATCOMC__) || \
+        (defined(_MSC_VER) && (_MSC_VER <= 1600))
 static int              //c99
 nearbyintf(float x)
 {
@@ -358,7 +361,7 @@ rgbvalue_new(const char **cursor, int rgbmax)
 
 /*
  *  specific length/
- *      #RRRGGBB
+ *      #RRGGBB
  */
 static int
 rgbvalue_old(const char **cursor, int len, int rgbmax)
@@ -842,19 +845,20 @@ rgb2hsl(const struct rgbvalue *rgb, float *h, float *s, float *l)
  *      Export the given RGB table to a structure.
  *
  *  Parameters:
- *      table -             Table address.
- *      maxval -            Under attribute value.
- *      base -              Display base 8, 10 or 16.
+ *      label - Optional table label.
+ *      table - Table address.
+ *      maxval - Under attribute value.
+ *      base - Display base 8, 10 or 16.
  *
  *  Returns:
  *      nothing.
  */
 static void
-rgb_exporttable(const struct rgbdef *table, int maxval, int base)
+rgb_exporttable(const char *label, const struct rgbdef *table, int maxval, int base)
 {
     unsigned color;
 
-printf("const struct rgbvalue rgb_%dtable[%d] = {\n", maxval, maxval);
+printf("const struct rgbvalue %srgb_%dtable[%d] = {\n", label, maxval, maxval);
 
     if (10 == base) {
         for (color = 0; color < maxval; ++color) {
@@ -920,20 +924,23 @@ main(int argc, char *argv[])
         };
     struct rgbvalue rgb;
     const char *p;
-    int base = 0;
     char buf[64] = {0};
     int cnt, i;
 
     if (argc > 1) {
+        int base = 0;
+
         if (0 == strcmp(argv[1], "--dec")) {
             base = 10;
+
         } else if (0 == strcmp(argv[1], "--hex")) {
             base = 16;
         }
 
         if (base) {
-            rgb_exporttable(rgb_xterm256table(), 256, base);
-            rgb_exporttable(rgb_xterm88table(), 88, base);
+            rgb_exporttable("win_", rgb_win256table(), 256, base);
+            rgb_exporttable("xterm_", rgb_xterm256table(), 256, base);
+            rgb_exporttable("xterm_", rgb_xterm88table(), 88, base);
         }
     }
 

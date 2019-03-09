@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_pty_win32_c,"$Id: pty_win32.c,v 1.20 2014/10/22 02:33:16 ayoung Exp $")
+__CIDENT_RCSID(gr_pty_win32_c,"$Id: pty_win32.c,v 1.21 2018/11/18 00:20:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: pty_win32.c,v 1.20 2014/10/22 02:33:16 ayoung Exp $
+/* $Id: pty_win32.c,v 1.21 2018/11/18 00:20:21 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -161,7 +161,7 @@ dpcreate(DISPLAY_t *dp, const char *shell, const char *cwd)
     } else {
         dp->d_cleanup = dpcleanup;
         dp->d_pipe_out = out;                   // process stdin
-	dp->d_handle_in = (int)hInputRead;
+        dp->d_handle_in = (int)hInputRead;
     }
     return (pid <= 0 ? -1 : pid);
 }

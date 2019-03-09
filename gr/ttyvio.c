@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.62 2015/03/14 23:14:50 ayoung Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.66 2018/10/04 15:39:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.62 2015/03/14 23:14:50 ayoung Exp $
+/* $Id: ttyvio.c,v 1.66 2018/10/04 15:39:29 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -27,6 +27,12 @@ __CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.62 2015/03/14 23:14:50 ayoung Exp 
 #include <edalt.h>
 
 #if defined(WIN32)
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0601
+#endif
+#ifndef WINVER
+#define WINVER 0x0601
+#endif
 #if !defined(WINDOWS_MEAN_AND_LEAN)
 #define  WINDOWS_MEAN_AND_LEAN
 #include <windows.h>
@@ -96,8 +102,8 @@ static void             term_attr(int fg, int bg);
 static void             term_hue(int fg, int bg);
 
 static void             vio_reference(void);
-static void             vio_save(void);
-static void             vio_restore(void);
+static void             vio_image_save(void);
+static void             vio_image_restore(void);
 static void             vio_dirty(int row, int col, int erow, int ecol);
 
 #if !defined(WIN32)
@@ -294,15 +300,14 @@ term_ready(int repaint, scrprofile_t *profile)
 {
     vio_reference();
     if (repaint) {
-        vio_save();
+        vio_image_save();
     }
 #if defined(WIN32)
     SetConsoleTitleA(tt_title);
 #endif
     if (profile) {
-        VIOMODEINFO mi = {0};
+        VIOMODEINFO mi = { sizeof(VIOMODEINFO) };
 
-        mi.cb = sizeof(mi);
         VioGetMode(&mi, 0);
         profile->sp_rows = (int)mi.row;
         profile->sp_cols = (int)mi.col;
@@ -462,7 +467,7 @@ term_control(int action, int param, ...)
     case SCR_CTRL_RESTORE:
         term_ready(TRUE, NULL);
         vtgarbled();
-        vio_dirty(0, 0, ttrows()-1, ttcols()-1);
+        vio_dirty(0, 0, ttrows() - 1, ttcols() - 1);
         break;
 
     case SCR_CTRL_COLORS:       /* color change */
@@ -487,7 +492,7 @@ term_control(int action, int param, ...)
 static void
 term_tidy(void)
 {
-    vio_restore();
+    vio_image_restore();
     tt_active = 0;
 }
 
@@ -504,10 +509,9 @@ term_tidy(void)
 static void
 vio_reference(void)
 {
-    VIOMODEINFO mi;
+    VIOMODEINFO mi = { sizeof(VIOMODEINFO) };
     USHORT cp = 0;
 
-    mi.cb = sizeof(mi);
     VioGetMode(&mi, 0);
 
 #if defined(__OS2__)
@@ -529,7 +533,7 @@ vio_reference(void)
 }
 
 
-/*  Function:           vio_save
+/*  Function:           vio_image_save
 //      Save the current video buffer.
 //
 //  Parameters:
@@ -539,7 +543,7 @@ vio_reference(void)
 //      nothing
 */
 static void
-vio_save(void)
+vio_image_save(void)
 {
     ULONG length = currRows * currCols * sizeof(VIOCELL);
     VIOCELL *screen;
@@ -558,6 +562,7 @@ vio_save(void)
         GetConsoleTitleA(origTitle, sizeof(origTitle));
 #endif
         rc = VioReadCellStr(screen, &length, 0, 0, 0);
+        origCursor.cb = sizeof(VIOCURSORINFO);
         VioGetCurType(&origCursor, 0);
         VioGetCurPos(&origRow, &origCol, 0);
         origScreen = screen;
@@ -566,9 +571,9 @@ vio_save(void)
 }
 
 
-/*  Function:           vio_restore
-//      Restore the previously saved video buffer. If the event the current image size 
-//	has changed, the previous image if clicked or padded as required.
+/*  Function:           vio_image_restore
+//      Restore the previously saved video buffer. If the event the current image size
+//      has changed, the previous image if clicked or padded as required.
 //
 //  Parameters:
 //      none
@@ -577,7 +582,7 @@ vio_save(void)
 //      nothing
 */
 static void
-vio_restore(void)
+vio_image_restore(void)
 {
     if (origScreen) {
         const int rows = currRows, cols = currCols;
@@ -663,9 +668,8 @@ vio_dirty(int row, int col, int erow, int ecol)
 static void
 term_sizeget(int *nrows, int *ncols)
 {
-    VIOMODEINFO mi;
+    VIOMODEINFO mi = { sizeof(VIOMODEINFO) };
 
-    mi.cb = sizeof(mi);
     VioGetMode(&mi, 0);
     if (ncols) *ncols = (int)mi.col;
     if (nrows) *nrows = (int)mi.row;
@@ -687,7 +691,7 @@ static int
 term_cursor(int visible, int imode, int virtual_space)
 {
     if (visible >= 0) {
-        VIOCURSORINFO ci;
+        VIOCURSORINFO ci = { sizeof(VIOCURSORINFO) };
 
         VioGetCurType(&ci, 0);
         ci.attr = (visible ? 1 : -1);           /* 1 = visible otherwise invisible */
@@ -827,7 +831,7 @@ term_print(int row, int col, int len, const VCELL_t *vvp)
             ++p;
             ++vvp;
         }
-	term_attribute(ATTR_NORMAL);
+        term_attribute(ATTR_NORMAL);
     }
 }
 
@@ -909,8 +913,8 @@ term_clear(void)
         const VIOCELL blank = VIO_INIT(tt_hue, ' ');
         int cells = ttcols() * ttrows();
         VIOCELL *p = currScreen;
-	while (cells-- > 0) {
-	    *p++ = blank;
+        while (cells-- > 0) {
+            *p++ = blank;
         }
     }
     ttposset(0, 0);
@@ -941,18 +945,21 @@ term_flush(void)
         VioShowBuf(0, rows * cols * sizeof(VIOCELL), 0);
 
     } else if (currDirtyTop >= 0) {             // dirty
+        VIOSHOW show = {sizeof(VIOSHOW)};
         const int end = (currDirtyEnd < rows ? currDirtyEnd : rows - 1);
         int top, cnt = 0;
+
+        VioShowInit(&show, 0);                  // show context initialisation.
 
         // update dirty line sections within dirty arena
         for (top = currDirtyTop, cnt = 0; top <= end; ++top) {
             if (top < VSET_MAX && 0 == vset_tst(currDirtyFlg, top)) {
-                if (cnt) {                      // flush dirty columns
+                if (cnt) {                      // flush dirty columns.
                     const ULONG start   =
                             (ULONG) (((top - cnt) * cols) * sizeof(VIOCELL));
                     const ULONG length  =
                             (ULONG) ((cnt * cols) * sizeof(VIOCELL));
-                    VioShowBuf(start, length, 0);
+                    VioShowBlock(start, length, &show);
                     cnt = 0;
                 }
             } else {
@@ -965,14 +972,17 @@ term_flush(void)
                     (ULONG) (((top - cnt) * cols) * sizeof(VIOCELL));
             const ULONG length  =
                     (ULONG) ((cnt * cols) * sizeof(VIOCELL));
-            VioShowBuf(start, length, 0);
+            VioShowBlock(start, length, &show);
         }
+
+        VioShowFinal(&show);                    // completion
     }
 
-    if (currDirtyTop  >= 0) {                   // reset dirty metadata
+    if (garbled || currDirtyTop >= 0) {         // reset dirty metadata
         vset_zero(currDirtyFlg);
         currDirtyTop = -1;
     }
+
     VioSetCurPos((unsigned short)ttatrow(), (unsigned short)ttatcol(), 0);
 
 #if defined(HAVE_MOUSE)
@@ -1024,8 +1034,7 @@ term_insl(int row, int bot, int nchunk, vbyte_t fillcolor)
 
 
 /*  Function:           term_dell
- *      Delete nchunk line(s) from "row", replacing the bottom line on the screen with
- *      a blank line.
+ *      Delete nchunk line(s) from "row", replacing the bottom line on the screen with a blank line.
  *
  *  Parameters:
  *      row -               Top row of region.
@@ -1154,15 +1163,12 @@ term_attribute(const vbyte_t attr)
         color_definition(attr, &ca);
         term_hue(term_colvalue(ca.fg, tt_defaultfg), term_colvalue(ca.bg, tt_defaultbg));
 #if defined(VIO_UNDERLINE)
-        if (COLORSTYLE_UNDERLINE & ca.sf) {
-            tt_style |= VIO_UNDERLINE;
-        }
-        if (COLORSTYLE_ITALIC & ca.sf) {
-            tt_style |= VIO_ITALIC;
-        }
+        if (COLORSTYLE_UNDERLINE & ca.sf)       tt_style |= VIO_UNDERLINE;
+        if (COLORSTYLE_ITALIC & ca.sf)          tt_style |= VIO_ITALIC;
+        if (COLORSTYLE_BOLD & ca.sf)            tt_style |= VIO_BOLD;
 #endif
 
-    } else  {
+    } else {
         /*
          *  black and white coloriser/
          *      back-white display emulation, based on linux console.
@@ -1187,8 +1193,9 @@ term_attribute(const vbyte_t attr)
             if (nstyle & COLORSTYLE_STANDOUT)  term_attr(__STANDOUT__);
             if (nstyle & COLORSTYLE_INVERSE)   term_attr(__INVERSE__);
 #if defined(VIO_UNDERLINE)
-            if (nstyle & COLORSTYLE_UNDERLINE) tt_style = VIO_UNDERLINE;
-            if (nstyle & COLORSTYLE_ITALIC)    tt_style = VIO_ITALIC;
+            if (nstyle & COLORSTYLE_UNDERLINE) tt_style |= VIO_UNDERLINE;
+            if (nstyle & COLORSTYLE_ITALIC)    tt_style |= VIO_ITALIC;
+            if (nstyle & COLORSTYLE_BOLD)      tt_style |= VIO_BOLD;
 #endif
             if (nstyle & COLORSTYLE_REVERSE)   term_attr(__REVERSE__);
         }
@@ -1271,46 +1278,46 @@ do_ega(void)		    /* void (int flag) */
 
     acc_assign_int((accint_t) xf_ega43);
 
-    if (isa_integer(1)) {			/* (mode < 80 sets rows), otherwise (mode >= 80 sets columns). */
-	const USHORT crows = (USHORT)currRows, ccols = (USHORT)currCols;
+    if (isa_integer(1)) {                       /* (mode < 80 sets rows), otherwise (mode >= 80 sets columns). */
+        const USHORT crows = (USHORT)currRows, ccols = (USHORT)currCols;
         const int flag = get_xinteger(1, 0);
-	VIOMODEINFO mi = {0};
+        VIOMODEINFO mi = { sizeof(VIOMODEINFO) };
 
-        if (flag < 0) {				/* min/max toggle (-1), restore (-2) used on exit */
-	    if (state && (-1 == flag || -2 == flag)) {						
-		if (crows == mrows && ccols == mcols) {
- 		    mi.row = orows;		/* restore, unless modified */
-		    mi.col = ocols;
-		}
-		state = 0;
-	    } else if (0 == state && (-1 == flag || -3 == flag)) {
-		orows  = crows;			/* maximise */
-		ocols  = ccols;
-		mi.row = 0xffff;
-		mi.col = 0xffff;
-		state = 1;
-	    }
+        if (flag < 0) {                         /* min/max toggle (-1), restore (-2) used on exit */
+            if (state && (-1 == flag || -2 == flag)) {						
+                if (crows == mrows && ccols == mcols) {
+                    mi.row = orows;             /* restore, unless modified */
+                    mi.col = ocols;
+                }
+            state = 0;
+            } else if (0 == state && (-1 == flag || -3 == flag)) {
+                orows  = crows;                 /* maximise */
+                ocols  = ccols;
+                mi.row = 0xffff;
+                mi.col = 0xffff;
+                state = 1;
+            }
         } else {
             mi.row = (USHORT)crows;
             mi.col = (USHORT)ccols;
-            if (flag >= 80) {			/* setting columns */
+            if (flag >= 80) {                   /* setting columns */
                 mi.col = (USHORT)flag;
             } else {
-		mi.row = (USHORT)(flag > 10 ? flag : 10);
+                mi.row = (USHORT)(flag > 10 ? flag : 10);
             }
         }
 
-	if (mi.row && mi.col &&
-		(crows != mi.row || ccols != mi.col)) {
-	    vio_restore();
-	    VioSetMode(&mi, 0);
-	    VioSetCurPos(origRow, origCol, 0);	/* restore cursor, mode changes home */
-	    ttwinched(mi.row, mi.col);
-	    if (flag < 0 && state) {
-	        mrows = mi.row;
-	        mcols = mi.col;
-	    }
-	}
+        if (mi.row && mi.col &&
+                (crows != mi.row || ccols != mi.col)) {
+            vio_restore();
+            VioSetMode(&mi, 0);
+            VioSetCurPos(origRow, origCol, 0);  /* restore cursor, mode changes home */
+            ttwinched(mi.row, mi.col);
+            if (flag < 0 && state) {
+                mrows = mi.row;
+                mcols = mi.col;
+            }
+        }
     }
 }
 

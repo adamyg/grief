@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
-# $Id: makechartable.pl,v 1.14 2015/02/19 00:17:04 ayoung Exp $
+# $Id: makechartable.pl,v 1.19 2018/10/01 22:10:53 cvsuser Exp $
 # Character table generation.
 #
-# Copyright (c) 2010 - 2015, Adam Young.
+# Copyright (c) 2010 - 2018, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -240,7 +240,7 @@ my  %QUOTES = (                 # Unicode quotes
     );
 
 my  $COPYRIGHT          =
-    " * Copy"."right (c) 2010 - 2015, Adam Young.\n".
+    " * Copy"."right (c) 2010 - 2018, Adam Young.\n".
     " * All rights reserved.\n".
     " *\n".
     " * This"." file is part of the GRIEF Editor.\n".
@@ -1159,7 +1159,7 @@ DefinitionTable($)      #(tablename)
             $namemax - length($name), "",
                 length($name), $cs, $ref->{CP}, $ref->{SZ},
             $cname, 15 - length($cname), "",
-                "${func}(&${mname}_chartable_module)", "";
+                "${func}(&${mname}_chartable_module)";
     }
 
     print OUT
@@ -1432,6 +1432,7 @@ DescriptionTable($)     #(tablename)
     }
 
     print OUT
+        "    NULL\n".
         "    };\n";
 
     # lookup table

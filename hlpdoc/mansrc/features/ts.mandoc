@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: ts.mandoc,v 1.1 2014/11/27 18:19:45 ayoung Exp $
+.\" | $Id: ts.mandoc,v 1.2 2018/10/01 21:19:58 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -152,6 +152,7 @@ Ignore this and all other binary images encountered.
 This macro can be accessed from the GRIEF features menu or by typing
 \f(HBts\fR at the command prompt, with or without the required arguments.
 .Sh SEE ALSO
+.Xr feature ,
 .Xr grep ,
 .Xr routines ,
 .Xr ff ,

@@ -1,16 +1,16 @@
 #ifndef GR_EDHEADERS_H_INCLUDED
 #define GR_EDHEADERS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edheaders_h,"$Id: edheaders.h,v 1.13 2015/02/19 00:16:55 ayoung Exp $")
+__CIDENT_RCSID(gr_edheaders_h,"$Id: edheaders.h,v 1.15 2018/10/16 10:00:14 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edheaders.h,v 1.13 2015/02/19 00:16:55 ayoung Exp $
+/* $Id: edheaders.h,v 1.15 2018/10/16 10:00:14 cvsuser Exp $
  * System headers.
  *
  *
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -100,12 +100,11 @@ __CPRAGMA_ONCE
 #endif
 #endif
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__WATCOMC__)
 #define sig_args            void
 #define sig_arg
 #define nw_sig()
-#else
-#if RETSIGTYPE == void
+#elif (RETSIGTYPE == void)
 #define sig_args            int i
 #define sig_arg             0
 #define nw_sig()            (void)i
@@ -113,7 +112,6 @@ __CPRAGMA_ONCE
 #define sig_args            void
 #define sig_arg
 #define nw_sig()
-#endif
 #endif
 
 #ifdef HAVE_UNISTD_H

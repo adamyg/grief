@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_window_c,"$Id: m_window.c,v 1.22 2014/10/27 23:27:55 ayoung Exp $")
+__CIDENT_RCSID(gr_m_window_c,"$Id: m_window.c,v 1.23 2019/01/26 22:27:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_window.c,v 1.22 2014/10/27 23:27:55 ayoung Exp $
+/* $Id: m_window.c,v 1.23 2019/01/26 22:27:08 cvsuser Exp $
  * Window primitives.
  *
  *
@@ -87,7 +87,7 @@ static const struct winflag {
  *<<GRIEF>>
     Macro: top_of_window - Goto top of the current window.
 
-        void 
+        int
         top_of_window()
 
     Macro Description:
@@ -132,7 +132,7 @@ do_top_of_window(void)          /* void () */
  *<<GRIEF>>
     Macro: end_of_window - Goto end of the current window.
 
-        void 
+        int
         end_of_window()
 
     Macro Description:
@@ -806,7 +806,7 @@ inq_window(void)
  *      nothing
  *
  *<<GRIEF>>
-    Macro: inq_window_info - Retrieve window information.
+    Macro: inq_window_info - Retrieve the current window information.
 
         int
         inq_window_info([int &winnum], [int &bufnum],
@@ -860,7 +860,7 @@ inq_window(void)
         inq_window, create_window, create_tiled_window, create_menu_window
 
  *<<GRIEF>>
-    Macro: inq_window_infox - Retrieve window information extended.
+    Macro: inq_window_infox - Retrieve information about a window.
 
         int
         inq_window_infox([int winnum], [int &bufnum],
@@ -1078,7 +1078,8 @@ do_set_window_flags(void)       /* ([int winnum], [string set|int or_mask], [str
  *<<GRIEF>>
     Macro: inq_window_flags - Retrieve window flags.
 
-        int inq_window_flags([int winnum], [string flags])
+        int
+        inq_window_flags([int winnum], [string flags])
 
     Macro Description:
         The 'inq_window_flags()' primitive retrieves the window flags of
@@ -1214,7 +1215,7 @@ flag_lookup(const char *name, int length)
  *<<GRIEF>>
     Macro: change_window_pos - Modify window coordinates/size.
 
-        void
+        int
         change_window_pos([int topx], [int topy],
                 [int width], [int height], [int winnum])
 
@@ -1420,7 +1421,7 @@ do_next_window(void)            /* int ([int winnum]) */
  *<<GRIEF>>
     Macro: set_window - Set the active window.
 
-        void
+        int
         set_window(int winnum)
 
     Macro Description:
@@ -1702,7 +1703,7 @@ inq_window_buf(void)            /* int ([int winnum]) */
  *<<GRIEF>>
     Macro: set_top_left - Manages window view port coordinates.
 
-        void
+        int
         set_top_left([int line], [int column],
                 [int winnum], [int csrline], [int csrcolumn], [int bufnum])
 
@@ -1838,7 +1839,7 @@ do_set_top_left(void)           /* ([int line], [int column],
  *<<GRIEF>>
     Macro: inq_top_left - Retrieve window view port coordinates.
 
-        void
+        int
         inq_top_left([int &top], [int &indent], [int winnum],
                 [int &line], [int &col], [int &bufnum])
 

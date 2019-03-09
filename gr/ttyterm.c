@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.99 2015/02/19 22:11:05 ayoung Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.100 2015/07/04 00:02:51 mada Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.99 2015/02/19 22:11:05 ayoung Exp $
+/* $Id: ttyterm.c,v 1.100 2015/07/04 00:02:51 mada Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -1325,6 +1325,11 @@ ttinit(void)
 
     } else if (term_xtermlike(term)) {          /* eg. xterm-color */
         t_attributes = TA_XTERM | TA_XTERMLIKE;
+#if defined(__CYGWIN__)
+	if (ggetenv("COMSPEC")) {
+	    t_attributes |= TA_DARK;		/* assume cmd/mintty */
+        }
+#endif  /*__CYGWIN__*/
     }
 
     if (hasfeature(term, "rv")) {
@@ -2343,7 +2348,7 @@ term_xtermlike(const char *term)
 #define XTERMLIKE(x)        { x, sizeof(x)-1 }
         XTERMLIKE("xterm"),                     /* generic */
         XTERMLIKE("aixterm"),                   /* AIX */
-        XTERMLIKE("mintty"),                    /* non-standard. normally "xterm" */
+        XTERMLIKE("mintty"),                    /* non-standard. normally "xterm-256color" */
         XTERMLIKE("rxvt"),
         XTERMLIKE("urxvt"),                     /* Unicode rxvt */
         XTERMLIKE("Eterm"),
@@ -5131,25 +5136,25 @@ ega_switch(int flag)
     Macro Parameters:
         lines - Optional integer specifing the required number of
             console lines. Under WIN32 if -1 the console size shall toggled
-	    bewteen minimized and maximised. If omitted, then only the 
-	    current state is returned.
+            bewteen minimized and maximised. If omitted, then only the
+            current state is returned.
 
     Notes!:
-        When running within a windows console, before Windows 7 one could press 
-	<Alt+Enter> to run the application in full screen. As of Windows 7 this 
-	functionality is no longer available resulting in the following.
+        When running within a windows console, before Windows 7 one could press
+        <Alt+Enter> to run the application in full screen. As of Windows 7 this
+        functionality is no longer available resulting in the following.
 
 >           This system does not support full screen mode
 
-	The ega() primitive can be used to emulate this functionality, using 
-	the special -1 flag, which shall toggle between a minimized or maximised
-	sized console.
+        The ega() primitive can be used to emulate this functionality, using
+        the special -1 flag, which shall toggle between a minimized or maximised
+        sized console.
 
 >           ega(-1)
 
     Macro Returns:
-        The 'ega()' primitive returns the previous status, otherwise -1 upon 
-	an error.
+        The 'ega()' primitive returns the previous status, otherwise -1 upon
+        an error.
 
     Macro Portability:
         A Grief extension.
@@ -5162,10 +5167,10 @@ do_ega(void)                    /* int (int mode) */
 {
     acc_assign_int((accint_t) xf_ega43);
     if (isa_integer(1)) {                       /* (mode < 80 sets rows), otherwise (mode >= 80 sets columns). */
-	const int flag = get_xinteger(1, 0);
-	if (flag >= 0) {
-	    ega_switch(flag);
-	}
+        const int flag = get_xinteger(1, 0);
+        if (flag >= 0) {
+            ega_switch(flag);
+        }
     }
 }
 
@@ -5208,3 +5213,4 @@ do_copy_screen(void)            /* void () */
 }
 
 #endif  /*!USE_VIO_BUFFER && !DJGPP */
+

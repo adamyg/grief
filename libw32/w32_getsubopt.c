@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_getsubopt_c,"$Id: w32_getsubopt.c,v 1.3 2014/10/22 02:34:04 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_getsubopt_c,"$Id: w32_getsubopt.c,v 1.6 2018/10/16 15:09:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*-
@@ -34,6 +34,7 @@ __CIDENT_RCSID(gr_w32_getsubopt_c,"$Id: w32_getsubopt.c,v 1.3 2014/10/22 02:34:0
  *  "$FreeBSD: src/lib/libc/stdlib/getsubopt.c,v 1.7 2007/01/09 00:28:10 imp Exp $"
  */
 
+#include "win32_internal.h"
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -46,7 +47,7 @@ __CIDENT_RCSID(gr_w32_getsubopt_c,"$Id: w32_getsubopt.c,v 1.3 2014/10/22 02:34:0
  */
 char *suboptarg = NULL;
 
-int
+LIBW32_API int
 getsubopt(char **optionp, char * const *tokens, char **valuep)
 {
 	int cnt;
@@ -95,4 +96,6 @@ getsubopt(char **optionp, char * const *tokens, char **valuep)
 			return(cnt);
 	return(-1);
 }
+
+/*end*/
 

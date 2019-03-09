@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: grep.mandoc,v 1.1 2014/11/27 18:19:37 ayoung Exp $
+.\" | $Id: grep.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -89,6 +89,8 @@ a change to a variable name across all source files.
 This macro can be accessed from the GRIEF features menu or by typing
 \f(HBgrep\fR at the command prompt, with or without the required arguments.
 .Sh SEE ALSO
+.Xr feature ,
 .Xr routines ,
 .Xr ff ,
 .Xr ts
+

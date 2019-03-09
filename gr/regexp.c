@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_regexp_c,"$Id: regexp.c,v 1.42 2014/11/16 17:28:43 ayoung Exp $")
+__CIDENT_RCSID(gr_regexp_c,"$Id: regexp.c,v 1.44 2018/11/16 00:01:19 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: regexp.c,v 1.42 2014/11/16 17:28:43 ayoung Exp $
+/* $Id: regexp.c,v 1.44 2018/11/16 00:01:19 cvsuser Exp $
  * Regular expression engine.
  *
  *  The orgin of this regular expression implementation has been lost with time,
@@ -14,7 +14,7 @@ __CIDENT_RCSID(gr_regexp_c,"$Id: regexp.c,v 1.42 2014/11/16 17:28:43 ayoung Exp 
  *  smaller, and faster at compiling regular expressions, but possiblity slower at
  *  executing them; a number of optimisations are employed for simple cases.
  *
- *  An number of GRIEF expressions and enhancements including Knuth-Morris-Pratt 
+ *  An number of GRIEF expressions and enhancements including Knuth-Morris-Pratt
  *  string searching algorithm are included to reduce worst case execution.
  *
  *  For detail discussion see the following series of articles written by Russ Cox
@@ -197,32 +197,54 @@ static __CINLINE int        strcasematch(const char *s1, const char *s2, int len
  *
  */
 
-static int                  is_ascii(int c);
-static int                  is_blank(int ch);
-static int                  is_word(int ch);
-static int                  is_csym(int ch);
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
-static const struct {
-    const char         *name;
-    unsigned            len;
-    int               (*isa)(int);
-} character_classes[] = {
-    { "ascii",  5, is_ascii },  /* ASCII character. */
-    { "alnum",  5, isalnum  },  /* An alphanumeric (letter or digit). */
-    { "alpha",  5, isalpha  },  /* A letter. */
-    { "blank",  5, is_blank },  /* A space or tab character. */
-    { "cntrl",  5, iscntrl  },  /* A control character. */
-    { "csym",   4, is_csym  },  /* A language symbol. */
-    { "digit",  5, isdigit  },  /* A decimal digit. */
-    { "graph",  5, isgraph  },  /* A character with a visible representation. */
-    { "lower",  5, islower  },  /* A lower-case letter. */
-    { "print",  5, isprint  },  /* An alphanumeric (same as alnum). */
-    { "punct",  5, ispunct  },  /* A punctuation character. */
-    { "space",  5, isspace  },  /* A character producing white space in displayed text. */
-    { "upper",  5, isupper  },  /* An upper-case letter. */
-    { "word",   4, is_word  },  /* A "word" character (alphanumeric plus "_"). */
-    { "xdigit", 6, isxdigit }   /* A hexadecimal digit. */
-    };
+    /*
+     *  character class interface adapters, resolve calling convention issues.
+     */
+    static int is_ascii(int c);
+    static int is_alnum(int c);
+    static int is_alpha(int c); 
+    static int is_blank(int c); 
+    static int is_cntrl(int c); 
+    static int is_csym(int ch);
+    static int is_digit(int c); 
+    static int is_graph(int c); 
+    static int is_lower(int c); 
+    static int is_print(int c); 
+    static int is_punct(int c); 
+    static int is_space(int c); 
+    static int is_upper(int c); 
+    static int is_word(int c);
+    static int is_xdigit(int c);
+
+    static const struct {
+        const char         *name;
+        unsigned            len;
+        int               (*isa)(int);
+    } character_classes[] = {
+        { "ascii",  5, is_ascii  }, /* ASCII character. */
+        { "alnum",  5, is_alnum  }, /* An alphanumeric (letter or digit). */
+        { "alpha",  5, is_alpha  }, /* A letter. */
+        { "blank",  5, is_blank  }, /* A space or tab character. */
+        { "cntrl",  5, is_cntrl  }, /* A control character. */
+        { "csym",   4, is_csym   }, /* A language symbol. */
+        { "digit",  5, is_digit  }, /* A decimal digit. */
+        { "graph",  5, is_graph  }, /* A character with a visible representation. */
+        { "lower",  5, is_lower  }, /* A lower-case letter. */
+        { "print",  5, is_print  }, /* An alphanumeric (same as alnum). */
+        { "punct",  5, is_punct  }, /* A punctuation character. */
+        { "space",  5, is_space  }, /* A character producing white space in displayed text. */
+        { "upper",  5, is_upper  }, /* An upper-case letter. */
+        { "word",   4, is_word   }, /* A "word" character (alphanumeric plus "_"). */
+        { "xdigit", 6, is_xdigit }  /* A hexadecimal digit. */
+        };
+
+#if defined(__cplusplus)
+}
+#endif
 
 
 static __CINLINE void
@@ -233,7 +255,7 @@ PUT16(REGEXPATOM *re, const uint16_t val)
 }
 
 
-static __CINLINE uint16_t 
+static __CINLINE uint16_t
 GET16(const REGEXPATOM *re)
 {
     return (((uint16_t)re[0] << 8) | re[1]);
@@ -655,6 +677,7 @@ re_atom(register recomp_t *rx, const char *pattern)
                                 if (0 == strncmp(cc, character_classes[i2].name, character_classes[i2].len)) {
                                     int v;      /* matching class */
 
+                                                // TODO: cache character class sets.
                                     for (v = 1; v <= 0xff; ++v)  {
                                         if ((*character_classes[i2].isa)(v)) {
                                             SET(v);
@@ -696,6 +719,16 @@ re_atom(register recomp_t *rx, const char *pattern)
                     ++range;
 
                 } else if ('\\' == c) {         /* quote, grief extension */
+#if (TODO)  //character classes short-hand
+                    switch (*pattern) {
+                    case 'd': //character class for digits.
+                    case 'D': //character class for non-digits.
+                    case 's': //character class for whitespace.
+                    case 'w': //character class for word characters.
+                    case 'W': //character class for non-word characters.
+                    }
+#endif //TODO
+
                     if (FALSE == re_escape(&pattern, &ch)) {
                         ++pattern;
                     }
@@ -756,6 +789,16 @@ re_atom(register recomp_t *rx, const char *pattern)
             }
         }
 
+#if (TODO)  //character classes short-hand
+        switch (*pattern) {
+        case 'd': //character class for digits.
+        case 'D': //character class for non-digits.
+        case 's': //character class for whitespace.
+        case 'w': //character class for word characters.
+        case 'W': //character class for non-word characters.
+        }
+#endif //TODO
+
         if (FALSE == re_escape(&pattern, &ch)) {
             len = strcspn(pattern + 1, MAGIC) + 1;
             goto NORMAL;
@@ -786,8 +829,8 @@ NORMAL: if (rx->orbranch && len > 1) {
 
         } else if (len > 1 && rx->regopts.regexp_chars) {
             /*
-             *  If followed by a repeat or modifier we need to include/not-include 
-             *  the last character because we need to obey the differing precedence 
+             *  If followed by a repeat or modifier we need to include/not-include
+             *  the last character because we need to obey the differing precedence
              *  between BRIEF/CRISP regexps and Unix regexps.
              */
             const char m = pattern[len];
@@ -1027,39 +1070,42 @@ re_expand(register recomp_t *rx, size_t len)
     return TRUE;
 }
 
-
-static int
-is_ascii(int c)
+static int is_ascii(int c)
 {
 #if defined(HAVE___ISASCII)
-    return __isascii(c);
+    return  __isascii((unsigned char)c);
 #elif defined(HAVE_ISASCII)
-    return isascii(c);
+    return isascii((unsigned char)c);
 #else
     return (c > 0 && c <= 0x7f);
 #endif
 }
 
+static int is_alnum(int c)      { return isalnum((unsigned char)c); }
+static int is_alpha(int c)      { return isalpha((unsigned char)c); }
 
-static int
-is_word(int ch)
+static int is_blank(int c)      
 {
-    return ('_' == ch || '-' == ch || isalnum((unsigned char)ch));
+#if defined(HAVE___ISBLANK)
+    return __isblank((unsigned char)c);
+#elif defined(HAVE_ISBLANK)
+    return isblank((unsigned char)c);
+#else
+    return (' ' == c || '\t' == c);
+#endif
 }
 
-
-static int
-is_csym(int ch)
-{
-    return ('_' == ch || isalnum((unsigned char)ch));
-}
-
-
-static int
-is_blank(int ch)
-{
-    return (' ' == ch || '\t' == ch);
-}
+static int is_cntrl(int c)      { return iscntrl((unsigned char)c); }
+static int is_csym(int ch)      { return ('_' == ch || isalnum((unsigned char)ch)); }
+static int is_digit(int c)      { return isdigit((unsigned char)c); }
+static int is_graph(int c)      { return isgraph((unsigned char)c); }
+static int is_lower(int c)      { return islower((unsigned char)c); }
+static int is_print(int c)      { return isprint((unsigned char)c); }
+static int is_punct(int c)      { return ispunct((unsigned char)c); }
+static int is_space(int c)      { return isspace((unsigned char)c); }
+static int is_upper(int c)      { return isupper((unsigned char)c); }
+static int is_word(int c)       { return ('_' == c || isalnum((unsigned char)c)); }
+static int is_xdigit(int c)     { return isxdigit((unsigned char)c); }
 
 
 static void
@@ -1308,6 +1354,7 @@ again:;
                     if (isalpha(ch)) {          /* not case sensitive */
                         const unsigned char uc = toupper((unsigned char)uch);
                         const unsigned char lc = tolower((unsigned char)uch);
+                                                /* TODO: buffer encoding specific */
 
                         if (ISSET(bitmap, uc) || ISSET(bitmap, lc)) {
                             --size;
@@ -1751,6 +1798,7 @@ strcasematch(const char *s1, const char *s2, int len)
             *_s2 = (const unsigned char *)s2;
 
     do {
+                                                /* TODO: buffer encoding specific */
         if ((*_s1 != *_s2) && (tolower(*_s1) != tolower(*_s2))) {
             return FALSE;
         }

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.54 2015/02/24 23:31:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.56 2018/10/04 15:39:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_win32.c,v 1.54 2015/02/24 23:31:09 cvsuser Exp $
+/* $Id: sys_win32.c,v 1.56 2018/10/04 15:39:29 cvsuser Exp $
  * WIN32 system support.
  *
  *
@@ -17,6 +17,13 @@ __CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.54 2015/02/24 23:31:09 cvsus
  * License for more details.
  * ==end==
  */
+
+#ifdef  WIN32
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0601
+#endif
+#define WINVER 0x0601
+#endif
 
 #include <editor.h>
 #include <edfileio.h>
@@ -44,11 +51,14 @@ __CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.54 2015/02/24 23:31:09 cvsus
 #include "vio.h"
 
 static DWORD                dwVersion, dwMajorVersion, dwMinorVersion, dwBuild;
-
 static DWORD                consoleMode = (DWORD)-1;
 
 static BOOL                 CtrlHandler(DWORD fdwCtrlType);
-static void                 Resize(int winch);
+static void CALLBACK        HandleWinEvent(HWINEVENTHOOK hook, DWORD event, HWND hwnd, 
+                                LONG idObject, LONG idChild,  DWORD dwEventThread, DWORD dwmsEventTime);
+
+static int                  Resize(int winch);
+static void                 ResizeCheck(unsigned *checks);
 
 #if defined(__WATCOMC__)
 extern char volatile        __WD_Present;
@@ -104,8 +114,8 @@ sys_initialise(void)
     GetConsoleMode(hConsole, &consoleMode);
     SetConsoleMode(hConsole, ENABLE_WINDOW_INPUT|ENABLE_MOUSE_INPUT|ENABLE_PROCESSED_INPUT);
     SetConsoleCtrlHandler((PHANDLER_ROUTINE) CtrlHandler, TRUE);
-    Resize(FALSE);
 
+    Resize(FALSE);
     x_display_ctrl |= DC_SHADOW_SHOWTHRU;       /* for non-color mode */
 }
 
@@ -256,24 +266,60 @@ DiffTicks(DWORD stick)                          /* start tick */
  *     Determine whether a resize is required and invoke as a result ttwinch().
  *
  */
-static void
+static int
 Resize(int winch)
 {
-    static int orows, ocols;
-    VIOMODEINFO mi = {0};
-    int nrows, ncols;
+    static int  orows, ocols;
+    static char ofont[80];
+    static RECT orect;
 
-    mi.cb = sizeof(mi);
+    VIOMODEINFO mi = { sizeof(VIOMODEINFO) };
+    int nrows, ncols, nfont = -1;
+    char font[sizeof(ofont)];
+    RECT rect;
+
     VioGetMode(&mi, 0);
     ncols = (int)mi.col;
     nrows = (int)mi.row;
-    if (orows != nrows || ocols != ncols) {
+    if (2 == winch) {                           /* possible font change */
+        VioGetFont(font, sizeof(font));
+        nfont = (0 != memcmp(font, ofont, sizeof(ofont)));
+        GetWindowRect(GetConsoleWindow(), &rect);
+        if ((orect.right - orect.left) != (rect.right - rect.left) ||
+                (orect.bottom - orect.top) != (rect.bottom - rect.top)) {
+            nfont = 1;
+        }
+    }
+
+    if (orows != nrows || ocols != ncols || 1 == nfont) {
         orows = nrows;
         ocols = ncols;
+        if (-1 == nfont) {
+            VioGetFont(font, sizeof(font));
+            GetWindowRect(GetConsoleWindow(), &rect);
+        }
+        memcpy(ofont, font, sizeof(ofont));
+        orect = rect;
         if (winch) {
             tty_needresize = TRUE;
         }
+        return 1;
     }
+    return 0;
+}
+
+
+static void
+ResizeCheck(unsigned *checks)
+{
+    unsigned t_checks = *checks;
+    if (t_checks) {
+        if (Resize(2)) t_checks = 0;
+        else --t_checks;
+    } else {
+        Resize(1);
+    }
+    *checks = t_checks;
 }
 
 
@@ -332,7 +378,7 @@ MouseEvent(const DWORD dwEventFlags, const DWORD dwButtonState)
 int
 sys_getevent(struct IOEvent *evt, int tmo)
 {
-    unsigned other = 0;
+    unsigned checks = 1;
     HANDLE hKbd = GetStdHandle(STD_INPUT_HANDLE);
     DWORD ticks, tmticks;
     INPUT_RECORD k;
@@ -367,8 +413,9 @@ sys_getevent(struct IOEvent *evt, int tmo)
                         assert(code > 0 && code < KEY_VOID);
                         return 0;
                     }
+                } else {
+                    ResizeCheck(&checks);
                 }
-                Resize(TRUE);
                 break;
 
             case MOUSE_EVENT: {
@@ -377,7 +424,6 @@ sys_getevent(struct IOEvent *evt, int tmo)
 #ifndef MOUSE_WHEELED
 #define MOUSE_WHEELED   4                       /* Not available within NT or 95/98 SDK */
 #endif
-
                     if (MOUSE_WHEELED & me->dwEventFlags) {
                         const int down = (0xFF000000 & me->dwButtonState ? TRUE : FALSE);
 
@@ -400,24 +446,27 @@ sys_getevent(struct IOEvent *evt, int tmo)
                         return 0;
                     }
                 }
-                Resize(TRUE);
+                ResizeCheck(&checks);
                 break;
 
             case FOCUS_EVENT:
                 VioSetFocus(k.Event.FocusEvent.bSetFocus);
-                Resize(TRUE);
+                Resize(2);
                 break;
 
             case WINDOW_BUFFER_SIZE_EVENT:
-                Resize(TRUE);
+                Resize(2);
                 break;
 
             case MENU_EVENT:
-                ++other;
+                /*
+                 *  font changes wont be reported, *unless* the window/buffer size is modified as a result,
+                 *      as such force font checks for the number of input iterations.
+                 */
+                checks = 10;                      
                 break;
 
             default:
-                ++other;
                 break;
             }
         }

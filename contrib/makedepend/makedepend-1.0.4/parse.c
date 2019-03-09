@@ -492,8 +492,7 @@ merge2defines(struct inclist *file1, struct inclist *file2)
                 {
                 	/* make sure deflen % SYMTABINC == 0 is still true */
                 	deflen += (SYMTABINC - deflen % SYMTABINC) % SYMTABINC;
-                	i_defs=(struct symtab**)
-			    malloc(deflen*sizeof(struct symtab*));
+                	i_defs = (struct symtab**) malloc(deflen*sizeof(struct symtab*));
                 	if (i_defs==NULL) return 0;
         	}
 

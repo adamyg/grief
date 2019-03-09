@@ -34,12 +34,16 @@
 #if HAVE_CONFIG_H
 #include "config.h"
 #endif
+#include <sys/stat.h>
+#include <sys/socket.h>
+#include <sys/time.h>
 
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "fetch.h"
 #include "common.h"

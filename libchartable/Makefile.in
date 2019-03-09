@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.18 2015/03/08 18:57:14 cvsuser Exp $
+# $Id: Makefile.in,v 1.21 2018/10/15 16:24:34 cvsuser Exp $
 # libchartable makefile.
 #
 #
-# Copyright (c) 2010 - 2015, Adam Young.
+# Copyright (c) 2010 - 2018, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -146,13 +146,11 @@ modules:		$(D_BINCTBL)/.created		\
 
 data/.created:
 		-@mkdir data
-		(cd data; \
-	wget -r -nv -nH -e robots=off --cut-dirs=1 --no-parent --reject "index.html.*" http://ftp.unicode.org/Public/MAPPINGS/; \
-	wget -nv http://ftp.unicode.org/Public/UNIDATA/Unihan.zip;		\
-	wget -nv http://ftp.unicode.org/Public/UNIDATA/UCD.zip;			\
-	wget -nv http://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz;		\
-	wget -nv http://de.selfhtml.org/html/referenz/zeichen.htm;		\
-	cd ..)
+		wget -P data -r -nv -nH -e robots=off --cut-dirs=1 --no-parent --reject "index.html.*" http://ftp.unicode.org/Public/MAPPINGS/
+		wget -P data -nv http://ftp.unicode.org/Public/UNIDATA/Unihan.zip
+		wget -P data -nv http://ftp.unicode.org/Public/UNIDATA/UCD.zip
+		wget -P data -nv --no-check-certificate http://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz
+		wget -P data -nv --no-check-certificate http://de.selfhtml.org/html/referenz/zeichen.htm
 		@echo "++ do not delete, managed content ++" > $@
 
 %/.created:

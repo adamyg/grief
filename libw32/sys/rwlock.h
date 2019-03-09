@@ -1,14 +1,14 @@
-#ifndef GR_RWLOCK_H_INCLUDED
-#define GR_RWLOCK_H_INCLUDED
+#ifndef GR_SYS_RWLOCK_H_INCLUDED
+#define GR_SYS_RWLOCK_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_rwlock_h,"$Id: rwlock.h,v 1.5 2015/02/19 00:17:39 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_sys_rwlock_h,"$Id: rwlock.h,v 1.8 2018/10/12 00:30:31 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 <rwlock.h> implementation
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -33,13 +33,15 @@ typedef struct rwlock {
 
 __BEGIN_DECLS
 
-void                    rwlock_init(struct rwlock *rw);
-void                    rwlock_destroy(struct rwlock *rw);
-void                    rwlock_rdlock(struct rwlock *rw);
-void                    rwlock_wrlock(struct rwlock *rw);
-void                    rwlock_rdunlock(struct rwlock *rw);
-void                    rwlock_wrunlock(struct rwlock *rw);
+LIBW32_API void         rwlock_init(struct rwlock *rw);
+LIBW32_API void         rwlock_destroy(struct rwlock *rw);
+LIBW32_API void         rwlock_rdlock(struct rwlock *rw);
+LIBW32_API void         rwlock_wrlock(struct rwlock *rw);
+LIBW32_API void         rwlock_rdunlock(struct rwlock *rw);
+LIBW32_API void         rwlock_wrunlock(struct rwlock *rw);
 
 __END_DECLS
 
-#endif /*GR_RWLOCK_H_INCLUDED*/
+#endif /*GR_SYS_RWLOCK_H_INCLUDED*/
+
+

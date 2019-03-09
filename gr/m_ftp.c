@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_ftp_c,"$Id: m_ftp.c,v 1.13 2015/02/24 23:10:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_ftp_c,"$Id: m_ftp.c,v 1.15 2018/09/30 23:34:12 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_ftp.c,v 1.13 2015/02/24 23:10:08 cvsuser Exp $
+/* $Id: m_ftp.c,v 1.15 2018/09/30 23:34:12 cvsuser Exp $
  * FTP/HTTP connection primitives -- beta/undocumented.
  *
  *
- * Copyright 2012-2014 (c) A.Young
+ * Copyright 2012-2017 (c) A.Young
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -556,11 +556,11 @@ do_ftp_get_file(void)               /* int (id, string remote, string local,
 
             if (NULL != (io = fetchXGet(url, &sb, "v"))) {
                 char buf[BUFSIZ * 4];
-                int len, ret, fd = -1;
+                int len, cnt, fd = -1;
                                                 /* TODO - flags and mode */
                 if ((fd = open(local, O_CREAT|O_TRUNC|O_WRONLY, 0600)) >= 0) {
                     while ((len = fetchIO_read(io, buf, sizeof(buf))) > 0) {
-                        if (len != (ret = write(fd, buf, len))) {
+                        if (len != (cnt = write(fd, buf, len))) {
                             break;
                         }
                     }
@@ -760,10 +760,8 @@ do_ftp_mkdir(void)                  /* int (int id, string dir) */
     int ret = -1;
 
     if (iftp) {
-        struct url *url;
-
         ED_TRACE(("ftp_mkdir(cwd:%s,new:%s)\n", (iftp->cwd ? iftp->cwd : ""), dir))
-        if (NULL != (url = iftp->url)) {
+        if (NULL != iftp->url) {
             switch (iftp->proto) {
             case PROTOCOL_FTP:
             case PROTOCOL_SFTP: {
@@ -868,10 +866,8 @@ do_ftp_remove(void)                 /* int (int id, string name) */
     int ret = -1;
 
     if (iftp) {
-        struct url *url;
-
         ED_TRACE(("ftp_remove(cwd:%s,name:%s)\n", (iftp->cwd ? iftp->cwd : ""), name))
-        if (NULL != (url = iftp->url)) {
+        if (NULL != iftp->url) {
             switch (iftp->proto) {
             case PROTOCOL_FTP:
             case PROTOCOL_SFTP: {
@@ -925,10 +921,8 @@ do_ftp_rename(void)                 /* int (int id, string oldname, string newna
     int ret = -1;
 
     if (iftp) {
-        struct url *url;
-
         ED_TRACE(("ftp_rename(cwd:%s,old:%s,new:%s)\n", (iftp->cwd ? iftp->cwd : ""), oldname, newname))
-        if (NULL != (url = iftp->url)) {
+        if (NULL != iftp->url) {
             switch (iftp->proto) {
             case PROTOCOL_FTP:
             case PROTOCOL_SFTP: {

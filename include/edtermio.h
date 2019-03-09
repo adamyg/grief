@@ -1,16 +1,16 @@
 #ifndef GR_EDTERMIO_H_INCLUDED
 #define GR_EDTERMIO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edtermio_h,"$Id: edtermio.h,v 1.11 2015/02/19 00:16:58 ayoung Exp $")
+__CIDENT_RCSID(gr_edtermio_h,"$Id: edtermio.h,v 1.12 2018/10/04 01:28:00 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edtermio.h,v 1.11 2015/02/19 00:16:58 ayoung Exp $
+/* $Id: edtermio.h,v 1.12 2018/10/04 01:28:00 cvsuser Exp $
  * Terminal i/o related definitions.
  *
  *
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

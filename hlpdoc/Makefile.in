@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.5 2015/02/22 22:14:11 ayoung Exp $
+# $Id: Makefile.in,v 1.6 2018/10/01 21:19:56 cvsuser Exp $
 # Help documentation.
 #
 #
@@ -78,7 +78,7 @@ features:	$(FEATOBJS)
 	@echo "++ do not delete, managed content ++" > $@
 
 $(OUTDIR)/prim.000:
-	@-$(RM) $(RMFLAGS) $(OUTDIR)/prim.000 $(OUTDIR)/prim???.hlp
+	@-$(RM) $(RMFLAGS) $(OUTDIR)/prim.000 $(OUTDIR)/prim???.hlp >/dev/null 2>&1
 	@$(PERL) ./makehelp.pl -I src/library.txt.src -F mansrc/features -F mansrc/cshelp prim
 
 $(OUTDIR)/cshelp/INDEX:		mansrc/cshelp/INDEX
@@ -94,9 +94,9 @@ $(OUTDIR)/features/%.hlp:	mansrc/features/%.mandoc
 	@$(PERL) ./makehelp.pl hlp $< $@
 
 clean:
-	-$(RM) $(RMFLAGS) $(CSOUTDIR)/* $(FEATOUTDIR)/*
-	-rmdir $(CSOUTDIR) $(FEATOUTDIR)
-	-$(RM) $(RMFLAGS) $(OUTDIR)/*
-	-rmdir $(OUTDIR)
+	-$(RM) $(RMFLAGS) $(CSOUTDIR)/* $(FEATOUTDIR)/* >/dev/null 2>&1
+	-rmdir $(CSOUTDIR) $(FEATOUTDIR) >/dev/null 2>&1
+	-$(RM) $(RMFLAGS) $(OUTDIR)/* >/dev/null 2>&1
+	-rmdir $(OUTDIR) >/dev/null 2>&1
 
 #end

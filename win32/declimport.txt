@@ -1,0 +1,131 @@
+
+	Source:		https://blogs.msdn.microsoft.com/russellk/2005/03/20/lnk4217/
+
+   LNK4217 
+   
+	The other day, someone sent me a mail wondering what the following linker warning meant:
+
+		warning LNK4217: locally defined symbol __rt_sdiv imported in function main 
+
+	The linker issues this diagnostic or its cousin LNK4049 (locally defined symbol SYMBOL imported) when it
+	encounters a reference to an imported symbol that has been defined locally. In this case, the ARM compiler’s
+	runtime helper function for signed division (__rt_sdiv) had been defined locally, a.k.a. statically linked.
+	Since the compiler, assuming __rt_sdiv will be resolved by COREDLL, by default treats __rt_sdiv as having
+	been declared __declspec(dllimport), the linker warns.
+
+	Shortly after giving this answer, it became abundantly clear that not many people know what the
+	__declspec(dllimport) extended attribute actually means. Therefore, I’ll digress a bit to explain it for the
+	curious.
+
+		__declspec(dllimport)
+
+	Most people know what __declspec(dllexport) does –it tells the linker to add a function or class of functions
+	to the export table in the Portable Executable (PE) image that the current object will eventually wind up
+	part of. However, __declspec(dllimport) is a much less understood modifier, and, despite its name, is almost
+	completely unrelated to __declspec(dllexport), at least in terms of functionality. __declspec(dllimport) can
+	be used on both code and data, and its semantics are subtly different between the two. When applied to a
+	routine call, it is purely a performance optimization. For data, it is required for correctness.
+
+   Importing routines
+  
+	Normally, when you write code that calls a routine, the compiler generates a single instruction that the
+	linker fixes up with the address of the called routine. However, if that called routine resides in a DLL, its
+	address isn’t known to the linker. Instead, the linker allocates a pointer in global memory to the called
+	routine that the loader will fix up when the image is executed. This pointer is an entry in what is known as
+	the Import Address Table (IAT), and its symbolic name is the name of the external routine with “__imp_”
+	prepended. So, for example, if the routine were named foo, its IAT entry would be __imp_foo. The linker also
+	creates a small piece of code called a thunk that, when called, will load the address stored in __imp_foo and
+	jump to it. As you can see, there is more overhead to call a routine in a DLL than there is to call a routine
+	directly. There is an extra data access as well as an extra jump.
+
+	When you use __declspec(dllimport) on a function or C++ class declaration, you are giving the compiler a hint
+	that its call is going to be redirected to a thunk that loads from the IAT. In this case, the compiler
+	doesn’t bother generating a direct call instruction. Instead it generates an indirect call through the IAT
+	entry, e.g. __imp_foo. You could think of this as “inlining the thunk.” Take the following C code for example:
+
+		__declspec(dllimport) void foo(void);
+
+		void bar(void);
+		
+		foo();
+
+		bar(); 
+
+	Here are the instructions the x86 compiler generates:
+
+		; foo()
+
+		ff 15 00 00 00 00 call DWORD PTR __imp__foo
+
+		; bar()
+
+		e8 00 00 00 00 call _bar 
+
+	Notice how the call to _foo is indirect through __imp__foo. x86 has a nice addressing mode that allows it to
+	call through a pointer in a single instruction, and the indirect form of the call instruction is only one
+	byte larger than the direct call. In this case, we trade one byte of code size per call to avoid the extra
+	jump instruction. Furthermore, if every callsite uses the __declspec(dllimport) form, the thunk can be
+	eliminated from the final image, saving 6 bytes. Note that if there are more than 6 call sites to foo, the
+	__declspec DLL import version costs more in size. However, since it’s only one byte extra per call site, this
+	is almost always a win for x86.
+
+	RISC targets are a different matter. The performance win of avoiding the extra jump is still there, but the
+	size hit is much worse. Look at the difference in generated code for MIPS:
+
+		; foo()
+
+		0000 3c02 lui v0,__imp_foo
+
+		0000 8c42 lw v0,__imp_foo(v0)
+
+		f809 0040 jalr ra,v0
+
+		0000 0000 nop
+
+		; bar();
+
+		0000 0c00 jal bar
+
+		0000 0000 nop 
+
+	RISC architectures typically don’t have indirect call instructions, so the compiler must load the address of
+	__imp_foo, then load the value there, and finally call it. This makes the size impact per call 8 bytes for
+	MIPS. If there is one call site, it is a size win since the thunk can be eliminated (the thunk is 16 bytes).
+	However, if there are more than two call sites, inlining the thunk starts to bloat the code quickly at a rate
+	of 8 bytes per site. The size situation is similar for all the other RISC targets as well. It is important to
+	keep the size impact in mind when deciding whether to declare your routines with __declspec(dllimport).
+
+   Importing data
+   
+	If you export a data item from a DLL, you must declare it with __declspec(dllimport) in the code that
+	accesses it. In this case, instead of generating a direct load from memory, the compiler generates a load
+	through a pointer, resulting in one additional indirection. Unlike calls, where the linker will fix up the
+	code correctly whether the routine was declared __declspec(dllimport) or not, accessing imported data
+	requires __declspec(dllimport). If omitted, the code will wind up accessing the IAT entry instead of the data
+	in the DLL, probably resulting in unexpected behavior.
+
+   The question at hand
+
+	Ok, now back to the linker warning. By default, Microsoft’s ARM and SuperH compilers generate references to
+	IAT entries when they reference helper routines in the runtime. They do this because they are designed to
+	target Windows CE, and on that platform those helpers usually reside in the system DLL, COREDLL, and it was
+	decided that, despite the size hit, it was better to inline the thunk to get better performance for things
+	like integer division. In this case, however, the user was writing the board support package (BSP) for his
+	platform and was linking the kernel, which cannot reference COREDLL. In the kernel and a few other PE images, 
+	all CRT routines are resolved by FULLLIBC.LIB and wind up being defined locally.
+
+	In terms of correctness, nothing bad is going to happen in this situation. It turns out that, even though
+	there is no real IAT to resolve the referenced symbol (__imp___rt_sdiv), the linker is clever and comes to
+	the rescue. It generates a fake IAT entry, places the address of the local symbol there, resolves the
+	reference as usual, and warns about the loss of performance. There is one unnecessary indirection when the
+	code calls __rt_sdiv, but everything otherwise behaves as it should.
+
+	What’s the fix? Well, if this were an ordinary function, the fix would be to remove the __declspec(dllimort)
+	attribute from the declaration or abstract it into a macro that expands appropriately depending on whether
+	the function lives in a DLL or resides locally. But __rt_sdiv is a helper, known intrinsically by the
+	compiler. In this case, the fix is simply to use the /QRimplicit-import- switch. This flag tells the compiler
+	that the code is not going to link to a DLL to resolve helper references. The compiler will then generate
+	direct calls instead. Note that the flag is /QSimplicit-import- in versions of the SH-4 compiler starting
+	with Windows CE 5.0.
+
+	I hope that makes sense. It took a lot longer to explain than I thought it would! 

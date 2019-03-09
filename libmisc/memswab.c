@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_memswab_c,"$Id: memswab.c,v 1.6 2015/02/19 00:17:12 ayoung Exp $")
+__CIDENT_RCSID(gr_memswab_c,"$Id: memswab.c,v 1.7 2017/01/29 04:33:31 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: memswab.c,v 1.6 2015/02/19 00:17:12 ayoung Exp $
+/* $Id: memswab.c,v 1.7 2017/01/29 04:33:31 cvsuser Exp $
  * Memory block swap
  *
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2017, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

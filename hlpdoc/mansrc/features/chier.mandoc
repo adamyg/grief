@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: chier.mandoc,v 1.1 2014/11/27 18:19:37 ayoung Exp $
+.\" | $Id: chier.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -52,13 +52,14 @@
 .Nm chier
 .Nd C hierarchy chart, synopsis of precedence and associativity.
 .Sh DESCRIPTION
-This macro gives the user a reminder of the familiar table located
-in the Kernighan and Ritchie definitive C books, but never to be
-found when desperately needed.
+The \fIchier\fR macro gives the user a reminder of the familiar table
+located in the Kernighan and Ritchie definitive C books, but never to
+be found when desperately needed.
 .Sh MENU/KEYS
-This macro can be accessed from the features menu or by
-typing '\f(HBchier\fR' at the command prompt.
+This macro can be accessed from the features menu or by typing
+'\f(HBchier\fR' at the command prompt.
 .Sh SEE ALSO
+.Xr feature ,
 .Xr program ,
 .Xr ascii ,
 .Xr hier

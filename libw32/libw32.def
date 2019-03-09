@@ -1,0 +1,7 @@
+; libw32 library
+EXPORTS
+; global variables, see: w32_slang.c
+;   variables need to be explicitly exported unlike functions.
+; socket interface
+	w32_h_errno DATA
+; end

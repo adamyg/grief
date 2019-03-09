@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_symbol_c,"$Id: m_symbol.c,v 1.38 2014/11/24 11:11:35 ayoung Exp $")
+__CIDENT_RCSID(gr_m_symbol_c,"$Id: m_symbol.c,v 1.39 2019/01/27 13:51:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_symbol.c,v 1.38 2014/11/24 11:11:35 ayoung Exp $
+/* $Id: m_symbol.c,v 1.39 2019/01/27 13:51:24 cvsuser Exp $
  * Symbol primitives.
  *
  *
@@ -210,6 +210,7 @@ static const struct {   /* integer constant's */
 #define S_ISOCK                 0
 #endif
 
+        { "S_IFMT",             S_IFMT          },
         { "S_IFDIR",            S_IFDIR         },
         { "S_IFCHR",            S_IFCHR         },
         { "S_IFIFO",            S_IFIFO         },

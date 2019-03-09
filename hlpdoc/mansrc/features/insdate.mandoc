@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: insdate.mandoc,v 1.1 2014/11/27 18:19:39 ayoung Exp $
+.\" | $Id: insdate.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -54,7 +54,8 @@
 .Sh SYNOPSIS
 insert_date [format]
 .Sh DESCRIPTION
-The insert_date command inserts the local date at current cursor position.
+The \fIinsert_date\fR macro inserts the local date at current cursor
+position.
 .Pp
 Formats:
 .Bl -tag -offset 1 -width xxxxxxxxxx

@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: buflist.mandoc,v 1.1 2014/11/27 18:19:36 ayoung Exp $
+.\" | $Id: buflist.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -52,20 +52,18 @@
 .Nm buflist
 .Nd Buffer List, show list of buffers currently being edited.
 .Sh DESCRIPTION
-The buffer list macro pops up a window which shows the buffers currently
-being edited, together with some status information.
+The buffer list macro pops up a window which shows the buffers
+currently being edited, together with some status information.
 .Pp
-The cursor keys can be used to scroll through the list of
-buffers. Pressing the \f(HB<Enter>\fR key makes that buffer the
-current buffer.
+The cursor keys can be used to scroll through the list of buffers.
+Pressing the \f(HB<Enter>\fR key makes that buffer the current buffer.
 .Pp
-Pressing  'W'  or  'w'  will write the buffer away, as if an
-<Alt-W> had been done on the buffer.
+Pressing 'W' or 'w' will write the buffer away, as if an <Alt-W> had
+been done on the buffer.
 .Pp
-Pressing 'D' or 'd' will delete the buffer. If the buffer has
-been modified, then you will be prompted to see if you are
-sure. You cannot delete a buffer which is currently on
-display in a window.
+Pressing 'D' or 'd' will delete the buffer. If the buffer has been
+modified, then you will be prompted to see if you are sure. You
+cannot delete a buffer which is currently on display in a window.
 .Pp
 The display consists of a number of fields:
 .Bd -literal
@@ -87,3 +85,6 @@ The flag settings are as follows:
 .Sh MENU/KEYS
 \f(HB<Alt-B>\fR is normally assigned to this macro; it can also
 be accessed from the features menu.
+.Sh SEE ALSO
+.Xr feature
+

@@ -1,12 +1,12 @@
-#ifndef GR_IOCTL_H_INCLUDED
-#define GR_IOCTL_H_INCLUDED
+#ifndef LIBW32_SYS_IOCTL_H_INCLUDED
+#define LIBW32_SYS_IOCTL_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_ioctl_h,"$Id: ioctl.h,v 1.5 2015/02/19 00:17:38 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_sys_ioctl_h,"$Id: ioctl.h,v 1.8 2018/10/01 16:44:41 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -20,5 +20,5 @@ __CPRAGMA_ONCE
  * License for more details.
  * ==end==
  */
-
-#endif /*GR_IOCTL_H_INCLUDED*/
+ 
+#endif /*LIBW32_SYS_IOCTL_H_INCLUDED*/

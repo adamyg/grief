@@ -1,16 +1,16 @@
-#ifndef GR_CONFIG_H_INCLUDED
-#define GR_CONFIG_H_INCLUDED
+#ifndef WIN32_CONFIG_H_INCLUDED
+#define WIN32_CONFIG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_config_h, "$Id: config.hin,v 1.30 2014/11/27 19:00:03 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.3 2018/11/19 03:04:09 cvsuser Exp $")
 __CPRAGMA_ONCE
 /* -*- mode: c; set-indent: 4; -*- */
-/* $Id: config.hin,v 1.30 2014/11/27 19:00:03 ayoung Exp $
+/* $Id: w32config.hin,v 1.3 2018/11/19 03:04:09 cvsuser Exp $
  * Machine configuration.
  *
  * System dependent <config.h> configuration template,
  * Windows targets (see makelib.pl for details).
  *
- * Copyright (c) 1998 - 2014, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the Grief Editor.
@@ -36,10 +36,10 @@ __CPRAGMA_ONCE
 #endif
 #endif /*MSC || WATCOM*/
 
-#undef GRIEF_CC_COMPILER
-#undef GRIEF_CC_VERSION
+#undef MAKELIB_CC_COMPILER
+#undef MAKELIB_CC_VERSION
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(__WATCOMC__)
 #pragma warning (disable : 4127)                // conditional expression is constant
 #pragma warning (disable : 4201)                // nonstandard extension used : nameless struct/union
 #pragma warning (disable : 4204)                // nonstandard extension used : non-constant aggregate initializer
@@ -47,12 +47,16 @@ __CPRAGMA_ONCE
 #pragma warning (disable : 4706)                // assignment within conditional expression
 #pragma warning (disable : 4996)
 
+#if !defined(_CRT_NO_POSIX_ERROR_CODES)
+#define _CRT_NO_POSIX_ERROR_CODES               // disable POSIX error number, see <errno.h>
+#endif
+
 #elif defined(__WATCOMC__)
 #if !defined(__cplusplus)
-#pragma disable_message(136)                    // Comparison equivalent to 'unsigned == 0'
+#pragma disable_message(136)                    // comparison equivalent to 'unsigned == 0'
 #endif
-#pragma disable_message(201)                    // Unreachable code
-#pragma disable_message(202)                    // Symbol 'xxx' has been defined, but not referenced
+#pragma disable_message(201)                    // unreachable code
+#pragma disable_message(202)                    // symbol 'xxx' has been defined, but not referenced
 #endif
 
 /*
@@ -126,6 +130,7 @@ __CPRAGMA_ONCE
 #undef HAVE_WINSOCK2_H
 #undef HAVE_WINCRYPT_H
 #undef HAVE_WINIOCTL_H
+#undef HAVE_BCRYPT_H
 
 /* Explicit header checks */
 #undef HAVE_SYS_TYPES_H
@@ -140,7 +145,6 @@ __CPRAGMA_ONCE
 #undef HAVE_SYS_UTSNAME_H
 #undef HAVE_SYS_SELECT_H
 #undef HAVE_SYS_SOCKET_H
-#undef HAVE_SYS_UTIME_H
 #undef HAVE_SYS_WAIT_H
 #undef HAVE_SYS_STAT_H
 #undef HAVE_SYS_STATFS_H
@@ -184,9 +188,8 @@ __CPRAGMA_ONCE
 #undef HAVE_STRINGS_H
 #undef HAVE_STRING_H
 #undef HAVE_UNISTD_H
-#undef HAVE_LIMITS_H
+
 #undef HAVE_ARGZ_H
-#undef HAVE_UTIME_H
 #undef HAVE_LIBGEN_H
 #undef HAVE_REGEX_H
 #undef HAVE_ALLOCA_H
@@ -258,10 +261,17 @@ __CPRAGMA_ONCE
  *  Platform dependancies
  */
 #if !defined(RETSIGTYPE)
-#if defined(__WATCOMC__) || defined(_MSC_VER)
+#if defined(__WATCOMC__)
+#if (__WATCOMC__ >= 1300)
+#define RETSIGTYPE void __watcall
+#else
+#define RETSIGTYPE void
+#endif
+#elif defined(_MSC_VER)
+#define SIGNALRETURNSINT
 #define RETSIGTYPE int
 #endif
-#endif
+#endif /*RETSIGTYPE*/
 
 #undef SIZEOF_CHAR 1
 #undef SIZEOF_SHORT 2
@@ -276,18 +286,54 @@ __CPRAGMA_ONCE
 #undef HAVE_INLINE
 #undef HAVE___INLINE
 
+#undef HAVE_DECL_SIZE_MAX
+#undef HAVE_DECL_SSIZE_MAX
+#undef HAVE_DECL_INT16_C
+#undef HAVE_DECL_INT16_MIN
+#undef HAVE_DECL_INT16_MAX
+#undef HAVE_DECL_UINT16_MAX
+#undef HAVE_DECL_INT32_C
+#undef HAVE_DECL_INT32_MIN
+#undef HAVE_DECL_INT32_MAX
+#undef HAVE_DECL_UINT32_MAX
+#undef HAVE_DECL_INT64_C
+#undef HAVE_DECL_INT64_MIN
+#undef HAVE_DECL_INT64_MAX
+#undef HAVE_DECL_UINT64_MAX
+#undef HAVE_DECL_INTPTR_MIN
+#undef HAVE_DECL_INTPTR_MAX
+#undef HAVE_DECL_UINTPTR_MAX
+#undef HAVE_DECL_WCHAR_MIN
+#undef HAVE_DECL_WCHAR_MAX
+#undef HAVE_DECL_INTMAX_MIN
+#undef HAVE_DECL_INTMAX_MAX
+#undef HAVE_DECL_UINTMAX_MAX
+
 #undef HAVE_INTMAX_T
 #undef HAVE_UINTMAX_T
 #undef HAVE_INTPTR_T
 #undef HAVE_UINTPTR_T
 #undef HAVE_LONG_LONG_INT
 #undef HAVE_UNSIGNED_LONG_LONG_INT
+#undef HAVE_INT8_T
+#undef HAVE_INT16_T
+#undef HAVE_INT32_T
 #undef HAVE_INT64_T
+#undef HAVE_UINT8_T
+#undef HAVE_UINT16_T
+#undef HAVE_UINT32_T
+#undef HAVE_UINT64_T
+#undef HAVE_UINT_FAST8_T
+#undef HAVE_UINT_FAST16_T
+#undef HAVE_UINT_FAST32_T
+#undef HAVE_UINT_FAST64_T
 #undef HAVE___INT64
 #undef HAVE___INT16
 #undef HAVE___INT32
 #undef HAVE___INT8
+#undef HAVE_WCHAR_T
 #undef HAVE_SSIZE_T
+#undef HAVE_C99BOOL
 #undef HAVE_BOOL
 #undef HAVE__BOOL
 
@@ -301,17 +347,17 @@ __CPRAGMA_ONCE
 #undef IS_UNIVERSAL_BUILD
 #undef AC_APPLE_UNIVERSAL_BUILD
 #if !defined(IS_BIG_ENDIAN) && !defined(IS_LITTLE_ENDIAN)
-#	if defined(_M_IX86)
-#		define IS_LITTLE_ENDIAN 1
-#	elif defined(_M_MRX000)
-#		define IS_LITTLE_ENDIAN 1
-#	elif defined(_M_ALPHA)
-#		define IS_LITTLE_ENDIAN 1
-#	elif defined(_M_PPC)
-#		define IS_LITTLE_ENDIAN 1
-#	else
-#		error unknown endian
-#	endif
+#       if defined(_M_IX86)
+#               define IS_LITTLE_ENDIAN 1
+#       elif defined(_M_MRX000)
+#               define IS_LITTLE_ENDIAN 1
+#       elif defined(_M_ALPHA)
+#               define IS_LITTLE_ENDIAN 1
+#       elif defined(_M_PPC)
+#               define IS_LITTLE_ENDIAN 1
+#       else
+#               error unknown endian
+#       endif
 #endif
 
 
@@ -324,12 +370,6 @@ __CPRAGMA_ONCE
 #undef HAVE_STDBOOL_H
 #undef HAVE_STDATOMIC_H
 #undef HAVE_THREADS_H
-
-#undef HAVE_STDARG_H
-#undef HAVE_STDIO_H
-#undef HAVE_STDLIB_H
-#undef HAVE_WCTYPE_H
-#undef HAVE_WCHAR_H
 
 #undef mode_t
 #undef off_t
@@ -375,6 +415,11 @@ __CPRAGMA_ONCE
 
 #undef HAVE_FGETPOS
 #undef HAVE_FSETPOS
+#undef HAVE_TRUNCATE
+#undef HAVE_FTRUNCATE
+#undef HAVE_OPENDIR
+#undef HAVE_FINDFIRST
+#undef HAVE__FINDFIRST
 
 #undef HAVE_GETOPT
 #undef HAVE_GETOPT_LONG
@@ -388,9 +433,7 @@ __CPRAGMA_ONCE
 #undef HAVE_STRICMP
 #undef HAVE_STRRCHR
 #undef HAVE_STRDUP
-#undef HAVE_STRERROR
 #undef HAVE_STRFTIME
-#undef HAVE_STRICMP
 #undef HAVE_STRTOF
 #undef HAVE_STRTOLD
 #undef HAVE_STRTOLL
@@ -400,7 +443,11 @@ __CPRAGMA_ONCE
 #undef HAVE_STRNLEN
 #undef HAVE_STRLCAT
 #undef HAVE_STRLCPY
-#undef HAVE_STRFTIME
+#undef HAVE_STRSEP
+#undef HAVE_STRNSTR
+#undef HAVE_STRCASESTR
+#undef HAVE_STRCASESTR_L
+#undef HAVE_STRTONUM
 
 #undef HAVE_ISASCII
 #undef HAVE___ISASCII
@@ -408,9 +455,6 @@ __CPRAGMA_ONCE
 #undef HAVE___ISBLANK
 #undef HAVE_ISCSYM
 #undef HAVE___ISCSYM
-
-#undef HAVE_FGETPOS
-#undef HAVE_FSETPOS
 
 #undef HAVE_DECL_TZNAME
 #undef HAVE_GETLOGIN
@@ -454,6 +498,26 @@ __CPRAGMA_ONCE
 #undef HAVE_POSIX_MADVISE
 #undef HAVE_MREMAP
 
+#undef HAVE_GETDELIM
+#undef HAVE_GETLINE
+
+
+        /* statfs/statvfs and stat */
+#define HAVE_STRUCT_STAT_ST_DEV 1
+#define HAVE_STRUCT_STAT_ST_RDEV 1
+#undef HAVE_STRUCT_STAT_ST_BLOCKS
+#undef HAVE_STRUCT_STAT_ST_BLKSIZE
+#undef HAVE_STRUCT_STAT_ST_MTIME
+#if defined(HAVE_SYS_STATFS_H) && (HAVE_SYS_STATFS_H)
+#define STAT_STATFS 1
+#define HAVE_STRUCT_STATFS_F_FSTYPENAME 1
+#endif
+#if defined(HAVE_SYS_STATVFS_H) && (HAVE_SYS_STATVFS_H)
+#define STAT_STATVFS 1
+#undef HAVE_STRUCT_STATVFS_F_BASETYPE
+#undef HAVE_STRUCT_STATVFS_F_FSTYPENAME
+#endif
+
 #undef CLOSEDIR_VOID
 #undef GETPGRP_VOID
 
@@ -467,15 +531,9 @@ __CPRAGMA_ONCE
 #undef HAVE_VSNPRINTF
 #undef HAVE__VSNPRINTF
 
-#undef HAVE_MBRTOWC
-#undef HAVE_WCRTOMB
-#undef HAVE_WCSCMP
-#undef HAVE_WCSCPY
-#undef HAVE_WCSLEN
-#undef HAVE_WCTOMB
-#undef HAVE_WMEMCMP
-#undef HAVE_WMEMCPY
-#undef HAVE_WMEMMOVE
+#undef HAVE_ALLOCA
+#undef HAVE__ALLOCA
+#undef HAVE_REALLOCARRAY
 
 #undef HAVE_LOCALE_H
 #undef HAVE_SETLOCALE
@@ -594,6 +652,13 @@ __CPRAGMA_ONCE
 #undef HAVE_BZLIB_H
 #undef HAVE_LIBBZ2
 
+#undef HAVE_LIBLZMA
+#undef HAVE_LZMA_H
+
+        /* glib */
+#undef HAVE_GLIB
+#undef HAVE_GLIB_GLIB_H
+
         /* libguess */
 #undef HAVE_LIBGUESS
 #undef HAVE_LIBGUESS_EXTENSIONS
@@ -676,4 +741,5 @@ __CPRAGMA_ONCE
 
 #define GRIEF_DATADIR "C:/Program Files/Grief/lib"
 
-#endif  /*GR_CONFIG_H_INCLUDED*/
+#endif  /*WIN32_CONFIG_H_INCLUDED*/
+

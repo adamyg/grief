@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_link_c,"$Id: w32_link.c,v 1.8 2015/02/19 00:17:30 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_link_c,"$Id: w32_link.c,v 1.12 2018/10/12 00:24:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win2 link system calls.
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -38,7 +38,14 @@ __CIDENT_RCSID(gr_w32_link_c,"$Id: w32_link.c,v 1.8 2015/02/19 00:17:30 ayoung E
 #include "win32_internal.h"
 #include <unistd.h>
 
-int __w32_link_backup = FALSE;
+typedef BOOL(WINAPI *CreateHardLinkA_t)(
+        LPCSTR lpFileName, LPCSTR lpExistingFileName, LPSECURITY_ATTRIBUTES lpSecurityAttributes);
+
+static BOOL                 my_CreateHardLink(const char *lpLinkFileName, const char *lpTargetFileName);
+static BOOL WINAPI          my_CreateHardLinkImp(LPCSTR lpFileName, LPCSTR lpExistingFileName, LPSECURITY_ATTRIBUTES lpSecurityAttributes);
+
+int                         __w32_link_backup = FALSE;
+
 
 /*
 //  NAME
@@ -50,8 +57,7 @@ int __w32_link_backup = FALSE;
 //      int link(const char *path1, const char *path2);
 //
 //  DESCRIPTION
-//      The link() function shall create a new link (directory entry) for the existing file,
-//      path1.
+//      The link() function shall create a new link (directory entry) for the existing file, path1.
 //
 //      The path1 argument points to a pathname naming an existing file. The path2 argument
 //      points to a pathname naming the new directory entry to be created. The link()
@@ -121,61 +127,111 @@ int __w32_link_backup = FALSE;
 //          As a result of encountering a symbolic link in resolution of the path1 or path2
 //          argument, the length of the substituted pathname string exceeded { PATH_MAX}.
 */
-int
-w32_link(const char *to, const char *from)
+LIBW32_API int
+w32_link(const char *path1, const char *path2)
 {
-    HINSTANCE hinst;
-    FARPROC createHardLink;
-    int ret = 0;
+    int ret = -1;
 
-    if (!to || !from) {
-        ret = -EINVAL;
+    if (!path1 || !path2) {
+        errno = EFAULT;
 
-    } else if (0 == (hinst = LoadLibrary("Kernel32")) ||
-                    0 == (createHardLink = GetProcAddress(hinst, "CreateHardLinkA"))) {
+    } else if (!*path1 || !*path2) {
+        errno = ENOENT;
 
-        if (__w32_link_backup) {                /* backup fallback option */
-            HANDLE fh;
-	    int wlen;
-	    WCHAR wpath[MAX_PATH];
-            WIN32_STREAM_ID wsi = {0};
-            void *ctx = NULL;
-            DWORD cnt;
+    } else if (strlen(path1) > MAX_PATH || strlen(path2) > MAX_PATH) {
+        errno = ENAMETOOLONG;
 
-            if (INVALID_HANDLE_VALUE ==         /* source image */
-                    (fh = CreateFile(from, GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
-                                FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_POSIX_SEMANTICS, NULL))) {
+    } else if (GetFileAttributesA(path2) != INVALID_FILE_ATTRIBUTES /*0xffffffff*/) {
+        errno = EEXIST;
+
+    } else {    // Note: Generally only available under an Admin account
+        ret = 0;
+        if (! my_CreateHardLink(/*target-link*/ path2, /*existing*/ path1)) {
+            switch (GetLastError()) {
+            case ERROR_ACCESS_DENIED:
+            case ERROR_SHARING_VIOLATION:
+            case ERROR_PRIVILEGE_NOT_HELD:
+                errno = EACCES;  break;
+            case ERROR_FILE_NOT_FOUND:
+                errno = ENOENT;  break;
+            case ERROR_PATH_NOT_FOUND:
+            case ERROR_INVALID_DRIVE:
+                errno = ENOTDIR; break;
+            case ERROR_WRITE_PROTECT:
+                errno = EROFS;   break;
+            default:
                 w32_errno_set();
-                CloseHandle(fh);
-                return -1;
+                break;
             }
-            wlen = mbstowcs(wpath, to, MAX_PATH) * sizeof(WCHAR);
-            wsi.dwStreamId = BACKUP_LINK;
-            wsi.dwStreamAttributes = 0;
-            wsi.dwStreamNameSize = 0;
-            wsi.Size.QuadPart = wlen;
-            if (! BackupWrite(fh, (LPBYTE) &wsi,
-                        offsetof(WIN32_STREAM_ID, cStreamName), &cnt, FALSE, FALSE, &ctx) ||
-                    offsetof(WIN32_STREAM_ID, cStreamName) != cnt ||
-                    ! BackupWrite(fh, (LPBYTE) wpath, wlen, &cnt, FALSE, FALSE, &ctx)) {
-                w32_errno_set();
-                CloseHandle(fh);
-                return -1;
-            }                                   /* free resources */
-            BackupWrite(fh, NULL, 0, &cnt, TRUE, FALSE, &ctx);
-            CloseHandle(fh);
-            return 0;
+            ret = -1;
         }
-        ret = -EIO;
-
-    } else if (! createHardLink(to, from, NULL)) {
-        ret = -w32_errno_cnv(GetLastError());
     }
-
-    if (ret < 0) {
-        errno = -ret;
-        return -1;
-    }
-    return 0;
+    return ret;
 }
+
+
+static BOOL
+my_CreateHardLink(LPCSTR lpFileName, LPCSTR lpExistingFileName)
+{
+    static CreateHardLinkA_t x_CreateHardLinkA = NULL;
+
+    if (NULL == x_CreateHardLinkA) {
+        HINSTANCE hinst;                        // Vista+
+
+        if (0 == (hinst = LoadLibraryA("Kernel32")) ||
+                0 == (x_CreateHardLinkA =
+                        (CreateHardLinkA_t)GetProcAddress(hinst, "CreateHardLinkA"))) {
+                                                // XP+
+            x_CreateHardLinkA = my_CreateHardLinkImp;
+            (void)FreeLibrary(hinst);
+        }
+    }
+    return x_CreateHardLinkA(lpFileName, lpExistingFileName, NULL);
+}
+
+
+static BOOL WINAPI
+my_CreateHardLinkImp(LPCSTR lpFileName, LPCSTR lpExistingFileName, LPSECURITY_ATTRIBUTES lpSecurityAttributes)
+{
+    if (!__w32_link_backup) {                   /* backup fallback option */
+        SetLastError(ERROR_NOT_SUPPORTED);      // not implemented
+        return FALSE;
+
+    } else {
+        WCHAR wpath[MAX_PATH] = { 0 };
+        WIN32_STREAM_ID wsi = { 0 };
+        void *ctx = NULL;
+        HANDLE handle;
+        int wlen;
+        DWORD cnt;
+
+        if (INVALID_HANDLE_VALUE ==             /* source image */
+                    (handle = CreateFile(lpExistingFileName, GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
+                            FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_POSIX_SEMANTICS, NULL))) {
+            w32_errno_set();
+            CloseHandle(handle);
+            return FALSE;
+        }
+
+        wlen = mbstowcs(wpath, lpFileName, MAX_PATH) * sizeof(WCHAR);
+        wsi.dwStreamId = BACKUP_LINK;
+        wsi.dwStreamAttributes = 0;
+        wsi.dwStreamNameSize = 0;
+        wsi.Size.QuadPart = wlen;
+
+        if (!BackupWrite(handle, (LPBYTE)&wsi, offsetof(WIN32_STREAM_ID, cStreamName), &cnt, FALSE, FALSE, &ctx) ||
+                offsetof(WIN32_STREAM_ID, cStreamName) != cnt ||
+                !BackupWrite(handle, (LPBYTE)wpath, wlen, &cnt, FALSE, FALSE, &ctx)) {
+            w32_errno_set();
+            CloseHandle(handle);
+            return FALSE;
+        }
+
+        BackupWrite(handle, NULL, 0, &cnt, TRUE, FALSE, &ctx);
+        CloseHandle(handle);
+
+        return TRUE;
+    }
+}
+
 /*end*/

@@ -4,7 +4,7 @@
 
   makedepend/
 
-        Modified version of makedepend 1.0.4
+        Modified version of makedepend 1.0.5
 
            The master development code repository can be found at:
 

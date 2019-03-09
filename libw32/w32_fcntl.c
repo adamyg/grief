@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_fcntl_c,"$Id: w32_fcntl.c,v 1.9 2015/02/19 00:17:28 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_fcntl_c,"$Id: w32_fcntl.c,v 1.13 2018/10/12 01:00:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 fcntl() system calls
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -298,8 +298,16 @@ __CIDENT_RCSID(gr_w32_fcntl_c,"$Id: w32_fcntl.c,v 1.9 2015/02/19 00:17:28 ayoung
 //          process, and putting the calling process to sleep to wait for that lock to
 //          become free would cause a deadlock.
 */
-int
+
+LIBW32_API int
 fcntl(int fd, int ctrl, int value)
+{
+    return w32_fcntl(fd, ctrl, value);
+}
+
+
+LIBW32_API int
+w32_fcntl(int fd, int ctrl, int value)
 {
     __CUNUSED(fd)
     switch (ctrl) {
@@ -311,3 +319,6 @@ fcntl(int fd, int ctrl, int value)
     }
     return value;
 }
+
+/*end*/
+

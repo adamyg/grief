@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_pty_os2_c,"$Id: pty_os2.c,v 1.19 2014/10/22 02:33:16 ayoung Exp $")
+__CIDENT_RCSID(gr_pty_os2_c,"$Id: pty_os2.c,v 1.20 2017/01/19 17:09:30 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: pty_os2.c,v 1.19 2014/10/22 02:33:16 ayoung Exp $
+/* $Id: pty_os2.c,v 1.20 2017/01/19 17:09:30 cvsuser Exp $
  *
  *
  *
@@ -566,4 +566,3 @@ pty_read(BUFFER_t *bp, char *buf, int amount)
 #endif
 
 #endif  /*__OS2__*/
-

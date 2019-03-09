@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: abbrev.mandoc,v 1.1 2014/11/27 18:19:34 ayoung Exp $
+.\" | $Id: abbrev.mandoc,v 1.2 2018/10/01 21:19:56 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -52,9 +52,9 @@
 .Nm abbrev
 .Nd Abbreviations, define shorthands for type-in.
 .Sh DESCRIPTION
-The abbrev macro allows the user to define a shorthand sequence which when
-typed in is expanded to a longer string. For example, the user could
-define the string XYZ, to be expanded into the word '\fIsolicitation\fR'.
+The \fIabbrev\fR macro allows the user to define a shorthand sequence
+which when typed in is expanded to a longer string. For example, the
+user could define the string XYZ, to be expanded into the word '\fIsolicitation\fR'.
 .Pp
 This macro takes two arguments -- the string which is the abbreviation,
 and the string to be expanded. These can either be typed together on
@@ -70,3 +70,6 @@ There is a single abbreviation list which is shared by all buffers.
 .Sh MENU/KEYS
 This macro can be accessed from the GRIEF features menu or by typing
 \f(HBabbrev\fR at the command prompt.
+.Sh SEE ALSO
+.Xr feature
+

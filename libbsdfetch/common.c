@@ -65,6 +65,11 @@
 #include "fetch.h"
 #include "common.h"
 
+#if defined(WIN32)
+#pragma comment(lib, "Ws2_32.lib")
+#endif
+
+
 /*** Local data **************************************************************/
 
 /*
@@ -282,7 +287,11 @@ fetch_nonblocking(int fd, int state)
 	return fcntl(fd, F_SETFL, (state ? (flags | O_NONBLOCK) : (flags & ~O_NONBLOCK)));
 
 #elif defined(WIN32)
+#if defined(WIN32_SOCKET_MAP_NATIVE)
+	int flags = state;		        /*nonzero value if the nonblocking mode, otherwise 0 blocking*/
+#else
 	unsigned long flags = state;		/*nonzero value if the nonblocking mode, otherwise 0 blocking*/
+#endif
 	return ioctlsocket(fd, FIONBIO, &flags);
 
 #else
@@ -549,8 +558,7 @@ fetch_ssl(conn_t *conn, const struct url *URL, int verbose)
 		X509_NAME *name;
 		char *str;
 
-		fprintf(stderr, "SSL connection established using %s\n",
-		    SSL_get_cipher(conn->ssl));
+		fprintf(stderr, "SSL connection established using %s\n",  SSL_get_cipher(conn->ssl));
 		conn->ssl_cert = SSL_get_peer_certificate(conn->ssl);
 		name = X509_get_subject_name(conn->ssl_cert);
 		str = X509_NAME_oneline(name, 0, 0);
@@ -578,11 +586,11 @@ int
 fetch_socketread(int sd, void *buf, size_t len)
 {
 #if defined(WIN32)
-	extern void w32_errno_net(void);
+	LIBW32_API int w32_neterrno_set(void);
 	int ret;
 
 	if (SOCKET_ERROR == (ret = recvfrom((SOCKET)sd, buf, len, 0, NULL, 0))) {
-		w32_errno_net();
+		w32_neterrno_set();
 	}
 	return ret;
 #else

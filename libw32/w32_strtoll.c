@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_strtoll_c,"$Id: w32_strtoll.c,v 1.5 2014/10/22 02:34:07 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_strtoll_c,"$Id: w32_strtoll.c,v 1.8 2018/10/11 01:49:38 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*-
@@ -31,6 +31,8 @@ __CIDENT_RCSID(gr_w32_strtoll_c,"$Id: w32_strtoll.c,v 1.5 2014/10/22 02:34:07 ay
  * SUCH DAMAGE.
  */
 
+#include "w32config.h"
+
 #include <limits.h>
 #include <errno.h>
 #include <ctype.h>
@@ -44,7 +46,7 @@ __CIDENT_RCSID(gr_w32_strtoll_c,"$Id: w32_strtoll.c,v 1.5 2014/10/22 02:34:07 ay
  * alphabets and digits are each contiguous.
  */
 #if defined(_MSC_VER) && (_MSC_VER <= 1600)
-long long
+LIBW32_API long long
 strtoll(const char * nptr, char ** endptr, int base)
 {
         const char *s;
@@ -140,6 +142,9 @@ noconv:
 }
 
 #else
+/*
+ *  avoid empty object warnings
+ */
 extern void __stdlibrary_has_strtoll(void);
 
 void
@@ -147,4 +152,6 @@ __stdlibrary_has_strtoll(void)
 {
 }
 #endif
+
+/*end*/
 

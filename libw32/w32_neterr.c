@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_neterr_c,"$Id: w32_neterr.c,v 1.6 2015/02/19 00:17:30 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_neterr_c,"$Id: w32_neterr.c,v 1.10 2018/10/12 00:24:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 network errno mapping support
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -39,27 +39,116 @@ __CIDENT_RCSID(gr_w32_neterr_c,"$Id: w32_neterr.c,v 1.6 2015/02/19 00:17:30 ayou
 #include <unistd.h>
 #include <time.h>
 
-
-int
-w32_errno_net(void)
+/*
+ *     winsock error mapping to unix error.
+ */
+LIBW32_API int
+w32_neterrno_map(int nerrno)
 {
-    int t_errno = WSAGetLastError();            /* last network error */
+    if (nerrno < WSABASEERR) return nerrno;
 
-    switch (t_errno) {
     /*
-     *  must map a few errno's as the errno namespaces are not clean.
+     *  map a few basic winsock file i / o errno's to their unix equivalent.
      */
-    case WSAEINTR: t_errno = EINTR; break;
-    case WSAEBADF: t_errno = EBADF; break;
-    case WSAEACCES: t_errno = EACCES; break;
-    case WSAEFAULT: t_errno = EFAULT; break;
-    case WSAEINVAL: t_errno = EINVAL; break;
-    case WSAEMFILE: t_errno = EMFILE; break;
-    case WSAENAMETOOLONG: t_errno = ENAMETOOLONG; break;
-    case WSAENOTEMPTY: t_errno = ENOTEMPTY; break;
+    switch (errno) {
+    case WSAEINTR:              nerrno = EINTR; break;
+    case WSAEBADF:              nerrno = EBADF; break;
+    case WSAEACCES:             nerrno = EACCES; break;
+    case WSAEFAULT:             nerrno = EFAULT; break;
+    case WSAEINVAL:             nerrno = EINVAL; break;
+    case WSAEMFILE:             nerrno = EMFILE; break;
+    case WSAENAMETOOLONG:       nerrno = ENAMETOOLONG; break;
+    case WSAENOTEMPTY:          nerrno = ENOTEMPTY; break;
     default:
         break;
     }
-    errno = t_errno;
-    return t_errno;
+    return nerrno;
 }
+
+
+/*
+ *      last network error to errno
+ */
+LIBW32_API int
+w32_neterrno_set(void)
+{
+    const int nerrno = w32_neterrno_map((int)WSAGetLastError());
+    errno = nerrno;
+    return nerrno;
+}
+
+
+#if defined(DEFUNCT)           /* constants are no longer within a seperate namespace */
+/*
+ *  winsock error mapping to unix
+ */
+LIBW32_API int
+w32_sockerrno_map(int nerrno)
+{
+    if (nerrno < WSABASEERR) return nerrno;
+    switch (nerrno) {
+    case WSAEINTR:              nerrno = EINTR; break;              // 10004L
+    case WSAEBADF:              nerrno = EBADF; break;              // 10009L
+    case WSAEACCES:             nerrno = EACCES; break;             // 10013L
+    case WSAEFAULT:             nerrno = EFAULT; break;             // 10014L
+    case WSAEINVAL:             nerrno = EINVAL; break;             // 10022L
+    case WSAEMFILE:             nerrno = EMFILE; break;             // 10024L
+    case WSAEWOULDBLOCK:        nerrno = EWOULDBLOCK; break;        // 10035L
+    case WSAEINPROGRESS:        nerrno = EINPROGRESS; break;        // 10036L
+    case WSAEALREADY:           nerrno = EALREADY; break;           // 10037L
+    case WSAENOTSOCK:           nerrno = ENOTSOCK; break;           // 10038L
+    case WSAEDESTADDRREQ:       nerrno = EDESTADDRREQ; break;       // 10039L
+    case WSAEMSGSIZE:           nerrno = EMSGSIZE; break;           // 10040L
+    case WSAEPROTOTYPE:         nerrno = EPROTOTYPE; break;         // 10041L
+    case WSAENOPROTOOPT:        nerrno = ENOPROTOOPT; break;        // 10042L
+    case WSAEPROTONOSUPPORT:    nerrno = EPROTONOSUPPORT; break;    // 10043L
+    case WSAESOCKTNOSUPPORT:    nerrno = ESOCKTNOSUPPORT; break;    // 10044L
+    case WSAEOPNOTSUPP:         nerrno = EOPNOTSUPP; break;         // 10045L
+    case WSAEPFNOSUPPORT:       nerrno = EPFNOSUPPORT; break;       // 10046L
+    case WSAEAFNOSUPPORT:       nerrno = EAFNOSUPPORT; break;       // 10047L
+    case WSAEADDRINUSE:         nerrno = EADDRINUSE; break;         // 10048L
+    case WSAEADDRNOTAVAIL:      nerrno = EADDRNOTAVAIL; break;      // 10049L
+    case WSAENETDOWN:           nerrno = ENETDOWN; break;           // 10050L
+    case WSAENETUNREACH:        nerrno = ENETUNREACH; break;        // 10051L
+    case WSAENETRESET:          nerrno = ENETRESET; break;          // 10052L
+    case WSAECONNABORTED:       nerrno = ECONNABORTED; break;       // 10053L
+    case WSAECONNRESET:         nerrno = ECONNRESET; break;         // 10054L
+    case WSAENOBUFS:            nerrno = ENOBUFS; break;            // 10055L
+    case WSAEISCONN:            nerrno = EISCONN; break;            // 10056L
+    case WSAENOTCONN:           nerrno = ENOTCONN; break;           // 10057L
+    case WSAESHUTDOWN:          nerrno = ESHUTDOWN; break;          // 10058L
+    case WSAETOOMANYREFS:       nerrno = ETOOMANYREFS; break;       // 10059L
+    case WSAETIMEDOUT:          nerrno = ETIMEDOUT; break;          // 10060L
+    case WSAECONNREFUSED:       nerrno = ECONNREFUSED; break;       // 10061L
+    case WSAELOOP:              nerrno = ELOOP; break;              // 10062L
+    case WSAENAMETOOLONG:       nerrno = ENAMETOOLONG; break;       // 10063L
+    case WSAEHOSTDOWN:          nerrno = EHOSTDOWN; break;          // 10064L
+    case WSAEHOSTUNREACH:       nerrno = EHOSTUNREACH; break;       // 10065L
+    case WSAENOTEMPTY:          nerrno = ENOTEMPTY; break;          // 10066L
+    case WSAEPROCLIM:           nerrno = EPROCLIM; break;           // 10067L
+    case WSAEUSERS:             nerrno = EUSERS; break;             // 10068L
+    case WSAEDQUOT:             nerrno = EDQUOT; break;             // 10069L
+    case WSAESTALE:             nerrno = ESTALE; break;             // 10070L
+    case WSAEREMOTE:            nerrno = EREMOTE; break;            // 10071L
+//  case WSASYSNOTREADY:        nerrno = SYSNOTREADY; break;        // 10091L
+//  case WSAVERNOTSUPPORTED:    nerrno = VERNOTSUPPORTED; break;    // 10092L
+    case WSANOTINITIALISED:     nerrno = ENOTINITIALISED; break;    // 10093L
+    case WSAEDISCON:            nerrno = EDISCON; break;            // 10101L
+    case WSAENOMORE:            nerrno = ENOMORE; break;            // 10102L
+    case WSAECANCELLED:         nerrno = ECANCELLED; break;         // 10103L
+//  case WSAEINVALIDPROCTABLE:                                      // 10104L
+//  case WSAEINVALIDPROVIDER:                                       // 10105L
+//  case WSAEPROVIDERFAILEDINIT:                                    // 10106L
+//  case WSASYSCALLFAILURE:                                         // 10107L
+//  case WSASERVICE_NOT_FOUND:                                      // 10108L
+//  case WSATYPE_NOT_FOUND:                                         // 10109L
+//  case WSA_E_NO_MORE:                                             // 10110L
+//  case WSA_E_CANCELLED:                                           // 10111L
+    case WSAEREFUSED:           nerrno = EREFUSED; break;           // 10112L
+    default:
+        break;
+    }
+    return nerrno;
+}
+#endif //DEFUNCT
+

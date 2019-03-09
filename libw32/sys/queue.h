@@ -1,12 +1,12 @@
 #ifndef GR_QUEUE_H_INCLUDED
 #define GR_QUEUE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_queue_h,"$Id: queue.h,v 1.5 2015/02/19 00:17:39 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_sys_queue_h,"$Id: queue.h,v 1.7 2018/10/01 00:00:05 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: ascii.mandoc,v 1.1 2014/11/27 18:19:34 ayoung Exp $
+.\" | $Id: ascii.mandoc,v 1.2 2018/10/01 21:19:56 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -54,15 +54,14 @@
 .Sh SYNOPSIS
 ascii [8|10|16]
 .Sh DESCRIPTION
-This macro is used to display an ascii chart, similar to those found
-in the back of most books. When this macro is executed a popup menu
-is displayed allowing the user to select
-a decimal, octal or hexadecimal listing.
-.Pp
-Only the first 128 characters in the character set are shown.
+The \fIascii\fR macro is used to display an ascii chart, similar to
+those found in the back of most books. When this macro is executed a
+popup menu is displayed allowing the user to select a decimal, octal
+or hexadecimal listing.
 .Sh MENU/KEYS
 This macro is available from GRIEF's features menu or by typing the
 command '\f(HBascii\fR' at the command line prompt.
 .Sh SEE ALSO
+.Xr feature ,
 .Xr program ,
 .Xr chier

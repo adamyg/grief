@@ -1,14 +1,14 @@
 #ifndef GR_DLFCN_H_INCLUDED
 #define GR_DLFCN_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_dlfcn_h,"$Id: dlfcn.h,v 1.4 2015/02/19 00:17:25 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_dlfcn_h,"$Id: dlfcn.h,v 1.7 2018/10/11 01:46:31 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * <dlfnc.h> for windows
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -41,10 +41,10 @@ __BEGIN_DECLS
 #define RTLD_GLOBAL     0x04    /* all symbols are available for relocation processing of other modules. */
 #define RTLD_LOCAL      0x08    /* all symbols are not made available for relocation processing by other modules. */
 
-void *                  dlopen(const char *file, int mode);
-void *                  dlsym(void *__restrict handle, const char *__restrict name);
-int                     dlclose(void *handle);
-char *                  dlerror(void);
+LIBW32_API void *       dlopen(const char *file, int mode);
+LIBW32_API void *       dlsym(void *__restrict handle, const char *__restrict name);
+LIBW32_API int          dlclose(void *handle);
+LIBW32_API char *       dlerror(void);
 
 __END_DECLS
 

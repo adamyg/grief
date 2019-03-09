@@ -1,25 +1,25 @@
 #!/usr/bin/perl
-# $Id: makepdf.pl,v 1.1 2014/10/31 01:09:02 ayoung Exp $
+# $Id: makepdf.pl,v 1.3 2018/10/18 22:13:37 cvsuser Exp $
 # -*- tabs: 8; indent-width: 4; -*-
 # pdf generation tool.
 #
 #
-# Copyright (c) 1998 - 2014, Adam Young.
+# Copyright (c) 1998 - 2018, Adam Young.
 # All rights reserved.
-# 
+#
 # This file is part of the GRIEF Editor.
-# 
+#
 # The GRIEF Editor is free software: you can redistribute it
 # and/or modify it under the terms of the GRIEF Editor License.
-# 
+#
 # Redistributions of source code must retain the above copyright
 # notice, and must be distributed with the license document above.
-# 
+#
 # Redistributions in binary form must reproduce the above copyright
 # notice, and must include the license document above in
 # the documentation and/or other materials provided with the
 # distribution.
-# 
+#
 # The GRIEF Editor is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
@@ -38,12 +38,11 @@ use File::Basename;
 use POSIX 'asctime';
 use Data::Dumper;
 
-my $x_binary    =                               # default path
-    ($^O eq 'MSWin32' ? $ENV{'ProgramFiles'}.'/wkhtmltopdf/bin' : '/usr/local/bin');
+my $x_binary    = '/usr/local/bin';
 
 my $CWD         = getcwd();
 my $o_version   = undef;
-my $o_binary    = $x_binary;
+my $o_binary    = undef;
 my $o_outdir    = '.';
 my $o_wkdir     = 'doc';
 my $o_srcdir    = 'src';
@@ -54,9 +53,23 @@ exit &main();
 sub
 main()
 {
+    if ($^O eq 'MSWin32') {                     # determine windows installation path
+            if (-d 'C:/Program Files (x86)/wkhtmltopdf') {
+                $x_binary = 'C:/Program Files (x86)/wkhtmltopdf';
+
+            } elsif (-d 'C:/Program Files/wkhtmltopdf') {
+                $x_binary = 'C:/Program Files/wkhtmltopdf';
+
+            } else {
+                $x_binary = $ENV{'ProgramFiles'}.'/wkhtmltopdf';
+            }
+            $x_binary .= '/bin';
+    }
+
     my $o_clean = 0;
     my $o_help = 0;
 
+    $o_binary = $x_binary;
     my $ret =
         GetOptions(
             'B|binary:s'    => \$o_binary,
@@ -150,7 +163,8 @@ main()
         "doc/html/index/General13.html ".
         "${o_outdir}/griefprogguide.pdf";
 
-    system($o_binary.'/wkhtmltopdf', $cmd);
+    print "==> ${o_binary}/wkhtmltopdf ${cmd}\n";
+    system($o_binary . '/wkhtmltopdf', $cmd);
     return 0;
 }
 
@@ -246,7 +260,7 @@ Copyright               #(file)
 {
 #   Grief Programmer's Guide
 #
-#   Copyright © 1998 - 2014 Adam Young
+#   Copyright © 1998 - 2018 Adam Young
 #
 #   Permission is granted to make and distribute non-commercial
 #   verbatim copies of this documentation provided the copyright
@@ -274,3 +288,4 @@ Debug
 }
 
 #end
+

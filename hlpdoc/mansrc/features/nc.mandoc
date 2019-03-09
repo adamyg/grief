@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: nc.mandoc,v 1.1 2014/11/27 18:19:41 ayoung Exp $
+.\" | $Id: nc.mandoc,v 1.2 2018/10/01 21:19:58 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -53,19 +53,18 @@
 .Nd Norton Commanber style shell.
 .Sh DESCRIPTION
 .Pp
-The nc macro gives you capabilities similar to those found in the
-NORTON COMMANDER, with a few exceptions.  Virtually all of the
-function key assignments are the same except for F2 which allows
-you to change what drive you are on.  To EDIT a file just select it
-with the highlight bar and hit <Enter>.  You can mark files with the
-<Ins> key, or the <+> or <-> keys to use a mask to select multiple
-files.
+The \fInc\fR macro gives you capabilities similar to those found in
+the NORTON COMMANDER, with a few exceptions. Virtually all of the
+function key assignments are the same except for F2 which allows you
+to change what drive you are on. To EDIT a file just select it with
+the highlight bar and hit <Enter>. You can mark files with the <Ins>
+key, or the <+> or <-> keys to use a mask to select multiple files.
 .Pp
-Once selected files may be deleted, or loaded into the editor.  <F9>
-allows you to change how the directory is sorted: Filename, Extension,
-Size, Date, or Reverse-date.  <F10> or <Esc> EXIT "dir".  Hitting the
+Once selected files may be deleted, or loaded into the editor. <F9>
+allows you to change how the directory is sorted: Filename, Extension, 
+Size, Date, or Reverse-date. <F10> or <Esc> EXIT "dir". Hitting the
 <Enter> key when a Directory is highlighted will take you into that
-directory.  Press the <F1> key to get his help.
+directory. Press the <F1> key to get his help.
 .Pp
 The following is a list of all legal commands and their function:
 .Bl -tag -offset 1 -width xxxxxxxx

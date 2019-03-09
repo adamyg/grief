@@ -1,5 +1,5 @@
 /*
- *  makedepend configuration, for makedepend-1.0.4
+ *  makedepend configuration, for makedepend-1.0.4/5
  *
  *  Introduction to makedepend
  *
@@ -13,7 +13,7 @@
  *
  *          Download (FTP):     ftp://ftp.x.org/pub/individual/util/makedepend-1.0.4.tar.bz2
  *
- * Copyright (c) 2012-2015 Adam Young.
+ * Copyright (c) 2012-2018 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,6 +53,7 @@
 #endif
 
 #define _X_ATTRIBUTE_PRINTF(_a,__b)
+#define _X_NORETURN
 
 #if defined(_WIN32)
 #define OBJSUFFIX       "obj"
@@ -73,6 +74,10 @@
 #ifndef strdup
 #define strdup          _strdup
 #endif
+#ifndef snprintf
+#define snprintf        _snprintf
+#endif
+
 #else
 #define OBJSUFFIX       "o"
 #endif

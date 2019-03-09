@@ -1,14 +1,14 @@
 #ifndef GR_WIN32_HUNSPELL_H_INCLUDED
 #define GR_WIN32_HUNSPELL_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_hunspell_h,"$Id: win32_hunspell.h,v 1.6 2015/02/19 00:17:34 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_win32_hunspell_h,"$Id: win32_hunspell.h,v 1.9 2018/10/11 01:46:32 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 hunspell dynamic loader.
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -36,18 +36,18 @@ __CPRAGMA_ONCE
 
 __CBEGIN_DECLS
 
-extern int              w32_hunspell_connect(int verbose);
-extern void             w32_hunspell_shutdown(void);
+LIBW32_API int              w32_hunspell_connect(int verbose);
+LIBW32_API extern void      w32_hunspell_shutdown(void);
 
-extern void *           w32_hunspell_initialise(const char *aff, const char *dic);
-extern void *           w32_hunspell_initialise_key(const char *aff, const char *dic, const char *key);
-extern void             w32_hunspell_uninitialise(void *handle);
-extern const char *     w32_hunspell_get_dic_encoding(void *handle);
-extern int              w32_hunspell_spell(void *handle, const char *word);
-extern int              w32_hunspell_suggest(void *handle, char ***sugglist, const char *word);
-extern void             w32_hunspell_free_list(void *handle, char ***sugglist, int suggcnt);
-extern int              w32_hunspell_add(void *handle, const char *word);
-extern int              w32_hunspell_add_with_affix(void *handle, const char *word, const char *affix);
+LIBW32_API void *           w32_hunspell_initialise(const char *aff, const char *dic);
+LIBW32_API void *           w32_hunspell_initialise_key(const char *aff, const char *dic, const char *key);
+LIBW32_API void             w32_hunspell_uninitialise(void *handle);
+LIBW32_API const char *     w32_hunspell_get_dic_encoding(void *handle);
+LIBW32_API int              w32_hunspell_spell(void *handle, const char *word);
+LIBW32_API int              w32_hunspell_suggest(void *handle, char ***sugglist, const char *word);
+LIBW32_API void             w32_hunspell_free_list(void *handle, char ***sugglist, int suggcnt);
+LIBW32_API int              w32_hunspell_add(void *handle, const char *word);
+LIBW32_API int              w32_hunspell_add_with_affix(void *handle, const char *word, const char *affix);
 
 #if defined(WIN32_HUNSPELL_MAP)
 typedef void *Hunhandle;

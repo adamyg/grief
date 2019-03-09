@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_lisp_c,"$Id: lisp.c,v 1.40 2014/11/24 11:27:24 ayoung Exp $")
+__CIDENT_RCSID(gr_lisp_c,"$Id: lisp.c,v 1.42 2019/01/26 22:27:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: lisp.c,v 1.40 2014/11/24 11:27:24 ayoung Exp $
+/* $Id: lisp.c,v 1.42 2019/01/26 22:27:08 cvsuser Exp $
  * List primitives.
  *
  *
@@ -2619,7 +2619,7 @@ do_typeof(void)                 /* (declare symbol) */
 
         Furthermore, this interface should be considered as an
         *internal* primitive. As this primitive is not compatible
-        with the 'nth' macro of Crisp its direct usage is not
+        with the 'nth' macro of CRiSPEdit its direct usage is not
         recommended, instead rely on the offset operator '[]'.
 
     Macro Parameters:
@@ -2635,7 +2635,7 @@ do_typeof(void)                 /* (declare symbol) */
 
     Macro Portability:
         GRIEF uses an alternative prototype to support support
-        multidimensional lists, unlike Crisp which only supports a
+        multidimensional lists, unlike CRiSPEdit which only supports a
         single dimension.
 
 >	    nth(expr, list_expr)
@@ -3045,7 +3045,7 @@ do_splice(void)                 /* void (list lst, int offset = 0, [int length],
  *<<GRIEF>>
     Macro: push - Add an element onto a list.
 
-        void
+        declare
         push(list lst, declare value ...)
 
     Macro Description:
@@ -3175,7 +3175,7 @@ do_shift(void)                  /* declare (list lst) */
  *<<GRIEF>>
     Macro: unshift - Shift the first list element.
 
-        int
+        declare
         unshift(list lst, declare value)
 
     Macro Description:

@@ -1,11 +1,11 @@
 #ifndef GR_VIO_H_INCLUDED
 #define GR_VIO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vio_h,"$Id: vio.h,v 1.24 2015/03/14 23:14:50 ayoung Exp $")
+__CIDENT_RCSID(gr_vio_h,"$Id: vio.h,v 1.28 2018/10/04 15:39:29 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vio.h,v 1.24 2015/03/14 23:14:50 ayoung Exp $
+/* $Id: vio.h,v 1.28 2018/10/04 15:39:29 cvsuser Exp $
  * Video I/O interface header.
  *
  *
@@ -296,68 +296,33 @@ __CPRAGMA_ONCE
 #define VIOVID_BIOS80MONO   7
 
 #if defined(WIN32)
-
-#ifndef WIN32_CONSOLENORM
-#define WIN32_CONSOLEEXT                        /* extended console */
-#endif
-
-#if defined(WIN32_CONSOLEEXT)
 /*
  *  Extended console support ...
- *      BG/8 + FG/8 + STYLE/16 + CHAR/32
  */
-typedef uint16_t VIOHUE;
-typedef struct {                                /* VIO cell unit (extended unicode) */
-    VIOHUE       attribute;                     /* FG + BG */
-    uint16_t     style;
-#define VIO_UNDERLINE       0x0001
-#define VIO_ITALIC          0x0002
-#define VIO_COLOR256        0x1000
-    uint32_t    character;                      /* unicode code */
-} VIOCELL;
+#define TERMEMU_VIO_SOURCE
+#include "termemu_vio.h"
 
-#define VIO_ATTR_MASK       0xffff              /* 0xffff */
-#define VIO_FG_SHIFT        0                   /* 0x00ff */
-#define VIO_BG_SHIFT        8                   /* 0xff00 */
-#define VIO_FB_MASK         0xff
-#define VIO_BK_MASK	    0xff00
-#define VIO_FG(_f)          ((_f) << VIO_FG_SHIFT)
-#define VIO_BG(_b)          ((_b) << VIO_BG_SHIFT)
-#define VIO_FGBG(_f, _b)    ((VIOHUE)(VIO_FG(_f)|VIO_BG(_b)))
-#define VIO_INIT(_a, _c)    { _a, 0, _c }
-#define VIO_ASSIGN(_v, _a, _c, _s) { \
-                    _v->attribute = _a; \
-                    _v->style     = _s; \
-                    _v->character = _c; \
-                    }
-#define VIO_IMPORT(_v, _a, _c) { \
-                    const VIOHUE fg = (_a & 0x0f), \
-                            bg = ((_a >> 4) & 0x0f); \
-                    _v->attribute = VIO_FGBG(fg, bg); \
-                    _v->style     = 0;  \
-                    _v->character = _c; \
-                    }
-#define VIO_EXPORT(_cell) \
-                    ((((_cell.attribute >> VIO_BG_SHIFT) & 0xf) << 4) \
-                     |((_cell.attribute >> VIO_FG_SHIFT) & 0xf))
-#define VIO_CHAR(_cell)     (_cell.character)
+typedef WCHAR_COLORINFO VIOHUE;
+typedef WCHAR_INFO VIOCELL;
 
-#else   //!WIN32_CONSOLEEXT
-/*
- *  Generic Unicode
- *      32bit cell - BG/4 + FG/4 + CHAR/24
- */
-typedef uint32_t VIOHUE;
-typedef uint32_t VIOCELL;                       /* VIO cell unit (unicode) */
+__inline WCHAR_COLORINFO
+VIO_FGBG(int fg, int bg) {
+    WCHAR_COLORINFO info = {VIO_FNORMAL, 0, (short)fg, (short)bg, 0, 0};
+    return info;
+}
 
-#define VIO_CHAR_MASK       0x001fffff          /* 0x00 00 ff ff ff */
-#define VIO_CHAR_SHIFT      0
-#define VIO_ATTR_MASK       0xff000000          /* 0xff 00 00 00 00 */
-#define VIO_ATTR_SHIFT      24
-#define VIO_FG_SHIFT        24                  /* 0x0f 00 00 00 00 */
-#define VIO_BG_SHIFT        28                  /* 0xf0 00 00 00 00 */
-#define VIO_FB_MASK         0xf
-#endif
+__inline WCHAR_INFO
+VIO_INIT(const WCHAR_COLORINFO i, unsigned c) {
+    WCHAR_INFO wchar = {0};
+    wchar.Info = i;
+    wchar.Char.UnicodeChar = c;
+    return wchar;
+}
+
+#define VIO_ASSIGN(_cell, _i, _c, _a) { \
+            _cell->Info = _i, _cell->Char.UnicodeChar = _c, _cell->Info.Attributes = _a; \
+            }
+#define VIO_CHAR(_cell)     _cell.Char.UnicodeChar
 
 #else   //!WIN32
 /*
@@ -373,9 +338,7 @@ typedef uint16_t VIOCELL;                       /* VIO cell unit (ascii only) */
 #define VIO_ATTR_SHIFT      8
 #define VIO_FG_SHIFT        8                   /* 0x0f 00 */
 #define VIO_BG_SHIFT        12                  /* 0xf0 00 */
-#endif
 
-#if !defined(VIO_CHAR)
 #define VIO_FG(_f)          ((_f) << VIO_FG_SHIFT)
 #define VIO_BG(_b)          ((_b) << VIO_BG_SHIFT)
 #define VIO_FGBG(_f, _b)    ((VIO_FG(_f)|VIO_BG(_b)) & VIO_ATTR_MASK)
@@ -387,7 +350,7 @@ typedef uint16_t VIOCELL;                       /* VIO cell unit (ascii only) */
                 { *_v = ((VIOCELL)(((_a) << VIO_ATTR_SHIFT) | ((_c) & VIO_CHAR_MASK))); }
 #define VIO_CHAR(_cell)     ((_cell) & VIO_CHAR_MASK)
 #define VIO_EXPORT(_cell)   ((_cell) >> VIO_ATTR_SHIFT)
-#endif
+#endif  //!WIN32
 
 typedef enum {
     VIOCUR_STATE,                               /* Cursor status */
@@ -425,6 +388,24 @@ typedef struct {
     DWORD               mask;                   /* cursor line maks, extension */
 } VIOCURSORINFO;
 
+typedef struct {
+    USHORT              cb;                     /* Structure size */
+    HVIO                handle;                 /* video handle; always zero */
+    DWORD               state;                  /* initialisation state */
+    DWORD               opaque[32];             /* opaque context storage */
+} VIOSHOW;
+
+    /* VioXxxx return codes */
+#if !defined(NO_ERROR)                          /* see: winerror.h */
+#define NO_ERROR 0
+#elif (NO_ERROR)
+#error Invalid NO_ERROR definition
+#endif
+#define ERROR_VIO_MODE 355
+#define ERROR_VIO_INVALID_PARMS 421
+#define ERROR_VIO_ILLEGAL_DURING_POPUP 430
+#define ERROR_VIO_INVALID_HANDLE 436
+
     /* OS2/NT/VIO interface compat */
 extern int                  VioGetMode(VIOMODEINFO *mode, HVIO viohandle);
 extern int                  VioSetMode(VIOMODEINFO *mode, HVIO viohandle);
@@ -436,6 +417,11 @@ extern int                  VioSetCurPos(USHORT row, USHORT col, HVIO viohandle)
 extern int                  VioGetBuf(VIOCELL **pBuf, ULONG *size, HVIO viohandle);
 extern int                  VioShowBuf(ULONG offset, ULONG length, HVIO viohandle);
 extern int                  VioReadCellStr(VIOCELL *buf, ULONG *length, USHORT row, USHORT col, HVIO viohandle);
+
+    /* extension */
+extern int                  VioShowInit(VIOSHOW *show, HVIO viohandle);
+extern int                  VioShowBlock(ULONG offset, ULONG length, VIOSHOW *show);
+extern int                  VioShowFinal(VIOSHOW *show);
 
     /* MSDOS extensions */
 extern int                  VioCursor(VIOCURSOR state);

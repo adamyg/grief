@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.3 2017/02/03 03:22:17 cvsuser Exp $
+# $Id: Makefile.in,v 1.4 2018/10/20 02:09:23 cvsuser Exp $
 # liblzma makefile and grxz
 #
 #
@@ -237,9 +237,10 @@ source:			.unpacked.$(VERSION)
 		@echo "unpacking source $(LZMAPACKED)"
 		@gzip -c -d $(LZMAPACKED) | tar -xvf -
 
-installinc:		../include/.created
-		@echo publishing headers 'lzma.h' ...
-		@-cp $(LZMASRC)/lzma.h ../include
+installinc:		../include/.created ../include/lzma/.created
+		@echo publishing headers 'lzma.h and lzma/*.h' ...
+		@-cp $(LIBLZMASRC)/api/lzma.h ../include
+		@-cp $(LIBLZMASRC)/api/lzma/*.h ../include/lzma
 
 %/.created:
 		-@mkdir $(@D)

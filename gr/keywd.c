@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.87 2015/02/19 00:16:52 ayoung Exp $")
+__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.89 2019/01/26 22:27:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keywd.c,v 1.87 2015/02/19 00:16:52 ayoung Exp $
+/* $Id: keywd.c,v 1.89 2019/01/26 22:27:08 cvsuser Exp $
  * Keyword table.
  *
  *
@@ -118,11 +118,11 @@ const int cm_version = CM_VERSION;
 #define VERSION_202
 #define VERSION_203
 #define VERSION_204
-//  #define VERSION_205
-//  #define VERSION_206
+//  #define VERSION_205     /*staged/experimental*/
+//  #define VERSION_206     /*not implemented/alpha*/
 
 /*
- *  Keyword table, should be in alphabetic order
+ *  Keyword table, assumed to be in alphabetic order.
  */
 BUILTIN builtin[] = {
     {"!", MACRO(do_lnot), ARG_UNDEF, 0, 0,                  /* arith */
@@ -263,13 +263,13 @@ BUILTIN builtin[] = {
     {"abort", MACRO(do_abort), ARG_VOID, 0, 0,              /* debug */
     0,  {0}},
 
-    {"above", MACRO(do_com_op), ARG_UNDEF, 0, MOP_ABOVE,    /* arith */
+    {"above", MACRO(do_com_op), ARG_INT, 0, MOP_ABOVE,      /* arith */
     2,  {ARG_NUM | ARG_STRING, ARG_NUM | ARG_STRING}},
 
-    {"above_eq", MACRO(do_com_op), ARG_UNDEF, 0, MOP_ABOVE_EQ, /* arith */
+    {"above_eq", MACRO(do_com_op), ARG_INT, 0, MOP_ABOVE_EQ, /* arith */
     2,  {ARG_NUM | ARG_STRING, ARG_NUM | ARG_STRING}},
 
-    {"abs", MACRO(do_abs), ARG_UNDEF, 0, 0,                 /* float, arith */
+    {"abs", MACRO(do_abs), ARG_FLOAT, 0, 0,                 /* float, arith */
     1,  {ARG_NUM}},
 
     {"access", MACRO(do_access), ARG_INT, 0, 0,             /* file */
@@ -290,7 +290,7 @@ BUILTIN builtin[] = {
     {"atan", MACRO(do_atan), ARG_FLOAT, 0, 0,               /* float, arith */
     1,  {ARG_FLOAT}},
 
-    {"atan2", MACRO(do_atan2), ARG_UNDEF, 0, 0,             /* float, arith */
+    {"atan2", MACRO(do_atan2), ARG_FLOAT, 0, 0,             /* float, arith */
     2,  {ARG_FLOAT, ARG_FLOAT}},
 
     {"atoi", MACRO(do_atoi), ARG_INT, 0, 0,                 /* string */
@@ -314,13 +314,13 @@ BUILTIN builtin[] = {
     {"beep", MACRO(do_beep), ARG_VOID, 0, 0,                /* misc */
     2,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"beginning_of_line", MACRO(do_beginning_of_line), ARG_UNDEF, 0, 0, /* movement */
+    {"beginning_of_line", MACRO(do_beginning_of_line), ARG_INT, 0, 0, /* movement */
     0,  {0}},
 
-    {"below", MACRO(do_com_op), ARG_UNDEF, 0, MOP_BELOW,    /* arith */
+    {"below", MACRO(do_com_op), ARG_INT, 0, MOP_BELOW,      /* arith */
     2,  {ARG_NUM | ARG_STRING, ARG_NUM | ARG_STRING}},
 
-    {"below_eq", MACRO(do_com_op), ARG_UNDEF, 0, MOP_BELOW_EQ, /* arith */
+    {"below_eq", MACRO(do_com_op), ARG_INT, 0, MOP_BELOW_EQ, /* arith */
     2,  {ARG_NUM | ARG_STRING, ARG_NUM | ARG_STRING}},
 
 #if defined(VERSION_206)
@@ -328,7 +328,7 @@ BUILTIN builtin[] = {
     2,  {ARG_INT, ARG_OPT | ARG_STRING}},
 #endif
 
-    {"bookmark_list", MACRO(do_bookmark_list), ARG_UNDEF, 0, 0, /* movement */
+    {"bookmark_list", MACRO(do_bookmark_list), ARG_LIST, 0, 0, /* movement */
     0,  {0}},
 
 #if defined(DO_INTERNAL) & (0)
@@ -345,16 +345,16 @@ BUILTIN builtin[] = {
     {"call_registered_macro", MACRO(do_call_registered_macro), ARG_INT, 0, 0, /* macro */
     1,  {ARG_INT}},
 
-    {"car", MACRO(do_car), ARG_UNDEF, 0, 0,                 /* list */
+    {"car", MACRO(do_car), ARG_ANY, 0, 0,                   /* list */
     1,  {ARG_LIST}},
 
-    {"cd", MACRO(do_cd), ARG_UNDEF, 0, 0,                   /* env */
+    {"cd", MACRO(do_cd), ARG_INT, 0, 0,                     /* env */
     1,  {ARG_OPT | ARG_STRING}},
 
-    {"cdr", MACRO(do_cdr), ARG_UNDEF, 0, 0,                 /* list */
+    {"cdr", MACRO(do_cdr), ARG_ANY, 0, 0,                   /* list */
     1,  {ARG_LIST}},
 
-    {"ceil", MACRO(do_ceil), ARG_UNDEF, 0, 0,               /* float, arith */
+    {"ceil", MACRO(do_ceil), ARG_FLOAT, 0, 0,               /* float, arith */
     1,  {ARG_FLOAT}},
 
     {"cftime", MACRO(do_cftime), ARG_STRING, 0, 0,          /* misc, string */
@@ -385,19 +385,19 @@ BUILTIN builtin[] = {
     1,  {ARG_OPT | ARG_INT}},
 #endif
 
-    {"color", MACRO(do_color), ARG_UNDEF, 0, 0,             /* screen */
+    {"color", MACRO(do_color), ARG_INT, 0, 0,              /* screen */
     -1, {ARG_OPT | ARG_INT | ARG_STRING}},
 
-    {"color_index", MACRO(do_color_index), ARG_UNDEF, 0, 0, /* misc */
+    {"color_index", MACRO(do_color_index), ARG_INT, 0, 0,  /* misc */
     1,  {ARG_OPT | ARG_INT}},
 
-    {"command_list", MACRO(do_command_list), ARG_UNDEF, 0, 0, /* list */
+    {"command_list", MACRO(do_command_list), ARG_LIST, 0, 0, /* list */
     2,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_STRING}},
 
     {"compare", MACRO(do_com_op), ARG_UNDEF, 0, MOP_CMP,    /* arith */
     2,  {ARG_NUM | ARG_STRING, ARG_NUM | ARG_STRING}},
 
-    {"compare_files", MACRO(do_compare_files), ARG_UNDEF, 0, 0, /* file */
+    {"compare_files", MACRO(do_compare_files), ARG_INT, 0, 0, /* file */
     2,  {ARG_STRING, ARG_STRING}},
 
     {"compress", MACRO(do_compress), ARG_STRING, 0, 0,      /* string */
@@ -412,16 +412,16 @@ BUILTIN builtin[] = {
     {"continue", MACRO(do_continue), ARG_VOID, 0, 0,        /* macro */
     0,  {0}},
 
-    {"copy", MACRO(do_copy), ARG_UNDEF, 0, 0,               /* scrap */
+    {"copy", MACRO(do_copy), ARG_INT, 0, 0,                 /* scrap */
     2,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"copy_keyboard", MACRO(do_copy_keyboard), ARG_UNDEF, 0, 0, /* kbd */
+    {"copy_keyboard", MACRO(do_copy_keyboard), ARG_INT, 0, 0, /* kbd */
     2,  {ARG_INT, ARG_REST}},
 
     {"copy_screen", MACRO(do_copy_screen), ARG_INT, 0, 0,   /* screen */
     0,  {0}},
 
-    {"cos", MACRO(do_cos), ARG_UNDEF, 0, 0,                 /* float, arith */
+    {"cos", MACRO(do_cos), ARG_FLOAT, 0, 0,                 /* float, arith */
     1,  {ARG_FLOAT}},
 
     {"cosh", MACRO(do_cosh), ARG_FLOAT, 0, 0,               /* float, arith */
@@ -458,13 +458,13 @@ BUILTIN builtin[] = {
     {"create_window", MACRO(do_create_window), ARG_INT, 0, 0, /* window */
     5,  {ARG_INT, ARG_INT, ARG_INT, ARG_INT, ARG_OPT | ARG_STRING}},
 
-    {"cursor", MACRO(do_cursor), ARG_UNDEF, 0, 0,           /* screen */
+    {"cursor", MACRO(do_cursor), ARG_INT, 0, 0,             /* screen */
     1,  {ARG_OPT | ARG_INT}},
 
-    {"cut", MACRO(do_cut), ARG_UNDEF, 0, 0,                 /* scrap */
+    {"cut", MACRO(do_cut), ARG_INT, 0, 0,                   /* scrap */
     2,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"cvt_to_object", MACRO(do_cvt_to_object), ARG_UNDEF, 0, 0, /* string, arith */
+    {"cvt_to_object", MACRO(do_cvt_to_object), ARG_ANY, 0, 0, /* string, arith */
     2,  {ARG_STRING, ARG_OPT | ARG_LVAL | ARG_INT}},
 
     {"date", MACRO(do_date), ARG_VOID, 0, 0,                /* misc */
@@ -483,69 +483,69 @@ BUILTIN builtin[] = {
     {"declare", MACRO(do_declare), ARG_VOID, B_NOVALUE, F_POLY, /* var */
     1,  {ARG_REST}},
 
-    {"define_keywords", MACRO(do_define_keywords), ARG_UNDEF, 0, 0, /* syntax */
+    {"define_keywords", MACRO(do_define_keywords), ARG_VOID, 0, 0, /* syntax */
     5,  {ARG_INT | ARG_STRING, ARG_STRING | ARG_LIST, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT | ARG_STRING}},
 
-    {"delete_block", MACRO(do_delete_block), ARG_UNDEF, 0, 0, /* scrap */
+    {"delete_block", MACRO(do_delete_block), ARG_INT, 0, 0, /* scrap */
     0,  {0}},
 
-    {"delete_bookmark", MACRO(do_delete_bookmark), ARG_UNDEF, 0, 0, /* movement */
+    {"delete_bookmark", MACRO(do_delete_bookmark), ARG_VOID, 0, 0, /* movement */
     1,  {ARG_INT}},
 
-    {"delete_buffer", MACRO(do_delete_buffer), ARG_UNDEF, 0, 0, /* buffer */
+    {"delete_buffer", MACRO(do_delete_buffer), ARG_VOID, 0, 0, /* buffer */
     1,  {ARG_INT}},
 
-    {"delete_char", MACRO(do_delete_char), ARG_UNDEF, 0, 0, /* buffer */
+    {"delete_char", MACRO(do_delete_char), ARG_VOID, 0, 0,  /* buffer */
     1,  {ARG_OPT | ARG_INT}},
 
-    {"delete_dictionary", MACRO(do_delete_dictionary/*obj_id*/), ARG_UNDEF, 0, 0, /* macro */
+    {"delete_dictionary", MACRO(do_delete_dictionary/*obj_id*/), ARG_INT, 0, 0, /* macro */
     1,  {ARG_INT}},
 
     {"delete_edge", MACRO(do_delete_edge), ARG_INT, 0, 0,   /* window */
     1,  {ARG_OPT | ARG_INT}},
 
-    {"delete_line", MACRO(do_delete_line), ARG_UNDEF, 0, 0, /* buffer */
+    {"delete_line", MACRO(do_delete_line), ARG_VOID, 0, 0,  /* buffer */
     0,  {0}},
 
-    {"delete_macro", MACRO(do_unimp), ARG_UNDEF, 0, 0,      /* macro */
+    {"delete_macro", MACRO(do_unimp), ARG_VOID, 0, 0,       /* macro */
     1,  {ARG_OPT | ARG_STRING}},
 
-    {"delete_nth", MACRO(do_delete_nth), ARG_UNDEF, 0, 0,   /* list */
+    {"delete_nth", MACRO(do_delete_nth), ARG_VOID, 0, 0,    /* list */
     3,  {ARG_LVAL | ARG_LIST, ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"delete_to_eol", MACRO(do_delete_to_eol), ARG_UNDEF, 0, 0, /* buffer */
+    {"delete_to_eol", MACRO(do_delete_to_eol), ARG_VOID, 0, 0, /* buffer */
     0,  {0}},
 
-    {"delete_window", MACRO(do_delete_window), ARG_UNDEF, 0, 0, /* window */
+    {"delete_window", MACRO(do_delete_window), ARG_VOID, 0, 0, /* window */
     1,  {ARG_OPT | ARG_INT}},
 
     {"detach_syntax", MACRO(do_detach_syntax), ARG_INT, 0, 0, /* syntax */
     0,  {0}},
 
-    {"dialog_create", MACRO(do_dialog_create), ARG_UNDEF, 0, 0, /* dialog */
+    {"dialog_create", MACRO(do_dialog_create), ARG_INT, 0, 0, /* dialog */
     1,  {ARG_LIST}},
 
-    {"dialog_delete", MACRO(do_dialog_delete), ARG_UNDEF, 0, 0, /* dialog */
+    {"dialog_delete", MACRO(do_dialog_delete), ARG_INT, 0, 0, /* dialog */
     1,  {ARG_INT}},
 
-    {"dialog_exit", MACRO(do_dialog_exit), ARG_UNDEF, 0, 0, /* dialog */
+    {"dialog_exit", MACRO(do_dialog_exit), ARG_INT, 0, 0,   /* dialog */
     2,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"dialog_run", MACRO(do_dialog_run), ARG_UNDEF, 0, 0,   /* dialog */
+    {"dialog_run", MACRO(do_dialog_run), ARG_INT, 0, 0,     /* dialog */
     1,  {ARG_INT}},
 
 #if defined(VERSION_204)
-    {"dict_clear", MACRO(do_dict_clear), ARG_UNDEF, 0, 0,   /* macro */
+    {"dict_clear", MACRO(do_dict_clear), ARG_INT, 0, 0,     /* macro */
     1,  {ARG_INT}},
 #endif
 
-    {"dict_delete", MACRO(do_dict_delete), ARG_UNDEF, 0, 0, /* macro */
+    {"dict_delete", MACRO(do_dict_delete), ARG_INT, 0, 0,   /* macro */
     2,  {ARG_INT, ARG_STRING}},
 
     {"dict_each", MACRO(do_dict_each), ARG_INT, 0, VALUE(DICT_EACH_PAIR), /* macro */
     3,  {ARG_INT, ARG_OPT | ARG_LVAL | ARG_STRING, ARG_OPT | ARG_LVAL | ARG_ANY}},
 
-    {"dict_exists", MACRO(do_dict_exists), ARG_UNDEF, 0, 0, /* macro */
+    {"dict_exists", MACRO(do_dict_exists), ARG_INT, 0, 0,   /* macro */
     2,  {ARG_INT, ARG_OPT | ARG_STRING}},
 
     {"dict_keys", MACRO(do_dict_each), ARG_INT, 0, VALUE(DICT_EACH_KEY), /* macro */
@@ -566,13 +566,13 @@ BUILTIN builtin[] = {
     {"diff_lines", MACRO(do_diff_lines), ARG_UNDEF, 0, 0,   /* buffer */
     5,  {ARG_INT, ARG_INT, ARG_INT|ARG_OPT, ARG_INT, ARG_INT|ARG_OPT}},
 
-    {"diff_strings", MACRO(do_diff_strings), ARG_UNDEF, 0, 0, /* string */
+    {"diff_strings", MACRO(do_diff_strings), ARG_INT, 0, 0, /* string */
     3,  {ARG_INT, ARG_STRING, ARG_STRING}},
 
-    {"dirname", MACRO(do_filename), ARG_UNDEF, 0, 1,        /* file */
+    {"dirname", MACRO(do_filename), ARG_STRING, 0, 1,       /* file */
     1,  {ARG_STRING}},
 
-    {"disconnect", MACRO(do_disconnect), ARG_UNDEF, 0, 0,   /* proc */
+    {"disconnect", MACRO(do_disconnect), ARG_INT, 0, 0,     /* proc */
     0,  {0}},
 
     {"display_mode", MACRO(do_display_mode), ARG_INT, 0, 0, /* screen */
@@ -584,7 +584,7 @@ BUILTIN builtin[] = {
          ARG_OPT | ARG_INT,
          ARG_OPT | ARG_INT}},
 
-    {"display_windows", MACRO(do_display_windows), ARG_UNDEF, 0, 0, /* screen */
+    {"display_windows", MACRO(do_display_windows), ARG_INT, 0, 0, /* screen */
     1,  {ARG_OPT | ARG_INT}},
 
     {"distance_to_indent", MACRO(do_distance_to_indent), ARG_INT, 0, 0, /* buffer, window */
@@ -593,7 +593,7 @@ BUILTIN builtin[] = {
     {"distance_to_tab", MACRO(do_distance_to_tab), ARG_INT, 0, 0, /* buffer, window */
     1,  {ARG_OPT | ARG_INT}},
 
-    {"do", MACRO(do_do), ARG_UNDEF, 0, 0,                   /* macro */
+    {"do", MACRO(do_do), ARG_VOID, 0, 0,                    /* macro */
     2,  {ARG_OPT | ARG_COND, ARG_OPT | ARG_REST}},
 
 #if defined(DO_INTERNAL) & (0)
@@ -601,23 +601,23 @@ BUILTIN builtin[] = {
     1,  {ARG_REST}},
 #endif
 
-    {"down", MACRO(do_down), ARG_UNDEF, 0, 0,               /* movement */
+    {"down", MACRO(do_down), ARG_INT, 0, 0,                 /* movement */
     1,  {ARG_OPT | ARG_INT}},
 
     {"dprintf", MACRO(do_dprintf), ARG_INT, B_NOVALUE, 0,   /* debug */
     -2, {ARG_STRING, ARG_OPT | ARG_ANY}},
 
-    {"drop_anchor", MACRO(do_drop_anchor), ARG_UNDEF, 0, 0, /* scrap */
+    {"drop_anchor", MACRO(do_drop_anchor), ARG_INT, 0, 0,   /* scrap */
     1,  {ARG_OPT | ARG_INT}},
 
-    {"drop_bookmark", MACRO(do_drop_bookmark), ARG_UNDEF, 0, 0, /* movement */
+    {"drop_bookmark", MACRO(do_drop_bookmark), ARG_INT, 0, 0, /* movement */
     5,  {ARG_OPT | ARG_INT,
          ARG_OPT | ARG_STRING,
          ARG_OPT | ARG_INT,
          ARG_OPT | ARG_INT,
          ARG_OPT | ARG_INT}},
 
-    {"echo_line", MACRO(do_echo_line), ARG_UNDEF, 0, 0,     /* screen */
+    {"echo_line", MACRO(do_echo_line), ARG_INT, 0, 0,       /* screen */
     1,  {ARG_OPT | ARG_INT}},
 
     {"edit_file", MACRO(do_edit_file), ARG_INT, 0, 0,       /* file */
@@ -629,16 +629,16 @@ BUILTIN builtin[] = {
     {"ega", MACRO(do_ega), ARG_INT, 0, 0,                   /* screen */
     1,  {ARG_OPT | ARG_INT}},
 
-    {"end_anchor", MACRO(do_end_anchor), ARG_UNDEF, 0, 0,   /* scrap */
+    {"end_anchor", MACRO(do_end_anchor), ARG_INT, 0, 0,     /* scrap */
     2,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"end_of_buffer", MACRO(do_end_of_buffer), ARG_UNDEF, 0, 0, /* movement */
+    {"end_of_buffer", MACRO(do_end_of_buffer), ARG_INT, 0, 0, /* movement */
     0,  {0}},
 
-    {"end_of_line", MACRO(do_end_of_line), ARG_UNDEF, 0, 0, /* movement */
+    {"end_of_line", MACRO(do_end_of_line), ARG_INT, 0, 0,   /* movement */
     0,  {0}},
 
-    {"end_of_window", MACRO(do_end_of_window), ARG_UNDEF, 0, 0, /* movement */
+    {"end_of_window", MACRO(do_end_of_window), ARG_INT, 0, 0, /* movement */
     0,  {0}},
 
     {"error", MACRO(do_error), ARG_INT, 0, 0,               /* debug */
@@ -648,16 +648,16 @@ BUILTIN builtin[] = {
          ARG_OPT | ARG_NUM | ARG_STRING,
          ARG_OPT | ARG_NUM | ARG_STRING}},
 
-    {"eval", 0, ARG_UNDEF, 0, 0,                            /* arith, macro, string */
+    {"eval", 0, ARG_ANY, 0, 0,                              /* arith, macro, string */
     1,  {ARG_STRING}},
 
-    {"execute_macro", MACRO(do_execute_macro), ARG_UNDEF, 0, 0, /* macro */
+    {"execute_macro", MACRO(do_execute_macro), ARG_INT, 0, 0, /* macro */
     2,  {ARG_OPT | ARG_STRING, ARG_OPT | ARG_REST}},
 
-    {"exist", MACRO(do_exist), ARG_UNDEF, 0, 0,             /* file */
+    {"exist", MACRO(do_exist), ARG_INT, 0, 0,               /* file */
     2,  {ARG_STRING, ARG_OPT | ARG_INT}},
 
-    {"exit", MACRO(do_exit), ARG_UNDEF, 0, 0,               /* macro */
+    {"exit", MACRO(do_exit), ARG_VOID, 0, 0,                /* macro */
     1,  {ARG_OPT | ARG_STRING}},
 
     {"exp", MACRO(do_exp), ARG_FLOAT, 0, 0,                 /* float, arith */
@@ -695,19 +695,19 @@ BUILTIN builtin[] = {
     1,  {ARG_STRING}},
 #endif
 
-    {"file_glob", MACRO(do_file_glob), ARG_UNDEF, 0, 0,     /* file, list */
+    {"file_glob", MACRO(do_file_glob), ARG_LIST, 0, 0,      /* file, list */
     1,  {ARG_STRING}},
 
-    {"file_match", MACRO(do_file_match), ARG_UNDEF, 0, 0,   /* file */
+    {"file_match", MACRO(do_file_match), ARG_INT, 0, 0,     /* file */
     2,  {ARG_STRING | ARG_LIST, ARG_STRING}},
 
-    {"file_pattern", MACRO(do_file_pattern), ARG_UNDEF, 0, 0, /* file */
+    {"file_pattern", MACRO(do_file_pattern), ARG_INT, 0, 0, /* file */
     1,  {ARG_STRING}},
 
-    {"filename_match", MACRO(do_filename_match), ARG_UNDEF, 0, 0, /* file */
+    {"filename_match", MACRO(do_filename_match), ARG_INT, 0, 0, /* file */
     2,  {ARG_STRING, ARG_STRING | ARG_LIST}},
 
-    {"filename_realpath", MACRO(do_filename_realpath), ARG_UNDEF, 0, 0, /* file */
+    {"filename_realpath", MACRO(do_filename_realpath), ARG_STRING, 0, 0, /* file */
     1,  {ARG_STRING}},
 
     {"find_file", MACRO(do_find_file), ARG_INT, 0, 1,       /* file */
@@ -741,7 +741,7 @@ BUILTIN builtin[] = {
          ARG_OPT | ARG_INT,
          ARG_OPT | ARG_INT}},
 
-    {"find_macro", MACRO(do_find_macro), ARG_UNDEF, 0, 0,   /* macro, file */
+    {"find_macro", MACRO(do_find_macro), ARG_STRING, 0, 0,  /* macro, file */
     1,  {ARG_STRING}},
 
     {"find_marker", MACRO(do_find_marker), ARG_INT, 0, 0,   /* buffer */
@@ -750,7 +750,7 @@ BUILTIN builtin[] = {
     {"fioctl", MACRO(do_fioctl), ARG_INT, 0, 0,             /* file */
     1,  {ARG_INT}},
 
-    {"first_time", MACRO(do_first_time), ARG_UNDEF, 0, 0,   /* macro */
+    {"first_time", MACRO(do_first_time), ARG_INT, 0, 0,     /* macro */
     0,  {0}},
 
     {"firstof", MACRO(do_firstof), ARG_INT, 0, 0,           /* string */
@@ -766,7 +766,7 @@ BUILTIN builtin[] = {
     1,  {ARG_FLOAT}},
 
 #if defined(VERSION_201)
-    {"fmktemp", MACRO(do_mktemp), ARG_UNDEF, 0, 0,          /* file */
+    {"fmktemp", MACRO(do_mktemp), ARG_INT, 0, 0,            /* file */
     1,  {ARG_LVAL | ARG_STRING}},
 #endif
 
@@ -776,7 +776,7 @@ BUILTIN builtin[] = {
     {"fopen", MACRO(do_fopen), ARG_INT, 0, 0,               /* file */
     4,  {ARG_STRING, ARG_INT|ARG_STRING, ARG_INT, ARG_INT|ARG_OPT}},
 
-    {"for", MACRO(do_for), ARG_UNDEF, 0, 0,                 /* macro */
+    {"for", MACRO(do_for), ARG_VOID, 0, 0,                  /* macro */
     4,  {ARG_OPT | ARG_ANY,  ARG_OPT | ARG_COND, ARG_OPT | ARG_COND, ARG_OPT | ARG_REST}},
 
     {"format", MACRO(do_format), ARG_STRING, 0, 0,          /* string */
@@ -800,7 +800,7 @@ BUILTIN builtin[] = {
     {"ftell", MACRO(do_ftell), ARG_INT, 0, 0,               /* file */
     1,  {ARG_INT}},
 
-    {"ftest", MACRO(do_ftest), ARG_UNDEF, 0, 0,             /* file */
+    {"ftest", MACRO(do_ftest), ARG_INT, 0, 0,               /* file */
     2,  {ARG_INT|ARG_STRING, ARG_STRING}},
 
     {"ftp_chdir", MACRO(do_ftp_chdir), ARG_INT, 0, 0,       /* comms */
@@ -880,7 +880,7 @@ BUILTIN builtin[] = {
     {"get_color", MACRO(do_get_color), ARG_LIST, 0, 0,      /* screen */
     1,  {ARG_OPT | ARG_INT}},
 
-    {"get_color_pair", MACRO(do_get_color_pair), ARG_UNDEF, 0, 0, /* screen, syntax */
+    {"get_color_pair", MACRO(do_get_color_pair), ARG_VOID, 0, 0, /* screen, syntax */
     4,  {ARG_INT | ARG_STRING,
          ARG_OPT | ARG_LVAL | ARG_INT | ARG_STRING,
          ARG_OPT | ARG_LVAL | ARG_INT | ARG_STRING,
@@ -896,7 +896,7 @@ BUILTIN builtin[] = {
          ARG_OPT | ARG_LVAL | ARG_INT,
          ARG_OPT | ARG_LVAL | ARG_INT}},
 
-    {"get_nth", MACRO(do_get_nth), ARG_UNDEF, 0, 0,         /* list */
+    {"get_nth", MACRO(do_get_nth), ARG_ANY, 0, 0,           /* list */
     2,  {ARG_LIST, ARG_INT}},
 
     {"get_parm", MACRO(do_get_parm), ARG_INT, 0, 0,         /* macro, var */
@@ -907,7 +907,7 @@ BUILTIN builtin[] = {
          ARG_OPT | ARG_ANY,
          ARG_OPT | ARG_INT}},
 
-    {"get_property", MACRO(do_get_property/*obj_id, key*/), ARG_UNDEF, 0, 0, /* macro */
+    {"get_property", MACRO(do_get_property/*obj_id, key*/), ARG_ANY, 0, 0, /* macro */
     2,  {ARG_INT, ARG_STRING}},
 
     {"get_region", MACRO(do_get_region), ARG_STRING, 0, 0,  /* scrap */
@@ -916,13 +916,13 @@ BUILTIN builtin[] = {
     {"get_term_characters", MACRO(do_get_term_characters), ARG_VOID, B_NOVALUE, 0, /* screen, env */
     1,  {ARG_REST | ARG_OPT}},
 
-    {"get_term_feature", MACRO(do_get_term_feature), ARG_UNDEF, 0, 0, /* screen, env */
+    {"get_term_feature", MACRO(do_get_term_feature), ARG_INT, 0, 0, /* screen, env */
     2,  {ARG_INT | ARG_STRING, ARG_OPT | ARG_LVAL | ARG_INT | ARG_STRING }},
 
     {"get_term_features", MACRO(do_get_term_features), ARG_VOID, B_NOVALUE, 0, /* screen, env */
     1,  {ARG_REST | ARG_OPT}},
 
-    {"get_term_keyboard", MACRO(do_get_term_keyboard), ARG_UNDEF, 0, 0, /* screen, env */
+    {"get_term_keyboard", MACRO(do_get_term_keyboard), ARG_INT, 0, 0, /* screen, env */
     1,  {ARG_OPT | ARG_INT}},
 
     {"getenv", MACRO(do_getenv), ARG_STRING, 0, 0,          /* env */
@@ -976,16 +976,16 @@ BUILTIN builtin[] = {
          ARG_OPT | ARG_LVAL | ARG_INT,
          ARG_OPT | ARG_LVAL | ARG_INT}},
 
-    {"goto_bookmark", MACRO(do_goto_bookmark), ARG_UNDEF, 0, 0, /* buffer */
+    {"goto_bookmark", MACRO(do_goto_bookmark), ARG_INT, 0, 0, /* buffer */
     4,  {ARG_OPT  | ARG_INT,
          ARG_OPT | ARG_LVAL | ARG_INT,
          ARG_OPT | ARG_LVAL | ARG_INT,
          ARG_OPT | ARG_LVAL | ARG_INT}},
 
-    {"goto_line", MACRO(do_goto_line), ARG_UNDEF, 0, 0,     /* movement */
+    {"goto_line", MACRO(do_goto_line), ARG_INT, 0, 0,       /* movement */
     1,  {ARG_OPT | ARG_INT}},
 
-    {"goto_old_line", MACRO(do_goto_old_line), ARG_UNDEF, 0, 0, /* movement */
+    {"goto_old_line", MACRO(do_goto_old_line), ARG_INT, 0, 0, /* movement */
     1,  {ARG_OPT | ARG_INT}},
 
 #if defined(VERSION_201)
@@ -1006,7 +1006,7 @@ BUILTIN builtin[] = {
     {"hilite_destroy", MACRO(do_hilite_destroy), ARG_INT, 0, 0, /* buffer,syntax */
     2,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"if", MACRO(do_if), ARG_UNDEF, 0, 0,                   /* macro */
+    {"if", MACRO(do_if), ARG_VOID, 0, 0,                    /* macro */
     3,  {ARG_NUM | ARG_STRING | ARG_LIST, ARG_COND, ARG_OPT | ARG_COND}},
 
     {"index", MACRO(do_index), ARG_INT, 0, 0,               /* string */
@@ -1044,18 +1044,18 @@ BUILTIN builtin[] = {
     {"input_mode", MACRO(do_input_mode), ARG_INT, 0, 0,     /* kbd */
     2,  {ARG_INT, ARG_INT}},
 
-    {"inq_assignment", MACRO(inq_assignment), ARG_UNDEF, 0, 0, /* kbd */
+    {"inq_assignment", MACRO(inq_assignment), ARG_STRING, 0, 0, /* kbd */
     2,  {ARG_INT | ARG_STRING, ARG_OPT | ARG_INT}},
 
     {"inq_attribute", MACRO(inq_attribute), ARG_INT, 0, 0,  /* buffer */
     2,  {ARG_OPT | ARG_INT | ARG_LVAL, ARG_OPT | ARG_INT}},
 
 #if defined(VERSION_201)
-    {"inq_backup", MACRO(inq_backup), ARG_UNDEF, 0, 0,      /* env */
+    {"inq_backup", MACRO(inq_backup), ARG_INT, 0, 0,        /* env */
     1,  {ARG_OPT | ARG_INT}},
 #endif
 
-    {"inq_backup_option", MACRO(inq_backup_option), ARG_UNDEF, 0, 0, /* env */
+    {"inq_backup_option", MACRO(inq_backup_option), ARG_INT, 0, 0, /* env */
     2,  {ARG_INT, ARG_OPT | ARG_INT}},
 
     {"inq_borders", MACRO(inq_borders), ARG_INT, 0, 0,      /* screen */
@@ -1101,7 +1101,7 @@ BUILTIN builtin[] = {
     {"inq_cmd_line", MACRO(inq_cmd_line), ARG_STRING, 0, 0, /* screen */
     0,  {0}},
 
-    {"inq_color", MACRO(inq_color), ARG_UNDEF, 0, 0,        /* screen */
+    {"inq_color", MACRO(inq_color), ARG_STRING, 0, 0,       /* screen */
     -1, {ARG_OPT | ARG_INT | ARG_STRING | ARG_LVAL}},
 
     {"inq_command", MACRO(inq_command), ARG_STRING, 0, 0,   /* screen */
@@ -1284,7 +1284,7 @@ BUILTIN builtin[] = {
     1,  {ARG_OPT | ARG_INT}},
 #endif
 
-    {"inq_ruler", MACRO(inq_ruler), ARG_UNDEF, 0, 0,        /* buffer */
+    {"inq_ruler", MACRO(inq_ruler), ARG_ANY, 0, 0,          /* buffer */
     3,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
     {"inq_scrap", MACRO(inq_scrap), ARG_INT, 0, 0,          /* scrap */
@@ -1305,7 +1305,7 @@ BUILTIN builtin[] = {
     {"inq_tab", MACRO(inq_tab), ARG_INT, 0, 0,              /* buffer */
     1,  {ARG_OPT | ARG_INT}},
 
-    {"inq_tabs", MACRO(inq_tabs), ARG_UNDEF, 0, 0,          /* buffer */
+    {"inq_tabs", MACRO(inq_tabs), ARG_ANY, 0, 0,            /* buffer */
     3,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
     {"inq_terminator", MACRO(inq_terminator), ARG_INT, 0, 0, /* buffer */
@@ -1331,7 +1331,7 @@ BUILTIN builtin[] = {
     {"inq_vfs_mounts", MACRO(inq_vfs_mounts), ARG_LIST, 0, 0, /* file */
     0,  {0}},
 
-    {"inq_views", MACRO(inq_views), ARG_UNDEF, 0, 0,        /* buffer, window */
+    {"inq_views", MACRO(inq_views), ARG_INT, 0, 0,          /* buffer, window */
     1,  {ARG_OPT | ARG_INT}},
 
     {"inq_window", MACRO(inq_window), ARG_INT, 0, 0,        /* window */
@@ -1346,7 +1346,7 @@ BUILTIN builtin[] = {
     {"inq_window_flags", MACRO(inq_window_flags), ARG_INT, 0, 0, /* window */
     2,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_STRING}},
 
-    {"inq_window_info", MACRO(inq_window_info), ARG_UNDEF, 0, 0, /* window */
+    {"inq_window_info", MACRO(inq_window_info), ARG_INT, 0, VALUE(0), /* window */
     8,  {ARG_OPT | ARG_LVAL | ARG_INT,
          ARG_OPT | ARG_LVAL | ARG_INT,
          ARG_OPT | ARG_LVAL | ARG_INT,
@@ -1357,7 +1357,7 @@ BUILTIN builtin[] = {
          ARG_OPT | ARG_LVAL | ARG_STRING}},
 
 #if defined(VERSION_201)
-    {"inq_window_infox", MACRO(inq_window_info), ARG_UNDEF, 0, 1, /* window */
+    {"inq_window_infox", MACRO(inq_window_info), ARG_INT, 0, VALUE(1), /* window */
     8, {ARG_OPT | ARG_INT,
         ARG_OPT | ARG_LVAL | ARG_INT,
         ARG_OPT | ARG_LVAL | ARG_INT,
@@ -1371,7 +1371,7 @@ BUILTIN builtin[] = {
     {"inq_window_priority", MACRO(inq_window_priority), ARG_INT, 0, 0, /* screen */
     1,  {ARG_OPT | ARG_INT}},
 
-    {"inq_window_size", MACRO(inq_window_size), ARG_UNDEF, 0, 0, /* window, screen */
+    {"inq_window_size", MACRO(inq_window_size), ARG_INT, 0, 0, /* window, screen */
     5,  {ARG_OPT | ARG_LVAL | ARG_INT,
          ARG_OPT | ARG_LVAL | ARG_INT,
          ARG_OPT | ARG_LVAL | ARG_INT,
@@ -1381,13 +1381,13 @@ BUILTIN builtin[] = {
     {"insert", MACRO(do_insert), ARG_INT, 0, FALSE,         /* buffer, window */
     2,  {ARG_INT | ARG_STRING, ARG_OPT | ARG_INT}},
 
-    {"insert_buffer", MACRO(do_insert_buffer), ARG_UNDEF, 0, FALSE, /* buffer, window */
+    {"insert_buffer", MACRO(do_insert_buffer), ARG_INT, 0, FALSE, /* buffer, window */
     -3, {ARG_INT, ARG_STRING, ARG_OPT | ARG_ANY}},
 
-    {"insert_mode", MACRO(do_insert_mode), ARG_UNDEF, 0, 0, /* buffer, window */
+    {"insert_mode", MACRO(do_insert_mode), ARG_INT, 0, 0,   /* buffer, window */
     2,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"insert_process", MACRO(do_insert), ARG_UNDEF, 0, TRUE, /* buffer, window, proc */
+    {"insert_process", MACRO(do_insert), ARG_INT, 0, TRUE,  /* buffer, window, proc */
     2,  {ARG_STRING, ARG_OPT | ARG_INT}},
 
     {"insertf", MACRO(do_insertf), ARG_INT, 0, FALSE,       /* buffer, window */
@@ -1401,7 +1401,7 @@ BUILTIN builtin[] = {
     {"int", MACRO(do_declare), ARG_VOID, B_NOVALUE, F_INT,  /* var */
     1,  {ARG_REST}},
 
-    {"int_to_key", MACRO(do_int_to_key), ARG_UNDEF, 0, 0,   /* kbd */
+    {"int_to_key", MACRO(do_int_to_key), ARG_STRING, 0, 0,  /* kbd */
     1,  {ARG_INT}},
 
 #if defined(VERSION_201)
@@ -1452,6 +1452,11 @@ BUILTIN builtin[] = {
 
     {"isfinite", MACRO(do_isfinite), ARG_INT, 0, 0,         /* float, arith */
     1,  {ARG_FLOAT}},
+
+#if defined(VERSION_205)
+    {"isgold", MACRO(do_isgold), ARG_INT, 0, 0,             /* string */
+    2,  {ARG_INT | ARG_STRING, ARG_OPT | ARG_INT}},
+#endif
 
     {"isgraph", MACRO(do_isgraph), ARG_INT, 0, 0,           /* string */
     2,  {ARG_INT | ARG_STRING, ARG_OPT | ARG_INT}},
@@ -1505,7 +1510,7 @@ BUILTIN builtin[] = {
     {"keyboard_push", MACRO(do_keyboard_push), ARG_INT, 0, 0, /* kbd */
     1,  {ARG_OPT | ARG_INT}},
 
-    {"keyboard_typeables", MACRO(do_keyboard_typeables), ARG_UNDEF, 0, 0, /* kbd */
+    {"keyboard_typeables", MACRO(do_keyboard_typeables), ARG_VOID, 0, 0, /* kbd */
     0,  {0}},
 
     {"lastof", MACRO(do_lastof), ARG_INT, 0, 0,             /* string */
@@ -1594,7 +1599,7 @@ BUILTIN builtin[] = {
     {"make_local_variable", MACRO(do_make_local_variable), ARG_VOID, B_NOVALUE, 0, /* var */
     1,  {ARG_REST}},
 
-    {"mark", MACRO(do_mark), ARG_UNDEF, 0, 0,               /* scrap */
+    {"mark", MACRO(do_mark), ARG_INT, 0, 0,                 /* scrap */
     1,  {ARG_OPT | ARG_INT}},
 
     {"mark_line", MACRO(do_mark_line), ARG_INT, 0, 0,       /* buffer */
@@ -1603,10 +1608,10 @@ BUILTIN builtin[] = {
     {"message", MACRO(do_message), ARG_VOID, B_NOVALUE, 0,  /* debug */
     -2, {ARG_STRING, ARG_OPT | ARG_ANY}},
 
-    {"mkdir", MACRO(do_mkdir), ARG_UNDEF, 0, 0,             /* file */
+    {"mkdir", MACRO(do_mkdir), ARG_INT, 0, 0,               /* file */
     2,  {ARG_STRING, ARG_OPT | ARG_INT}},
 
-    {"mktemp", MACRO(do_mktemp), ARG_UNDEF, 0, 0,           /* file */
+    {"mktemp", MACRO(do_mktemp), ARG_STRING, 0, 0,          /* file */
     1,  {ARG_STRING}},
 
     {"mode_string", MACRO(do_mode_string), ARG_STRING, 0, 0, /* misc, buffer */
@@ -1615,7 +1620,7 @@ BUILTIN builtin[] = {
     {"modf", MACRO(do_modf), ARG_FLOAT, 0, 0,               /* float, arith */
     2,  {ARG_FLOAT, ARG_LVAL | ARG_FLOAT}},
 
-    {"module", MACRO(do_module), ARG_UNDEF, 0, 0,           /* macro */
+    {"module", MACRO(do_module), ARG_INT, 0, 0,             /* macro */
     1,  {ARG_STRING}},
 
     {"move_abs", MACRO(do_move_abs), ARG_INT, 0, 0,         /* movement */
@@ -1624,7 +1629,7 @@ BUILTIN builtin[] = {
     {"move_edge", MACRO(do_move_edge), ARG_INT, 0, 0,       /* window */
     2,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"move_rel", MACRO(do_move_rel), ARG_UNDEF, 0, 0,       /* movement */
+    {"move_rel", MACRO(do_move_rel), ARG_INT, 0, 0,         /* movement */
     2,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
     {"next_buffer", MACRO(do_next_buffer), ARG_INT, 0, 0,   /* buffer */
@@ -1636,19 +1641,19 @@ BUILTIN builtin[] = {
     {"next_window", MACRO(do_next_window), ARG_INT, 0, 0,   /* window */
     1,  {ARG_OPT | ARG_INT}},
 
-    {"nothing", MACRO(do_nothing), ARG_UNDEF, 0, 0,         /* macro */
+    {"nothing", MACRO(do_nothing), ARG_VOID, 0, 0,          /* macro */
     0,  {0}},
 
-    {"nth", MACRO(do_nth), ARG_UNDEF, B_SAFE, 0,            /* list */
+    {"nth", MACRO(do_nth), ARG_ANY, B_SAFE, 0,              /* list */
     6,  {ARG_LIST, ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"output_file", MACRO(do_output_file), ARG_UNDEF, 0, 0, /* file */
+    {"output_file", MACRO(do_output_file), ARG_INT, 0, 0,   /* file */
     1,  {ARG_OPT | ARG_STRING}},
 
-    {"page_down", MACRO(do_page_down), ARG_UNDEF, 0, 0,     /* movement */
+    {"page_down", MACRO(do_page_down), ARG_INT, 0, 0,       /* movement */
     1,  {ARG_OPT | ARG_INT}},
 
-    {"page_up", MACRO(do_page_up), ARG_UNDEF, 0, 0,         /* movement */
+    {"page_up", MACRO(do_page_up), ARG_INT, 0, 0,           /* movement */
     1,  {ARG_OPT | ARG_INT}},
 
 #if defined(VERSION_202)
@@ -1660,10 +1665,10 @@ BUILTIN builtin[] = {
         ARG_OPT | ARG_LVAL | ARG_STRING}},
 #endif
 
-    {"paste", MACRO(do_paste), ARG_UNDEF, 0, 0,             /* scrap */
+    {"paste", MACRO(do_paste), ARG_INT, 0, 0,               /* scrap */
     1,  {ARG_OPT | ARG_INT}},
 
-    {"pause", MACRO(do_pause), ARG_UNDEF, 0, 0,             /* kbd */
+    {"pause", MACRO(do_pause), ARG_VOID, 0, 0,              /* kbd */
     0,  {0}},
 
     {"pause_on_error", MACRO(do_pause_on_error), ARG_INT, 0, 0, /* debug */
@@ -1677,22 +1682,22 @@ BUILTIN builtin[] = {
     {"perror", MACRO(do_perror), ARG_VOID, B_NOVALUE, 0,    /* misc, proc */
     -3, {ARG_OPT | ARG_INT, ARG_STRING, ARG_OPT | ARG_ANY}},
 
-    {"playback", MACRO(do_playback), ARG_UNDEF, 0, 0,       /* kbd */
+    {"playback", MACRO(do_playback), ARG_INT, 0, 0,         /* kbd */
     1,  {ARG_OPT | ARG_INT}},
 
-    {"pop", MACRO(do_pop), ARG_UNDEF, 0, 0,                 /* list */
+    {"pop", MACRO(do_pop), ARG_ANY, 0, 0,                   /* list */
     1,  {ARG_LVAL | ARG_LIST}},
 
-    {"post++", MACRO(do_post_plusplus), ARG_UNDEF, 0, 0,    /* arith */
+    {"post++", MACRO(do_post_plusplus), ARG_ANY, 0, 0,      /* arith */
     1,  {ARG_LVAL | ARG_NUM}},
 
-    {"post--", MACRO(do_post_minusminus), ARG_UNDEF, 0, 0,  /* arith */
+    {"post--", MACRO(do_post_minusminus), ARG_ANY, 0, 0,    /* arith */
     1,  {ARG_LVAL | ARG_NUM}},
 
     {"pow", MACRO(do_pow), ARG_FLOAT, 0, 0,                 /* float, arith */
     2,  {ARG_FLOAT, ARG_FLOAT}},
 
-    {"prev_char", MACRO(do_prev_char), ARG_UNDEF, 0, 0,     /* movement */
+    {"prev_char", MACRO(do_prev_char), ARG_INT, 0, 0,       /* movement */
     1,  {ARG_OPT | ARG_INT}},
 
 #if defined(VERSION_201)
@@ -1706,22 +1711,22 @@ BUILTIN builtin[] = {
     {"printf", MACRO(do_printf), ARG_INT, 0, 0,             /* debug */
     -2, {ARG_STRING, ARG_OPT | ARG_ANY}},
 
-    {"process", MACRO(do_process), ARG_UNDEF, 0, 0,         /* kbd */
+    {"process", MACRO(do_process), ARG_VOID, 0, 0,          /* kbd */
     0,  {0}},
 
-    {"process_mouse", MACRO(do_process_mouse), ARG_UNDEF, 0, 0, /* kbd, misc */
+    {"process_mouse", MACRO(do_process_mouse), ARG_VOID, 0, 0, /* kbd, misc */
     5,  {ARG_INT, ARG_INT, ARG_INT, ARG_INT, ARG_INT}},
 
-    {"profile", MACRO(do_profile), ARG_UNDEF, 0, 0,         /* debug */
+    {"profile", MACRO(do_profile), ARG_VOID, 0, 0,          /* debug */
     1,  {ARG_OPT | ARG_INT}},
 
-    {"push", MACRO(do_push), ARG_UNDEF, 0, 0,               /* list */
+    {"push", MACRO(do_push), ARG_ANY, 0, 0,                 /* list */
     -2, {ARG_LVAL | ARG_LIST, ARG_OPT | ARG_ANY}},
 
-    {"push_back", MACRO(do_push_back), ARG_UNDEF, 0, 0,     /* kbd */
+    {"push_back", MACRO(do_push_back), ARG_VOID, 0, 0,      /* kbd */
     4,  {ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"put_nth", MACRO(do_put_nth), ARG_UNDEF, 0, 0,         /* list */
+    {"put_nth", MACRO(do_put_nth), ARG_ANY, 0, 0,           /* list */
     6,  {ARG_LVAL | ARG_LIST, ARG_INT,
          ARG_OPT | ARG_ANY, ARG_OPT | ARG_ANY,
          ARG_OPT | ARG_ANY, ARG_OPT | ARG_ANY }},
@@ -1738,7 +1743,7 @@ BUILTIN builtin[] = {
     {"quote_regexp", MACRO(do_quote_regexp), ARG_STRING, 0, 0, /* string, search */
     1,  {ARG_STRING}},
 
-    {"raise_anchor", MACRO(do_raise_anchor), ARG_UNDEF, 0, 0, /* scrap */
+    {"raise_anchor", MACRO(do_raise_anchor), ARG_INT, 0, 0, /* scrap */
     0,  {0}},
 
     {"rand", MACRO(do_rand), ARG_INT, 0, 0,                 /* misc */
@@ -1766,10 +1771,10 @@ BUILTIN builtin[] = {
          ARG_OPT | ARG_INT,
          ARG_OPT | ARG_LVAL | ARG_INT}},
 
-    {"re_syntax", MACRO(do_re_syntax), ARG_UNDEF, 0, 0,     /* search */
+    {"re_syntax", MACRO(do_re_syntax), ARG_INT, 0, 0,       /* search */
     3,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"re_translate", MACRO(do_re_translate), ARG_UNDEF, 0, 0, /* search */
+    {"re_translate", MACRO(do_re_translate), ARG_INT, 0, 0, /* search */
     4,  {ARG_OPT | ARG_INT,
          ARG_OPT | ARG_STRING,
          ARG_OPT | ARG_STRING,
@@ -1781,25 +1786,25 @@ BUILTIN builtin[] = {
     {"read_char", MACRO(do_read_char), ARG_INT, 0, 0,       /* kbd */
     2,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"read_file", MACRO(do_read_file), ARG_UNDEF, 0, 0,     /* file */
+    {"read_file", MACRO(do_read_file), ARG_INT, 0, 0,       /* file */
     3,  {ARG_OPT | ARG_STRING, ARG_OPT | ARG_INT, ARG_OPT | ARG_STRING}},
 
-    {"readlink", MACRO(do_readlink), ARG_UNDEF, 0, 0,       /* file */
+    {"readlink", MACRO(do_readlink), ARG_ANY, 0, 0,         /* file */
     2,  {ARG_STRING, ARG_OPT | ARG_LVAL | ARG_STRING}},
 
-    {"realpath", MACRO(do_realpath), ARG_UNDEF, 0, 0,       /* file */
+    {"realpath", MACRO(do_realpath), ARG_INT, 0, 0,         /* file */
     2,  {ARG_STRING, ARG_OPT | ARG_LVAL | ARG_STRING}},
 
-    {"redraw", MACRO(do_redraw), ARG_UNDEF, 0, 0,           /* screen */
+    {"redraw", MACRO(do_redraw), ARG_VOID, 0, 0,            /* screen */
     1,  {ARG_OPT | ARG_INT}},
 
     {"ref_parm", MACRO(do_ref_parm), ARG_VOID, 0, 0,        /* macro, var */
     3,  {ARG_INT, ARG_STRING, ARG_OPT | ARG_INT}},
 
-    {"refresh", MACRO(do_refresh), ARG_UNDEF, 0, 0,         /* screen */
+    {"refresh", MACRO(do_refresh), ARG_VOID, 0, 0,          /* screen */
     0,  {0}},
 
-    {"register_macro", MACRO(do_register_macro), ARG_UNDEF, 0, FALSE, /* macro */
+    {"register_macro", MACRO(do_register_macro), ARG_INT, 0, FALSE, /* macro */
     3,  {ARG_INT, ARG_STRING, ARG_OPT | ARG_INT}},
 
 #if defined(VERSION_204)
@@ -1807,31 +1812,31 @@ BUILTIN builtin[] = {
     1,  {ARG_OPT | ARG_INT}},
 #endif
 
-    {"remember", MACRO(do_remember), ARG_UNDEF, 0, 0,       /* kbd */
+    {"remember", MACRO(do_remember), ARG_INT, 0, 0,         /* kbd */
     2,  {ARG_OPT | ARG_INT | ARG_STRING, ARG_OPT | ARG_INT}},
 
-    {"remove", MACRO(do_remove), ARG_UNDEF, 0, 0,           /* file */
+    {"remove", MACRO(do_remove), ARG_INT, 0, 0,             /* file */
     1,  {ARG_STRING}},
 
-    {"rename", MACRO(do_rename), ARG_UNDEF, 0, 0,           /* file */
+    {"rename", MACRO(do_rename), ARG_INT, 0, 0,             /* file */
     2,  {ARG_STRING, ARG_STRING}},
 
     {"replacement", MACRO(do_macro), ARG_VOID, B_NOVALUE, TRUE, /* macro */
     2,  {ARG_COND, ARG_REST}},
 
-    {"require", MACRO(do_require), ARG_UNDEF, 0, 0,         /* macro */
+    {"require", MACRO(do_require), ARG_INT, 0, 0,           /* macro */
     1,  {ARG_STRING}},
 
-    {"reregister_macro", MACRO(do_register_macro), ARG_UNDEF, 0, TRUE, /* macro */
+    {"reregister_macro", MACRO(do_register_macro), ARG_INT, 0, TRUE, /* macro */
     3,  {ARG_INT, ARG_STRING, ARG_OPT | ARG_INT}},
 
-    {"restore_position", MACRO(do_restore_position), ARG_UNDEF, 0, 0, /* movement, macro */
+    {"restore_position", MACRO(do_restore_position), ARG_INT, 0, 0, /* movement, macro */
     1,  {ARG_OPT | ARG_INT}},
 
-    {"return", MACRO(do_returns), ARG_UNDEF, 0, FALSE,      /* macro */
+    {"return", MACRO(do_returns), ARG_ANY, 0, FALSE,        /* macro */
     1,  {ARG_OPT | ARG_ANY}},
 
-    {"returns", MACRO(do_returns), ARG_UNDEF, 0, TRUE,      /* macro */
+    {"returns", MACRO(do_returns), ARG_ANY, 0, TRUE,        /* macro */
     1,  {ARG_ANY}},
 
     {"right", MACRO(do_right), ARG_INT, 0, 0,               /* buffer, window */
@@ -1849,7 +1854,7 @@ BUILTIN builtin[] = {
     {"save_keystroke_macro", MACRO(do_save_keystroke_macro), ARG_INT, 0, 0, /* kbd */
     1,  {ARG_STRING}},
 
-    {"save_position", MACRO(do_save_position), ARG_UNDEF, 0, 0, /* movement, macro */
+    {"save_position", MACRO(do_save_position), ARG_VOID, 0, 0, /* movement, macro */
     0,  {0}},
 
     {"screen_dump", MACRO(do_screen_dump), ARG_INT, 0, 0,   /* screen */
@@ -1889,13 +1894,13 @@ BUILTIN builtin[] = {
     {"set_attribute", MACRO(do_set_attribute), ARG_INT, 0, 0, /* buffer */
     3,  {ARG_OPT | ARG_INT | ARG_STRING, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"set_backup", MACRO(do_set_backup), ARG_UNDEF, 0, 0,   /* env */
+    {"set_backup", MACRO(do_set_backup), ARG_INT, 0, 0,     /* env */
     2,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"set_backup_option", MACRO(do_set_backup_option), ARG_UNDEF, 0, 0, /* env */
+    {"set_backup_option", MACRO(do_set_backup_option), ARG_INT, 0, 0, /* env */
     3,  {ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT | ARG_STRING}},
 
-    {"set_binary_size", MACRO(do_set_binary_size), ARG_UNDEF, 0, 0, /* buffer, file */
+    {"set_binary_size", MACRO(do_set_binary_size), ARG_INT, 0, 0, /* buffer, file */
     1,  {ARG_INT}},
 
 #if defined(VERSION_204)
@@ -1903,13 +1908,13 @@ BUILTIN builtin[] = {
     1,  {ARG_INT}},
 #endif
 
-    {"set_buffer", MACRO(do_set_buffer), ARG_UNDEF, 0, 0,   /* buffer */
+    {"set_buffer", MACRO(do_set_buffer), ARG_INT, 0, 0,     /* buffer */
     1,  {ARG_INT}},
 
     {"set_buffer_cmap", MACRO(do_set_buffer_cmap), ARG_INT, 0, 0, /* buffer, env, window */
     2,  {ARG_OPT | ARG_INT | ARG_STRING, ARG_OPT | ARG_INT}},
 
-    {"set_buffer_flags", MACRO(do_set_buffer_flags), ARG_UNDEF, 0, 0, /* buffer */
+    {"set_buffer_flags", MACRO(do_set_buffer_flags), ARG_VOID, 0, 0, /* buffer */
     4,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT | ARG_STRING, ARG_OPT | ARG_INT | ARG_STRING, ARG_OPT | ARG_INT}},
 
     {"set_buffer_title", MACRO(do_set_buffer_title), ARG_INT, 0, 0, /* buffer */
@@ -1918,7 +1923,7 @@ BUILTIN builtin[] = {
     {"set_buffer_type", MACRO(do_set_buffer_type), ARG_INT, 0, 0, /* buffer */
     2,  {ARG_OPT | ARG_INT, ARG_INT}},
 
-    {"set_calling_name", MACRO(do_set_calling_name), ARG_UNDEF, 0, 0, /* macro */
+    {"set_calling_name", MACRO(do_set_calling_name), ARG_VOID, 0, 0, /* macro */
     1,  {ARG_OPT | ARG_STRING}},
 
     {"set_char_timeout", MACRO(do_set_char_timeout), ARG_INT, 0, 0, /* screen, env */
@@ -1927,7 +1932,7 @@ BUILTIN builtin[] = {
     {"set_color", MACRO(do_set_color), ARG_INT, 0, 0,       /* screen */
     2,  {ARG_OPT | ARG_STRING | ARG_LIST, ARG_OPT | ARG_INT}},
 
-    {"set_color_pair", MACRO(do_set_color_pair), ARG_UNDEF, 0, 0, /* screen, syntax */
+    {"set_color_pair", MACRO(do_set_color_pair), ARG_VOID, 0, 0, /* screen, syntax */
     4,  {ARG_INT | ARG_STRING,
          ARG_OPT | ARG_INT | ARG_STRING,
          ARG_OPT | ARG_INT | ARG_STRING,
@@ -1936,13 +1941,13 @@ BUILTIN builtin[] = {
     {"set_ctrl_state", MACRO(do_set_ctrl_state), ARG_INT, 0, 0, /* window */
     3,  {ARG_INT, ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"set_echo_format", MACRO(do_set_echo_format), ARG_UNDEF, 0, 0, /* screen */
+    {"set_echo_format", MACRO(do_set_echo_format), ARG_VOID, 0, 0, /* screen */
     1,  {ARG_OPT | ARG_STRING}},
 
     {"set_encoding", MACRO(do_set_encoding), ARG_INT, 0, 0, /* buffer */
     2,  {ARG_OPT | ARG_STRING, ARG_OPT | ARG_INT}},
 
-    {"set_feature", MACRO(do_set_feature), ARG_UNDEF, 0, 0, /* screen, window */
+    {"set_feature", MACRO(do_set_feature), ARG_INT, 0, 0,   /* screen, window */
     2,  {ARG_OPT | ARG_STRING, ARG_OPT | ARG_STRING}},
 
     {"set_file_magic", MACRO(do_set_file_magic), ARG_INT, 0, 0, /* file */
@@ -1951,13 +1956,13 @@ BUILTIN builtin[] = {
     {"set_font", MACRO(do_set_font), ARG_INT, 0, 0,         /* screen, window */
     2,  {ARG_OPT | ARG_STRING, ARG_OPT | ARG_STRING}},
 
-    {"set_idle_default", MACRO(do_set_idle_default), ARG_UNDEF, 0, 0, /* env */
+    {"set_idle_default", MACRO(do_set_idle_default), ARG_INT, 0, 0, /* env */
     1,  {ARG_INT}},
 
-    {"set_indent", MACRO(do_set_indent), ARG_UNDEF, 0, 0,   /* buffer */
+    {"set_indent", MACRO(do_set_indent), ARG_INT, 0, 0,     /* buffer */
     1,  {ARG_OPT | ARG_INT}},
 
-    {"set_kbd_name", MACRO(do_set_kbd_name), ARG_UNDEF, 0, 0, /* kbd */
+    {"set_kbd_name", MACRO(do_set_kbd_name), ARG_VOID, 0, 0, /* kbd */
     2,  {ARG_STRING, ARG_OPT | ARG_INT}},
 
     {"set_line_flags", MACRO(do_set_line_flags), ARG_INT, 0, 0, /* buffer */
@@ -1967,7 +1972,7 @@ BUILTIN builtin[] = {
          ARG_INT,
          ARG_INT}},
 
-    {"set_macro_history", MACRO(do_set_macro_history), ARG_UNDEF, 0, 0, /* macro */
+    {"set_macro_history", MACRO(do_set_macro_history), ARG_STRING, 0, 0, /* macro */
     2,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_STRING}},
 
     {"set_margins", MACRO(do_set_margins), ARG_INT, 0, 0,   /* buffer */
@@ -1989,7 +1994,7 @@ BUILTIN builtin[] = {
     {"set_process_position", MACRO(set_process_position), ARG_INT, 0, 0, /* proc, buffer */
     2,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"set_property", MACRO(do_set_property/*obj_id, key, value*/), ARG_UNDEF, 0, 0, /* macro */
+    {"set_property", MACRO(do_set_property/*obj_id, key, value*/), ARG_INT, 0, 0, /* macro */
     3,  {ARG_INT, ARG_STRING, ARG_ANY}},
 
     {"set_ruler", MACRO(do_set_ruler), ARG_INT, 0, 0,       /* buffer */
@@ -1998,7 +2003,7 @@ BUILTIN builtin[] = {
     {"set_scrap_info", MACRO(do_set_scrap_info), ARG_INT, 0, 0, /* scrap */
     3,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"set_syntax_flags", MACRO(do_set_syntax_flags), ARG_UNDEF, 0, 0, /* syntax */
+    {"set_syntax_flags", MACRO(do_set_syntax_flags), ARG_INT, 0, 0, /* syntax */
     2,  {ARG_INT, ARG_OPT | ARG_INT | ARG_STRING}},
 
     {"set_tab", MACRO(do_set_tab), ARG_INT, B_NOVALUE, 0,   /* buffer */
@@ -2007,7 +2012,7 @@ BUILTIN builtin[] = {
     {"set_term_characters", MACRO(do_set_term_characters), ARG_VOID, B_NOVALUE, 0, /* screen, env */
     1,  {ARG_REST}},
 
-    {"set_term_feature", MACRO(do_set_term_feature), ARG_UNDEF, 0, 0, /* screen, env */
+    {"set_term_feature", MACRO(do_set_term_feature), ARG_INT, 0, 0, /* screen, env */
     2,  {ARG_INT | ARG_STRING, ARG_OPT | ARG_ANY}},
 
     {"set_term_features", MACRO(do_set_term_features), ARG_VOID, B_NOVALUE, 0, /* screen, env */
@@ -2027,13 +2032,13 @@ BUILTIN builtin[] = {
          ARG_OPT | ARG_INT,
          ARG_OPT | ARG_INT}},
 
-    {"set_window", MACRO(do_set_window), ARG_UNDEF, 0, 0,   /* window */
+    {"set_window", MACRO(do_set_window), ARG_INT, 0, 0,     /* window */
     1,  {ARG_INT}},
 
     {"set_window_cmap", MACRO(do_set_window_cmap), ARG_INT, 0, 0, /* buffer, env, window */
     2,  {ARG_OPT | ARG_INT | ARG_STRING, ARG_OPT | ARG_INT}},
 
-    {"set_window_flags", MACRO(do_set_window_flags), ARG_UNDEF, 0, 0, /* window */
+    {"set_window_flags", MACRO(do_set_window_flags), ARG_VOID, 0, 0, /* window */
     3,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT | ARG_STRING, ARG_OPT | ARG_INT | ARG_STRING}},
 
     {"set_window_priority", MACRO(do_set_window_priority), ARG_INT, 0, 0, /* screen */
@@ -2042,7 +2047,7 @@ BUILTIN builtin[] = {
     {"set_wm_name", MACRO(do_set_wm_name), ARG_INT, 0, 0,   /* screen, env, window */
     2,  {ARG_OPT | ARG_STRING, ARG_OPT | ARG_STRING}},
 
-    {"shell", MACRO(do_shell), ARG_UNDEF, 0, 0,             /* env, proc */
+    {"shell", MACRO(do_shell), ARG_INT, 0, 0,               /* env, proc */
     8,  {ARG_OPT | ARG_STRING,      /* command  */
          ARG_OPT | ARG_INT,         /* redraw   */
          ARG_OPT | ARG_STRING,      /* macro    */
@@ -2052,7 +2057,7 @@ BUILTIN builtin[] = {
          ARG_OPT | ARG_INT,         /* mode     */
          ARG_OPT | ARG_STRING}},    /* spec     */
 
-    {"shift", MACRO(do_shift), ARG_UNDEF, 0, 0,             /* list */
+    {"shift", MACRO(do_shift), ARG_ANY, 0, 0,               /* list */
     1,  {ARG_LVAL | ARG_LIST}},
 
     {"sin", MACRO(do_sin), ARG_FLOAT, 0, 0,                 /* float, arith */
@@ -2061,7 +2066,7 @@ BUILTIN builtin[] = {
     {"sinh", MACRO(do_sinh), ARG_FLOAT, 0, 0,               /* float, arith */
     1,  {ARG_FLOAT}},
 
-    {"sleep", MACRO(do_sleep), ARG_UNDEF, 0, 0,             /* proc */
+    {"sleep", MACRO(do_sleep), ARG_VOID, 0, 0,              /* proc */
     2,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
     {"sort_buffer", MACRO(do_sort_buffer), ARG_INT, 0, 0,   /* buffer */
@@ -2117,7 +2122,7 @@ BUILTIN builtin[] = {
     {"sscanf", MACRO(do_sscanf), ARG_INT, 0, 0,             /* string */
     -3, {ARG_STRING, ARG_STRING, ARG_OPT | ARG_LVAL | ARG_ANY}},
 
-    {"stat", MACRO(do_stat), ARG_UNDEF, 0, 0,               /* file */
+    {"stat", MACRO(do_stat), ARG_INT, 0, 0,                 /* file */
     11, {ARG_OPT | ARG_STRING,
          ARG_OPT | ARG_LVAL | ARG_INT,
          ARG_OPT | ARG_LVAL | ARG_INT,
@@ -2196,7 +2201,7 @@ BUILTIN builtin[] = {
     {"suspend", MACRO(do_suspend), ARG_INT, 0, 0,           /* proc */
     0,  {0}},
 
-    {"swap_anchor", MACRO(do_swap_anchor), ARG_UNDEF, 0, 0, /* scrap, movement */
+    {"swap_anchor", MACRO(do_swap_anchor), ARG_INT, 0, 0,   /* scrap, movement */
     0,  {0}},
 
     {"switch", MACRO(do_switch), ARG_VOID, 0, 0,            /* macro */
@@ -2213,10 +2218,10 @@ BUILTIN builtin[] = {
     {"syntax_column_ruler", MACRO(do_syntax_column_ruler), ARG_INT, 0, 0, /* syntax */
     3,  {ARG_LIST | ARG_OPT, ARG_OPT | ARG_STRING, ARG_OPT | ARG_INT | ARG_STRING}},
 
-    {"syntax_rule", MACRO(do_syntax_rule), ARG_UNDEF, 0, 0, /* syntax */
+    {"syntax_rule", MACRO(do_syntax_rule), ARG_VOID, 0, 0,  /* syntax */
     3,  {ARG_STRING, ARG_STRING, ARG_OPT | ARG_INT | ARG_STRING}},
 
-    {"syntax_token", MACRO(do_syntax_token), ARG_UNDEF, 0, 0, /* syntax */
+    {"syntax_token", MACRO(do_syntax_token), ARG_VOID, 0, 0, /* syntax */
     4,  {ARG_INT | ARG_STRING, ARG_OPT | ARG_INT | ARG_STRING, ARG_OPT | ARG_INT | ARG_STRING, ARG_OPT | ARG_INT | ARG_STRING}},
 
     {"tabs", MACRO(do_tabs), ARG_INT, 0, 0,                 /* buffer */
@@ -2250,19 +2255,19 @@ BUILTIN builtin[] = {
          ARG_OPT | ARG_LVAL | ARG_INT,
          ARG_OPT | ARG_LVAL | ARG_INT}},
 
-    {"tokenize", MACRO(do_tokenize), ARG_UNDEF, 0, 0,       /* string */
+    {"tokenize", MACRO(do_tokenize), ARG_LIST, 0, 0,        /* string */
     3,  {ARG_STRING, ARG_INT | ARG_STRING, ARG_OPT | ARG_INT}},
 
-    {"top_of_buffer", MACRO(do_top_of_buffer), ARG_UNDEF, 0, 0, /* movement */
+    {"top_of_buffer", MACRO(do_top_of_buffer), ARG_INT, 0, 0, /* movement */
     0,  {0}},
 
-    {"top_of_window", MACRO(do_top_of_window), ARG_UNDEF, 0, 0, /* movement */
+    {"top_of_window", MACRO(do_top_of_window), ARG_INT, 0, 0, /* movement */
     0,  {0}},
 
-    {"transfer", MACRO(do_transfer), ARG_UNDEF, 0, 0,       /* scrap */
+    {"transfer", MACRO(do_transfer), ARG_INT, 0, 0,         /* scrap */
     5,  {ARG_INT, ARG_INT, ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"translate", MACRO(do_translate), ARG_UNDEF, 0, 0,     /* search */
+    {"translate", MACRO(do_translate), ARG_INT, 0, 0,       /* search */
     7,  {ARG_OPT | ARG_STRING,
          ARG_OPT | ARG_STRING,
          ARG_OPT | ARG_INT,
@@ -2271,7 +2276,7 @@ BUILTIN builtin[] = {
          ARG_OPT | ARG_INT,
          ARG_OPT | ARG_INT}},
 
-    {"translate_pos", MACRO(do_translate_pos), ARG_UNDEF, 0, 0, /* kbd, window */
+    {"translate_pos", MACRO(do_translate_pos), ARG_INT, 0, 0, /* kbd, window */
     5,  {ARG_INT,
          ARG_INT,
          ARG_OPT | ARG_LVAL | ARG_INT,
@@ -2287,17 +2292,17 @@ BUILTIN builtin[] = {
     {"typeof", MACRO(do_typeof), ARG_STRING, 0, 0,          /* var */
     1,  {ARG_OPT | ARG_ANY}},
 
-    {"umask", MACRO(do_umask), ARG_UNDEF, 0, 0,             /* file */
+    {"umask", MACRO(do_umask), ARG_INT, 0, 0,               /* file */
     1,  {ARG_OPT | ARG_INT}},
 
-    {"uname", MACRO(do_uname), ARG_UNDEF, 0, 0,             /* env */
+    {"uname", MACRO(do_uname), ARG_INT, 0, 0,               /* env */
     5,  {ARG_OPT | ARG_LVAL | ARG_STRING,
          ARG_OPT | ARG_LVAL | ARG_STRING,
          ARG_OPT | ARG_LVAL | ARG_STRING,
          ARG_OPT | ARG_LVAL | ARG_STRING,
          ARG_OPT | ARG_LVAL | ARG_STRING}},
 
-    {"undo", MACRO(do_undo), ARG_UNDEF, 0, -1,              /* buffer, kbd */
+    {"undo", MACRO(do_undo), ARG_INT, 0, -1,                /* buffer, kbd */
     3,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
 #if defined(VERSION_205)
@@ -2305,26 +2310,26 @@ BUILTIN builtin[] = {
     2,  {ARG_STR, ARG_OPT | ARG_INT}},
 #endif
 
-    {"unregister_macro", MACRO(do_unregister_macro), ARG_UNDEF, 0, 0, /* macro */
+    {"unregister_macro", MACRO(do_unregister_macro), ARG_INT, 0, 0, /* macro */
     3,  {ARG_INT, ARG_STRING, ARG_OPT | ARG_INT}},
 
     {"unshift", MACRO(do_unshift), ARG_INT, 0, 0,           /* list */
     -2, {ARG_LVAL | ARG_LIST, ARG_OPT | ARG_ANY}},
 
-    {"up", MACRO(do_up), ARG_UNDEF, 0, 0,                   /* buffer, window */
+    {"up", MACRO(do_up), ARG_INT, 0, 0,                     /* buffer, window */
     1,  {ARG_OPT | ARG_INT}},
 
     {"upper", MACRO(do_upper), ARG_STRING, 0, 0,            /* string */
     1,  {ARG_INT | ARG_STRING}},
 
-    {"use_local_keyboard", MACRO(do_use_local_keyboard), ARG_UNDEF, 0, 0, /* kbd */
+    {"use_local_keyboard", MACRO(do_use_local_keyboard), ARG_INT, 0, 0, /* kbd */
     1,  {ARG_INT}},
 
     {"use_tab_char", MACRO(do_use_tab_char), ARG_INT, 0, 0, /* env, screen */
     2,  {ARG_OPT | ARG_INT | ARG_STRING,
          ARG_OPT | ARG_INT}},
 
-    {"version", MACRO(do_version), ARG_UNDEF, 0, 0,         /* misc */
+    {"version", MACRO(do_version), ARG_INT, 0, 0,           /* misc */
     9,  {ARG_OPT | ARG_LVAL | ARG_INT | ARG_STRING,
          ARG_OPT | ARG_LVAL | ARG_INT,
          ARG_OPT | ARG_LVAL | ARG_INT,
@@ -2342,7 +2347,7 @@ BUILTIN builtin[] = {
     2,  {ARG_STRING,
          ARG_OPT | ARG_INT}},
 
-    {"view_screen", MACRO(do_view_screen), ARG_UNDEF, 0, 0, /* screen */
+    {"view_screen", MACRO(do_view_screen), ARG_INT, 0, 0,   /* screen */
     0,  {0}},
 
     {"wait", MACRO(do_wait), ARG_INT, 0, 0,                 /* proc */
@@ -2354,26 +2359,26 @@ BUILTIN builtin[] = {
     {"watch", MACRO(do_unimp), ARG_VOID, 0, 0,              /* debug */
     0,  {0}},
 
-    {"while", MACRO(do_while), ARG_UNDEF, 0, 0,             /* macro */
+    {"while", MACRO(do_while), ARG_VOID, 0, 0,              /* macro */
     2,  {ARG_COND, ARG_OPT | ARG_REST}},
 
-    {"widget_get", MACRO(do_widget_get), ARG_UNDEF, 0, 0,   /* dialog */
+    {"widget_get", MACRO(do_widget_get), ARG_ANY, 0, 0,     /* dialog */
     4,  {ARG_OPT | ARG_INT, ARG_INT | ARG_STRING, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"widget_set", MACRO(do_widget_set), ARG_UNDEF, 0, 0,   /* dialog */
+    {"widget_set", MACRO(do_widget_set), ARG_ANY, 0, 0,     /* dialog */
     5,  {ARG_OPT | ARG_INT,
          ARG_INT | ARG_STRING,
          ARG_OPT | ARG_INT | ARG_STRING | ARG_LIST,
          ARG_OPT | ARG_INT,
          ARG_OPT | ARG_INT}},
 
-    {"window_color", MACRO(do_window_color), ARG_UNDEF, 0, 0, /* window, screen */
+    {"window_color", MACRO(do_window_color), ARG_INT, 0, 0, /* window, screen */
     2,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"write_block", MACRO(do_write_block), ARG_UNDEF, 0, 0, /* file, scrap */
+    {"write_block", MACRO(do_write_block), ARG_INT, 0, 0,   /* file, scrap */
     4,  {ARG_OPT | ARG_STRING, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"write_buffer", MACRO(do_write_buffer), ARG_UNDEF, 0, 0, /* file, buffer */
+    {"write_buffer", MACRO(do_write_buffer), ARG_INT, 0, 0, /* file, buffer */
     2,  {ARG_OPT | ARG_STRING, ARG_OPT | ARG_INT}},
 
     {"|", MACRO(do_com_op), ARG_UNDEF, 0, MOP_BOR,          /* arith */

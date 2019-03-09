@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: help.mandoc,v 1.1 2014/11/27 18:19:38 ayoung Exp $
+.\" | $Id: help.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -50,11 +50,14 @@
 .Os
 .Sh NAME
 .Nm help
-.Nd on-line help for CRISP.
+.Nd on-line help for GRIEF.
 .Sh DESCRIPTION
-The help macro displays a popup window allowing the user to
-select topics on help. These topics cover keyboard bindings,
-configuration, programming and using GRIEF.
+The help macro displays a popup window allowing the user to select
+topics on help. These topics cover keyboard bindings, configuration, 
+programming and using GRIEF.
 .Sh MENU/KEYS
 This macro can be accessed from the GRIEF features menu or by typing
 \f(HB<Alt-H>\fR.
+.Sh SEE ALSO
+.Xr feature
+

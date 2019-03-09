@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: man.mandoc,v 1.1 2014/11/27 18:19:40 ayoung Exp $
+.\" | $Id: man.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -56,11 +56,11 @@ man [!section] name ...
 .br
 man ?keyword ...
 .Sh DESCRIPTION
-This macro provides a way to view Unix manual pages inside a popup window
-and scroll around.  It displays complete manual pages that you select by
-name, or one-line summaries selected by keyword.  All manual pages mtching
-'name' within the MANPATH search path. Manual pages are displayed in the
-order found.
+The \fIman\fR macro provides a way to view Unix manual pages inside a
+popup window and scroll around. It displays complete manual pages
+that you select by name, or one-line summaries selected by keyword.
+All manual pages mtching 'name' within the MANPATH search path.
+Manual pages are displayed in the order found.
 .Pp
 Subsearchs are specified by 'section', where the directories searched
 for name is limited to those specified by section. section can be a

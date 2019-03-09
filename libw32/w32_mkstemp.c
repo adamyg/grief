@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_mkstemp_c,"$Id: w32_mkstemp.c,v 1.10 2015/02/19 00:17:30 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_mkstemp_c,"$Id: w32_mkstemp.c,v 1.14 2018/10/12 00:24:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 mkstemp implementation
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -44,10 +44,9 @@ __CIDENT_RCSID(gr_w32_mkstemp_c,"$Id: w32_mkstemp.c,v 1.10 2015/02/19 00:17:30 a
 #include <ctype.h>
 #include <unistd.h>
 
-#define DISABLE_HARD_ERRORS (void)SetErrorMode (0);
-#define ENABLE_HARD_ERRORS  (void)SetErrorMode (SEM_FAILCRITICALERRORS | \
-				    SEM_NOOPENFILEERRORBOX);
-
+#define DISABLE_HARD_ERRORS     (void)SetErrorMode (0);
+#define ENABLE_HARD_ERRORS      (void)SetErrorMode (SEM_FAILCRITICALERRORS | \
+                                        SEM_NOOPENFILEERRORBOX);
 
 /*
 //  NAME
@@ -92,7 +91,7 @@ __CIDENT_RCSID(gr_w32_mkstemp_c,"$Id: w32_mkstemp.c,v 1.10 2015/02/19 00:17:30 a
 static int                  gettemp(char *path, register int *fd, int temporary);
 
 
-int
+LIBW32_API int
 w32_mkstemp(char *path)
 {
     int fildes = -1;
@@ -100,7 +99,7 @@ w32_mkstemp(char *path)
 }
 
 
-int
+LIBW32_API int
 w32_mkstempx(char *path)
 {
     int fildes = -1;
@@ -173,10 +172,10 @@ gettemp(char *path, register int *fildes, int temporary)
         errno = 0;
         if (fildes) {
                 if ((*fildes = WIN32_OPEN(path, (temporary ? O_MODEX : O_MODE), 0600)) >= 0) {
-                        return GETTEMP_SUCCESS;
+                    return GETTEMP_SUCCESS;
                 }
                 if (EEXIST != errno) {
-                        return GETTEMP_ERROR;
+                    return GETTEMP_ERROR;
                 }
         } else {
                 DISABLE_HARD_ERRORS
@@ -211,3 +210,6 @@ gettemp(char *path, register int *fildes, int temporary)
     }
     /*NOTREACHED*/
 }
+
+/*end*/
+

@@ -1,10 +1,10 @@
 #ifndef MANDOC_CONFIG_H_INCLUDED
 #define MANDOC_CONFIG_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: config.h,v 1.11 2017/01/26 01:25:37 cvsuser Exp $
+/* $Id: config.h,v 1.13 2018/11/12 01:56:06 cvsuser Exp $
  * mandoc config.h
  *
- * Copyright (c) 201 - 2017, Adam Young.
+ * Copyright (c) 201 - 2018, Adam Young.
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software for any
@@ -27,16 +27,26 @@
 
 #if defined(WIN32) && !defined(__MINGW32__)
 #include "../libw32/config.h"
+
+#include <stddef.h>
 #include <malloc.h>
 #include <unistd.h>
+
 #ifndef  snprintf
 #if defined(_MSC_VER) && (_MSC_VER < 1900)
 #define  snprintf _snprintf    /*2015+*/
 #endif
 #endif
 #define  mktemp _mktemp
+
 #ifndef  chdir
 #define  chdir w32_chdir
+#endif
+#ifndef  mkdir
+#define  mkdir w32_mkdir
+#endif
+#ifndef  rmdir
+#define  rmdir w32_rmdir
 #endif
 #ifndef  getcwd
 #define  getcwd w32_getcwd
@@ -66,6 +76,10 @@
  *  compat_strlcpy.c
  *  compat_strtonum (1.13.4)
  */
+
+#if defined(linux)
+#define _GNU_SOURCE             /*see: string.h*/
+#endif
 
 #include <stdio.h>
 #include <string.h>
@@ -104,6 +118,10 @@ extern int                      getsubopt(char **optionp, char * const *tokens, 
 void *                          reallocarray(void *optr, size_t nmemb, size_t size);
 #endif
 
+#if !defined(HAVE_RECALLOCARRAY)
+void *                          recallocarray(void *ptr, size_t oldnmemb, size_t newnmemb, size_t size);
+#endif
+
 #if !defined(HAVE_STRCASESTR) || defined(__CYGWIN__) /*missing?*/
 extern char *                   strcasestr(const char *s, const char *find);
 #endif
@@ -114,6 +132,10 @@ extern size_t                   strlcpy(char *dst, const char *src, size_t siz);
 
 #if !defined(HAVE_STRLCAT)
 extern size_t                   strlcat(char *dst, const char *src, size_t siz);
+#endif
+
+#if !defined(HAVE_STRNDUP)
+extern char *                   strndup(const char *str, size_t maxlen);
 #endif
 
 #if !defined(HAVE_STRTONUM)
@@ -172,6 +194,12 @@ extern int                      isblank(int ch);
 #     define __P(x)             ()
 #  endif
 #endif
+
+#ifndef __attribute__
+#define __attribute__(__x)
+#endif
+
+#include "portable_endian.h"
 
 #endif  /*MANDOC_CONFIG_H_INCLUDED*/
 /*end*/

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_buf_c,"$Id: m_buf.c,v 1.51 2014/11/16 17:28:38 ayoung Exp $")
+__CIDENT_RCSID(gr_m_buf_c,"$Id: m_buf.c,v 1.52 2019/01/26 22:27:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_buf.c,v 1.51 2014/11/16 17:28:38 ayoung Exp $
+/* $Id: m_buf.c,v 1.52 2019/01/26 22:27:08 cvsuser Exp $
  * Buffer primitives.
  *
  *
@@ -2742,7 +2742,7 @@ get_window(int dir)
  *<<GRIEF>>
     Macro: save_position - Saves current cursor/buffer state.
 
-        int
+        void
         save_position()
 
     Macro Description:

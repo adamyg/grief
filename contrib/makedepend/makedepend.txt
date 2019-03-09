@@ -1,231 +1,188 @@
-makedepend(1)                                                    makedepend(1)
+MAKEDEPEND(1)               General Commands Manual              MAKEDEPEND(1)
 
-NAME
 
-       makedepend - create dependencies in makefiles (with extensions)
 
-SYNOPSIS
+NNAAMMEE
+       makedepend - create dependencies in makefiles
 
-       makedepend  [ -Dname=def ] [ -Dname ] [ -Iincludedir ] [ -Yincludedir ]
-       [ -a ] [ -fmakefile ] [ -include file ] [ -oobjsuffix ] [ -pobjprefix ]
-       [  -sstring  ] [ -wwidth ] [ -v ] [ -m ] [ -- otheroptions -- ] source-
-       file ...
+SSYYNNOOPPSSIISS
+       mmaakkeeddeeppeenndd [ --DD_n_a_m_e==_d_e_f ] [ --DD_n_a_m_e ] [ --II_i_n_c_l_u_d_e_d_i_r ] [ --YY_i_n_c_l_u_d_e_d_i_r ]
+       [ --aa ] [ --ff_m_a_k_e_f_i_l_e ] [ --iinncclluuddee _f_i_l_e ] [ --oo_o_b_j_s_u_f_f_i_x ] [ --pp_o_b_j_p_r_e_f_i_x ]
+       [ --ss_s_t_r_i_n_g ] [ --ww_w_i_d_t_h ] [ --vv ] [ --mm ] [ -- _o_t_h_e_r_o_p_t_i_o_n_s -- ]
+       _s_o_u_r_c_e_f_i_l_e ...
 
-DESCRIPTION
+DDEESSCCRRIIPPTTIIOONN
+       The mmaakkeeddeeppeenndd program reads each _s_o_u_r_c_e_f_i_l_e in sequence and parses it
+       like a C-preprocessor, processing all _#_i_n_c_l_u_d_e_, _#_d_e_f_i_n_e_, _#_u_n_d_e_f_,
+       _#_i_f_d_e_f_, _#_i_f_n_d_e_f_, _#_e_n_d_i_f_, _#_i_f_, _#_e_l_i_f and _#_e_l_s_e directives so that it can
+       correctly tell which _#_i_n_c_l_u_d_e_, directives would be used in a
+       compilation.  Any _#_i_n_c_l_u_d_e_, directives can reference files having other
+       _#_i_n_c_l_u_d_e directives, and parsing will occur in these files as well.
 
-       The makedepend program reads each sourcefile in sequence and parses  it
-       like  a  C-preprocessor,  processing  all  #include,  #define,  #undef,
-       #ifdef, #ifndef, #endif, #if, #elif and #else directives so that it can
-       correctly  tell  which #include, directives would be used in a compila-
-       tion.  Any  #include,  directives  can  reference  files  having  other
-       #include directives, and parsing will occur in these files as well.
-
-       Every  file that a sourcefile includes, directly or indirectly, is what
-       makedepend calls a dependency.  These dependencies are then written  to
-       a makefile in such a way that make(1) will know which object files must
+       Every file that a _s_o_u_r_c_e_f_i_l_e includes, directly or indirectly, is what
+       mmaakkeeddeeppeenndd calls a _d_e_p_e_n_d_e_n_c_y_. These dependencies are then written to a
+       _m_a_k_e_f_i_l_e in such a way that mmaakkee((11)) will know which object files must
        be recompiled when a dependency has changed.
 
-       By default, makedepend places its output in the file named makefile  if
-       it  exists, otherwise Makefile.  An alternate makefile may be specified
-       with the -f option.  It first searches the makefile for the line
+       By default, mmaakkeeddeeppeenndd places its output in the file named _m_a_k_e_f_i_l_e if
+       it exists, otherwise _M_a_k_e_f_i_l_e_.  An alternate makefile may be specified
+       with the --ff option.  It first searches the makefile for the line
 
            # DO NOT DELETE THIS LINE -- make depend depends on it.
 
-       or one provided with the -s option, as a delimiter for  the  dependency
-       output.   If  it  finds it, it will delete everything following this to
-       the end of the makefile and put the output  after  this  line.   If  it
-       doesn't  find  it, the program will append the string to the end of the
-       makefile and place the output  following  that.   For  each  sourcefile
-       appearing on the command line, makedepend puts lines in the makefile of
+       or one provided with the --ss option, as a delimiter for the dependency
+       output.  If it finds it, it will delete everything following this to
+       the end of the makefile and put the output after this line.  If it
+       doesn't find it, the program will append the string to the end of the
+       makefile and place the output following that.  For each _s_o_u_r_c_e_f_i_l_e
+       appearing on the command line, mmaakkeeddeeppeenndd puts lines in the makefile of
        the form
 
             sourcefile.o: dfile ...
 
-       Where sourcefile.o is the name from the command line  with  its  suffix
-       replaced  with  ``.o'',  and  dfile  is  a  dependency  discovered in a
-       #include directive while parsing sourcefile or  one  of  the  files  it
+       Where _s_o_u_r_c_e_f_i_l_e_._o is the name from the command line with its suffix
+       replaced with ``.o'', and _d_f_i_l_e is a dependency discovered in a
+       _#_i_n_c_l_u_d_e directive while parsing _s_o_u_r_c_e_f_i_l_e or one of the files it
        included.
 
-
-EXAMPLE
-
-       Normally,  makedepend  will be used in a makefile target so that typing
-       ``make depend'' will bring the dependencies up to date  for  the  make-
-       file.  For example,
+EEXXAAMMPPLLEE
+       Normally, mmaakkeeddeeppeenndd will be used in a makefile target so that typing
+       ``make depend'' will bring the dependencies up to date for the
+       makefile.  For example,
            SRCS = file1.c file2.c ...
            CFLAGS = -O -DHACK -I../foobar -xyz
            depend:
                    makedepend -- $(CFLAGS) -- $(SRCS)
 
+OOPPTTIIOONNSS
+       The program will ignore any option that it does not understand so that
+       you may use the same arguments that you would for cccc((11))..
 
-OPTIONS
+       --DD_n_a_m_e==_d_e_f or --DD_n_a_m_e
+            Define.  This places a definition for _n_a_m_e in mmaakkeeddeeppeenndd''ss symbol
+            table.  Without _=_d_e_f the symbol becomes defined as ``1''.
 
-       The  program will ignore any option that it does not understand so that
-       you may use the same arguments that you would for cc(1).
-
-       -Dname=def or -Dname
-            Define.  This places a definition for name in makedepend's  symbol
-            table.  Without =def the symbol becomes defined as ``1''.
-
-       -Iincludedir
-            Include  directory.   This  option  tells  makedepend  to  prepend
-            includedir to its list of directories to search when it encounters
-            a  #include  directive.   By default, makedepend only searches the
-            standard include directories (usually /usr/include and possibly  a
+       --II_i_n_c_l_u_d_e_d_i_r
+            Include directory.  This option tells mmaakkeeddeeppeenndd to prepend
+            _i_n_c_l_u_d_e_d_i_r to its list of directories to search when it encounters
+            a _#_i_n_c_l_u_d_e directive.  By default, mmaakkeeddeeppeenndd only searches the
+            standard include directories (usually /usr/include and possibly a
             compiler-dependent directory).
 
-       -Yincludedir
-            Replace  all  of  the standard include directories with the single
-            specified include directory; you can omit the includedir to simply
+       --YY_i_n_c_l_u_d_e_d_i_r
+            Replace all of the standard include directories with the single
+            specified include directory; you can omit the _i_n_c_l_u_d_e_d_i_r to simply
             prevent searching the standard include directories.
 
-            (extension) If includedir is prefixed with @@, the value shall be
-            taken to be the name of an environment variable, of the form
-            '@@name', which will be imported and treated as a ';' seperated
-            list of directories.
+       --aa   Append the dependencies to the end of the file instead of
+            replacing them.
 
-       -a   Append  the dependencies to the end of the file instead of replac-
-            ing them.
-
-       -fmakefile
-            Filename.  This allows you to specify  an  alternate  makefile  in
-            which  makedepend  can  place its output.  Specifying ``-'' as the
-            file name (i.e., -f-) sends the output to standard output  instead
+       --ff_m_a_k_e_f_i_l_e
+            Filename.  This allows you to specify an alternate makefile in
+            which mmaakkeeddeeppeenndd can place its output.  Specifying ``-'' as the
+            file name (i.e., --ff--) sends the output to standard output instead
             of modifying an existing file.
 
-       -include file
+       --iinncclluuddee _f_i_l_e
             Process file as input, and include all the resulting output before
-            processing the regular input file. This has the same affect as  if
+            processing the regular input file. This has the same affect as if
             the specified file is an include statement that appears before the
             very first line of the regular input file.
 
-       -oobjsuffix
-            Object file suffix.  Some systems may have object files whose suf-
-            fix  is  something  other  than ``.o''.  This option allows you to
-            specify another suffix, such as ``.b'' with -o.b or ``:obj''  with
-            -o:obj and so forth.
+       --oo_o_b_j_s_u_f_f_i_x
+            Object file suffix.  Some systems may have object files whose
+            suffix is something other than ``.o''.  This option allows you to
+            specify another suffix, such as ``.b'' with _-_o_._b or ``:obj'' with
+            _-_o_:_o_b_j and so forth.
 
-       -pobjprefix
-            Object  file  prefix.   The prefix is prepended to the name of the
-            object file. This is usually used to designate a different  direc-
-            tory for the object file.  The default is the empty string.
+       --pp_o_b_j_p_r_e_f_i_x
+            Object file prefix.  The prefix is prepended to the name of the
+            object file. This is usually used to designate a different
+            directory for the object file.  The default is the empty string.
 
-       -sstring
-            Starting  string  delimiter.  This option permits you to specify a
-            different string for makedepend to look for in the makefile.
+       --ss_s_t_r_i_n_g
+            Starting string delimiter.  This option permits you to specify a
+            different string for mmaakkeeddeeppeenndd to look for in the makefile.
 
-       -wwidth
-            Line width.  Normally, makedepend will ensure  that  every  output
-            line  that  it  writes will be no wider than 78 characters for the
-            sake of readability.  This  option  enables  you  to  change  this
+       --ww_w_i_d_t_h
+            Line width.  Normally, mmaakkeeddeeppeenndd will ensure that every output
+            line that it writes will be no wider than 78 characters for the
+            sake of readability.  This option enables you to change this
             width.
 
-       -v   Verbose operation.  This option causes makedepend to emit the list
+       --vv   Verbose operation.  This option causes mmaakkeeddeeppeenndd to emit the list
             of files included by each input file.
 
-       -m   Warn about multiple inclusion.  This option causes  makedepend  to
-            produce  a  warning  if  any input file includes another file more
-            than once.  In  previous  versions  of  makedepend  this  was  the
+       --mm   Warn about multiple inclusion.  This option causes mmaakkeeddeeppeenndd to
+            produce a warning if any input file includes another file more
+            than once.  In previous versions of mmaakkeeddeeppeenndd this was the
             default behavior; the default has been changed to better match the
-            behavior of the C  compiler,  which  does  not  consider  multiple
-            inclusion  to  be  an error.  This option is provided for backward
-            compatibility, and to aid in debugging problems related to  multi-
-            ple inclusion.
+            behavior of the C compiler, which does not consider multiple
+            inclusion to be an error.  This option is provided for backward
+            compatibility, and to aid in debugging problems related to
+            multiple inclusion.
 
-       -M [-MG]         GCC support (extension)
-
-            -M   tell the preprocessor to output dependencies.
-
-            -MG  says to treat  missing  header  files  as  generated files and
-                 assume they live  in the  same  directory  as  the source file.
-                 It must be specified in addition to -M.
-
-       -MM [-MG]        GCC support (extension)
-
-            Like -M  but  the  output  mentions  only  the  user  header files
-            included with `#include file"'. System header files included  with
-            `#include <file>' are  omitted, either the system defaults or ones
-            specified by '-Y'.
-
-       -MT <target>
-
-            Change the target of the rule emitted by dependency generation. By
-            default 'makedepend' takes the name of the input file, including any
-            path, deletes any file suffix such as '.c', and appends the
-            platform's usual object suffix (-o) and optional (-p); the result
-            is the target.
-
-            An -MT option will set the target to be exactly the string you
-            specify. If you want multiple targets, you can specify them as a
-            single argument to -MT, or use multiple -MT options.
-
-            For example, -MT '$(objpfx)foo.o' might give
-
-                $(objpfx)foo.o: foo.c
-
-       -MC <profile>
-
-            Specification the compiler configuration profile to read.
-
-       -- options --
-            If  makedepend  encounters  a  double  hyphen (--) in the argument
+       ---- _o_p_t_i_o_n_s ----
+            If mmaakkeeddeeppeenndd encounters a double hyphen (--) in the argument
             list, then any unrecognized argument following it will be silently
             ignored; a second double hyphen terminates this special treatment.
-            In this way, makedepend can be made to safely ignore esoteric com-
-            piler  arguments  that  might  normally  be found in a CFLAGS make
-            macro (see the EXAMPLE section above).  All options  that  makede-
-            pend  recognizes and appear between the pair of double hyphens are
-            processed normally.
+            In this way, mmaakkeeddeeppeenndd can be made to safely ignore esoteric
+            compiler arguments that might normally be found in a CFLAGS mmaakkee
+            macro (see the EEXXAAMMPPLLEE section above).  All options that
+            mmaakkeeddeeppeenndd recognizes and appear between the pair of double
+            hyphens are processed normally.
 
-
-ALGORITHM
-
-       The approach used in this program enables it to run an order of  magni-
-       tude  faster  than any other ``dependency generator'' I have ever seen.
-       Central to this performance are two assumptions: that  all  files  com-
-       piled  by  a  single makefile will be compiled with roughly the same -I
-       and -D options; and that most files in a single directory will  include
+AALLGGOORRIITTHHMM
+       The approach used in this program enables it to run an order of
+       magnitude faster than any other ``dependency generator'' I have ever
+       seen.  Central to this performance are two assumptions: that all files
+       compiled by a single makefile will be compiled with roughly the same _-_I
+       and _-_D options; and that most files in a single directory will include
        largely the same files.
 
-       Given  these assumptions, makedepend expects to be called once for each
-       makefile, with all source files that are  maintained  by  the  makefile
-       appearing  on the command line.  It parses each source and include file
+       Given these assumptions, mmaakkeeddeeppeenndd expects to be called once for each
+       makefile, with all source files that are maintained by the makefile
+       appearing on the command line.  It parses each source and include file
        exactly once, maintaining an internal symbol table for each.  Thus, the
        first file on the command line will take an amount of time proportional
-       to the amount of time that a normal C preprocessor takes.  But on  sub-
-       sequent  files,  if  it  encounters an include file that it has already
+       to the amount of time that a normal C preprocessor takes.  But on
+       subsequent files, if it encounters an include file that it has already
        parsed, it does not parse it again.
 
-       For example, imagine you are compiling two files, file1.c and  file2.c,
-       they  each  include  the header file header.h, and the file header.h in
-       turn includes the files def1.h and def2.h.  When you run the command
+       For example, imagine you are compiling two files, _f_i_l_e_1_._c and _f_i_l_e_2_._c_,
+       they each include the header file _h_e_a_d_e_r_._h_, and the file _h_e_a_d_e_r_._h in
+       turn includes the files _d_e_f_1_._h and _d_e_f_2_._h_.  When you run the command
 
            makedepend file1.c file2.c
 
-       makedepend will parse  file1.c  and  consequently,  header.h  and  then
-       def1.h and def2.h.  It then decides that the dependencies for this file
+       mmaakkeeddeeppeenndd will parse _f_i_l_e_1_._c and consequently, _h_e_a_d_e_r_._h and then
+       _d_e_f_1_._h and _d_e_f_2_._h_.  It then decides that the dependencies for this file
        are
 
            file1.o: header.h def1.h def2.h
 
-       But when the  program  parses  file2.c  and  discovers  that  it,  too,
-       includes  header.h,  it  does  not  parse  the  file,  but  simply adds
-       header.h, def1.h and def2.h to the list of dependencies for file2.o.
+       But when the program parses _f_i_l_e_2_._c and discovers that it, too,
+       includes _h_e_a_d_e_r_._h_, it does not parse the file, but simply adds
+       _h_e_a_d_e_r_._h_, _d_e_f_1_._h and _d_e_f_2_._h to the list of dependencies for _f_i_l_e_2_._o_.
 
-BUGS
+SSEEEE AALLSSOO
+       cc(1), make(1)
 
-       makedepend parses, but does not currently evaluate,  the  SVR4  #predi-
-       cate(token-list)  preprocessor  expression; such expressions are simply
-       assumed to be true.  This may cause the wrong #include directives to be
-       evaluated.
+BBUUGGSS
+       mmaakkeeddeeppeenndd parses, but does not currently evaluate, the SVR4
+       #predicate(token-list) preprocessor expression; such expressions are
+       simply assumed to be true.  This may cause the wrong _#_i_n_c_l_u_d_e
+       directives to be evaluated.
 
-       Imagine  you  are  parsing  two  files,  say  file1.c and file2.c, each
-       includes the file def.h.  The list of files that def.h  includes  might
-       truly  be  different  when def.h is included by file1.c than when it is
-       included by file2.c.  But once makedepend arrives at a list  of  depen-
-       dencies for a file, it is cast in concrete.
+       Imagine you are parsing two files, say _f_i_l_e_1_._c and _f_i_l_e_2_._c_, each
+       includes the file _d_e_f_._h_.  The list of files that _d_e_f_._h includes might
+       truly be different when _d_e_f_._h is included by _f_i_l_e_1_._c than when it is
+       included by _f_i_l_e_2_._c_.  But once mmaakkeeddeeppeenndd arrives at a list of
+       dependencies for a file, it is cast in concrete.
 
-
-AUTHOR
-
+AAUUTTHHOORR
        Todd Brunhoff, Tektronix, Inc. and MIT Project Athena
+
+
+
+4th Berkeley Distribution       __xorgversion__                  MAKEDEPEND(1)

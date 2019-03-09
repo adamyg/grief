@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: apropos.mandoc,v 1.1 2014/11/27 18:19:34 ayoung Exp $
+.\" | $Id: apropos.mandoc,v 1.2 2018/10/01 21:19:56 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -54,28 +54,28 @@
 .Sh SYNOPSIS
 apropos keyword ...
 .Sh DESCRIPTION
-The apropos macro is similar to the BSD command \fIapropos\fR
-(or \fIman -k\fR). It displays a popup window showing a list
-of manual entries which mention the word specified.
+The \fIapropos\fR macro is similar to the BSD command \fIapropos\fR
+(or \fIman -k\fR). It displays a popup window showing a list of
+manual entries which mention the word specified.
 .Pp
-You can use the cursor keys to select an entry, and the manual
-entry for that command will displayed.
+You can use the cursor keys to select an entry, and the manual entry
+for that command will displayed.
 .Pp
-The apropos utility displays the man page name, section number,
-and a short description for each man page whose NAME line
-contains keyword. This information is contained in the
-/usr/share/man/windex database created by catman(1M). If catman(1M)
-was not run, or was run with the -n option, apropos fails. Each
-word is considered separately and the case of letters is ignored.
-Words which are part of other words are considered; for example,
-when looking for `compile', apropos also finds all instances of
-`compiler'. apropos is actually just the '?' option to the man
-macro.
+The apropos utility displays the man page name, section number, and a
+short description for each man page whose NAME line contains keyword.
+This information is contained in the /usr/share/man/windex database
+created by catman(1M). If catman(1M) was not run, or was run with the
+-n option, apropos fails. Each word is considered separately and the
+case of letters is ignored. Words which are part of other words are
+considered; for example, when looking for `compile', apropos also
+finds all instances of `compiler'. apropos is actually just the '?'
+option to the man macro.
 .Sh MENU/KEYS
-This macro can be accessed from the features menu or by
-typing \f(HBapropos\fR at the command prompt.
+This macro can be accessed from the features menu or by typing
+\f(HBapropos\fR at the command prompt.
 .Sh SEE ALSO
+.Xr feature ,
 .Xr explain ,
 .Xr man
 .Sh BUGS
-Should work with the GRIEF documentation as well.
+Should work with the GRIEF internal documentation as well.

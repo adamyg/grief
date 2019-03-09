@@ -1,3 +1,9 @@
+Wed Jan 25 17:23:27 2017 adamy
+
+        * LUA support.
+
+        * setprofile, dynamic profiler loader.
+
 Sun Apr 28 20:19:40 2013 developer
 
         * stream functions, for example; could model from php interface? (http://php.net/manual/en/ref.stream.php)
@@ -275,11 +281,12 @@ Fri Mar 11 10:52:31 2005  developer
                 realpath (done)
                 basename (done)
 
-$Id: ToDo,v 1.15 2014/10/27 23:27:52 ayoung Exp $
+$Id: ToDo,v 1.16 2017/01/25 17:38:45 cvsuser Exp $
 
 /*
  *  Local Variables: ***
  *  mode: changelog ***
  *  End: ***
  */
+
 

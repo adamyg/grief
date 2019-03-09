@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_tree_c,"$Id: vfs_tree.c,v 1.16 2015/02/19 00:17:23 ayoung Exp $")
+__CIDENT_RCSID(gr_vfs_tree_c,"$Id: vfs_tree.c,v 1.18 2018/10/01 22:16:28 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_tree.c,v 1.16 2015/02/19 00:17:23 ayoung Exp $
+/* $Id: vfs_tree.c,v 1.18 2018/10/01 22:16:28 cvsuser Exp $
  * Virtual file system interface - tree management.
  *
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: gm.c,v 1.26 2015/02/24 23:14:37 cvsuser Exp $
+/* $Id: gm.c,v 1.27 2018/10/04 01:34:19 cvsuser Exp $
  * Grief LISP macro compiler.
  *
  *
@@ -90,12 +90,13 @@ void                    sys_abort(void);
 int
 main(int argc, char **argv)
 {
-    MACRO *mp;
+    int arg_index = do_switches(argc, argv);
+    int print_msg = (arg_index < argc - 1);
     int exit_status = 0;
-    int print_msg;
     char obuf[BUFSIZ];
     struct stat sbuf;
-    int arg_index = do_switches(argc, argv);
+    MACRO *mp;
+
 
 #if defined(__EMX__)
     _response(&argc, &argv);
@@ -109,8 +110,6 @@ main(int argc, char **argv)
 
     builtin_init();
 
-    print_msg = (arg_index < argc - 1);
-
     for (; arg_index < argc; ++arg_index) {
         const char *file = argv[arg_index];
         int len = strlen(file);
@@ -122,8 +121,9 @@ main(int argc, char **argv)
             continue;
         }
 
-        if (print_msg)
+        if (print_msg) {
             printf("Compiling %s...\n", file);
+        }
 
         if (cm_push(file) < 0) {
             perror(file);
@@ -144,7 +144,7 @@ main(int argc, char **argv)
          *  the compiled file in the specified directory
          */
         if (output_file && stat(output_file, &sbuf) >= 0 &&
-                (sbuf.st_mode & S_IFMT) == S_IFDIR) {
+                    (sbuf.st_mode & S_IFMT) == S_IFDIR) {
             if (len <= 2 || strcmp(file + len - 2, ".m") != 0) {
                 sprintf(obuf, "%s/%s%s", output_file, file, CM_EXTENSION);
             } else {
@@ -161,11 +161,14 @@ main(int argc, char **argv)
         }
 
         write_output(obuf);
-        if (o_aflg)
+        if (o_aflg) {
             print_perc();
+        }
 
-        /* Dump internal form of macro if asked for */
-        for (mp = macro_tbl; mp < &macro_tbl[macro_cnt]; mp++) {
+        /* 
+         *  Dump internal form of macro if asked for 
+         */
+        for (mp = macro_tbl; mp < &macro_tbl[macro_cnt]; ++mp) {
             if (o_lflg) {
                 list_macro(0, mp->m_list);
                 printf("\n");
@@ -188,30 +191,23 @@ do_switches(int ac, char **av)
         case 'a':
             o_aflg = TRUE;
             break;
-
         case 'l':
             o_lflg = 1;
             break;
-
         case 'q':
             break;
-
         case 'L':
             o_Lflg = 1;
             break;
-
         case 'o':
             output_file = optarg;
             break;
-
         case 'I':
             do_include(optarg);
             break;
-
         case 's':
             o_sflg = TRUE;
             break;
-
         default:
         case 'h':
             usage();
@@ -247,14 +243,14 @@ usage(void)
         "Usage: gm [options] <file> ...",
         "",
         "options:",
-        "   -a              Print atom percentages.",
-        "   -l              List macro expansions.",
-        "   -L              Print detailed disassembly info.",
-        "   -q              Quiet error messages.",
-        "   -s              Print size of " CM_EXTENSION " file only.",
-        "   -o file         Name of compiled output file.",
-        "   -I path         Include path.",
-        "   -h              Command line help.",
+        "   -a          Print atom percentages.",
+        "   -l          List macro expansions.",
+        "   -L          Print detailed disassembly info.",
+        "   -q          Quiet error messages.",
+        "   -s          Print size of " CM_EXTENSION " file only.",
+        "   -o file     Name of compiled output file.",
+        "   -I path     Include path.",
+        "   -h          Command line help.",
         "",
         NULL
         };
@@ -317,7 +313,7 @@ output_error:
             printf("\n*** Macro %d (%s%s%s):\n", i,
                 (macro_tbl[i].m_flags & 0x01 ? "static " : ""),
                 (macro_tbl[i].m_flags & 0x02 ? "replacement " : ""),
-                macro_tbl[i].m_name);
+                    macro_tbl[i].m_name);
         }
 
         lp = macro_tbl[i].m_list;
@@ -360,7 +356,7 @@ output_error:
     m_offsets[macro_cnt] = ftell(fp) - (long) base;
     m_offsets[macro_cnt + 1] = string_count;
 
-    /* Now write out table of string offsets from here */
+    /* table of string offsets */
     for (offset = 0, i = 0; i < string_count; ++i) {
         uint32_t o = WGET32(offset);
 
@@ -370,7 +366,7 @@ output_error:
         offset += strlen(string_table[i]) + 1;
     }
 
-    /* Now write out string table */
+    /* string table */
     for (i = 0; i < string_count; ++i) {
         const int len = strlen(string_table[i]);
 
@@ -515,7 +511,7 @@ disassemble(const char *file)
 
     printf("\n");
     for (i = 0; i < cm->cm_num_macros; ++i) {
-        printf("Macro %d, offset = atom #%d\n", i, (int) vm_offsets[i]);
+        printf("Macro %3d, offset = atom #%d\n", i, (int) vm_offsets[i]);
     }
 
     printf("\n");

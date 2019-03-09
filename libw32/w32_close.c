@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_close_c,"$Id: w32_close.c,v 1.10 2015/02/19 00:17:27 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_close_c,"$Id: w32_close.c,v 1.13 2018/10/12 00:24:39 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 close() system calls
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -146,17 +146,16 @@ __CIDENT_RCSID(gr_w32_close_c,"$Id: w32_close.c,v 1.10 2015/02/19 00:17:27 ayoun
 //      [EIO]
 //          An I/O error occurred while reading from or writing to the file system.
 */
-int
-w32_close(int fd)
+LIBW32_API int
+w32_close(int fildes)
 {
-    HANDLE handle;
+    SOCKET s;
     int ret;
 
-    if (fd < 0) {
+    if (fildes < 0) {
         errno = EBADF;
         ret = -1;
-    } else if (fd >= WIN32_FILDES_MAX ||
-            (handle = (HANDLE) _get_osfhandle(fd)) == (HANDLE)INVALID_HANDLE_VALUE) {
+   } else if (w32_issockfd(fildes, &s)) {
         //
         //  To ensure that all data is sent and received on a connected socket
         //  before it is closed, an application should use shutdown to close the
@@ -170,14 +169,16 @@ w32_close(int fd)
 #define SD_SEND         0x01
 #define SD_BOTH         0x02
 #endif
-        (void) shutdown((SOCKET)fd, SD_BOTH);
-        if ((ret = closesocket((SOCKET)fd)) == SOCKET_ERROR) {
-            w32_errno_net();
+        w32_sockfd_close(fildes, s);
+        (void) shutdown(s, SD_BOTH);
+        if ((ret = closesocket(s)) == SOCKET_ERROR) {
+            w32_neterrno_set();
             ret = -1;
         }
     } else {
-        ret = _close(fd);
+        ret = _close(fildes);
     }
     return ret;
 }
 /*end*/
+

@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: tetris.mandoc,v 1.1 2014/11/27 18:19:44 ayoung Exp $
+.\" | $Id: tetris.mandoc,v 1.2 2018/10/01 21:19:58 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -77,19 +77,23 @@ Pause the game.
 Game summary.
 .El
 .Pp
-In addition to the above keys, the 'i', 'j', and 'l' keys can be
-used to rotate and move the falling block. (Useful on systems where
-keypad keys generate escape sequences which may suffer a delay when playing
+In addition to the above keys, the 'i', 'j', and 'l' keys can be used
+to rotate and move the falling block. (Useful on systems where keypad
+keys generate escape sequences which may suffer a delay when playing
 over a network).
 .Pp
-This macro saves your highest score in your home directory in the file
-\f(HB.tetris\fR.
+This macro saves your highest score in your home directory in the
+file \f(HB.tetris\fR.
 .Pp
-The game is based on an X-windows implementation and apparently should
-conform to the original tetris in terms of scoring.
+The game is based on an X-windows implementation and apparently
+should conform to the original tetris in terms of scoring.
 .Sh MENU/KEYS
-Type 'tetris' at the command prompt or access it from the features menu.
+Type 'tetris' at the command prompt or access it from the features
+menu.
 .Sh BUGS
 I think the window is a bit too high.
 .Pp
 The score screen sometimes gets a little messy.
+.Sh SEE ALSO
+.Xr feature
+

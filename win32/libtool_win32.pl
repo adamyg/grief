@@ -1,16 +1,16 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: libtool_win32.pl,v 1.22 2014/10/27 13:01:18 ayoung Exp $
+# $Id: libtool_win32.pl,v 1.29 2019/01/27 00:00:03 cvsuser Exp $
 # libtool emulation for WIN32 builds.
 #
 #   **Warning**
 #
-#       Functionality is limited to the current GRIEF build requirements.
+#       Functionality is limited to the current GRIEF/MC build requirements.
 #
 #   Example usage:
 #
 #       $(D_LIB)/%.la:      $(D_OBJ)/%.lo
-#               $(LIBTOOL) --mode=link $(CC) $(CFLAGS) -rpath $(D_LIB) -bindir $(D_BIN) -o $@ $(D_OBJ)/$<
+#               $(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -rpath $(D_LIB) -bindir $(D_BIN) -o $@ $(D_OBJ)/$<
 #
 #       $(D_LIB)/%.lo:      %.c
 #               $(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -o $(D_OBJ)/$@ -c $<
@@ -18,6 +18,9 @@
 #       $(D_LIB)/%.lo:      %.cpp
 #               $(LIBTOOL) --mode=compile $(CXX) $(CXXFLAGS) -o $(D_OBJ)/$@ -c $<
 #
+# Copyright Adam Young 2012-2018
+#
+# This file is part of the GRIEF Editor.
 #
 use strict;
 use warnings 'all';
@@ -35,9 +38,10 @@ my $o_features;
 my $o_mode;
 my $o_tag;
 my $o_preserve_dup_deps;
-my $o_quiet;
+my $o_quiet = 1;
 my $o_silent = 0;
 my $o_verbose = 0;
+my $o_keeptmp = 0;
 my $o_debug;
 my $o_version;
 my $o_extra = '';
@@ -86,6 +90,7 @@ Main
             'silent'            => \$o_silent,
             'no-silent'         => sub {$o_silent=0;},
             'v|verbose'         => \$o_verbose,
+            'keeptmp'           => \$o_keeptmp,
             'no-verbose'        => sub {$o_verbose=0;},
             'debug'             => \$o_debug,
             'version'           => \$o_version);
@@ -151,6 +156,11 @@ Compile() {
     while (scalar @ARGV > 1) {
         $_ = shift @ARGV;
 
+        if (/^\@(.*)$/) {                       # @cmdfile
+            OpenCommandFile($1);
+            next;
+        }
+
         if (/^-o(.*)$/) {                       # -o <object>
             my $val = ($1 ? $1 : shift @ARGV);
             if ($val && $val !~ /\./) {
@@ -189,9 +199,6 @@ Compile() {
 
         } elsif (/^[-\/]c/) {                   # -c
             $compile = 1;
-
-##      } elsif (/^[-\/]M/) {                   # -MT[d], -MD[d]
-##
 
         } elsif (/^-prefer-pic$/) {
             # Libtool will try to build only PIC objects.
@@ -236,14 +243,14 @@ Compile() {
     my $true_path = unix2dos(dirname($object))."\\${x_libdir}";
     my $true_object = ${true_path}.basename($object, 'lo')."obj";
 
-    Verbose "cc:       $cc";
+    Verbose "cc:       ${cc}";
     Verbose "defines:";
         foreach(@DEFINES) { Verbose "\t$_"; }
     Verbose "includes:";
         foreach(@INCLUDES) { Verbose "\t$_"; }
-    Verbose "object:   $object";
-    Verbose "  true:   $true_object";
-    Verbose "source:   $source";
+    Verbose "object:   ${object}";
+    Verbose "  true:   ${true_object}";
+    Verbose "source:   ${source}";
     Verbose "...:      @STUFF";
 
     my $cmd = '';
@@ -253,7 +260,7 @@ Compile() {
         foreach (@DEFINES) { $cmd .= " /D$_"; }
         foreach (@INCLUDES) { $cmd .= " /I$_"; }
         $cmd .= " /Fo$true_object";
-        $cmd .= " /Fd".$true_path.'\\';         # VCx0.pdb
+        $cmd .= " /Fd".${true_path}.'\\';       # VCx0.pdb
         $cmd .= " /c $source";
 
     } elsif ('wcl386' eq $cc) {
@@ -280,6 +287,7 @@ Compile() {
     exit($ret)
         if (0 != ($ret = System($cmd)));
 
+    # generate lo artifact
     open(LO, ">${object}") or
         die "cannot create <$object> : $!\n";
     print LO "#libtool win32 generated, do not modify\n";
@@ -288,7 +296,7 @@ Compile() {
     print LO "cmd=$cmd\n";
     print LO "source=$source\n";
     print LO "object=$object\n";
-    print LO "true_object=$true_object\n";
+    print LO "true_object=".dos2unix($true_object)."\n";
     close(LO);
     return 0;
 }
@@ -303,16 +311,23 @@ Link() {
 
     my ($output, $rpath, $bindir, $module);
     my $version_number = '';
-    my $fastcall = 0;                           # fastcall
+    my $wc_fastcall = -1;                       # fastcall (Watcom) convention.
+    my $wc_debugger = '';
     my @OBJECTS;
     my @RESOURCES;
     my @EXPORTS;
+    my $DESCRIPTION;
     my @LIBRARIES;
     my @LIBPATHS;
     my @STUFF;
 
     while (scalar @ARGV) {
         $_ = shift @ARGV;
+
+        if (/^\@(.*)$/) {                       # @cmdfile
+            OpenCommandFile($1);
+            next;
+        }
 
         if (/^-o(.*)$/) {                       # -o <output>
             my $val = ($1 ? $1 : shift @ARGV);
@@ -347,9 +362,6 @@ Link() {
         } elsif (/^-L(.*)/) {
             push @LIBPATHS, $1;
 
-    ##  } elsif (/^[-\/]M/) {                   # -MT[d], -MD[d]
-    ##
-
         } elsif (/^-all-static$/) {
             Error("link: $_ not supported\n");
 
@@ -372,7 +384,11 @@ Link() {
             Error("link: $_ not supported\n");
 
         } elsif (/^-export-fastcall$/) {        # extension
-            $fastcall = 1;
+            if ($wc_fastcall eq -1 or $wc_fastcall eq 1) {
+                $wc_fastcall = 1;
+            } else {
+                Error("link: -export-fastcall and compiler switches are incompatible\n");
+            }
 
         } elsif (/^-export-symbols[=]?(.*)$/) {
             my $val = ($1 ? $1 : shift @ARGV);
@@ -380,7 +396,7 @@ Link() {
                 if (! -f $val);
 
             if ($val =~ /\.def$/i) {            # <name.def>
-                ParseDefFile($val, \@EXPORTS);
+                ParseDefFile($val, \@EXPORTS, \$DESCRIPTION);
             } else {                            # <name.sym>
                 ParseSymFile($val, \@EXPORTS);
             }
@@ -417,11 +433,14 @@ Link() {
                 $rpath = $val;
             }
 
+        } elsif (/^-RTC1$/ && ('cl' eq $cc)) {
+            push @STUFF, $_;
+
         } elsif (/^-R(.*)$/) {
             Error("link: $_ not supported\n");
 
         } elsif (/^-shared$/) {
-            Error("link: $_ not supported\n");
+            #default
 
         } elsif (/^-shrext(.*)$/) {
             Error("link: $_ not supported\n");
@@ -458,6 +477,46 @@ Link() {
             Error("link: $_ not supported\n");
 
         } else {
+            if ('wcl386' eq $cc) {              # process
+                #   Calling convention:
+                #       [3-6]r      register calling convention
+                #       [3-6]s      stack based calling convention
+                #
+                #       ecc         set default calling convention to __cdecl
+                #       ecd         set default calling convention to __stdcall
+                #       ecf         set default calling convention to __fastcall
+                #       ecp         set default calling convention to __pascal
+                #       ecr         set default calling convention to __fortran
+                #       ecs         set default calling convention to __syscall
+                #       ecw         set default calling convention to __watcall (default)
+                #
+                #   Warning:
+                #       The OpenWatcom run-time library utilise either register or stack based (by default register) calls,
+                #       hence use of the alternative convention via a '-ecx' option may create major compatiblity issues.
+                #
+                #       For example atexit() and qsort() shall assume register/stack yet as the default is applied the
+                #       function argument, the caller can siliently pass an alternatively coded function; that shall be
+                #       fatal at run-time.
+                #
+                if (/^-[3456]r$/ or /^-ecw$/) {
+                    if ($wc_fastcall eq -1) {
+                        $wc_fastcall = 1;       # auto-selection
+                    } elsif ($wc_fastcall eq 0) {
+                        Error("link: -export-fastcall and compiler switches are incompatible\n");
+                    }
+
+                } elsif (/^-[3456]s$/ or /^-ec[cdfprs]$/) {
+                    if ($wc_fastcall eq 1) {
+                        Error("link: -export-fastcall and compiler switches are incompatible\n");
+                    }
+
+                #   Debugger support:
+                #       -h[wcd]     Watcom,Codeview,Dwarf
+                #
+                } elsif (/^-h([wc])$/) {
+                    $wc_debugger = $1;
+                }
+            }
             push @STUFF, $_;
         }
     }
@@ -513,13 +572,29 @@ Link() {
     my $basepath = $basedir.'\\'.$basename;
     my $dllname  = "${basename}${version_number}.dll";
     my $dllpath  = "${basepath}${version_number}.dll";
-    my $libpath  = "${basepath}.lib";
+    my $pdbpath  = "${basepath}${version_number}.pdb";
+    my $mappath  = "${basepath}${version_number}.map";
+    my $manifestpath = "${basepath}${version_number}.dll.manifest";
+    my $libpath  = "${basepath}.lib";           # import library
+    my $exppath  = "${basepath}.exp";           # export library
+        # Notes:
+        #   Export (.exp) files contain information about exported functions and data items. When LIB creates an import library, it also creates an .exp file.
+        #   You use the .exp file when you link a program that both exports to and imports from another program, either directly or indirectly.
+        #   If you link with an .exp file, LINK does not produce an import library, because it assumes that LIB already created one.
+        #   For details about .exp files and import libraries, see "Working with Import Libraries and Export Files" (MSDN).
+        #
+    my $sympath  = undef;
 
     if ('cl' eq $cc) {
         #
         #   MSVC/Watcom
         #
-        $cmd = "\"%VCINSTALLDIR%\\bin\\link\" \@$cmdfile";
+        if (defined $ENV{'VCINSTALLDIR'}) {      # 2008
+            $cmd = "\"%VCINSTALLDIR%\\bin\\link\" \@$cmdfile";
+
+        } else {                                 # 2010 plus
+            $cmd = "\"%VCToolsInstallDir%\\bin\\Hostx86\\x86\\link\" \@$cmdfile";
+        }
 
         open(CMD, ">${cmdfile}") or
             die "cannot create <${$cmdfile}>: $!\n";
@@ -528,11 +603,12 @@ Link() {
         print CMD "/ENTRY:_DllMainCRTStartup\@12"."\n";
         print CMD "/OUT:${dllpath}\n";
         print CMD "/IMPLIB:${libpath}\n";
-        print CMD "/MAP:${basepath}.map\n";
+        print CMD "/MAP:${mappath}\n";
         print CMD "/MAPINFO:EXPORTS\n";
         print CMD "/VERSION:${dll_version}\n"
             if ($dll_version);
-        print CMD "/NOLOGO\n";
+        print CMD "/NOLOGO\n"
+            if ($o_quiet || $o_silent);
         print CMD "/INCREMENTAL:NO\n";
         print CMD "/OPT:REF\n";
         print CMD "/DEBUG\n";
@@ -543,7 +619,7 @@ Link() {
         print CMD true_object($_)."\n";
       }
       foreach(@EXPORTS) {
-        print CMD "/EXPORT:$_\n";
+        print CMD "/EXPORT:".MSVCExportDef($_)."\n";
       }
       foreach(@LIBPATHS) {
         print CMD "/LIBPATH:$_\n";
@@ -561,16 +637,44 @@ Link() {
 
         open(CMD, ">${cmdfile}") or
             die "cannot create <${$cmdfile}>: $!\n";
-        print CMD "system   nt_dll\n";
+        print CMD "system   nt_dll initinstance terminstance\n";
+            #
+            #   When a dynamic link library uses the Watcom C/C++ run-time libraries, an automatic data
+            #   segment is created each time a new process accesses the dynamic link library.  For this reason,
+            #   initialization code must be executed when a process accesses the dynamic link library for the
+            #   first time.  To achieve this, "INITINSTANCE" must be specified in the "SYSTEM" directive.
+            #   Similarly, "TERMINSTANCE" must be specified so that the termination code is executed when
+            #   a process has completed its access to the dynamic link library.  If the Watcom C/C++ run-time
+            #   libraries are not used, these options are not required.
+            #
         print CMD "name     ${dllpath}\n";
+     #
+     #  print CMD "option   modname='${modulepath}'\n";
+     #  print CMD "option   copyright=''\n";
+     #  print CMD "option   description=${DESCRIPTION}\n"
+     #      if ($DESCRIPTION);
         print CMD "option   implib=${libpath}\n";
         print CMD "option   version=${dll_version}\n"
             if ($dll_version);
-        print CMD "option   map=${basepath}.map\n";
-        print CMD "option   symfile=${basepath}.sym\n";
+        print CMD "option   map=${mappath}\n";
+        print CMD "option   static\n";          # export statics within the map file.
+        print CMD "option   artificial\n";      # export internal symbols.
+        print CMD "sort\n";                     # sort symbol by address.
         print CMD "option   checksum\n";
-        print CMD "option   quiet\n";
-        print CMD "debug    all\n";
+        print CMD "option   quiet\n"
+            if ($o_quiet || $o_silent);
+      if (! $wc_debugger) {                     # options are exclusive; plus before objects.
+        $sympath = "${basepath}${version_number}.sym";
+        print CMD "option   symfile=${sympath}\n";
+            #XXX: consider default when -d1, allowing use within a production environment
+      } elsif ($wc_debugger eq 'w') {
+        print CMD "debug    watcom all\n";      # 'watcom all' is fatal at times!
+      } elsif ($wc_debugger eq 'c') {
+        print CMD "debug    codeview\n";
+        print CMD "option   cvpack\n";
+      } elsif ($wc_debugger eq 'd') {
+        print CMD "debug    dwarf\n";
+      }
       foreach(@OBJECTS) {
         print CMD "file     ".unix2dos(true_object($_))."\n";
       }
@@ -578,13 +682,7 @@ Link() {
         print CMD "option   resource=".unix2dos(true_object($_))."\n";
       }
       foreach(@EXPORTS) {
-       if (/^(.+)=(.+)$/) {
-        print CMD "export   '$1'='$2'\n";       # quote internal name.
-       } elsif ($fastcall) {
-        print CMD "export   $_=$_"."_\n";       # fastcall.
-       } else {
-        print CMD "export   $_=_$_\n";          # cdecl.
-       }
+        print CMD "export   ".WatcomExportDef($_, $wc_fastcall)."\n";
       }
       foreach(@LIBPATHS) {
         print CMD "libpath  ".unix2dos($_)."\n";
@@ -600,6 +698,11 @@ Link() {
         #
         $cmd = "g++ \@${cmdfile}";
 
+        $libpath = "${basepath}.a";
+        $pdbpath = undef;
+        $exppath = undef;
+        $manifestpath = undef;
+
         open(CMD, ">${cmdfile}") or
             die "cannot create <${cmdfile}>: $!\n";
         print CMD "-o ".dos2unix($dllpath)."\n";
@@ -611,7 +714,7 @@ Link() {
             if (scalar @RESOURCES);
         print CMD "-Wl,--subsystem,windows\n";
         print CMD "-Wl,--out-implib,".dos2unix("${basepath}.a")."\n";
-        print CMD "-Xlinker -Map=".dos2unix($basepath).".map\n";
+        print CMD "-Xlinker -Map=".dos2unix($mappath)."\n";
       foreach(@LIBPATHS) {
         print CMD "-L ".dos2unix($_)."\n";
       }
@@ -655,23 +758,30 @@ Link() {
         exit ($ret);
     }
 
-    unlink $cmdfile, $deffile;
-    open(LO, ">${output}") or
+    # generate la artifact
+    unlink $cmdfile, $deffile
+        if (! $o_keeptmp);
+    open(LA, ">${output}") or
         die "cannot create <$output> : $!\n";
-    print LO "#libtool win32 generated, do not modify\n";
-    print LO "mode=link\n";
-    print LO "cc=$cc\n";
-    print LO "lib=${libpath}\n";
-    print LO "dll=${dllpath}\n";
-    print LO "[objects]\n";
+    print LA "#libtool win32 generated, do not modify\n";
+    print LA "mode=link\n";
+    print LA "cc=$cc\n";
+    print LA "lib=${libpath}\n";
+    print LA "exp=${exppath}\n" if ($exppath);
+    print LA "map=${mappath}\n" if ($mappath);
+    print LA "sym=${sympath}\n" if ($sympath);
+    print LA "dll=${dllpath}\n";
+    print LA "pdb=${pdbpath}\n" if ($pdbpath);
+    print LA "manifest=${manifestpath}\n" if ($manifestpath);
+    print LA "[objects]\n";
     foreach(@OBJECTS) {
-        print LO true_object($_)."\n";
+        print LA true_object($_)."\n";
     }
-    print LO "[libraries]\n";
+    print LA "[libraries]\n";
     foreach(@LIBRARIES) {
-        print LO "$_\n";
+        print LA "$_\n";
     }
-    close(LO);
+    close(LA);
 
     if ('gcc' eq $cc) {
         copy("${basepath}.a", $libpath) or
@@ -687,25 +797,48 @@ Link() {
 }
 
 
+sub
+OpenCommandFile($) {
+    my ($file) = @_;
+    my @NARGV;
+
+    open(CMD, "<${file}") or
+        die "cannot open command line <$file> : $!\n";
+    while (<CMD>) {
+        s/\s*([\n\r]+|$)//;
+        s/^\s+//;
+        next if (!$_ || /^[;\#]/);              # blank or comment
+        push @NARGV, $_;
+    }
+    close(CMD);
+
+    (scalar @NARGV) or
+        die "empty command line <$file>\n";
+
+    unshift(@ARGV, @NARGV);                     # insert results
+}
+
+
 #   Function: ParseDefFile
 #       Parse a definition file.
 #
 #   Syntax:
+#       NAME [application][BASE=address]
+#       LIBRARY [library][BASE=address]
+#       DESCRIPTION "text"
+#       VERSION major[.minor]
+#       /HEAP:reserve[,commit]
 #       EXPORTS
 #           entryname[=internalname] [@ordinal [NONAME]] [PRIVATE] [DATA]
 #           ...
-#       /HEAP:reserve[,commit]
-#       LIBRARY [library][BASE=address]
-#       NAME [application][BASE=address]
 #       SECTIONS
 #           definitions
 #       STACKSIZE reserve[,commit]
 #       STUB:filename
-#       VERSION major[.minor]
 #
 sub
-ParseDefFile($$) {
-    my ($file, $EXPORTSRef) = @_;
+ParseDefFile($$$) {
+    my ($file, $EXPORTSRef, $DESCRIPTIONRef) = @_;
     my $mode = 0;
 
     open(DEF, "<${file}") or
@@ -714,21 +847,29 @@ ParseDefFile($$) {
         s/\s*([\n\r]+|$)//;
         s/^\s+//;
         next if (!$_ || /^;/);                  # blank or comment
+
         if (/^EXPORTS(.*)/) {
             $mode = 1;
             next if (!$1);
             $_ = $1;
 
-        } elsif (/^\/HEAP:(.*)/) {
-            Error("link: $file ($.), HEAP option not supported\n");
+        } elsif (/^NAME\s+(.*)/) {              # same as /OUT
+            Warning("link: $file ($.), 'NAME $1'option ignored\n");
+            next;
+
+        } elsif (/^DESCRIPTION\s+(.*)$/) {
+            $$DESCRIPTIONRef = $1;
+            next;
 
         } elsif (/^LIBRARY\s+(.*)/) {
             Warning("link: $file ($.), 'LIBRARY $1' option ignored\n");
             next;
 
-        } elsif (/^NAME\s+(.*)/) {
-            Warning("link: $file ($.), 'NAME $1'option ignored\n");
-            next;
+        } elsif (/^VERSION\s+.*$/) {            # same as /VERSION
+            Error("link: $file ($.), VERSION option not supported\n");
+
+        } elsif (/^\/HEAP:(.*)/) {
+            Error("link: $file ($.), HEAP option not supported\n");
 
         } elsif (/^SECTIONS/) {
             Error("link: $file ($.), SECTIONS option not supported\n");
@@ -738,17 +879,10 @@ ParseDefFile($$) {
 
         } elsif (/^STUB:+.*$/) {
             Error("link: $file ($.), STUB option not supported\n");
-
-        } elsif (/^VERSION\s+.*$/) {
-            Error("link: $file ($.), VERSION option not supported\n");
-
-        } elsif (/^DESCRIPTION\s+.*$/) {
-            #ignored
-            next;
         }
 
         if (1 == $mode) {                       # EXPORTS
-            s/\s+//i;
+            s/\s+/ /g;
             push @$EXPORTSRef, $_;
         } else {
             Error("link: $file ($.), unexpected text <$_>\n");
@@ -758,13 +892,96 @@ ParseDefFile($$) {
 }
 
 
+#   Function: MSVCExportDef
+#       Generate a MSVC EXPORTY definition from a DEF definition.
+#
+#   Conversion:
+#       entryname[=internalname]@ordinal [DATA] [PRIVATE]
+#           --> /EXPORT:entryname[,@ordinal][,NONAME][,DATA]
+#
+sub
+MSVCExportDef($) {
+    my ($def) = @_;
+    my @parts = split(/ /, $def);
+    my $name = $parts[0];
+    my $ordinal = '';
+    my $ret = "";
+
+    if ($name =~ /\@(.+)$/) {                   # optional ordinal
+        $ordinal = ",@"."$1";
+        $name =~ s/\s*\@.+$//;
+    }
+
+    $ret  = $name;
+    $ret .= ",${parts[1]}"
+        if (scalar @parts >= 2);
+    $ret .= ",${parts[2]}"
+        if (scalar @parts >= 3);
+
+    return $ret;
+}
+
+
+#   Function: WatcomExportDef
+#       Generate a Watcom EXPORT definition from a DEF definition.
+#
+#   Conversion:
+#       entryname[=internalname]@ordinal [DATA] [PRIVATE]
+#           --> entryname[.ordinal]=internalname [PRIVATE]
+#
+sub
+WatcomExportDef($$) {
+    my ($def, $fastcall) = @_;
+    my @parts = split(/ /, $def);
+    my $name = $parts[0];
+    my $ordinal = '';
+    my $ret = "";
+
+    if ($name =~ /\@(.+)$/) {                   # optional ordinal
+        $ordinal = ".$1";
+        $name =~ s/\s*\@.+$//;
+    }
+
+    if ((scalar @parts >= 2 && $parts[1] eq 'DATA') ||
+                (scalar @parts >= 3 && $parts[2] eq 'DATA')) {
+        Warning("link: export ($def), Ordinal ignored on DATA element\n")
+            if ($ordinal);
+        if ($name =~ /^(.+)=(.+)$/) {
+            $ret = "'$1='$2'";                  # quote internal name.
+        } else {
+            $ret = "${name}=_${name}";
+        }
+
+    } else {
+        if ($name =~ /^(.+)=(.+)$/) {           # quote internal name.
+            $ret = "'$1${ordinal}'='$2'";
+
+        } elsif ($fastcall) {                   # fastcall.
+            $ret = "${name}${ordinal}=${name}_";
+
+        } else {                                # cdecl.
+            $ret = "${name}${ordinal}=_${name}";
+        }
+    }
+
+    if ((scalar @parts >= 2 && $parts[1] eq 'PRIVATE') ||
+            (scalar @parts >= 3 && $parts[2] eq 'PRIVATE')) {
+        $ret .= " PRIVATE";                     # otherwise RESIDENT
+    }
+
+    return $ret;
+}
+
+
+
+
 sub
 ParseSymFile($$) {
     my ($file, $EXPORTSRef);
     my $mode = 0;
 
     open(SYM, "<${file}") or
-        die "cannot open <$file> : $!\n";
+        die "cannot open symbol file <$file> : $!\n";
     while (<SYM>) {
         s/\s*([\n\r]+|$)//;
         s/^\s+//;
@@ -788,6 +1005,11 @@ Clean() {
     while (scalar @ARGV) {
         $_ = shift @ARGV;
 
+        if (/^\@(.*)$/) {                       # @cmdfile
+            OpenCommandFile($1);
+            next;
+        }
+
         if (/\.lo$/ || /\.o$/ || /\.obj$/ || /\.res$/) {
             push @OBJECTS, $_;
 
@@ -799,15 +1021,43 @@ Clean() {
     Error("clean: unsupported remove command <$rm>")
         if (!('rm' eq $rm || 'rm.exe' eq $rm));
 
-    foreach(@OBJECTS) {
-        my $object = $_;
-        if (-f $object) {
-            my $true_object = true_object($object);
-            unlink($object, $true_object);
-            rmdir(dirname($true_object));
+    foreach(@LIBRARIES) {
+        my $lib = $_;
+        if ($lib =~ /\.la$/ && -f $lib) {       # library artifact
+            open(LA, "<${lib}") or
+                die "cannot open library artifact <${lib}> : $!\n";
+            while (<LA>) {
+                s/\s*([\n\r]+|$)//;
+                if (/^(lib|dll|map|sym|pdb|exp|manifest)=(.*)$/) {
+                    Verbose "rm: $2";
+                    unlink($2);
+                }
+            }
+            close(LA);
         }
+        Verbose "rm: ${lib}";
+        unlink($lib);
     }
 
+    my %dirs = ();
+    foreach(@OBJECTS) {
+        my $obj = $_;
+        if ($obj =~ /\.lo$/ && -f $obj) {       # object artifact
+            my $true_object = true_object($obj);
+            my $extra = $true_object;
+            $dirs{dirname($true_object)}++;
+            Verbose "rm: ${true_object}";
+            unlink($true_object);
+            unlink($extra)
+                if ($extra =~ s/\.obj$/\.mbr/); # TODO, toolchain specific
+        }
+        Verbose "rm: ${obj}";
+        unlink($obj);
+    }
+
+    foreach(keys %dirs) {
+        rmdir($_);
+    }
     return 0;
 }
 
@@ -824,7 +1074,7 @@ true_object($)          #(lo)
     return $lo
         if ($lo !~ /.lo$/);
     open(LO, "<${lo}") or
-        die "cannot open <$lo> : $!\n";
+        die "cannot open object image <$lo> : $!\n";
     while (<LO>) {
         s/\s*([\n\r]+|$)//;
         next if (!$_ || /^\s#/);
@@ -871,11 +1121,12 @@ Help {
     print STDERR "@_\n\n"
         if (@_);
     print STDERR << "EOF";
-Minimal win32 libtool emulation (version: 0.3)
+Minimal windows libtool emulation (version: 0.41)
 
 usage:  libtool.pl [options] ...
 
---help for help
+    --help for help
+
 EOF
     exit(1);
 }
@@ -886,7 +1137,7 @@ Usage {
     print STDERR "@_\n\n"
         if (@_);
     print STDERR << "EOF";
-Minimal win32 libtool emulation (version: 0.3)
+Minimal win32 libtool emulation (version: 0.41)
 
 usage:  libtool.pl [options] ...
 
@@ -948,6 +1199,9 @@ Options:
    -v, --verbose
        Print out progress and informational messages (enabled by default), as
        well as additional messages not ordinary seen by default.
+
+   --keeptmp
+       Keep temporary working files.
 
    --no-quiet, --no-silent
        Print out the progress and informational messages that are seen by default.
@@ -1294,3 +1548,4 @@ Error {
 }
 
 #end
+

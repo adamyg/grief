@@ -1,10 +1,11 @@
 /* Generated file. Do not edit. */
 
-static teken_state_t	teken_state_2;
 static teken_state_t	teken_state_6;
-static teken_state_t	teken_state_1;
+static teken_state_t	teken_state_2;
 static teken_state_t	teken_state_7;
+static teken_state_t	teken_state_1;
 static teken_state_t	teken_state_8;
+static teken_state_t	teken_state_9;
 static teken_state_t	teken_state_3;
 static teken_state_t	teken_state_5;
 static teken_state_t	teken_state_4;
@@ -22,6 +23,26 @@ teken_state_init(teken_t *t, teken_char_t c)
 		teken_subr_regular_character(t, c);
 		break;
 	}
+}
+
+/* '^[[ ' */
+static void
+teken_state_6(teken_t *t, teken_char_t c)
+{
+
+	if (teken_state_numbers(t, c))
+		return;
+
+	switch (c) {
+	case 'q': /* DECSCUSR: Set Cursor Style */
+		teken_subr_set_cursor_style(t, t->t_curnum < 1 ? 0 : t->t_nums[0]);
+		break;
+	default:
+		teken_printf("Unsupported sequence in teken_state_6: %u\n", (unsigned int)c);
+		break;
+	}
+
+	teken_state_switch(t, teken_state_init);
 }
 
 /* '^[[' */
@@ -138,8 +159,11 @@ teken_state_2(teken_t *t, teken_char_t c)
 	case 'T': /* SD: Pan Up */
 		teken_subr_pan_up(t, (t->t_curnum < 1 || t->t_nums[0] == 0) ? 1 : t->t_nums[0]);
 		break;
+	case ' ':
+		teken_state_switch(t, teken_state_6);
+		return;
 	case '=':
-		teken_state_switch(t, teken_state_8);
+		teken_state_switch(t, teken_state_9);
 		return;
 	case '>':
 		teken_state_switch(t, teken_state_3);
@@ -157,7 +181,7 @@ teken_state_2(teken_t *t, teken_char_t c)
 
 /* '^[(' */
 static void
-teken_state_6(teken_t *t, teken_char_t c)
+teken_state_7(teken_t *t, teken_char_t c)
 {
 
 	switch (c) {
@@ -177,7 +201,7 @@ teken_state_6(teken_t *t, teken_char_t c)
 		teken_subr_g0_scs_us_ascii(t);
 		break;
 	default:
-		teken_printf("Unsupported sequence in teken_state_6: %u\n", (unsigned int)c);
+		teken_printf("Unsupported sequence in teken_state_7: %u\n", (unsigned int)c);
 		break;
 	}
 
@@ -230,10 +254,10 @@ teken_state_1(teken_t *t, teken_char_t c)
 		teken_state_switch(t, teken_state_2);
 		return;
 	case '(':
-		teken_state_switch(t, teken_state_6);
+		teken_state_switch(t, teken_state_7);
 		return;
 	case ')':
-		teken_state_switch(t, teken_state_7);
+		teken_state_switch(t, teken_state_8);
 		return;
 	case '#':
 		teken_state_switch(t, teken_state_4);
@@ -248,7 +272,7 @@ teken_state_1(teken_t *t, teken_char_t c)
 
 /* '^[)' */
 static void
-teken_state_7(teken_t *t, teken_char_t c)
+teken_state_8(teken_t *t, teken_char_t c)
 {
 
 	switch (c) {
@@ -268,7 +292,7 @@ teken_state_7(teken_t *t, teken_char_t c)
 		teken_subr_g1_scs_us_ascii(t);
 		break;
 	default:
-		teken_printf("Unsupported sequence in teken_state_7: %u\n", (unsigned int)c);
+		teken_printf("Unsupported sequence in teken_state_8: %u\n", (unsigned int)c);
 		break;
 	}
 
@@ -277,30 +301,36 @@ teken_state_7(teken_t *t, teken_char_t c)
 
 /* '^[[=' */
 static void
-teken_state_8(teken_t *t, teken_char_t c)
+teken_state_9(teken_t *t, teken_char_t c)
 {
 
 	if (teken_state_numbers(t, c))
 		return;
 
 	switch (c) {
+	case 'A': /* C25BORD: Cons25 set border */
+		teken_subr_cons25_set_border(t, t->t_curnum < 1 ? 0 : t->t_nums[0]);
+		break;
 	case 'B': /* C25BLPD: Cons25 set bell pitch duration */
 		teken_subr_cons25_set_bell_pitch_duration(t, t->t_curnum < 1 ? 0 : t->t_nums[0], t->t_curnum < 2 ? 0 : t->t_nums[1]);
 		break;
-	case 'F': /* C25ADFG: Cons25 set adapter foreground */
-		teken_subr_cons25_set_adapter_foreground(t, t->t_curnum < 1 ? 0 : t->t_nums[0]);
+	case 'C': /* C25GCS: Cons25 set global cursor shape */
+		teken_subr_cons25_set_global_cursor_shape(t, t->t_curnum, t->t_nums);
 		break;
-	case 'G': /* C25ADBG: Cons25 set adapter background */
-		teken_subr_cons25_set_adapter_background(t, t->t_curnum < 1 ? 0 : t->t_nums[0]);
+	case 'F': /* C25DFG: Cons25 set default foreground */
+		teken_subr_cons25_set_default_foreground(t, t->t_curnum < 1 ? 0 : t->t_nums[0]);
 		break;
-	case 'S': /* C25CURS: Cons25 set cursor type */
-		teken_subr_cons25_set_cursor_type(t, t->t_curnum < 1 ? 0 : t->t_nums[0]);
+	case 'G': /* C25DBG: Cons25 set default background */
+		teken_subr_cons25_set_default_background(t, t->t_curnum < 1 ? 0 : t->t_nums[0]);
+		break;
+	case 'S': /* C25LCT: Cons25 set local cursor type */
+		teken_subr_cons25_set_local_cursor_type(t, t->t_curnum < 1 ? 0 : t->t_nums[0]);
 		break;
 	case 'T': /* C25MODE: Cons25 set terminal mode */
 		teken_subr_cons25_set_terminal_mode(t, t->t_curnum < 1 ? 0 : t->t_nums[0]);
 		break;
 	default:
-		teken_printf("Unsupported sequence in teken_state_8: %u\n", (unsigned int)c);
+		teken_printf("Unsupported sequence in teken_state_9: %u\n", (unsigned int)c);
 		break;
 	}
 

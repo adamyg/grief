@@ -1,13 +1,13 @@
-#ifndef GR_MMAN_H_INCLUDED
-#define GR_MMAN_H_INCLUDED
+#ifndef LIBW32_SYS_MMAN_H_INCLUDED
+#define LIBW32_SYS_MMAN_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_mman_h,"$Id: mman.h,v 1.8 2015/02/19 00:17:38 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_sys_mman_h,"$Id: mman.h,v 1.10 2018/09/29 02:25:24 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 mmap implementation
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -22,6 +22,7 @@ __CPRAGMA_ONCE
  * ==end==
  */
 
+#include <sys/utypes.h>                         /* off_t */
 #include <stddef.h>                             /* size_t */
 
 /*
@@ -49,16 +50,14 @@ __CPRAGMA_ONCE
 
 /* other flags to mmap (or-ed in to MAP_SHARED or MAP_PRIVATE) */
 #define MAP_FIXED       0x10                    /* user assigns address */
+#define MAP_ANONYMOUS   0x20                    /* allocated from memory, swap space */
+#define MAP_ANON        MAP_ANONYMOUS
 #define MAP_NORESERVE   0x40                    /* don't reserve needed swap area */
-
-/* these flags not yet implemented */
-#define MAP_RENAME      0x20                    /* rename private pages to file */
 
 /* return value on failure */
 #if !defined (MAP_FAILED)                       /* Failure return value. */
 #define MAP_FAILED      ((void *) -1)
 #endif
-
 
 /* flags to msync */
 #define MS_SYNC         0x4                     /* wait for msync */
@@ -69,13 +68,14 @@ __CPRAGMA_ONCE
 
 __BEGIN_DECLS
 
-void * __PDECL          mmap __P((void *addr, size_t len, int prot, int flags, int fildes, off_t off));
-int __PDECL             mprotect __P((void *addr, size_t len, int prot));
-int __PDECL             msync __P((void *addr, size_t len, int flags));
-int __PDECL             munmap __P((void *addr, size_t len));
-int __PDECL             mlock __P((const void *, size_t));
-int __PDECL             munlock __P((const void *, size_t));
+LIBW32_API void *       mmap __P((void *addr, size_t len, int prot, int flags, int fildes, off_t off));
+LIBW32_API int          mprotect __P((void *addr, size_t len, int prot));
+LIBW32_API int          msync __P((void *addr, size_t len, int flags));
+LIBW32_API int          munmap __P((void *addr, size_t len));
+LIBW32_API int          mlock __P((const void *, size_t));
+LIBW32_API int          munlock __P((const void *, size_t));
 
 __END_DECLS
 
-#endif /*GR_MMAN_H_INCLUDED*/
+#endif /*LIBW32_SYS_MMAN_H_INCLUDED*/
+

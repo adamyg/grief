@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: hier.mandoc,v 1.1 2014/11/27 18:19:38 ayoung Exp $
+.\" | $Id: hier.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -52,9 +52,9 @@
 .Nm hier
 .Nd language hierarchy charts.
 .Sh DESCRIPTION
-The \f(HBhier\fR macro gives the user a selection of precedence and
+The \fIhier\fR macro gives the user a selection of precedence and
 associativity tables for the following languages.
-.Bl -bullet -offset 1 -width xxxxxxxx
+.Bl -bullet -offset 1 -width xxxx
 .It
 C
 .It
@@ -68,6 +68,7 @@ Perl
 .El
 .Pp
 .Sh SEE ALSO
+.Xr feature ,
 .Xr program ,
 .Xr ascii ,
 .Xr chier

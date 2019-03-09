@@ -1,0 +1,5 @@
+; libduktape library
+EXPORTS
+; global variables
+;   variables need to be explicitly exported unlike functions.
+; end

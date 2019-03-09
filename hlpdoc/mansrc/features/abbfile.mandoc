@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: abbfile.mandoc,v 1.1 2014/11/27 18:19:34 ayoung Exp $
+.\" | $Id: abbfile.mandoc,v 1.2 2018/10/01 21:19:56 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -52,17 +52,17 @@
 .Nm abbfile
 .Nd File Abbreviation.
 .Sh DESCRIPTION
-This menu is selected because you have partially typed a
-filename at the prompt.  This menu is a selection of the
-files in the current directory or within the directory
-partially typed by you.
+This \fImenu\fR is selected because you have partially typed a
+filename at the prompt. This menu is a selection of the files in the
+current directory or within the directory partially typed by you.
 .Pp
-You can use the arrow keys to scroll through the
-selection. Pressing <Enter> on a filename will the
-current prompt to treat that as if you had typed it
-in yourself.
+You can use the arrow keys to scroll through the selection. Pressing
+<Enter> on a filename will the current prompt to treat that as if you
+had typed it in yourself.
 .Pp
-Filenames ending in '/' indicate directories. Selecting a
-directory will update the menu display with all files in
-that directory.  Selecting the '..' entry allows you to
-walk up the directory path.
+Filenames ending in '/' indicate directories. Selecting a directory
+will update the menu display with all files in that directory.
+Selecting the '..' entry allows you to walk up the directory path.
+.Sh SEE ALSO
+.Xr feature
+

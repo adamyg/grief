@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_ino_c,"$Id: w32_ino.c,v 1.8 2015/02/19 00:17:29 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_ino_c,"$Id: w32_ino.c,v 1.11 2018/10/12 00:24:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 ino implementation
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -49,7 +49,7 @@ __CIDENT_RCSID(gr_w32_ino_c,"$Id: w32_ino.c,v 1.8 2015/02/19 00:17:29 ayoung Exp
  *  w32_ino_has ---
  *      Generate a file inode based on a simple hash of the specific file-name.
  */
-ino_t
+LIBW32_API ino_t
 w32_ino_hash(const char *name)
 {
     const char *p = name;
@@ -101,7 +101,7 @@ w32_ino_hash(const char *name)
  *      replaced file, is retained as the file ID of the resulting file.
  *
  */
-ino_t
+LIBW32_API ino_t
 w32_ino_gen(const DWORD fileIndexLow, const DWORD fileIndexHigh)
 {
     //
@@ -141,7 +141,7 @@ w32_ino_gen(const DWORD fileIndexLow, const DWORD fileIndexHigh)
  *  w32_ino_hande ---
  *      Generate a file inode for the specified open file 'handle'.
  */
-ino_t
+LIBW32_API ino_t
 w32_ino_handle(HANDLE handle)
 {
     BY_HANDLE_FILE_INFORMATION fi = {0};
@@ -157,7 +157,7 @@ w32_ino_handle(HANDLE handle)
  *  w32_ino_fildes ---
  *      Generate a file inode for the specified open osf file 'fildes'.
  */
-ino_t
+LIBW32_API ino_t
 w32_ino_fildes(int fildes)
 {
     HANDLE handle;
@@ -176,14 +176,14 @@ w32_ino_fildes(int fildes)
  *  w32_ino_file ---
  *      Generate a file inode for the specified file 'path'.
  */
-ino_t
+LIBW32_API ino_t
 w32_ino_file(const char *path)
 {
     HANDLE handle;
 
     if (NULL != path && *path &&
             INVALID_HANDLE_VALUE != (handle =
-                CreateFile(path, 0, 0, NULL, OPEN_EXISTING,
+                CreateFileA(path, 0, 0, NULL, OPEN_EXISTING,
                             FILE_FLAG_BACKUP_SEMANTICS | FILE_ATTRIBUTE_READONLY, NULL))) {
         const ino_t ino = w32_ino_handle(handle);
         CloseHandle(handle);
@@ -191,3 +191,6 @@ w32_ino_file(const char *path)
     }
     return 0;
 }
+
+/*end*/
+

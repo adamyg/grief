@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: outdent.mandoc,v 1.1 2014/11/27 18:19:42 ayoung Exp $
+.\" | $Id: outdent.mandoc,v 1.2 2018/10/01 21:19:58 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -52,13 +52,13 @@
 .Nm outdent
 .Nd Outdent a region, shifts a block one tab stop to the left.
 .Sh DESCRIPTION
-This macro is used to shift a hilighted region one tab stop to
-the left. This is typically used when writing block-structured code
-and some code is moved to a separate function where it does not need to
-be indent as much.
+The \foutdent\fR macro is used to shift a hilighted region one tab
+stop to the left. This is typically used when writing
+block-structured code and some code is moved to a separate function
+where it does not need to be indent as much.
 .Sh MENU/KEYS
-This macro can be accessed by hitting the \f(HB<Back-Tab>\fR key whilst a
-block is hilighted, or from the features menu.
+This macro can be accessed by hitting the \f(HB<Back-Tab>\fR key
+whilst a block is hilighted, or from the features menu.
 .Sh BUGS
 Outdenting does not work properly when you use space filling. It only
 seems to remove tabs.

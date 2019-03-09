@@ -1,14 +1,14 @@
-#ifndef GR_CDEFS_H_INCLUDED
-#define GR_CDEFS_H_INCLUDED
+#ifndef LIBW32_SYS_CDEFS_H_INCLUDED
+#define LIBW32_SYS_CDEFS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_cdefs_h,"$Id: cdefs.h,v 1.12 2015/02/19 00:17:36 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_sys_cdefs_h,"$Id: cdefs.h,v 1.15 2018/09/30 23:24:13 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*-
  *
  * win32 declaration helpers
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -34,10 +34,40 @@ __CPRAGMA_ONCE
 #pragma warning(disable:4115)   /* forward reference of struct * */
 #endif
 
-/*
+/* 
+ *  Library binding.
+ */
+#if !defined(LIBW32_API)
+
+#if defined(LIBW32_DYNAMIC)
+    #if defined(LIBW32_LIBRARY)     /* library source */
+        #define LIBW32_API __declspec(dllexport)
+    #else
+        #define LIBW32_API __declspec(dllimport)
+    #endif
+
+#else   /*static*/
+    #if defined(LIBW32_LIBRARY)     /* library source */
+        #ifndef LIBW32_STATIC                   /* verify STATIC/DYNAMIC configuration */
+        #error  LIBW32 static library yet LIB32_STATIC not defined.
+        #endif
+        #ifdef _WINDLL                          /*verify target configuration */
+        #error  LIBW32 static library yet _WINDLL defined.
+        #endif
+    #endif
+#endif
+
+#ifndef LIBW32_API
+#define LIBW32_API
+#endif
+
+#endif //!LIBW32_API
+
+
+/* 
  *  Binding:
  *
- *  Usage:
+ * Usage:
  *      __BEGIN_DECLS
  *      void my_declarations();
  *      __END_DECLS
@@ -66,7 +96,7 @@ __CPRAGMA_ONCE
  *
  * Usage:
  *      void func_prototype();
- *      #ifdef  __PDECL2                // Alternative form for typedefs
+ *      #ifdef  __PDECL2                        // Alternative form for typedefs
  *      typedef void (__PDECL2 *func_typedef)();
  *      #else
  *      typedef void __PDECL (*func_typdef)();
@@ -75,8 +105,8 @@ __CPRAGMA_ONCE
 #ifndef __PDECL
 #  if defined(WIN32)
 #     if defined(_MSC_VER) || defined(__WATCOMC__)
-#        define __PDECL         __cdecl /* Calling convention */
-#        define __PDECL2        __cdecl /* Alternative form for typedefs */
+#        define __PDECL         __cdecl         /* Calling convention */
+#        define __PDECL2        __cdecl         /* Alternative form for typedefs */
 #     elif defined(__MINGW32__)
 #        define __PDECL
 #        define __PDECL2
@@ -139,16 +169,16 @@ __CPRAGMA_ONCE
              */
 #       define __PUNUSED(x) \
             /*lint -e527 -e530 */ \
-            { (x) = (x); } \
+            { (x) = (x); }        \
             /*lint +e527 +e530 */
 
 #  elif ((defined(_MSC_VER) && _MSC_VER >= 800) || \
          defined(__BORLANDC__) || defined(__PARADIGM__))
-#       define __PUNUSED(x)     (void)x
+#       define __PUNUSED(x)     (void)x;
 #  elif defined(__WATCOMC__)
-#       define __PUNUSED(x)     (void)x
+#       define __PUNUSED(x)     (void)x;
 #  elif defined(__GNUC__)
-#       define __PUNUSED(x)     (void)x
+#       define __PUNUSED(x)     (void)x;
 #       define __PUNUSED_ATTRIBUTE__    __attribute__((unused))
 #  endif
 
@@ -158,6 +188,9 @@ __CPRAGMA_ONCE
 #  ifndef __PUNUSED_ATTRIBUTE__
 #        define __PUNUSED_ATTRIBUTE__   /*default*/
 #  endif
+#endif
+#ifndef __CUNUSED
+#  define __CUNUSED(x)          __PUNUSED(x)
 #endif
 
 
@@ -178,7 +211,7 @@ __CPRAGMA_ONCE
 #endif
 
 
-/* Compiler-dependent structure pack helper, see also sys/pack?.h:
+/* Structure pack helper, see also sys/pack?.h:
  *
  * Usage:
  *      #include <sys/pack1.h>
@@ -222,6 +255,11 @@ __CPRAGMA_ONCE
 #ifndef _DIAGASSERT
 #define _DIAGASSERT(_a)         /**/
 #endif
+
+#ifndef __RCSID
+#define __RCSID(__rcsid)        /**/
+#endif
+
 
 /*
  * Compiler-dependent macros to help declare dead (non-returning) and
@@ -278,4 +316,4 @@ __CPRAGMA_ONCE
 #define __printf0like(fmtarg, firstvararg)
 #endif
 
-#endif /*GR_CDEFS_H_INCLUDED*/
+#endif /*LIBW32_SYS_CDEFS_H_INCLUDED*/

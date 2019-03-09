@@ -1,14 +1,14 @@
 #ifndef GR_ENDIAN_H_INCLUDED
 #define GR_ENDIAN_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_endian_h,"$Id: endian.h,v 1.6 2015/02/19 00:17:37 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_sys_endian_h,"$Id: endian.h,v 1.9 2018/10/01 00:00:05 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*-
  *
  * win32 <sys/endian.h> implementation
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -28,7 +28,7 @@ __CPRAGMA_ONCE
 #define _LITTLE_ENDIAN      1234
 #define _BIG_ENDIAN         4321
 #if defined(_BSD_SOURCE)
-#define LITTLE_ENDIAN       _LITTLE_ENDIAN     
+#define LITTLE_ENDIAN       _LITTLE_ENDIAN
 #define BIG_ENDIAN          _BIG_ENDIAN
 #endif
 

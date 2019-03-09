@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.53 2014/11/16 17:28:37 ayoung Exp $")
+__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.55 2018/11/18 00:19:39 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: builtin.c,v 1.53 2014/11/16 17:28:37 ayoung Exp $
+/* $Id: builtin.c,v 1.55 2018/11/18 00:19:39 cvsuser Exp $
  * Builtin expresssion evaluation.
  *
  *
@@ -273,22 +273,22 @@ execute_macro(const LIST *lp)
                 if (0 == x_evtactive++) {
                     while (x_evtno) {
                         /*
-                        *  REG_SIGUSR1, REG_SIGUSR2, REG_SIGCTRLC ...
-                        */
+                         *  REG_SIGUSR1, REG_SIGUSR2, REG_SIGCTRLC ...
+                         */
                         const unsigned head = (x_evthead++ % REGEVTNUM),
-                            event = x_evtqueue[head];
+                            evtno = x_evtqueue[head];
                         --x_evtno;
 
-                        switch (event) {
+                        switch (evtno) {
                         case REG_CTRLC:
                             if (! handling_ctrlc) {
                                 handling_ctrlc = TRUE;
-                                trigger(event);
+                                trigger(evtno);
                                 handling_ctrlc = FALSE;
                             }
                             break;
                         default:
-                            trigger(event);
+                            trigger(evtno);
                             break;
                         }
                     }
@@ -472,7 +472,7 @@ exec_macro:
         stack->name   = mptr->m_name;
         stack->caller = NULL;
         stack->argv   = lp_argv;
-        stack->argc   = -1;	                /* future use */
+        stack->argc   = -1;                     /* future use */
         stack->level  = x_nest_level;
     }
     omsglevel = x_msglevel;                     /* message level */
@@ -972,3 +972,4 @@ set_hooked(void)
     assert(cur_cmap  != NULL);
 }
 /*end*/
+

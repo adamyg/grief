@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_spell_aspell_c,"$Id: spell_aspell.c,v 1.10 2014/10/22 02:33:19 ayoung Exp $")
+__CIDENT_RCSID(gr_spell_aspell_c,"$Id: spell_aspell.c,v 1.12 2018/10/01 09:55:43 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: spell_aspell.c,v 1.10 2014/10/22 02:33:19 ayoung Exp $
+/* $Id: spell_aspell.c,v 1.12 2018/10/01 09:55:43 cvsuser Exp $
  * Spell implementation - aspell driver.
  *
  *
@@ -467,3 +467,4 @@ spell_aspell_init(const char **langs)
 }
 
 #endif  /* !LIBSPELL */
+

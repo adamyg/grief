@@ -1,14 +1,14 @@
-#ifndef GR_WIN32_ICONV_H_INCLUDED
-#define GR_WIN32_ICONV_H_INCLUDED
+#ifndef LIBW32_WIN32_ICONV_H_INCLUDED
+#define LIBW32_WIN32_ICONV_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_iconv_h,"$Id: win32_iconv.h,v 1.6 2015/02/19 00:17:34 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_win32_iconv_h,"$Id: win32_iconv.h,v 1.10 2018/10/11 01:46:32 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 iconv dynamic loader.
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -32,28 +32,29 @@ __CPRAGMA_ONCE
  */
 
 #include <sys/cdefs.h>
-#include <unistd.h>
+#include <sys/utypes.h>
 
-__CBEGIN_DECLS
+__BEGIN_DECLS
 
-extern int              w32_iconv_connect(int verbose);
-extern void             w32_iconv_shutdown(void);
+LIBW32_API int              w32_iconv_connect(int verbose);
+LIBW32_API void             w32_iconv_shutdown(void);
 
-extern void *           w32_iconv_open(const char *to, const char *from);
-extern int              w32_iconv(void *fd, const char **from, size_t *fromlen, char **to, size_t *tolen);
-extern void             w32_iconv_close(void *fd);
+LIBW32_API void *           w32_iconv_open(const char *to, const char *from);
+LIBW32_API int              w32_iconv(void *fd, const char **from, size_t *fromlen, char **to, size_t *tolen);
+LIBW32_API void             w32_iconv_close(void *fd);
+
+LIBW32_API void *           w32native_iconv_open(const char *tocode, const char *fromcode);
+LIBW32_API int              w32native_iconv_close(void *fd);
+LIBW32_API size_t           w32native_iconv(void *fd, const char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft);
 
 #if defined(WIN32_ICONV_MAP)
 typedef void *iconv_t;
 
-#define iconv_open(__to, __from) \
-                        w32_iconv_open(__to, __from)
-#define iconv(__fd, __from, __fromlen, __to, __tolen) \
-                        w32_iconv(__fd, __from, __fromlen, __to, __tolen)
-#define iconv_close(__fd) \
-                        w32_iconv_close(__fd)
+#define iconv_open(__to, __from) w32_iconv_open(__to, __from)
+#define iconv(__fd, __from, __fromlen, __to, __tolen) w32_iconv(__fd, __from, __fromlen, __to, __tolen)
+#define iconv_close(__fd)   w32_iconv_close(__fd)
 #endif /*WIN32_ICONV_MAP*/
 
-__CEND_DECLS
+__END_DECLS
 
-#endif /*GR_WIN32_ICONV_H_INCLUDED*/
+#endif /*LIBW32_WIN32_ICONV_H_INCLUDED*/

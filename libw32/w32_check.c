@@ -1,11 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_check_c,"$Id: w32_check.c,v 1.14 2015/02/19 00:17:27 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_check_c,"$Id: w32_check.c,v 1.17 2018/10/11 01:49:38 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
- * win32 system io functionality, compile time checks
+ * win32 system io functionality
+ * Note: NOT CALLED -- purely a compile time check of the mode namespace
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -39,7 +40,7 @@ __CIDENT_RCSID(gr_w32_check_c,"$Id: w32_check.c,v 1.14 2015/02/19 00:17:27 ayoun
 #define _WIN32_WINNT        0x0501              /* enable xp+ features */
 #endif
 
-#include <config.h>
+#include "w32config.h"
 #include <win32_internal.h>
 
 #include <sys/endian.h>
@@ -109,7 +110,6 @@ __CIDENT_RCSID(gr_w32_check_c,"$Id: w32_check.c,v 1.14 2015/02/19 00:17:27 ayoun
 #error missing <unistd.h>
 #endif
 
-
 #include <sys/pack1.h>
 struct __packed_pre__ mypackedstruct {
     int field;
@@ -169,5 +169,6 @@ __w32_check_attr(mode_t mode)
     }
     return FALSE;
 }
+
 /*end*/
 

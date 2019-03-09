@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crlex_c,"$Id: crlex.c,v 1.33 2014/10/22 02:33:28 ayoung Exp $")
+__CIDENT_RCSID(gr_crlex_c,"$Id: crlex.c,v 1.34 2018/10/20 01:05:15 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crlex.c,v 1.33 2014/10/22 02:33:28 ayoung Exp $
+/* $Id: crlex.c,v 1.34 2018/10/20 01:05:15 cvsuser Exp $
  * Lexical analyser for the GRUNCH language.
  *
  *
@@ -1839,7 +1839,7 @@ convertfloat(numeric_t *value, int type, const char *buffer, unsigned length)
         lret = strtold(buffer, &end);
         if (ERANGE == errno) {
 #if defined(HUGE_VALL)
-            value->overflow = (ret == -HUGE_VALL ? -1 : 1);
+            value->overflow = (lret == -HUGE_VALL ? -1 : 1);
 #else
             value->overflow = 1;
 #endif

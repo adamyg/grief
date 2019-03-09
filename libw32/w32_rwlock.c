@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_rwlock_c,"$Id: w32_rwlock.c,v 1.7 2015/02/19 00:17:31 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_rwlock_c,"$Id: w32_rwlock.c,v 1.10 2018/10/12 00:19:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 rwlock functionality/emulation
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -36,53 +36,164 @@ __CIDENT_RCSID(gr_w32_rwlock_c,"$Id: w32_rwlock.c,v 1.7 2015/02/19 00:17:31 ayou
  */
 
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT        0x0501              /* enable xp+ features */
+#define _WIN32_WINNT        0x0601              /* enable vista features */
 #endif
+
 #include <sys/rwlock.h>
-#define WINDOWS_MEAN_AND_LEAN
+
+#define  WINDOWS_MEAN_AND_LEAN
 #include <windows.h>
 #include <assert.h>
 
+typedef void (WINAPI *InitializeSRWLock_t)(PSRWLOCK);
+typedef void (WINAPI *AcquireSRWLockShared_t)(PSRWLOCK);
+typedef void (WINAPI *ReleaseSRWLockShared_t)(PSRWLOCK);
+typedef void (WINAPI *AcquireSRWLockExclusive_t)(PSRWLOCK);
+typedef void (WINAPI *ReleaseSRWLockExclusive_t)(PSRWLOCK);
+
 typedef struct {
-    unsigned            magic;
-#define RW_MAGIC            0x57333272          /* W32r */
-    CRITICAL_SECTION    reader_lock;
-    CRITICAL_SECTION    write_lock;
-    HANDLE              noreader_cond;
-    int                 readers;                /* >= 0 or -99 of writer */
-} rw_lock_imp;
+    CRITICAL_SECTION        reader_lock;
+    CRITICAL_SECTION        write_lock;
+    HANDLE                  noreader_cond;
+    int                     readers;            /* >= 0 or -99 of writer */
+} xpsrwlock_t;
+
+typedef struct {
+    unsigned                magic;
+#define RW_MAGIC                0x57333272      /* W32r */
+    union {
+        SRWLOCK             srw;                /* Slim Reader/Writer (SRW) Locks (vista+) */
+        xpsrwlock_t         rwlock;             /* legacy implementation */
+    };
+} rwlock_imp_t;
+
+static void WINAPI          my_InitializeSRWLock(PSRWLOCK);
+static void WINAPI          my_AcquireSRWLockShared(PSRWLOCK);
+static void WINAPI          my_ReleaseSRWLockShared(PSRWLOCK);
+static void WINAPI          my_AcquireSRWLockExclusive(PSRWLOCK);
+static void WINAPI          my_ReleaseSRWLockExclusive(PSRWLOCK);
+
+static InitializeSRWLock_t              initialize_srw_lock;
+static AcquireSRWLockShared_t           acquire_srw_lock_shared;
+static ReleaseSRWLockShared_t           release_srw_lock_shared;
+static AcquireSRWLockExclusive_t        acquire_srw_lock_exclusive;
+static ReleaseSRWLockExclusive_t        release_srw_lock_exclusive;
+static HINSTANCE                        library;
 
 
-//  typedef struct {
-//      unsigned            magic;
-//  #define RW_MAGIC            0x57333272      /* W32r */
-//      SRWLOCK             rwlock;
-//      int                 readers;            /* >= 0 or -99 of writer */
-//  } rw_lock_imp2;
+static void
+initialisation(void)
+{
+    if (NULL == initialize_srw_lock) {
+        assert(sizeof(struct rwlock) >= sizeof(rwlock_imp_t));
+
+        /*
+         *  resolve
+         */
+        if (0 != (library = LoadLibrary("Kernel32"))) {
+            initialize_srw_lock         = (InitializeSRWLock_t) GetProcAddress(library, "InitializeSRWLock");
+            acquire_srw_lock_shared     = (AcquireSRWLockShared_t) GetProcAddress(library, "AcquireSRWLockShared");
+            release_srw_lock_shared     = (ReleaseSRWLockShared_t) GetProcAddress(library, "ReleaseSRWLockShared");
+            acquire_srw_lock_exclusive  = (AcquireSRWLockExclusive_t) GetProcAddress(library, "AcquireSRWLockExclusive");
+            release_srw_lock_exclusive  = (ReleaseSRWLockExclusive_t) GetProcAddress(library, "ReleaseSRWLockExclusive");
+
+            if (initialize_srw_lock && 
+                    acquire_srw_lock_shared && release_srw_lock_shared &&
+                    acquire_srw_lock_exclusive && release_srw_lock_exclusive) {
+                return;                         // success
+            }
+
+            FreeLibrary(library);
+        }
+
+        /*
+         *  local implemenation
+         */
+        initialize_srw_lock             = my_InitializeSRWLock;
+        acquire_srw_lock_shared         = my_AcquireSRWLockShared;
+        release_srw_lock_shared         = my_ReleaseSRWLockShared;
+        acquire_srw_lock_exclusive      = my_AcquireSRWLockExclusive;
+        release_srw_lock_exclusive      = my_ReleaseSRWLockExclusive;
+    }
+}
 
 
-void
+/////////////////////////////////////////////////////////////////////////////////
+//  implementation
+//
+
+LIBW32_API void
 rwlock_init(struct rwlock *rwlock)
 {
-    rw_lock_imp *rw = (rw_lock_imp *)rwlock;
-//  int s1 = sizeof(struct rwlock), s2 = sizeof(rw_lock_imp);
+    rwlock_imp_t *rw = (rwlock_imp_t *)rwlock;
 
-//  InitializeSRWLock(&rw->lock);               /* vista+ */
-    assert(sizeof(struct rwlock) >= sizeof(rw_lock_imp));
-    InitializeCriticalSection(&rw->reader_lock);
-    InitializeCriticalSection(&rw->write_lock);
-    rw->noreader_cond = CreateEvent(NULL, TRUE, TRUE, NULL);
+    initialisation();
+    memset(rwlock, 0, sizeof(struct rwlock));
+    initialize_srw_lock(&rw->srw);
     rw->magic = RW_MAGIC;
 }
 
 
-void
+LIBW32_API void
 rwlock_rdlock(struct rwlock *rwlock)
 {
-    rw_lock_imp *rw = (rw_lock_imp *)rwlock;
+    rwlock_imp_t *rw = (rwlock_imp_t *)rwlock;
 
     assert(RW_MAGIC == rw->magic);
-//  AcquireSRWLockShared(&rw->lock);
+    acquire_srw_lock_shared(&rw->srw);
+}
+
+
+LIBW32_API void
+rwlock_wrlock(struct rwlock *rwlock)
+{
+    rwlock_imp_t *rw = (rwlock_imp_t *)rwlock;
+
+    assert(RW_MAGIC == rw->magic);
+    acquire_srw_lock_exclusive (&rw->srw);
+}
+
+
+LIBW32_API void
+rwlock_rdunlock(struct rwlock *rwlock)
+{
+    rwlock_imp_t *rw = (rwlock_imp_t *)rwlock;
+
+    assert(RW_MAGIC == rw->magic);
+    release_srw_lock_shared(&rw->srw);
+}
+
+
+LIBW32_API void
+rwlock_wrunlock(struct rwlock *rwlock)
+{
+    rwlock_imp_t *rw = (rwlock_imp_t *)rwlock;
+
+    assert(RW_MAGIC == rw->magic);
+    release_srw_lock_exclusive(&rw->srw);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
+//  SRW emulation
+//
+
+static void WINAPI
+my_InitializeSRWLock(PSRWLOCK srw)
+{
+    xpsrwlock_t *rw = (xpsrwlock_t *)srw;
+
+    InitializeCriticalSection(&rw->reader_lock);
+    InitializeCriticalSection(&rw->write_lock);
+    rw->noreader_cond = CreateEvent(NULL, TRUE, TRUE, NULL);
+}
+
+
+static void WINAPI
+my_AcquireSRWLockShared(PSRWLOCK srw)
+{
+    xpsrwlock_t *rw = (xpsrwlock_t *)srw;
+
     EnterCriticalSection(&rw->write_lock);
         EnterCriticalSection(&rw->reader_lock);
             if (1 == ++rw->readers) {
@@ -93,13 +204,27 @@ rwlock_rdlock(struct rwlock *rwlock)
 }
 
 
-void
-rwlock_wrlock(struct rwlock *rwlock)
+static void WINAPI
+my_ReleaseSRWLockShared(PSRWLOCK srw)
 {
-    rw_lock_imp *rw = (rw_lock_imp *)rwlock;
+    xpsrwlock_t *rw = (xpsrwlock_t *)srw;
+    
+    EnterCriticalSection(&rw->reader_lock);
+    assert(rw->readers > 0);
+    if (rw->readers > 0) {
+        if (0 == --rw->readers) {
+            SetEvent(rw->noreader_cond);
+        }
+    }
+    LeaveCriticalSection(&rw->reader_lock);
+}
 
-    assert(RW_MAGIC == rw->magic);
-//  AcquireSRWLockExclusive(&rw->lock);
+
+static void WINAPI
+my_AcquireSRWLockExclusive(PSRWLOCK srw)
+{
+    xpsrwlock_t *rw = (xpsrwlock_t *)srw;
+
     EnterCriticalSection(&rw->write_lock);
     if (rw->readers > 0) {
         WaitForSingleObject(rw->noreader_cond, INFINITE);
@@ -109,31 +234,17 @@ rwlock_wrlock(struct rwlock *rwlock)
 }
 
 
-void
-rwlock_rdunlock(struct rwlock *rwlock)
+static void WINAPI
+my_ReleaseSRWLockExclusive(PSRWLOCK srw)
 {
-    rw_lock_imp *rw = (rw_lock_imp *)rwlock;
+    xpsrwlock_t *rw = (xpsrwlock_t *)srw;
 
-    assert(RW_MAGIC == rw->magic);
-//  ReleaseSRWLockShared(&rw->lock);
-    EnterCriticalSection(&rw->reader_lock);
-    assert(rw->readers > 0);
-    if (0 == --rw->readers) {
-        SetEvent(rw->noreader_cond);
-    }
-    LeaveCriticalSection(&rw->reader_lock);
-}
-
-
-void
-rwlock_wrunlock(struct rwlock *rwlock)
-{
-    rw_lock_imp *rw = (rw_lock_imp *)rwlock;
-
-    assert(RW_MAGIC == rw->magic);
-//  ReleaseSRWLockExclusive(&rw->lock);
     assert(-99 == rw->readers);
-    rw->readers = 0;
-    LeaveCriticalSection(&rw->write_lock);
+    if (-99 == rw->readers) {
+        rw->readers = 0;
+        LeaveCriticalSection(&rw->write_lock);
+    }
 }
+
 /*end*/
+

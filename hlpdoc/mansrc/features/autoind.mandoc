@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: autoind.mandoc,v 1.1 2014/11/27 18:19:34 ayoung Exp $
+.\" | $Id: autoind.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -52,13 +52,16 @@
 .Nm autoind
 .Nd Turn autoindent on/off.
 .Sh DESCRIPTION
-This macro allows the user to turn on or off autoindent. If
-autoindenting is enabled, then when the user hits \f(HB<Enter>\fR at the
-end of a line, the cursor automatically goes to the the column
-underneath the first character on the previous line. Autoindenting
-is temporarily disabled if there is any text to the right of the cursor.
+The \fIautoind\fR macro allows the user to turn on or off autoindent.
+If autoindenting is enabled, then when the user hits \f(HB<Enter>\fR
+at the end of a line, the cursor automatically goes to the the column
+underneath the first character on the previous line. Autoindenting is
+temporarily disabled if there is any text to the right of the cursor.
 .Pp
-The autoindent macro uses tabs and spaces to align with the previous line.
-If you want to start a new line without an indent, hit \f(HB<Ctrl-J>\fR.
+The autoindent macro uses tabs and spaces to align with the previous
+line. If you want to start a new line without an indent, hit \f(HB<Ctrl-J>\fR.
 .Sh MENU/KEYS
 This function is available from the Features menu and the Options menu.
+.Sh SEE ALSO
+.Xr feature
+

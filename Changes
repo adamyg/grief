@@ -1,10 +1,46 @@
 -*- encoding: utf-8; -*-
 
-Thu Feb 19 00:35:01 2015 ayoung
+Mon Nov 12 01:49:21 2018 adamy
+
+	* version 3.2.1
+	* mandoc 1.14.4
+
+Thu Oct 11 01:52:20 2018 adamy
+
+	* dynamic library linkage
+	* windows 10 console
+	* legacy console font/optimisation tweaks
+	* libw32 merge
+		- symlink/mount-point support
+
+Mon Jan 30 15:42:45 2017 adamy
+
+	* xz utils 5.2.3
+
+Sat Jan 28 02:03:55 2017 adamy
+
+	* libmagic 5.29
+
+Mon Jan 23 21:59:18 2017 adamy
+
+	* msvc 2008 - 2015 builds.
+
+	* libz 1.2.11
+
+Sun Mar 15 19:31:54 2015 adamy
+
+	* emacs mode.
+
+	* win32
+
+		- trailing italic character truncation.
+		- symlink() EEXIST error code.
+
+Thu Feb 19 00:35:01 2015 adamy
 
 	* BUILD8 released.
 
-Mon Dec 15 02:55:34 2014 ayoung
+Mon Dec 15 02:55:34 2014 adamy
 
 	* installer, corrected PATH 'bin' path.
 
@@ -14,19 +50,19 @@ Mon Dec 15 02:55:34 2014 ayoung
 
 		- <Ctrl-Enter>, 'fullscreen' default mapping.
 
-		- explain fullscreen
+		- explain fullscreen.
 
-	* ReadConsoleOutputA() ERROR_NOT_ENOUGH_MEMORY handling
+	* ReadConsoleOutputA() ERROR_NOT_ENOUGH_MEMORY handling.
 
-Mon Dec 15 02:55:34 2014 ayoung
+Mon Dec 15 02:55:34 2014 adamy
 
 	* Corrected primitive sort order.
 
-Fri Dec 12 18:35:53 2014 ayoung
+Fri Dec 12 18:35:53 2014 adamy
 
 	* Corrected license within about/welcome dialogs.
 
-Fri Dec 01 18:35:53 2014 ayoung
+Fri Dec 01 18:35:53 2014 adamy
 
 	* Public release, BUILD7.
 

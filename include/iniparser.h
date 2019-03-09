@@ -1,16 +1,16 @@
 #ifndef GR_INIPARSER_H_INCLUDED
 #define GR_INIPARSER_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_iniparser_h,"$Id: iniparser.h,v 1.4 2015/02/19 00:16:58 ayoung Exp $")
+__CIDENT_RCSID(gr_iniparser_h,"$Id: iniparser.h,v 1.6 2019/01/28 00:23:56 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: iniparser.h,v 1.4 2015/02/19 00:16:58 ayoung Exp $
+/* $Id: iniparser.h,v 1.6 2019/01/28 00:23:56 cvsuser Exp $
  * INI parser.
  *
  *
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -77,15 +77,16 @@ typedef struct IFILE {
  */
 #define IFILE_STANDARD          0x0001          /* standard comment syntax (;). */
 #define IFILE_STANDARDEOL       0x0002          /* ; end-of-ine comments. */
-#define IFILE_EXTENDED          0x0004          /* extended syntax (#). */
+#define IFILE_EXTENDED          0x0004          /* extended syntax (#) comments. */
 #define IFILE_EXTENDEDEOL       0x0008          /* ## end-of-line comments. */
-                                                /* EOL comments */
 #define IFILE_COMMENTSEOL      (IFILE_STANDARDEOL|IFILE_EXTENDEDEOL)
+                                                /* EOL comments */
 
 #define IFILE_DUPLICATES        0x0010          /* allow duplicate sections. */
 #define IFILE_COLON             0x0020          /* colon (:) as key/value delimiter, otherwise equal (=). */
                                                 /* colon (:) and equal (=) as key/value delimiter. */
 #define IFILE_EQUALCOLON       (0x0040|IFILE_COLON)
+#define IFILE_BACKSLASH         0x0080          /* backslash quoting. */
 
 #define IFILE_QUOTED            0x0100          /* quoted strings. */
 #define IFILE_QUOTES            0x0200          /* preserve quotes. */

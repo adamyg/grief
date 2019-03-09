@@ -1,16 +1,12 @@
-#ifndef GR_FTP_H_INCLUDED
-#define GR_FTP_H_INCLUDED
+#ifndef LIBW32_ARPA_FTP_H_INCLUDED
+#define LIBW32_ARPA_FTP_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_arpa_ftp_h,"$Id: ftp.h,v 1.4 2015/02/19 00:17:35 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_arpa_ftp_h,"$Id: ftp.h,v 1.7 2018/09/30 23:32:24 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
- * Copyright (c) 1983, 1989 Regents of the University of California.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms are permitted
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2017, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -24,6 +20,10 @@ __CPRAGMA_ONCE
  * License for more details.
  * ==end==
  *
+ * Copyright (c) 1983, 1989 Regents of the University of California.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms are permitted
  * provided that: (1) source distributions retain this entire copyright
  * notice and comment, and (2) distributions including binaries display
  * the following acknowledgement:  ``This product includes software
@@ -126,4 +126,5 @@ char *levelnames[] =  {"0", "Clear", "Safe", "Private" };
 #define	BLK_RESTART	0x10	/* Block is Restart Marker */
 
 #define	BLK_BYTECOUNT	2	/* Bytes in this block */
-#endif /*GR_FTP_H_INCLUDED*/
+
+#endif /*LIBW32_ARPA_FTP_H_INCLUDED*/

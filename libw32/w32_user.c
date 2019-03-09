@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_user_c,"$Id: w32_user.c,v 1.10 2015/02/19 00:17:33 ayoung Exp $")
+__CIDENT_RCSID(gr_w32_user_c,"$Id: w32_user.c,v 1.15 2018/10/12 00:30:31 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 user identification functionality
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -64,7 +64,7 @@ __CIDENT_RCSID(gr_w32_user_c,"$Id: w32_user.c,v 1.10 2015/02/19 00:17:33 ayoung 
 //  ERRORS
 //      No errors are defined.
 */
-int
+LIBW32_API int
 w32_getuid (void)
 {
     return 42;
@@ -116,12 +116,11 @@ w32_geteuid (void)
 //  ERRORS
 //      No errors are defined.
 */
-int
+LIBW32_API int
 w32_getgid (void)
 {
     return 42;
 }
-
 
 
 /*
@@ -172,12 +171,11 @@ w32_getegid (void)
 //  ERRORS
 //      No errors are defined.
 */
-int
+LIBW32_API int
 issetugid (void)
 {
     return 0;
 }
-
 
 
 /*
@@ -242,7 +240,7 @@ issetugid (void)
 //          The value of namesize is smaller than the length of the string to be returned
 //          including the terminating null character.
 */
-const char *
+LIBW32_API const char *
 getlogin (void)
 {
     static char buffer[100];                    /* one-shot */
@@ -254,7 +252,7 @@ getlogin (void)
 
         if (p == NULL) p = getenv("USERNAME");  /* NT */
 
-        if (GetUserName(buffer, &size))         /* requires: advapi32.lib */
+        if (GetUserNameA(buffer, &size))        /* requires: advapi32.lib */
             p = buffer;
 
         if (p == NULL)
@@ -270,7 +268,7 @@ getlogin (void)
 }
 
 
-int
+LIBW32_API int
 getlogin_r (char *name, size_t namesize)
 {
     const char *login = getlogin();
@@ -281,11 +279,11 @@ getlogin_r (char *name, size_t namesize)
         return -1;
     }
     memcpy(name, login, length + 1);
-    return length;
+    return (int)length;
 }
 
 
-#if defined(_MSC_VER) && (_MSC_VER < 1600)
+#if defined(_MSC_VER) && (_MSC_VER < 1500)
 #define TokenElevation          20
 typedef struct _TOKEN_ELEVATION {
     DWORD TokenIsElevated;
@@ -293,7 +291,7 @@ typedef struct _TOKEN_ELEVATION {
 typedef TOKEN_ELEVATION *PTOKEN_ELEVATION;
 #endif
 
-int
+LIBW32_API int
 w32_IsElevated(void)
 {
     BOOL fRet = FALSE;
@@ -326,7 +324,7 @@ w32_IsElevated(void)
  *      TRUE    - Caller has Administrators local group.
  *      FALSE   - Caller does not have Administrators local group.
  */
-int
+LIBW32_API int
 w32_IsAdministrator(void)
 {
     SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
@@ -349,3 +347,4 @@ w32_IsAdministrator(void)
     return b;
 }
 /*end*/
+

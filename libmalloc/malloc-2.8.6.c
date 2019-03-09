@@ -1501,8 +1501,8 @@ extern void*     sbrk(ptrdiff_t);
 #include <pthread.h>
 #endif /* USE_RECURSIVE_LOCKS ... */
 #elif defined(__WATCOMC__)
-#define interlockedcompareexchange InterlockedCompareExchange
-#define interlockedexchange InterlockedExchange
+#define interlockedcompareexchange(a,b,c) InterlockedCompareExchange((long volatile *)a, b, c)
+#define interlockedexchange(a,b) InterlockedExchange((long volatile *)a, b)
 #elif defined(_MSC_VER)
 #ifndef _M_AMD64
 /* These are already defined on AMD64 builds */

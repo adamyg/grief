@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: margin.mandoc,v 1.1 2014/11/27 18:19:40 ayoung Exp $
+.\" | $Id: margin.mandoc,v 1.2 2018/10/01 21:19:58 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -52,8 +52,8 @@
 .Nm margin
 .Nd Set margin for formatting and autowrap.
 .Sh DESCRIPTION
-The margin macro is used to set the margin when autowrap is enabled
-or for formatting paragraphs (via the <Ctrl-F> key).
+The \fImargin\fR macro is used to set the margin when autowrap is
+enabled or for formatting paragraphs (via the <Ctrl-F> key).
 .Sh MENU/KEYS
 This macro can be accessed from the GRIEF features menu or by typing
 \f(HBmargin\fR at the command prompt.

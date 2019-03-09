@@ -1,14 +1,14 @@
-#ifndef GR_STATFS_H_INCLUDED
-#define GR_STATFS_H_INCLUDED
+#ifndef LIBW32_SYS_STATFS_H_INCLUDED
+#define LIBW32_SYS_STATFS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_statfs_h,"$Id: statfs.h,v 1.5 2015/02/19 00:17:39 ayoung Exp $")
+__CIDENT_RCSID(gr_libw32_sys_statfs_h,"$Id: statfs.h,v 1.7 2018/09/29 02:25:24 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 [f]statfs implementation
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -34,7 +34,7 @@ __CPRAGMA_ONCE
 
 typedef struct fsid {                           /* file system id type */
     unsigned long   val[2]; 
-} fsid_t;                       
+} fsid_t;
 
 struct statfs {
     long            f_spare2;                   /* placeholder */
@@ -57,9 +57,9 @@ struct statfs {
 
 __BEGIN_DECLS
 
-int                 statfs(const char *, struct statfs *);
-int                 fstatfs(int, struct statfs *);
+LIBW32_API int      statfs(const char *, struct statfs *);
+LIBW32_API int      fstatfs(int, struct statfs *);
 
 __END_DECLS
 
-#endif /*GR_STATFS_H_INCLUDED*/
+#endif  /*LIBW32_SYS_STATFS_H_INCLUDED*/

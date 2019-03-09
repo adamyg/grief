@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: match.mandoc,v 1.1 2014/11/27 18:19:40 ayoung Exp $
+.\" | $Id: match.mandoc,v 1.2 2018/10/01 21:19:58 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -52,10 +52,10 @@
 .Nm match
 .Nd Match brackets, move to matching bracket.
 .Sh DESCRIPTION
-This macro allows the user to quickly go to the matching bracket
-underneath the cursor. This is useful for checking that brackets
-are properly paired, and/or that the indentation level matches
-appropriately.
+The \fImatch\fR macro allows the user to quickly go to the matching
+bracket underneath the cursor. This is useful for checking that
+brackets are properly paired, and/or that the indentation level
+matches appropriately.
 .Pp
 To execute this macro simply place the cursor on a bracket and hit
 the \f(HB<Ctrl-^>\fR key. If no matching bracket can be found then

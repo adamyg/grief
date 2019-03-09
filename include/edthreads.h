@@ -1,18 +1,18 @@
 #ifndef GR_EDTHREADS_H_INCLUDED
 #define GR_EDTHREADS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_h,"$Id: edthreads.h,v 1.11 2015/02/19 00:16:58 ayoung Exp $")
+__CIDENT_RCSID(gr_edthreads_h,"$Id: edthreads.h,v 1.13 2018/10/04 01:28:00 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads.h,v 1.11 2015/02/19 00:16:58 ayoung Exp $
+/* $Id: edthreads.h,v 1.13 2018/10/04 01:28:00 cvsuser Exp $
  * Threads interface
  * ISO/IEC 9899:201x Committee Draft
  * April 12, 2011 N1570
  *
  *
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2018, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -39,7 +39,7 @@ __CPRAGMA_ONCE
 #include <config.h>
 #endif
 
-#if defined(__MINGW32__) && defined(HAVE_PTHREAD_H)
+#if (defined(__MINGW32__) || defined(__CYGWIN__)) && defined(HAVE_PTHREAD_H)
 #define __STDC_NO_THREADS__                     /*PTHREADS*/
 #endif
 

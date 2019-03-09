@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.29 2015/02/17 23:26:17 ayoung Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.31 2018/10/18 01:49:26 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.29 2015/02/17 23:26:17 ayoung Exp $
+/* $Id: cmain.c,v 1.31 2018/10/18 01:49:26 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -383,6 +383,10 @@ extern char **          environ;
 #endif
 #endif
 
+extern void                                     /* must be extern linkage; otherwise compiler may remove */
+cpp_linkage(const char *str);
+
+
 
 /*  Function:           cmain
  *      Entry point.
@@ -455,6 +459,8 @@ cmain(int argc, char **argv)
 #else
     tzset();                                    /* localtime requirement */
 #endif
+
+    if (argc < 0) cpp_linkage("");
 
     x_umask = (mode_t)fileio_umask(0);          /* our umask */
     if ((int)x_umask < 0) x_umask = 0;
@@ -1613,7 +1619,11 @@ gr_exit(int rcode)
         chk_stats();
     }
 
+#if defined(__WATCOMC__) && (__WATCOMC__ == 1300)
+    exit(rcode);                                /* missing! */
+#else
     _exit(rcode);
+#endif
 }
 
 
@@ -1765,7 +1775,7 @@ usage(int what)
             " disregarded if not applicable.\n\n", HINDENT, "");
     }
     fflush(stderr);
-    _exit(EXIT_FAILURE);
+    exit(EXIT_FAILURE);
 #undef      HINDENT
 }
 

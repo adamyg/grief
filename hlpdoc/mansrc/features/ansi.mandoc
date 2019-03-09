@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: ansi.mandoc,v 1.1 2014/11/27 18:19:34 ayoung Exp $
+.\" | $Id: ansi.mandoc,v 1.2 2018/10/01 21:19:56 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -52,18 +52,21 @@
 .Nm ansi
 .Nd Ansi mode, toggles display of ANSI escape sequences.
 .Sh DESCRIPTION
-This macro is used to toggle the ANSI mode flag associated with the
-current buffer. Normally, ANSI compatible escape sequences are
-displayed in a printable format. When the ANSI mode flag is enabled, these
-escape sequences are interpreted by GRIEF and can be used to effect
-coloring and highliting, \fIwithin\fR the current buffer/window.
+The \fIansi\fI macro is used to toggle the ANSI mode flag associated
+with the current buffer. Normally, ANSI compatible escape sequences
+are displayed in a printable format. When the ANSI mode flag is
+enabled, these escape sequences are interpreted by GRIEF and can be
+used to effect coloring and highliting, \fIwithin\fR the current
+buffer/window.
 .Pp
-This mode is useful, for example when looking at output from
-a program.
+This mode is useful, for example when looking at output from a program.
 .Pp
 The escape sequences include the foreground and background color
-setting escape sequences (ESC[3?m and ESC[4?m) and the
-reverse video escape sequence.
+setting escape sequences (ESC[3?m and ESC[4?m) and the reverse video
+escape sequence.
 .Sh MENU/KEYS
 This macro can be accessed from the GRIEF features menu or by typing
 \f(HBansi\fR at the command prompt.
+.Sh SEE ALSO
+.Xr feature
+

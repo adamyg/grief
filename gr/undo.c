@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_undo_c,"$Id: undo.c,v 1.46 2014/11/27 18:56:53 ayoung Exp $")
+__CIDENT_RCSID(gr_undo_c,"$Id: undo.c,v 1.48 2019/01/26 22:27:09 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: undo.c,v 1.46 2014/11/27 18:56:53 ayoung Exp $
+/* $Id: undo.c,v 1.48 2019/01/26 22:27:09 cvsuser Exp $
  * undo and redo facilities.
  *
  *
@@ -220,6 +220,27 @@ undo_close(void)
         u_fname[0] = 0;
         u_fp = NULL;
     }
+}
+
+
+/*
+ *  Check to see whether we should be doing undo for this buffer.
+ */
+static __CINLINE int
+undo_check(void)
+{
+    if (BFTST(curbp, BF_NO_UNDO) || NULL == u_fp) {
+        return TRUE;
+    }
+
+    /*
+     *  If user isn't undoing an undo then
+     *      terminate the redo chain so we don't confuse the user.
+     */
+    if (US_NORMAL == x_undo_state) {
+        curbp->b_redo.u_last = 0;
+    }
+    return FALSE;
 }
 
 
@@ -466,26 +487,6 @@ u_scrap(void)
     uwrite_op(&undo);
 }
 
-
-/*
- *  Check to see whether we should be doing undo for this buffer
- */
-static int
-undo_check(void)
-{
-    if (BFTST(curbp, BF_NO_UNDO) || NULL == u_fp) {
-        return TRUE;
-    }
-
-    /*
-     *  If user isn't undoing an undo then
-     *      terminate the redo chain so we don't confuse the user.
-     */
-    if (US_NORMAL == x_undo_state) {
-        curbp->b_redo.u_last = 0;
-    }
-    return FALSE;
-}
 
 
 static void
@@ -957,7 +958,7 @@ upread(char *buf, int len, FSIZE_t offset)
  *<<GRIEF>>
     Macro: undo - Undo previous edit operations.
 
-        void
+        int
         undo([int move], [int pastwrite = -1], [int redo = FALSE])
 
     Macro Description:
