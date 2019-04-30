@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.40 2019/01/27 00:15:27 cvsuser Exp $
+# $Id: Makefile.in,v 1.41 2019/04/30 23:07:25 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2019, Adam Young.
@@ -105,7 +105,6 @@ E=
 A=		.a
 O=		.o
 LP=		lib
-E=		.exe
 
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
 XCLEAN=
