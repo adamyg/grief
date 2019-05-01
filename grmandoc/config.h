@@ -1,7 +1,7 @@
 #ifndef MANDOC_CONFIG_H_INCLUDED
 #define MANDOC_CONFIG_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: config.h,v 1.13 2018/11/12 01:56:06 cvsuser Exp $
+/* $Id: config.h,v 1.15 2019/05/01 00:27:09 cvsuser Exp $
  * mandoc config.h
  *
  * Copyright (c) 201 - 2018, Adam Young.
@@ -195,13 +195,14 @@ extern int                      isblank(int ch);
 #  endif
 #endif
 
-#ifndef __attribute__
+#if !defined(__GNUC__) && !defined(__clang__)
+#ifndef __attribute__           //FIXME: HAVE_ATTRIBUTE
 #define __attribute__(__x)
+#endif
 #endif
 
 #include "portable_endian.h"
 
 #endif  /*MANDOC_CONFIG_H_INCLUDED*/
 /*end*/
-
 
