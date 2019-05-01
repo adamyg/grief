@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: libtool_win32.pl,v 1.29 2019/01/27 00:00:03 cvsuser Exp $
+# $Id: libtool_win32.pl,v 1.30 2019/03/27 00:52:27 cvsuser Exp $
 # libtool emulation for WIN32 builds.
 #
 #   **Warning**
@@ -974,10 +974,9 @@ WatcomExportDef($$) {
 
 
 
-
 sub
 ParseSymFile($$) {
-    my ($file, $EXPORTSRef);
+    my ($file, $EXPORTSRef) = @_;
     my $mode = 0;
 
     open(SYM, "<${file}") or
