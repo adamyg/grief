@@ -1,10 +1,10 @@
-dnl $Id: configure.in,v 1.58 2019/05/01 01:05:21 cvsuser Exp $
+dnl $Id: configure.in,v 1.59 2019/05/01 19:59:54 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl
 
-AC_REVISION($Revision: 1.58 $)
+AC_REVISION($Revision: 1.59 $)
 ##	AC_COPYRIGHT(Adam Young 1995-2018, Paul Fox 1989-1991)
 AC_INIT([GRIEF], [3.2.1], [griefedit@gmail.com])
 AC_PREREQ(2.68)
@@ -681,6 +681,7 @@ AC_CONFIG_FILES([\
 	libtre/Makefile \
 	libchartable/Makefile \
 	libcharudet/Makefile \
+	libduktape/Makefile \
 	gr/Makefile \
 	gm/Makefile \
 	grcpp/Makefile \
