@@ -1,10 +1,10 @@
-dnl $Id: configure.in,v 1.57 2018/10/01 14:39:07 cvsuser Exp $
+dnl $Id: configure.in,v 1.58 2019/05/01 01:05:21 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl
 
-AC_REVISION($Revision: 1.57 $)
+AC_REVISION($Revision: 1.58 $)
 ##	AC_COPYRIGHT(Adam Young 1995-2018, Paul Fox 1989-1991)
 AC_INIT([GRIEF], [3.2.1], [griefedit@gmail.com])
 AC_PREREQ(2.68)
@@ -446,9 +446,7 @@ dnl     libarchive
 dnl     libexplain
 dnl     yacc/bison
 dnl
-AC_CHECK_HEADERS(archive.h)
-AC_SUBST(LIBARCHIVE)
-AC_CHECK_LIB(archive,main,[LIBARCHIVE="-larchive"],[LIBARCHIVE=""])
+CF_WITH_LIBARCHIVE
 
 AC_CHECK_HEADERS(libexplain/libexplain.h)
 AC_CHECK_HEADERS(libexplain.h)
@@ -599,6 +597,7 @@ AC_FUNC_STRTOLD
 AC_CHECK_FUNCS(\
 	bcmp bzero memcmp memset memmove \
 	vprintf snprintf vsnprintf _vsnprintf \
+	asprintf vasprintf \
 	getlogin getexecname \
 	fgetpos fsetpos fgetln \
 	getline getdelim \
@@ -618,7 +617,7 @@ AC_CHECK_FUNCS(\
 	strtof strtoll strtold \
 	strftime \
 	strerror \
-	strnlen \
+	strnlen strndup \
 	strvis strnvis strvisx strunvix unvis )
 CF_CHECK_STRLCPY
 CF_CHECK_STRLCAT
