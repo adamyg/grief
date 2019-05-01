@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.19 2017/01/29 04:33:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.20 2019/05/01 21:37:36 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edbt_win32.c,v 1.19 2017/01/29 04:33:31 cvsuser Exp $
+/* $Id: edbt_win32.c,v 1.20 2019/05/01 21:37:36 cvsuser Exp $
  * win32 (include cygwin) backtrace implementation.
  *
  *
@@ -71,6 +71,9 @@ __CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.19 2017/01/29 04:33:31 cvs
 #include <string.h>
 #include <errno.h>
 #include <io.h>
+#if defined(__CYGWIN__)
+#include <unistd.h>
+#endif
 #include <tailqueue.h>
 #include <rbtree.h>
 

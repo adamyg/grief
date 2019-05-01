@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bsd_cdbr_c,"$Id: bsd_cdbr.c,v 1.8 2014/11/03 00:15:55 ayoung Exp $")
+__CIDENT_RCSID(gr_bsd_cdbr_c,"$Id: bsd_cdbr.c,v 1.9 2019/05/01 21:37:36 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*-
@@ -45,6 +45,7 @@ __CIDENT_RCSID(gr_bsd_cdbr_c,"$Id: bsd_cdbr.c,v 1.8 2014/11/03 00:15:55 ayoung E
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 #include <unistd.h>
 
