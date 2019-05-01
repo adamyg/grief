@@ -1,4 +1,4 @@
-# $Id: aclocal.m4,v 1.17 2017/01/30 04:03:27 cvsuser Exp $
+# $Id: aclocal.m4,v 1.18 2019/05/01 01:05:16 cvsuser Exp $
 # -*- mode: Autoconf; tabs: 8; -*-
 # local packages
 #
@@ -12,6 +12,7 @@ m4_include([m4/ax_pthread.m4])
 m4_include([m4/acx_nanosleep.m4])
 m4_include([m4/libthread.m4])
 m4_include([m4/compiler.m4])
+m4_include([m4/libarchive.m4])
 m4_include([m4/libapriconv.m4])
 m4_include([m4/libclang.m4])
 m4_include([m4/libcurl.m4])
