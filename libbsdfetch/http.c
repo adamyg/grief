@@ -64,7 +64,7 @@
  * SUCH DAMAGE.
  */
 
-#if defined(__linux__) || defined(__MINT__) || defined(__FreeBSD_kernel__)
+#if defined(__linux__) || defined(__MINT__) || defined(__FreeBSD_kernel__) || defined(__CYGWIN__)
 /* Keep this down to Linux or MiNT, it can create surprises elsewhere. */
 /*
    __FreeBSD_kernel__ is defined for GNU/kFreeBSD.
@@ -114,6 +114,8 @@
 #include "fetch.h"
 #include "common.h"
 #include "httperr.h"
+
+#include <libtime.h>
 
 /* Maximum number of redirects to follow */
 #define MAX_REDIRECT 5
@@ -1311,7 +1313,7 @@ http_digest_auth(conn_t *conn, const char *hdr, http_auth_challenge_t *c,
 	if (!c->algo)
 		c->algo = strdup("");
 
-	if (basprintf(&options, "%s%s%s%s",
+	if (asprintf(&options, "%s%s%s%s",
 		     *c->algo? ",algorithm=" : "", c->algo,
 		     c->opaque? ",opaque=" : "", c->opaque?c->opaque:"")== -1)
 		return (-1);

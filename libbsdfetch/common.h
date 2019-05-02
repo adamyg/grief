@@ -76,7 +76,7 @@
 #define strcasecmp	stricmp
 #define strncasecmp	strnicmp
 #endif
-#if !defined(asprintf)
+#if !defined(asprintf) && !defined(__CYGWIN__)
 #include "../libbsdio/bstdio.h"
 #define asprintf	basprintf
 #define vasprintf	bvasprintf

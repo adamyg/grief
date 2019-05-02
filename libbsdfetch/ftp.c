@@ -58,7 +58,7 @@
  *
  */
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__CYGWIN__)
 /* Keep this down to Linux, it can create surprises else where. */
 #define _GNU_SOURCE
 #endif
