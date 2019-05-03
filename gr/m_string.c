@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.38 2015/07/08 21:08:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.39 2019/05/02 18:24:00 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_string.c,v 1.38 2015/07/08 21:08:14 cvsuser Exp $
+/* $Id: m_string.c,v 1.39 2019/05/02 18:24:00 cvsuser Exp $
  * String primitives.
  *
  *
@@ -18,7 +18,12 @@ __CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.38 2015/07/08 21:08:14 cvsuser
  * ==end==
  */
 
+#if defined(linux) || defined(__CYGWIN__)
+#define _GNU_SOURCE                             /* FIXME: extensions */
+#endif
+
 #include <editor.h>
+
 #include <limits.h>
 #include <stdlib.h>
 #include <math.h>                               /* HUGE_VAL */

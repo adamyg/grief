@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyx11_c,"$Id: ttyx11.c,v 1.12 2018/10/01 20:59:48 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyx11_c,"$Id: ttyx11.c,v 1.13 2019/05/02 18:24:00 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyx11.c,v 1.12 2018/10/01 20:59:48 cvsuser Exp $ */
+/* $Id: ttyx11.c,v 1.13 2019/05/02 18:24:00 cvsuser Exp $ */
 /*
  * Copyright (c) 2012-2018 Adam Young.
  * Copyright (c) 2009 Jeremy Cooper.
@@ -65,10 +65,15 @@ __CIDENT_RCSID(gr_ttyx11_c,"$Id: ttyx11.c,v 1.12 2018/10/01 20:59:48 cvsuser Exp
 #include "debug.h"                              /* trace_...() */
 #include "display.h"
 #include "getkey.h"
+#include "echo.h"
+#include "cmap.h"
 #include "main.h"
 #include "tty.h"
 #include "ttyx11if.h"                           /* Xlib dynamic binding */
+#include "system.h"
 #include "window.h"
+
+#include "m_pty.h"
 
 #define APP_CLASS       "Xgr"
 #define APP_NAME        "Xgr"
@@ -2575,7 +2580,7 @@ xgr_clipboard_get(size_t *sz, BOOL line)
             // that we requested.  The clipboard text will truncated.
             // Log a warning.
             //
-            infof("x11: dropped %d bytes from clipboard transfer.", bytes_remaining);
+            infof("x11: dropped %lu bytes from clipboard transfer.", bytes_remaining);
 
         clsz = bytes_returned;
         xfree = TRUE;
