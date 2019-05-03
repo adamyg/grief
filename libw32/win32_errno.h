@@ -1,14 +1,14 @@
 #ifndef LIBW32_WIN32_ERRNO_H_INCLUDED
 #define LIBW32_WIN32_ERRNO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_errno_h,"$Id: win32_errno.h,v 1.5 2018/10/11 01:49:38 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_errno_h,"$Id: win32_errno.h,v 1.6 2019/03/15 23:12:22 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * <errno.h>
  *
- * Copyright (c) 2007, 2012 - 2018 Adam Young.
+ * Copyright (c) 2007, 2012 - 2019 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -34,6 +34,7 @@ __CPRAGMA_ONCE
      *  Verify that MSVC POSIX errno number are not active; if the case warn and undef clashing constants
      *  Generally <sys/socket.h> is included before <errno.h> as such the following should not occur.
      */
+#if !defined(__MAKEDEPEND__)
 #if defined(EADDRINUSE) && (EADDRINUSE != 10048)
 #if defined(_MSC_VER)
 #if (EADDRINUSE == 100)
@@ -47,60 +48,27 @@ __CPRAGMA_ONCE
 #endif
 #endif //_MSC_VER
 #endif //EADDRINUSE != 10048
+#endif //__MAKEDEPEND__
 
 #if defined(_MSC_VER) || defined(__MAKEDEPEND__)
-#undef EADDRINUSE           //100
-#undef EADDRNOTAVAIL        //101
-#undef EAFNOSUPPORT         //102
-#undef EALREADY             //103
-//#define EBADMSG           104
-//#define ECANCELED         105
-#undef ECONNABORTED         //106
-#undef ECONNREFUSED         //107
-#undef ECONNRESET           //108
-#undef EDESTADDRREQ         //109
-#undef EHOSTUNREACH         //110
-//#define EIDRM             111
-#undef EINPROGRESS          //112
-#undef EISCONN              //113
-#undef ELOOP                //114
-#undef EMSGSIZE             //115g
-#undef ENETDOWN             //116
-#undef ENETRESET            //117
-#undef ENETUNREACH          //118
-#undef ENOBUFS              //119
-//#define ENODATA           120
-//#define ENOLINK           121
-//#define ENOMSG            122
-#undef ENOPROTOOPT          //123
-//#define ENOSR             124
-//#define ENOSTR            125
-//#define ENOTCONN          126
-#undef ENOTCONN             //126
-#undef ENOTRECOVERABLE      //127
-#undef ENOTSOCK             //128
-//#define ENOTSUP           129
-#undef EOPNOTSUPP           //130
-//#define EOTHER            131
-//#define EOVERFLOW         132
-//#define EOWNERDEAD        133
-//#define EPROTO            134
-#undef EPROTONOSUPPORT      //135
-#undef EPROTOTYPE           //136
-//#define ETIME             137
-#undef ETIMEDOUT            //138
-//#define ETXTBSY           139
-#undef EWOULDBLOCK          //140
-#endif //EADDRINUSE
+#include "msvc_errno.h"
+#endif
 
 /*
  *  System <errno.h>
  */
-#if defined(_MSC_VER) && \
+#if defined(_MSC_VER) && (_MSC_VER > 1600) && \
         !defined(_CRT_NO_POSIX_ERROR_CODES)
 #define _CRT_NO_POSIX_ERROR_CODES               /* disable POSIX error number, see <errno.h> (MSVC 2010+) */
 #endif //_MSC_VER
+
 #include <errno.h>
+
+#if defined(EWOULDBLOCK)                        /* _CRT_NO_POSIX_ERROR_CODES not available */
+#if (_MSC_VER == 1600)
+#include "msvc_errno.h"
+#endif
+#endif
 
 /*
  *  Addition UNIX style errno's, plus Windows Sockets errors redefined as regular Berkeley error constants.
@@ -159,7 +127,7 @@ __CPRAGMA_ONCE
      *  Outside include guard, set/verify WinSock error mapping.
      *  Note: Force errors on inconsistent redefinitions
      */
-#if defined(WSAEINTR)
+#if defined(WSAEINTR) && !defined(__MAKEDEPEND__)
     //  && !defined(LIBW32_ERRNO_WINSOCK)
     //  #define LIBW32_ERRNO_WINSOCK
 
