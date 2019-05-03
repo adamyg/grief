@@ -1,7 +1,7 @@
 /*
  * RGB Colors -- win32 slang emulation.
  *
- * Copyright (c) 2015 - 2018, Adam Young.
+ * Copyright (c) 2015 - 2019, Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *

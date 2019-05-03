@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_strftime_c,"$Id: w32_strftime.c,v 1.11 2018/10/01 00:00:04 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_strftime_c,"$Id: w32_strftime.c,v 1.12 2019/03/15 23:12:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -12,7 +12,7 @@ __CIDENT_RCSID(gr_w32_strftime_c,"$Id: w32_strftime.c,v 1.11 2018/10/01 00:00:04
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

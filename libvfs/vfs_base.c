@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_base_c,"$Id: vfs_base.c,v 1.20 2018/10/01 22:16:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_base_c,"$Id: vfs_base.c,v 1.21 2019/03/15 23:23:01 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_base.c,v 1.20 2018/10/01 22:16:27 cvsuser Exp $
+/* $Id: vfs_base.c,v 1.21 2019/03/15 23:23:01 cvsuser Exp $
  * Virtual file system interface - base implementation.
  *
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

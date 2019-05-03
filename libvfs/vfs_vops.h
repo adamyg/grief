@@ -1,15 +1,15 @@
 #ifndef GR_VFS_VOPS_H_INCLUDED
 #define GR_VFS_VOPS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_vops_h,"$Id: vfs_vops.h,v 1.11 2018/10/01 22:16:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_vops_h,"$Id: vfs_vops.h,v 1.12 2019/03/15 23:23:04 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_vops.h,v 1.11 2018/10/01 22:16:28 cvsuser Exp $
+/* $Id: vfs_vops.h,v 1.12 2019/03/15 23:23:04 cvsuser Exp $
  * Virtual File System Interface -- ops.
  *
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

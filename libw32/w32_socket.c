@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_socket_c,"$Id: w32_socket.c,v 1.15 2018/10/12 00:24:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_socket_c,"$Id: w32_socket.c,v 1.16 2019/03/15 23:12:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 socket () system calls
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

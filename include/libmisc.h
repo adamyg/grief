@@ -1,16 +1,16 @@
 #ifndef GR_LIBMISC_H_INCLUDED
 #define GR_LIBMISC_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libmisc_h,"$Id: libmisc.h,v 1.18 2018/10/04 01:28:00 cvsuser Exp $")
+__CIDENT_RCSID(gr_libmisc_h,"$Id: libmisc.h,v 1.19 2019/03/15 23:03:10 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: libmisc.h,v 1.18 2018/10/04 01:28:00 cvsuser Exp $
+/* $Id: libmisc.h,v 1.19 2019/03/15 23:03:10 cvsuser Exp $
  * libmisc - Miscellaneous library functions.
  *
  *
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

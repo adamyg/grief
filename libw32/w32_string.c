@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_string_c,"$Id: w32_string.c,v 1.12 2018/10/11 02:42:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_string_c,"$Id: w32_string.c,v 1.13 2019/03/15 23:12:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 string functions.
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

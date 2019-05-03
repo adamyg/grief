@@ -1,14 +1,14 @@
 #ifndef LIBW32_WIN32_IO_H_INCLUDED
 #define LIBW32_WIN32_IO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_io_h,"$Id: win32_io.h,v 1.27 2018/10/12 01:00:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_io_h,"$Id: win32_io.h,v 1.28 2019/03/15 23:12:23 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 io functionality.
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

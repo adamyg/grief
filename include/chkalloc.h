@@ -1,11 +1,11 @@
 #ifndef GR_CHKALLOC_H_INCLUDED
 #define GR_CHKALLOC_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_chkalloc_h,"$Id: chkalloc.h,v 1.18 2018/10/04 01:27:59 cvsuser Exp $")
+__CIDENT_RCSID(gr_chkalloc_h,"$Id: chkalloc.h,v 1.19 2019/03/15 23:03:05 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: chkalloc.h,v 1.18 2018/10/04 01:27:59 cvsuser Exp $
+/* $Id: chkalloc.h,v 1.19 2019/03/15 23:03:05 cvsuser Exp $
  * Memory management interface.
  *
  *  #define CHKALLOC_DEBUG 1
@@ -33,7 +33,7 @@ __CPRAGMA_ONCE
  *      CHKALLOC_WHERE
  *          Extended trace information.
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

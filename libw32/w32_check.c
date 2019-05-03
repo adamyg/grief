@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_check_c,"$Id: w32_check.c,v 1.17 2018/10/11 01:49:38 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_check_c,"$Id: w32_check.c,v 1.18 2019/03/15 23:12:09 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 system io functionality
  * Note: NOT CALLED -- purely a compile time check of the mode namespace
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

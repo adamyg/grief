@@ -1,15 +1,15 @@
 #ifndef GR_EDALT_H_INCLUDED
 #define GR_EDALT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edalt_h,"$Id: edalt.h,v 1.24 2018/10/04 01:27:59 cvsuser Exp $")
+__CIDENT_RCSID(gr_edalt_h,"$Id: edalt.h,v 1.25 2019/03/15 23:03:05 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edalt.h,v 1.24 2018/10/04 01:27:59 cvsuser Exp $
+/* $Id: edalt.h,v 1.25 2019/03/15 23:03:05 cvsuser Exp $
  * Key definitions.
  * ==noguard==
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -1,10 +1,10 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_sockfd_c,"$Id: w32_sockfd.c,v 1.4 2018/10/12 00:24:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_sockfd_c,"$Id: w32_sockfd.c,v 1.5 2019/03/15 23:12:20 cvsuser Exp $")
 
 /*
  * win32 socket file-descriptor support
  *
- * Copyright (c) 2007, 2012 - 2018 Adam Young.
+ * Copyright (c) 2007, 2012 - 2019 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *

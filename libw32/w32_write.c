@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_write_c,"$Id: w32_write.c,v 1.13 2018/10/12 00:24:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_write_c,"$Id: w32_write.c,v 1.14 2019/03/15 23:12:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 write() system calls,
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

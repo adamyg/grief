@@ -2,7 +2,7 @@
 /*
  * internal definitions
  *
- * Copyright (c) 2016 - 2018 Adam Young.
+ * Copyright (c) 2016 - 2019 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *

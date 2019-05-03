@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_hunspell_c,"$Id: w32_hunspell.c,v 1.15 2018/10/11 01:46:32 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_hunspell_c,"$Id: w32_hunspell.c,v 1.16 2019/03/15 23:12:16 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 hunspell dynamic loader.
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

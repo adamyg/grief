@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_child_c,"$Id: w32_child.c,v 1.11 2018/10/12 00:24:39 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_child_c,"$Id: w32_child.c,v 1.12 2019/03/15 23:12:09 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 sub-process support
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -1,14 +1,14 @@
 #ifndef LIBW32_DIRENT_H_INCLUDED
 #define LIBW32_DIRENT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_dirent_h,"$Id: dirent.h,v 1.17 2018/10/01 09:41:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_dirent_h,"$Id: dirent.h,v 1.18 2019/03/15 23:12:09 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 <dirent.h> implementation
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

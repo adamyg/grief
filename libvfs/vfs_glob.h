@@ -1,15 +1,15 @@
 #ifndef GR_VFS_GLOB_H_INCLUDED
 #define GR_VFS_GLOB_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_glob_h,"$Id: vfs_glob.h,v 1.7 2018/10/01 22:16:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_glob_h,"$Id: vfs_glob.h,v 1.8 2019/03/15 23:23:01 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_glob.h,v 1.7 2018/10/01 22:16:27 cvsuser Exp $
+/* $Id: vfs_glob.h,v 1.8 2019/03/15 23:23:01 cvsuser Exp $
  * Virtual file system interface - glob implementation.
  *
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

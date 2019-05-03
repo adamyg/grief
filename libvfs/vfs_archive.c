@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_archive_c,"$Id: vfs_archive.c,v 1.16 2018/10/01 22:16:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_archive_c,"$Id: vfs_archive.c,v 1.17 2019/03/15 23:23:01 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_archive.c,v 1.16 2018/10/01 22:16:27 cvsuser Exp $
+/* $Id: vfs_archive.c,v 1.17 2019/03/15 23:23:01 cvsuser Exp $
  * Virtual file system interface - libarchive driver.
  *
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

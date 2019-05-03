@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_errno_c,"$Id: w32_errno.c,v 1.18 2018/10/18 12:58:49 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_errno_c,"$Id: w32_errno.c,v 1.19 2019/03/15 23:12:15 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 errno mapping support
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -1,16 +1,16 @@
 #ifndef GR_EDDIR_H_INCLUDED
 #define GR_EDDIR_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_eddir_h,"$Id: eddir.h,v 1.11 2018/10/04 01:27:59 cvsuser Exp $")
+__CIDENT_RCSID(gr_eddir_h,"$Id: eddir.h,v 1.12 2019/03/15 23:03:05 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: eddir.h,v 1.11 2018/10/04 01:27:59 cvsuser Exp $
+/* $Id: eddir.h,v 1.12 2019/03/15 23:03:05 cvsuser Exp $
  * Directory management.
  *
  *
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_vops_c,"$Id: vfs_vops.c,v 1.10 2018/10/01 22:16:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_vops_c,"$Id: vfs_vops.c,v 1.11 2019/03/15 23:23:04 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_vops.c,v 1.10 2018/10/01 22:16:28 cvsuser Exp $
+/* $Id: vfs_vops.c,v 1.11 2019/03/15 23:23:04 cvsuser Exp $
  * Virtual file system - virtual operators.
  *
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

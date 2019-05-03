@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_neterr_c,"$Id: w32_neterr.c,v 1.10 2018/10/12 00:24:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_neterr_c,"$Id: w32_neterr.c,v 1.11 2019/03/15 23:12:18 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 network errno mapping support
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

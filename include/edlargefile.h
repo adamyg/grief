@@ -1,16 +1,16 @@
 #ifndef GR_EDLARGEFILE_H_INCLUDED
 #define GR_EDLARGEFILE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edlargefile_h,"$Id: edlargefile.h,v 1.9 2018/10/04 01:27:59 cvsuser Exp $")
+__CIDENT_RCSID(gr_edlargefile_h,"$Id: edlargefile.h,v 1.10 2019/03/15 23:03:08 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edlargefile.h,v 1.9 2018/10/04 01:27:59 cvsuser Exp $
+/* $Id: edlargefile.h,v 1.10 2019/03/15 23:03:08 cvsuser Exp $
  * Large file support interface.
  *
  * 
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

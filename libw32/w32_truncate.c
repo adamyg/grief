@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_truncate_c,"$Id: w32_truncate.c,v 1.9 2018/10/01 00:00:04 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_truncate_c,"$Id: w32_truncate.c,v 1.10 2019/03/15 23:12:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 ftruncate()/truncate() system calls.
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

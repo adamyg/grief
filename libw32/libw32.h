@@ -4,7 +4,7 @@
 /*
  * win32 public interface
  *
- * Copyright (c) 2007, 2012 - 2018 Adam Young.
+ * Copyright (c) 2007, 2012 - 2019 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
