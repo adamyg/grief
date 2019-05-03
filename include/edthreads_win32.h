@@ -1,11 +1,11 @@
 #ifndef GR_EDTHREADS_WIN32_H_INCLUDED
 #define GR_EDTHREADS_WIN32_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_win32_h,"$Id: edthreads_win32.h,v 1.13 2018/10/18 15:32:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_edthreads_win32_h,"$Id: edthreads_win32.h,v 1.15 2019/03/27 00:44:31 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads_win32.h,v 1.13 2018/10/18 15:32:24 cvsuser Exp $
+/* $Id: edthreads_win32.h,v 1.15 2019/03/27 00:44:31 cvsuser Exp $
  * Threads interface
  * ISO/IEC 9899:201x Committee Draft
  * April 12, 2011 N1570
@@ -86,7 +86,7 @@ __CPRAGMA_ONCE
  *          which is returned by a function to indicate that the requested operation
  *          failed because it was unable to allocate memory.
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -141,7 +141,13 @@ struct timespec {
 #endif
 #endif /*TODO - HAVE_TIMESPEC*/
 
-#define TIME_UTC            0x01
+#if defined(TIME_UTC)
+#if (TIME_UTC != 1)
+#error  TIME_UTC redefinition error ...
+#endif
+#else
+#define TIME_UTC            1
+#endif
 
 #define TSS_DTOR_ITERATIONS 4
 
