@@ -1,9 +1,8 @@
-# $Id: makelib.def,v 1.1 2017/01/30 17:16:23 cvsuser Exp $
+# $Id: makelib.def,v 1.2 2019/03/27 00:12:58 cvsuser Exp $
 # win32 makelib configuration
 #
 inc=../include
 lbl=LIBLZMA
 lib=liblzma.lib
-ext=liblzma.lib
 def=HAVE_LIBLZMA
 def=HAVE_LZMA_H
