@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strcompare_c,"$Id: strcompare.c,v 1.12 2017/01/29 04:33:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_strcompare_c,"$Id: strcompare.c,v 1.14 2019/05/06 00:19:14 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strcompare.c,v 1.12 2017/01/29 04:33:31 cvsuser Exp $
+/* $Id: strcompare.c,v 1.14 2019/05/06 00:19:14 cvsuser Exp $
  * libstr - String compare utility functions.
  *
  *
- * Copyright (c) 1998 - 2017, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -30,12 +30,18 @@ __CIDENT_RCSID(gr_strcompare_c,"$Id: strcompare.c,v 1.12 2017/01/29 04:33:31 cvs
  */
 
 #include <config.h>
+
+#if defined(HAVE_STRVERSCMP) && !defined(_GNU_SOURCE)
+#if defined(linux) || defined(__CYGWIN__) //FIXME
+#define _GNU_SOURCE
+#endif
+#endif
+
 #include <editor.h>
 #include <edtypes.h>
 #include <assert.h>
 
 #if defined(HAVE_STRVERSCMP)
-#define  _GNU_SOURCE
 #include <string.h>                             /* strverscmp() */
 #endif
 #include <libstr.h>

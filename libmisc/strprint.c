@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strprint_c,"$Id: strprint.c,v 1.6 2017/01/29 04:33:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_strprint_c,"$Id: strprint.c,v 1.8 2019/05/06 00:19:14 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strprint.c,v 1.6 2017/01/29 04:33:31 cvsuser Exp $
+/* $Id: strprint.c,v 1.8 2019/05/06 00:19:14 cvsuser Exp $
  * libstr - String print utilities.
  *
  *
- * Copyright (c) 1998 - 2017, Adam Young.
+ * Copyright (c) 1998 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -30,12 +30,16 @@ __CIDENT_RCSID(gr_strprint_c,"$Id: strprint.c,v 1.6 2017/01/29 04:33:31 cvsuser 
  */
 
 #include <config.h>
+
+#if defined(linux) || defined(__CYGWIN__) //FIXME
+#define _GNU_SOURCE
+#endif
+
 #include <editor.h>
 #include <edtypes.h>
 #include <assert.h>
 
 #if defined(HAVE_STRVERSCMP)
-#define _GNU_SOURCE
 #include <string.h>                             /* strverscmp() */
 #endif
 #include <stdarg.h>
