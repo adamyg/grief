@@ -1,10 +1,10 @@
-dnl $Id: configure.in,v 1.59 2019/05/01 19:59:54 cvsuser Exp $
+dnl $Id: configure.in,v 1.61 2019/05/06 00:21:53 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl
 
-AC_REVISION($Revision: 1.59 $)
+AC_REVISION($Revision: 1.61 $)
 ##	AC_COPYRIGHT(Adam Young 1995-2018, Paul Fox 1989-1991)
 AC_INIT([GRIEF], [3.2.1], [griefedit@gmail.com])
 AC_PREREQ(2.68)
@@ -602,6 +602,7 @@ AC_CHECK_FUNCS(\
 	fgetpos fsetpos fgetln \
 	getline getdelim \
 	truncate ftruncate \
+        rename \
 	select poll \
 	setlocale \
 	link symlink \
@@ -614,11 +615,11 @@ AC_CHECK_FUNCS(\
 	strchr strrchr strdup \
 	stricmp strcasecmp __strcasecmp strncasecmp __strncasecmp strcasestr \
 	strverscmp __strverscmp \
-	strtof strtoll strtold \
+	strtoul strtof strtoll strtold \
 	strftime \
 	strerror \
 	strnlen strndup \
-	strvis strnvis strvisx strunvix unvis )
+	strvis strnvis strvisx strunvix unvis)
 CF_CHECK_STRLCPY
 CF_CHECK_STRLCAT
 
@@ -630,18 +631,14 @@ AC_CHECK_FUNCS(\
 
 AC_CHECK_FUNCS(\
 	strtok_r strerror_l strerror_r \
-	readdir_r \
 	rand_r \
 	pread pwrite \
 	getlogin_r \
-	asctime_r \
-	ctime_r \
-	gmtime_r \
-	localtime_r \
+	asctime_r ctime_r gmtime_r localtime_r \
 	timegm)
 
 AC_CHECK_FUNCS(\
-	opendir )
+	opendir readdir_r)
 
 AC_CHECK_FUNCS(\
 	mergesort \

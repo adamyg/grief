@@ -1,11 +1,11 @@
 #ifndef CR_CONFIG_H_INCLUDED
 #define CR_CONFIG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(config_h, "$Id: config.hin,v 1.48 2019/05/01 01:04:55 cvsuser Exp $")
+__CIDENT_RCSID(config_h, "$Id: config.hin,v 1.49 2019/05/05 23:34:34 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; set-indent: 4; -*- */
-/* $Id: config.hin,v 1.48 2019/05/01 01:04:55 cvsuser Exp $
+/* $Id: config.hin,v 1.49 2019/05/05 23:34:34 cvsuser Exp $
  * Machine configuration.
  *
  *
@@ -345,6 +345,7 @@ __CPRAGMA_ONCE
 
 #undef HAVE_TRUNCATE
 #undef HAVE_FTRUNCATE
+#undef HAVE_RENAME
 
 #undef HAVE_GETLINE
 #undef HAVE_GETDELIM
@@ -367,6 +368,7 @@ __CPRAGMA_ONCE
 #undef HAVE_STRERROR
 #undef HAVE_STRFTIME
 #undef HAVE_STRICMP
+#undef HAVE_STRTOUL
 #undef HAVE_STRTOF
 #undef HAVE_STRTOLD
 #undef HAVE_STRTOLL
@@ -382,12 +384,9 @@ __CPRAGMA_ONCE
 #undef HAVE_SETPGRP
 #undef HAVE_SETSID
 
-#undef HAVE_OPENDIR
-
 #undef HAVE_STRTOK_R
 #undef HAVE_STRERROR_L
 #undef HAVE_STRERROR_R
-#undef HAVE_READDIR_R
 #undef HAVE_RAND_R
 #undef HAVE_PREAD
 #undef HAVE_PWRITE
@@ -397,6 +396,9 @@ __CPRAGMA_ONCE
 #undef HAVE_GMTIME_R
 #undef HAVE_LOCALTIME_R
 #undef HAVE_TIMEGM
+
+#undef HAVE_OPENDIR
+#undef HAVE_READDIR_R
 
 #undef HAVE_MERGESORT
 #undef HAVE_VERSIONSORT

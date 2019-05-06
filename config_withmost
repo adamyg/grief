@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- mode: sh; -*-
-# $Id: config_withmost,v 1.6 2015/02/25 00:43:23 cvsuser Exp $
+# $Id: config_withmost,v 1.7 2019/05/05 23:51:36 cvsuser Exp $
 #       auto select the terminal interface (ncurses, tinfo, curse, termcap and termlib)
 #       enable most other third-party library support
 #
@@ -11,7 +11,6 @@
 	--with-apriconv		\
 	--with-iconv		\
 	--with-enca		\
-	--with-openssl		\
 	--with-dlmalloc		\
 	$*
 
