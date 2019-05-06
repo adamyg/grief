@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_archive_c,"$Id: vfs_archive.c,v 1.17 2019/03/15 23:23:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_archive_c,"$Id: vfs_archive.c,v 1.18 2019/05/05 23:41:13 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_archive.c,v 1.17 2019/03/15 23:23:01 cvsuser Exp $
+/* $Id: vfs_archive.c,v 1.18 2019/05/05 23:41:13 cvsuser Exp $
  * Virtual file system interface - libarchive driver.
  *
  *
@@ -127,7 +127,7 @@ vfsarc_mount(struct vfs_mount *vmount, const char *argument)
 #endif
 
     if (NULL != (a = read_new())) {
-        if (0 == (rcode = archive_read_open_file(a, path, ARCHIVE_DEFAULT_BYTES_PER_BLOCK))) {
+        if (0 == (rcode = archive_read_open_filename(a, path, ARCHIVE_DEFAULT_BYTES_PER_BLOCK))) {
             vmount->mt_data = chk_salloc(path);
             for (;;) {
                 unsigned vmode;
@@ -171,7 +171,7 @@ vfsarc_mount(struct vfs_mount *vmount, const char *argument)
                 }
             }
             archive_read_close(a);
-            archive_read_finish(a);
+            archive_read_free(a);
         }
     }
 
@@ -224,7 +224,7 @@ vfsarc_tree_vlocalget(struct vfs_tree *tree, struct vfs_node *node, int mode, in
         error = ENOMEM;
 
     } else {
-        if (0 == archive_read_open_file(a, vmount->mt_data, ARCHIVE_DEFAULT_BYTES_PER_BLOCK)) {
+        if (0 == archive_read_open_filename(a, vmount->mt_data, ARCHIVE_DEFAULT_BYTES_PER_BLOCK)) {
             for (;;) {
                 struct archive_entry *entry;
                 int rcode;
@@ -272,7 +272,7 @@ vfsarc_tree_vlocalget(struct vfs_tree *tree, struct vfs_node *node, int mode, in
                 }
             }
             archive_read_close(a);
-            archive_read_finish(a);
+            archive_read_free(a);
         }
     }
     chk_free((void *)path);
@@ -289,3 +289,4 @@ vfsarc_init(void)
 }
 
 #endif
+
