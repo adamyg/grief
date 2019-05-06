@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.40 2018/10/16 22:40:13 cvsuser Exp $
+# $Id: Makefile.in,v 1.41 2019/05/05 23:04:26 cvsuser Exp $
 # libmisc makefile.
 #
 #
@@ -128,6 +128,7 @@ LIBOBJS=\
 	\
 	$(D_OBJ)/bsd_cdbr$(O)		\
 	$(D_OBJ)/bsd_cdbw$(O)		\
+	$(D_OBJ)/bsd_mivhash$(O)	\
 	$(D_OBJ)/bsd_getoptl$(O)	\
 	$(D_OBJ)/bsd_glob$(O)		\
 	$(D_OBJ)/bsd_heapsort$(O)	\

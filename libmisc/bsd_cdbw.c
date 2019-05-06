@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bsd_cdbw_c,"$Id: bsd_cdbw.c,v 1.7 2019/05/01 21:37:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_bsd_cdbw_c,"$Id: bsd_cdbw.c,v 1.9 2019/05/05 23:25:14 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*-
@@ -45,6 +45,8 @@ __CIDENT_RCSID(gr_bsd_cdbw_c,"$Id: bsd_cdbw.c,v 1.7 2019/05/01 21:37:36 cvsuser 
 #include <unistd.h>
 
 #include "bsd_endian.h"
+#include "bsd_bitops.h"
+#include "bsd_mivhash.h"
 #include "bsd_queue.h"
 #include <chkalloc.h>
 
@@ -72,6 +74,7 @@ struct cdbw {
 
  /* Max. data counter that allows the index size to be 32bit. */
 static const uint32_t max_data_counter = 0xccccccccU;
+
 
 struct cdbw *
 bsd_cdbw_open(void)
@@ -174,7 +177,7 @@ bsd_cdbw_put_key(struct cdbw *cdbw, const void *key, size_t keylen, uint32_t idx
 	    cdbw->key_counter == max_data_counter)
 		return -1;
 
-	mi_vector_hash(key, keylen, 0, hashes);
+	bsd_mi_vector_hash(key, keylen, 0, hashes);
 
 	head = cdbw->hash + (hashes[0] & (cdbw->hash_size - 1));
 	SLIST_FOREACH(key_hash, head, link) {
@@ -370,7 +373,7 @@ build_graph(struct cdbw *cdbw, struct state *state)
 		head = &cdbw->hash[i];
 		SLIST_FOREACH(key_hash, head, link) {
 			e->idx = key_hash->idx;
-			mi_vector_hash(key_hash->key, key_hash->keylen,
+			bsd_mi_vector_hash(key_hash->key, key_hash->keylen,
 			    state->seed, hashes);
 			e->left = hashes[0] % state->entries;
 			e->middle = hashes[1] % state->entries;
@@ -613,4 +616,5 @@ release:
 
 	return rv;
 }
+
 /*end*/

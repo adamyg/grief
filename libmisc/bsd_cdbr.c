@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bsd_cdbr_c,"$Id: bsd_cdbr.c,v 1.9 2019/05/01 21:37:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_bsd_cdbr_c,"$Id: bsd_cdbr.c,v 1.11 2019/05/05 23:25:14 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*-
@@ -38,6 +38,8 @@ __CIDENT_RCSID(gr_bsd_cdbr_c,"$Id: bsd_cdbr.c,v 1.9 2019/05/01 21:37:36 cvsuser 
 
 #include <bsd_cdbr.h>
 
+#include <config.h>
+
 #include <edtypes.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -50,6 +52,8 @@ __CIDENT_RCSID(gr_bsd_cdbr_c,"$Id: bsd_cdbr.c,v 1.9 2019/05/01 21:37:36 cvsuser 
 #include <unistd.h>
 
 #include "bsd_endian.h"
+#include "bsd_bitops.h"
+#include "bsd_mivhash.h"
 #include <chkalloc.h>
 
 struct cdbr {
@@ -73,6 +77,7 @@ struct cdbr {
 	uint8_t entries_s1, entries_s2;
 	uint8_t entries_index_s1, entries_index_s2;
 };
+
 
 /* ARGSUSED */
 struct cdbr *
@@ -217,7 +222,7 @@ bsd_cdbr_find(struct cdbr *cdbr, const void *key, size_t key_len,
 		return -1;
 	}
 
-	mi_vector_hash(key, key_len, cdbr->seed, hashes);
+	bsd_mi_vector_hash(key, key_len, cdbr->seed, hashes);
 
 	hashes[0] = fast_remainder32(hashes[0], cdbr->entries_index,
 			cdbr->entries_index_m, cdbr->entries_index_s1,
@@ -244,4 +249,5 @@ bsd_cdbr_close(struct cdbr *cdbr)
 	munmap(cdbr->mmap_base, cdbr->mmap_size);
 	free(cdbr);
 }
+
 /*end*/
