@@ -1,4 +1,4 @@
-freebsd/
-netbsd/
+/freebsd/
+/netbsd/
 ftperr.h
 httperr.h

@@ -8,6 +8,7 @@ CVS/
 /lib/
 /bin/
 /macros/
+/help/
 /.makelib/
 _grstate
 .created

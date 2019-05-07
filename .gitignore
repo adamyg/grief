@@ -4,15 +4,6 @@ CVS/
 /defunct/
 /EXTRA/
 /doc/
-<<<<<<< .gitignore
-/libbsdfetch/freebsd/
-/libbsdfetch/netbsd/
-/hlpdoc/ndplus/
-/hlpdoc/doc/
-/hlpdoc/ndplus/
-=======
-/win32/Autoupdater/
->>>>>>> 1.2
 /objects/
 /lib/
 /bin/
