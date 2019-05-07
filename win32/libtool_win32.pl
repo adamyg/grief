@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: libtool_win32.pl,v 1.30 2019/03/27 00:52:27 cvsuser Exp $
+# $Id: libtool_win32.pl,v 1.32 2019/05/07 00:50:36 cvsuser Exp $
 # libtool emulation for WIN32 builds.
 #
 #   **Warning**
@@ -49,6 +49,7 @@ my $o_extra = '';
 sub Compile();
 sub Link();
 sub true_object($);
+sub true_library($);
 sub unix2dos($);
 sub dos2unix($);
 sub Help;
@@ -309,10 +310,11 @@ sub
 Link() {
     my $cc = shift @ARGV;
 
-    my ($output, $rpath, $bindir, $module);
+    my ($output, $rpath, $bindir, $module, $mapfile);
     my $version_number = '';
     my $wc_fastcall = -1;                       # fastcall (Watcom) convention.
     my $wc_debugger = '';
+    my $linktype = 'dll';
     my @OBJECTS;
     my @RESOURCES;
     my @EXPORTS;
@@ -333,15 +335,41 @@ Link() {
             my $val = ($1 ? $1 : shift @ARGV);
             Error("link: multiple outputs specified <$output> and <$val>")
                 if ($output);
+            if ($val =~ /\.exe$/i) {
+                $linktype = 'exe';
+            } elsif ($val =~ /\.(la|dll)$/i) {
+                $linktype = 'dll';
+            } else {
+                Error("link: unexpected output type <${val}>");
+            }
             $output = $val;
 
-        } elsif (/^[-\/]Fo[=]?(.*)/) {          # -Fe[=]<output>
+        } elsif (/^[-\/]Fo[=]?(.*)/) {          # -Fo[=]<output>
             my $val = ($1 ? $1 : shift @ARGV);
             Error("link: multiple outputs specified <$output> and <$val>")
                 if ($output);
             $output = $val;
 
-        } elsif (/^(.*)\.lo$/ || /^(.*)\.o$/ || /^(.*)\.obj$/) {
+        } elsif (/^[-\/]Fe[=]?(.*)/) {          # -Fe[=]<output>
+            my $val = ($1 ? $1 : shift @ARGV);
+            Error("link: multiple outputs specified <$output> and <$val>")
+                if ($output);
+            $linktype = 'exe';
+            $output = $val;
+
+        } elsif ('wcl386' eq $cc and /^[-\/]Fm[=]?(.*)/i) { # -Fm[=]<output>
+            my $val = ($1 ? $1 : shift @ARGV);
+            Error("link: multiple mapfile specified <$mapfile> and <$val>")
+                if ($mapfile);
+            $mapfile = $val;
+
+        } elsif (/^[-\/]Map[=]?(.*)/i) {        # -Map[=]<output>
+            my $val = ($1 ? $1 : shift @ARGV);
+            Error("link: multiple mapfile specified <$mapfile> and <$val>")
+                if ($mapfile);
+            $mapfile = $val;
+
+        } elsif (/^(.*)\.lo$/ || /^(.*)\.o$/ || /^(.*)\.obj$/i) {
             push @OBJECTS, $_;
 
         } elsif (/^(.*)\.res$/) {
@@ -350,7 +378,7 @@ Link() {
         } elsif (/^(.*)\.rc$/) {
             Error("link: $_ not supported\n");
 
-        } elsif (/^(.*)\.la$/ || /^(.*)\.a$/ || /^(.*)\.lib$/) {
+        } elsif (/^(.*)\.la$/ || /^(.*)\.a$/ || /^(.*)\.lib$/i) {
             push @LIBRARIES, $_;
 
         } elsif (/^-l(.*)$/) {
@@ -525,8 +553,10 @@ Link() {
         if (!('cl' eq $cc || 'wcl386' eq $cc || 'gcc' eq $cc));
     Error("link: unable to determine output")
         if (!$output);
-    Error("link: output file suffix not <.la>")
-        if ($output !~ /.la$/);
+    if ($linktype eq 'dll') {
+      Error("link: output file suffix not <.la>")
+          if ($output !~ /.la$/);
+    }
 
     Verbose "cc:       $cc";
     Verbose "output:   $output";
@@ -573,7 +603,7 @@ Link() {
     my $dllname  = "${basename}${version_number}.dll";
     my $dllpath  = "${basepath}${version_number}.dll";
     my $pdbpath  = "${basepath}${version_number}.pdb";
-    my $mappath  = "${basepath}${version_number}.map";
+    my $mappath  = ($mapfile ? $mapfile : "${basepath}${version_number}.map");
     my $manifestpath = "${basepath}${version_number}.dll.manifest";
     my $libpath  = "${basepath}.lib";           # import library
     my $exppath  = "${basepath}.exp";           # export library
@@ -583,30 +613,73 @@ Link() {
         #   If you link with an .exp file, LINK does not produce an import library, because it assumes that LIB already created one.
         #   For details about .exp files and import libraries, see "Working with Import Libraries and Export Files" (MSDN).
         #
-    my $sympath  = undef;
+    my $sympath = undef;
+
+    if ($linktype eq 'dll') {
+        my @BAD_OBJECTS = ();
+
+        for my $obj (@OBJECTS) {                # usage warning
+            push @BAD_OBJECTS, $obj
+                if ($obj !~ /\.lo$/i);
+        }
+
+        if (scalar @BAD_OBJECTS) {
+print "*** Warning: Linking the shared library ${output} against the\n";
+print "*** non-libtool objects @BAD_OBJECTS is not portable!\n";
+        }
+
+    } elsif ($linktype eq 'exe') {
+        my @BAD_OBJECTS = ();
+
+        for my $obj (@OBJECTS) {                # usage warning
+            push @BAD_OBJECTS, $obj
+                if ($obj =~ /\.lo$/i);
+        }
+
+        if (scalar @BAD_OBJECTS) {
+print "*** Warning: Linking the executable ${output} against the\n";
+print "*** non-libtool objects @BAD_OBJECTS is not portable!\n";
+        }
+
+        $output .= '.exe'
+            if ($output !~ /\.exe$/i);
+    }
 
     if ('cl' eq $cc) {
         #
         #   MSVC/Watcom
         #
-        if (defined $ENV{'VCINSTALLDIR'}) {      # 2008
-            $cmd = "\"%VCINSTALLDIR%\\bin\\link\" \@$cmdfile";
+        if (defined $ENV{'VCToolsInstallDir'}) { # 2010 plus
+            my $toolbase = $ENV{'VCToolsInstallDir'};
+            $cmd = "\"${toolbase}\\bin\\Hostx86\\x86\\link\" \@$cmdfile";
 
-        } else {                                 # 2010 plus
-            $cmd = "\"%VCToolsInstallDir%\\bin\\Hostx86\\x86\\link\" \@$cmdfile";
+        } elsif (defined $ENV{'VCINSTALLDIR'}) { # 2008
+            my $toolbase = $ENV{'VCINSTALLDIR'};
+            $cmd = "\"${toolbase}\\bin\\link\" \@$cmdfile";
+
+        } else {                                 # default
+            $cmd = "link \@$cmdfile";
         }
 
         open(CMD, ">${cmdfile}") or
             die "cannot create <${$cmdfile}>: $!\n";
-        print CMD "/DLL\n";
-        print CMD "/SUBSYSTEM:WINDOWS\n";
-        print CMD "/ENTRY:_DllMainCRTStartup\@12"."\n";
-        print CMD "/OUT:${dllpath}\n";
-        print CMD "/IMPLIB:${libpath}\n";
+
+        if ($linktype eq 'dll') {
+            print CMD "/DLL\n";
+            print CMD "/SUBSYSTEM:WINDOWS\n";
+            print CMD "/ENTRY:_DllMainCRTStartup\@12"."\n";
+            print CMD "/OUT:${dllpath}\n";
+            print CMD "/IMPLIB:${libpath}\n";
+        } else {
+            print CMD "/SUBSYSTEM:CONSOLE\n";
+            print CMD "/OUT:${output}\n";
+
+        }
         print CMD "/MAP:${mappath}\n";
         print CMD "/MAPINFO:EXPORTS\n";
         print CMD "/VERSION:${dll_version}\n"
             if ($dll_version);
+
         print CMD "/NOLOGO\n"
             if ($o_quiet || $o_silent);
         print CMD "/INCREMENTAL:NO\n";
@@ -618,14 +691,16 @@ Link() {
       foreach(@RESOURCES) {
         print CMD true_object($_)."\n";
       }
-      foreach(@EXPORTS) {
-        print CMD "/EXPORT:".MSVCExportDef($_)."\n";
+      if ($linktype eq 'dll') {
+        foreach(@EXPORTS) {
+          print CMD "/EXPORT:".MSVCExportDef($_)."\n";
+        }
       }
       foreach(@LIBPATHS) {
         print CMD "/LIBPATH:$_\n";
       }
       foreach(@LIBRARIES) {
-         print CMD "$_\n";
+        print CMD unix2dos(true_library($_))."\n";
       }
         close(CMD);
 
@@ -637,32 +712,47 @@ Link() {
 
         open(CMD, ">${cmdfile}") or
             die "cannot create <${$cmdfile}>: $!\n";
-        print CMD "system   nt_dll initinstance terminstance\n";
-            #
-            #   When a dynamic link library uses the Watcom C/C++ run-time libraries, an automatic data
-            #   segment is created each time a new process accesses the dynamic link library.  For this reason,
-            #   initialization code must be executed when a process accesses the dynamic link library for the
-            #   first time.  To achieve this, "INITINSTANCE" must be specified in the "SYSTEM" directive.
-            #   Similarly, "TERMINSTANCE" must be specified so that the termination code is executed when
-            #   a process has completed its access to the dynamic link library.  If the Watcom C/C++ run-time
-            #   libraries are not used, these options are not required.
-            #
-        print CMD "name     ${dllpath}\n";
-     #
+
+        if ($linktype eq 'dll') {
+            print CMD "system   nt_dll initinstance terminstance\n";
+                #
+                #   nt_dll: Windows NT Dynamic Link Libraries.
+                #
+                #   When a dynamic link library uses the Watcom C/C++ run-time libraries, an automatic data
+                #   segment is created each time a new process accesses the dynamic link library.  For this reason,
+                #   initialization code must be executed when a process accesses the dynamic link library for the
+                #   first time.  To achieve this, "INITINSTANCE" must be specified in the "SYSTEM" directive.
+                #   Similarly, "TERMINSTANCE" must be specified so that the termination code is executed when
+                #   a process has completed its access to the dynamic link library.  If the Watcom C/C++ run-time
+                #   libraries are not used, these options are not required.
+                #
+            print CMD "name     ${dllpath}\n";
+            print CMD "option   implib=${libpath}\n";
+            print CMD "option   checksum\n";   # create an MS-CRC32 checksum for image.
+        } else {
+            print CMD "system   nt\n";
+                #
+                #   nt: Windows NT Character-Mode Executable.
+                #   nt_win: Windows NT Windowed Executable.
+                #
+            print CMD "name     ${output}\n";
+        }
+
      #  print CMD "option   modname='${modulepath}'\n";
      #  print CMD "option   copyright=''\n";
      #  print CMD "option   description=${DESCRIPTION}\n"
      #      if ($DESCRIPTION);
-        print CMD "option   implib=${libpath}\n";
+
         print CMD "option   version=${dll_version}\n"
             if ($dll_version);
         print CMD "option   map=${mappath}\n";
         print CMD "option   static\n";          # export statics within the map file.
         print CMD "option   artificial\n";      # export internal symbols.
         print CMD "sort\n";                     # sort symbol by address.
-        print CMD "option   checksum\n";
+
         print CMD "option   quiet\n"
             if ($o_quiet || $o_silent);
+
       if (! $wc_debugger) {                     # options are exclusive; plus before objects.
         $sympath = "${basepath}${version_number}.sym";
         print CMD "option   symfile=${sympath}\n";
@@ -688,7 +778,7 @@ Link() {
         print CMD "libpath  ".unix2dos($_)."\n";
       }
       foreach(@LIBRARIES) {
-        print CMD "library  $_\n";
+        print CMD "library  ".unix2dos(true_library($_))."\n";
       }
         close(CMD);
 
@@ -759,29 +849,29 @@ Link() {
     }
 
     # generate la artifact
-    unlink $cmdfile, $deffile
-        if (! $o_keeptmp);
-    open(LA, ">${output}") or
-        die "cannot create <$output> : $!\n";
-    print LA "#libtool win32 generated, do not modify\n";
-    print LA "mode=link\n";
-    print LA "cc=$cc\n";
-    print LA "lib=${libpath}\n";
-    print LA "exp=${exppath}\n" if ($exppath);
-    print LA "map=${mappath}\n" if ($mappath);
-    print LA "sym=${sympath}\n" if ($sympath);
-    print LA "dll=${dllpath}\n";
-    print LA "pdb=${pdbpath}\n" if ($pdbpath);
-    print LA "manifest=${manifestpath}\n" if ($manifestpath);
-    print LA "[objects]\n";
-    foreach(@OBJECTS) {
-        print LA true_object($_)."\n";
+    if ($linktype eq 'dll') {
+        open(LA, ">${output}") or
+            die "cannot create <$output> : $!\n";
+        print LA "#libtool win32 generated, do not modify\n";
+        print LA "mode=link\n";
+        print LA "cc=$cc\n";
+        print LA "lib=${libpath}\n";
+        print LA "exp=${exppath}\n" if ($exppath);
+        print LA "map=${mappath}\n" if ($mappath);
+        print LA "sym=${sympath}\n" if ($sympath);
+        print LA "dll=${dllpath}\n";
+        print LA "pdb=${pdbpath}\n" if ($pdbpath);
+        print LA "manifest=${manifestpath}\n" if ($manifestpath);
+        print LA "[objects]\n";
+        foreach(@OBJECTS) {
+            print LA true_object($_)."\n";
+        }
+        print LA "[libraries]\n";
+        foreach(@LIBRARIES) {
+            print LA "$_\n";
+        }
+        close(LA);
     }
-    print LA "[libraries]\n";
-    foreach(@LIBRARIES) {
-        print LA "$_\n";
-    }
-    close(LA);
 
     if ('gcc' eq $cc) {
         copy("${basepath}.a", $libpath) or
@@ -793,6 +883,10 @@ Link() {
         copy($dllpath, "${bindir}/${dllname}") or
             die "link: unable to copy <$dllname> to <${bindir}/${dllname}> : $!\n";
     }
+
+    unlink $cmdfile, $deffile                   # remove temporary
+        if (! $o_keeptmp);
+
     return 0;
 }
 
@@ -1085,6 +1179,33 @@ true_object($)          #(lo)
     close(LO);
     die "internal: lo truename missing <$lo>" if (!$true_object);
     return $true_object;
+}
+
+
+#   Function:       true_library
+#       Retrieve the true object name for the specified 'la' image.
+#
+sub
+true_library($)         #(la)
+{
+    my ($la) = @_;
+    my $true_library;
+
+    return $la
+        if ($la !~ /.la$/);
+    open(LA, "<${la}") or
+        die "cannot open library image <$la> : $!\n";
+    while (<LA>) {
+        s/\s*([\n\r]+|$)//;
+        next if (!$_ || /^\s#/);
+        if (/^lib=(.*)$/) {
+            $true_library = $1;
+            last;
+        }
+    }
+    close(LA);
+    die "internal: la truename missing <$la>" if (!$true_library);
+    return $true_library;
 }
 
 
@@ -1460,7 +1581,6 @@ Otherwise, an executable program is created.
 
 EOF
 }
-
 
 
 #   Function:       System

@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.4 2019/05/01 23:27:25 cvsuser Exp $
+# $Id: Makefile.in,v 1.5 2019/05/07 00:50:14 cvsuser Exp $
 # libduktape makefile.
 #
 #
@@ -146,7 +146,7 @@ $(DUKTAPEDLL):		Makefile $(D_OBJ)/.created $(DLLOBJS)
 
 $(DUK):		MAPFILE=$(basename $@).map
 $(DUK):			Makefile $(DUKOBJS)
-		$(CC) $(LDFLAGS) -o $@ $(DUKOBJS) $(D_LIB)/libduktape_static$(A) $(LDLIBS) @LDMAPFILE@
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(DUKOBJS) $(DUKTAPEDLL) $(LDLIBS) @LDMAPFILE@
 
 version.h:		Makefile
 		@sh -c "\
