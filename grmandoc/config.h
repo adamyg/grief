@@ -1,7 +1,7 @@
 #ifndef MANDOC_CONFIG_H_INCLUDED
 #define MANDOC_CONFIG_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: config.h,v 1.15 2019/05/01 00:27:09 cvsuser Exp $
+/* $Id: config.h,v 1.16 2019/05/07 23:40:51 cvsuser Exp $
  * mandoc config.h
  *
  * Copyright (c) 201 - 2018, Adam Young.
@@ -26,6 +26,7 @@
  */
 
 #if defined(WIN32) && !defined(__MINGW32__)
+
 #include "../libw32/config.h"
 
 #include <stddef.h>
@@ -37,8 +38,10 @@
 #define  snprintf _snprintf    /*2015+*/
 #endif
 #endif
-#define  mktemp _mktemp
 
+#ifndef  mktemp
+#define  mktemp _mktemp
+#endif
 #ifndef  chdir
 #define  chdir w32_chdir
 #endif
@@ -77,8 +80,10 @@
  *  compat_strtonum (1.13.4)
  */
 
-#if defined(linux)
+#if !defined(_GNU_SOURCE)
+#if defined(linux) || defined(__CYGWIN__) //FIXME
 #define _GNU_SOURCE             /*see: string.h*/
+#endif
 #endif
 
 #include <stdio.h>
