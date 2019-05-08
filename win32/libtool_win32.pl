@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: libtool_win32.pl,v 1.32 2019/05/07 00:50:36 cvsuser Exp $
+# $Id: libtool_win32.pl,v 1.33 2019/05/07 23:26:52 cvsuser Exp $
 # libtool emulation for WIN32 builds.
 #
 #   **Warning**
@@ -363,7 +363,7 @@ Link() {
                 if ($mapfile);
             $mapfile = $val;
 
-        } elsif (/^[-\/]Map[=]?(.*)/i) {        # -Map[=]<output>
+	} elsif (/^[-\/]Map[:=]?(.*)/i) {	# -Map[:=]<output>
             my $val = ($1 ? $1 : shift @ARGV);
             Error("link: multiple mapfile specified <$mapfile> and <$val>")
                 if ($mapfile);

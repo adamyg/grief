@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.15 2018/11/12 01:56:06 cvsuser Exp $
+# $Id: Makefile.in,v 1.16 2019/05/07 23:30:30 cvsuser Exp $
 # libbsdmdoc and grmanddoc
 #
 #
-# Copyright (c) 2014 - 2018, Adam Young.
+# Copyright (c) 2014 - 2019, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -47,6 +47,7 @@ CC=		@CC@
 CXX=		@CXX@
 AR=		@AR@
 RANLIB=		@RANLIB@
+LIBTOOL=	@LIBTOOL@
 PERL=		@PERL@
 RM=		@RM@
 
@@ -261,19 +262,19 @@ unpacked:		mdocversion.h $(LIBRARIES) $(MANDOC) $(CGI) $(DEMANDOC) $(SOELIM)
 
 $(MANDOC):		MAPFILE=$(basename $@).map
 $(MANDOC):		$(MANDOC_OBJS)
-		$(CC) $(LDFLAGS) -o $@ $(MANDOC_OBJS) $(LDLIBS) @LDMAPFILE@
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(MANDOC_OBJS) $(LDLIBS) @LDMAPFILE@
 
 $(CGI):			MAPFILE=$(basename $@).map
 $(CGI):			$(CGI_OBJS)
-		$(CC) $(LDFLAGS) -o $@ $(CGI_OBJS) $(LDLIBS) @LDMAPFILE@
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(CGI_OBJS) $(LDLIBS) @LDMAPFILE@
 
 $(DEMANDOC):		MAPFILE=$(basename $@).map
 $(DEMANDOC):		$(DEMANDOC_OBJS)
-		$(CC) $(LDFLAGS) -o $@ $(DEMANDOC_OBJS) $(LDLIBS) @LDMAPFILE@
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(DEMANDOC_OBJS) $(LDLIBS) @LDMAPFILE@
 
 $(SOELIM):		MAPFILE=$(basename $@).map
 $(SOELIM):		$(SOELIM_OBJS)
-		$(CC) $(LDFLAGS) -o $@ $(SOELIM_OBJS) $(LDLIBS) @LDMAPFILE@
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(SOELIM_OBJS) $(LDLIBS) @LDMAPFILE@
 
 $(LIBMANDOC):		$(D_OBJ)/.created $(LIBMANDOC_OBJS)
 		$(RM) $(RMFLAGS) $@
