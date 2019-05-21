@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.91 2019/01/27 00:15:27 cvsuser Exp $
+# $Id: makelib.pl,v 1.92 2019/05/06 02:29:25 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -644,6 +644,7 @@ my @x_functions     = (
         'truncate', 'ftruncate',
         'getline', 'getdelim',                  # bsd/linux
         'ctime_r', 'localtime_r', 'gmtime_r', 'asctime_r', #posix.1
+              '_get_timezone',
         'mktime',
         'timegm',                               # bsd/linux extensions
         'feclearexpect',                        # fenv.h/c99
