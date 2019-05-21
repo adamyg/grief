@@ -25,7 +25,15 @@
 #define LIBARCHIVE_VERSION_STRING "3.3.3"
 #define LIBARCHIVE_VERSION_NUMBER "3003003"
 
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0601 // Windows 7; bcrypt requirement
+#endif
+
 #include "../contrib_config.h"
+
+#if !defined(HAVE_BCRYPT_H)
+#error <bcrypt.h> missing ...
+#endif
 
 #undef lstat
 #undef open

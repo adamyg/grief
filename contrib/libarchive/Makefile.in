@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.12 2018/10/18 00:38:42 cvsuser Exp $
+# $Id: Makefile.in,v 1.13 2019/05/13 02:02:40 cvsuser Exp $
 # libarchive makefile
 #
 #
@@ -44,7 +44,7 @@ endif
 ifeq ("win32","@build_os@")
 CEXTRA+=	-D_CRT_SECURE_NO_WARNINGS
 endif
-CEXTRA+=	-D_WIN32 -D_WIN32_WINNT=0X501
+CEXTRA+=	-D_WIN32 -D_WIN32_WINNT=0X601
 CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
 CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
 YFLAGS=		-d
@@ -194,15 +194,15 @@ LIBOBJS+=\
 	$(D_OBJ)/archive_write_set_passphrase$(O)		\
 	$(D_OBJ)/xxhash$(O)
 
-#special 3.3.3
-# XXX:  crypt32.dll dynamic loader ...
-LIBOBJS+=\
-	$(D_OBJ)/w32_crypto$(O)
-
 ifeq ("yes","@ISWIN32@")
 LIBOBJS+=\
 	$(D_OBJ)/archive_windows$(O)				\
 	$(D_OBJ)/filter_fork_windows$(O)
+
+#special 3.3.3
+# XXX:  crypt32.dll dynamic loader ...
+LIBOBJS+=\
+	$(D_OBJ)/w32_crypto$(O)
 else
 LIBOBJS+=\
 	$(D_OBJ)/archive_read_disk_posix$(O)			\

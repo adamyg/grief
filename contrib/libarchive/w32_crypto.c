@@ -1,12 +1,11 @@
-
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_crypto_c,"$Id: w32_crypto.c,v 1.2 2019/03/13 21:45:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_crypto_c,"$Id: w32_crypto.c,v 1.3 2019/05/13 02:02:41 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * crypt32.dll dynamic loader ...
  *
- * Copyright (c) 2017 - 2018, Adam Young.
+ * Copyright (c) 2017 - 2019, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -28,6 +27,12 @@ __CIDENT_RCSID(gr_w32_crypto_c,"$Id: w32_crypto.c,v 1.2 2019/03/13 21:45:50 cvsu
  * License for more details.
  * ==end==
  */
+
+
+#ifndef _WINVER
+#define _WINVER 0x0601 // Windows 7
+#define _WIN32_WINN 0x0601 // Windows 7
+#endif
 
 #define  WINDOWS_MEAN_AND_LEAN
 #include <windows.h>
@@ -336,6 +341,7 @@ NTSTATUS WINAPI BCryptDeriveKeyCapi(BCRYPT_HASH_HANDLE hHash, BCRYPT_ALG_HANDLE 
     RESOLVE_CRYPT32_API(BCryptDeriveKeyCapi)
         (hHash, hTargetAlg, pbDerivedKey, cbDerivedKey, dwFlags);
 }
+
 
 NTSTATUS WINAPI BCryptDeriveKeyPBKDF2(BCRYPT_ALG_HANDLE hPrf, PUCHAR pbPassword, ULONG cbPassword, PUCHAR pbSalt, ULONG cbSalt, ULONGLONG cIterations, PUCHAR pbDerivedKey, ULONG cbDerivedKey, ULONG dwFlags) {
     RESOLVE_CRYPT32_API(BCryptDeriveKeyPBKDF2)
