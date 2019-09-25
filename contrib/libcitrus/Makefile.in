@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.7 2015/02/22 22:13:55 ayoung Exp $
+# $Id: Makefile.in,v 1.8 2019/05/22 00:45:30 cvsuser Exp $
 # libcitrus and modules makefile
 #
 #
@@ -32,7 +32,7 @@ LIBTOOL=	@LIBTOOL@
 # Common flags
 
 ARFLAGS=	rcv
-XFLAGS=		
+XFLAGS=
 COPT=		@CFLAGS@
 CWARN=		@CWARN@
 CDEBUG=		@CDEBUG@
@@ -100,28 +100,28 @@ LIBOBJS=\
 
 
 MODULES=\
-	BIG5			\
-	DECHanyu		\
-	EUC			\
-	EUCTW			\
-	GBK2K			\
-	HZ			\
-	ISO2022			\
-	JOHAB			\
-	MSKanji			\
-	UES			\
-	UTF1632			\
-	UTF7			\
-	UTF8			\
-	VIQR			\
-	ZW			\
-	iconv_none		\
-	iconv_std		\
-	mapper_646		\
-	mapper_none		\
-	mapper_parallel		\
-	mapper_serial		\
-	mapper_std		\
+	BIG5		\
+	DECHanyu	\
+	EUC		\
+	EUCTW		\
+	GBK2K		\
+	HZ		\
+	ISO2022		\
+	JOHAB		\
+	MSKanji		\
+	UES		\
+	UTF1632		\
+	UTF7		\
+	UTF8		\
+	VIQR		\
+	ZW		\
+	iconv_none	\
+	iconv_std	\
+	mapper_646	\
+	mapper_none	\
+	mapper_parallel	\
+	mapper_serial	\
+	mapper_std	\
 	mapper_zone
 
 MODULEOBJS=	$(addprefix $(D_OBJ)/,$(addsuffix .lo,$(MODULES)))
@@ -159,7 +159,97 @@ clean:
 		-@$(LIBTOOL) --mode=clean $(RM) $(MODULELIBS) >/dev/null 2>&1
 		-@$(RM) $(LIBOBJS) >/dev/null 2>&1
 
-$(D_LIB)/libmapper_parallel.la::	$(D_OBJ)/citrus_mapper_serial.lo
+$(D_LIB)/libBIG5.la:			$(D_OBJ)/citrus_big5.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_LIB)/libDECHanyu.la:		$(D_OBJ)/citrus_dechanyu.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_LIB)/libEUC.la:			$(D_OBJ)/citrus_euc.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_LIB)/libEUCTW.la:			$(D_OBJ)/citrus_euctw.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_LIB)/libGBK2K.la:			$(D_OBJ)/citrus_gbk2k.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_LIB)/libHZ.la:			$(D_OBJ)/citrus_hz.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_LIB)/libISO2022.la:			$(D_OBJ)/citrus_iso2022.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_LIB)/libJOHAB.la:			$(D_OBJ)/citrus_johab.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_LIB)/libMSKanji.la:			$(D_OBJ)/citrus_mskanji.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_LIB)/libUES.la:			$(D_OBJ)/citrus_ues.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_LIB)/libUTF1632.la:			$(D_OBJ)/citrus_utf1632.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_LIB)/libUTF7.la:			$(D_OBJ)/citrus_utf7.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_LIB)/libUTF8.la:			$(D_OBJ)/citrus_utf8.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_LIB)/libVIQR.la:			$(D_OBJ)/citrus_viqr.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_LIB)/libZW.la:			$(D_OBJ)/citrus_zw.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_LIB)/libiconv_none.la:		$(D_OBJ)/citrus_iconv_none.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_LIB)/libiconv_std.la:		$(D_OBJ)/citrus_iconv_std.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_LIB)/libmapper_646.la:		$(D_OBJ)/citrus_mapper_646.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_LIB)/libmapper_none.la:		$(D_OBJ)/citrus_mapper_none.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_LIB)/libmapper_parallel.la:		$(D_OBJ)/citrus_mapper_serial.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_LIB)/libmapper_serial.la:		$(D_OBJ)/citrus_mapper_serial.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_LIB)/libmapper_std.la:		$(D_OBJ)/citrus_mapper_std.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+
+$(D_LIB)/libmapper_zone.la:		$(D_OBJ)/citrus_mapper_zone.lo
+		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
+			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
 
 $(D_LIB)/lib%.la:	$(D_OBJ)/citrus_%.lo $(D_LIB)/libcitrus.lib
 		$(LIBTOOL) --mode=link $(CC) -o $@ -c $< \
