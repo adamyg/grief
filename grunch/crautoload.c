@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crautoload_c,"$Id: crautoload.c,v 1.11 2014/10/22 02:33:28 ayoung Exp $")
+__CIDENT_RCSID(gr_crautoload_c,"$Id: crautoload.c,v 1.14 2020/04/23 12:35:50 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crautoload.c,v 1.11 2014/10/22 02:33:28 ayoung Exp $
+/* $Id: crautoload.c,v 1.14 2020/04/23 12:35:50 cvsuser Exp $
  * Autoload directive support.
  *
  *
@@ -240,7 +240,7 @@ module_find(const char *name, const int length)
 
     TAILQ_FOREACH(m, modulelist, ml_node) {
         assert(MODULE_MAGIC == m->ml_magic);
-        if (length == m->ml_length &&
+        if ((unsigned)length == m->ml_length &&
                 0 == memcmp(name, m->ml_name, length)) {
             return m;
         }
@@ -282,17 +282,7 @@ autoload_push(const char *funcname)
     }
 }
 
-
-#if (defined(_MSC_VER) || defined(__WATCOMC__)) && \
-        !defined(HAVE_FTRUNCATE)
-int
-ftruncate(int fd, off_t length)
-{
-    return _chsize(fd, length);
-}
-#endif
-
-
+        
 int
 autoload_export(int commit)
 {
@@ -388,8 +378,8 @@ autoload_export(int commit)
 
         fputs("void\nmain(void)\n{\n", x_autofp);
         TAILQ_FOREACH(m, modulelist, ml_node) {
-            NameList_t *list = &m->ml_names;
-            Name_t *n;
+            NameList_t *mlist = &m->ml_names;
+            Name_t *mn;
 
             assert(MODULE_MAGIC == m->ml_magic);
             if (m->ml_count) {
@@ -399,10 +389,10 @@ autoload_export(int commit)
                 }
                 fprintf(x_autofp,
                         "    autoload(\"%s\"", m->ml_name);
-                TAILQ_FOREACH(n, list, an_list) {
-                    assert(NAME_MAGIC == n->an_magic);
+                TAILQ_FOREACH(mn, mlist, an_list) {
+                    assert(NAME_MAGIC == mn->an_magic);
                     fprintf(x_autofp,
-                        ",\n        \"%s\"", n->an_name);
+                        ",\n        \"%s\"", mn->an_name);
                 }
                 fputs(");\n", x_autofp);
             }
@@ -492,7 +482,7 @@ name_find(Module_t *m, const char *name, const int length)
 
         TAILQ_FOREACH(n, list, an_list) {
             assert(NAME_MAGIC == n->an_magic);
-            if (length == n->an_length &&
+            if ((unsigned)length == n->an_length &&
                     0 == memcmp(name, n->an_name, length)) {
                 return n;
             }
@@ -507,5 +497,5 @@ name_compare(const struct Name *a, const struct Name *b)
 {
     return strcmp(a->an_name, b->an_name);
 }
-/*end*/
 
+/*end*/

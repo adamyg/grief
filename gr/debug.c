@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_debug_c,"$Id: debug.c,v 1.34 2014/10/22 02:32:54 ayoung Exp $")
+__CIDENT_RCSID(gr_debug_c,"$Id: debug.c,v 1.35 2020/04/21 00:01:55 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: debug.c,v 1.34 2014/10/22 02:32:54 ayoung Exp $
+/* $Id: debug.c,v 1.35 2020/04/21 00:01:55 cvsuser Exp $
  * internal debug/diagnositics.
  *
  *
@@ -43,7 +43,7 @@ __CIDENT_RCSID(gr_debug_c,"$Id: debug.c,v 1.34 2014/10/22 02:32:54 ayoung Exp $"
 
 int                     x_dflags = 0;           /* global flags */
 
-static void             trace_sym1(SYMBOL *sp);
+static void             trace_sym1(const SYMBOL *sp);
 static void             trace_list0(const LIST *lp, int level);
 static void             trace_string(const char *str);
 
@@ -352,7 +352,7 @@ trace_line2(const LINE_t *lp)
  *      Function to trace assignments to symbols.
  */
 void
-trace_sym(SYMBOL *sp)
+trace_sym(const SYMBOL *sp)
 {
     if (0 == x_dflags) {
         return;
@@ -367,7 +367,7 @@ trace_sym(SYMBOL *sp)
  *      Function to trace references to a symbol.
  */
 void
-trace_sym_ref(SYMBOL *sp)
+trace_sym_ref(const SYMBOL *sp)
 {
     if (0 == x_dflags) {
         return;
@@ -382,7 +382,7 @@ trace_sym_ref(SYMBOL *sp)
  *      Print value of a symbol.
  */
 static void
-trace_sym1(SYMBOL *sp)
+trace_sym1(const SYMBOL *sp)
 {
     switch (sp->s_type) {
     case F_INT:
@@ -536,14 +536,6 @@ trace_list0(const LIST *lp, int level)
             trace_list0((LIST *)(r_ptr(rp)), level+1);
             trace_log(")");
             break;
-        case F_ID: {
-                const int id = LGET_ID(lp);
-                const char *name = builtin[id].b_name;
-
-                assert(id >= 0 && (unsigned)id < builtin_count);
-                trace_str(name);
-            }
-            break;
         case F_HALT:
             if (0 == level)
                 trace_str(")");
@@ -558,6 +550,22 @@ trace_list0(const LIST *lp, int level)
         case F_NULL:
             trace_str("NULL");
             break;
+
+        case F_ID: {
+                const int id = LGET_ID(lp);
+                const char *name = builtin[id].b_name;
+
+                assert(id >= 0 && (unsigned)id < builtin_count);
+                trace_str(name);
+            }
+            break;
+        case F_SYM:
+            trace_string(LGET_PTR2(const char, lp));
+            break;
+        case F_REG:
+            trace_string(LGET_PTR2(const char, lp));
+            break;
+
         default:
             trace_log("<dont-know type=%d - aborting dump> ", *lp);
             return;
@@ -597,4 +605,5 @@ trace_string(const char *str)
     }
     trace_log("\"");
 }
+
 /*end*/

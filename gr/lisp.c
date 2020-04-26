@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_lisp_c,"$Id: lisp.c,v 1.42 2019/01/26 22:27:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_lisp_c,"$Id: lisp.c,v 1.43 2020/04/21 00:01:55 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: lisp.c,v 1.42 2019/01/26 22:27:08 cvsuser Exp $
+/* $Id: lisp.c,v 1.43 2020/04/21 00:01:55 cvsuser Exp $
  * List primitives.
  *
  *
@@ -32,6 +32,8 @@ __CIDENT_RCSID(gr_lisp_c,"$Id: lisp.c,v 1.42 2019/01/26 22:27:08 cvsuser Exp $")
 #include "main.h"
 #include "math.h"                               /* do_cmp_op */
 #include "symbol.h"
+
+#define WORD_INLINE
 #include "word.h"
 
 /*
@@ -95,9 +97,9 @@ atom_size(const LIST *lp)
 LIST *
 atom_push_sym(LIST *lp, const char *sym)
 {
-    *lp = F_STR;                                /* execute() requirement */
+    *lp = F_SYM;                                /* execute() requirement */
     LPUT_PTR(lp, sym);
-    return lp + sizeof_atoms[F_STR];
+    return lp + sizeof_atoms[F_SYM];
 }
 
 
@@ -323,6 +325,25 @@ atom_next(const LIST *lp)
 
 
 const LIST *
+atom_next_nonnull(const register LIST *lp)
+{
+    assert(lp && *lp < F_MAX);
+    switch (*lp) {
+    case F_HALT:
+        break;
+    case F_LIST:
+        lp += LGET_LEN(lp);
+        assert(F_HALT == lp[-1]);
+        break;
+    default:
+        lp += sizeof_atoms[*lp];
+        break;
+    }
+    return lp;
+}
+
+
+const LIST *
 atom_nth(const LIST *lp, int idx)
 {
     assert(idx >= 0);                           /* 0 .. (length-1) */
@@ -465,8 +486,10 @@ atom_xstr(const LIST *lp)
 {
     if (lp) {
         switch (*lp) {
-        case F_LIT:
         case F_STR:
+        case F_LIT:
+        case F_SYM:
+        case F_REG:
             return LGET_PTR2(const char, lp);
         case F_RSTR:
             return (const char *) r_ptr(LGET_PTR2(ref_t, lp));
@@ -500,7 +523,7 @@ atom_xlist(const LIST *lp)
         case F_RLIST:
             return (const LIST *) r_ptr(LGET_PTR2(ref_t, lp));
         case F_LIST:
-            return lp + sizeof_atoms[F_LIST];
+            return lp + CM_ATOM_LIST_SZ;
         }
     }
     return (NULL);
@@ -532,18 +555,8 @@ atom_assign_acc(const LIST *lp)
         acc_assign_float(LGET_FLOAT(lp));
         break;
 
-    case F_STR:
     case F_LIT:
         acc_assign_str(LGET_PTR2(const char, lp), -1);
-        break;
-
-    case F_ID: {
-            const int id = LGET_ID(lp);
-            const char *name = builtin[id].b_name;
-
-            assert(id >= 0 || (unsigned)id < builtin_count);
-            acc_assign_str(name, -1);
-        }
         break;
 
     case F_RSTR: {      /* copy on reference */
@@ -556,8 +569,8 @@ atom_assign_acc(const LIST *lp)
             int len;
 
             len = LGET_LEN(lp);
-            len -= sizeof_atoms[F_LIST];
-            lp  += sizeof_atoms[F_LIST];
+            len -= CM_ATOM_LIST_SZ;
+            lp  += CM_ATOM_LIST_SZ;
             assert(F_HALT == lp[len-1]);
             acc_assign_list(lp, len);
         }
@@ -571,8 +584,23 @@ atom_assign_acc(const LIST *lp)
         acc_assign_null();
         return 1;
 
-    case F_HALT:
+    case F_ID: {        /* arg_list() usage */
+            const int id = LGET_ID(lp);
+            const char *name = builtin[id].b_name;
+            assert(id >= 0 || (unsigned)id < builtin_count);
+            acc_assign_str(name, -1);
+        }
+        break;
+
+    case F_SYM:         /* arg_list() usage */
+    case F_REG:
+        acc_assign_str(LGET_PTR2(const char, lp), -1);
+        break;
+
+//  case F_STR:
     default:
+        panic("atom_assign_acc: Unexpected type (0x%x/%d)", *lp, *lp);
+    case F_HALT:
         acc_assign_null();
         return -1;
     }
@@ -605,25 +633,15 @@ atom_assign_sym(const LIST *lp, SYMBOL *sp)
         sym_assign_float(sp, LGET_FLOAT(lp));
         break;
 
-    case F_STR:         /* copy */
-    case F_LIT:
+    case F_LIT:         /* copy */
         sym_assign_str(sp, LGET_PTR2(const char, lp));
-        break;
-
-    case F_ID: {
-            const int id = LGET_ID(lp);
-            const char *name = builtin[id].b_name;
-
-            assert(id >= 0 || (unsigned)id < builtin_count);
-            sym_assign_str(sp, name);
-        }
         break;
 
     case F_LIST:        /* clone */
         sym_donate_ref(sp, rlst_build(atom_xlist(lp), -1));
         break;
 
-    case F_RSTR:         /* reference */
+    case F_RSTR:        /* reference */
         sym_assign_ref(sp, LGET_PTR2(ref_t, lp));
         break;
 
@@ -634,8 +652,13 @@ atom_assign_sym(const LIST *lp, SYMBOL *sp)
     case F_NULL:
         return 1;
 
-    case F_HALT:
+//  case F_STR:        
+//  case F_ID:
+//  case F_SYM:
+//  case F_REG:
     default:
+        panic("atom_assign_sym: Unexpected type (0x%x/%d)", *lp, *lp);
+    case F_HALT:
         return -1;
     }
     return 0;
@@ -645,8 +668,10 @@ atom_assign_sym(const LIST *lp, SYMBOL *sp)
 /*  Function:           atom_copy
  *      Copy an atom from one list to another list.
  *
- *      o Sublists are copied over as a single atom.
- *      o Reference counters are incremented where necessary.
+ *          o Sublists are copied over as a single atom.
+ *          o Reference counters are incremented where necessary.
+ *
+ *      Note: arg_list() macro may encounter builtins/symbols during operations.
  *
  *  Parameters:
  *      dstlp - Destination atom list address.
@@ -689,8 +714,8 @@ atom_copy(LIST *dstlp, const LIST *srclp)
             assert(n <= LIST_MAXLEN);
 
             LPUT_LEN(dstlp, (int16_t)n);
-            dstlp += sizeof_atoms[F_LIST];
-            srclp += sizeof_atoms[F_LIST];
+            dstlp += CM_ATOM_LIST_SZ;
+            srclp += CM_ATOM_LIST_SZ;
             while (srclp < end_lp) {
                 n = atom_copy(dstlp, srclp);
                 dstlp += n;
@@ -702,28 +727,32 @@ atom_copy(LIST *dstlp, const LIST *srclp)
             return dstlp - lp;
         }
 
-    case F_STR:
-        LPUT_PTR(dstlp, LGET_PTR2(const char, srclp));
-        panic("atom_copy: STR.");               /* compiler bug! */
+    case F_NULL:        /* null, opcode only */
         break;
 
-    case F_ID: {
-            const int id = LGET_ID(srclp);
+    case F_HALT:
+        panic("atom_copy: Unexpected HALT.");
+        break;
 
+    case F_ID: {        /* arg_list() usage */
+            const int id = LGET_ID(srclp);
             assert(id >= 0 || (unsigned)id < builtin_count);
             LPUT_ID(dstlp, (int16_t)id);
         }
         break;
 
-    case F_NULL:
+    case F_SYM:         /* arg_list() usage */
+        LPUT_PTR(dstlp, LGET_PTR(srclp));
         break;
 
-    case F_HALT:
-        panic("atom_copy: HALT.");
+    case F_REG:         /* arg_list() usage */
+        LPUT_PTR(dstlp, LGET_PTR(srclp));
+        dstlp[SIZEOF_VOID_P + 1] = srclp[SIZEOF_VOID_P + 1];
         break;
 
+//  case R_STR:         /* not within LIST's */
     default:
-        panic("atom_copy: Unknown type (%d).", atom);
+        panic("atom_copy: Unexpected type (0x%x/%d).", atom, atom);
         break;
     }
     return sizeof_atoms[atom];
@@ -775,13 +804,11 @@ argv_size(const LISTV *lvp)
     switch (atom) {
     case F_INT:
     case F_FLOAT:
-    case F_LIT:
     case F_STR:
-    case F_RSTR:
-    case F_NULL:
-    case F_RLIST:
+    case F_LIT:
+    case F_SYM:
+    case F_REG:
         break;
-
     case F_LIST: {
             const LIST *lp = lvp->l_list;
             const int len = atom_size(lp);
@@ -790,13 +817,12 @@ argv_size(const LISTV *lvp)
             assert(F_HALT == lp[len-1]);
             return len;
         }
-
-    case F_HALT:
-        panic("argv_size: HALT.");
+    case F_RSTR:
+    case F_RLIST:
+    case F_NULL:
         break;
-
     default:
-        panic("argv_size: Unknown type (%d).", atom);
+        panic("argv_size: Unexpected type (0x%x/%d).", atom, atom);
         break;
     }
     return sizeof_atoms[atom];
@@ -817,11 +843,10 @@ argv_size(const LISTV *lvp)
  *      int - size of list element in bytes.
  */
 int
-argv_copy(LIST *lp, const LISTV *lvp)
+argv_copy(LIST *lp, const register LISTV *lvp)
 {
-    register LIST atom = lvp->l_flags;
+    LIST atom = lvp->l_flags;
 
-    *lp = atom;
     switch (atom) {
     case F_INT:
         LPUT_INT(lp, lvp->l_int);
@@ -835,8 +860,8 @@ argv_copy(LIST *lp, const LISTV *lvp)
         LPUT_PTR(lp, lvp->l_str);
         break;
 
-    case F_STR:         /* copy on reference */
-        *lp = atom = F_RSTR;
+    case F_STR:         /* argv_list() usage, copy on reference */
+        atom = F_RSTR;
         LPUT_PTR(lp, r_string(lvp->l_str));
         break;
 
@@ -851,9 +876,10 @@ argv_copy(LIST *lp, const LISTV *lvp)
             assert(F_HALT == srclp[len-1]);
             assert(F_HALT == *end_lp);
 
+            *dstlp = F_LIST;
             LPUT_LEN(dstlp, (int16_t)len);
-            dstlp += sizeof_atoms[F_LIST];
-            srclp += sizeof_atoms[F_LIST];
+            dstlp += CM_ATOM_LIST_SZ;
+            srclp += CM_ATOM_LIST_SZ;
             while (srclp < end_lp) {
                 int n = atom_copy(dstlp, srclp);
                 dstlp += n;
@@ -872,17 +898,26 @@ argv_copy(LIST *lp, const LISTV *lvp)
         LPUT_PTR(lp, r_inc(lvp->l_ref));
         break;
 
-    case F_NULL:
+    case F_NULL:        /* opcode only */
         break;
 
-    case F_HALT:
-        panic("argv_copy: HALT.");
+    case F_SYM:         /* argv_list() usage, copy on reference */
+        /*
+         *  Note: Original type is lost, hence can no longer be exec'ed;
+         *      require F_RSYM opcode to retain executable state.
+         */
+        atom = F_RSTR;
+        LPUT_PTR(lp, r_string(lvp->l_sym->s_name));
         break;
 
+//  case F_ID:          /* never within a LISTV */
+//  case F_REG:
+//  case F_HALT:
     default:
-        panic("argv_copy: Unknown type (%d).", atom);
+        panic("argv_copy: Unexpected type (0x%x/%d).", atom, atom);
         break;
     }
+    *lp = atom;
     return sizeof_atoms[atom];
 }
 
@@ -920,13 +955,13 @@ argv_make(LISTV *lvp, const LIST *lp)
         lvp->l_str = LGET_PTR2(const char, lp);
         break;
 
-    case F_STR:
-        lvp->l_str = LGET_PTR2(const char, lp);
-        break;
+//  case F_STR:
+//      lvp->l_str = LGET_PTR2(const char, lp);
+//      break;
 
     case F_LIST:
         lvp->l_list = lp;
-        return sizeof_atoms[F_LIST] + lstsizeof(lp);
+        return CM_ATOM_LIST_SZ + lstsizeof(lp);
 
     case F_RSTR:
     case F_RLIST:
@@ -936,11 +971,32 @@ argv_make(LISTV *lvp, const LIST *lp)
     case F_NULL:
         break;
 
-    case F_HALT:
-        panic("argv_make: HALT.");
+#if (XXX)   //review
+    case F_SYM:         /* arg_list() usage; convert */
+    case F_REG: {
+            const char *name = LGET_PTR2(const char, lp)
+            SYMBOL *sp;
+            if (NULL != (sp = sym_elookup(name))) {
+                lvp->l_flags = F_SYM;
+                lvp->l_sym = sp;
+            } else {
+                lvp->l_flags = F_STR;
+                lvp->l_str = LGET_PTR2(const char, lp);
+            }
+        }
+        break;
+#else
+    case F_SYM:         /* arg_list() usage; convert */
+    case F_REG:
+        lvp->l_flags = F_STR;
+        lvp->l_str = LGET_PTR2(const char, lp);
+        break;
+#endif
 
+//  case F_ID:                
+//  case F_HALT:
     default:
-        panic("argv_make: Unknown type (%d).", atom);
+        panic("argv_make: Unexpected type (0x%x/%d).", atom, atom);
     }
     return sizeof_atoms[atom];
 }
@@ -1153,7 +1209,7 @@ int
 lst_atoms_get(const LIST *lp)
 {
     const struct listhead *lh;
-    int atoms;
+    __CIFDEBUG(int atoms;)
 
     lh = ((const struct listhead *)lp)-1;
     assert(lh->lh_magic1 == LIST_MAGIC);
@@ -1206,7 +1262,7 @@ LIST *
 lst_size(LIST *lp, int newlen, int newatoms)
 {
     struct listhead *lh;
-    int curlen;
+    __CIFDEBUG(int curlen;)
 
     assert(lp != NULL);
 
@@ -1335,7 +1391,7 @@ int
 lst_check(const LIST *lp)
 {
     const struct listhead *lh;
-    int length, atoms;
+    __CIFDEBUG(int length; int atoms;)
 
     lh = ((const struct listhead *)lp)-1;
     assert(lh->lh_magic1 == LIST_MAGIC);
@@ -2468,7 +2524,7 @@ do_is_type(int type)            /* int (declare symbol, [int | string type]) */
                     type = F_FLOAT;
                 }
                 break;
-#if defined(F_ARRRAY)
+#if defined(DO_ARRAY)
             case 'a':
                 if (0 == str_icmp(name, "array"))  {
                     type = F_ARRAY;
@@ -2498,11 +2554,19 @@ do_is_type(int type)            /* int (declare symbol, [int | string type]) */
     }
 
     if (sp) {
-        if (F_NULL == type && isa_list(1)) {
-            const LIST *lp = (const LIST *)r_ptr(sp->s_obj);
-            ret = (NULL == lp || F_HALT == *lp);
+        if (F_NULL == type) {                   /* empty list? */
+            switch (sp->s_type) {
+            case F_LIST: {
+                    const LIST *lp = (const LIST *)r_ptr(sp->s_obj);
+                    ret = (!lp || F_HALT == *lp);
+                }
+                break;
+            case F_NULL:
+                ret = 1;
+                break;
+            }
         } else {
-            ret = (margv[1].l_flags == (accint_t) type);
+            ret = (sp->s_type == type);         /* symbol type */
         }
     }
     acc_assign_int(ret ? 1 : 0);
@@ -2671,7 +2735,7 @@ do_nth(void)
             if (F_RLIST == *lp) {               /* .. read and ref */
                 lp = r_ptr(LGET_PTR2(ref_t, lp));
             } else if (F_LIST == *lp) {         /* .. skip length */
-                lp += sizeof_atoms[F_LIST];
+                lp += CM_ATOM_LIST_SZ;
             } else {                            /* ??? */
                 errorf("nth: non-list sub member");
                 lp = NULL;
@@ -3605,4 +3669,5 @@ do_list_extract(void)           /* (list lst, int start, [int end], [int increme
         acc_assign_null();
     }
 }
+
 /*end*/

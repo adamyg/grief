@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntaxdfa_c,"$Id: syntaxdfa.c,v 1.32 2018/10/01 20:59:48 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntaxdfa_c,"$Id: syntaxdfa.c,v 1.34 2020/04/21 00:01:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntaxdfa.c,v 1.32 2018/10/01 20:59:48 cvsuser Exp $
+/* $Id: syntaxdfa.c,v 1.34 2020/04/21 00:01:57 cvsuser Exp $
  * Deterministic Finite Automata (DFA) based syntax highlighting.
  *
  *
@@ -172,7 +172,7 @@ static char END_DFA[] =         "[END-DFA]";
         within the string 'rule', and the associated 'attribute' is
         then applied against any matched constructs.
 
-        These rules works alongside the basic syntax elements
+        These rules work alongside the basic syntax elements
         declared by <syntax_token> against the same syntax table.
 
         For example, the rules to highlight floating point numbers
@@ -275,7 +275,7 @@ static char END_DFA[] =         "[END-DFA]";
         interpreted literally.
 
 (start table,format=nd)
-        [Anchor     [Description                                        ]
+        [Escape     [Description                                        ]
 
       ! \t          Tab.
 
@@ -299,7 +299,7 @@ static char END_DFA[] =         "[END-DFA]";
         following table.
 
 (start table,format=nd)
-        [Anchor     [Description                                        ]
+        [Escape     [Description                                        ]
 
       ! [...]       Matches any one character contained within the
                     character sequence.
@@ -895,21 +895,19 @@ syndfa_resolve(int argi, int create, SyntaxTable_t **stp)
     }
 
     if (NULL == st->st_drivers[SYNI_REGDFA]) {
-        if (create) {
-            SyntaxDFA_t *dfa;
+        SyntaxDFA_t *dfa;
 
-            if (NULL == (dfa = chk_calloc(sizeof(SyntaxDFA_t),1))) {
-                return NULL;
-            }
-            dfa->dfa_driver.sd_instance = dfa;
-            dfa->dfa_driver.sd_select   = syndfa_select;
-            dfa->dfa_driver.sd_write    = syndfa_write;
-            dfa->dfa_driver.sd_cont     = syndfa_cont;
-            dfa->dfa_driver.sd_destroy  = syndfa_destroy;
-            dfa->dfa_owner = st;
-
-            st->st_drivers[SYNI_REGDFA] = &dfa->dfa_driver;
+        if (!create || NULL == (dfa = chk_calloc(sizeof(SyntaxDFA_t),1))) {
+            return NULL;
         }
+        dfa->dfa_driver.sd_instance = dfa;
+        dfa->dfa_driver.sd_select   = syndfa_select;
+        dfa->dfa_driver.sd_write    = syndfa_write;
+        dfa->dfa_driver.sd_cont     = syndfa_cont;
+        dfa->dfa_driver.sd_destroy  = syndfa_destroy;
+        dfa->dfa_owner = st;
+
+        st->st_drivers[SYNI_REGDFA] = &dfa->dfa_driver;
     }
 
     if (stp) {

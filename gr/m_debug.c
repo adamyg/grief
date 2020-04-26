@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_debug_c,"$Id: m_debug.c,v 1.37 2014/11/16 17:28:40 ayoung Exp $")
+__CIDENT_RCSID(gr_m_debug_c,"$Id: m_debug.c,v 1.39 2020/04/21 00:01:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_debug.c,v 1.37 2014/11/16 17:28:40 ayoung Exp $
+/* $Id: m_debug.c,v 1.39 2020/04/21 00:01:56 cvsuser Exp $
  * Debug primitives.
  *
  *
@@ -42,6 +42,7 @@ static void             dbg_nest_level(void);
 static void             dbg_inq_vars(int type);
 static void             dbg_inq_var_info(int type);
 static void             dbg_stack_trace(const char *start_fn);
+static void             dbg_inq_opcodes(void);
 
 static SPTREE *         get_sym_level(int type);
 
@@ -141,13 +142,13 @@ static const struct dbgflg *flag_lookup(const char *name, int length);
 
      !  DB_NOTRAP       notrap      Disable SIGBUS/SIGSEGV trap handling.
 
-     !  DB_MEMORY       memory      Target specific debug memory services.
+     !  DB_MEMORY       memory      Target specific debug memory services: DEBUG only.
 
      !  DB_REFS         refs        Variable references.
 
      !  DB_PROMPT       prompt      Command prompting.
      
-     !  DB_PURIFY       purify      Running under a memory analysis tool.
+     !  DB_PURIFY       purify      Running under a memory analysis tool; DEBUG only.
      
      !  DB_HISTORY      history     Command history.
 (end table)
@@ -444,6 +445,10 @@ do_debug_support(void)          /* void (int what, declare object, declare arg) 
         dbg_inq_var_info(DBG_INQ_MVARS);
         break;
 
+    case DBG_INQ_OPCODES:
+        dbg_inq_opcodes();
+        break;
+
     default:
         acc_assign_int(-1);
         break;
@@ -461,8 +466,8 @@ dbg_stack_trace(const char *start_fn)
     LIST *newlp, *lp;
     int llen, i;
 
-    llen = (ms_cnt * sizeof_atoms[F_RSTR]) + sizeof_atoms[F_HALT];
-    if (ms_cnt <= 0 || NULL == (newlp = lst_alloc(llen, ms_cnt))) {
+    llen = (mac_sd * sizeof_atoms[F_RSTR]) + sizeof_atoms[F_HALT];
+    if (mac_sd <= 0 || NULL == (newlp = lst_alloc(llen, mac_sd))) {
         acc_assign_null();
         return;
     }
@@ -471,7 +476,7 @@ dbg_stack_trace(const char *start_fn)
         start_fn = NULL;
     }
 
-    for (lp = newlp, i = (ms_cnt - 1); i >= 0; --i) {
+    for (lp = newlp, i = (mac_sd - 1); i >= 0; --i) {
         const char *macname = mac_stack[i].name;
 
         if (start_fn) {
@@ -495,7 +500,7 @@ dbg_stack_trace(const char *start_fn)
 static void
 dbg_nest_level(void)
 {
-    acc_assign_int((accint_t) ms_cnt);
+    acc_assign_int((accint_t) mac_sd);
 }
 
 
@@ -593,8 +598,54 @@ dbg_inq_var_info(int vartype)
         lp = atom_push_ref(lp, sp->s_obj);
         break;
     default:
-        panic("sym_export: unexpected type ? (%d)", sp->s_type);
+        panic("sym_export: unexpected type ? (0x%x/%d)", sp->s_type, sp->s_type);
         break;
+    }
+    atom_push_halt(lp);                         /* terminator */
+
+    acc_donate_list(newlp, llen);
+}
+
+
+/*
+ *  dbg_inq_opcodes ---
+ *      Retrieve the current OPCODE desciptions.
+ */
+static void
+dbg_inq_opcodes(void)
+{
+    const char *desc = "";
+    LIST *newlp, *lp;
+    int opcode, llen;
+
+    llen = (F_MAX * sizeof_atoms[F_LIT]) + sizeof_atoms[F_HALT];
+    if (NULL == (lp = newlp = lst_alloc(llen, F_MAX))) {
+        acc_assign_null();
+        return;
+    }
+
+    assert(0 == F_HALT && 14 == F_MAX);         /* confirm namespace below */
+    for (opcode = F_HALT; opcode < F_MAX; ++opcode) {
+        switch (opcode) {
+        case F_HALT:   desc = "?0?     "; break;
+        case F_INT:    desc = "int     "; break;
+        case F_FLOAT:  desc = "float   "; break;
+        case F_STR:    desc = "string  "; break;
+        case F_LIT:    desc = "lit     "; break;
+        case F_LIST:   desc = "list    "; break;
+        case F_ARRAY:  desc = "array   "; break;
+        case F_NULL:   desc = "null    "; break;
+        case F_RSTR:   desc = "rstr    "; break;
+        case F_RLIST:  desc = "rlist   "; break;
+        case F_RARRAY: desc = "rarray  "; break;
+        case F_ID:     desc = "id      "; break;
+        case F_SYM:    desc = "symbol  "; break;
+        case F_REG:    desc = "register"; break;
+        default:
+            panic("dbq_inq_opcodes: unexpected type ? (0x%x/%d)", opcode, opcode);
+            break;
+        }
+        lp = atom_push_str(lp, desc);           /* const string */
     }
     atom_push_halt(lp);                         /* terminator */
 
@@ -693,4 +744,5 @@ do_profile(void)
     }
     ewprintf("[Profiling %s]", (xf_profile ? "ON" : "OFF"));
 }
+
 /*end*/

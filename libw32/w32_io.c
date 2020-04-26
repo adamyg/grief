@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.35 2019/03/15 23:12:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.36 2020/04/20 23:18:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -1649,7 +1649,7 @@ ReadShortcut(const char *name, char *buf, int maxlen)
     WIN32_FIND_DATA wfd;
     IShellLink *pShLink;
 
-    CoInitialize(NULL);
+    (void) CoInitialize(NULL);
 
     hres = CoCreateInstance(&x_CLSID_ShellLink, NULL,
                 CLSCTX_INPROC_SERVER, &x_IID_IShellLink, (LPVOID *)&pShLink);
@@ -1660,7 +1660,7 @@ ReadShortcut(const char *name, char *buf, int maxlen)
 
         hres = pShLink->lpVtbl->QueryInterface(pShLink, &x_IID_IPersistFile, (LPVOID *)&ppf);
         if (SUCCEEDED(hres)) {
-            MultiByteToWideChar(CP_ACP, 0, name, -1, wsz, sizeof(wsz));
+            MultiByteToWideChar(CP_ACP, 0, name, -1, wsz, _countof(wsz));
 
             hres = ppf->lpVtbl->Load(ppf, wsz, STGM_READ);
             if (SUCCEEDED(hres)) {
@@ -1698,7 +1698,7 @@ CreateShortcut(const char *link, const char *name, const char *working, const ch
     IShellLink *pShLink;
     HRESULT hres;
 
-    CoInitialize(NULL);
+    (void) CoInitialize(NULL);
 
     // Get a pointer to the IShellLink interface.
     hres = CoCreateInstance(&x_CLSID_ShellLink, NULL,
@@ -1901,7 +1901,6 @@ Stat(const char *name, struct stat *sb)
                             /* XXX: warning: owc crash if = {0} under full optimisation */
                         PREPARSE_DATA_BUFFER rdb = (PREPARSE_DATA_BUFFER)reparseBuffer;
                         DWORD returnedLength = 0;
-                        int ret = -1;
 
                         memset(reparseBuffer, 0, sizeof(MAX_REPARSE_SIZE));
 
@@ -2040,7 +2039,7 @@ my_GetVolumeInformationByHandle(HANDLE handle, DWORD *serialno, DWORD *flags)
                         (GetVolumeInformationByHandleW_t)GetProcAddress(hinst, "GetVolumeInformationByHandleW"))) {
                                                 // XP+
             x_GetVolumeInformationByHandleW = my_GetVolumeInformationByHandleImp;
-            (void) FreeLibrary(hinst);
+            if (hinst) FreeLibrary(hinst);
         }
     }
 

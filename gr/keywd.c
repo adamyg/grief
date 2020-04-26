@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.89 2019/01/26 22:27:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.91 2020/04/21 21:35:55 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keywd.c,v 1.89 2019/01/26 22:27:08 cvsuser Exp $
+/* $Id: keywd.c,v 1.91 2020/04/21 21:35:55 cvsuser Exp $
  * Keyword table.
  *
  *
@@ -118,8 +118,10 @@ const int cm_version = CM_VERSION;
 #define VERSION_202
 #define VERSION_203
 #define VERSION_204
-//  #define VERSION_205     /*staged/experimental*/
-//  #define VERSION_206     /*not implemented/alpha*/
+#define VERSION_205         /* 01/04/2020, register(), __lexicalblock(), isclose() and cast_xxx() */
+
+//  #define VERSION_206     /* array's, staged/experimental */
+//  #define VERSION_207     /* not implemented/alpha */
 
 /*
  *  Keyword table, assumed to be in alphabetic order.
@@ -201,20 +203,22 @@ BUILTIN builtin[] = {
      *      le          String less than or equal.
      *      ge          String greater than or equal.
      *      cmp         String comparison, returning -1, 0, or 1.
-     *      <=>         Numeric comparison, returning -1, 0, or 1.
+     *      <=>         Numeric comparison, returning -1, 0, or 1 (DONE).
      *
      *  Note: Add --perl option to compiler
      *
      *      and/or      #pragma perl=yes
      *      and/or      #pragma crisp=yes
      *      and/or      #pragma grief=yes
-     *
      */
     {"=", MACRO(do_com_equ), ARG_UNDEF, 0, MOP_NOOP,        /* arith */
     2,  {ARG_LVAL | ARG_ANY, ARG_OPT | ARG_ANY}},
 
     {"==", MACRO(do_com_op), ARG_UNDEF, 0, MOP_EQ,          /* arith */
     2,  {ARG_NUM | ARG_STRING, ARG_NUM | ARG_STRING}},
+
+//  {"===", MACRO(do_com_same), ARG_UNDEF, 0, 0,            /* arith */
+//  2,  {ARG_NUM | ARG_STRING, ARG_NUM | ARG_STRING}},
 
     {">", MACRO(do_com_op), ARG_UNDEF, 0, MOP_GT,           /* arith */
     2,  {ARG_NUM | ARG_STRING, ARG_NUM | ARG_STRING}},
@@ -236,6 +240,11 @@ BUILTIN builtin[] = {
 
     {"__breaksw", MACRO(do_breaksw), ARG_VOID, 0, 0,        /* macro */
     0,  {0}},
+
+#if defined(VERSION_205)
+    {"__lexicalblock", MACRO(do_lexicalblock), ARG_VOID, 0, 0, /* var */
+    1,  {ARG_COND}},
+#endif
 
     {"__regress_op", MACRO(do_regress_op), ARG_INT, 0, 0,   /* misc */
     2,  {ARG_INT, ARG_OPT | ARG_ANY}},
@@ -284,7 +293,7 @@ BUILTIN builtin[] = {
     {"asin", MACRO(do_asin), ARG_FLOAT, 0, 0,               /* float, arith */
     1,  {ARG_FLOAT}},
 
-    {"assign_to_key", MACRO(do_assign_to_key), ARG_INT, B_NOVALUE, 0, /* kbd */
+    {"assign_to_key", MACRO(do_assign_to_key), ARG_INT, 0, 0, /* kbd */
     2,  {ARG_OPT | ARG_STRING, ARG_OPT | ARG_STRING}},
 
     {"atan", MACRO(do_atan), ARG_FLOAT, 0, 0,               /* float, arith */
@@ -323,7 +332,7 @@ BUILTIN builtin[] = {
     {"below_eq", MACRO(do_com_op), ARG_INT, 0, MOP_BELOW_EQ, /* arith */
     2,  {ARG_NUM | ARG_STRING, ARG_NUM | ARG_STRING}},
 
-#if defined(VERSION_206)
+#if defined(VERSION_207)
     {"bless", MACRO(do_bless), ARG_INT, 0, 0,               /* macro */
     2,  {ARG_INT, ARG_OPT | ARG_STRING}},
 #endif
@@ -347,6 +356,14 @@ BUILTIN builtin[] = {
 
     {"car", MACRO(do_car), ARG_ANY, 0, 0,                   /* list */
     1,  {ARG_LIST}},
+
+#if defined(VERSION_205)
+    {"cast_float", MACRO(do_cast), ARG_FLOAT, 0, F_FLOAT,   /* float, arith */
+    1,  {ARG_INT}},
+
+    {"cast_int", MACRO(do_cast), ARG_INT, 0, F_INT,         /*  arith */
+    1,  {ARG_FLOAT}},
+#endif
 
     {"cd", MACRO(do_cd), ARG_INT, 0, 0,                     /* env */
     1,  {ARG_OPT | ARG_STRING}},
@@ -549,7 +566,7 @@ BUILTIN builtin[] = {
     2,  {ARG_INT, ARG_OPT | ARG_STRING}},
 
     {"dict_keys", MACRO(do_dict_each), ARG_INT, 0, VALUE(DICT_EACH_KEY), /* macro */
-    3,  {ARG_INT, ARG_OPT | ARG_LVAL | ARG_STRING}},
+    2,  {ARG_INT, ARG_OPT | ARG_LVAL | ARG_STRING}},
 
     {"dict_list", MACRO(do_dict_list), ARG_LIST, 0, 0,      /* macro */
     2,  {ARG_INT, ARG_OPT | ARG_INT}},
@@ -596,7 +613,7 @@ BUILTIN builtin[] = {
     {"do", MACRO(do_do), ARG_VOID, 0, 0,                    /* macro */
     2,  {ARG_OPT | ARG_COND, ARG_OPT | ARG_REST}},
 
-#if defined(DO_INTERNAL) & (0)
+#if defined(DO_INTERNAL) && (0)
     {"double", MACRO(do_declare), ARG_VOID, B_NOVALUE, F_FLOAT, /* var */
     1,  {ARG_REST}},
 #endif
@@ -604,7 +621,7 @@ BUILTIN builtin[] = {
     {"down", MACRO(do_down), ARG_INT, 0, 0,                 /* movement */
     1,  {ARG_OPT | ARG_INT}},
 
-    {"dprintf", MACRO(do_dprintf), ARG_INT, B_NOVALUE, 0,   /* debug */
+    {"dprintf", MACRO(do_dprintf), ARG_INT, 0, 0,           /* debug */
     -2, {ARG_STRING, ARG_OPT | ARG_ANY}},
 
     {"drop_anchor", MACRO(do_drop_anchor), ARG_INT, 0, 0,   /* scrap */
@@ -642,11 +659,7 @@ BUILTIN builtin[] = {
     0,  {0}},
 
     {"error", MACRO(do_error), ARG_INT, 0, 0,               /* debug */
-    5,  {ARG_STRING, ARG_OPT | ARG_NUM | ARG_STRING,
-         ARG_OPT | ARG_NUM | ARG_STRING,
-         ARG_OPT | ARG_NUM | ARG_STRING,
-         ARG_OPT | ARG_NUM | ARG_STRING,
-         ARG_OPT | ARG_NUM | ARG_STRING}},
+    -2, {ARG_STRING, ARG_OPT | ARG_ANY}},
 
     {"eval", 0, ARG_ANY, 0, 0,                              /* arith, macro, string */
     1,  {ARG_STRING}},
@@ -677,7 +690,7 @@ BUILTIN builtin[] = {
 
 #if defined(VERSION_201)
     {"feof", MACRO(do_feof), ARG_INT, 0, 0,                 /* file */
-    2,  {ARG_INT}},
+    1,  {ARG_INT}},
 #endif
 
 #if defined(VERSION_201)
@@ -814,7 +827,7 @@ BUILTIN builtin[] = {
             ARG_OPT | ARG_INT, ARG_OPT | ARG_STRING, ARG_OPT | ARG_STRING, ARG_OPT | ARG_STRING}},
 
     {"ftp_connection_list", MACRO(do_ftp_connection_list), ARG_LIST, 0, 0, /* comms */
-    0,  {ARG_OPT | ARG_STRING}},
+    1,  {ARG_OPT | ARG_STRING}},
 
     {"ftp_create", MACRO(do_ftp_create), ARG_INT, 0, 0,     /* comms */
     1,  {ARG_OPT | ARG_INT | ARG_STRING}},
@@ -959,7 +972,7 @@ BUILTIN builtin[] = {
     {"getwd", MACRO(do_getwd), ARG_INT, 0, 0,               /* env */
     2,  {ARG_OPT | ARG_STRING, ARG_LVAL | ARG_STRING}},
 
-    {"glob", MACRO(do_glob), ARG_STRING, B_NOVALUE, 0,      /* file */
+    {"glob", MACRO(do_glob), ARG_STRING, 0, 0,              /* file */
     1,  {ARG_STRING}},
 
     {"global", MACRO(do_global), ARG_VOID, B_NOVALUE, 0,    /* var */
@@ -990,7 +1003,7 @@ BUILTIN builtin[] = {
 
 #if defined(VERSION_201)
     {"grief_version", MACRO(do_grief_version), ARG_INT, 0, 0, /* misc */
-    0, {0}},
+    1,  {ARG_OPT | ARG_INT}},
 #endif
 
     {"hilite_create", MACRO(do_hilite_create), ARG_INT, 0, 0, /* buffer,syntax */
@@ -1279,7 +1292,7 @@ BUILTIN builtin[] = {
     {"inq_prompt", MACRO(inq_prompt), ARG_INT, 0, 0,        /* screen */
     0,  {0}},
 
-#if defined(VERSION_205)
+#if defined(VERSION_206)
     {"inq_remember_buffer", MACRO(inq_remember_buffer), ARG_STRING, 0, 0, /* kbd */
     1,  {ARG_OPT | ARG_INT}},
 #endif
@@ -1404,8 +1417,8 @@ BUILTIN builtin[] = {
     {"int_to_key", MACRO(do_int_to_key), ARG_STRING, 0, 0,  /* kbd */
     1,  {ARG_INT}},
 
-#if defined(VERSION_201)
-#if defined(F_ARRAY)
+#if defined(VERSION_206)
+#if defined(DO_ARRAY)
     {"is_array", MACRO(do_is_type), ARG_INT, 0, F_ARRAY,    /* var */
     1,  {ARG_LVAL | ARG_ANY}},
 #endif
@@ -1441,6 +1454,11 @@ BUILTIN builtin[] = {
     {"isblank", MACRO(do_isblank), ARG_INT, 0, 0,           /* string */
     2,  {ARG_INT | ARG_STRING, ARG_OPT | ARG_INT}},
 
+#if defined(VERSION_205)
+    {"isclose", MACRO(do_isclose), ARG_INT, 0, 0,           /* float, arith */
+    4,  {ARG_FLOAT, ARG_FLOAT, ARG_OPT | ARG_FLOAT, ARG_OPT | ARG_FLOAT}},
+#endif
+
     {"iscntrl", MACRO(do_iscntrl), ARG_INT, 0, 0,           /* string */
     2,  {ARG_INT | ARG_STRING, ARG_OPT | ARG_INT}},
 
@@ -1453,7 +1471,7 @@ BUILTIN builtin[] = {
     {"isfinite", MACRO(do_isfinite), ARG_INT, 0, 0,         /* float, arith */
     1,  {ARG_FLOAT}},
 
-#if defined(VERSION_205)
+#if defined(VERSION_206)
     {"isgold", MACRO(do_isgold), ARG_INT, 0, 0,             /* string */
     2,  {ARG_INT | ARG_STRING, ARG_OPT | ARG_INT}},
 #endif
@@ -1525,7 +1543,7 @@ BUILTIN builtin[] = {
     {"length_of_list", MACRO(do_length_of_list), ARG_INT, 0, 0, /* list */
     1,  {ARG_LIST}},
 
-#if defined(VERSION_205)
+#if defined(VERSION_206)
     {"link", MACRO(do_link), ARG_INT, 0, 0,                 /* file */
     3,  {ARG_STR, ARG_STR, ARG_OPT | ARG_INT}},
 #endif
@@ -1774,7 +1792,8 @@ BUILTIN builtin[] = {
     {"re_syntax", MACRO(do_re_syntax), ARG_INT, 0, 0,       /* search */
     3,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"re_translate", MACRO(do_re_translate), ARG_INT, 0, 0, /* search */
+    {"re_translate", MACRO(do_re_translate), ARG_UNDEF, 0, 0, /* search */
+            /* returns: int|string */
     4,  {ARG_OPT | ARG_INT,
          ARG_OPT | ARG_STRING,
          ARG_OPT | ARG_STRING,
@@ -1803,6 +1822,11 @@ BUILTIN builtin[] = {
 
     {"refresh", MACRO(do_refresh), ARG_VOID, 0, 0,          /* screen */
     0,  {0}},
+
+#if defined(VERSION_205)
+    {"register", MACRO(do_register), ARG_VOID, 0, 0,        /* var */
+    1,  {ARG_REST}},
+#endif
 
     {"register_macro", MACRO(do_register_macro), ARG_INT, 0, FALSE, /* macro */
     3,  {ARG_INT, ARG_STRING, ARG_OPT | ARG_INT}},
@@ -2006,8 +2030,8 @@ BUILTIN builtin[] = {
     {"set_syntax_flags", MACRO(do_set_syntax_flags), ARG_INT, 0, 0, /* syntax */
     2,  {ARG_INT, ARG_OPT | ARG_INT | ARG_STRING}},
 
-    {"set_tab", MACRO(do_set_tab), ARG_INT, B_NOVALUE, 0,   /* buffer */
-    1,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
+    {"set_tab", MACRO(do_set_tab), ARG_INT, 0, 0,           /* buffer */
+    2,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
     {"set_term_characters", MACRO(do_set_term_characters), ARG_VOID, B_NOVALUE, 0, /* screen, env */
     1,  {ARG_REST}},
@@ -2088,7 +2112,7 @@ BUILTIN builtin[] = {
     {"spell_distance", MACRO(do_spell_distance), ARG_UNDEF, 0, 0, /* spell */
     2,  {ARG_STRING, ARG_STRING}},
 
-#if defined(VERSION_205)
+#if defined(VERSION_206)
     {"spell_dictionary", MACRO(do_spell_dictionary), ARG_UNDEF, 0, 0, /* spell */
     -3, {ARG_INT, ARG_OPT|ARG_INT, ARG_STRING|ARG_LIST}},
 #endif
@@ -2305,7 +2329,7 @@ BUILTIN builtin[] = {
     {"undo", MACRO(do_undo), ARG_INT, 0, -1,                /* buffer, kbd */
     3,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-#if defined(VERSION_205)
+#if defined(VERSION_206)
     {"unlink", MACRO(do_unlink), ARG_INT, 0, 0,             /* file */
     2,  {ARG_STR, ARG_OPT | ARG_INT}},
 #endif
@@ -2418,18 +2442,36 @@ b_sort(void const *k1, void const *k2)
 void
 builtin_init(void)
 {
-    register BUILTIN *bp;
+    BUILTIN *bp;
     unsigned i;
 
     /* Runtime checks */
 #if !defined(__NOFUNCTIONS__)
-    trace_log("keywd: count = %d\n", builtin_count);
+    trace_log("keywd: count = %d\n");
 #endif
+
+    assert(MAX_BUILTIN_ARGS <= MAX_ARGC);
 
     for (i = 0, bp = builtin; i < builtin_count; ++i, ++bp) {
         assert(0 == bp->b_magic);
-        bp->b_magic = BUILTIN_MAGIC;
-        assert(abs(bp->b_argc) <= MAX_BUILTIN_ARGS);
+        bp->b_magic = BUILTIN_MAGIC;            /* structure magic */
+
+        if (bp->b_arg_count < 0) {              /* variable argument count primer */
+            bp->b_arg_count = -bp->b_arg_count;
+            bp->b_flags |= B_VARARGS;
+        }
+
+#if !defined(NDEBUG) 
+        {   const int argc = bp->b_arg_count;
+            int iarg;
+      
+            assert(argc <= MAX_BUILTIN_ARGS);
+            for (iarg = 0; iarg < argc; ++iarg) {
+                assert(bp->b_arg_types[iarg]);
+            }
+            assert(0 == bp->b_arg_types[argc]); /* terminator */
+        }
+#endif  //NDEBUG
 
 #if !defined(__NOFUNCTIONS__)
         if (i && b_sort(bp - 1, bp) > 0)  {

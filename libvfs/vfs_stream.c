@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_stream_c,"$Id: vfs_stream.c,v 1.12 2019/03/15 23:23:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_stream_c,"$Id: vfs_stream.c,v 1.13 2020/04/14 23:13:32 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_stream.c,v 1.12 2019/03/15 23:23:02 cvsuser Exp $
+/* $Id: vfs_stream.c,v 1.13 2020/04/14 23:13:32 cvsuser Exp $
  * Virtual file system interface - streams.
  *
  *
@@ -77,6 +77,8 @@ fdstream(const char *path, int handle, int flags, int mode, unsigned bsize)
 {
     const unsigned pathlen = strlen(path);
     vfs_file_t *file;
+
+    __CUNUSED(mode);
 
     /*
      *  Build file structure/

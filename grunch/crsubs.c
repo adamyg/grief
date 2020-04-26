@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crsubs_c,"$Id: crsubs.c,v 1.25 2014/10/22 02:33:28 ayoung Exp $")
+__CIDENT_RCSID(gr_crsubs_c,"$Id: crsubs.c,v 1.28 2020/04/23 12:35:50 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crsubs.c,v 1.25 2014/10/22 02:33:28 ayoung Exp $
+/* $Id: crsubs.c,v 1.28 2020/04/23 12:35:50 cvsuser Exp $
  * Parser ultities.
  *
  *
@@ -223,17 +223,15 @@ list_free(Head_p *hdp)
 
 
 /*
- *  Allocate a node containing a symbol type and copy the string
- *  containing the symbol name.
+ *  Allocate a node containing a symbol type and copy the string containing the symbol name.
  */
 node_t *
-new_symbol(const char *str)
+new_symbol(const char *name)
 {
-    const char *cp = chk_salloc(str);
     node_t *np = new_node();
 
     np->type = node_symbol;
-    np->atom.sval = cp;
+    np->atom.sval = chk_salloc(name);
     return np;
 }
 
@@ -351,8 +349,7 @@ node(int op, node_t *left, node_t *right)
 
 
 /*  Function:           node_opt
- *      This function is similar to 'node()' but attempts to do some simple constant
- *      optimisations.
+ *      Function is similar to 'node()' but attempts to do some simple constant optimisations.
  *
  *  Parameters:
  *      op -                Operator.
@@ -372,6 +369,9 @@ node_opt(int op, node_t *b, node_t *c)
     if (b->type == node_integer && c->type == node_integer) {
         /*
          *  integer <op> integer
+         *  
+         *  XXX/TODO:  over/underflow
+         *  Ref: INT32-C. Ensure that operations on signed integers do not result in overflow
          */
         switch (op) {
         case O_PLUS:
@@ -412,6 +412,32 @@ node_opt(int op, node_t *b, node_t *c)
             break;
         }
 
+#if (TODO)
+    } else if (b->type == node_float && c->type == node_float) {
+        /*
+         *  float <op> integer
+         */
+        switch (op) {
+        case O_PLUS:
+            b->atom.fval += c->atom.fval;
+            return b;
+        case O_MINUS:
+            b->atom.fval -= c->atom.fval;
+            return b;
+        case O_MUL:
+            b->atom.fval *= c->atom.fval;
+            return b;
+        case O_DIV:
+            if (0 == c->atom.fval) {
+                crwarn(RC_ERROR, "constant expression divides by zero");
+                b->atom.fval = 0;
+            } else {
+                b->atom.fval /= c->atom.fval;
+            }
+            return b;
+        }
+#endif
+
     } else if (b->type == node_string && c->type == node_string) {
         /*
          *  string <op> string
@@ -451,7 +477,7 @@ node_opt(int op, node_t *b, node_t *c)
         case O_MUL:   case O_DIV:
         case O_MOD:   case O_XOR:
         case O_OR:    case O_AND:
-	         crerror(RC_ERROR, "invalid string operation");
+            crerror(RC_ERROR, "invalid string operation");
             break;
         default:
             break;
@@ -477,7 +503,7 @@ node_opt(int op, node_t *b, node_t *c)
         case O_MUL:   case O_DIV:
         case O_MOD:   case O_XOR:
         case O_OR:    case O_AND:
-	         crerror(RC_ERROR, "invalid string operation");
+            crerror(RC_ERROR, "invalid string operation");
             break;
         default:
             break;
@@ -525,7 +551,7 @@ stringmultiple(node_t *snode, int count)
 
 
 /*
- *  Function to create a tree as a result of an assignment operator.
+ *  Create a tree as a result of an assignment operator.
  *
  *  We map the "list[expr] = ..." syntax into a
  *
@@ -612,8 +638,7 @@ node_lvalue(int op, node_t *l, node_t *r)
 
 
 /*
- *  Function called at start of a function with the type of
- *  function and the parameter list
+ *  Called at start of a function with the type of function and the parameter list.
  */
 int
 function_start(symtype_t type, node_t *defn)
@@ -744,6 +769,7 @@ function_arglist(const char *name, node_t *defn, int body)
     }
 
     xprintf(")\n");
+
     return argc;
 }
 
@@ -886,7 +912,7 @@ decl_pop(void)
 symtype_t
 node_typeof(const node_t *np)
 {
-    symtype_t type = TY_UNDEF;
+    symtype_t type = (symtype_t)TY_UNDEF;
 
     assert(np);
     switch (np->type) {
@@ -1163,7 +1189,7 @@ enum_add(node_t *np)
 
 
 void
-enum_exit(node_t *enumvalues)
+enum_exit(node_t *__CUNUSEDARGUMENT(enumvalues))
 {
     symbol_t *sp = x_enum_sp;
 
@@ -1362,7 +1388,7 @@ switch_start(node_t *np)
         switch (sw->sw_type & TY_MASK) {
         case TY_VOID:
             crerror(RC_ERROR, "switch quantity is void");
-            sw->sw_type = TY_UNDEF;
+            sw->sw_type = (symtype_t)TY_UNDEF;
             break;
 
         case TY_STRUCT: case TY_STRUCTI:
@@ -1371,7 +1397,7 @@ switch_start(node_t *np)
         case TY_LIST:
         case TY_ARRAY:
             crerror(RC_ERROR, "switch quantity is either a numeric nor string type");
-            sw->sw_type = TY_UNDEF;
+            sw->sw_type = (symtype_t)TY_UNDEF;
             break;
 
         default:
@@ -1409,13 +1435,14 @@ switch_end(node_t *np)
     --x_break_level;
 
     /*
-     *  Reverse order of cases
-     *
-     *      XXX - check for missing enumeration values
+     *  Reverse order of cases,
+     *      TODO - check for missing enumeration values
      */
-    while (NULL != (lp = ll_first(hd_case))) {
-        ll_push(hd, ll_elem(lp));
-        ll_delete(lp);
+    if (hd_case) {  /*non-empty switch*/
+        while (NULL != (lp = ll_first(hd_case))) {
+            ll_push(hd, ll_elem(lp));
+            ll_delete(lp);
+        }
     }
 
     while (NULL != (lp = ll_first(hd))) {
@@ -1729,4 +1756,5 @@ loop_exit(void)
     loop_or_switch_exit();
     block_pop();
 }
+
 /*end*/

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.16 2018/11/18 00:20:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.17 2020/04/21 00:01:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_terminal.c,v 1.16 2018/11/18 00:20:40 cvsuser Exp $
+/* $Id: m_terminal.c,v 1.17 2020/04/21 00:01:56 cvsuser Exp $
  * Terminal screen and keyboard primitives.
  *
  *
@@ -908,7 +908,7 @@ get_list_common(const struct pt_map *p)
 
     } else {                                    /* extension, return list of attribute */
         LIST *newlp;
-        const int llen = (attrs * sizeof_atoms[F_STR]) + sizeof_atoms[F_HALT];
+        const int llen = (attrs * sizeof_atoms[F_RSTR]) + sizeof_atoms[F_HALT];
         char buffer[128];
 
         if (NULL != (newlp = lst_alloc(llen, attrs))) {

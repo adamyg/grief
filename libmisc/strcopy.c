@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strcopy_c,"$Id: strcopy.c,v 1.5 2017/01/29 04:33:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_strcopy_c,"$Id: strcopy.c,v 1.7 2020/04/20 23:48:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strcopy.c,v 1.5 2017/01/29 04:33:31 cvsuser Exp $
+/* $Id: strcopy.c,v 1.7 2020/04/20 23:48:40 cvsuser Exp $
  * libstr - String copy utility functions.
  *
  *
- * Copyright (c) 1998 - 2017, Adam Young.
+ * Copyright (c) 1998 - 2020, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -37,50 +37,111 @@ __CIDENT_RCSID(gr_strcopy_c,"$Id: strcopy.c,v 1.5 2017/01/29 04:33:31 cvsuser Ex
 #include <libstr.h>
 #include <unistd.h>
 
+#if defined(HAVE__MEMCCPY)
+#define DO_MEMCCPY _memccpy
+#elif defined(HAVE_MEMCCPY)
+#define DO_MEMCCPY memccpy
+#endif
+
 
 /*  Function:           strxcpy
- *      Length delimited copy like strncpy but always NUL terminates the
- *      destination buffer.
+ *      Length delimited copy like strncpy but always NUL terminates the destination buffer.
  *
  *  Parameters:
- *      dest - Destination buffer.
+ *      dst - Destination buffer.
  *      src - Source buffer.
  *      len - Length of destination buffer, in bytes.
+ *
+ *  Note:
+ *      strxcpy() behaves like strlcpy().
+ *
+ *      Unlike strncpy, which if count is greater than the length of strSource, the destination
+ *      string is padded with null characters up to length count, strings are only terminated
+ *      not zero padded.
  *
  *  Returns:
  *      Destination buffer.
  */
 char *
-strxcpy(char *dest, const char *src, int len)
+strxcpy(char *dst, const char *src, int len)
 {
-    (void) strncpy(dest, src, len);
-    if (len > 0) {
-        dest[len - 1] = '\0';
+#if defined(DO_MEMCCPY)
+    if (len--) {    /* reserve nul */
+        if (NULL == DO_MEMCCPY(dst, src, 0, len)) {
+            dst[len] = 0;                       // NUL not encountered.
+        }
     }
-    return dest;
+
+#elif (0)
+    if (len--) {    /* reserve nul */
+        const int srclen = strlen(src);
+        if (srclen < len) {
+            (void) memcpy(dst, src, srclen + 1 /* + nul*/);
+
+        } else {
+            (void) memcpy(dst, src, len);
+            dst[len] = '\0'; /*nul terminate*/
+        }
+    }
+
+#else
+    if (len) {      /* space available */
+        register unsigned count = (unsigned)(len - 1);
+        register const char *in = src;
+        register char *out = dst;
+
+        while (count && (*out++ = *in++) != 0) {
+            --count;                            // copy, length limited.
+        }
+        *out = 0;                               // terminate.
+    }
+#endif
+
+    return dst;
 }
 
 
 /*  Function:           strxcat
- *      Length delimited concat like strncat but always nul terminates
- *      the destination buffer.
+ *      Length delimited concat similar to strncat() excepts limits the destination length.
  *
  *  Parameters:
- *      dest - Destination buffer.
+ *      dst - Destination buffer.
  *      src - Source buffer.
- *      len - Length of destination buffer, in bytes.
+ *      len - Maximum number of characters within the destination, including nul.
+ *
+ *  Note:
+ *      strlcat() behaves like strlcat().
  *
  *  Returns:
- *      Destination buffer.
+ *      Destination buffer address.
  */
 char *
-strxcat(char *dest, const char *src, int len)
+strxcat(char *dst, const char *src, int len)
 {
-    (void) strncat(dest, src, len);
-    if (len > 0) {
-        dest[len - 1] = '\0';
+    if (--len) {
+#if defined(DO_MEMCCPY)
+        const size_t length = strlen(dst);
+
+        if (NULL == DO_MEMCCPY(dst + length, src, 0, len - length)) {
+            dst[len] = 0;                       // NUL not encountered.
+        }
+
+#else
+        char *cursor = dst;
+        const size_t length = strlen(cursor);
+
+        if (length < len) {
+            cursor += length;
+            for (len -= length; len--;) {
+                if (0 == (*cursor++ = *src++)) {
+                    return dst;
+                }
+            }
+            *cursor = '\0';                     // terminate.
+        }
+#endif
     }
-    return dest;
+    return dst;
 }
 
 
@@ -116,4 +177,5 @@ str_cpy(char *dst, const char *src)
         memmove(dst, src, strlen(src) + 1);
     }
 }
+
 /*end*/

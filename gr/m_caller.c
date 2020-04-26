@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_caller_c,"$Id: m_caller.c,v 1.13 2014/10/22 02:33:00 ayoung Exp $")
+__CIDENT_RCSID(gr_m_caller_c,"$Id: m_caller.c,v 1.14 2020/04/21 00:01:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_caller.c,v 1.13 2014/10/22 02:33:00 ayoung Exp $
+/* $Id: m_caller.c,v 1.14 2020/04/21 00:01:56 cvsuser Exp $
  * Caller primitives.
  *
  *
@@ -23,9 +23,9 @@ __CIDENT_RCSID(gr_m_caller_c,"$Id: m_caller.c,v 1.13 2014/10/22 02:33:00 ayoung 
 #include "m_caller.h"                           /* public interface */
 
 #include "accum.h"                              /* acc_...() */
+#include "builtin.h"                            /* mac_... */
 #include "debug.h"                              /* trace_...() */
 #include "eval.h"                               /* get_...() */
-#include "main.h"                               /* ms_cnt */
 
 typedef TAILQ_HEAD(CallerList, Caller)
                         CallerList_t;           /* caller list */
@@ -85,7 +85,7 @@ static CallerList_t             x_callerlist;
 void
 inq_called(void)                /* (void) */
 {
-    const struct mac_stack *stk2 = (ms_cnt >= 2 ? mac_stack + (ms_cnt - 2) : NULL);
+    const struct mac_stack *stk2 = (mac_sd >= 2 ? mac_stack + (mac_sd - 2) : NULL);
     const char *caller = (stk2 ? (stk2->caller ? stk2->caller : stk2->name) : NULL);
 
     acc_assign_str(caller ? caller : "", -1);
@@ -131,10 +131,10 @@ inq_called(void)                /* (void) */
 void
 do_set_calling_name(void)       /* (string name = NULL) */
 {
-    caller_release(ms_cnt);                     /* release resources */
+    caller_release(mac_sd);                     /* release resources */
 
-    if (ms_cnt >= 1) {
-        struct mac_stack *stk1 = mac_stack + (ms_cnt - 1);
+    if (mac_sd >= 1) {
+        struct mac_stack *stk1 = mac_sp;
         const char *caller = get_xstr(1);
 
         if (caller) {                           /* set_calling_name(NULL) -- extension */
@@ -149,7 +149,7 @@ do_set_calling_name(void)       /* (string name = NULL) */
             } else if (0 == strcmp(caller, stk1->name)) {
                 caller = stk1->name;
                                                 /* set_calling_name(inq_called()) */
-            } else if (ms_cnt >= 2 && 0 == strcmp(caller, stk1[-1].name)) {
+            } else if (mac_sd >= 2 && 0 == strcmp(caller, stk1[-1].name)) {
                 caller = stk1[-1].name;
 
             } else {                            /* set_calling_name(<name>) */
@@ -173,7 +173,7 @@ do_set_calling_name(void)       /* (string name = NULL) */
                     cp->c_magic = CALLER_MAGIC;
                     memcpy(cp->c_name, caller, length + 1);
                     cp->c_length = length;
-                    cp->c_level = ms_cnt;
+                    cp->c_level = mac_sd;
                     cp->c_hits = 0;
                     caller = cp->c_name;
                     ++x_callers;
@@ -192,7 +192,7 @@ caller_release(int level)
     CallerList_t *callerlist = &x_callerlist;
 
     if (-1 == x_callers) {
-        if (ms_cnt >= 1) {
+        if (mac_sd >= 1) {
             TAILQ_INIT(callerlist);
             x_callers = 0;
         }

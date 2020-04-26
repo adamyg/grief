@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.60 2019/01/26 22:27:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.61 2020/04/13 14:29:41 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keyboard.c,v 1.60 2019/01/26 22:27:08 cvsuser Exp $
+/* $Id: keyboard.c,v 1.61 2020/04/13 14:29:41 cvsuser Exp $
  * Manipulate key maps and bindings.
  *
  *
@@ -795,7 +795,7 @@ int
 key_string2code(const char *cp, char *keybuf, int buflen)
 {
     const KEY *keys;
-    int ret, size = 0;
+    int ret = -1, size = 0;
 
     if (NULL == (keys = key_string2seq(cp, &size)) || size <= 0) {
         ret = -2;                               /* invalid key definition */

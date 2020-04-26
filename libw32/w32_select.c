@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_select_c,"$Id: w32_select.c,v 1.11 2019/03/15 23:12:20 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_select_c,"$Id: w32_select.c,v 1.12 2020/04/20 23:18:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -295,6 +295,7 @@ sel_console(Select_t *selfd)
 static void
 sel_block(Select_t *selfd)
 {
+    __PUNUSED(selfd)
     assert(0);                                  // TODO
 }
 
@@ -302,6 +303,7 @@ sel_block(Select_t *selfd)
 static void
 sel_pipe(Select_t *selfd)
 {
+    __PUNUSED(selfd)
     assert(0);                                  // TODO
 }
 

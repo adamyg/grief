@@ -1,11 +1,11 @@
 #ifndef GR_GRUNCH_H_INCLUDED
 #define GR_GRUNCH_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_grunch_h,"$Id: grunch.h,v 1.33 2018/10/20 01:05:45 cvsuser Exp $")
+__CIDENT_RCSID(gr_grunch_h,"$Id: grunch.h,v 1.34 2020/04/20 22:49:23 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: grunch.h,v 1.33 2018/10/20 01:05:45 cvsuser Exp $
+/* $Id: grunch.h,v 1.34 2020/04/20 22:49:23 cvsuser Exp $
  * grunch language compiler, structures etc
  *
  *
@@ -159,7 +159,7 @@ enum _Ttypes {
 
 
 /*
- *  Storage class specifiers (max=16)
+ *  Storage class specifiers values (max=16)
  */
 enum _Tstore {
 /*--export--enumTYPE--*/
@@ -179,7 +179,7 @@ enum _Tstore {
 
 
 /*
- *  Type qualifiers (max=4)
+ *  Type qualifiers bits (max=4)
  */
 enum _Tqualif {
     TQ_CONST            =0x1,
@@ -191,7 +191,7 @@ enum _Tqualif {
 
 
 /*
- *  Function modifiers (max=4)
+ *  Function modifiers bits (max=4)
  */
 enum _Fmodifiers {
     FM_INLINE           =0x1,
@@ -203,12 +203,12 @@ enum _Fmodifiers {
 
 
 /*
- *  Type modifiers (max=4)
+ *  Type modifiers bits (max=4)
  */
 enum _Tmodifiers {
     TM_FUNCTION         =0x1,
     TM_POINTER          =0x2,
-    TM_OPTIONAL         =0x4,                   /* Crisp (~type) notional */
+    TM_OPTIONAL         =0x4,                   /* (~ type) notional */
     TM_REFERENCE        =0x8,
     TM_MAX              =TM_REFERENCE
 };
@@ -328,6 +328,7 @@ typedef struct symbol {
     unsigned            s_references;           /* Total reference count, released when zero */
     const char *name;                           /* Symbol name */
     int                 s_level;                /* Block level so we can remove things as we come out of blocks */
+    int                 s_register;             /* Register assignment */
     symtype_t           s_type;                 /* Data type of symbol */
     argtype_t *         s_arguments;            /* Function argument summary */
     struct symbol *     s_defn;                 /* Pointer to struct/union/enum definition */
@@ -336,7 +337,7 @@ typedef struct symbol {
     node_t *            s_tree;                 /* Tree describing type modifiers */
     Head_p              s_members;              /* List (in order) of members */
     unsigned short      s_flags;                /* SF_xxx flags */
-    unsigned short      s_align;                /* For a struct/union - the base alignment */
+    unsigned short      s_align;                /* Struct/union base alignment */
     symtype_t           s_enumtype;             /* Emumeration element base type */
     int                 s_size;                 /* Size of variable (type or type * elements) */
     int                 s_line_no;              /* Line where original defined */
@@ -398,7 +399,8 @@ typedef struct gen_t {      /* code generator interface */
     void (*g_macro)(void);
     void (*g_list)(void);
     void (*g_id)(const char *id);
-    void (*g_lit)(const char *lit);
+    void (*g_sym)(const char *lit);
+    void (*g_reg)(const char *name, int index);
     void (*g_end_list)(void);
     void (*g_int)(accint_t);
     void (*g_string)(const char *str);
@@ -438,7 +440,7 @@ typedef struct lexer {
 
 extern int              yylex(void);
 extern int              yyparse(void);
-extern int              yylexer(lexer_t *lexer);
+extern int              yylexer(lexer_t *lexer, int expand_symbols);
 extern const char *     yysymbol(const char *str, int length);
 
 extern node_t *         node_alloc(int op);
@@ -446,7 +448,7 @@ extern void             nodes_free(void);
 
 extern node_t *         node(int op, node_t *left, node_t *right);
 extern node_t *         new_node(void);
-extern node_t *         new_symbol(const char *sym);
+extern node_t *         new_symbol(const char *name);
 extern node_t *         new_symbol1(char *sym);
 extern node_t *         new_string(char *str);
 extern node_t *         new_number(accint_t ival);
@@ -480,6 +482,7 @@ extern symbol_t *       sym_add(const char *name, node_t *np, symtype_t type);
 extern symbol_t *       sym_push(Head_p *hd, int order, const char *, node_t *np, symtype_t type, symbol_t *sp);
 extern symbol_t *       sym_auto_function(const char *name, int argumentc, const argtype_t *arguments);
 extern symbol_t *       sym_lookup(const char *name, unsigned flags);
+extern int              sym_predefined(const char *name);
 extern symtype_t        sym_typeof(const char *name, unsigned flags);
 extern int              sym_print(symbol_t *sp, int level);
 extern symbol_t *       sym_implied_function(const char *name, int argumentc, const argtype_t *arguments);
@@ -522,6 +525,7 @@ extern void             function_return(int);
 
 extern void             block_enter(void);
 extern node_t *         block_exit(void);
+extern node_t *         block_exit1(int *newscope);
 extern void             block_pop(void);
 
 extern symtype_t        typedef_type(const char *name);
@@ -571,7 +575,8 @@ extern int              x_generate_ascii;
 extern void             gena_macro(void);
 extern void             gena_list(void);
 extern void             gena_id(const char *id);
-extern void             gena_lit(const char *lit);
+extern void             gena_sym(const char *lit);
+extern void             gena_reg(const char *name, int index);
 extern void             gena_end_list(void);
 extern void             gena_int(accint_t);
 extern void             gena_string(const char *str);
@@ -583,7 +588,8 @@ extern void             gena_null(void);
 extern void             genb_macro(void);
 extern void             genb_list(void);
 extern void             genb_id(const char *id);
-extern void             genb_lit(const char *lit);
+extern void             genb_sym(const char *lit);
+extern void             genb_reg(const char *name, int index);
 extern void             genb_end_list(void);
 extern void             genb_int(accint_t);
 extern void             genb_float(accfloat_t);
@@ -594,10 +600,12 @@ extern void             genb_null(void);
 
 extern const char *     x_progname;
 
-extern FILE *           x_ofp;
+extern FILE *           x_bfp;                  /* binary output stream */
+extern FILE *           x_afp;                  /* ASCII output stream */
 extern FILE *           x_errfp;
 
 extern const char *     x_filename;
+extern const char *     x_filename2;
 extern const char *     x_funcname;             /* current function name for error messages */
 
 extern char *           yytext;
@@ -607,6 +615,7 @@ extern int              x_columnno;
 extern stat_t           x_stats;
 
 extern int              xf_warnings;
+extern int              xf_lexical_scope;
 extern int              xf_debug;
 extern int              xf_debugger;
 extern int              xf_flush;

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crpragma_c,"$Id: crpragma.c,v 1.12 2014/10/22 02:33:28 ayoung Exp $")
+__CIDENT_RCSID(gr_crpragma_c,"$Id: crpragma.c,v 1.14 2020/04/23 12:35:50 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crpragma.c,v 1.12 2014/10/22 02:33:28 ayoung Exp $
+/* $Id: crpragma.c,v 1.14 2020/04/23 12:35:50 cvsuser Exp $
  * Pragma support.
  *
  *
@@ -20,9 +20,12 @@ __CIDENT_RCSID(gr_crpragma_c,"$Id: crpragma.c,v 1.12 2014/10/22 02:33:28 ayoung 
 
 #include "grunch.h"                             /* local definitions */
 
-static int              pragma_get(lexer_t *lexer);
+static int              prlexer(lexer_t *lexer);
+static int              prget(lexer_t *lexer);
+
 static void             pragma_message(lexer_t *lexer);
 static void             pragma_control_message(lexer_t *lexer, int enable);
+static void             pragma_scoping(lexer_t *lexer, int state);
 static void             pragma_warning(lexer_t *lexer);
 static void             pragma_autoload(lexer_t *lexer);
 
@@ -41,11 +44,11 @@ pragma_process(const char *cp)
 {
     lexer_t lexer = {0};
 
-    lexer.get      = pragma_get;
+    lexer.get      = prget;
     lexer.l_flags  = LEX_FNOSALLOC;
     lexer.l_cursor = chk_salloc(cp);
 
-    if (O_SYMBOL == yylexer(&lexer)) {
+    if (O_SYMBOL == prlexer(&lexer)) {
         const char *word = yylval.sval;
 
         if (0 == strcmp(word, "message")) {
@@ -62,6 +65,15 @@ pragma_process(const char *cp)
 
         } else if (0 == strcmp(word, "autoload")) {
             pragma_autoload(&lexer);
+
+        } else if (0 == strcmp(word, "lexical_scope")) {
+            pragma_scoping(&lexer, 1);
+
+        } else if (0 == strcmp(word, "dynamic_scope")) {
+            pragma_scoping(&lexer, 0);
+
+        } else if (0 == strcmp(word, "scope")) {
+            pragma_scoping(&lexer, -1);
 
         } else if (0 == strcmp(word, "once") ||
                      0 == strcmp(word, "align") ||
@@ -80,7 +92,20 @@ pragma_process(const char *cp)
 }
 
 
-/*  Function:           pragma_get
+/*  Function:           prlexer
+ *      Pragma lexer, basic tokeniser without symbol lookup.
+ *
+ *  Returns:
+ *      Token identifier.
+ */
+static int
+prlexer(lexer_t *lexer)
+{
+    return yylexer(lexer, FALSE /*noexpand*/);
+}
+
+
+/*  Function:           prget
  *      Pragma lexer stream operator.
  *
  *  Parameters:
@@ -90,13 +115,11 @@ pragma_process(const char *cp)
  *      nothing
  */
 static int
-pragma_get(lexer_t *lexer)
+prget(lexer_t *lexer)
 {
     const int ch = (int)*lexer->l_cursor;
 
-    if (ch) {
-        ++lexer->l_cursor;
-    }
+    if (ch) ++lexer->l_cursor;
     return ch;
 }
 
@@ -118,7 +141,7 @@ pragma_get(lexer_t *lexer)
 static void
 pragma_control_message(lexer_t *lexer, int enable)
 {
-    if (O_INTEGER_CONST == yylexer(lexer)) {
+    if (O_INTEGER_CONST == prlexer(lexer)) {
         const int msgno = yylval.ival;
 
         switch (msgno) {
@@ -128,16 +151,133 @@ pragma_control_message(lexer_t *lexer, int enable)
             crmessage(msgno, enable);
             break;
         }
-        if (yylexer(lexer)) {
+        if (prlexer(lexer)) {
             yyerror("expected end-of-line");
         }
     }
 }
 
 
+/*  Function;
+ *      Scoping directive.
+ *
+ *  Syntax:
+ *      #pragma lexical_scope | dynamic_scope
+ *
+ *      #pragma scope( push [,lexical|dynamic] )
+ *      #pragma scope( pop )
+ *
+ *  Parameters:
+ *      lexer -             Lexer stream.
+ *      state -             0=enable, 1=disable
+ *
+ *  Returns:
+ *      nothing
+ */
+static void
+pragma_scoping(lexer_t *lexer, int state)
+{
+    static int scopelvl = 0, scopestk[16] = {0};
+    int push = 0, pop = 0;
+
+    // parse
+    if (-1 == state) {
+        if (O_OROUND == prlexer(lexer)) {
+            if (O_SYMBOL == prlexer(lexer)) {
+                const char *specifier = yylval.sval;
+                int token = 0;
+
+                // scope( push [,lexical|dynamic] )
+                if (0 == strcmp(specifier, "push")) {
+                    if (O_COMMA == (token = prlexer(lexer))) {
+                        if (O_SYMBOL == prlexer(lexer)) {
+                            const char *specifier2 = yylval.sval;
+
+                            if (0 == strcmp(specifier2, "lexical")) {
+                                state = 1;
+
+                            } else if (0 == strcmp(specifier2, "dynamic")) {
+                                state = 0;
+
+                            } else {
+                                yyerrorf("unexpected token '%s'", specifier2);
+                                return;
+                            }
+                            token = 0;
+
+                        } else {
+                            yyerror("expected a token");
+                            return;
+                        }
+                    }
+                    push = 1;
+
+                // scope( pop )
+                } else if (0 == strcmp(specifier, "pop")) {
+                    pop = 1;
+
+                // scope( lexical )
+                } else if (0 == strcmp(specifier, "lexical")) {
+                    state = 1;
+
+                // scope( dynamic )
+                } else if (0 == strcmp(specifier, "dynamic")) {
+                    state = 0;
+
+                } else {
+                    yyerrorf("unexpected token '%s'", specifier);
+                    return;
+                }
+
+                if (0 == token) token = prlexer(lexer);
+                if (O_CROUND != token) {
+                    yyerror("expected a ')'");
+                    return;
+                }
+
+            } else {
+                yyerror("expected a token");
+                return;
+            }
+
+        } else {
+            yyerror("expected a '('");
+            return;
+        }
+    }
+
+    if (prlexer(lexer)) {                       /* termination */
+        yyerror("expected end-of-line");
+        return;
+    }
+
+    // apply
+    if (x_funcname && x_funcname[0]) {
+        yywarningf("lexical scoping set inside function scope; ignored");
+    } else {
+        if (push) {
+            if (scopelvl < sizeof(scopestk)) {
+                scopestk[scopelvl++] = xf_lexical_scope;
+            } else {
+                yyerror("scope stack exceeded");
+            }
+        }
+
+        if (state >= 0) xf_lexical_scope = state;
+
+        if (pop) {
+            if (scopelvl > 0) {
+                xf_lexical_scope = scopestk[--scopelvl];
+            } else {
+                yyerror("scope stack empty");
+            }
+        }
+    }
+}
+
+
 /*  Function:           pragma_message
- *      Message directive, outputs the specified strings unconditionally
- *      to stdout.
+ *      Message directive, outputs the specified strings unconditionally to stdout.
  *
  *  Syntax:
  *      #pragma message ("one or more " "long message " "strings")
@@ -151,13 +291,13 @@ pragma_control_message(lexer_t *lexer, int enable)
 static void
 pragma_message(lexer_t *lexer)
 {
-    if (O_OROUND != yylexer(lexer)) {
+    if (O_OROUND != prlexer(lexer)) {
         yyerror("expected a '('");
     } else {
         int token, count = 0;
 
         for (;;) {
-            if ((token = yylexer(lexer)) != O_STRING_CONST) {
+            if ((token = prlexer(lexer)) != O_STRING_CONST) {
                 break;
             }
             printf("%s", yylval.sval);
@@ -175,12 +315,13 @@ pragma_message(lexer_t *lexer)
  *      warning directive.
  *
  *  Syntax:
+ *      #pragma warning off|on|push|pop
+ *
  *      #pragma warning( <specifier> : <number> [,...] [,<specifier ...] )
  *      #pragma warning( level : <1,2,3,4> )
+ *
  *      #pragma warning( push[ , n ] )
  *      #pragma warning( pop )
- *
- *      #pragma warning off
  *
  *  Description;
  *      Allows selective modification of the behavior of compiler warning messages.
@@ -210,34 +351,42 @@ pragma_warning(lexer_t *lexer)
     static int warninglvl = 0, warningstk[16] = {0};
     int token;
 
-    if ((token = yylexer(lexer)) != O_OROUND) {
+    if ((token = prlexer(lexer)) != O_OROUND) {
         /*
          *  #pragma warning off|on|push|pop
          */
         if (O_SYMBOL == token) {
             const char *specifier = yylval.sval;
 
+            // warning off
             if (0 == strcmp(specifier, "off")) {
                 xf_warnings = 0;
 
+            // warning on
             } else if (0 == strcmp(specifier, "on")) {
                 xf_warnings = 1;
 
+            // warning push
             } else if (0 == strcmp(specifier, "push")) {
                 if (warninglvl < sizeof(warningstk)) {
                     warningstk[warninglvl++] = xf_warnings;
+                } else {
+                    yyerror("warning stack exceeded");
                 }
 
+            // warning pop
             } else if (0 == strcmp(specifier, "pop")) {
                 if (warninglvl > 0) {
                     xf_warnings = warningstk[--warninglvl];
+                } else {
+                    yyerror("warning stack empty");
                 }
 
             } else {
                 yywarningf("unknown warning directive '%s'", specifier);
             }
 
-            if (yylexer(lexer)) {
+            if (prlexer(lexer)) {
                 yyerror("expected end-of-line");
             }
         } else {
@@ -246,70 +395,94 @@ pragma_warning(lexer_t *lexer)
 
     } else {
         /*
-         *  #pragma warning (once|default|disable|enable|error : <list>)
+         *  #pragma warning (once|default|disable|enable|error : <list> ...)
          *  #pragma warning (level : <level>)
          *  #pragma warning (push|pop)
          */
-        do {
-            if (O_SYMBOL == (token = yylexer(lexer))) {
-                const char *specifier = chk_salloc(yylval.sval);
+        if (O_SYMBOL == (token = prlexer(lexer))) {
+            const char *specifier = yylval.sval;
 
-                token = yylexer(lexer);
-                if (0 == strcmp(specifier, "once")) {
-                    if (O_SEMICOLON == token) {
-                    }
+            token = 0;                      // clear current token
 
-                } else if (0 == strcmp(specifier, "default")) {
-                    if (O_SEMICOLON == token) {
-                    }
-
-                } else if (0 == strcmp(specifier, "disable")) {
-                    if (O_SEMICOLON == token) {
-                    }
-
-                } else if (0 == strcmp(specifier, "enable")) {
-                    if (O_SEMICOLON == token) {
-                    }
-
-                } else if (0 == strcmp(specifier, "error")) {
-                    if (O_SEMICOLON == token) {
-                    }
-
-                } else if (0 == strcmp(specifier, "level")) {
-                    if (O_SEMICOLON == token) {
-                    }
-
-                } else if (0 == strcmp(specifier, "off")) {
-                    xf_warnings = 0;
-
-                } else if (0 == strcmp(specifier, "on")) {
-                    xf_warnings = 1;
-
-                } else if (0 == strcmp(specifier, "push")) {
-                    if (warninglvl < sizeof(warningstk)) {
-                        warningstk[warninglvl++] = xf_warnings;
-                    }
-
-                } else if (0 == strcmp(specifier, "pop")) {
-                    if (warninglvl > 0) {
-                        xf_warnings = warningstk[--warninglvl];
-                    }
-
+            // warning( push [, n|off|on ] )
+            if (0 == strcmp(specifier, "push")) {
+                if (warninglvl < sizeof(warningstk)) {
+                    warningstk[warninglvl++] = xf_warnings;
                 } else {
-                    yywarningf("unknown warning directive '%s'", specifier);
+                    yyerror("warning stack exceeded");
                 }
 
-                chk_free((void *)specifier);
-            }
+                if (O_COMMA == (token = prlexer(lexer))) {
+                    if (O_INTEGER_CONST != (token = prlexer(lexer)) ||
+                            yylval.ival < 1 || yylval.ival > 4) {
+                        if (O_SYMBOL == token && 0 == strcmp(yylval.sval, "off")) {
+                            xf_warnings = 0;
+                        } else if (O_SYMBOL == token && 0 == strcmp(yylval.sval, "on")) {
+                            xf_warnings = 1;
+                        } else {
+                            yyerror("expected a numeric value 1 .. 4");
+                            return;
+                        }
+                    } else {
+                        xf_warnings = yylval.ival;
+                    }
+                    token = 0;
+                }
 
-            /* consume until ',' or ')' */
-            while (token && O_COMMA != token && O_CROUND != token) {
-                token = yylexer(lexer);
-            }
-        } while (O_COMMA == token);
+            // warning( pop )
+            } else if (0 == strcmp(specifier, "pop")) {
+                if (warninglvl > 0) {
+                    xf_warnings = warningstk[--warninglvl];
+                } else {
+                    yyerror("warning stack empty");
+                }
 
+            // warning( off )
+            } else if (0 == strcmp(specifier, "off")) {
+                xf_warnings = 0;
+
+            // warning( on )
+            } else if (0 == strcmp(specifier, "on")) {
+                xf_warnings = 1;
+
+            // warning( specifier : values .. [, ...])
+            } else {
+                do {
+                    specifier = chk_salloc(yylval.sval);
+                    token = prlexer(lexer);     // next token
+
+                    if (O_SEMICOLON != token) {
+                        yyerrorf("expected a colon, following '%s'", specifier);
+                        return;
+                    }
+
+//                  if (0 == strcmp(specifier, "once")) {
+//                  } else if (0 == strcmp(specifier, "default")) {
+//                  } else if (0 == strcmp(specifier, "disable")) {
+//                  } else if (0 == strcmp(specifier, "enable")) {
+//                  } else if (0 == strcmp(specifier, "error")) {
+//                  } else {
+                        if (! token) {
+                            yyerror("expected a token");
+                        } else {
+                            yywarningf("unknown warning directive '%s'", specifier);
+                        }
+//                  }
+
+                    chk_free((void *)specifier);
+
+                } while (O_COMMA == token &&
+                    O_SYMBOL == (token = prlexer(lexer)));
+            }
+        }
+
+        if (0 == token) token = prlexer(lexer);
         if (O_CROUND != token) {
             yyerror("expected a ')'");
+        } else if (token) {
+            if (prlexer(lexer)) {               /* termination */
+                yyerror("expected end-of-line");
+            }
         }
     }
 }
@@ -330,13 +503,13 @@ pragma_warning(lexer_t *lexer)
 static void
 pragma_autoload(lexer_t *lexer)
 {
-    if (O_OROUND != yylexer(lexer)) {
+    if (O_OROUND != prlexer(lexer)) {
         yyerror("expected a '('");
     } else {
         int token;
 
         for (;;) {                          /* "<name>" [,] ... */
-            if ((token = yylexer(lexer)) == O_STRING_CONST) {
+            if ((token = prlexer(lexer)) == O_STRING_CONST) {
                 autoload_push(yylval.sval);
 
             } else if (O_SYMBOL == token && /* __FUNCTION__ */
@@ -358,4 +531,5 @@ pragma_autoload(lexer_t *lexer)
         }
     }
 }
+
 /*end*/

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmap_c,"$Id: cmap.c,v 1.30 2018/11/18 00:20:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmap_c,"$Id: cmap.c,v 1.31 2020/04/21 00:01:55 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmap.c,v 1.30 2018/11/18 00:20:40 cvsuser Exp $
+/* $Id: cmap.c,v 1.31 2020/04/21 00:01:55 cvsuser Exp $
  * Character map management/primitives.
  *
  *
@@ -826,7 +826,7 @@ do_create_char_map(void)        /* (int mapid, [int start = 0], [list chars], [l
             unsigned idx;
 
             if (! atom_xint(lp, &ival)) {       /* character position */
-                ewprintf("%s: invalid flag index.", x_command_name);
+                ewprintf("%s: invalid flag index.", execute_name());
                 break;
             }
 

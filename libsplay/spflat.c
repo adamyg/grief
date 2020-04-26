@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(cr_spflat_c,"$Id: spflat.c,v 1.14 2018/10/01 22:14:55 cvsuser Exp $")
+__CIDENT_RCSID(cr_spflat_c,"$Id: spflat.c,v 1.15 2020/04/11 20:01:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: spflat.c,v 1.14 2018/10/01 22:14:55 cvsuser Exp $
+/* $Id: spflat.c,v 1.15 2020/04/11 20:01:27 cvsuser Exp $
  * libsplay version 2.0 - SPLAY tree implementation.
  *
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2020, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -64,7 +64,6 @@ spflatten(SPTREE *tree)
 
     count = spsize(tree);
     if ((array = chk_alloc((count + 1) * sizeof(SPBLK *))) != NULL) {
-        _sproot *root = &tree->sp_root;
         Flatten_t f;
 
         f.index = 0;

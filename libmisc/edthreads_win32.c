@@ -1,14 +1,14 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_win32_c,"$Id: edthreads_win32.c,v 1.15 2018/10/18 15:32:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_edthreads_win32_c,"$Id: edthreads_win32.c,v 1.16 2020/04/08 11:36:34 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads_win32.c,v 1.15 2018/10/18 15:32:24 cvsuser Exp $
+/* $Id: edthreads_win32.c,v 1.16 2020/04/08 11:36:34 cvsuser Exp $
  * C11 threads implementation, for windows
  * based on ISO/IEC 9899:201x Committee Draft, April 12, 2011 N1570
  *
  *
  *
- * Copyright (c) 1998 - 2017, Adam Young.
+ * Copyright (c) 1998 - 2020, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -230,7 +230,7 @@ int
 cnd_init(cnd_t *cond)
 {
     if (!cond) return thrd_error;
-    InitializeCriticalSectionAndSpinCount(&cond->guard, 100);
+    (void) InitializeCriticalSectionAndSpinCount(&cond->guard, 100);
 
                                                 // auto-reset event
     if (!(cond->signalevt = CreateEvent(NULL, FALSE, FALSE, NULL))) {
@@ -300,7 +300,7 @@ internal(const struct timespec *ts)
     struct timespec now;
     long long diff;
 
-    timespec_get(&now, TIME_UTC);
+    (void) timespec_get(&now, TIME_UTC);
     diff = ts->tv_sec - now.tv_sec;
     diff += ts->tv_nsec - now.tv_nsec;
     return (diff > 0 ? (DWORD)(diff/1000000) : 1);
@@ -411,7 +411,7 @@ mtx_init(mtx_t *mtx, int type)
 {
     assert(mtx);
     if (!mtx) return thrd_error;
-    InitializeCriticalSectionAndSpinCount(&mtx->guard, 100);
+    (void) InitializeCriticalSectionAndSpinCount(&mtx->guard, 100);
     mtx->recursive = ((type & mtx_recursive) ? 1 : 0);
     mtx->locked = 0;
     mtx->magic = MTX_MAGIC;
@@ -937,7 +937,7 @@ __tss_init(void)
     LARGE_INTEGER freq;
 
     TAILQ_INIT(&x_tsslist);
-    InitializeCriticalSectionAndSpinCount(&x_tssguard, 100);
+    (void) InitializeCriticalSectionAndSpinCount(&x_tssguard, 100);
     x_perfscale =                               /* 2000+ */
         (QueryPerformanceFrequency(&freq) ? (unsigned long long)(freq.QuadPart/1000000000.0) : 1);
 }
@@ -982,3 +982,4 @@ void *__edthr_xiu = __tss_init;
 
 #endif
 /*end*/
+

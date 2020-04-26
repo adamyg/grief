@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crmsg_c,"$Id: crmsg.c,v 1.9 2014/10/22 02:33:28 ayoung Exp $")
+__CIDENT_RCSID(gr_crmsg_c,"$Id: crmsg.c,v 1.11 2020/04/23 12:35:50 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crmsg.c,v 1.9 2014/10/22 02:33:28 ayoung Exp $
+/* $Id: crmsg.c,v 1.11 2020/04/23 12:35:50 cvsuser Exp $
  * Compiler messages.
  *
  *
@@ -230,7 +230,7 @@ functionname(void)
 
 
 void
-crerror_line(int msgno, int lineno, const char *str)
+crerror_line(int __CUNUSEDARGUMENT(msgno), int lineno, const char *str)
 {
     char t_msgbuf[1024], *p = t_msgbuf;
     const char *t_msgend = t_msgbuf + (sizeof(t_msgbuf)-2);
@@ -341,7 +341,7 @@ crerrorx(int msgno, const char * fmt, ...)
 
 
 void
-crwarn_line(int msgno, int lineno, const char *str)
+crwarn_line(int __CUNUSEDARGUMENT(msgno), int lineno, const char *str)
 {
     if (xf_warnings) {
         if ('\r' == str[0]) {                   /*special, line join*/
@@ -402,4 +402,5 @@ crwarnx(int msgno, const char * fmt, ...)
     crwarnv(msgno, fmt, ap);
     va_end(ap);
 }
+
 /*end*/

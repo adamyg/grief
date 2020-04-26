@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_word_c,"$Id: word.c,v 1.23 2015/03/10 20:00:42 ayoung Exp $")
+__CIDENT_RCSID(gr_word_c,"$Id: word.c,v 1.25 2020/04/21 21:24:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: word.c,v 1.23 2015/03/10 20:00:42 ayoung Exp $
+/* $Id: word.c,v 1.25 2020/04/21 21:24:37 cvsuser Exp $
  * Portable mappings to and from internal word and byte order.
  *
  *
@@ -25,64 +25,51 @@ __CIDENT_RCSID(gr_word_c,"$Id: word.c,v 1.23 2015/03/10 20:00:42 ayoung Exp $")
 #include "word.h"
 #include "system.h"
 
-#if defined(HOST_BIG_ENDIAN)
-#define DEFENDIAN           1
-#elif defined(HOST_LITTLE_ENDIAN)
-#define DEFENDIAN           0
-#else
-#error Unsupported target architecture ...
+#if defined(WORD_INLINE)
+#error Unexpected WORD_INLINE definition ...
 #endif
+#include "wordimpl.h"
 
-#if (SIZEOF_VOID_P != 4 && SIZEOF_VOID_P != 8)
-#error unsupported sizeof(void *)
-#endif
-#if (SIZEOF_LONG != SIZEOF_VOID_P)
-#error unsupported sizeof(long)
-#endif
-#if (SIZEOF_DOUBLE != 8)
-#error unsupported sizeof(double)
-#endif
+const unsigned __CCACHEALIGN sizeof_atoms[] = {
+    1,                      /* F_HALT   -- EOL */                   /* F_HALT   */
+    CM_ATOMSIZE+1,          /* F_INT    -- Integer. */              /* F_INT    <integer> */
+    1+8,                    /* F_FLOAT  -- Float */                 /* F_FLOAT  <stored in native format, 64-bit double precision IEEE 754> */
+    CM_ATOMSIZE+1,          /* F_STR    -- Symbol/macro name. */    /* F_STR    <string> */ 
+    CM_ATOMSIZE+1,          /* F_LIT    -- Literal string */        /* F_LIT    <string> */
+    CM_ATOM_LIST_SZ,        /* F_LIST   */                          /* F_LIST   <length:16bit> ... */
+    CM_ATOMSIZE+1,          /* F_ARRAY  */                          /* TODO     */
+    1,                      /* F_NULL   */                          /* F_NULL   */
+    CM_ATOMSIZE+1,          /* F_RSTR   -- String reference */      /* F_RSTR   <ptr> */
+    CM_ATOMSIZE+1,          /* F_RLIST  -- List reference */        /* F_RLIST  <ptr> */
+    CM_ATOMSIZE+1,          /* F_RARRAY -- Array reference */       /* F_RARRAY <ptr> */
 
-#define ATOMSIZE           SIZEOF_LONG
-
-const unsigned sizeof_atoms[] = {
-    1,                      /* F_HALT  */
-    ATOMSIZE+1,             /* F_INT   -- integer. */
-    ATOMSIZE+1,             /* F_STR   -- symbol/macro name. */
-    3,                      /* F_LIST  */
-    1,                      /* F_NULL  */
-    3,                      /* F_ID    -- keyword/primitive. */
-    1,                      /* F_END   */
-    1,                      /* F_POLY  */
-    ATOMSIZE+1,             /* F_LIT   -- literal string */
-    ATOMSIZE+1,             /* F_RSTR  -- string reference */
-    9,                      /* F_FLOAT -- stored in native format. */
-    ATOMSIZE+1,             /* F_RLIST */
+    1+2,                    /* F_ID     -- Keyword/primitive. */    /* F_ID     <builtin:16bit> */
+    CM_ATOMSIZE+1,          /* F_SYM    -- Symbol/macro name. */    /* F_SYM    <symbol> */
+    CM_ATOMSIZE+2,          /* F_REG    -- Symbol + index. */       /* F_REG    <symbol> <idx> */
     };
 
-const char * nameof_atoms[] = {
-    "HALT",                 /* F_HALT  */
-    "INT",                  /* F_INT   -- integer. */
-    "STR",                  /* F_STR   -- symbol/macro name. */
-    "LIST",                 /* F_LIST  */
-    "NULL",                 /* F_NULL  */
-    "ID",                   /* F_ID    -- keyword/primitive. */
-    "END",                  /* F_END   */
-    "POLY",                 /* F_POLY  */
-    "LIT",                  /* F_LIT   -- literal string */
-    "RSTR",                 /* F_RSTR  -- string reference */
-    "FLOAT",                /* F_FLOAT -- stored in native format. */
-    "RLIST"                 /* F_RLIST */
+const char * const nameof_atoms[] = {
+    "HALT",                 /* F_HALT   */
+    "INT",                  /* F_INT    */
+    "FLOAT",                /* F_FLOAT  */
+    "STR",                  /* F_STR    */
+    "LIT",                  /* F_LIT    */
+    "LIST",                 /* F_LIST   */
+    "ARRAY",                /* F_ARRAY  */
+    "NULL",                 /* F_NULL   */
+    "END",                  /* F_END    */
+    "RSTR",                 /* F_RSTR   */
+    "RLIST",                /* F_RLIST  */
+    "RARRAY",               /* F_RARRAY */
+
+    "ID",                   /* F_ID     */
+    "SYM",                  /* F_SYM    */
+    "REG"                   /* F_REG    */
     };
 
 static int16_t              one       = 1;
 static const char *         onep      = (const char *) &one;
 static uint8_t              one234[4] = {0x01, 0x02, 0x03, 0x04};
-
-union double_int32 {
-    uint32_t    i[2];
-    double      d;
-};
 
 
 void
@@ -142,12 +129,12 @@ WPUT32(const uint32_t n)
 uint32_t
 WGET32(const uint32_t n)
 {
-    union double_int32 uval = {{0}};
+    union word_double_int32 uval = {{0}};
     uint32_t l = *(uint32_t *) one234;
 
     assert(8 == sizeof(uval));
     assert(4 == sizeof(one234));
-    assert(sizeof(double) == sizeof(union double_int32));
+    assert(sizeof(double) == sizeof(union word_double_int32));
 
     if (sizeof(void *) != sizeof(accint_t)) {
         printf("WGET32: panic, sizeof(void *) not sizeof(accint_t)\n");
@@ -188,196 +175,6 @@ WGET32_block(uint32_t *warray, int size)
     }
 }
 
-
-void
-LPUT16(LIST *lp, register const int16_t n)
-{
-    register uint8_t *cp = (uint8_t *) lp;
-
-    *++cp = (uint8_t) (n >> 8);
-    *++cp = (uint8_t) n;
-}
-
-
-int16_t
-LGET16(register const LIST *lp)
-{
-    return (((uint16_t)lp[1] << 8) |
-            ((uint16_t)lp[2]));
-}
-
-
-void
-LPUT32(LIST *lp, register const int32_t n)
-{
-    register uint8_t *cp = (uint8_t *) lp;
-
-    *++cp = (uint8_t) (n >> (8*3));
-    *++cp = (uint8_t) (n >> (8*2));
-    *++cp = (uint8_t) (n >> (8*1));
-    *++cp = (uint8_t) n;
-}
-
-
-int32_t
-LGET32(register const LIST *lp)
-{
-    register const uint8_t *cp = (const uint8_t *) lp;
-
-    return (((int32_t) cp[1] << (8*3)) |
-            ((int32_t) cp[2] << (8*2)) |
-            ((int32_t) cp[3] << (8*1)) |
-            ((int32_t) cp[4]));
-}
-
-
-#if (defined(HAVE_LONG_LONG_INT) && (SIZEOF_LONG_LONG >= 8)) || \
-        (SIZEOF_INT >= 8)
-void
-LPUT64(LIST *lp, register const int64_t n)
-{
-    register uint8_t *cp = (uint8_t *) lp;
-
-    *++cp = (uint8_t) (n >> (8*7));
-    *++cp = (uint8_t) (n >> (8*6));
-    *++cp = (uint8_t) (n >> (8*5));
-    *++cp = (uint8_t) (n >> (8*4));
-    *++cp = (uint8_t) (n >> (8*3));
-    *++cp = (uint8_t) (n >> (8*2));
-    *++cp = (uint8_t) (n >> (8*1));
-    *++cp = (uint8_t) n;
-}
-#endif /*64bit*/
-
-
-#if (defined(HAVE_LONG_LONG_INT) && (SIZEOF_LONG_LONG >= 8)) || \
-        (SIZEOF_INT >= 8)
-int64_t
-LGET64(register const LIST *lp)
-{
-    register const uint8_t *cp = (const uint8_t *) lp;
-
-    return (((int64_t) cp[1] << (8*7)) |
-            ((int64_t) cp[2] << (8*6)) |
-            ((int64_t) cp[3] << (8*5)) |
-            ((int64_t) cp[4] << (8*4)) |
-            ((int64_t) cp[5] << (8*3)) |
-            ((int64_t) cp[6] << (8*2)) |
-            ((int64_t) cp[7] << (8*1)) |
-            ((int64_t) cp[8]));
-}
-#endif /*64BIT*/
-
-
-void
-LPUT_PTR(LIST *lp, const void *p)
-{
-    register uint8_t *cp = (uint8_t *)lp;
-#if (SIZEOF_VOID_P == 8)
-    register uint64_t n = (uint64_t)p;
-    *++cp = (uint8_t) (n >> (8*7));
-    *++cp = (uint8_t) (n >> (8*6));
-    *++cp = (uint8_t) (n >> (8*5));
-    *++cp = (uint8_t) (n >> (8*4));
-    *++cp = (uint8_t) (n >> (8*3));
-    *++cp = (uint8_t) (n >> (8*2));
-    *++cp = (uint8_t) (n >> (8*1));
-    *++cp = (uint8_t) n;
-
-#elif (SIZEOF_VOID_P == 4)
-    register uint32_t n = (uint32_t)p;
-    *++cp = (uint8_t) (n >> (8*3));
-    *++cp = (uint8_t) (n >> (8*2));
-    *++cp = (uint8_t) (n >> (8*1));
-    *++cp = (uint8_t) n;
-
-#else
-#error LPUT_PTR: missing implementation
-#endif
-}
-
-
-void *
-LGET_PTR(register const LIST *lp)
-{
-    register const uint8_t *cp = (const uint8_t *)lp;
-#if (SIZEOF_VOID_P == 8)
-    register uint64_t n =
-            (((uint64_t) cp[1] << (8*7)) |
-             ((uint64_t) cp[2] << (8*6)) |
-             ((uint64_t) cp[3] << (8*5)) |
-             ((uint64_t) cp[4] << (8*4)) |
-             ((uint64_t) cp[5] << (8*3)) |
-             ((uint64_t) cp[6] << (8*2)) |
-             ((uint64_t) cp[7] << (8*1)) |
-             ((uint64_t) cp[8]));
-
-#elif (SIZEOF_VOID_P == 4)
-    register uint32_t n =
-            (((uint32_t) cp[1] << (8*3)) |
-             ((uint32_t) cp[2] << (8*2)) |
-             ((uint32_t) cp[3] << (8*1)) |
-             ((uint32_t) cp[4]));
-
-#else
-#error LGET_PTR: missing implementation
-#endif
-    return ((void *)n);
-}
-
-
-/*
- *  Routine to read a 64-bit double precision floating point number.
- *
- *  We use LGET32() to preserve byte orderedness amongst machines, but
- *  we don't have a generic mapping from one FP representation to another.
- */
-double
-LGET_FLOAT(const LIST *lp)
-{
-    union double_int32 uval;
-
-#if defined(HOST_BIG_ENDIAN) || \
-        (defined(__arm__) && !defined(__VFP_FP__) && !defined(__MAVERICK__))    /*not IEEE-754*/
-    uval.i[0] = LGET32(lp);
-    lp += 4;
-    uval.i[1] = LGET32(lp);
-
-#else
-    uval.i[1] = LGET32(lp);
-    lp += 4;
-    uval.i[0] = LGET32(lp);
-#endif
-    return uval.d;
-}
-
-
-/*
- *  Function to store a float in a hopefully machine independent manner.
- */
-void
-#if defined(__GNUC__)
-LPUT_FLOAT(LIST *lp, const volatile double val)
-#else
-LPUT_FLOAT(LIST *lp, const double val)
-#endif
-{
-    union double_int32 uval;
-
-    uval.d = val;
-
-#if defined(HOST_BIG_ENDIAN) || \
-        (defined(__arm__) && !defined(__VFP_FP__) && !defined(__MAVERICK__))    /*not IEEE-754*/
-    LPUT32(lp, uval.i[0]);
-    lp += 4;
-    LPUT32(lp, uval.i[1]);
-
-#else
-    LPUT32(lp, uval.i[1]);
-    lp += 4;
-    LPUT32(lp, uval.i[0]);
-#endif
-}
 
 
 /*  If porting to a new system, the following:
@@ -427,4 +224,6 @@ main(int argc, char **argv)
     }
     return 0;
 }
+
 #endif  /*LOCAL_MAIN*/
+

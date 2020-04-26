@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_symbol_c,"$Id: symbol.c,v 1.38 2014/11/16 17:28:43 ayoung Exp $")
+__CIDENT_RCSID(gr_symbol_c,"$Id: symbol.c,v 1.41 2020/04/23 00:02:38 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: symbol.c,v 1.38 2014/11/16 17:28:43 ayoung Exp $
+/* $Id: symbol.c,v 1.41 2020/04/23 00:02:38 cvsuser Exp $
  * Symbol management.
  *
  *
@@ -35,26 +35,14 @@ __CIDENT_RCSID(gr_symbol_c,"$Id: symbol.c,v 1.38 2014/11/16 17:28:43 ayoung Exp 
 #include "symbol.h"
 #include "word.h"
 
-/*
- *  Symbol tables
- */
-SPTREE *                x_gsym_tbl = NULL;
-SPTREE *                x_lsym_tbl[MAX_NESTING] = {0};
+int __CCACHEALIGN       x_nest_level = 0;       /* Stack dpeth */
+ref_t *                 x_halt_list = NULL;     /* NULL lisp */
+accint_t *              x_errno_ptr = NULL;     /* errno reference */
 
-/*
- *  NULL symbol
- */
-ref_t *                 x_halt_list = NULL;
+SPTREE *                x_gsym_tbl = NULL;      /* global symbol table */
+SPTREE *                x_lsym_tbl[MAX_SYMSTACK+1] = {0}; /* local symbol tables */
 
-/*
- *  Pointer to value field of errno global variable
- */
-accint_t *              x_errno_ptr = NULL;
-int                     x_nest_level = 0;
-
-static void             sym_clear(SYMBOL *sp);
-
-#define CURR_MACRO      (ms_cnt > 0 ? mac_stack[ms_cnt-1].name : NULL)
+static void __CINLINE   sym_clear(SYMBOL *sp);
 
 
 /*  Function:           sym_init
@@ -97,14 +85,14 @@ sym_init(void)
 {
     const LIST halt[1] = {F_HALT};
     SYMBOL *sp;
-    int i;
+    unsigned i;
 
     /*
      *  prime symbol tables.
      */
     x_gsym_tbl = spinit();                      /* global */
-    for (i = 0; i < MAX_NESTING; ++i) {         /* scope/stack */
-        x_lsym_tbl[i] = spinit();
+    for (i = 0; i < _countof(x_lsym_tbl); ++i) {
+        x_lsym_tbl[i] = spinit();               /* scope symbol stack */
     }
     x_halt_list = rlst_build(halt, 1);          /* special halt list */
 
@@ -119,7 +107,7 @@ sym_init(void)
 void
 sym_shutdown(void)
 {
-    int i;
+    unsigned i;
 
     /* global */
     sym_table_delete(x_gsym_tbl);
@@ -127,7 +115,7 @@ sym_shutdown(void)
     x_gsym_tbl = NULL;
 
     /* local */
-    for (i = 0; i < MAX_NESTING; ++i) {
+    for (i = 0; i < _countof(x_lsym_tbl); ++i) {
         spfree(x_lsym_tbl[i]);
     }
 
@@ -375,19 +363,31 @@ sym_global_lookup(const char *name)
 
 
 void
-sym_local_delete(void)
+sym_local_build(void)
+{
+    if (++x_nest_level >= MAX_SYMSTACK) {
+        panic("Symbol nesting overflow.");
+    }
+}
+
+
+void
+sym_local_delete(int outer)
 {
     sym_table_delete(x_lsym_tbl[x_nest_level]);
     --x_nest_level;
-    if (x_returns) {                            /* last returns() value, if any */
-        if (! x_return) {
-            acc_assign_object(x_returns);       /* assign unless explicit return */
-            obj_trace(x_returns);
+
+    if (outer) {
+        if (x_returns) {                        /* last returns() value, if any */
+            if (! is_return()) {
+                acc_assign_object(x_returns);   /* assign unless explicit return */
+                obj_trace(x_returns);
+            }
+            obj_free(x_returns);
+            x_returns = NULL;
         }
-        obj_free(x_returns);
-        x_returns = NULL;
+        clear_return();
     }
-    x_return = FALSE;
 }
 
 
@@ -459,8 +459,9 @@ sym_elookup(const char *name)
         /*
          *  Force macro to return on an undefined symbol error.
          */
-        x_return = TRUE;
         ewprintf("Undefined symbol: %s", name);
+       //acc_assign_null();                     /* XXX: 1/4/2020, review return value on error. */
+        set_return();
     }
     return sp;
 }
@@ -469,17 +470,19 @@ sym_elookup(const char *name)
 /*  Function:           sym_lookup
  *      Lookup a symbol, applying scoping rules.
  *
- *      1. First a check is made for a static variable definition in the current function.
+ *      Search order:
  *
- *      2. If no value is found as a static variable then try a buffer local variable.
+ *      1. Static variable definition in the current function.
  *
- *      3. If not found, then try the current local variables of a function.
+ *      2. Buffer local variable.
  *
- *      4. Then search all the nested stack frames, back to the outermost function call.
+ *      3. Current local variables of a function.
  *
- *      5. Then try for a module global (static) variables.
+ *      4. Search all the nested stack frames, back to the outermost function call.
  *
- *      6. Finally, search global variables.
+ *      5. module global (static) variables.
+ *
+ *      6. global variables.
  *
  *  Parameters:
  *      name - Symbol name.
@@ -490,17 +493,15 @@ sym_elookup(const char *name)
 SYMBOL *
 sym_lookup(const char *name)
 {
-    SPTREE *mp = macro_symbols(mac_stack[ms_cnt - 1].module);
-    const char *function = mac_stack[ms_cnt - 1].name;
-    char fnbuf[SYM_FUNCNAME_LEN + 2];
-    register int i;
+    SPTREE *mp = macro_symbols(mac_sp->module);
+    const char *function = mac_sp->name;
+    char fnbuf[SYM_FUNCNAME_LEN + 2]; 
     int loop;
     MACRO *mptr;
     SPBLK *spb;
 
-    assert(ms_cnt > 0);
+    fnbuf[0] = '$', strxcpy(fnbuf+1, function, sizeof(fnbuf)-1);
 
-    sxprintf(fnbuf, sizeof(fnbuf), "$%s", function);
     for (loop = 0; loop++ < 2;) {
         /* function (static) symbol table */
         if ((spb = splookup(fnbuf, mp)) != NULL) {
@@ -518,9 +519,11 @@ sym_lookup(const char *name)
         }
 
         /* local symbol tables */
-        for (i = x_nest_level; i > 0; --i) {
-            if (NULL != (spb = splookup(name, x_lsym_tbl[i]))) {
-                goto found;
+        {   int i;
+            for (i = x_nest_level; i > 0; --i) {
+                if (NULL != (spb = splookup(name, x_lsym_tbl[i]))) {
+                    goto found;
+                }
             }
         }
 
@@ -539,6 +542,10 @@ sym_lookup(const char *name)
         if (NULL == mptr || macro_autoload(mptr, FALSE) != 0) {
             break;
         }
+
+        /*
+         *  retry, with new macro; loop
+         */
     }
 
     if (spb) {
@@ -561,6 +568,68 @@ sym_access(SYMBOL *sp)
 }
 
 
+void
+sym_rassociate(int idx, SYMBOL *sp)
+{
+    mac_registers_t *regs, *nregs;
+    unsigned slots = 0, nslots;
+
+    assert(mac_sd);
+    assert(idx >= 0 && idx < 64);               /* system limit */
+    assert(sp);
+
+    if (idx >= 0) {
+        if (NULL != (regs = mac_sp->registers) &&
+                (unsigned)idx < (slots = regs->slots)) {
+            /*
+             *  available storage
+             */
+            assert(REGISTERS_MAGIC == regs->magic);
+            assert(NULL == regs->symbols[idx]);
+                /* register's should not be reassociated */
+            regs->symbols[idx] = sp;
+
+        } else {
+            /*
+             *  expand existing
+             */
+            assert(!regs || REGISTERS_MAGIC == regs->magic);
+
+            nslots = ALIGN_UP(idx + 1, 16);     /* blocks of 16 */
+            assert(nslots > (unsigned)idx);
+
+            if (NULL != (nregs = (mac_registers_t *)
+                    chk_recalloc(regs, sizeof(mac_registers_t) + (sizeof(SYMBOL *) * slots),
+                        sizeof(mac_registers_t) + (sizeof(SYMBOL *) * nslots)))) {
+                nregs->magic = REGISTERS_MAGIC;
+                nregs->slots = nslots;
+                assert(NULL == nregs->symbols[idx]);
+                nregs->symbols[idx] = sp;
+                mac_sp->registers = nregs;
+            }
+        }
+    }
+}
+
+
+SYMBOL *
+sym_rlookup(int idx)
+{
+    register mac_registers_t *regs;
+    SYMBOL *sp = NULL;
+
+    assert(idx >= 0 && idx < 64);               /* system limit */
+    if (NULL != (regs = mac_sp->registers)) {
+        assert(REGISTERS_MAGIC == regs->magic);
+        if (idx >= 0 && (unsigned)idx < regs->slots) {
+            sp = regs->symbols[idx];
+        }
+    }
+    assert(sp); /*should exist*/
+    return sp;
+}
+
+
 /*  Function:           sym_dump
  *      Dump the symbol tables
  *
@@ -579,7 +648,7 @@ sym_dump(void)
     printf("Symbol Table:\n");
     printf("Globals: %s\n", spstats(x_gsym_tbl));
     printf("Locals:\n");
-    for (i = j = 0; i < MAX_NESTING && j < 3; ++i) {
+    for (i = j = 0; i < _countof(x_lsym_tbl) && j < 3; ++i) {
         if (x_lsym_tbl[i]->lookups + x_lsym_tbl[i]->enqs + x_lsym_tbl[i]->splays == 0)
             j++;
 
@@ -600,7 +669,7 @@ sym_isconstant(SYMBOL *sp, const char *msg)
         return 0;
     }
     ewprintf("%s: symbol '%s' is constant", msg, sp->s_name);
-    return (1);
+    return 1;
 }
 
 
@@ -608,34 +677,30 @@ sym_isconstant(SYMBOL *sp, const char *msg)
  *  sym_clear ---
  *      Clear memory in object before assigning new value.
  */
-static void
+static __CINLINE void
 sym_clear(SYMBOL *sp)
 {
     switch (sp->s_type) {
     case F_INT:
     case F_FLOAT:
     case F_NULL:
-        sp->s_int = 0;
+     // sp->s_int = 0;
         break;
-
     case F_REFERENCE:
         sp->s_sym = NULL;
         break;
-
     case F_STR:
     case F_LIST:
         r_dec(sp->s_obj);
         sp->s_obj = NULL;
         break;
-
     case F_LIT:
     case F_RLIST:
     case F_RSTR:
-        panic("sym_clean: unexpected type ? (%d)", sp->s_type);
+        panic("sym_clear: Unexpected type ? (0x%x/%d)", sp->s_type, sp->s_type);
         break;
-
     default:
-        panic("sym_clean: unknown type ? (%d)", sp->s_type);
+        panic("sym_clear: Unknown type ? (0x%x/%d)", sp->s_type, sp->s_type);
         break;
     }
 }
@@ -782,7 +847,7 @@ argv_assign_list(int argi, const LIST *list)
 
 
 /*  Function:           argv_donate_list
- *      Donate the list to a symbol if the argv element is pointing to a 
+ *      Donate the list to a symbol if the argv element is pointing to a
  *      symbol name, otherwise release the list resource.
  *
  *  Parameters:
@@ -896,4 +961,5 @@ system_errno(int ret)
 {
     *x_errno_ptr = (accint_t) ret;
 }
+
 /*end*/

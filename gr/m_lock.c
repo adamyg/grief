@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_lock_c,"$Id: m_lock.c,v 1.7 2014/10/27 23:27:54 ayoung Exp $")
+__CIDENT_RCSID(gr_m_lock_c,"$Id: m_lock.c,v 1.8 2020/04/21 00:01:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_lock.c,v 1.7 2014/10/27 23:27:54 ayoung Exp $
+/* $Id: m_lock.c,v 1.8 2020/04/21 00:01:56 cvsuser Exp $
  * lock primitives -- not implemented
  *
  *
@@ -32,3 +32,5 @@ do_lock_info(void)                  /* void (int type], [int lock_type], [string
     /*TODO*/
     acc_assign_int(-1);
 }
+
+/*end*/

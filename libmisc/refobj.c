@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_refobj_c,"$Id: refobj.c,v 1.28 2017/01/29 04:33:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_refobj_c,"$Id: refobj.c,v 1.30 2020/04/20 23:09:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: refobj.c,v 1.28 2017/01/29 04:33:31 cvsuser Exp $
+/* $Id: refobj.c,v 1.30 2020/04/20 23:09:57 cvsuser Exp $
  * Reference counted objects.
  *
  *
@@ -403,9 +403,7 @@ r_inc(ref_t *rp)
 {
     assert(R_MAGIC == rp->r_magic);
     assert(rp->r_refs >= 1);
-    if (rp) {
-        ++rp->r_refs;
-    }
+    ++rp->r_refs;
     return rp;
 }
 
@@ -430,11 +428,12 @@ r_dec(ref_t *rp)
                 rp->r_delete = NULL;
                 rp->r_ptr = NULL;
             }
-            rp->r_magic = ~R_MAGIC;             /* invalidate */
+            rp->r_magic = (uint32_t)~R_MAGIC;   /* invalidate */
             vm_free(&hd_rstr, rp);
             rp = NULL;
         }
     }
     return rp;
 }
+
 /*end*/

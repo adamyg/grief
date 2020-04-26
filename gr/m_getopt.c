@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_getopt_c,"$Id: m_getopt.c,v 1.23 2015/02/24 23:10:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_getopt_c,"$Id: m_getopt.c,v 1.24 2020/04/21 00:01:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_getopt.c,v 1.23 2015/02/24 23:10:08 cvsuser Exp $
+/* $Id: m_getopt.c,v 1.24 2020/04/21 00:01:56 cvsuser Exp $
  * Command line/argument option processing.
  *
  *
@@ -28,12 +28,12 @@ __CIDENT_RCSID(gr_m_getopt_c,"$Id: m_getopt.c,v 1.23 2015/02/24 23:10:08 cvsuser
 #include "m_getopt.h"                           /* public interface */
 
 #include "accum.h"                              /* acc_...() */
+#include "builtin.h"                            /* mac_... */
 #include "arg.h"                                /* ... */
 #include "debug.h"                              /* trace_...() */
 #include "echo.h"
 #include "eval.h"                               /* get_...() */
 #include "lisp.h"                               /* atom_...() */
-#include "main.h"                               /* mac_stack */
 #include "symbol.h"                             /* argv_...() */
 
 enum {
@@ -255,8 +255,8 @@ do_getopt(void)                 /* (string value, [[string shortoptions], list l
 
             assert(0 == x_getopt_argc);
 
-            if (NULL == caller && ms_cnt) {     /* caller/program, argv[0] */
-                const struct mac_stack *stk1 = mac_stack + (ms_cnt - 1);
+            if (NULL == caller && mac_sd) {     /* caller/program, argv[0] */
+                const struct mac_stack *stk1 = mac_sp;
                 caller = (stk1->caller ? stk1->caller : stk1->name);
             }
             x_getopt_argv[x_getopt_argc++] = (caller ? caller : "");

@@ -1,11 +1,11 @@
 #ifndef GR_SYNTAX_H_INCLUDED
 #define GR_SYNTAX_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntax_h,"$Id: syntax.h,v 1.33 2014/10/22 02:33:19 ayoung Exp $")
+__CIDENT_RCSID(gr_syntax_h,"$Id: syntax.h,v 1.34 2020/03/27 14:39:03 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntax.h,v 1.33 2014/10/22 02:33:19 ayoung Exp $
+/* $Id: syntax.h,v 1.34 2020/03/27 14:39:03 cvsuser Exp $
  * Syntax hiliting constructs.
  *
  *
@@ -57,11 +57,37 @@ __CBEGIN_DECLS
 /*--export--defines--*/
 /*
  *  Syntax flags
+ *
+ *      Flag                        Description
+ *  ----------------------------------------------------------------------------
+ *      SYNF_CASEINSENSITIVE        Case insensitive language tokens.
+ *      SYNF_FORTRAN                FORTRAN style language.
+ *      SYNF_STRING_ONELINE         String definitions don't continue over line breaks.
+ *      SYNF_LITERAL_NOQUOTES       Literal strings don't translate quoted characters.
+ *      SYNF_STRING_MATCHED         String open/close must be matched; otherwise ignored.
+ *
+ *      SYNF_COMMENTS_LEADINGWS     xxx
+ *      SYNF_COMMENTS_TRAILINGWS    xxx
+ *      SYNF_COMMENTS_QUOTE         xxx
+ *      SYNF_COMMENTS_CSTYLE        C-style comments.
+ *
+ *      SYNF_PREPROCESSOR_WS        xxx
+ *      SYNF_LINECONT_WS            xxx
+ *      SYNF_MANDOC                 xxx
+ *
+ *      SYNF_HILITE_WS              Hilite white-space.
+ *      SYNF_HILITE_LINECONT        Hilite line continuations.
+ *      SYNF_HILITE_PREPROCESSOR    Hilite preprocessor directives.
+ *
+ *      SYNF_SPELL_WORD             Enable word spell check.
+ *      SYNF_SPELL_COMMENT          Enable comment spell check.
+ *
  */
 #define SYNF_CASEINSENSITIVE        0x0001
 #define SYNF_FORTRAN                0x0002
 #define SYNF_STRING_ONELINE         0x0004
 #define SYNF_LITERAL_NOQUOTES       0x0008
+#define SYNF_STRING_MATCHED         0x4000
 
 #define SYNF_COMMENTS_LEADINGWS     0x0010
 #define SYNF_COMMENTS_TRAILINGWS    0x0020

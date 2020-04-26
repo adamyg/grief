@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(cr_spplook_c,"$Id: spplook.c,v 1.16 2018/10/01 22:14:55 cvsuser Exp $")
+__CIDENT_RCSID(cr_spplook_c,"$Id: spplook.c,v 1.18 2020/04/20 23:08:07 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: spplook.c,v 1.16 2018/10/01 22:14:55 cvsuser Exp $
+/* $Id: spplook.c,v 1.18 2020/04/20 23:08:07 cvsuser Exp $
  * libsplay version 2.0 - SPLAY tree implementation.
  *
  *
@@ -83,12 +83,12 @@ static int
 cmp_ambiguous(
     struct _sproot *root, struct _spblk *a, struct _spblk *b)
 {
-    SPTREE *tree = (SPTREE *)root;
     Ambiguous_t *ambig = (Ambiguous_t *)a->data;
     const char *ak = a->key, *bk = b->key;
     struct _spblk *broot = b;
     int ret;
 
+    __CUNUSED(root)
     assert(ak == ambig->key);
 
     /*
@@ -128,3 +128,4 @@ cmp_ambiguous(
     return ret;
 }
 
+/*end*/

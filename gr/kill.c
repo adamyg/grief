@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_kill_c,"$Id: kill.c,v 1.21 2014/10/22 02:32:59 ayoung Exp $")
+__CIDENT_RCSID(gr_kill_c,"$Id: kill.c,v 1.22 2020/04/21 00:01:55 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: kill.c,v 1.21 2014/10/22 02:32:59 ayoung Exp $
+/* $Id: kill.c,v 1.22 2020/04/21 00:01:55 cvsuser Exp $
  * Scrap buffer.
  *
  *
@@ -32,6 +32,7 @@ __CIDENT_RCSID(gr_kill_c,"$Id: kill.c,v 1.21 2014/10/22 02:32:59 ayoung Exp $")
 #include "map.h"
 #include "symbol.h"
 #include "undo.h"
+
 
 #define K_START         BUFFER_t *savedbp = curbp; curbp = scrbp; set_hooked()
 #define K_END           curbp = savedbp; set_hooked()

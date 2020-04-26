@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bsd_glob_c,"$Id: bsd_glob.c,v 1.5 2014/10/22 02:33:44 ayoung Exp $")
+__CIDENT_RCSID(gr_bsd_glob_c,"$Id: bsd_glob.c,v 1.6 2020/04/11 21:36:46 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -222,7 +222,7 @@ bsd_glob(const char *pattern, int flags, int (*errfunc)(const char *, int), glob
 #endif
 	if (flags & GLOB_NOESCAPE) {
 		while (bufnext < bufend && (c = *patnext++) != EOS) {
-			*bufnext++ = c;
+			*bufnext++ = (Char)c;
 		}
 	} else {
 		/* Protect the quoted characters. */
@@ -241,9 +241,9 @@ bsd_glob(const char *pattern, int flags, int (*errfunc)(const char *, int), glob
 					c = QUOTE;
 					--patnext;
 				}
-				*bufnext++ = c | M_PROTECT;
+				*bufnext++ = (Char)(c | M_PROTECT);
 			} else {
-				*bufnext++ = c;
+				*bufnext++ = (Char)c;
 			}
 	}
 	*bufnext = EOS;

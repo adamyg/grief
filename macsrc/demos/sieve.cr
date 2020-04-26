@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: sieve.cr,v 1.7 2014/10/22 02:34:30 ayoung Exp $
+/* $Id: sieve.cr,v 1.8 2020/04/20 23:14:34 cvsuser Exp $
  * Sieve of Eratosthenes -- prime numbers
  *
  *  This macro isn't really that useful but its a demonstration
@@ -51,7 +51,7 @@ sieve()
 list
 calc_primes(int nprimes)
 {
-    int i, j;
+    register int i, j;
     list bucket;
 
     message("Clearing numbers...");

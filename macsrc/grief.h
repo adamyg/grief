@@ -585,13 +585,16 @@
  *  file_match flags
  */
 #define MATCH_TRAILINGWHITE     0x01
-        /* If set, ignores trailing whitespace **/
+        /*  If set, ignores trailing whitespace
+        **/
 
 #define MATCH_NOCASE            0x02
-        /*  If set, ignore cases during character comparisons */
+        /*  If set, ignore cases during character comparisons
+        **/
 
 #define MATCH_AUTOCASE          0x04
-        /*  If set, sets NOCASE based on target operating system */
+        /*  If set, sets NOCASE based on target operating system
+        **/
 
 #define MATCH_NOESCAPE          0x08
         /*  If not set, a backslash character (\) in pattern followed by
@@ -640,15 +643,16 @@
  */
 #define IFILE_STANDARD          0x0001      /* standard comment syntax (;). */
 #define IFILE_STANDARDEOL       0x0002      /* ; end-of-ine comments. */
-#define IFILE_EXTENDED          0x0004      /* extended syntax (#). */
+#define IFILE_EXTENDED          0x0004      /* extended syntax (#) comments. */
 #define IFILE_EXTENDEDEOL       0x0008      /* ## end-of-line comments. */
+#define IFILE_COMMENTSEOL       (IFILE_STANDARDEOL|IFILE_EXTENDEDEOL)
                                                 /* EOL comments */
-#define IFILE_COMMENTSEOL      (IFILE_STANDARDEOL|IFILE_EXTENDEDEOL)
 
 #define IFILE_DUPLICATES        0x0010      /* allow duplicate sections. */
 #define IFILE_COLON             0x0020      /* colon (:) as key/value delimiter, otherwise equal (=). */
                                                 /* colon (:) and equal (=) as key/value delimiter. */
-#define IFILE_EQUALCOLON       (0x0040|IFILE_COLON)
+#define IFILE_EQUALCOLON        (0x0040|IFILE_COLON)
+#define IFILE_BACKSLASH         0x0080      /* backslash quoting. */
 
 #define IFILE_QUOTED            0x0100      /* quoted strings. */
 #define IFILE_QUOTES            0x0200      /* preserve quotes. */
@@ -716,10 +720,10 @@
  *  Tokenize flags
  */
         /*  General
-        //  
+        //
         //  o TOK_COLLAPSE_MULTIPLE
-        //      Collapes occurrences of the repeated delimiter characters 
-        //      treating them as single delimiter, in other words empty 
+        //      Collapes occurrences of the repeated delimiter characters
+        //      treating them as single delimiter, in other words empty
         //      elements with the delimited text shall not be returned.
         */
 #define TOK_COLLAPSE_MULTIPLE   (1 << 1)
@@ -798,7 +802,7 @@
         /*  Result processing options
         //
         //  o TOK_TRIM_LEADING
-        //      Remove any leading whitespace from non-quoted string elements. 
+        //      Remove any leading whitespace from non-quoted string elements.
         //      Whitespace is defined as any space, tab or newline character unless
         //      they exist within the set of specified delimiters.
         //
@@ -1134,11 +1138,37 @@
 
 /*
  *  Syntax flags
+ *
+ *      Flag                        Description
+ *  ----------------------------------------------------------------------------
+ *      SYNF_CASEINSENSITIVE        Case insensitive language tokens.
+ *      SYNF_FORTRAN                FORTRAN style language.
+ *      SYNF_STRING_ONELINE         String definitions don't continue over line breaks.
+ *      SYNF_LITERAL_NOQUOTES       Literal strings don't translate quoted characters.
+ *      SYNF_STRING_MATCHED         String open/close must be matched; otherwise ignored.
+ *
+ *      SYNF_COMMENTS_LEADINGWS     xxx
+ *      SYNF_COMMENTS_TRAILINGWS    xxx
+ *      SYNF_COMMENTS_QUOTE         xxx
+ *      SYNF_COMMENTS_CSTYLE        C-style comments.
+ *
+ *      SYNF_PREPROCESSOR_WS        xxx
+ *      SYNF_LINECONT_WS            xxx
+ *      SYNF_MANDOC                 xxx
+ *
+ *      SYNF_HILITE_WS              Hilite white-space.
+ *      SYNF_HILITE_LINECONT        Hilite line continuations.
+ *      SYNF_HILITE_PREPROCESSOR    Hilite preprocessor directives.
+ *
+ *      SYNF_SPELL_WORD             Enable word spell check.
+ *      SYNF_SPELL_COMMENT          Enable comment spell check.
+ *
  */
 #define SYNF_CASEINSENSITIVE    0x0001
 #define SYNF_FORTRAN            0x0002
 #define SYNF_STRING_ONELINE     0x0004
 #define SYNF_LITERAL_NOQUOTES   0x0008
+#define SYNF_STRING_MATCHED     0x4000
 
 #define SYNF_COMMENTS_LEADINGWS 0x0010
 #define SYNF_COMMENTS_TRAILINGWS 0x0020
@@ -1242,12 +1272,27 @@ enum {
 /*
  *  File Mode Bits
  */
+extern const int                S_IFMT;
 extern const int                S_IFDIR;
 extern const int                S_IFCHR;
 extern const int                S_IFIFO;
 extern const int                S_IFREG;
 extern const int                S_IFLNK;
+extern const int                S_IFSOCK;
 
+extern const int                S_IRUSR;
+extern const int                S_IWUSR;
+extern const int                S_IXUSR;
+extern const int                S_IRGRP;
+extern const int                S_IWGRP;
+extern const int                S_IXGRP;
+extern const int                S_IROTH;
+extern const int                S_IWOTH;
+extern const int                S_IXOTH;
+
+extern const int                S_ISUID;
+extern const int                S_ISGID;
+extern const int                S_ISVTX;
 
 /*
  *  File open flags
@@ -1361,6 +1406,12 @@ extern void                     modeline(void);
 extern void                     coloriser(~ string);
 extern int                      colorscheme(~ string scheme, ...);
 extern string                   inq_coloriser(void);
+
+#define VIM_16DEPTH             (1 << 1)
+#define VIM_88DEPTH             (1 << 2)
+#define VIM_256DEPTH            (1 << 3)
+#define VIM_GUIDEPTH            (1 << 4)
+
 extern int                      vim_colorscheme(string label, int colors, ~string base, list spec, int asgui);
 extern int                      vim_colorschemex(string label, int colors, ~string base, list spec, int asgui, int &gui);
 
@@ -1407,7 +1458,7 @@ extern void                     bvars(~int);
 extern int                      inq_nest_level(void);
 
 extern void                     __dbg_init(void);
-extern void                     __dbg_trace__(~int, ~string);
+extern void                     __dbg_trace__(~int, ~string, ~string);
 
                                 /*feature.cr*/
 extern int                      select_feature(list lst, int width, ~int dohelp);
@@ -1501,6 +1552,10 @@ extern void                     help_display(string file, string title, declare 
 extern string                   help_window(int type, int buf, int lines, int width,
                                         int initial_line, ~int level, ~string msg);
 
+                                /*indent.cr*/
+extern void                     _slide_in();
+extern void                     _slide_out();
+
                                 /*menu.cr*/
 extern void                     menu(void);
 extern void                     menubar(void);
@@ -1573,6 +1628,9 @@ extern void                     egrep(~string, ~string);
                                 /*view.cr*/
 extern void                     view(string arg);
 extern void                     literal(void);
+
+                                /*wp.cr*/
+extern int                      autoindent(~string arg);
 
                                 /*window.cr*/
 extern void                     goto_left_edge(void);

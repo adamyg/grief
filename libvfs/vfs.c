@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_c,"$Id: vfs.c,v 1.13 2019/03/15 23:23:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_c,"$Id: vfs.c,v 1.14 2020/04/14 23:13:32 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs.c,v 1.13 2019/03/15 23:23:01 cvsuser Exp $
+/* $Id: vfs.c,v 1.14 2020/04/14 23:13:32 cvsuser Exp $
  * Virtual file system interface.
  *
  *
@@ -266,7 +266,7 @@ vfs_statdir(vfs_dirent_t *dent, struct stat *sb)
     sb->st_ctime = dent->d_ctime;
     sb->st_mtime = dent->d_mtime;
     sb->st_atime = dent->d_atime;
-    sb->st_mode = dent->d_mode;
+    sb->st_mode = (mode_t) dent->d_mode;
     sb->st_size = dent->d_size;
     sb->st_uid = dent->d_uid;
     sb->st_gid = dent->d_gid;

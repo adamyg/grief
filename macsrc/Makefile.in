@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.16 2019/01/25 16:28:12 cvsuser Exp $
+# $Id: Makefile.in,v 1.18 2020/04/11 19:56:15 cvsuser Exp $
 # GRIEF macro library makefile.
 #
 #
-# Copyright (c) 1998 - 2019, Adam Young.
+# Copyright (c) 1998 - 2020, Adam Young.
 # All rights reserved.
 # 
 # This file is part of the GRIEF Editor.
@@ -32,15 +32,16 @@ M=		@ABS_ROOT@/macros
 MKBD=		$M/kbd
 MTTY=		$M/tty
 MDEMOS=		$M/demos
+MBENCHMARKS=	$M/benchmarks
 MMODES=		$M/modes
 MPROFILES=	$M/profiles
 MCOLORS=	$M/colors
-MDIRS=		$M $(MKBD) $(MTTY) $(MDEMOS) $(MMODES) $(MPROFILES) $(MCOLORS)
+MDIRS=		$M $(MKBD) $(MTTY) $(MDEMOS) $(MBENCHMARKS) $(MMODES) $(MPROFILES) $(MCOLORS)
 
 all:		macros
 
-SOURCE=		$(shell ls *.cr kbd/*.cr tty/*.cr demos/*.cr modes/*.cr profiles/*.cr colors/*.cr)
-OBJECTS=	$(shell ls $M/*.cm $(MKBD)/*.cm $(MTTY)/*.cm $(MDEMOS)/*.cm $(MMODES)/*.cm $(MPROFILES)/*.cm  $(MCOLORS)/*.cm)
+SOURCE=		$(shell ls *.cr kbd/*.cr tty/*.cr demos/*.cr benchmarks/*.cr modes/*.cr profiles/*.cr colors/*.cr)
+OBJECTS=	$(shell ls $M/*.cm $(MKBD)/*.cm $(MTTY)/*.cm $(MDEMOS)/*.cm $(MBENCHMARKS)/*.cm $(MMODES)/*.cm $(MPROFILES)/*.cm  $(MCOLORS)/*.cm)
 
 macros:		$(MDIRS)
 		$(GRUNCH) -w -m -A autoload.inc -o $M $(SOURCE)
@@ -50,7 +51,7 @@ force:		$(MDIRS)
 
 debug:		$(MDIRS)
 		$(GRUNCH) -w -g -A autoload.inc -o $M $(SOURCE)
-		${GRUNCH} -w $M crisp.cr debug.cr
+		${GRUNCH} -w $M grief.cr debug.cr
 
 $M:
 		-mkdir $M
@@ -63,6 +64,9 @@ $(MTTY):
 
 $(MDEMOS):
 		-mkdir $(MDEMOS)
+
+$(MBENCHMARKS):
+		-mkdir $(MBENCHMARKS)
 
 $(MMODES):
 		-mkdir $(MMODES)

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sh_win32_c,"$Id: sh_win32.c,v 1.24 2014/10/27 23:27:56 ayoung Exp $")
+__CIDENT_RCSID(gr_sh_win32_c,"$Id: sh_win32.c,v 1.25 2020/04/13 01:24:51 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sh_win32.c,v 1.24 2014/10/27 23:27:56 ayoung Exp $
+/* $Id: sh_win32.c,v 1.25 2020/04/13 01:24:51 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -219,13 +219,13 @@ Dup(HANDLE old, HANDLE *dup, BOOL inherit)
 {
     HANDLE self = GetCurrentProcess();
 
-    if ( dup == NULL || old == INVALID_HANDLE_VALUE ||
+    if (dup == NULL || old == INVALID_HANDLE_VALUE ||
             !DuplicateHandle(
                 self, old, self, dup, 0, inherit, DUPLICATE_SAME_ACCESS) ) {
-        *dup = INVALID_HANDLE_VALUE;
-        return (FALSE);
+        if (dup) *dup = INVALID_HANDLE_VALUE;
+        return FALSE;
     }
-    return (TRUE);
+    return TRUE;
 }
 
 

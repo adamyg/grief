@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_window_c,"$Id: m_window.c,v 1.23 2019/01/26 22:27:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_window_c,"$Id: m_window.c,v 1.24 2020/04/21 00:01:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_window.c,v 1.23 2019/01/26 22:27:08 cvsuser Exp $
+/* $Id: m_window.c,v 1.24 2020/04/21 00:01:56 cvsuser Exp $
  * Window primitives.
  *
  *
@@ -1457,6 +1457,7 @@ do_set_window(void)             /* ([int winnum]) */
         }
         wp->w_status |= WFHARD;
         curwp = wp;
+        set_hooked();
         ret = 1;
     }
     acc_assign_int(ret);
@@ -1577,6 +1578,7 @@ do_delete_window(void)          /* void ([int winnum]) */
 
     if (wp == curwp) {
         curwp = &x_window_null;
+        set_hooked();
     }
 
     ismenu = (W_MENU == wp->w_type);

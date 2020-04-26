@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.75 2015/02/19 00:16:50 ayoung Exp $")
+__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.76 2020/04/13 14:29:18 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: display.c,v 1.75 2015/02/19 00:16:50 ayoung Exp $
+/* $Id: display.c,v 1.76 2020/04/13 14:29:18 cvsuser Exp $
  * High level display interface.
  *
  *
@@ -30,6 +30,7 @@ __CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.75 2015/02/19 00:16:50 ayoung Ex
 #include "anchor.h"
 #include "border.h"
 #include "buffer.h"                             /* buf_...() */
+#include "builtin.h"
 #include "cmap.h"
 #include "color.h"
 #include "debug.h"
@@ -262,6 +263,7 @@ vtready(void)
     if (NULL == vbuffer || NULL == vscreen || NULL == pscreen ||
                 NULL == vflags || NULL == vblanks) {
         panic("Cannot allocate screen buffer.");
+        return;
     }
 
     memset(vbuffer, 0, sizeof(VCELL_t)   * 2 * (nrows + 1) * ncols);
@@ -2863,6 +2865,7 @@ draw_window(WINDOW_t *wp, int top, LINENO line, int end, const int bottom, int a
     wp->w_disp_anchor = NULL;
     curwp = saved_wp;                           /* restore state */
     curbp = saved_bp;
+    set_hooked();
 }
 
 
@@ -2931,7 +2934,7 @@ draw_title(const WINDOW_t *wp, const int top, const int line)
     if (titlelen <= 0) {
         left = width;
     } else {
-        const int scroll = BF2TST(bp, BF2_TITLE_SCROLL);
+        const int scroll = (bp ? BF2TST(bp, BF2_TITLE_SCROLL) : 0);
         int norm;                               /* title length, include left/right separators (+2) */
 
         if (scroll) {

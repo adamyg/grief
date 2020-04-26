@@ -1,14 +1,14 @@
 #ifndef GR_EDMACROS_H_INCLUDED
 #define GR_EDMACROS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edmacros_h,"$Id: edmacros.h,v 1.18 2019/03/15 23:03:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_edmacros_h,"$Id: edmacros.h,v 1.20 2020/04/21 21:21:14 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edmacros.h,v 1.18 2019/03/15 23:03:08 cvsuser Exp $
+/* $Id: edmacros.h,v 1.20 2020/04/21 21:21:14 cvsuser Exp $
  * Macro and symbolic interpreter information.
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2020, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -34,11 +34,17 @@ __CPRAGMA_ONCE
 #include <edtypes.h>
 #include <edopcode.h>
 
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4324) // 'xxx': structure was padded due to alignment specifier)
+#endif
+
 __CBEGIN_DECLS
 
 #define MAX_ARGC            16                  /* primitive fixed argument limit */
 #define MAX_MACROS          512                 /* object macro limit */
-#define MAX_NESTING         256                 /* macro run-time exectuion nesting limit */
+#define MAX_MACSTACK        256                 /* macro run-time execution nesting limit */
+#define MAX_SYMSTACK        300                 /* symbol stack */
 #define MAX_CMDLINE         512                 /* prompt command line limit */
 
 enum __macrotype {
@@ -136,8 +142,7 @@ typedef struct MACROF {
 #define MAX_BUILTIN_ARGS    12                  /* 15/02/10 was 8 */
 
 /*
- *  The following flag definitions are used to define the
- *  argument types to the builtin primitives (2^16)
+ *  Flag definitions defining the argument types to the builtin primitives (2^16)
  *
  *  Warning:
  *      Changing the values of based types INT, FLOAT, STRING, LIST also
@@ -176,52 +181,70 @@ typedef unsigned short argtype_t;               /* Argument type */
 enum _biflags {
     B_REDEFINE      =0x0001,                    /* Builtin macro has been redefined */
     B_NOVALUE       =0x0002,                    /* Dont print accumulator result in debug mode */
-    B_SAFE          =0x0004                     /* Macro doesn't/cannot modify parameters,
-                                                 * ie. its safe to not take a copy of arguments */
+    B_SAFE          =0x0004,                    /* Macro wont parameters, ie. its safe to not take a copy of arguments */
+    B_VARARGS       =0x8000,                    /* Variable arguments */
 };
 
 
 /*
- *  Structure used to define built-in macros
+ *  Built-in macro definition.
  */
-typedef struct BUILTIN {
+typedef struct __CCACHEALIGN BUILTIN {
     /*
      *  Static components
      */
     const char *    b_name;                     /* Function name */
     void          (*b_func)(int);               /* Implementation */
     argtype_t       b_rtntype;                  /* Return type */
-    unsigned        b_flags;                    /* Flags (see above) */
-    int             b_parameter;                /* Parameter passed to caller */
-    int             b_argc;                     /* Argument count */
-    argtype_t       b_arg_types[MAX_BUILTIN_ARGS];
+    unsigned short  b_flags;                    /* Flags (see above) */
+    int             b_parameter;                /* Parameter passed to caller, for example operator */
+    int             b_arg_count;                /* Argument count; < 0 denotes varargs */
+    argtype_t       b_arg_types[MAX_BUILTIN_ARGS+1 /*NULL*/]; /*Argument types */
 
     /*
      *  Dynamic components
      */
-    MAGIC_t         b_magic;                    /* Structure magic */
-#define BUILTIN_MAGIC       MKMAGIC('B','l','I','n')
     const LIST *    b_ovargv;                   /* Overload argument vector, saved on initial call */
     MACRO *         b_first_macro;              /* Overload/replacement chain */
     MACRO *         b_macro;                    /* Current macro being executed in recursive keyword execution */
-    unsigned        b_reference;                /* Reference/execution count */
-    unsigned        b_replacement;              /* Replace execution count */
+
+    unsigned        b_reference;                /* Reference/execution count (DEBUG only) */
+    unsigned        b_replacement;              /* Replace execution count (DEBUG only) */
     unsigned        b_profile;                  /* Execution profile */
+
+    MAGIC_t         b_magic;                    /* Structure magic */
+#define BUILTIN_MAGIC       MKMAGIC('B','l','I','n')
 } BUILTIN;
 
 
 /*
  *  Macro stack structure
  */
-struct mac_stack {
+typedef struct mac_registers {
+#define REGISTERS_MAGIC     MKMAGIC('M','R','e','g')
+    unsigned        magic;
+    unsigned        slots;
+    SYMBOL *        symbols[1];                 /* first symbol */
+        // ..
+        //  symbols[slots-1]
+        //
+} mac_registers_t;
+
+struct __CCACHEALIGN mac_stack {
     const char *    module;                     /* $xxxx */
     const char *    name;                       /* Macro name */
     const char *    caller;                     /* set_calling_name() override */
     const LIST *    argv;                       /* Argument vector */
     int             argc;                       /* Argument count */
     int             level;                      /* Level where symbols are defined for debugger */
+    mac_registers_t *registers;                 /* Register cache */
 };
 
 __CEND_DECLS
 
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
+
 #endif  /*GR_EDMACROS_H_INCLUDED*/
+

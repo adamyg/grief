@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_arg_c,"$Id: arg.c,v 1.19 2014/10/22 02:32:52 ayoung Exp $")
+__CIDENT_RCSID(gr_arg_c,"$Id: arg.c,v 1.20 2020/04/21 00:01:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: arg.c,v 1.19 2014/10/22 02:32:52 ayoung Exp $
+/* $Id: arg.c,v 1.20 2020/04/21 00:01:54 cvsuser Exp $
  * Command line argument processing functionality.
  *
  *
@@ -865,4 +865,5 @@ arg_subopt(char **optionp, const char * const *tokens, char **valuep)
     *valuep = subval;
     return (-1);
 }
+
 /*end*/

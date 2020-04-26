@@ -1,11 +1,11 @@
 #ifndef GR_DISPLAY_H_INCLUDED
 #define GR_DISPLAY_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_display_h,"$Id: display.h,v 1.26 2014/10/22 02:32:57 ayoung Exp $")
+__CIDENT_RCSID(gr_display_h,"$Id: display.h,v 1.27 2020/04/21 00:01:55 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: display.h,v 1.26 2014/10/22 02:32:57 ayoung Exp $
+/* $Id: display.h,v 1.27 2020/04/21 00:01:55 cvsuser Exp $
  * Display management.
  *
  *

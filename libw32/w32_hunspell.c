@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_hunspell_c,"$Id: w32_hunspell.c,v 1.16 2019/03/15 23:12:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_hunspell_c,"$Id: w32_hunspell.c,v 1.17 2020/04/20 23:04:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -136,8 +136,8 @@ w32_hunspell_connect(int verbose)
             const DWORD err = GetLastError();
             char buffer[128];
 
-            _snprintf(buffer, sizeof(buffer), "Unable to load %s, rc: %ld",
-                        "hunspell.dll", (long)err);
+            (void) _snprintf(buffer, sizeof(buffer), "Unable to load %s, rc: %ld", "hunspell.dll", (long)err);
+            buffer[sizeof(buffer) - 1] = 0;
             MessageBoxA(0, buffer, "Error", MB_OK);
         }
         w32_hunspell_shutdown();
@@ -183,7 +183,8 @@ w32_hunspell_connect(int verbose)
         if (verbose) {
             char buffer[128];
 
-            _snprintf(buffer, sizeof(buffer), "Unable to resolve symbols from\n <%s>", fullname);
+            (void) _snprintf(buffer, sizeof(buffer), "Unable to resolve symbols from\n <%s>", fullname);
+            buffer[sizeof(buffer) - 1] = 0;
             MessageBoxA(0, buffer, "Error", MB_OK);
         }
         w32_hunspell_shutdown();
@@ -244,6 +245,7 @@ hunspell_resolve(const char *name)
         FARPROC proc;
 
         _snprintf(fullname, sizeof(fullname), "%s%s", prefix, name);
+        fullname[sizeof(fullname) - 1] = 0;
         if (0 != (proc = GetProcAddress(x_hunspelldll, fullname))) {
             return proc;
         }

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_symbol_c,"$Id: m_symbol.c,v 1.39 2019/01/27 13:51:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_symbol_c,"$Id: m_symbol.c,v 1.42 2020/04/21 00:01:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_symbol.c,v 1.39 2019/01/27 13:51:24 cvsuser Exp $
+/* $Id: m_symbol.c,v 1.42 2020/04/21 00:01:56 cvsuser Exp $
  * Symbol primitives.
  *
  *
@@ -1194,11 +1194,11 @@ do_extern(void)                 /* (name ...) */
 
     Macro Description:
         The 'make_local_variable()' primitive associates the
-        specified variable with the current buffer, becoming a buffer
+        specified variable with the current buffer, becoming a buffer local
         variable..
 
-        Unlike local variables are destroyed when the block within
-        which they are defines terminates, buffer variables maintain
+        Unlike scoped variables that are destroyed when the block within
+        which they are defines terminates, buffer local variables maintain
         their value across macro invocation and occupy permanent
         storage until the buffer is deleted (see scope).
 
@@ -1225,7 +1225,7 @@ do_extern(void)                 /* (name ...) */
         n/a
 
     Macro See Also:
-        inq_symbol
+        inq_symbol, types
  */
 void
 do_make_local_variable(void)    /* void (name ...) */
@@ -1305,7 +1305,7 @@ do_make_local_variable(void)    /* void (name ...) */
         n/a
 
     Macro See Also:
-        Types, global, extern, static, const
+        Types, global, extern, static, const, register
  */
 void
 do_global(void)                 /* (name ...) */
@@ -1404,7 +1404,7 @@ do_global(void)                 /* (name ...) */
         Module static declarations are a GRIEF extension.
 
     Macro See Also:
-        Types, global, extern, static, const
+        Types, global, extern, static, const, register
  */
 void
 do_static(void)                 /* (name ...) */
@@ -1415,11 +1415,11 @@ do_static(void)                 /* (name ...) */
     /*
      *  Pull arguments, unless from command line then just exit
      */
-    if (ms_cnt <= 0) {
-        return;
+    if (mac_sd <= 0) {
+        return; 
     }
-    function = mac_stack[ms_cnt - 1].name;
-    mp = macro_symbols(mac_stack[ms_cnt - 1].module);
+    function = mac_sp->name;
+    mp = macro_symbols(mac_sp->module);
 
     /*
      *  If within _init, module global
@@ -1467,12 +1467,15 @@ do_static(void)                 /* (name ...) */
         const <type> sym1, sym2 ...;
 
     Macro Description:
-        The 'const' qualifier explicitly declares a data object as
-        something that cannot be changed. Its value can only be set
-        during initialization. You cannot use const data objects in
-        expressions requiring a modifiable lvalue. For example, a
-        const data object cannot appear on the lefthand side of an
-        assignment statement.
+        The 'const' qualifier explicitly declares a locally scoped data object as 
+        something that cannot be changed. Its an immutable variable can only be set
+        during initialization. 
+        
+        You cannot use const data objects in expressions requiring a modifiable lvalue.
+        If you try to give it a new value, it will return you an error.
+        
+        For example, a const data object cannot appear on the lefthand side 
+        of an assignment statement.
 
     Macro Returns:
         nothing
@@ -1481,14 +1484,14 @@ do_static(void)                 /* (name ...) */
         An experimental GRIEF extension; functionality may change.
 
     Macro See Also:
-        Types, global, extern, static, const
+        Types, global, extern, static, const, register
  */
 void
 do_const(void)                  /* (name ...) */
 {
     const LIST *nextlp, *lp = get_xlist(1);
 
-    if (NULL == lp || ms_cnt <= 0) {
+    if (NULL == lp || mac_sd <= 0) {
         return;
     }
 
@@ -1526,6 +1529,82 @@ do_const(void)                  /* (name ...) */
             } else {
                 SYMCLR(lsp, SF_CONSTANT);
             }
+        }
+    }
+}
+
+
+/*  Function:           do_register
+ *      register primitive.
+ *
+ *  Parameters:
+ *      none.
+ *
+ *  Returns:
+ *      nothing.
+ *
+ *<<GRIEF>>
+    Macro: register - Define a variable as being a register.
+
+        register idx1, sym1, idx2, sym2 ...;
+
+    Macro Description:
+        The 'register' qualifier explicitly declares a locally scoped data object
+        as something that should be cached against the given index. 
+
+        Registers are function scoped, being unique to each macro and
+        are is visible only within the function.
+
+    Macro Returns:
+        nothing
+
+    Macro Portability:
+        An experimental GRIEF extension; functionality may change.
+
+    Macro See Also:
+        Types, global, extern, static, const, register
+ */
+void
+do_register(void)               /* (index name ...) */
+{
+    const LIST *nextlp, *lp = get_xlist(1);
+
+    if (NULL == lp || mac_sd <= 0) {
+        return;
+    }
+
+    for (;(nextlp = atom_next(lp)) != lp; lp = nextlp) {
+        accint_t idx = -1;
+        const char *symname;
+        SYMBOL *lsp;
+
+        /*
+         *  retrieve "<index> <symbol>"
+         */
+        if (! atom_xint(lp, &idx)) {
+            continue;
+        }
+        lp = nextlp; 
+        if ((nextlp = atom_next(lp)) == lp) {
+            break;              /* eos */
+        } else if (NULL == (symname = atom_xstr(lp))) {
+            continue;
+        }
+
+        /*
+         *  locate the symbol and assign symbol to assigned cache index.
+         */
+        if (NULL == (lsp = sym_local_lookup(symname))) {
+            ewprintf("register: '%s' not found at current scope.", symname);
+
+        } else if (SYMTST(lsp, SF_REFERENCE)) {
+            ewprintf("register: reference/dynamic variable '%s'", symname);
+
+        } else if (SYMTST(lsp, SF_SYSTEM)) {
+            ewprintf("register: system variable '%s'", symname);
+
+        } else {
+            sym_rassociate(idx, lsp);
         }
     }
 }
@@ -1720,7 +1799,7 @@ do_declare(int flag)            /* (type name ...) */
 {
     const LIST *nextlp, *lp = get_xlist(1);
 
-    if (NULL == lp || ms_cnt <= 0) {
+    if (NULL == lp || mac_sd <= 0) {
         return;
     }
 
@@ -1735,11 +1814,17 @@ do_declare(int flag)            /* (type name ...) */
         }
 
         /* create or recreate */
-        if ((lsp = sym_local_lookup(symname)) != NULL) {
+        if (NULL != (lsp = sym_local_lookup(symname))) {
             if (SYMTST(lsp, SF_SYSTEM)) {
                 ewprintf("declare: system variable '%s'", symname);
                 continue;
             }
+                /*
+                 *  XXX:
+                 *  Scoping is not lexical, in that each function has a single local scope.
+                 *  Hidden variable warnings should not be ignored.
+                 */
+          //ewprintf("declare: variable '%s' redefined", symname);
             sym_destroy(lsp);
 
         } else {
@@ -2022,7 +2107,7 @@ do_get_parm(void)               /* (int argument, lval symbol, [string prompt],
     LISTV lv;
 
     acc_assign_int(0);                          /* failure */
-    if (ms_cnt <= 0) {
+    if (! mac_sd) {
         return;
     }
 
@@ -2081,7 +2166,7 @@ reprompt:;
         return;
     }
 
-    if (NULL == (lp = atom_nth(mac_stack[ms_cnt - 1].argv, argi))) {
+    if (NULL == (lp = atom_nth(mac_sp->argv, argi))) {
         goto reprompt;
     }
 
@@ -2096,11 +2181,11 @@ reprompt:;
 
         lsym = x_lsym_tbl[x_nest_level];
         x_lsym_tbl[x_nest_level--] = spinit();
-        lmacstack = mac_stack[--ms_cnt];
+        lmacstack = mac_stack[--mac_sd]; --mac_sp;
 
         ret = eval(lp, &lv);                   /* eval the parameter */
 
-        mac_stack[ms_cnt++] = lmacstack;
+        mac_stack[mac_sd++] = lmacstack; ++mac_sp;
         spfree(x_lsym_tbl[++x_nest_level]);
         x_lsym_tbl[x_nest_level] = lsym;
     }
@@ -2187,7 +2272,7 @@ do_put_parm(void)               /* int (int argidx, declare value, [int optional
     const LIST *lp;
     int ret = 0;
 
-    if (ms_cnt <= 0) {
+    if (! mac_sd) {
         acc_assign_int(0);
         return;
     }
@@ -2195,13 +2280,13 @@ do_put_parm(void)               /* int (int argidx, declare value, [int optional
     if (argi < 0) {
         ewprintf("put_parm: argument index '%d' out of range", argi);
 
-    } else if (/*argi >= mac_stack[ms_cnt - 1].argc ||*/
-                    NULL == (lp = atom_nth(mac_stack[ms_cnt - 1].argv, argi))) {
+    } else if (/*argi >= mac_sp->argc ||*/
+                    NULL == (lp = atom_nth(mac_sp->argv, argi))) {
         if (xf_warnings) {
             infof("put_parm: argument index '%d' out of range", argi);
         }
 
-    } else if (F_STR != *lp) {
+    } else if (F_SYM != *lp && F_REG != *lp) {  /* compiler bug! */
         if (!optional || F_NULL != *lp) {
             ewprintf("put_parm: argument '%d' incorrect type", argi);
         }
@@ -2209,9 +2294,14 @@ do_put_parm(void)               /* int (int argidx, declare value, [int optional
     } else {
         SYMBOL *sp;
 
-        --x_nest_level; --ms_cnt;
+        assert(x_nest_level > 2);
+        assert(mac_sd > 1);
+
+        --x_nest_level;
+        --mac_sd; --mac_sp;
         sp = sym_elookup(LGET_PTR2(const char, lp));
-        ++ms_cnt; ++x_nest_level;
+        ++mac_sd; ++mac_sp;
+        ++x_nest_level;
 
         if (NULL != sp) {
             if (! sym_isconstant(sp, "put_parm")) {
@@ -2341,13 +2431,13 @@ do_arg_list(void)               /* ([int eval], [int start = 0], [int end = -1])
     int len;
 
     acc_assign_null();
-    if (ms_cnt <= 0) {
+    if (! mac_sd) {
         return;
     }
 
     /* count active parameters */
     argc = 0;
-    for (lp = mac_stack[ms_cnt - 1].argv, argi = 0;
+    for (lp = mac_sp->argv, argi = 0;
             (nextlp = atom_next(lp)) != lp; lp = nextlp, ++argi) {
         if (argi >= start && argi <= end) {
             ++argc;
@@ -2361,24 +2451,26 @@ do_arg_list(void)               /* ([int eval], [int start = 0], [int end = -1])
     }
 
     argc = 0;
-    for (lp = mac_stack[ms_cnt - 1].argv, argi = 0;
+    for (lp = mac_sp->argv, argi = 0;
             (nextlp = atom_next(lp)) != lp; lp = nextlp, ++argi) {
 
         if (argi >= start && argi <= end) {
             if (doeval) {
                 /*
                  *  evaluate the parameter,
-                 *    must remove the local frame and reinitialise, this is
-                 *    required in the event eval() invokes a function.
+                 *    must remove the local frame and reinitialise, 
+                 *    this is required to setup the callers context to resolve any symbol/function references.
                  */
                 struct mac_stack lmacstack;
                 SPTREE *lsym;
 
                 lsym = x_lsym_tbl[x_nest_level];
                 x_lsym_tbl[x_nest_level--] = spinit();
-                lmacstack = mac_stack[--ms_cnt];
+                lmacstack = mac_stack[--mac_sd]; --mac_sp;
+
                 (void)eval(lp, argv + argc);    /* evaluate the argument */
-                mac_stack[ms_cnt++] = lmacstack;
+
+                mac_stack[mac_sd++] = lmacstack; ++mac_sp;
                 spfree(x_lsym_tbl[++x_nest_level]);
                 x_lsym_tbl[x_nest_level] = lsym;
 
@@ -2434,7 +2526,7 @@ do_arg_list(void)               /* ([int eval], [int start = 0], [int end = -1])
         This interface should be considered as an internal primitive,
         reserved for exclusive use by the GRIEF Macro Compiler and
         may change without notice. Management of variable scoping and
-        argument binding shall be handling automatically by the
+        argument binding shall be handled automatically by the
         compiler.
 
     Macro Parameters:
@@ -2465,16 +2557,16 @@ do_ref_parm(void)               /* (int argument, string local_symbol, [int opti
     SYMBOL *lsp, *sp;
 
     acc_assign_int(-1);
-    if (ms_cnt <= 0) {
+    if (! mac_sd) {
         return;
     }
 
-    if (NULL == (lp = atom_nth(mac_stack[ms_cnt - 1].argv, argi))) {
+    if (NULL == (lp = atom_nth(mac_sp->argv, argi))) {
         ewprintf("ref_parm: argument index '%d' out of range", argi);
         return;
     }
 
-    if (F_STR != *lp) {
+    if (F_SYM != *lp && F_REG != *lp) {         /* compiler bug! */
         if (!optional || F_NULL != *lp) {       /* 11/01/11. optional reference */
             ewprintf("ref_parm: target incorrect type");
         }
@@ -2487,9 +2579,13 @@ do_ref_parm(void)               /* (int argument, string local_symbol, [int opti
     }
 
     assert(x_nest_level >= 2);
-    --x_nest_level; --ms_cnt;
+    assert(mac_sd > 1);
+
+    --x_nest_level; 
+    --mac_sd; --mac_sp;
     sp = sym_elookup(LGET_PTR2(const char, lp));
-    ++ms_cnt; ++x_nest_level;
+    ++mac_sd; ++mac_sp;
+    ++x_nest_level;
 
     if (NULL != sp) {
         if (! sym_isconstant(sp, "ref_parm")) {
@@ -2502,4 +2598,5 @@ do_ref_parm(void)               /* (int argument, string local_symbol, [int opti
         }
     }
 }
+
 /*end*/

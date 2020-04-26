@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntax_c,"$Id: syntax.c,v 1.56 2014/10/27 23:27:56 ayoung Exp $")
+__CIDENT_RCSID(gr_syntax_c,"$Id: syntax.c,v 1.58 2020/04/13 01:22:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntax.c,v 1.56 2014/10/27 23:27:56 ayoung Exp $
+/* $Id: syntax.c,v 1.58 2020/04/13 01:22:57 cvsuser Exp $
  * Syntax pre-processor.
  *
  *
@@ -85,10 +85,37 @@ static const struct flag {
 #if defined(__cplusplus)
 extern "C" {                                    /* MCHAR??? */
 #endif
-    static int      is_ascii(int c);
-    static int      is_blank(int c);
-    static int      is_word(int c);
-    static int      is_csym(int c);
+    static int is_ascii(int ch) {
+#if defined(HAVE___ISASCII)
+    return __isascii(ch);
+#elif defined(HAVE_ISASCII)
+    return isascii(ch);
+#else
+    return (ch > 0 && ch <= 0x7f);
+#endif
+    }
+    static int is_blank(int ch) {
+#if defined(HAVE___ISBLANK)
+        return __isblank((unsigned char)ch));
+#elif defined(HAVE_ISBLANK)
+        return isblank((unsigned char)ch);
+#else
+        return (' ' == ch || '\t' == ch || '\f' == ch);
+#endif
+    }
+    static int is_alnum(int ch)     { return isalnum((unsigned char)ch); }
+    static int is_alpha(int ch)     { return isalpha((unsigned char)ch); }
+    static int is_cntrl(int ch)     { return iscntrl((unsigned char)ch); }
+    static int is_csym(int ch)      { return ('_' == ch || isalnum((unsigned char)ch)); }
+    static int is_digit(int ch)     { return isdigit((unsigned char)ch); }
+    static int is_graph(int ch)     { return isgraph((unsigned char)ch); }
+    static int is_lower(int ch)     { return islower((unsigned char)ch); }
+    static int is_print(int ch)     { return isprint((unsigned char)ch); }
+    static int is_punct(int ch)     { return ispunct((unsigned char)ch); }
+    static int is_space(int ch)     { return isspace((unsigned char)ch); }
+    static int is_upper(int ch)     { return isupper((unsigned char)ch); }
+    static int is_word(int ch)      { return ('_' == ch || '-' == ch || isalnum((unsigned char)ch)); }
+    static int is_xdigit(int ch)    { return isxdigit((unsigned char)ch); }
 
     static const struct {                       /* Character classes */
         const char *name;
@@ -96,20 +123,20 @@ extern "C" {                                    /* MCHAR??? */
         int       (*isa)(int);
     } character_classes[] = {
         { "ascii",  5,  is_ascii },             /* ASCII character. */
-        { "alnum",  5,  isalnum  },             /* An alphanumeric (letter or digit). */
-        { "alpha",  5,  isalpha  },             /* A letter. */
-        { "blank",  5,  is_blank },             /* A space or tab character. */
-        { "cntrl",  5,  iscntrl  },             /* A control character. */
-        { "csym",   4,  is_csym  },             /* A language symbol. */
-        { "digit",  5,  isdigit  },             /* A decimal digit. */
-        { "graph",  5,  isgraph  },             /* A character with a visible representation. */
-        { "lower",  5,  islower  },             /* A lower-case letter. */
-        { "print",  5,  isprint  },             /* An alphanumeric (same as alnum). */
-        { "punct",  5,  ispunct  },             /* A punctuation character. */
-        { "space",  5,  isspace  },             /* A character producing white space in displayed text. */
-        { "upper",  5,  isupper  },             /* An upper-case letter. */
-        { "word",   4,  is_word  },             /* A "word" character (alphanumeric plus "_"). */
-        { "xdigit", 6,  isxdigit }              /* A hexadecimal digit. */
+        { "alnum",  5,  is_alnum  },            /* An alphanumeric (letter or digit). */
+        { "alpha",  5,  is_alpha  },            /* A letter. */
+        { "blank",  5,  is_blank  },            /* A space or tab character. */
+        { "cntrl",  5,  is_cntrl  },            /* A control character. */
+        { "csym",   4,  is_csym   },            /* A language symbol. */
+        { "digit",  5,  is_digit  },            /* A decimal digit. */
+        { "graph",  5,  is_graph  },            /* A character with a visible representation. */
+        { "lower",  5,  is_lower  },            /* A lower-case letter. */
+        { "print",  5,  is_print  },            /* An alphanumeric (same as alnum). */
+        { "punct",  5,  is_punct  },            /* A punctuation character. */
+        { "space",  5,  is_space  },            /* A character producing white space in displayed text. */
+        { "upper",  5,  is_upper  },            /* An upper-case letter. */
+        { "word",   4,  is_word   },            /* A "word" character (alphanumeric plus "_"). */
+        { "xdigit", 6,  is_xdigit }             /* A hexadecimal digit. */
         };
 #if defined(__cplusplus)
 };
@@ -2198,40 +2225,6 @@ syntax_comment(
 }
 
 
-static int
-is_ascii(int c)
-{
-#if defined(HAVE___ISASCII)
-    return __isascii(c);
-#elif defined(HAVE_ISASCII)
-    return isascii(c);
-#else
-    return (c > 0 && c <= 0x7f);
-#endif
-}
-
-
-static int
-is_blank(int c)
-{                                               /* MCHAR??? */
-    return (' ' == c || '\t' == c || '\f' == c);
-}
-
-
-static int
-is_word(int ch)
-{
-    return ('_' == ch || '-' == ch || isalnum(ch));
-}
-
-
-static int
-is_csym(int ch)
-{
-    return (ch == '_' || isalnum(ch));
-}
-
-
 const LINECHAR *
 syntax_comment_end(
     SyntaxTable_t *st, unsigned type, const LINECHAR *cursor, const LINECHAR *end)
@@ -2478,15 +2471,20 @@ parse_line(SyntaxTable_t *st, LINE_t *line)
         }
 
         if (ch == schar || ch == cchar) {       /* string/character */
-            cursor = syntax_string_end(st, cursor + 1, end, quote, ch);
+            const LINECHAR *ocursor = cursor;
+            cursor = syntax_string_end(st, ocursor + 1, end, quote, ch);
             if (NULL == cursor) {
-                return (ch == schar ? L_IN_STRING : L_IN_CHARACTER);
+                if (0 == (st->st_flags & SYNF_STRING_MATCHED)) {
+                    return (ch == schar ? L_IN_STRING : L_IN_CHARACTER);
+                }
+                cursor = ocursor + 1;           /* normal */
             }
             continue;
         }
 
         if (ch == ichar) {                      /* literals, optional quoting */
-            cursor = syntax_string_end(st, cursor + 1, end, (char)(SYNF_LITERAL_NOQUOTES & flags ? 0 : quote), ch);
+            const LINECHAR *ocursor = cursor;
+            cursor = syntax_string_end(st, ocursor + 1, end, (char)(SYNF_LITERAL_NOQUOTES & flags ? 0 : quote), ch);
             if (NULL == cursor) {
                 return L_IN_LITERAL;
             }

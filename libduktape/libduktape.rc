@@ -55,7 +55,7 @@ BEGIN
 			VALUE "InternalName", "libduktape.dll\0"
 
 			VALUE "LegalCopyright",
-				"Copyright (c) 2013-2018 by Duktape authors\0"
+				"Copyright (c) 2013-2019 by Duktape authors\0"
 
 			VALUE "OriginalFilename",
 				"Duktape." DUKTAPE_VERSION ".dll\0"

@@ -1,16 +1,16 @@
 #ifndef GR_EDCM_H_INCLUDED
 #define GR_EDCM_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edcm_h,"$Id: edcm.h,v 1.20 2019/03/15 23:03:05 cvsuser Exp $")
+__CIDENT_RCSID(gr_edcm_h,"$Id: edcm.h,v 1.21 2020/04/20 23:21:26 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edcm.h,v 1.20 2019/03/15 23:03:05 cvsuser Exp $
+/* $Id: edcm.h,v 1.21 2020/04/20 23:21:26 cvsuser Exp $
  * clisp macro constructs.
  *
  *
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2020, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -40,7 +40,9 @@ __CPRAGMA_ONCE
 #include <edmacros.h>                           /* Macro constants. */
 #include <edrefobj.h>                           /* Reference object utilities. */
 
-#define CM_VERSION      30                      /* Interface version 3.0. */
+#define CM_VERSION      31                      /* Interface version 3.1 */
+    /* 3.1 - 1/04/2020, register variables */
+
 #define CM_MAGIC        ((')' << 8) | ')')      /* lower/upper bytes must be same. */
 #define CM_EXTENSION    ".cm"                   /* Object extension. */
 

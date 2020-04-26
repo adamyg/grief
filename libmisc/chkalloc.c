@@ -1,13 +1,13 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_chkalloc_c,"$Id: chkalloc.c,v 1.23 2017/01/29 04:33:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_chkalloc_c,"$Id: chkalloc.c,v 1.26 2020/04/14 21:09:44 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: chkalloc.c,v 1.23 2017/01/29 04:33:31 cvsuser Exp $
+/* $Id: chkalloc.c,v 1.26 2020/04/14 21:09:44 cvsuser Exp $
  * Memory allocation front end.
  *
  *
  *
- * Copyright (c) 1998 - 2017, Adam Young.
+ * Copyright (c) 1998 - 2020, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -61,7 +61,7 @@ __CIDENT_RCSID(gr_chkalloc_c,"$Id: chkalloc.c,v 1.23 2017/01/29 04:33:31 cvsuser
 #define FREE(_bf)           dlfree(_bf)
 #define HAVE_NATIVE_ALLOC
 
-#elif defined(_MSC_VER)
+#elif defined(_MSC_VER) && (0)
 #define MALLOC(_sz)         _malloc(_sz)
 #define CALLOC(_ne,_sz)     _calloc(_ne,_sz)
 #define REALLOC(_bf,_sz)    _realloc(_bf,_sz)
@@ -86,7 +86,7 @@ __CIDENT_RCSID(gr_chkalloc_c,"$Id: chkalloc.c,v 1.23 2017/01/29 04:33:31 cvsuser
  *          0 .. length in size
  *      <tail>
  *          magic           MAGIC_TAIL
- *          [file-name]
+ *          [filename:linenumber]
  */
 
 #include <tailqueue.h>
@@ -103,20 +103,31 @@ __CIDENT_RCSID(gr_chkalloc_c,"$Id: chkalloc.c,v 1.23 2017/01/29 04:33:31 cvsuser
 typedef TAILQ_HEAD(_MemList, _MemBlock)
                             MEMLIST_t;
 static MEMLIST_t            x_memtail;
-static unsigned             x_flags;
+static unsigned             x_memflags;
+            // = CHKALLOC_TAIL | CHKALLOC_FILL | CHKALLOC_ZERO | CHKALLOC_WHERE | CHKALLOC_UNINIT;
 static unsigned             x_totalallocs = 0;
 static unsigned             x_allocs = 0;
 static uint32_t             x_tail = MAGIC_TAIL;
 
 struct _MemBlock {
-    uint32_t                magic;
-    size_t                  length;
-    TAILQ_ENTRY(_MemBlock)  node;
+    union {
+        struct _MemInternal {
+            uint32_t        magic;
+            size_t          length;
+            TAILQ_ENTRY(_MemBlock) node;
+        } block;
+#define ALIGNMENT   16
+        char                alignment[ALIGNMENT];
+            /*  Assure if allocation succeeds, 
+             *  we return a pointer that is suitably aligned for any object type with fundamental alignment.
+             */
+    };
 };
 
 static int                  x_native;
 static unsigned             x_inuse;
 static unsigned             x_leak;
+
 
 static void
 checkfailed(const char *msg, const char *filename, size_t line)
@@ -135,22 +146,25 @@ checktail(const char *filename, size_t line)
 {
     if (x_totalallocs) {
         const MEMLIST_t *tq = &x_memtail;
-        register const struct _MemBlock *ip;
-        size_t length;
+        const struct _MemBlock *mp;
+        size_t size;
 
-        TAILQ_FOREACH(ip, tq, node) {
+        TAILQ_FOREACH(mp, tq, block.node) {
+            const struct _MemInternal *ip = &mp->block;
 
             if (MAGIC_ALLOCED != ip->magic) {
-                if (MAGIC_ALLOCED_WHERE != ip->magic) {
-                    checkfailed("check(), overwritten block magic.", filename, line);
+                if (MAGIC_FREED == ip->magic) {
+                    checkfailed("check(), block already freed memory.", filename, line);
+                } else if (MAGIC_ALLOCED_WHERE != ip->magic) {
+                    checkfailed("check(), non-alloced memory.", filename, line);
                 }
             }
 
-            if (0 == (length = ip->length)) {
+            if (0 == (size = ip->length)) {
                 checkfailed("check(), overwritten block length.", filename, line);
             }
 
-            if (memcmp((const char *)&x_tail, ((const char *)(ip + 1)) + length, sizeof(uint32_t))) {
+            if (0 != memcmp((const char *)&x_tail, ((const char *)(ip + 1)) + size, sizeof(x_tail))) {
                 checkfailed("check(), overwritten arena magic.", filename, line);
             }
         }
@@ -159,46 +173,56 @@ checktail(const char *filename, size_t line)
 
 
 static void *
-checkalloc(size_t length, const char *filename, size_t line)
+checkalloc(size_t size, const char *filename, size_t line)
 {
     void *result = NULL;
+    size_t fnsize = 0;
 
-    if (length > 0) {
-        size_t fnsize = 0;
+    if (0 == size) {
+        return NULL;
+    }
 
-        if (CHKALLOC_TAIL & x_flags) {
-            checktail(filename, line);
+    if (CHKALLOC_TAIL & x_memflags) {
+        checktail(filename, line);
+    }
+
+    if ((CHKALLOC_WHERE & x_memflags) && filename && *filename) {
+        fnsize = strlen(filename) + 15 /*line*/;
+        fnsize = ALIGNU64(fnsize);
+    }
+
+    /*
+     *  Structure:
+     *    < Block >
+     *    < ... memory of length bytes ... >
+     *    < Tail >
+     *    [ filename:line\0 ]
+     */
+    if (NULL != (result =
+            MALLOC(sizeof(struct _MemBlock) + size + sizeof(x_tail) + fnsize))) {
+        struct _MemBlock *mp = (struct _MemBlock *) result;
+        struct _MemInternal *ip = &mp->block;
+        char *end;
+
+        if (0 == x_totalallocs++) {
+            assert(sizeof(struct _MemBlock) == ALIGNMENT);
+            TAILQ_INIT(&x_memtail);
         }
+        ++x_allocs;
 
-        if ((CHKALLOC_WHERE & x_flags) && filename && *filename) {
-            fnsize =  strlen(filename) + 15;
-            fnsize -= (fnsize % 8);
-        }
+        ip->magic = MAGIC_ALLOCED;
+        ip->length = size;
 
-        if (NULL != (result =
-                MALLOC(sizeof(struct _MemBlock) + length + fnsize))) {
-            register struct _MemBlock *ip = (struct _MemBlock *) result;
-            char *end;
+        result = (void *)(mp + 1);              /* trailing data block */
+        end = ((char *)result) + size;
 
-            if (0 == x_totalallocs++) {
-                TAILQ_INIT(&x_memtail);
-            }
-            ++x_allocs;
+        TAILQ_INSERT_TAIL(&x_memtail, mp, block.node);
 
-            ip->magic = MAGIC_ALLOCED;
-            ip->length = length;
+        memcpy(end, (const char *)&x_tail, sizeof(x_tail));
 
-            result = (void *)(ip + 1);
-            end = ((char *)result) + length;
-
-            TAILQ_INSERT_TAIL(&x_memtail, ip, node);
-
-            memcpy(end, (const char *)&x_tail, sizeof(uint32_t));
-
-            if (CHKALLOC_WHERE & x_flags) {
-                sprintf(end + sizeof(uint32_t), "%s:%u", filename, line);
-                ip->magic = MAGIC_ALLOCED_WHERE;
-            }
+        if (CHKALLOC_WHERE & x_memflags) {
+            (void) sprintf(end + sizeof(x_tail), "%s:%u", filename, line);
+            ip->magic = MAGIC_ALLOCED_WHERE;
         }
     }
     return result;
@@ -208,9 +232,9 @@ checkalloc(size_t length, const char *filename, size_t line)
 unsigned
 check_configure(unsigned flags)
 {
-    const unsigned oflags = x_flags;
+    const unsigned oflags = x_memflags;
 
-    if ((unsigned)-1 != flags) x_flags |= flags;
+    if ((unsigned)-1 != flags) x_memflags |= flags;
     return oflags;
 }
 
@@ -222,14 +246,15 @@ check_alloc(size_t size, const char *filename, size_t line)
 
     if (size) {
         if (NULL != (result = checkalloc(size, filename, line))) {
-            if (CHKALLOC_FILL & x_flags) {
+            if (CHKALLOC_FILL & x_memflags) {
                 memset(result, 'A', size);
 
-            } else if (CHKALLOC_ZERO & x_flags) {
+            } else if (CHKALLOC_ZERO & x_memflags) {
                 memset(result, 0, size);
             }
         }
     }
+    assert(ISALIGNTO(result, ALIGNMENT));
     return result;
 }
 
@@ -243,62 +268,84 @@ check_realloc(void *p, size_t size, const char *filename, size_t line)
         result = check_alloc(size, filename, line);
 
     } else {
-        struct _MemBlock *ip = (struct _MemBlock *) p;
-        size_t oldlength, fnsize = 0;
-        char *end, fntmp[512];
+        struct _MemBlock *mp = ((struct _MemBlock *) p) - 1;
+        struct _MemInternal *ip = &mp->block;
+        size_t oldsize, fnsize = 0;
+        const char *oldend;
+        char *end;
 
-        --ip;
         if (MAGIC_ALLOCED != ip->magic) {
-            if (MAGIC_ALLOCED_WHERE != ip->magic) {
-                checkfailed("realloc(), non-allocated memory.", filename, line);
+            if (MAGIC_FREED == ip->magic) {
+                checkfailed("realloc(), block already freed memory.", filename, line);
+            } else if (MAGIC_ALLOCED_WHERE != ip->magic) {
+                checkfailed("realloc(), non-alloced memory.", filename, line);
             }
         }
 
-        if (0 == (oldlength = ip->length)) {
+        if (0 == (oldsize = ip->length)) {
             checkfailed("realloc(), overwritten block length.", filename, line);
         }
 
-        end = ((char *)p) + oldlength;
+        oldend = ((char *)p) + oldsize;
 
-        if (memcmp((const char *)&x_tail, end, sizeof(uint32_t))) {
+        if (0 != memcmp((const char *)&x_tail, oldend, sizeof(x_tail))) {
             checkfailed("realloc(), overwritten arena magic.", filename, line);
         }
 
-        TAILQ_REMOVE(&x_memtail, ip, node);
+        if (size <= oldsize) {
+            return p;                           /* dont shrink, return original */
+        }
 
-        if (CHKALLOC_TAIL & x_flags) {
+        TAILQ_REMOVE(&x_memtail, mp, block.node);
+
+        if (CHKALLOC_TAIL & x_memflags) {
             checktail(filename, line);
         }
 
         if (MAGIC_ALLOCED_WHERE == ip->magic) {
-            strncpy(fntmp, (const char *)end + sizeof(uint32_t), sizeof(fntmp - 1));
-            fntmp[sizeof(fntmp) - 1] = 0;
-            fnsize = strlen(fntmp) + 1;
+            const char *fileinfo = oldend + sizeof(x_tail);
+            fnsize = strlen(fileinfo) + 1;      /* trailing file information */
         }
 
         if (NULL == (result =
-                REALLOC((void *)ip, sizeof(struct _MemBlock) + size + sizeof(uint32_t) + fnsize))) {
-            TAILQ_INSERT_TAIL(&x_memtail, ip, node);
+                REALLOC((void *)mp, sizeof(struct _MemBlock) + size + sizeof(x_tail) + ALIGNU64(fnsize)))) {
+            TAILQ_INSERT_TAIL(&x_memtail, mp, block.node);
 
         } else {
-            ip = (struct _MemBlock *) result;
+            mp = (struct _MemBlock *) result;
+            ip = &mp->block;
 
-            ip->magic = MAGIC_ALLOCED;
+            ip->magic = (fnsize ? MAGIC_ALLOCED_WHERE : MAGIC_ALLOCED);
             ip->length = size;
-            result = (void *)(ip + 1);
+            result = (void *)(mp + 1);
             end = ((char *)result) + size;
+            oldend = ((const char *)result + oldsize);
 
-            TAILQ_INSERT_TAIL(&x_memtail, ip, node);
+            TAILQ_INSERT_TAIL(&x_memtail, mp, block.node);
 
-            memcpy(end, (const char *)&x_tail, sizeof(uint32_t));
-
-            if (fnsize) {
-                memcpy(end + sizeof(uint32_t), (const void *)fntmp, fnsize);
-                ip->magic = MAGIC_ALLOCED_WHERE;
+            assert(0 == memcmp((const char *)&x_tail, oldend, sizeof(x_tail)));
+            memcpy(end, (const char *)&x_tail, sizeof(x_tail));
+            if (fnsize) {                       /* fileinfo */
+                memmove(end + sizeof(x_tail), oldend + sizeof(x_tail), fnsize);
             }
         }
     }
     return result;
+}
+
+
+void *
+check_recalloc(void *p, size_t osize, size_t nsize, const char *filename, size_t line)
+{
+    assert(nsize > osize);                      /* assume expand */
+    if (NULL == p) {
+        p = check_calloc(1, nsize, filename, line);
+    } else if (NULL != (p = check_realloc(p, nsize, filename, line))) {
+        if (nsize > osize) {                    /* zero new storage */
+            (void) memset((char *)p + osize, 0, nsize - osize);
+        }
+    }
+    return p;
 }
 
 
@@ -328,16 +375,15 @@ void
 check_free(void *p, const char * filename, size_t line)
 {
     if (p) {
-        struct _MemBlock *ip = (struct _MemBlock *)p;
-        size_t length;
+        struct _MemBlock *mp = ((struct _MemBlock *) p) - 1;
+        struct _MemInternal *ip = &mp->block;
+        size_t length;  
 
-        --ip;
-        if (MAGIC_FREED == ip->magic) {
-            checkfailed("free(), block already freed memory.", filename, line);
-
-        } else if (MAGIC_ALLOCED != ip->magic) {
-            if (MAGIC_ALLOCED_WHERE != ip->magic) {
-                checkfailed("free(), freeing non-alloced memory.", filename, line);
+        if (MAGIC_ALLOCED != ip->magic) {
+            if (MAGIC_FREED == ip->magic) {
+                checkfailed("free(), block already freed memory.", filename, line);
+            } else if (MAGIC_ALLOCED_WHERE != ip->magic) {
+                checkfailed("free(), non-alloced memory.", filename, line);
             }
         }
 
@@ -345,17 +391,17 @@ check_free(void *p, const char * filename, size_t line)
             checkfailed("free(), overwritten block length.", filename, line);
         }
 
-        if (memcmp((const char *)&x_tail, (const char *)p + length, sizeof(uint32_t))) {
+        if (0 != memcmp((const char *)&x_tail, (const char *)p + length, sizeof(x_tail))) {
             checkfailed("free(), overwritten arena magic.", filename, line);
         }
 
-        TAILQ_REMOVE(&x_memtail, ip, node);
+        TAILQ_REMOVE(&x_memtail, mp, block.node);
 
-        if (CHKALLOC_TAIL & x_flags) {
+        if (CHKALLOC_TAIL & x_memflags) {
             checktail(filename, line);
         }
 
-        if (CHKALLOC_UNINIT & x_flags) {
+        if (CHKALLOC_UNINIT & x_memflags) {
             size_t iplength = (sizeof(struct _MemBlock) + length) / sizeof(uint32_t);
             uint32_t *ip2 = (uint32_t *)ip;
             while (iplength--) {
@@ -365,7 +411,7 @@ check_free(void *p, const char * filename, size_t line)
         ip->magic = MAGIC_FREED;
         --x_allocs;
 
-        FREE(ip);
+        FREE(mp);
     }
 }
 
@@ -376,7 +422,7 @@ check_calloc(size_t elem, size_t elsize, const char *filename, size_t line)
     const size_t size = elem * elsize;
     void *result = NULL;
 
-    if (size > elem && size > elsize) {
+    if (size) {
         if (NULL != (result = checkalloc(size, filename, line))) {
             memset(result, 0, size);
         }
@@ -386,13 +432,12 @@ check_calloc(size_t elem, size_t elsize, const char *filename, size_t line)
 
 
 void *
-check_salloc(const char *s, const char * filename, size_t line)
+check_salloc(const char *s, const char *filename, size_t line)
 {
     void *result = NULL;
 
     if (s) {
-        const size_t size = strlen(s) + 1;
-
+        const size_t size = strlen(s) + 1 /*nul*/;
         if (NULL != (result = checkalloc(size, filename, line))) {
             memcpy(result, s, size);
         }
@@ -407,12 +452,21 @@ check_snalloc(const char *s, size_t len, const char *filename, size_t line)
     void *result = NULL;
 
     if (s) {
-        if (NULL != (result = checkalloc(len + 1, filename, line))) {
+        if (NULL != (result = checkalloc(len + 1 /*nul*/, filename, line))) {
             memcpy(result, s, len);
             ((char *)result)[len] = 0;
         }
     }
     return result;
+}
+
+
+void
+check_leak(const void *p, const char *file, size_t line)
+{
+    __CUNUSED(p);
+    __CUNUSED(file);
+    __CUNUSED(line);
 }
 
 
@@ -477,10 +531,11 @@ mscv_reporthook(int nRptType, char *szMsg, int *retVal)
 static void
 mscv_diagnositics(void)
 {
-#ifndef _DEBUG
+#if !defined(_DEBUG) || (1) /*1=disable*/
     printf("Skipping this for non-debug mode.\n");
-    return;
-#endif
+
+#else
+#define CRT_DUMP_MEMORY_LEAKS
 //  _CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) |_CRTDBG_CHECK_ALWAYS_DF);
     _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
     _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
@@ -490,13 +545,16 @@ mscv_diagnositics(void)
     _CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
 //  _CrtSetAllocHook(mscv_allochook);
     _CrtSetReportHook(mscv_reporthook);
+#endif
 }
 
 
 static void
 mscv_dump(void)
 {
+#if defined(CRT_DUMP_MEMORY_LEAKS)
     _CrtDumpMemoryLeaks();
+#endif
     trace_flush();
 }
 #endif  /*_MSC_VER*/
@@ -509,10 +567,15 @@ mscv_dump(void)
 #undef chk_alloc
 #undef chk_calloc
 #undef chk_realloc
+#undef chk_recalloc
+#undef chk_shrink
 #undef chk_expand
 #undef chk_free
 #undef chk_salloc
 #undef chk_snalloc
+#undef chk_leak
+#undef chk_isleak
+
 
 /*
  *  Enable use of system native allocator, if not already the default.
@@ -582,10 +645,10 @@ chk_alloc(size_t size)
 #endif /*HAVE_NATIVE_ALLOC*/
 
     if (NULL != (result = MALLOC(size))) {
-        if (CHKALLOC_FILL & x_flags) {
+        if (CHKALLOC_FILL & x_memflags) {
             memset(result, 'A', size);
 
-        } else if (CHKALLOC_ZERO & x_flags) {
+        } else if (CHKALLOC_ZERO & x_memflags) {
             memset(result, 0, size);
         }
     }
@@ -625,6 +688,21 @@ chk_realloc(void *p, size_t size)
 #endif /*HAVE_NATIVE_ALLOC*/
 
     return REALLOC(p, size);
+}
+
+
+void *
+chk_recalloc(void *p, size_t osize, size_t nsize)
+{
+    assert(nsize > osize);                      /* assume expand */
+    if (NULL == p) {
+        p = chk_calloc(1, nsize);
+    } else if (NULL != (p = chk_realloc(p, nsize))) {
+        if (nsize > osize) {                    /* zero new storage */
+            (void) memset((char *)p + osize, 0, nsize - osize);
+        }
+    }
+    return p;
 }
 
 
@@ -771,4 +849,5 @@ chk_snalloc(const char *s, size_t len)
     }
     return result;
 }
+
 /*end*/

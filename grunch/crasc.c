@@ -1,9 +1,9 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crasc_c,"$Id: crasc.c,v 1.15 2014/10/22 02:33:28 ayoung Exp $")
+__CIDENT_RCSID(gr_crasc_c,"$Id: crasc.c,v 1.18 2020/04/23 12:35:50 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crasc.c,v 1.15 2014/10/22 02:33:28 ayoung Exp $
- * ASCII back end code generator.
+/* $Id: crasc.c,v 1.18 2020/04/23 12:35:50 cvsuser Exp $
+ * ASCII/LISP backend code generator.
  *
  *
  * This file is part of the GRIEF Editor.
@@ -18,13 +18,13 @@ __CIDENT_RCSID(gr_crasc_c,"$Id: crasc.c,v 1.15 2014/10/22 02:33:28 ayoung Exp $"
  * ==end==
  */
 
+
 #include "grunch.h"         /*local definitions*/
 
 static int                  need_space, list_level, consec_opens, col;
 
 static void                 printstr(const char *);
 static void                 printnl(void);
-
 
 void
 init_ascii(void)
@@ -94,41 +94,41 @@ gena_string(const char *str)
     while (*str) {
         switch (*str) {
         case '\a':
-            fputs("\\a", x_ofp);
+            fputs("\\a", x_afp);
             col++;
             break;
         case '\b':
-            fputs("\\b", x_ofp);
+            fputs("\\b", x_afp);
             col++;
             break;
         case '\t':
-            fputs("\\t", x_ofp);
+            fputs("\\t", x_afp);
             col++;
             break;
         case '\v':
-            fputs("\\v", x_ofp);
+            fputs("\\v", x_afp);
             col++;
             break;
         case '\r':
-            fputs("\\r", x_ofp);
+            fputs("\\r", x_afp);
             col++;
             break;
         case '\n':
-            fputs("\\n", x_ofp);
+            fputs("\\n", x_afp);
             col++;
             break;
         case '\f':
-            fputs("\\f", x_ofp);
+            fputs("\\f", x_afp);
             col++;
             break;
         default:
-            fputc(*str, x_ofp);
+            fputc(*str, x_afp);
             break;
         }
         ++str; ++col;
     }
     need_space = TRUE;
-    fputc('"', x_ofp);
+    fputc('"', x_afp);
     ++col;
 }
 
@@ -152,10 +152,22 @@ gena_token(int val)
 
 
 void
-gena_lit(const char *str)
+gena_sym(const char *str)
 {
     consec_opens = 0;
     printstr(str);
+    need_space = TRUE;
+}
+
+
+void
+gena_reg(const char *name, int index)
+{
+    char buf[32];
+
+    printstr(name);
+    sprintf(buf, "#%" ACCINT_FMT, index);       // <symbol>#<index>
+    printstr(buf);
     need_space = TRUE;
 }
 
@@ -175,7 +187,8 @@ gena_finish(void)
 void
 gena_null(void)
 {
-    printstr(" NULL");
+    printstr("NULL");
+    need_space = TRUE;
 }
 
 
@@ -186,7 +199,7 @@ printstr(const char *str)
         if (col > IDENT_LINELENGTH) {
             printnl();
         } else if (need_space) {
-            fputc(' ', x_ofp);
+            fputc(' ', x_afp);
         }
     }
     need_space = FALSE;
@@ -196,12 +209,12 @@ printstr(const char *str)
             printnl(); ++str;
             continue;
         }
-        fputc(*str, x_ofp);
+        fputc(*str, x_afp);
         ++str; ++col;
     }
 
     if (xf_flush) {
-        fflush(x_ofp);
+        fflush(x_afp);
     }
 }
 
@@ -211,10 +224,11 @@ printnl(void)
 {
     int i;
 
-    fputc('\n', x_ofp);
+    fputc('\n', x_afp);
     col = list_level * IDENT_LEVEL;
     for (i = col; i-- > 0;) {
-        fputc(' ', x_ofp);
+        fputc(' ', x_afp);
     }
 }
+
 /*end*/

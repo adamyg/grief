@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.82 2019/01/26 22:27:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.83 2020/04/21 00:01:55 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: file.c,v 1.82 2019/01/26 22:27:08 cvsuser Exp $
+/* $Id: file.c,v 1.83 2020/04/21 00:01:55 cvsuser Exp $
  * File-buffer primitives and support.
  *
  *
@@ -723,10 +723,9 @@ buf_insert(BUFFER_t *bp, const char *fname, int inserting, const int32_t flags, 
     }
 
     if (fd >= 0) {
+        struct stat sb = {0};
         WINDOW_t *wp;
-        struct stat sb;
 
-        sb.st_mode = 0;
         vfs_fstat(fd, &sb);
 
         if (! S_ISREG(sb.st_mode) || S_ISDIR(sb.st_mode)) {
@@ -737,10 +736,10 @@ buf_insert(BUFFER_t *bp, const char *fname, int inserting, const int32_t flags, 
         } else {
             int numlines;
 
-            if (inserting) {
-                bp->b_mode  = sb.st_mode;
-                bp->b_mtime = sb.st_mtime;
-                bp->b_rsize = sb.st_size;
+            if (inserting) {    /*update file attributes*/
+                bp->b_mode  = sb.st_mode;       /* mode */
+                bp->b_mtime = sb.st_mtime;      /* modification time */
+                bp->b_rsize = sb.st_size;       /* size, in bytes */
                 if (S_IEXEC & sb.st_mode) {
                     BFSET(bp, BF_EXEC);
                 }
@@ -1317,7 +1316,7 @@ buf_readin(BUFFER_t *bp, int fd, const char *fname, FSIZE_t fsize, int flags, co
     if (NULL == encoding) {
         if (EDIT_NORMAL == (EDIT_MASK & flags)) {
 
-            if (NULL == (buffer = cache = chk_alloc(CACHEBUFSZ))) {
+            if (NULL == (buffer = cache = chk_calloc(1, CACHEBUFSZ))) {
                 errorfx("%s: building cache", fname);
                 return -1;
             }
@@ -2718,6 +2717,7 @@ file_load(const char *fname, const int32_t flags, const char *encoding)
     if (0 == (EDIT_AGAIN & flags) && BFTST(bp, BF_READ)) {
         trace_log("=> already(2)\n");
         curbp = bp;                             /* already read */
+        set_hooked();
         ret = 2;
 
     } else {
@@ -2767,7 +2767,10 @@ file_load(const char *fname, const int32_t flags, const char *encoding)
                 buf_type_default(bp);
             }
         }
+
         curbp = bp;
+        set_hooked();
+
         lrenumber(bp);
         if (!noundo) {
             BFCLR(bp, BF_NO_UNDO);
@@ -3418,7 +3421,7 @@ file_copy(
             return TRUE;
         }
 
-        fileio_chmod(dst, perms);
+        (void) fileio_chmod(dst, perms);        /* FIXME: return */
 #ifdef HAVE_CHOWN
         if (-1 == chown(dst, owner, group))
             ewprintf("warning: unable to chown(%s)", dst);

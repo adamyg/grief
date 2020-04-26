@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dict_c,"$Id: dict.c,v 1.21 2014/11/16 17:28:38 ayoung Exp $")
+__CIDENT_RCSID(gr_dict_c,"$Id: dict.c,v 1.22 2020/04/21 00:01:55 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dict.c,v 1.21 2014/11/16 17:28:38 ayoung Exp $
+/* $Id: dict.c,v 1.22 2020/04/21 00:01:55 cvsuser Exp $
  * Dictionary functionality.
  *
  *
@@ -647,8 +647,8 @@ do_dict_list(void)              /* list (int obj_id, [int value = FALSE]) */
                             case F_RSTR:
                                 lp = atom_push_ref(lp, obj_get_ref(obj));
                                 break;
-                            case F_STR:
                             case F_LIT:
+                            case F_STR:
                                 lp = atom_push_str(lp, obj_get_sval(obj));
                                 break;
                             case F_NULL:
@@ -990,8 +990,8 @@ do_dict_each(int what)          /* (int obj_id, [string key], [declare value]) *
                     case F_RSTR:
                         sym_assign_ref(value, obj_get_ref(obj));
                         break;
-                    case F_STR:
                     case F_LIT:
+                    case F_STR:
                         sym_assign_str(value, obj_get_sval(obj));
                         break;
                     case F_NULL:
@@ -1007,4 +1007,5 @@ do_dict_each(int what)          /* (int obj_id, [string key], [declare value]) *
     }
     acc_assign_int(ret);
 }
+
 /*end*/

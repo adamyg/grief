@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vm_alloc_c,"$Id: vm_alloc.c,v 1.19 2017/01/29 04:33:32 cvsuser Exp $")
+__CIDENT_RCSID(gr_vm_alloc_c,"$Id: vm_alloc.c,v 1.20 2020/04/20 23:10:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vm_alloc.c,v 1.19 2017/01/29 04:33:32 cvsuser Exp $
+/* $Id: vm_alloc.c,v 1.20 2020/04/20 23:10:37 cvsuser Exp $
  * Simple buffer pool.
  *
  *
@@ -490,4 +490,5 @@ main(void)
     printf("...done\n");
     return (0);
 }
+
 #endif  /*DO_LOCALMAIN*/

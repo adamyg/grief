@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_buffer_c,"$Id: buffer.c,v 1.47 2015/02/11 23:25:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_buffer_c,"$Id: buffer.c,v 1.48 2020/04/21 00:01:55 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: buffer.c,v 1.47 2015/02/11 23:25:12 cvsuser Exp $
+/* $Id: buffer.c,v 1.48 2020/04/21 00:01:55 cvsuser Exp $
  * Buffer managment.
  *
  *
@@ -749,6 +749,7 @@ buf_kill(int bufnum)
             curbp = buf_first();
         }
         assert(curbp != bp);
+        set_hooked();
     }
 
     /* Unhook buffer from attached windows */
@@ -773,6 +774,7 @@ buf_kill(int bufnum)
     hilite_detach(bp);
     sym_detach(bp);
     chunk_detach(bp);
+    set_hooked();
 
     bp->b_magic = ~BUFFER_MAGIC;
     bp->b_magic2 = ~BUFFER_MAGIC;

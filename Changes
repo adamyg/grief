@@ -1,8 +1,63 @@
 -*- encoding: utf-8; -*-
 
+Mon Apr 20 23:49:30 2020 adamy
+
+	* Macro language
+
+		o Register variable and lexical-scope support.
+		o true/fale, plus NAN/INFINITY predefines.
+		o Hex floating point syntax.
+		o isclose() float comparision.
+		o Cast operators (int and float/double).
+
+	* Grunch
+
+		o Allow concurrent cm and m generation.
+		o Slashes converted within debug filenames.
+		o Removed unneeded outer macro list closure.
+		o Empty macros associated with nothing verb.
+		o Unary + added.
+
+	* Performance/profiling
+
+		o Explicit symbol opcode.
+		o Benchmark macros.
+		o Extended regression tests.
+		o Inbuilt execution streamlining.
+		o Cache alignment.
+		o Inlined LIST access primitives.
+		o Explicit set_hooked() usage; DEBUG runtime checks catch semantic errors.
+		o Removed unneed accumlator interactions.
+
+	* General
+
+		o Consume stray ESC keystrokes; default keyboard.
+		o Documentation tweaks.
+		o -+debug feature reporting.
+
+	* Ticket #15 - Screen not properly restored.
+
+		o Explicit application of console rgb table.
+		o Save and restore under 16-bit mode.
+		o Restore console attribute on exit.
+		
+Sat Oct 26 00:49:25 2019 adamy
+
+	* BUILD 17 release
+	* added missing wc19 runtime dll
+
 Wed Sep 25 23:20:14 2019 adamy
 
 	* BUILD 16 release
+
+Wed May  1 13:31:26 2019 adamy
+
+	* mandoc 1.14.4 - gcc builds
+	* configure; strndup, asprintf and vasprintf
+
+Mon Feb  4 11:47:31 2019 adamy
+
+	* duktape 2.3.0; alpha integration
 
 Mon Nov 12 01:49:21 2018 adamy
 

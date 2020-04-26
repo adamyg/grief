@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_tokenize_c,"$Id: m_tokenize.c,v 1.25 2015/02/11 23:25:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_tokenize_c,"$Id: m_tokenize.c,v 1.26 2020/04/11 23:15:33 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_tokenize.c,v 1.25 2015/02/11 23:25:13 cvsuser Exp $
+/* $Id: m_tokenize.c,v 1.26 2020/04/11 23:15:33 cvsuser Exp $
  * String primitives.
  *
  *
@@ -568,7 +568,7 @@ do_tokenize(void)               /* (string str, string delims, int flags = 0, [s
         }
     }
 
-    if (TOK_PRESERVE_QUOTES & flags) {
+    if (delims && (TOK_PRESERVE_QUOTES & flags)) {
         if (strchr(delims, '"')) {
             flags |= TOK_DOUBLE_QUOTES;         /* enable double quotes */
         }

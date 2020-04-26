@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_feature_c,"$Id: m_feature.c,v 1.23 2015/02/28 11:39:05 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_feature_c,"$Id: m_feature.c,v 1.24 2020/04/21 00:01:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_feature.c,v 1.23 2015/02/28 11:39:05 cvsuser Exp $
+/* $Id: m_feature.c,v 1.24 2020/04/21 00:01:56 cvsuser Exp $
  * Features.
  *
  *
@@ -144,6 +144,12 @@ const char * const      x_features[] = {
             "-stdc" STRINGIZE(__STDC_VERSION__)
 #endif
         ,
+
+#if defined(NDEBUG)
+        "-debug",           /*release*/
+#else
+        "+debug",           /*debug*/
+#endif
 
         /* video/terminal implementation */
 #if defined(USE_VIO_BUFFER)
@@ -292,6 +298,7 @@ const char * const      x_features[] = {
 #else
         "+float",
 #endif
+
         NULL
     };
 

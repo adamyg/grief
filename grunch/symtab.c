@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_symtab_c,"$Id: symtab.c,v 1.28 2014/10/22 02:33:30 ayoung Exp $")
+__CIDENT_RCSID(gr_symtab_c,"$Id: symtab.c,v 1.30 2020/04/23 12:35:50 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: symtab.c,v 1.28 2014/10/22 02:33:30 ayoung Exp $
+/* $Id: symtab.c,v 1.30 2020/04/23 12:35:50 cvsuser Exp $
  * Symbol table.
  *
  *
@@ -440,12 +440,13 @@ sc_same(symtype_t type1, symtype_t type2)
 symbol_t *
 sym_push(Head_p *hd, int order, const char *name, node_t *np, symtype_t type, symbol_t *owner)
 {
-    symtype_t ty = (type & TY_MASK);
-    symtype_t sc = (type & SC_MASK) >> SC_SHIFT;
-    symtype_t istag = symtype_istag(type);
+    const symtype_t ty = (type & TY_MASK);
+          symtype_t sc = (type & SC_MASK) >> SC_SHIFT;
+    const symtype_t istag = symtype_istag(type);
 
-    int islocal = (sc == SC_LOCAL ? 1 : 0);
+    const int islocal = (sc == SC_LOCAL ? 1 : 0);
     int isfunct = (type & (TM_FUNCTION << TM_SHIFT)) ? 1 : 0;
+    int max_register = 0;
 
     argtype_t *arguments = NULL;
     int redef = FALSE;
@@ -500,12 +501,12 @@ sym_push(Head_p *hd, int order, const char *name, node_t *np, symtype_t type, sy
                  *  function(arglist)
                  */
                 Head_p arglist = np->right->atom.arglist;
-                List_p lp;
+                List_p alp;
 
                 assert(node_arglist == np->right->type);
                 assert(NULL != arglist);
 
-                for (lp = ll_first(arglist); lp; lp = ll_next(lp)) {
+                for (alp = ll_first(arglist); alp; alp = ll_next(alp)) {
                     ++argc;                     /* argument count */
                 }
 
@@ -521,8 +522,8 @@ sym_push(Head_p *hd, int order, const char *name, node_t *np, symtype_t type, sy
 
                     *t_arguments++ = (argtype_t)argc;
 
-                    for (lp = ll_first(arglist); lp && argc--; lp = ll_next(lp)) {
-                        node_t *t_np = (node_t *) ll_elem(lp);
+                    for (alp = ll_first(arglist); alp && argc--; alp = ll_next(alp)) {
+                        node_t *t_np = (node_t *) ll_elem(alp);
 
                         if (t_np) {
                             assert(node_type == t_np->type);
@@ -581,6 +582,12 @@ sym_push(Head_p *hd, int order, const char *name, node_t *np, symtype_t type, sy
         t_sc = (sp->s_type & SC_MASK) >> SC_SHIFT;
         t_ty = sp->s_type & TY_MASK;
         t_istag = symtype_istag(sp->s_type);
+
+        if (sp->s_level > 1) {                  /* non-parameter */
+            if (sp->s_register > max_register) {
+                max_register = sp->s_register;  /* max register index */
+            }
+        }
 
         /*
          *  Match symbol-name and namespace
@@ -741,7 +748,7 @@ sym_push(Head_p *hd, int order, const char *name, node_t *np, symtype_t type, sy
     /*
      *  warning/errors regarding unsupported types
      */
-    if (1 != x_block_level) {
+    if (1 != x_block_level) {                   /* not parameters */
         /*
          *  references unless arguments are not supported (08/05/09)
          */
@@ -796,7 +803,7 @@ setup:;
     sp->s_filename = filename_cache(x_filename);
 
     if (islocal) {
-        sp->s_flags |= SF_LOCAL;
+        sp->s_flags |= SF_LOCAL;                /* TODO: implied make_local_variable() */
 
     } else if (isfunct) {
         sp->s_flags |= SF_FUNCTION;
@@ -806,6 +813,12 @@ setup:;
     }
 
     if (! redef) {
+        if (sp->s_level > 1) {                  /* assign next register index */
+            if (SC_REGISTER == sc) {
+                sp->s_register = max_register + 1;
+            }
+        }
+
         if (INSERT_AT_END == order || isfunct) {
             ll_append(*hd, (char *) sp);
 
@@ -848,7 +861,7 @@ sym_implied_function(const char *name, int argumentc, const argtype_t *arguments
             if (t_arguments) {
                 sp->s_arguments = t_arguments;
 
-                *t_arguments++ = argumentc;
+                *t_arguments++ = (argtype_t)argumentc;
                 while (argumentc-- > 0) {
                     *t_arguments++ = *arguments++;
                 }
@@ -892,47 +905,39 @@ sym_lookup(const char *name, unsigned flags)
     register symbol_t *sp;
 
     /*
-     *  first symbol in file wont have hd_syms set up. This is ok, since it must be a function name
-     */
-    if (NULL == hd_syms) {
-        if (!undef && 0 != strcmp(name, "NULL")) {
-            goto undef_ref;
-        }
-        return NULL;
-    }
-
-    /*
      *  search symbol table inner block to outer block
      */
-    for (lp = ll_first(hd_syms); lp; lp = ll_next(lp)) {
-        sp = (symbol_t *) ll_elem(lp);
-        D_SYMBOL_MAGIC(assert(sp->magic == SYMBOL_MAGIC);)
+    if (hd_syms) {                              /* non-empty table */
+        for (lp = ll_first(hd_syms); lp; lp = ll_next(lp)) {
+            sp = (symbol_t *) ll_elem(lp);
+            D_SYMBOL_MAGIC(assert(sp->magic == SYMBOL_MAGIC);)
 
-        if (sp->name[0] == *name && 0 == strcmp(sp->name+1, name+1)) {
-            if (istag == (symtype_istag(sp->s_type) ? 1 : 0)) {
-                /*
-                 *  Mark as referenced and return
-                 */
-                sp->s_flags |= SF_REF;
-                return sp;
+            if (sp->name[0] == *name && 0 == strcmp(sp->name+1, name+1)) {
+                if (istag == (symtype_istag(sp->s_type) ? 1U : 0U)) {
+                    /*
+                     *  Mark as referenced and return
+                     */
+                    sp->s_flags |= SF_REF;
+                    return sp;
+                }
             }
         }
     }
 
-    if (undef || 0 == strcmp(name, "NULL")) {
-        return NULL;
+    if (undef || sym_predefined(name)) {
+        return NULL;                            /* well known symbol */
     }
 
     /*
      *  undefine, one-shot error
      */
-undef_ref:
     if (NULL == hd_undef) {
         hd_undef = ll_init();
-    }
-    for (lp = ll_first(hd_undef); lp; lp = ll_next(lp)) {
-        if (0 == strcmp((const char *) ll_elem(lp), name)) {
-            return NULL;
+    } else {
+        for (lp = ll_first(hd_undef); lp; lp = ll_next(lp)) {
+            if (0 == strcmp((const char *) ll_elem(lp), name)) {
+                return NULL;
+            }
         }
     }
     crerrorx(RC_ERROR, "undefined symbol '%s'", name);
@@ -941,9 +946,20 @@ undef_ref:
 }
 
 
+int /* Also See: compile_arglist() and compile_node2() */
+sym_predefined(const char *name)
+{
+    return ((name[0] == 'N' && 0 == strcmp(name, "NULL")) ||
+            (name[0] == 'n' && 0 == strcmp(name, "null")) ||
+            (name[0] == 'N' && 0 == strcmp(name, "NAN"))  ||
+            (name[0] == 'I' && 0 == strcmp(name, "INFINITY")) ||
+            (name[0] == 't' && 0 == strcmp(name, "true")) ||
+            (name[0] == 'f' && 0 == strcmp(name, "false")));
+}
+
 
 /*  Function:           sym_typeof
- *      Determine the type of the specified symbol
+ *      Determine the type of the specified symbol.
  *
  *  Parameters:
  *      symbol -            Symbol name.
@@ -965,7 +981,7 @@ undef_ref:
 symtype_t
 sym_typeof(const char *symbol, unsigned flags)
 {
-    symtype_t ret = TY_UNDEF;
+    symtype_t ret = (symtype_t)TY_UNDEF;
     symbol_t *sp = NULL;
     BUILTIN *bp = NULL;
 
@@ -1034,15 +1050,16 @@ block_enter(void)
  *  Code to remove symbols from symbol table from currently nested block
  */
 node_t *
-block_exit(void)
+block_exit1(int *newscope)
 {
-    node_t *ty_trees[SYMPRIM_MAX], *auto_consts;
+    node_t *ty_trees[SYMPRIM_MAX], *auto_register, *auto_consts;
     node_t *sty_trees[SYMPRIM_MAX], *static_consts, *static_list;
 
     register List_p lp;
     register symbol_t *sp;
     node_t *n, *tree = NULL;
     Head_p statics;
+    int t_newscope;
     symtype_t ty, sc, qu;
     symprim_t j;
 
@@ -1053,6 +1070,7 @@ block_exit(void)
     }
 
     static_consts = static_list = NULL;
+    auto_register = NULL;
     auto_consts = NULL;
 
     if (hd_syms)
@@ -1099,40 +1117,39 @@ block_exit(void)
                 /* const statics */
                 if (qu & TQ_CONST) {
                     n = new_symbol(sp->name);
-                    if (NULL == static_consts) {
-                        static_consts = n;
-                    } else {
-                        static_consts = node(K_NOOP, static_consts, n);
-                    }
+                    static_consts = (static_consts ? node(K_NOOP, static_consts, n) : n);
                 }
 
                 /* build static definition list */
                 n = new_symbol(sp->name);
-                if (NULL == static_list) {
-                    static_list = n;
-                } else {
-                    static_list = node(K_NOOP, static_list, n);
-                }
+                static_list = (static_list ? node(K_NOOP, static_list, n) : n);
 
             } else {
-                /* gather declarations into those of the same type */
-                if (SYMPRIM_UNKNOWN != j && 0 == sc) {
+                /* gather declarations into those of the same type
+                 *  XXX: elements are generated in reserve order of declaration, consider rerordering.
+                 */
+                if (SYMPRIM_UNKNOWN != j && (SC_AUTO == sc || SC_REGISTER == sc)) {
                     n = new_symbol(sp->name);
                     if (NULL == ty_trees[j]) {
                         ty_trees[j] = n;
                     } else {
                         ty_trees[j] = node(K_NOOP, ty_trees[j], n);
                     }
+
+                    if (SC_REGISTER == sc && sp->s_register > 0) {
+                        /*
+                         *  register <index> <symbol>
+                         */
+                        n = new_number(sp->s_register - 1);
+                        auto_register = (auto_register ? node(K_NOOP, auto_register, n) : n);
+                            auto_register = node(K_NOOP, auto_register, new_symbol(sp->name));
+                    }
                 }
 
                 /* const auto */
                 if (qu & TQ_CONST) {
                     n = new_symbol(sp->name);
-                    if (NULL == auto_consts) {
-                        auto_consts = n;
-                    } else {
-                        auto_consts = node(K_NOOP, auto_consts, n);
-                    }
+                    auto_consts = (auto_consts ? node(K_NOOP, auto_consts, n) : n);
                 }
 
                 xprintf("removing symbol %s\n", sp->name);
@@ -1142,16 +1159,27 @@ block_exit(void)
         }
 
     /* Build a tree containing all the symbols to be defined on entry to the enclosing block. */
-    for (j = 0; j < SYMPRIM_MAX; j++)
+    t_newscope =
+        (xf_lexical_scope && x_block_level > 2 ? FALSE : -1 /*no*/);
+
+    for (j = 0; j < SYMPRIM_MAX; ++j) {
         if (ty_trees[j] != NULL) {
             n = node(symprim_types[j], ty_trees[j], (node_t *) NULL);
             if (NULL == tree) {
+                if (! t_newscope) {             /* new lexical block required */
+                    t_newscope = TRUE;
+                }
                 tree = n;
             } else {
                 tree = node(K_NOOP, tree, n);
             }
             ty_trees[j] = NULL;
         }
+    }
+
+    if (newscope) {
+        *newscope = t_newscope;                 /* new local declarations */
+    }
 
     /* Build a block for all statics and their associated initialisation (in any). */
     if (ll_first(statics)) {
@@ -1159,7 +1187,7 @@ block_exit(void)
         Head_p hd = NULL;
 
         /* declarations */
-        for (j = 0; j < (int)SYMPRIM_MAX; j++)
+        for (j = 0; j < (int)SYMPRIM_MAX; ++j)
             if (sty_trees[j] != NULL) {
                 n = node(symprim_types[j], sty_trees[j], (node_t *) NULL);
                 if (NULL == s_tree) {
@@ -1235,8 +1263,22 @@ block_exit(void)
         auto_consts = NULL;
     }
 
+    /* register */
+    if (auto_register) {
+        tree = node(K_NOOP, tree,
+                node(K_REGISTER, auto_register, (node_t *) NULL));
+        auto_register = NULL;
+    }
+
     block_pop();
     return tree;
+}
+
+
+node_t *
+block_exit(void)
+{
+    return block_exit1(NULL);
 }
 
 
@@ -1283,8 +1325,9 @@ sym_print(symbol_t *sp, int tab)
     symtype_t type, sc;
     int size;
 
-    if (! xf_struct && tab) {
-        printf("%*.s", tab, "\t\t\t\t\t\t");
+    assert(tab < 8);
+    if (! xf_struct && tab > 0) {
+        printf("%*.s", tab, "\t\t\t\t\t\t\t\t");
     }
 
     type = sp->s_type & TY_MASK;
@@ -1850,7 +1893,7 @@ symtype_map(symtype_t type)
  *      type -              Type specification.
  *
  *  Returns:
- *      Argument base-type, otherwise -1 if unknown.
+ *      Argument base-type, otherwise 0 if unknown.
  */
 unsigned
 symtype_arg(symtype_t stype)
@@ -2027,7 +2070,7 @@ symtab_dump(void)
             sp1 = (symbol_t *) ll_elem(ll_first(sp->s_members));
             if (sp1) {
                 D_SYMBOL_MAGIC(assert(sp->magic == SYMBOL_MAGIC);)
-                sp->s_align = sym_alignment(sp1);
+                sp->s_align = (unsigned short)sym_alignment(sp1);
             } else {
                 sp->s_align = 0;
             }
@@ -2125,4 +2168,5 @@ symtab_print(void)
         }
     }
 }
+
 /*end*/

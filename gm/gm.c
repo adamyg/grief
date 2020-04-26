@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: gm.c,v 1.27 2018/10/04 01:34:19 cvsuser Exp $
+/* $Id: gm.c,v 1.28 2020/04/20 22:38:18 cvsuser Exp $
  * Grief LISP macro compiler.
  *
  *
@@ -25,7 +25,7 @@ static unsigned         macro_cnt;
 
 static int              nglobals;               /* Number of global statements found so far */
 
-static uint32_t         globals[CM_GLOBALS_MAX];   /* Table of indexes to global statements */
+static uint32_t         globals[CM_GLOBALS_MAX]; /* Table of indexes to global statements */
 
 static FILE *           fp;                     /* File pointer for output file */
 
@@ -165,8 +165,8 @@ main(int argc, char **argv)
             print_perc();
         }
 
-        /* 
-         *  Dump internal form of macro if asked for 
+        /*
+         *  Dump internal form of macro if asked for
          */
         for (mp = macro_tbl; mp < &macro_tbl[macro_cnt]; ++mp) {
             if (o_lflg) {
@@ -324,10 +324,10 @@ output_error:
             const char *str = "";
             const int atom = *lp;
 
-            if (F_STR == atom || F_LIT == atom) {
-                str = put_string((LIST *)lp);
+            if (F_SYM == atom || F_LIT == atom || F_REG == atom) {
+                str = put_string((LIST *)lp);   /* strings, symbols and register variables */
 
-            } else if (F_ID == atom) {
+            } else if (F_ID == atom) {          /* builtin */
                 const int id = LGET_ID(lp);
 
                 assert(id >= 0 && id < (int)builtin_count);
@@ -339,6 +339,11 @@ output_error:
 
             if (o_Lflg) {
                 patom(macro_tbl[i].m_list, lp, str);
+            }
+
+            if (atom >= F_MAX) {
+                printf("\n*** unexpected opcode (0x%x/%u)\n", atom, atom);
+                break;
             }
 
             lp += sizeof_atoms[*lp];
@@ -525,13 +530,13 @@ disassemble(const char *file)
         const LIST atom = *lp;
 
         str = "";
-        if (F_STR == atom || F_LIT == atom) {
-            const uint32_t off = LGET_INT(lp);
+        if (F_SYM == atom || F_LIT == atom || F_REG == atom) {
+            const uint32_t off = LGET_INT(lp);  /* strings, symbols and register variables */
 
             str = str_table + soffsets[off];
 
         } else if (F_ID == atom) {
-            const int id = LGET_ID(lp);
+            const int id = LGET_ID(lp);         /* builtin */
 
             assert(id >= 0 && id < (int)builtin_count);
             str = builtin[id].b_name;
@@ -544,6 +549,11 @@ disassemble(const char *file)
         }
 
         patom(baselp, lp, str);
+
+        if (atom >= F_MAX) {
+            printf("\n*** unexpected opcode (0x%x/%u)\n", atom, atom);
+            break;
+        }
 
         if (0 == sizeof_atoms[atom]) {
             ++lp;
@@ -626,7 +636,7 @@ loadmacro(const LIST *lp, int size)
         lpn += sizeof_atoms[F_INT];
     }
 
-    if (F_STR != *lpn && F_ID != *lpn) {
+    if (F_SYM != *lpn && F_ID != *lpn) {
         cm_error("Macro must start with a name\n");
         exit(1);
     }
@@ -674,7 +684,7 @@ patom(const LIST *first, const LIST *lp, const char *str)
     ++num_atoms[atom];
 
     if ((F_ID == atom && 0 == strcmp("macro", str)) ||
-            (F_STR == atom && 0 == strcmp("macro", str))) {
+            (F_SYM == atom && 0 == strcmp("macro", str))) {
         printf("\n");
     }
     sprintf(lbuf, "0x%04x", atom);
@@ -683,7 +693,9 @@ patom(const LIST *first, const LIST *lp, const char *str)
     if (o_Lflg) {
         switch (atom) {
         case F_HALT:
+#if defined(CMD_OLD)
         case F_END:
+#endif
             printf("[%02x/........] ", atom);
             break;
         case F_LIST:
@@ -697,29 +709,20 @@ patom(const LIST *first, const LIST *lp, const char *str)
     }
 
     switch (atom) {
-    case F_INT:
+    case F_INT:     // F_INT   <integer>
         printf("F_INT   %" ACCINT_FMT "\n", (accint_t)LGET_INT(lp));
         break;
-    case F_LIT:
-        printf("F_LIT   \"%s\"\n", str);
-        break;
-    case F_STR:
-        printf("F_STR   \"%s\"\n", str);
-        break;
-    case F_FLOAT:
+    case F_FLOAT:   // F_FLOAT <double>
         printf("F_FLOAT %" ACCFLOAT_FMT "\n", (accfloat_t)LGET_FLOAT(lp));
         break;
-    case F_ID: {
-            const int id = LGET_ID(lp);
-            const char *name = builtin[id].b_name;
-
-            assert(id >= 0 && id < (int)builtin_count);
-            printf("F_ID    %s\n", name);
-        }
+    case F_STR:     // F_STR   <string>
+        printf("F_STR   \"%s\"\n", str);
+        break;
+    case F_LIT:     // F_LIT   <string>
+        printf("F_LIT   \"%s\"\n", str);
         break;
     case F_LIST: {
             const int llen = LGET_LEN(lp);
-
             printf("F_LIST  ");
             if (0 == llen) {
                 printf("======\n");
@@ -728,15 +731,38 @@ patom(const LIST *first, const LIST *lp, const char *str)
             }
         }
         break;
+#if !defined(CMD_OLD)
+    case F_ARRAY:   // F_ARRAY <string>
+        printf("F_ARRAY \"%s\"\n", str);
+        break;
+#endif
     case F_NULL:
         printf("F_NULL\n");
         break;
     case F_HALT:
         printf("F_HALT\n");
         break;
+
+    case F_ID:      // F_ID   <builtin>
+        printf("F_ID    %s\n", str);
+        break;
+#if defined(CMD_OLD)
     case F_END:
         printf("F_END   *** End ***\n");
         break;
+    case F_POLY:
+        printf("F_POLY\n");
+        break;
+#else
+    case F_SYM:     // F_SYM <symbol>
+        printf("F_SYM   \"%s\"\n", str);
+        break;
+    case F_REG:     // F_REG <symbol> <idx>
+        lp += sizeof_atoms[F_SYM];
+        printf("F_REG   \"%s\", %u\n", str, *lp);
+        break;
+#endif
+
     default:
         printf("F_WHAT? <%02x>\n", atom);
         break;

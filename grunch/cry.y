@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cry.y,v 1.32 2019/01/28 02:49:44 cvsuser Exp $
+/* $Id: cry.y,v 1.33 2020/04/20 22:49:23 cvsuser Exp $
  * grunch/crunch grammer, extended c99
  *
  *
@@ -39,9 +39,10 @@
 
 
 /*internal*/
-%token <ival>   K_BLOCK                         /* Used as a marker for {..} blocks for the
+%token <ival>   K_BLOCK K_LEXICALBLOCK          /* Used as a marker for {..} blocks for the
                                                  * compilation code only - not a syntactic token */
 %token <ival>   K_CONSTRUCTORS                  /* local constructors */
+%token <ival>   K_CAST                          /* cast */
 
 /*keywords*/
 %token <ival>   K_SWITCH K_CASE K_DEFAULT
@@ -87,6 +88,7 @@
 %type <nval>    unary_expression
 %type <ival>    unary_operator
 %type <nval>    cast_expression
+%type <ival>    cast_type_name_primitive
 %type <nval>    multiplicative_expression
 %type <nval>    additive_expression
 %type <nval>    shift_expression
@@ -224,6 +226,16 @@ loop_or_switch_exit(void)
 {
     assert(loop_top > 0);
     --loop_top;
+}
+
+
+static int /* Also See: compile_arglist() and predefined_symbol() */
+constant_symbol(const node_t *node)
+{
+    if (node_symbol == node->type) {
+        return sym_predefined(node->atom.sval);
+    }
+    return 0;
 }
 
 
@@ -399,7 +411,7 @@ postfix_expression:
                 | postfix_expression O_DOT O_SYMBOL     /* 27/07/08, get_property */
                     { $$ = node(K_GETPROPERTY, $1, new_string($3)); }
                 | postfix_expression O_ARROW O_SYMBOL
-		    { crerror(RC_UNSUPPORTED_POINTER, "pointer dereferencing not supported"); }
+                    { crerror(RC_UNSUPPORTED_POINTER, "pointer dereferencing not supported"); }
                 | postfix_expression O_PLUS_PLUS
                     { $$ = node(O_POST_PLUS_PLUS, $1, NULL); }
                 | postfix_expression O_MINUS_MINUS
@@ -421,23 +433,40 @@ unary_expression:
                     { $$ = node(O_MINUS_MINUS, $2, NULL); }
                 | unary_operator cast_expression
                     {
-                        if (O_MINUS == $1) {
-                            node_t *np;
+                        const int op = $1;
+                        node_t *np = NULL;
 
+                        /*
+                         *  Unary negative and positive.
+                         */
+                        if (O_MINUS == op || O_PLUS == op) {
                             if (NULL != (np = $2)) {
-                                if (node_integer == np->type) {
-                                    np->atom.ival = -np->atom.ival;
-                                } else if (node_float == np->type) {
-                                    np->atom.fval = -np->atom.fval;
-                                } else {
-                                    np = NULL;
+                                /*inline constant*/
+                                if (O_MINUS == op) {/* - <value> */
+                                    if (node_integer == np->type) {
+                                        np->atom.ival = -np->atom.ival;
+                                    } else if (node_float == np->type) {
+                                        np->atom.fval = -np->atom.fval;
+                                    } else {
+                                        np = NULL;
+                                    }
+
+                                } else {            /* + <value> */
+                                    if (node_integer == np->type || node_float == np->type) {
+                                        $$ = np;
+                                    } else {
+                                        np = NULL;
+                                    }
+                                }
+
+                                if (NULL == ($$ = np)) {
+                                    $$ = np = node_opt(op, (node_t *) new_number(0), $2);
+                                                    /* default (op 0 <value>) */
                                 }
                             }
+                        }
 
-                            if (NULL == ($$ = np)) {
-                                $$ = node_opt(O_MINUS, (node_t *) new_number(0), $2);
-                            }
-                        } else {
+                        if (NULL == np) {
                             $$ = node_opt($1, $2, NULL);
                         }
                     }
@@ -447,10 +476,10 @@ unary_expression:
                 ;
 
 unary_operator:
-                  O_AND             { $$ = O_AND; }
-                | O_MUL             { $$ = O_MUL; }
-                | O_PLUS            { $$ = O_PLUS; }
+                  O_PLUS            { $$ = O_PLUS; }
                 | O_MINUS           { $$ = O_MINUS; }
+             /* | O_AND             { $$ = O_AND; } */
+             /* | O_MUL             { $$ = O_MUL; } */
                 | O_NOT             { $$ = O_NOT; }
                 | O_COMPLEMENT      { $$ = O_COMPLEMENT; }
                 ;
@@ -459,6 +488,20 @@ cast_expression:
                   unary_expression
                     { $$ = $1; }
              /* | O_OROUND type_name O_CROUND cast_expression */
+                | O_OROUND cast_type_name_primitive O_CROUND cast_expression
+                    { $$ = node(K_CAST, (node_t *) new_number($2), $4); }
+                ;
+
+cast_type_name_primitive:
+                  K_CHAR            { $$ = TY_CHAR; }
+                | K_SHORT           { $$ = TY_SHORT; }
+                | K_INT             { $$ = TY_INT; }
+                | K_LONG            { $$ = TY_LONG; }
+                | K_FLOAT           { $$ = TY_FLOAT; }
+                | K_DOUBLE          { $$ = TY_DOUBLE; }
+                | K_SIGNED          { $$ = TY_SIGNED; }
+                | K_UNSIGNED        { $$ = TY_UNSIGNED; }
+                | K_BOOL            { $$ = TY_BOOLEAN; }
                 ;
 
 multiplicative_expression:
@@ -1241,10 +1284,21 @@ parameter_declaration:
                         symtype_t type = decl_peek();
                         node_t *np, *sym = NULL;
 
-                        if (! xf_grunch)
+                        if ($1 && ! xf_grunch)
                             crerror(RC_ERROR, "invalid parameter declaration");
 
                         type |= $1;             /* TM_OPTIONAL or 0 */
+
+                        if (type & ((SC_STATIC|SC_REGISTER|SC_LOCAL) << SC_SHIFT)) {
+                            crwarn(RC_ERROR, "parameter has bad storage class.");
+                            type &= ~((SC_STATIC|SC_REGISTER|SC_LOCAL) << SC_SHIFT);
+                        }
+
+                        if (type & ((TQ_VOLATILE) << TQ_SHIFT)) {
+                            crwarn(RC_ERROR, "parameter has bad qualifier.");
+                            type &= ~((TQ_VOLATILE) << TQ_SHIFT);
+                        }
+
                         np = new_type(type, NULL, sym);
                         list_append(&hd_arglist, np);
                         decl_pop();
@@ -1257,14 +1311,14 @@ parameter_declaration:
                         symbol_t *sp;
                         node_t *np, *sym;
 
-                        if (! xf_grunch) {
+                        if ($1 && ! xf_grunch) {
                             crerror(RC_ERROR, "invalid parameter declaration");
                         }
 
                         sym = new_symbol(name);
                         if ($4) {               /* default assignment, 11/10/08 */
                             sym->right = $4;
-                            type |= (TM_OPTIONAL<< TM_SHIFT);
+                            type |= (TM_OPTIONAL << TM_SHIFT);
 
                             if ($1 & (TM_OPTIONAL << TM_SHIFT)) {
                                 crwarn(RC_ERROR,"'~' implied with default argument.");
@@ -1272,6 +1326,17 @@ parameter_declaration:
                         }
 
                         type |= $1;             /* TM_OPTIONAL or 0 */
+
+                        if (type & ((SC_STATIC|SC_REGISTER|SC_LOCAL) << SC_SHIFT)) {
+                            crwarnx(RC_ERROR, "'%s' has bad storage class.", name);
+                            type &= ~((SC_STATIC|SC_REGISTER|SC_LOCAL) << SC_SHIFT);
+                        }
+
+                        if (type & ((TQ_VOLATILE) << TQ_SHIFT)) {
+                            crwarnx(RC_ERROR, "'%s' has bad qualifier.", name);
+                            type &= ~((TQ_VOLATILE) << TQ_SHIFT);
+                        }
+
                         np = new_type(type, $3, sym);
                         sp = decl_add(np, type);
                         sym->sym = sym_reference(sp);
@@ -1297,7 +1362,8 @@ optional_operator:
 parameter_default:
                   O_EQ constant_expression
                     {
-                        if (node_integer == $2->type || node_string == $2->type || node_float == $2->type) {
+                        if (node_integer == $2->type || node_string == $2->type || node_float == $2->type ||
+                                 constant_symbol($2)) {
                             $$ = $2;
                         } else {
                             crerror(RC_ERROR, "expected a constant expression");
@@ -1527,7 +1593,7 @@ labeled_statement:
 
 compound_statement:
                   O_OCURLY O_CCURLY
-                    {
+                    {                           /* empty block */
                         $$ = node(K_BLOCK, NULL, NULL);
                     }
                 | O_OCURLY
@@ -1536,15 +1602,21 @@ compound_statement:
                     }
                   block_item_list O_CCURLY
                     {
+                        int newscope = FALSE;
                         Head_p hd = hd_stmt;
                         node_t *np1;
 
-                        np1 = block_exit();
+                        np1 = block_exit1(&newscope);
                         if (NULL == hd) {
-                            $$ = np1;
+                            if (TRUE == newscope) {
+                                list_append(&hd, np1);
+                                $$ = node(K_LEXICALBLOCK, NULL, (node_t *) hd);
+                            } else {
+                                $$ = np1;
+                            }
                         } else {
                             if (np1) ll_push(hd, (void *) np1);
-                            $$ = node(K_BLOCK, NULL, (node_t *) hd);
+                            $$ = node((TRUE == newscope ? K_LEXICALBLOCK : K_BLOCK), NULL, (node_t *) hd);
                         }
                     }
                 ;
@@ -1878,4 +1950,3 @@ function_definition:
 //              ;
 
 /*end*/
-

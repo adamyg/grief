@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.66 2018/10/04 15:39:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.67 2020/04/19 23:47:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.66 2018/10/04 15:39:29 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.67 2020/04/19 23:47:37 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -194,6 +194,7 @@ static int              origRows;
 static int              origCols;
 static USHORT           origRow;
 static USHORT           origCol;
+static USHORT           origAttribute;
 static const VIOCELL *  origScreen;
 static char             origTitle[100];
 
@@ -556,17 +557,19 @@ vio_image_save(void)
     origRows = currRows;
     origCols = currCols;
 
-    if (NULL != (screen = chk_alloc(length))) {
-        memset(screen, 0, length);
+    if (NULL != (screen = chk_calloc(length, 1))) {
 #if defined(WIN32)
-        GetConsoleTitleA(origTitle, sizeof(origTitle));
+        GetConsoleTitleA(origTitle, sizeof(origTitle));                     
+        VioGetCurAttribute(&origAttribute, 0);
 #endif
-        rc = VioReadCellStr(screen, &length, 0, 0, 0);
+
+        rc = VioReadCellStr(screen, &length, 0, 0, 0);           
+        assert(0 == rc);                        /* image */
+
         origCursor.cb = sizeof(VIOCURSORINFO);
-        VioGetCurType(&origCursor, 0);
+        VioGetCurType(&origCursor, 0);          /* cursor */
         VioGetCurPos(&origRow, &origCol, 0);
         origScreen = screen;
-        assert(0 == rc);
     }
 }
 
@@ -604,13 +607,18 @@ vio_image_restore(void)
                 *cursor++ = blank;
             }
         }
-        VioShowBuf(0, currScreenCells, 0);
-        chk_free((void *)origScreen);
-        origScreen = NULL;
+
 #if defined(WIN32)
         if (origTitle[0]) SetConsoleTitleA(origTitle);
+        VioSetColors(16);                       /* color depth, implied by VioReadCellStr() */
+        VioSetCurAttribute(origAttribute, 0);   /* original write color */
 #endif
-        VioSetCurPos(origRow, origCol, 0);
+
+        VioShowBuf(0, currScreenCells, 0);      /* restore image */
+        chk_free((void *)origScreen);
+        origScreen = NULL;
+
+        VioSetCurPos(origRow, origCol, 0);      /* cursor */
         VioSetCurType(&origCursor, 0);
     }
 }

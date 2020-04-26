@@ -1,5 +1,5 @@
 /* -*- mode: cr; tabs: 4; -*- */
-/* $Id: grief_tail.h,v 1.20 2014/11/27 17:47:18 ayoung Exp $
+/* $Id: grief_tail.h,v 1.22 2020/04/13 20:48:55 cvsuser Exp $
  * Common GRIEF macro definitions -- tail.
  * Utilised by the makeinc.pl script.
  *
@@ -34,12 +34,27 @@
 /*
  *  File Mode Bits
  */
+extern const int                S_IFMT;
 extern const int                S_IFDIR;
 extern const int                S_IFCHR;
 extern const int                S_IFIFO;
 extern const int                S_IFREG;
 extern const int                S_IFLNK;
+extern const int                S_IFSOCK;
 
+extern const int                S_IRUSR;
+extern const int                S_IWUSR;
+extern const int                S_IXUSR;
+extern const int                S_IRGRP;
+extern const int                S_IWGRP;
+extern const int                S_IXGRP;
+extern const int                S_IROTH;
+extern const int                S_IWOTH;
+extern const int                S_IXOTH;
+
+extern const int                S_ISUID;
+extern const int                S_ISGID;
+extern const int                S_ISVTX;
 
 /*
  *  File open flags
@@ -154,10 +169,10 @@ extern void                     coloriser(~ string);
 extern int                      colorscheme(~ string scheme, ...);
 extern string                   inq_coloriser(void);
 
-#define VIM_16DEPTH     (1 << 1)
-#define VIM_88DEPTH     (1 << 2)
-#define VIM_256DEPTH    (1 << 3)
-#define VIM_GUIDEPTH    (1 << 4)
+#define VIM_16DEPTH             (1 << 1)
+#define VIM_88DEPTH             (1 << 2)
+#define VIM_256DEPTH            (1 << 3)
+#define VIM_GUIDEPTH            (1 << 4)
 
 extern int                      vim_colorscheme(string label, int colors, ~string base, list spec, int asgui);
 extern int                      vim_colorschemex(string label, int colors, ~string base, list spec, int asgui, int &gui);
@@ -205,7 +220,7 @@ extern void                     bvars(~int);
 extern int                      inq_nest_level(void);
 
 extern void                     __dbg_init(void);
-extern void                     __dbg_trace__(~int, ~string);
+extern void                     __dbg_trace__(~int, ~string, ~string);
 
                                 /*feature.cr*/
 extern int                      select_feature(list lst, int width, ~int dohelp);
@@ -299,6 +314,10 @@ extern void                     help_display(string file, string title, declare 
 extern string                   help_window(int type, int buf, int lines, int width,
                                         int initial_line, ~int level, ~string msg);
 
+                                /*indent.cr*/
+extern void                     _slide_in();
+extern void                     _slide_out();
+
                                 /*menu.cr*/
 extern void                     menu(void);
 extern void                     menubar(void);
@@ -371,6 +390,9 @@ extern void                     egrep(~string, ~string);
                                 /*view.cr*/
 extern void                     view(string arg);
 extern void                     literal(void);
+
+                                /*wp.cr*/
+extern int                      autoindent(~string arg);
 
                                 /*window.cr*/
 extern void                     goto_left_edge(void);

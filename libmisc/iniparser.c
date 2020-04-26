@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_iniparser_c,"$Id: iniparser.c,v 1.13 2019/01/28 00:23:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_iniparser_c,"$Id: iniparser.c,v 1.14 2020/04/20 23:09:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: iniparser.c,v 1.13 2019/01/28 00:23:56 cvsuser Exp $
+/* $Id: iniparser.c,v 1.14 2020/04/20 23:09:29 cvsuser Exp $
  * INI parser.
  *
  *
@@ -519,7 +519,7 @@ iniGetx(IFILE *ifile, IniSection_t **iSect)
     int section = 0;                            /* ']' encountered */
     int c;
 
-#define BUFPUSH(__c)        (void)(cursor < end ? *cursor++ = (__c) : (-1))
+#define BUFPUSH(__c)        (void)(cursor < end ? *cursor++ = (char)(__c) : (char)(-1))
 
     do {
         c = iniGetc(ifile);
@@ -698,7 +698,7 @@ iniGetl(IFILE *ifile, const char **special, const char **comment)
     int ch;                                     /* character */
 
 #define BUFRESET()          cursor = buffer, end = buffer + (IFILE_LINEMAX - 1)
-#define BUFPUSH(__c)        (void)(cursor < end ? *cursor++ = (__c) : (-1))
+#define BUFPUSH(__c)        (void)(cursor < end ? *cursor++ = (char)(__c) : (char)(-1))
 
     *special = NULL, *comment = NULL;
     BUFRESET();

@@ -1,16 +1,16 @@
 #ifndef GR_EDTYPES_H_INCLUDED
 #define GR_EDTYPES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edtypes_h,"$Id: edtypes.h,v 1.29 2019/03/15 23:03:10 cvsuser Exp $")
+__CIDENT_RCSID(gr_edtypes_h,"$Id: edtypes.h,v 1.36 2020/04/21 21:19:41 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edtypes.h,v 1.29 2019/03/15 23:03:10 cvsuser Exp $
+/* $Id: edtypes.h,v 1.36 2020/04/21 21:19:41 cvsuser Exp $
  * Editor base types.
  *
  *
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2020, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -79,8 +79,15 @@ typedef unsigned long u_long;
 #endif /*_BSD_SOURCE*/
 
 #ifndef VSIZEOF                                 /* vector sizing */
-#define VSIZEOF(__def)          (sizeof(__def)/sizeof(__def[0]))
+#define VSIZEOF(__type)         (sizeof(__type)/sizeof(__type[0]))
 #endif
+
+#ifndef _MSC_VER
+#ifndef _countof
+#define _countof(__type)        (sizeof(__type)/sizeof(__type[0]))
+#endif
+#endif
+
 
 /*
  *  Useful type definitions
@@ -139,6 +146,7 @@ typedef unsigned char LINEATTR;                 /* line attribute management */
  *  prototype/language support,
  *
  *      __CINLINE
+ *      __CCACHEALIGN
  *      __CRESTRICT
  *      __CUNUSEDARGUMENT
  *          Example:
@@ -181,17 +189,29 @@ typedef unsigned char LINEATTR;                 /* line attribute management */
  *      __ATTRIBUTE_NORETURN__
  *          Example:
  *              __ATTRIBUTE_NORETURN__ void foo() { ... }
+ *
+ *      __CIFDEBUG( .. debug declarations )
  */
 
 #if !defined(___CINLINE)
 #if defined(HAVE_INLINE)
+# if defined(_MSC_VER) /*FIXME: override*/
+#define __CINLINE               __inline
+#if defined(HAVE___FORCEINLINE)
+#define __CFORCEINLINE          __forceinline
+#endif
+# else
 #define __CINLINE               inline
+# endif
 #elif defined(HAVE___INLINE)
 #define __CINLINE               __inline
 #elif (__STDC_VERSION__ >= 199901L)             /* C99 or better */
 #define __CINLINE               inline
 #elif defined(_MSC_VER)
 #define __CINLINE               __inline
+#if defined(HAVE___FORCEINLINE)
+#define __CFORCELINE            __forceline
+#endif
 #elif defined(__WATCOMC__)
 #define __CINLINE               __inline
 #elif defined(__GNUC__)
@@ -202,6 +222,20 @@ typedef unsigned char LINEATTR;                 /* line attribute management */
 #define __CINLINE
 #endif
 #endif  /*___CINLINE*/
+#if !defined(__CFORCEINLINE)
+#define __CFORCEINLINE          __CINLINE
+#endif
+
+#if !defined(__CCACHEALIGN)
+// XXX: 64 bytes for x86 CPUs and 128 bytes for ARMs.
+#if defined(__GNUC__)                           /* clang and GCC */
+#define __CCACHEALIGN           __attribute__((aligned(64)))
+#elif defined(_MSC_VER)                         /* MSVC */
+#define __CCACHEALIGN           __declspec(align(64))
+#else
+#define __CCACHEALIGN
+#endif
+#endif /*_CCACHEALIGNED*/
 
 #if !defined(__CEXPORT)
 #   if defined(__CSTATICLIB)                    /* building static library */
@@ -257,9 +291,12 @@ typedef unsigned char LINEATTR;                 /* line attribute management */
 #endif
 #endif  /*___CRESTRICT*/
 
+/* UNUSED macro, for function argument */
 #if !defined(__CUNUSEDARGUMENT)
 #ifdef __GNUC__
 #define __CUNUSEDARGUMENT(x)    UNUSED_ ## x __attribute__((__unused__))
+#elif defined(_MSC_VER) && (_MSC_VER >= 1900)
+#define __CUNUSEDARGUMENT(x)    __pragma(warning(suppress:4100)) UNUSED_ ## x
 #else
 #define __CUNUSEDARGUMENT(x)    UNUSED_ ## x
 #endif
@@ -376,6 +413,13 @@ typedef unsigned char LINEATTR;                 /* line attribute management */
 #endif
 #endif
 
+#if defined(NDEBUG)
+#define __CIFDEBUG(__x)
+#else
+#define __CIFDEBUG(__x) __x                     /* DEBUG only code/declarations */
+#endif
+
+
 /*
  *  accumulator base types
  */
@@ -417,7 +461,21 @@ typedef double accfloat_t;
 #define accstrtou(_a, _b, _c)   strtoul(_a, _b, _c)
 
 /*
- *  structure magic
+ *  Alignment
+ */
+#ifndef ALIGNTO
+#define ALIGNTO(_n,_to)         ((((size_t)_n) + _to - 1) & ~(_to - 1))
+#define ALIGNU16(_n)            ALIGNTO(_n, sizeof(uint16_t))
+#define ALIGNU32(_n)            ALIGNTO(_n, sizeof(uint32_t))
+#define ALIGNU64(_n)            ALIGNTO(_n, sizeof(uint64_t))
+#define ISALIGNU16(_n)          (0 == (((size_t)_n) & 0x1))
+#define ISALIGNU32(_n)          (0 == (((size_t)_n) & 0x3))
+#define ISALIGNU64(_n)          (0 == (((size_t)_n) & 0x7))
+#define ISALIGNTO(_n2,_to2)     (((size_t)_n2) == ALIGNTO(_n2,_to2))
+#endif
+
+/*
+ *  Structure magic
  */
 typedef uint32_t MAGIC_t;
 
@@ -430,5 +488,4 @@ typedef uint32_t MAGIC_t;
               (((uint32_t)(__a))<<24 | ((uint32_t)(__b))<<16 | (__c)<<8 | (__d))
 #endif
 
-/*end*/
 #endif /*GR_EDTYPES_H_INCLUDED*/

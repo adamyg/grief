@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_tagsex_c,"$Id: tagsex.c,v 1.13 2014/10/22 02:33:22 ayoung Exp $")
+__CIDENT_RCSID(gr_tagsex_c,"$Id: tagsex.c,v 1.14 2020/04/19 23:54:45 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/*$Id: tagsex.c,v 1.13 2014/10/22 02:33:22 ayoung Exp $
+/*$Id: tagsex.c,v 1.14 2020/04/19 23:54:45 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -133,8 +133,9 @@ growString (vstring *s)
 
     if (0 == s->size) {
         newLength = 128;
-        newLine   = (char *) malloc (newLength);
-        *newLine  = '\0';
+        if (NULL != (newLine = (char *) malloc (newLength))) {
+            *newLine  = '\0';
+        }
     } else {
         newLength = 2 * s->size;
         newLine   = (char *) realloc (s->buffer, newLength);

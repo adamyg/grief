@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_widgets_tty_c,"$Id: widgets_tty.c,v 1.34 2014/10/26 22:13:14 ayoung Exp $")
+__CIDENT_RCSID(gr_widgets_tty_c,"$Id: widgets_tty.c,v 1.35 2020/04/19 23:55:19 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: widgets_tty.c,v 1.34 2014/10/26 22:13:14 ayoung Exp $
+/* $Id: widgets_tty.c,v 1.35 2020/04/19 23:55:19 cvsuser Exp $
  * Dialog widgets, tty interface.
  *
  *
@@ -2179,7 +2179,7 @@ lb_item_add(Listbox_t *lb, int32_t pos, uint16_t flags, const char *data)
     }
 
     ++lb->lb_count;
-    if (0 == ((LBI_FHIDDEN|LBI_FFILTERED) & n->li_flags)) {
+    if (n && 0 == ((LBI_FHIDDEN|LBI_FFILTERED) & n->li_flags)) {
         ++lb->lb_visible;
     }
 
@@ -2827,7 +2827,7 @@ lb_paint(Listbox_t *lb, WIDGET_t *w, int repaint)
     const int32_t page    = rows * columns;
 
     const int popup       = (LB_FISPOPUP & lb->lb_flags) ? TRUE : FALSE;
-    const int frame       = (FALSE == popup && w->w_border ? TRUE : FALSE);
+    const int frame       = (FALSE == popup && w && w->w_border ? TRUE : FALSE);
     const int vscroll     = (lb->lb_visible > page ? TRUE : FALSE);
 
     void (*move)(WIDGET_t *w, int x, int y) =
@@ -4895,4 +4895,3 @@ combofield_callback(WCombofield_t *cf, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETAR
     return FALSE;
 }
 /*end*/
-

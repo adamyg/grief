@@ -1,11 +1,11 @@
 #ifndef GR_MAC1_H_INCLUDED
 #define GR_MAC1_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mac1_h,"$Id: mac1.h,v 1.25 2014/10/22 02:33:11 ayoung Exp $")
+__CIDENT_RCSID(gr_mac1_h,"$Id: mac1.h,v 1.26 2020/04/21 00:01:57 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mac1.h,v 1.25 2014/10/22 02:33:11 ayoung Exp $
+/* $Id: mac1.h,v 1.26 2020/04/21 00:01:57 cvsuser Exp $
  * Basic primitives.
  *
  *
@@ -34,6 +34,7 @@ extern void                 do_delete_line(void);
 extern void                 do_delete_to_eol(void);
 extern void                 do_do(void);
 extern void                 do_execute_macro(void);
+extern void                 do_lexicalblock(void);
 extern void                 do_first_time(void);
 extern void                 do_for(void);
 extern void                 do_foreach(void);
@@ -63,7 +64,6 @@ extern void                 do_version(void);
 extern void                 do_while(void);
 extern void                 inq_msg_level(void);
 
-extern int                  x_break;
 extern int                  x_selfinsert;
 
 __CEND_DECLS

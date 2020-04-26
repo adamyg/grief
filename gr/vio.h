@@ -1,11 +1,11 @@
 #ifndef GR_VIO_H_INCLUDED
 #define GR_VIO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vio_h,"$Id: vio.h,v 1.28 2018/10/04 15:39:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_vio_h,"$Id: vio.h,v 1.29 2020/04/19 23:47:37 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vio.h,v 1.28 2018/10/04 15:39:29 cvsuser Exp $
+/* $Id: vio.h,v 1.29 2020/04/19 23:47:37 cvsuser Exp $
  * Video I/O interface header.
  *
  *
@@ -414,6 +414,8 @@ extern int                  VioSetCurType(VIOCURSORINFO *info, HVIO viohandle);
 extern int                  VioGetCp(ULONG reserved, USHORT *cp, HVIO viohandle);
 extern int                  VioGetCurPos(USHORT *row, USHORT *col, HVIO viohandle);
 extern int                  VioSetCurPos(USHORT row, USHORT col, HVIO viohandle);
+extern int                  VioGetCurAttribute(USHORT *attribute, HVIO voidhandle);
+extern int                  VioSetCurAttribute(USHORT attribute, HVIO voidhandle);
 extern int                  VioGetBuf(VIOCELL **pBuf, ULONG *size, HVIO viohandle);
 extern int                  VioShowBuf(ULONG offset, ULONG length, HVIO viohandle);
 extern int                  VioReadCellStr(VIOCELL *buf, ULONG *length, USHORT row, USHORT col, HVIO viohandle);

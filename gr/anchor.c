@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_anchor_c,"$Id: anchor.c,v 1.44 2019/01/26 22:27:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_anchor_c,"$Id: anchor.c,v 1.45 2020/04/21 00:01:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: anchor.c,v 1.44 2019/01/26 22:27:08 cvsuser Exp $
+/* $Id: anchor.c,v 1.45 2020/04/21 00:01:54 cvsuser Exp $
  * Anchor primitives.
  *
  *
@@ -284,7 +284,7 @@ anchor_get(WINDOW_t *wp, BUFFER_t *bp, ANCHOR_t *a)
         a->type       = MK_NONE;
         a->start_line = (curbp == bp ? *cur_line : bp->b_line);
         a->start_col  = 0;
-        a->end_line   = (bp->b_numlines ? bp->b_numlines : 1);
+        a->end_line   = (bp && bp->b_numlines ? bp->b_numlines : 1);
         a->end_col    = 0;
         return FALSE;
     }
@@ -873,4 +873,5 @@ do_swap_anchor(void)            /* int () */
     }
     acc_assign_int(ret);
 }
+
 /*end*/

@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_link_c,"$Id: w32_link.c,v 1.13 2019/03/15 23:12:18 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_link_c,"$Id: w32_link.c,v 1.14 2020/04/20 23:18:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -193,6 +193,8 @@ my_CreateHardLink(LPCSTR lpFileName, LPCSTR lpExistingFileName)
 static BOOL WINAPI
 my_CreateHardLinkImp(LPCSTR lpFileName, LPCSTR lpExistingFileName, LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
+    __PUNUSED(lpSecurityAttributes)
+
     if (!__w32_link_backup) {                   /* backup fallback option */
         SetLastError(ERROR_NOT_SUPPORTED);      // not implemented
         return FALSE;

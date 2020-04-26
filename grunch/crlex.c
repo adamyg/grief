@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crlex_c,"$Id: crlex.c,v 1.34 2018/10/20 01:05:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_crlex_c,"$Id: crlex.c,v 1.36 2020/04/23 12:35:50 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crlex.c,v 1.34 2018/10/20 01:05:15 cvsuser Exp $
+/* $Id: crlex.c,v 1.36 2020/04/23 12:35:50 cvsuser Exp $
  * Lexical analyser for the GRUNCH language.
  *
  *
@@ -24,6 +24,15 @@ __CIDENT_RCSID(gr_crlex_c,"$Id: crlex.c,v 1.34 2018/10/20 01:05:15 cvsuser Exp $
 #include <math.h>
 #include <limits.h>
 
+#if defined(_MSC_VER)
+#include <msvcversions.h>
+#endif
+
+#if (defined(_MSC_VER) && (_MSC_VER >= _MSC_VER_2015)) || \
+           (__STDC_VERSION__ >= 201103L) || (__cplusplus >= 201103L)
+#define HEX_FLOATS      1                       /* Experimental */
+    /* strtod() 2015+ supports hexadecimal floats */
+#endif
 #define INC_YYTEXT      2048                    /* Size increment for yytext[] buffer */
 
 /*
@@ -111,6 +120,7 @@ static const struct map {
         { T_SYMBOL(K_STATIC),           "static"        },
         { T_SYMBOL(K_CONST),            "const"         },
         { T_SYMBOL(K_VOLATILE),         "volatile"      },
+        { T_SYMBOL(K_REGISTER),         "register"      },
         { T_SYMBOL(K_RESTRICT),         "restrict"      },  /*c99*/
         { T_SYMBOL(K_INLINE),           "inline"        },  /*c99*/
         { T_SYMBOL(K_LONG),             "long"          },
@@ -222,7 +232,7 @@ static int              streamget(lexer_t *lexer);
 static int              lexget(lexer_t *lexer);
 static int              lexunget(lexer_t *lexer, int ch);
 
-static void             get_line(lexer_t *lexer);
+static int              get_line(lexer_t *lexer);
 static void             get_while(lexer_t *lexer, int chclass);
 static void             get_string(lexer_t *lexer, int wchar);
 static void             get_unquoted(lexer_t *lexer, const int end);
@@ -231,7 +241,7 @@ static int              get_character(lexer_t *lexer, int wchar);
 static int              get_escape(lexer_t *lexer, unsigned wchar, unsigned limit, int *value);
 
 static int              get_numeric(lexer_t *lexer, numeric_t *value, int ch);
-static int              get_float(lexer_t *lexer, numeric_t *value, char *buffer, unsigned cursor);
+static int              get_float(lexer_t *lexer, numeric_t *value, char *buffer, unsigned cursor, int base);
 static int              convertnumeric(numeric_t *value, int base, const char *buffer, unsigned length);
 static int              convertfloat(numeric_t *value, int type, const char *buffer, unsigned length);
 
@@ -288,12 +298,12 @@ init_lex(void)
 int
 yylex(void)
 {
-    return yylexer(&stdstream);
+    return yylexer(&stdstream, TRUE /*expand_symbols*/);
 }
 
 
 int
-yylexer(lexer_t *lexer)
+yylexer(lexer_t *lexer, int expand_symbols)
 {
     register int ch;
 
@@ -343,18 +353,20 @@ yylexer(lexer_t *lexer)
             lexunget(lexer, ch);
             get_while(lexer, XSYMBOL | XDIGIT);
 
-            if ((k = kwlookup(yytext)) > 0) {
-                return k;                       /* keyword */
-            }
+            if (expand_symbols) {
+                if ((k = kwlookup(yytext)) > 0) {
+                    return k;                   /* keyword */
+                }
 
-            if (NULL != (sp = sym_lookup(yytext, SYMLK_FUNDEF))) {
-                if (SC_TYPEDEF == ((sp->s_type & SC_MASK) >> SC_SHIFT)) {
-                    /*
-                     *  Typedef
-                     */
-                    yylval.sym = sp;
-                    yylval.sval = yytext;
-                    return O_TYPEDEF_NAME;      /* typedef */
+                if (NULL != (sp = sym_lookup(yytext, SYMLK_FUNDEF))) {
+                    if (SC_TYPEDEF == ((sp->s_type & SC_MASK) >> SC_SHIFT)) {
+                        /*
+                         *  Typedef
+                         */
+                        yylval.sym = sp;
+                        yylval.sval = yytext;
+                        return O_TYPEDEF_NAME;  /* typedef */
+                    }
                 }
             }
 
@@ -497,7 +509,8 @@ yylexer(lexer_t *lexer)
                 RETURN(O_DIV_EQ);
             if ('*' == ch) {
                 while (1) {
-                    ch = lexget(lexer);
+                    if (0 == (ch = lexget(lexer)))
+                        break;                  /* eof */
                     if ('\n' == ch)
                         newline();
                     if (ch != '*')
@@ -510,7 +523,7 @@ yylexer(lexer_t *lexer)
                 continue;
             }
             if ('/' == ch) {                    /* allow // style comments */
-                while (lexget(lexer) != '\n')   /* .. inline as preprocessor may not support */
+                while (0 != (ch = lexget(lexer)) && ch != '\n') /* .. inline as preprocessor may not support */
                     /**/;
                 newline();
                 continue;
@@ -556,8 +569,8 @@ yylexer(lexer_t *lexer)
         case '#': {
                 int columnno = x_columnno;
                 const char *cp;
+                const int newlines = get_line(lexer);
 
-                get_line(lexer);
                 for (cp = yytext; ' ' == *cp; ++cp)
                     ;                           /* consume leading white-space */
 
@@ -566,9 +579,12 @@ yylexer(lexer_t *lexer)
                      *  pragma's
                      */
                     const char *pragma = chk_salloc(cp + 6);
+                    int lineno = x_lineno;
 
+                    x_lineno -= newlines;
                     pragma_process(pragma);
                     chk_free((void *)pragma);
+                    x_lineno = lineno;
 
                 } else if (1 == columnno || 0 == strncmp(cp, "line", 4)) {
                     /*
@@ -672,12 +688,13 @@ streamget(lexer_t *lexer)
  *      lexer -             Lexer stream.
  *
  *  Returns:
- *      nothing
+ *      Newlines consumed.
  */
-static void
+static int
 get_line(lexer_t *lexer)
 {
     register int ch;
+    int ch2, lines = 0;
 
     yyleng = 0;
     while (1) {
@@ -686,20 +703,45 @@ get_line(lexer_t *lexer)
         ch = lexget(lexer);
 
         if (0 == ch || '\r' == ch || '\n' == ch) {
-            yytext[yyleng] = '\0';
-            newline();
-            return;
+            goto eol;
 
         } else if ('\\' == ch) {
             if ((ch = lexget(lexer)) == '\n') {
                 newline();                      /* line continuation */
+                ++lines;
                 continue;
             }
             yytext[yyleng++] = '\\';
+
+        } else if ('/' == ch) {
+            if ((ch = lexget(lexer)) == '*') {  /* comment */
+                for (ch = ch2 = 0;;) {
+                    ch = lexget(lexer);
+
+                    if (0 == ch || '\r' == ch || '\n' == ch) {
+                        goto eol;
+
+                    } else if ('*' == ch2 && '/' == ch) {
+                        break;                  /* eos */
+                    }
+                    ch2 = ch;
+                }
+                continue;
+            }
+
+            yytext[yyleng++] = '/';
+            if (0 == ch || '\r' == ch || '\n' == ch)
+                goto eol;
         }
 
         yytext[yyleng++] = (char) ch;
     }
+    return lines;
+
+eol:;
+    yytext[yyleng] = '\0';
+    newline();
+    return (lines + 1);
 }
 
 
@@ -892,7 +934,7 @@ get_string(lexer_t *lexer, int wchar)
 static void
 get_unquoted(lexer_t *lexer, const int end)
 {
-    int once = 0, ch;
+    int ch;
 
     yyleng = 0;
     while (1) {
@@ -1423,7 +1465,7 @@ get_numeric(lexer_t *lexer, numeric_t *value, int ch)
 
         if (ISDIGIT(ch)) {                      /* .x */
             lexunget(lexer, ch);
-            return get_float(lexer, value, buffer, cursor);
+            return get_float(lexer, value, buffer, cursor, 10);
         }
 
         lexunget(lexer, ch);
@@ -1447,6 +1489,13 @@ get_numeric(lexer_t *lexer, numeric_t *value, int ch)
                 }
                 t_ch = lexget(lexer);
             }
+
+#if defined(HEX_FLOATS)
+            if ('.' == t_ch || 'p' == t_ch || 'P' == t_ch) {
+                buffer[cursor++] = (char)t_ch;
+                return get_float(lexer, value, buffer, cursor, 16);
+            }
+#endif //HEX_FLOAT
 
             if (cursor <= 2) {
                 lexunget(lexer, t_ch);
@@ -1495,7 +1544,7 @@ get_numeric(lexer_t *lexer, numeric_t *value, int ch)
 
             if ('.' == ch || 'e' == ch || 'E' == ch) {
                 buffer[cursor++] = (char)ch;
-                return get_float(lexer, value, buffer, cursor);
+                return get_float(lexer, value, buffer, cursor, 10);
             }
 
             base = (1 == cursor ? 10 : 8);
@@ -1518,7 +1567,7 @@ get_numeric(lexer_t *lexer, numeric_t *value, int ch)
 
         if ('.' == ch || 'e' == ch || 'E' == ch) {
             buffer[cursor++] = (char)ch;
-            return get_float(lexer, value, buffer, cursor);
+            return get_float(lexer, value, buffer, cursor, 10);
         }
     }
 
@@ -1547,15 +1596,15 @@ get_numeric(lexer_t *lexer, numeric_t *value, int ch)
         unsigned t_cursor = cursor;
 
         if ('u' == ch || 'U' == ch) {
-            buffer[cursor++] = ch;
+            buffer[cursor++] = (char)ch;
             ch = lexget(lexer);
 
             if ('l' == ch || 'L' == ch) {
-                buffer[cursor++] = ch;
+                buffer[cursor++] = (char)ch;
                 ch = lexget(lexer);
 
                 if ('l' == ch || 'L' == ch) {
-                    buffer[cursor++] = ch;
+                    buffer[cursor++] = (char)ch;
                     suffix = SUFFIX_ULL;            /* unsigned long long */
 
                 } else {
@@ -1564,7 +1613,7 @@ get_numeric(lexer_t *lexer, numeric_t *value, int ch)
                 }
 
             } else if ('i' == ch || 'I' == ch) {
-                buffer[cursor++] = ch;
+                buffer[cursor++] = (char)ch;
                 suffix = SUFFIX_UI;                 /* unsigned int */
 
             } else {
@@ -1573,19 +1622,19 @@ get_numeric(lexer_t *lexer, numeric_t *value, int ch)
             }
 
         } else if ('l' == ch || 'L' == ch) {
-            buffer[cursor++] = ch;
+            buffer[cursor++] = (char)ch;
             ch = lexget(lexer);
 
             if ('u' == ch || 'U' == ch) {
-                buffer[cursor++] = ch;
+                buffer[cursor++] = (char)ch;
                 suffix = SUFFIX_UL;                 /* unsigned long */
 
             } else if ('l' == ch || 'L' == ch) {
-                buffer[cursor++] = ch;
+                buffer[cursor++] = (char)ch;
                 ch = lexget(lexer);
 
                 if ('u' == ch || 'U' == ch) {
-                    buffer[cursor++] = ch;
+                    buffer[cursor++] = (char)ch;
                     suffix = SUFFIX_ULL;            /* unsigned long long */
 
                 } else {
@@ -1599,16 +1648,16 @@ get_numeric(lexer_t *lexer, numeric_t *value, int ch)
             }
 
         } else if ('i' == ch || 'I' == ch) {        /* integer */
-            buffer[cursor++] = ch;
+            buffer[cursor++] = (char)ch;
             suffix = SUFFIX_I;
 
         } else if ('f' == ch || 'F' == ch) {        /* float */
-            buffer[cursor++] = ch;
+            buffer[cursor++] = (char)ch;
             suffix = SUFFIX_F;
             value->type = O_FLOAT_CONST;
 
         } else if ('d' == ch || 'D' == ch) {        /* C#, double */
-            buffer[cursor++] = ch;
+            buffer[cursor++] = (char)ch;
             suffix = SUFFIX_D;
             value->type = O_DOUBLE_CONST;
 
@@ -1637,7 +1686,7 @@ suffix_unknown:;
 
                 while (ch >= '0' && ch <= '9') {
                     t_base = (t_base * 10) + (ch - '0');
-                    buffer[cursor++] = ch;
+                    buffer[cursor++] = (char)ch;
                     ch = lexget(lexer);
                 }
                 switch (t_base) {
@@ -1669,9 +1718,9 @@ suffix_unknown:;
         yyerrorf("invalid integer constant '%s'", buffer);
     } else if (value->overflow) {
         if (value->overflow < 0) {
-            yyerror("integer underflow on conversion");
+            yyerror("integral constant underflow on conversion");
         } else {
-            yyerror("integer overflow on conversion");
+            yyerror("integral constant overflow on conversion");
         }
     }
     value->errors += error;
@@ -1680,16 +1729,21 @@ suffix_unknown:;
 
 
 static int
-get_float(lexer_t *lexer, numeric_t *value, char *buffer, unsigned cursor)
+get_float(lexer_t *lexer, numeric_t *value, char *buffer, unsigned cursor, int base)
 {
     int error = 0, type, ch;
 
     assert(cursor);
+    assert(10 == base || 16 == base);
 
     /*
-     *  consume digits, decimal point and exponent
+     *  Consume digits, decimal point and exponent
      *
      *      [digit]*[.[digit]+][e[-+]][digit]+[fl]
+     *
+     *  or
+     *
+     *      0x[hexdigit]*[.[digit]+][e[-+]][digit]+[fl]
      */
     ch = buffer[--cursor];
 
@@ -1700,9 +1754,15 @@ get_float(lexer_t *lexer, numeric_t *value, char *buffer, unsigned cursor)
         }
     }
 
-    if ('e' == ch || 'E' == ch) {
+    if (16 != base && ('e' == ch || 'E' == ch)) {
+        /* Decimal float
+        // Components:
+        //  o (optional) plus or minus sign
+        //  o nonempty sequence of decimal digits optionally containing decimal-point character (as determined by the current C locale) (defines significand)
+        //  o (optional) e or E followed with optional minus or plus sign and nonempty sequence of decimal digits (defines exponent to base 10)
+        */
         if ('.' == buffer[cursor-1]) {
-            ++error;                            /* .. dont allow '.e' */
+            ++error;                            /* .. dont allow '.e' (nonempty sequence) */
         }
         buffer[cursor++] = (char)ch;
         ch = lexget(lexer);
@@ -1724,13 +1784,54 @@ get_float(lexer_t *lexer, numeric_t *value, char *buffer, unsigned cursor)
             buffer[cursor++] = (char)ch;
             ch = lexget(lexer);
         }
+
+#if defined(HEX_FLOATS)
+    } else if (16 == base && ('p' == ch || 'P' == ch)) {
+        /* Hexadecimal float
+        // Components:
+        //  o (optional) plus or minus sign
+        //  o 0x or 0X
+        //  o nonempty sequence of hexadecimal digits optionally containing a decimal-point character (as determined by the current C locale) (defines significand)
+        //  o (optional) p or P followed with optional minus or plus sign and nonempty sequence of decimal digits (defines exponent to base 2)
+        */
+        if ('.' == buffer[cursor-1]) {
+            ++error;                            /* .. dont allow '.p' (nonempty sequence) */
+        }
+        buffer[cursor++] = (char)ch;
+        ch = lexget(lexer);
+        if ('+' == ch || '-' == ch) {           /* optional sign */
+            buffer[cursor++] = (char)ch;
+            ch = lexget(lexer);
+        }
+
+        if (! ISDIGIT(ch)) {                    /* P[+-][digit]+ */
+            if (0 == ch) {
+                yyerror("unterminated hexidecimal float constant");
+            } else if ('\r' == ch || '\n' == ch) {
+                yyerror("newline within hexidecimal float constant");
+            }
+            ++value->errors;
+        }
+
+        while (ISDIGIT(ch)) {
+            buffer[cursor++] = (char)ch;
+            ch = lexget(lexer);
+        }
+#endif //HEX_FLOATS
     }
 
+
     /*
-     *  suffix
+     *  numeric-suffix:
+     *      float-suffix:           f|F
+     *      long-suffix:            l|L
+     *      double-suffix:          d|D
      */
-    if ('f' == ch || 'F' == ch) {
+    if ('f' == ch || 'F' == ch) {               /* float */
         type = O_FLOAT_CONST;
+
+    } else if ('d' == ch || 'D' == ch) {        /* C#, double (extension) */
+        type = O_DOUBLE_CONST;
 
     } else if ('l' == ch || 'L' == ch) {
 #if defined(O_LONG_DOUBLE_CONST) && defined(HAVE_STRTOLD)
@@ -1739,9 +1840,9 @@ get_float(lexer_t *lexer, numeric_t *value, char *buffer, unsigned cursor)
         yyerror("long doubles are not supported");
         type = O_DOUBLE_CONST;
 #endif
-    } else {
+    } else {                                    /* default (double) */
         lexunget(lexer, ch);
-        type = O_FLOAT_CONST;
+        type = O_DOUBLE_CONST;
     }
 
     /*
@@ -1764,9 +1865,17 @@ get_float(lexer_t *lexer, numeric_t *value, char *buffer, unsigned cursor)
         yyerror("invalid floating point constant");
     } else if (value->overflow) {
         if (value->overflow < 0) {
-            yywarning("float underflow on conversion");
+            if (O_FLOAT_CONST == type) {
+                yywarning("float constant underflow on conversion");
+            } else if (-1 == value->overflow) {
+                yywarning("double constant underflow on conversion");
+            }
         } else {
-            yywarning("float overflow on conversion");
+            if (O_FLOAT_CONST == type) {
+                yywarning("float constant overflow on conversion");
+            } else if (-1 == value->overflow) {
+                yywarning("double constant underflow on conversion");
+            }
         }
     }
     value->errors += error;
@@ -1775,7 +1884,7 @@ get_float(lexer_t *lexer, numeric_t *value, char *buffer, unsigned cursor)
 
 
 static int
-convertnumeric(numeric_t *value, int base, const char *buffer, unsigned length)
+convertnumeric(numeric_t *value, int base, const char *buffer, unsigned __CUNUSEDARGUMENT(length))
 {
     int error = 0;
     char *endp = NULL;
@@ -1797,7 +1906,7 @@ convertnumeric(numeric_t *value, int base, const char *buffer, unsigned length)
 
 
 static int
-convertfloat(numeric_t *value, int type, const char *buffer, unsigned length)
+convertfloat(numeric_t *value, int type, const char *buffer, unsigned __CUNUSEDARGUMENT(length))
 {
     double ret;
     char *end;
@@ -1817,10 +1926,12 @@ convertfloat(numeric_t *value, int type, const char *buffer, unsigned length)
     if (O_FLOAT_CONST == type) {
         errno = 0;
         ret = strtod(buffer, &end);
-        if (ERANGE == errno) {
+        if (ERANGE == errno) {                  /* double range */
             value->overflow = (ret == -HUGE_VAL ? -1 : 1);
+                // If the correct value would cause overflow, signed plus or minus HUGE_VAL is returned, and ERANGE is stored in errno.
+                // If the correct value would cause underflow, zero is returned and ERANGE is stored in errno.
 
-#if defined(FLT_MIN) && defined(FLT_MAX)
+#if defined(FLT_MIN) && defined(FLT_MAX)        /* float range */
         } else if (0 == errno && ret) {
             if (ret < FLT_MIN) {
                 value->overflow = -2;
@@ -1997,4 +2108,5 @@ filename_free(void)
         hd_filenames = NULL;
     }
 }
+
 /*end*/

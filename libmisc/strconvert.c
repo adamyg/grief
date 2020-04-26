@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strconvert_c,"$Id: strconvert.c,v 1.9 2019/05/06 00:19:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_strconvert_c,"$Id: strconvert.c,v 1.10 2020/04/13 21:04:47 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strconvert.c,v 1.9 2019/05/06 00:19:14 cvsuser Exp $
+/* $Id: strconvert.c,v 1.10 2020/04/13 21:04:47 cvsuser Exp $
  * libstr - String convert utility functions.
  *
  *
@@ -91,7 +91,7 @@ str_upper(char *p)
     register char *s = p;
 
     while (*s) {
-        *s = toupper(*s);
+        *s = (char)toupper(*s);
         ++s;
     }
     return p;
@@ -113,7 +113,7 @@ str_lower(char *p)
     register char *s = p;
 
     while (*s) {
-        *s = tolower(*s);
+        *s = (char)tolower(*s);
         ++s;
     }
     return p;

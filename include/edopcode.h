@@ -1,16 +1,16 @@
 #ifndef GR_EDOPCODE_H_INCLUDED
 #define GR_EDOPCODE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edopcode_h,"$Id: edopcode.h,v 1.19 2019/03/15 23:03:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_edopcode_h,"$Id: edopcode.h,v 1.21 2020/04/21 21:21:14 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edopcode.h,v 1.19 2019/03/15 23:03:08 cvsuser Exp $
+/* $Id: edopcode.h,v 1.21 2020/04/21 21:21:14 cvsuser Exp $
  * List types.
  *
  *
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2020, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -36,26 +36,39 @@ __CPRAGMA_ONCE
 typedef unsigned char LIST;             /* LIST atoms */
 
 /*
- *  The following are the atom types we recognize and generate in the cm files.
+ *  atom types recognized and generated within cm files.
+ *
+ *  See Also: sizeof_atoms and nameof_atoms, word.c
  */
 typedef enum opcodes {
     F_ERROR     = -1,                   /* Non-existant case */
     F_HALT      = 0,                    /* End of List */
-    F_INT       = 1,                    /* 32-bit integer */
-    F_STR       = 2,                    /* Unquoted string */
-    F_LIST      = 3,                    /* List */
-    F_NULL      = 4,                    /* Used as destination of loops */
-    F_ID        = 5,                    /* 16-bit keyword */
-    F_END       = 6,                    /* End of list */
-    F_POLY      = 7,                    /* Symbol is polymorphic */
-    F_LIT       = 8,                    /* Pointer to literal string */
-    F_RSTR      = 9,                    /* Pointer to reference string */
-    F_FLOAT     = 10,                   /* Floating point number */
-    F_RLIST     = 11,                   /* A Reference list */
-    F_MAX       = 12,                   /* Upper limit (used for assert tests) */
 
-    F_INT_DYNAMIC = 98,                 /* Dynamic 'F_INT' value */
-    F_REFERENCE = 99                    /* Reference to another symbol */
+    F_INT       = 1,                    /* Integer number */
+    F_FLOAT     = 2,                    /* Floating point number */
+    F_STR       = 3,                    /* Unquoted string (run-time only) */
+    F_LIT       = 4,                    /* Literal string */
+    F_LIST      = 5,                    /* List */
+    F_ARRAY     = 6,                    /* Array (experimental) */
+    F_NULL      = 7,                    /* Used as destination of loops */
+    F_RSTR      = 8,                    /* Reference string */
+    F_RLIST     = 9,                    /* Reference list */
+    F_RARRAY    = 10,                   /* Reference array (experimental) */ 
+
+    F_ID        = 11,                   /* Keyword; 16-bit */
+    F_SYM       = 12,                   /* Symbol */
+    F_REG       = 13,                   /* Register */
+
+    F_MAX       = 14,                   /* Opcode's upper limit */
+    F_OPDATA    = F_RARRAY,             /* Last data-type opcode */
+
+    /*
+     *  Specials
+     */
+    F_INT_DYNAMIC = 97,                 /* Dynamic 'F_INT' value */
+    F_REFERENCE = 98,                   /* Reference to another symbol */
+    F_POLY      = 99                    /* Symbol is polymorphic */
 } OPCODE;
 
 #endif /*GR_EDOPCODE_H_INCLUDED*/
+

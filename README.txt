@@ -19,11 +19,11 @@ Facility, was a popular programmer's text editor in the 1980s and early 1990s.
 
    o Supported operating systems
 
+        * Linux
+        * Microsoft Windows (native/cygwin/mingw)
         * AIX
         * HP-UX
-        * Linux
         * Mac OS/X
-        * Microsoft Windows (native/cygwin/mingw)
         * Solaris (SPARC and x86)
 
 
@@ -90,7 +90,7 @@ following.
 
         o <http://www.crisp.com>
 
-last update: 18/02/15
+last update: 11/Oct/18
 
 -end-
 

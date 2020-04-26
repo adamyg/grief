@@ -1,11 +1,11 @@
 #ifndef GR_LISP_H_INCLUDED
 #define GR_LISP_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_lisp_h,"$Id: lisp.h,v 1.19 2014/10/22 02:33:00 ayoung Exp $")
+__CIDENT_RCSID(gr_lisp_h,"$Id: lisp.h,v 1.20 2020/04/21 00:01:55 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: lisp.h,v 1.19 2014/10/22 02:33:00 ayoung Exp $
+/* $Id: lisp.h,v 1.20 2020/04/21 00:01:55 cvsuser Exp $
  * List implementation and primitives.
  *
  *
@@ -40,6 +40,7 @@ extern LIST *               atom_push_null(LIST *lp);
 extern LIST *               atom_push_halt(LIST *lp);
 
 extern const LIST *         atom_next(const LIST *lp);
+extern const LIST *         atom_next_nonnull(const LIST *lp);
 extern int                  atom_number(const LIST *lp);
 extern const LIST *         atom_nth(const LIST *lp, int idx);
 extern int                  atom_xnull(const LIST *lp);

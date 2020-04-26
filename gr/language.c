@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_language_c,"$Id: language.c,v 1.45 2018/09/29 02:25:20 cvsuser Exp $")
+__CIDENT_RCSID(gr_language_c,"$Id: language.c,v 1.48 2020/04/21 21:23:03 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: language.c,v 1.45 2018/09/29 02:25:20 cvsuser Exp $
+/* $Id: language.c,v 1.48 2020/04/21 21:23:03 cvsuser Exp $
  * Module loader and inline compiler for lisp source.
  *
  *
@@ -454,7 +454,6 @@ cm_parse(void (*execute)(const LIST *lp, int size), const char **includes)
             break;
         }
 
-        first_atom[atom++] = F_END;             /* defunct */
         ++pendingnumber;
     }
 
@@ -527,7 +526,7 @@ gr_parse1(int base_atom)
             }
 
             first_atom[atom] = F_LIST;
-            if ((new_atom = gr_parse1(atom + sizeof_atoms[F_LIST])) == 0) {
+            if ((new_atom = gr_parse1(atom + CM_ATOM_LIST_SZ)) == 0) {
                 return 0;
             }
 
@@ -560,7 +559,7 @@ gr_parse1(int base_atom)
                         decl = F_STR;
                     } else if (0 == strcmp(yytext, "list")) {
                         decl = F_LIST;
-#if defined(F_ARRAY)
+#if defined(DO_ARRAY)
                     } else if (0 == strcmp(yytext, "array")) {
                         decl = F_ARRAY;
 #endif
@@ -602,8 +601,11 @@ gr_parse1(int base_atom)
 
             if (yytext[0] == 'N' && strcmp(yytext, "NULL") == 0) {
                 *ap = F_NULL;
+//TODO:
+//          NAN/INFINITE
+//          true/false
             } else if (yytext[0] != '"') {
-                *ap = F_STR;
+                *ap = F_SYM;
                 LPUT_PTR(ap, chk_salloc(yytext));
             } else {
                 *ap = F_LIT;
@@ -1331,7 +1333,6 @@ gr_loadobject(struct fp *fp, void (*execute)(const LIST *lp, int size))
         return -1;
     }
 
-
     /*
      *  Fixup function, string and global tables.
      */
@@ -1358,13 +1359,24 @@ gr_loadobject(struct fp *fp, void (*execute)(const LIST *lp, int size))
      *  Walk atoms list and fixup string references.
      */
     lpend = base_list + cm->cm_num_atoms;
-    for (lp = base_list; lp < lpend; lp += sizeof_atoms[*lp]) {
-        if (F_STR == *lp || F_LIT == *lp) {
-            accint_t offset = LGET_INT(lp);
+    for (lp = base_list; lp < lpend;) {
+        const int atom = *lp;
 
-            assert(offset < cm->cm_num_strings);
+        if (F_SYM == atom || F_REG == atom || F_LIT == atom) {
+            const accint_t offset = LGET_INT(lp);
+
+            assert((uint32_t)offset < cm->cm_num_strings);
             LPUT_PTR(lp, (str_table + soffsets[offset]));
+
+#if !defined(NDEBUG)
+        } else if (F_ID == atom) {
+            const int id = LGET_ID(lp);
+            assert(id >= 0 && id < (int)builtin_count);
+#endif
         }
+
+        assert(atom >= F_HALT && atom < F_MAX);
+        lp += sizeof_atoms[atom];
     }
 
     /*
@@ -1389,4 +1401,6 @@ gr_loadobject(struct fp *fp, void (*execute)(const LIST *lp, int size))
 
     return 0;
 }
+
 /*end*/
+

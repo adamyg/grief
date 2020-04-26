@@ -1,11 +1,11 @@
 #ifndef GR_DIALOG_TTY_H_INCLUDED
 #define GR_DIALOG_TTY_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dialog_tty_h,"$Id: dialog_tty.h,v 1.9 2014/10/22 02:32:55 ayoung Exp $")
+__CIDENT_RCSID(gr_dialog_tty_h,"$Id: dialog_tty.h,v 1.10 2020/04/21 00:01:55 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dialog_tty.h,v 1.9 2014/10/22 02:32:55 ayoung Exp $
+/* $Id: dialog_tty.h,v 1.10 2020/04/21 00:01:55 cvsuser Exp $
  * Dialog manager, TTY specific functionality
  *
  *

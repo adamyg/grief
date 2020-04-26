@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.50 2017/01/23 00:22:38 cvsuser Exp $")
+__CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.55 2020/04/23 12:39:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crmain.c,v 1.50 2017/01/23 00:22:38 cvsuser Exp $
+/* $Id: crmain.c,v 1.55 2020/04/23 12:39:29 cvsuser Exp $
  * grunch command line.
  *
  *
@@ -39,14 +39,13 @@ __CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.50 2017/01/23 00:22:38 cvsuser Exp
  *  Basic system dependent definitions.
  */
 #if defined(DJGPP)
-#define CONVERTSLASHES
 #define DIRCHR              '/'
 #define EXEEXT              ".exe"
 #define PATHCH              ";"
 
 #elif defined(__OS2__) || \
-	defined(__MSDOS__) || defined(MSDOS) || defined(WIN32)
-#define CONVERTSLASHES
+        defined(__MSDOS__) || defined(MSDOS) || defined(WIN32)
+#define CC_SLASHCONVERT     1
 #define DIRCHR              '\\'
 #define EXEEXT              ".exe"
 #define PATHCH              ";"
@@ -61,7 +60,8 @@ __CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.50 2017/01/23 00:22:38 cvsuser Exp
 #endif
 
 #define PATHLENGTH          1024
-#define TMPFILE             "/tmp/chXXXXXX"
+#define TMPFILE             "/tmp/grunch.XXXXXX"
+
 
 /*
  *  PATH to C preprocessor.
@@ -79,6 +79,8 @@ __CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.50 2017/01/23 00:22:38 cvsuser Exp
 #define CC_GRUNCH           "-DGRUNCH -DGRUNCH_VERSION=0x0311 -DGRIEF"
 #define CC_COMPILETIME      "-D__COMPILETIME__"
 #define CC_PROTOTYPES       "-D__PROTOTYPES__"
+#define CC_REGISTERS        "-D__REGISTERS__"
+
 
 /*
  *  Preprocessor application.
@@ -189,6 +191,7 @@ const char *            x_progname = "grunch";
 int                     xf_grunch = 1;          /* Crunch level (1=extended, 2=compat) */
 int                     xf_warnings = 0;        /* TRUE enable warnings */
 int                     xf_warn_errors = 0;     /* TRUE force warnings to be treated as errors */
+int                     xf_lexical_scope = 0;   /* TRUE enable block/lexical scoping */
 int                     xf_verbose = 0;         /* Verbose output */
 int                     xf_debug = 0;           /* Debug level */
 int                     xf_echoname = 0;        /* Echo filename */
@@ -208,10 +211,13 @@ int                     xf_watch = FALSE;       /* TRUE if we wanted to see pass
 int                     xf_output = FALSE;      /* TRUE retain prexisting output on failure */
 
 const char *            x_filename = NULL;      /* Name of current source file */
+const char *            x_filename2 = NULL;     /* Name of current source file; escape safe, if any */
 static const char *     x_outputfile = NULL;    /* Output image name */
 
 FILE *                  x_errfp = NULL;         /* Error file */
-FILE *                  x_ofp = NULL;           /* Output file pointer */
+FILE *                  x_bfp = NULL;           /* Binary output file pointer */
+FILE *                  x_afp = NULL;           /* ASCII output file pointer */
+
 extern FILE *           x_lexfp;                /* Input stream */
 
 static char             gr_path[PATHLENGTH];    /* Directory where executable came from */
@@ -247,7 +253,7 @@ static struct longsw {
     { NULL,         NULL,           NULL                              },
     };
 
-#if defined(CC_SLASHCONVERT) || \
+#if (defined(CC_SLASHCONVERT) && (CC_SLASHCONVERT)) || \
         (!defined(DJGPP) && (defined(MSDOS) || defined(__MSDOS__) \
             || defined(__EMX__) || defined(__OS2__)))
 
@@ -315,22 +321,19 @@ main(int argc, char *argv[])
         xf_symdump = TRUE;
     }
 
-    if (! xf_leave) {
-        x_generate_ascii = FALSE;
-    }
-
     /*  Arguments
-     *   eg. '-DCRUNCH -DGRIEF -D__PROTOTYPES__ -D__COMPILETIME__=12345668 -DMSDOS'
+     *   eg. '-DCRUNCH -DGRIEF -D__PROTOTYPES__ D__REGISTERS__ -D__COMPILETIME__=12345668 -DMSDOS'
      */
     cc_params[0] = CC_GRUNCH;
     if (xf_prototype) {
         cc_params[1] = CC_PROTOTYPES;
     }
-    cc_params[2] = cc_timestamp;
+    cc_params[2] = CC_REGISTERS;                /* 1/4/2020 */
+    cc_params[3] = cc_timestamp;
     if ((ev = getenv("GRARG")) != NULL) {       /* preprocessor arg override */
-        cc_params[3] = ev;
+        cc_params[4] = ev;
     } else {
-        cc_params[3] = CC_OSARG;
+        cc_params[4] = CC_OSARG;
     }
     len = strlen(cc_prog);
     len += arg_sizeof(cc_params, CC_PARMS);
@@ -350,7 +353,7 @@ main(int argc, char *argv[])
 
     if (! resolve_path(cc_buf, sizeof(cc_buf), cc_path, cc_prog, (xf_watch ? "CPP" : NULL))) {
         fprintf(x_errfp, "%s: unable to locate C preprocessor '%s'\n" \
-	             "using '%s'\n", x_progname, cc_prog, cc_path);
+                     "using '%s'\n", x_progname, cc_prog, cc_path);
         exit(1);
     }
 
@@ -422,9 +425,9 @@ get_tmpdir(const char *env)
 
     if ((ev = getenv(env)) != NULL
 #if defined(_MSC_VER) && (_MSC_VER >= 1400)
-	    && _access(ev, 0) == 0) {
+            && _access(ev, 0) == 0) {
 #else
-	    && access(ev, 0) == 0) {
+            && access(ev, 0) == 0) {
 #endif
         return ev;
     }
@@ -440,7 +443,10 @@ get_tmpdir(const char *env)
 static int
 compile_file(const char *srcname)
 {
-    char t_outname[BUFSIZ], outname[BUFSIZ];
+#if (defined(CC_SLASHCONVERT) && (CC_SLASHCONVERT))
+    char t_srcname[BUFSIZ];
+#endif
+    char m_outname[BUFSIZ], t_outname[BUFSIZ], outname[BUFSIZ];
     struct stat objsb = {0}, srcsb = {0};
     int len, exit_status = 0, ext_len = 0;
     int ok = FALSE;
@@ -448,13 +454,21 @@ compile_file(const char *srcname)
     int tmpfd = -1;
 #endif
 
-    x_filename = srcname;
+    x_filename = srcname;                       /* input filename */
     backslash((char *)x_filename);
-    len = strlen(x_filename);
+
+#if (defined(CC_SLASHCONVERT) && (CC_SLASHCONVERT))
+    strxcpy(t_srcname, srcname, sizeof(t_srcname));
+    backslash(t_srcname);
+    x_filename2 = t_srcname;                    /* Escape safe filename */
+#endif
 
     strcpy(cc_cmdfile, x_filename);
     strcat(cc_cmdfile, cc_space);
-    strcpy(outname, x_filename);
+
+    len = strlen(x_filename);
+    strxcpy(outname, x_filename, sizeof(outname));
+    strxcpy(m_outname, x_filename, sizeof(m_outname));
 
     if (len > 2 &&
             0 == strcmp(x_filename + len - 2, ".c")) {
@@ -477,10 +491,9 @@ compile_file(const char *srcname)
     if (ok) {
         srcsb.st_mtime = objsb.st_mtime = 0;
 
-        if (xf_leave) {
-            strcpy(outname + len - ext_len, ".m");
+        strcpy(m_outname + len - ext_len, ".m");
 
-        } else if (x_outputfile && x_filename[0] != '/'
+        if (x_outputfile && x_filename[0] != '/'
 #if defined(DOSISH)
                         && x_filename[1] != ':'
 #endif
@@ -527,7 +540,11 @@ compile_file(const char *srcname)
             if (l && (cc_tempfile[l - 1] != '\\' || cc_tempfile[l - 1] != '/')) {
                 cc_tempfile[l++] = DIRCHR;
             }
-            strcpy(cc_tempfile + l, "chXXXXXX");
+#if defined(WIN32)
+            strcpy(cc_tempfile + l, "grunch.XXXXXX");
+#else
+            strcpy(cc_tempfile + l, "grXXXXXX");
+#endif
         }
 #else
         strcpy(cc_tempfile, TMPFILE);
@@ -543,7 +560,7 @@ compile_file(const char *srcname)
         forwardslash(cc_buf);
 #elif defined(__WATCOMC__) || \
             defined(_MSC_VER) && (_MSC_VER >= 1400)
-	strcat(cc_buf, _mktemp(cc_tempfile));
+        strcat(cc_buf, _mktemp(cc_tempfile));
 #else
         strcat(cc_buf, mktemp(cc_tempfile));
 #endif
@@ -560,7 +577,7 @@ compile_file(const char *srcname)
         }
 
         if (0 != system(cc_buf)) {
-	    UNLINK(cc_tempfile);
+            UNLINK(cc_tempfile);
             exit(1);
         }
 
@@ -569,11 +586,20 @@ compile_file(const char *srcname)
             strcat(t_outname, "$");
         }
 
-        if (NULL == (x_ofp =
+        if (NULL == (x_bfp =                    /* binary */
                 fopen((xf_output ? t_outname : outname), FOPEN_W_BINARY))) {
             printf("%s: error opening pass2 '%s' : %s (%d)\n",
                 x_progname, (xf_output ? t_outname : outname), strerror(errno), errno);
             exit(1);
+        }
+
+        if (xf_leave && xf_grunch) {
+            if (NULL == (x_afp =                /* ASCII */
+                    fopen(m_outname, FOPEN_W_BINARY))) {
+                printf("%s: error opening pass2 '%s' : %s (%d)\n",
+                    x_progname, m_outname, strerror(errno), errno);
+                exit(1);
+            }
         }
 
 #if defined(HAVE_MKSTEMP)
@@ -607,10 +633,12 @@ compile_file(const char *srcname)
 
         parser_close();                         /* release any storage etc */
 
-        fclose(x_ofp), x_ofp = NULL;
+        if (x_afp) fclose(x_afp), x_afp = NULL;
+        fclose(x_bfp), x_bfp = NULL;
+
         if (exit_status) {
             if (!xf_output) {
-	        UNLINK(outname);
+                UNLINK(outname);
             }
         } else {
             if (xf_output) {
@@ -684,15 +712,16 @@ usage(void)
         "",
         "Option:",
         "   -a              Create core file on exit (for debugging).",
-        "   -c              Leave temporary files (.m etc).",
+        "   -c[c]           Leave temporary files (create .m and secondary preprocessor output).",
         "   -Dvar           Define var as in #define.",
         "   -d[d]           Enable internal debugging features.",
         "   -f              Flush output for debugging.",
         "   -Ipath          Add 'path' to the #include search path.",
         "   -g              Compile with debug on.",
         "   -m[m]           Compile only if out of date (make option).",
-        "   -n              Don't do anything but tell us what you would do.",
+        "   -n              Report only, wont execute.",
         "   -o file         Name of compiled output file.",
+        "   -O              Only update output on success, otherwise left intack.",
         "   -e file         Error output file.",
         "   -A file         Autoload macro file.",
         "   -p cpp          Specify name of C pre-processor to use.",
@@ -900,7 +929,7 @@ switch_process(int argc, char *argv[])
                 arg_push(cc_includes, CC_INCLUDES, optv, "-I");
                 break;
 
-            case 'c':       /* leave temporary */
+            case 'c':       /* leave temporary (create .m) */
                 ++xf_leave;
                 break;
 
@@ -1059,6 +1088,8 @@ resolve_self(const char *name)
 
 #if defined(WIN32)
     DWORD len;
+    
+    (void)name;                                  /* optional usage */
 
     len = GetModuleFileName(NULL, gr_path, sizeof(gr_path));
     if (len && len < sizeof(gr_path)) {
@@ -1123,7 +1154,7 @@ resolve_self(const char *name)
 #else
 #if defined(EXEEXT)
     namelen = strlen(name);
-    if (namelen < sizeof(EXEEXT) ||		/* add .exe if we need to */
+    if (namelen < sizeof(EXEEXT) ||             /* add .exe if we need to */
             0 != str_icmp((name + namelen) - (sizeof(EXEEXT) - 1), EXEEXT)) {
         memcpy(t_name, name, namelen);
         memcpy(t_name + namelen, EXEEXT, sizeof(EXEEXT)));
@@ -1187,10 +1218,10 @@ resolve_path(char *dst, int dstlen, const char *pp, const char *name, const char
     t_name[namelen] = 0;
 
 #if defined(EXEEXT)
-    if (namelen < sizeof(EXEEXT) ||		/* add .exe, if needed */
+    if (namelen < sizeof(EXEEXT) ||             /* add .exe, if needed */
             0 != str_icmp((t_name + namelen) - (sizeof(EXEEXT)-1), EXEEXT)) {
         memcpy(t_name + namelen, EXEEXT, sizeof(EXEEXT));
-	namelen += (sizeof(EXEEXT) - 1);
+        namelen += (sizeof(EXEEXT) - 1);
     }
 #endif
 
@@ -1272,15 +1303,15 @@ success:;
  *      Address of buffer containing result.
  */
 static const char *
-expand_var(const char *env, char *buf, int buflen)
+expand_var(const char *xenv, char *buf, int buflen)
 {
     char *p, var[256];
 
     if (xf_watch) {
-        printf("IN:  <%s>\n", env);
+        printf("IN:  <%s>\n", xenv);
     }
 
-    strxcpy(buf, env, buflen);
+    strxcpy(buf, xenv, buflen);
     while (NULL != (p = strchr(buf, '$'))) {
         const char *env, *q = p + 1;
         int len = 0;
@@ -1340,4 +1371,5 @@ expand_var(const char *env, char *buf, int buflen)
     }
     return buf;
 }
+
 /*end*/

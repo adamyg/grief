@@ -11,7 +11,7 @@
 AppId={{1BDBED1A-1B0E-4D87-BD04-31E9E3DA5ADC}}
 AppName=GRIEF
 AppVersion={#GR_VERSION} (build: {#GR_BUILD_DATE}-{#GR_BUILD_NUMBER})
-AppCopyright=Copyright (C) 1998-2018.
+AppCopyright=Copyright (C) 1998-2020.
 AppPublisherURL=http://sourceforge.net/projects/grief/
 AppSupportURL=http://sourceforge.net/projects/grief/
 AppUpdatesURL=http://sourceforge.net/projects/grief/
@@ -53,6 +53,11 @@ Source: "..\bin\ctbl\*";        DestDir: "{app}\bin\ctbl"; Flags: ignoreversion 
 Source: "..\bin\i18n\*";        DestDir: "{app}\bin\i81n"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\macros\*";          DestDir: "{app}\macros"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\help\*";            DestDir: "{app}\help"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\COPYING";           DestDir: "{app}"; Flags: ignoreversion
+Source: "..\Changes";           DestDir: "{app}"; Flags: ignoreversion
+
+  ;Source: "..\bin\clbr19.dll";    DestDir: "{app}\bin"; Flags: ignoreversion    
+  ;Source: "..\bin\plbr19.dll";    DestDir: "{app}\bin"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\Grief"; Filename: "{app}\bin\gr.exe"

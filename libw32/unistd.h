@@ -1,14 +1,14 @@
 #ifndef LIBW32_UNISTD_H_INCLUDED
 #define LIBW32_UNISTD_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_unistd_h,"$Id: unistd.h,v 1.45 2019/03/15 23:12:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_unistd_h,"$Id: unistd.h,v 1.48 2020/03/28 00:21:29 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 <unistd.h> header (_MSC_VER, __WATCOMC__ and __MINGW32__)
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2020, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -38,9 +38,11 @@ __CPRAGMA_ONCE
 #if (_MSC_VER != 1500)                          /* MSVC 9/2008 */
 #if (_MSC_VER != 1600)                          /* MSVC 10/2010 */
 #if (_MSC_VER != 1900)                          /* MSVC 19/2015 */
-#if (_MSC_VER <  1910 || _MSC_VER > 1914)       /* MSVC 19.10 .. 14/2017 */
-#error unistd.h: untested MSVC Version (2005 -- 2017) only ...
+#if (_MSC_VER <  1910 || _MSC_VER > 1916)       /* MSVC 19.10 .. 16/2017 */
+#if (_MSC_VER > 1920)                           /* MSVC 19.20 /2019 */
+#error unistd.h: untested MSVC Version (2005 -- 2019) only ...
 	//see: https://en.wikipedia.org/wiki/Microsoft_Visual_C%2B%2B
+#endif //2019
 #endif //2017
 #endif //2015
 #endif //2010
@@ -364,7 +366,6 @@ __BEGIN_DECLS
 #define DEFFILEMODE     (S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH) /* 0666 */
 #endif
 
-
 /*stdio.h*/
 #if !defined(STDIN_FILENO)
 #define STDIN_FILENO    0
@@ -382,9 +383,14 @@ typedef struct {
     unsigned            junk;
 } sigset_t;
 
+typedef struct {
+    unsigned            junk;
+} siginfo_t;
+
 struct sigaction {
     void              (*sa_handler)(int);
-#define SA_RESTART                      0x01
+    void              (*sa_sigaction)(int, siginfo_t *, void *);
+#define SA_RESTART                  0x01
     unsigned            sa_flags;
     sigset_t            sa_mask;
 };

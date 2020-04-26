@@ -1,11 +1,11 @@
 #ifndef GR_CHKALLOC_H_INCLUDED
 #define GR_CHKALLOC_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_chkalloc_h,"$Id: chkalloc.h,v 1.19 2019/03/15 23:03:05 cvsuser Exp $")
+__CIDENT_RCSID(gr_chkalloc_h,"$Id: chkalloc.h,v 1.22 2020/04/21 21:21:14 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: chkalloc.h,v 1.19 2019/03/15 23:03:05 cvsuser Exp $
+/* $Id: chkalloc.h,v 1.22 2020/04/21 21:21:14 cvsuser Exp $
  * Memory management interface.
  *
  *  #define CHKALLOC_DEBUG 1
@@ -33,7 +33,7 @@ __CPRAGMA_ONCE
  *      CHKALLOC_WHERE
  *          Extended trace information.
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2020, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -71,13 +71,15 @@ extern void             chk_stats(void);
 extern void *           chk_alloc(size_t size);
 extern void *           chk_calloc(size_t elem, size_t size);
 extern void             chk_free(void *p);
-extern void             chk_leak(const void *p);
-extern int              chk_isleak(const void *p);
 extern void *           chk_realloc(void *p, size_t size);
+extern void *           chk_recalloc(void *p, size_t osize, size_t nsize);
 extern size_t           chk_shrink(void *p, size_t size);
 extern size_t           chk_expand(void *p, size_t size);
 extern void *           chk_salloc(const char *s);
 extern void *           chk_snalloc(const char *s, size_t size);
+
+extern void             chk_leak(const void *p);
+extern int              chk_isleak(const void *p);
 
 __CEND_DECLS
 
@@ -89,13 +91,13 @@ __CEND_DECLS
 #define chk_alloc(size)             check_alloc(size, __FILE__, __LINE__)
 #define chk_calloc(elem, size)      check_calloc(elem, size, __FILE__, __LINE__)
 #define chk_realloc(ptr, size)      check_realloc(ptr, size, __FILE__, __LINE__)
+#define chk_recalloc(ptr, osize, nsize) check_recalloc(ptr, osize, nsize, __FILE__, __LINE__)
 #define chk_shrink(ptr, size)       check_shrink(ptr, size, __FILE__, __LINE__)
 #define chk_expand(ptr, size)       check_expand(ptr, size, __FILE__, __LINE__)
 #define chk_leak(ptr)               check_leak(ptr, __FILE__, __LINE__)
 #define chk_free(ptr)               check_free(ptr, __FILE__, __LINE__)
 #define chk_salloc(ptr)             check_salloc(ptr, __FILE__, __LINE__)
-#define chk_snalloc(ptr, len)       check_salloc(ptr, len, __FILE__, __LINE__)
-#define chk_snalloc(ptr, size)      check_salloc(ptr, NULL, 0)
+#define chk_snalloc(ptr, size)      check_snalloc(ptr, size, __FILE__, __LINE__)
 #endif
 
 __CBEGIN_DECLS
@@ -107,15 +109,20 @@ __CBEGIN_DECLS
 #define CHKALLOC_UNINIT 0x10
 
 extern unsigned         check_configure(unsigned flags);
-extern void *           check_alloc(size_t len, char const * file, size_t line);
-extern void *           check_calloc(size_t elem, size_t len, char const * file, size_t line);
-extern void *           check_realloc(void *p, size_t len, char const * file, size_t line);
-extern size_t           check_shrink(void *p, size_t newlen, char const * file, size_t line);
-extern size_t           check_expand(void *p, size_t newlen, char const * file, size_t line);
-extern void             check_free(void *p, char const * file, size_t line);
-extern void *           check_salloc(char const *s, char const * file, size_t line);
-extern void *           check_snalloc(char const *s, size_t len, char const * file, size_t line);
+extern void *           check_alloc(size_t len, const char *file, size_t line);
+extern void *           check_calloc(size_t elem, size_t len, const char *file, size_t line);
+extern void *           check_realloc(void *p, size_t len, const char *file, size_t line);
+extern void *           check_recalloc(void *p, size_t olen, size_t nlen, const char *file, size_t line);
+extern size_t           check_shrink(void *p, size_t newlen, const char *file, size_t line);
+extern size_t           check_expand(void *p, size_t newlen, const char *file, size_t line);
+extern void             check_free(void *p, const char *file, size_t line);
+extern void *           check_salloc(const char *s, const char *file, size_t line);
+extern void *           check_snalloc(const char *s, size_t len, const char *file, size_t line);
+
+extern void             check_leak(const void *p, const char *file, size_t line);
+extern int              check_isleak(const void *p);
 
 __CEND_DECLS
 
 #endif /*GR_CHKALLOC_H_INCLUDED*/
+

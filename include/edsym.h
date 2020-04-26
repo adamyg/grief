@@ -1,16 +1,16 @@
 #ifndef GR_EDSYM_H_INCLUDED
 #define GR_EDSYM_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edsym_h,"$Id: edsym.h,v 1.21 2019/03/15 23:03:10 cvsuser Exp $")
+__CIDENT_RCSID(gr_edsym_h,"$Id: edsym.h,v 1.23 2020/04/21 21:21:14 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edsym.h,v 1.21 2019/03/15 23:03:10 cvsuser Exp $
+/* $Id: edsym.h,v 1.23 2020/04/21 21:21:14 cvsuser Exp $
  * Symbol management.
  *
  *
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2020, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -48,8 +48,7 @@ typedef struct define {
 
 
 /*
- *  Following passed to the com_op() and com_equ() routines to
- *  distinguish the arithmetic operator
+ *  com_op() and com_equ() operators.
  */
 enum _aops {
     MOP_NOOP,
@@ -131,3 +130,4 @@ typedef struct LISTV {
 #define llist(lp)       ((lp)->l_int ? (lp) + (lp)->l_int : 0)
 
 #endif /*GR_EDSYM_H_INCLUDED*/
+

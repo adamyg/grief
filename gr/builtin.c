@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.55 2018/11/18 00:19:39 cvsuser Exp $")
+__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.57 2020/04/21 21:42:18 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: builtin.c,v 1.55 2018/11/18 00:19:39 cvsuser Exp $
+/* $Id: builtin.c,v 1.57 2020/04/21 21:42:18 cvsuser Exp $
  * Builtin expresssion evaluation.
  *
  *
@@ -35,25 +35,40 @@ __CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.55 2018/11/18 00:19:39 cvsuser E
 #include "register.h"
 #include "symbol.h"                             /* sym_... */
 #include "tty.h"
+
+#define  WORD_INLINE    /* inline LIST interface */
 #include "word.h"                               /* PUT/GET */
 
 #define EERROR          -1
 #define EEXECUTE        -2
 
-struct saved {                                  /* Save argument references */
+enum ARGERRORS {
+    ERR_NONE = 0,
+    ERR_MISSING,
+    ERR_INVALID,
+    ERR_TOOMANY
+};
+
+struct SAVED {                                  /* Save argument references */
     OPCODE      save_type;
     void       *save_ptr;
 };
 
-
 static void             execute_event(int event);
-static void             execute_builtin(BUILTIN *bp, const LIST *lp);
-static void             arg_error(BUILTIN *bp, int msg, struct saved *saved_str, struct saved *ssp, int arg);
-static void             arg_free(struct saved *saved_str, struct saved *ssp);
-static int              execute_expr2(argtype_t arg, const LIST *argp, LISTV *lap);
+static void             execute_builtin(const BUILTIN *bp, const LIST *lp);
+
+static void __CINLINE   arg_error(const BUILTIN *bp, enum ARGERRORS msg, struct SAVED *saved_str, struct SAVED *ssp, int arg);
+static void __CINLINE   arg_free(struct SAVED *saved_str, struct SAVED *ssp);
+
+static int              arg_expand(const BUILTIN *bp, int varargs, int largc, 
+                            LISTV **largv, LISTV **lap, struct SAVED **lsaved, struct SAVED **ssp);
+
+static int              execute_expr2(const argtype_t arg, const LIST *argp, LISTV *lap);
+#if !defined(NDEBUG)
+static void             check_hooked(void);
+#endif
 
 #define REGEVTNUM       32                      /* Event queue size */
-
 
 static unsigned         x_evtno = 0;
 static unsigned         x_evttail = 0;
@@ -64,24 +79,27 @@ static unsigned         x_evtqueue[REGEVTNUM];  /* Event queue */
 
 static LISTV            x_margv[MAX_ARGC];      /* Initial stack frame */
 
-int                     x_return = FALSE;       /* Set to TRUE when a 'return' is executed. */
-void *                  x_returns = NULL;       /* Assigned to the returns() value */
-void *                  x_exception = NULL;     /* Try/catch() exception */
-const char *            x_command_name = NULL;  /* Name of current macro primitive */
+unsigned __CCACHEALIGN  mexecflags = 0;         /* Execution flags, 'break', 'return' etc. */
+const LISTV *           margv = x_margv;        /* Argument vector */
+int                     margc = 0;              /* Argument count */
+    //const char *      mname = NULL;           /* Name of current macro primitive */
 
 LINENO *                cur_line = NULL;        /* Current line reference */
 LINENO *                cur_col  = NULL;        /* Current column reference */
 LINEATTR *              cur_attr = NULL;        /* Attribute reference */
 
-LISTV *                 margv = x_margv;        /* Argument vector */
-int                     margc = 0;
+unsigned                mac_sd = 0;             /* Macro stack depth */
+struct mac_stack *      mac_sp = NULL;          /* Stack point (== mac_stack[ms_cnt-1]) */
+struct mac_stack        mac_stack[MAX_MACSTACK+1] = {0}; /* Macro name stack */
+
+void *                  x_returns = NULL;       /* Assigned to the returns() value */
+void *                  x_exception = NULL;     /* Try/catch() exception */
 
 
 /*
  *  execute_str ---
- *      Function to take a string like what the user can type at the
- *      command prompt,  perform  a simple parse on it and execute the
- *      specified macro
+ *      Function to take a string like what the user can type at the command prompt,
+ *      perform a simple parse on it and execute the specified macro.
  */
 int
 execute_str(const char *str)
@@ -133,7 +151,7 @@ execute_str(const char *str)
             int ret, len = 0;
 
             ret = str_numparse(cp, &fval, &ival, &len);
-            switch (ret) {                      
+            switch (ret) {
             case NUMPARSE_INTEGER:              /* integer-constant */
             case NUMPARSE_FLOAT:                /* float-constant */
                 cp += len;
@@ -210,7 +228,6 @@ execute_expr(const LISTV *lp)
 
     default:
         panic("execute_expr: Internal evaluation error %d?", lp->l_flags);
-        ewprintf("execute_expr: Internal evaluation error");
         break;
     }
 }
@@ -219,11 +236,9 @@ execute_expr(const LISTV *lp)
 void
 execute_nmacro(const LIST *lp)
 {
-    if (++x_nest_level >= MAX_NESTING) {
-        panic("Macro nesting overflow.");
-    }
+    sym_local_build();
     execute_macro(lp);
-    sym_local_delete();
+    sym_local_delete(TRUE);
 }
 
 
@@ -231,18 +246,17 @@ void
 execute_event_ctrlc(void)
 {
     execute_event(REG_CTRLC);
-//  ++x_evtctrlc;
 }
 
 
-void  
+void
 execute_event_usr1(void)
 {
     execute_event(REG_SIGUSR1);
 }
 
 
-void                 
+void
 execute_event_usr2(void)
 {
     execute_event(REG_SIGUSR2);
@@ -255,6 +269,7 @@ execute_event(int event)
     if (++x_evtno <= REGEVTNUM) {
         const unsigned tail = (x_evttail++ % REGEVTNUM);
         x_evtqueue[ tail ] = event;
+        set_signal();
         return;
     }
     --x_evtno;
@@ -264,56 +279,36 @@ execute_event(int event)
 void
 execute_macro(const LIST *lp)
 {
-    static int handling_ctrlc = FALSE;
-
-    while (1) {
+    for (;;) {
         switch (*lp) {
         case F_LIST:
-            if (x_evtno) {
-                if (0 == x_evtactive++) {
-                    while (x_evtno) {
-                        /*
-                         *  REG_SIGUSR1, REG_SIGUSR2, REG_SIGCTRLC ...
-                         */
-                        const unsigned head = (x_evthead++ % REGEVTNUM),
-                            evtno = x_evtqueue[head];
-                        --x_evtno;
-
-                        switch (evtno) {
-                        case REG_CTRLC:
-                            if (! handling_ctrlc) {
-                                handling_ctrlc = TRUE;
-                                trigger(evtno);
-                                handling_ctrlc = FALSE;
-                            }
-                            break;
-                        default:
+            execute_macro(lp + CM_ATOM_LIST_SZ);
+            if (is_interrupt()) {
+                /*
+                 *  break, return or signal events
+                 */
+                if (x_evtno) {                  // pending signals
+                    if (0 == x_evtactive++) {   // and not inside signal handler
+                        while (x_evtno) {
+                            /*
+                             *  REG_SIGUSR1, REG_SIGUSR2, REG_SIGCTRLC ...
+                             */
+                            const unsigned head = (x_evthead++ % REGEVTNUM),
+                                evtno = x_evtqueue[head];
+                            if (0 == --x_evtno) clear_signal();
                             trigger(evtno);
-                            break;
                         }
+                        --x_evtactive;
                     }
-                    --x_evtactive;
                 }
-            }
-
-//OLD
-//          if (x_evtctrlc && !handling_ctrlc) {
-//              handling_ctrlc = TRUE;
-//              trigger(REG_CTRLC);
-//              x_evtctrlc = FALSE;
-//              handling_ctrlc = FALSE;
-//          }
-
-            execute_macro(lp + sizeof_atoms[*lp]);
-            if (x_break || x_return) {
-                return;
+                if (is_breakreturn()) {
+                    return;
+                }
             }
             lp += LGET_LEN(lp);
             continue;
-
         case F_HALT:
             return;
-
         default:
             trace_ilist(lp);
             execute_xmacro(lp, lp + sizeof_atoms[*lp]);
@@ -326,24 +321,15 @@ execute_macro(const LIST *lp)
 void
 execute_xmacro(register const LIST *lp, const LIST *lp_argv)
 {
-    const char *macro = NULL;
-    register BUILTIN *bp = NULL;
-    register MACRO *mptr = NULL;
-    MACRO *saved_macro = NULL;
-    int ret, omsglevel = 0;
+    const char *macro;
+    register BUILTIN *bp;
+    register MACRO *mptr;
+    int ret, omsglevel;
 
     /*
      *  Locate
      */
     switch (*lp) {
-    case F_ID: {            /* builtin */
-            const int id = LGET_ID(lp);
-            assert(id >= 0 || (unsigned)id < builtin_count);
-            bp = builtin + id;
-            macro = bp->b_name;
-        }
-        break;
-
     case F_INT:             /* integer-constant */
         acc_assign_int(LGET_INT(lp));
         return;
@@ -356,19 +342,27 @@ execute_xmacro(register const LIST *lp, const LIST *lp_argv)
         acc_assign_str(LGET_PTR2(const char, lp), -1);
         return;
 
-    case F_STR:             /* symbol */
+    case F_ID:              /* builtin */
+#if defined(NDEBUG)
+        bp = builtin + LGET_ID(lp);
+#else
+        {   const int id = LGET_ID(lp);
+            assert(id >= 0 || (unsigned)id < builtin_count);
+            bp = builtin + id;
+        }
+#endif
+        macro = bp->b_name;
+        break;
+
+    case F_SYM:             /* symbol; possible builtin (see: execute_str) */
         macro = LGET_PTR2(const char, lp);
         bp = builtin_lookup(macro);
         break;
 
-    case F_RSTR:            /* symbol */
-        macro = r_ptr(LGET_PTR2(ref_t, lp));
-        bp = builtin_lookup(macro);
-        panic("execute_xmacro: RSTR??");
-        break;
-
     default:                /* unsupported/unexpected */
-        panic("execute_xmacro: type? (%d)", *lp);
+        panic("execute_xmacro: Unexpected type (0x%x/%u)", *lp, *lp);
+        macro = NULL;                           /* quiet uninit warnings */
+        bp = NULL;
         break;
     }
 
@@ -376,25 +370,38 @@ execute_xmacro(register const LIST *lp, const LIST *lp_argv)
      *  Builtin?
      */
     if (bp) {
+        /*
+         *  Non-replacement execution
+         */
         assert(BUILTIN_MAGIC == bp->b_magic);
+        if (0 == (B_REDEFINE & bp->b_flags)) {
+            assert(NULL == bp->b_macro && NULL == bp->b_ovargv);
+            __CIFDEBUG(++bp->b_reference;)
+            execute_builtin(bp, lp_argv);
+            return;
+        }
 
-        if (B_REDEFINE & bp->b_flags) {
-            if (NULL == bp->b_macro) {          /* end of call chain, reset on next call */
-                bp->b_macro = bp->b_first_macro;
-                goto exec_builtin;
-            }
-
+        /*
+         *  Replacement execution
+         */
+        if (NULL != (mptr = bp->b_macro)) {     /* replace chain */
             if (bp->b_macro == bp->b_first_macro) {
                 bp->b_ovargv = lp_argv;         /* first call, save argument reference */
             }
-
-            mptr = saved_macro = bp->b_macro;   /* setup 4 next recursive calls */
+            __CIFDEBUG(++bp->b_replacement;)
             bp->b_macro = bp->b_macro->m_next;
             macro = bp->b_name;
             goto exec_macro;
         }
-exec_builtin:
+
+exec_replacement:
+        if (F_HALT == *lp_argv && bp->b_ovargv) {
+            lp_argv = bp->b_ovargv;             /* apply original argument list */
+            bp->b_ovargv = NULL;
+        }
+        __CIFDEBUG(++bp->b_reference;)
         execute_builtin(bp, lp_argv);
+        bp->b_macro  = bp->b_first_macro;       /* reset for next call */
         bp->b_ovargv = NULL;
         return;
     }
@@ -402,39 +409,18 @@ exec_builtin:
     /*
      *  Lookup-defined macros
      */
-    assert(macro);
     if (NULL == (mptr = macro_lookup(macro))) {
         if (0 == macro_load(macro)) {
             mptr = macro_lookup(macro);
         }
-    }
-
-    if (NULL == mptr) {
+        if (NULL == mptr) {
 undefined_macro:
-#if (XXX_LISTEXEC)
-        {                                       /* XXX - implicited list execution */
-            SYMBOL *sp;
-            if (NULL != (sp = sym_lookup(str))) {
-                if (sp->s_type == F_FLIST) {
-                    /*
-                     *  create an unnamed function and execute??
-                     *      issues under which module, scoping problems.
-                     */
-                    LIST *lp = ((ref_t *)sp->s_obj)->r_ref;
-
-                    if (F_ID == *lp && MACRO == lp[1]) {
-                        mptr = macro_unnamed(lp);
-                        goto exec_macro;
-                    }
-                }
+            triggerx(REG_UNDEFINED_MACRO, "\"%s\"", macro);
+            if (FALSE == x_mflag) {
+                errorf("%s undefined.", macro);
+            }
+            return;
         }
-#endif
-
-        triggerx(REG_UNDEFINED_MACRO, "\"%s\"", macro);
-        if (FALSE == x_mflag) {
-            errorf("%s undefined.", macro);
-        }
-        return;
     }
 
     /*
@@ -443,14 +429,14 @@ undefined_macro:
 exec_macro:
     if ((ret = macro_autoload(mptr, TRUE)) < 0) {
         if (bp) {                               /* autoload failed */
-            goto exec_builtin;
+            goto exec_replacement;
         }
         goto undefined_macro;
 
     } else if (0 == ret) {
         assert(mptr == macro_lookup(macro));
         mptr = macro_lookup(macro);
-        assert(mptr != NULL);
+        assert(mptr);
         assert(0 == (mptr->m_flags & M_AUTOLOAD));
 
     } else {
@@ -459,14 +445,17 @@ exec_macro:
 
     lp = mptr->m_list;
     if (F_HALT == *lp) {
+        assert(! bp);                           /* XXX: restore bp->b_macro ? */
         return;                                 /* empty/null macro */
     }
 
-    assert(ms_cnt >= 0);
-    if (ms_cnt >= MAX_NESTING) {
-        panic("Macro stack overflow (%d).", ms_cnt);
-    } else {
-        struct mac_stack *stack = mac_stack + ms_cnt++;
+    if (mac_sd >= MAX_MACSTACK) {
+        panic("Macro stack overflow (%d).", mac_sd);
+    } else {                                    /* -- push */
+        register struct mac_stack *stack = mac_stack + mac_sd++;
+        mac_registers_t *regs;
+
+        ++mac_sp; assert(stack == mac_sp);
 
         stack->module = mptr->m_module;
         stack->name   = mptr->m_name;
@@ -474,9 +463,13 @@ exec_macro:
         stack->argv   = lp_argv;
         stack->argc   = -1;                     /* future use */
         stack->level  = x_nest_level;
+        if (NULL != (regs = stack->registers)) {
+            assert(REGISTERS_MAGIC == regs->magic);
+            memset(&regs->symbols, 0, sizeof(SYMBOL *) * (regs->slots + 1));
+        }
     }
     omsglevel = x_msglevel;                     /* message level */
-	
+
     if ((M_STATIC & mptr->m_flags) || '$' != mptr->m_module[0]) {
         trace_log("Execute macro: %s::%s\n", mptr->m_module, mptr->m_name);
     } else {
@@ -492,335 +485,407 @@ exec_macro:
     ++mptr->m_hits;
 #endif
 
-    if (bp) {
-        assert(mptr == saved_macro);
-        bp->b_macro = saved_macro;
-    }
+    if (bp) bp->b_macro = mptr;                 /* pop chain */ 
 
     mptr->m_ftime = FALSE;                      /* first time */
     x_msglevel = omsglevel;                     /* restore message level */
-    --ms_cnt;
-    assert(ms_cnt >= 0);
+
+    assert(mac_sp == (mac_stack + (mac_sd - 1)));
+    --mac_sd; --mac_sp;                         /* --- pop */
+    return;
 }
 
 
 static void
-execute_builtin(register BUILTIN *bp, register const LIST *lp)
+execute_builtin(const BUILTIN *bp, const LIST *lp)
 {
-    register const argtype_t *bp_argp = bp->b_arg_types;
-    int bp_argc = bp->b_argc;
-    register int largc = 1;
-    int indefinite_args = 0;
-    const LIST *ovargv = bp->b_ovargv;
-    struct saved t_saved_str[MAX_ARGC];
-    struct saved *saved_str = t_saved_str;
-    struct saved *ssp;
-    LISTV t_largv[MAX_ARGC];
-    LISTV *largv_dynamic = NULL;
-    LISTV *largv = t_largv;
-    register LISTV *lap;
-    int type;
+    int varargs = (B_VARARGS & bp->b_flags) ? -1 : 0;
+        /* dynamic arguments, -1=enabled otherwise 0=disabled */
 
-    ssp = saved_str;
-    lap = largv+1;
+    const argtype_t *argtypes = bp->b_arg_types;
+    argtype_t argtype = *argtypes;
 
-    /*
-     *  no arguments list, use original argument list (if any).
-     */
-    ++bp->b_reference;
-    if (ovargv) {
-        if (lp == ovargv) {
-            ovargv = NULL;                      /* primary execution */
-        } else {                                /* replacement call */
-            ++bp->b_replacement;
-            if (F_HALT == *lp && ovargv) {
-                lp = ovargv;
-                ovargv = NULL;
-            }
-        }
-    }
+    const LIST *olp, *ovargv = bp->b_ovargv;    /* original argument list, if replacement */
+
+    struct SAVED localsaved[MAX_ARGC];
+    struct SAVED *lsaved = localsaved;
+    struct SAVED *ssp = localsaved;
+
+    LISTV localargv[MAX_ARGC];                  /* argument stack */
+    LISTV *largv = localargv;
+    register LISTV *lap = localargv;
+    int largc;
+
+    int exectype, op;
+
+    lap->l_str = bp->b_name;                    /* arg[0] */
+    __CIFDEBUG(lap->l_flags = F_LIT;)
+
+    ++lap;                                      /* arg[1] ... */
+    largc = 1;
 
     /*
-     *  If the number of valid arguments for a command is < 0, then take the
-     *  absolute value, and remember how many arguments are specified.
-     *
-     *  This syntax is used to mean that the same as '...' in ANSI C,
-     *  i.e. allow the last argument type to repeat indefinitely.
+     *  Pass arguments
      */
-    if (bp_argc < 0) {
-        bp_argc = -bp_argc;
-        indefinite_args = -1;
-    }
-
-    if (bp_argc > MAX_ARGC) {                   /* guard system limits */
-        ewprintf("%s: parameter definition too large", bp->b_name);
-        arg_error(bp, FALSE, saved_str, ssp, 0);
-        return;
-    }
-
-    /*
-     *  Keep executing following loop until we run out of arguments passed by
-     *  the macro, or we've processed all the arguments needed by the primitive
-     */
-    while (bp_argc > 0 && F_HALT != *lp) {
-        LIST atom = F_HALT;                     /* temporary atom register */
-
-        /*
-         *  decode original argument
-         */
-        const LIST *oparg = NULL;
-
-        if (ovargv) {
-            atom = *ovargv;                     /* current atom */
-            if (F_HALT != atom) {
-                oparg = ovargv;
-                if (F_LIST == atom) {
-                    ovargv += LGET_LEN(ovargv);
-                } else {
-                    assert(atom < F_MAX);
-                    ovargv += sizeof_atoms[atom];
-                }
-            } else {
-                ovargv = NULL;
-            }
-        }
-
-        /*
-         *  encode and validate argument against parameter list
-         */
-        ++largc;
-
-        if (largc > MAX_ARGC) {                 /* guard system limits */
-            if (indefinite_args) {
+    if (F_HALT != (op = *lp) && argtype) {
+        do {
+            /*
+             *  Manage local storage.
+             */
+            if (++largc > MAX_ARGC) {           /* guard system limits */
                 /*
-                 *   Dynamic argument list sizing
+                 *  vararg, syntax is similar to '...', allowing the last argument type to repeat indefinitely.
                  */
-                const int sspi = (int)(ssp - saved_str);
-                const int lapi = (int)(lap - largv);
-
-                if (-1 == indefinite_args) {
-                    indefinite_args = MAX_ARGC * 2;
-                    largv_dynamic = chk_calloc(indefinite_args, indefinite_args * sizeof(LISTV));
-                    saved_str = chk_calloc(indefinite_args, sizeof(struct saved));
-                    largv = largv_dynamic;
-
-                    memcpy(largv, t_largv, sizeof(t_largv));
-                    memcpy(saved_str, t_saved_str, sizeof(t_saved_str));
-
-                } else if (largc > indefinite_args) {
-                    indefinite_args *= 2;
-                    largv_dynamic = chk_realloc(largv_dynamic, indefinite_args * sizeof(LISTV));
-                    saved_str = chk_realloc(saved_str, indefinite_args * sizeof(struct saved));
-                    largv = largv_dynamic;
+                if (largc > varargs) {
+                    LISTV *t_lap = lap;
+                    if (-1 == (varargs =        /* expand */
+                            arg_expand(bp, varargs, largc, &largv, &t_lap, &lsaved, &ssp))) {
+                        arg_error(bp, ERR_NONE, lsaved, ssp, 0);
+                        return;
+                    }
+                    lap = t_lap;
                 }
-                ssp = saved_str + sspi;
-                lap = largv + lapi;
+            }
 
+            /*
+             *  Encode and validate argument against parameter list.
+             */
+            if (F_NULL == op && 0 == (argtype & ARG_REST)) {
+                if (ovargv && NULL != (olp = atom_nth(ovargv, largc - 2))) {
+                        //Note: Replacement overhead seeking alt argument,
+                        //  could optimise yet at the expense of general non-replacement use case.
+                    exectype = execute_expr2(argtype, olp, lap);
+                } else {
+                    if (0 == (argtype & ARG_OPT)) {
+                        arg_error(bp, ERR_MISSING, lsaved, ssp, lap - largv);
+                        return;
+                    }
+                    lap->l_flags = F_NULL;
+                    lap->l_int = 0;
+                    exectype = F_HALT;
+                }
             } else {
-                ewprintf("%s: parameter number too large", bp->b_name);
-                arg_error(bp, FALSE, saved_str, ssp, 0);
+                exectype = execute_expr2(argtype, lp, lap);
+            }
+
+            switch (exectype) {
+            case F_HALT:
+            case F_INT:
+            case F_FLOAT:
+            case F_LIT:
+                break;
+            case F_STR:
+                assert(lap->l_flags == F_STR);
+                lap->l_str = ssp->save_ptr = chk_salloc(lap->l_str);
+                ssp->save_type = F_STR;
+                ++ssp;
+                break;
+            case F_RLIST:
+            case F_RSTR:
+#if defined(DO_ARRAY)
+            case F_RARRAY:
+#endif
+                assert(lap->l_flags == exectype);
+                ssp->save_ptr = r_inc(lap->l_ref);
+                ssp->save_type = exectype;
+                ++ssp;
+                break;
+            case F_LIST:
+                assert(lap->l_flags == F_LIST);
+                ssp->save_ptr = lst_clone(lap->l_list, NULL);
+                ssp->save_type = F_LIST;
+                ++ssp;
+                break;
+#if defined(DO_ARRAY)
+            case F_ARRAY:
+                assert(lap->l_flags == F_ARRAY);
+                ssp->save_ptr = array_clone(lap->l_array, NULL);
+                ssp->save_type = F_ARRAY;
+                ++ssp;
+                break;
+#endif
+            case F_NULL:
+                break;
+            case EEXECUTE:                          /* ... */
+                goto execute; 
+            case EERROR:
+                /*
+                 *  One last chance --
+                 *      if we wanted an int-value but we have a float then do a cast for the user.
+                 */
+                if ((argtype & (ARG_LVAL | ARG_NUM)) == ARG_INT && lap->l_flags == F_FLOAT) {
+                    lap->l_int = (accint_t) lap->l_float;
+                    lap->l_flags = F_INT;
+                    break;
+                }
+                arg_error(bp, ERR_INVALID, lsaved, ssp, lap - largv);
+                return;
+            default:
+                panic("%s: Unexpected exectype (0x%x/%d)", bp->b_name, exectype, exectype);
                 return;
             }
-        }
+            ++lap;
 
-        if (0 == (*bp_argp & ARG_REST) && F_NULL == *lp) {
-            if (oparg) {
-                type = execute_expr2(*bp_argp, oparg, lap);
-
-            } else {
-                if (0 == (*bp_argp & ARG_OPT)) {
-                    arg_error(bp, TRUE, saved_str, ssp, lap - largv);
-                    return;
-                }
-                lap->l_int = 0;
-                lap->l_flags = F_NULL;
-                type = F_HALT;
-            }
-        } else {
-            type = execute_expr2(*bp_argp, lp, lap);
-        }
-
-        switch (type) {
-        case EEXECUTE:
-            goto execute;
-
-        case F_INT:
-        case F_FLOAT:
-        case F_NULL:
-        case F_HALT:
-        case F_LIT:
-            break;
-
-        case F_STR:
-            lap->l_str = ssp->save_ptr = chk_salloc(lap->l_str);
-            ssp->save_type = F_STR;
-            ++ssp;
-            break;
-
-        case F_RLIST:
-        case F_RSTR:
-            ssp->save_ptr = r_inc(lap->l_ref);
-            ssp->save_type = type;
-            lap->l_flags = type;
-            ++ssp;
-            break;
-
-        case F_LIST:
-            ssp->save_ptr = lst_clone(lap->l_list, NULL);
-            ssp->save_type = F_LIST;
-            lap->l_flags = F_LIST;
-            ++ssp;
-            break;
-
-        case EERROR:
             /*
-             *  One last chance --
-             *      if we wanted an int-value but we have a float then do a cast for the user.
+             *  Terminate, for example an undefined symbol.
              */
-            if ((*bp_argp & (ARG_LVAL | ARG_NUM)) == ARG_INT && lap->l_flags == F_FLOAT) {
-                lap->l_flags = F_INT;
-                lap->l_int = (accint_t) lap->l_float;
+            if (is_return()) {
+                arg_free(lsaved, ssp);
+                return;
+            }
+
+            /*
+             *  Move onto the next argument descriptor. 
+             *  Note: Don't move if an indefinite list and last descriptor; as it repeats.
+             */
+            if (! varargs || argtypes[1] /*not-last*/) {
+                argtype = *++argtypes;          /* next type */
+            }
+
+            /*
+             *  Move cursor 'lp', defaulting to 'ovargv' if end-of-list.
+             *  Note: Unsure whether Brief compatible.
+             */
+            lp = atom_next_nonnull(lp);
+            if (F_HALT == (op = *lp)) {
+                /*
+                 *  End-of-arguments, utilise replace if available.
+                 */
+                if (ovargv) {
+                    if (NULL != (lp = atom_nth(ovargv, largc - 1))) {
+                        ovargv = NULL;
+                        op = *lp;
+                        continue;               /* additional arguments */
+                    }
+                }
                 break;
             }
-            arg_error(bp, TRUE, saved_str, ssp, lap - largv);
-            return;
+        } while (argtype);                      /* terminator? */
+    }
 
-        default:
-            ewprintf("%s: default case (type=%d)", bp->b_name, type);
-            panic("default case (%d/%x)", type, type);
-        }
+    if (argtype) {
+        assert(F_HALT == op && op == *lp);
 
-        /*
-         *  Skip to next argument descriptor. Don't skip to next one if we have
-         *  an indefinite argument list and this is the last descriptor.
-         */
-        if (! indefinite_args || 1 != bp_argc) {
-            --bp_argc;
-            ++bp_argp;
-        }
-        ++lap;
-
-        /*
-         *  move cursor 'lp', defaulting to 'ovargv' if end-of-list
-         *  Unsure whether Crisp compatible.
-         */
-        lp = atom_next(lp);
-        if (F_HALT == *lp) {
-            if (ovargv) {
-                lp = ovargv;
-                ovargv = NULL;
+        do {                                    /* check for missing mandatory arguments. */
+            if (0 == (argtype & ARG_OPT)) {
+                arg_error(bp, ERR_MISSING, lsaved, ssp, 0);
+                return;
             }
-        }
 
-        /*
-         *  Skip rest of arguments if we are executing a return.
-         *  This can happen for example on a symbol being undefined.
-         */
-        if (x_return) {
-            arg_free(saved_str, ssp);
+            /*
+             *  NULL pad trailing optional arguments.
+             *  Note: No macros currently requires, could reenable via flags (B_NULLPAD).
+             */
+#if defined(B_NULLPAD)
+              if (B_NULLFILL & bp->b_flags) {
+                  if (++largc > MAX_ARGC && largc > varargs) {
+                      LISTV *t_lap = lap;
+                      if (-1 == (varargs =      /* expand */
+                              arg_expand(bp, varargs, largc, &largv, &t_lap, &lsaved, &ssp))) {
+                          arg_error(bp, ERR_NONE, lsaved, ssp, 0);
+                          return;
+                      }
+                      lap = t_lap;
+                  }
+              }
+              lap->l_flags = F_NULL;
+              lap->l_int = 0;
+              ++lap;
+#endif  //B_NULLPAD
+
+        } while (0 != (argtype = *++argtypes)); /* next argument */
+
+    } else {
+        assert(0 == argtype && 0 == *argtypes);
+        assert(op == *lp);
+
+        if (F_HALT != op) {                     /* unexpected argments */
+            arg_error(bp, ERR_TOOMANY, lsaved, ssp, 0);
             return;
         }
-    }
-
-    if (F_HALT != *lp) {
-        ewprintf("%s: too many arguments", bp->b_name);
-        arg_error(bp, FALSE, saved_str, ssp, 0);
-        return;
-    }
-
-    /*
-     *  If user hasn't specified enough arguments then complain if any of
-     *  the arguments are mandatory.
-     */
-    while (bp_argc-- > 0) {
-        if (0 == (*bp_argp++ & ARG_OPT)) {
-            ewprintf("%s: parameter(s) missing", bp->b_name);
-            arg_error(bp, FALSE, saved_str, ssp, lap - largv);
-            return;
-        }
-        lap->l_flags = F_NULL;
-        lap->l_int = 0;
-        ++lap;
     }
 
 execute: {
-        LISTV *saved_argv = margv;              /* push stack frame */
+        const LISTV *saved_argv = margv;        /* push stack frame */
         int saved_argc = margc;
 
         margv = largv;
         margc = largc;
-        set_hooked();                           /* why??? - create set_curwp/curbp functions */
 
 #if defined(DO_PROFILE)
         if (x_profile) {
             timer_start(&timer);
         }
 #endif
-        x_command_name = bp->b_name;
         (*bp->b_func)(bp->b_parameter);
 #if defined(DO_PROFILE)
         if (x_profile) {
             bp->b_profile += timer_end(&timer);
         }
 #endif
-        if (x_dflags && 0 == (bp->b_flags & B_NOVALUE)) {
-            acc_trace();
+#if !defined(NDEBUG)
+        check_hooked();                         /* trap incorrect curbp/curwp/set_hooked() usage */
+#endif
+
+        if (x_dflags) {
+            if (0 == (bp->b_flags & B_NOVALUE)) {
+                acc_trace();                    /* TODO: replace B_NOVALUE with ARG_VOID */
+            }
         }
 
-        arg_free(saved_str, ssp);
-        if (largv_dynamic) {                    /* release dynamic storage */
-            assert(largv == largv_dynamic);
-            assert(saved_str != t_saved_str);
-            chk_free(largv_dynamic);
-            chk_free(saved_str);
+        arg_free(lsaved, ssp);
+
+        assert((varargs <= 0 && largv == localargv) || (varargs > 0 || largv != localargv));
+        if (varargs > 0) {                      /* release dynamic storage */
+            assert(lsaved != localsaved);
+            chk_free(largv);
+            chk_free(lsaved);
         }
+
         margv = saved_argv;                     /* pop stack frame */
         margc = saved_argc;
     }
 }
 
 
-static void
-arg_error(BUILTIN *bp, int msg, struct saved *saved_str, struct saved *ssp, int arg)
+// Retrieve the name of the current builtin macro.
+const char *
+execute_name(void)
 {
-    if (msg) {
+    assert(margv);
+    if (margv) {
+        assert(F_LIT == margv->l_flags);
+        return margv->l_str;                    /* command name, source bp->name */
+    }
+    return "command";
+}
+
+
+static __CINLINE void
+arg_error(const BUILTIN *bp, enum ARGERRORS msg, struct SAVED *saved_str, struct SAVED *ssp, int arg)
+{
+    /*
+     *  Exception and/or errno ...
+     */
+    switch (msg) {
+    case ERR_MISSING:
+        if (msg > 1) {
+            errorf("%s: parameter %d missing", bp->b_name, arg);
+        } else {
+            errorf("%s: parameter(s) missing", bp->b_name);
+        }
+        break;
+    case ERR_INVALID:
         errorf("%s: parameter %d invalid", bp->b_name, arg);
+        break;
+    case ERR_TOOMANY:
+        errorf("%s: too many parameters", bp->b_name);
+        break;
+    case ERR_NONE:
+        break;
     }
     arg_free(saved_str, ssp);
 }
 
 
-static void
-arg_free(register struct saved *saved_str, register struct saved *ssp)
+static __CINLINE void
+arg_free(register struct SAVED *saved, register struct SAVED *ssp)
 {
-    while (ssp > saved_str) {
+    while (ssp > saved) {
         switch ((--ssp)->save_type) {
         case F_STR:
             chk_free((char *) ssp->save_ptr);
             break;
-
         case F_LIST:
             lst_free((LIST *) ssp->save_ptr);
             break;
-
-#if defined(F_ARRAY)
+#if defined(DO_ARRAY)
         case F_ARRAY:
-            assoc_free((HASH *) ssp->save_ptr);
+            array_free((HASH *) ssp->save_ptr);
             break;
 #endif
-
         case F_RLIST:
         case F_RSTR:
-#if defined(F_RARRAY)
+#if defined(DO_ARRAY)
         case F_RARRAY:
 #endif
             r_dec((ref_t *) ssp->save_ptr);
             break;
-
         default:
+            panic("arg_free: unexpected type (0x%x/%d)", ssp->save_type, ssp->save_type);
             break;
         }
     }
+}
+
+
+static int
+arg_expand(const BUILTIN *bp, int varargs, int largc, LISTV **largv, LISTV **lap, struct SAVED **lsaved, struct SAVED **ssp)
+{
+    const size_t lapi = (size_t)(*lap - *largv);
+    const size_t sspi = (size_t)(*ssp - *lsaved);
+
+    struct SAVED *nlsaved = NULL; 
+    LISTV *nlargv;
+    int nvarargs;
+
+    /*
+     *  Varargs available ? 
+     */
+    assert(varargs >= -1);
+    if (! varargs) {
+        ewprintf("%s: parameter limit exceeded", bp->b_name);
+        return -1;
+    }
+
+    /*
+     *  Expand argument vector and associcate save vector,
+     *  Note: Save vector is general small, yet resize in tandem as the argument count represents it upper value.
+     */
+    if (-1 == varargs) {                        /* initial expansion */
+        assert(largc == (MAX_ARGC + 1));
+        assert(lapi == MAX_ARGC);
+        assert(sspi <= lapi);
+
+        nvarargs = MAX_ARGC * 2;
+        if (NULL != (nlargv = chk_calloc(nvarargs, sizeof(LISTV)))) {
+            if (NULL != (nlsaved = chk_calloc(nvarargs, sizeof(struct SAVED)))) {
+                                                /* import current; fixed buffers */
+                (void) memcpy(nlsaved, *lsaved, sspi * sizeof(struct SAVED));
+                (void) memcpy(nlargv, *largv, MAX_ARGC * sizeof(LISTV));
+            } else {
+                ewprintf("%s: memory overflow", bp->b_name);
+                chk_free(nlargv);
+                nlargv = NULL;
+                return -1;                      /* allocation error */
+            }
+        }
+
+    } else {
+        assert(largc >= (MAX_ARGC + 1));
+        assert(sspi <= lapi);
+
+        nvarargs = varargs * 2;                 /* expand */
+        if (NULL != (nlargv = chk_recalloc(*largv, varargs * sizeof(LISTV), nvarargs * sizeof(LISTV)))) {
+            nlsaved = chk_recalloc(*lsaved, varargs * sizeof(struct SAVED), nvarargs * sizeof(struct SAVED));
+        }
+
+        if (NULL == nlsaved) {
+            ewprintf("%s: memory overflow", bp->b_name);
+            chk_free(nlargv ? nlargv : *largv);
+            arg_free(*lsaved, *ssp);
+            chk_free(*lsaved);
+            return -1;                          /* reallocation error */
+        }
+    }
+
+    *largv  = nlargv;                           /* reassociate cursors */
+    *lap    = nlargv + lapi;
+
+    *lsaved = nlsaved;
+    *ssp    = nlsaved + sspi;
+
+    return nvarargs;
 }
 
 
@@ -832,75 +897,98 @@ arg_free(register struct saved *saved_str, register struct saved *ssp)
  *      s = ARG_STRING  (0x0004)
  *      l = ARG_LIST    (0x0008)
  */
-static const int state_tbl[][13] = {
-    /*        EERROR HALT F_INT, F_STR, F_LIST, F_NULL, F_ID, F_END, POLY, F_LIT, F_RSTR, F_FLOAT, F_RLIST*/
-    /*----*/ {-1,   -1,  -1,    -1,    -1,     -1,     -1,   -1,    -1,   -1,    -1,     -1,      -1     },
-    /*---i*/ {-1,   -1,  F_INT, -1,    -1,     -1,     -1,   -1,    -1,   -1,    -1,     -1,      -1     },
-    /*--f-*/ {-1,   -1,  -1,    -1,    -1,     -1,     -1,   -1,    -1,   -1,    -1,     F_FLOAT, -1     },
-    /*--fi*/ {-1,   -1,  F_INT, -1,    -1,     -1,     -1,   -1,    -1,   -1,    -1,     F_FLOAT, -1     },
-    /*-s--*/ {-1,   -1,  -1,    F_STR, -1,     -1,     F_ID, -1,    -1,   F_LIT, F_RSTR, -1,      -1     },
-    /*-s-i*/ {-1,   -1,  F_INT, F_STR, -1,     -1,     F_ID, -1,    -1,   F_LIT, F_RSTR, -1,      -1     },
-    /*-sf-*/ {-1,   -1,  -1,    F_STR, -1,     -1,     F_ID, -1,    -1,   F_LIT, F_RSTR, F_FLOAT, -1     },
-    /*-sfi*/ {-1,   -1,  F_INT, F_STR, -1,     -1,     F_ID, -1,    -1,   F_LIT, F_RSTR, F_FLOAT, -1     },
-    /*l---*/ {-1,   -1,  -1,    -1,    F_LIST, -1,     -1,   -1,    -1,   -1,    -1,     -1,      F_RLIST},
-    /*l--i*/ {-1,   -1,  F_INT, -1,    F_LIST, -1,     -1,   -1,    -1,   -1,    -1,     -1,      F_RLIST},
-    /*l-f-*/ {-1,   -1,  -1,    -1,    F_LIST, -1,     -1,   -1,    -1,   -1,    -1,     F_FLOAT, F_RLIST},
-    /*l-fi*/ {-1,   -1,  F_INT, -1,    F_LIST, -1,     -1,   -1,    -1,   -1,    -1,     F_FLOAT, F_RLIST},
-    /*ls--*/ {-1,   -1,  -1,    F_STR, F_LIST, -1,     F_ID, -1,    -1,   F_LIT, F_RSTR, -1,      F_RLIST},
-    /*ls-i*/ {-1,   -1,  F_INT, F_STR, F_LIST, -1,     F_ID, -1,    -1,   F_LIT, F_RSTR, -1,      F_RLIST},
-    /*lsf-*/ {-1,   -1,  -1,    F_STR, F_LIST, -1,     F_ID, -1,    -1,   F_LIT, F_RSTR, F_FLOAT, F_RLIST},
-    /*lsfi*/ {-1,   -1,  F_INT, F_STR, F_LIST, F_NULL, F_ID, -1,    -1,   F_LIT, F_RSTR, F_FLOAT, F_RLIST},
-    };
-
-
+static const int state_tbl[][12] = {
+    /*        ERROR,  HALT     F_INT,   F_FLOAT, F_STR,   F_LIT,   F_LIST,  F_ARRAY, F_NULL,  F_RSTR,  F_RLIST, F_FARRAY*/
+    /*----*/ {-1,     -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1      },
+    /*---i*/ {-1,     -1,      F_INT,   -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1      },
+    /*--f-*/ {-1,     -1,      -1,      F_FLOAT, -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1      },
+    /*--fi*/ {-1,     -1,      F_INT,   F_FLOAT, -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1      },
+    /*-s--*/ {-1,     -1,      -1,      -1,      F_STR,   F_LIT,   -1,      -1,      -1,      F_RSTR,  -1,      -1      },
+    /*-s-i*/ {-1,     -1,      F_INT,   -1,      F_STR,   F_LIT,   -1,      -1,      -1,      F_RSTR,  -1,      -1      },
+    /*-sf-*/ {-1,     -1,      -1,      F_FLOAT, F_STR,   F_LIT,   -1,      -1,      -1,      F_RSTR,  -1,      -1      },
+    /*-sfi*/ {-1,     -1,      F_INT,   F_FLOAT, F_STR,   F_LIT,   -1,      -1,      -1,      F_RSTR,  -1,      -1      },
+    /*l---*/ {-1,     -1,      -1,      -1,      -1,      -1,      F_LIST,  -1,      -1,      -1,      F_RLIST, -1      },
+    /*l--i*/ {-1,     -1,      F_INT,   -1,      -1,      -1,      F_LIST,  -1,      -1,      -1,      F_RLIST, -1      },
+    /*l-f-*/ {-1,     -1,      -1,      F_FLOAT, -1,      -1,      F_LIST,  -1,      -1,      -1,      F_RLIST, -1      },
+    /*l-fi*/ {-1,     -1,      F_INT,   F_FLOAT, -1,      -1,      F_LIST,  -1,      -1,      -1,      F_RLIST, -1      },
+    /*ls--*/ {-1,     -1,      -1,      -1,      F_STR,   F_LIT,   F_LIST,  -1,      -1,      F_RSTR,  F_RLIST, -1      },
+    /*ls-i*/ {-1,     -1,      F_INT,   -1,      F_STR,   F_LIT,   F_LIST,  -1,      -1,      F_RSTR,  F_RLIST, -1      },
+    /*lsf-*/ {-1,     -1,      -1,      F_FLOAT, F_STR,   F_LIT,   F_LIST,  -1,      -1,      F_RSTR,  F_RLIST, -1      },
+    /*lsfi*/ {-1,     -1,      F_INT,   F_FLOAT, F_STR,   F_LIT,   F_LIST,  -1,      F_NULL,  F_RSTR,  F_RLIST, -1      },
+    };                                                                                                                  
+                                                                                                                        
 static const int state2_tbl[][11] = {
-    /*        HALT  F_INT,  F_STR,  F_LIST, F_NULL, F_ID, F_END, POLY, F_LIT, F_RSTR, F_FLOAT*/
-    /*----*/ {-1,   -1,     -1,     -1,     -1,     -1,   -1,    -1,   -1,    -1,     -1    },
-    /*---i*/ {-1,   F_HALT, -1,     -1,     -1,     -1,   -1,    -1,   -1,    -1,     -1    },
-    /*--f-*/ {-1,   -1,     -1,     -1,     -1,     -1,   -1,    -1,   -1,    -1,     F_HALT},
-    /*--fi*/ {-1,   F_HALT, -1,     -1,     -1,     -1,   -1,    -1,   -1,    -1,     F_HALT},
-    /*-s--*/ {-1,   -1,     F_HALT, -1,     -1,     -1,   -1,    -1,   -1,    -1,     -1    },
-    /*-s-i*/ {-1,   F_HALT, F_HALT, -1,     -1,     -1,   -1,    -1,   -1,    -1,     -1    },
-    /*-sf-*/ {-1,   -1,     F_HALT, -1,     -1,     -1,   -1,    -1,   -1,    -1,     F_HALT},
-    /*-sfi*/ {-1,   F_HALT, F_HALT, -1,     -1,     -1,   -1,    -1,   -1,    -1,     F_HALT},
-    /*l---*/ {-1,   -1,     -1,     F_HALT, -1,     -1,   -1,    -1,   -1,    -1,     -1    },
-    /*l--i*/ {-1,   F_HALT, -1,     F_HALT, -1,     -1,   -1,    -1,   -1,    -1,     -1    },
-    /*l-f-*/ {-1,   -1,     -1,     F_HALT, -1,     -1,   -1,    -1,   -1,    -1,     F_HALT},
-    /*l-fi*/ {-1,   F_HALT, -1,     F_HALT, -1,     -1,   -1,    -1,   -1,    -1,     F_HALT},
-    /*ls--*/ {-1,   -1,     F_HALT, F_HALT, -1,     -1,   -1,    -1,   -1,    -1,     -1    },
-    /*ls-i*/ {-1,   F_HALT, F_HALT, F_HALT, -1,     -1,   -1,    -1,   -1,    -1,     -1    },
-    /*lsf-*/ {-1,   -1,     F_HALT, F_HALT, -1,     -1,   -1,    -1,   -1,    -1,     F_HALT},
-    /*lsfi*/ {-1,   F_HALT, F_HALT, F_HALT, F_HALT, -1,   -1,    -1,   -1,    -1,     F_HALT},
+    /*
+     *  Symbol type conversions.
+     *  Notes:
+     *    o Symbols are limited to being F_INT, F_FLOAT, F_STR, F_ARRAY, F_LIST types.
+     *    o F_HALT(0) conversion ok, otherwise -1 (EERROR).
+     */
+    /*        F_HALT, F_INT,   F_FLOAT, F_STR,   F_LIT,   F_LIST,  F_ARRAY, F_NULL,  F_RSTR,  F_RLIST, F_FARRAY*/
+    /*----*/ {-1,     -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1      },
+    /*---i*/ {-1,     F_HALT,  -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1      },
+    /*--f-*/ {-1,     -1,      F_HALT,  -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1      },
+    /*--fi*/ {-1,     F_HALT,  F_HALT,  -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1      },
+    /*-s--*/ {-1,     -1,      -1,      F_HALT,  -1,      -1,      -1,      -1,      -1,      -1,      -1      },
+    /*-s-i*/ {-1,     F_HALT,  -1,      F_HALT,  -1,      -1,      -1,      -1,      -1,      -1,      -1      },
+    /*-sf-*/ {-1,     -1,      F_HALT,  F_HALT,  -1,      -1,      -1,      -1,      -1,      -1,      -1      },
+    /*-sfi*/ {-1,     F_HALT,  F_HALT,  F_HALT,  -1,      -1,      -1,      -1,      -1,      -1,      -1      },
+    /*l---*/ {-1,     -1,      -1,      -1,      -1,      F_HALT,  -1,      -1,      -1,      -1,      -1      },
+    /*l--i*/ {-1,     F_HALT,  -1,      -1,      -1,      F_HALT,  -1,      -1,      -1,      -1,      -1      },
+    /*l-f-*/ {-1,     -1,      F_HALT,  -1,      -1,      F_HALT,  -1,      -1,      -1,      -1,      -1      },
+    /*l-fi*/ {-1,     F_HALT,  F_HALT,  -1,      -1,      F_HALT,  -1,      -1,      -1,      -1,      -1      },
+    /*ls--*/ {-1,     -1,      -1,      F_HALT,  -1,      F_HALT,  -1,      -1,      -1,      -1,      -1      },
+    /*ls-i*/ {-1,     F_HALT,  -1,      F_HALT,  -1,      F_HALT,  -1,      -1,      -1,      -1,      -1      },
+    /*lsf-*/ {-1,     -1,      F_HALT,  F_HALT,  -1,      F_HALT,  -1,      -1,      -1,      -1,      -1      },
+    /*lsfi*/ {-1,     F_HALT,  F_HALT,  F_HALT,  -1,      F_HALT,  -1,      F_HALT,  -1,      -1,      -1      },
     };
-
 
 static int
-execute_expr2(argtype_t arg, const LIST *argp, register LISTV *lap)
+execute_expr2(const argtype_t arg, register const LIST *argp, LISTV *lap)
 {
     SYMBOL *sp;
+    int type;
 
     switch (arg & (ARG_REST | ARG_COND | ARG_LVAL)) {
     case ARG_LVAL: {
-            /*
-             *  pass by reference
-             */
-            int type;
+        /*
+         *  pass by reference, lookup symbol
+         */
+            const OPCODE argtype = *argp;
 
-            if (F_STR != *argp) {
-                if (F_NULL != *argp) {          /* 05/01/11 */
-                    ewprintf("Symbol reference expected");
+            if (F_REG == argtype) {             /* REG <symbol> <idx/byte>, 01/04/20 */
+                if (NULL == (sp = sym_rlookup(argp[SIZEOF_VOID_P + 1]))) {
+                    if (NULL == (sp = sym_elookup(LGET_PTR2(const char, argp)))) {
+                        return EERROR;          /* lookup error */
+                    }
                 }
-                return EERROR;                  /* symbol name expected */
-            }
+#if !defined(NDEBUG) && defined(DO_REGISTER_CHECK)
+                else {
+                    SYMBOL *sp2 = sym_elookup(LGET_PTR2(const char, argp));
+                    assert(sp == sp2);
+                }
+#endif  //_DEBUG
 
-            if ((sp = sym_elookup(LGET_PTR2(const char, argp))) == NULL) {
-                return EERROR;                  /* lookup error */
+            } else if (F_SYM == argtype) {      /* SYM <symbol> */
+                if (NULL == (sp = sym_elookup(LGET_PTR2(const char, argp)))) {
+                    return EERROR;              /* lookup error */
+                }
+
+            } else {
+                if (F_NULL != argtype) {        /* 05/01/11 */
+                    ewprintf("Symbol reference expected");
+#if !defined(NDEBUG)
+                } else {
+                    panic("execute_xmacro: F_WHAT? (0x%x/%u)", argtype, argtype);
+#endif
+                }
+                return EERROR;                  /* symbol/register expected */
             }
 
             type = sp->s_type;
             lap->l_sym = sp;
-            lap->l_flags = type;
-            assert(type >= 0 && type < 11);
+            lap->l_flags = F_SYM;
+            assert(type >= 0 && type <= F_OPDATA);
             return state2_tbl[arg & ARG_ANY][type];
         }
 
@@ -915,6 +1003,7 @@ execute_expr2(argtype_t arg, const LIST *argp, register LISTV *lap)
     case ARG_COND:
         /*
          *  conditional, return unprocessed
+         *      see do_if(), which shall execute indirectly when do required.
          */
         lap->l_list = argp;
         lap->l_flags = F_LIST;
@@ -926,8 +1015,29 @@ execute_expr2(argtype_t arg, const LIST *argp, register LISTV *lap)
      *
      *              eval() - F_ERROR (ie eval() + 1).
      */
-    return state_tbl[arg & ARG_ANY][eval(argp, lap) - F_ERROR];
+    type = eval(argp, lap) - F_ERROR;
+    assert(type >= 0 && type <= (F_OPDATA + 1));
+    return state_tbl[arg & ARG_ANY][type];
 }
+
+
+#if !defined(NDEBUG)
+static void
+check_hooked(void)
+{
+    LINENO *t_cur_line = cur_line;
+    LINENO *t_cur_col  = cur_col;
+    LINEATTR *t_cur_attr = cur_attr;
+    const cmap_t *t_cur_cmap = cur_cmap;
+
+    set_hooked();
+
+    assert(t_cur_line == cur_line);
+    assert(t_cur_col  == cur_col );
+    assert(t_cur_attr == cur_attr);
+    assert(t_cur_cmap == cur_cmap);
+}
+#endif  //!NDEBUG
 
 
 void
@@ -971,5 +1081,5 @@ set_hooked(void)
     assert(*cur_col  >= 1);
     assert(cur_cmap  != NULL);
 }
-/*end*/
 
+/*end*/

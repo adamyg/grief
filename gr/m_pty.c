@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_pty_c,"$Id: m_pty.c,v 1.22 2019/01/26 22:27:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_pty_c,"$Id: m_pty.c,v 1.23 2020/04/21 00:01:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_pty.c,v 1.22 2019/01/26 22:27:08 cvsuser Exp $
+/* $Id: m_pty.c,v 1.23 2020/04/21 00:01:56 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -1711,5 +1711,3 @@ pty_write(const char *buf, int len)
     }
 }
 /*end*/
-
-

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dialog_tty_c,"$Id: dialog_tty.c,v 1.25 2015/02/11 23:25:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_dialog_tty_c,"$Id: dialog_tty.c,v 1.26 2020/04/21 00:01:55 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dialog_tty.c,v 1.25 2015/02/11 23:25:13 cvsuser Exp $
+/* $Id: dialog_tty.c,v 1.26 2020/04/21 00:01:55 cvsuser Exp $
  * Dialog manager, TTY interface.
  *
  *
@@ -651,7 +651,7 @@ dlg_hotkey(DIALOG_t *d, const int key)
                         done = widget_send(w, WIDGET_HOTKEY, key, 0);
                     }
                 }
-            } while (! done && (w = dialog_next(d, w)) != start);
+            } while (! done && (w = dialog_next(d, w)) != start && w);
         }
     }
 
@@ -1037,7 +1037,7 @@ dlg_pack_init(WIDGET_t *parent)
     WIDGET_t *w;
 
     parent->w_uflags |= WTTY_FREPACK;
-    if (0 == parent->w_reqcols || 0 == parent->w_reqcols) {
+    if (0 == parent->w_reqcols || 0 == parent->w_reqrows) {
         parent->w_uflags |= WTTY_FRESIZE;
     }
     for (w = TAILQ_FIRST(&parent->w_children); w; w = TAILQ_NEXT(w, w_sibling)) {

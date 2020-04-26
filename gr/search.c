@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_search_c,"$Id: search.c,v 1.51 2014/11/27 18:56:53 ayoung Exp $")
+__CIDENT_RCSID(gr_search_c,"$Id: search.c,v 1.53 2020/04/21 00:01:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: search.c,v 1.51 2014/11/27 18:56:53 ayoung Exp $
+/* $Id: search.c,v 1.53 2020/04/21 00:01:57 cvsuser Exp $
  * Search interface.
  *
  *  TODO:
@@ -1214,8 +1214,8 @@ do_re_result(void)              /* ([int capture], [string &value], [int &offset
             of buffer.
 
     Macro Returns:
-        The 'translate()' primitive returns the number of
-        translations which occurred, otherwise -1 on error.
+        The 'translate()' primitive returns the number of translations which occurred,
+        otherwise -1 on error.
 
     Macro Portability:
         n/a
@@ -1238,9 +1238,8 @@ do_translate(void)              /* (string pattern, string replacement, [int glo
 /*  Function:           re_translate
  *      re_translate primitive.
  *
- *      Function similar to translate() primitive but allows the
- *      syntax to be specified at the time of the translate and
- *      is a bit more compact.
+ *      Function similar to translate() primitive but allows the syntax to be specified at 
+ *      the time of the translate and is a bit more compact.
  *
  *  Parameters:
  *      nothing
@@ -1251,7 +1250,7 @@ do_translate(void)              /* (string pattern, string replacement, [int glo
  *<<GRIEF>>
     Macro: re_translate - Search and replace.
 
-        int
+        int|string
         re_translate([int flags], string pattern,
                 [string replacement], [declare object])
 
@@ -1334,8 +1333,10 @@ do_translate(void)              /* (string pattern, string replacement, [int glo
 (end table)
 
     Macro Returns:
-        The 're_translate()' primitive returns the number of
-        translations which occurred, otherwise -1 on error.
+        If 'object' is a string, then the resulting translated string is returned.
+
+        Otherwise the 're_translate()' primitive returns the number of translations
+        which occurred, otherwise -1 on error.
 
     Macro Portability:
         n/a
@@ -1368,11 +1369,11 @@ do_re_translate(void)           /* ([int flags], string pattern, [string replace
             }
         }
 
-    } else if (isa_string(4)) {                 /* string */
+    } else if (isa_string(4)) {                 /* string, return: string */
         translate_string(flags, get_str(4), get_strlen(4), 2, 3);
 
 #if (TODO)
-    } else if (isa_list(4)) {                   /* list */
+    } else if (isa_list(4)) {
         translate_list(flags, get_list(4), 2, 3);
 #endif
 
@@ -1944,6 +1945,7 @@ search_arguments(struct re_state *rs, int pati, int repi)
         if (-1 == search_load(rs, get_integer(abspati))) {
             return FALSE;
         }
+      //pattern = rs->originalpattern;
     } else {
         if (! search_comp(rs, pattern, strlen(pattern))) {
             return FALSE;

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_window_c,"$Id: window.c,v 1.40 2014/10/22 02:33:25 ayoung Exp $")
+__CIDENT_RCSID(gr_window_c,"$Id: window.c,v 1.41 2020/04/21 00:01:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: window.c,v 1.40 2014/10/22 02:33:25 ayoung Exp $
+/* $Id: window.c,v 1.41 2020/04/21 00:01:57 cvsuser Exp $
  * Window basics.
  *
  *
@@ -274,6 +274,7 @@ window_create(int type, const char *title, int x, int y, int w, int h)
         window_title(wp, "", (title ? title : ""));
         window_append(wp);
         curwp = wp;                             /* current window */
+        set_hooked();
     }
     return (NULL == wp ? -1 : wp->w_num);
 }
@@ -371,6 +372,7 @@ attach_buffer(WINDOW_t *wp, BUFFER_t *bp)
         window_title(wp, bp->b_title ? bp->b_title : sys_basename(bp->b_fname), NULL);
 
         curbp = bp;
+        set_hooked();
     }
 }
 

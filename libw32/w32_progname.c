@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_progname_c,"$Id: w32_progname.c,v 1.4 2019/03/15 23:12:19 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_progname_c,"$Id: w32_progname.c,v 1.5 2020/04/20 23:06:03 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -55,7 +55,7 @@ setprogname(const char *name)
         *p = 0; //consume trailing exe/com extension.
     }
     for (p = (char *)progname; *p; ++p) { //hide case issues.
-        *p = tolower(*p);
+        *p = (char)tolower(*p);
     }
 }
 

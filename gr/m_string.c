@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.39 2019/05/02 18:24:00 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.40 2020/04/21 00:01:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_string.c,v 1.39 2019/05/02 18:24:00 cvsuser Exp $
+/* $Id: m_string.c,v 1.40 2020/04/21 00:01:56 cvsuser Exp $
  * String primitives.
  *
  *
@@ -1056,7 +1056,7 @@ acc_rtrim(const char *trimchars, int len)
 
         string
         compress(string str, [int trim = FALSE],
-                    [string chars = " \t\r\n"], [int replacement = ' '])
+                    [string chars = " \\t\\r\\n"], [int replacement = ' '])
 
     Macro Description:
         The 'compress()' primitive takes a string and removes all

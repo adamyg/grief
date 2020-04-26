@@ -1,16 +1,16 @@
 #ifndef GR_EDSTRUCT_H_INCLUDED
 #define GR_EDSTRUCT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.66 2019/03/15 23:03:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.68 2020/04/21 21:21:14 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edstruct.h,v 1.66 2019/03/15 23:03:09 cvsuser Exp $
+/* $Id: edstruct.h,v 1.68 2020/04/21 21:21:14 cvsuser Exp $
  * Window, buffer, line and character-map definitions.
  *
  *
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2020, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -1203,9 +1203,8 @@ enum {
     CH_MAX              =CH_PADDING
 };
 
-
 extern const unsigned   sizeof_atoms[];
-extern const char *     nameof_atoms[];
+extern const char * const nameof_atoms[];
 
 extern const int        x_major_version;
 extern const int        x_minor_version;
@@ -1219,3 +1218,4 @@ extern const char *     x_compiled;
 __CEND_DECLS
 
 #endif /*GR_EDSTRUCT_H_INCLUDED*/
+

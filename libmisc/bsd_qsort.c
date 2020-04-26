@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bsd_qsort_c,"$Id: bsd_qsort.c,v 1.6 2014/10/22 02:33:45 ayoung Exp $")
+__CIDENT_RCSID(gr_bsd_qsort_c,"$Id: bsd_qsort.c,v 1.7 2020/04/11 21:37:12 cvsuser Exp $")
 
 /*- -*- indent-width: 4; tabs: 8; -*-
  * Copyright (c) 1992, 1993
@@ -70,9 +70,7 @@ static __CINLINE void	 swapfunc(char *, char *, int, int);
 	es % sizeof(long) ? 2 : es == sizeof(long)? 0 : 1;
 
 static __CINLINE void
-swapfunc(a, b, n, swaptype)
-	char *a, *b;
-	int n, swaptype;
+swapfunc(char *a, char *b, int n, int swaptype)
 {
 	if(swaptype <= 1)
 		swapcode(long, a, b, n)

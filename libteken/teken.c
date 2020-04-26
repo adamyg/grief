@@ -49,12 +49,14 @@
 #include <config.h>
 #include <editor.h>
 
+#include "msvcversions.h"
+
 #ifndef __unused
 #define __unused
 #endif
 
 #if !defined(__WATCOMC__) && \
-        (!defined(_MSC_VER) || (_MSC_VER >= 1600))
+        (!defined(_MSC_VER) || (_MSC_VER >= _MSC_VER_2015))
 #include <sys/types.h>
 #include <assert.h>
 #include <limits.h>
@@ -766,4 +768,10 @@ teken_get_sequence(const teken_t *t, unsigned int k)
 
 #include "teken_state.h"
 
-#endif   /*_MSC_VER*/
+#else	/*_MSC_VER*/
+
+void teken_not_available() {
+}
+
+#endif
+

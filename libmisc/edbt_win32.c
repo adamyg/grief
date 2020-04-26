@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.20 2019/05/01 21:37:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.21 2020/04/13 21:06:07 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edbt_win32.c,v 1.20 2019/05/01 21:37:36 cvsuser Exp $
+/* $Id: edbt_win32.c,v 1.21 2020/04/13 21:06:07 cvsuser Exp $
  * win32 (include cygwin) backtrace implementation.
  *
  *
@@ -286,6 +286,7 @@ map_symbol(module_t *module, const char *sname, size_t slen, void *address)
             symbol->s_name[slen] = 0;
             if (RB_INSERT(symboltree, symbols, symbol)) {
                 free(symbol);
+                symbol = NULL; /*non-unqiue*/
             }
         }
 

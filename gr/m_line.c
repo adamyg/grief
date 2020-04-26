@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_line_c,"$Id: m_line.c,v 1.18 2014/11/16 17:28:41 ayoung Exp $")
+__CIDENT_RCSID(gr_m_line_c,"$Id: m_line.c,v 1.19 2020/04/21 00:01:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_line.c,v 1.18 2014/11/16 17:28:41 ayoung Exp $
+/* $Id: m_line.c,v 1.19 2020/04/21 00:01:56 cvsuser Exp $
  * Line primitives.
  *
  *
@@ -512,4 +512,5 @@ do_find_line_flags(void)        /* int ([int bufnum], [int lineno],
     }
     acc_assign_int(ret);
 }
+
 /*end*/

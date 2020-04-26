@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: grief.cr,v 1.84 2018/10/01 21:05:01 cvsuser Exp $
+/* $Id: grief.cr,v 1.86 2020/04/20 23:13:31 cvsuser Exp $
  * GRIEF startup macro.
  *
  *
@@ -279,6 +279,7 @@ grief(void)
         "cshelp",
         "kdb_summary",
         "kdb_mapping",
+        "help_about",
         "help_resolve",
         "help_display",
         "help_window");
@@ -594,8 +595,10 @@ grief(void)
     assign_to_key("<Alt-Right>",                "page_down");
     assign_to_key("<Ctrl-F1>",                  "borders");
 
-    /* Consume stray ESC presses .... */
+    /* Consume stray ESC and Flow-control keys */
     assign_to_key("<Esc>",                      "nothing");
+    assign_to_key("<Ctrl-Q>",                   "nothing");             /* 1/4/2020 */
+    assign_to_key("<Ctrl-S>",                   "nothing");
 
     /* Append the data to the scrap */
     assign_to_key("<Shift-Keypad-plus>",        "copy 1");
@@ -1077,7 +1080,9 @@ grinit_onexit(void)
                 //
                 //  old property interface -- string
                 //
-                inipush(ifd, sect, prop, execute_macro("get_" + prop));
+                string value = execute_macro("get_" + prop);
+
+                inipush(ifd, sect, prop, value);
 
             } else if (p < length_of_list(gri_values)) {
                 //

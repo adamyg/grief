@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.48 2018/10/04 15:39:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.49 2020/04/19 23:47:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttywin32.c,v 1.48 2018/10/04 15:39:29 cvsuser Exp $
+/* $Id: ttywin32.c,v 1.49 2020/04/19 23:47:37 cvsuser Exp $
  * WIN32 VIO driver.
  *  see: http://www.edm2.com/index.php/Category:Vio
  *
@@ -593,7 +593,7 @@ VioSetCurType(
 int
 VioGetCurPos(USHORT *row, USHORT *col, HVIO viohandle)
 {
-    CONSOLE_SCREEN_BUFFER_INFO sbinfo;
+    CONSOLE_SCREEN_BUFFER_INFO sbinfo = {0};
 
     __CUNUSED(viohandle)
 
@@ -648,17 +648,60 @@ VioSetCurPos(USHORT row, USHORT col, HVIO viohandle)
         return ERROR_VIO_INVALID_HANDLE;
     }
 
-    (void)GetConsoleScreenBufferInfo(chandle, &csbi);
+    (void) GetConsoleScreenBufferInfo(chandle, &csbi);
     if (csbi.srWindow.Left > 0 || csbi.srWindow.Top > 0) {
         coord.X = 0; coord.Y = 0;               // home console
-        (void)SetConsoleCursorPosition(chandle, coord);
+        (void) SetConsoleCursorPosition(chandle, coord);
         ++vio.c_trashed;
     }
 
     vio_flush();
 
     coord.X = col; coord.Y = row;               // true position
-    (void)SetConsoleCursorPosition(chandle, coord);
+    (void) SetConsoleCursorPosition(chandle, coord);
+    return 0;
+}
+
+
+int
+VioGetCurAttribute(USHORT *attribute, HVIO viohandle)
+{
+    CONSOLE_SCREEN_BUFFER_INFO sbinfo = {0};
+
+    __CUNUSED(viohandle)
+
+    assert(0 == viohandle);
+    assert(vio.inited);                         /* uninitialised */
+
+    if (!attribute) {
+        return ERROR_VIO_INVALID_PARMS;
+    } else if (!vio.inited || NULL == vio.image) {
+        return ERROR_VIO_MODE;
+    } else if (viohandle) {
+        return ERROR_VIO_INVALID_HANDLE;
+    }
+
+    (void) GetConsoleScreenBufferInfo(vio.chandle, &sbinfo);
+    if (attribute) *attribute = sbinfo.wAttributes;
+    return 0;
+}
+
+
+int
+VioSetCurAttribute(USHORT attribute, HVIO viohandle)
+{
+    __CUNUSED(viohandle)
+
+    assert(0 == viohandle);
+    assert(vio.inited);                         /* uninitialised */
+
+    if (!vio.inited || NULL == vio.image) {
+        return ERROR_VIO_MODE;
+    } else if (viohandle) {
+        return ERROR_VIO_INVALID_HANDLE;
+    }
+
+    (void) SetConsoleTextAttribute(vio.chandle, attribute);
     return 0;
 }
 

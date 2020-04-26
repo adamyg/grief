@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_buf_c,"$Id: m_buf.c,v 1.52 2019/01/26 22:27:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_buf_c,"$Id: m_buf.c,v 1.53 2020/04/21 00:01:55 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_buf.c,v 1.52 2019/01/26 22:27:08 cvsuser Exp $
+/* $Id: m_buf.c,v 1.53 2020/04/21 00:01:55 cvsuser Exp $
  * Buffer primitives.
  *
  *
@@ -2125,6 +2125,7 @@ do_create_edge(void)            /* int ([int direction]) */
         if (wp) {
             if (WD_RIGHT == i || WD_DOWN == i) {
                 curwp = wp;
+                set_hooked();
             }
             ret = 1;
         } else {

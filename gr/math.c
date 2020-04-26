@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_math_c,"$Id: math.c,v 1.30 2014/11/27 18:56:53 ayoung Exp $")
+__CIDENT_RCSID(gr_math_c,"$Id: math.c,v 1.31 2020/04/21 00:01:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: math.c,v 1.30 2014/11/27 18:56:53 ayoung Exp $
+/* $Id: math.c,v 1.31 2020/04/21 00:01:57 cvsuser Exp $
  * Math operators/primitives.
  *
  *
@@ -38,6 +38,53 @@ __CIDENT_RCSID(gr_math_c,"$Id: math.c,v 1.30 2014/11/27 18:56:53 ayoung Exp $")
 #endif
 
 static int              lst_append(SYMBOL *sp, const LISTV *lvp);
+
+/*  Function:           do_com_cast
+ *      Cast operator.
+ *
+*  Macro Parameters:
+ *      type - Cast type, int or float.
+ *
+ *  Returns:
+ *      nothing
+ */
+void
+do_cast(int type)
+{
+    if (F_INT == type) {
+        accint_t lvalue = 0;
+        switch (margv[1].l_flags) {
+        case F_INT:        
+            lvalue = margv[1].l_int;
+            break;
+        case F_FLOAT:
+            lvalue = (accint_t)margv[1].l_float;
+            break;
+        default:
+            ewprintf("Invalid integer cast.");
+            break;
+        }
+        acc_assign_int(lvalue);
+
+    } else if (F_FLOAT == type) {
+        accfloat_t lvalue = 0;
+        switch (margv[1].l_flags) {
+        case F_INT:        
+            lvalue = (accfloat_t)margv[1].l_int;
+            break;
+        case F_FLOAT:
+            lvalue = margv[1].l_float;
+            break;
+        default:
+            ewprintf("Invalid float cast.");
+            break;
+        }
+        acc_assign_float(lvalue);
+
+    } else {
+        panic("cast: bad type (%d)", type);
+    }
+}
 
 
 /*<<GRIEF>>
@@ -290,7 +337,7 @@ static int              lst_append(SYMBOL *sp, const LISTV *lvp);
  *      Assignment Operators.
  *
  *  Macro Parameters:
- *      none
+ *      op - Operator.
  *
  *  Returns:
  *      nothing
@@ -305,18 +352,15 @@ do_com_equ(int op)
 int
 com_equ(int op, register SYMBOL *sp, const LISTV *lvp)
 {
-#define lvp_int         lvp->l_int
-#define lvp_float       lvp->l_float
-#define lvp_str         lvp->l_str
-#define lvp_list        lvp->l_list
-#define lvp_ref         lvp->l_ref
-
     LISTV nvalue = *lvp;                        /* local working copy, used during conversions */
-    OPCODE type = lvp->l_flags;
-    accint_t rvalue = 0;
+    OPCODE type = nvalue.l_flags;
     char buf[32];
 
-    lvp = &nvalue;                              /* re-associate to localised copy */
+#define lvp_int         nvalue.l_int
+#define lvp_float       nvalue.l_float
+#define lvp_str         nvalue.l_str
+#define lvp_list        nvalue.l_list
+#define lvp_ref         nvalue.l_ref
 
     if (F_LIST != sp->s_type && F_NULL == type && 0 == (sp->s_flags & SF_POLY)) {
         ewprintf("Missing assignment value.");
@@ -358,15 +402,13 @@ com_equ(int op, register SYMBOL *sp, const LISTV *lvp)
             case F_LIT:
                 break;
             case F_INT:
-                sprintf(buf, "%" ACCINT_FMT, lvp_int);
+                sprintf(buf, "%" ACCINT_FMT, lvp_int); // XXX: fast_itoa
                 nvalue.l_str = buf;
-                nvalue.l_flags = F_STR;
                 type = F_STR;
                 break;
             case F_FLOAT:
-                sprintf(buf, "%" ACCFLOAT_FMT, lvp_float);
+                sprintf(buf, "%" ACCFLOAT_FMT, lvp_float); // XXX: fast_dtoa
                 nvalue.l_str = buf;
-                nvalue.l_flags = F_STR;
                 type = F_STR;
                 break;
             default:
@@ -378,12 +420,11 @@ com_equ(int op, register SYMBOL *sp, const LISTV *lvp)
         if (F_NULL == type) {
             ;
 
-        } else if (sp->s_type == F_INT && type == F_FLOAT) {
+        } else if (sp->s_type == F_INT   && type == F_FLOAT) {
             /*
              *  Cast float value to an int
              */
-            rvalue = (accint_t) lvp_float;
-            nvalue.l_int = rvalue;
+            nvalue.l_int = (accint_t) lvp_float;
             type = F_INT;
 
         } else if (sp->s_type == F_FLOAT && type == F_INT) {
@@ -412,149 +453,181 @@ bad_asgn:   ewprintf("Mixed types in assignment: %s", sp->s_name);
 
 ok_check:
     if (F_INT == type) {
-        rvalue = lvp_int;
-    }
+        const accint_t rvalue = lvp_int;
+        accint_t lvalue = sp->s_int;
 
-    switch (op) {
-    case MOP_NOOP:          /* = */
-        switch (type) {
-        case F_INT:
-            sp->s_int = rvalue;
+        switch (op) {
+        case MOP_NOOP:          /* = */
+            lvalue =  rvalue;
             break;
-        case F_FLOAT:
-            sym_assign_float(sp, lvp_float);
-            acc_assign_float(lvp_float);
-            return 0;
-        case F_LIT:
-        case F_STR:
-            sym_assign_str(sp, lvp_str);
-            acc_assign_ref(sp->s_obj);
-            return 0;
-        case F_RSTR:
-            assert(sp->s_type == F_STR);
-            sym_assign_ref(sp, lvp_ref);
-            acc_assign_ref(lvp_ref);
-            return 0;
-        case F_RLIST:
-            assert(sp->s_type == F_LIST);
-            sym_assign_ref(sp, lvp_ref);
-            acc_assign_ref(lvp_ref);
-            return 0;
-        case F_LIST: {
-                ref_t *rp;
-
-                if (NULL != (rp = rlst_build(lvp_list, -1))) {
-                    sym_donate_ref(sp, rp);
-                    acc_assign_ref(rp);
-                }
+        case MOP_PLUS:          /* += */
+            lvalue += rvalue;
+            break;
+        case MOP_MINUS:         /* -= */
+            lvalue -= rvalue;
+            break;
+        case MOP_MULTIPLY:      /* *= */
+            lvalue *= rvalue;
+            break;
+        case MOP_DIVIDE:        /* /= */
+            if (0 == rvalue) {
+                ewprintf("Divide by zero.");
+                lvalue = 0;
+                break;
             }
-            return 0;
-        case F_NULL:
-            assert(sp->s_type == F_STR || sp->s_type == F_LIST || sp->s_type == F_NULL);
-            if (sp->s_obj) {
-                r_dec(sp->s_obj);
-                sp->s_obj = r_inc(x_halt_list);
+            lvalue /= rvalue;
+            break;
+        case MOP_MODULO:        /* %= */
+            if (0 == rvalue) {
+                ewprintf("Modula by zero.");
+                lvalue = rvalue;
+                break;
             }
-            acc_assign_null();
-            return 0;
-        default:
-            panic("com_equ: what do i do? (%d)", type);
+            lvalue %= rvalue;
+            break;
+        case MOP_BAND:          /* &= */
+            lvalue &= rvalue;
+            break;
+        case MOP_BOR:           /* |= */
+            lvalue |= rvalue;
+            break;
+        case MOP_BXOR:          /* ^= */
+            lvalue ^= rvalue;
+            break;
+        case MOP_LSHIFT:        /* <<= */
+            lvalue <<= rvalue;
+            break;
+        case MOP_RSHIFT:        /* >>= */
+            lvalue >>= rvalue;
+            break;
+        default:                /* unknown */
+            panic("com_equ: INT bad op (%d)", op);
+            lvalue = 0;
             break;
         }
-        break;
 
-    case MOP_PLUS:          /* += */
-        switch (type) {
-        case F_LIT:
-        case F_STR:
-            sp->s_obj = r_cat(sp->s_obj, lvp_str);
-            trace_sym(sp);
-            acc_assign_ref(sp->s_obj);
-            return 0;
-        case F_RSTR:
-            sp->s_obj = r_cat(sp->s_obj, (const char *)r_ptr(lvp_ref));
-            trace_sym(sp);
-            acc_assign_ref(sp->s_obj);
-            return 0;
-        case F_FLOAT:
-            sym_assign_float(sp, sp->s_float + lvp_float);
-            acc_assign_float(sp->s_float);
-            return 0;
-        case F_LIST:
-            return lst_append(sp, lvp);
-        default:
-            sp->s_int += rvalue;
+        assert(F_INT == sp->s_type);
+        sp->s_int = lvalue;
+        trace_sym(sp);
+        acc_assign_int(lvalue);
+        return 0;
+
+    } else if (F_FLOAT == type) {
+        const accfloat_t rvalue = lvp_float;
+        accfloat_t lvalue = sp->s_float;
+
+        switch (op) {
+        case MOP_NOOP:          /* = */
+            lvalue =  rvalue;
             break;
-        }
-        break;
-
-    case MOP_MINUS:         /* -= */
-        if (F_FLOAT == type) {
-            sym_assign_float(sp, sp->s_float - lvp_float);
-            acc_assign_float(sp->s_float);
-            return 0;
-        }
-        sp->s_int -= rvalue;
-        break;
-
-    case MOP_MULTIPLY:      /* *= */
-        if (F_FLOAT == type) {
-            sym_assign_float(sp, sp->s_float * lvp_float);
-            acc_assign_float(sp->s_float);
-            return 0;
-        }
-        sp->s_int *= rvalue;
-        break;
-
-    case MOP_DIVIDE:        /* /= */
-        if (F_FLOAT == type) {
+        case MOP_PLUS:          /* += */
+            lvalue += rvalue;
+            break;
+        case MOP_MINUS:         /* -= */
+            lvalue -= rvalue;
+            break;
+        case MOP_MULTIPLY:      /* *= */
+            lvalue *= rvalue;
+            break;
+        case MOP_DIVIDE:        /* /= */
             if (lvp_float != 0.0) {
-                sym_assign_float(sp, sp->s_float / lvp_float);
-                acc_assign_float(sp->s_float);
+                lvalue /= rvalue;
             }
-            return 0;
+            break;
+//      case MOP_MODULO:        /* %= */
+//      case MOP_BAND:          /* &= */
+//      case MOP_BOR:           /* |= */
+//      case MOP_BXOR:          /* ^= */
+//      case MOP_LSHIFT:        /* <<= */
+//      case MOP_RSHIFT:        /* >>= */
+        default:                /* unknown */
+            panic("com_equ: FLOAT bad op (%d)", op);
+            lvalue = 0;
+            break;
         }
-        if (0 == rvalue) {
-            ewprintf("Divide by zero.");
-            rvalue = 1;
+        sym_assign_float(sp, lvalue);
+        acc_assign_float(lvalue);
+        return 0;
+
+    } else {
+        /*
+         *  STR, LIST and NULL types
+         */
+        switch (op) {
+        case MOP_NOOP:          /* = */
+            switch (type) {
+            case F_LIT:
+            case F_STR:
+                sym_assign_str(sp, lvp_str);
+                acc_assign_ref(sp->s_obj);
+                break;
+            case F_RSTR:
+                assert(sp->s_type == F_STR);
+                sym_assign_ref(sp, lvp_ref);
+                acc_assign_ref(lvp_ref);
+                break;
+            case F_RLIST:
+                assert(sp->s_type == F_LIST);
+                sym_assign_ref(sp, lvp_ref);
+                acc_assign_ref(lvp_ref);
+                break;
+            case F_LIST: {
+                    ref_t *rp;
+                    if (NULL != (rp = rlst_build(lvp_list, -1))) {
+                        sym_donate_ref(sp, rp);
+                        acc_assign_ref(rp);
+                    }
+                }
+                break;
+            case F_NULL:
+                assert(sp->s_type == F_STR || sp->s_type == F_LIST || sp->s_type == F_NULL);
+                if (sp->s_obj) {
+                    r_dec(sp->s_obj);
+                    sp->s_obj = r_inc(x_halt_list);
+                }
+                acc_assign_null();
+                break;
+            default:
+                panic("com_equ: bad type (%d)", type);
+                break;
+            }
+            break;
+
+        case MOP_PLUS:          /* += */
+            switch (type) {
+            case F_LIT:
+            case F_STR:
+                sp->s_obj = r_cat(sp->s_obj, lvp_str);
+                trace_sym(sp);
+                acc_assign_ref(sp->s_obj);
+                break;
+            case F_RSTR:
+                sp->s_obj = r_cat(sp->s_obj, (const char *)r_ptr(lvp_ref));
+                trace_sym(sp);
+                acc_assign_ref(sp->s_obj);
+                break;
+            case F_LIST:
+                return lst_append(sp, lvp);
+            default:
+                panic("com_equ: bad += type (%d)", type);
+                break;
+            }
+            break;
+
+//      case MOP_MINUS:         /* -= */
+//      case MOP_MULTIPLY:      /* *= */
+//      case MOP_DIVIDE:        /* /= */
+//      case MOP_MODULO:        /* %= */
+//      case MOP_BAND:          /* &= */
+//      case MOP_BOR:           /* |= */
+//      case MOP_BXOR:          /* ^= */
+//      case MOP_LSHIFT:        /* <<= */
+//      case MOP_RSHIFT:        /* >>= */
+        default:                /* unknown */
+            panic("com_equ: bad op (%d)", op);
+            break;
         }
-        sp->s_int /= rvalue;
-        break;
-
-    case MOP_MODULO:        /* %= */
-        if (0 == rvalue) {
-            ewprintf("Modula by zero.");
-            rvalue = 1;
-        }
-        sp->s_int %= rvalue;
-        break;
-
-    case MOP_BAND:          /* &= */
-        sp->s_int &= rvalue;
-        break;
-
-    case MOP_BOR:           /* |= */
-        sp->s_int |= rvalue;
-        break;
-
-    case MOP_BXOR:          /* ^= */
-        sp->s_int ^= rvalue;
-        break;
-
-    case MOP_LSHIFT:        /* <<= */
-        sp->s_int <<= rvalue;
-        break;
-
-    case MOP_RSHIFT:        /* >>= */
-        sp->s_int >>= rvalue;
-        break;
-
-    default:                /* unknown */
-        panic("com_equ: bad op (%d)", op);
-        break;
     }
-    acc_assign_int(sp->s_int);
-    trace_sym(sp);
     return 0;
 
 #undef  lvp_int
@@ -1231,6 +1304,11 @@ lst_append(SYMBOL *sp, const LISTV *lvp)
  *  Returns:
  *      nothing
  */
+
+#pragma warning(push)
+#pragma warning(disable : 4701) // potentially uninitialized local variable 'xxx' used
+#pragma warning(disable : 4703) // potentially uninitialized local pointer variable 'xxx' used
+
 void
 do_com_op(int op)
 {
@@ -1242,48 +1320,126 @@ do_com_op(int op)
 #define arg_int2        margv[2].l_int
 #define arg_float2      margv[2].l_float
 
-    enum {B_INTEGER, B_FLOAT, B_STRING, B_LIST, B_NONE} type = B_NONE;
-    accint_t int1 = 0, int2 = 0;
-    accfloat_t float1 = 0, float2 = 0;
-    const char *str1 = NULL, *str2 = NULL;
-    const LIST *lp = NULL;
-    const LISTV *lvp = NULL;
-    int str1len = 0, str2len = 0;
-    int llen = 0;
-    accint_t val = 0;
+    register accint_t val = 0;
+    accfloat_t float1, float2;
+    int str1len, str2len;
+    const char *str1, *str2;
+    const LIST *lp;
+    const LISTV *lvp;
+    int llen;
     char buf[64];
 
     /*
      *  Basic type co-oercion
      */
     if (MOP_BNOT == op) {                       /* Bitwise NOT (complement) is special */
-        if (F_INT == arg_flags1) {
-            int1 = arg_int1;
-        } else if (F_FLOAT == arg_flags1) {
-            int1 = (accint_t) arg_float1;
-    // experimental
-    //  } else if (F_LIT == arg_flags1 || F_STR == arg_flags1 || F_RSTR == arg_flags1) {
-    //      int1 = (accint_t) get_strlen(1);    /* 3.3.0 */
-        } else {
+        switch (arg_flags1) {
+        case F_INT:     /* int */ 
+            val = arg_int1;
+            break;
+        case F_FLOAT:   /* float */
+            val = (accint_t) arg_float1;
+            break;
+        default:
             goto com_op_mixed;
         }
-        acc_assign_int(~int1);
+        acc_assign_int(~val);
         return;
     }
 
     switch (arg_flags1) {
-    case F_INT:
+    case F_INT:         /* int ... */
         switch (arg_flags2) {
         case F_INT:         /* int, int */
-            int1 = arg_int1;
-            int2 = arg_int2;
-            type = B_INTEGER;                   /* integer */
+            switch (op) {
+            case MOP_PLUS:                      /* (+)  addition */
+                val = arg_int1 + arg_int2;
+                break;
+            case MOP_MINUS:                     /* (-)  subtraction */
+                val = (arg_int1 - arg_int2);
+                break;
+            case MOP_MULTIPLY:                  /* (*)  multiplication */
+                val = (arg_int1 * arg_int2);
+                break;
+            case MOP_DIVIDE:                    /* (/)  division */
+                if (0 == arg_int2) {
+                    ewprintf("Divide by zero.");
+                } else {
+                    val = arg_int1 / arg_int2;
+                }
+                break;
+            case MOP_MODULO:                    /* (%)  modulus */
+                if (0 == arg_int2) {
+                    ewprintf("Modula by zero.");
+                } else {
+                    val = (arg_int1 % arg_int2);
+                }
+                break;
+            case MOP_EQ:                        /* (==) equals */
+                val = (arg_int1 == arg_int2);
+                break;
+            case MOP_NE:                        /* (!=) not-equals */
+                val = (arg_int1 != arg_int2);
+                break;
+            case MOP_LT:                        /* (<)  less-than */
+                val = (arg_int1 < arg_int2);
+                break;
+            case MOP_LE:                        /* (<=) less than or equal */
+                val = (arg_int1 <= arg_int2);
+                break;
+            case MOP_GT:                        /* (>)  greater than */
+                val = (arg_int1 > arg_int2);
+                break;
+            case MOP_GE:                        /* (>=) greater than or equal */
+                val = (arg_int1 >= arg_int2);
+                break;
+            case MOP_ABOVE:                     /* above(a.b) */
+                val = (arg_int1 > arg_int2);
+                break;
+            case MOP_ABOVE_EQ:                  /* above_eq(a,b) */
+                val = (arg_int1 >= arg_int2);
+                break;
+            case MOP_BELOW:                     /* below(a,b) */
+                val = (arg_int1 < arg_int2);
+                break;
+            case MOP_BELOW_EQ:      /* below_eq(a,b) */
+                val = (arg_int1 <= arg_int2);
+                break;
+            case MOP_BAND:                      /* (&)  bit-wise and */
+                val = (arg_int1 & arg_int2);
+                break;
+            case MOP_BOR:                       /* (|)  bit-wise or */
+                val = (arg_int1 | arg_int2);
+                break;
+            case MOP_BXOR:                      /* (^)  bit-wise xor */
+                val = (arg_int1 ^ arg_int2);
+                break;
+            case MOP_LSHIFT:                    /* (<<) left shift */
+                val = (arg_int1 << arg_int2);
+                break;
+            case MOP_RSHIFT:                    /* (>>) right shift */
+                val = (arg_int1 >> arg_int2);
+                break;
+            case MOP_CMP:                       /* (<=>) comparison operator, returns -1, 0 or 1 */
+                if (arg_int1 == arg_int2) {
+                    val = 0;
+                } else if (arg_int1 < arg_int2) {
+                    val = -1;
+                } else {
+                    val = 1;
+                }
+                break;
+            default:                            /* illegal */
+                panic("com_op: INT bad op (%d)", op);
+                break;
+            }
             break;
+
         case F_FLOAT:       /* int, float */
             float1 = (accfloat_t) arg_int1;
             float2 = arg_float2;
-            type = B_FLOAT;                     /* convert to float */
-            break;
+            goto xfloat;
+
         case F_LIT:         /* int, str */
         case F_STR:
         case F_RSTR:
@@ -1294,32 +1450,97 @@ do_com_op(int op)
                 return;
             }
             str1 = buf;
-            str1len = sprintf(buf, "%" ACCINT_FMT, arg_int1);
-            type = B_STRING;                    /* convert string */
-            break;
+            str1len = sprintf(buf, "%" ACCINT_FMT, arg_int1); // XXX: fast_itoa
+            goto xstring;
+
         case F_RLIST:       /* int, list */
         case F_LIST:
             lp = get_list(2);
             llen = get_listlen(2);
             lvp = margv + 1;
-            type = B_LIST;                      /* list + type */
-            break;
-        default:
-            goto com_op_mixed;
+            goto xlist;
         }
         break;
 
-    case F_FLOAT:
+    case F_FLOAT:       /* float .... */
         switch (arg_flags2) {
         case F_INT:         /* float, int */
             float1 = arg_float1;
             float2 = (accfloat_t) arg_int2;
-            type = B_FLOAT;
-            break;
+            goto xfloat;
+
         case F_FLOAT:       /* float, float */
             float1 = arg_float1;
             float2 = arg_float2;
-            type = B_FLOAT;
+
+xfloat:     switch (op) {
+            case MOP_PLUS:                      /* (+)  addition */
+                acc_assign_float(float1 + float2);
+                return;
+            case MOP_MINUS:                     /* (-)  subtraction */
+                acc_assign_float(float1 - float2);
+                return;
+            case MOP_MULTIPLY:                  /* (*)  multiplication */
+                acc_assign_float(float1 * float2);
+                return;
+            case MOP_DIVIDE:                    /* (/)  division */
+                if (0 == float2) {
+                    ewprintf("Divide by zero.");
+                    acc_assign_float(0);
+                } else {
+                    acc_assign_float(float1 / float2);
+                }
+                return;
+            case MOP_MODULO:                    /* (%)  modulus */
+                goto com_op_mixed;
+            case MOP_EQ:                        /* (==) equals */
+                val = (float1 == float2);
+                break;
+            case MOP_NE:                        /* (!=) not-equals */
+                val = (float1 != float2);
+            case MOP_LT:                        /* (<)  less-than */
+                val = (float1 < float2);
+                break;
+            case MOP_LE:                        /* (<=) less than or equal */
+                val = (float1 <= float2);
+                break;
+            case MOP_GT:                        /* (>)  greater than */
+                val = (float1 > float2);
+                break;
+            case MOP_GE:                        /* (>=) greater than or equal */
+                val = (float1 >= float2);
+                break;
+            case MOP_ABOVE:                     /* above(a.b) */
+                val = (float1 > float2);
+                break;
+            case MOP_ABOVE_EQ:                  /* above_eq(a,b) */
+                val = (float1 >= float2);
+                break;
+            case MOP_BELOW:                     /* below(a,b) */
+                val = (float1 < float2);
+                break;
+            case MOP_BELOW_EQ:                  /* below_eq(a,b) */
+                val = (float1 <= float2);
+                break;
+            case MOP_BAND:                      /* (&)  bit-wise and */
+            case MOP_BOR:                       /* (|)  bit-wise or */
+            case MOP_BXOR:                      /* (^)  bit-wise xor */
+            case MOP_LSHIFT:                    /* (<<) left shift */
+            case MOP_RSHIFT:                    /* (>>) right shift */
+                goto com_op_mixed;
+            case MOP_CMP:                       /* (<=>) comparison operator, returns -1, 0 or 1 */
+                if (float1 == float2) {
+                    val = 0;
+                } else if (float1 < float2) {
+                    val = -1;
+                } else {
+                    val = 1;
+                }
+                break;
+            default:                            /* illegal */
+                panic("com_op: bad op (%d)", op);
+                break;
+            }
             break;
         case F_LIT:         /* float, str */
         case F_STR:
@@ -1331,32 +1552,62 @@ do_com_op(int op)
                 return;
             }
             str1 = buf;
-            str1len = sprintf(buf, "%" ACCFLOAT_FMT, arg_float1);
-            type = B_STRING;
-            break;
+            str1len = sprintf(buf, "%" ACCFLOAT_FMT, arg_float1); // XXX: fast_ftoa
+            goto xstring;
         case F_RLIST:       /* float, list */
         case F_LIST:
             lp = get_list(2);
             llen = get_listlen(2);
             lvp = margv + 1;
-            type = B_LIST;                      /* list + float */
-            break;
+            goto xlist;
         default:
             goto com_op_mixed;
         }
         break;
 
-    case F_RLIST:
+    case F_RLIST:       /* list ... */
     case F_LIST:
-        if (MOP_PLUS != op) /* list, int|float|string|list */
-            goto com_op_mixed;
         lp = get_list(1);
         llen = get_listlen(1);
         lvp = margv + 2;
-        type = B_LIST;
+
+xlist:  switch (op) {
+        case MOP_PLUS: {                 /* (+)  addition */
+                LIST *nlp;
+                int newlen;
+
+                nlp = lst_join(lp, llen, lvp, &newlen);
+                acc_donate_list(nlp, newlen);
+            }
+            return;
+        case MOP_MINUS:                     /* (-)  subtraction */
+        case MOP_MULTIPLY:                  /* (*)  multiplication */
+        case MOP_DIVIDE:                    /* (/)  division */
+        case MOP_MODULO:                    /* (%)  modulus */
+        case MOP_EQ:                        /* (==) equals */
+        case MOP_NE:                        /* (!=) not-equals */
+        case MOP_LT:                        /* (<)  less-than */
+        case MOP_LE:                        /* (<=) less than or equal */
+        case MOP_GT:                        /* (>)  greater than */
+        case MOP_GE:                        /* (>=) greater than or equal */
+        case MOP_ABOVE:                     /* above(a.b) */
+        case MOP_ABOVE_EQ:                  /* above_eq(a,b) */
+        case MOP_BELOW:                     /* below(a,b) */
+        case MOP_BELOW_EQ:                  /* below_eq(a,b) */
+        case MOP_BAND:                      /* (&)  bit-wise and */
+        case MOP_BOR:                       /* (|)  bit-wise or */
+        case MOP_BXOR:                      /* (^)  bit-wise xor */
+        case MOP_LSHIFT:                    /* (<<) left shift */
+        case MOP_RSHIFT:                    /* (>>) right shift */
+        case MOP_CMP:                       /* (<=>) comparison operator, returns -1, 0 or 1 */
+            goto com_op_mixed;
+        default:
+            panic("com_op: LIST bad op (%d)", op);
+            break;
+        }
         break;
 
-    case F_LIT:
+    case F_LIT:         /* str ... */
     case F_STR:
     case F_RSTR:
         switch (arg_flags2) {
@@ -1368,9 +1619,8 @@ do_com_op(int op)
                 return;
             }
             str2 = buf;
-            str2len = sprintf(buf, "%" ACCINT_FMT, arg_int2);
-            type = B_STRING;
-            break;
+            str2len = sprintf(buf, "%" ACCINT_FMT, arg_int2); // XXX: fast_itoa
+            goto xstring;
         case F_FLOAT:       /* str, float */
             str1 = get_str(1);
             str1len = get_strlen(1);
@@ -1379,29 +1629,78 @@ do_com_op(int op)
                 return;
             }
             str2 = buf;
-            str2len = sprintf(buf, "%" ACCFLOAT_FMT, arg_float2);
-            type = B_STRING;
-            break;
+            str2len = sprintf(buf, "%" ACCFLOAT_FMT, arg_float2); // XXX: fast_ftoa
+            goto xstring;
         case F_LIT:         /* str, str */
         case F_STR:
         case F_RSTR:
-            if (MOP_MULTIPLY == op) {
-                ewprintf("*: attempt to multiply two strings.");
-                return;
-            }
             str1 = get_str(1);
             str1len = get_strlen(1);
             str2 = get_str(2);
             str2len = get_strlen(2);
-            type = B_STRING;
+
+xstring:    switch (op) {
+            case MOP_PLUS:                      /* (+)  addition */
+                acc_assign_str2(str1, str1len, str2, str2len);
+                return;
+            case MOP_MINUS:                     /* (-)  subtraction */
+            case MOP_MULTIPLY:                  /* (*)  multiplication */
+                ewprintf("*: attempt to multiply two strings.");
+                acc_assign_int(0);
+                return;
+            case MOP_DIVIDE:                    /* (/)  division */
+            case MOP_MODULO:                    /* (%)  modulus */
+                goto com_op_mixed;
+            case MOP_EQ:                        /* (==) equals */
+                val = (strcmp(str1, str2) == 0);
+                break;
+            case MOP_NE:                        /* (!=) not-equals */
+                val = (strcmp(str1, str2) != 0);
+                break;
+            case MOP_LT:                        /* (<)  less-than */
+                val = strcmp(str1, str2) < 0;
+                break;
+            case MOP_LE:                        /* (<=) less than or equal */
+                val = (strcmp(str1, str2) <= 0);
+                break;
+            case MOP_GT:                        /* (>)  greater than */
+                val = (strcmp(str1, str2) > 0);
+                break;
+            case MOP_GE:                        /* (>=) greater than or equal */
+                val = (strcmp(str1, str2) >= 0);
+                break;
+            case MOP_ABOVE:                     /* above(a.b) */
+                val = (strcmp(str1, str2) > 0);
+                break;
+            case MOP_ABOVE_EQ:                  /* above_eq(a,b) */
+                val = (strcmp(str1, str2) >= 0);
+                break;
+            case MOP_BELOW:                     /* below(a,b) */
+                val = (strcmp(str1, str2) < 0);
+                break;
+            case MOP_BELOW_EQ:                  /* below_eq(a,b) */
+                val = (strcmp(str1, str2) <= 0);
+                break;
+            case MOP_BAND:                      /* (&)  bit-wise and */
+            case MOP_BOR:                       /* (|)  bit-wise or */
+            case MOP_BXOR:                      /* (^)  bit-wise xor */
+            case MOP_LSHIFT:                    /* (<<) left shift */
+            case MOP_RSHIFT:                    /* (>>) right shift */
+                goto com_op_mixed;
+            case MOP_CMP:                       /* (<=>) comparison operator, returns -1, 0 or 1 */
+                val = strcmp(str1, str2);
+                break;
+            default:                            /* illegal */
+                panic("com_op: STRING bad op (%d)", op);
+                break;
+            }
             break;
         case F_RLIST:       /* str, list */
         case F_LIST:
             lp = get_list(2);
             llen = get_listlen(2);
             lvp = margv + 1;
-            type = B_LIST;
-            break;
+            goto xlist;
         default:
             goto com_op_mixed;
         }
@@ -1410,344 +1709,11 @@ do_com_op(int op)
     default:
         goto com_op_mixed;
     }
-
-    /*
-     *  Execute operation
-     */
-    switch (op) {
-    case MOP_PLUS:          /* (+)  addition */
-        switch (type) {
-        case B_INTEGER:
-            val = int1 + int2;
-            break;
-        case B_FLOAT:
-            acc_assign_float(float1 + float2);
-            return;
-        case B_LIST: {
-                LIST *nlp;
-                int newlen;
-
-                nlp = lst_join(lp, llen, lvp, &newlen);
-                acc_donate_list(nlp, newlen);
-            }
-            return;
-        case B_STRING:
-            acc_assign_str2(str1, str1len, str2, str2len);
-            return;
-        default:
-            goto com_op_mixed;
-        }
-        break;
-
-    case MOP_MINUS:         /* (-)  subtraction */
-        switch (type) {
-        case B_INTEGER:
-            val = (int1 - int2);
-            break;
-        case B_FLOAT:
-            acc_assign_float(float1 - float2);
-            return;
-        default:
-            goto com_op_mixed;
-        }
-        break;
-
-    case MOP_MULTIPLY:      /* (*)  multiplication */
-        switch (type) {
-        case B_INTEGER:
-            val = (int1 * int2);
-            break;
-        case B_FLOAT:
-            acc_assign_float(float1 * float2);
-            return;
-        default:
-            goto com_op_mixed;
-        }
-        break;
-
-    case MOP_DIVIDE:        /* (/)  division */
-        switch (type) {
-        case B_INTEGER:
-            if (0 == int2) {
-                ewprintf("Divide by zero.");
-            } else {
-                val = int1 / int2;
-            }
-            break;
-        case B_FLOAT:
-            if (0 == float2) {
-                ewprintf("Divide by zero.");
-                acc_assign_float(0);
-            } else {
-                acc_assign_float(float1 / float2);
-            }
-            return;
-        default:
-            goto com_op_mixed;
-        }
-        break;
-
-    case MOP_MODULO:        /* (%)  modulus */
-        switch (type) {
-        case B_INTEGER:
-            if (0 == int2) {
-                ewprintf("Modula by zero.");
-            } else {
-                val = (int1 % int2);
-            }
-            break;
-        default:
-            goto com_op_mixed;
-        }
-        break;
-
-    case MOP_EQ:            /* (==) equals */
-        switch (type) {
-        case B_INTEGER:
-            val = (int1 == int2);
-            break;
-        case B_FLOAT:
-            val = (float1 == float2);
-            break;
-        case B_STRING:
-            val = (strcmp(str1, str2) == 0);
-            break;
-        default:
-            goto com_op_mixed;
-        }
-        break;
-
-    case MOP_NE:            /* (!=) not-equals */
-        switch (type) {
-        case B_INTEGER:
-            val = (int1 != int2);
-            break;
-        case B_FLOAT:
-            val = (float1 != float2);
-            break;
-        case B_STRING:
-            val = (strcmp(str1, str2) != 0);
-            break;
-        default:
-            goto com_op_mixed;
-        }
-        break;
-
-    case MOP_LT:            /* (<)  less-than */
-        switch (type) {
-        case B_INTEGER:
-            val = (int1 < int2);
-            break;
-        case B_FLOAT:
-            val = (float1 < float2);
-            break;
-        case B_STRING:
-            val = strcmp(str1, str2) < 0;
-            break;
-        default:
-            goto com_op_mixed;
-        }
-        break;
-
-    case MOP_LE:            /* (<=) less than or equal */
-        switch (type) {
-        case B_INTEGER:
-            val = (int1 <= int2);
-            break;
-        case B_FLOAT:
-            val = (float1 <= float2);
-            break;
-        case B_STRING:
-            val = (strcmp(str1, str2) <= 0);
-            break;
-        default:
-            goto com_op_mixed;
-        }
-        break;
-
-    case MOP_GT:            /* (>)  greater than */
-        switch (type) {
-        case B_INTEGER:
-            val = (int1 > int2);
-            break;
-        case B_FLOAT:
-            val = (float1 > float2);
-            break;
-        case B_STRING:
-            val = (strcmp(str1, str2) > 0);
-            break;
-        default:
-            goto com_op_mixed;
-        }
-        break;
-
-    case MOP_GE:
-        switch (type) {     /* (>=) greater than or equal */
-        case B_INTEGER:
-            val = (int1 >= int2);
-            break;
-        case B_FLOAT:
-            val = (float1 >= float2);
-            break;
-        case B_STRING:
-            val = (strcmp(str1, str2) >= 0);
-            break;
-        default:
-            goto com_op_mixed;
-        }
-        break;
-
-    case MOP_ABOVE:         /* above(a.b) */
-        switch (type) {
-        case B_INTEGER:
-            val = (int1 > int2);
-            break;
-        case B_FLOAT:
-            val = (float1 > float2);
-            break;
-        case B_STRING:
-            val = (strcmp(str1, str2) > 0);
-            break;
-        default:
-            goto com_op_mixed;
-        }
-        break;
-
-    case MOP_ABOVE_EQ:      /* above_eq(a,b) */
-        switch (type) {
-        case B_INTEGER:
-            val = (int1 >= int2);
-            break;
-        case B_FLOAT:
-            val = (float1 >= float2);
-            break;
-        case B_STRING:
-            val = (strcmp(str1, str2) >= 0);
-            break;
-        default:
-            goto com_op_mixed;
-        }
-        break;
-
-    case MOP_BELOW:         /* below(a,b) */
-        switch (type) {
-        case B_INTEGER:
-            val = (int1 < int2);
-            break;
-        case B_FLOAT:
-            val = (float1 < float2);
-            break;
-        case B_STRING:
-            val = (strcmp(str1, str2) < 0);
-            break;
-        default:
-            goto com_op_mixed;
-        }
-        break;
-
-    case MOP_BELOW_EQ:      /* below_eq(a,b) */
-        switch (type) {
-        case B_INTEGER:
-            val = (int1 <= int2);
-            break;
-        case B_FLOAT:
-            val = (float1 <= float2);
-            break;
-        case B_STRING:
-            val = (strcmp(str1, str2) <= 0);
-            break;
-        default:
-            goto com_op_mixed;
-        }
-        break;
-
-    case MOP_BAND:          /* (&)  bit-wise and */
-        switch (type) {
-        case B_INTEGER:
-            val = (int1 & int2);
-            break;
-        default:
-            goto com_op_mixed;
-        }
-        break;
-
-    case MOP_BOR:           /* (|)  bit-wise or */
-        switch (type) {
-        case B_INTEGER:
-            val = (int1 | int2);
-            break;
-        default:
-            goto com_op_mixed;
-        }
-        break;
-
-    case MOP_BXOR:          /* (^)  bit-wise xor */
-        switch (type) {
-        case B_INTEGER:
-            val = (int1 ^ int2);
-            break;
-        default:
-            goto com_op_mixed;
-        }
-        break;
-
-    case MOP_LSHIFT:        /* (<<) left shift */
-        switch (type) {
-        case B_INTEGER:
-            val = (int1 << int2);
-            break;
-        default:
-            goto com_op_mixed;
-        }
-        break;
-
-    case MOP_RSHIFT:        /* (>>) right shift */
-        switch (type) {
-        case B_INTEGER:
-            val = (int1 >> int2);
-            break;
-        default:
-            goto com_op_mixed;
-        }
-        break;
-
-    case MOP_CMP:           /* (<=>) comparison operator, returns -1, 0 or 1 */
-        switch (type) {
-        case B_INTEGER:
-            if (int1 == int2) {
-                val = 0;
-            } else if (int1 < int2) {
-                val = -1;
-            } else {
-                val = 1;
-            }
-            break;
-        case B_FLOAT:
-            if (float1 == float2) {
-                val = 0;
-            } else if (float1 < float2) {
-                val = -1;
-            } else {
-                val = 1;
-            }
-            break;
-        case B_STRING:
-            val = strcmp(str1, str2);
-            break;
-        default:
-            goto com_op_mixed;
-        }
-        break;
-
-    default:
-        panic("com_op: bad op (%d)", op);
-        break;
-    }
     acc_assign_int(val);
     return;
 
 com_op_mixed:
-    ewprintf("%s: invalid parameters.", x_command_name);
+    ewprintf("%s: invalid parameters.", execute_name());
     acc_assign_int(0);
 
 #undef  arg_flags1
@@ -1756,6 +1722,8 @@ com_op_mixed:
 #undef  arg_flags2
 #undef  arg_int2
 #undef  arg_float2
+
+#pragma warning(pop)
 }
 
 

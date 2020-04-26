@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bookmark_c,"$Id: bookmark.c,v 1.32 2015/02/11 23:25:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_bookmark_c,"$Id: bookmark.c,v 1.33 2020/04/21 00:01:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: bookmark.c,v 1.32 2015/02/11 23:25:12 cvsuser Exp $
+/* $Id: bookmark.c,v 1.33 2020/04/21 00:01:54 cvsuser Exp $
  * Bookmark implementation.
  *
  *
@@ -44,7 +44,7 @@ typedef struct _bookmark {
     TAILQ_ENTRY(_bookmark)
                         b_node;                 /* List node */
     accint_t            b_ident;                /* Bookmark number */
- // accini_t		b_local;                /* Vim style buffer localised identifier (TODO) */
+ // accini_t            b_local;                /* Vim style buffer localised identifier (TODO) */
     IDENTIFIER_t        b_buffer;               /* Buffer identifier */
     LINENO              b_line;                 /* Line */
     LINENO              b_col;                  /* Column */
@@ -546,5 +546,5 @@ bookmark_find(accint_t bookid, int create)
     }
     return bk;
 }
-/*end*/
 
+/*end*/

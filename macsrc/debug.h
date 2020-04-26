@@ -1,7 +1,7 @@
 #ifndef MACSRC_DEBUG_H_INCLUDED
 #define MACSRC_DEBUG_H_INCLUDED
 /* -*- mode: cr; indent-width: 4; -*- */
-/*  
+/*
  *  An auto-generated file, do not modify
  */
 
@@ -19,6 +19,9 @@
 
 #define DBG_INQ_MVARS           6           /* Return list of moduler variable values. */
 #define DBG_INQ_MVAR_INFO       7           /* Return info about an actual variable. */
+
+#define DBG_INQ_OPCODES         8           /* OPCODE descriptions */
+
 
 /*
  *  Debug flags

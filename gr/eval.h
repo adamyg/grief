@@ -1,11 +1,11 @@
 #ifndef GR_EVAL_H_INCLUDED
 #define GR_EVAL_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_eval_h,"$Id: eval.h,v 1.19 2014/10/22 02:32:57 ayoung Exp $")
+__CIDENT_RCSID(gr_eval_h,"$Id: eval.h,v 1.20 2020/04/21 00:01:55 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: eval.h,v 1.19 2014/10/22 02:32:57 ayoung Exp $
+/* $Id: eval.h,v 1.20 2020/04/21 00:01:55 cvsuser Exp $
  * Expression evaluation.
  *
  *
@@ -26,6 +26,7 @@ __CPRAGMA_ONCE
 __CBEGIN_DECLS
 
 extern int                  eval(const LIST *lp, LISTV *lpv);
+extern int                  eval2(register const LIST *lp);
 
 extern int                  listv_null(const LISTV *lp);
 extern int                  listv_int(const LISTV *lp, accint_t *val);

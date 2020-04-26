@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_ruler_c,"$Id: m_ruler.c,v 1.15 2014/10/22 02:33:08 ayoung Exp $")
+__CIDENT_RCSID(gr_m_ruler_c,"$Id: m_ruler.c,v 1.16 2020/04/11 00:32:55 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_ruler.c,v 1.15 2014/10/22 02:33:08 ayoung Exp $
+/* $Id: m_ruler.c,v 1.16 2020/04/11 00:32:55 cvsuser Exp $
  * Ruler primitives.
  *
  *
@@ -1145,7 +1145,7 @@ ruler_export(const LINENO *ruler, int maxtabs, int mincnt, int aslist)
         int len;
                                                 /* allocate list storage */
         len = (cnt * sizeof_atoms[F_INT]) + sizeof_atoms[F_HALT];
-        if (ruler || cnt <= 0 ||
+        if (!ruler || cnt <= 0 ||
                 NULL == (lp = newlp = lst_alloc(len, cnt))) {
             acc_assign_null();
             return;

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_file_c,"$Id: m_file.c,v 1.38 2015/02/17 23:26:17 ayoung Exp $")
+__CIDENT_RCSID(gr_m_file_c,"$Id: m_file.c,v 1.40 2020/04/21 00:01:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_file.c,v 1.38 2015/02/17 23:26:17 ayoung Exp $
+/* $Id: m_file.c,v 1.40 2020/04/21 00:01:56 cvsuser Exp $
  * File primitives.
  *
  *
@@ -128,7 +128,7 @@ do_compare_files(void)          /* ([int flags = 0], string filea, string fileb)
             ret = -2;
 
         } else {
-            char b1[IOBUF_SIZ], b2[IOBUF_SIZ];
+            char b1[IOBUF_SIZ], b2[IOBUF_SIZ];  /* FIXME: dynamic */
             int i, j;
 
             for (;;) {
@@ -1005,7 +1005,7 @@ do_cd(void)                     /* int ([string dir]) */
         }
     }
 
-    if (*cp) {                                  /* change directory */
+    if (cp && *cp) {                            /* change directory */
         ret = file_chdir(cp);
     } else {
         errno = EINVAL;
@@ -2398,6 +2398,10 @@ void
 do_stat(void)                   /* ([string path], [int size], [int mtime], [int ctime], [int atime],
                                         [int mode], [int uid], [string uid2name], [int gid], [string gid2name], [int nlink] */
 {
+#if defined(_MSC_VER)
+#define ST_UID_TYPE         short
+#define ST_GID_TYPE         short
+#endif
     const char *path = get_xstr(1);
     struct stat sb = {0};
 
@@ -2411,8 +2415,16 @@ do_stat(void)                   /* ([string path], [int size], [int mtime], [int
                 sb.st_ctime = curbp->b_ctime;
                 sb.st_atime = 0;
                 sb.st_mode  = curbp->b_mode;
+#if defined(ST_UID_TYPE)
+                sb.st_uid   = (ST_UID_TYPE)curbp->b_uid;
+#else
                 sb.st_uid   = curbp->b_uid;
-                sb.st_gid   = curbp->b_gid;
+#endif
+#if defined(ST_GID_TYPE)
+                sb.st_gid   = (ST_GID_TYPE)curbp->b_gid;
+#else
+                sb.st_gid = curbp->b_gid;
+#endif
                 ret = 0;
             }
         }
@@ -2768,7 +2780,7 @@ do_readlink(void)               /* string (string path, [string &link]) */
 
 //TODO
 //  path = file_tilder(path, t_path, sizeof(t_path));
-//  if (vfs_readlink(name, link, sizeof(link)-1) == -1) {
+//  if (vfs_readlink(name, link, sizeof(link)-1) == -1)
 #if defined(unix) || defined(__APPLE__)
     if ((ret = readlink(name, linkpath, sizeof(linkpath)-1)) <= -1) {
 #else

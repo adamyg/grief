@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crgen_c,"$Id: crgen.c,v 1.32 2014/10/22 02:33:28 ayoung Exp $")
+__CIDENT_RCSID(gr_crgen_c,"$Id: crgen.c,v 1.37 2020/04/23 12:35:50 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crgen.c,v 1.32 2014/10/22 02:33:28 ayoung Exp $
+/* $Id: crgen.c,v 1.37 2020/04/23 12:35:50 cvsuser Exp $
  * generic code generator routines.
  *
  *
@@ -19,6 +19,22 @@ __CIDENT_RCSID(gr_crgen_c,"$Id: crgen.c,v 1.32 2014/10/22 02:33:28 ayoung Exp $"
  */
 
 #include "grunch.h"                             /* local definitions */
+
+#include <math.h>       /* NAN */
+
+#if !defined(NAN) && defined(_MSC_VER)
+#include "msvcversions.h"
+
+#if (_MSC_VER <= _MSC_VER_2010)
+#pragma warning(disable:4756)	// overflow in constant arithmetic
+#ifndef _HUGE_ENUF
+#define _HUGE_ENUF 1e+300	// _HUGE_ENUF*_HUGE_ENUF must overflow
+#endif
+#define INFINITY ((float)(_HUGE_ENUF * _HUGE_ENUF))
+#define NAN ((float)(INFINITY * 0.0F))
+
+#endif //_MSC_VER
+#endif //!NAN
 
 static int              globals_compile(int);
 static void             globals_cleanup(void);
@@ -39,17 +55,16 @@ static void             funct_check(void);
 static void             funct_print(void);
 static void             funct_pop(void);
 
-int                     x_generate_ascii = TRUE;
-
 static int              x_initialisor_level = 0;
 static int              x_globals = 0;
 
-static const gen_t      gen_ascii =
+static const gen_t      t_gen_ascii =
     {
         gena_macro,
         gena_list,
         gena_id,
-        gena_lit,
+        gena_sym,
+        gena_reg,
         gena_end_list,
         gena_int,
         gena_string,
@@ -59,12 +74,13 @@ static const gen_t      gen_ascii =
         gena_null
     };
 
-static const gen_t      gen_binary =
+static const gen_t      t_gen_binary =
     {
         genb_macro,
         genb_list,
         genb_id,
-        genb_lit,
+        genb_sym,
+        genb_reg,
         genb_end_list,
         genb_int,
         genb_string,
@@ -75,28 +91,65 @@ static const gen_t      gen_binary =
     };
 
 
-#define gen_macro()     x_generate_ascii ? \
-                            (*gen_ascii.g_macro)() :    (*gen_binary.g_macro)()
-#define gen_list()      x_generate_ascii ? \
-                            (*gen_ascii.g_list)() :     (*gen_binary.g_list)()
-#define gen_id(id)      x_generate_ascii ? \
-                            (*gen_ascii.g_id)(id) :     (*gen_binary.g_id)(id)
-#define gen_lit(l)      x_generate_ascii ? \
-                            (*gen_ascii.g_lit)(l) :     (*gen_binary.g_lit)(l)
-#define gen_end_list()  x_generate_ascii ? \
-                            (*gen_ascii.g_end_list)() : (*gen_binary.g_end_list)()
-#define gen_int(n)      x_generate_ascii ? \
-                            (*gen_ascii.g_int)(n) :     (*gen_binary.g_int)(n)
-#define gen_string(s)   x_generate_ascii ? \
-                            (*gen_ascii.g_string)(s) :  (*gen_binary.g_string)(s)
-#define gen_float(f)    x_generate_ascii ? \
-                            (*gen_ascii.g_float)(f) :   (*gen_binary.g_float)(f)
-#define gen_token(t)    x_generate_ascii ? \
-                            (*gen_ascii.g_token)(t) :   (*gen_binary.g_token)(t)
-#define gen_finish()    x_generate_ascii ? \
-                            (*gen_ascii.g_finish)() :   (*gen_binary.g_finish)()
-#define gen_null()      x_generate_ascii ? \
-                            (*gen_ascii.g_null)() :     (*gen_binary.g_null)()
+static void gen_macro() {                       /* macro */
+    if (x_afp) (*t_gen_ascii.g_macro)();
+    if (x_bfp) (*t_gen_binary.g_macro)();
+}
+
+static void gen_list() {                        /* list open */
+    if (x_afp) (*t_gen_ascii.g_list)();
+    if (x_bfp) (*t_gen_binary.g_list)();
+}
+
+static void gen_id(const char *id) {            /* identifier */
+    if (x_afp) (*t_gen_ascii.g_id)(id);
+    if (x_bfp) (*t_gen_binary.g_id)(id);
+}
+
+static void gen_sym(const char *s) {            /* symbol */
+    if (x_afp) (*t_gen_ascii.g_sym)(s);
+    if (x_bfp) (*t_gen_binary.g_sym)(s);
+}
+
+static void gen_reg(const char *s, int n) {     /* register */
+    if (x_afp) (*t_gen_ascii.g_reg)(s, n);
+    if (x_bfp) (*t_gen_binary.g_reg)(s, n);
+}
+
+static void gen_end_list() {                    /* list end */
+    if (x_afp) (*t_gen_ascii.g_end_list)();
+    if (x_bfp) (*t_gen_binary.g_end_list)();
+}
+
+static void gen_int(int n) {                    /* integer constant */
+    if (x_afp) (*t_gen_ascii.g_int)(n);
+    if (x_bfp) (*t_gen_binary.g_int)(n);
+}
+
+static void gen_string(const char *s) {         /* string literal/constant */
+    if (x_afp) (*t_gen_ascii.g_string)(s);
+    if (x_bfp) (*t_gen_binary.g_string)(s);
+}
+
+static void gen_float(double f) {               /* floating point constant */
+    if (x_afp) (*t_gen_ascii.g_float)(f);
+    if (x_bfp) (*t_gen_binary.g_float)(f);
+}
+
+static void gen_token(int t) {                  /* builtin */
+     if (x_afp) (*t_gen_ascii.g_token)(t);
+     if (x_bfp) (*t_gen_binary.g_token)(t);
+}
+
+static void gen_null() {                        /* null constant */
+    if (x_afp) (*t_gen_ascii.g_null)();
+    if (x_bfp) (*t_gen_binary.g_null)();
+}
+
+static void gen_finish() {                      /* object completion */
+    if (x_afp) (*t_gen_ascii.g_finish)();
+    if (x_bfp) (*t_gen_binary.g_finish)();
+}
 
 
 /*
@@ -125,10 +178,11 @@ compile_main(node_t *maintree)
         gen_keywd("macro");
         gen_int(0x01);                          /* static */
         gen_id("_init");
-        if (globals_compile(FALSE)) {
+        if (! globals_compile(FALSE)) {         /* empty, create body */
+            gen_keywd("nothing");
             gen_end_list();
         }
-        gen_end_list();
+        gen_end_list();                         /* body */
     }
     globals_cleanup();
     gen_finish();
@@ -143,7 +197,9 @@ reserved_builtin(const char *function)
         x_reserved[] = {
             "_init",
             "main",
-            "execute_macro"
+            "execute_macro",
+            "__breaksw",
+            "__lexicalblock",
             };
     unsigned i;
 
@@ -156,12 +212,16 @@ reserved_builtin(const char *function)
 }
 
 
+/*
+ *  generate code a function call
+ */
 void
 compile_func(symtype_t type, const char *function, Head_p arglist, node_t *stmts)
 {
+    const int has_stmts = (stmts && (stmts->left || stmts->right));
     int is_replacement = ((type & SC_MASK) == (SC_REPLACEMENT<<SC_SHIFT)) ? 1 : 0;
     int is_static = ((type & SC_MASK) == (SC_STATIC << SC_SHIFT)) ? 1 : 0;
-    int do_end = FALSE;
+    int has_args = FALSE, do_end = FALSE;
     int mode = 0;
 
     /*
@@ -183,66 +243,67 @@ compile_func(symtype_t type, const char *function, Head_p arglist, node_t *stmts
         }
     }
 
-    gen_macro();
-
     /*
      *  macro header and macro name part
      */
+    gen_macro();
     gen_keywd("macro");
     if (is_static)
         mode |= 0x01;                           /* CM_MACRO_FSTATIC */
     if (is_replacement)
         mode |= 0x02;                           /* CM_MACRO_FREPLACEMENT */
-    if (mode)
+    if (mode)                                   /* optional mode; default=0 */
         gen_int(mode);
-    gen_lit(function);
+    gen_sym(function);
+
+    xprintf("building function %s(), [stats=%u]\n", function, has_stmts);
 
     /*
-     *  no code in the function, just terminate the macro definition
+     *  arguments
      */
-    if (NULL == stmts) {
-        gen_end_list();
-        return;
-    }
-
     if (0 == strcmp(function, "_init")) {
-        do_end = globals_compile(stmts != NULL);
+        do_end = ((has_args = globals_compile(has_stmts)) && has_stmts);
     } else {
-        do_end = compile_arglist(arglist, stmts != NULL);
+        do_end = ((has_args = compile_arglist(arglist, has_stmts)) && has_stmts);
     }
 
-    if (stmts) {
-        /*
-         * If we got a multi-line macro, dont enclose the whole lot in yet another
-         * layer of list brackets
-         */
-        if (stmts->type == node_keywd && stmts->atom.ival == K_BLOCK) {
+    /*
+     *  body
+     */
+    if (has_stmts) {
+        if (stmts->type == node_keywd &&
+                (stmts->atom.ival == K_BLOCK || stmts->atom.ival == K_LEXICALBLOCK)) {
+            /*
+             *  block, dont enclose in yet another list layer.
+             */
             compile_list((Head_p) stmts->right, 1, do_end, FALSE);
 
         } else {
-            if (!do_end && stmts->left && stmts->right) {
+            /*
+             *  non-block, enclose.
+             */
+            if (! do_end) {
                 gen_list();
+                do_end = TRUE;
             }
             compile_node(stmts, 1);
-            if (!do_end && stmts->left && stmts->right) {
-                gen_end_list();
-            }
         }
-
-        if (do_end) {
+    } else {
+        if (! do_end && ! has_args) {           /* create empty body */
+            gen_keywd("nothing");
             gen_end_list();
         }
     }
 
-    gen_end_list();
     if (do_end) {
-        gen_end_list();
+        gen_end_list();                         /* body */
     }
+    gen_end_list();                             /* macro */
 }
 
 
 /*
- *  The following function is used to generate code for all the global symbols we've seen
+ *  generate code for all the global symbols
  */
 static int
 globals_compile(int flag)
@@ -253,9 +314,10 @@ globals_compile(int flag)
     int got_decl = 0;
     symprim_t j;
 
-    /* Dont generate anything if no symbols defined */
+    xprintf("building globals\n");
+
     if (NULL == hd_syms || NULL == ll_first(hd_syms)) {
-        return FALSE;
+        return FALSE;                           /* empty */
     }
 
     /* We must have at least one non-extern declaration before we start outputting
@@ -298,7 +360,6 @@ globals_compile(int flag)
     if (flag) {
         gen_list();
     }
-
     gen_list();
 
     /* Output declarations, but merge all declarations of each type */
@@ -358,6 +419,7 @@ globals_compile(int flag)
                     break;
                 }
 
+                xprintf("%*s%s %s\n", IDENT_LEVEL, "", keywd, sp->name);
                 if (! done_keywd) {
                     gen_keywd(keywd);
                     done_keywd = TRUE;
@@ -387,6 +449,7 @@ globals_compile(int flag)
             qu = (sp->s_type & TQ_MASK) >> TQ_SHIFT;
             sc = (sp->s_type & SC_MASK) >> SC_SHIFT;
             tm = (sp->s_type & TM_MASK) >> TM_SHIFT;
+            ty = (sp->s_type & TY_MASK);
 
             if (tm != TM_FUNCTION && sc != SC_EXTERN) {
                 if (qu & TQ_CONST)
@@ -399,7 +462,7 @@ globals_compile(int flag)
                     case TY_DECLARE:
                     case TY_FLOAT:
                     case TY_DOUBLE:
-                        gen_lit(sp->name);
+                        gen_sym(sp->name);
                         break;
                     }
             }
@@ -429,7 +492,7 @@ globals_compile(int flag)
                 case TY_DECLARE:
                 case TY_FLOAT:
                 case TY_DOUBLE:
-                    gen_lit(sp->name);
+                    gen_sym(sp->name);
                     break;
                 }
             }
@@ -459,7 +522,7 @@ globals_compile(int flag)
                 case TY_DECLARE:
                 case TY_FLOAT:
                 case TY_DOUBLE:
-                    gen_lit(sp->name);
+                    gen_sym(sp->name);
                     break;
                 }
             }
@@ -467,6 +530,7 @@ globals_compile(int flag)
         gen_end_list();
     }
 
+    gen_end_list();
     return TRUE;
 }
 
@@ -516,22 +580,18 @@ compile_arglist(Head_p arglist, int flag)
 {                                               /* 17/08/08 */
     register List_p lp;
     register node_t *np;
-    symtype_t old_ty = 0;
-    int arg, dots_seen = FALSE;
+    symtype_t old_ty = (symtype_t)-1;
+    int named = FALSE, dots_seen = FALSE;
+    int arg;
 
-    if (NULL == arglist)
-        return FALSE;
-
-    if (flag)
-        gen_list();
-    gen_list();
+    xprintf("building argument list\n");
 
     /* declarations */
-    for (lp = ll_first(arglist); lp; lp = ll_next(lp)) {
+    for (lp = (arglist ? ll_first(arglist) : NULL); lp; lp = ll_next(lp)) {
         np = (node_t *) ll_elem(lp);
 
         if (NULL == np) {
-            dots_seen = TRUE;
+            dots_seen = TRUE;                   /* ... */
 
         } else {
             assert(node_type == np->type);
@@ -553,21 +613,34 @@ compile_arglist(Head_p arglist, int flag)
                 }
 
                 if (ty != old_ty) {             /* XXX - check for supported types */
-                    if (old_ty)
+                    if (! named) {
+                        if (flag) {
+                            gen_list();
+                        }
+                        gen_list();
+                        named = TRUE;
+
+                    } else if (old_ty) {
                         gen_end_list();
+                    }
+
                     gen_list();
                     gen_id(symtype_to_str(ty));
                 }
 
-                gen_lit(np->right->atom.sval);
+                gen_sym(np->right->atom.sval);
                 old_ty = ty;
             }
         }
     }
 
-    if (old_ty) {
-        gen_end_list();
+    if (! named) {
+        assert(old_ty == -1);
+        return FALSE;                           /* empty/void */
     }
+
+    assert(old_ty != -1);
+    gen_end_list();
 
     /* assignments */
     for (arg = 0, lp = ll_first(arglist); lp; lp = ll_next(lp)) {
@@ -596,9 +669,9 @@ compile_arglist(Head_p arglist, int flag)
                 } else {
                     gen_keywd("get_parm");
                     gen_int((accint_t) arg);
-                    gen_lit(npsym->atom.sval);
+                    gen_sym(npsym->atom.sval);
 
-                    if (npsym->right) {         /* 11/10/08 */
+                    if (npsym->right) {         /* 11/10/08, default value */
                         const node_t *npdef = npsym->right;
 
                         gen_null();
@@ -613,6 +686,31 @@ compile_arglist(Head_p arglist, int flag)
                         case node_string:
                             gen_string(npdef->atom.sval);
                             break;
+                        case node_symbol: {
+                                const char *name = npdef->atom.sval;
+
+                                /*
+                                 *  Also See: sym_predefined() and compile_node2()
+                                 */
+                                if ((name[0] == 'N' && 0 == strcmp(name, "NULL")) ||
+                                    (name[0] == 'n' && 0 == strcmp(name, "null"))) {
+                                   gen_null();
+                                   break;
+                                } else if (name[0] == 'N' && 0 == strcmp(name, "NAN")) {
+                                   gen_float(NAN);
+                                   break;
+                                } else if (name[0] == 'I' && 0 == strcmp(name, "INFINITY")) {
+                                   gen_float(INFINITY);
+                                   break;
+                                } else if (name[0] == 't' && 0 == strcmp(name, "true")) {
+                                   gen_int(1);
+                                   break;
+                                } else if (name[0] == 'f' && 0 == strcmp(name, "false")) {
+                                   gen_int(0);
+                                   break;
+                                }
+                            }
+                            /*FALLTHRU*/
                         default:
                             assert(0);
                             gen_null();
@@ -624,13 +722,15 @@ compile_arglist(Head_p arglist, int flag)
 
                 if (qu & TQ_CONST) {            /*18/01/07*/
                     gen_keywd("const");
-                    gen_lit(npsym->atom.sval);
+                    gen_sym(npsym->atom.sval);
                     gen_end_list();
                 }
             }
         }
         ++arg;
     }
+
+    gen_end_list();
     return TRUE;
 }
 
@@ -646,10 +746,10 @@ compile_list(Head_p hd, int level, int flag, int sep_stmt)
         return;
     lp = ll_first(hd);
     if (lp) {
-        if (ll_next(lp)) {
+        np = (node_t *) ll_elem(lp);
+        if (ll_next(lp)) {                      /* multiple statements */
             complex_list = TRUE;
         } else {
-            np = (node_t *) ll_elem(lp);
             if (np && np->type == node_keywd && np->atom.ival == K_NOOP) {
                 complex_list = TRUE;
             }
@@ -667,30 +767,23 @@ compile_list(Head_p hd, int level, int flag, int sep_stmt)
          * its own set of brackets (sep_stmt == TRUE).
          */
         if (np) {
+            int block = FALSE;
+
             if (sep_stmt) {
                 switch (np->type) {
                 case node_string:
                 case node_integer:
                 case node_float:
                     gen_list();
+                    block = TRUE;
                     break;
                 default:
                     break;
                 }
             }
-
             compile_node(np, level);
-
-            if (sep_stmt) {
-                switch (np->type) {
-                case node_string:
-                case node_integer:
-                case node_float:
-                    gen_end_list();
-                    break;
-                default:
-                    break;
-                }
+            if (block) {
+                gen_end_list();
             }
         }
         ll_delete(lp);
@@ -820,6 +913,12 @@ compile_node(const node_t *tree, int level)
             compile_list((Head_p) tree->right, level, FALSE, TRUE);
             break;
 
+        case K_LEXICALBLOCK:    /* { <expr> } */
+            gen_keywd("__lexicalblock");
+            compile_list((Head_p) tree->right, level, FALSE, TRUE);
+            gen_end_list();
+            break;
+
         case K_SWITCH: {        /* switch <value> <cases> <default> */
                 const node_t *casep;
 
@@ -941,6 +1040,20 @@ compile_node(const node_t *tree, int level)
      // case K_ARRAY:
             goto DEFAULT;
 
+        case K_CAST:            /* 1/4/2020 */
+            switch (tree->left->atom.ival) {
+            case TY_FLOAT:
+            case TY_DOUBLE:
+                gen_keywd("cast_float");
+                break;
+            default:
+                gen_keywd("cast_int");
+                break;
+            }
+            compile_node(tree->right, level);
+            gen_end_list();
+            break;
+
         case K_NOOP:            /* group */
             compile_node(tree->left, level);
             compile_node(tree->right, level);
@@ -974,31 +1087,46 @@ compile_node2(const node_t *np, int level)
 {
     switch (np->type) {
     case node_symbol: {
-            const char *sval = np->atom.sval;
+            const char *name = np->atom.sval;
 
             assert(NULL == np->left);
                                                 // NULL or null
-            if ((sval[0] == 'N' && 0 == strcmp(sval, "NULL")) ||
-                (sval[0] == 'n' && 0 == strcmp(sval, "null"))) {
+            if ((name[0] == 'N' && 0 == strcmp(name, "NULL")) ||
+                (name[0] == 'n' && 0 == strcmp(name, "null"))) {
                 gen_null();
-                funct_type(np->atom.sval, ARG_NULL);
-
+                funct_type(name, ARG_NULL);
+                                                // NAN
+            } else if (name[0] == 'N' && 0 == strcmp(name, "NAN")) {
+                gen_float(NAN);
+                funct_type(name, ARG_FLOAT);
+                                                // INFINITY
+            } else if (name[0] == 'I' && 0 == strcmp(name, "INFINITY")) {
+                gen_float(INFINITY);
+                funct_type(name, ARG_FLOAT);
                                                 // true
-            } else if (sval[0] == 't' && 0 == strcmp(sval, "true")) {
+            } else if (name[0] == 't' && 0 == strcmp(name, "true")) {
                 gen_int(1);
                 funct_type(NULL, ARG_INT);
                                                 // false
-            } else if (sval[0] == 'f' && 0 == strcmp(sval, "false")) {
+            } else if (name[0] == 'f' && 0 == strcmp(name, "false")) {
                 gen_int(0);
                 funct_type(NULL, ARG_INT);
 
-            } else {                            //  symbol name
-                gen_lit(sval);
+            } else {                            // symbol name
                 if (np->sym) {
-                    sym_check(np->sym);
-                    funct_symtypeof(sval, np->sym->s_type);
+                    symbol_t *sym = np->sym;
+
+                    sym_check(sym);
+                    if (sym->s_register > 0) {
+                        assert(((sym->s_type & SC_MASK) >> SC_SHIFT) == SC_REGISTER);
+                        gen_reg(name, sym->s_register - 1);
+                    } else {
+                        gen_sym(name);
+                    }
+                    funct_symtypeof(name, sym->s_type);
                 } else {
-                    funct_typeof(sval);
+                    gen_sym(name);
+                    funct_typeof(name);
                 }
             }
         }
@@ -1067,7 +1195,7 @@ open_bracket(const node_t *np)
         gen_list();
         gen_id("__dbg_trace__");
         gen_int((accint_t) np->lineno);
-        gen_string(x_filename);
+        gen_string(x_filename2 ? x_filename2 : x_filename);
         gen_string(x_funcname ? x_funcname : "");
         gen_end_list();
     }
@@ -1198,7 +1326,7 @@ funct_typeof(const char *symbol)
 static void
 funct_symtypeof(const char *name, symtype_t stype)
 {
-    funct_type(name, symtype_arg(stype));
+    funct_type(name, (argtype_t)symtype_arg(stype));
 }
 
 
@@ -1212,7 +1340,7 @@ arg_mask(argtype_t type)
 static const char *
 arg_type(unsigned type)
 {
-    switch (arg_mask(type)) {
+    switch (arg_mask((argtype_t)type)) {
     case ARG_ANY:    return "poly";
     case ARG_NUM:    return "numeric";
 
@@ -1245,6 +1373,7 @@ funct_check(void)
             int is_defined = 0;
             int is_function = 0;
             int is_replacement = 0;
+            int is_varargs = 0;
             int bp_argc = 0;
 
             funct_print();
@@ -1257,8 +1386,9 @@ funct_check(void)
                  *  builtin primitive
                  */
                 is_defined = is_function = 1;
+                if (bp->b_flags & B_VARARGS) is_varargs = 1;
                 bp_types = bp->b_arg_types;
-                bp_argc = bp->b_argc;
+                bp_argc = bp->b_arg_count;
             }
 
             if (NULL != (sp = sym_lookup(funct->f_name, SYMLK_FUNDEF))) {
@@ -1299,14 +1429,7 @@ funct_check(void)
             if (bp_types) {
                 const argtype_t *f_types = funct->f_types;
                 int f_argc = funct->f_argc;
-
-                int indefinite_args = 0;
                 int arg = 1;
-
-                if (bp_argc < 0) {              /* like ... */
-                    bp_argc = -bp_argc;
-                    indefinite_args = 1;
-                }
 
                 while (bp_argc > 0 && f_argc > 0) {
                     if (*bp_types & ARG_REST) {
@@ -1352,7 +1475,7 @@ funct_check(void)
                     ++arg;
                 }
 
-                if (! indefinite_args) {
+                if (! is_varargs) {
                     if (f_argc > 0) {
                         crwarnx_line(RC_ERROR, funct->f_lineno,
                             "'%s', too many actual parameters, starting with parameter %d", funct->f_name, arg);
@@ -1427,4 +1550,5 @@ funct_pop(void)
         --funct_level;
     }
 }
+
 /*end*/

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.31 2018/10/18 01:49:26 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.34 2020/04/21 21:33:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.31 2018/10/18 01:49:26 cvsuser Exp $
+/* $Id: cmain.c,v 1.34 2020/04/21 21:33:24 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -166,8 +166,8 @@ static struct argoption options[] = {
     { "grhelp",         arg_required,       NULL,       318,    "Override the GRHELP setting",
                             "<path>" },
 
-    { "grprofile",	arg_required,       NULL,       319,    "Override the GRPROFILE setting",
-			    "<user-profile>" },
+    { "grprofile",      arg_required,       NULL,       319,    "Override the GRPROFILE setting",
+                        "<user-profile>" },
 
     { "termcap",        arg_none,           NULL,       310,    "Use termcap if available, otherwise terminfo" },
 
@@ -353,10 +353,6 @@ static const char *     m_strings[MAX_M+1];     /* Array of pointer to -m string
 
 BUFFER_t *              curbp = NULL;           /* Current buffer. */
 WINDOW_t *              curwp = NULL;           /* Current window. */
-
-int                     ms_cnt;                 /* Macro name stack. */
-struct mac_stack        mac_stack[MAX_NESTING + 1];
-
 
 static void             path_cat(const char *path, const char *sub, char *buf);
 static char *           path_cook(const char *name);
@@ -765,7 +761,7 @@ argv_init(int *argcp, char **argv)
             const char *arg = argv[i];
             int cook = 0;
 
-            if (argv[i][1] == 'd' || 0 == strncmp(arg, "--log", 5))  {
+            if (arg[1] == 'd' || 0 == strncmp(arg, "--log", 5))  {
                 cook = 1;
 
             } else if (arg[1] == 'P' || 0 == strncmp(arg, "--dflags", 7)) {
@@ -1367,7 +1363,7 @@ env_setup(void)
 
     /* PATHS */
     if (NULL == ggetenv("GRPATH")) {
-        char *grpath = path_cook(x_grpath);
+        const char *grpath = path_cook(x_grpath);
 
         sprintf(buf, "GRPATH=");
         if (binpath[0]) {                       /* rel to binary image */
@@ -1382,12 +1378,12 @@ env_setup(void)
             path_cat(env, "/macros", buf);
         }
         path_cat(grpath, NULL, buf);            /* default */
-        chk_free(grpath);
+        chk_free((void *)grpath);
         gputenv(file_slashes(buf));
     }
 
     if (NULL == ggetenv("GRHELP")) {
-        char *grhelp = path_cook(x_grhelp);
+        const char *grhelp = path_cook(x_grhelp);
 
         sprintf(buf, "GRHELP=");
         if (binpath[0]) {                      /* rel to binary image */
@@ -1402,7 +1398,7 @@ env_setup(void)
             path_cat(env, "/help", buf);
         }
         path_cat(grhelp, NULL, buf);            /* default */
-        chk_free(grhelp);
+        chk_free((void *)grhelp);
         gputenv(file_slashes(buf));
     }
 
@@ -1548,7 +1544,7 @@ gr_exit(int rcode)
     if (! xf_dumpcore) {
         LISTV largv[MAX_ARGC];
 
-        (void) memset(largv, 0, MAX_ARGC * sizeof(LISTV));
+        (void) memset(largv, 0, sizeof(largv));
         margv = largv;                          /* create argument frame for exit */
         margc = 0;
         trigger(REG_EXIT);
@@ -1640,6 +1636,7 @@ editor_setup(void)
     if (NULL == (bp = buf_find_or_create("/SCRAP/anon")) ||
             NULL == (wp = window_new(NULL))) {
         panic("anon");
+        return;
     }
 
     k_init(bp);
@@ -1666,6 +1663,7 @@ editor_setup(void)
     wp->w_status = WFHARD;
 
     window_title(wp, "*scratch*", "");
+    set_hooked();
 }
 
 

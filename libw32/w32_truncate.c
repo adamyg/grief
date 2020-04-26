@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_truncate_c,"$Id: w32_truncate.c,v 1.10 2019/03/15 23:12:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_truncate_c,"$Id: w32_truncate.c,v 1.11 2020/03/28 00:25:03 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -169,14 +169,13 @@ ftruncate(int fildes, off_t length)
     if (0xFFFFFFFF == SetFilePointer (handle, 0, NULL, FILE_CURRENT) ||
                 0xFFFFFFFF == SetFilePointer (handle, length, NULL, FILE_BEGIN) ||
             !SetEndOfFile (handle)) {
-
-        const DWORD rc = GetLastError ();
+        const DWORD rc = GetLastError();
 
         switch (rc) {
-	case ERROR_INVALID_HANDLE:
-	    errno = EBADF;
-	    break;
-	default:
+        case ERROR_INVALID_HANDLE:
+            errno = EBADF;
+            break;
+        default:
             w32_errno_set();
             break;
         }
@@ -207,7 +206,6 @@ truncate(const char *path, off_t length)
             0xFFFFFFFF == SetFilePointer (handle, 0, NULL, FILE_CURRENT) ||
                     0xFFFFFFFF == SetFilePointer (handle, length, NULL, FILE_BEGIN) ||
             !SetEndOfFile (handle)) {
-
         w32_errno_set();
         if (INVALID_HANDLE_VALUE != handle) {
             CloseHandle(handle);

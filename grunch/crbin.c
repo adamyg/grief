@@ -1,9 +1,9 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crbin_c,"$Id: crbin.c,v 1.22 2015/02/19 22:11:05 ayoung Exp $")
+__CIDENT_RCSID(gr_crbin_c,"$Id: crbin.c,v 1.23 2020/04/20 22:49:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crbin.c,v 1.22 2015/02/19 22:11:05 ayoung Exp $
- * Binary back end code generator.
+/* $Id: crbin.c,v 1.23 2020/04/20 22:49:22 cvsuser Exp $
+ * Binary backend code generator.
  *
  *
  * This file is part of the GRIEF Editor.
@@ -23,6 +23,10 @@ __CIDENT_RCSID(gr_crbin_c,"$Id: crbin.c,v 1.22 2015/02/19 22:11:05 ayoung Exp $"
 
 #define OBJECT_SIZE     4096                    /* Initial size of object code buffer */
 #define OBJECT_INCR     2048                    /* Code buffer increment */
+
+#ifndef LIST_MAXLEN
+#define LIST_MAXLEN     0x7fff                  /* 2^15 */
+#endif
 
 
 /*
@@ -61,8 +65,11 @@ static ref_t *          str_table;
 static ref_t *          macro_offsets;
 static int              list_level;
 
-static void             gen_str(const char *str, int type);
-static void             gen_byte(int);
+static void             push_str(const char *str, int type);
+static void             push_int(accint_t);
+static void             push_float(accfloat_t);
+static void             push_byte(int);
+
 static void             free_binary(void);
 
 
@@ -117,11 +124,11 @@ genb_list(void)
     if (0 == list_level++) {
         return;
     }
-    gen_byte(F_LIST);
+    push_byte(F_LIST);
     offset = (uint32_t)(byte_ptr - object_code);
     ll_push(hd_list_stack, (void *) offset);
-    gen_byte(0);                                /* LISTSIZE */
-    gen_byte(0);
+    push_byte(0);                                /* LISTSIZE, see end_list() */
+    push_byte(0);
 }
 
 
@@ -129,72 +136,98 @@ void
 genb_end_list(void)
 {
     if (0 == --list_level) {
-        gen_byte(F_HALT);
+        push_byte(F_HALT);
 
     } else {
-        uint32_t offset = (uint32_t) ll_elem(ll_first(hd_list_stack));
+        List_p lp = ll_first(hd_list_stack);
+        uint32_t length, offset;
 
-        gen_byte(F_HALT);
+        assert(lp);
+        if (NULL == lp) {
+            crerror(RC_ERROR, "internal list stack empty");
+            return;
+        }        
+        offset = (uint32_t)ll_elem(lp);
+        push_byte(F_HALT);
         ll_pop(hd_list_stack);                  /* LISTSIZE */
-        LPUT16((LIST *) (object_code + offset - 1), (uint16_t)((byte_ptr - object_code) - offset + 1));
+        length = ((byte_ptr - object_code) - offset + 1);
+        if (length > LIST_MAXLEN) {
+            crerror(RC_ERROR, "internal list object length exceeded");
+        }
+        LPUT16((LIST *) (object_code + offset - 1), (uint16_t)length);
+            /* backfill list length, in bytes */
     }
 }
 
 
+/* integer constant */
 void
 genb_int(accint_t ival)
 {
-    LIST buf[sizeof(accint_t)+1];
-    unsigned i;
-
-    assert(SIZEOF_LONG == sizeof(accint_t));   /* verify env */
-    gen_byte(F_INT);
-    LPUT_INT(buf, ival);
-    for (i = 1; i < sizeof(buf); ++i) {
-        gen_byte(buf[i]);
-    }
+    push_byte(F_INT);
+    push_int(ival);
 }
 
 
-
+/* numeric/float constant */
 void
 genb_float(accfloat_t fval)
 {
-    LIST buf[sizeof(accfloat_t)+1];
-    unsigned i;
+    push_byte(F_FLOAT);
+    push_float(fval);
+}
 
-    assert(8 == sizeof(accfloat_t));            /* verify env */
-    gen_byte(F_FLOAT);
-    LPUT_FLOAT(buf, fval);
-    for (i = 1; i < sizeof(buf); ++i) {
-        gen_byte(buf[i]);
+
+/* string constant */
+void
+genb_string(const char *str)
+{
+    push_str(str, F_LIT);
+}
+
+
+/* builtin */
+void
+genb_token(int val)
+{
+    const char *token = yymap(val);
+    push_str(token, F_ID);
+}
+
+
+/* identifer, possible builtin */
+void
+genb_id(const char *str)
+{
+    push_str(str, F_ID);
+}
+
+
+/* symbol */
+void
+genb_sym(const char *str)
+{
+    push_str(str, F_SYM);
+}
+
+
+/* 03/20, register variable */
+void
+genb_reg(const char *name, int index)
+{
+    assert(index >= 0 && index < 64);           /* XXX: limit to 64 */
+    if (index >= 64) {
+       push_str(name, F_SYM);                   /* convert to a standard symbol reference */
+    } else {
+       push_str(name, F_REG);                   /* F_REG <symbol> <index> */
+       push_byte(index);
     }
 }
 
 
-void
-genb_string(const char *str)
-{
-    gen_str(str, F_LIT);
-}
-
-
-void
-genb_token(int val)
-{
-    gen_str(yymap(val), F_ID);
-}
-
-
-void
-genb_id(const char *str)
-{
-    gen_str(str, F_ID);
-}
-
-
+/* push string element */
 static void
-gen_str(const char *str, int type)
+push_str(const char *str, int type)
 {
     char *alloc_str, *cp, ch;
     const char *in;
@@ -204,14 +237,15 @@ gen_str(const char *str, int type)
     if (F_ID == type) {                         /* 10/11/10, only map builtin's */
         const int id = builtin_index(str);
 
-        if (id >= 0) {
-            gen_byte(F_ID);
-            gen_byte(0);
-            gen_byte(0);
+        if (id >= 0) { /* F_ID <builtin> */
+            push_byte(F_ID);
+            push_byte(0);
+            push_byte(0);
             LPUT16((LIST *)(byte_ptr - 3), (uint16_t)id);
             return;
         }
-        type = F_STR;                           /* remap */
+
+        type = F_SYM;                           /* non-builtin, remap */
     }
 
     /*
@@ -273,7 +307,7 @@ gen_str(const char *str, int type)
                     unsigned n = 0, len = 0;
 
                     if ('{' == *in) {           // extended hexidecimal
-                        limit = 17;             // 64bit 
+                        limit = 17;             // 64bit
                         ++in;
                     }
                     while (len < limit) {
@@ -381,37 +415,18 @@ gen_str(const char *str, int type)
         spenq(sp, str_tree);
     }
 
-    assert(F_STR == type || F_LIT == type);
+    assert(F_SYM == type || F_REG == type || F_LIT == type);
     assert(strp->str_index <= 0x0001ffff);      /* 128k limit */
-//  gen_byte(type);
-//  gen_byte(0);
-//  gen_byte(0);
-//  gen_byte(0);
-//  gen_byte(0);
-//  LPUT32((LIST *) (byte_ptr - 5), strp->str_index);
-    {  LIST buf[sizeof(accint_t)+1];
-       unsigned i;
 
-       gen_byte(type);
-       LPUT_INT(buf, strp->str_index);
-       for (i = 1; i < sizeof(buf); ++i) {
-           gen_byte(buf[i]);
-       }
-    }
-}
-
-
-void
-genb_lit(const char *str)
-{
-    gen_str(str, F_STR);
+    push_byte(type);
+    push_int(strp->str_index);
 }
 
 
 void
 genb_null(void)
 {
-    gen_byte(F_NULL);
+    push_byte(F_NULL);
 }
 
 
@@ -425,8 +440,39 @@ genb_macro(void)
 }
 
 
+/* push an integer element */
 static void
-gen_byte(int b)
+push_int(accint_t ival)
+{
+    LIST t_buf[sizeof(accint_t)+1];
+    unsigned i;
+
+    assert(SIZEOF_LONG == sizeof(accint_t));    /* verify env */
+    LPUT_INT(t_buf, ival);
+    for (i = 1; i < sizeof(t_buf); ++i) {
+        push_byte(t_buf[i]);
+    }
+}
+
+
+/* push a numeric/float element */
+static void
+push_float(accfloat_t fval)
+{
+    LIST t_buf[sizeof(accfloat_t)+1];
+    unsigned i;
+
+    assert(8 == sizeof(accfloat_t));            /* verify env */
+    LPUT_FLOAT(t_buf, fval);
+    for (i = 1; i < sizeof(t_buf); ++i) {
+        push_byte(t_buf[i]);
+    }
+}
+
+
+/* push a byte */
+static void
+push_byte(int b)
 {
     uint32_t offset;
 
@@ -457,7 +503,7 @@ genb_finish(void)
     uint32_t *maclp, *macend;
     const char **strp;
 
-    gen_byte(F_END);
+  //push_byte(F_END); /*1/4/2020*/
 
     /*
      *  Header
@@ -468,11 +514,11 @@ genb_finish(void)
     }
 
     if (str_index > CM_STRINGS_MAX) {
-        printf("crbin: warning, string limit exceeded\n");
+        crerror(RC_ERROR, "internal string-table limit exceeded");
     }
 
     cm_header.cm_magic = CM_MAGIC;
-    cm_header.cm_version = cm_version;
+    cm_header.cm_version = (uint16_t)cm_version;
     cm_header.cm_builtin = builtin_count;
     cm_header.cm_signature = builtin_signature;
     cm_header.cm_num_atoms = (uint32_t)(byte_ptr - object_code);
@@ -480,7 +526,7 @@ genb_finish(void)
     cm_header.cm_num_globals = 0;               /* not-used */
     cm_xdr_export(&cm_header);
 
-    fwrite(&cm_header, 1, sizeof(cm_header), x_ofp);
+    fwrite(&cm_header, 1, sizeof(cm_header), x_bfp);
 
     maclp = (uint32_t *) r_ptr(macro_offsets);
     macend = maclp + (r_used(macro_offsets)/sizeof(uint32_t));
@@ -488,19 +534,19 @@ genb_finish(void)
         uint32_t idx = *maclp++;
 
         idx = WPUT32(idx);                      /* 64/32BIT */
-        fwrite(&idx, sizeof(idx), 1, x_ofp);
+        fwrite(&idx, sizeof(idx), 1, x_bfp);
     }
 
     offset = WPUT32(code_size);
-    fwrite(&offset, sizeof(offset), 1, x_ofp);  /* 64/32BIT */
+    fwrite(&offset, sizeof(offset), 1, x_bfp);  /* 64/32BIT */
 
     offset = cm_header.cm_num_strings;
-    fwrite(&offset, sizeof(offset), 1, x_ofp);  /* 64/32BIT */
+    fwrite(&offset, sizeof(offset), 1, x_bfp);  /* 64/32BIT */
 
     /*
      *  Code
      */
-    fwrite(object_code, code_size, 1, x_ofp);
+    fwrite(object_code, code_size, 1, x_bfp);
 
     /*
      *  Strings/
@@ -512,7 +558,7 @@ genb_finish(void)
         const char *cp = *strp++;
         uint32_t o = WPUT32(offset);            /* 64/32BIT */
 
-        fwrite(&o, sizeof(o), 1, x_ofp);
+        fwrite(&o, sizeof(o), 1, x_bfp);
         offset += strlen(cp) + 1;
     }
 
@@ -520,7 +566,8 @@ genb_finish(void)
     for (j = 0; j++ < str_index;) {
         const char *cp = *strp++;
 
-        fwrite(cp, strlen(cp) + 1, 1, x_ofp);
+        fwrite(cp, strlen(cp) + 1, 1, x_bfp);
     }
 }
+
 /*end*/

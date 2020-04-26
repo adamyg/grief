@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(cr_spstats_c,"$Id: spstats.c,v 1.13 2018/10/01 22:14:55 cvsuser Exp $")
+__CIDENT_RCSID(cr_spstats_c,"$Id: spstats.c,v 1.14 2020/04/20 23:08:07 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: spstats.c,v 1.13 2018/10/01 22:14:55 cvsuser Exp $
+/* $Id: spstats.c,v 1.14 2020/04/20 23:08:07 cvsuser Exp $
  * libsplay version 2.0 - SPLAY tree implementation.
  *
  *
@@ -44,6 +44,10 @@ __CIDENT_RCSID(cr_spstats_c,"$Id: spstats.c,v 1.13 2018/10/01 22:14:55 cvsuser E
 const char *
 spstats(const SPTREE *tree, char *buf, unsigned length)
 {
+    __CUNUSED(buf)
+    __CUNUSED(buf)
+    __CUNUSED(length)
+
     if (tree == NULL) {
         return "NULL tree";
     }

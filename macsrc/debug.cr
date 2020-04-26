@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: debug.cr,v 1.15 2014/11/27 15:54:10 ayoung Exp $
+/* $Id: debug.cr,v 1.17 2020/04/20 23:13:00 cvsuser Exp $
  * Debugging package.
  *
  *
@@ -35,21 +35,16 @@ static list         _dbg_bpt;                   /* List of breakpoints. */
 static int          _dbg_nbrk = 0;              /* Number of breakpoints active. */
 static int          _dbg_on = FALSE;            /* If TRUE, (debug) has been called. */
 
-static list         __dbg_type_info = {         /* Symbol types */
-    "?0?    ",          // F_HALT      = 0,     /* TODO - these should match internals. */
-    "int    ",          // F_INT       = 1,     /*  need inquiry function (debug_support). */
-    "string ",          // F_STR       = 2,
-    "list   ",          // F_LIST      = 3,
-    "null   ",          // F_NULL      = 4,
-    "id     ",          // F_ID        = 5,
-    "end    ",          // F_END       = 6,
-    "declare",          // F_POLY      = 7,
-    "lit    ",          // F_LIT       = 8,
-    "rstr   ",          // F_RSTR      = 9,
-    "float  ",          // F_FLOAT     = 10,
-    "rlist  "           // F_RLIST     = 11,
-//  "array  "
-    };
+static list         __dbg_type_info;            /* Symbol types, see main() */
+
+
+void
+main(void)
+{
+    __dbg_type_info =
+        debug_support(DBG_INQ_OPCODES, NULL, "");
+}
+
 
 void
 trace(~string)
@@ -88,7 +83,7 @@ __dbg_init(void)
  *      callback executed by object debug produced by 'grunch -g'.
  */
 void
-__dbg_trace__(~int, ~string)
+__dbg_trace__(~int /*lineno*/, ~string /*filename*/, ~string /*function*/)
 {
     int curbuf, curwin, msg_printed, line_no;
     string filename, macro_name;
@@ -456,3 +451,5 @@ debug_pause(string msg)
 }
 
 /*eof*/
+
+

@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: perf.cr,v 1.7 2014/10/22 02:34:29 ayoung Exp $
+/* $Id: perf.cr,v 1.9 2020/04/20 23:14:33 cvsuser Exp $
  * Engine performance monitoring.
  *
  *
@@ -11,9 +11,11 @@
 #define BASE        10
 
 static string       perf_time(int test, string mac);
+static string       benchmark_time(int test, string mac);
 static string       display_time(int s, int e);
 static void         pf_assert(int cond);
 static void         pf_loop(void);
+static void         pf_loop_reg(void);
 static void         pf_macro_list(void);
 static void         pf_command_list(void);
 static void         pf_strcat(void);
@@ -24,10 +26,12 @@ static void         pf_if(void);
 static void         pf_trim(void);
 static void         pf_compress(void);
 static void         pf_loop_float(void);
+static void         pf_loop_float_reg(void);
 static void         pf_sieve(void);
 
-static list         tests = {
+static list         basic = {
    "loop",
+   "loop_reg",
    "macro_list",
    "command_list",
    "strcat",
@@ -38,23 +42,30 @@ static list         tests = {
    "trim",
    "compress",
    "loop_float",
-   "sieve"
+   "loop_float_reg",
+   "primes"
+   };
+
+static list         benchmarks = {
+   "add_int",
+   "add_float",
+   "add_string",
+   "assign_add",
+   "assign_addto",
+   "assign_boolean",
+   "assign_const_int",
+   "assign_literal",
    };
 
 
-void
-main(void)
-{
-}
-
-
-/* Perform a set of performance tests. These are used for
- * performance comparisons across processor ranges and for some
- * regression testing.
+/*
+ * Perform a set of performance tests.
  */
 void
-perf(int arg)
+perf(declare arg = 0)
 {
+    const int basic_count = length_of_list(basic),
+        benchmark_count = length_of_list(benchmarks);
     int h, m, s;
     int d, y;
     int i;
@@ -68,20 +79,63 @@ perf(int arg)
     edit_file("PERF.log");
     end_of_buffer();
     version(maj, min, edit);
-    sprintf(buf, "\n%d %s %d %02d:%02d v%d.%d%c\n", d, mon, y, h, m, maj, min, edit);
+    sprintf(buf, "\n%d %s %d %02d:%02d v%d.%d%c (%s)\n",
+        d, mon, y, h, m, maj, min, edit, (grief_version(1) ? "release" : "debug"));
     insert(buf);
     set_bottom_of_window();
     refresh();
 
     stime = inq_clock();
 
-    if (arg >= 1 && arg <= length_of_list(tests)) {
-        perf_time(arg, tests[arg - 1]);
-    } else {					/* start of tests.. */
-        for (i = 0; i < length_of_list(tests); i++) {
-            perf_time(i + 1, tests[i]);
-	}
+    if (is_integer(arg) && arg >= 1) {
+        /*
+         *  indexed
+         */
+        if (arg >= 1 && arg <= basic_count) {
+            perf_time(arg, basic[arg - 1]);
+
+        } else if (arg > basic_count && arg <= (basic_count + benchmark_count)) {
+            benchmark_time(arg, benchmarks[arg - basic_count]);
+        }
+
+    } else if (is_string(arg) && strlen(arg)) {
+        /*
+         *  named
+         */
+        int test = 0;
+
+        for (i = 0; i < length_of_list(basic); ++i, ++test) {
+            if (arg == basic[i]) {
+                perf_time(++test, basic[i]);
+                test = -1;                      /* done */
+                break;
+            }
+        }
+
+        if (test != -1) {                       /* not found */
+            for (i = 0; i < length_of_list(benchmarks); ++i, ++test) {
+                if (arg == benchmarks[i]) {
+                    benchmark_time(++test, benchmarks[i]);
+                    test = -1;
+                    break;
+                }
+            }
+        }
+
+    } else {
+        /*
+         *  test collection
+         */
+        int test = 0;
+
+        for (i = 0; i < length_of_list(basic); ++i) {
+            perf_time(++test, basic[i]);
+        }
+        for (i = 0; i < length_of_list(benchmarks); ++i) {
+            benchmark_time(++test, benchmarks[i]);
+        }
     }
+
     stime = inq_clock() - stime;
     sprintf(buf, "                     Total: %d.%06d\n", stime / UNITS, stime % UNITS);
     insert(buf);
@@ -96,10 +150,32 @@ perf_time(int test, string mac)
 
     sprintf(str, "  %d) %s", test, mac);
     insert(str);
-    move_abs(0, 24);
+    move_abs(0, 40);
     refresh();
     s = inq_clock();
     execute_macro("pf_" + mac);
+    e = inq_clock();
+    str = display_time(s, e);
+    insert(str);
+    insert("\n");
+    refresh();
+}
+
+
+static string
+benchmark_time(int test, string mac)
+{
+    int s, e;
+    string str;
+
+    sprintf(str, "  %d) %s", test, mac);
+    insert(str);
+    move_abs(0, 40);
+    refresh();
+    load_macro("benchmarks/" + mac);
+    message(mac);
+    s = inq_clock();
+    execute_macro("benchmark_" + mac);
     e = inq_clock();
     str = display_time(s, e);
     insert(str);
@@ -115,7 +191,8 @@ display_time(int s, int e)
     int usec = (e - s) % UNITS;
     string buf;
 
-    sprintf(buf, "Time: %d.%02d", sec, usec / 10000);
+//  sprintf(buf, "Time: %d.%02d", sec, usec / 10000);
+    sprintf(buf, "Time: %d.%03d", sec, usec / 1000);
     return buf;
 }
 
@@ -138,6 +215,18 @@ pf_loop(void)
         ;
     }
 }
+
+
+static void
+pf_loop_reg(void)
+{
+    register int i;
+
+    for (i = 0; i < 30000*BASE; i++) {
+        ;
+    }
+}
+
 
 
 static void
@@ -228,7 +317,7 @@ pf_if(void)
     for (i = 0; i < 10000*BASE; i++) {
         if ((s = "abc") == "def") {
             break;
-	}
+        }
     }
 }
 
@@ -275,9 +364,22 @@ pf_loop_float(void)
 
 
 static void
-pf_sieve(void)
+pf_loop_float_reg(void)
+{
+    register float i;
+
+    for (i = 0; i < 30000*BASE; i++) {
+        ;
+    }
+}
+
+
+static void
+pf_primes(void)
 {
     extern list calc_primes(int);
 
-    calc_primes(1000*BASE);
+    calc_primes(5000);
 }
+
+/*end*/

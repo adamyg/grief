@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntaxcol_c,"$Id: syntaxcol.c,v 1.20 2018/10/01 20:59:48 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntaxcol_c,"$Id: syntaxcol.c,v 1.21 2020/04/21 00:01:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntaxcol.c,v 1.20 2018/10/01 20:59:48 cvsuser Exp $
+/* $Id: syntaxcol.c,v 1.21 2020/04/21 00:01:57 cvsuser Exp $
  * Simple column based coloriser.
  *
  *
@@ -242,19 +242,17 @@ syncol_find(int argi, int create)
     }
 
     if (NULL == st->st_drivers[SYNI_COLUMN]) {
-        if (create) {
-            SyntaxCol_t *col;
+        SyntaxCol_t *col;
 
-            if (NULL == (col = (SyntaxCol_t *)chk_calloc(sizeof(SyntaxCol_t),1))) {
-                return NULL;
-            }
-            col->sc_driver.sd_instance = col;
-            col->sc_driver.sd_select   = syncol_select;
-            col->sc_driver.sd_write    = syncol_write;
-            col->sc_driver.sd_destroy  = syncol_destroy;
-
-            st->st_drivers[SYNI_COLUMN] = &col->sc_driver;
+        if (!create ||
+                NULL == (col = (SyntaxCol_t *)chk_calloc(sizeof(SyntaxCol_t),1))) {
+            return NULL;
         }
+        col->sc_driver.sd_instance = col;
+        col->sc_driver.sd_select   = syncol_select;
+        col->sc_driver.sd_write    = syncol_write;
+        col->sc_driver.sd_destroy  = syncol_destroy;
+        st->st_drivers[SYNI_COLUMN] = &col->sc_driver;
     }
 
     return (SyntaxCol_t *)st->st_drivers[SYNI_COLUMN]->sd_instance;

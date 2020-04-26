@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_patmatch_c,"$Id: patmatch.c,v 1.11 2017/01/29 04:33:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_patmatch_c,"$Id: patmatch.c,v 1.12 2020/04/11 21:33:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: patmatch.c,v 1.11 2017/01/29 04:33:31 cvsuser Exp $
+/* $Id: patmatch.c,v 1.12 2020/04/11 21:33:54 cvsuser Exp $
  * Basic pattern (not regexp, fnmatch style) matching support.
  *
  *
- * Copyright (c) 1998 - 2017, Adam Young.
+ * Copyright (c) 1998 - 2020, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -209,6 +209,7 @@ white(const unsigned char *p)
  *      http://www.greenend.org.uk/rjk/2002/06/regexp.html
  *
  */
+
 static int
 is_ascii(int c)
 {
@@ -221,33 +222,29 @@ is_ascii(int c)
 #endif
 }
 
-
-static int
-is_blank(int ch)
+static int is_alnum(int c)      { return isalnum((unsigned char)c); }
+static int is_alpha(int c)      { return isalpha((unsigned char)c); }
+static int is_blank(int c)
 {
 #if defined(HAVE___ISBLANK)
-    return __isblank(ch);
+    return __isblank((unsigned char)c);
 #elif defined(HAVE_ISBLANK)
-    return isblank(ch);
+    return isblank((unsigned char)c);
 #else
-    return (ch == ' ' || ch == '\t');
+    return (' ' == c || '\t' == c);
 #endif
 }
-
-
-static int
-is_word(int ch)
-{
-    return ('_' == ch || '-' == ch || isalnum(ch));
-}
-
-
-static int
-is_csym(int ch)
-{
-    return (ch == '_' || isalnum(ch));
-}
-
+static int is_cntrl(int c)      { return iscntrl((unsigned char)c); }
+static int is_csym(int c)       { return (c == '_' || isalnum((unsigned char)c)); }
+static int is_digit(int c)      { return isdigit((unsigned char)c); }
+static int is_graph(int c)      { return isgraph((unsigned char)c); }
+static int is_lower(int c)      { return islower((unsigned char)c); }
+static int is_print(int c)      { return isprint((unsigned char)c); }
+static int is_punct(int c)      { return ispunct((unsigned char)c); }
+static int is_space(int c)      { return isspace((unsigned char)c); }
+static int is_upper(int c)      { return isupper((unsigned char)c); }
+static int is_word(int c)       { return ('_' == c || '-' == c || isalnum((unsigned char)c)); }
+static int is_xdigit(int c)     { return isxdigit((unsigned char)c); }
 
 static const struct {
     const char         *name;
@@ -255,20 +252,20 @@ static const struct {
     int               (*isa)(int);
 } character_classes[] = {
     { "ascii",      5,  is_ascii    },          /* ASCII character. */
-    { "alnum",      5,  isalnum     },          /* An alphanumeric (letter or digit). */
-    { "alpha",      5,  isalpha     },          /* A letter. */
+    { "alnum",      5,  is_alnum    },          /* An alphanumeric (letter or digit). */
+    { "alpha",      5,  is_alpha    },          /* A letter. */
     { "blank",      5,  is_blank    },          /* A space or tab character. */
-    { "cntrl",      5,  iscntrl     },          /* A control character. */
+    { "cntrl",      5,  is_cntrl    },          /* A control character. */
     { "csym",       4,  is_csym     },          /* A language symbol. */
-    { "digit",      5,  isdigit     },          /* A decimal digit. */
-    { "graph",      5,  isgraph     },          /* A character with a visible representation. */
-    { "lower",      5,  islower     },          /* A lower-case letter. */
-    { "print",      5,  isprint     },          /* An alphanumeric (same as alnum). */
-    { "punct",      5,  ispunct     },          /* A punctuation character. */
-    { "space",      5,  isspace     },          /* A character producing white space in displayed text. */
-    { "upper",      5,  isupper     },          /* An upper-case letter. */
+    { "digit",      5,  is_digit    },          /* A decimal digit. */
+    { "graph",      5,  is_graph    },          /* A character with a visible representation. */
+    { "lower",      5,  is_lower    },          /* A lower-case letter. */
+    { "print",      5,  is_print    },          /* An alphanumeric (same as alnum). */
+    { "punct",      5,  is_punct    },          /* A punctuation character. */
+    { "space",      5,  is_space    },          /* A character producing white space in displayed text. */
+    { "upper",      5,  is_upper    },          /* An upper-case letter. */
     { "word",       4,  is_word     },          /* A "word" character (alphanumeric plus "_"). */
-    { "xdigit",     6,  isxdigit    }           /* A hexadecimal digit. */
+    { "xdigit",     6,  is_xdigit   }           /* A hexadecimal digit. */
     };
 
 

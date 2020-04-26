@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_regdfa_c,"$Id: regdfa.c,v 1.31 2018/10/11 22:37:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_regdfa_c,"$Id: regdfa.c,v 1.32 2020/04/21 00:01:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: regdfa.c,v 1.31 2018/10/11 22:37:23 cvsuser Exp $
+/* $Id: regdfa.c,v 1.32 2020/04/21 00:01:57 cvsuser Exp $
  * DFA regular expression engine.
  * Streamlined engine for use by the syntax hiliting code.
  *
@@ -869,7 +869,8 @@ charset_alias(recompile_t *re, int value, const char *alias, int length)
 {
     int i;
 
-    if (length < 0 && alias) {
+    assert(alias);
+    if (length < 0) {
         length = (int)strlen(alias);
     }
 

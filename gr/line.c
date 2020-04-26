@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_line_c,"$Id: line.c,v 1.42 2015/02/11 23:25:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_line_c,"$Id: line.c,v 1.43 2020/04/21 00:01:55 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: line.c,v 1.42 2015/02/11 23:25:13 cvsuser Exp $
+/* $Id: line.c,v 1.43 2020/04/21 00:01:55 cvsuser Exp $
  * Line management.
  *
  *
@@ -190,7 +190,7 @@ lexpand(LINE_t *lp, LINENO dot, LINENO size)
     ED_TRACE(("lexpand(length:%d,dot:%d,size:%d)\n", length, dot, size))
 
     if (FALSE != (ret = ledit(lp, size))) {
-        assert(length + size <= lalloced(lp));
+        assert((length + size) <= lalloced(lp));
         line_move(lp, dot + size, dot, length - dot);
         lp->l_used += size;
     }
@@ -864,7 +864,7 @@ lwrite(const char *buffer, LINENO length, int characters)
         dot = line_offset2(lp, cline, ccol, LOFFSET_FILL_SPACE);
         count = line_sizeregion(lp, ccol, dot, characters, &olength, NULL);
         if (olength < length) {
-            if (dot + length <= llength(lp)) {
+            if ((dot + length) <= (LINENO)llength(lp)) {
                 replace = TRUE;
             }
         } else if (olength > length) {
@@ -886,7 +886,7 @@ lwrite(const char *buffer, LINENO length, int characters)
                 lchange(WFEDIT, 0);
                 u_replace((const char *)(ltext(lp) + dot), olength, length);
                 line_set(lp, dot, buffer, length, *cur_attr, 1);
-                if (edoto > lp->l_used) {
+                if (edoto > (LINENO)lp->l_used) {
                     lp->l_used = edoto;
                 }
             }
@@ -1068,7 +1068,7 @@ ldeletedot(LINENO cnt, int dot)
 {
     const LINENO cline = *cur_line;
     LINE_t *lp;
-    int ccol;
+    __CIFDEBUG(int ccol;)
 
     ED_TRACE(("ldeletedot(line:%d, col:%d, dot:%d, cnt:%d)\n", *cur_line, *cur_col, dot, cnt))
     assert(cnt > 0);
@@ -1084,7 +1084,7 @@ ldeletedot(LINENO cnt, int dot)
      *  simple case/
      *      less bytes then contained on the line.
      */
-    if (cnt <= (llength(lp) - dot)) {
+    if (cnt <= (LINENO)(llength(lp) - dot)) {
         ED_TRACE(("--> deleting bytes (cnt:%d)\n", cnt))
 
         lchange(WFEDIT, 0);
@@ -1202,7 +1202,7 @@ newlinedot(LINE_t *lp, LINENO dot)
             newsize = (dot < length ? length - dot : 0);
     const LINENO cline = *cur_line;
     LINE_t *newlp;
-    int ccol;
+    __CIFDEBUG(int ccol;)
 
     assert(lp != x_static_line);
     assert(0 == xf_test || *cur_col == (ccol = line_column2(lp, cline, dot)));
@@ -1334,9 +1334,9 @@ line_size(LINE_t *lp, LINENO need)
             assert(0 == size);
             assert(NULL == lp->l_attr);
 
-            if (NULL == (lp->l_text = chk_alloc(newsize + 1)) ||
+            if (NULL == (lp->l_text = chk_calloc(newsize + 1, 1)) ||
                     ((LI_ATTRIBUTES & lp->l_iflags) &&
-                            NULL == (lp->l_attr = chk_alloc(sizeof(LINEATTR) * (newsize + 1))))) {
+                            NULL == (lp->l_attr = chk_calloc(sizeof(LINEATTR), (newsize + 1))))) {
                 ewprintf(x_errmsg, newsize);
                 chk_free(lp->l_text);
                 lp->l_text = NULL;

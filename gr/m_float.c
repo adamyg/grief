@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_float_c,"$Id: m_float.c,v 1.20 2014/11/02 20:51:04 ayoung Exp $")
+__CIDENT_RCSID(gr_m_float_c,"$Id: m_float.c,v 1.26 2020/04/22 21:37:36 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_float.c,v 1.20 2014/11/02 20:51:04 ayoung Exp $
+/* $Id: m_float.c,v 1.26 2020/04/22 21:37:36 cvsuser Exp $
  * Floating point primitives.
  *
  *
@@ -21,6 +21,11 @@ __CIDENT_RCSID(gr_m_float_c,"$Id: m_float.c,v 1.20 2014/11/02 20:51:04 ayoung Ex
 #include <editor.h>
 #include <math.h>
 #include <float.h>
+
+#if defined(_MSC_VER) && defined(_WIN32)
+//#define  WINDOWS_MEAN_AND_LEAN
+//#include <windows.h>
+#endif
 
 #include "m_float.h"                            /* public interface */
 
@@ -75,14 +80,50 @@ __CIDENT_RCSID(gr_m_float_c,"$Id: m_float.c,v 1.20 2014/11/02 20:51:04 ayoung Ex
 #if defined(HAVE_FENV_H) && defined(HAVE_FECLEAREXCEPT)
 #define ___XEXEC(__y)       __y
 #define __FEXEC(__x) \
-accfloat_t __r; \
+        accfloat_t __r; \
         int ret; \
         errno = 0; \
         feclearexcept(FE_ALL_EXCEPT); \
         __r = (accfloat_t) ___XEXEC(__x); \
-        ret = (errno ? errno : (fetestexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW) ? ERANGE : 0)); \
+        if (0 == (ret = errno)) { \
+            system_errno(errno); \
+        } else if (fetestexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW)) { \
+            ret = ERANGE; \
+        } \
         acc_assign_float(ret ? 0 : __r); \
-        errno = ret;
+        system_errno(ret);
+#define __IEXEC(__x) \
+        accint_t __r; \
+        int ret; \
+        errno = 0; \
+        feclearexcept(FE_ALL_EXCEPT); \
+        __r = ___XEXEC(__x); \
+        if (0 == (ret = errno)) { \
+            system_errno(errno); \
+        } else if (fetestexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW)) { \
+            ret = ERANGE; \
+        } \
+        acc_assign_int(ret ? 0 : __r); \
+        system_errno(ret);
+#endif
+#if defined(_MSC_VER)
+#define ___XEXEC(__y)       __y
+#define __FEXEC(__x) \
+        __try { \
+            double __r = ___XEXEC(__x); \
+            acc_assign_float(__r); \
+        } __except (EXCEPTION_EXECUTE_HANDLER) { \
+            system_errno(errno); \
+            acc_assign_int(0); \
+        }
+#define __IEXEC(__x) \
+        __try { \
+            int __r = ___XEXEC(__x); \
+            acc_assign_int(__r); \
+        } __except (EXCEPTION_EXECUTE_HANDLER) { \
+            system_errno(errno); \
+            acc_assign_int(0); \
+        }
 #endif
 #endif  /*NO_FLOAT_MATH*/
 
@@ -90,10 +131,19 @@ accfloat_t __r; \
 #define ___XEXEC(__y)       __y
 #define __FEXEC(__x) \
         acc_assign_float((accfloat_t)___XEXEC(__x))
+#define __IEXEC(__x) \
+        acc_assign_int((accint_t)___XEXEC(__x))
 #endif
 
+#if defined(__WATCOMC__)
+unsigned _WCNEAR _chipbug = 0;			/* suppress Pentuin div checking */
+#endif
+      
 #define arg_float1          margv[1].l_float
 #define arg_float2          margv[2].l_float
+#define arg_float3          margv[3].l_float
+#define arg_float4          margv[4].l_float
+
 
 /*
  *  Both types of NaNs are represented by the largest biased exponent
@@ -181,7 +231,7 @@ do_isnan(void)                  /* int (float val) */
 #if defined(HAVE_ISNAN) || defined(isnan)
     acc_assign_int(isnan(arg_float1));
 
-#elif defined(HAVE__ISNAN) || defined(_MSC_VER)
+#elif defined(HAVE__ISNAN)
     acc_assign_int(_isnan(arg_float1));
 
 #else
@@ -221,16 +271,95 @@ do_isinf(void)                  /* int (float val) */
 #if defined(isinf) || defined(HAVE_ISINF)
     acc_assign_int(isinf(arg_float1));
 
+#elif defined(HAVE__FINITE) && defined(HAVE__ISNAN) /* MSC_VER */
+    acc_assign_int(!_finite(arg_float1) && !_isnan(arg_float1));
+
 #elif defined(HAVE_ISNAN) || defined(isnan)
     acc_assign_int(!isnan(arg_float1));
 
-#elif defined(HAVE__ISNAN) || defined(_MSC_VER)
+#elif defined(HAVE__ISNAN)
     acc_assign_int(!_isnan(arg_float1));
 
 #else
-    acc_assign_int(1);
+    acc_assign_int(0);
 
 #endif
+}
+
+
+/*  Function:               do_isclose
+ *      isclose primitive.
+ *
+ *  Returns:
+ *      nothing
+ *
+ *<<GRIEF>>
+    Macro: isclose - Test for floating point equality
+
+        int 
+        isclose(float v1, float v2, float ~rel_tot, float ~abs_tol)
+
+    Macro Description:
+        The 'isclose()' primitive determines whether two floating point numbers are close in value.
+
+    Macro Parameters:
+        v1 - First string.
+
+        v2 - Second value to compare against.
+
+        rel_tol - Optional value, used for relative tolerance.
+
+        abs_tol - Optional value, used for the minimum absolute tolerance.
+
+    Macro Returns:
+        The 'isclose()' primitive returns a non-zero value if v1 is close in value to v2,
+        otherwise zero or -1 on error.
+
+    Macro Portability:
+        A Grief extension.
+
+        Result on error are system dependent; where supported 'errno' shall be set to a 
+        non-zero manifest constant describing the error.
+*/
+
+static int
+isclose(const double v1, const double v2, double rel_tol, double abs_tol)
+{
+    double delta = fabs(v2 - v1);
+    return (((delta <= fabs(rel_tol * v2)) || (delta <= fabs(rel_tol * v1))) || (delta <= abs_tol));
+}
+
+void
+do_isclose(void)                /* int (float v1, float v2, float rel_tol = 1e09, float abs_tol = 0.0) */
+{
+    double v1 = arg_float1, v2 = arg_float2;
+    double rel_tol = 1e-09, abs_tol = 0.0;
+
+    if (isa_float(3)) rel_tol = arg_float3;
+    if (isa_float(4)) abs_tol = arg_float4;
+
+    if (rel_tol < 0.0 || abs_tol < 0.0) {       /* check parameters */
+        ewprintf("isclose: tolerances must be non-negative.");
+        system_errno(EINVAL);
+        acc_assign_int(-1);
+
+    } else if (v1 == v2) {                      /* simple case */
+        acc_assign_int(1);
+
+#if defined(isinf) || defined(HAVE_ISINF)
+    } else if (isinf(v1) || isinf(v2)) {        /* infinite never match */
+        acc_assign_int(0);
+#elif defined(HAVE__ISINF)
+    } else if (_isinf(v1) || _isinf(v2)) {		/* infinite never match */
+        acc_assign_int(0);
+#endif
+
+    } else {
+        /*
+         *  return (fabs(v1 - v2) < rel_tol)    // alternative method.
+         */
+        __IEXEC(isclose(v1, v2, rel_tol, abs_tol));
+    }
 }
 
 
@@ -247,9 +376,8 @@ do_isinf(void)                  /* int (float val) */
         isfinite(float val)
 
     Macro Description:
-        The 'isfinite()' primitive shall determine whether its argument
-        has a finite value (zero, subnormal, or normal, and not
-        infinite or NaN).
+        The 'isfinite()' primitive shall determine whether its argument has a finite
+        value (zero, subnormal, or normal, and not infinite or NaN).
 
     Macro Returns:
         The 'isfinite()' primitive shall return a non-zero value if and
@@ -264,7 +392,10 @@ do_isfinite(void)               /* int (float val) */
 #if defined(HAVE_ISFINITE) || defined(isfinite)
     acc_assign_int(isfinite(arg_float1));
 
-#elif defined(HAVE__FINITE) || defined(_MSC_VER)
+#elif defined(HAVE__ISFINITE)
+    acc_assign_int(_isfinite(arg_float1))
+
+#elif defined(HAVE__FINITE)                     /* MSC_VER */
     acc_assign_int(_finite(arg_float1));
 
 #else
@@ -286,9 +417,8 @@ do_isfinite(void)               /* int (float val) */
         acos(float x)
 
     Macro Description:
-        The 'acos()' primitive shall compute the principal value of
-        the arc cosine of the argument 'x'. The value of 'x' should
-        be in the range [-1,1].
+        The 'acos()' primitive shall compute the principal value of the arc cosine of the argument 'x'. 
+        The value of 'x' should be in the range [-1,1].
 
     Macro Returns:
         The 'acos()' primitive on successful completion shall return
@@ -510,9 +640,9 @@ void
 do_cos(void)                    /* float (float val) */
 {
 #if defined(DO_LONG_DOUBLE)
-    __FEXEC(acosl(arg_float1));
+    __FEXEC(cosl(arg_float1));
 #else
-    __FEXEC(acos(arg_float1));
+    __FEXEC(cos(arg_float1));
 #endif
 }
 

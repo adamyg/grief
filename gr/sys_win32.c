@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.56 2018/10/04 15:39:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.57 2020/04/13 01:22:18 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_win32.c,v 1.56 2018/10/04 15:39:29 cvsuser Exp $
+/* $Id: sys_win32.c,v 1.57 2020/04/13 01:22:18 cvsuser Exp $
  * WIN32 system support.
  *
  *
@@ -809,7 +809,7 @@ sys_copy(
     __CUNUSED(owner)
 #endif
     if ((rc = CopyFileA(src, dst, FALSE)) != FALSE) {
-        fileio_chmod(dst, perms);
+        (void) fileio_chmod(dst, perms);        /* FIXME: return */
 #ifdef HAVE_CHOWN
         chown(dst, owner, group);
 #endif

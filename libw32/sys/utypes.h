@@ -1,14 +1,14 @@
 #ifndef LIBW32_SYS_UTYPES_H_INCLUDED
 #define LIBW32_SYS_UTYPES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_utypes_h,"$Id: utypes.h,v 1.25 2018/10/16 22:38:20 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_utypes_h,"$Id: utypes.h,v 1.26 2020/03/27 18:25:26 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* 
  * win32 unix types
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2020, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -29,15 +29,17 @@ __CPRAGMA_ONCE
 #if (_MSC_VER != 1500)                          /* MSVC 9/2008 */
 #if (_MSC_VER != 1600)                          /* MSVC 10/2010 */
 #if (_MSC_VER != 1900)                          /* MSVC 19/2015 */
-#if (_MSC_VER <  1910 || _MSC_VER > 1914)       /* MSVC 19.10 .. 14/2017 */
+#if (_MSC_VER <  1910 || _MSC_VER > 1916)       /* MSVC 19.10 .. 16/2017 */
+#if (_MSC_VER > 1920)                           /* MSVC 19.20 /2019 */
 #error utypes.h: untested MSVC Version (2005 -- 2017) only ...
  //see: https://en.wikipedia.org/wiki/Microsoft_Visual_C%2B%2B
-#endif	//2017
-#endif	//2015
-#endif	//2010
-#endif	//2008
-#endif	//2005
-#endif	//_MSC_VER
+#endif //2019
+#endif //2017
+#endif //2015
+#endif //2010
+#endif //2008
+#endif //2005
+#endif //_MSC_VER
 
 #pragma warning(disable:4115)
 

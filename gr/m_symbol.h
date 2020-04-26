@@ -1,11 +1,11 @@
 #ifndef GR_M_SYMBOL_H_INCLUDED
 #define GR_M_SYMBOL_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_symbol_h,"$Id: m_symbol.h,v 1.4 2014/10/22 02:33:09 ayoung Exp $")
+__CIDENT_RCSID(gr_m_symbol_h,"$Id: m_symbol.h,v 1.5 2020/04/21 00:01:56 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_symbol.h,v 1.4 2014/10/22 02:33:09 ayoung Exp $
+/* $Id: m_symbol.h,v 1.5 2020/04/21 00:01:56 cvsuser Exp $
  * Symbol primitives.
  *
  *
@@ -34,6 +34,7 @@ extern void                 do_global(void);
 extern void                 do_make_local_variable(void);
 extern void                 do_put_parm(void);
 extern void                 do_ref_parm(void);
+extern void                 do_register(void);
 extern void                 do_static(void);
 
 extern void                 inq_symbol(void);

@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_dirent_c,"$Id: w32_dirent.c,v 1.28 2019/03/15 23:12:10 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_dirent_c,"$Id: w32_dirent.c,v 1.29 2020/04/20 23:03:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -312,7 +312,7 @@ unc_populate(const char *path)
     }
 
     do {
-        DWORD entries = -1, tr = 0, resume = 0;
+        DWORD entries = (DWORD)-1, tr = 0, resume = 0;
 
         res = NetShareEnum(NULL, 502, (LPBYTE *)&buffer, MAX_PREFERRED_LENGTH, &entries, &tr, &resume);
 

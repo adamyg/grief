@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crdebug_c,"$Id: crdebug.c,v 1.14 2014/10/22 02:33:28 ayoung Exp $")
+__CIDENT_RCSID(gr_crdebug_c,"$Id: crdebug.c,v 1.16 2020/04/23 12:35:50 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crdebug.c,v 1.14 2014/10/22 02:33:28 ayoung Exp $
+/* $Id: crdebug.c,v 1.16 2020/04/23 12:35:50 cvsuser Exp $
  * Debug/diagnostics support.
  *
  *
@@ -74,7 +74,7 @@ node_dprint(const node_t *np, int size)
 
 
 int
-list_print(const Head_p hd, int size)
+list_print(const Head_p hd, int __CUNUSEDARGUMENT(size))
 {
     return listprint(hd, 0, stdout, 0);
 }
@@ -178,6 +178,7 @@ nt1(const node_t *np, int size, FILE *out, int depth)
                     return size;
 
                 case K_BLOCK:
+                case K_LEXICALBLOCK:
                     ntp(np, size, out, depth);
                     if (right) {
                         listprint((Head_p) right, size, out, depth);
@@ -350,4 +351,5 @@ ntp(const node_t *np, int size, FILE *out, int depth)
     }
     return size;
 }
+
 /*end*/

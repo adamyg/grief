@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_sort_c,"$Id: m_sort.c,v 1.16 2014/11/16 17:28:41 ayoung Exp $")
+__CIDENT_RCSID(gr_m_sort_c,"$Id: m_sort.c,v 1.17 2020/04/21 00:01:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_sort.c,v 1.16 2014/11/16 17:28:41 ayoung Exp $
+/* $Id: m_sort.c,v 1.17 2020/04/21 00:01:56 cvsuser Exp $
  * Sort functionality.
  *
  *
@@ -283,7 +283,7 @@ lsort_callback(void *callback, const void *l1, const void *l2)
     size_t llen;
 
     /* size arguments */
-    llen = sizeof_atoms[F_STR] + argv_size(lvp1) + argv_size(lvp2) + sizeof_atoms[F_HALT];
+    llen = sizeof_atoms[F_SYM] + argv_size(lvp1) + argv_size(lvp2) + sizeof_atoms[F_HALT];
     if (llen < sizeof(tmpl)) {                  /* static buffer suitable (general case) */
         newlp = tmpl;
     } else {                                    /* otherwise dynamic */

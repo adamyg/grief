@@ -1,13 +1,13 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strparse_c,"$Id: strparse.c,v 1.6 2017/01/29 04:33:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_strparse_c,"$Id: strparse.c,v 1.12 2020/04/23 12:37:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strparse.c,v 1.6 2017/01/29 04:33:31 cvsuser Exp $
+/* $Id: strparse.c,v 1.12 2020/04/23 12:37:54 cvsuser Exp $
  * libstr - String to numeric (float/integer) parser.
  *
  *
  *
- * Copyright (c) 1998 - 2017, Adam Young.
+ * Copyright (c) 1998 - 2020, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -46,14 +46,18 @@ __CIDENT_RCSID(gr_strparse_c,"$Id: strparse.c,v 1.6 2017/01/29 04:33:31 cvsuser 
 #include <errno.h>
 
 #include <libstr.h>
+#if defined(_MSC_VER)
+#include <msvcversions.h>
+#endif
 
-#if defined(LOCAL_DEBUG)
+#if defined(LOCAL_DEBUG)                        /* local main() */
 #if defined(LOCAL_MAIN)
 #define DDEBUG(__d) printf __d;
 #else
 #define DDEBUG(__d) trace_log __d;
-#endif
-#endif
+#endif /*LOCAL_MAIN*/
+#endif /*LOCAL_DEBUG*/
+
 #ifndef DDEBUG
 #define DDEBUG(__d)
 #endif
@@ -99,6 +103,7 @@ static void         chinit(struct parse *p);
 static void         chclose(struct parse *p);
 static int          chparse(struct parse *p);
 static int          chmatch(struct parse *p, const char *s);
+static int          chxmatch(struct parse *p, const char *s);
 static int          chget(struct parse *p);
 static int          chunget(struct parse *p, int ch);
 
@@ -120,7 +125,7 @@ chparse(struct parse *p)
 #define FRACTDIGIT  0x02
 #define EXPNDIGIT   0x04
     int sign = 0, dots = 0, base = 10, digits = 0;
-    const char *num;
+    const char *num = p->p_buffer;
     int ch, ret = NUMPARSE_ERROR;
 
     /*
@@ -144,6 +149,8 @@ chparse(struct parse *p)
      *          octal constant,
      *          binary constant
      *       or hexadecimal constant.
+     *
+     *  1.#INF, 1.#QNAN or 1.#SNAN
      */
     if ('0' == ch) {
         if ((ch = chget(p)) > 0) {
@@ -181,14 +188,44 @@ chparse(struct parse *p)
                 ret = NUMPARSE_ERR_SUFFIX;
                 goto error;
             }
+        } else {
+            digits |= INTDIGIT;
+        }
 
+    } else if ('1' == ch) {
+        if ((ch = chget(p)) > 0) {
+            if ('.' == ch) {        // 1.
+                ch = chget(p);
+                if ('#' == ch) {    // 1.#INF, 1.#QNAN, 1.#SNAN
+                    if (3 == chxmatch(p, "INF")) {
+                        *p->p_double = INFINITY;
+                        DDEBUG((" 1.#INF(%d)", !ISINF(*p->p_double)))
+                        return NUMPARSE_FLOAT;
+
+                    } else if (4 == chxmatch(p, "QNAN")) {
+                       *p->p_double = NAN;
+                        DDEBUG((" 1.#QNAN(%d)", ISNAN(*p->p_double)))
+                        return NUMPARSE_FLOAT;
+
+                    } else if (4 == chxmatch(p, "SNAN")) {
+                        *p->p_double = NAN;
+                        DDEBUG((" 1.#SNAN(%d)", ISNAN(*p->p_double)))
+                        return NUMPARSE_FLOAT;
+
+                    }
+                    ret = NUMPARSE_ERR_SUFFIX;
+                    goto error;
+                }
+                digits |= INTDIGIT;
+                dots = 1;
+            }
         } else {
             digits |= INTDIGIT;
         }
 
     } else if ('.' == ch) {
         ch = chget(p);
-        if (!sign) {
+        if (! sign) {
             if ('.' == ch) {
                 ch = chget(p);
                 if (chterm(ch)) {
@@ -242,14 +279,18 @@ chparse(struct parse *p)
     }
 
     /* Exponent/trailing */
-    switch( ch) {
+    switch (ch) {
     case 'e': case 'E':         // decimal float
+        // Components:
+        //  o (optional) plus or minus sign
+        //  o nonempty sequence of decimal digits optionally containing decimal-point character (as determined by the current C locale) (defines significand)
+        //  o (optional) e or E followed with optional minus or plus sign and nonempty sequence of decimal digits (defines exponent to base 10)
         if (10 == base && digits) {
             ch = chget(p);
             if ('-' == ch || '+' == ch) {
                 ch = chget(p);              // sign
             }
-            while (isdigit(ch)) {
+            while (ch > 0 && isdigit(ch)) {
                 digits |= EXPNDIGIT;
                 ch = chget(p);
             }
@@ -261,30 +302,42 @@ chparse(struct parse *p)
         break;
 
     case 'p': case 'P':         // hexadecimal float
-        if (10 == base && digits) {
-            const char p1 =
-                (p->p_cursor > p->p_buffer ? p->p_cursor[-1] : 0);
-
-            if ('e' == p1 || 'E' == p1) {   // EP
+        // Components:
+        //  o (optional) plus or minus sign
+        //  o 0x or 0X
+        //  o nonempty sequence of hexadecimal digits optionally containing a decimal-point character (as determined by the current C locale) (defines significand)
+        //  o (optional) p or P followed with optional minus or plus sign and nonempty sequence of decimal digits (defines exponent to base 2)
+        //
+        if (16 == base && digits) {
+            ch = chget(p);
+            if ('-' == ch || '+' == ch) {
+                ch = chget(p);              // sign
+            }
+            while (ch > 0 && isdigit(ch)) {
+                digits |= EXPNDIGIT;
                 ch = chget(p);
-                if ('-' == ch || '+' == ch) {
-                    ch = chget(p);          // sign
-                }
-                while (isxdigit(ch)) {
-                    digits |= EXPNDIGIT;
-                    ch = chget(p);
-                }
-                if (0 == (digits & EXPNDIGIT)) {
-                    ret = NUMPARSE_ERR_EXPONENT;
-                    goto error;
-                }
+            }
+            if (0 == (digits & EXPNDIGIT)) {
+                ret = NUMPARSE_ERR_EXPONENT;
+                goto error;
             }
         }
         break;
 
-    case 'n': case 'N':         // NaN
+    case 'n': case 'N':        // NaN or NAN(foo)
+        // Components:
+        //  o (optional) plus or minus sign
+        //  o NAN or NAN(char_sequence) ignoring case of the NAN part.
+        //      char_sequence can only contain digits, Latin letters, and underscores. The result is a quiet NaN floating-point value.
+        //
         if (10 == base && !dots && !digits) {
             if (2 == chmatch(p, "an")) {
+                if ((ch = chget(p)) == '(') {
+                    while ((ch = chget(p)) > 0 && ch != ')') {
+                        /*continue*/;
+                    }
+                }
+                chunget(p, ch);
                 *p->p_double = NAN;
                 DDEBUG((" nan(%d)", ISNAN(*p->p_double)))
                 return NUMPARSE_FLOAT;
@@ -304,15 +357,11 @@ chparse(struct parse *p)
             }
         }
         break;
-
-//TODO
-//  case '#':                   // 1.#INF, 1.#QNAN, 1.#SNAN
-//      break;
     }
 
     /* Convert */
     DDEBUG((" base:%u, sign:%u, digits:%x, dots:%u, last:%d/%c", base, sign, digits, dots, ch, (ch > 0 ? ch : ' ')))
-    if (isspace(ch)) {
+    if (ch > 0 && isspace(ch)) {
         chunget(p, ch);
         ch = 0;
     }
@@ -321,7 +370,7 @@ chparse(struct parse *p)
 
         chclose(p);
 
-        if ((dots <= 1 && (digits & (FRACTDIGIT|EXPNDIGIT))) || (1 == dots && (INTDIGIT == digits))) {
+        if ((dots <= 1 && (digits & (FRACTDIGIT|EXPNDIGIT))) || (1 == dots && INTDIGIT == digits)) {
             /*
              *  A decimal ASCII floating-point number, optionally preceded by white space.
              *
@@ -366,8 +415,8 @@ chparse(struct parse *p)
     }
 
 error:;
-    chunget(p, ch);
     DDEBUG((" ERROR\n"))
+    chunget(p, ch);
     return ret;
 }
 
@@ -390,17 +439,58 @@ chclose(struct parse *p)
 
 
 static int
-chmatch(struct parse *p, const char *s)
+chxmatch(struct parse *p, const char *s)
 {
-    int mch, ch, count = 0;
+    int stack[16], ch = 0, match = 0, count = 0, undo;
 
-    DDEBUG((" match(%s) [", s))
+    DDEBUG((" xmatch(%s) [", s))
+
     if (s && *s) {
-        while ((mch = *s++) != 0 && (ch = chget(p)) > 0) {
-            if (tolower(ch) != tolower(mch)) {
+        while ((match = *s++) != 0 && (ch = chget(p)) > 0) {
+            if (ch != match) {                  /* same case */
                 break;
             }
-            ++count;
+            assert(count < sizeof(stack));
+            stack[count++] = ch;
+            ch = -1;
+        }
+    }
+
+    if (match) {                                /* incomplete, undo */
+        DDEBUG((", UNDO:"))
+        chunget(p, ch);
+        for (undo = count; undo;) {
+            chunget(p, stack[--undo]);
+        }
+    }
+    DDEBUG(("]=%d, ", count))
+    return count;
+}
+
+
+static int
+chmatch(struct parse *p, const char *s)
+{
+    int stack[16], ch = 0, match = 0, count = 0, undo;
+
+    DDEBUG((" match(%s) [", s))
+
+    if (s && *s) {
+        while ((match = *s++) != 0 && (ch = chget(p)) > 0) {
+            if (tolower(ch) != tolower(match)) {/* case insensitive */
+                break;
+            }
+            assert(count < sizeof(stack));
+            stack[count++] = ch;
+            ch = -1;
+        }
+    }
+
+    if (match) {                                /* incomplete, undo */
+        DDEBUG((", UNDO:"))
+        chunget(p, ch);
+        for (undo = count; undo;) {
+            chunget(p, stack[--undo]);
         }
     }
     DDEBUG(("]=%d, ", count))
@@ -418,8 +508,8 @@ chget(struct parse *p)
         DDEBUG(("~"))
         return -1;
     }
-    *p->p_cursor++ = ch;
-    DDEBUG(("%c", ch))
+    *p->p_cursor++ = (char)ch;
+    DDEBUG(("<%c>", ch))
     return ch;
 }
 
@@ -427,13 +517,14 @@ chget(struct parse *p)
 static int
 chunget(struct parse *p, int ch)
 {
-    DDEBUG((" unget(%d/%c)", ch, (ch > 0 ? ch : ' ')))
-    if (ch > 0) {
+    if (ch > 0) {                                /* character value */
+        DDEBUG((" unget(%c=%c)", ch, p->p_cursor[-1]))
         assert(p->p_cursor > p->p_buffer);
         --p->p_cursor;
         assert(ch == *p->p_cursor);
         return (*p->p_unget)(p->p_parm, ch);
     }
+    DDEBUG((" unget(-1)"))
     return -1;
 }
 
@@ -619,8 +710,11 @@ main(void)
 {
 #define DOUBLE(__x)         #__x, TDOUBLE,   __x, 0
 #define DOUBLE2(__x,__v)    #__x, TDOUBLE,   __v, 0
+#define DOUBLEX(__x,__v)     __x, TDOUBLE,   __v, 0
+
 #define INTEGER(__x)        #__x, TINTEGER,  0, __x
-#define NUMBERIC(__x,__v)   __x,  TINTEGER,  0, __v
+#define NUMERIC(__x,__v)    __x,  TINTEGER,  0, __v
+
 #define DOT(__x)            __x,  TDOT,      0, 0
 #define ELLIPSIS(__x)       __x,  TELLIPSIS, 0, 0
 #define ERROR(__x)          __x,  TERROR,    0, 0
@@ -632,20 +726,34 @@ main(void)
         long i;
 
     } values[] = {
+        /* numeric */
         { INTEGER(0) },
+        { INTEGER(1) },
+        { INTEGER(-0) },
+        { INTEGER(+1) },
+
+        { INTEGER(1234) },
+        { NUMERIC(" 1234", 1234) },
         { INTEGER(+1234) },
         { INTEGER(-1234) },
+
         { INTEGER(0x1234) },
+        { NUMERIC(" 0x01234", 0x1234) },
         { INTEGER(+0x1234) },
         { INTEGER(-0x1234) },
+
         { INTEGER(01234) },
+        { NUMERIC(" 01234", 01234) },
         { INTEGER(+01234) },
         { INTEGER(-01234) },
-        { NUMBERIC("0b010101", 21) },
-        { NUMBERIC("+0b010101", 21) },
-        { NUMBERIC("-0b010101", -21) },
 
-        { DOUBLE(.0) },
+        { NUMERIC("0b010101", 21) },
+        { NUMERIC("+0b010101", 21) },
+        { NUMERIC("-0b010101", -21) },
+
+        /* float */
+        { NULL },
+        { DOUBLE(.0) },6
         { DOUBLE(.0e1) },
         { DOUBLE(.1234) },
         { DOUBLE(1.) },
@@ -663,14 +771,38 @@ main(void)
         { DOUBLE(2.2250738585072014e-308) },    // Smallest number without losing precision.
 
         { DOUBLE2(NaN, -1 /*NAN*/) },
+        { DOUBLE2(-NaN, -1 /*NAN*/) },
+        { DOUBLE2(+NaN, -1 /*NAN*/) },
+        { DOUBLE2(NaN(ind), -1 /*NAN(foo)*/) },
+        { DOUBLE2(-NaN(ind), -1 /*NAN(foo)*/) },
+        { DOUBLE2(+NaN(ind), -1 /*NAN(foo)*/) },
+
+        { DOUBLEX("1.#INF", -1) },
+        { DOUBLEX("1.#QNAN", -1) },
+        { DOUBLEX("1.#SNAN", -1) },
+
         { DOUBLE2(Inf, -1 /*INFINITY*/) },
         { DOUBLE2(Infinite, -1 /*INFINITY*/) },
+
+#if (defined(_MSC_VER) && (_MSC_VER >= _MSC_VER_2019)) || \
+           (__STDC_VERSION__ >= 201103L) || (__cplusplus >= 201103L)
+        { DOUBLE(-0xc.90fep-2) },               // C11/hex
+        { DOUBLE(-0XC.90FEP-2) },
+
+        { DOUBLE(-0x1afp-2) },                  // =-107.75
+        { DOUBLE(0x1.999999999999ap-4) },       // 0.1
+
+        { DOUBLE(0x1.fffffffffffffp+1023) },    // DBL_MAX
+        { DOUBLE(0x1p-1022) },                  // DBL_MIN
+#endif //MSVC 2019
+
+        /* specials */
+        { NULL },
         { DOT(".") },
         { ELLIPSIS("..") },
 
-     // { DOUBLE(-0xc.90fep-2) },               // C11
-     // { DOUBLE(-0XC.90FEP-2) },
-     
+        /* errors */
+        { NULL },
         { ERROR("") },
         { ERROR("-") },
         { ERROR("+") },
@@ -679,24 +811,37 @@ main(void)
         { ERROR("1x") },
         { ERROR("a") },
         { ERROR(".e1") },
-        { ERROR("...") },
+
         { ERROR("0y") },                        // suffix
         { ERROR("123.e") },                     // exponent
         { ERROR("9.999e+999") },                // overflow
         { ERROR("9.999e-999") },                // underflow
+
+        { ERROR("...") },
+
+        { ERROR("NaX") },
+        { ERROR("1.#SNXN") },
+        { ERROR("1.#XXX") },
         };
 
     double d;
     long l;
-    int v;
+    int v, len;
 
     for (v = 0; v < (sizeof(values)/sizeof(values[0])); ++v) {
         const struct testvalue *val = values + v;
-        const int r = str_numparse(val->text, &d, &l, NULL);
 
-        printf(" %-24.24s : %d [%s] (%s, %ld/0x%lx/0%lo)\n",
-            val->text, r, str_numerror(r), Double(d), l, l, l);
+        if (val->text) {
+            const int r = str_numparse(val->text, &d, &l, &len);
+       
+            printf(" %-24.24s : %d [%s] (%s, %ld/0x%lx/0%lo) = %d\n",
+                val->text, r, str_numerror(r), Double(d), l, l, l, len);
+
+        } else {
+            printf("\n");
+        }
     }
 }
 #endif  /*LOCAL_MAIN*/
+
 /*end*/

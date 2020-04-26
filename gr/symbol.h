@@ -1,11 +1,11 @@
 #ifndef GR_SYMBOL_H_INCLUDED
 #define GR_SYMBOL_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_symbol_h,"$Id: symbol.h,v 1.23 2014/11/09 20:06:38 cvsuser Exp $")
+__CIDENT_RCSID(gr_symbol_h,"$Id: symbol.h,v 1.24 2020/04/21 00:01:57 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: symbol.h,v 1.23 2014/11/09 20:06:38 cvsuser Exp $
+/* $Id: symbol.h,v 1.24 2020/04/21 00:01:57 cvsuser Exp $
  * Symbol management.
  *
  *
@@ -40,9 +40,13 @@ extern void                 sym_free(SYMBOL *sp);
 extern SPBLK *              sym_alloc(const char *str, int type);
 extern void                 sym_attach(BUFFER_t *bp);
 extern void                 sym_detach(BUFFER_t *bp);
-extern void                 sym_local_delete(void);
+extern void                 sym_local_build(void);
+extern void                 sym_local_delete(int outer);
 extern void                 sym_macro_delete(SPTREE *sym_tbl);
 extern void                 sym_table_delete(SPTREE *sym_tbl);
+
+extern void                 sym_rassociate(int idx, SYMBOL *sp);
+extern SYMBOL *             sym_rlookup(int idx);
 
 extern SYMBOL *             sym_elookup(const char *name);
 extern SYMBOL *             sym_lookup(const char *name);

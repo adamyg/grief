@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_util_c,"$Id: vfs_util.c,v 1.18 2019/03/15 23:23:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_util_c,"$Id: vfs_util.c,v 1.19 2020/04/11 20:33:12 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_util.c,v 1.18 2019/03/15 23:23:03 cvsuser Exp $
+/* $Id: vfs_util.c,v 1.19 2020/04/11 20:33:12 cvsuser Exp $
  * Virtual file system - utility functions.
  *
  *
@@ -215,7 +215,7 @@ vfs_dirent_init(struct vfs_dirent *vdirent, int fd, const char *name, unsigned n
         namlen = sizeof(vdirent->d_name) - 1;
     memcpy(vdirent->d_name, (const char *)name, namlen);
     vdirent->d_name[namlen] = 0;
-    vdirent->d_namlen = namlen;
+    vdirent->d_namlen = (unsigned short)namlen;
     if (sb) {
         vdirent->d_stat  = VDIRECTST_MAGIC;
         vdirent->d_ctime = sb->st_ctime;
@@ -231,10 +231,10 @@ vfs_dirent_init(struct vfs_dirent *vdirent, int fd, const char *name, unsigned n
         vdirent->d_ctime = -1;
         vdirent->d_mtime = -1;
         vdirent->d_atime = -1;
-        vdirent->d_mode  = -1;
-        vdirent->d_size  = -1;
-        vdirent->d_uid   = -1;
-        vdirent->d_gid   = -1;
+        vdirent->d_mode  = (unsigned)-1;
+        vdirent->d_size  = (unsigned)-1;
+        vdirent->d_uid   = (unsigned)-1;
+        vdirent->d_gid   = (unsigned)-1;
     }
 }
 
@@ -249,11 +249,11 @@ vfs_dirent_init(struct vfs_dirent *vdirent, int fd, const char *name, unsigned n
  *      Address of dynamic string buffer containing full-path
  *      to the tempory filename,
  */
+extern const char *sysinfo_tmpdir();            /* FIXME */
+
 const char *
 vfs_tempnam(int *fd)
 {
-    extern const char *sysinfo_tmpdir();        /* FIXME */
-
     static unsigned seqno = 1;
     const char *tmpdir = sysinfo_tmpdir();      /* TODO/FIXME - vfs specific */
 #if defined(HAVE_LONG_LONG_INT) && !defined(__MINGW32__)
@@ -301,7 +301,7 @@ vfs_tempnam(int *fd)
 unsigned         
 vfs_name_hash(const char *path, unsigned pathlen)
 {
-    unsigned hash = -1;
+    unsigned hash = (unsigned)-1;
     unsigned char ch;
     
     while (pathlen-- && (ch = (unsigned char)*path++) != 0) {
@@ -390,7 +390,7 @@ IsHPFSFileSystem(const char *directory)
         nDrive = toupper (directory[0]) - '@';
 
     } else {
-        GetCurrentDirectory(MAX_PATH, szCurDir);
+        GetCurrentDirectoryA(MAX_PATH, szCurDir);
         nDrive = szCurDir[0] - 'A' + 1;
     }
 
@@ -398,7 +398,7 @@ IsHPFSFileSystem(const char *directory)
     bName[0] = (char) (nDrive + '@');
 
     DISABLE_HARD_ERRORS;
-    rc = GetVolumeInformation(bName, (LPTSTR)NULL, 0,
+    rc = GetVolumeInformationA(bName, (LPTSTR)NULL, 0,
                 (LPDWORD)NULL, &maxname, &flags, (LPTSTR)NULL, 0);
     ENABLE_HARD_ERRORS;
 

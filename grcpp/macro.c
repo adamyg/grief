@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(libucpp_macro_c,"$Id: macro.c,v 1.2 2012/03/18 16:59:25 ayoung Exp $")
+__CIDENT_RCSID(libucpp_macro_c,"$Id: macro.c,v 1.3 2020/03/27 22:22:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 8; -*- */
 /*
@@ -1033,7 +1033,7 @@ int substitute_macro(struct lexer_state *ls, struct macro *m,
 	struct token_fifo *tfi, int penury, int reject_nested, long l)
 {
 	char *mname = HASH_ITEM_NAME(m);
-	struct token_fifo *atl, etl;
+	struct token_fifo *atl = NULL, etl;
 	struct token t, *ct;
 	int i, save_nest = m->nest;
 	size_t save_art, save_tfi, etl_limit;

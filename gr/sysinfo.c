@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.44 2015/03/01 01:54:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.45 2020/04/21 00:01:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sysinfo.c,v 1.44 2015/03/01 01:54:03 cvsuser Exp $
+/* $Id: sysinfo.c,v 1.45 2020/04/21 00:01:57 cvsuser Exp $
  * System information services.
  *
  *
@@ -310,7 +310,7 @@ sysinfo_tmpdir(void)
                 const char *xtmpdir = tmpdirs[d];
 
 #if defined(__MSDOS__)
-                if (':' == xtmpdir[1] && *homedir) {
+                if (homedir && *homedir && ':' == xtmpdir[1]) {
                     if (isalpha((unsigned char)*homedir)) {
                         strxcpy(t_path, xtmpdir, sizeof(t_path));
                         t_path[0] = *homedir;
@@ -371,7 +371,7 @@ resolve_execname(const char *name)
     __CUNUSED(cp)
 
 #if defined(WIN32) || defined(__CYGWIN__)
-    namelen = GetModuleFileNameA(NULL, t_name, sizeof(t_name));
+    namelen = GetModuleFileNameA(NULL, t_name, sizeof(t_name)-1);
     trace_log("exename: <%s/%d>\n", t_name, namelen);
     t_name[namelen] = 0;
 

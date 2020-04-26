@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_spell_c,"$Id: m_spell.c,v 1.41 2018/10/01 20:59:48 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_spell_c,"$Id: m_spell.c,v 1.42 2020/04/21 00:01:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_spell.c,v 1.41 2018/10/01 20:59:48 cvsuser Exp $
+/* $Id: m_spell.c,v 1.42 2020/04/21 00:01:56 cvsuser Exp $
  * Spell primitives.
  *
  *      Enchant - AbiWord spell-checker generic interface
@@ -1129,7 +1129,7 @@ do_spell_control(void)          /* int (int action, ...) */
                 while (dicts[dictcnt]) {
                     ++dictcnt;
                 }
-                dictlen = (dictcnt * sizeof_atoms[F_STR]) + sizeof_atoms[F_HALT];
+                dictlen = (dictcnt * sizeof_atoms[F_RSTR]) + sizeof_atoms[F_HALT];
                 if (NULL != (dictlp = lst_alloc(dictlen, dictcnt))) {
                     lp = dictlp;
                     while (*dicts) {

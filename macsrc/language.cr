@@ -1,4 +1,4 @@
-/* $Id: language.cr,v 1.25 2014/11/24 11:10:51 ayoung Exp $
+/* $Id: language.cr,v 1.26 2020/04/10 01:36:51 cvsuser Exp $
  * File type/extension language support macros.
  *
  *  You can attach these packages so that they are automaticlly used with
@@ -468,11 +468,11 @@ _pkg_lookup( string event_name, string mode,
                 mac_name = "_" + equiv_ext + mac_name;
 
             } else {                            /* ask modes module (if loaded) */
-                string ret;
+                string t_ret;
 
                 if (inq_macro("_mode_package", 1) > 0 &&
-                        (ret = _mode_package(mode, mac_name)) != "") {
-                    mac_name = ret;
+                        (t_ret = _mode_package(mode, mac_name)) != "") {
+                    mac_name = t_ret;
                     processed = 1;
 
                 } else if (strlen(initial_mac) == 0) {

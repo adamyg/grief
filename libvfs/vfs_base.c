@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_base_c,"$Id: vfs_base.c,v 1.21 2019/03/15 23:23:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_base_c,"$Id: vfs_base.c,v 1.23 2020/04/14 23:13:32 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_base.c,v 1.21 2019/03/15 23:23:01 cvsuser Exp $
+/* $Id: vfs_base.c,v 1.23 2020/04/14 23:13:32 cvsuser Exp $
  * Virtual file system interface - base implementation.
  *
  *
@@ -234,6 +234,9 @@ vfsbase_tell(struct vfs_handle *vhandle)
 static int
 vfsbase_ioctl(struct vfs_handle *vhandle, int op, void *data)
 {
+    __CUNUSED(op);
+    __CUNUSED(data);
+
     assert(vhandle->h_ihandle >= 0);
 #if defined(HAVE_IOCTL) || defined(unix) || defined(__APPLE__)
     return ioctl(vhandle->h_ihandle, op, data);
@@ -255,7 +258,7 @@ vfsbase_fileno(struct vfs_handle *vhandle)
 static int
 vfsbase_access(struct vfs_mount *vmount, const char *path, int what)
 {
-    __UNUSED(vmount);
+    __CUNUSED(vmount);
     return vfsio_access(path, what);
 }
 
@@ -263,7 +266,7 @@ vfsbase_access(struct vfs_mount *vmount, const char *path, int what)
 static int
 vfsbase_stat(struct vfs_mount *vmount, const char *path, struct stat *sb)
 {
-    __UNUSED(vmount);
+    __CUNUSED(vmount);
     return vfsio_stat(path, sb);
 }
 
@@ -271,7 +274,7 @@ vfsbase_stat(struct vfs_mount *vmount, const char *path, struct stat *sb)
 static int
 vfsbase_lstat(struct vfs_mount *vmount, const char *path, struct stat *sb)
 {
-    __UNUSED(vmount);
+    __CUNUSED(vmount);
 #if defined(HAVE_LSTAT)
     return vfsio_lstat(path, sb);
 #else
@@ -291,7 +294,7 @@ vfsbase_fstat(struct vfs_handle *vhandle, struct stat *sb)
 static int
 vfsbase_chmod(struct vfs_mount *vmount, const char *path, int mode)
 {
-    __UNUSED(vmount);
+    __CUNUSED(vmount);
     return vfsio_chmod(path, mode);
 }
 
@@ -299,7 +302,10 @@ vfsbase_chmod(struct vfs_mount *vmount, const char *path, int mode)
 static int
 vfsbase_chown(struct vfs_mount *vmount, const char *path, int owner, int group)
 {
-    __UNUSED(vmount);
+    __CUNUSED(vmount);
+    __CUNUSED(path);
+    __CUNUSED(owner);
+    __CUNUSED(group);
 #if defined(HAVE_CHOWN) || defined(unix) || defined(__APPLE__)
     return chown(path, owner, group);
 #else
@@ -425,8 +431,8 @@ vfsbase_closedir(struct vfs_handle *vhandle)
 static int
 vfsbase_mkdir(struct vfs_mount *vmount, const char *path, mode_t mode)
 {
-    __UNUSED(vmount);
-    __UNUSED(mode);
+    __CUNUSED(vmount);
+    __CUNUSED(mode);
     return vfsio_mkdir(path, mode);
 }
 
@@ -434,25 +440,25 @@ vfsbase_mkdir(struct vfs_mount *vmount, const char *path, mode_t mode)
 static int
 vfsbase_rmdir(struct vfs_mount *vmount, const char *path)
 {
-    __UNUSED(vmount);
+    __CUNUSED(vmount);
     return vfsio_rmdir(path);
 }
 
+
+extern const char *sys_cwd(char *path, int size);   /*FIXME*/
 
 static int
 vfsbase_chdir(struct vfs_mount *vmount, const char *path)
 {
     const int ret = vfsio_chdir(path);
 
-    __UNUSED(vmount);
+    __CUNUSED(vmount);
     if (0 == ret) {
         /*
          *  XXX - must convert to an abs path
          *      maybe keep two cwd, one for last physical and the other being the last
          *      virtual current-working directory.
          */
-        extern const char *sys_cwd(char *path, int size);   /*FIXME*/
-
         char t_cwd[VFS_MAXPATH+1];
         VFS_TRACE(("chdir(%s) ==>%s\n", path, sys_cwd(t_cwd, sizeof(t_cwd))))
         vfscwd_set(NULL);
@@ -464,7 +470,7 @@ vfsbase_chdir(struct vfs_mount *vmount, const char *path)
 static int
 vfsbase_readlink(struct vfs_mount *vmount, const char *path, char *buf, size_t size)
 {
-    __UNUSED(vmount);
+    __CUNUSED(vmount);
 #if defined(HAVE_READLINK) || defined(unix) || \
 	defined(WIN32) || defined(__APPLE__)
     return vfsio_readlink(path, buf, size);
@@ -478,7 +484,7 @@ vfsbase_readlink(struct vfs_mount *vmount, const char *path, char *buf, size_t s
 static int
 vfsbase_symlink(struct vfs_mount *vmount, const char *n1, const char *n2)
 {
-    __UNUSED(vmount);
+    __CUNUSED(vmount);
 #if defined(HAVE_SYMLINK) || defined(unix) || \
 	defined(WIN32) || defined(__APPLE__)
     return vfsio_symlink(n1, n2);
@@ -492,7 +498,9 @@ vfsbase_symlink(struct vfs_mount *vmount, const char *n1, const char *n2)
 static int
 vfsbase_link(struct vfs_mount *vmount, const char *path1, const char *path2)
 {
-    __UNUSED(vmount);
+    __CUNUSED(vmount);
+    __CUNUSED(path1);
+    __CUNUSED(path2);
 #if defined(HAVE_LINK) || defined(unix) || defined(__APPLE__)
     return link(path1, path2);
 #else
@@ -505,7 +513,7 @@ vfsbase_link(struct vfs_mount *vmount, const char *path1, const char *path2)
 static int
 vfsbase_unlink(struct vfs_mount *vmount, const char *path)
 {
-    __UNUSED(vmount);
+    __CUNUSED(vmount);
     return vfsio_unlink(path);
 }
 

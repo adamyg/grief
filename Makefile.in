@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.41 2019/04/30 23:07:25 cvsuser Exp $
+# $Id: Makefile.in,v 1.42 2020/03/27 21:23:24 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2019, Adam Young.
@@ -124,6 +124,7 @@ INSTALL_PROGRAM=@INSTALL_PROGRAM@
 INSTALL_DATA=	@INSTALL_DATA@
 
 CLBR19=		$(shell which clbr19.dll)
+PLBR19=		$(shell which plbr19.dll)
 MT7R19=		$(shell which mt7r19.dll)
 # Common flags
 
@@ -159,6 +160,7 @@ IMPORT=
 ifeq ("wcl386","$(CC)")
 IMPORT+=\
 	$(D_BIN)/clbr19.dll		\
+	$(D_BIN)/plbr19.dll		\
 	$(D_BIN)/mt7r19.dll
 endif
 
@@ -200,7 +202,7 @@ DIRECTORIES:=\
 .DEFAULT:
 .PHONY:				build directories install
 
-build:				directories buildinfo libs bins
+build:				directories buildinfo libs bins import
 		$(MAKE) -C $(D_HLPDOC) $(MAKEFLAGS)
 		$(MAKE) -C $(D_MACSRC) $(MAKEFLAGS)
 
@@ -211,7 +213,7 @@ directories:			$(DIRECTORIES)
 		@echo "++ do not delete, grief edit managed content ++" > $@
 
 .PHONY:				package
-package:
+package:			import
 		$(ComSpec) /c start win32\gr-inno-setup.iss
 
 .PHONY:
@@ -223,6 +225,10 @@ $(D_BIN)/grbusybox.exe:		$(BUSYBOX)
 
 $(D_BIN)/clbr19.dll:		$(CLBR19)
 		@echo importing $(CLBR19)
+		@$(CP) -f $(subst /,\,$^) $@
+
+$(D_BIN)/plbr19.dll:		$(PLBR19)
+		@echo importing $(PLBR19)
 		@$(CP) -f $(subst /,\,$^) $@
 
 $(D_BIN)/mt7r19.dll:		$(MT7R19)

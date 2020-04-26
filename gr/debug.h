@@ -1,11 +1,11 @@
 #ifndef GR_DEBUG_H_INCLUDED
 #define GR_DEBUG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_debug_h,"$Id: debug.h,v 1.11 2015/02/11 23:25:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_debug_h,"$Id: debug.h,v 1.12 2020/04/21 00:01:55 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: debug.h,v 1.11 2015/02/11 23:25:13 cvsuser Exp $
+/* $Id: debug.h,v 1.12 2020/04/21 00:01:55 cvsuser Exp $
  * Debugging support.
  *
  *
@@ -43,6 +43,8 @@ __CBEGIN_DECLS
 
 #define DBG_INQ_MVARS       6                   /* Return list of moduler variable values. */
 #define DBG_INQ_MVAR_INFO   7                   /* Return info about an actual variable. */
+
+#define DBG_INQ_OPCODES     8                   /* OPCODE descriptions */
 /*--end--*/
 
 
@@ -88,8 +90,8 @@ extern void                 trace_list(const LIST *lp);
 extern void                 trace_lines(void);
 extern void                 trace_line(const LINE_t *lp);
 extern void                 trace_line2(const LINE_t *lp);
-extern void                 trace_sym(SYMBOL *sp);
-extern void                 trace_sym_ref(SYMBOL *sp);
+extern void                 trace_sym(const SYMBOL *sp);
+extern void                 trace_sym_ref(const SYMBOL *sp);
 extern void                 trace_trigger(int type, const char *args);
 extern void                 trace_refs(void);
 

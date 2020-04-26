@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_archive_c,"$Id: vfs_archive.c,v 1.18 2019/05/05 23:41:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_archive_c,"$Id: vfs_archive.c,v 1.20 2020/04/14 23:13:32 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_archive.c,v 1.18 2019/05/05 23:41:13 cvsuser Exp $
+/* $Id: vfs_archive.c,v 1.20 2020/04/14 23:13:32 cvsuser Exp $
  * Virtual file system interface - libarchive driver.
  *
  *
@@ -215,6 +215,10 @@ vfsarc_tree_vlocalget(struct vfs_tree *tree, struct vfs_node *node, int mode, in
     VFS_LEVELINC()
     VFS_TRACE(("vfsarc_vlocalget(%p, %s%s)\n", tree, vmount->mt_mount, path))
 
+    __CUNUSED(mode)
+    __CUNUSED(mask)
+    __CUNUSED(fd)
+
     assert(vmount->mt_data);
 
     if (node->v_localname) {
@@ -249,15 +253,15 @@ vfsarc_tree_vlocalget(struct vfs_tree *tree, struct vfs_node *node, int mode, in
 
                     if (0 == file_cmp(path, pathname)) {
                         const char *tempnam;
-                        int fd = -1;
+                        int t_fd = -1;
 
-                        if (NULL == (tempnam = vfs_tempnam(&fd))) {
+                        if (NULL == (tempnam = vfs_tempnam(&t_fd))) {
                             VFS_TRACE(("== temp file error\n"))
                             error = errno;
                         } else {
                             VFS_TRACE(("\textracting %s=>%s\n", pathname, tempnam))
-                            rcode = archive_read_data_into_fd(a, fd);
-                            close(fd);
+                            rcode = archive_read_data_into_fd(a, t_fd);
+                            close(t_fd);
                             if (ARCHIVE_OK == rcode) {
                                 node->v_localname = tempnam;
                                 error = 0;

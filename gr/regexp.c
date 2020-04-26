@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_regexp_c,"$Id: regexp.c,v 1.44 2018/11/16 00:01:19 cvsuser Exp $")
+__CIDENT_RCSID(gr_regexp_c,"$Id: regexp.c,v 1.45 2020/04/13 01:26:43 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: regexp.c,v 1.44 2018/11/16 00:01:19 cvsuser Exp $
+/* $Id: regexp.c,v 1.45 2020/04/13 01:26:43 cvsuser Exp $
  * Regular expression engine.
  *
  *  The orgin of this regular expression implementation has been lost with time,
@@ -456,7 +456,7 @@ re_comp(recomp_t *rx)
                 goto DEFAULT;
             }
 open_bracket:
-            if (rx->level > RE_NSUBEXP) {
+            if (rx->level >= RE_NSUBEXP) {
                 EWERROR("regexp: Too many '{'");
             }
             rx->opend = rx->opidx;

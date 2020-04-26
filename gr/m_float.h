@@ -1,11 +1,11 @@
 #ifndef GR_M_FLOAT_H_INCLUDED
 #define GR_M_FLOAT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_float_h,"$Id: m_float.h,v 1.7 2014/10/22 02:33:03 ayoung Exp $")
+__CIDENT_RCSID(gr_m_float_h,"$Id: m_float.h,v 1.8 2020/04/21 00:01:56 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_float.h,v 1.7 2014/10/22 02:33:03 ayoung Exp $
+/* $Id: m_float.h,v 1.8 2020/04/21 00:01:56 cvsuser Exp $
  * Floating point primitives.
  *
  *
@@ -37,6 +37,7 @@ extern void                 do_fabs(void);
 extern void                 do_floor(void);
 extern void                 do_fmod(void);
 extern void                 do_frexp(void);
+extern void                 do_isclose(void);
 extern void                 do_isfinite(void);
 extern void                 do_isinf(void);
 extern void                 do_isnan(void);

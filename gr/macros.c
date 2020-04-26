@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_macros_c,"$Id: macros.c,v 1.52 2018/11/18 00:20:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_macros_c,"$Id: macros.c,v 1.54 2020/04/21 00:01:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: macros.c,v 1.52 2018/11/18 00:20:40 cvsuser Exp $
+/* $Id: macros.c,v 1.54 2020/04/21 00:01:57 cvsuser Exp $
  * Manipulating macro definitions.
  *
  *
@@ -249,7 +249,7 @@ macro_shutdown(void)
 const char *
 module_identifier(void)
 {
-    return (ms_cnt > 0 ? mac_stack[ms_cnt - 1].module : NULL);
+    return (mac_sd > 0 ? mac_sp->module : NULL);
 }
 
 
@@ -639,7 +639,7 @@ do_module(void)                 /* int (string namespace) */
     const char *module = module_identifier();
     const char *name_space = get_str(1);
 
-    if (0 == ms_cnt || !mac_validname(name_space)) {
+    if (!mac_sd || !mac_validname(name_space)) {
         acc_assign_int((accint_t) -1);          /* invalid */
 
     } else {
@@ -916,7 +916,7 @@ mac_walk(SPBLK *sp, void *arg)
         This interface should be considered as a *internal* primitive, 
         reserved for exclusive use by the GRIEF Macro Compiler and
         may change without notice. Management of macro definitions
-        plus any associated argument binding shall be handling
+        plus any associated argument binding shall be handled
         automatically by the compiler.
 
         Registering an ill-formed macro declaration shall have
@@ -1196,7 +1196,7 @@ macro_define(const char *name, int flags, const LIST *lp)
     BUILTIN *bp = builtin_lookup(name);
     MACRO *mptr = NULL;
 
-    assert(ms_cnt);
+    assert(mac_sd && mac_sp);
     assert(module);
     assert('$' == *module);
     assert(0 == flags || M_AUTOLOAD == flags || M_STATIC == flags);
@@ -1357,6 +1357,9 @@ macro_delete(const LIST *list)
 int
 macro_startup(void)
 {
+    assert(0 == mac_sd && 0 == mac_sp);
+    mac_sp = mac_stack - 1;
+
     execute_str(GRINIT_MACRO);
     return macro_lookup(GRINIT_MACRO) == NULL ? -1 : 0;
 }
@@ -1788,7 +1791,7 @@ static int
 mac_parse(const char *filepath, const char *macroname)
 {
     const MOBJECT *objp;
-    int ret;
+    int ret = -1;
 
     if (xf_findmacro) {                         /* if finding, dont load the macro object */
         return 1;
@@ -1803,25 +1806,38 @@ mac_parse(const char *filepath, const char *macroname)
         return -1;                              /* creation error */
     }
 
-    mac_stack[ms_cnt].module = objp->o_module;
-    mac_stack[ms_cnt].name   = "_init";
-    mac_stack[ms_cnt].argv   = NULL;
-    mac_stack[ms_cnt].argc   = 0;
-//FIXME/XXX
-//  mac_stack[ms_cnt].level  =                  /* old debug interface */
-//      (ms_cnt ? mac_stack[ms_cnt - 1].level + 1 : 0);
+    if (mac_sd >= MAX_MACSTACK) {
+        panic("Macro stack overflow (%d).", mac_sd);
 
-    /* parse/load the object */
-    trace_ilog("object: fname:%s, mname:%s = %s\n", \
-        filepath, macroname, mac_stack[ms_cnt].module);
+    } else {                                    /* --- push */
+        register struct mac_stack *stack = mac_stack + mac_sd++;
+        mac_registers_t *regs;
 
-    ++ms_cnt;
-    xf_initdef = FALSE;
-    ret = cm_parse(loadmacro, NULL);            /* 0=success, otherwise -1 on error */
-    if (xf_initdef) {
-        execute_str("_init");                   /* shall be module::_init */
+        ++mac_sp; assert(stack == mac_sp);
+
+        stack->module = objp->o_module;
+        stack->name   = "_init";
+        stack->argv   = NULL;
+        stack->argc   = 0;
+        stack->level  = x_nest_level;
+        if (NULL != (regs = stack->registers)) {
+            assert(REGISTERS_MAGIC == regs->magic);
+            memset(&regs->symbols, 0, sizeof(SYMBOL *) * (regs->slots + 1));
+        }
+
+        /* parse/load the object */
+        trace_ilog("object: fname:%s, mname:%s = %s\n", \
+            filepath, macroname, stack->module);
+
+        xf_initdef = FALSE;
+        ret = cm_parse(loadmacro, NULL);        /* 0=success, otherwise -1 on error */
+        if (xf_initdef) {
+            execute_str("_init");               /* shall be module::_init */
+        }
+
+        assert(mac_sp == (mac_stack + (mac_sd - 1)));
+        --mac_sd, --mac_sp;                     /* --- pop */
     }
-    --ms_cnt;
 
     return (ret ? 1 : 0);
 }
@@ -2084,7 +2100,7 @@ do_autoload(void)               /* void (filename, function, ...) */
         This interface is an internal primitive, reserved for
         exclusive use by the GRIEF Macro Compiler and may change
         without notice. Management of variable scoping and argument
-        binding shall be handling automatically by the compiler.
+        binding shall be handled automatically by the compiler.
 
     Macro Returns:
         nothing

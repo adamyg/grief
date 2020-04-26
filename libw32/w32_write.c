@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_write_c,"$Id: w32_write.c,v 1.14 2019/03/15 23:12:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_write_c,"$Id: w32_write.c,v 1.16 2020/04/20 23:18:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -44,6 +44,7 @@ __CIDENT_RCSID(gr_w32_write_c,"$Id: w32_write.c,v 1.14 2019/03/15 23:12:22 cvsus
 #include <unistd.h>
 
 #pragma comment(lib, "Ws2_32.lib")
+
 
 /*
 //  NAME
@@ -328,7 +329,7 @@ __CIDENT_RCSID(gr_w32_write_c,"$Id: w32_write.c,v 1.14 2019/03/15 23:12:22 cvsus
 LIBW32_API int
 w32_write(int fildes, const void *buffer, size_t nbyte)
 {
-    SOCKET s = -1;
+    SOCKET s = (SOCKET)-1;
     int ret;
 
     if (fildes < 0) {

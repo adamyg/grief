@@ -1,11 +1,11 @@
 #ifndef GR_PATMATCH_H_INCLUDED
 #define GR_PATMATCH_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_patmatch_h,"$Id: patmatch.h,v 1.7 2019/03/15 23:03:11 cvsuser Exp $")
+__CIDENT_RCSID(gr_patmatch_h,"$Id: patmatch.h,v 1.8 2020/03/27 18:08:15 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: patmatch.h,v 1.7 2019/03/15 23:03:11 cvsuser Exp $
+/* $Id: patmatch.h,v 1.8 2020/03/27 18:08:15 cvsuser Exp $
  * Simple pattern matching.
  *
  *
@@ -43,13 +43,16 @@ enum {
  *  file_match flags
  */
     MATCH_TRAILINGWHITE = 0x01,
-        /* If set, ignores trailing whitespace **/
+        /*  If set, ignores trailing whitespace 
+        **/
 
     MATCH_NOCASE        = 0x02,
-        /*  If set, ignore cases during character comparisons */
+        /*  If set, ignore cases during character comparisons
+        **/
 
     MATCH_AUTOCASE      = 0x04,
-        /*  If set, sets NOCASE based on target operating system */
+        /*  If set, sets NOCASE based on target operating system
+        **/
 
     MATCH_NOESCAPE      = 0x08,
         /*  If not set, a backslash character (\) in pattern followed by

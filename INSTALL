@@ -30,9 +30,19 @@
 
             Source, http://unxutils.sourceforge.net/
 
-        Note: gmake bundled with gnuwin32 is 3.81 which wont function 100% correctly
-          as GNUu make 4.0 or greater shall be required to build several contrib packages.
-          Advise using 'win32\gmake-4.2.exe'.
+        Notes:
+
+         o gmake bundled with gnuwin32 is 3.81 wont function correctly as 
+           GNU make 4.0 or greater shall be required to build several contrib packages.
+
+               Advise using 'win32/gmake-4.2.exe'.
+
+         o bundled wget utilises an outdated SSL implementation.
+
+               Advise using 'https://eternallybored.org/misc/wget/'.
+
+          gnuwin32 wget is also out-dated, advise using wget sourced from
+          https://eternallybored.org/misc/wget.
 
       b. Run the `makelib.pl' perl script by typing:
 
@@ -61,12 +71,12 @@
       f. To install, type:
 
             gmake install
-	    
+
       e. To build the documentation in html and pdf forms
       
             install https://wkhtmltopdf.org/downloads.html
-	    
-	    cd hlpdoc
+
+            cd hlpdoc
             makehtml
             makepdf
 
@@ -268,5 +278,5 @@ setting up terminal features.
 
 *Some* of this information may be obsolete, but most of it will be fine.
 
-$Id: INSTALL,v 1.12 2019/02/04 11:45:50 cvsuser Exp $
+$Id: INSTALL,v 1.14 2020/04/22 22:59:18 cvsuser Exp $
 

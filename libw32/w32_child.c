@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_child_c,"$Id: w32_child.c,v 1.12 2019/03/15 23:12:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_child_c,"$Id: w32_child.c,v 1.13 2020/04/20 23:03:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -994,7 +994,8 @@ DisplayError(
 
     _snprintf(szPrintBuffer, sizeof(szPrintBuffer),
         "Internal Error: %s = %d (%s).\n%s%s", pszAPI, rc, (char *)lpvMessageBuffer,
-            args ? args : "", args ? "\n" : "" );
+            args ? args : "", args ? "\n" : "");
+    szPrintBuffer[sizeof(szPrintBuffer) - 1] = 0;
 
     WriteConsoleA(hOutput, szPrintBuffer, lstrlenA(szPrintBuffer), &nCharsWritten, NULL);
     LocalFree(lpvMessageBuffer);

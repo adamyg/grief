@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_statfs_c,"$Id: w32_statfs.c,v 1.15 2019/03/15 23:12:20 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_statfs_c,"$Id: w32_statfs.c,v 1.16 2020/04/20 23:16:18 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -153,10 +153,10 @@ statfs(const char *path, struct statfs *sb)
     }
 
     sb->f_type = MOUNT_PC;
-    strncat(sb->f_fstypename, "unknown", MFSNAMELEN);
+    strncpy(sb->f_fstypename, "unknown", MFSNAMELEN);
     if (GetVolumeInformationA(path,
             volName, MNAMELEN,                  /* VolumeName and size */
-            NULL, &MaximumComponentLength, &FileSystemFlags, fsName, MNAMELEN)) /* filesystem type */
+            NULL, &MaximumComponentLength, &FileSystemFlags, fsName, MFSNAMELEN)) /* filesystem type */
     {                                           /* FileSystem type/NTFS, FAT etc */
         if (fsName[0]) {
             strncpy(sb->f_fstypename, fsName, MFSNAMELEN);
@@ -253,7 +253,7 @@ getmntinfo(struct statfs **psb, int flags)
     static struct statfs *x_getmntinfo = NULL;  // global instance
     struct statfs *sb;
     char szDrivesAvail[32*4], *p;
-    int numVolumes[32] = {0};
+//  int numVolumes[32] = {0};
     int cnt;
 
     if (! psb) {                                // invalid

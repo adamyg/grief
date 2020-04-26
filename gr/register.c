@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_register_c,"$Id: register.c,v 1.29 2014/10/22 02:33:17 ayoung Exp $")
+__CIDENT_RCSID(gr_register_c,"$Id: register.c,v 1.30 2020/04/21 00:01:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: register.c,v 1.29 2014/10/22 02:33:17 ayoung Exp $
+/* $Id: register.c,v 1.30 2020/04/21 00:01:57 cvsuser Exp $
  * Event handlers.
  *
  *
@@ -38,7 +38,7 @@ __CIDENT_RCSID(gr_register_c,"$Id: register.c,v 1.29 2014/10/22 02:33:17 ayoung 
 
 typedef struct _registration {
     MAGIC_t             r_magic;
-#define REGISTER_MAGIC      MKMAGIC('R','e','G',' ')
+#define REGISTRATION_MAGIC      MKMAGIC('R','e','G',' ')
     TAILQ_ENTRY(_registration)
                         r_node;
     accint_t            r_ident;
@@ -97,7 +97,7 @@ register_shutdown(void)
 
     for (type = 0, rq = x_reglst; type < MAX_REGISTER; ++type, ++rq) {
         while (NULL != (r = TAILQ_FIRST(rq))) {
-            assert(REGISTER_MAGIC == r->r_magic);
+            assert(REGISTRATION_MAGIC == r->r_magic);
             TAILQ_REMOVE(rq, r, r_node);
             chk_free((void *)r);
         }
@@ -295,7 +295,7 @@ do_register_macro(int unique)   /* (int num, string macro-name, [int local = FAL
                 registration_t *r;
 
                 if (NULL != (r = chk_alloc(sizeof(registration_t) + len))) {
-                    r->r_magic = REGISTER_MAGIC;
+                    r->r_magic = REGISTRATION_MAGIC;
                     r->r_name = (const char *)(r + 1);
                     memcpy(r + 1, resolved, len);
                     TAILQ_INSERT_HEAD(rq, r, r_node);
@@ -322,7 +322,7 @@ register_detach(BUFFER_t *bp)
     registration_t *r;
 
     while (NULL != (r = TAILQ_FIRST(rq))) {
-        assert(REGISTER_MAGIC == r->r_magic);
+        assert(REGISTRATION_MAGIC == r->r_magic);
         TAILQ_REMOVE(rq, r, r_node);
         chk_free((void *)r);
     }
@@ -409,7 +409,7 @@ register_ident(void)
     const accint_t type = get_xinteger(1, -1);
 
     if (type < 0 || type >= MAX_REGISTER) {
-        errorf("%s: invalid parameters.", x_command_name);
+        errorf("%s: invalid parameters.", execute_name());
         return -1;
     }
     return type;
@@ -432,7 +432,7 @@ register_find(REGISTERLIST_t *rq, const char *macro)
     registration_t *r;
 
     TAILQ_FOREACH(r, rq, r_node) {
-        assert(REGISTER_MAGIC == r->r_magic);
+        assert(REGISTRATION_MAGIC == r->r_magic);
         if (0 == strcmp(r->r_name, macro)) {
             return r;
         }
@@ -457,7 +457,7 @@ register_remove(REGISTERLIST_t *rq, const char *macro)
     registration_t *r;
 
     TAILQ_FOREACH(r, rq, r_node) {
-        assert(REGISTER_MAGIC == r->r_magic);
+        assert(REGISTRATION_MAGIC == r->r_magic);
         if (0 == strcmp(r->r_name, macro)) {
             TAILQ_REMOVE(rq, r, r_node);
             chk_free((void *)r);
@@ -585,7 +585,7 @@ triggerx(int type, const char *fmt, ...)
 
     if (brq) {
         TAILQ_FOREACH(r, brq, r_node) {         /* buffer local */
-            assert(REGISTER_MAGIC == r->r_magic);
+            assert(REGISTRATION_MAGIC == r->r_magic);
             if (NULL == fmt) {
                 execute_str(r->r_name);
 
@@ -598,7 +598,7 @@ triggerx(int type, const char *fmt, ...)
     }
 
     TAILQ_FOREACH(r, grq, r_node) {             /* global local */
-        assert(REGISTER_MAGIC == r->r_magic);
+        assert(REGISTRATION_MAGIC == r->r_magic);
         if (NULL == fmt) {
             execute_str(r->r_name);
 

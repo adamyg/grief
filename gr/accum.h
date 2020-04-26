@@ -1,11 +1,11 @@
 #ifndef GR_ACCUM_H_INCLUDED
 #define GR_ACCUM_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_accum_h,"$Id: accum.h,v 1.18 2014/10/22 02:32:51 ayoung Exp $")
+__CIDENT_RCSID(gr_accum_h,"$Id: accum.h,v 1.19 2020/04/21 00:01:54 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: accum.h,v 1.18 2014/10/22 02:32:51 ayoung Exp $
+/* $Id: accum.h,v 1.19 2020/04/21 00:01:54 cvsuser Exp $
  * Accumulator manipulating.
  *
  *
@@ -40,7 +40,7 @@ extern void                 acc_assign_int(accint_t val);
 extern void                 acc_assign_float(accfloat_t val);
 extern accfloat_t           acc_get_fval(void);
 extern accint_t             acc_get_ival(void);
-extern accint_t             acc_strtoi(const char *str, char **endp, int base);
+    //extern accint_t             acc_strtoi(const char *str, char **endp, int base);
 extern const char *         acc_get_sval(void);
 extern ref_t *              acc_get_ref(void);
 extern char *               acc_get_sbuf(void);

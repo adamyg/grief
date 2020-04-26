@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.21 2018/10/15 16:24:34 cvsuser Exp $
+# $Id: Makefile.in,v 1.22 2020/03/27 12:28:01 cvsuser Exp $
 # libchartable makefile.
 #
 #
-# Copyright (c) 2010 - 2018, Adam Young.
+# Copyright (c) 2010 - 2020, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -114,7 +114,7 @@ TSKS=
 
 # Rules
 
-all:			data/.created $(CTBLLIB)
+all:			data/.import $(CTBLLIB)
 		$(MAKE) modules
 
 $(CTBLLIB):		charsetlocales.h		\
@@ -144,18 +144,33 @@ modules:		$(D_BINCTBL)/.created		\
 			$(MODULELIBS)
 		@echo dynamic character conversion modules built ...
 
-data/.created:
-		-@mkdir data
-		wget -P data -r -nv -nH -e robots=off --cut-dirs=1 --no-parent --reject "index.html.*" http://ftp.unicode.org/Public/MAPPINGS/
-		wget -P data -nv http://ftp.unicode.org/Public/UNIDATA/Unihan.zip
-		wget -P data -nv http://ftp.unicode.org/Public/UNIDATA/UCD.zip
-		wget -P data -nv --no-check-certificate http://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz
-		wget -P data -nv --no-check-certificate http://de.selfhtml.org/html/referenz/zeichen.htm
+data/.import:		data/.created			\
+			data/MAPPINGS/.import		\
+			data/Unihan.zip			\
+			data/UCD.zip			\
+			data/uniset.tar.gz		\
+			data/Zeichenreferenz
 		@echo "++ do not delete, managed content ++" > $@
+
+data/MAPPINGS/.import:	data/MAPPINGS/.created
+		wget -P data -r -nv -nH -e robots=off --cut-dirs=1 --no-parent --reject "index.html.*" http://ftp.unicode.org/Public/MAPPINGS/
+		@echo "++ do not delete, managed content ++" > $@
+
+data/Unihan.zip:
+		wget -P data -nv http://ftp.unicode.org/Public/UNIDATA/Unihan.zip
+
+data/UCD.zip:
+		wget -P data -nv http://ftp.unicode.org/Public/UNIDATA/UCD.zip
+
+data/uniset.tar.gz:
+		wget -P data -nv --no-check-certificate http://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz
+
+data/Zeichenreferenz:
+		wget -P data -nv --no-check-certificate http://de.selfhtml.org/html/referenz/zeichen.htm
 
 %/.created:
 		-@mkdir $(@D)
-		@echo "++ do not delete, managed content ++" > $@
+		@echo "++ do not delete, managed directory ++" > $@
 
 $(D_LIB)/%.la:		%.lo
 		$(LIBTOOL) --mode=link $(CC) -o $@ $(D_OBJ)/$< \

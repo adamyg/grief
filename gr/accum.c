@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_accum_c,"$Id: accum.c,v 1.35 2014/10/22 02:32:51 ayoung Exp $")
+__CIDENT_RCSID(gr_accum_c,"$Id: accum.c,v 1.36 2020/04/21 00:01:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: accum.c,v 1.35 2014/10/22 02:32:51 ayoung Exp $
+/* $Id: accum.c,v 1.36 2020/04/21 00:01:54 cvsuser Exp $
  * Accumulator manipulating.
  *
  *
@@ -45,7 +45,7 @@ __CIDENT_RCSID(gr_accum_c,"$Id: accum.c,v 1.35 2014/10/22 02:32:51 ayoung Exp $"
 typedef struct accumulator {
     OPCODE              ac_type;                /* Current type of accumulator */
     size_t              ac_memlen;              /* Storage length, in bytes */
-    char *              ac_memptr;              /* Our storage */
+    char *              ac_memptr;              /* Storage address */
 #define ACC_ALLOCROUND       0x3ff
 
     int                 ac_length;              /* Length of composite object */
@@ -64,10 +64,10 @@ typedef struct accumulator {
     } ac;
 } accumulator_t;
 
-static void                     acc_zap(void);
-static void                     acc_size(int len);
+static void __CINLINE           acc_zap(void);
+static void __CINLINE           acc_size(int len);
 
-static accumulator_t            accum = {       /* global accumulator */
+static accumulator_t __CCACHEALIGN accum = {    /* global accumulator */
         F_INT
         };
 
@@ -103,36 +103,36 @@ acc_expand(int len)
  *  acc_size ---
  *      Size the accumulator to accomdate 'len' bytes.
  */
-static void
+static void __CINLINE
 acc_size(int len)
 {
     assert(len >= 0);
 
+#if !defined(NDEBUG)
     if ((DB_PURIFY|DB_MEMORY) & x_dflags) {
         /*
          *  Allow purify/memcheck style memory protection.
-         *
-         *      Release and alloc a new block allowing runtime memory block
-         *      usage traces to occur.
+         *      Release and alloc a new block allowing runtime memory block usage traces to occur.
          */
         chk_free(accum.ac_memptr);
         accum.ac_memptr = chk_alloc(accum.ac_memlen = len);
+        return;
+    }
+#endif  /*NDEBUG*/
 
-    } else  {
-        /*
-         *  Reallocate if needed.
-         */
-        if ((unsigned)len > accum.ac_memlen) {
-            void *ptr;
+    /*
+     *  Reallocate if needed.
+     */
+    if ((unsigned)len > accum.ac_memlen) {
+        void *ptr;
 
-            accum.ac_memlen = (len | ACC_ALLOCROUND) + 1;
-            if (NULL == (ptr = chk_realloc(accum.ac_memptr, accum.ac_memlen))) {
-                if (NULL != (ptr = chk_alloc(accum.ac_memlen))) {
-                    chk_free((void *)accum.ac_memptr);
-                }
+        accum.ac_memlen = (len | ACC_ALLOCROUND) + 1;
+        if (NULL == (ptr = chk_realloc(accum.ac_memptr, accum.ac_memlen))) {
+            if (NULL != (ptr = chk_alloc(accum.ac_memlen))) {
+                chk_free((void *)accum.ac_memptr);
             }
-            accum.ac_memptr = ptr;
         }
+        accum.ac_memptr = ptr;
     }
 }
 
@@ -141,24 +141,26 @@ acc_size(int len)
  *  acc_zap ---
  *      Release any external accumulator references.
  */
-static void
+static void __CINLINE
 acc_zap(void)
 {
     switch (accum.ac_type) {
+    case F_RSTR:
+    case F_RLIST:
+        r_dec(accum.ac_rval);
+        accum.ac_rval = NULL;
+        break;
+#if !defined(NDEBUG)
     case F_INT:
     case F_FLOAT:
     case F_LIT:
     case F_STR:
     case F_NULL:
         break;
-    case F_RSTR:
-    case F_RLIST:
-        r_dec(accum.ac_rval);
-        accum.ac_rval = NULL;
-        break;
     default:
         panic("acc_zap: type? (%d)", accum.ac_type);
         break;
+#endif
     }
 }
 
@@ -354,7 +356,7 @@ acc_donate_list(LIST *lp, int llen)
     if (-1 == llen) {
         llen = lst_length(lp);
     } else {
-        int t_llen = lst_length(lp);            /* IFASSERT() */
+        __CIFDEBUG(int t_llen = lst_length(lp);)
         assert(llen == t_llen);
     }
     accum.ac_rval = rlst_create(lp, llen);
@@ -392,8 +394,8 @@ acc_assign_object(object_t *obj)
     case F_FLOAT:
         acc_assign_float(obj_get_fval(obj));
         break;
-    case F_STR:
     case F_LIT:
+    case F_STR:
         acc_assign_str(obj_get_sval(obj), -1);
         break;
     case F_RSTR:
@@ -563,4 +565,5 @@ acc_trace(void)
         }
     }
 }
+
 /*end*/

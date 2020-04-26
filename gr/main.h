@@ -1,11 +1,11 @@
 #ifndef GR_MAIN_H_INCLUDED
 #define GR_MAIN_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_main_h,"$Id: main.h,v 1.26 2015/02/17 23:26:17 ayoung Exp $")
+__CIDENT_RCSID(gr_main_h,"$Id: main.h,v 1.27 2020/04/21 00:01:57 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: main.h,v 1.26 2015/02/17 23:26:17 ayoung Exp $
+/* $Id: main.h,v 1.27 2020/04/21 00:01:57 cvsuser Exp $
  * Globals and main process primitives.
  *
  *
@@ -113,9 +113,6 @@ extern uint32_t             xf_test;            /* TRUE enables test code --- in
 
 #define XF_FLAG(__test)     (1 << (__test - 1))
 #define XF_TEST(__test)     (xf_test & XF_FLAG(__test))
-
-extern int                  ms_cnt;             /* Depth of macro stack */
-extern struct mac_stack     mac_stack[];        /* Macro name stack */
 
 extern BUFFER_t *           curbp;              /* Current buffer */
 extern WINDOW_t *           curwp;              /* Current window */

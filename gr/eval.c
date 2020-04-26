@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_eval_c,"$Id: eval.c,v 1.36 2014/11/27 18:56:53 ayoung Exp $")
+__CIDENT_RCSID(gr_eval_c,"$Id: eval.c,v 1.37 2020/04/21 00:01:55 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: eval.c,v 1.36 2014/11/27 18:56:53 ayoung Exp $
+/* $Id: eval.c,v 1.37 2020/04/21 00:01:55 cvsuser Exp $
  * Evaluator.
  *
  *
@@ -32,6 +32,8 @@ __CIDENT_RCSID(gr_eval_c,"$Id: eval.c,v 1.36 2014/11/27 18:56:53 ayoung Exp $")
 #include "main.h"
 #include "symbol.h"
 #include "tty.h"
+
+#define  WORD_INLINE        /* inline LIST interface */
 #include "word.h"
 
 static char                 x_nullstr[16] = {0};
@@ -48,153 +50,233 @@ nullscan(void)
 }
 
 
+// Evaluation, direct result
 int
 eval(register const LIST *lp, register LISTV *lpv)
 {
-    assert(nullscan());
+    const char *name;
+    SYMBOL *sp;
+    int type;
 
+    assert(nullscan());
     switch (*lp) {
     case F_INT:                     /* integers */
         lpv->l_int = LGET_INT(lp);
         lpv->l_flags = F_INT;
-        acc_assign_int(lpv->l_int);
         return F_INT;
 
     case F_FLOAT:                   /* floats */
         lpv->l_float = LGET_FLOAT(lp);
         lpv->l_flags = F_FLOAT;
-        acc_assign_float(lpv->l_float);
         return F_FLOAT;
 
     case F_LIT:                     /* string-literals */
         lpv->l_str = LGET_PTR2(const char, lp);
         lpv->l_flags = F_LIT;
-        acc_assign_str(lpv->l_str, -1);
         return F_LIT;
 
-    case F_STR: {                   /* symbols */
-            const char *str = LGET_PTR2(const char, lp);
-            SYMBOL *sp;
+    case F_REG:                     /* registers, 01/04/2020 */
+        if (NULL != (sp = sym_rlookup(lp[SIZEOF_VOID_P + 1]))) {
+#if !defined(NDEBUG) && defined(DO_REGISTER_CHECK)
+            SYMBOL *sp2 = sym_elookup(LGET_PTR2(const char, lp));
+            assert(sp == sp2);
+#endif  //_DEBUG
+            goto symbols;
+        }
+        /*FALLTHRU*/
 
-            if (NULL == (sp = sym_lookup(str))) {
-                const MACRO *mptr = macro_lookup(str);
-
-                /*
-                 *  On an error, force the current macro to be aborted
-                 */
-                if (NULL == mptr) {
-                    ewprintf("Undefined symbol: %s", str);
-                    x_return = TRUE;
-                    lpv->l_int = 0;
-                    lpv->l_flags = F_NULL;
-                    return F_ERROR;
-                }
-
-                /*
-                 *  XXX - issues
-                 *      no way of execution within the same env, module etc
-                 *      alt solution return macro name $xxxxx:macro.
-                 *          require builtin enhancements.
-                 */
-                panic("eval: CODE<%s>", str);   /* 11/11/10 */
-                execute_nmacro(mptr->m_list);
-                goto list;
-            }
-
-            /* symbols */
-            if (x_dflags) trace_sym_ref(sp);
+    case F_SYM:                     /* symbols */
+        name = LGET_PTR2(const char, lp);
+        sp = sym_lookup(name);
+        if (sp) {
+symbols:;   trace_sym_ref(sp);
             switch (sp->s_type) {
             case F_INT:
-                lpv->l_flags = F_INT;
                 lpv->l_int = sp->s_int;
+                lpv->l_flags = F_INT;
                 return F_INT;
             case F_FLOAT:
-                lpv->l_flags = F_FLOAT;
                 lpv->l_float = sp->s_float;
+                lpv->l_flags = F_FLOAT;
                 return F_FLOAT;
             case F_STR:
-                lpv->l_flags = F_RSTR;
                 lpv->l_ref = sp->s_obj;
-                assert(lpv->l_ref);
+                lpv->l_flags = F_RSTR;
                 return F_RSTR;
             case F_LIST:
-                lpv->l_flags = F_RLIST;
                 lpv->l_ref = sp->s_obj;
-                assert(lpv->l_ref);
+                lpv->l_flags = F_RLIST;
                 return F_RLIST;
             case F_NULL:
-                lpv->l_flags = F_NULL;
                 lpv->l_ref = 0;
+                lpv->l_flags = F_NULL;
                 return F_NULL;
             default:
-                panic("eval: STR symtype (%d)?", sp->s_type);
-                break;
+                panic("eval: Unexpected symtype (%d)?", sp->s_type);
+                lpv->l_ref = 0;
+                lpv->l_flags = F_NULL;
+                return F_ERROR;
             }
         }
-        break;
 
-    case F_RSTR:                    /* string-references, Jan/07, needed for new sort_list() */
-        lpv->l_flags = F_RSTR;
+#if defined(XXX_INDIRECT_EXEC)
+        /*
+         *  On an error, force the current macro to be aborted
+         */
+        const MACRO *mptr = macro_lookup(name);
+        if (NULL != mptr) {
+               /*
+                *   XXX - issues
+                *       no way of execution within the same env, module etc
+                *       alt solution return macro name $xxxxx:macro, require builtin enhancements.
+                */
+            execute_nmacro(mptr->m_list);
+            goto list;
+        }
+#endif
+        ewprintf("Undefined symbol: %s", name);
+      //acc_assign_null();                      /* XXX: 1/4/2020, review return value on error. */
+      //    or set_return_error();
+        set_return();
+        lpv->l_int = 0;
+        lpv->l_flags = F_NULL;
+        return F_ERROR;
+
+    case F_RSTR:                    /* string-references, 01/07; see sort_list() */
         lpv->l_ref = LGET_PTR2(ref_t, lp);
-        acc_assign_ref(lpv->l_ref);
+        lpv->l_flags = F_RSTR;
         return F_RSTR;
 
-    case F_ID: {                    /* builtins -- this conditional should *not* occur */
-            const int id = LGET_ID(lp);
-            const char *name = builtin[id].b_name;
-
-            assert(id >= 0 || (unsigned)id < builtin_count);
-            lpv->l_str = (char *)name;
-            lpv->l_flags = F_LIT;
-            acc_assign_str(name, -1);
-            panic("eval: F_ID");                /* 11/11/10 */
-        }
-        return F_LIT;
-
     case F_LIST:                    /* expressions */
-        execute_macro(lp + sizeof_atoms[F_LIST]);
-list:   lpv->l_flags = acc_get_type();
-
-        switch (lpv->l_flags) {
+        execute_macro(lp + CM_ATOM_LIST_SZ);
+/*list:*/
+        type = acc_get_type();
+        switch (type) {
         case F_INT:
-            lpv->l_int = acc_get_ival();
-            break;
-        case F_LIT:
-        case F_STR:
-            lpv->l_str = acc_get_sval();
-            break;
-        case F_RSTR:
-            lpv->l_ref = acc_get_ref();
-            break;
-        case F_LIST:
-        case F_RLIST:
-            lpv->l_flags = F_RLIST;
-            lpv->l_ref = acc_get_ref();
+            lpv->l_int   = acc_get_ival();
             break;
         case F_FLOAT:
             lpv->l_float = acc_get_fval();
             break;
+        case F_LIT:
+        case F_STR:
+            lpv->l_str   = acc_get_sval();
+            break;
+        case F_RSTR:
+            lpv->l_ref   = acc_get_ref();
+            break;
+        case F_LIST:
+        case F_RLIST:
+            lpv->l_ref   = acc_get_ref();
+            type = F_RLIST;
+            break;
         case F_NULL:
             break;
         default:
-            panic("eval: LIST symtype (%d)?", lpv->l_flags);
+            panic("eval: Unexpected accumlator type (%d)?", type);
             break;
         }
-        return lpv->l_flags;
-
-    case F_RLIST:                   /* expression references */
-        panic("eval: RLIST");
-        break;
+        lpv->l_flags = type;
+        return type;
 
     case F_NULL:                    /* NULL list */
         lpv->l_flags = F_NULL;
         return F_NULL;
 
+//  case F_RLIST:                   /* expression references */
+//  case F_HALT:
+//  case F_ID:
     default:                        /* unknown */
+        panic("eval: Unexpected type (0x%x/%d)", *lp, *lp);
         break;
     }
+
     lpv->l_int = 0;
     lpv->l_flags = F_NULL;
+    return F_ERROR;
+}
+
+
+// Evaluation, indirect result published to accumulator (see: do_if())
+int
+eval2(register const LIST *lp)
+{
+    const char *name;
+    SYMBOL *sp;
+
+    assert(nullscan());
+    switch (*lp) {
+    case F_INT:                     /* integers */
+        acc_assign_int(LGET_INT(lp));
+        return F_INT;
+
+    case F_FLOAT:                   /* floats */
+        acc_assign_float(LGET_FLOAT(lp));
+        return F_FLOAT;
+
+    case F_LIT:                     /* string-literals */
+        acc_assign_str(LGET_PTR2(const char, lp), -1);
+        return F_LIT;
+
+    case F_REG:                     /* registers, 01/04/2020 */
+        if (NULL != (sp = sym_rlookup(lp[SIZEOF_VOID_P + 1]))) {
+#if !defined(NDEBUG) && defined(DO_REGISTER_CHECK)
+            SYMBOL *sp2 = sym_elookup(LGET_PTR2(const char, lp));
+            assert(sp == sp2);
+#endif  //_DEBUG
+            goto symbols;
+        }
+        /*FALLTHRU*/
+
+    case F_SYM:                     /* symbols */
+        name = LGET_PTR2(const char, lp);
+        sp = sym_lookup(name);
+        if (sp) {
+symbols:;   trace_sym_ref(sp);
+            switch (sp->s_type) {
+            case F_INT:
+                acc_assign_int(sp->s_int);
+                return F_INT;
+            case F_FLOAT:
+                acc_assign_float(sp->s_float);
+                return F_FLOAT;
+            case F_STR:
+                acc_assign_ref(sp->s_obj);
+                return F_RSTR;
+            case F_LIST:
+                acc_assign_ref(sp->s_obj);
+                return F_RLIST;
+            case F_NULL:
+                acc_assign_null();
+                return F_NULL;
+            default:
+                panic("eval2: Unexpected symtype (%d)?", sp->s_type);
+                return F_ERROR;
+            }
+        }
+        ewprintf("Undefined symbol: %s", name);
+        set_return();
+        return F_ERROR;
+
+    case F_RSTR:                    /* string-references */
+        acc_assign_ref(LGET_PTR2(ref_t, lp));
+        return F_RSTR;
+
+    case F_LIST:                    /* expressions */
+        execute_macro(lp + CM_ATOM_LIST_SZ);
+        return acc_get_type();
+
+    case F_NULL:                    /* NULL list */
+        acc_assign_null();
+        return F_NULL;
+
+//  case F_RLIST:                   /* expression references */
+//  case F_HALT:
+//  case F_ID:
+    default:                        /* unknown */
+        panic("eval2: Unexpected type (0x%x/%d)", *lp, *lp);
+        break;
+    }
     return F_ERROR;
 }
 
@@ -240,8 +322,8 @@ listv_str(const LISTV *lvp, const char **val)
 {
     if (lvp) {
         switch (lvp->l_flags) {
-        case F_STR:
         case F_LIT:
+        case F_STR:
             if (val) {
                 *val = lvp->l_str;
             }
@@ -361,7 +443,7 @@ listv_list(const LISTV *lvp, const LIST **val)
 
     Floating Point Values:
 
-        A floating-point number should have form "SI.FESX" contained at least a
+        A floating-point number should have the form "SI.FESX" containing at least a
         fractional value or exponent, where
 
             o *S* is the sign; may be "+", "-", or omitted.
@@ -445,7 +527,6 @@ do_cvt_to_object(void)          /* (string value, [string length]) */
 
     if ('\0' == ch) {                           /* NUL */
         acc_assign_null();
-     // acc_assign_int(0);
 
     } else if ('"' == ch || '\'' == ch) {       /* "<string>" or '<string>' */
         const char *str = ++cursor,
@@ -534,6 +615,8 @@ isa_null(int argi)
 
         if (F_NULL == lp->l_flags) {
             return TRUE;                        /*NULL*/
+        } else if (F_SYM == lp->l_flags) {
+            return (F_NULL == lp->l_sym->s_type);
         }
     }
     return FALSE;                               /*!NULL*/
@@ -558,6 +641,8 @@ isa_integer(int argi)
 
         if (F_INT == lp->l_flags) {
             return TRUE;
+        } else if (F_SYM == lp->l_flags) {
+            return (F_INT == lp->l_sym->s_type);
         }
     }
     return FALSE;
@@ -582,6 +667,8 @@ isa_float(int argi)
 
         if (F_FLOAT == lp->l_flags) {
             return TRUE;
+        } else if (F_SYM == lp->l_flags) {
+            return (F_FLOAT == lp->l_sym->s_type);
         }
     }
     return FALSE;
@@ -609,6 +696,14 @@ isa_string(int argi)
         case F_STR:
         case F_RSTR:
             return TRUE;
+        case F_SYM:
+            switch (lp->l_sym->s_type) {
+            case F_LIT:
+            case F_STR:
+            case F_RSTR:
+                return TRUE;
+            }
+            break;
         default:
             break;
         }
@@ -637,6 +732,13 @@ isa_list(int argi)
         case F_LIST:
         case F_RLIST:
             return TRUE;
+        case F_SYM:
+            switch (lp->l_sym->s_type) {
+            case F_LIST:
+            case F_RLIST:
+                return TRUE;
+            }
+            break;
         default:
             break;
         }
@@ -663,9 +765,10 @@ get_str(int argi)
     if (argi < margc) {                         /* 30/07/09, address uninit reads */
         register const LISTV *lp = margv + argi;
 
+        assert(F_SYM != lp->l_flags);           /* LVAL, use get symbol */
         switch (lp->l_flags) {
-        case F_STR:
         case F_LIT:
+        case F_STR:
             return lp->l_str;
         case F_RSTR:
             return r_ptr(lp->l_ref);
@@ -713,6 +816,7 @@ get_strlen(int argi)
     if (argi < margc) {                         /* 30/07/09, address uninit reads */
         register const LISTV *lp = margv + argi;
 
+        assert(F_SYM != lp->l_flags);           /* LVAL, use get symbol */
         switch (lp->l_flags) {
         case F_STR:
         case F_LIT:
@@ -750,6 +854,7 @@ get_xstr(int argi)
     if (argi < margc) {                         /* 30/07/09, address uninit reads */
         register const LISTV *lp = margv + argi;
 
+        assert(F_SYM != lp->l_flags);           /* LVAL, use get symbol */
         switch (lp->l_flags) {
         case F_STR:
         case F_LIT:
@@ -783,6 +888,7 @@ get_xcharacter(int argi)
         register const LISTV *lp = margv + argi;
         const char *str;
 
+        assert(F_SYM != lp->l_flags);           /* LVAL, use get symbol */
         if (F_INT == lp->l_flags) {
             value = lp->l_int;
 
@@ -813,6 +919,7 @@ get_integer(int argi)
     if (argi < margc) {                         /* 30/07/09, address uninit reads */
         register const LISTV *lp = margv + argi;
 
+        assert(F_SYM != lp->l_flags);           /* LVAL, use get symbol */
         if (F_INT == lp->l_flags) {
             value = (int) lp->l_int;
 #if (ACCINT_SIZEOF > SIZEOF_INT)
@@ -848,6 +955,7 @@ get_xinteger(int argi, int undef)
     if (argi < margc) {                         /* 30/07/09, address uninit reads */
         register const LISTV *lp = margv + argi;
 
+        assert(F_SYM != lp->l_flags);           /* LVAL, use get symbol */
         if (F_INT == lp->l_flags) {
             value = (int) lp->l_int;
 #if (ACCINT_SIZEOF > SIZEOF_INT)
@@ -880,6 +988,7 @@ get_accint(int argi)
     if (argi < margc) {                         /* 30/07/09, address uninit reads */
         register const LISTV *lp = margv + argi;
 
+        assert(F_SYM != lp->l_flags);           /* LVAL, use get symbol */
         if (F_INT == lp->l_flags) {
             value = lp->l_int;
         } else {
@@ -909,6 +1018,7 @@ get_xaccint(int argi, accint_t undef)
     if (argi < margc) {                         /* 30/07/09, address uninit reads */
         register const LISTV *lp = margv + argi;
 
+        assert(F_SYM != lp->l_flags);           /* LVAL, use get symbol */
         if (F_INT == lp->l_flags) {
             value = lp->l_int;
         }
@@ -935,6 +1045,7 @@ get_accfloat(int argi)
     if (argi < margc) {                         /* 30/07/09, address uninit reads */
         register const LISTV *lp = margv + argi;
 
+        assert(F_SYM != lp->l_flags);           /* LVAL, use get symbol */
         if (F_FLOAT == lp->l_flags) {
             value = lp->l_float;
         } else {
@@ -964,6 +1075,7 @@ get_xaccfloat(int argi, accfloat_t undef)
     if (argi < margc) {                         /* 30/07/09, address uninit reads */
         register const LISTV *lp = margv + argi;
 
+        assert(F_SYM != lp->l_flags);           /* LVAL, use get symbol */
         if (F_FLOAT == lp->l_flags) {
             value = lp->l_float;
         }
@@ -988,6 +1100,7 @@ get_list(int argi)
     if (argi < margc) {                         /* 30/07/09, address uninit reads */
         register const LISTV *lp = margv + argi;
 
+        assert(F_SYM != lp->l_flags);           /* LVAL, use get symbol */
         switch (lp->l_flags) {
         case F_LIST:
            return lp->l_list;
@@ -1021,6 +1134,7 @@ get_listlen(int argi)
     if (argi < margc) {                         /* 30/07/09, address uninit reads */
         register const LISTV *lp = margv + argi;
 
+        assert(F_SYM != lp->l_flags);           /* LVAL, use get symbol */
         switch (lp->l_flags) {
         case F_LIST:
             return -1;
@@ -1054,6 +1168,7 @@ get_xlist(int argi)
     if (argi < margc) {                         /* 30/07/09, address uninit reads */
         register const LISTV *lp = margv + argi;
 
+        assert(F_SYM != lp->l_flags);           /* LVAL, use get symbol */
         switch (lp->l_flags) {
         case F_LIST:
             return lp->l_list;
@@ -1072,8 +1187,9 @@ get_symbol(int argi)
 {
     assert(argi > 0);
     if (argi < margc) {
-        register LISTV *lp = margv + argi;
+        register const LISTV *lp = margv + argi;
 
+        assert(F_SYM == lp->l_flags);           /* LVAL assumed */
         return lp->l_sym;
     }
     return NULL;
@@ -1100,7 +1216,7 @@ get_iarg1(const char *prompt, accint_t *ival)
 
     } else {
         char buf[MAX_CMDLINE] = {0};
-        LISTV *saved_argv;
+        const LISTV *saved_argv;
         int saved_argc;
 
         saved_argc = margc;
@@ -1126,7 +1242,7 @@ get_iarg1(const char *prompt, accint_t *ival)
  *
  *  Parameters:
  *      prompt - Command line prompt.
-. *      buf - Buffer used using prompt.
+ *      buf - Buffer used using prompt.
  *      bufsize - Size of the buffer, in bytes.
  *
  *  Returns:
@@ -1147,7 +1263,7 @@ get_xarg(int argi, const char *prompt, char *buf, int bufsiz)
     assert(argi >= 1);
     if (NULL == (ret = get_xstr(argi))) {
         int saved_argc;
-        LISTV *saved_argv;
+        const LISTV *saved_argv;
 
         saved_argc = margc;
         saved_argv = margv;
@@ -1166,4 +1282,5 @@ get_xarg(int argi, const char *prompt, char *buf, int bufsiz)
     }
     return ret;
 }
+
 /*end*/

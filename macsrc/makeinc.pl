@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makeinc.pl,v 1.14 2014/10/27 23:28:24 ayoung Exp $
+# $Id: makeinc.pl,v 1.15 2020/03/27 21:33:27 cvsuser Exp $
 # Generate 'grief.h' from the embedded export statements within the source.
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 #
@@ -102,7 +102,7 @@ Export($$;$)
         if (1 == scalar @$source) {
             print OUT <<HEADER;
 /* -*- mode: cr; indent-width: 4; -*- */
-/*  
+/*
  *  An auto-generated file, do not modify
  */
 
@@ -125,7 +125,7 @@ HEADER
             }
 
             if ( /^\/\*--export--enum--\*\// ) {
-                $enum_value = 0;
+                $enum_value = '0';
                 $export = 2;
                 next;
             }
@@ -145,10 +145,18 @@ HEADER
                 if ($export == 2) {
                     #   Reformat enum data-types
                     #..
+                    s/[ \t]+$//g;
+
+                    s/^\s+(\/\*.*\*\/)          # block comment
+                        /' 'x(45) . "$1"/ex ||
+
+                    s/^(\s+)(\/[*\/])           # comment
+                        /$1.$2/ex ||
+
                     s/^\s+([A-Z0-9_]+)          # TOKEN=value, comment
                         \s*=
                         \s*([-()<>~^&|_0-9A-Z ]+),?     # symbols and binary operators
-                        \s*(\/*.*\*\/)/
+                        \s*(\/\*.*\*\/)/
                         "#define $1 " .
                             ' 'x(23-length($1)) . "$2 " .
                             ' 'x(11-length($2)) . "$3"/exi ||
@@ -161,7 +169,7 @@ HEADER
                             ' 'x(23-length($1)) . "$2"/exi ||
 
                     s/^\s+([A-Z0-9_]+)()[,]?    # TOKEN, comment
-                        \s*(\/*.*\*\/)/
+                        \s*(\/\*.*\*\/)/
                         "#define $1 " .
                             ' 'x(23-length($1)) . "$enum_value " .
                             ' 'x(11-length("$enum_value")) . "$3"/exi ||
@@ -171,30 +179,53 @@ HEADER
                         "#define $1 " .
                             ' 'x(23-length($1)) . "$enum_value"/exi;
 
-                    $enum_value = $2            # new value
+                    $enum_value = $2            # new value.
                         if (defined($2) && $2 ne "");
 
-                    ++$enum_value               # increment enum value
-                        if (defined($1));
+                    if (defined($1)) {
+                        if ($enum_value =~ /^0x[0-9a-f]+$/i) {
+                            $enum_value = sprintf("0x%x", hex($enum_value) + 1);
+
+                        } elsif ($enum_value =~ /^\d+$/) {
+                            ++$enum_value;
+                        }
+                    }
 
                 } elsif ($export == 3) {
                     #   Reformat defines
                     #
-                    #   define XXX numeric /*comment*/
+                    #   define XXX numeric  /*comment*/
+                    #   define XXX value    /*comment*/
                     #   define XXX numeric
+                    #   define XXX value
                     #..
-                    s/^\#define\s+([A-Z0-9_]+)
+                    s/[ \t]+$//g;
+
+                    s/^\#define\s+([A-Za-z0-9_]+)
                         \s+([0-9a-fx]+)
+                        \s+(\/*.*\*\/)/                 # numeric
+                        "#define $1 " .
+                            ' 'x(23-length($1)) . "$2 " .
+                            ' 'x(11-length($2)) . "$3"/exi ||
+
+                    s/^\#define\s+([A-Za-z0-9_]+)
+                        \s*([-()<>~^&|_0-9A-Z ]+)       # symbols and binary operators
                         \s+(\/*.*\*\/)/
                         "#define $1 " .
                             ' 'x(23-length($1)) . "$2 " .
                             ' 'x(11-length($2)) . "$3"/exi ||
 
-                    s/^\#define\s+([A-Z0-9_]+)
-                        \s+([0-9a-fx]+)
-                        .*$/
+                    s/^\#define\s+([A-Za-z0-9_]+)
+                        \s+([0-9a-fx]+)                 # numeric
+                        (.*)$/
                         "#define $1 " .
-                            ' 'x(23-length($1)) . "$2"/exi;
+                            ' 'x(23-length($1)) . "$2$3"/exi ||
+
+                    s/^\#define\s+([A-Za-z0-9_]+)
+                        \s*([-()<>~^&|_0-9A-Z ]+)       # symbols and binary operators
+                        (.*)$/
+                        "#define $1 " .
+                            ' 'x(23-length($1)) . "$2$3"/exi;
                 }
 
                 print OUT $_;
@@ -229,3 +260,4 @@ Usage
 }
 
 #end
+
