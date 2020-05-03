@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strparse_c,"$Id: strparse.c,v 1.12 2020/04/23 12:37:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_strparse_c,"$Id: strparse.c,v 1.13 2020/05/03 21:09:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strparse.c,v 1.12 2020/04/23 12:37:54 cvsuser Exp $
+/* $Id: strparse.c,v 1.13 2020/05/03 21:09:06 cvsuser Exp $
  * libstr - String to numeric (float/integer) parser.
  *
  *
@@ -216,12 +216,10 @@ chparse(struct parse *p)
                     ret = NUMPARSE_ERR_SUFFIX;
                     goto error;
                 }
-                digits |= INTDIGIT;
                 dots = 1;
             }
-        } else {
-            digits |= INTDIGIT;
         }
+        digits |= INTDIGIT;
 
     } else if ('.' == ch) {
         ch = chget(p);
@@ -728,9 +726,19 @@ main(void)
     } values[] = {
         /* numeric */
         { INTEGER(0) },
+        { NUMERIC(" 0", 0) },
+        { NUMERIC("0 ", 0) },
+
         { INTEGER(1) },
+        { NUMERIC(" 1", 1) },
+        { NUMERIC("1 ", 1) },
+
         { INTEGER(-0) },
+        { NUMERIC(" -0", -0) },
+        { NUMERIC("-0 ", -0) },
         { INTEGER(+1) },
+        { NUMERIC(" +1", +1) },
+        { NUMERIC("+1 ", +1) },
 
         { INTEGER(1234) },
         { NUMERIC(" 1234", 1234) },
@@ -753,7 +761,7 @@ main(void)
 
         /* float */
         { NULL },
-        { DOUBLE(.0) },6
+        { DOUBLE(.0) },
         { DOUBLE(.0e1) },
         { DOUBLE(.1234) },
         { DOUBLE(1.) },
