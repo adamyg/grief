@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.61 2020/04/13 14:29:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.62 2020/05/03 18:25:44 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keyboard.c,v 1.61 2020/04/13 14:29:41 cvsuser Exp $
+/* $Id: keyboard.c,v 1.62 2020/05/03 18:25:44 cvsuser Exp $
  * Manipulate key maps and bindings.
  *
  *
@@ -2118,6 +2118,11 @@ key_execute(int c)
     sentry_t *sep = NULL;
     const char *cp;
 
+    if (KEY_WINCH == c) {
+        trace_log("\nKEY_EXEC(WINCH) 0x%x\n", KEY_WINCH);
+        return;                                 /* WINCH event; ignore */
+    }
+
     if (curbp && curbp->b_keyboard) {           /* buffer specific */
         sep = stype_lookup(curbp->b_keyboard->kt_macros, c);
     }
@@ -3402,9 +3407,5 @@ inq_kbd_name(void)              /* string ([int kbdid]) */
         acc_assign_str(kp->kt_name ? kp->kt_name : "", -1);
     }
 }
+
 /*end*/
-
-
-
-
-

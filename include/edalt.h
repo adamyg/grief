@@ -1,11 +1,11 @@
 #ifndef GR_EDALT_H_INCLUDED
 #define GR_EDALT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edalt_h,"$Id: edalt.h,v 1.25 2019/03/15 23:03:05 cvsuser Exp $")
+__CIDENT_RCSID(gr_edalt_h,"$Id: edalt.h,v 1.26 2020/05/03 18:26:49 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edalt.h,v 1.25 2019/03/15 23:03:05 cvsuser Exp $
+/* $Id: edalt.h,v 1.26 2020/05/03 18:26:49 cvsuser Exp $
  * Key definitions.
  * ==noguard==
  *
@@ -153,6 +153,7 @@ typedef int32_t KEY;
 #define KEY_TAB                 __TAB
 #define KEY_ENTER               __ENTER
 #define KEY_NEWLINE             '\n'
+#define KEY_WINCH               0x7ffe
 #define KEY_VOID                0x7fff
 
 /*

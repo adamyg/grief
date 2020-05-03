@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.57 2020/04/13 01:22:18 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.59 2020/05/03 21:41:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_win32.c,v 1.57 2020/04/13 01:22:18 cvsuser Exp $
+/* $Id: sys_win32.c,v 1.59 2020/05/03 21:41:40 cvsuser Exp $
  * WIN32 system support.
  *
  *
@@ -58,7 +58,7 @@ static void CALLBACK        HandleWinEvent(HWINEVENTHOOK hook, DWORD event, HWND
                                 LONG idObject, LONG idChild,  DWORD dwEventThread, DWORD dwmsEventTime);
 
 static int                  Resize(int winch);
-static void                 ResizeCheck(unsigned *checks);
+static int                  ResizeCheck(unsigned *checks);
 
 #if defined(__WATCOMC__)
 extern char volatile        __WD_Present;
@@ -111,8 +111,24 @@ sys_initialise(void)
     /*
      *  Console mode, required for correct Ctrl-C processing.
      */
-    GetConsoleMode(hConsole, &consoleMode);
-    SetConsoleMode(hConsole, ENABLE_WINDOW_INPUT|ENABLE_MOUSE_INPUT|ENABLE_PROCESSED_INPUT);
+    if (hConsole) {
+        if ((DWORD)-1 == consoleMode) {         /* save */
+            GetConsoleMode(hConsole, &consoleMode);
+        }
+
+        if (xf_mouse) {                         /* mouse enabled */
+            if (! SetConsoleMode(hConsole, ENABLE_EXTENDED_FLAGS|\
+                        ENABLE_WINDOW_INPUT|ENABLE_MOUSE_INPUT|ENABLE_PROCESSED_INPUT)) {
+                    // Note: Stating ENABLE_EXTENDED_FLAGS disables ENABLE_INSERT_MODE and/or ENABLE_QUICK_EDIT_MODE.
+                    //  required for correct mouse operation; restored within sys_shutdown().
+                SetConsoleMode(hConsole, ENABLE_WINDOW_INPUT|ENABLE_MOUSE_INPUT|ENABLE_PROCESSED_INPUT);
+                    // No extended support/XP.
+            }
+        } else {
+            SetConsoleMode(hConsole, ENABLE_WINDOW_INPUT|ENABLE_PROCESSED_INPUT);
+        }
+    }
+
     SetConsoleCtrlHandler((PHANDLER_ROUTINE) CtrlHandler, TRUE);
 
     Resize(FALSE);
@@ -129,8 +145,10 @@ sys_shutdown(void)
 {
     HANDLE hConsole = GetStdHandle(STD_INPUT_HANDLE);
 
-    if ((DWORD)-1 != consoleMode) {
-        SetConsoleMode(hConsole, consoleMode);
+    if (hConsole) {
+        if ((DWORD)-1 != consoleMode) {
+            SetConsoleMode(hConsole, consoleMode);
+        }
     }
     SetConsoleCtrlHandler(NULL, TRUE);
 }
@@ -168,7 +186,7 @@ CtrlHandler(DWORD fdwCtrlType)
 {
     switch (fdwCtrlType) {
     case CTRL_CLOSE_EVENT:
-        Beep(600, 200);
+        Beep(600, 200); //TODO: KEY_SHUTDOWN/tigger
         if (buf_anycb() == TRUE) {
             return FALSE;
         }
@@ -281,18 +299,22 @@ Resize(int winch)
     VioGetMode(&mi, 0);
     ncols = (int)mi.col;
     nrows = (int)mi.row;
+
+    font[0] = 0;
     if (2 == winch) {                           /* possible font change */
         VioGetFont(font, sizeof(font));
-        nfont = (0 != memcmp(font, ofont, sizeof(ofont)));
+        nfont = (ofont[0] && (0 != memcmp(font, ofont, sizeof(ofont))));
         GetWindowRect(GetConsoleWindow(), &rect);
         if ((orect.right - orect.left) != (rect.right - rect.left) ||
                 (orect.bottom - orect.top) != (rect.bottom - rect.top)) {
-            nfont = 1;
+            if (orect.bottom) {
+                nfont = 1;
+            }
         }
     }
 
     if (orows != nrows || ocols != ncols || 1 == nfont) {
-        orows = nrows;
+        orows = nrows;                          /* change; cache current */
         ocols = ncols;
         if (-1 == nfont) {
             VioGetFont(font, sizeof(font));
@@ -301,7 +323,7 @@ Resize(int winch)
         memcpy(ofont, font, sizeof(ofont));
         orect = rect;
         if (winch) {
-            tty_needresize = TRUE;
+            ++tty_needresize;
         }
         return 1;
     }
@@ -309,17 +331,20 @@ Resize(int winch)
 }
 
 
-static void
+static int
 ResizeCheck(unsigned *checks)
 {
     unsigned t_checks = *checks;
+    int resize;
+
     if (t_checks) {
-        if (Resize(2)) t_checks = 0;
+        if ((resize = Resize(2)) != 0) t_checks = 0;
         else --t_checks;
     } else {
-        Resize(1);
+        resize = Resize(1);
     }
     *checks = t_checks;
+    return resize;
 }
 
 
@@ -383,6 +408,7 @@ sys_getevent(struct IOEvent *evt, int tmo)
     DWORD ticks, tmticks;
     INPUT_RECORD k;
     DWORD count, rc;
+    int resize = 0;                             /* new resize event */
 
     for (;;) {
 
@@ -414,7 +440,7 @@ sys_getevent(struct IOEvent *evt, int tmo)
                         return 0;
                     }
                 } else {
-                    ResizeCheck(&checks);
+                    resize = ResizeCheck(&checks);
                 }
                 break;
 
@@ -451,11 +477,11 @@ sys_getevent(struct IOEvent *evt, int tmo)
 
             case FOCUS_EVENT:
                 VioSetFocus(k.Event.FocusEvent.bSetFocus);
-                Resize(2);
+                resize = Resize(2);
                 break;
 
             case WINDOW_BUFFER_SIZE_EVENT:
-                Resize(2);
+                resize = Resize(2);
                 break;
 
             case MENU_EVENT:
@@ -469,6 +495,13 @@ sys_getevent(struct IOEvent *evt, int tmo)
             default:
                 break;
             }
+        }
+
+        if (resize) {                           /* resize event */
+            evt->type = EVT_KEYDOWN;
+            evt->code = KEY_WINCH;
+            evt->modifiers = 0;
+            return 0;
         }
 
         if (tmo < 0 || (tmo > 0 && (tmo -= ticks) <= 0)) {
@@ -1018,4 +1051,3 @@ sys_running(int pid)
     return 0;
 }
 #endif  /*WIN32*/
-
