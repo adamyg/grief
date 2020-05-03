@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_uname_c,"$Id: w32_uname.c,v 1.14 2019/03/15 23:12:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_uname_c,"$Id: w32_uname.c,v 1.15 2020/05/03 21:34:19 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 uname() system calls
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2020, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -75,7 +75,7 @@ __CIDENT_RCSID(gr_w32_uname_c,"$Id: w32_uname.c,v 1.14 2019/03/15 23:12:21 cvsus
 //
 //      No errors are defined.
 */
-int
+LIBW32_API int
 uname(struct utsname *u)
 {
     static char u_sysname[32], u_version[16], u_release[32], u_machine[32];
