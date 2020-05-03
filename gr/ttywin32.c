@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.49 2020/04/19 23:47:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.50 2020/05/03 18:57:00 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttywin32.c,v 1.49 2020/04/19 23:47:37 cvsuser Exp $
+/* $Id: ttywin32.c,v 1.50 2020/05/03 18:57:00 cvsuser Exp $
  * WIN32 VIO driver.
  *  see: http://www.edm2.com/index.php/Category:Vio
  *
@@ -681,8 +681,11 @@ VioGetCurAttribute(USHORT *attribute, HVIO viohandle)
         return ERROR_VIO_INVALID_HANDLE;
     }
 
-    (void) GetConsoleScreenBufferInfo(vio.chandle, &sbinfo);
-    if (attribute) *attribute = sbinfo.wAttributes;
+    if (GetConsoleScreenBufferInfo(vio.chandle, &sbinfo)) {
+        if (attribute) {
+            *attribute = sbinfo.wAttributes;
+        }
+    }
     return 0;
 }
 
