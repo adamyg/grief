@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.57 2020/04/21 21:42:18 cvsuser Exp $")
+__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.58 2020/05/03 21:51:42 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: builtin.c,v 1.57 2020/04/21 21:42:18 cvsuser Exp $
+/* $Id: builtin.c,v 1.58 2020/05/03 21:51:42 cvsuser Exp $
  * Builtin expresssion evaluation.
  *
  *
@@ -98,64 +98,95 @@ void *                  x_exception = NULL;     /* Try/catch() exception */
 
 /*
  *  execute_str ---
- *      Function to take a string like what the user can type at the command prompt,
- *      perform a simple parse on it and execute the specified macro.
+ *      Take a string, possiblity entered via the the command prompt, taking the 
+ *      form <macro [arguments ... ]>, parse and then execute the specified macro.
+ *
+ *      Arguments can be either int, float otherwise treated as a string.
  */
 int
 execute_str(const char *str)
 {
-    register const char *cp = str;
-    char buf[MAX_CMDLINE * 2];                  /* MAGIC */
-    int dp = 0;
+    register const unsigned char *cp = (unsigned char *)str;
 
-    LIST tmpl[LIST_SIZEOF(128)], *lp = tmpl;    /* 128 atoms -- ~1k */
+    unsigned char cmd[MAX_CMDLINE * 2],         /* MAGIC */
+        *dp = cmd, *dpend = dp + (sizeof(cmd) - 2 /*nul*/);
 
-    while (isspace(*cp)) {
+    LIST list[LIST_SIZEOF(128)],                /* 128 atoms -- ~1k */
+        *lp = list, *lpend = lp + (sizeof(list) - 1 /*HALT*/);
+
+    while (*cp && isspace(*cp)) {
         ++cp;
     }
-    if (*cp == '\0') {
-        return 0;
+    if (! *cp) {
+        return 0;           /*success, no macro*/
     }
 
-    lp = atom_push_sym(tmpl, buf + dp);         /* macro name */
-
-    while (*cp && !isspace(*cp)) {
-        if (dp >= (int)sizeof(buf)-2) {
-            ewprintf("Out of space in execute_str(1)");
-            return -1;
+    if ('$' == *cp) {                           /* leading module identifier "$xxxx::" */
+        *dp++ = '$';
+        while (*++cp && isxdigit(*cp)) {
+            *dp++ = *cp;
         }
-        buf[dp++] = *cp++;
+
+        if (':' == *cp)  {
+            *dp++ = *cp++;
+            if (':' == *cp) {
+                *dp++ = *cp++;
+            }
+        }
     }
-    buf[dp++] = '\0';
+
+    while (*cp && iscsym(*cp)) {                /* letter, underscore or digit */
+        if (dp >= dpend) {
+            ewprintf("Out of space in execute_str(1)");
+            return -1;      /*error, no-memory*/
+        }
+        *dp++ = *cp++;
+    }
+
+    if (*cp && !isspace(*cp)) {
+        while (*cp && !isspace(*cp)) {          /* add new additional non-space characters */
+            if (dp < dpend) {
+                *dp++ = *cp;
+            }
+            ++cp;
+        }
+        *dp++ = '\0';
+
+        ewprintf("Invalid macro name <%s>", cmd);
+        return -1;          /*error, function name*/
+    }
+    *dp++ = '\0';
+
+    lp = atom_push_sym(lp, (const char *)cmd);  /* macro name */
 
     while (*cp) {
         while (isspace(*cp)) {
-            ++cp;
+            ++cp;           /*leading whitespace*/
+        }
+        if (! *cp)  {
+            break;          /*end-of-arguments*/
         }
 
-        if ('\0' == *cp)  {
-            break;
-        }
-
-        if (lp >= (tmpl + sizeof(tmpl))) {
+        if (lp >= lpend) {
             ewprintf("Out of space in execute_str(2)");
             return -1;
         }
 
-        if ((*cp >= '0' && *cp <= '9') ||
+        if ((*cp >= '0' && *cp <= '9') ||       /* possible numeric */
                 (*cp == '-' && (cp[1] >= '0' && cp[1] <= '9')) ||
+                (*cp == '+' && (cp[1] >= '0' && cp[1] <= '9')) ||
                 (*cp == '.' && (cp[1] >= '0' && cp[1] <= '9')))
         {
             accfloat_t fval;
             accint_t ival;
             int ret, len = 0;
 
-            ret = str_numparse(cp, &fval, &ival, &len);
+            ret = str_numparse((const char *)cp, &fval, &ival, &len);
             switch (ret) {
             case NUMPARSE_INTEGER:              /* integer-constant */
             case NUMPARSE_FLOAT:                /* float-constant */
                 cp += len;
-                if (0 == *cp || isspace(*cp)) {
+                if (!*cp || isspace(*cp)) {
                     if (ret == NUMPARSE_INTEGER) {
                         lp = atom_push_int(lp, ival);
                     } else {
@@ -170,7 +201,7 @@ execute_str(const char *str)
             }
 
         } else {
-            register const char *cp1;
+            register const unsigned char *cp1;
             char term;
 
 string:;    term = ' ';
@@ -188,15 +219,15 @@ string:;    term = ' ';
                 ++cp;
             }
 
-            lp = atom_push_const(lp, buf + dp); /* copy sub-string */
+            lp = atom_push_const(lp, (const char *)dp); /* copy sub-string */
             for (cp = cp1; *cp && *cp != term;) {
-                if (dp >= (int)(sizeof(buf) - 2)) {
+                if (dp >= dpend) {
                     ewprintf("Out of space in execute_str(3)");
                     return -1;
                 }
-                buf[dp++] = *cp++;
+                *dp++ = *cp++;
             }
-            buf[dp++] = '\0';
+            *dp++ = '\0';
 
             if (*cp) {                          /* consume terminator */
                 ++cp;
@@ -205,7 +236,7 @@ string:;    term = ' ';
     }
 
     atom_push_halt(lp);
-    execute_nmacro(tmpl);
+    execute_nmacro(list);
     return 0;
 }
 
