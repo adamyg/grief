@@ -14,6 +14,7 @@ static list alist = {       // mode alias map
      */
     "cr",                   ".brief.crisp.grief.",
     "chlog",                ".changelog.",
+    "pymode",               ".python.",
     "mak",                  ".makefile.",
     "sh",                   ".bash.",
     "txt",                  ".text.",
@@ -35,6 +36,7 @@ static list xlist =  {      // mode extension map
     "mak",                  ".mk.mak.",
     "masm",                 ".asm.",
     "perl",                 ".pl.pm.",
+    "python",               ".py.",
     "sh",                   ".sh.csh.tcsh.zsh.bash.ash.rsh.",
     "txt",                  ".txt.",
     "slang",                ".sl.",
@@ -50,7 +52,7 @@ main(void)
 
     autoload("modes/awk",           "_awk_mode");
 
-    autoload("modes/dosbatch",	    "_dosbatch_mode");
+    autoload("modes/dosbatch",      "_dosbatch_mode");
 
     autoload("modes/c",             "_c_mode", "_c_modeattach", "_cplusplus_mode",
                                             "_c_hier_list", "_cpp_hier_list");
@@ -185,3 +187,4 @@ _mode_package(string ext, string cmd)
 }
 
 /*end*/
+
