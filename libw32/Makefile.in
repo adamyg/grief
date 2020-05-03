@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.22 2018/10/12 00:24:39 cvsuser Exp $
+# $Id: Makefile.in,v 1.23 2020/05/03 21:34:19 cvsuser Exp $
 # libwin32 makefile.
 #
 #
@@ -102,6 +102,7 @@ CSOURCES=\
 	w32_getcwd.c \
 	w32_gethostname.c \
 	w32_getopt.c \
+	w32_getrusage.c \
 	w32_getsubopt.c \
 	w32_getlocale.c \
 	w32_gistrerror.c \
