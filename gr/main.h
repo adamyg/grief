@@ -1,11 +1,11 @@
 #ifndef GR_MAIN_H_INCLUDED
 #define GR_MAIN_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_main_h,"$Id: main.h,v 1.27 2020/04/21 00:01:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_main_h,"$Id: main.h,v 1.28 2020/05/03 21:10:56 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: main.h,v 1.27 2020/04/21 00:01:57 cvsuser Exp $
+/* $Id: main.h,v 1.28 2020/05/03 21:10:56 cvsuser Exp $
  * Globals and main process primitives.
  *
  *
@@ -30,6 +30,8 @@ __CBEGIN_DECLS
  *  Global variables declared in main.c
  */
 extern const char *         x_progname;         /* arg0 or better */
+
+extern int                  xf_mouse;           /* TRUE enable mouse. */
 
 extern int                  xf_compat;          /* TRUE normal stdout I/O otherwise optimised */
 

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.34 2020/04/21 21:33:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.36 2020/05/03 21:09:41 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.34 2020/04/21 21:33:24 cvsuser Exp $
+/* $Id: cmain.c,v 1.36 2020/05/03 21:09:41 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -254,7 +254,7 @@ static int              xf_dumpstats = FALSE;   /* TRUE if stats reporting on ex
 
 static int              xf_dumprefs = FALSE;    /* TRUE if ref status are dumped on exit. */
 
-static int              xf_mouse = TRUE;        /* TRUE enable mouse. */
+int                     xf_mouse = TRUE;        /* TRUE enable mouse. */
 
 static int              xf_ttydrv = 't';        /* TTY driver type */
 
@@ -573,6 +573,7 @@ cmain(int argc, char **argv)
             }
         }
         buf_show(curbp = firstbp, curwp);
+        set_hooked();
 
     } else  {                                   /* load default quietly */
         const char *grfile = ggetenv("GRFILE");
