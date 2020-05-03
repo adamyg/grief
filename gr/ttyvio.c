@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.67 2020/04/19 23:47:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.68 2020/05/03 18:24:42 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.67 2020/04/19 23:47:37 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.68 2020/05/03 18:24:42 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -141,7 +141,6 @@ static const struct colormap {                  /* BRIEF -> NCURSES palette */
     int         c16;
     int         c16win;
 #endif
-//  int         c256;
 } tt_colormap[] = {
     /*  Ident   16/PC       16/WIN */
     { BLACK,        0,      WIN32_Black        },
@@ -558,7 +557,7 @@ vio_image_save(void)
     origCols = currCols;
 
     if (NULL != (screen = chk_calloc(length, 1))) {
-#if defined(WIN32)
+#if defined(WIN32) 
         GetConsoleTitleA(origTitle, sizeof(origTitle));                     
         VioGetCurAttribute(&origAttribute, 0);
 #endif
@@ -914,8 +913,8 @@ term_putc(vbyte_t c)
 static void
 term_clear(void)
 {
-    assert(currRows == ttrows());
-    assert(currCols == ttcols());
+    assert(currRows == ttrows() || tty_needresize /*FIXME: very small window*/);
+    assert(currCols == ttcols() || tty_needresize /*FIXME: very small window*/);
     term_attribute(ATTR_NORMAL);
     {
         const VIOCELL blank = VIO_INIT(tt_hue, ' ');
