@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_gethostname_c,"$Id: w32_gethostname.c,v 1.11 2019/03/15 23:12:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_gethostname_c,"$Id: w32_gethostname.c,v 1.12 2020/05/03 21:34:19 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 gethostname
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2020, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -38,6 +38,8 @@ __CIDENT_RCSID(gr_w32_gethostname_c,"$Id: w32_gethostname.c,v 1.11 2019/03/15 23
 #include "win32_internal.h"
 #include <unistd.h>
 
+#include <libstr.h>
+
 /*
 //  NAME
 //      gethostname - get name of current host
@@ -48,7 +50,7 @@ __CIDENT_RCSID(gr_w32_gethostname_c,"$Id: w32_gethostname.c,v 1.11 2019/03/15 23
 //      int gethostname(char *name, size_t namelen);
 //
 //  DESCRIPTION
-//      The  gethostname() function shall return the standard host name for the
+//      The gethostname() function shall return the standard host name for the
 //      current machine. The namelen argument shall specify  the  size  of  the
 //      array  pointed  to  by  the  name argument.  The returned name shall be
 //      null-terminated, except that if namelen is an  insufficient  length  to
@@ -71,24 +73,29 @@ w32_gethostname(char *name, size_t namelen)
 {
     const char *host;
 
+    if (NULL == name || 0 == namelen) {
+        errno = EINVAL;
+        return -1;
+    }
+   
 #undef gethostname
     if (0 == gethostname(name, (int)namelen)) {
         return 0;
+    } else {
+        DWORD dwSize = namelen;
+        if (GetComputerNameExA(ComputerNameDnsHostname, name, &dwSize) && dwSize) {
+            // The DNS host name of the local computer.
+            // If the local computer is a node in a cluster, lpBuffer receives the DNS host name of the cluster virtual server.
+            return 0;
+        }
     }
-
-#if (TODO)
-    char buffer[MAX_COMPUTERNAME_LENGTH+1] = {0};
-    DWORD dwSize = sizeof(buffer);
-
-    if (GetComputerNameEx((COMPUTER_NAME_FORMAT)cnf, buffer, &dwSize)) {
-    }
-#endif
 
     host = getenv("COMPUTERNAME");
     if (NULL == host) host = "pccomputer";
     strncpy(name, (const char *)host, namelen);
+    name[namelen - 1] = 0;
+
     return 0;
 }
 
 /*end*/
-
