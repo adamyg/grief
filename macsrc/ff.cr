@@ -1,13 +1,14 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: ff.cr,v 1.37 2014/10/27 23:28:21 ayoung Exp $
+/* $Id: ff.cr,v 1.39 2020/05/04 20:11:58 cvsuser Exp $
  * Find find and other assorted directory/file searches.
  *
  *  ff      File find.
  *  dir     Directory list.
  *  tree    Directory tree.
  *  treecd  Change directory.
+ *  bs      Buffer search.
+ *  find    Current buffer search.
  *  ts      Text search.
- *
  *
  */
 
@@ -42,10 +43,13 @@
 #define F_IGNORECASE        0x0010
 #define F_BINARY            0x0020
 #define F_NOBINARY          0x0040
+#define F_SELECTONE         0x0080              /* find, single selection */
+
 #define F_BUFFER            0x0100
 #define F_SYSBUFFERS        0x0200
 #define F_PIPE              0x0400
-#define F_MODE              0x0800
+#define F_DIR               0x0800
+#define F_CURRBUFFER        0x1000
 
 /* Globals */
 static string               ffslashc;
@@ -81,7 +85,8 @@ static string               getpathname(string);
 #endif
 
 
-/*  ff ---
+/*
+ *  ff ---
  *    Findfile, user interface
  *
  *       ff [pattern] [file-path] [flags]
@@ -107,7 +112,7 @@ ff(~string, ~string, ~int)
     }
 
     /* Generate the file list */
-    if ((ff_buf = create_buffer("File Find", NULL, 1)) == -1) {
+    if ((ff_buf = create_buffer((flags & F_DIR ? "Directory" : "File Find"), NULL, 1)) == -1) {
         return "";
     }
     set_buffer(ff_buf);
@@ -162,6 +167,7 @@ ff(~string, ~string, ~int)
 
         set_buffer(old_buf);
         inq_screen_size(slines, scols);
+
         _dialog_menu(ffwidth, (slines/3)*2, 0, 0,
             "File-List", "<Enter> to select, <F10/Esc> to exit>",
                NULL, ff_buf, "_ff_act", TRUE);
@@ -218,14 +224,15 @@ ff(~string, ~string, ~int)
 }
 
 
-/*  dir ---
+/*
+ *  dir ---
  *      Dir list, performs 'user specified' command on selection list
  */
 string
 dir(~string, ~string)
 {
     string dir, file;
-    int flags = F_MODE;
+    int flags = F_DIR;
     int param = 0;
 
     while (1) {
@@ -257,7 +264,8 @@ dir(~string, ~string)
 }
 
 
-/*  tree ---
+/*
+ *  tree ---
  *      Directory tree
  */
 string
@@ -265,9 +273,8 @@ tree(~string)
 {
     string  directory, tmpstr;
     int     old_buf = inq_buffer(),
-            msg_level = inq_msg_level(),
-            tree_buf,
-            picked_no;
+               msg_level = inq_msg_level();
+    int     tree_buf, picked_no;
 
     /* Retrieve base directory */
     if (! get_parm(0, directory, "Directory: ", NULL, CURRENTDIR)) {
@@ -287,19 +294,18 @@ tree(~string)
     if (rindex(tmpstr, sysslash()) != strlen(tmpstr)) {
         tmpstr += sysslash();
     }
-    if ((tree_buf = create_buffer("Directory Tree", tmpstr + TREE_FILE, 0)) == -1) {
-        message("tree: Cannot open %s.", tmpstr + TREE_FILE);
+
+    if ((tree_buf =
+            create_buffer("Directory Tree", tmpstr + TREE_FILE, FALSE)) < 0) {
+        message("tree: Unable to access directory buffer.");
         return "";
     }
-    set_buffer(tree_buf);
 
-    /* Does the tree already exist */
-    set_msg_level(0);
-    top_of_buffer();
-    ffrescan = 0;
-    if (read(1) == "\n") {
-        ffrescan = 1;
-    }
+    set_buffer(tree_buf);
+    set_buffer_flags(tree_buf, BF_SYSBUF|BF_NO_UNDO, ~BF_BACKUP);
+
+    if (inq_lines() <= 1) ffrescan = 1;         /* new buffer; scan */
+
     ffwidth = TREE_WIDTH;
 
     while (1) {                                 /* Generate the file list */
@@ -313,9 +319,9 @@ tree(~string)
             getwd("", tmpstr);
             cd(directory);
             getwd("", directory);
-            insert(upper(directory));
+            insert(directory);
             move_abs(0, TREE_WIDTH);
-            insert(";" + lower(directory));
+            insert(";" + directory);
 
             /* Create the TREE from the base directory */
                                                 /* recursive, tree */
@@ -368,7 +374,8 @@ tree(~string)
 }
 
 
-/*  treecd ---
+/*
+ *  treecd ---
  *      Change directory, using directory tree
  */
 void
@@ -384,7 +391,8 @@ treecd(~string)
 }
 
 
-/*  bs --- Buffer search
+/*
+ *  bs --- Buffer search
  *
  *      bs [options] pattern
  */
@@ -417,6 +425,10 @@ bs(~string, ...)
         } else if (opt == "/i" || opt == "-i") {
             flags |= F_IGNORECASE;              /* ignore case */
 
+        } else if (opt == "/1" || opt == "-1") {
+            flags |= F_SELECTONE;               /* single select */
+            break;
+
         } else {    /*otherwise pattern */
             pattern = opt;
             break;
@@ -433,7 +445,48 @@ bs(~string, ...)
 }
 
 
-/*  ts ---- Text Search
+/*
+ *  find --- Find text within the current buffer
+ *
+ *       find [options] pattern
+ */
+string
+find(~string, ...)
+{
+    string opt, pattern, file;
+    int flags, param;
+
+    flags = F_CURRBUFFER|F_SELECTONE;           /* buffer search/single selection */
+    param = 0;
+
+    while (1) {
+        if (! get_parm(param++, opt, "Pattern/Options: ")) {
+            return "";
+        }
+
+        if (opt == "--") {                      /* getopt style (--) */
+            if (! get_parm(param++, pattern, "Pattern: ")) {
+                return "";
+            }
+            break;
+
+        } else if (opt == "/i" || opt == "-i") {
+            flags |= F_IGNORECASE;              /* ignore case */
+
+        } else {    /*otherwise pattern */
+            pattern = opt;
+            break;
+        }
+    }
+
+    inq_names(NULL, NULL, file);                /* current buffer */
+
+    tsmain(flags, pattern, file, inq_called());
+}
+
+
+/*
+ *  ts ---- Text Search
  *
  *         ts [/ralib] pattern [dir/][pattern]
  *      or ts [options] pattern --
@@ -475,6 +528,10 @@ ts(~string, ~string, ...)
 
         } else if (opt == "/p" || opt == "-p") {
             flags |= F_PIPE;                    /* pipe */
+            break;
+
+        } else if (opt == "/1" || opt == "-1") {
+            flags |= F_SELECTONE;               /* single select */
             break;
 
         } else {    /*otherwise pattern */
@@ -527,8 +584,8 @@ tsmain(int flags, string pattern, string file, string caller)
             return;
         }
 
-    } else if (flags & F_BUFFER) {              /* open files (buffers) open */
-        string name, _ff_pattern = pattern;
+    } else if (flags & (F_BUFFER|F_CURRBUFFER)) {
+        string name, _ff_pattern = pattern;     /* open files (buffers) */
         int _ff_flags = flags;
 
         UNUSED(_ff_pattern, _ff_flags);
@@ -537,21 +594,27 @@ tsmain(int flags, string pattern, string file, string caller)
 
         setwidth(pattern);                      /* setup display width */
 
-        do {                                    /* walk buffers */
-            inq_names(NULL, NULL, name);
+        if (flags & F_CURRBUFFER) {
+            set_buffer(curbuf);
+            searchbuffer(tsbuf);
 
-            /*
-             *  Search if/
-             *      a) Not the result buffer
-             *      b) If not a system buffer or F_SYSBUFFERS
-             *      c) 'file' matches the buffer name
-             */
-            if (inq_buffer() != tsbuf &&
-                    ((flags & F_SYSBUFFERS) || !inq_system()) && file_match(file, name)) {
-                searchbuffer(tsbuf);
-            }
-            set_buffer(next_buffer(TRUE));      /* next */
-        } while (inq_buffer() != tsbuf);
+        } else {
+            do {                                /* walk buffers */
+                inq_names(NULL, NULL, name);
+
+                /*
+                *  Search if/
+                *      a) Not the result buffer
+                *      b) If not a system buffer or F_SYSBUFFERS
+                *      c) 'file' matches the buffer name
+                */
+                if (inq_buffer() != tsbuf &&
+                        ((flags & F_SYSBUFFERS) || !inq_system()) && file_match(file, name)) {
+                    searchbuffer(tsbuf);
+                }
+                set_buffer(next_buffer(TRUE));  /* next */
+            } while (inq_buffer() != tsbuf);
+        }
 
     } else {
         string curdir, dir;
@@ -590,9 +653,16 @@ tsmain(int flags, string pattern, string file, string caller)
             int t_buf = tsbuf;                  /* XXX - scoping bug (fixed??) */
 
             inq_screen_size(slines, scols);
-            _dialog_menu(ffwidth, (slines / 3) * 2, 0, 0,
-                "Search-List", "<Esc/F10> to exit, <Enter> to select",
-                    NULL, t_buf, "_ts_act", TRUE);
+
+            if (flags & F_SELECTONE) {          /* single selection */
+               _dialog_menu(ffwidth, (slines / 3) * 2, 0, 0,
+                  "Search-List", "<Esc> to exit, <Enter> to select",
+                        NULL, t_buf, "_ts_act_one", TRUE);
+            } else {
+               _dialog_menu(ffwidth, (slines / 3) * 2, 0, 0,
+                  "Search-List", "<Esc/F10> to exit, <Enter> to select",
+                        NULL, t_buf, "_ts_act_mul", TRUE);
+            }
         }
 
         if (caller == "") {                     /* invoked from command line */
@@ -785,7 +855,8 @@ _ff_act(int type)
 }
 
 
-/*  _tree_act ---
+/*
+ *  _tree_act ---
  *      Directory tree engine dialog action interface
  */
 int
@@ -820,11 +891,45 @@ _tree_act(int type)
 }
 
 
-/*  _ts_act ---
- *      Text search engine dialog action interface
+/*
+ *  _ts_act_one ---
+ *      Text search engine dialog action interface, single selection.
  */
 int
-_ts_act(int type)
+_ts_act_one(int type)
+{
+    string text;
+    int pos;
+
+    switch(type) {
+    case DIALOG_PICK_MENU: {                    /* <Enter>, select */
+            get_parm(1, pos);
+            move_abs(pos, 1);
+            if (substr(text = read(5), 2, 4) != "File") {
+                text = substr(text, 1, 1);
+            } else {
+                down();
+                text = read(1);
+            }
+            delete_char();
+            insert(text == " " ? "*" : " ");
+            left();
+            tskeep = 1;
+            _dialog_esc();
+        }
+        break;
+    }
+    return (TRUE);                              /* perform default action */
+}
+
+
+
+/*
+ *  _ts_act_mul ---
+ *      Text search engine dialog action interface, multiple selection.
+ */
+int
+_ts_act_mul(int type)
 {
     string text;
     int pos;
@@ -950,7 +1055,7 @@ _ff2(int dirtree, int dirmask)
         int     smode = 0;
         string  mon;
 
-        if (F_MODE & _ff_flags) {               /* mode */
+        if (F_DIR & _ff_flags) {               /* dir, mode selection */
             if (flen > 30) {
                 flen -= 11;
                 smode = 1;
@@ -1074,7 +1179,7 @@ _ff2(int dirtree, int dirmask)
         if (dirtree) {
             buffer = "\n";
 
-#if defined(MSDOS)                              // MCHAR???
+#if defined(MSDOS) && (0)                       // MCHAR???
             for (i=2; i<dirtree; ++i) {         // parents
                 if (dirmask & (1<<i)) {
                     buffer += "     ";
@@ -1399,3 +1504,4 @@ getpathname( string newdir )
 }
 
 /*eof*/
+

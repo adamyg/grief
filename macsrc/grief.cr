@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: grief.cr,v 1.86 2020/04/20 23:13:31 cvsuser Exp $
+/* $Id: grief.cr,v 1.87 2020/05/04 18:45:47 cvsuser Exp $
  * GRIEF startup macro.
  *
  *
@@ -260,6 +260,7 @@ grief(void)
         "tree",
         "treecd",
         "ts",
+        "find",
         "bs");
     autoload("objects",
         "objects",
