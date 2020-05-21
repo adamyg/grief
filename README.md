@@ -14,7 +14,7 @@ Based on a long standing interface, Grief is an intuitive and easy editor to bot
 novice and seasoned developers, inheriting its clean user interface from the BRIEF
 family of programmers editors.
 
-![GRIEF Programmers Guide](https://github.com/adamyg/grief/blob/master/griefprogguide.pdf)
+![GRIEF Quick Start and Programmers Guide](https://github.com/adamyg/grief/blob/master/griefprogguide.pdf)
 
 Brief, BRIEF, or B.R.I.E.F., an acronym for Basic Reconfigurable Interactive Editing
 Facility, was a popular programmer's text editor in the 1980s and early 1990s.
@@ -90,9 +90,9 @@ Other Resources:
 Details about the commercially supported BRIEF clone CRisPEdit(tm),
 can be found at the following.
 
-   * <http://www.crisp.demon.co.uk>
+    * <http://www.crisp.demon.co.uk>
 
-   * <http://www.crisp.com>
+    * <http://www.crisp.com>
 
 last update: May/2020
 
