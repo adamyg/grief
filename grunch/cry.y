@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cry.y,v 1.33 2020/04/20 22:49:23 cvsuser Exp $
+/* $Id: cry.y,v 1.34 2020/05/04 20:12:45 cvsuser Exp $
  * grunch/crunch grammer, extended c99
  *
  *
@@ -1860,7 +1860,7 @@ external_declaration:
                         Head_p arglist = NULL;
                         symtype_t type = ((symtype_t)fp->f_type) | (TM_FUNCTION << TM_SHIFT);
 
-                        assert(fp->f_body);
+                      //assert(fp->f_body);     /* may occur if a syntax error */
                         if (fp->f_defn) {
                             if (fp->f_defn->right) {
                                 assert(node_arglist == fp->f_defn->right->type);
