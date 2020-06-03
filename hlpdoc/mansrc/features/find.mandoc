@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: bs.mandoc,v 1.3 2020/05/04 18:42:50 cvsuser Exp $
+.\" | $Id: find.mandoc,v 1.1 2020/05/04 18:42:50 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -46,40 +46,36 @@
 .\" |         Gotchas and caveats.
 .\" | --
 .Dd $Mdocdate$
-.Dt BS
+.Dt FIND
 .Os
 .Sh NAME
-.Nm bs
-.Nd buffer search.
+.Nm find
+.Nd current buffer search.
 .Sh SYNOPSIS
-bs pattern [/isl]
+find pattern [/isl]
 .Sh DESCRIPTION
-The \fIbs\fR macro searchs all existing buffers against the regular expression
+The \fIfind\fR macro searchs the current buffer against the regular expression
 'pattern' for matching text.
 .Pp
-Whilst bs is operating it prints the message:
+Whilst find is operating it prints the message:
 .Bd -literal
 	Matches: total/this-file file-name ...
 .Ed
 .Pp
 The search results shall be presented within a selection dialog. The user can
 move around this dialog with the usual cursor movement keys. The current
-entry is highlited. Pressing <Enter> on any particular line result in its
-selection being toggled denoted by a marker in the left column. Upon exiting
-by <F10> all marked files are then loaded with the line on which the match
-occurred being selected.
+entry is highlited. Pressing <Enter> on any particular line result in
+selection being selected.
 .Pp
 Dialog example:
 .Bd -literal
 	File: ./firstfile.txt Pattern: hello
 	  10,   helloworld
 	  12,   hello again
-	File: ./secondfile.txt Pattern: hello
-	  12,   hello to the second coming
 .Ed
 .Pp
-Also if the dialog was exited using <F10>, regardless whether any files
-where marked, the follwing navigation services are enabled.
+Also if the dialog was exited using <Enter>, the follwing navigation services
+are enabled.
 .Bl -tag -offset 1
 .It Previous and next
 The <Ctrl-N> and <Ctrl-P> keys are remapped to the search results. Pressing
@@ -105,17 +101,13 @@ The valid options are:
 .Bl -tag -offset 1
 .It /i
 Ignore case.
-.It /s
-Include system buffers (use with caution).
 .El
 .Sh MENU/KEYS
 This macro can be accessed from the GRIEF features menu or by typing
-\fIbs\fR at the command prompt, with or without the required arguments.
+\fIfind\fR at the command prompt, with or without the required arguments.
 .Sh SEE ALSO
 .Xr feature ,
 .Xr grep ,
 .Xr routines ,
 .Xr ff ,
-.Xr ts ,
-.Xr find
-
+.Xr ts

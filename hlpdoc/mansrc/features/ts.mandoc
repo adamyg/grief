@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: ts.mandoc,v 1.2 2018/10/01 21:19:58 cvsuser Exp $
+.\" | $Id: ts.mandoc,v 1.3 2020/05/04 18:42:50 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -56,7 +56,7 @@ ts [options] pattern [path]
 .br
 ts /p file
 .Sh DESCRIPTION
-The ts macro locates all files contained within 'path', recursively
+The \fIts\fR macro locates all files contained within 'path', recursively
 descends the directory hierarchy if requested, searching the matching files
 against the regular expression 'pattern' for matching text.
 .Pp
@@ -150,10 +150,12 @@ Ignore this and all other binary images encountered.
 .Pp
 .Sh MENU/KEYS
 This macro can be accessed from the GRIEF features menu or by typing
-\f(HBts\fR at the command prompt, with or without the required arguments.
+\fIts\fR at the command prompt, with or without the required arguments.
 .Sh SEE ALSO
 .Xr feature ,
 .Xr grep ,
 .Xr routines ,
 .Xr ff ,
-.Xr bs
+.Xr bs ,
+.Xr find
+

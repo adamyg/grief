@@ -31,6 +31,7 @@ Features menu              :feature
 File find                  :ff
 Find function              :tags,tag=tags
 Find manual entry          :apropos
+Find within current buffer :find
 Format Region              :format
 GREP                       :grep
 GRIEF Demonstration        :demo
