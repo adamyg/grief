@@ -1,4 +1,4 @@
-dnl $Id: misc.m4,v 1.7 2013/03/13 21:34:41 cvsuser Exp $
+dnl $Id: misc.m4,v 1.8 2020/06/03 16:59:01 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -176,6 +176,17 @@ AC_DEFUN([CF_FUNC_ISBLANK],[
 		AC_DEFINE([HAVE_ISBLANK], 1, [isblank() available.])
 ])dnl
 
+AC_DEFUN([CF_FUNC_ISCSYM],[
+	AC_MSG_CHECKING(for iscsym)
+	AC_CACHE_VAL(cf_cv_have_iscsym,[
+		AC_TRY_LINK([#include <ctype.h>],[int x = iscsym(' ')],
+		[cf_cv_have_iscsym=yes],
+		[cf_cv_have_iscsym=no])
+	])dnl
+	AC_MSG_RESULT($cf_cv_have_iscsym)
+	test "$cf_cv_have_iscsym" = yes && \
+		AC_DEFINE([HAVE_ISCSYM], 1, [iscsym() available.])
++])dnl
 
 dnl ---------------------------------------------------------------------------
 dnl Check if the C compiler supports "inline".
