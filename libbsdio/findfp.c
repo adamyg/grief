@@ -48,7 +48,7 @@
 
 #if !defined(ALIGNBYTES)
 #define	ALIGNBYTES	3
-#define	ALIGN(p)	(((unsigned int)(p) + ALIGNBYTES) &~ ALIGNBYTES)
+#define	ALIGN(p)	(((size_t)(p) + ALIGNBYTES) &~ ALIGNBYTES)
 #endif
 
 int	__sdidinit;
