@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: csmtable.pl,v 1.3 2012/09/05 19:22:51 ayoung Exp $
+# $Id: csmtable.pl,v 1.5 2020/06/03 17:40:25 cvsuser Exp $
 #
 # iconv cs table generated for windows, derived from the cs Makefiles
 #

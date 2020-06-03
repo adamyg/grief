@@ -1,5 +1,7 @@
 [![Website](https://img.shields.io/badge/View-Website-blue)](https://sourceforge.net/projects/grief/)
 
+[![Build status - Ubuntu](https://ci.appveyor.com/api/projects/status/3tx1vwwclydfp1t6?svg=true)](https://ci.appveyor.com/project/adamyg/grief-ubuntu)
+
 GRIEF - BRIEF clone
 =======================================================
 
