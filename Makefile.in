@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.42 2020/03/27 21:23:24 cvsuser Exp $
+# $Id: Makefile.in,v 1.43 2020/06/03 19:59:37 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2019, Adam Young.
@@ -123,9 +123,6 @@ INSTALL=	@INSTALL@
 INSTALL_PROGRAM=@INSTALL_PROGRAM@
 INSTALL_DATA=	@INSTALL_DATA@
 
-CLBR19=		$(shell which clbr19.dll)
-PLBR19=		$(shell which plbr19.dll)
-MT7R19=		$(shell which mt7r19.dll)
 # Common flags
 
 RMFLAGS=	-f
@@ -156,12 +153,27 @@ BUILDINFO=	include/edbuildinfo.h
 
 LW=		$(D_LIB)/$(LP)
 
+ifeq ("wcl386","$(CC)")
+ifeq ("@TOOLCHAIN@","owc20")
+CLBRNAME=	clbr20
+MT7RNAME=	mt7r20
+PLBRNAME=	plbr20
+else
+CLBRNAME=	clbr19
+MT7RNAME=	mt7r19
+PLBRNAME=	plbr19
+endif
+LIBCLBRPATH=	$(shell which $(CLBRNAME).dll)
+LIBMT7RPATH=	$(shell which $(MT7RNAME).dll)
+LIBPLBRPATH=	$(shell which $(PLBRNAME).dll)
+endif
+
 IMPORT=
 ifeq ("wcl386","$(CC)")
 IMPORT+=\
-	$(D_BIN)/clbr19.dll		\
-	$(D_BIN)/plbr19.dll		\
-	$(D_BIN)/mt7r19.dll
+	$(D_BIN)/$(CLBRNAME).dll	\
+	$(D_BIN)/$(MT7RNAME).dll	\
+	$(D_BIN)/$(PLBRNAME).dll
 endif
 
 BINS=\
@@ -223,17 +235,19 @@ $(D_BIN)/grbusybox.exe:		$(BUSYBOX)
 		@echo importing $(BUSYBOX)
 		@$(CP) -f $^ $@
 
-$(D_BIN)/clbr19.dll:		$(CLBR19)
-		@echo importing $(CLBR19)
+ifeq ("wcl386","$(CC)")
+$(D_BIN)/$(CLBRNAME).dll:	$(LIBCLBRPATH)
+		@echo importing $(LIBCLBRPATH)
 		@$(CP) -f $(subst /,\,$^) $@
 
-$(D_BIN)/plbr19.dll:		$(PLBR19)
-		@echo importing $(PLBR19)
-		@$(CP) -f $(subst /,\,$^) $@
-
-$(D_BIN)/mt7r19.dll:		$(MT7R19)
-		@echo importing $(MT7R19)
+$(D_BIN)/$(MT7RNAME).dll:	$(LIBMT7RPATH)
+		@echo importing $(LIBMT7RPATH)
 		@$(CP) -f $^ $@
+
+$(D_BIN)/$(PLBRNAME).dll:	$(LIBPLBRPATH)
+		@echo importing $(LIBPLBRPATH)
+		@$(CP) -f $(subst /,\,$^) $@
+endif
 
 #########################################################################################
 # applications

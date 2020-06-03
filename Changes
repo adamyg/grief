@@ -1,6 +1,22 @@
 -*- encoding: utf-8; -*-
 
-Mon Apr 20 23:49:30 2020 adamy
+Wed Jun  3 21:42:20 2020 adamy
+
+	* appveyor
+
+		o Ubuntu and win32 ci build support.
+
+		- https://ci.appveyor.com/project/adamyg/grief-win
+		- https://ci.appveyor.com/project/adamyg/grief-ubuntu
+
+Mon May  4 20:10:25 2020 adamy
+
+	* Macros
+
+		o find - Current buffer search.
+		o tree - Reworked buffer management.
+
+Tue Apr 28 00:40:07 2020 adamy
 
 	* Macro language
 
@@ -35,12 +51,14 @@ Mon Apr 20 23:49:30 2020 adamy
 		o Documentation tweaks.
 		o -+debug feature reporting.
 
-	* Ticket #15 - Screen not properly restored.
+	* Ticket #15 - Screen not properly restored (WIN32).
 
 		o Explicit application of console rgb table.
+		o Disable quick-edit during session, when mouse enabled.
 		o Save and restore under 16-bit mode.
 		o Restore console attribute on exit.
-		
+		o Reactive winch handling.
+
 Sat Oct 26 00:49:25 2019 adamy
 
 	* BUILD 17 release
