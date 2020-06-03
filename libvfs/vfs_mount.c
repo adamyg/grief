@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_mount_c,"$Id: vfs_mount.c,v 1.15 2019/03/15 23:23:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_mount_c,"$Id: vfs_mount.c,v 1.16 2020/06/03 15:37:47 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_mount.c,v 1.15 2019/03/15 23:23:01 cvsuser Exp $
+/* $Id: vfs_mount.c,v 1.16 2020/06/03 15:37:47 cvsuser Exp $
  * Virtual file system interface --- mount table management.
  *
  *
@@ -545,7 +545,7 @@ automount(char *buffer, char **sepp)
                         vfs_class_get(prefix + 1, (subpath - prefix) -1);
 
             assert(NULL == vfs_mount_get(buffer, prefix - buffer));
-            VFS_TRACE(("\td. %.*s:%s\n", (subpath - prefix) - 1, prefix + 1, subpath))
+            VFS_TRACE(("\td. %.*s:%s\n", (int)((subpath - prefix) - 1), prefix + 1, subpath))
 
             if (vclass) {
                 if (vclass->v_flags & VCLASS_FAUTOMOUNT) {
