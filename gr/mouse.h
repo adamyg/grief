@@ -1,11 +1,11 @@
 #ifndef GR_MOUSE_H_INCLUDED
 #define GR_MOUSE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mouse_h,"$Id: mouse.h,v 1.22 2014/10/22 02:33:14 ayoung Exp $")
+__CIDENT_RCSID(gr_mouse_h,"$Id: mouse.h,v 1.23 2020/06/03 16:04:16 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mouse.h,v 1.22 2014/10/22 02:33:14 ayoung Exp $
+/* $Id: mouse.h,v 1.23 2020/06/03 16:04:16 cvsuser Exp $
  * Mouse support.
  *
  *
@@ -99,10 +99,8 @@ extern void                 sys_mousepointer(int on);
 
 extern void                 mouse_pointer(int state);
 extern void                 mouse_draw_icon(int y, int x, int oldy, int oldx);
-#if defined(HAVE_MOUSE_POLL)
 extern int                  mouse_poll(fd_set *fds);
 extern int                  sys_mousepoll(fd_set *fds, struct MouseEvent *mevt);
-#endif
 #endif
 
 extern void                 do_process_mouse(void);

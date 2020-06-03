@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_unix_c,"$Id: sys_unix.c,v 1.60 2015/02/25 01:06:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_unix_c,"$Id: sys_unix.c,v 1.61 2020/06/03 16:31:33 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_unix.c,v 1.60 2015/02/25 01:06:58 cvsuser Exp $
+/* $Id: sys_unix.c,v 1.61 2020/06/03 16:31:33 cvsuser Exp $
  * System dependent functionality - UNIX.
  *
  *
@@ -45,11 +45,15 @@ __CIDENT_RCSID(gr_sys_unix_c,"$Id: sys_unix.c,v 1.60 2015/02/25 01:06:58 cvsuser
 #endif
 #include "accum.h"                              /* acc_...() */
 #include "builtin.h"
+#include "debug.h"
+#include "display.h"
 #include "echo.h"
 #include "main.h"
+#include "keyboard.h"
 #include "system.h"                             /* sys_...() */
 #include "tty.h"
 
+#include "edstacktrace.h"
 #include "m_pty.h"
 
 #if !defined(_VMS) && !defined(__OS2__) && !defined(__MSDOS__)
