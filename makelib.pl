@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.97 2020/06/03 18:06:50 cvsuser Exp $
+# $Id: makelib.pl,v 1.98 2020/06/03 19:17:35 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -194,7 +194,8 @@ my %x_environment   = (
             TOOLCHAIN       => 'vs140',
             TOOLCHAINEXT    => '.vs140',
             CC              => 'cl',
-            COMPILERPATH    => '%VCINSTALLDIR%/bin',
+            COMPILERPATHS   => '%VS140COMNTOOLS%/../../VC/bin|%VCINSTALLDIR%/bin',
+            COMPILERPATH    => '',
             VSWITCH         => '',
             VPATTERN        => undef,
             OSWITCH         => '-Fo',
@@ -1472,8 +1473,28 @@ CheckCompiler($$)       # (type, env)
 {
     my ($type, $env) = @_;
 
+    if ($$env{COMPILERPATH} eq '') {
+        if (exists $$env{COMPILERPATHS}) {
+            my @PATHS = split(/\|/, $$env{COMPILERPATHS});
+            foreach (@PATHS) {
+                my $path = ExpandENV($_);
+                if (-e $path && -d $path) {
+                    $$env{COMPILERPATH} = realpath($path);
+                    last;
+                }
+            }
+        }
+        $x_compiler  = $$env{COMPILERPATH}.'/'
+            if (exists $$env{COMPILERPATH});
+
+    } else {
+        $x_compiler  = ExpandENV($$env{COMPILERPATH}).'/'
+            if (exists $$env{COMPILERPATH});
+    }
+
     $x_compiler  = ExpandENV($$env{COMPILERPATH}).'/'
         if (exists $$env{COMPILERPATH});
+
     $x_compiler .= $$env{CC};
     $x_compiler =~ s/\//\\/g;
     $x_command   = "\"$x_compiler\" ";
