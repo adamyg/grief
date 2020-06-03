@@ -27038,7 +27038,7 @@ $as_echo "#define HAVE_STRTOLD 1" >>confdefs.h
 
   fi
 
-+for ac_func in \
+for ac_func in \
 	bcmp bzero memcmp memset memmove \
 	vprintf snprintf vsnprintf _vsnprintf \
 	asprintf vasprintf \
