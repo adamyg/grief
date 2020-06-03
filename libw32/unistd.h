@@ -1,7 +1,7 @@
 #ifndef LIBW32_UNISTD_H_INCLUDED
 #define LIBW32_UNISTD_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_unistd_h,"$Id: unistd.h,v 1.48 2020/03/28 00:21:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_unistd_h,"$Id: unistd.h,v 1.49 2020/05/04 19:59:25 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -132,6 +132,10 @@ __CPRAGMA_ONCE
 #define  NEED_GETOPT
 #endif
 #include <edgetopt.h>                           /* getopt */
+#endif
+
+#ifndef _countof
+#define _countof(__type) (sizeof(__type)/sizeof(__type[0]))
 #endif
 
 __BEGIN_DECLS
