@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.4 2018/10/20 02:09:23 cvsuser Exp $
+# $Id: Makefile.in,v 1.6 2020/06/03 23:17:59 cvsuser Exp $
 # liblzma makefile and grxz
 #
 #
@@ -212,7 +212,25 @@ TSKS=		$(LZMAUTIL)
 
 # Rules
 
+LZMA=no
+ifeq ("@TOOLCHAIN@","owc20")
+else ifeq ("@TOOLCHAIN@","owc19")
+else ifeq ("@TOOLCHAIN@","vs142")
+LZMA=yes
+else ifeq ("@TOOLCHAIN@","vs141")
+LZMA=yes
+else ifeq ("@TOOLCHAIN@","vs140")
+LZMA=yes
+endif
+
+.PHONY:
+ifeq "$(LZMA)" 'yes'
 all:			source unpacked
+else
+all:
+		@echo liblzma not available ...
+endif
+
 unpacked:		$(LIBS) $(TSKS) installinc
 
 $(LZMALIB):		CEXTRA += -D__LIBLZMA_BUILD -DLIBLZMA_STATIC -D_WIN32
