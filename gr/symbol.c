@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_symbol_c,"$Id: symbol.c,v 1.41 2020/04/23 00:02:38 cvsuser Exp $")
+__CIDENT_RCSID(gr_symbol_c,"$Id: symbol.c,v 1.42 2020/06/03 16:22:15 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: symbol.c,v 1.41 2020/04/23 00:02:38 cvsuser Exp $
+/* $Id: symbol.c,v 1.42 2020/06/03 16:22:15 cvsuser Exp $
  * Symbol management.
  *
  *
@@ -223,7 +223,7 @@ sym_create(SYMBOL *sp, const char *name, int type)
 {
     if (name) {                                 /* check system limits */
         if (strlen(name) >= sizeof(sp->s_name)) {
-            ewprintf("variable name truncated '%.*s'", sizeof(sp->s_name), name);
+            ewprintf("variable name truncated '%.*s'", (int)sizeof(sp->s_name), name);
         }
         strxcpy(sp->s_name, name, sizeof(sp->s_name));
     }

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mchar_guess_c,"$Id: mchar_guess.c,v 1.25 2018/10/01 20:59:48 cvsuser Exp $")
+__CIDENT_RCSID(gr_mchar_guess_c,"$Id: mchar_guess.c,v 1.26 2020/06/03 16:31:32 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mchar_guess.c,v 1.25 2018/10/01 20:59:48 cvsuser Exp $
+/* $Id: mchar_guess.c,v 1.26 2020/06/03 16:31:32 cvsuser Exp $
  * Character-set conversion/file type guess logic.
  *
  *
@@ -625,7 +625,7 @@ decodercall(guessinfo_t *guess, const struct guessdecoder *decoder,
 
     ret = (*decoder->guess)(guess, buffer, length /*, argument*/);
     if (1 == ret) {
-        trace_ilog("\t==> decoder(%s)%*s : 1", decoder->name, 12 - decoder->namelen, "");
+        trace_ilog("\t==> decoder(%s)%*s : 1", decoder->name, (int)(12 - decoder->namelen), "");
         if (BFTYP_UNDEFINED != guess->gi_type) {
             trace_log(", type:<%d/%s>",
                 guess->gi_type, buf_type_desc(guess->gi_type, "n/a"));
@@ -637,7 +637,7 @@ decodercall(guessinfo_t *guess, const struct guessdecoder *decoder,
         trace_log("\n");
         return 1;
     }
-    trace_ilog("\t==> decoder(%s)%*s : %d\n", decoder->name, 12 - decoder->namelen, "", ret);
+    trace_ilog("\t==> decoder(%s)%*s : %d\n", decoder->name, (int)(12 - decoder->namelen), "", ret);
     return 0;
 }
 

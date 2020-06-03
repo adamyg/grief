@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.45 2020/04/21 00:01:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.46 2020/06/03 16:31:33 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sysinfo.c,v 1.45 2020/04/21 00:01:57 cvsuser Exp $
+/* $Id: sysinfo.c,v 1.46 2020/06/03 16:31:33 cvsuser Exp $
  * System information services.
  *
  *
@@ -488,7 +488,7 @@ resolve_execname(const char *name)
                     ++path;
                     continue;
                 }
-                sxprintf(t_path, sizeof(t_path), "%.*s%c%s", delim - path, path, FILEIO_PATHSEP, app);
+                sxprintf(t_path, sizeof(t_path), "%.*s%c%s", (int)(delim - path), path, FILEIO_PATHSEP, app);
                 path = delim + 1;
             } else {
                 sxprintf(t_path, sizeof(t_path), "%s%c%s", path, FILEIO_PATHSEP, app);

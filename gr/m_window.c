@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_window_c,"$Id: m_window.c,v 1.24 2020/04/21 00:01:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_window_c,"$Id: m_window.c,v 1.25 2020/06/03 16:22:53 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_window.c,v 1.24 2020/04/21 00:01:56 cvsuser Exp $
+/* $Id: m_window.c,v 1.25 2020/06/03 16:22:53 cvsuser Exp $
  * Window primitives.
  *
  *
@@ -1170,7 +1170,7 @@ flag_decode(const char *who, int mode, const char *spec, uint32_t *value)
 
         } else {
             if (comma)  {
-                errorf("%s: unknown flag '%*s'.", who, comma - spec, spec);
+                errorf("%s: unknown flag '%*s'.", who, (int)(comma - spec), spec);
             } else {
                 errorf("%s: unknown flag '%s'.", who, spec);
             }

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.91 2020/04/21 21:35:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.92 2020/06/03 16:05:32 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keywd.c,v 1.91 2020/04/21 21:35:55 cvsuser Exp $
+/* $Id: keywd.c,v 1.92 2020/06/03 16:05:32 cvsuser Exp $
  * Keyword table.
  *
  *
@@ -2447,7 +2447,7 @@ builtin_init(void)
 
     /* Runtime checks */
 #if !defined(__NOFUNCTIONS__)
-    trace_log("keywd: count = %d\n");
+    trace_log("keywd: count = %u\n", builtin_count);
 #endif
 
     assert(MAX_BUILTIN_ARGS <= MAX_ARGC);

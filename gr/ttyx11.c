@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyx11_c,"$Id: ttyx11.c,v 1.13 2019/05/02 18:24:00 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyx11_c,"$Id: ttyx11.c,v 1.14 2020/06/03 16:31:33 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyx11.c,v 1.13 2019/05/02 18:24:00 cvsuser Exp $ */
+/* $Id: ttyx11.c,v 1.14 2020/06/03 16:31:33 cvsuser Exp $ */
 /*
  * Copyright (c) 2012-2018 Adam Young.
  * Copyright (c) 2009 Jeremy Cooper.
@@ -2509,7 +2509,7 @@ xgr_clipboard_get(size_t *sz, BOOL line)
         //
         clsz = clipboardSize;
         data = clipboardBuffer;
-        trace_log("x11: Using internal clipboard data, size %d.\n", clsz);
+        trace_log("x11: Using internal clipboard data, size %lu.\n", (unsigned long)clsz);
 
     } else {
         //

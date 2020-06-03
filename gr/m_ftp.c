@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_ftp_c,"$Id: m_ftp.c,v 1.15 2018/09/30 23:34:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_ftp_c,"$Id: m_ftp.c,v 1.16 2020/06/03 16:22:15 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_ftp.c,v 1.15 2018/09/30 23:34:12 cvsuser Exp $
+/* $Id: m_ftp.c,v 1.16 2020/06/03 16:22:15 cvsuser Exp $
  * FTP/HTTP connection primitives -- beta/undocumented.
  *
  *
@@ -622,7 +622,7 @@ do_ftp_directory(void)              /* int (int id, [string pattern], list &file
                 for (it = 0; it < items; ++it) {
                     const char *filename = unquotedURL(urls + it);
 
-                    ED_TRACE((" %3d: [%s] <%s>\n", it, urls[it].doc, (filename && *filename ? filename : "n/a")))
+                    ED_TRACE((" %3u: [%s] <%s>\n", (unsigned)it, urls[it].doc, (filename && *filename ? filename : "n/a")))
                     if (filename && *filename) {
                         filenames[atoms++] = filename;
                     }

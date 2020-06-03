@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_color_c,"$Id: m_color.c,v 1.42 2019/01/26 22:27:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_color_c,"$Id: m_color.c,v 1.43 2020/06/03 16:22:15 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_color.c,v 1.42 2019/01/26 22:27:08 cvsuser Exp $
+/* $Id: m_color.c,v 1.43 2020/06/03 16:22:15 cvsuser Exp $
  * Color configuration.
  *
  *
@@ -1646,7 +1646,7 @@ set_color(colors_t *colors, const char *spec, int create, int ident)
         }
 
         if (NULL == (ap = attr_bynname(colors, spec, eq - spec, create))) {
-            errorf("%s: unknown attribute '%.*s'", who, eq - spec, spec);
+            errorf("%s: unknown attribute '%.*s'", who, (int)(eq - spec), spec);
 
         } else {
             collinks_t lks = ap->ca_links;

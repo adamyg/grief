@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_chkalloc_c,"$Id: chkalloc.c,v 1.26 2020/04/14 21:09:44 cvsuser Exp $")
+__CIDENT_RCSID(gr_chkalloc_c,"$Id: chkalloc.c,v 1.28 2020/06/03 14:31:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: chkalloc.c,v 1.26 2020/04/14 21:09:44 cvsuser Exp $
+/* $Id: chkalloc.c,v 1.28 2020/06/03 14:31:22 cvsuser Exp $
  * Memory allocation front end.
  *
  *
@@ -41,6 +41,9 @@ __CIDENT_RCSID(gr_chkalloc_c,"$Id: chkalloc.c,v 1.26 2020/04/14 21:09:44 cvsuser
 #if defined(_MSC_VER)
 #include <malloc.h>                             /* _expand */
 #include <crtdbg.h>
+#endif
+#if defined(HAVE_MALLOC_STATS)
+#include <malloc.h>                             /* malloc_stats */
 #endif
 #include <edtrace.h>
 
@@ -130,7 +133,7 @@ static unsigned             x_leak;
 
 
 static void
-checkfailed(const char *msg, const char *filename, size_t line)
+checkfailed(const char *msg, const char *filename, unsigned line)
 {
     fprintf(stderr, "%s(%u): %s\r\n", (filename ? filename : "?"), line, msg);
     fflush(stderr);
@@ -142,7 +145,7 @@ checkfailed(const char *msg, const char *filename, size_t line)
  *  Walk down the allocated blocks, checking for buffer corruption.
  */
 static void
-checktail(const char *filename, size_t line)
+checktail(const char *filename, unsigned line)
 {
     if (x_totalallocs) {
         const MEMLIST_t *tq = &x_memtail;
@@ -173,7 +176,7 @@ checktail(const char *filename, size_t line)
 
 
 static void *
-checkalloc(size_t size, const char *filename, size_t line)
+checkalloc(size_t size, const char *filename, unsigned line)
 {
     void *result = NULL;
     size_t fnsize = 0;
@@ -240,7 +243,7 @@ check_configure(unsigned flags)
 
 
 void *
-check_alloc(size_t size, const char *filename, size_t line)
+check_alloc(size_t size, const char *filename, unsigned line)
 {
     void *result = NULL;
 
@@ -260,7 +263,7 @@ check_alloc(size_t size, const char *filename, size_t line)
 
 
 void *
-check_realloc(void *p, size_t size, const char *filename, size_t line)
+check_realloc(void *p, size_t size, const char *filename, unsigned line)
 {
     void *result = NULL;
 
@@ -335,7 +338,7 @@ check_realloc(void *p, size_t size, const char *filename, size_t line)
 
 
 void *
-check_recalloc(void *p, size_t osize, size_t nsize, const char *filename, size_t line)
+check_recalloc(void *p, size_t osize, size_t nsize, const char *filename, unsigned line)
 {
     assert(nsize > osize);                      /* assume expand */
     if (NULL == p) {
@@ -350,7 +353,7 @@ check_recalloc(void *p, size_t osize, size_t nsize, const char *filename, size_t
 
 
 size_t
-check_expand(void *p, size_t size, const char *filename, size_t line)
+check_expand(void *p, size_t size, const char *filename, unsigned line)
 {
     __CUNUSED(p);
     __CUNUSED(size);
@@ -361,7 +364,7 @@ check_expand(void *p, size_t size, const char *filename, size_t line)
 
 
 size_t
-check_shrink(void *p, size_t size, const char *filename, size_t line)
+check_shrink(void *p, size_t size, const char *filename, unsigned line)
 {
     __CUNUSED(p);
     __CUNUSED(size);
@@ -372,7 +375,7 @@ check_shrink(void *p, size_t size, const char *filename, size_t line)
 
 
 void
-check_free(void *p, const char * filename, size_t line)
+check_free(void *p, const char * filename, unsigned line)
 {
     if (p) {
         struct _MemBlock *mp = ((struct _MemBlock *) p) - 1;
@@ -417,7 +420,7 @@ check_free(void *p, const char * filename, size_t line)
 
 
 void *
-check_calloc(size_t elem, size_t elsize, const char *filename, size_t line)
+check_calloc(size_t elem, size_t elsize, const char *filename, unsigned line)
 {
     const size_t size = elem * elsize;
     void *result = NULL;
@@ -432,7 +435,7 @@ check_calloc(size_t elem, size_t elsize, const char *filename, size_t line)
 
 
 void *
-check_salloc(const char *s, const char *filename, size_t line)
+check_salloc(const char *s, const char *filename, unsigned line)
 {
     void *result = NULL;
 
@@ -447,7 +450,7 @@ check_salloc(const char *s, const char *filename, size_t line)
 
 
 void *
-check_snalloc(const char *s, size_t len, const char *filename, size_t line)
+check_snalloc(const char *s, size_t len, const char *filename, unsigned line)
 {
     void *result = NULL;
 
@@ -462,7 +465,7 @@ check_snalloc(const char *s, size_t len, const char *filename, size_t line)
 
 
 void
-check_leak(const void *p, const char *file, size_t line)
+check_leak(const void *p, const char *file, unsigned line)
 {
     __CUNUSED(p);
     __CUNUSED(file);

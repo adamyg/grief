@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_lock_c,"$Id: lock.c,v 1.29 2014/11/16 17:28:38 ayoung Exp $")
+__CIDENT_RCSID(gr_lock_c,"$Id: lock.c,v 1.30 2020/06/03 16:22:15 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: lock.c,v 1.29 2014/11/16 17:28:38 ayoung Exp $
+/* $Id: lock.c,v 1.30 2020/06/03 16:22:15 cvsuser Exp $
  * File locking support.
 
     When two users edit the same file at the same time, they are likely
@@ -563,8 +563,8 @@ lock_ask(const char *file, Info_t *i)
     if (NULL != (prompt = chk_alloc(len))) {
         int retries;				/* retry count */
 
-        sxprintf(prompt, len, "\001%s locked by %s@%.*s.%d, edit [^y^n^s]?",
-            file, i->i_user, hostlen, i->i_host, i->i_pid);
+        sxprintf(prompt, len, "\001%s locked by %s@%.*s.%lu, edit [^y^n^s]?",
+            file, i->i_user, hostlen, i->i_host, (unsigned long)i->i_pid);
 
         for (retries = 0; retries < 10; ++retries) {
             int ch;

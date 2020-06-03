@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_buf_c,"$Id: m_buf.c,v 1.53 2020/04/21 00:01:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_buf_c,"$Id: m_buf.c,v 1.55 2020/06/03 16:18:30 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_buf.c,v 1.53 2020/04/21 00:01:55 cvsuser Exp $
+/* $Id: m_buf.c,v 1.55 2020/06/03 16:18:30 cvsuser Exp $
  * Buffer primitives.
  *
  *
@@ -396,7 +396,7 @@ do_create_buffer(int nested)    /* int (string bufname, [string filename],
     /*
      *  Populate
      */
-    if (sysflag || (EDIT_SYSTEM | editflags)) {
+    if (sysflag || (EDIT_SYSTEM & editflags)) { /* system buffer? */
         BFSET(bp, BF_SYSBUF);
         BFSET(bp, BF_NO_UNDO);
         bp->b_imode = TRUE;                     /* ignore user level imode */
@@ -852,7 +852,7 @@ flag_decode(int mode, const char *spec, uint32_t *values)
             flags |= (0x01 << set);
         } else {
             if (comma)  {
-                errorf("%s: unknown flag '%*s'.", who, comma - spec, spec);
+                errorf("%s: unknown flag '%*s'.", who, (int)(comma - spec), spec);
             } else {
                 errorf("%s: unknown flag '%s'.", who, spec);
             }

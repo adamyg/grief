@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_word_c,"$Id: word.c,v 1.25 2020/04/21 21:24:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_word_c,"$Id: word.c,v 1.26 2020/05/03 21:41:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: word.c,v 1.25 2020/04/21 21:24:37 cvsuser Exp $
+/* $Id: word.c,v 1.26 2020/05/03 21:41:54 cvsuser Exp $
  * Portable mappings to and from internal word and byte order.
  *
  *
@@ -226,4 +226,3 @@ main(int argc, char **argv)
 }
 
 #endif  /*LOCAL_MAIN*/
-

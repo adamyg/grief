@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_debug_c,"$Id: m_debug.c,v 1.39 2020/04/21 00:01:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_debug_c,"$Id: m_debug.c,v 1.40 2020/06/03 16:22:15 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_debug.c,v 1.39 2020/04/21 00:01:56 cvsuser Exp $
+/* $Id: m_debug.c,v 1.40 2020/06/03 16:22:15 cvsuser Exp $
  * Debug primitives.
  *
  *
@@ -298,7 +298,7 @@ flag_decode(int mode, const char *spec)
             nvalues |= flag->f_value;
         } else {
             if (comma)  {
-                errorf("%s: unknown flag '%*s'.", who, comma - spec, spec);
+                errorf("%s: unknown flag '%*s'.", who, (int)(comma - spec), spec);
             } else {
                 errorf("%s: unknown flag '%s'.", who, spec);
             }

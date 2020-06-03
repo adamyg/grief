@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_chunk_c,"$Id: chunk.c,v 1.20 2018/10/01 20:59:48 cvsuser Exp $")
+__CIDENT_RCSID(gr_chunk_c,"$Id: chunk.c,v 1.21 2020/06/03 15:56:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: chunk.c,v 1.20 2018/10/01 20:59:48 cvsuser Exp $
+/* $Id: chunk.c,v 1.21 2020/06/03 15:56:54 cvsuser Exp $
  * Buffer chunk implementation.
  *
  *
@@ -158,10 +158,10 @@ chunk_new(BUFFER_t *bp, size_t size, void **chunkp)
                     (void *) mmap((void *) NULL, size, PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE, x_zerofd, 0))) {
                 chunk->c_vmaddr = buffer;
                 chunk->c_vmsize = size;
-                ED_TRACE(("chunk_vmnew(vmaddr:%p,vmsize:%u)\n", buffer, size))
+                ED_TRACE(("chunk_vmnew(vmaddr:%p,vmsize:%lu)\n", buffer, (unsigned long)size))
 
             } else {
-                ED_TRACE(("chunk_vmnew(vmsize:%u) = %d (error)\n", size, errno))
+                ED_TRACE(("chunk_vmnew(vmsize:%lu) = %d (error)\n", (unsigned long)size, errno))
                 chk_free(chunk);
                 chunk = NULL;
             }
@@ -175,7 +175,7 @@ chunk_new(BUFFER_t *bp, size_t size, void **chunkp)
         }
         chunk->c_vmaddr = NULL;
         buffer = (void *)(chunk + 1);
-        ED_TRACE(("chunk_new(addr:%p,size:%u)\n", buffer, size))
+        ED_TRACE(("chunk_new(addr:%p,size:%lu)\n", buffer, (unsigned long)size))
     }
 
     chunk->c_magic  = BUFFERCHUNK_MAGIC;

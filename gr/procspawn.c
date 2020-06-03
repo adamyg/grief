@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_procspawn_c,"$Id: procspawn.c,v 1.23 2014/10/22 02:33:16 ayoung Exp $")
+__CIDENT_RCSID(gr_procspawn_c,"$Id: procspawn.c,v 1.24 2020/05/03 21:43:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: procspawn.c,v 1.23 2014/10/22 02:33:16 ayoung Exp $
+/* $Id: procspawn.c,v 1.24 2020/05/03 21:43:37 cvsuser Exp $
  * Process spawn primitive and management.
  *
  *
@@ -602,4 +602,5 @@ proc_prep_start(void)
     vtgarbled();
     vtupdate();
 }
+
 /*end*/

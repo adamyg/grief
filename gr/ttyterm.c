@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.100 2015/07/04 00:02:51 mada Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.101 2020/06/03 16:31:33 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.100 2015/07/04 00:02:51 mada Exp $
+/* $Id: ttyterm.c,v 1.101 2020/06/03 16:31:33 cvsuser Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -1403,7 +1403,7 @@ ttinit(void)
             const char *name = ttiname(ti);
 
             if (name && NULL != (cp = ttigetstr(ti))) {
-                const int kcode = (int)term_keys[i].token;
+                const size_t kcode = (size_t)term_keys[i].token;
 
                 term_keys[i].value.i_str = cp;  /* loaded later by ttkeys() */
 

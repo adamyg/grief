@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.83 2020/04/21 00:01:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.84 2020/06/03 16:01:35 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: file.c,v 1.83 2020/04/21 00:01:55 cvsuser Exp $
+/* $Id: file.c,v 1.84 2020/06/03 16:01:35 cvsuser Exp $
  * File-buffer primitives and support.
  *
  *
@@ -1416,8 +1416,8 @@ buf_readin(BUFFER_t *bp, int fd, const char *fname, FSIZE_t fsize, int flags, co
     is8bit = BFTYP_IS8BIT(fileinfo.fi_type);    /* TODO - mchar_is8bit(iconv) */
     istream = mchar_stream_open(iconv, fd, fname, "r");
 
-    trace_ilog("istream:%c, is8bit:%c, eolchar:%d/0x%02x, termlen:%d, encoding:%s, internal:%s\n",
-        (istream ? 'y' : 'n'), (is8bit ? 'y' : 'n'), eolchar, eolchar, termlen, \
+    trace_ilog("istream:%c, is8bit:%c, eolchar:%d/0x%02x, termlen:%lu, encoding:%s, internal:%s\n",
+        (istream ? 'y' : 'n'), (is8bit ? 'y' : 'n'), eolchar, eolchar, (unsigned long)termlen, \
             mchar_encoding(iconv), mchar_internal_encoding(iconv));
 
     if (buffer) {                               /* push-back guess buffer, if any */
@@ -1461,7 +1461,7 @@ buf_readin(BUFFER_t *bp, int fd, const char *fname, FSIZE_t fsize, int flags, co
         }
 
         if (NULL == (buffer = (char *)chunk_new(bp, chunklen, &chunk))) {
-            ewprintf("%s: cannot allocate %d sized chunk", fname, chunklen);
+            ewprintf("%s: cannot allocate %lu sized chunk", fname, (unsigned long)chunklen);
             goto error;
         }
 
@@ -1502,7 +1502,8 @@ buf_readin(BUFFER_t *bp, int fd, const char *fname, FSIZE_t fsize, int flags, co
             }
         }
 
-        trace_ilog("chunk_read(%d of %d, %d) = %d\n", chunklen - ovlen, chunklen, (int)fleft, cnt);
+        trace_ilog("chunk_read(%lu of %lu, %d) = %lu\n",
+            (unsigned long)(chunklen - ovlen), (unsigned long)chunklen, (int)fleft, (unsigned long)cnt);
         cnt += ovlen;
         ovlen = 0;
 

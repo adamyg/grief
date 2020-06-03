@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_display_c,"$Id: m_display.c,v 1.25 2015/02/11 23:25:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_display_c,"$Id: m_display.c,v 1.26 2020/06/03 16:22:15 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_display.c,v 1.25 2015/02/11 23:25:13 cvsuser Exp $
+/* $Id: m_display.c,v 1.26 2020/06/03 16:22:15 cvsuser Exp $
  * Display primitives.
  *
  *
@@ -450,7 +450,7 @@ flag_decode(const char *who, int mode, const char *spec, uint32_t *value, enum o
 
             if (!done) {
                 if (comma)  {
-                    errorf("%s: unknown flag '%*s'.", who, comma - spec, spec);
+                    errorf("%s: unknown flag '%*s'.", who, (int)(comma - spec), spec);
                 } else {
                     errorf("%s: unknown flag '%s'.", who, spec);
                 }
