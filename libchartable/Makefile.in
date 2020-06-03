@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.22 2020/03/27 12:28:01 cvsuser Exp $
+# $Id: Makefile.in,v 1.23 2020/06/03 23:45:57 cvsuser Exp $
 # libchartable makefile.
 #
 #
@@ -52,6 +52,7 @@ PERL=		@PERL@
 LIBTOOL=	@LIBTOOL@
 ##SHELL=	bash
 LT_OBJDIR=	@LT_OBJDIR@
+WGET=		@WGET@
 
 # Common flags
 
@@ -153,20 +154,20 @@ data/.import:		data/.created			\
 		@echo "++ do not delete, managed content ++" > $@
 
 data/MAPPINGS/.import:	data/MAPPINGS/.created
-		wget -P data -r -nv -nH -e robots=off --cut-dirs=1 --no-parent --reject "index.html.*" http://ftp.unicode.org/Public/MAPPINGS/
+		$(WGET) -P data -r -nv -nH -e robots=off --cut-dirs=1 --no-parent --reject "index.html.*" http://ftp.unicode.org/Public/MAPPINGS/
 		@echo "++ do not delete, managed content ++" > $@
 
 data/Unihan.zip:
-		wget -P data -nv http://ftp.unicode.org/Public/UNIDATA/Unihan.zip
+		$(WGET) -P data -nv http://ftp.unicode.org/Public/UNIDATA/Unihan.zip
 
 data/UCD.zip:
-		wget -P data -nv http://ftp.unicode.org/Public/UNIDATA/UCD.zip
+		$(WGET) -P data -nv http://ftp.unicode.org/Public/UNIDATA/UCD.zip
 
 data/uniset.tar.gz:
-		wget -P data -nv --no-check-certificate http://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz
+		$(WGET) -P data -nv --no-check-certificate http://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz
 
 data/Zeichenreferenz:
-		wget -P data -nv --no-check-certificate http://de.selfhtml.org/html/referenz/zeichen.htm
+		$(WGET) -P data -nv --no-check-certificate http://de.selfhtml.org/html/referenz/zeichen.htm
 
 %/.created:
 		-@mkdir $(@D)

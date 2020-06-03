@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.100 2020/06/03 20:41:36 cvsuser Exp $
+# $Id: makelib.pl,v 1.102 2020/06/03 23:58:05 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -54,6 +54,7 @@ my $CWD                     = getcwd();
 my $BINPATH                 = '';
 my $PERLPATH                = '';
 my $BUSYBOX                 = 'busybox';
+my $WGET                    = 'wget';
 my $LIBTOOL                 = '';
 my $PROGRAMFILES            = ProgramFiles();
 
@@ -469,6 +470,8 @@ my %x_tokens        = (
         GREP                => 'egrep',
         AWK                 => 'awk',
         SED                 => 'sed',
+       #WGET                => 'wget',          # special
+       #BUSYBOX             => 'busybox',       # special
         PERL                => 'perl',
         LIBTOOL             => 'libtool',
 
@@ -795,6 +798,7 @@ main()
                 'binpath=s'     => \$BINPATH,
                 'perlpath=s'    => \$PERLPATH,
                 'busybox=s'     => \$BUSYBOX,
+                'wget=s'        => \$WGET,
                 'version=i'     => \$o_version,
                 'icu=s'         => \$o_icu,
                 'gnuwin32=s'    => \$o_gnuwin32,
@@ -984,6 +988,38 @@ Configure($$)           # (type, version)
         $PERLPATH = realpath($PERLPATH);
         print "perlpath: ${PERLPATH}\n";
         $PERLPATH .= '/';
+    }
+
+    if ($BUSYBOX) {
+        if ($BUSYBOX ne 'busybox') {
+            if (-e $BUSYBOX) {
+                $BUSYBOX = realpath($BUSYBOX);
+
+            } elsif (-e "${BUSYBOX}.exe") {
+                $BUSYBOX = realpath("${BUSYBOX}.exe");
+                $BUSYBOX =~ s/\.exe//;
+
+            } else {
+                print "warning: unable to resolve path <${BUSYBOX}>\n";
+            }
+        }
+        print "busybox:  ${BUSYBOX}\n";
+    }
+
+    if ($WGET) {
+        if ($WGET ne 'wget') {
+            if (-e $WGET) {
+                $WGET = realpath($WGET);
+
+            } elsif (-e "${WGET}.exe") {
+                $WGET = realpath("${WGET}.exe");
+                $WGET =~ s/\.exe//;
+
+            } else {
+                print "warning: unable to resolve path <${WGET}>\n";
+            }
+        }
+        print "wget:     ${WGET}\n";
     }
 
     if (! $LIBTOOL) {                           # derive libtool location
@@ -2308,19 +2344,6 @@ Makefile($$$)           # (type, dir, file)
         $text =~ s/\@$quoted_entry\@/$replace/g;
     }
 
-    if ($BUSYBOX && ($BUSYBOX ne 'busybox')) {
-        if (-e $BUSYBOX) {
-            $BUSYBOX = realpath($BUSYBOX);
-
-        } elsif (-e "${BUSYBOX}.exe") {
-            $BUSYBOX = realpath("${BUSYBOX}.exe");
-            $BUSYBOX =~ s/\.exe//;
-
-        } else {
-            print "warning: unable to resolve path <${BUSYBOX}>\n";
-        }
-    }
-
     if ($BUSYBOX) {                             # command interface rework
         $text =~ s/\@sh /\@\@BUSYBOX\@ sh /g;
         $text =~ s/\-sh /-\@BUSYBOX\@ sh /g;
@@ -2331,6 +2354,7 @@ Makefile($$$)           # (type, dir, file)
     $text =~ s/\@BINPATH\@/${BINPATH}/g;
     $text =~ s/\@PERLPATH\@/${PERLPATH}/g;
     $text =~ s/\@BUSYBOX\@/${BUSYBOX}/g;
+    $text =~ s/\@WGET\@/${WGET}/g;
 
     $text =~ s/(\$\(RM\)) (.*)/$1 \$(subst \/,\\,$2)/g;
     $text =~ s/(\$\(RMDIR\)) (.*)/$1 \$(subst \/,\\,$2)/g;
@@ -2506,5 +2530,6 @@ systemrcode($)          # (retcode)
 }
 
 #end
+
 
 

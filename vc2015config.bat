@@ -8,5 +8,6 @@ if not defined GNUWIN32 (
 if not defined PERL (
         set PERL=perl
 )
-%PERL% makelib.pl --gnuwin32=%GNUWIN32% --busybox=.\win32\busybox --icu=auto vc2015 %1 %2 %3 %4
+%PERL% makelib.pl --gnuwin32=%GNUWIN32% --busybox=.\win32\busybox --wget=.\win32\wget --icu=auto vc2015 %1 %2 %3 %4
+
 
