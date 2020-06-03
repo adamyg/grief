@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.95 2020/04/22 18:05:19 cvsuser Exp $
+# $Id: makelib.pl,v 1.97 2020/06/03 18:06:50 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -784,7 +784,7 @@ main()
     my $o_clean         = 0;
     my $o_help          = 0;
 
-    require "makelib.in";
+    require "./makelib.in";
         die "makelib.in: PACKAGE not defined\n"
             if (! $PACKAGE);
         $x_tokens{PACKAGE}      = $PACKAGE;
@@ -822,7 +822,10 @@ main()
     #   MSVC++ 12.0  _MSC_VER == 1800 (Visual Studio 2013 version 12.0)
     #   MSVC++ 14.0  _MSC_VER == 1900 (Visual Studio 2015 version 14.0)
     #   MSVC++ 14.1  _MSC_VER == 1910 (Visual Studio 2017 version 15.0)
-    #                             :
+    #   MSVC++ 14.11 _MSC_VER == 1911 (Visual Studio 2017 version 15.3)
+    #   MSVC++ 14.12 _MSC_VER == 1912 (Visual Studio 2017 version 15.5)
+    #   MSVC++ 14.13 _MSC_VER == 1913 (Visual Studio 2017 version 15.6)
+    #   MSVC++ 14.14 _MSC_VER == 1914 (Visual Studio 2017 version 15.7)
     #   MSVC++ 14.16 _MSC_VER == 1916 (Visual Studio 2017 version 15.9)
     #   MSVC++ 14.20 _MSC_VER == 1920 (Visual Studio 2019 version 15.7)
     #
@@ -2231,7 +2234,7 @@ Makefile($$$)           # (type, dir, file)
                 # directory slash conversion
               # $text =~ s/-I([^\s]+)/-i="$1"/g;
               # $text =~ s/-I ([^\s]+)/-i="$1"/g;
-                    #gnuwin32 make quotes would be retained; this can not guaranteed under an alt instance.
+                    #gnuwin32 make quotes would be retained; this can not be guaranteed under an alt instance.
                 $text =~ s/-I([^\s]+)/-i=\$(subst \/,\\,$1)/g;
                 $text =~ s/-I ([^\s]+)/-i=\$(subst \/,\\,$1)/g;
 
