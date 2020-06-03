@@ -1,7 +1,7 @@
 #ifndef TERMEMU_VIO_H_INCLUDED
 #define TERMEMU_VIO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(termemu_vio_h,"$Id: termemu_vio.h,v 1.2 2020/04/19 23:47:37 cvsuser Exp $")
+__CIDENT_RCSID(termemu_vio_h,"$Id: termemu_vio.h,v 1.3 2020/05/04 20:20:18 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -82,6 +82,10 @@ enum vt_colors {
 #define VIO_STRIKE          0x4000
 #define VIO_FAINT           0x8000
 #define VIO_ATTRIBUTES      0xff00
+#define VIO_MINCOLS         12
+#define VIO_MINROWS         2
+#define VIO_MAXCOLS         1024
+#define VIO_MAXROWS         500
 
 #if defined(TERMEMU_VIO_SOURCE)
 typedef struct WCHAR_COLORINFO {                // color information.

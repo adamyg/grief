@@ -72,7 +72,6 @@ static void                         vio_trace(const char *, ...);
 #endif //DO_TRACE_LOG
 #endif //TRACE_LOG
 
-#define MAXROWS                     500
 #define MAXCOLORS                   256
 #define MAXOBJECTS                  256
 #define MASKOBJECTS                 0xff
@@ -200,7 +199,7 @@ static uint32_t         unicode_remap(uint32_t ch);
 
 static __inline void    WCHAR_BUILD(const uint32_t ch, const struct WCHAR_COLORINFO *color, WCHAR_INFO *ci);
 static __inline BOOL    WCHAR_COMPARE(const WCHAR_INFO *c1, const WCHAR_INFO *c2);
-static __inline int     WCHAR_UPDATE(WCHAR_INFO *cursor, const uint32_t ch, const struct WCHAR_COLORINFO *color);
+static __inline unsigned WCHAR_UPDATE(WCHAR_INFO *cursor, const uint32_t ch, const struct WCHAR_COLORINFO *color);
 
 static int              parse_color(const char *color, const char *defname, const struct attrmap *map, int *attr);
 static int              parse_true_color(const char *color, COLORREF *rgb, int *attr);
@@ -356,7 +355,7 @@ static struct {                                 /* Video state */
 #define TOUCHED             0x01
 #define TRASHED             0x02
     unsigned            c_trashed;              /* Trashed signal */
-    struct sline        c_screen[MAXROWS];      /* Screen lines */
+    struct sline        c_screen[VIO_MAXROWS];  /* Screen lines */
 } vio;
 
 static const struct rgb rgb_colors256[256] = {
@@ -565,9 +564,12 @@ vio_init(void)
     //  Screen sizing
     //
     vio_size(&rows, &cols);                     // buffer size.
-    if (rows >= MAXROWS) {
-        rows = (MAXROWS - 1);                   // limit to supported width.
+    if (rows < VIO_MINROWS) {
+        rows = VIO_MINROWS;
+    } else if (rows > VIO_MAXROWS) {
+        rows = VIO_MAXROWS;                     // limit to supported width.
     }
+    if (cols < VIO_MINCOLS) cols = VIO_MINCOLS;
 
     if (fontprofile || vio.cols != cols || vio.rows != rows) {
         const WCHAR_INFO *oimage;
@@ -626,6 +628,7 @@ vio_init(void)
         vio.c_trashed = 1;
         vio.rows = rows;
         vio.cols = cols;
+        vio_goto(vio.c_row, vio.c_col);         // limit current cursor
 
         for (l = 0; l < rows; ++l) {
             vio.c_screen[l].flags = 0;
@@ -1017,9 +1020,14 @@ IsVirtualConsole(int *depth)
 {
 #if !defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
 #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+    // When writing with WriteFile or WriteConsole, characters are parsed for VT100 and similar control
+    // character sequences that control cursor movement, color/font mode, and other operations that can
+    // also be performed via the existing Console APIs.
 #endif
 #if !defined(DISABLE_NEWLINE_AUTO_RETURN)
 #define DISABLE_NEWLINE_AUTO_RETURN 0x0008
+    // When writing with WriteFile or WriteConsole, this adds an additional state to end-of-line wrapping
+    // that can delay the cursor move and buffer scroll operations.
 #endif
 #if !defined(ENABLE_INSERT_MODE)
 #define ENABLE_INSERT_MODE 0x0020
@@ -1159,13 +1167,14 @@ vio_reset(void)
 {
     if (0 == vio.inited) return;                /* uninitialised */
 
-    vio.cols = vio.rows = 0;
     if (vio.image) {
         free(vio.iimage); vio.iimage = NULL;
         free(vio.oshadow); vio.oshadow = NULL;
         free(vio.oimage); vio.oimage = NULL;
         free(vio.image); vio.image = NULL;
     }
+    vio.c_col  = vio.c_row = 0;
+    vio.cols   = vio.rows = 0;
     vio.inited = 0;
 }
 
@@ -1930,6 +1939,7 @@ CopyOutEx2(copyoutctx_t *ctx, size_t pos, size_t cnt, unsigned flags)
                         *wctext++ = (WCHAR)cell.Char.UnicodeChar;
                         continue;
                     }
+
                     //else, attribute change.
                 }
 
@@ -2551,17 +2561,17 @@ WCHAR_COMPARE(const WCHAR_INFO *c1, const WCHAR_INFO *c2)
 }
 
 
-static __inline int
+static __inline unsigned
 WCHAR_UPDATE(WCHAR_INFO *cursor, const uint32_t ch, const struct WCHAR_COLORINFO *info)
 {
     WCHAR_INFO text;
 
     WCHAR_BUILD(ch, info, &text);
     if (WCHAR_COMPARE(cursor, &text)) {
-        return FALSE;                           // up-to-date
+        return 0;                               // up-to-date
     }
     *cursor = text;
-    return TRUE;
+    return TOUCHED;
 }
 
 
@@ -2984,12 +2994,9 @@ vio_close(void)
         vio_setsize(vio.maximised_oldrows, vio.maximised_oldcols);
         if (vio.isvirtualconsole) {
             if (3 == vio.isvirtualconsole) {    /* restore? */
-                DWORD mode = vio.oldConsoleMode;
+                const DWORD mode = vio.oldConsoleMode;
 
                 if (mode) {
-//XXX               if (mode & (ENABLE_QUICK_EDIT_MODE | ENABLE_INSERT_MODE)) {
-//                      mode |= ENABLE_EXTENDED_FLAGS;
-//                  }
                     (void) SetConsoleMode(vio.chandle, mode);
                 }
                 if (vio.oldConsoleCP) {
@@ -3155,7 +3162,9 @@ vio_cursor_state(void)
 void
 vio_goto(int row, int col)
 {
+    if (row >= vio.rows) row = vio.rows-1;
     vio.c_row = row;
+    if (col >= vio.cols) col = vio.cols-1;
     vio.c_col = col;
 }
 
@@ -3694,6 +3703,8 @@ vio_putc(unsigned ch, unsigned cnt, int move)
     }
     vio.c_screen[ row ].flags |= flags;
     if (move) {
+        assert(row >= 0 && row < vio.rows);
+        assert(col >= 0 && col < vio.cols);
         vio.c_col = col, vio.c_row = row;
     }
 }
