@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.14 2015/02/22 22:13:53 ayoung Exp $
+# $Id: Makefile.in,v 1.15 2020/05/04 20:48:31 cvsuser Exp $
 # libhunspell, hunspell, hzip and hunzip makefile
 #
 #
@@ -66,6 +66,8 @@ HUNSPELLDLL=	$(D_LIB)/$(LP)hunspell.la
 
 VERSION=	1.3.3
 VERSIONSPEC=	$(subst .,:,$(VERSION))
+PACKED= 	hunspell-$(VERSION).patched.tgz
+
 HUNSPELLSRC=	./hunspell-$(VERSION)/src/hunspell
 PARSERSSRC=	./hunspell-$(VERSION)/src/parsers
 TOOLSSRC=	./hunspell-$(VERSION)/src/tools
@@ -139,10 +141,10 @@ $(D_BIN)/hunzip$(E):	$(D_OBJ)/hunzip$(O)
 source:			.unpacked.$(VERSION)
 		$(MAKE) unpacked
 
-.unpacked.$(VERSION):	hunspell-$(VERSION).patched.tgz
+.unpacked.$(VERSION):	$(PACKED)
 		@echo "do not delete, managed file" > $@
 		@echo "unpacking source"
-		@gzip -c -d hunspell-$(VERSION).patched.tgz | tar -xvf -
+		@gzip -c -d $(PACKED) | tar -xvf -
 
 .PHONY:		object
 object:			$(D_OBJ)/.created

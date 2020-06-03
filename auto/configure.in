@@ -1,11 +1,12 @@
-dnl $Id: configure.in,v 1.63 2020/06/03 17:38:58 cvsuser Exp $
+dnl $Id: configure.in,v 1.64 2020/06/03 22:15:12 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl
 
-AC_REVISION($Revision: 1.63 $)
-##	AC_COPYRIGHT(Adam Young 1995-2018, Paul Fox 1989-1991)
+AC_REVISION($Revision: 1.64 $)
+##	AC_COPYRIGHT(Adam Young 1995-2020, Paul Fox 1989-1991)
+AC_SUBST([PACKAGE])
 AC_INIT([GRIEF], [3.2.1], [griefedit@gmail.com])
 AC_PREREQ(2.68)
 

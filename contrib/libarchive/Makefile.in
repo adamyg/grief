@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.13 2019/05/13 02:02:40 cvsuser Exp $
+# $Id: Makefile.in,v 1.14 2020/05/04 20:18:19 cvsuser Exp $
 # libarchive makefile
 #
 #
@@ -31,7 +31,7 @@ LIBTOOL=	@LIBTOOL@
 # Common flags
 
 ARFLAGS=	rcv
-XFLAGS=		
+XFLAGS=
 COPT=		@CFLAGS@
 CWARN=		@CWARN@
 CDEBUG=		@CDEBUG@
@@ -49,7 +49,7 @@ CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
 CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
 YFLAGS=		-d
 LDFLAGS=	$(LDEBUG) @LDFLAGS@
-LDLIBS=		-L$(D_LIB) @LIBS@ @LIBM@ @EXTRALIBS@
+LDLIBS=		-L$(D_LIB) @LIBLZMA@ @LIBS@ @LIBM@ @EXTRALIBS@
 
 RMFLAGS=	-f
 

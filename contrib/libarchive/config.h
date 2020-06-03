@@ -35,6 +35,19 @@
 #error <bcrypt.h> missing ...
 #endif
 
+#if defined(_MSC_VER) && (_MSC_VER <= 1500) //2008; missing Win7 SDK components
+#include <windows.h>
+#include <bcrypt.h>
+#ifndef NT_SUCCESS
+#define NT_SUCCESS(x) ((x)>=0)
+#define STATUS_SUCCESS ((NTSTATUS)0)
+#endif //NT_SUCCESS
+#ifndef BCRYPT_SUCCESS
+#define BCRYPT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
+#endif
+NTSTATUS WINAPI BCryptDeriveKeyPBKDF2(BCRYPT_ALG_HANDLE hPrf, PUCHAR pbPassword, ULONG cbPassword, PUCHAR pbSalt, ULONG cbSalt, ULONGLONG cIterations, PUCHAR pbDerivedKey, ULONG cbDerivedKey, ULONG dwFlags);
+#endif //_MSC_VER
+
 #undef lstat
 #undef open
 #undef read
@@ -87,3 +100,4 @@
 #endif /*__WATCOMC__*/
 
 #endif /*CONFIG_H_INCLUDED*/
+
