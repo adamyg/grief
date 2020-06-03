@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.58 2020/05/03 21:51:42 cvsuser Exp $")
+__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.59 2020/06/03 14:12:36 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: builtin.c,v 1.58 2020/05/03 21:51:42 cvsuser Exp $
+/* $Id: builtin.c,v 1.59 2020/06/03 14:12:36 cvsuser Exp $
  * Builtin expresssion evaluation.
  *
  *
@@ -94,6 +94,16 @@ struct mac_stack        mac_stack[MAX_MACSTACK+1] = {0}; /* Macro name stack */
 
 void *                  x_returns = NULL;       /* Assigned to the returns() value */
 void *                  x_exception = NULL;     /* Try/catch() exception */
+
+
+#if !defined(HAVE_ISCSYM) && \
+        !defined(_MSC_VER) && !defined(__WATCOMC__) && !defined(__MINGW32__)
+static int
+iscsym(int c) /*TODO: compat_iscsym()*/
+{
+    return ('_' == c || isalnum(c));
+}
+#endif
 
 
 /*
