@@ -1,0 +1,16 @@
+
+busybox-w32
+===========
+
+Win32 native port for Busybox (latest build can be found in the below link)
+
+	https://frippery.org/busybox/
+
+BusyBox is a single binary that contains many common Unix tools. 
+It's often found in embedded Linux systems like routers, in Android smartphones,
+in Linux containers and anywhere else it would be handy to have a compact set of Unix command line tools.
+
+
+
+
+

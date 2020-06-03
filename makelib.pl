@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.98 2020/06/03 19:17:35 cvsuser Exp $
+# $Id: makelib.pl,v 1.100 2020/06/03 20:41:36 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -930,7 +930,9 @@ Options:
 
     --perlpath=<path>       PERL binary path, otherwise assumed in the path.
 
-    --gnuwin32=<path>       gnuwin32 tool installation path.
+    --gnuwin32=<path>       gnuwin32 g++ tool installation path.
+
+    --busybox=<path>        busybox-w32 installation path.
 
     --contib                enable local contrib libraries (default).
 
@@ -2306,6 +2308,19 @@ Makefile($$$)           # (type, dir, file)
         $text =~ s/\@$quoted_entry\@/$replace/g;
     }
 
+    if ($BUSYBOX && ($BUSYBOX ne 'busybox')) {
+        if (-e $BUSYBOX) {
+            $BUSYBOX = realpath($BUSYBOX);
+
+        } elsif (-e "${BUSYBOX}.exe") {
+            $BUSYBOX = realpath("${BUSYBOX}.exe");
+            $BUSYBOX =~ s/\.exe//;
+
+        } else {
+            print "warning: unable to resolve path <${BUSYBOX}>\n";
+        }
+    }
+
     if ($BUSYBOX) {                             # command interface rework
         $text =~ s/\@sh /\@\@BUSYBOX\@ sh /g;
         $text =~ s/\-sh /-\@BUSYBOX\@ sh /g;
@@ -2491,4 +2506,5 @@ systemrcode($)          # (retcode)
 }
 
 #end
+
 
