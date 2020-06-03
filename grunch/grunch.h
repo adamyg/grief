@@ -1,11 +1,11 @@
 #ifndef GR_GRUNCH_H_INCLUDED
 #define GR_GRUNCH_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_grunch_h,"$Id: grunch.h,v 1.34 2020/04/20 22:49:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_grunch_h,"$Id: grunch.h,v 1.35 2020/06/03 17:18:19 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: grunch.h,v 1.34 2020/04/20 22:49:23 cvsuser Exp $
+/* $Id: grunch.h,v 1.35 2020/06/03 17:18:19 cvsuser Exp $
  * grunch language compiler, structures etc
  *
  *
@@ -56,13 +56,21 @@ __CPRAGMA_ONCE
 //
 */
 #ifdef  HAVE_STDLIB_H
+#if !defined(__GLIBC__)
 #define _STDLIB_H
 #endif
+#endif
+
 #ifdef  HAVE_ALLOCA_H
+#if !defined(__GLIBC__)
 #define _ALLOCA_H
 #endif
+#endif
+
 #ifdef  HAVE_STRING_H
+#if !defined(__GLIBC__)
 #define _STRING_H
+#endif
 #endif
 
 
