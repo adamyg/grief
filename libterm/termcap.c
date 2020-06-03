@@ -39,6 +39,10 @@
  *  #include <errno.h>
  */
 
+#if defined(__linux__) || defined(__CYGWIN32__)
+#define _GNU_SOURCE                      /* XXX: asprintf */
+#endif
+
 #include <editor.h>
 #include <edtermcap.h>
 #include <unistd.h>

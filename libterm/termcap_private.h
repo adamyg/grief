@@ -74,7 +74,11 @@ int                     cgetnum(char *buf, const char *cap, long *num);
 /*__END_DECLS*/
 
 #define strlcpy(a,b,c)  strncmp(a,b,c)
-#define snprintf        _snprintf
+
+#if defined(_MSC_VER) || defined(__WATCOMC__)
+#define snprintf _snprintf
+#endif
+
 #undef  _DIAGASSERT
 #define _DIAGASSERT(x)  assert(x)
 
