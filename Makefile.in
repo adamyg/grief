@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.45 2020/06/04 01:20:59 cvsuser Exp $
+# $Id: Makefile.in,v 1.46 2020/06/04 11:51:37 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2020, Adam Young.
@@ -204,7 +204,7 @@ LIBS+=\
 	$(LW)bsdfetch			\
 	$(LW)bsddb
 
-DIRECTORIES:=\
+DIRECTORIES=\
 	$(D_LIB)/.created		\
 	$(D_OBJ)/.created		\
 	$(D_BIN)/.created
@@ -221,10 +221,11 @@ build:				directories buildinfo libs bins import
 		$(MAKE) -C $(D_MACSRC) $(MAKEFLAGS)
 
 .PHONY:
-contrib:			directories buildinfo
 ifneq "" "$(filter mingw32 win32,@build_os@)"
-contrib:			$(LW)win32 $(LW)misc
+contrib:			directories buildinfo $(LW)win32 $(LW)misc
 		$(MAKE) -C contrib $(MAKEFLAGS)
+else
+contrib:			directories buildinfo
 endif
 
 directories:			$(DIRECTORIES)

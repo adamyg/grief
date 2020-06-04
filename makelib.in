@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.in,v 1.4 2020/06/03 19:31:31 cvsuser Exp $
+# $Id: makelib.in,v 1.5 2020/06/04 11:51:47 cvsuser Exp $
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 # makelib configuration
 #
@@ -69,6 +69,7 @@ $PACKAGE_H      = 'edpackage.h';
         'libw32',
         '^contrib',
         '^contrib/makedepend',
+        '^contrib/flex',
         '^contrib/extags',
         '^contrib/libz',
         '^contrib/libbzip2',
