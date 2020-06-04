@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.44 2020/06/03 21:57:28 cvsuser Exp $
+# $Id: Makefile.in,v 1.45 2020/06/04 01:20:59 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2020, Adam Young.
@@ -185,24 +185,24 @@ BINS=\
 
 LIBS=
 ifneq "" "$(filter mingw32 win32,@build_os@)"
-LIBS+=	$(LW)win32$(A)
+LIBS+=	$(LW)win32
 endif
 LIBS+=\
-	$(LW)misc$(A)			\
-	$(LW)malloc$(A)			\
-	$(LW)llist$(A)			\
-	$(LW)splay$(A)			\
-	$(LW)term$(A)			\
-	$(LW)teken$(A)			\
-	$(LW)onigrx$(A)			\
-	$(LW)tre$(A)			\
-	$(LW)chartable$(A)		\
-	$(LW)charudet$(A)		\
-	$(LW)vfs$(A)			\
-	$(LW)duktape$(A)		\
-	$(LW)bsdio$(A)			\
-	$(LW)bsdfetch$(A)		\
-	$(LW)bsddb$(A)
+	$(LW)misc			\
+	$(LW)malloc			\
+	$(LW)llist			\
+	$(LW)splay			\
+	$(LW)term			\
+	$(LW)teken			\
+	$(LW)onigrx			\
+	$(LW)tre			\
+	$(LW)chartable			\
+	$(LW)charudet			\
+	$(LW)vfs			\
+	$(LW)duktape			\
+	$(LW)bsdio			\
+	$(LW)bsdfetch			\
+	$(LW)bsddb
 
 DIRECTORIES:=\
 	$(D_LIB)/.created		\
@@ -221,9 +221,9 @@ build:				directories buildinfo libs bins import
 		$(MAKE) -C $(D_MACSRC) $(MAKEFLAGS)
 
 .PHONY:
-contrib:			directories
+contrib:			directories buildinfo
 ifneq "" "$(filter mingw32 win32,@build_os@)"
-contrib:			$(LW)win32$(A)
+contrib:			$(LW)win32 $(LW)misc
 		$(MAKE) -C contrib $(MAKEFLAGS)
 endif
 
@@ -308,13 +308,13 @@ $(D_BIN)/grunch$(E):	$(D_BIN)/.created libs
 
 libs:			$(LIBS)
 
-$(LW)win32$(A):		$(D_LIB)/.created $(D_OBJ)/.created
+$(LW)win32:		$(D_LIB)/.created $(D_OBJ)/.created
 		$(MAKE) -C libw32 $(MAKEFLAGS)
 
-$(LW)termlib$(A):	$(D_LIB)/.created $(D_OBJ)/.created
+$(LW)termlib:		$(D_LIB)/.created $(D_OBJ)/.created
 		$(MAKE) -C libterm $(MAKEFLAGS)
 
-$(LW)%$(A):		$(D_LIB)/.created $(D_OBJ)/.created
+$(LW)%:			$(D_LIB)/.created $(D_OBJ)/.created
 		$(MAKE) -C $(notdir $(basename $@)) $(MAKEFLAGS)
 
 
