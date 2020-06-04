@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.19 2020/06/04 23:00:55 cvsuser Exp $
+# $Id: Makefile.in,v 1.20 2020/06/04 23:46:38 cvsuser Exp $
 # libbsdmdoc and grmanddoc
 #
 #
@@ -63,7 +63,7 @@ CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
 ifeq ("mingw32","@build_os@")
 CINCLUDE+=	-I../libw32
 endif
-CEXTRA=		@DEFS@ -DOSNAME="\"GRIEF Edit 3.2\""
+CEXTRA=		@DEFS@
 CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
 CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
 YFLAGS=		-d
@@ -287,8 +287,6 @@ $(LIBMANDOC):		$(D_OBJ)/.created $(LIBMANDOC_OBJS)
 
 mdocversion.h:		Makefile
 	@$(PERL) ./mdocversion.pl -o $@ -v "$(VERSION)" -r "$(RELDATE)"
-	-cmd /C dir
-	-cmd /C set
 
 source:			.unpacked.$(VERSION)
 		$(MAKE) unpacked
