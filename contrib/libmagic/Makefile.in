@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.11 2017/01/29 04:52:26 cvsuser Exp $
+# $Id: Makefile.in,v 1.13 2020/06/04 21:04:29 cvsuser Exp $
 # libmagic makefile
 #
 #
@@ -149,15 +149,15 @@ $(MAGICUTIL):		$(UTILOBJS)
 
 $(MAGICDB):		magic.mgc
 		@echo publishing magicdb $(MAGICDB) ...
-		@-cp.exe magic.mgc $(MAGICDB)
+		@cp magic.mgc $(MAGICDB)
 
-MSRC=		$(shell ls $(MAGDIR)/Magdir/*)
+magic.mgc:		MSRC=$(wildcard $(MAGDIR)/Magdir/*)
 magic.mgc:		$(MSRC) Makefile
-		@rm -fr magic
-		@-mkdir magic
-		@cp $(MAGDIR)/Magdir/* magic
+		@$(RM) -fr magic
+		-@mkdir magic
+		@cp $(MSRC)/Magdir/* magic
 		$(MAGICUTIL) -C -m magic
-		@rm -fr magic
+		@$(RM) -fr magic
 
 source:			.unpacked.$(VERSION)
 		$(MAKE) unpacked
@@ -169,7 +169,7 @@ source:			.unpacked.$(VERSION)
 
 installinc:		../include/.created
 		@echo publishing headers 'magic.h' ...
-		@-cp $(MAGICSRC)/magic.h ../include
+		@cp $(MAGICSRC)/magic.h ../include
 
 %/.created:
 		-@mkdir $(@D)

@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.6 2018/10/01 21:19:56 cvsuser Exp $
+# $Id: Makefile.in,v 1.7 2020/06/04 21:01:07 cvsuser Exp $
 # Help documentation.
 #
 #
@@ -44,8 +44,8 @@ OUTDIR=		$(D_HELP)
 CSOUTDIR=	$(OUTDIR)/cshelp
 FEATOUTDIR=	$(OUTDIR)/features
 
-CSSOURCE=	$(shell ls mansrc/cshelp/*.mandoc) INDEX
-FEATSOURCE=	$(shell ls mansrc/features/*.mandoc) INDEX
+CSSOURCE=	$(wildcard mansrc/cshelp/*.mandoc) INDEX
+FEATSOURCE=	$(wildcard mansrc/features/*.mandoc) INDEX
  
 OBJS=		$(OUTDIR)/prim.000
 CSOBJS=		$(addprefix $(CSOUTDIR)/,$(patsubst %.mandoc,%.hlp,$(notdir $(CSSOURCE))))

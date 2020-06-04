@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.18 2020/04/11 19:56:15 cvsuser Exp $
+# $Id: Makefile.in,v 1.19 2020/06/04 21:00:51 cvsuser Exp $
 # GRIEF macro library makefile.
 #
 #
@@ -27,8 +27,10 @@
 #
 
 SHELL=		/bin/sh
+
 GRUNCH=		@ABS_ROOT@/bin/grunch
 M=		@ABS_ROOT@/macros
+
 MKBD=		$M/kbd
 MTTY=		$M/tty
 MDEMOS=		$M/demos
@@ -36,20 +38,20 @@ MBENCHMARKS=	$M/benchmarks
 MMODES=		$M/modes
 MPROFILES=	$M/profiles
 MCOLORS=	$M/colors
-MDIRS=		$M $(MKBD) $(MTTY) $(MDEMOS) $(MBENCHMARKS) $(MMODES) $(MPROFILES) $(MCOLORS)
+MACRODIRS=	$M $(MKBD) $(MTTY) $(MDEMOS) $(MBENCHMARKS) $(MMODES) $(MPROFILES) $(MCOLORS)
 
 all:		macros
 
-SOURCE=		$(shell ls *.cr kbd/*.cr tty/*.cr demos/*.cr benchmarks/*.cr modes/*.cr profiles/*.cr colors/*.cr)
-OBJECTS=	$(shell ls $M/*.cm $(MKBD)/*.cm $(MTTY)/*.cm $(MDEMOS)/*.cm $(MBENCHMARKS)/*.cm $(MMODES)/*.cm $(MPROFILES)/*.cm  $(MCOLORS)/*.cm)
+SOURCE=		$(wildcard *.cr kbd/*.cr tty/*.cr demos/*.cr benchmarks/*.cr modes/*.cr profiles/*.cr colors/*.cr)
+OBJECTS=	$(wildcard $M/*.cm $(MKBD)/*.cm $(MTTY)/*.cm $(MDEMOS)/*.cm $(MBENCHMARKS)/*.cm $(MMODES)/*.cm $(MPROFILES)/*.cm  $(MCOLORS)/*.cm)
 
-macros:		$(MDIRS)
+macros:			$(MACRODIRS)
 		$(GRUNCH) -w -m -A autoload.inc -o $M $(SOURCE)
 
-force:		$(MDIRS)
+force:			$(MACRODIRS)
 		${GRUNCH} -w -A autoload.inc -o $M $(SOURCE)
 
-debug:		$(MDIRS)
+debug:			$(MACRODIRS)
 		$(GRUNCH) -w -g -A autoload.inc -o $M $(SOURCE)
 		${GRUNCH} -w $M grief.cr debug.cr
 
@@ -81,4 +83,5 @@ clean:
 		-rm -f a.out mon.out crisp.log core
 		-rm -f $(OBJECTS)
 		-rm -f *.m */*.m
+
 
