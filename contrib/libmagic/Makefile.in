@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.13 2020/06/04 21:04:29 cvsuser Exp $
+# $Id: Makefile.in,v 1.14 2020/06/04 22:01:40 cvsuser Exp $
 # libmagic makefile
 #
 #
@@ -47,7 +47,7 @@ CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
 CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
 YFLAGS=		-d
 LDFLAGS=	$(LDEBUG) @LDFLAGS@
-LDLIBS=		$(D_LIB)/$(LP)regex$(A) -L$(D_LIB) @LIBS@
+LDLIBS=		-L$(D_LIB) $(D_LIB)/$(LP)regex$(A) @LIBS@
 ifeq ("mingw32","@build_os@")
 LDLIBS+=	-lw32 -lshlwapi -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
 endif
@@ -155,7 +155,7 @@ magic.mgc:		MSRC=$(wildcard $(MAGDIR)/Magdir/*)
 magic.mgc:		$(MSRC) Makefile
 		@$(RM) -fr magic
 		-@mkdir magic
-		@cp $(MSRC)/Magdir/* magic
+		@cp $(MSRC) magic
 		$(MAGICUTIL) -C -m magic
 		@$(RM) -fr magic
 
