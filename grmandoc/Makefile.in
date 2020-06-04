@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.18 2020/06/04 22:33:52 cvsuser Exp $
+# $Id: Makefile.in,v 1.19 2020/06/04 23:00:55 cvsuser Exp $
 # libbsdmdoc and grmanddoc
 #
 #
@@ -287,8 +287,8 @@ $(LIBMANDOC):		$(D_OBJ)/.created $(LIBMANDOC_OBJS)
 
 mdocversion.h:		Makefile
 	@$(PERL) ./mdocversion.pl -o $@ -v "$(VERSION)" -r "$(RELDATE)"
-	-dir
-	-set
+	-cmd /C dir
+	-cmd /C set
 
 source:			.unpacked.$(VERSION)
 		$(MAKE) unpacked
