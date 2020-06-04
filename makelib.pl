@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.102 2020/06/03 23:58:05 cvsuser Exp $
+# $Id: makelib.pl,v 1.103 2020/06/04 02:21:51 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -55,6 +55,7 @@ my $BINPATH                 = '';
 my $PERLPATH                = '';
 my $BUSYBOX                 = 'busybox';
 my $WGET                    = 'wget';
+my $BISON                   = '';
 my $LIBTOOL                 = '';
 my $PROGRAMFILES            = ProgramFiles();
 
@@ -797,6 +798,7 @@ main()
         = GetOptions(
                 'binpath=s'     => \$BINPATH,
                 'perlpath=s'    => \$PERLPATH,
+                'bison=s'       => \$BISON,
                 'busybox=s'     => \$BUSYBOX,
                 'wget=s'        => \$WGET,
                 'version=i'     => \$o_version,
@@ -1020,6 +1022,21 @@ Configure($$)           # (type, version)
             }
         }
         print "wget:     ${WGET}\n";
+    }
+    
+    if ($BISON) {                               # override
+        if (-e $BISON) {
+            $BISON = realpath($BISON);
+
+        } elsif (-e "${BISON}.exe") {
+            $BISON = realpath("${BISON}.exe");
+            $BISON =~ s/\.exe//;
+
+        } else {
+            print "warning: unable to resolve path <${BISON}>\n";
+        }
+        print "bison:    ${BISON}\n";
+        $win_entries{YACC} = "${BISON} -y";
     }
 
     if (! $LIBTOOL) {                           # derive libtool location

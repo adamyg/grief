@@ -1,0 +1,12 @@
+wget-w32
+===========
+
+A command-line utility for retrieving files using HTTP, HTTPS and FTP protocols.
+
+	https://eternallybored.org/misc/wget
+
+Version 1.20.3
+
+	OpenSSL 1.1.1b, ZLib 1.2.11, gpgme-1.13.0, pcre2 10.32, libpsl 0.20.2, taskbar progressbar,
+	Windows certificate store support.
+

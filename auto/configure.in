@@ -1,10 +1,10 @@
-dnl $Id: configure.in,v 1.65 2020/06/03 23:31:06 cvsuser Exp $
+dnl $Id: configure.in,v 1.66 2020/06/04 02:09:36 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl
 
-AC_REVISION($Revision: 1.65 $)
+AC_REVISION($Revision: 1.66 $)
 ##	AC_COPYRIGHT(Adam Young 1995-2020, Paul Fox 1989-1991)
 AC_SUBST([PACKAGE])
 AC_INIT([GRIEF], [3.2.1], [griefedit@gmail.com])
@@ -53,6 +53,7 @@ AC_PATH_PROG(GREP,egrep,egrep)
 AC_PATH_PROG(NROFF,nroff,nroff)
 AC_PATH_PROG(TROFF,troff,troff)
 AC_PATH_PROG(RANLIB,ranlib,echo)
+AC_PATH_PROG(BISON,bison,bison)
 AC_PATH_PROG(WGET,wget,wget)
 
 AC_SUBST(LIBPROGS)
