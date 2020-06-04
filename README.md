@@ -1,6 +1,6 @@
-[![Website](https://img.shields.io/badge/View-Website-blue)](https://sourceforge.net/projects/grief/)
+[![Website](https://img.shields.io/badge/View-Website-blue)](https://sourceforge.net/projects/grief/) [![GitHub release](https://img.shields.io/github/release/Naereen/StrapDown.js.svg)](https://GitHub.com/adamyg/grief/releases/)
 
-[![Build status - Ubuntu](https://ci.appveyor.com/api/projects/status/3tx1vwwclydfp1t6?svg=true)](https://ci.appveyor.com/project/adamyg/grief-ubuntu) - <b>Ubuntu</b>
+[![Build status](https://ci.appveyor.com/api/projects/status/3tx1vwwclydfp1t6?svg=true&passingText=Ubuntu%20Passing&failingText=Ubuntu%20Failing&pendingText=Ubuntu%20Pending)](https://ci.appveyor.com/project/adamyg/grief-ubuntu)
 
 GRIEF - BRIEF clone
 =======================================================
