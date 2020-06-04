@@ -1,0 +1,14 @@
+-*- encoding: utf-8; -*-
+
+Thu Jun  3 23:41:44 2020 adamy
+
+	* xz-5.2.3
+
+		- mytime.c, gettimeofday() local implementation under win32
+		
+/*
+ * Local Variables: ***
+ * mode: changelog ***
+ * End: ***
+ */
+

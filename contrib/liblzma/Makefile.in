@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.6 2020/06/03 23:17:59 cvsuser Exp $
+# $Id: Makefile.in,v 1.7 2020/06/04 00:37:18 cvsuser Exp $
 # liblzma makefile and grxz
 #
 #
@@ -71,7 +71,7 @@ LZMADLL=	$(D_LIB)/$(LP)lzma.la
 LZMAUTIL=	$(D_BIN)/grxz$(E)
 
 VERSION=	5.2.3
-LZMAPACKED=	xz-$(VERSION).tgz
+LZMAPACKED=	xz-$(VERSION).gr.tgz
 LZMASRC=	./xz-$(VERSION)/src
 LIBLZMASRC=	./xz-$(VERSION)/src/liblzma
 LIBINC=		\
