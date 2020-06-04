@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.103 2020/06/04 02:21:51 cvsuser Exp $
+# $Id: makelib.pl,v 1.104 2020/06/04 02:45:21 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -56,6 +56,7 @@ my $PERLPATH                = '';
 my $BUSYBOX                 = 'busybox';
 my $WGET                    = 'wget';
 my $BISON                   = '';
+my $FLEX                    = '';
 my $LIBTOOL                 = '';
 my $PROGRAMFILES            = ProgramFiles();
 
@@ -799,6 +800,7 @@ main()
                 'binpath=s'     => \$BINPATH,
                 'perlpath=s'    => \$PERLPATH,
                 'bison=s'       => \$BISON,
+                'flex=s'        => \$FLEX,
                 'busybox=s'     => \$BUSYBOX,
                 'wget=s'        => \$WGET,
                 'version=i'     => \$o_version,
@@ -1037,6 +1039,21 @@ Configure($$)           # (type, version)
         }
         print "bison:    ${BISON}\n";
         $win_entries{YACC} = "${BISON} -y";
+    }
+    
+    if ($FLEX) {                                # override
+        if (-e $FLEX) {
+            $FLEX = realpath($FLEX);
+
+        } elsif (-e "${FLEX}.exe") {
+            $FLEX = realpath("${FLEX}.exe");
+            $FLEX =~ s/\.exe//;
+
+        } else {
+            print "warning: unable to resolve path <${FLEX}>\n";
+        }
+        print "flex:     ${FLEX}\n";
+        $win_entries{LEX} = "${FLEX}";
     }
 
     if (! $LIBTOOL) {                           # derive libtool location
