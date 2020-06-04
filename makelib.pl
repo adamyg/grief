@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.104 2020/06/04 02:45:21 cvsuser Exp $
+# $Id: makelib.pl,v 1.107 2020/06/04 18:59:46 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -1025,7 +1025,7 @@ Configure($$)           # (type, version)
         }
         print "wget:     ${WGET}\n";
     }
-    
+
     if ($BISON) {                               # override
         if (-e $BISON) {
             $BISON = realpath($BISON);
@@ -1034,13 +1034,16 @@ Configure($$)           # (type, version)
             $BISON = realpath("${BISON}.exe");
             $BISON =~ s/\.exe//;
 
+        } elsif ($BISON =~ /^\.[\/\\]/) {
+            $BISON =~ s/^\./\$(ROOT)/;
+
         } else {
             print "warning: unable to resolve path <${BISON}>\n";
         }
         print "bison:    ${BISON}\n";
         $win_entries{YACC} = "${BISON} -y";
     }
-    
+
     if ($FLEX) {                                # override
         if (-e $FLEX) {
             $FLEX = realpath($FLEX);
@@ -1048,6 +1051,9 @@ Configure($$)           # (type, version)
         } elsif (-e "${FLEX}.exe") {
             $FLEX = realpath("${FLEX}.exe");
             $FLEX =~ s/\.exe//;
+
+        } elsif ($FLEX =~ /^\.[\/\\]/) {
+            $FLEX =~ s/^\./\$(ROOT)/;
 
         } else {
             print "warning: unable to resolve path <${FLEX}>\n";
@@ -2381,6 +2387,7 @@ Makefile($$$)           # (type, dir, file)
     if ($BUSYBOX) {                             # command interface rework
         $text =~ s/\@sh /\@\@BUSYBOX\@ sh /g;
         $text =~ s/\-sh /-\@BUSYBOX\@ sh /g;
+        $text =~ s/shell sh /shell \@BUSYBOX\@ sh /g;
         $text =~ s/shell date /shell \@BUSYBOX\@ date /g;
         $text =~ s/shell cat /shell \@BUSYBOX\@ cat /g;
     }
