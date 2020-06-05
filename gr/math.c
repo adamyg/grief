@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_math_c,"$Id: math.c,v 1.31 2020/04/21 00:01:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_math_c,"$Id: math.c,v 1.33 2020/06/05 15:56:50 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: math.c,v 1.31 2020/04/21 00:01:57 cvsuser Exp $
+/* $Id: math.c,v 1.33 2020/06/05 15:56:50 cvsuser Exp $
  * Math operators/primitives.
  *
  *
@@ -54,7 +54,7 @@ do_cast(int type)
     if (F_INT == type) {
         accint_t lvalue = 0;
         switch (margv[1].l_flags) {
-        case F_INT:        
+        case F_INT:
             lvalue = margv[1].l_int;
             break;
         case F_FLOAT:
@@ -69,7 +69,7 @@ do_cast(int type)
     } else if (F_FLOAT == type) {
         accfloat_t lvalue = 0;
         switch (margv[1].l_flags) {
-        case F_INT:        
+        case F_INT:
             lvalue = (accfloat_t)margv[1].l_int;
             break;
         case F_FLOAT:
@@ -1334,7 +1334,7 @@ do_com_op(int op)
      */
     if (MOP_BNOT == op) {                       /* Bitwise NOT (complement) is special */
         switch (arg_flags1) {
-        case F_INT:     /* int */ 
+        case F_INT:     /* int */
             val = arg_int1;
             break;
         case F_FLOAT:   /* float */
@@ -1459,6 +1459,9 @@ do_com_op(int op)
             llen = get_listlen(2);
             lvp = margv + 1;
             goto xlist;
+
+        default:
+            goto com_op_mixed;
         }
         break;
 

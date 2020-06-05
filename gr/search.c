@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_search_c,"$Id: search.c,v 1.53 2020/04/21 00:01:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_search_c,"$Id: search.c,v 1.54 2020/06/05 15:50:31 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: search.c,v 1.53 2020/04/21 00:01:57 cvsuser Exp $
+/* $Id: search.c,v 1.54 2020/06/05 15:50:31 cvsuser Exp $
  * Search interface.
  *
  *  TODO:
@@ -2162,12 +2162,12 @@ re_exec(struct regprog *prog, const char *buf, int buflen, int offset)
         prog->groupno = regexp->groupno;
 
 #if defined(SRCH_ENABLED)
-        SRCH_TRACE(("exec: Standard-%s (at:%d, captures:%d)\n",
-            (RE_BRIEF == regexp->options.mode ? "brief" : "unix"), prog->start - buf, groupno))
+        SRCH_TRACE(("exec: Standard-%s (at:%ld, captures:%d)\n",
+            (RE_BRIEF == regexp->options.mode ? "brief" : "unix"), (long)(prog->start - buf), groupno))
         SRCH_TRACE(("  <%.*s>\n", prog->end - prog->start, prog->start))
         for (group = 0; group < groupno; ++group) {
-            SRCH_TRACE(("  [%d] %2d - %2d <%.*s>\n", group, regexp->startp[group] - buf, regexp->endp[group] - buf,
-                (regexp->endp[group] - regexp->startp[group]), regexp->startp[group]))
+            SRCH_TRACE(("  [%d] %2d - %2d <%.*s>\n", group, (int)(regexp->startp[group] - buf), (int)(regexp->endp[group] - buf),
+                (int)(regexp->endp[group] - regexp->startp[group]), regexp->startp[group]))
         }
 #endif
         return 1;
@@ -2229,10 +2229,10 @@ on_exec(struct regprog *prog, const char *buf, int buflen, int offset)
 #if defined(SRCH_ENABLED)
         {   int rn;
             SRCH_TRACE(("exec: Oniguruma (at:%d, captures:%d)\n", r, groupno - 1))
-            SRCH_TRACE(("  <%.*s>\n", prog->end - prog->start, prog->start))
+            SRCH_TRACE(("  <%.*s>\n", (int)(prog->end - prog->start), prog->start))
             for (rn = 1; rn < groupno; ++rn) {
                 SRCH_TRACE(("  [%d] %2d - %2d <%.*s>\n", rn, region->beg[rn], region->end[rn],
-                    (region->end[rn] - region->beg[rn]), buf + region->beg[rn]))
+                    (int)(region->end[rn] - region->beg[rn]), buf + region->beg[rn]))
             }
         }
 #endif

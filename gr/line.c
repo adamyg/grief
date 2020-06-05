@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_line_c,"$Id: line.c,v 1.43 2020/04/21 00:01:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_line_c,"$Id: line.c,v 1.44 2020/06/05 15:40:35 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: line.c,v 1.43 2020/04/21 00:01:55 cvsuser Exp $
+/* $Id: line.c,v 1.44 2020/06/05 15:40:35 cvsuser Exp $
  * Line management.
  *
  *
@@ -94,7 +94,7 @@ static int              line_size(LINE_t *lp, LINENO size);
 void
 line_init(void)
 {
-    trace_log("sizeof(LINE_t)=%d\n", sizeof(LINE_t));
+    trace_log("sizeof(LINE_t)=%u\n", (unsigned)sizeof(LINE_t));
     vm_init(&x_vmlines, sizeof(LINE_t), 0);
 }
 

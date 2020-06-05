@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_display_c,"$Id: m_display.c,v 1.26 2020/06/03 16:22:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_display_c,"$Id: m_display.c,v 1.27 2020/06/05 15:51:34 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_display.c,v 1.26 2020/06/03 16:22:15 cvsuser Exp $
+/* $Id: m_display.c,v 1.27 2020/06/05 15:51:34 cvsuser Exp $
  * Display primitives.
  *
  *
@@ -498,7 +498,7 @@ flag_override(const char *name, int length, int *value)
         *value = atoi(eq + 1);
     }
 
-    {   const size_t namelength = (eq ? eq - name : length);
+    {   const int namelength = (eq ? (int)(eq - name) : length);
         unsigned i;
 
         trace_ilog(value ? "\t %*s=%d\n" : "\t %*s\n", namelength, name, (value ? *value : -1));

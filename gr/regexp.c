@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_regexp_c,"$Id: regexp.c,v 1.46 2020/06/03 16:17:32 cvsuser Exp $")
+__CIDENT_RCSID(gr_regexp_c,"$Id: regexp.c,v 1.48 2020/06/05 15:56:50 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: regexp.c,v 1.46 2020/06/03 16:17:32 cvsuser Exp $
+/* $Id: regexp.c,v 1.48 2020/06/05 15:56:50 cvsuser Exp $
  * Regular expression engine.
  *
  *  The orgin of this regular expression implementation has been lost with time,
@@ -1556,10 +1556,10 @@ re_print(const REGEXPATOM *re)
             break;
 
         case RE_STRING: {
-                const size_t slength = GET16(re + 3);
+                const unsigned slength = GET16(re + 3);
                 const char *sdata = (const char *)(re + 5);
 
-                sprintf(buf1, "STRING len=%lu str='%.*s'", (unsigned long)slength, slength, sdata);
+                sprintf(buf1, "STRING len=%u str='%.*s'", slength, (int)slength, sdata);
             }
             break;
 
