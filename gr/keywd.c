@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.92 2020/06/03 16:05:32 cvsuser Exp $")
+__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.93 2020/06/05 15:40:35 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keywd.c,v 1.92 2020/06/03 16:05:32 cvsuser Exp $
+/* $Id: keywd.c,v 1.93 2020/06/05 15:40:35 cvsuser Exp $
  * Keyword table.
  *
  *
@@ -925,6 +925,11 @@ BUILTIN builtin[] = {
 
     {"get_region", MACRO(do_get_region), ARG_STRING, 0, 0,  /* scrap */
     1,  {ARG_OPT | ARG_INT}},
+
+#if defined(VERSION_206)
+    {"get_system_resources", MACRO(do_get_system_resources), ARG_STRING, 0, 0,  /* env */
+    1,  {ARG_OPT | ARG_INT}},
+#endif
 
     {"get_term_characters", MACRO(do_get_term_characters), ARG_VOID, B_NOVALUE, 0, /* screen, env */
     1,  {ARG_REST | ARG_OPT}},
