@@ -1613,7 +1613,7 @@ fetchRemoveFTP(struct url *url, const char *flags)
 			const size_t pathlen = strlen(path);
 			const int isdir = (pathlen && path[pathlen - 1] == '/' ? 1 : 0);
 			const int e = ftp_cmd(conn, "%s %.*s\r\n",
-					(isdir ? "RMD": "DELE"), (isdir ? pathlen-1 : pathlen), path);
+					(isdir ? "RMD": "DELE"), (int)(isdir ? pathlen-1 : pathlen), path);
 
 			free(path);
 			switch(e) {
