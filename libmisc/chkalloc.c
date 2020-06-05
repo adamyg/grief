@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_chkalloc_c,"$Id: chkalloc.c,v 1.30 2020/06/05 00:48:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_chkalloc_c,"$Id: chkalloc.c,v 1.31 2020/06/05 17:37:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: chkalloc.c,v 1.30 2020/06/05 00:48:01 cvsuser Exp $
+/* $Id: chkalloc.c,v 1.31 2020/06/05 17:37:37 cvsuser Exp $
  * Memory allocation front end.
  *
  *
@@ -42,10 +42,19 @@ __CIDENT_RCSID(gr_chkalloc_c,"$Id: chkalloc.c,v 1.30 2020/06/05 00:48:01 cvsuser
 #include <malloc.h>                             /* _expand */
 #include <crtdbg.h>
 #endif
-#if defined(HAVE_MALLOC_STATS)
-#include <malloc.h>                             /* malloc_stats */
-#endif
 #include <edtrace.h>
+
+#if defined(HAVE_MALLOC_STATS)
+#if !defined(__CYGWIN__) /* cygwin, struct malinfo redefinition/dlmalloc */
+#include <malloc.h>                             /* malloc_stats */
+#if defined(__linux__) || defined(__linux) /*redef warnings*/
+#undef M_TRIM_THRESHOLD
+#undef M_MMAP_THRESHOLD
+#endif
+#else
+extern void malloc_stats (void);
+#endif
+#endif/*HAVE_MALLOC_STATS*/
 
 #if !defined(HAVE_LIBDLMALLOC) && \
         (defined(_MSC_VER) || defined(__WATCOMC__))
@@ -55,10 +64,6 @@ __CIDENT_RCSID(gr_chkalloc_c,"$Id: chkalloc.c,v 1.30 2020/06/05 00:48:01 cvsuser
 #if defined(HAVE_LIBDLMALLOC)
 #ifndef USE_DL_PREFIX
 #define USE_DL_PREFIX                           /* dlxxxx assumed */
-#endif
-#if defined(__linux__) || defined(__linux) /*redef warnings*/
-#undef M_TRIM_THRESHOLD
-#undef M_MMAP_THRESHOLD
 #endif
 #include "../libmalloc/dlmalloc.h"
 
