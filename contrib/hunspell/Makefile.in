@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.15 2020/05/04 20:48:31 cvsuser Exp $
+# $Id: Makefile.in,v 1.17 2020/06/05 01:18:51 cvsuser Exp $
 # libhunspell, hunspell, hzip and hunzip makefile
 #
 #
@@ -165,22 +165,24 @@ clean:
 		-@$(LIBTOOL) --mode=clean $(RM) $(DLLOBJS) >/dev/null 2>&1
 		-@$(RM) $(LIBOBJS) >/dev/null 2>&1
 
+# XXX: open-watcom debug breaks due to the module size, must filter out -hw
+
 $(D_OBJ)/lib_%$(O):	$(HUNSPELLSRC)/%.cxx
-		$(CXX) $(CXXFLAGS) -o $@ -c $<
+		$(CXX) $(filter-out -hw,$(CXXFLAGS)) -o $@ -c $<
 
 $(D_OBJ)/lib_%.lo:	$(HUNSPELLSRC)/%.cxx
-		$(LIBTOOL) --mode=compile $(CXX) $(CXXFLAGS) -o $@ -c $<
+		$(LIBTOOL) --mode=compile $(CXX) $(filter-out -hw,$(CXXFLAGS)) -o $@ -c $<
 
 $(D_OBJ)/%.lo:		%.cxx
-		$(LIBTOOL) --mode=compile $(CXX) $(CXXFLAGS) -o $@ -c $<
+		$(LIBTOOL) --mode=compile $(CXX) $(filter-out -hw,$(CXXFLAGS)) -o $@ -c $<
 
 $(D_OBJ)/%$(O):		$(TOOLSSRC)/%.cxx
-		$(CXX) $(CXXFLAGS) -o $@ -c $<
+		$(CXX) $(filter-out -hw,$(CXXFLAGS)) -o $@ -c $<
 
 $(D_OBJ)/%$(O):		$(PARSERSSRC)/%.cxx
-		$(CXX) $(CXXFLAGS) -o $@ -c $<
+		$(CXX) $(filter-out -hw,$(CXXFLAGS)) -o $@ -c $<
 
 $(D_OBJ)/%$(O):		$(TOOLSSRC)/%.c
-		$(CC) $(CFLAGS) -o $@ -c $<
+		$(CC) $(filter-out -hw,$(CFLAGS)) -o $@ -c $<
 
 #end
