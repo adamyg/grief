@@ -1,7 +1,7 @@
 #ifndef MANDOC_CONFIG_H_INCLUDED
 #define MANDOC_CONFIG_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: config.h,v 1.17 2020/06/04 23:46:38 cvsuser Exp $
+/* $Id: config.h,v 1.18 2020/06/05 01:07:40 cvsuser Exp $
  * mandoc config.h
  *
  * Copyright (c) 201 - 2020, Adam Young.
@@ -33,9 +33,6 @@
 #include <malloc.h>
 #include <unistd.h>
 
-/*FIXME: edbuildinfo.h*/
-#define  OSNAME "GRIEF Edit 3.2"
-
 #ifndef  snprintf
 #if defined(_MSC_VER) && (_MSC_VER < 1900)
 #define  snprintf _snprintf    /*2015+*/
@@ -66,9 +63,12 @@
 #define  inline _inline
 #include "../libw32/win32_child.h"
 
-#else
+#else /*!WIN32*/
 #include "../include/config.h"
 #endif
+
+/*FIXME: edbuildinfo.h*/
+#define  OSNAME "GRIEF Edit 3.2"
 
 #include "mdocversion.h"        /*VERSION and binary names*/
 
