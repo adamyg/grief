@@ -30,10 +30,19 @@
  *
  * $FreeBSD: file.c,v 1.18 2007/12/14 10:26:58 des Exp $
  */
+ 
+#define _BSD_SOURCE     /* implied orgin */
 
 #if HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#if defined(__linux__)  /* _BSD_SOURCE has been deprecated, glibc >= 2.2 */
+#if defined(_BSD_SOURCE)
+#define _DEFAULT_SOURCE
+#endif
+#endif
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/socket.h>

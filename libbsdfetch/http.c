@@ -64,6 +64,8 @@
  * SUCH DAMAGE.
  */
 
+#define _BSD_SOURCE     /* implied orgin */
+
 #if defined(__linux__) || defined(__MINT__) || defined(__FreeBSD_kernel__) || defined(__CYGWIN__)
 /* Keep this down to Linux or MiNT, it can create surprises elsewhere. */
 /*
@@ -80,6 +82,12 @@
 
 #if HAVE_CONFIG_H
 #include "config.h"
+#endif
+
+#if defined(__linux__)  /* _BSD_SOURCE has been deprecated, glibc >= 2.2 */
+#if defined(_BSD_SOURCE)
+#define _DEFAULT_SOURCE
+#endif
 #endif
 
 #include <sys/types.h>

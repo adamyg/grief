@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bsd_radixsort_c,"$Id: bsd_radixsort.c,v 1.8 2014/10/22 02:33:45 ayoung Exp $")
+__CIDENT_RCSID(gr_bsd_radixsort_c,"$Id: bsd_radixsort.c,v 1.9 2020/06/05 23:29:50 cvsuser Exp $")
 
 /*- -*- indent-width: 8; tabs: 8; -*-
  * Copyright (c) 1990, 1993
@@ -48,7 +48,11 @@ __CIDENT_RCSID(gr_bsd_radixsort_c,"$Id: bsd_radixsort.c,v 1.8 2014/10/22 02:33:4
  * "Engineering Radix Sort".
  */
 
+#if defined(__linux__)	/* _BSD_SOURCE has been deprecated, glibc >= 2.2 */
+#define  _DEFAULT_SOURCE
+#endif
 #define  _BSD_SOURCE
+
 #include <edtypes.h>
 #include <libmisc.h>
 

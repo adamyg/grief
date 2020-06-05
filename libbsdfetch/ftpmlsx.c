@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ftpmlsx.c,v 1.4 2014/11/24 23:50:02 ayoung Exp $
+/* $Id: ftpmlsx.c,v 1.5 2020/06/05 23:45:01 cvsuser Exp $
  * FTP MLSx command reply parser.
  *
  *
@@ -14,9 +14,17 @@
  * License for more details.
  * ==end==
  */
-
+ 
+#define _BSD_SOURCE     /* implied orgin */
+ 
 #if HAVE_CONFIG_H
 #include "config.h"
+#endif
+
+#if defined(__linux__)  /* _BSD_SOURCE has been deprecated, glibc >= 2.2 */
+#if defined(_BSD_SOURCE)
+#define _DEFAULT_SOURCE
+#endif
 #endif
 
 #include <ctype.h>

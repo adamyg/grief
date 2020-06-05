@@ -34,6 +34,14 @@
  * optimizations are not included to reduce source code size and avoid
  * compile-time configuration.
  */
+ 
+#define _BSD_SOURCE     /* implied orgin */
+
+#if defined(__linux__)  /* _BSD_SOURCE has been deprecated, glibc >= 2.2 */
+#if defined(_BSD_SOURCE)
+#define _DEFAULT_SOURCE
+#endif
+#endif
 
 #ifndef HAVE_OPENSSL
 

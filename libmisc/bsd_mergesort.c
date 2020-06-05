@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bsd_mergesort_c,"$Id: bsd_mergesort.c,v 1.6 2014/10/22 02:33:44 ayoung Exp $")
+__CIDENT_RCSID(gr_bsd_mergesort_c,"$Id: bsd_mergesort.c,v 1.7 2020/06/05 23:29:50 cvsuser Exp $")
 
 /*- -*- indent-width: 8; tabs: 8; -*-
  * Copyright (c) 1992, 1993
@@ -32,10 +32,15 @@ __CIDENT_RCSID(gr_bsd_mergesort_c,"$Id: bsd_mergesort.c,v 1.6 2014/10/22 02:33:4
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
+ *
+ * "@(#)merge.c 8.2 (Berkeley) 2/14/94"
  */
 
-/*static char sccsid[] = "@(#)merge.c	8.2 (Berkeley) 2/14/94";*/
+#if defined(__linux__)	/* _BSD_SOURCE has been deprecated, glibc >= 2.2 */
+#define  _DEFAULT_SOURCE
+#endif
 #define  _BSD_SOURCE
+
 #include <edtypes.h>
 #include <libmisc.h>
 

@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.11 2018/10/16 22:39:56 cvsuser Exp $
+# $Id: Makefile.in,v 1.12 2020/06/05 23:45:01 cvsuser Exp $
 # libbsdfetch makefile.
 #
 #
-# Copyright (c) 1998 - 2018, Adam Young.
+# Copyright (c) 1998 - 2020, Adam Young.
 # All rights reserved.
 # 
 # This file is part of the GRIEF Editor.
@@ -60,7 +60,7 @@ CINCLUDE=	-I$(D_INC) @CINCLUDE@
 ifeq ("mingw32","@build_os@")
 CINCLUDE+=	-I../libw32
 endif
-CEXTRA=		@DEFS@ -D_BSD_SOURCE -DFTP_COMBINE_CWDS -DWITH_SSL -DWIN32_SOCKET_MAP_NATIVE
+CEXTRA=		@DEFS@ -DFTP_COMBINE_CWDS -DWITH_SSL -DWIN32_SOCKET_MAP_NATIVE
 CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
 CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
 YFLAGS=		-d

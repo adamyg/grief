@@ -30,10 +30,19 @@
  *
  * $FreeBSD: fetch.c,v 1.41 2007/12/19 00:26:36 des Exp $
  */
-
+ 
+#define _BSD_SOURCE     /* implied orgin */
+ 
 #if HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#if defined(__linux__)  /* _BSD_SOURCE has been deprecated, glibc >= 2.2 */
+#if defined(_BSD_SOURCE)
+#define _DEFAULT_SOURCE
+#endif
+#endif
+
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/time.h>

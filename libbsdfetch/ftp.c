@@ -57,6 +57,8 @@
  * $ftpioId: ftpio.c,v 1.30 1998/04/11 07:28:53 phk Exp $
  *
  */
+ 
+#define _BSD_SOURCE     /* implied orgin */
 
 #if defined(__linux__) || defined(__CYGWIN__)
 /* Keep this down to Linux, it can create surprises else where. */
@@ -65,6 +67,12 @@
 
 #if HAVE_CONFIG_H
 #include "config.h"
+#endif
+
+#if defined(__linux__)  /* _BSD_SOURCE has been deprecated, glibc >= 2.2 */
+#if defined(_BSD_SOURCE)
+#define _DEFAULT_SOURCE
+#endif
 #endif
 
 #include <sys/types.h>

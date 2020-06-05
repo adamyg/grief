@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ftplist.c,v 1.5 2015/03/07 23:39:04 ayoung Exp $
+/* $Id: ftplist.c,v 1.6 2020/06/05 23:45:01 cvsuser Exp $
  * FTP LIST command reply parser.
  *
  *
@@ -14,9 +14,17 @@
  * License for more details.
  * ==end==
  */
-
+ 
+#define _BSD_SOURCE     /* implied orgin */
+ 
 #if HAVE_CONFIG_H
 #include "config.h"
+#endif
+
+#if defined(__linux__)  /* _BSD_SOURCE has been deprecated, glibc >= 2.2 */
+#if defined(_BSD_SOURCE)
+#define _DEFAULT_SOURCE
+#endif
 #endif
 
 #include <sys/stat.h>
