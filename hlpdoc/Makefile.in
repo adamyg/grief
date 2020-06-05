@@ -1,7 +1,28 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.7 2020/06/04 21:01:07 cvsuser Exp $
+# $Id: Makefile.in,v 1.8 2020/06/05 00:13:06 cvsuser Exp $
 # Help documentation.
 #
+# Copyright (c) 1998 - 2020, Adam Young.
+# All rights reserved.
+#
+# This file is part of the GRIEF Editor.
+#
+# The GRIEF Editor is free software: you can redistribute it
+# and/or modify it under the terms of the GRIEF Editor License.
+#
+# Redistributions of source code must retain the above copyright
+# notice, and must be distributed with the license document above.
+#
+# Redistributions in binary form must reproduce the above copyright
+# notice, and must include the license document above in
+# the documentation and/or other materials provided with the
+# distribution.
+#
+# The GRIEF Editor is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# License for more details.
+# ==end==
 #
 #
 
@@ -23,6 +44,7 @@ GREP=		@GREP@
 AWK=		@AWK@
 SED=		@SED@
 PERL=		@PERL@
+WGET=		@WGET@
 LANG=C
 export LANG	#RH 8 has a LANG=en_US.UTF-8
 
@@ -58,15 +80,15 @@ help:			outdirs $(OBJS) prog user cshelp features
 outdirs:		$(OUTDIR)/.created $(CSOUTDIR)/.created $(FEATOUTDIR)/.created
 
 prog:
-	@$(PERL) ./makehelp.pl prog
+	@$(PERL) ./makehelp.pl --wget=@WGET@ prog
 	@$(GRUNCH) $(OUTDIR)/prog.cr
 
 user:
-	@$(PERL) ./makehelp.pl user
+	@$(PERL) ./makehelp.pl --wget=@WGET@ user
 	@$(GRUNCH) $(OUTDIR)/user.cr
 
 pdf:
-	@$(PERL) ./makehelp.pl html
+	@$(PERL) ./makehelp.pl --wget=@WGET@ html
 	@$(PERL) ./makepdf.pl
 
 cshelp:		$(CSOBJS)
@@ -79,19 +101,19 @@ features:	$(FEATOBJS)
 
 $(OUTDIR)/prim.000:
 	@-$(RM) $(RMFLAGS) $(OUTDIR)/prim.000 $(OUTDIR)/prim???.hlp >/dev/null 2>&1
-	@$(PERL) ./makehelp.pl -I src/library.txt.src -F mansrc/features -F mansrc/cshelp prim
+	@$(PERL) ./makehelp.pl --wget=@WGET@ -I src/library.txt.src -F mansrc/features -F mansrc/cshelp prim
 
 $(OUTDIR)/cshelp/INDEX:		mansrc/cshelp/INDEX
 	@cp $< $@
 
 $(OUTDIR)/cshelp/%.hlp:		mansrc/cshelp/%.mandoc
-	@$(PERL) ./makehelp.pl hlp $< $@
+	@$(PERL) ./makehelp.pl --wget=@WGET@ hlp $< $@
 
 $(OUTDIR)/features/INDEX:	mansrc/features/INDEX
 	@cp $< $@
 
 $(OUTDIR)/features/%.hlp:	mansrc/features/%.mandoc
-	@$(PERL) ./makehelp.pl hlp $< $@
+	@$(PERL) ./makehelp.pl --wget=@WGET@ hlp $< $@
 
 clean:
 	-$(RM) $(RMFLAGS) $(CSOUTDIR)/* $(FEATOUTDIR)/* >/dev/null 2>&1

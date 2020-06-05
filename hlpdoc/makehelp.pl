@@ -1,10 +1,10 @@
 #!/usr/bin/perl
-# $Id: makehelp.pl,v 1.20 2019/05/01 22:37:42 cvsuser Exp $
+# $Id: makehelp.pl,v 1.21 2020/06/05 00:13:06 cvsuser Exp $
 # -*- tabs: 8; indent-width: 4; -*-
 # Help collection tool.
 #
 #
-# Copyright (c) 1998 - 2018, Adam Young.
+# Copyright (c) 1998 - 2020, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -46,6 +46,7 @@ my $CWD         = getcwd();
 my $o_version   = undef;
 my $o_ndbin     = 'https://sourceforge.net/projects/ndplus/files/nd+_stable';
 
+my $o_wget      = 'wget';
 my $o_ndwk      = './doc';
 my $o_srcdir    = './src';
 my $o_prmdir    = '../gr';
@@ -53,22 +54,22 @@ my $o_manbin    = '../bin/grmandoc';
 my $x_manopt    = '';                           # -O indent=3,width=80'
     #
     # ASCII Output
-    #	    Use -T ascii to force text output in 7-bit ASCII character encoding documented in the ascii(7) manual page, 
+    #	    Use -T ascii to force text output in 7-bit ASCII character encoding documented in the ascii(7) manual page,
     #	    ignoring the locale(1) set in the environment. Font styles are applied by using back-spaced encoding such that an
     #	    underlined character ‘c’ is rendered as ‘_\[bs]c’, where ‘\[bs]’ is the back-space character number 8. Emboldened
     #	    characters are rendered as ‘c\[bs]c’. The special characters documented in mandoc_char(7) are rendered
     #	    best-effort in an ASCII equivalent. The following -O arguments are accepted:
-    # 
+    #
     # indent=indent
     #	    The left margin for normal text is set to indent blank characters instead of the default of five for mdoc(7) and
     #	    seven for man(7). Increasing this is not recommended; it may result in degraded formatting, for example overfull
     #	    lines or ugly line breaks. When output is to a pager on a terminal that is less than 66 columns wide, the default
     #	    is reduced to three columns.
-    # 
+    #
     # mdoc  Format man(7) input files in mdoc(7) output style. Specifically, this suppresses the two additional blank lines
     #	    near the top and the bottom of each page, and it implies -O indent=5. One useful application is for checking that
     #	    -T man output formats in the same way as the mdoc(7) source it was generated from.
-    # 
+    #
     # width=width
     #	    The output width is set to width instead of the default of 78. When output is to a pager on a terminal that is
     #	    less than 79 columns wide, the default is reduced to one less than the terminal width. In any case, lines that
@@ -183,6 +184,7 @@ main()                  #()
         'M|manbins:s'   => \$o_manbin,
         'I|index:s'     => \$o_index,
         'F|feature:s'   => \@o_features,
+        'W|wget:s'      => \$o_wget,
         'verbose'       => \$o_verbose,
         'warnings'      => \$o_warning,
         'debug'         => \$o_debug,
@@ -251,6 +253,7 @@ Options:
     -N,--ndbin <dir>        NaturalDoc binary path.
     -M,--manbin <path>      Mandoc binary path.
     -F,--feature <file>     Features directory (one or more).
+    -W,--wget <path>        wget application path.
 
     --debug                 Enable runtime diagnostics.
     --help                  Help.
@@ -294,16 +297,16 @@ NDPLUSDownload()
             # Pull the package
             if (! -f "$nddir/$name") {
                                                 # download
-                system("wget --no-check-certificate -O $nddir/$name ${o_ndbin}.${ext}");
+                system("${o_wget} --no-check-certificate -O $nddir/$name ${o_ndbin}.${ext}");
 
                                                 # mirrors
                 foreach my $sfmirror (@sfmirrors) {
-                   system("wget --no-check-certificate -O $nddir/$name \"${sfmirror}/project/ndplus/nd+_stable.${ext}\"")
+                   system("${o_wget} --no-check-certificate -O $nddir/$name \"${sfmirror}/project/ndplus/nd+_stable.${ext}\"")
                         if (! -f "$nddir/$name" || -z "$nddir/$name");
                 }
 
             # auto direct -- no longer functional
-            ##  system("wget --no-check-certificate -O $nddir/$name ${ndauto}")
+            ##  system("${o_wget} --no-check-certificate -O $nddir/$name ${ndauto}")
             ##      if (! -f "$nddir/$name" || -z "$nddir/$name");
             }
 
@@ -1423,7 +1426,4 @@ Debug
 }
 
 #end
-
-
-
 
