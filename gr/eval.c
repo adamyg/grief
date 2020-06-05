@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_eval_c,"$Id: eval.c,v 1.37 2020/04/21 00:01:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_eval_c,"$Id: eval.c,v 1.38 2020/06/05 13:06:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: eval.c,v 1.37 2020/04/21 00:01:55 cvsuser Exp $
+/* $Id: eval.c,v 1.38 2020/06/05 13:06:21 cvsuser Exp $
  * Evaluator.
  *
  *
@@ -702,6 +702,8 @@ isa_string(int argi)
             case F_STR:
             case F_RSTR:
                 return TRUE;
+            default:
+                break;
             }
             break;
         default:
@@ -737,6 +739,8 @@ isa_list(int argi)
             case F_LIST:
             case F_RLIST:
                 return TRUE;
+            default:
+                break;
             }
             break;
         default:
