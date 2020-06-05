@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_pty_unix_c,"$Id: pty_unix.c,v 1.22 2015/02/24 23:10:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_pty_unix_c,"$Id: pty_unix.c,v 1.23 2020/06/05 15:52:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: pty_unix.c,v 1.22 2015/02/24 23:10:08 cvsuser Exp $
+/* $Id: pty_unix.c,v 1.23 2020/06/05 15:52:56 cvsuser Exp $
  * PTY interface for Unix and Unix-like environments.
  *
  *      Linux
@@ -771,7 +771,7 @@ sys_pty_ptsname(int fd, char *buf, int len)
         int ret;
 
         if (0 == ioctl(fd, TIOCPTYGNAME, buf)) {
-            if (0 == stat(buf, &sb))
+            if (0 == stat(buf, &sb)) {
                 return buf;
             }
         }
