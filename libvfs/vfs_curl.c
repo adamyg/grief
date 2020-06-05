@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_curl_c,"$Id: vfs_curl.c,v 1.13 2019/03/15 23:23:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_curl_c,"$Id: vfs_curl.c,v 1.14 2020/06/05 12:54:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_curl.c,v 1.13 2019/03/15 23:23:01 cvsuser Exp $
+/* $Id: vfs_curl.c,v 1.14 2020/06/05 12:54:27 cvsuser Exp $
  * Virtual file system interface - libcurl driver.
  *
  *
@@ -169,7 +169,7 @@ vfsftp_url_split(const char *path, ftpurl_t *url)
     enum {URL_USER, URL_PASSWD, URL_HOST, URL_PORT, URL_PATH, URL_MODES}
         mode = URL_USER;
     unsigned i, length[URL_MODES] = {0};
-    const unsigned char *cursor = (unsigned char *)path, *port = NULL;
+    const char *cursor = path, *port = NULL;
     int quote = -1, ch;
 
     assert(path);
