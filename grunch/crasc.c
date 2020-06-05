@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crasc_c,"$Id: crasc.c,v 1.18 2020/04/23 12:35:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_crasc_c,"$Id: crasc.c,v 1.19 2020/06/05 22:28:19 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crasc.c,v 1.18 2020/04/23 12:35:50 cvsuser Exp $
+/* $Id: crasc.c,v 1.19 2020/06/05 22:28:19 cvsuser Exp $
  * ASCII/LISP backend code generator.
  *
  *
@@ -166,7 +166,7 @@ gena_reg(const char *name, int index)
     char buf[32];
 
     printstr(name);
-    sprintf(buf, "#%" ACCINT_FMT, index);       // <symbol>#<index>
+    sprintf(buf, "#%d", index); // <symbol>#<index>
     printstr(buf);
     need_space = TRUE;
 }
