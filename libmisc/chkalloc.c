@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_chkalloc_c,"$Id: chkalloc.c,v 1.29 2020/06/05 00:45:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_chkalloc_c,"$Id: chkalloc.c,v 1.30 2020/06/05 00:48:01 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: chkalloc.c,v 1.29 2020/06/05 00:45:35 cvsuser Exp $
+/* $Id: chkalloc.c,v 1.30 2020/06/05 00:48:01 cvsuser Exp $
  * Memory allocation front end.
  *
  *
@@ -56,7 +56,7 @@ __CIDENT_RCSID(gr_chkalloc_c,"$Id: chkalloc.c,v 1.29 2020/06/05 00:45:35 cvsuser
 #ifndef USE_DL_PREFIX
 #define USE_DL_PREFIX                           /* dlxxxx assumed */
 #endif
-#if defined(linux) /*redef warnings*/
+#if defined(__linux__) || defined(__linux) /*redef warnings*/
 #undef M_TRIM_THRESHOLD
 #undef M_MMAP_THRESHOLD
 #endif
