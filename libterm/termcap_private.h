@@ -54,13 +54,13 @@ extern const short      __tmspc10[TMSPC10SIZE];
  *  localize cgetxxx() implementations/
  *	Under BSD derived environments (including OS/X) these are available within stdlib.h
  */
-#define cgetset         termlib_cgetset  
-#define cgetcap         termlib_cgetcap  
-#define cgetent         termlib_cgetent  
+#define cgetset         termlib_cgetset
+#define cgetcap         termlib_cgetcap
+#define cgetent         termlib_cgetent
 #define cgetmatch       termlib_cgetmatch
 #define cgetclose       termlib_cgetclose
-#define cgetstr         termlib_cgetstr  
-#define cgetustr        termlib_cgetustr 
+#define cgetstr         termlib_cgetstr
+#define cgetustr        termlib_cgetustr
 #define cgetnum         termlib_cgetnum
 
 int                     cgetset(const char *ent);
@@ -73,7 +73,9 @@ int                     cgetustr(char *buf, const char *cap, char **str);
 int                     cgetnum(char *buf, const char *cap, long *num);
 /*__END_DECLS*/
 
+#ifndef strlcpy         /*__APPLE__*/
 #define strlcpy(a,b,c)  strncmp(a,b,c)
+#endif
 
 #if defined(_MSC_VER) || defined(__WATCOMC__)
 #define snprintf _snprintf
