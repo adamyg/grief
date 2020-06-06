@@ -1,10 +1,10 @@
 #ifndef DBHASH_NAMESPACE_H_INCLUDED
 #define DBHASH_NAMESPACE_H_INCLUDED
-/* $Id: namespace.h,v 1.8 2018/09/29 02:25:20 cvsuser Exp $
+/* $Id: namespace.h,v 1.9 2020/06/05 23:56:31 cvsuser Exp $
  *
  * libbsdb <namespace.h>
  *
- * Copyright (c) 2012-2015 Adam Young.
+ * Copyright (c) 2012-2020 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,12 @@
  */
 
 #ifndef _BSD_SOURCE
-#define _BSD_SOURCE
+#define _BSD_SOURCE     /* implied orgin */
+#endif
+#if defined(__linux__)  /* _BSD_SOURCE has been deprecated, glibc >= 2.2 */
+#if defined(_BSD_SOURCE)
+#define _DEFAULT_SOURCE
+#endif
 #endif
 
 #include <config.h>
