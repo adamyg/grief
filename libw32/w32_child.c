@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_child_c,"$Id: w32_child.c,v 1.13 2020/04/20 23:03:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_child_c,"$Id: w32_child.c,v 1.14 2020/05/04 19:59:43 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -937,8 +937,9 @@ Getpath(const char *src, char *dst, unsigned maxlen)
      *  If we copied something and stopped because of a ';', skip ';'
      *  before returning
      */
-    while (*src == ';')
+    while (*src == ';') {
         ++src;
+    }
 
     /*
      *  Store a terminating null.

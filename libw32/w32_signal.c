@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_signal_c,"$Id: w32_signal.c,v 1.13 2020/03/28 00:24:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_signal_c,"$Id: w32_signal.c,v 1.14 2020/05/03 21:34:19 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -89,4 +89,3 @@ sigaction(int sig, struct sigaction *sa, struct sigaction *osa)
 #endif /*__MINGW32__*/
 
 /*end*/
-

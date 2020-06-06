@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.36 2020/04/20 23:18:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.37 2020/05/04 00:00:01 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -225,7 +225,16 @@ w32_stat(const char *path, struct stat *sb)
             path = symbuf;
         }
     }
+
     if (ret < 0 || (ret = Stat(path, sb)) < 0) {
+        if (-ENOTDIR == ret) {                  // component error.                                               
+            if (path != symbuf &&               // expand embedded shortcut
+                    w32_shortcut_expand(path, symbuf, sizeof(symbuf), SHORTCUT_COMPONENT)) {
+                if ((ret = Stat(symbuf, sb)) >= 0) {
+                    return ret;
+                }
+            }
+        }
         errno = -ret;
         return -1;
     }
@@ -309,13 +318,24 @@ w32_lstat(const char *path, struct stat *sb)
 
     if (path == NULL || sb == NULL) {
         ret = -EFAULT;
+    } else {
+        (void) memset(sb, 0, sizeof(struct stat));
     }
 
     if (ret < 0 || (ret = Stat(path, sb)) < 0) {
+        if (-ENOTDIR == ret) {                  // component error.
+            char lnkbuf[WIN32_PATH_MAX];
+                                                // expand embedded shortcut
+            if (w32_shortcut_expand(path, lnkbuf, sizeof(lnkbuf), SHORTCUT_COMPONENT)) {
+                if ((ret = Stat(lnkbuf, sb)) >= 0) {
+                    return ret;
+                }
+            }
+        }
         errno = -ret;
-        return (-1);
+        return -1;
     }
-    return (0);
+    return 0;
 }
 
 
@@ -487,7 +507,7 @@ my_GetFinalPathNameByHandle(HANDLE handle, char *path, int length)
 
 
 static DWORD WINAPI
-my_GetFinalPathNameByHandleImp(HANDLE handle, char *path, DWORD length, DWORD flags)
+my_GetFinalPathNameByHandleImp(HANDLE handle, LPSTR path, DWORD length, DWORD flags)
 {                                               // Determine underlying file-name, XP+
     HANDLE map;
     DWORD ret;
