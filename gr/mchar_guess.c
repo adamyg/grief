@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mchar_guess_c,"$Id: mchar_guess.c,v 1.26 2020/06/03 16:31:32 cvsuser Exp $")
+__CIDENT_RCSID(gr_mchar_guess_c,"$Id: mchar_guess.c,v 1.27 2020/06/05 23:13:47 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mchar_guess.c,v 1.26 2020/06/03 16:31:32 cvsuser Exp $
+/* $Id: mchar_guess.c,v 1.27 2020/06/05 23:13:47 cvsuser Exp $
  * Character-set conversion/file type guess logic.
  *
  *
@@ -1374,7 +1374,7 @@ guess_magic(guessinfo_t *guess, const void *buffer, unsigned length)
 
         trace_ilog("\t==> magic_init()\n");
         x_magiclib = magic_open(MAGIC_MIME);
-        trace_ilog("\t==> magic_open() : %d\n", (int)x_magiclib);
+        trace_ilog("\t==> magic_open() : 0x%p\n", x_magiclib);
         ret = magic_load(x_magiclib, NULL);
         trace_ilog("\t==> magic_load() : %d\n", ret);
         ++x_magicopen;
