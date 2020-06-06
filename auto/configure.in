@@ -1,10 +1,10 @@
-dnl $Id: configure.in,v 1.66 2020/06/04 02:09:36 cvsuser Exp $
+dnl $Id: configure.in,v 1.67 2020/06/06 00:18:32 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl
 
-AC_REVISION($Revision: 1.66 $)
+AC_REVISION($Revision: 1.67 $)
 ##	AC_COPYRIGHT(Adam Young 1995-2020, Paul Fox 1989-1991)
 AC_SUBST([PACKAGE])
 AC_INIT([GRIEF], [3.2.1], [griefedit@gmail.com])
@@ -710,6 +710,7 @@ AC_CONFIG_FILES([\
 	contrib/libmagic/Makefile \
 	contrib/libguess/Makefile \
 	contrib/libarchive/Makefile \
+	contrib/flex/Makefile \
 	contrib/extags/Makefile])
 fi
 
