@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_crypto_c,"$Id: w32_crypto.c,v 1.3 2019/05/13 02:02:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_crypto_c,"$Id: w32_crypto.c,v 1.4 2020/05/04 20:17:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * crypt32.dll dynamic loader ...
  *
- * Copyright (c) 2017 - 2019, Adam Young.
+ * Copyright (c) 2017 - 2020, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -28,17 +28,20 @@ __CIDENT_RCSID(gr_w32_crypto_c,"$Id: w32_crypto.c,v 1.3 2019/05/13 02:02:41 cvsu
  * ==end==
  */
 
+#if defined(_WIN32)
 
 #ifndef _WINVER
 #define _WINVER 0x0601 // Windows 7
 #define _WIN32_WINN 0x0601 // Windows 7
 #endif
 
+#ifndef  WINDOWS_MEAN_AND_LEAN
 #define  WINDOWS_MEAN_AND_LEAN
-#include <windows.h>
-#include <bcrypt.h>
+#endif
 
+#include <windows.h>
 #include <stdio.h>
+#include <bcrypt.h>
 
 typedef NTSTATUS (WINAPI * BCryptOpenAlgorithmProvider_t)(BCRYPT_ALG_HANDLE *phAlgorithm, LPCWSTR pszAlgId, LPCWSTR pszImplementation, ULONG dwFlags);
 typedef NTSTATUS (WINAPI * BCryptEnumAlgorithms_t)(ULONG dwAlgOperations, ULONG *pAlgCount, BCRYPT_ALGORITHM_IDENTIFIER **ppAlgList, ULONG dwFlags);
@@ -156,6 +159,7 @@ static HMODULE                                      x_Crypt32dll;
 #define STATUS_NOT_SUPPORTED 0xC00000BB
 #endif
 
+
 static void
 load_error() {
     const DWORD rc = GetLastError();
@@ -171,25 +175,49 @@ load_error() {
     MessageBoxA(0, message, "Error", MB_OK|MB_ICONERROR);
 }
 
+
+static int
+load_library() {
+    if (0 == x_Crypt32dll) {
+        if (0 != (x_Crypt32dll = LoadLibraryA("crypt32.dll"))) {
+            x_Crypt32dll = (HMODULE)-1;
+            load_error();
+
+        }
+    }
+    return ((HMODULE)-1 != x_Crypt32dll);
+
+}
+
+
+static NTSTATUS WINAPI
+BCrypt_STATUS_NOT_SUPPORTED() {
+    return STATUS_NOT_SUPPORTED;
+}
+
+
+static VOID WINAPI
+BCrypt_VOID() {
+    return;
+}
+
+
 #define RESOLVE_CRYPT32_API(__name) \
-    if (0 == x_Crypt32dll) { \
-        if (0 == (x_Crypt32dll = LoadLibraryA("crypt32.dll"))) { \
-            x_Crypt32dll = (HMODULE)-1; \
-            load_error(); \
+    if (0 == x_pfn##__name) { \
+        if (load_library()) { \
+            x_pfn##__name = (__name##_t)GetProcAddress(x_Crypt32dll, #__name); \
         } \
+        if (0 == x_pfn##__name) x_pfn##__name = (__name##_t)BCrypt_STATUS_NOT_SUPPORTED; \
     } \
-    if ((HMODULE)-1 != x_Crypt32dll) x_pfn##__name = (__name##_t)GetProcAddress(x_Crypt32dll, #__name); \
-    if (0 == x_pfn##__name) return STATUS_NOT_SUPPORTED; \
     return (x_pfn##__name)
 
 #define RESOLVE_CRYPT32_API_VOID(__name) \
-    if (0 == x_Crypt32dll) { \
-        if (0 == (x_Crypt32dll = LoadLibraryA("crypt32.dll"))) { \
-            x_Crypt32dll = (HMODULE)-1; \
+    if (0 == x_pfn##__name) { \
+        if (load_library()) { \
+            x_pfn##__name = (__name##_t)GetProcAddress(x_Crypt32dll, #__name); \
         } \
+        if (0 == x_pfn##__name) x_pfn##__name = (__name##_t)BCrypt_VOID; \
     } \
-    if ((HMODULE)-1 != x_Crypt32dll) x_pfn##__name = (__name##_t)GetProcAddress(x_Crypt32dll, #__name); \
-    if (0 == x_pfn##__name) return; \
     (x_pfn##__name)
 
 
@@ -443,6 +471,8 @@ NTSTATUS WINAPI BCryptGetFipsAlgorithmMode(BOOLEAN *pfEnabled ) {
         (pfEnabled);
 }
 
-/*end*/
+#endif  //_WIN32
 
+
+/*end*/
 
