@@ -283,7 +283,11 @@ mpool_sync(MPOOL *mp)
 			return (RET_ERROR);
 
 	/* Sync the file descriptor. */
+#if defined(_WIN32)
+	return (w32_fsync(mp->fd) ? RET_ERROR : RET_SUCCESS);
+#else	
 	return (fsync(mp->fd) ? RET_ERROR : RET_SUCCESS);
+#endif	
 }
 
 /*
