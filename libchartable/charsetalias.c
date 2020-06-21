@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetalias_c,"$Id: charsetalias.c,v 1.12 2018/10/01 22:10:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetalias_c,"$Id: charsetalias.c,v 1.13 2020/06/18 13:10:35 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* Locale/multibyte character information.
@@ -27,7 +27,9 @@ __CIDENT_RCSID(gr_charsetalias_c,"$Id: charsetalias.c,v 1.12 2018/10/01 22:10:52
  * License for more details.
  * ==end==
  */
-
+ 
+#include "libchartable.h"
+ 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,8 +37,12 @@ __CIDENT_RCSID(gr_charsetalias_c,"$Id: charsetalias.c,v 1.12 2018/10/01 22:10:52
 #include <ctype.h>
 #include <unistd.h>
 
+//#if defined(_CYGWIN__) || defined(_WIN32) || defined(WIN32)
+//#define WIN32_LEAN_AND_MEAN
+//#include <windows.h>
+//#endif
+
 #include <libstr.h>                             /* str_...()/sxprintf() */
-#include "libchartable.h"
 
 #if defined(DO_DEBUG)
 #define __DEBUG(x)          printf x;
@@ -78,7 +84,7 @@ static const char *         charset_lookup(struct charsetmap *map, const char *n
 static void                 charset_dump(struct charsetmap *map);
 
 static const char *         skipwhite(const char *cursor);
-static int                  iswhite(int c);
+static int                  iswhite(const int c);
 
 static int                  alias_push(struct charset *map, const char *name);
 static const char *         alias_map(const char *name, char *buffer, int bufsiz);

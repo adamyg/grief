@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetutf32_c,"$Id: charsetutf32.c,v 1.11 2018/10/01 22:10:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetutf32_c,"$Id: charsetutf32.c,v 1.12 2020/06/18 13:11:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* Multibyte character - UTF32 utility functionality.
@@ -176,7 +176,7 @@ charset_utf32le_decode_safe(const void *src, const void *cpend, int32_t *cooked)
 
 
 int
-charset_utf32_encode(int endian, const int32_t ch, void *buffer)
+charset_utf32_encode(int endian, int32_t ch, void *buffer)
 {
     unsigned char *cursor = (unsigned char *)buffer;
 
