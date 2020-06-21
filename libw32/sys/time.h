@@ -1,7 +1,7 @@
 #ifndef LIBW32_SYS_TIME_H
 #define LIBW32_SYS_TIME_H
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_time_h,"$Id: time.h,v 1.12 2019/03/03 15:26:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_time_h,"$Id: time.h,v 1.13 2020/06/18 20:35:18 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -129,6 +129,10 @@ LIBW32_API int          w32_select(int, fd_set *, fd_set *, fd_set *, struct tim
 #if defined(NEED_TIMEVAL) || \
         defined(_WINSOCKAPI_) || defined(_WINSOCK2API_)
 LIBW32_API int          utimes(const char *, const struct timeval[2]);
+#endif
+
+#if defined(_MSC_VER) || defined(__WATCOMC__)
+LIBW32_API time_t       timegm(struct tm *tm);
 #endif
 
 /*
