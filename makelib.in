@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.in,v 1.5 2020/06/04 11:51:47 cvsuser Exp $
+# $Id: makelib.in,v 1.6 2020/06/18 20:35:15 cvsuser Exp $
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 # makelib configuration
 #
@@ -23,11 +23,16 @@
 # ==end==
 #
 
-$PACKAGE        = 'grief';
-$PACKAGE_PATH   = 'include';
-$PACKAGE_H      = 'edpackage.h';
+## Package
 
-@x_libraries    = (    # local libraries -l<xxx> lib<xxx>.lib
+$PACKAGE        = 'grief';
+$PACKAGE_NAME   = 'GriefEdit';
+$PACKAGE_PATH   = 'include';
+$PACKAGE_FILE   = 'edpackage.h';
+
+## External
+
+@LIBRARIES      = (    # local libraries -l<xxx> lib<xxx>.lib
         'vfs',
         'charudet',
         'chartable',
@@ -49,14 +54,14 @@ $PACKAGE_H      = 'edpackage.h';
         'dlmalloc'
         );
 
-@x_libraries2    = (    # local libraries -l<xxx> xxx.lib
+@LIBRARIES2     = (    # local libraries -l<xxx> xxx.lib
         'libw32',
         'libw32_static',
         'libz',
       # 'libz_static',
         );
 
-@x_optlibraries  = (    # optional libraries
+@OPTLIBRARIES   = (    # optional libraries
         'aspell',
         'iconv',
         'intl',
@@ -64,7 +69,10 @@ $PACKAGE_H      = 'edpackage.h';
         'expat'
         );
 
-@x_makefiles     = (    # local makefiles
+
+## Makefiles
+
+@MAKEFILES      = (    # local makefiles
         '.',                                    # build order
         'libw32',
         '^contrib',
@@ -112,6 +120,94 @@ $PACKAGE_H      = 'edpackage.h';
         '^win32/AutoUpdater'
         );
 
-1;
 
+## Toolchain
+
+sub
+Configure()
+{
+        # Visual studio
+        ################################################################################
+
+        if ($TOOLCHAIN =~ /^vs/) {
+
+                set_msvc_runtime('dynamic', '$(RTSUFFIX)');
+
+                remove_define('WIN32');
+                add_define('HAVE_CONFIG_H');
+                add_define('WIN32_WINNT=0x501');
+
+                # Extra includes; C and compiler tests.
+                add_xinclude('$(ROOT)/libw32');
+                add_xinclude('$(ROOT)/libw32/msvc');    # MSVC specials
+
+                add_application_library('libw32.lib');
+        }
+
+
+        ################################################################################
+        # OpenWatcom
+
+        if ($TOOLCHAIN =~ /^owc/) {
+
+                remove_define('WIN32');
+                add_define('HAVE_CONFIG_H');
+                add_define('WIN32_WINNT=0x501');
+
+                # Extra includes; C and compiler tests.
+                add_xinclude('$(ROOT)/libw32');
+
+                add_application_library('libw32.lib');
+        }
+}
+
+
+# Example usage
+#
+#   # Configuration
+#   ifeq ("$(BUILD_TYPE)","")   #default
+#   BUILD_TYPE= debug
+#   MAKEFLAGS+= BUILD_TYPE=debug
+#   endif
+#   ifneq ("$(BUILD_TYPE)","release")
+#   # MSVC Run-time suffix
+#   RTSUFFIX=d
+#   endif
+#
+#   # Common flags
+#   XFLAGS=
+#   CFLAGS=         @CFLAGS@
+#   CWARN=          @CWARN@ $(CWALL)
+#   CDEBUG=         @CDEBUG@
+#   CRELEASE=       @CRELEASE@
+#
+#   CXXFLAGS=       @CXXFLAGS@
+#   CXXDEBUG=       @CXXDEBUG@
+#   ifeq ("$(CXXDEBUG)","")
+#   CXXDEBUG=       $(CDEBUG)
+#   endif
+#   CXXRELEASE=     @CXXRELEASE@
+#   ifeq ("$(CXXRELEASE)","")
+#   CXXRELEASE=     $(CRELEASE)
+#   endif
+#
+#   LDDEBUG=        @LDDEBUG@
+#   LDRELEASE=      @LDRELEASE@
+#
+#   CINCLUDE=       <additional> @CINCLUDE@
+#   CEXTRA=         @DEFS@ <additional>
+#
+#   ifeq ("$(BUILD_TYPE)","release")
+#   CFLAGS+=        $(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+#   CXXFLAGS+=      $(CXXRELEASE) $(CWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
+#   LDFLAGS=        $(LDRELEASE) @LDFLAGS@
+#   else
+#   CFLAGS+=        $(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+#   CXXFLAGS+=      $(CXXDEBUG) $(CWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
+#   LDFLAGS=        $(LDDEBUG) @LDFLAGS@
+#   endif
+#   LDLIBS=         -L$(D_LIB) @LDLIBS@ @LIBS@ @EXTRALIBS@
+#
+
+1;
 
