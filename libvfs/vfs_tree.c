@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_tree_c,"$Id: vfs_tree.c,v 1.20 2020/04/11 20:33:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_tree_c,"$Id: vfs_tree.c,v 1.21 2020/06/18 13:18:07 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_tree.c,v 1.20 2020/04/11 20:33:12 cvsuser Exp $
+/* $Id: vfs_tree.c,v 1.21 2020/06/18 13:18:07 cvsuser Exp $
  * Virtual file system interface - tree management.
  *
  *
@@ -1053,7 +1053,7 @@ vfs_tree_vioctl(struct vfs_handle *vhandle, int op, void *data)
 
     } else {
         if (vhandle->h_ihandle >= 0) {
-#if defined(WIN32) || !defined(HAVE_IOCTL)
+#if defined(_WIN32) || defined(WIN32) || !defined(HAVE_IOCTL)
             errno = EOPNOTSUPP; 
             ret = -1;
 #else

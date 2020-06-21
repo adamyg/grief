@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edtrace_c,"$Id: edtrace.c,v 1.42 2020/04/11 00:34:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_edtrace_c,"$Id: edtrace.c,v 1.43 2020/06/18 13:13:45 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edtrace.c,v 1.42 2020/04/11 00:34:16 cvsuser Exp $
+/* $Id: edtrace.c,v 1.43 2020/06/18 13:13:45 cvsuser Exp $
  * Simple diagnostic trace.
  *
  *
@@ -59,7 +59,7 @@ static FILE *               x_debug_file  = NULL;
 int
 trace_filename(const char *name)
 {
-#if defined(WIN32) && defined(_MSC_VER)
+#if (defined(_WIN32) || defined(WIN32)) && defined(_MSC_VER)
     if (x_debug_log) {
         free((void *)x_debug_log);
     }

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(cr_env_c,"$Id: env.c,v 1.28 2017/01/29 04:33:31 cvsuser Exp $")
+__CIDENT_RCSID(cr_env_c,"$Id: env.c,v 1.29 2020/06/18 13:13:01 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: env.c,v 1.28 2017/01/29 04:33:31 cvsuser Exp $
+/* $Id: env.c,v 1.29 2020/06/18 13:13:01 cvsuser Exp $
  * Environment related functions.
  *
  *
@@ -155,7 +155,7 @@ myputenv(char *arg)
 {
     int rc;
 
-#if defined(WIN32) && defined(_MSC_VER)
+#if (defined(_WIN32) || defined(WIN32)) && defined(_MSC_VER)
     if (0 == (rc = _putenv(arg))) {
 #else
     if (0 == (rc = putenv(arg))) {

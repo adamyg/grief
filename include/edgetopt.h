@@ -1,16 +1,16 @@
 #ifndef GR_EDGETOPT_H_INCLUDED
 #define GR_EDGETOPT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edgetopt_h,"$Id: edgetopt.h,v 1.16 2019/03/15 23:03:05 cvsuser Exp $")
+__CIDENT_RCSID(gr_edgetopt_h,"$Id: edgetopt.h,v 1.17 2020/06/18 12:53:56 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edgetopt.h,v 1.16 2019/03/15 23:03:05 cvsuser Exp $
+/* $Id: edgetopt.h,v 1.17 2020/06/18 12:53:56 cvsuser Exp $
  * getopt() interface/implemenation.
  *
  *
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2020, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -37,11 +37,11 @@ __CPRAGMA_ONCE
 #include <edtypes.h>
 
 #if defined(HAVE_GETOPT_H) && \
-            !defined(WIN32) && !defined(NEEDS_GETOPT)
+            !defined(_WIN32) && !defined(WIN32) && !defined(NEEDS_GETOPT)
 #include <getopt.h>
 
 #elif defined(HAVE_UNISTD_H) && \
-            !defined(WIN32) && !defined(NEEDS_GETOPT)
+            !defined(_WIN32) && !defined(WIN32) && !defined(NEEDS_GETOPT)
 #include <unistd.h>
 
 #elif defined(__MINGW32__)
@@ -55,7 +55,7 @@ extern int              optreset;
 __CEND_DECLS
 
 
-#elif defined(NEEDS_GETOPT)  || defined(WIN32)
+#elif defined(NEEDS_GETOPT) || defined(_WIN32) || defined(WIN32)
 #if !defined(NEEDS_GETOPT)
 #define NEEDS_GETOPT    /*getopt.c requirement*/
 #endif

@@ -687,7 +687,7 @@ overflow_page(HTAB *hashp)
 			in_use_bits = free_bit;
 		else
 			in_use_bits = (hashp->BSIZE << BYTE_SHIFT) - 1;
-		
+
 		if (i == first_page) {
 			bit = hashp->LAST_FREED &
 			    ((hashp->BSIZE << BYTE_SHIFT) - 1);
@@ -861,7 +861,7 @@ open_temp(HTAB *hashp)
 	char namestr[PATH_MAX];
 	int len;
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 	len = snprintf(namestr, sizeof(namestr), "%s/_hashXXXXXX", _PATH_TMP);
 	if (len < 0 || (size_t)len >= sizeof(namestr)) {
 		errno = ENAMETOOLONG;

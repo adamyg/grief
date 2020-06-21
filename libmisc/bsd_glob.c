@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bsd_glob_c,"$Id: bsd_glob.c,v 1.6 2020/04/11 21:36:46 cvsuser Exp $")
+__CIDENT_RCSID(gr_bsd_glob_c,"$Id: bsd_glob.c,v 1.7 2020/06/18 13:14:34 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -66,7 +66,7 @@ __CIDENT_RCSID(gr_bsd_glob_c,"$Id: bsd_glob.c,v 1.6 2020/04/11 21:36:46 cvsuser 
 #include <edtypes.h>
 #include <eddir.h>
 #include <libstr.h>
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 #include <win32_io.h>
 #endif
 #include "bsd_glob.h"
@@ -1034,7 +1034,7 @@ g_lstat(Char *fn, struct stat *sb, glob_t *pglob)
 		return(-1);
 	if (pglob->gl_flags & GLOB_ALTDIRFUNC)
 		return((*pglob->gl_lstat)(buf, sb));
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 	return(w32_lstat(buf, sb));
 #else
 #ifdef HAVE_LSTAT
@@ -1054,7 +1054,7 @@ g_stat(Char *fn, struct stat *sb, glob_t *pglob)
 		return(-1);
 	if (pglob->gl_flags & GLOB_ALTDIRFUNC)
 		return((*pglob->gl_stat)(buf, sb));
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
         return(w32_stat(buf, sb));
 #else
 	return(stat(buf, sb));

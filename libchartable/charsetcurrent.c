@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetcurrent_c,"$Id: charsetcurrent.c,v 1.8 2018/10/01 22:10:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetcurrent_c,"$Id: charsetcurrent.c,v 1.9 2020/06/18 13:10:35 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* libcharset current.
@@ -39,7 +39,7 @@ __CIDENT_RCSID(gr_charsetcurrent_c,"$Id: charsetcurrent.c,v 1.8 2018/10/01 22:10
 #include <langinfo.h>
 #endif
 
-#if defined(_CYGWIN__) || defined(WIN32)
+#if defined(_CYGWIN__) || defined(_WIN32) || defined(WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
@@ -113,7 +113,7 @@ charset_current(const char *env, const char *def)
         codeset = locale;
     }
 
-#if defined(_CYGWIN__) || defined(WIN32)
+#if defined(_CYGWIN__) || defined(_WIN32) || defined(WIN32)
     if (NULL == codeset || 0 == codeset[0]) {
         unsigned acp = (unsigned)GetACP();      /* active code page */
 

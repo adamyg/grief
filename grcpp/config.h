@@ -46,7 +46,7 @@
  * backslashes to seperate directory components.
  */
 /* #define AMIGA */
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 #define MSDOS
 #endif
 
@@ -85,7 +85,7 @@
  * with files bigger than 4 GB), this option makes ucpp fail to operate
  * on those extremely large files.
  */
-#if !defined(WIN32)
+#if !defined(_WIN32) && !defined(WIN32)
 #define UCPP_MMAP
 #endif
 

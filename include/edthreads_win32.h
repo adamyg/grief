@@ -1,11 +1,11 @@
 #ifndef GR_EDTHREADS_WIN32_H_INCLUDED
 #define GR_EDTHREADS_WIN32_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_win32_h,"$Id: edthreads_win32.h,v 1.15 2019/03/27 00:44:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_edthreads_win32_h,"$Id: edthreads_win32.h,v 1.16 2020/06/18 12:51:29 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads_win32.h,v 1.15 2019/03/27 00:44:31 cvsuser Exp $
+/* $Id: edthreads_win32.h,v 1.16 2020/06/18 12:51:29 cvsuser Exp $
  * Threads interface
  * ISO/IEC 9899:201x Committee Draft
  * April 12, 2011 N1570
@@ -112,7 +112,7 @@ __CPRAGMA_ONCE
 #if !defined(GR_EDTHREADS_H_INCLUDED)
 #error incorrect usage, only include <edthreads.h>
 #endif
-#if !defined(WIN32) || defined(__CYGWIN__)
+#if (!defined(_WIN32) && !defined(WIN32)) || defined(__CYGWIN__)
 #error incorrect target, win32 only
 #endif
 

@@ -1,20 +1,25 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_main_cpp,"$Id: main.cpp,v 1.14 2018/10/18 01:27:44 cvsuser Exp $")
+__CIDENT_RCSID(gr_main_cpp,"$Id: main.cpp,v 1.15 2020/06/18 12:45:13 cvsuser Exp $")
 
 /* -*- mode: cpp; indent-width: 4; -*- */
-/* $Id: main.cpp,v 1.14 2018/10/18 01:27:44 cvsuser Exp $
+/* $Id: main.cpp,v 1.15 2020/06/18 12:45:13 cvsuser Exp $
  * main(), address c/c++ linkage for several environments.
  * Regardless of configuration force binding to the C++ runtime library.
  *
  *
  */
 
+#if (defined(_WIN32) || defined(WIN32)) && \
+	!defined(WINDOWS_MEAN_AND_LEAN)
+#define WINDOWS_MEAN_AND_LEAN
+#endif
+
 #include <editor.h>
 #include <chkalloc.h>
 #include "signals.h"
 
 #if defined(_CRT_NO_POSIX_ERROR_CODES)
-#if (_MSC_VER >= 1900)
+#if (_MSC_VER >= 1900) || defined(__MAKEDEPEND__)
 #undef _CRT_NO_POSIX_ERROR_CODES                /* <system_error> is incompatible with _CRT_NO_POSIX_ERROR_CODES */
     // additional research required, yet there is limited information detailing _CRT_NO_POSIX_ERROR_CODES usage and how these interact with winsocks.
 #endif //_MSC_VER

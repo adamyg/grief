@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_base_c,"$Id: vfs_base.c,v 1.23 2020/04/14 23:13:32 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_base_c,"$Id: vfs_base.c,v 1.24 2020/06/18 13:17:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_base.c,v 1.23 2020/04/14 23:13:32 cvsuser Exp $
+/* $Id: vfs_base.c,v 1.24 2020/06/18 13:17:29 cvsuser Exp $
  * Virtual file system interface - base implementation.
  *
  *
@@ -472,7 +472,7 @@ vfsbase_readlink(struct vfs_mount *vmount, const char *path, char *buf, size_t s
 {
     __CUNUSED(vmount);
 #if defined(HAVE_READLINK) || defined(unix) || \
-	defined(WIN32) || defined(__APPLE__)
+        defined(_WIN32) || defined(WIN32) || defined(__APPLE__)
     return vfsio_readlink(path, buf, size);
 #else
     errno = EOPNOTSUPP;
@@ -486,7 +486,7 @@ vfsbase_symlink(struct vfs_mount *vmount, const char *n1, const char *n2)
 {
     __CUNUSED(vmount);
 #if defined(HAVE_SYMLINK) || defined(unix) || \
-	defined(WIN32) || defined(__APPLE__)
+        defined(_WIN32) || defined(WIN32) || defined(__APPLE__)
     return vfsio_symlink(n1, n2);
 #else
     errno = EOPNOTSUPP;
@@ -504,7 +504,7 @@ vfsbase_link(struct vfs_mount *vmount, const char *path1, const char *path2)
 #if defined(HAVE_LINK) || defined(unix) || defined(__APPLE__)
     return link(path1, path2);
 #else
-    errno = EOPNOTSUPP;				/*FIXME/WIN32*/
+    errno = EOPNOTSUPP;                         /*FIXME/WIN32*/
     return -1;
 #endif
 }
@@ -533,3 +533,5 @@ vfsbase_rename(struct vfs_mount *vmount, const char *oldname, const char *newnam
     return rename(oldname, newname);
 }
 /*end*/
+
+

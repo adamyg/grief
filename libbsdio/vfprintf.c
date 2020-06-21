@@ -94,7 +94,7 @@
 #include "local.h"
 #include "fvwrite.h"
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 #if !defined(u_long)
 #define u_long unsigned long
 #endif
@@ -1444,7 +1444,7 @@ outf(char *buffer, int buflen, double value, int ch, int width, int precision, i
 	*fp++ = ch;
 	*fp = 0;
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 	*size = _snprintf(buffer, buflen, fmt, value);
 #else
 	*size = snprintf(buffer, buflen, fmt, value);

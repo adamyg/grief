@@ -55,7 +55,8 @@
 
 #if !defined(__sun) && !defined(__hpux) && !defined(__INTERIX) && \
     !defined(__digital__) && !defined(__linux) && !defined(__MINT__) && \
-    !defined(__sgi) && !defined(__minix) && !defined(__CYGWIN__) && !defined(WIN32)
+    !defined(__sgi) && !defined(__minix) && \
+    !defined(__CYGWIN__) && !defined(_WIN32) && !defined(WIN32)
 #define HAVE_SA_LEN
 #endif
 
@@ -66,7 +67,7 @@
 
 #define ED_LEVEL        1
 #include <eddebug.h>
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 #include <sys/socket.h>
 #include <unistd.h>
 #if defined(_MSC_VER) && !defined(snprintf)

@@ -1,11 +1,11 @@
 #ifndef GR_VIO_H_INCLUDED
 #define GR_VIO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vio_h,"$Id: vio.h,v 1.29 2020/04/19 23:47:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_vio_h,"$Id: vio.h,v 1.30 2020/06/18 12:48:04 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vio.h,v 1.29 2020/04/19 23:47:37 cvsuser Exp $
+/* $Id: vio.h,v 1.30 2020/06/18 12:48:04 cvsuser Exp $
  * Video I/O interface header.
  *
  *
@@ -29,7 +29,7 @@ __CPRAGMA_ONCE
 #include <os2.h>
 
 #else                                           /* support environments */
-#if !defined(DJGPP) && !defined(__WATCOMC__) && !defined(WIN32)
+#if !defined(DJGPP) && !defined(__WATCOMC__) && !defined(_WIN32)
 #error  Unsupported environment ...
 #endif
 #define UCHAR               unsigned char
@@ -295,7 +295,7 @@ __CPRAGMA_ONCE
 #define VIOVID_BIOS80COLOUR 3
 #define VIOVID_BIOS80MONO   7
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 /*
  *  Extended console support ...
  */

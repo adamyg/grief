@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edassert_c,"$Id: edassert.c,v 1.20 2017/01/29 04:33:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_edassert_c,"$Id: edassert.c,v 1.21 2020/06/18 13:14:07 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edassert.c,v 1.20 2017/01/29 04:33:31 cvsuser Exp $
+/* $Id: edassert.c,v 1.21 2020/06/18 13:14:07 cvsuser Exp $
  *
  *  This macro is useful for putting diagnostics into programs. When it is executed, if
  *  expression is false (zero), edAssert() prints:
@@ -47,7 +47,7 @@ __CIDENT_RCSID(gr_edassert_c,"$Id: edassert.c,v 1.20 2017/01/29 04:33:31 cvsuser
 #include <signal.h>
 #include <assert.h>
 
-#if defined(WIN32) || defined(__CYGWIN__)
+#if defined(_WIN32) || defined(WIN32) || defined(__CYGWIN__)
 #if !defined(WIN32_LEAN_AND_MEAN)
 #define  WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -119,7 +119,7 @@ __edassert(
         }
         doubletrap = 1;
 
-#if defined(WIN32) || defined(__CYGWIN__)
+#if defined(_WIN32) || defined(WIN32) || defined(__CYGWIN__)
         if (IDABORT == MessageBox((HWND)NULL, x_message, "Assertion Error",
                             MB_ABORTRETRYIGNORE|MB_ICONSTOP)) {
             FatalExit(-1);
@@ -130,7 +130,7 @@ __edassert(
         fflush(stderr);
     }
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 #if defined(__CYGWIN__)
     __assert(file, lineno, cond);
 #elif defined(_MSC_VER)

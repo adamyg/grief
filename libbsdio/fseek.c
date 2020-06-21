@@ -132,7 +132,7 @@ bfseeko(BFILE *fp, off_t offset, int whence)
 			fp->_flags |= __BSNPT;
 			goto dumb;
 		}
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 		fp->_blksize = 1024;		/* 1024 or 4096 */
 #else
 		fp->_blksize = st.st_blksize;

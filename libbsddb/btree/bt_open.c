@@ -266,7 +266,7 @@ __bt_open(const char *fname, int flags, mode_t mode, const BTREEINFO *openinfo,
 		 * Don't overflow the page offset type.
 		 */
 		if (b.psize == 0) {
-#if !defined(WIN32)
+#if !defined(_WIN32) && !defined(WIN32)
 			b.psize = sb.st_blksize;
 #endif
 			if (b.psize < MINPSIZE)
@@ -401,7 +401,7 @@ tmp(void)
 	char path[PATH_MAX];
 	int len;
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 	len = snprintf(path, sizeof(path), "%s/bt.XXXXXX", _PATH_TMP);
 	if (len < 0 || (size_t)len >= sizeof(path)) {
 		errno = ENAMETOOLONG;

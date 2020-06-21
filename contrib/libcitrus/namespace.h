@@ -1,6 +1,6 @@
 #ifndef LOCAL_NAMESPACE_H_INCLUDED
 #define LOCAL_NAMESPACE_H_INCLUDED
-/* $Id: namespace.h,v 1.8 2018/09/29 02:25:20 cvsuser Exp $
+/* $Id: namespace.h,v 1.9 2020/06/18 19:52:15 cvsuser Exp $
  *
  * libcitrus <namespace.h>
  *
@@ -67,7 +67,7 @@
 #if defined(MODULE_STATIC)
 #   define MODULE_LINKAGE
 #   define MODULE_ENTRY
-#elif defined(WIN32)
+#elif defined(_WIN32) || defined(WIN32)
 #   define MODULE_LINKAGE       __declspec(dllexport)
 #   define MODULE_ENTRY         __cdecl
 #else

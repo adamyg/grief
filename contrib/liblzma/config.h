@@ -12,17 +12,19 @@
 #define PACKAGE_URL "http://tukaani.org/xz/"
 #define VERSION PACKAGE_VERSION
 
-#include <windows.h>
 #include <../contrib_config.h>
+
+#if !defined(WINDOWS_MEAN_AND_LEAN)
+#define  WINDOWS_MEAN_AND_LEAN
+#endif
+#include <windows.h>
 
 #undef  HAVE_UTIME_H
 #undef  HAVE_SYS_UTIME_H
 
-#if defined(WIN32) && defined(__MINGW32__)
+#if (defined(_WIN32) || defined(WIN32)) && defined(__MINGW32__)
 #undef  HAVE_GETOPT_H
 #endif
-
-#include <unistd.h>
 
 #if defined(_MSC_VER)
 #include <msvcversions.h>
@@ -38,8 +40,10 @@
 #endif
 #endif
 
+#include <unistd.h>
+
 #ifndef SSIZE_MAX
-#define	SSIZE_MAX ((ssize_t)(SIZE_MAX >> 1))
+#define SSIZE_MAX ((ssize_t)(SIZE_MAX >> 1))
 
 #define ASSUME_RAM 1000 //1GB
 
@@ -66,3 +70,4 @@
 #define HAVE_DECODER_DELTA
 
 #endif  /*CONFIG_H_INCLUDED*/
+

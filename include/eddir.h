@@ -1,11 +1,11 @@
 #ifndef GR_EDDIR_H_INCLUDED
 #define GR_EDDIR_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_eddir_h,"$Id: eddir.h,v 1.12 2019/03/15 23:03:05 cvsuser Exp $")
+__CIDENT_RCSID(gr_eddir_h,"$Id: eddir.h,v 1.13 2020/06/18 12:52:43 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: eddir.h,v 1.12 2019/03/15 23:03:05 cvsuser Exp $
+/* $Id: eddir.h,v 1.13 2020/06/18 12:52:43 cvsuser Exp $
  * Directory management.
  *
  *
@@ -47,7 +47,7 @@ __CPRAGMA_ONCE
 #include <sys/dir.h>
 #endif
 
-#if defined(WIN32)      /* Native and MingW builds */
+#if defined(_WIN32) || defined(WIN32) /* Native and MingW builds */
 #include <../libw32/dirent.h>
 #else
 #if defined(HAVE_DIRENT_H)

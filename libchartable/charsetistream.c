@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetistream_c,"$Id: charsetistream.c,v 1.9 2018/10/01 22:10:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetistream_c,"$Id: charsetistream.c,v 1.10 2020/06/18 13:09:48 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* iconv stream support.
@@ -37,7 +37,7 @@ __CIDENT_RCSID(gr_charsetistream_c,"$Id: charsetistream.c,v 1.9 2018/10/01 22:10
 #include <errno.h>
 #include <unistd.h>
 
-#if defined(WIN32) && \
+#if (defined(_WIN32) || defined(WIN32)) && \
         (!defined(HAVE_ICONV_H) || defined(GNUWIN32_LIBICONV)) && \
             !defined(WIN32_DYNAMIC_ICONV)
 #define WIN32_DYNAMIC_ICONV                     /* dynamic loader */

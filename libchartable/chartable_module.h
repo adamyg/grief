@@ -1,7 +1,7 @@
 #ifndef GR_CHARTABLE_MODULE_H_INCLUDED
 #define GR_CHARTABLE_MODULE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_chartable_module_h,"$Id: chartable_module.h,v 1.16 2018/10/01 22:10:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_chartable_module_h,"$Id: chartable_module.h,v 1.17 2020/06/18 13:09:28 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -54,7 +54,7 @@ __CPRAGMA_ONCE
 #if defined(MODULE_STATIC)
 #   define MODULE_LINKAGE
 #   define MODULE_ENTRY
-#elif defined(WIN32)
+#elif defined(_WIN32) || defined(WIN32)
 #   define MODULE_LINKAGE       __declspec(dllexport)
 #   define MODULE_ENTRY         __cdecl
 #else

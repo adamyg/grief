@@ -1,6 +1,6 @@
 #ifndef ICONV_H_INCLUDED
 #define ICONV_H_INCLUDED
-/* $Id: iconv.h,v 1.4 2015/03/01 02:58:51 cvsuser Exp $
+/* $Id: iconv.h,v 1.5 2020/06/18 19:52:45 cvsuser Exp $
  *
  * win32 <iconv.h> - libiconv
  *
@@ -36,7 +36,7 @@
 #if defined(LIBICONV_STATIC)
 #   define LIBICONV_LINKAGE
 #   define LIBICONV_ENTRY
-#elif defined(WIN32)
+#elif defined(_WIN32) || defined(WIN32)
 #   if defined(__LIBICONV_BUILD)
 #       define LIBICONV_LINKAGE __declspec(dllexport)
 #   else

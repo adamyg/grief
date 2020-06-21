@@ -1,13 +1,13 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_getopt_common_c,"$Id: getopt_common.c,v 1.8 2017/01/29 04:33:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_getopt_common_c,"$Id: getopt_common.c,v 1.9 2020/06/18 13:16:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: getopt_common.c,v 1.8 2017/01/29 04:33:31 cvsuser Exp $
+/* $Id: getopt_common.c,v 1.9 2020/06/18 13:16:22 cvsuser Exp $
  * common globals getopt/bsd_getopt.
  *
  *
  *
- * Copyright (c) 1998 - 2017, Adam Young.
+ * Copyright (c) 1998 - 2020, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -37,7 +37,7 @@ __CIDENT_RCSID(gr_getopt_common_c,"$Id: getopt_common.c,v 1.8 2017/01/29 04:33:3
 
 #elif defined(__MINGW32__)
 
-#elif defined(WIN32)
+#elif defined(_WIN32) || defined(WIN32)
 
 int   opterr   = 1;                             /* if error message should be printed */
 int   optind   = 1;                             /* index into parent argv vector */
@@ -46,5 +46,11 @@ char *optarg   = NULL;                          /* argument associated with opti
 int   optreset = 0;                             /* reset getopt */
 
 #endif
+
+extern void __getopt_common(void);
+
+void
+__getopt_common_dummy() {
+}
 
 /*end*/

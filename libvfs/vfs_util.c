@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_util_c,"$Id: vfs_util.c,v 1.19 2020/04/11 20:33:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_util_c,"$Id: vfs_util.c,v 1.20 2020/06/18 13:18:30 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_util.c,v 1.19 2020/04/11 20:33:12 cvsuser Exp $
+/* $Id: vfs_util.c,v 1.20 2020/06/18 13:18:30 cvsuser Exp $
  * Virtual file system - utility functions.
  *
  *
@@ -180,7 +180,7 @@ const char *
 vfscwd_get(void)
 {
     if (0 == x_cwd[0]) {
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
         w32_getcwd(x_cwd, sizeof(x_cwd));
 #else
         if (NULL == getcwd(x_cwd, sizeof(x_cwd))) {
@@ -271,7 +271,7 @@ vfs_tempnam(int *fd)
     sxprintf(t_name, sizeof(t_name), "%s%cvfs%luxXXXXX", tmpdir, VFS_PATHSEP, salt);
 #endif
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
     if ((t_fd = w32_mkstemp(t_name)) >= 0)
 #elif defined(HAVE_MKSTEMP) || \
             defined(linux) || defined(sun) || defined(_AIX)
@@ -316,7 +316,7 @@ vfs_name_hash(const char *path, unsigned pathlen)
 char *
 vfs_fix_slashes(char *str)
 {
-#if defined(DOSISH) || defined(WIN32)
+#if defined(DOSISH) || defined(_WIN32) || defined(WIN32)
     if (str && *str) {
         register char *cp = str;
         for (; *cp; ++cp) {
@@ -341,7 +341,7 @@ vfs_fix_slashes(char *str)
  *  Returns:
  *      Original buffer.
  */
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 static int                      IsHPFSFileSystem(const char *directory);
 #endif
 
@@ -352,7 +352,7 @@ vfs_fix_case(char *str)
     if (str && *str) {
         register char *cp;
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
         if (IsHPFSFileSystem(str)) {
             return str;
         }
@@ -371,7 +371,7 @@ vfs_fix_case(char *str)
 }
 
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 static int
 IsHPFSFileSystem(const char *directory)
 {

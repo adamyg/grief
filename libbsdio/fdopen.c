@@ -49,7 +49,7 @@ bfdopen(int fd, const char *mode)
 
 	/* Make sure the mode the user wants is a subset of the actual mode. */
 #if defined(F_GETFL)
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 	if ((fdflags = w32_fcntl(fd, F_GETFL, 0)) < 0)
 		return (NULL);
 #else

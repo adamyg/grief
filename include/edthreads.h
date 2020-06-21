@@ -1,11 +1,11 @@
 #ifndef GR_EDTHREADS_H_INCLUDED
 #define GR_EDTHREADS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_h,"$Id: edthreads.h,v 1.14 2019/03/15 23:03:10 cvsuser Exp $")
+__CIDENT_RCSID(gr_edthreads_h,"$Id: edthreads.h,v 1.15 2020/06/18 12:50:48 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads.h,v 1.14 2019/03/15 23:03:10 cvsuser Exp $
+/* $Id: edthreads.h,v 1.15 2020/06/18 12:50:48 cvsuser Exp $
  * Threads interface
  * ISO/IEC 9899:201x Committee Draft
  * April 12, 2011 N1570
@@ -76,7 +76,7 @@ __CEND_DECLS
 #include <edthreads_thread.h>
 #elif defined(HAVE_PTHREAD_H) || defined(__CYGWIN__)
 #include <edthreads_pthread.h>
-#elif defined(WIN32)
+#elif defined(_WIN32) || defined(WIN32)
 #include <edthreads_win32.h>
 #else
 #error Unsupported target ...

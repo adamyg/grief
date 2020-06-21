@@ -1,10 +1,10 @@
 #ifndef MANDOC_CONFIG_H_INCLUDED
 #define MANDOC_CONFIG_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: config.h,v 1.18 2020/06/05 01:07:40 cvsuser Exp $
+/* $Id: config.h,v 1.19 2020/06/18 12:50:24 cvsuser Exp $
  * mandoc config.h
  *
- * Copyright (c) 201 - 2020, Adam Young.
+ * Copyright (c) 2014 - 2020, Adam Young.
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software for any
@@ -25,7 +25,7 @@
 /*
  */
 
-#if defined(WIN32) && !defined(__MINGW32__)
+#if (defined(_WIN32) || defined(WIN32)) && !defined(__MINGW32__)
 
 #include "../libw32/config.h"
 

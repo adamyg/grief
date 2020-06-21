@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_hunspell_c,"$Id: w32_hunspell.c,v 1.17 2020/04/20 23:04:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_hunspell_c,"$Id: w32_hunspell.c,v 1.18 2020/06/18 13:24:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -35,7 +35,7 @@ __CIDENT_RCSID(gr_w32_hunspell_c,"$Id: w32_hunspell.c,v 1.17 2020/04/20 23:04:54
  * ==extra==
  */
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 
 #include <editor.h>
 #include <eddebug.h>

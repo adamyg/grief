@@ -106,7 +106,7 @@ __swhatbuf(BFILE *fp, size_t *bufsize, int *couldbetty)
 	 * __sseek is mainly paranoia.)  It is safe to set _blksize
 	 * unconditionally; it will only be used if __BSOPT is also set.
 	 */
-#if defined(DOSISH) || defined(WIN32)
+#if defined(DOSISH) || defined(_WIN32) || defined(WIN32)
 	*bufsize = BUFSIZ;
 	return ((st.st_mode & S_IFMT) == S_IFREG && fp->_seek == __sseek ? __BSOPT : __BSNPT);
 

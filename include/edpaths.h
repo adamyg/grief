@@ -1,11 +1,11 @@
 #ifndef GR_EDPATHS_H_INCLUDED
 #define GR_EDPATHS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edpaths_h,"$Id: edpaths.h,v 1.18 2019/03/15 23:03:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_edpaths_h,"$Id: edpaths.h,v 1.19 2020/06/18 12:52:11 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edpaths.h,v 1.18 2019/03/15 23:03:09 cvsuser Exp $
+/* $Id: edpaths.h,v 1.19 2020/06/18 12:52:11 cvsuser Exp $
  * Default system paths ...
  *
  *  Example:
@@ -44,7 +44,7 @@ __CPRAGMA_ONCE
 
 #include <edbuildinfo.h>                        /* exported configure settings */
 
-#if defined(WIN32) && !defined(__CYGWIN__)
+#if (defined(_WIN32) || defined(WIN32)) && !defined(__CYGWIN__)
 #define _PATH_GRIEF_NAME    "Grief"
 #define _PATH_GRIEF_ROOT    "$(ProgramFiles)/Grief"
 #else

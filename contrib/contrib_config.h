@@ -1,6 +1,6 @@
 #ifndef CONTRIB_CONFIG_H_INCLUDED
 #define CONTRIB_CONFIG_H_INCLUDED
-/* $Id: contrib_config.h,v 1.13 2018/11/19 03:27:15 cvsuser Exp $
+/* $Id: contrib_config.h,v 1.14 2020/06/18 20:35:15 cvsuser Exp $
  * contrib <config.h> ...
  *
  *
@@ -35,6 +35,7 @@
 #define _WIN32
 #define _WIN32_NT=0x400
 #endif
+
 #define APPLICATIONDIR  "Grief"                 /* FIXME, edconfig.h */
 
 #if defined(__MINGW32__) || defined(unix)

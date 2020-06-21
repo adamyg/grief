@@ -90,7 +90,7 @@
 #define	CT_INT		3	/* integer, i.e., strtoimax or strtoumax */
 #define	CT_FLOAT	4	/* floating, i.e., strtod */
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 #if !defined(u_char)
 #define u_char unsigned char
 #endif

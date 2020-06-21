@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charseticonv_c,"$Id: charseticonv.c,v 1.18 2018/10/01 22:10:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_charseticonv_c,"$Id: charseticonv.c,v 1.19 2020/06/18 13:10:07 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* Conversion tables loader/interface.
@@ -524,7 +524,7 @@ dlmod_path(char *path, int pathlen, const char *dir, const char *name)
     struct stat sb;
     int rc;
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
     _snprintf(path, pathlen, "%s/cx%s.dll", dir, name);
     path[pathlen - 1] = 0;
     dospath(path);
@@ -582,7 +582,7 @@ dlmod_open(const char *module, int flag, const char *path, struct dlmodule ** re
         ret = (errno ? errno : ENOTSUPPORTED);
     }
 
-#elif defined(WIN32)
+#elif defined(_WIN32) || defined(WIN32)
     ret = ENOTSUPPORTED;                        /* dlfcn emulation */
 
 #else
@@ -783,7 +783,7 @@ dlmod_close(void *handle, struct dlmodule *dlmod)
 }
 
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 /*
  *  Retrieve cx library directory, equivalent to '/usr/local/lib/grief'
  *

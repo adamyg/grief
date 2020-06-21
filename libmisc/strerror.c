@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strerror_c,"$Id: strerror.c,v 1.9 2017/01/29 04:33:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_strerror_c,"$Id: strerror.c,v 1.10 2020/06/18 13:12:38 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strerror.c,v 1.9 2017/01/29 04:33:31 cvsuser Exp $
+/* $Id: strerror.c,v 1.10 2020/06/18 13:12:38 cvsuser Exp $
  * libstr - str_error utility functions.
  *
  *
@@ -34,7 +34,7 @@ __CIDENT_RCSID(gr_strerror_c,"$Id: strerror.c,v 1.9 2017/01/29 04:33:31 cvsuser 
 #include <edtypes.h>
 #include <assert.h>
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT    0x0601                  /* Window 7 */
 #endif
@@ -50,7 +50,7 @@ __CIDENT_RCSID(gr_strerror_c,"$Id: strerror.c,v 1.9 2017/01/29 04:33:31 cvsuser 
 #include <libstr.h>
 #include <unistd.h>
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 static struct win32wsa {
     int value;
     const char *desc;
@@ -60,7 +60,7 @@ static struct win32wsa {
 #endif  /*WIN32*/
 
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 static int
 win32wsacmp(const void *a, const void *b)
 {
@@ -85,7 +85,7 @@ str_error(const int xerrno)
         return "Success";
     }
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
     if (xerrno >= 80 && xerrno < 12000) {
         static volatile unsigned sorted  = 0;
         const struct win32wsa *wsa;
@@ -105,7 +105,7 @@ str_error(const int xerrno)
 #endif
 
 #if defined(HAVE_STRERROR)
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
     if (xerrno < 0 || NULL == (ret = w32_strerror(xerrno))) {
         ret = "Unknown error";
     }

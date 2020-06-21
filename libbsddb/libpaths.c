@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: libpaths.c,v 1.6 2015/03/01 01:53:54 cvsuser Exp $
+/* $Id: libpaths.c,v 1.7 2020/06/18 12:54:52 cvsuser Exp $
  *
  * libbsddb <libpath.c>
  *
@@ -39,7 +39,7 @@
 #include <unistd.h>
 #endif
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 #define  WINDOWS_MEAN_AND_LEAN
 #undef u_char
 #include <windows.h>
@@ -53,7 +53,7 @@
 
 #if !defined(_PATH_TMP)
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 #define access(__p,__m) _access(__p,__m)
 #endif
 
@@ -78,7 +78,7 @@ libbsddb_PATH_TMP(void)
     static const char *tmpdir = NULL;           /* one-shot */
 
     if (NULL == tmpdir) {
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
         char t_path[MAX_PATH];
 #endif
         const char *p = NULL;
@@ -88,7 +88,7 @@ libbsddb_PATH_TMP(void)
             p = tmpdir2("BTMP");                /* BRIEF override */
         }
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
         if (NULL == p || !*p) {
             DWORD pathlen;
 
@@ -143,7 +143,7 @@ libbsddb_PATH_TMP(void)
                 }
 #endif  /*!VMS*/
         }
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
         tmpdir = _strdup(p);
 #else
         tmpdir = strdup(p);

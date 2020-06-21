@@ -299,7 +299,7 @@ init_hash(HTAB *hashp, const char *file, const HASHINFO *info)
 	if (file != NULL) {
 		if (stat(file, &statbuf))
 			return (NULL);
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 		hashp->BSIZE = MAX_BSIZE;
 #else
 		hashp->BSIZE = MIN(statbuf.st_blksize, MAX_BSIZE);

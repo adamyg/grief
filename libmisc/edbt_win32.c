@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.21 2020/04/13 21:06:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.22 2020/06/18 13:15:07 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edbt_win32.c,v 1.21 2020/04/13 21:06:07 cvsuser Exp $
+/* $Id: edbt_win32.c,v 1.22 2020/06/18 13:15:07 cvsuser Exp $
  * win32 (include cygwin) backtrace implementation.
  *
  *
@@ -39,7 +39,7 @@ __CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.21 2020/04/13 21:06:07 cvs
 #include <stdlib.h>
 #include <libstr.h>
 
-#if defined(WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
+#if defined(_WIN32) || defined(WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
 #ifndef  WIN32_LEAN_AND_MEAN
 #define  WIN32_LEAN_AND_MEAN
 #endif
@@ -342,7 +342,9 @@ map_load(const char *progname)
     // parse map symbols
     if (file) {
         module_t *module = NULL;
+#if defined(__WATCOMC__)
         unsigned lineno = 1;
+#endif
 
         RB_INIT(&x_symbols);
         TAILQ_INIT(&x_modules);

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_win32_c,"$Id: edthreads_win32.c,v 1.16 2020/04/08 11:36:34 cvsuser Exp $")
+__CIDENT_RCSID(gr_edthreads_win32_c,"$Id: edthreads_win32.c,v 1.18 2020/06/21 01:36:17 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads_win32.c,v 1.16 2020/04/08 11:36:34 cvsuser Exp $
+/* $Id: edthreads_win32.c,v 1.18 2020/06/21 01:36:17 cvsuser Exp $
  * C11 threads implementation, for windows
  * based on ISO/IEC 9899:201x Committee Draft, April 12, 2011 N1570
  *
@@ -31,14 +31,17 @@ __CIDENT_RCSID(gr_edthreads_win32_c,"$Id: edthreads_win32.c,v 1.16 2020/04/08 11
  * ==end==
  */
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT            0x0601
+#define _WIN32_WINNT 0x0601
 #endif
 #undef  WIN32
-#define WIN32                   0x0601
+#define WIN32 0x0601
 #endif
+
 #include <edthreads.h>
+#include <assert.h>
+
 
 #if (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L) && !defined(__STDC_NO_THREADS__)) \
                 || defined(HAVE_THREADS_H)
@@ -92,7 +95,7 @@ nanosleep(const struct timespec *rqtp, struct timespec *rmtp /*notused*/)
 }
 
 
-#elif defined(WIN32)
+#elif defined(_WIN32) || defined(WIN32)
 //
 //  Native Win threading
 //

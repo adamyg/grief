@@ -21,7 +21,7 @@
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 #if defined(HAVE_STDINT_H) || \
 	(defined(_MSC_VER) && (_MSC_VER >= 1900)) || defined(__WATCOMC__)
 #include <stdint.h>

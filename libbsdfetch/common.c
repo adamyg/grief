@@ -73,7 +73,7 @@
 #include "fetch.h"
 #include "common.h"
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 #pragma comment(lib, "Ws2_32.lib")
 #endif
 
@@ -294,7 +294,7 @@ fetch_nonblocking(int fd, int state)
 	}
 	return fcntl(fd, F_SETFL, (state ? (flags | O_NONBLOCK) : (flags & ~O_NONBLOCK)));
 
-#elif defined(WIN32)
+#elif defined(_WIN32) || defined(WIN32)
 #if defined(WIN32_SOCKET_MAP_NATIVE)
 	int flags = state;		        /*nonzero value if the nonblocking mode, otherwise 0 blocking*/
 #else
@@ -325,7 +325,7 @@ fetch_connect(struct url *url, int af, int verbose)
 	if (verbose)
 		fetch_info("looking up %s", url->host);
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 	w32_sockinit();
 #endif
 
@@ -593,7 +593,7 @@ fetch_ssl(conn_t *conn, const struct url *URL, int verbose)
 int
 fetch_socketread(int sd, void *buf, size_t len)
 {
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 	LIBW32_API int w32_neterrno_set(void);
 	int ret;
 
@@ -612,7 +612,7 @@ fetch_socketread(int sd, void *buf, size_t len)
 int
 fetch_socketclose(int sd)
 {
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 	return closesocket(sd);
 #else
 	return close(sd);
@@ -764,7 +764,7 @@ fetch_write(conn_t *conn, const void *buf, size_t len)
 	fd_set writefds;
 	ssize_t wlen, total;
 	int r;
-#ifndef WIN32
+#if !defined(_WIN32) && !defined(WIN32)
 #ifndef MSG_NOSIGNAL
 	static int killed_sigpipe;
 #endif
@@ -1052,7 +1052,7 @@ fetch_netrc_auth(struct url *url)
 		}
 	} else {
 		if ((p = getenv("HOME")) != NULL) {
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 			return (-1);
 #else
 			const struct passwd *pwd;

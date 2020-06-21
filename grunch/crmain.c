@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.55 2020/04/23 12:39:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.56 2020/06/20 02:18:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crmain.c,v 1.55 2020/04/23 12:39:29 cvsuser Exp $
+/* $Id: crmain.c,v 1.56 2020/06/20 02:18:22 cvsuser Exp $
  * grunch command line.
  *
  *
@@ -25,7 +25,7 @@ __CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.55 2020/04/23 12:39:29 cvsuser Exp
 #include <libstr.h>                             /* str_...()/sxprintf() */
 #include <libstr.h>
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 #define  WINDOWS_MEAN_AND_LEAN
 #undef   u_char
 #include <windows.h>
@@ -44,7 +44,8 @@ __CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.55 2020/04/23 12:39:29 cvsuser Exp
 #define PATHCH              ";"
 
 #elif defined(__OS2__) || \
-        defined(__MSDOS__) || defined(MSDOS) || defined(WIN32)
+        defined(__MSDOS__) || defined(MSDOS) || \
+        defined(_WIN32) || defined(WIN32)
 #define CC_SLASHCONVERT     1
 #define DIRCHR              '\\'
 #define EXEEXT              ".exe"
@@ -90,7 +91,8 @@ __CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.55 2020/04/23 12:39:29 cvsuser Exp
         #define CC_NATIVE   "cpp.exe"
     #elif defined(DJGPP)
         #define CC_NATIVE   "gcc.exe -E -x c"
-    #elif defined(MSDOS) || defined(__MSDOS__) || defined(WIN32)
+    #elif defined(MSDOS) || defined(__MSDOS__) || \
+            defined(_WIN32) || defined(WIN32)
         #define CC_NATIVE   "cl.exe -nologo -E"
         #define CC_NATIVENOECHO
     #else
@@ -106,7 +108,7 @@ __CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.55 2020/04/23 12:39:29 cvsuser Exp
     #if defined(MSDOS) || defined(__MSDOS__)
       #if defined(__MINGW32__)
         #define CC_OSARG    "-DMSDOS -DMINGW32"
-      #elif defined(WIN32)
+      #elif defined(_WIN32) || defined(WIN32)
         #define CC_OSARG    "-DMSDOS -DWIN32"
       #else
         #define CC_OSARG    "-DMSDOS"
@@ -417,7 +419,8 @@ forwardslash(char* fname)
 #endif  /*CC_SLASHCONVERT*/
 
 
-#if defined(MSDOS) || defined(__EMX__) || defined(WIN32)
+#if defined(MSDOS) || defined(__EMX__) || \
+        defined(_WIN32) || defined(WIN32)
 static const char *
 get_tmpdir(const char *env)
 {
@@ -450,6 +453,10 @@ compile_file(const char *srcname)
     struct stat objsb = {0}, srcsb = {0};
     int len, exit_status = 0, ext_len = 0;
     int ok = FALSE;
+#if defined(HAVE_MKSTEMP) && \
+        (defined(_WIN32) || defined(WIN32) || defined(DOSISH))
+#undef HAVE_MKSTEMP                             /* disable */
+#endif
 #if defined(HAVE_MKSTEMP)
     int tmpfd = -1;
 #endif
@@ -526,7 +533,8 @@ compile_file(const char *srcname)
             printf("%s\n", srcname);
         }
 
-#if defined(MSDOS) || defined(__EMX__) || defined(WIN32)
+#if defined(MSDOS) || defined(__EMX__) || \
+        defined(_WIN32) || defined(WIN32)
         {
             const char *tmp = get_tmpdir("TMP");
             int l;
@@ -540,7 +548,7 @@ compile_file(const char *srcname)
             if (l && (cc_tempfile[l - 1] != '\\' || cc_tempfile[l - 1] != '/')) {
                 cc_tempfile[l++] = DIRCHR;
             }
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
             strcpy(cc_tempfile + l, "grunch.XXXXXX");
 #else
             strcpy(cc_tempfile + l, "grXXXXXX");
@@ -1086,9 +1094,9 @@ resolve_self(const char *name)
 {
     struct stat sb = {0};
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
     DWORD len;
-    
+
     (void)name;                                  /* optional usage */
 
     len = GetModuleFileName(NULL, gr_path, sizeof(gr_path));
@@ -1231,7 +1239,7 @@ resolve_path(char *dst, int dstlen, const char *pp, const char *name, const char
     }
 
     if (gr_path[0]) {                           /* relative to self */
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
         strxcpy(dst, ('"' == *gr_path ? gr_path + 1 : gr_path), dstlen);
 #else
         strxcpy(dst, gr_path, dstlen);
@@ -1272,7 +1280,7 @@ success:;
 #if defined(CC_SLASHCONVERT)
     backslash(dst);
 #endif
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
     if (strchr(dst, ' ')) {                     /* quote arg0 */
         int len = (int)strlen(dst);
 
@@ -1373,3 +1381,5 @@ expand_var(const char *xenv, char *buf, int buflen)
 }
 
 /*end*/
+
+

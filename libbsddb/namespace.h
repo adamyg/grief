@@ -1,6 +1,6 @@
 #ifndef DBHASH_NAMESPACE_H_INCLUDED
 #define DBHASH_NAMESPACE_H_INCLUDED
-/* $Id: namespace.h,v 1.9 2020/06/05 23:56:31 cvsuser Exp $
+/* $Id: namespace.h,v 1.10 2020/06/18 12:54:27 cvsuser Exp $
  *
  * libbsdb <namespace.h>
  *
@@ -62,7 +62,7 @@
 #endif
 #include <sys/socket.h>
 #include <edendian.h>
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 #include <sys/utypes.h>
 #include <win32_io.h>
 #endif
@@ -119,7 +119,7 @@
 #define MAX(__a, __b)           ((__a) > (__b) ? (__a) : (__b))
 #endif
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 #ifndef snprintf
 #define snprintf                _snprintf
 #define vsnprintf               _vsnprintf

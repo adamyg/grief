@@ -1,11 +1,11 @@
 #ifndef GR_VFS_INTERNAL_H_INCLUDED
 #define GR_VFS_INTERNAL_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_internal_h,"$Id: vfs_internal.h,v 1.19 2019/03/15 23:23:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_internal_h,"$Id: vfs_internal.h,v 1.20 2020/06/20 01:59:53 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_internal.h,v 1.19 2019/03/15 23:23:01 cvsuser Exp $
+/* $Id: vfs_internal.h,v 1.20 2020/06/20 01:59:53 cvsuser Exp $
  * Virtual File System Interface -- internal definitions.
  *
  *
@@ -34,7 +34,7 @@ __CPRAGMA_ONCE
 
 #include "vfs.h"
 #include <edsym.h>
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 #include <../libw32/win32_io.h>                 /* w32_xxx() */
 #include <io.h>                                 /* _chdir() ... */
 #endif
@@ -72,7 +72,7 @@ __CBEGIN_DECLS
 #define VFS_ISSEP(__c)      ((__c) == VFS_PATHSEP)
 #endif
 
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 /*
  *  win32 posix emulation
  *

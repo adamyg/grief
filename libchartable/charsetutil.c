@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetutil_c,"$Id: charsetutil.c,v 1.10 2018/10/01 22:10:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetutil_c,"$Id: charsetutil.c,v 1.11 2020/06/18 13:09:28 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* utility functions.
@@ -39,7 +39,7 @@ __CIDENT_RCSID(gr_charsetutil_c,"$Id: charsetutil.c,v 1.10 2018/10/01 22:10:53 c
 #include "libchartable.h"
 
 #define ALIAS(__x)          "^" __x,
-#if defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 #define EXTALIAS(__x)       "^" __x,
 #else
 #define EXTALIAS(__x)       /*nothing*/

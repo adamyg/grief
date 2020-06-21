@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_config_c,"$Id: config.c,v 1.33 2014/10/22 02:32:54 ayoung Exp $")
+__CIDENT_RCSID(gr_config_c,"$Id: config.c,v 1.34 2020/06/20 02:17:09 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: config.c,v 1.33 2014/10/22 02:32:54 ayoung Exp $
+/* $Id: config.c,v 1.34 2020/06/20 02:17:09 cvsuser Exp $
  * Machine dependent configuration variables.
  *
  *
@@ -28,8 +28,10 @@ __CIDENT_RCSID(gr_config_c,"$Id: config.c,v 1.33 2014/10/22 02:32:54 ayoung Exp 
  *  Default environment
  */
 #include <limits.h>                             /* confirm compiler environment */
+#if !defined(__MAKEDEPEND__)
 #if (CHAR_MIN == 0)
 #error Character value is unsigned
+#endif
 #endif
 
 const char *x_grfile        = "GRFILE=newfile";
@@ -39,7 +41,7 @@ const char *x_grflags       = "GRFLAGS=-i60";
 const char *x_machtype      = "VMS";
 #elif defined(__OS2__)
 const char *x_machtype      = "OS/2";
-#elif defined(WIN32)
+#elif defined(_WIN32) || defined(WIN32)
 #if defined(__MINGW32__)
 const char *x_machtype      = "Mingw32";
 #else
@@ -70,7 +72,7 @@ const char *x_grpath        = _PATH_GRIEF_MACROS ":" _PATH_GRIEF_SOURCE;
 #if defined(__MSDOS__)
 #if defined(__MINGW32__)
 const char *x_default_term  = "TERM=mingw32";
-#elif defined(WIN32)
+#elif defined(_WIN32) || defined(WIN32)
 const char *x_default_term  = "TERM=win32";
 #else
 const char *x_default_term  = "TERM=dos";
