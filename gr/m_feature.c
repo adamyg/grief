@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_feature_c,"$Id: m_feature.c,v 1.24 2020/04/21 00:01:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_feature_c,"$Id: m_feature.c,v 1.25 2020/06/21 00:21:31 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_feature.c,v 1.24 2020/04/21 00:01:56 cvsuser Exp $
+/* $Id: m_feature.c,v 1.25 2020/06/21 00:21:31 cvsuser Exp $
  * Features.
  *
  *
@@ -66,6 +66,8 @@ __CIDENT_RCSID(gr_m_feature_c,"$Id: m_feature.c,v 1.24 2020/04/21 00:01:56 cvsus
 #if defined(HAVE_LIBICU)
 #include <unicode/uversion.h>
 #endif
+
+#include <edbuildinfo.h>
 
 #include "accum.h"
 #include "eval.h"
@@ -145,10 +147,16 @@ const char * const      x_features[] = {
 #endif
         ,
 
-#if defined(NDEBUG)
-        "-debug",           /*release*/
+#if !defined(NDEBUG)
+        "+assert",
+#endif
+
+#if defined(BUILD_TYPE_RELEASE)
+        "+release",                             /*release*/
+#elif defined(BUILD_TYPE_DEBUG)
+        "+debug",                               /*debug*/
 #else
-        "+debug",           /*debug*/
+#error edbuildinfo.h: unknown BUILD_TYPE
 #endif
 
         /* video/terminal implementation */
@@ -439,3 +447,5 @@ inq_feature(void)               /* ([string pattern|int index], [string value]) 
     acc_assign_null();
 }
 /*eof*/
+
+
