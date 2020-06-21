@@ -1,14 +1,15 @@
-dnl $Id: configure.in,v 1.67 2020/06/06 00:18:32 cvsuser Exp $
+dnl $Id: configure.in,v 1.70 2020/06/20 21:38:37 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl
 
-AC_REVISION($Revision: 1.67 $)
+AC_REVISION($Revision: 1.70 $)
 ##	AC_COPYRIGHT(Adam Young 1995-2020, Paul Fox 1989-1991)
 AC_SUBST([PACKAGE])
 AC_INIT([GRIEF], [3.2.1], [griefedit@gmail.com])
 AC_PREREQ(2.68)
+PACKAGE="gr"
 
 AC_CONFIG_SRCDIR([include/edheaders.h])
 AC_CONFIG_HEADER(include/config.h:include/config.hin)
@@ -37,10 +38,16 @@ AC_SUBST(PROGS)
 AC_PROG_CC(gcc cc clang c1 egcs)
 AC_PROG_CXX(g++ CC clang++)
 AC_PROG_GCC_TRADITIONAL
+#TODO
+#AX_COMPILER_VENDOR
+#AX_COMPILER_VERSION
 
 AC_PROG_CPP
 AC_SUBST(CPPDEP)
 CPPDEP=${CPPDEP-"gcc -MM"}
+
+AC_SUBST(TOOLCHAINEXT)
+TOOLCHAINEXT=$CC
 
 AC_SUBST([ABS_ROOT])
 ABS_ROOT="`pwd`/"
@@ -53,23 +60,31 @@ AC_PATH_PROG(GREP,egrep,egrep)
 AC_PATH_PROG(NROFF,nroff,nroff)
 AC_PATH_PROG(TROFF,troff,troff)
 AC_PATH_PROG(RANLIB,ranlib,echo)
-AC_PATH_PROG(BISON,bison,bison)
 AC_PATH_PROG(WGET,wget,wget)
 
 AC_SUBST(LIBPROGS)
-AC_SUBST(EXTRALIBS)
 AC_SUBST(EXTRA_CFLAGS)
 AC_SUBST(EXTRA_CXXFLAGS)
 AC_SUBST(CWARN)
 AC_SUBST(CXXWARN)
 AC_SUBST(CINCLUDE)
+AC_SUBST(CXXINCLUDE)
 
-EXTRALIBS=""
+AC_SUBST(LDLIBS)
+AC_SUBST(EXTRALIBS)
+
+AC_SUBST(TOOLCHAINEXT)
+TOOLCHAINEXT=".${CC}"
+
 EXTRA_CFLAGS=""
 EXTRA_CXXFLAGS=""
 CWARN=""
 CXXWARN=""
 CINCLUDE=""
+CXXINCLUDE=""
+
+LDLIBS=
+EXTRALIBS=
 
 AC_ARG_WITH(gcc,
 	[  --with-gcc              force use of gcc for compilation],
@@ -356,24 +371,50 @@ if test "$with_gpm" = yes ; then
 	],AC_MSG_WARN(cannot link with gpm library, missing or maybe old))
 fi
 
-
-AC_SUBST(LDEBUG)
 AC_SUBST(CDEBUG)
 AC_SUBST(CXXDEBUG)
-AC_ARG_WITH(debug,
-	[  --with-debug            compile with debugging information],
-			[with_debug=$withval],
-			[with_debug=no])
-if test "$with_debug" = yes ; then
-	CDEBUG="-g"
-	CXXDEBUG="-g"
-	LDEBUG="-g"
-else
+AC_SUBST(CRELEASE)
+AC_SUBST(CXXRELEASE)
+AC_SUBST(LDDEBUG)
+AC_SUBST(LDRELEASE)
+
+AC_ARG_WITH(nodebug,
+	[  --without-debug         compile without debugging information],
+			[without_debug=$withval],
+			[without_debug=no])
+if test "$without_debug" = yes ; then
 	CDEBUG=""
 	CXXDEBUG=""
-	LDEBUG=""
+	LDDEBUG=""
+else
+	CDEBUG="-g -Og"
+	CXXDEBUG="-g -Og"
+	LDDEBUG="-g -Og"
 fi
 
+AC_ARG_WITH(gdbdebug,
+	[  --with-gdbdebug         compile with GDB debugging information],
+			[with_gdbdebug=$withval],
+			[with_gdbdebug=no])
+if test "$with_debug" = yes ; then
+	CDEBUG="-ggdb -0g"
+	CXXDEBUG="-ggdb -Og"
+	LDDEBUG="-ggdb -Og"
+fi
+
+AC_ARG_WITH(full_optimise,
+	[  --with-full-optimise    compile with full optimization],
+			[with_full_optimise=$withval],
+			[with_full_optimise=no])
+if test "$with_full_optimise" = yes ; then
+	CRELEASE="-O2 -DNDEBUG"
+	CXXRELEASE="-O2 -DNDEBUG"
+	LDRELEASE="-O2"
+else
+	CRELEASE="-O1 -DNDEBUG"
+	CXXRELEASE="-O1 -DNDEBUG"
+	LDRELEASE="-O1"
+fi
 
 AC_MSG_CHECKING(whether to enable runtime assertions)
 AC_ARG_WITH(assert,
@@ -402,7 +443,7 @@ dnl	   		[[const char *foo = __FUNCTION__;]])],
 dnl	   		[ac_cv_cpp_func=__FUNCTION__],
 dnl	   		[ac_cv_cpp_func="\"no\""])]
 dnl	   )
-dnl	
+dnl
 dnl	   if test "X$ac_cv_cpp_func" = "X__FUNCTION__"; then
 dnl	   	AC_MSG_RESULT([__FUNCTION__])
 dnl	   elif test "x$ac_cv_cpp_func" = "xyes" ; then
@@ -416,13 +457,23 @@ dnl	   fi
 
 dnl
 dnl Checks for programs.
+dnl	   @AR@, @AWK@, @MKDIR_P@
+dnl	   @LEX@, @YACC@ and @BISON@
 dnl
 AC_PROG_INSTALL
 AC_PATH_PROG(AR,ar,ar)
-AC_PROG_YACC
+AC_PROG_MKDIR_P
 AC_PROG_LN_S
 AC_PROG_AWK
 AC_PROG_LEX
+if test "$LEX" != "flex"; then
+	AC_MSG_ERROR(couldn't locate flex; make sure it's installed and in your path)
+fi
+AC_PROG_YACC
+if test "$YACC" != "bison -y"; then
+	AC_MSG_ERROR(couldn't locate bison; make sure it's installed and in your path)
+fi
+AC_PATH_PROG(BISON,bison,bison)
 
 dnl
 dnl System libraries.
@@ -432,6 +483,7 @@ AC_SUBST([LIBM])
 if test "x$with_floating" != "xno"; then
 	CF_NEED_LIBM(LIBM)
 fi
+
 AC_CHECK_LIB(socket,main)
 AC_CHECK_LIB(inet,main)
 AC_CHECK_LIB(nsl,main)
@@ -439,6 +491,7 @@ AC_CHECK_LIB(posix,main)
 AC_CHECK_LIB(PW,main)
 AC_CHECK_LIB(dir,main)
 AC_CHECK_LIB(x,main)
+
 AC_SEARCH_LIBS([strerror],[cposix])
 CF_WITH_THREADS
 
@@ -607,7 +660,7 @@ AC_CHECK_FUNCS(\
 	fgetpos fsetpos fgetln \
 	getline getdelim \
 	truncate ftruncate \
-        rename \
+	rename \
 	select poll \
 	setlocale \
 	link symlink \
