@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_err_c,"$Id: w32_err.c,v 1.2 2018/10/12 00:24:39 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_err_c,"$Id: w32_err.c,v 1.3 2020/06/18 14:28:06 cvsuser Exp $")
 
 /*
  * Copyright (c) 1993
@@ -42,6 +42,7 @@ __CIDENT_RCSID(gr_w32_err_c,"$Id: w32_err.c,v 1.2 2018/10/12 00:24:39 cvsuser Ex
 static void vwarni(const char *, va_list);
 static void vwarnxi(const char *, va_list);
 
+/* "<program>: <format>", on stderr. */
 static void
 vwarnxi(const char *fmt, va_list ap)
 {
@@ -50,6 +51,7 @@ vwarnxi(const char *fmt, va_list ap)
 		vfprintf(stderr, fmt, ap);
 }
 
+/* "<program>: <format>: <errno>\n", on stderr. */
 static void
 vwarni(const char *fmt, va_list ap)
 {
@@ -62,6 +64,7 @@ vwarni(const char *fmt, va_list ap)
 	fprintf(stderr, "%s\n", w32_strerror(sverrno)); 
 }
 
+
 LIBW32_API void
 err(int eval, const char *fmt, ...)
 {
@@ -72,6 +75,15 @@ err(int eval, const char *fmt, ...)
 	va_end(ap);
 	exit(eval);
 }
+
+
+LIBW32_API void
+verr(int eval, const char *fmt, va_list ap)
+{
+	vwarni(fmt, ap);
+	exit(eval);
+}
+
 
 LIBW32_API void
 errx(int eval, const char *fmt, ...)
@@ -85,6 +97,16 @@ errx(int eval, const char *fmt, ...)
 	exit(eval);
 }
 
+
+LIBW32_API void
+verrx(int eval, const char *fmt, va_list ap)
+{
+	vwarnxi(fmt, ap);
+	fputc('\n', stderr);
+	exit(eval);
+}
+
+
 LIBW32_API void
 warn(const char *fmt, ...)
 {
@@ -94,6 +116,14 @@ warn(const char *fmt, ...)
 	vwarni(fmt, ap);
 	va_end(ap);
 }
+
+
+LIBW32_API void
+vwarn(const char *fmt, va_list ap)
+{
+	vwarni(fmt, ap);
+}
+
 
 LIBW32_API void
 warnx(const char *fmt, ...)
@@ -106,3 +136,12 @@ warnx(const char *fmt, ...)
 	fputc('\n', stderr);
 }
 
+
+LIBW32_API void
+vwarnx(const char *fmt, va_list ap)
+{
+	vwarnxi(fmt, ap);
+	fputc('\n', stderr);
+}
+
+/*end*/
