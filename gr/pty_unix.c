@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_pty_unix_c,"$Id: pty_unix.c,v 1.23 2020/06/05 15:52:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_pty_unix_c,"$Id: pty_unix.c,v 1.24 2020/06/20 12:39:45 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: pty_unix.c,v 1.23 2020/06/05 15:52:56 cvsuser Exp $
+/* $Id: pty_unix.c,v 1.24 2020/06/20 12:39:45 cvsuser Exp $
  * PTY interface for Unix and Unix-like environments.
  *
  *      Linux
@@ -29,8 +29,8 @@ __CIDENT_RCSID(gr_pty_unix_c,"$Id: pty_unix.c,v 1.23 2020/06/05 15:52:56 cvsuser
  * ==end==
  */
 
-#if defined(linux) && !defined(_XOPEN_SOURCE)
-#define _XOPEN_SOURCE       600
+#if (defined(linux) || defined(__CYGWIN__)) && !defined(_XOPEN_SOURCE)
+#define _XOPEN_SOURCE       600                 /* grantpt() */
 #endif
 #if defined(linux) && !defined(_GNU_SOURCE)
 #define _GNU_SOURCE
@@ -919,4 +919,3 @@ pty_tty_name(char *name, int major, int minor)
 }
 
 #endif  /*unix*/
-
