@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_sort_c,"$Id: m_sort.c,v 1.17 2020/04/21 00:01:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_sort_c,"$Id: m_sort.c,v 1.18 2020/06/18 14:40:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_sort.c,v 1.17 2020/04/21 00:01:56 cvsuser Exp $
+/* $Id: m_sort.c,v 1.18 2020/06/18 14:40:37 cvsuser Exp $
  * Sort functionality.
  *
  *
@@ -28,7 +28,7 @@ __CIDENT_RCSID(gr_m_sort_c,"$Id: m_sort.c,v 1.17 2020/04/21 00:01:56 cvsuser Exp
 #include "lisp.h"
 #include "macros.h"
 #include "main.h"
-#include "math.h"                               /* do_com_op */
+#include "maths.h"                              /* do_com_op */
 #include "m_sort.h"
 
 static int              lsort_callback(void *callback, const void *l1, const void *l2);

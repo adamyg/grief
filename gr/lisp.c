@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_lisp_c,"$Id: lisp.c,v 1.43 2020/04/21 00:01:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_lisp_c,"$Id: lisp.c,v 1.44 2020/06/18 14:40:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: lisp.c,v 1.43 2020/04/21 00:01:55 cvsuser Exp $
+/* $Id: lisp.c,v 1.44 2020/06/18 14:40:37 cvsuser Exp $
  * List primitives.
  *
  *
@@ -30,7 +30,7 @@ __CIDENT_RCSID(gr_lisp_c,"$Id: lisp.c,v 1.43 2020/04/21 00:01:55 cvsuser Exp $")
 #include "lisp.h"
 #include "macros.h"
 #include "main.h"
-#include "math.h"                               /* do_cmp_op */
+#include "maths.h"                              /* do_cmp_op */
 #include "symbol.h"
 
 #define WORD_INLINE

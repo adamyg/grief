@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_math_c,"$Id: math.c,v 1.33 2020/06/05 15:56:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_math_c,"$Id: maths.c,v 1.34 2020/06/18 14:40:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: math.c,v 1.33 2020/06/05 15:56:50 cvsuser Exp $
+/* $Id: maths.c,v 1.34 2020/06/18 14:40:37 cvsuser Exp $
  * Math operators/primitives.
  *
  *
@@ -29,7 +29,7 @@ __CIDENT_RCSID(gr_math_c,"$Id: math.c,v 1.33 2020/06/05 15:56:50 cvsuser Exp $")
 #include "lisp.h"
 #include "m_string.h"
 #include "main.h"
-#include "math.h"
+#include "maths.h"
 #include "symbol.h"
 #include "word.h"
 

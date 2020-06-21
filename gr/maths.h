@@ -1,11 +1,11 @@
 #ifndef GR_MATH_H_INCLUDED
 #define GR_MATH_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_math_h,"$Id: math.h,v 1.13 2020/04/21 00:01:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_math_h,"$Id: maths.h,v 1.13 2020/04/21 00:01:57 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: math.h,v 1.13 2020/04/21 00:01:57 cvsuser Exp $
+/* $Id: maths.h,v 1.13 2020/04/21 00:01:57 cvsuser Exp $
  * Basic math primitives.
  *
  *

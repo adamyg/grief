@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_float_c,"$Id: m_float.c,v 1.26 2020/04/22 21:37:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_float_c,"$Id: m_float.c,v 1.27 2020/06/18 12:45:51 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_float.c,v 1.26 2020/04/22 21:37:36 cvsuser Exp $
+/* $Id: m_float.c,v 1.27 2020/06/18 12:45:51 cvsuser Exp $
  * Floating point primitives.
  *
  *
@@ -69,7 +69,7 @@ __CIDENT_RCSID(gr_m_float_c,"$Id: m_float.c,v 1.26 2020/04/22 21:37:36 cvsuser E
 
 #else
 #if defined(HAVE_FENV_H)
-#if !defined(WIN32) && !defined(_GNU_SOURCE)
+#if !defined(_WIN32) && !defined(WIN32) && !defined(_GNU_SOURCE)
 #define _GNU_SOURCE         /*extensions*/
 #define HAVE_FECLEAREXCEPT  /*c99*/
 #endif

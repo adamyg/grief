@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.93 2020/06/05 15:40:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.94 2020/06/18 14:40:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keywd.c,v 1.93 2020/06/05 15:40:35 cvsuser Exp $
+/* $Id: keywd.c,v 1.94 2020/06/18 14:40:37 cvsuser Exp $
  * Keyword table.
  *
  *
@@ -56,7 +56,7 @@ __CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.93 2020/06/05 15:40:35 cvsuser Exp $
  #include "mac1.h"
  #include "macros.h"
  #include "main.h"
- #include "math.h"
+ #include "maths.h"
  #include "mouse.h"
  #include "playback.h"
  #include "procspawn.h"

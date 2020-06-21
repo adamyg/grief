@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_symbol_c,"$Id: m_symbol.c,v 1.42 2020/04/21 00:01:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_symbol_c,"$Id: m_symbol.c,v 1.43 2020/06/18 14:40:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_symbol.c,v 1.42 2020/04/21 00:01:56 cvsuser Exp $
+/* $Id: m_symbol.c,v 1.43 2020/06/18 14:40:37 cvsuser Exp $
  * Symbol primitives.
  *
  *
@@ -37,7 +37,7 @@ __CIDENT_RCSID(gr_m_symbol_c,"$Id: m_symbol.c,v 1.42 2020/04/21 00:01:56 cvsuser
 #include "lisp.h"
 #include "macros.h"
 #include "main.h"
-#include "math.h"
+#include "maths.h"
 #include "symbol.h"
 #include "word.h"
 
