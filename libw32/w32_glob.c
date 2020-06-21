@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_glob_c,"$Id: w32_glob.c,v 1.4 2018/10/12 00:24:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_glob_c,"$Id: w32_glob.c,v 1.5 2020/06/18 14:32:39 cvsuser Exp $")
 
 /*
  * win <glob.h>
@@ -104,7 +104,6 @@ __CIDENT_RCSID(gr_w32_glob_c,"$Id: w32_glob.c,v 1.4 2018/10/12 00:24:40 cvsuser 
 #include <assert.h>
 #include <ctype.h>
 #include <dirent.h>
-#include <errno.h>
 #include <glob.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -112,6 +111,8 @@ __CIDENT_RCSID(gr_w32_glob_c,"$Id: w32_glob.c,v 1.4 2018/10/12 00:24:40 cvsuser 
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#include <errno.h>
 
 #ifdef HAVE_NBTOOL_CONFIG_H
 #define NO_GETPW_R

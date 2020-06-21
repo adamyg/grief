@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_pwd_c,"$Id: w32_pwd.c,v 1.12 2019/03/15 23:12:19 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_pwd_c,"$Id: w32_pwd.c,v 1.13 2020/06/18 14:32:39 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -269,7 +269,7 @@ LIBW32_API struct passwd *
 getpwnam(const char *name)
 {
     fillin();
-    if (strcmp(pw.pw_name, name) == 0) {
+    if (0 == strcmp(pw.pw_name, name)) {
         return &pw;
     }
     return NULL;
