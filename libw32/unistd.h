@@ -1,7 +1,7 @@
 #ifndef LIBW32_UNISTD_H_INCLUDED
 #define LIBW32_UNISTD_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_unistd_h,"$Id: unistd.h,v 1.49 2020/05/04 19:59:25 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_unistd_h,"$Id: unistd.h,v 1.50 2020/06/14 15:55:33 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -39,8 +39,8 @@ __CPRAGMA_ONCE
 #if (_MSC_VER != 1600)                          /* MSVC 10/2010 */
 #if (_MSC_VER != 1900)                          /* MSVC 19/2015 */
 #if (_MSC_VER <  1910 || _MSC_VER > 1916)       /* MSVC 19.10 .. 16/2017 */
-#if (_MSC_VER > 1920)                           /* MSVC 19.20 /2019 */
-#error unistd.h: untested MSVC Version (2005 -- 2019) only ...
+#if (_MSC_VER > 1926)                           /* MSVC 19.20 /2019.06 */
+#error unistd.h: untested MSVC Version (2005 -- 2019.06) only ...
 	//see: https://en.wikipedia.org/wiki/Microsoft_Visual_C%2B%2B
 #endif //2019
 #endif //2017
@@ -80,13 +80,13 @@ __CPRAGMA_ONCE
 #error unistd.h: unsupported compiler
 #endif
 
+#if !defined(_WIN32)                            /* _WIN32 requirement */
+#error _WIN32 not defined; correct toolchain?
+#endif
+
 #if !defined(_WIN32_WINCE)                      /* require winsock2.h */
 #if !defined(_WIN32_WINNT)
-#if defined(WIN32) && (WIN32 > 0x100)
-#define _WIN32_WINNT WIN32
-#else
 #define _WIN32_WINNT 0x400                      /* entry level */
-#endif
 #elif (_WIN32_WINNT) < 0x400
 //  Minimum system required Minimum value for _WIN32_WINNT and WINVER
 //  Windows 7                                           (0x0601)
@@ -98,10 +98,6 @@ __CPRAGMA_ONCE
 #pragma message("unistd: _WIN32_WINNT < 0400")
 #endif
 #endif   /*_WIN32_WINCE*/
-#ifndef _WIN32
-#define _WIN32 WIN32                           /* WIN32 and _WIN32 generally required */
-#endif
-
 
 /*
  *  avoid importing <win32_include.h>
@@ -253,7 +249,7 @@ __BEGIN_DECLS
 #error  S_ISUID redefinition error ...
 #endif
 #else
-#define	S_ISUID	        0004000			/* set user id on execution */
+#define S_ISUID         0004000                 /* set user id on execution */
 #endif
 
 #if defined(S_ISGID)
@@ -261,7 +257,7 @@ __BEGIN_DECLS
 #error  S_ISGID redefinition error ...
 #endif
 #else
-#define	S_ISGID	        0002000			/* set group id on execution */
+#define S_ISGID         0002000                 /* set group id on execution */
 #endif
 
 #ifndef _POSIX_SOURCE
@@ -309,9 +305,9 @@ __BEGIN_DECLS
 
 #ifndef _POSIX_SOURCE
 #ifndef S_IREAD
-#define	S_IREAD		S_IRUSR
-#define	S_IWRITE	S_IWUSR
-#define	S_IEXEC		S_IXUSR
+#define S_IREAD         S_IRUSR
+#define S_IWRITE        S_IWUSR
+#define S_IEXEC         S_IXUSR
 #endif /*S_IREAD*/
 #endif /*_POSIX_SOURCE*/
 

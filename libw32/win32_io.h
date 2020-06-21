@@ -1,7 +1,7 @@
 #ifndef LIBW32_WIN32_IO_H_INCLUDED
 #define LIBW32_WIN32_IO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_io_h,"$Id: win32_io.h,v 1.30 2020/05/04 00:00:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_io_h,"$Id: win32_io.h,v 1.31 2020/06/14 15:55:33 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -40,8 +40,8 @@ __CPRAGMA_ONCE
 #if (_MSC_VER != 1600)                          /* MSVC 10/2010 */
 #if (_MSC_VER != 1900)                          /* MSVC 19/2015 */
 #if (_MSC_VER <  1910 || _MSC_VER > 1916)       /* MSVC 19.10 .. 16/2017 */
-#if (_MSC_VER > 1920)                           /* MSVC 19.20 /2019 */
-#error unistd.h: untested MSVC Version (2005 -- 2019) only ...
+#if (_MSC_VER > 1926)                           /* MSVC 19.20 ...26/2019 */
+#error unistd.h: untested MSVC Version (2005 -- 2019.06) only ...
 	 //see: https://en.wikipedia.org/wiki/Microsoft_Visual_C%2B%2B
 #endif //2019
 #endif //2017
@@ -117,7 +117,9 @@ LIBW32_API int          w32_root_unc (const char *path);
 
 #define SHORTCUT_TRAILING   0x01
 #define SHORTCUT_COMPONENT  0x02
+
 LIBW32_API int          w32_shortcut_expand(const char *name, char *buf, size_t buflen, unsigned flags);
+
 LIBW32_API const char * w32_strslash (const char *path);
 
 LIBW32_API int          w32_errno_set (void);
