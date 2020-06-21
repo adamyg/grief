@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.14 2020/05/04 20:18:19 cvsuser Exp $
+# $Id: Makefile.in,v 1.15 2020/06/18 20:35:15 cvsuser Exp $
 # libarchive makefile
 #
 #
@@ -28,40 +28,57 @@ RM=		@RM@
 PERL=		@PERL@
 LIBTOOL=	@LIBTOOL@
 
-# Common flags
+# Configuration
 
-ARFLAGS=	rcv
-XFLAGS=
-COPT=		@CFLAGS@
-CWARN=		@CWARN@
-CDEBUG=		@CDEBUG@
-LDEBUG=		@LDEBUG@
-CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
-CEXTRA=		@DEFS@
-ifeq ("mingw32","@build_os@")
-CEXTRA+=	-D__USE_MINGW_ANSI_STDIO
+ifeq ("$(BUILD_TYPE)","")	#default
+BUILD_TYPE=	debug
+MAKEFLAGS+=	BUILD_TYPE=debug
 endif
-ifeq ("win32","@build_os@")
-CEXTRA+=	-D_CRT_SECURE_NO_WARNINGS
+ifneq ("$(BUILD_TYPE)","release")
+RTSUFFIX=d
 endif
-CEXTRA+=	-D_WIN32 -D_WIN32_WINNT=0X601
-CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-YFLAGS=		-d
-LDFLAGS=	$(LDEBUG) @LDFLAGS@
-LDLIBS=		-L$(D_LIB) @LIBLZMA@ @LIBS@ @LIBM@ @EXTRALIBS@
-
-RMFLAGS=	-f
 
 # Directories
 
-D_BIN=		$(ROOT)/bin
 D_INC=		$(ROOT)/include
-D_OBJ=		$(ROOT)/objects/libarchive
-D_LIB=		$(ROOT)/lib
+D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/libarchive
+D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
-############################################################
+# Common flags
 
+XFLAGS=
+
+CFLAGS=		@CFLAGS@
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+CRELEASE=	@CRELEASE@
+LDDEBUG=	@LDDEBUG@
+LDRELEASE=	@LDRELEASE@
+
+CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
+CEXTRA=		@DEFS@
+ifeq ("yes","@ISWIN32@")
+CEXTRA+=	-D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
+endif
+ifeq ("mingw32","@build_os@")
+CEXTRA+=	-D__USE_MINGW_ANSI_STDIO
+endif
+
+ifeq ("$(BUILD_TYPE)","release")
+CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDRELEASE) @LDFLAGS@
+else
+CFLAGS+=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDDEBUG) @LDFLAGS@
+endif
+LDLIBS=		-L$(D_LIB) @LIBLZMA@ @LIBS@ @EXTRALIBS@
+
+ARFLAGS=	rcv
+RMFLAGS=	-f
+
+
+#########################################################################################
 # Targets
 
 ARCHIVELIB=	$(D_LIB)/$(LP)archive_static$(A)
@@ -218,10 +235,18 @@ OBJS=		$(LIBOBJS) $(DLLOBJS)
 LIBS=		$(ARCHIVELIB) $(ARCHIVEDLL)
 TSKS=
 
+
+#########################################################################################
 # Rules
 
-all:			checkversion source unpacked
+.PHONY: 	build release debug
+build:			checkversion source unpacked
 unpacked:		object $(LIBS) $(TSKS) installinc
+
+release:
+		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
+debug:
+		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
 # gmake 4.0; file operator required
 verneeded :=	4.0
@@ -245,8 +270,8 @@ $(ARCHIVELIB):		$(LIBOBJS)
 $(ARCHIVEDLL):		CEXTRA += -I$(ARCHIVESRC) -D__LIBARCHIVE_BUILD -DZLIB_DLL
 $(ARCHIVEDLL):		$(DLLOBJS)
 		$(file >libtool.cmd) $(foreach O,$^,$(file >>libtool.cmd, $O))
-		$(LIBTOOL) --mode=link $(CC) -version-number $(VERSIONSPEC) \
-			-rpath $(D_LIB) -bindir $(D_BIN) -o $@ @libtool.cmd libz$(A) libbz2$(A) $(LDLIBS)
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ -version-number $(VERSIONSPEC) \
+			-rpath $(D_LIB) -bindir $(D_BIN) @libtool.cmd libz$(A) libbz2$(A) $(LDLIBS)
 		@$(RM) libtool.cmd
 
 source:			.unpacked.$(VERSION)

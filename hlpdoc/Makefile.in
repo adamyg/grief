@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.8 2020/06/05 00:13:06 cvsuser Exp $
+# $Id: Makefile.in,v 1.9 2020/06/18 20:35:16 cvsuser Exp $
 # Help documentation.
 #
 # Copyright (c) 1998 - 2020, Adam Young.
@@ -50,14 +50,27 @@ export LANG	#RH 8 has a LANG=en_US.UTF-8
 
 RMFLAGS=	-f
 
+# Configuration
+
+ifeq ("$(BUILD_TYPE)","")	#default
+BUILD_TYPE=	debug
+MAKEFLAGS+=	BUILD_TYPE=debug
+endif
+ifneq ("$(BUILD_TYPE)","release")
+RTSUFFIX=d
+endif
+
 # Directories
 
-D_BIN=		$(ROOT)/bin
-D_LIB=		$(ROOT)/lib
-D_GR=		$(ROOT)/gr
+D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 D_HELP=		$(ROOT)/help
 
-############################################################
+GRMANDOC=	$(D_BIN)/grmandoc
+
+
+#########################################################################################
+# Targets
 
 MANDOC=		$(D_BIN)/grmandoc
 GRUNCH=		$(D_BIN)/grunch
@@ -68,27 +81,37 @@ FEATOUTDIR=	$(OUTDIR)/features
 
 CSSOURCE=	$(wildcard mansrc/cshelp/*.mandoc) INDEX
 FEATSOURCE=	$(wildcard mansrc/features/*.mandoc) INDEX
- 
+
 OBJS=		$(OUTDIR)/prim.000
 CSOBJS=		$(addprefix $(CSOUTDIR)/,$(patsubst %.mandoc,%.hlp,$(notdir $(CSSOURCE))))
 FEATOBJS=	$(addprefix $(FEATOUTDIR)/,$(patsubst %.mandoc,%.hlp,$(notdir $(FEATSOURCE))))
 
-all:			help
+
+#########################################################################################
+# Rules
+
+.PHONY:			build release debug
+build:			help
+
+release:
+		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
+debug:
+		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
 help:			outdirs $(OBJS) prog user cshelp features
 
 outdirs:		$(OUTDIR)/.created $(CSOUTDIR)/.created $(FEATOUTDIR)/.created
 
 prog:
-	@$(PERL) ./makehelp.pl --wget=@WGET@ prog
+	@$(PERL) ./makehelp.pl --wget=@WGET@ --manbin=$(GRMANDOC) prog
 	@$(GRUNCH) $(OUTDIR)/prog.cr
 
 user:
-	@$(PERL) ./makehelp.pl --wget=@WGET@ user
+	@$(PERL) ./makehelp.pl --wget=@WGET@ --manbin=$(GRMANDOC) user
 	@$(GRUNCH) $(OUTDIR)/user.cr
 
 pdf:
-	@$(PERL) ./makehelp.pl --wget=@WGET@ html
+	@$(PERL) ./makehelp.pl --wget=@WGET@ --manbin=$(GRMANDOC) html
 	@$(PERL) ./makepdf.pl
 
 cshelp:		$(CSOBJS)
@@ -101,21 +124,22 @@ features:	$(FEATOBJS)
 
 $(OUTDIR)/prim.000:
 	@-$(RM) $(RMFLAGS) $(OUTDIR)/prim.000 $(OUTDIR)/prim???.hlp >/dev/null 2>&1
-	@$(PERL) ./makehelp.pl --wget=@WGET@ -I src/library.txt.src -F mansrc/features -F mansrc/cshelp prim
+	@$(PERL) ./makehelp.pl --wget=@WGET@ --manbin=$(GRMANDOC) -I src/library.txt.src -F mansrc/features -F mansrc/cshelp prim
 
 $(OUTDIR)/cshelp/INDEX:		mansrc/cshelp/INDEX
 	@cp $< $@
 
 $(OUTDIR)/cshelp/%.hlp:		mansrc/cshelp/%.mandoc
-	@$(PERL) ./makehelp.pl --wget=@WGET@ hlp $< $@
+	@$(PERL) ./makehelp.pl --wget=@WGET@ --manbin=$(GRMANDOC) hlp $< $@
 
 $(OUTDIR)/features/INDEX:	mansrc/features/INDEX
 	@cp $< $@
 
 $(OUTDIR)/features/%.hlp:	mansrc/features/%.mandoc
-	@$(PERL) ./makehelp.pl --wget=@WGET@ hlp $< $@
+	@$(PERL) ./makehelp.pl --wget=@WGET@ --manbin=$(GRMANDOC) hlp $< $@
 
 clean:
+	@echo $(BUILD_TYPE) clean
 	-$(RM) $(RMFLAGS) $(CSOUTDIR)/* $(FEATOUTDIR)/* >/dev/null 2>&1
 	-rmdir $(CSOUTDIR) $(FEATOUTDIR) >/dev/null 2>&1
 	-$(RM) $(RMFLAGS) $(OUTDIR)/* >/dev/null 2>&1

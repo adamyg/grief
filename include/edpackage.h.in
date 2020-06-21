@@ -1,15 +1,15 @@
 #ifndef GR_EDPACKAGE_H_INCLUDED
 #define GR_EDPACKAGE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(edpackage_h, "$Id: edpackage.h.in,v 1.6 2015/02/19 00:16:56 ayoung Exp $")
+__CIDENT_RCSID(edpackage_h, "$Id: edpackage.h.in,v 1.7 2020/06/18 20:35:17 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: h; set-indent: 4; -*- */
-/* $Id: edpackage.h.in,v 1.6 2015/02/19 00:16:56 ayoung Exp $
+/* $Id: edpackage.h.in,v 1.7 2020/06/18 20:35:17 cvsuser Exp $
  * Package configuration.
  *
  *
- * Copyright (c) 1998 - 2015, Adam Young.
+ * Copyright (c) 1998 - 2020, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -42,8 +42,14 @@ __CPRAGMA_ONCE
  * AC_SUBST(SET_MAKE)           @SET_MAKE@
  *
  * AC_SUBST(RM)                 @RM@
+ * AC_SUBST(MV)                 @MV@
+ * AC_SUBST(MKDIR)              @MKDIR@
+ * AC_SUBST(RMDIR)              @RMDIR@
  * AC_SUBST(TAR)                @TAR@
  * AC_SUBST(PERL)               @PERL@
+ * AC_SUBST(WGET)               @WGET@
+ * AC_SUBST(LEX)                @LEX@
+ * AC_SUBST(YACC)               @YACC@
  * AC_SUBST(INSTALL)            @INSTALL@
  * AC_SUBST(PROGS)              @PROGS@
  * AC_SUBST(LIBPROGS)           @LIBPROGS@
@@ -52,14 +58,20 @@ __CPRAGMA_ONCE
  * AC_SUBST(CXX)                @CXX@
  * AC_SUBST(CPPDEP)             @CPPDEP@
  * AC_SUBST(DEFS)               @DEFS@
- * AC_SUBST(CFLAGS)             @CFLAGS@
- * AC_SUBST(CXXFLAGS)           @CXXFLAGS@
- * AC_SUBST(CWARN)              @CWARN@
- * AC_SUBST(CXXWARN)            @CXXWARN@
  * AC_SUBST(CINCLUDE)           @CINCLUDE@
- * AC_SUBST(LDEBUG)             @LDEBUG@
+ * AC_SUBST(CFLAGS)             @CFLAGS@
+ * AC_SUBST(CWARN)              @CWARN@
+ * AC_SUBST(CRELEASE)           @CRELEASE@
  * AC_SUBST(CDEBUG)             @CDEBUG@
+ * AC_SUBST(CXXFLAGS)           @CXXFLAGS@
+ * AC_SUBST(CXXWARN)            @CXXWARN@
+ * AC_SUBST(CXXRELEASE)         @CXXRELEASE@
  * AC_SUBST(CXXDEBUG)           @CXXDEBUG@
+ *
+ * AC_SUBST(LDFLAGS)            @LDFLAGS@
+ * AC_SUBST(LDRELEASE)          @LDRELEASE@
+ * AC_SUBST(LDDEBUG)            @LDDEBUG@
+ *
  * AC_SUBST(LIBCURL_CPPFLAGS)   @LIBCURL_CPPFLAGS@
  * AC_SUBST(LIBICU_CFLAGS)      @LIBICU_CFLAGS@
  * AC_SUBST(LIBICU_CXXFLAGS)    @LIBICU_CXXFLAGS@

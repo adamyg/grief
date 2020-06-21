@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.7 2018/10/15 14:31:59 cvsuser Exp $
+# $Id: Makefile.in,v 1.8 2020/06/18 20:35:16 cvsuser Exp $
 # libintl makefile
 #
 #
@@ -29,33 +29,55 @@ RM=		@RM@
 PERL=		@PERL@
 LIBTOOL=	@LIBTOOL@
 
-# Common flags
+# Configuration
 
-ARFLAGS=	rcv
-XFLAGS=		
-COPT=		@CFLAGS@
-CWARN=		@CWARN@
-CDEBUG=		@CDEBUG@
-LDEBUG=		@LDEBUG@
-CINCLUDE=	-I. -I../libcitrus/src -I$(D_INC) @CINCLUDE@
-CEXTRA=		@DEFS@
-CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-YFLAGS=		-d
-LDFLAGS=	$(LDEBUG) @LDFLAGS@
-LDLIBS=		-L$(D_LIB) @LIBS@ @EXTRALIBS@
-
-RMFLAGS=	-f
+ifeq ("$(BUILD_TYPE)","")	#default
+BUILD_TYPE=	debug
+MAKEFLAGS+=	BUILD_TYPE=debug
+endif
+ifneq ("$(BUILD_TYPE)","release")
+RTSUFFIX=d
+endif
 
 # Directories
 
-D_BIN=		$(ROOT)/bin
 D_INC=		$(ROOT)/include
-D_OBJ=		$(ROOT)/objects/libintl
-D_LIB=		$(ROOT)/lib
+D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/libintl
 
-############################################################
+# Common flags
 
+XFLAGS=
+
+CFLAGS=		@CFLAGS@
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+CRELEASE=	@CRELEASE@
+LDDEBUG=	@LDDEBUG@
+LDRELEASE=	@LDRELEASE@
+
+CINCLUDE=	-I. -I../libcitrus/src -I$(D_INC) @CINCLUDE@
+CEXTRA=		@DEFS@
+ifeq ("yes","@ISWIN32@")
+CEXTRA+=	-DWIN32 -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
+endif
+
+ifeq ("$(BUILD_TYPE)","release")
+CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDRELEASE) @LDFLAGS@
+else
+CFLAGS+=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDDEBUG) @LDFLAGS@
+endif
+LDLIBS=		-L$(D_LIB) $(D_LIB)/$(LP)regex$(A) @LIBS@ @LIBM@ @EXTRALIBS@
+
+ARFLAGS=	rcv
+YFLAGS=		-d
+RMFLAGS=	-f
+
+
+#########################################################################################
 # Targets
 
 INTLLIB=	$(D_LIB)/$(LP)intl_static$(A)
@@ -80,29 +102,38 @@ LIBOBJS=\
 DLLOBJS=\
 	$(D_OBJ)/libintl.lo			\
 	$(subst $(O),.lo,$(LIBOBJS))		\
-	$(D_OBJ)/citrus_bcs$(O)			\
-	$(D_OBJ)/citrus_memstream$(O)		\
-	$(D_OBJ)/tfind$(O)			\
-	$(D_OBJ)/tsearch$(O)
+	$(D_OBJ)/citrus_bcs.lo			\
+	$(D_OBJ)/citrus_memstream.lo		\
+	$(D_OBJ)/tfind.lo			\
+	$(D_OBJ)/tsearch.lo
 
 OBJS=		$(LIBOBJS) $(DLLOBJS)
 LIBS=		$(INTLLIB) $(INTLDLL)
 TSKS=
 
+
+#########################################################################################
 # Rules
 
-all:			object $(LIBS) $(TSKS) installinc
+.PHONY:			build release debug
+build:			object $(LIBS) $(TSKS) installinc
 
-$(INTLLIB):		CEXTRA += -I$(INTLSRC) -DLIBINTL_STATIC -D__LIBINTL_BUILD -D_WIN32 -D_WIN32_WINNT=0X601
+release:
+		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
+debug:
+		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
+
+$(INTLLIB):		CEXTRA += -I$(INTLSRC) -DLIBINTL_STATIC -D__LIBINTL_BUILD -D_WIN32_WINNT=0X601
 $(INTLLIB):		$(LIBOBJS)
 		$(RM) $(RMFLAGS) $@ >/dev/null 2>&1
 		$(AR) $(ARFLAGS) $@ $(subst /,\,$^)
 		$(RANLIB) $@
 
-$(INTLDLL):		CEXTRA += -I$(INTLSRC) -DLIBINTL_DYANMIC -D__LIBINTL_BUILD -D_WIN32 -D_WIN32_WINNT=0X601
+$(INTLDLL):		CEXTRA += -I$(INTLSRC) -DLIBINTL_DYANMIC -D__LIBINTL_BUILD -D_WIN32_WINNT=0X601
+$(INTLDLL):		MAPFILE=$(basename $@).map
 $(INTLDLL):		$(DLLOBJS)
-		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -version-number $(VERSIONSPEC) \
-			-rpath $(D_LIB) -bindir $(D_BIN) -o $@ $^ -L$(D_LIB) $(LDLIBS)
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ -version-number $(VERSIONSPEC) \
+			-rpath $(D_LIB) -bindir $(D_BIN) $^ $(LDLIBS) @LDMAPFILE@
 
 .PHONY:		object
 object:			$(D_OBJ)/.created
@@ -117,7 +148,8 @@ installinc:		../include/.created
 		@echo "do not delete, managed directory" > $@
 
 clean:
-		-@$(LIBTOOL) --mode=clean $(RM) $(DLLOBJS) >/dev/null 2>&1
+		@echo $(BUILD_TYPE) clean
+		-@$(LIBTOOL) --mode=clean $(RM) $(INTLDLL) $(DLLOBJS) >/dev/null 2>&1
 		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
 		-@$(RM) $(LIBOBJS) >/dev/null 2>&1
 

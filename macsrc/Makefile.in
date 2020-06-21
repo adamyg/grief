@@ -1,24 +1,24 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.19 2020/06/04 21:00:51 cvsuser Exp $
+# $Id: Makefile.in,v 1.20 2020/06/18 20:35:18 cvsuser Exp $
 # GRIEF macro library makefile.
 #
 #
 # Copyright (c) 1998 - 2020, Adam Young.
 # All rights reserved.
-# 
+#
 # This file is part of the GRIEF Editor.
-# 
+#
 # The GRIEF Editor is free software: you can redistribute it
 # and/or modify it under the terms of the GRIEF Editor License.
-# 
+#
 # Redistributions of source code must retain the above copyright
 # notice, and must be distributed with the license document above.
-# 
+#
 # Redistributions in binary form must reproduce the above copyright
 # notice, and must include the license document above in
 # the documentation and/or other materials provided with the
 # distribution.
-# 
+#
 # The GRIEF Editor is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
@@ -27,23 +27,50 @@
 #
 
 SHELL=		/bin/sh
+ROOT=		@abs_top_builddir@
+top_builddir=	@top_builddir@
 
-GRUNCH=		@ABS_ROOT@/bin/grunch
-M=		@ABS_ROOT@/macros
+# Configuration
 
-MKBD=		$M/kbd
-MTTY=		$M/tty
-MDEMOS=		$M/demos
-MBENCHMARKS=	$M/benchmarks
-MMODES=		$M/modes
-MPROFILES=	$M/profiles
-MCOLORS=	$M/colors
-MACRODIRS=	$M $(MKBD) $(MTTY) $(MDEMOS) $(MBENCHMARKS) $(MMODES) $(MPROFILES) $(MCOLORS)
+ifeq ("$(BUILD_TYPE)","")	#default
+BUILD_TYPE=	debug
+MAKEFLAGS+=	BUILD_TYPE=debug
+endif
+ifneq ("$(BUILD_TYPE)","release")
+# MSVC Run-time suffix
+RTSUFFIX=d
+endif
 
-all:		macros
+# Directories
+
+D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
+
+GRUNCH=		$(D_BIN)/grunch
+
+M=		$(ROOT)/macros
+MKBD=		$(M)/kbd
+MTTY=		$(M)/tty
+MDEMOS=		$(M)/demos
+MBENCHMARKS=	$(M)/benchmarks
+MMODES=		$(M)/modes
+MPROFILES=	$(M)/profiles
+MCOLORS=	$(M)/colors
+MACRODIRS=	$(M) $(MKBD) $(MTTY) $(MDEMOS) $(MBENCHMARKS) $(MMODES) $(MPROFILES) $(MCOLORS)
+
+
+#########################################################################################
+# Rules
+
+.PHONY:		build debug release
+build:		macros
+
+release:
+		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
+debug:
+		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
 SOURCE=		$(wildcard *.cr kbd/*.cr tty/*.cr demos/*.cr benchmarks/*.cr modes/*.cr profiles/*.cr colors/*.cr)
-OBJECTS=	$(wildcard $M/*.cm $(MKBD)/*.cm $(MTTY)/*.cm $(MDEMOS)/*.cm $(MBENCHMARKS)/*.cm $(MMODES)/*.cm $(MPROFILES)/*.cm  $(MCOLORS)/*.cm)
+OBJECTS=	$(wildcard $(M)/*.cm $(MKBD)/*.cm $(MTTY)/*.cm $(MDEMOS)/*.cm $(MBENCHMARKS)/*.cm $(MMODES)/*.cm $(MPROFILES)/*.cm  $(MCOLORS)/*.cm)
 
 macros:			$(MACRODIRS)
 		$(GRUNCH) -w -m -A autoload.inc -o $M $(SOURCE)
@@ -51,7 +78,7 @@ macros:			$(MACRODIRS)
 force:			$(MACRODIRS)
 		${GRUNCH} -w -A autoload.inc -o $M $(SOURCE)
 
-debug:			$(MACRODIRS)
+withdebug:		$(MACRODIRS)
 		$(GRUNCH) -w -g -A autoload.inc -o $M $(SOURCE)
 		${GRUNCH} -w $M grief.cr debug.cr
 
@@ -80,8 +107,10 @@ $(MCOLORS):
 		-mkdir $(MCOLORS)
 
 clean:
+		@echo $(BUILD_TYPE) clean
 		-rm -f a.out mon.out crisp.log core
 		-rm -f $(OBJECTS)
 		-rm -f *.m */*.m
 
+#end
 

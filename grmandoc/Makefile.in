@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.20 2020/06/04 23:46:38 cvsuser Exp $
+# $Id: Makefile.in,v 1.22 2020/06/20 02:13:24 cvsuser Exp $
 # libbsdmdoc and grmanddoc
 #
 #
@@ -32,6 +32,7 @@ top_builddir=	@top_builddir@
 
 # File extensions
 
+E=
 C=		.c
 O=		.o
 H=		.h
@@ -51,45 +52,66 @@ LIBTOOL=	@LIBTOOL@
 PERL=		@PERL@
 RM=		@RM@
 
+# Configuration
+
+ifeq ("$(BUILD_TYPE)","")	#default
+BUILD_TYPE=	debug
+MAKEFLAGS+=	BUILD_TYPE=debug
+endif
+ifneq ("$(BUILD_TYPE)","release")
+RTSUFFIX=d
+endif
+
+# Directories
+
+D_INC=		$(ROOT)/include
+D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/grmandoc
+D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
+
 # Common flags
 
-ARFLAGS=	rcv
-XFLAGS=		
-COPT=		@CFLAGS@
+XFLAGS=
+CFLAGS=		@CFLAGS@
 CWARN=		@CWARN@
 CDEBUG=		@CDEBUG@
-LDEBUG=		@LDEBUG@
+CRELEASE=	@CRELEASE@
+LDDEBUG=	@LDDEBUG@
+LDRELEASE=	@LDRELEASE@
+
 CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
-ifeq ("mingw32","@build_os@")
-CINCLUDE+=	-I../libw32
-endif
 CEXTRA=		@DEFS@
-CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-YFLAGS=		-d
-LDFLAGS=	$(LDEBUG) @LDFLAGS@
+ifeq "win32" "@build_os@"
+CEXTRA+=	-DWIN32
+endif
+
+ifeq ("$(BUILD_TYPE)","release")
+CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDRELEASE) @LDFLAGS@
+else
+CFLAGS+=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDDEBUG) @LDFLAGS@
+endif
 ifeq (gcc,$(findstring gcc,$(CC)))
 ifeq ("linux","@build_os@")
 LDFLAGS+=	-rdynamic
 endif
 endif
-LDLIBS=		-L$(D_LIB) -lbsdmdoc -lmisc @LIBZ@ @LIBREGEX@ @LIBS@ @LIBM@ @EXTRALIBS@
-ifeq ("mingw32","@build_os@")
-LDLIBS+=	-lw32 -lshlwapi -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
-endif
+
+LDLIBS=		-L$(D_LIB) -lbsdmdoc -lmisc @LIBZ@ @LIBREGEX@ @LDLIBS@ @LIBS@ @LIBM@ @EXTRALIBS@
+##ifeq ("mingw32","@build_os@")
+##LDLIBS+=	-lw32 -lshlwapi -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
+##endif
 LDLIBS+=	@LIBMALLOC@ @LIBTHREAD@
 
+YFLAGS=		-d
+ARFLAGS=	rcv
 RMFLAGS=	-f
-
-# Directories
-
-D_BIN=		$(ROOT)/bin
-D_INC=		$(ROOT)/include
-D_OBJ=		$(ROOT)/objects/grmandoc
-D_LIB=		$(ROOT)/lib
+RMDFLAGS=	-rf
 
 
-############################################################
+#########################################################################################
+# Targets
 
 VERSION=	1.14.4.gr
 RELDATE=	8 August 2018
@@ -254,15 +276,22 @@ LIBRARIES=	$(LIBMANDOC)
 
 CLEANFILES=	mdocversion.h
 
-############################################################
 
+#########################################################################################
+# Rules
 
 ifeq ("cygwin","@build_os@")
 LDLIBS:=	$(filter-out -liberty, $(LDLIBS))
 endif
 
-all:			source unpacked
+.PHONY:			build release debug
+build:			source unpacked
 unpacked:		mdocversion.h $(LIBRARIES) $(MANDOC) $(CGI) $(DEMANDOC) $(SOELIM)
+
+release:
+		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
+debug:
+		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
 $(MANDOC):		MAPFILE=$(basename $@).map
 $(MANDOC):		$(MANDOC_OBJS)
@@ -296,20 +325,22 @@ source:			.unpacked.$(VERSION)
 		@echo "unpacking source $(PACKED)"
 		@gzip -c -d $(PACKED) | tar -xvf -
 
-CLEAN +=	
+CLEAN +=
 
 $(D_OBJ)/.created:
 		-@mkdir $(D_OBJ)
 		@echo "do not create" > $@
 
 clean:
+		@echo $(BUILD_TYPE) clean
 		-@$(RM) $(RMFLAGS) $(BAK) $(LIBRARIES) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
 		-@$(RM) $(RMFLAGS) $(LIBOBJS) $(OBJS) $(CLEANFILES) >/dev/null 2>&1
 
-$(D_OBJ)/sqlite3$(O):	CFLAGS := $(filter-out -hw,$(CFLAGS))
+$(D_OBJ)/sqlite3$(O):	CFLAGS := $(filter-out -gw -hw,$(CFLAGS))
 	# open-watcom debug breaks due to the module size
 
 $(D_OBJ)/%$(O):		%$(C)
 		$(CC) $(CFLAGS) -o $@ -I ./sqlite3 -DHAVE_SQLITE3 -c $<
 
 #end
+

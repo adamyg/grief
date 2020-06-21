@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.10 2015/02/22 22:13:56 ayoung Exp $
+# $Id: Makefile.in,v 1.11 2020/06/18 20:35:15 cvsuser Exp $
 # libiconv/iconv makefile
 #
 #
@@ -28,35 +28,59 @@ RM=		@RM@
 PERL=		@PERL@
 LIBTOOL=	@LIBTOOL@
 
-# Common flags
+# Configuration
 
-ARFLAGS=	rcv
-XFLAGS=		
-COPT=		@CFLAGS@
-CWARN=		@CWARN@
-CDEBUG=		@CDEBUG@
-LDEBUG=		@LDEBUG@
-CINCLUDE=	-I. -I../libcitrus/src -I$(D_INC) @CINCLUDE@
-CEXTRA=		@DEFS@
-CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-LDFLAGS=	$(LDEBUG) @LDFLAGS@
-LDLIBS=		@LIBS@ @LIBM@ @EXTRALIBS@
-
-RMFLAGS=	-f
+ifeq ("$(BUILD_TYPE)","")	#default
+BUILD_TYPE=	debug
+MAKEFLAGS+=	BUILD_TYPE=debug
+endif
+ifneq ("$(BUILD_TYPE)","release")
+RTSUFFIX=d
+endif
 
 # Directories
 
-D_BIN=		$(ROOT)/bin
-D_I18N=		$(ROOT)/bin/i18n
-D_I18N_ICONV=	$(D_I18N)/iconv
 D_INC=		$(ROOT)/include
-D_OBJ=		$(ROOT)/objects/libiconv
-D_LIB=		$(ROOT)/lib
+D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/libiconv
+D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
+
+D_I18N=		$(D_BIN)/i18n
+D_I18N_ICONV=	$(D_I18N)/iconv
+
+# Common flags
+
+XFLAGS=
+CFLAGS=		@CFLAGS@
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+CRELEASE=	@CRELEASE@
+LDDEBUG=	@LDDEBUG@
+LDRELEASE=	@LDRELEASE@
+
+CINCLUDE=	-I. -I../libcitrus/src -I$(D_INC) @CINCLUDE@
+
+CEXTRA=		@DEFS@
+ifeq ("yes","@ISWIN32@")
+CEXTRA+=	-DWIN32 -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
+endif
+
+ifeq ("$(BUILD_TYPE)","release")
+CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDRELEASE) @LDFLAGS@
+else
+CFLAGS+=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDDEBUG) @LDFLAGS@
+endif
+LDLIBS=		-L$(D_LIB) @LIBS@ @EXTRALIBS@
+
+YFLAGS=		-d
+ARFLAGS=	rcv
+RMFLAGS=	-f
+RMDFLAGS=	-rf
 
 
-############################################################
-
+#########################################################################################
 # Targets
 
 ICONVLIB=	$(D_LIB)/$(LP)iconv_static$(A)
@@ -76,9 +100,17 @@ DLLOBJS=\
 OBJS=		$(LIBOBJS) $(DLLOBJS)
 LIBS=		$(ICONVLIB) $(ICONVDLL)
 
+
+#########################################################################################
 # Rules
 
-all:			directories $(LIBS) installinc components installcfg
+.PHONY:			build release debug
+build:			directories $(LIBS) installinc components installcfg
+
+release:
+		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
+debug:
+		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
 components:
 		$(MAKE) -C iconv
@@ -97,9 +129,10 @@ $(ICONVLIB):		$(LIBOBJS)
 		$(RANLIB) $@
 
 $(ICONVDLL):		CEXTRA += -D__LIBICONV_BUILD -D_WIN32 -D_WIN32_WINNT=0X601
+$(ICONVDLL):		MAPFILE=$(basename $@).map
 $(ICONVDLL):		$(DLLOBJS)
-		$(LIBTOOL) --mode=link $(CC) -o $@ $^ -version-number $(VERSIONSPEC) \
-			-rpath $(D_LIB) -bindir $(D_BIN) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $^ -version-number $(VERSIONSPEC) \
+			-rpath $(D_LIB) -bindir $(D_BIN) $(LDLIBS) libcitrus$(A) @LDMAPFILE@
 
 .PHONY:		installinc installcfg
 installinc:		../include/.created
@@ -118,6 +151,7 @@ clean:			cleancomponents
 		-@$(RM) $(LIBOBJS) >/dev/null 2>&1
 
 cleancomponents:
+		@echo $(BUILD_TYPE) clean
 		$(MAKE) -C iconv	clean
 		$(MAKE) -C mkesdb	clean
 		$(MAKE) -C mkcsmapper	clean

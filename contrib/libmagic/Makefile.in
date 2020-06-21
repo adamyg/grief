@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.14 2020/06/04 22:01:40 cvsuser Exp $
+# $Id: Makefile.in,v 1.16 2020/06/18 20:35:16 cvsuser Exp $
 # libmagic makefile
 #
 #
@@ -30,41 +30,63 @@ RM=		@RM@
 PERL=		@PERL@
 LIBTOOL=	@LIBTOOL@
 
-# Common flags
+# Configuration
 
-ARFLAGS=	rcv
-XFLAGS=		
-COPT=		@CFLAGS@
-CWARN=		@CWARN@
-CDEBUG=		@CDEBUG@
-LDEBUG=		@LDEBUG@
-CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
-ifeq ("mingw32","@build_os@")
-CINCLUDE+=	-I../include -I../../libw32
+ifeq ("$(BUILD_TYPE)","")	#default
+BUILD_TYPE=	debug
+MAKEFLAGS+=	BUILD_TYPE=debug
 endif
-CEXTRA=		@DEFS@
-CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-YFLAGS=		-d
-LDFLAGS=	$(LDEBUG) @LDFLAGS@
-LDLIBS=		-L$(D_LIB) $(D_LIB)/$(LP)regex$(A) @LIBS@
-ifeq ("mingw32","@build_os@")
-LDLIBS+=	-lw32 -lshlwapi -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
+ifneq ("$(BUILD_TYPE)","release")
+RTSUFFIX=d
 endif
-LDLIBS+=	@LIBM@ @EXTRALIBS@
-
-RMFLAGS=	-f
 
 # Directories
 
-D_BIN=		$(ROOT)/bin
 D_INC=		$(ROOT)/include
-D_OBJ=		$(ROOT)/objects/libmagic
-D_LIB=		$(ROOT)/lib
+D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/libmagic
+D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
-############################################################
+# Common flags
 
-# targets
+XFLAGS=		
+
+CFLAGS=		@CFLAGS@
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+CRELEASE=	@CRELEASE@
+LDDEBUG=	@LDDEBUG@
+LDRELEASE=	@LDRELEASE@
+
+CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
+##ifeq ("mingw32","@build_os@")
+##CINCLUDE+=	-I../include -I../../libw32
+##endif
+
+CEXTRA=		@DEFS@
+ifeq ("yes","@ISWIN32@")
+CEXTRA+=	-DWIN32 -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
+endif
+
+ifeq ("$(BUILD_TYPE)","release")
+CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDRELEASE) @LDFLAGS@
+else
+CFLAGS+=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDDEBUG) @LDFLAGS@
+endif
+
+LDLIBS=		-L$(D_LIB) $(D_LIB)/$(LP)regex$(A) @LIBS@ @LIBM@ @EXTRALIBS@
+##ifeq ("mingw32","@build_os@")
+##LDLIBS+=	-lw32 -lshlwapi -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
+##endif
+
+ARFLAGS=	rcv
+RMFLAGS=	-f
+
+
+#########################################################################################
+# Targets
 
 MAGICLIB=	$(D_LIB)/$(LP)magic_static$(A)
 MAGICDLL=	$(D_LIB)/$(LP)magic.la
@@ -82,38 +104,41 @@ MAGICSRC=	./file-5.29/src
 MAGDIR=		./file-5.29/magic
 
 VERSIONSPEC=	$(subst .,:,$(VERSION))
+
 VPATH=		$(MAGICSRC)
+CSOURCES=\
+	apprentice.c \
+	ascmagic.c \
+	cdf.c \
+	cdf_time.c \
+	compress.c \
+	encoding.c \
+	fsmagic.c \
+	funcs.c \
+	is_tar.c \
+	magic.c \
+	print.c \
+	readcdf.c \
+	softmagic.c \
+	getline.c \
+	asprintf.c \
+	vasprintf.c \
+	strlcpy.c \
+	strlcat.c
+ifneq ($(VERSION),5.11)
+CSOURCES+=\
+	fmtcheck.c \
+	der.c \
+	pread.c \
+	strcasestr.c \
+	ctime_r.c \
+	asctime_r.c \
+	localtime_r.c \
+	gmtime_r.c
+endif
 
 LIBOBJS=\
-	$(D_OBJ)/apprentice$(O)		\
-	$(D_OBJ)/ascmagic$(O)		\
-	$(D_OBJ)/cdf$(O)		\
-	$(D_OBJ)/cdf_time$(O)		\
-	$(D_OBJ)/compress$(O)		\
-	$(D_OBJ)/encoding$(O)		\
-	$(D_OBJ)/fsmagic$(O)		\
-	$(D_OBJ)/funcs$(O)		\
-	$(D_OBJ)/is_tar$(O)		\
-	$(D_OBJ)/magic$(O)		\
-	$(D_OBJ)/print$(O)		\
-	$(D_OBJ)/readcdf$(O)		\
-	$(D_OBJ)/softmagic$(O)		\
-	$(D_OBJ)/getline$(O)		\
-	$(D_OBJ)/asprintf$(O)		\
-	$(D_OBJ)/vasprintf$(O)		\
-	$(D_OBJ)/strlcpy$(O)		\
-	$(D_OBJ)/strlcat$(O)
-ifeq ($(VERSION),5.29)
-LIBOBJS+=\
-	$(D_OBJ)/fmtcheck$(O)		\
-	$(D_OBJ)/der$(O)		\
-	$(D_OBJ)/pread$(O)		\
-	$(D_OBJ)/strcasestr$(O)		\
-	$(D_OBJ)/ctime_r$(O)		\
-	$(D_OBJ)/asctime_r$(O)		\
-	$(D_OBJ)/localtime_r$(O)	\
-	$(D_OBJ)/gmtime_r$(O)
-endif
+	$(addprefix $(D_OBJ)/,$(subst .c,$(O),$(CSOURCES)))
 
 DLLOBJS=\
 	$(subst $(O),.lo,$(LIBOBJS))
@@ -128,21 +153,30 @@ OBJS=		$(LIBOBJS) $(DLLOBJS) $(UTILOBJS)
 LIBS=		$(MAGICLIB) $(MAGICDLL)
 TSKS=		$(MAGICUTIL)
 
+
+#########################################################################################
 # Rules
 
-all:			source unpacked
-unpacked:		$(LIBS) $(TSKS) $(MAGICDB) installinc 
+.PHONY: 	build release debug
+build:			source unpacked
+unpacked:		$(LIBS) $(TSKS) $(MAGICDB) installinc
 
-$(MAGICLIB):		CEXTRA += -D__LIBMAGIC_BUILD -DLIBMAGIC_STATIC -D_WIN32
+release:
+		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
+debug:
+		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
+
+$(MAGICLIB):		CEXTRA += -D__LIBMAGIC_BUILD -DLIBMAGIC_STATIC
 $(MAGICLIB):		$(D_OBJ)/.created $(LIBOBJS)
 		$(RM) $(RMFLAGS) $@ >/dev/null 2>&1
 		$(AR) $(ARFLAGS) $@ $(LIBOBJS)
 		$(RANLIB) $@
 
-$(MAGICDLL):		CEXTRA += -D__LIBMAGIC_BUILD -DLIBMAGIC_DYNAMIC -D_WIN32
+$(MAGICDLL):		CEXTRA += -D__LIBMAGIC_BUILD -DLIBMAGIC_DYNAMIC
+$(MAGICDLL):		MAPFILE=$(basename $@).map
 $(MAGICDLL):		$(DLLOBJS)
-		$(LIBTOOL) --mode=link $(CC) -o $@ $^ -version-number $(VERSIONSPEC) \
-			-rpath $(D_LIB) -bindir $(D_BIN) $(LDLIBS)
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ -version-number $(VERSIONSPEC) \
+			-rpath $(D_LIB) -bindir $(D_BIN) $^ $(LDLIBS) @LDMAPFILE@
 
 $(MAGICUTIL):		$(UTILOBJS)
 		$(CC) $(LDFLAGS) $^ -o $@ $(D_LIB)/libmagic$(A) $(LDLIBS)
@@ -176,14 +210,15 @@ installinc:		../include/.created
 		@echo "do not delete, managed directory" > $@
 
 clean:
+		@echo $(BUILD_TYPE) clean
+		-@$(LIBTOOL) --mode=clean $(RM) $(MAGICDLL) $(DLLOBJS) >nul 2>&1
 		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(CLEAN) $(XCLEAN) >nul 2>&1
-		-@$(LIBTOOL) --mode=clean $(RM) $(DLLOBJS) >nul 2>&1
 		-@$(RM) $(LIBOBJS) $(UTILOBJS) >nul 2>&1
 
 $(D_OBJ)/%$(O):		%$(C)
-		$(CC) $(CFLAGS) -D_CRT_SECURE_NO_DEPRECATE -o $@ -c $<
+		$(CC) $(CFLAGS) -o $@ -c $<
 
 $(D_OBJ)/%.lo:		%.c
-		$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -D_CRT_SECURE_NO_DEPRECATE -o $@ -c $<
+		$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -o $@ -c $<
 
 #end

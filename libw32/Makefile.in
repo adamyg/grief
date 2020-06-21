@@ -1,24 +1,24 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.23 2020/05/03 21:34:19 cvsuser Exp $
+# $Id: Makefile.in,v 1.25 2020/06/20 01:29:20 cvsuser Exp $
 # libwin32 makefile.
 #
 #
-# Copyright (c) 1998 - 2018, Adam Young.
+# Copyright (c) 1998 - 2020, Adam Young.
 # All rights reserved.
-# 
+#
 # This file is part of the GRIEF Editor.
-# 
+#
 # The GRIEF Editor is free software: you can redistribute it
 # and/or modify it under the terms of the GRIEF Editor License.
-# 
+#
 # Redistributions of source code must retain the above copyright
 # notice, and must be distributed with the license document above.
-# 
+#
 # Redistributions in binary form must reproduce the above copyright
 # notice, and must include the license document above in
 # the documentation and/or other materials provided with the
 # distribution.
-# 
+#
 # The GRIEF Editor is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
@@ -50,36 +50,65 @@ PERL=		@PERL@
 LIBTOOL=	@LIBTOOL@
 RC=		@RC@
 
-# Common flags
+# Configuration
 
-ARFLAGS=	rcv
-XFLAGS=		
-COPT=		@CFLAGS@
-CXXOPT=		@CXXFLAGS@
-ifeq "" "$(CXXOPT)"
-CXXOPT=		$(COPT)
+ifeq ("$(BUILD_TYPE)","")	#default
+BUILD_TYPE=	debug
+MAKEFLAGS+=	BUILD_TYPE=debug
 endif
-CWARN=		@CWARN@
-CDEBUG=		@CDEBUG@
-LDEBUG=		@LDEBUG@
-CINCLUDE=	-I$(D_INC) @CINCLUDE@ -I.
-CEXTRA=		@DEFS@ -D_WIN32_WINNT=0x601
-CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-CXXFLAGS=	$(CPPFLAGS) $(CDEBUG) $(CXXOPT) $(CWARN) $(CEXTRA) $(CINCLUDE) $(XFLAGS)
-YFLAGS=		-d
-LDFLAGS=	$(LDEBUG) @LDFLAGS@
-LXFLAGS=	$(LDLIBS) @LIBS@ @LIBMALLOC@
-
-RMFLAGS=	-f
+ifneq ("$(BUILD_TYPE)","release")
+# MSVC Run-time suffix
+RTSUFFIX=d
+endif
 
 # Directories
 
-D_BIN=		$(ROOT)/bin
 D_INC=		$(ROOT)/include
-D_OBJ=		$(ROOT)/objects/libw32
-D_LIB=		$(ROOT)/lib
+D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/libw32
 
-############################################################
+# Common flags
+
+XFLAGS=
+CFLAGS=		@CFLAGS@
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+CRELEASE=	@CRELEASE@
+CXXFLAGS=	@CXXFLAGS@
+CXXDEBUG=	@CXXDEBUG@
+ifeq ("$(CXXDEBUG)","")
+CXXDEBUG=	$(CDEBUG)
+endif
+CXXRELEASE=	@CXXRELEASE@
+ifeq ("$(CXXRELEASE)","")
+CXXRELEASE=	$(CRELEASE)
+endif
+LDDEBUG=	@LDDEBUG@
+LDRELEASE=	@LDRELEASE@
+
+CINCLUDE=	-I$(D_INC) @CINCLUDE@ -I.
+CEXTRA=		@DEFS@
+
+ifeq ("$(BUILD_TYPE)","release")
+CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CXXFLAGS+=	$(CXXRELEASE) $(CWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDRELEASE) @LDFLAGS@
+else
+CFLAGS+=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CXXFLAGS+=	$(CXXDEBUG) $(CWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDDEBUG) @LDFLAGS@
+endif
+
+LDLIBS=		-L$(D_LIB) @EXTRALIBS@
+
+RMFLAGS=	-f
+ARFLAGS=	rcv
+YFLAGS=		-d
+
+
+#########################################################################################
+# Targets
 
 W32LIB=		$(D_LIB)/$(LP)w32_static$(A)
 W32DLL=		$(D_LIB)/$(LP)w32.la
@@ -146,6 +175,7 @@ CSOURCES=\
 	w32_strtoull.c \
 	w32_sysdir.c \
 	w32_time.c \
+	w32_timegm.c \
 	w32_truncate.c \
 	w32_uname.c \
 	w32_unlink.c \
@@ -168,9 +198,17 @@ OBJS=		$(LIBOBJS) $(DLLOBJS)
 LIBS=		$(W32LIB) $(W32DLL)
 TSKS=
 
+
+#########################################################################################
 # Rules
 
-all:			$(LIBS) $(TSKS)
+.PHONY:		build debug release
+build:			$(LIBS) $(TSKS)
+
+release:
+		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
+debug:
+		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
 $(W32LIB):		CEXTRA += -DLIBW32_STATIC -DLIBW32_LIBRARY
 $(W32LIB):		$(D_OBJ)/.created $(LIBOBJS)
@@ -181,14 +219,15 @@ $(W32LIB):		$(D_OBJ)/.created $(LIBOBJS)
 $(W32DLL):		CEXTRA += -DLIBW32_DYNAMIC -DLIBW32_LIBRARY
 $(W32DLL):		DLLDEF = -export-symbols libw32.def
 $(W32DLL):		$(DLLOBJS)
-		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -version-number $(VERSIONSPEC) \
-			-rpath $(D_LIB) -bindir $(D_BIN) $(DLLDEF) -o $@ $^ $(LDLIBS)
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ -version-number $(VERSIONSPEC) \
+			-rpath $(D_LIB) -bindir $(D_BIN) $(DLLDEF) $^ $(LDLIBS)
 
 $(D_OBJ)/.created:
 		-@mkdir $(D_OBJ)
 		@echo "do not create" > $@
 
 clean:
+		@echo $(BUILD_TYPE) clean
 		-@$(LIBTOOL) --mode=clean $(RM) $(W32DLL) $(DLLOBJS) >/dev/null 2>&1
 		-@$(RM) $(RMFLAGS) $(BAK) $(W32LIB) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
 		-@$(RM) $(RMFLAGS) $(LIBOBJS) >/dev/null 2>&1

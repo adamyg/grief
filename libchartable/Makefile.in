@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.23 2020/06/03 23:45:57 cvsuser Exp $
+# $Id: Makefile.in,v 1.24 2020/06/18 20:35:17 cvsuser Exp $
 # libchartable makefile.
 #
 #
@@ -50,42 +50,67 @@ RANLIB=		@RANLIB@
 RM=		@RM@
 PERL=		@PERL@
 LIBTOOL=	@LIBTOOL@
-##SHELL=	bash
 LT_OBJDIR=	@LT_OBJDIR@
 WGET=		@WGET@
 
-# Common flags
+# Configuration
 
-ARFLAGS=	rcv
-XFLAGS=		
-COPT=		@CFLAGS@
-CWARN=		@CWARN@
-CDEBUG=		@CDEBUG@
-LDEBUG=		@LDEBUG@
-CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
-ifeq ("mingw32","@build_os@")
-CINCLUDE+=	-I../libw32
+ifeq ("$(BUILD_TYPE)","")	#default
+BUILD_TYPE=	debug
+MAKEFLAGS+=	BUILD_TYPE=debug
 endif
-CEXTRA=		@DEFS@
-CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-YFLAGS=		-d
-LDFLAGS=	$(LDEBUG) @LDFLAGS@
-LXFLAGS=	$(LDLIBS) @LIBS@ @LIBMALLOC@
-RMFLAGS=	-f
+ifneq ("$(BUILD_TYPE)","release")
+RTSUFFIX=d
+endif
 
 # Directories
 
-D_BIN=		$(ROOT)/bin
-D_BINCTBL=	$(ROOT)/bin/ctbl
 D_INC=		$(ROOT)/include
-D_OBJ=		$(ROOT)/objects/libchartable
-D_LIB=		$(ROOT)/lib
+D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_BINCTBL=	$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)/ctbl
+D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/libchartable
+D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 OBJMKDIR :=	$(shell test -d $(ROOT)/objects) || mkdir $(ROOT)/objects)
 LIBMKDIR :=	$(shell test -d $(ROOT)/lib) || mkdir $(ROOT)/lib)
 
-############################################################
+# Common flags
+
+XFLAGS=
+CFLAGS=		@CFLAGS@
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+CRELEASE=	@CRELEASE@
+LDDEBUG=	@LDDEBUG@
+LDRELEASE=	@LDRELEASE@
+
+CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
+##ifeq ("mingw32","@build_os@")
+##CINCLUDE+=	-I../libw32
+##endif
+CEXTRA=		@DEFS@
+
+ifeq ("$(BUILD_TYPE)","release")
+CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDRELEASE) @LDFLAGS@
+else
+CFLAGS+=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDDEBUG) @LDFLAGS@
+endif
+
+LDLIBS=		-L$(D_LIB) @LIBS@ -lmisc @LIBMALLOC@ @LIBTHREAD@ @EXTRALIBS@
+##ifeq ("mingw32","@build_os@")
+##LDLIBS+=	-lw32 -lshlwapi -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
+##endif
+
+YFLAGS=		-d
+ARFLAGS=	rcv
+RMFLAGS=	-f
+RMDFLAGS=	-rf
+
+
+#########################################################################################
+# Targets
 
 CTBLLIB=	$(D_LIB)/$(LP)chartable$(A)
 
@@ -113,10 +138,18 @@ OBJS=		$(CTBLOBJS) $(MODULEOBJS)
 LIBS=		$(CTBLLIB)
 TSKS=
 
+
+#########################################################################################
 # Rules
 
-all:			data/.import $(CTBLLIB)
+.PHONY:			build release debug
+build:			data/.import $(CTBLLIB)
 		$(MAKE) modules
+
+release:
+		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
+debug:
+		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
 $(CTBLLIB):		charsetlocales.h		\
 			charsettable.c			\
@@ -174,8 +207,8 @@ data/Zeichenreferenz:
 		@echo "++ do not delete, managed directory ++" > $@
 
 $(D_LIB)/%.la:		%.lo
-		$(LIBTOOL) --mode=link $(CC) -o $@ $(D_OBJ)/$< \
-			-module -avoid-version -bindir $(D_BINCTBL)
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(D_OBJ)/$< \
+			-module -avoid-version -bindir $(D_BINCTBL) $(LDLIBS)
 
 %.lo:			cnvtables/%.c
 		$(LIBTOOL) --mode=compile $(CC) -DMODULE_LOADABLE $(CFLAGS) -o $(D_OBJ)/$@ -c $<
@@ -184,3 +217,4 @@ $(D_OBJ)/%$(O):		%.c
 		$(CC) $(CFLAGS) -o $@ -c $<
 
 #end
+

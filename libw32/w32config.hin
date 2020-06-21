@@ -1,10 +1,10 @@
 #ifndef WIN32_CONFIG_H_INCLUDED
 #define WIN32_CONFIG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.12 2020/06/03 20:30:44 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.13 2020/06/18 14:32:40 cvsuser Exp $")
 __CPRAGMA_ONCE
 /* -*- mode: c; set-indent: 4; -*- */
-/* $Id: w32config.hin,v 1.12 2020/06/03 20:30:44 cvsuser Exp $
+/* $Id: w32config.hin,v 1.13 2020/06/18 14:32:40 cvsuser Exp $
  * Machine configuration.
  *
  * System dependent <config.h> configuration template,
@@ -116,6 +116,7 @@ __CPRAGMA_ONCE
 #undef HAVE_STDLIB_H
 #undef HAVE_STDIO_H
 #undef HAVE_LIMITS_H
+#undef HAVE_MATH_H
 
 /* AC_HEADER_DIRENT */
 #undef HAVE_DIRENT_H
@@ -168,6 +169,7 @@ __CPRAGMA_ONCE
 #undef HAVE_STDALIGN_H
 #undef HAVE_STDATOMIC_H
 #undef HAVE_THREADS_H
+#undef HAVE_XTHREADS_H
 
 #undef HAVE_THREAD_H
 #undef HAVE_PTHREAD_H
@@ -186,7 +188,6 @@ __CPRAGMA_ONCE
 #undef HAVE_GETOPT_H
 #undef HAVE_STRUCT_OPTION
 #undef HAVE_MACHINE_CONSOLE_H
-#undef HAVE_MATH_H
 #undef HAVE_MEMORY_H
 #undef HAVE_PROCESS_H
 #undef HAVE_PWD_H
@@ -415,10 +416,15 @@ __CPRAGMA_ONCE
 #undef HAVE_MEMCCPY
 #undef HAVE__MEMCCPY
 
+#undef HAVE_SECUREZEROMEMORY
+#undef HAVE_EXPLICIT_BZERO
+#undef HAVE_MEMSET_S
+
 #undef HAVE_MATHERR
 
 #undef HAVE_CHOWN
 #undef HAVE_CHROOT
+#undef HAVE_MKTEMP
 #undef HAVE_MKSTEMP
 #undef HAVE_SELECT
 #undef HAVE_POLL
@@ -473,6 +479,9 @@ __CPRAGMA_ONCE
 #undef HAVE_ISCSYM
 #undef HAVE___ISCSYM
 
+#undef HAVE_GETW
+#undef HAVE_PUTW
+
 #undef HAVE_DECL_TZNAME
 #undef HAVE_GETLOGIN
 #undef HAVE_GETEXECNAME
@@ -484,6 +493,7 @@ __CPRAGMA_ONCE
 #undef HAVE_CTIME_R
 #undef HAVE_LOCALTIME_R
 #undef HAVE_GMTIME_R
+#undef HAVE_GMTIME_S
 #undef HAVE_ASCTIME_R
 #undef HAVE__GET_TIMEZONE
 
@@ -539,6 +549,8 @@ __CPRAGMA_ONCE
 #undef CLOSEDIR_VOID
 #undef GETPGRP_VOID
 
+#undef HAVE_VA_COPY
+#undef HAVE___VA_COPY
 #undef HAVE_VPRINTF
 #if defined(HAVE_VPRINTF) && (HAVE_VPRINTF)
 #undef HAVE_PRINTF

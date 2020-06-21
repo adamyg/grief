@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: libtool_win32.pl,v 1.33 2019/05/07 23:26:52 cvsuser Exp $
+# $Id: libtool_win32.pl,v 1.35 2020/06/20 02:06:56 cvsuser Exp $
 # libtool emulation for WIN32 builds.
 #
 #   **Warning**
@@ -18,7 +18,7 @@
 #       $(D_LIB)/%.lo:      %.cpp
 #               $(LIBTOOL) --mode=compile $(CXX) $(CXXFLAGS) -o $(D_OBJ)/$@ -c $<
 #
-# Copyright Adam Young 2012-2018
+# Copyright Adam Young 2012-2020
 #
 # This file is part of the GRIEF Editor.
 #
@@ -162,16 +162,13 @@ Compile() {
             next;
         }
 
-        if (/^-o(.*)$/) {                       # -o <object>
-            my $val = ($1 ? $1 : shift @ARGV);
-            if ($val && $val !~ /\./) {
-                push @STUFF, "-o${val}";        # i.e. optimisation flags
-            } else {
-                $val = shift @ARGV if (! $val);
-                Error("compile: multiple objects specified <$object> and <$val>")
-                    if ($object);
-                $object = $val;
-            }
+        if (/^-o$/) {                           # -o <object>
+            my $val = shift @ARGV;
+            Error("compile: missing output")
+                if (! $val);
+            Error("compile: multiple objects specified <$object> and <$val>")
+                if ($object);
+            $object = $val;
 
         } elsif (/^[-\/]Fo[=]?(.*)/) {          # -Fo[=]<object>
             my $val = ($1 ? $1 : shift @ARGV);
@@ -188,6 +185,9 @@ Compile() {
         } elsif (/^[-\/]I[=]?(.+)$/) {          # -I[=]<path>
             push @INCLUDES, $1;
 
+        } elsif (/^-I$/) {                      # -I <path>
+            push @INCLUDES, shift @ARGV;
+
         } elsif (/^-d(.*)$/) {                  # -d <define[=value]>
             if ('wcl386' eq $cc && (/^-d[1-3][ist]$/ || /^-db$/)) {
                 push @STUFF, $_;
@@ -198,7 +198,7 @@ Compile() {
         } elsif (/^[-\/]D[=]?(.+)/) {           # -D[=]<define[=value]>
             push @DEFINES, $1;
 
-        } elsif (/^[-\/]c/) {                   # -c
+        } elsif (/^[-\/]c$/) {                  # -c
             $compile = 1;
 
         } elsif (/^-prefer-pic$/) {
@@ -219,10 +219,16 @@ Compile() {
         } elsif (/^-Wc,(.*)$/) {
             # Pass a flag directly to the compiler. With -Wc,, multiple flags may be separated by
             # commas, whereas -Xcompiler passes through commas unchanged.
+            if ('owcc' eq $cc || 'gcc' eq $cc) {
+                push @STUFF, $_;
+            } else {
+                Error("compile: unexpected option <$_>");
+            }
 
-        } elsif (/^-Xcompiler(.*)/) {
+        } elsif (/^-Xcompiler$/) {
             # Pass a flag directly to the compiler. With -Wc,, multiple flags may be separated by
             # commas, whereas -Xcompiler passes through commas unchanged.
+            push @STUFF, shift @ARGV;
 
         } else {
             push @STUFF, $_;
@@ -231,7 +237,7 @@ Compile() {
     $source = shift @ARGV;
 
     Error("compile: unsupported compiler <$cc>")
-        if (!('cl' eq $cc || 'wcl386' eq $cc || 'gcc' eq $cc));
+        if (!('cl' eq $cc || 'wcl386' eq $cc || 'owcc' eq $cc || 'gcc' eq $cc));
     Error("compile: unable to determine object")
         if (!$object);
     Error("compile: object file suffix not <.lo>")
@@ -264,13 +270,21 @@ Compile() {
         $cmd .= " /Fd".${true_path}.'\\';       # VCx0.pdb
         $cmd .= " /c $source";
 
-    } elsif ('wcl386' eq $cc) {
+    } elsif ('wcl386' eq $cc) {     # OpenWatcom, legacy interface.
         # http://www.openwatcom.org/index.php/Writing_DLLs
         $cmd  = "$cc @STUFF -dDLL=1";
         $cmd .= " -bd";                         # DLL builds
         foreach (@DEFINES) { $cmd .= " -d$_"; }
         foreach (@INCLUDES) { $cmd .= " -I=\"$_\""; }
         $cmd .= " -Fo=\"$true_object\"";
+        $cmd .= " -c $source";
+
+    } elsif ('owcc' eq $cc) {       # OpenWatcom, posix driver.
+        $cmd  = "$cc @STUFF -DDLL=1";
+        $cmd .= " -shared";                     # DLL builds
+        foreach (@DEFINES) { $cmd .= " -D$_"; }
+        foreach (@INCLUDES) { $cmd .= " -I \"$_\""; }
+        $cmd .= " -o \"$true_object\"";
         $cmd .= " -c $source";
 
     } elsif ('gcc' eq $cc) {
@@ -285,6 +299,7 @@ Compile() {
     mkdir $true_path;
     unlink $object;
 
+    Verbose "cc:       $cmd";
     exit($ret)
         if (0 != ($ret = System($cmd)));
 
@@ -315,6 +330,8 @@ Link() {
     my $wc_fastcall = -1;                       # fastcall (Watcom) convention.
     my $wc_debugger = '';
     my $linktype = 'dll';
+    my $cl_ltcg = 0;
+    my $cl_debug = undef;
     my @OBJECTS;
     my @RESOURCES;
     my @EXPORTS;
@@ -331,8 +348,10 @@ Link() {
             next;
         }
 
-        if (/^-o(.*)$/) {                       # -o <output>
-            my $val = ($1 ? $1 : shift @ARGV);
+        if (/^-o$/) {                           # -o <output>
+            my $val = shift @ARGV;
+            Error("link: missing output")
+                if (! $val);
             Error("link: multiple outputs specified <$output> and <$val>")
                 if ($output);
             if ($val =~ /\.exe$/i) {
@@ -357,13 +376,14 @@ Link() {
             $linktype = 'exe';
             $output = $val;
 
-        } elsif ('wcl386' eq $cc and /^[-\/]Fm[=]?(.*)/i) { # -Fm[=]<output>
+        } elsif (('wcl386' eq $cc || 'owcc' eq $cc) and /^[-\/]Fm[=]?(.*)/i) {
+                                                # -Fm[=]<output>
             my $val = ($1 ? $1 : shift @ARGV);
             Error("link: multiple mapfile specified <$mapfile> and <$val>")
                 if ($mapfile);
             $mapfile = $val;
 
-	} elsif (/^[-\/]Map[:=]?(.*)/i) {	# -Map[:=]<output>
+        } elsif (/^[-\/]Map[:=]?(.*)/i) {       # -Map[:=]<output>
             my $val = ($1 ? $1 : shift @ARGV);
             Error("link: multiple mapfile specified <$mapfile> and <$val>")
                 if ($mapfile);
@@ -461,7 +481,7 @@ Link() {
                 $rpath = $val;
             }
 
-        } elsif (/^-RTC1$/ && ('cl' eq $cc)) {
+        } elsif (/^-RTC[1csu]+$/ && ('cl' eq $cc)) {
             push @STUFF, $_;
 
         } elsif (/^-R(.*)$/) {
@@ -496,6 +516,13 @@ Link() {
             Error("link: $_ not supported\n");
 
         } elsif (/^-Wl,(.*)$/) {
+            if ('owcc' eq $cc) {
+                my $wl = $1;
+                if ($wl =~ /^LIBPATH[:= ]?\s*(.+)/) {
+                    push @LIBPATHS, $1;         # -LIBPATH[:= ]<path>
+                    next;
+                }
+            }
             Error("link: $_ not supported\n");
 
         } elsif (/^-Xlinker(.*)$/) {
@@ -505,26 +532,45 @@ Link() {
             Error("link: $_ not supported\n");
 
         } else {
-            if ('wcl386' eq $cc) {              # process
-                #   Calling convention:
-                #       [3-6]r      register calling convention
-                #       [3-6]s      stack based calling convention
+            # toolchain specific
+            if ('cl' eq $cc) {
+
+                # Optimisation
+                if (/^[-\/]GL$/i) {             # /GL (Whole Program Optimization)
+                    $cl_ltcg = 1;               # imply /LTCG
+                    next;
+
+                } elsif (/^[-\/]LTCG$/i) {
+                    $cl_ltcg = 1;               # explicit /LTCG
+                    next;
+
+                # Debugger
+                } elsif (/^[-\/]DEBUG$/ || /^[-\/]DEBUG:(.+_)$/) {
+                    $cl_debug = $_;             # explicit /DEBUG:NONE, /DEBUG:FULL and /DEBUG:FASTLINK
+                    $cl_debug =~ s/^-/\//;
+                    next;
+                }
+
+            } elsif ('wcl386' eq $cc) {         # process
+                # Calling convention:
+                #   [3-6]r      register calling convention
+                #   [3-6]s      stack based calling convention
                 #
-                #       ecc         set default calling convention to __cdecl
-                #       ecd         set default calling convention to __stdcall
-                #       ecf         set default calling convention to __fastcall
-                #       ecp         set default calling convention to __pascal
-                #       ecr         set default calling convention to __fortran
-                #       ecs         set default calling convention to __syscall
-                #       ecw         set default calling convention to __watcall (default)
+                #   ecc         set default calling convention to __cdecl
+                #   ecd         set default calling convention to __stdcall
+                #   ecf         set default calling convention to __fastcall
+                #   ecp         set default calling convention to __pascal
+                #   ecr         set default calling convention to __fortran
+                #   ecs         set default calling convention to __syscall
+                #   ecw         set default calling convention to __watcall (default)
                 #
-                #   Warning:
-                #       The OpenWatcom run-time library utilise either register or stack based (by default register) calls,
-                #       hence use of the alternative convention via a '-ecx' option may create major compatiblity issues.
+                # Warning:
+                #   The OpenWatcom run-time library utilise either register or stack based (by default register) calls,
+                #   hence use of the alternative convention via a '-ecx' option may create major compatiblity issues.
                 #
-                #       For example atexit() and qsort() shall assume register/stack yet as the default is applied the
-                #       function argument, the caller can siliently pass an alternatively coded function; that shall be
-                #       fatal at run-time.
+                #   For example atexit() and qsort() shall assume register/stack yet as the default is applied the
+                #   function argument, the caller can siliently pass an alternatively coded function; that shall be
+                #   fatal at run-time.
                 #
                 if (/^-[3456]r$/ or /^-ecw$/) {
                     if ($wc_fastcall eq -1) {
@@ -538,19 +584,56 @@ Link() {
                         Error("link: -export-fastcall and compiler switches are incompatible\n");
                     }
 
-                #   Debugger support:
-                #       -h[wcd]     Watcom,Codeview,Dwarf
+                # Target
+                } elsif (/^-bt=(.*)$/) {
+                    my $target = uc($1);
+                    Error("link: <$_> unexpected target\n")
+                        if ($target ne 'NT');
+
+                # Debugger support:
+                #   -h[wcd]     Watcom,Codeview,Dwarf
                 #
                 } elsif (/^-h([wc])$/) {
                     $wc_debugger = $1;
                 }
+
+            } elsif ('owcc' eq $cc) {
+                # Call convention
+                if (/^mregparm=1$/) {
+                    if ($wc_fastcall eq -1) {
+                        $wc_fastcall = 1;       # auto-selection
+                    } elsif ($wc_fastcall eq 0) {
+                        Error("link: -export-fastcall and compiler switches are incompatible\n");
+                    }
+
+                } elsif (/^mregparm=0$/) {
+                    if ($wc_fastcall eq 1) {
+                        Error("link: -export-fastcall and compiler switches are incompatible\n");
+                    }
+
+                # Target
+                } elsif (/^-b$/) {
+                    my $target = uc(shift @ARGV);
+                    Error("link: <$_> unexpected target\n")
+                        if ($target ne 'NT');
+
+                } elsif (/^-m(console|windows)$/) {
+                    my $target = $1;
+                    Error("link: <$_> unexpected target\n")
+                        if ($target ne 'console');
+
+                # Debugger
+                } elsif (/^-g([wcd])$/) {       # -g[wcd] Watcom,Codeview,Dwarf
+                    $wc_debugger = $1;
+                }
             }
+
             push @STUFF, $_;
         }
     }
 
     Error("link: unsupported compiler <$cc>")
-        if (!('cl' eq $cc || 'wcl386' eq $cc || 'gcc' eq $cc));
+        if (!('cl' eq $cc || 'wcl386' eq $cc || 'owcc' eq $cc || 'gcc' eq $cc));
     Error("link: unable to determine output")
         if (!$output);
     if ($linktype eq 'dll') {
@@ -679,12 +762,13 @@ print "*** non-libtool objects @BAD_OBJECTS is not portable!\n";
         print CMD "/MAPINFO:EXPORTS\n";
         print CMD "/VERSION:${dll_version}\n"
             if ($dll_version);
-
         print CMD "/NOLOGO\n"
             if ($o_quiet || $o_silent);
-        print CMD "/INCREMENTAL:NO\n";
         print CMD "/OPT:REF\n";
-        print CMD "/DEBUG\n";
+        print CMD (defined $cl_debug ? $cl_debug : "/DEBUG") . "\n";
+        print CMD "/INCREMENTAL:NO\n";           # after /DEBUG
+        print CMD "/LTCG\n"
+            if ($cl_ltcg);
       foreach(@OBJECTS) {
         print CMD true_object($_)."\n";
       }
@@ -704,7 +788,7 @@ print "*** non-libtool objects @BAD_OBJECTS is not portable!\n";
       }
         close(CMD);
 
-    } elsif ('wcl386' eq $cc) {
+    } elsif ('wcl386' eq $cc || 'owcc' eq $cc) {
         #
         #   OpenWatcom
         #
@@ -1667,4 +1751,3 @@ Error {
 }
 
 #end
-

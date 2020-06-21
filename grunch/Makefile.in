@@ -1,24 +1,24 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.24 2020/04/20 22:49:22 cvsuser Exp $
+# $Id: Makefile.in,v 1.26 2020/06/20 02:18:39 cvsuser Exp $
 # GRIEF macro compiler.
 #
 #
 # Copyright (c) 1998 - 2020, Adam Young.
 # All rights reserved.
-# 
+#
 # This file is part of the GRIEF Editor.
-# 
+#
 # The GRIEF Editor is free software: you can redistribute it
 # and/or modify it under the terms of the GRIEF Editor License.
-# 
+#
 # Redistributions of source code must retain the above copyright
 # notice, and must be distributed with the license document above.
-# 
+#
 # Redistributions in binary form must reproduce the above copyright
 # notice, and must include the license document above in
 # the documentation and/or other materials provided with the
 # distribution.
-# 
+#
 # The GRIEF Editor is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
@@ -53,20 +53,38 @@ YACC=		@YACC@
 GREP=		@GREP@
 RM=		@RM@
 PERL=		@PERL@
+LIBTOOL=	@LIBTOOL@
 LANG=C
 export LANG	#RH 8 has a LANG=en_US.UTF-8
 
+# Configuration
+
+ifeq ("$(BUILD_TYPE)","")	#default
+BUILD_TYPE=	debug
+MAKEFLAGS+=	BUILD_TYPE=debug
+endif
+ifneq ("$(BUILD_TYPE)","release")
+RTSUFFIX=d
+endif
+
+# Directories
+
+D_INC=		$(ROOT)/include
+D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/grunch
+D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
+
+D_GR=		$(ROOT)/gr
+
 # Common flags
 
-XFLAGS=		
-COPT=		@CFLAGS@
-
+CWALL=
 ifdef WALL2
-WALL+=1
-COPT+=		-Wcast-qual
+WALL=1
+CWALL+=		-Wcast-qual
 endif
 ifdef WALL
-COPT+=		-Wall \
+CWALL+=		-Wall \
 		-Wextra \
 		-Wformat \
 		-Wuninitialized \
@@ -84,35 +102,42 @@ COPT+=		-Wall \
 		-Wredundant-decls \
 		-Wconversion
 ifndef WALL2
-COPTS+=		-Wno-sign-conversion
+CWALL+=		-Wno-sign-conversion
 endif
 endif
 
-CWARN=		@CWARN@
+XFLAGS=
+CFLAGS=		@CFLAGS@
+CWARN=		@CWARN@ $(CWALL)
 CDEBUG=		@CDEBUG@
-LDEBUG=		@LDEBUG@
+CRELEASE=	@CRELEASE@
+LDDEBUG=	@LDDEBUG@
+LDRELEASE=	@LDRELEASE@
+
 CINCLUDE=	-I$(D_INC) @CINCLUDE@
 CEXTRA=		@DEFS@
-CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+
+ifeq ("$(BUILD_TYPE)","release")
+CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDRELEASE) @LDFLAGS@
+else
+CFLAGS+=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDDEBUG) @LDFLAGS@
+endif
+
+LDLIBS=		-L$(D_LIB) @LDLIBS@ -lsplay -lllist -lmisc @LIBS@ @LIBYACC@ @LIBM@ @LIBMALLOC@ @EXTRALIBS@
+
 YFLAGS=		-d
-LDFLAGS=	$(LDEBUG) @LDFLAGS@
-LXFLAGS=	$(LDLIBS) @LIBS@ @LIBYACC@ @LIBM@ @LIBMALLOC@
+ARFLAGS=	rcv
+RMFLAGS=	-f
+RMDFLAGS=	-rf
 
 RMFLAGS=	-f
-
 YTAB=		y.tab
 
-# Directories
 
-D_BIN=		$(ROOT)/bin
-D_INC=		$(ROOT)/include
-D_OBJ=		$(ROOT)/objects/grunch
-D_LIB=		$(ROOT)/lib
-D_GR=		$(ROOT)/gr
-
-
-############################################################
+#########################################################################################
+# Targets
 
 TARGET=		grunch$(E)
 
@@ -132,24 +157,30 @@ OBJS=		$(D_OBJ)/crmain$(O)		\
 		$(D_OBJ)/version$(O)		\
 		$(D_OBJ)/word$(O)
 
-LDLIBS=		-L$(D_LIB)			\
-		-lsplay				\
-		-lllist				\
-		-lmisc
-
 XCLEAN+=	$(YTAB)$(C) $(YTAB)$(H) $(YTAB)$(C) yygen$(H) crntypes$(H)
 
-all:			$(D_BIN)/$(TARGET)
+
+#########################################################################################
+# Rules
+
+.PHONY:			build release debug
+build:			$(D_BIN)/$(TARGET)
+
+release:
+		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
+debug:
+		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
 $(D_BIN)/$(TARGET):	MAPFILE=$(basename $@).map
 $(D_BIN)/$(TARGET):	$(D_OBJ)/.created crntypes$(H) $(OBJS)
-		$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LXFLAGS) @LDMAPFILE@
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS) @LDMAPFILE@
 
 $(D_OBJ)/.created:
 		-@mkdir $(D_OBJ)
 		@echo "do not delete" > $@
 
 clean:
+		@echo ($BUILD_TYPE) clean
 		-@$(RM) $(RMFLAGS) $(BAK) $(D_BIN)/$(TARGET) $(TARGET) $(OBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
 
 $(D_OBJ)/%$(O):		%$(C)

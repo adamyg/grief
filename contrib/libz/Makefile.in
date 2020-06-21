@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.15 2017/01/23 21:09:08 cvsuser Exp $
+# $Id: Makefile.in,v 1.17 2020/06/20 01:58:03 cvsuser Exp $
 # libarchive makefile
 #
 #
@@ -13,6 +13,7 @@ top_builddir=	@top_builddir@
 
 E=
 O=		.o
+H=		.h
 A=		.a
 LP=		lib
 
@@ -29,37 +30,65 @@ PERL=		@PERL@
 LIBTOOL=	@LIBTOOL@
 RC=		@RC@
 
-# Common flags
+# Configuration
 
-ARFLAGS=	rcv
-XFLAGS=		
-COPT=		@CFLAGS@
-CXXOPT=		@CXXFLAGS@
-ifeq "" "$(CXXOPT)"
-CXXOPT=		$(COPT)
+ifeq ("$(BUILD_TYPE)","")	#default
+BUILD_TYPE=	debug
+MAKEFLAGS+=	BUILD_TYPE=debug
 endif
-CWARN=		@CWARN@
-CDEBUG=		@CDEBUG@
-LDEBUG=		@LDEBUG@
-CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
-CEXTRA=		@DEFS@
-CFLAGS=		$(CPPFLAGS) $(CDEBUG) $(COPT) $(CWARN) $(CEXTRA) $(CINCLUDE) $(XFLAGS)
-CXXFLAGS=	$(CPPFLAGS) $(CDEBUG) $(CXXOPT) $(CWARN) $(CEXTRA) $(CINCLUDE) $(XFLAGS)
-YFLAGS=		-d
-LDFLAGS=	$(LDEBUG) @LDFLAGS@
-LDLIBS=		-L$(D_LIB) @LIBS@ @LIBM@ @EXTRALIBS@
-
-RMFLAGS=	-f
+ifneq ("$(BUILD_TYPE)","release")
+RTSUFFIX=d
+endif
 
 # Directories
 
-D_BIN=		$(ROOT)/bin
 D_INC=		$(ROOT)/include
-D_OBJ=		$(ROOT)/objects/libz
-D_LIB=		$(ROOT)/lib
+D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/libz
 
-############################################################
+# Common flags
 
+XFLAGS=
+CFLAGS=		@CFLAGS@
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+CRELEASE=	@CRELEASE@
+CXXFLAGS=	@CXXFLAGS@
+CXXDEBUG=	@CXXDEBUG@
+ifeq ("$(CXXDEBUG)","")
+CXXDEBUG=	$(CDEBUG)
+endif
+CXXRELEASE=	@CXXRELEASE@
+ifeq ("$(CXXRELEASE)","")
+CXXRELEASE=	$(CRELEASE)
+endif
+LDDEBUG=	@LDDEBUG@
+LDRELEASE=	@LDRELEASE@
+
+CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
+CEXTRA= 	@DEFS@
+ifeq ("yes","@ISWIN32@")
+CEXTRA+=	-DWIN32 -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
+endif
+
+ifeq ("$(BUILD_TYPE)","release")
+CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CXXFLAGS+=	$(CXXRELEASE) $(CWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDRELEASE) @LDFLAGS@
+else
+CFLAGS+=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CXXFLAGS+=	$(CXXDEBUG) $(CWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDDEBUG) @LDFLAGS@
+endif
+LDLIBS=		-L$(D_LIB) @LIBS@ @EXTRALIBS@
+
+ARFLAGS=	rcv
+YFLAGS=		-d
+RMFLAGS=	-f
+
+
+#########################################################################################
 # Targets
 
 ZLIB=		$(D_LIB)/$(LP)z_static$(A)
@@ -73,23 +102,25 @@ VERPACKED=	zlib-$(VERSION).tgz
 
 ZSRC=		./zlib-$(VERSION)
 VPATH=		$(ZSRC) $(ZSRC)/win32
+CSOURCES=\
+	adler32.c \
+	compress.c \
+	crc32.c \
+	deflate.c \
+	gzclose.c  \
+	gzlib.c \
+	gzread.c \
+	gzwrite.c \
+	infback.c \
+	inflate.c \
+	inftrees.c \
+	inffast.c \
+	trees.c \
+	uncompr.c \
+	zutil.c
 
 LIBOBJS=\
-	$(D_OBJ)/adler32$(O)		\
-	$(D_OBJ)/compress$(O)		\
-	$(D_OBJ)/crc32$(O)		\
-	$(D_OBJ)/deflate$(O)		\
-	$(D_OBJ)/gzclose$(O)		\
-	$(D_OBJ)/gzlib$(O)		\
-	$(D_OBJ)/gzread$(O)		\
-	$(D_OBJ)/gzwrite$(O)		\
-	$(D_OBJ)/infback$(O)		\
-	$(D_OBJ)/inflate$(O)		\
-	$(D_OBJ)/inftrees$(O)		\
-	$(D_OBJ)/inffast$(O)		\
-	$(D_OBJ)/trees$(O)		\
-	$(D_OBJ)/uncompr$(O)		\
-	$(D_OBJ)/zutil$(O)
+	$(addprefix $(D_OBJ)/,$(subst .c,$(O),$(CSOURCES)))
 
 DLLOBJS=\
 	$(subst $(O),.lo,$(LIBOBJS))
@@ -103,13 +134,22 @@ OBJS=		$(LIBOBJS) $(DLLOBJS)
 LIBS=		$(ZLIB) $(ZDLL)
 TSKS=
 
+
+#########################################################################################
 # Rules
 
-all:			source unpacked
+.PHONY: 	build release debug
+build:			source unpacked
 unpacked:		object $(LIBS) $(TSKS) installinc
 
-CEXTRA	+=	-I$(ZSRC) -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
+release:
+		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
+debug:
+		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
+CEXTRA+=	-I$(ZSRC)
+
+$(ZLIB):		CEXTRA += -DZLIB_STATIC
 $(ZLIB):		$(LIBOBJS)
 		$(RM) $(RMFLAGS) $@ >/dev/null 2>&1
 		$(AR) $(ARFLAGS) $@ $^
@@ -117,18 +157,19 @@ $(ZLIB):		$(LIBOBJS)
 
 $(ZDLL):		CEXTRA += -DZLIB_DLL
 ifeq ("yes","@ISWIN32@")
-$(ZDLL):		ZDEF = -export-symbols $(ZSRC)/win32/zlib.def -export-fastcall
+$(ZDLL):		ZDEF = -export-symbols $(ZSRC)/win32/zlib.def --export-fastcall
 endif
+$(ZDLL):		MAPFILE=$(basename $@).map
 $(ZDLL):		$(DLLOBJS)
-		$(LIBTOOL) --mode=link $(CC) -version-number $(VERSIONSPEC) \
-			-rpath $(D_LIB) -bindir $(D_BIN) $(ZDEF) -o $@ $^ $(LDLIBS)
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ -version-number $(VERSIONSPEC) \
+			-rpath $(D_LIB) -bindir $(D_BIN) $(ZDEF) $^ $(LDLIBS) @LDMAPFILE@
 
 source:			.unpacked.$(VERSION)
 		$(MAKE) unpacked
 
 .unpacked.$(VERSION):	$(VERPACKED)
 		@echo "do not delete, managed file" > $@
-		@echo "unpacking source $BZ2PACKED"
+		@echo "unpacking source $VERPACKED"
 		@gzip -c -d $(VERPACKED) | tar -xvf -
 
 .PHONY:		object
@@ -145,8 +186,9 @@ installinc:		../include/.created
 		@echo "do not delete, managed directory" > $@
 
 clean:
+		@echo $(BUILD_TYPE) clean
+		-@$(LIBTOOL) --mode=clean $(RM) $(ZDLL) $(DLLOBJS) >/dev/null 2>&1
 		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
-		-@$(LIBTOOL) --mode=clean $(RM) $(DLLOBJS) >/dev/null 2>&1
 		-@$(RM) $(LIBOBJS) >/dev/null 2>&1
 
 $(D_OBJ)/%$(O):		%.c
@@ -162,3 +204,4 @@ $(D_OBJ)/%_res.o:	%1.rc
 		$(RC) -o $@ $<
 
 #end
+

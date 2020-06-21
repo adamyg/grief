@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.17 2020/06/05 01:18:51 cvsuser Exp $
+# $Id: Makefile.in,v 1.18 2020/06/18 20:35:15 cvsuser Exp $
 # libhunspell, hunspell, hzip and hunzip makefile
 #
 #
@@ -30,35 +30,67 @@ RM=		@RM@
 PERL=		@PERL@
 LIBTOOL=	@LIBTOOL@
 
-# Common flags
+# Configuration
 
-ARFLAGS=	rcv
-COPT=		@CFLAGS@
-CXXOPT=		@CXXFLAGS@
-CWARN=		@CWARN@
-CXXWARN=	@CXXWARN@
-CDEBUG=		@CDEBUG@
-CXXDEBUG=	@CXXDEBUG@
-LDEBUG=		@LDEBUG@
-CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
-CEXTRA=		@DEFS@
-CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA)
-CXXFLAGS=	$(CXXDEBUG) $(CXXOPT) $(CXXWARN) $(CINCLUDE) $(CEXTRA)
-YFLAGS=		-d
-LDFLAGS=	$(LDEBUG) @LDFLAGS@
-LDLIBS=		-L$(D_LIB) @LIBS@ @TERMLIB@ @LIBM@ @EXTRALIBS@
-
-RMFLAGS=	-f
+ifeq ("$(BUILD_TYPE)","")	#default
+BUILD_TYPE=	debug
+MAKEFLAGS+=	BUILD_TYPE=debug
+endif
+ifneq ("$(BUILD_TYPE)","release")
+RTSUFFIX=d
+endif
 
 # Directories
 
-D_BIN=		$(ROOT)/bin
 D_INC=		$(ROOT)/include
-D_OBJ=		$(ROOT)/objects/libhunspell
-D_LIB=		$(ROOT)/lib
+D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/libhunspell
+D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
-############################################################
+# Common flags
 
+XFLAGS=
+CFLAGS=		@CFLAGS@
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+CRELEASE=	@CRELEASE@
+CXXFLAGS=	@CXXFLAGS@
+CXXDEBUG=	@CXXDEBUG@
+ifeq ("$(CXXDEBUG)","")
+CXXDEBUG=	$(CDEBUG)
+endif
+CXXRELEASE=	@CXXRELEASE@
+ifeq ("$(CXXRELEASE)","")
+CXXRELEASE=	$(CRELEASE)
+endif
+
+LDDEBUG=	@LDDEBUG@
+LDRELEASE=	@LDRELEASE@
+
+CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
+CEXTRA=		@DEFS@
+ifeq ("yes","@ISWIN32@")
+CEXTRA+=	-D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
+endif
+
+ifeq ("$(BUILD_TYPE)","release")
+CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CXXFLAGS+=	$(CXXRELEASE) $(CWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDRELEASE) @LDFLAGS@
+else
+CFLAGS+=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CXXFLAGS+=	$(CXXDEBUG) $(CWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDDEBUG) @LDFLAGS@
+endif
+LDLIBS=		-L$(D_LIB) @LIBS@ @EXTRALIBS@
+
+YFLAGS=		-d
+ARFLAGS=	rcv
+RMFLAGS=	-f
+RMDFLAGS=	-rf
+
+
+#########################################################################################
 # Targets
 
 HUNSPELLLIB=	$(D_LIB)/$(LP)hunspell_static$(A)
@@ -109,10 +141,18 @@ OBJS=		$(LIBOBJS) $(DLLOBJS)
 LIBS=		$(HUNSPELLLIB) $(HUNSPELLDLL)
 TSKS=		$(D_BIN)/hunspell$(E) $(D_BIN)/hzip$(E) $(D_BIN)/hunzip$(E)
 
+
+#########################################################################################
 # Rules
 
+.PHONY:			build release debug
 all:			source unpacked
 unpacked:		object $(LIBS) $(TSKS) $(HUNSPELLDB) installinc
+
+release:
+		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
+debug:
+		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
 $(HUNSPELLLIB):		CEXTRA += -I$(HUNSPELLSRC) -DHUNSPELL_STATIC
 $(HUNSPELLLIB):		$(LIBOBJS)
@@ -123,8 +163,8 @@ $(HUNSPELLLIB):		$(LIBOBJS)
 #note build as static, only exported are via hunspell_dlls./c modules
 $(HUNSPELLDLL):		CEXTRA += -I$(HUNSPELLSRC) -DHUNSPELL_STATIC
 $(HUNSPELLDLL):		$(DLLOBJS)
-		$(LIBTOOL) --mode=link $(CC) -version-number $(VERSIONSPEC) -rpath $(D_LIB) -bindir $(D_BIN) \
-			-o $@ $^ $(LDLIBS)
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ -version-number $(VERSIONSPEC) \
+			-rpath $(D_LIB) -bindir $(D_BIN) $^ $(LDLIBS)
 
 $(D_BIN)/hunspell$(E):	CEXTRA += -I$(TOOLSSRC) -I$(PARSERSSRC) -I$(HUNSPELLSRC) -DHUNSPELL_STATIC
 $(D_BIN)/hunspell$(E):	$(HUNSPELLOBJS)
@@ -161,6 +201,7 @@ installinc:		../include/.created
 		@echo "do not delete, managed directory" > $@
 
 clean:
+		@echo $(BUILD_TYPE) clean
 		-@$(RM) $(RMFLAGS) $(TSKS) $(LIBS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
 		-@$(LIBTOOL) --mode=clean $(RM) $(DLLOBJS) >/dev/null 2>&1
 		-@$(RM) $(LIBOBJS) >/dev/null 2>&1

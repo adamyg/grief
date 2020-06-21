@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.46 2020/06/04 11:51:37 cvsuser Exp $
+# $Id: Makefile.in,v 1.47 2020/06/18 20:35:15 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2020, Adam Young.
@@ -109,31 +109,23 @@ LP=		lib
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
 XCLEAN=
 
-# Compilers, programs
+# Configuration
 
-CC=		@CC@
-AR=		@AR@
-RM=		@RM@
-RMDIR=		@RMDIR@
-CP=		@CP@
-RC=		@RC@
-PERL=		@PERL@
-TAR=		@TAR@
-INSTALL=	@INSTALL@
-INSTALL_PROGRAM=@INSTALL_PROGRAM@
-INSTALL_DATA=	@INSTALL_DATA@
-
-# Common flags
-
-RMFLAGS=	-f
-RMDFLAGS=	-rf
+ifeq ("$(BUILD_TYPE)","")	#default
+BUILD_TYPE=	debug
+MAKEFLAGS+=	BUILD_TYPE=debug
+endif
+ifneq ("$(BUILD_TYPE)","release")
+RTSUFFIX=d
+endif
 
 # Directories
 
-D_BIN=		$(ROOT)/bin
 D_INC=		$(ROOT)/include
-D_OBJ=		$(ROOT)/objects
-D_LIB=		$(ROOT)/lib
+D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)
+
 
 D_GR=		$(ROOT)/gr
 D_GM=		$(ROOT)/gm
@@ -149,6 +141,65 @@ D_HLPDOC=	$(ROOT)/hlpdoc
 BUILDNUMBER=	BUILDNUMBER.in
 BUILDINFO=	include/edbuildinfo.h
 
+# Compilers, programs
+
+CC=		@CC@
+CXX=		@CXX@
+AR=		@AR@
+RM=		@RM@
+RMDIR=		@RMDIR@
+CP=		@CP@
+RC=		@RC@
+PERL=		@PERL@
+TAR=		@TAR@
+LEX=		@LEX@
+YACC=		@YACC@
+WGET=		@WGET@
+
+INSTALL=	@INSTALL@
+INSTALL_PROGRAM=@INSTALL_PROGRAM@
+INSTALL_DATA=	@INSTALL_DATA@
+
+ifneq "" "$(filter mingw32 win32,@build_os@)"
+INNO=		@INNO@
+ifeq ($(INNO),) # Inno5: allowing legacy XP installations
+INNO=		"C:/Program Files (x86)/Inno Setup 5/Compil32"
+endif
+endif
+
+BUSYBOX=	@BUSYBOX@
+ifeq ($(BUSYBOX),busybox)
+BUSYBOX=	$(shell which busybox 2>/dev/null)
+endif
+
+# Common flags
+
+XFLAGS=
+CFLAGS=		@CFLAGS@
+CWARN=		@CWARN@
+CDEBUG=		@CDEBUG@
+CRELEASE=	@CRELEASE@
+LDDEBUG=	@LDDEBUG@
+LDRELEASE=	@LDRELEASE@
+
+CINCLUDE=	@CINCLUDE@
+
+CEXTRA=		@DEFS@
+ifeq ("$(BUILD_TYPE)","release")
+CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDRELEASE) @LDFLAGS@
+else
+CFLAGS+=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDDEBUG) @LDFLAGS@
+endif
+LDLIBS=		-L$(D_LIB) @LDLIBS@ @LIBS@ @EXTRALIBS@
+
+ARFLAGS=	rcv
+RMFLAGS=	-f
+RMDFLAGS=	-rf
+
+
+#########################################################################################
 # Targets
 
 LW=		$(D_LIB)/$(LP)
@@ -211,19 +262,22 @@ DIRECTORIES=\
 
 
 #########################################################################################
-# rules
+# Rules
 
-.DEFAULT:
-.PHONY:				build directories install
-
+.PHONY:				build release debug directories install
 build:				directories buildinfo libs bins import
-		$(MAKE) -C $(D_HLPDOC) $(MAKEFLAGS)
-		$(MAKE) -C $(D_MACSRC) $(MAKEFLAGS)
+		$(MAKE) -C $(D_HLPDOC)
+		$(MAKE) -C $(D_MACSRC)
+
+release:
+		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
+debug:
+		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
 .PHONY:
 ifneq "" "$(filter mingw32 win32,@build_os@)"
 contrib:			directories buildinfo $(LW)win32 $(LW)misc
-		$(MAKE) -C contrib $(MAKEFLAGS)
+		$(MAKE) -C contrib
 else
 contrib:			directories buildinfo
 endif
@@ -234,15 +288,16 @@ directories:			$(DIRECTORIES)
 		-@$(PERL) ./win32/mkdir_p.pl $(@D)
 		@echo "++ do not delete, grief edit managed content ++" > $@
 
-.PHONY:				package
+.PHONY:		package
 package:			import
-		$(ComSpec) /c start win32\gr-inno-setup.iss
+		$(INNO) ./win32/gr-inno-setup.iss
 
-.PHONY:
+.PHONY:		import
 import:				$(IMPORT)
 
-$(D_BIN)/grbusybox.exe:		$(BUSYBOX)
-		@echo importing $(BUSYBOX)
+BUSYBOXEXE=	$(addsuffix .exe, $(basename $(BUSYBOX)))
+$(D_BIN)/grbusybox.exe:		$(BUSYBOXEXE)
+		@echo importing $(BUSYBOXEXE)
 		@$(CP) -f $^ $@
 
 ifeq ("wcl386","$(CC)")
@@ -261,7 +316,7 @@ endif
 
 
 #########################################################################################
-# applications
+# Applications
 
 buildinfo:		$(BUILDINFO)
 
@@ -269,7 +324,8 @@ PKG_BUILD_DATE=		$(shell date +'%Y%m%d')
 PKG_BUILD_NUMBER=	$(shell cat ./$(BUILDNUMBER))
 
 $(BUILDINFO):		Makefile $(BUILDNUMBER)
-			-@$(PERL) ./buildinfo.pl -o $@ -p "$(PACKAGE)" -n "$(PKG_NAME)" -v "$(PKG_VERSION)" --date="$(PKG_BUILD_DATE)" --build="$(PKG_BUILD_NUMBER)" \
+			-@$(PERL) ./buildinfo.pl -o $@ --prefix="GR_" --package="$(PACKAGE)" --name="$(PKG_NAME)" --version="$(PKG_VERSION)" \
+				--date="$(PKG_BUILD_DATE)" --build="$(PKG_BUILD_NUMBER)" --toolchain="@TOOLCHAINEXT@" --type="$(BUILD_TYPE)" \
 				--bindir="$(BINDIR)" --sbindir="$(SBINDIR)" --libexecdir="$(LIBEXECDIR)" --libdir="$(LIBDIR)" --datadir="$(DATADIR)"
 
 .PHONY:			new_buildnumber
@@ -289,38 +345,38 @@ fi;\
 bins:			$(BINS)
 
 $(D_BIN)/gr$(E):	$(D_BIN)/.created libs
-		$(MAKE) -C $(D_GR) $(MAKEFLAGS)
+		$(MAKE) -C $(D_GR)
 
 $(D_BIN)/gm$(E):	$(D_BIN)/.created libs
-		$(MAKE) -C $(D_GM) $(MAKEFLAGS)
+		$(MAKE) -C $(D_GM)
 
 $(D_BIN)/grcpp$(E):	$(D_BIN)/.created libs
-		$(MAKE) -C $(D_GRCPP) $(MAKEFLAGS)
+		$(MAKE) -C $(D_GRCPP)
 
 $(D_BIN)/grmandoc$(E):	$(D_BIN)/.created libs
-		$(MAKE) -C $(D_GRMANDOC) $(MAKEFLAGS)
+		$(MAKE) -C $(D_GRMANDOC)
 
 $(D_BIN)/grunch$(E):	$(D_BIN)/.created libs
-		$(MAKE) -C $(D_GRUNCH) $(MAKEFLAGS)
+		$(MAKE) -C $(D_GRUNCH)
 
 
 #########################################################################################
-# libraries
+# Rules
 
 libs:			$(LIBS)
 
 $(LW)win32:		$(D_LIB)/.created $(D_OBJ)/.created
-		$(MAKE) -C libw32 $(MAKEFLAGS)
+		$(MAKE) -C libw32
 
 $(LW)termlib:		$(D_LIB)/.created $(D_OBJ)/.created
-		$(MAKE) -C libterm $(MAKEFLAGS)
+		$(MAKE) -C libterm
 
 $(LW)%:			$(D_LIB)/.created $(D_OBJ)/.created
-		$(MAKE) -C $(notdir $(basename $@)) $(MAKEFLAGS)
+		$(MAKE) -C $(notdir $(basename $@))
 
 
 #########################################################################################
-# support rules
+# Support rules
 
 .PHONY: install
 install:		build
@@ -343,6 +399,7 @@ install:		build
 		@echo Install done.
 
 clean:
+		@echo $(BUILD_TYPE) clean
 		$(MAKE) -C libmisc clean
 ifneq "" "$(filter mingw32 win32,@build_os@)"
 		$(MAKE) -C libw32
@@ -399,5 +456,12 @@ distclean:		clean
 			libbsddb/Makefile \
 			include/config.h \
 			Makefile
+
+#TODO
+#	ifeq ("libtool", "@LIBTOOL@")
+#	LIBTOOL_DEPS = @LIBTOOL_DEPS@
+#	libtool:	$(LIBTOOL_DEPS)
+#		$(SHELL) ./config.status libtool
+#	endif
 
 #end

@@ -1,24 +1,24 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.5 2018/10/16 22:39:59 cvsuser Exp $
+# $Id: Makefile.in,v 1.7 2020/06/20 02:20:28 cvsuser Exp $
 # libbsdio makefile.
 #
 #
-# Copyright (c) 1998 - 2018, Adam Young.
+# Copyright (c) 1998 - 2020, Adam Young.
 # All rights reserved.
-# 
+#
 # This file is part of the GRIEF Editor.
-# 
+#
 # The GRIEF Editor is free software: you can redistribute it
 # and/or modify it under the terms of the GRIEF Editor License.
-# 
+#
 # Redistributions of source code must retain the above copyright
 # notice, and must be distributed with the license document above.
-# 
+#
 # Redistributions in binary form must reproduce the above copyright
 # notice, and must include the license document above in
 # the documentation and/or other materials provided with the
 # distribution.
-# 
+#
 # The GRIEF Editor is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
@@ -32,6 +32,7 @@ top_builddir=	@top_builddir@
 
 # File extensions
 
+E=
 C=		.c
 O=		.o
 H=		.h
@@ -48,47 +49,69 @@ CXX=		@CXX@
 AR=		@AR@
 RANLIB=		@RANLIB@
 PERL=		@PERL@
+LIBTOOL=	@LIBTOOL@
 RM=		@RM@
+
+# Configuration
+
+ifeq ("$(BUILD_TYPE)","")	#default
+BUILD_TYPE=	debug
+MAKEFLAGS+=	BUILD_TYPE=debug
+endif
+ifneq ("$(BUILD_TYPE)","release")
+RTSUFFIX=d
+endif
+
+# Directories
+
+D_INC=		$(ROOT)/include
+D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/libbsdio
+D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 # Common flags
 
-ARFLAGS=	rcv
-XFLAGS=		
-COPT=		@CFLAGS@
+XFLAGS=
+CFLAGS=		@CFLAGS@
 CWARN=		@CWARN@
 CDEBUG=		@CDEBUG@
-LDEBUG=		@LDEBUG@
+CRELEASE=	@CRELEASE@
+LDDEBUG=	@LDDEBUG@
+LDRELEASE=	@LDRELEASE@
+
 CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
-ifeq ("mingw32","@build_os@")
-CINCLUDE+=	-I../libw32
-endif
+##ifeq ("mingw32","@build_os@")
+##CINCLUDE+=	-I../libw32
+##endif
 CEXTRA=		@DEFS@
 CEXTRA+=	-D__POSIX_VISIBLE=199506 -D__BSTDIO_INTERNAL -DFLOATING_POINT
-CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-YFLAGS=		-d
-LDFLAGS=	$(LDEBUG) @LDFLAGS@
+
+ifeq ("$(BUILD_TYPE)","release")
+CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDRELEASE) @LDFLAGS@
+else
+CFLAGS+=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDDEBUG) @LDFLAGS@
+endif
 ifeq (gcc,$(findstring gcc,$(CC)))
 ifeq ("linux","@build_os@")
 LDFLAGS+=	-rdynamic
 endif
 endif
-LDLIBS=		-L$(D_LIB) -lbsdio -lmisc @LIBS@ @LIBM@ @EXTRALIBS@
-ifeq ("mingw32","@build_os@")
-LDLIBS+=	-lw32 -lshlwapi -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
-endif
-LDLIBS+=	@LIBMALLOC@ @LIBTHREAD@
 
+LDLIBS=		-L$(D_LIB) $(LINKLIBS) @LIBS@ @LIBMALLOC@ @LIBTHREAD@ @EXTRALIBS@
+##ifeq ("mingw32","@build_os@")
+##LDLIBS+=	-lw32 -lshlwapi -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
+##endif
+
+YFLAGS=		-d
+ARFLAGS=	rcv
 RMFLAGS=	-f
+RMDFLAGS=	-rf
 
-# Directories
 
-D_BIN=		$(ROOT)/bin
-D_INC=		$(ROOT)/include
-D_OBJ=		$(ROOT)/objects/libbsdio
-D_LIB=		$(ROOT)/lib
-
-############################################################
+#########################################################################################
+# Targets
 
 TARGET=		bstdio$(E)
 LIBROOT=	bsdio
@@ -156,24 +179,36 @@ LIBOBJS=\
 
 LIBRARY=	$(D_LIB)/$(LP)$(LIBROOT)$(A)
 
-all:			$(LIBRARY) $(D_BIN)/$(TARGET)
+
+#########################################################################################
+# Rules
+
+.PHONY:			build release debug
+build:			$(LIBRARY) $(D_BIN)/$(TARGET)
+
+release:
+		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
+debug:
+		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
 $(D_BIN)/$(TARGET):	MAPFILE=$(basename $@).map
+$(D_BIN)/$(TARGET):	LINKLIBS=-lmisc
 $(D_BIN)/$(TARGET):	$(OBJS)
-		$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS) @LDMAPFILE@
+		$(LIBTOOL) --mode=link $(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBRARY) $(LDLIBS) @LDMAPFILE@
 
 $(LIBRARY):		$(D_OBJ)/.created $(LIBOBJS)
 		$(RM) $(RMFLAGS) $@
 		$(AR) $(ARFLAGS) $@ $(LIBOBJS)
 		$(RANLIB) $@
 
-CLEAN +=	
+CLEAN +=
 
 $(D_OBJ)/.created:
 		-@mkdir $(D_OBJ)
 		@echo "do not create" > $@
 
 clean:
+		@echo $(BUILD_TYPE) clean
 		-@$(RM) $(RMFLAGS) $(BAK) $(LIBRARY) $(LIBOBJS) $(OBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
 
 $(D_OBJ)/%$(O):		%$(C)

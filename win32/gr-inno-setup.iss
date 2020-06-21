@@ -3,6 +3,16 @@
 ;
 #include "../include/edbuildinfo.h"
 
+#if defined(BUILD_TOOLCHAIN)
+#if defined(BUILD_TYPE)
+#define BinDir "bin" + BUILD_TOOLCHAIN + "\\" + BUILD_TYPE
+#else
+#define BinDir "bin" + BUILD_TOOLCHAIN
+#endif
+#else
+#define BinDir "bin"
+#endif
+
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
@@ -42,22 +52,19 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 
 [Files]
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
-Source: "..\bin\gr.exe";        DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\bin\gm.exe";        DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\bin\grcpp.exe";     DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\bin\grunch.exe";    DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\bin\grmandoc.exe";  DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\bin\grwc.exe";      DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\bin\*.dll";         DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\bin\ctbl\*";        DestDir: "{app}\bin\ctbl"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\bin\i18n\*";        DestDir: "{app}\bin\i81n"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\macros\*";          DestDir: "{app}\macros"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\help\*";            DestDir: "{app}\help"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\COPYING";           DestDir: "{app}"; Flags: ignoreversion
-Source: "..\Changes";           DestDir: "{app}"; Flags: ignoreversion
-
-  ;Source: "..\bin\clbr19.dll";    DestDir: "{app}\bin"; Flags: ignoreversion    
-  ;Source: "..\bin\plbr19.dll";    DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\{#BinDir}\gr.exe";        DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\{#BinDir}\gm.exe";        DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\{#BinDir}\grcpp.exe";     DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\{#BinDir}\grunch.exe";    DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\{#BinDir}\grmandoc.exe";  DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\{#BinDir}\grwc.exe";      DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\{#BinDir}\*.dll";         DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\{#BinDir}\ctbl\*";        DestDir: "{app}\bin\ctbl"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\{#BinDir}\i18n\*";        DestDir: "{app}\bin\i81n"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\macros\*";                DestDir: "{app}\macros"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\help\*";                  DestDir: "{app}\help"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\COPYING";                 DestDir: "{app}"; Flags: ignoreversion
+Source: "..\Changes";                 DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\Grief"; Filename: "{app}\bin\gr.exe"

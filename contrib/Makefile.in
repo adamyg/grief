@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.13 2020/06/04 15:20:30 cvsuser Exp $
+# $Id: Makefile.in,v 1.14 2020/06/18 20:35:15 cvsuser Exp $
 # External packages.
 #
 #
@@ -28,8 +28,25 @@
 
 @SET_MAKE@
 
-D_OBJ=		../objects
-D_LIB=		../lib
+# Configuration
+
+ifeq ("$(BUILD_TYPE)","")	#default
+BUILD_TYPE=	debug
+MAKEFLAGS+=	BUILD_TYPE=debug
+endif
+ifneq ("$(BUILD_TYPE)","release")
+RTSUFFIX=d
+endif
+
+# Directories
+
+D_OBJ=		../objects@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_LIB=		../lib@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_BIN=		../bin@TOOLCHAINEXT@/$(BUILD_TYPE)
+
+
+#########################################################################################
+# Rules
 
 define contrib-all
 	$(MAKE) -C makedepend
@@ -71,17 +88,28 @@ define contrib-cleanx
 endef
 endif
 
-.PHONY:		all
-all:			directories
+DIRECTORIES=\
+	./include/.created 	\
+	$(D_OBJ)/.created 	\
+	$(D_LIB)/.created 	\
+	$(D_BIN)/.created
+
+.PHONY: 	build release debug
+build:			directories
 		$(contrib-all)
 		$(contrib-allx)
+
+release:
+		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
+debug:
+		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
 .PHONY:		clean
 clean:
 		$(contrib-clean)
 		$(contrib-cleanx)
 
-directories:		./include/.created $(D_OBJ)/.created $(D_LIB)/.created
+directories:		$(DIRECTORIES)
 
 %/.created:
 		-@mkdir $(@D)

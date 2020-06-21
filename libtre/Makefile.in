@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.8 2018/10/16 22:37:08 cvsuser Exp $
+# $Id: Makefile.in,v 1.9 2020/06/18 20:35:17 cvsuser Exp $
 # libtre - regular expression library makefile.
 #
 #
-# Copyright (c) 1998 - 2018, Adam Young.
+# Copyright (c) 1998 - 2020, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -50,35 +50,53 @@ PERL=		@PERL@
 LIBTOOL=	@LIBTOOL@
 RC=		@RC@
 
-# Common flags
+# Configuration
 
-ARFLAGS=	rcv
-XFLAGS=		
-COPT=		@CFLAGS@
-CWARN=		@CWARN@
-CDEBUG=		@CDEBUG@
-LDEBUG=		@LDEBUG@
-CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
-ifeq ("mingw32","@build_os@")
-CINCLUDE+=	-I../libw32
+ifeq ("$(BUILD_TYPE)","")	#default
+BUILD_TYPE=	debug
+MAKEFLAGS+=	BUILD_TYPE=debug
 endif
-CEXTRA=		@DEFS@ -DTRE_REGEX_T_FIELD=value
-CFLAGS=		$(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-CNFLAGS=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-YFLAGS=		-d
-LDFLAGS=	$(LDEBUG) @LDFLAGS@
-LXFLAGS=	$(LDLIBS) @LIBS@ @LIBMALLOC@
-
-RMFLAGS=	-f
+ifneq ("$(BUILD_TYPE)","release")
+RTSUFFIX=d
+endif
 
 # Directories
 
-D_BIN=		$(ROOT)/bin
 D_INC=		$(ROOT)/include
-D_OBJ=		$(ROOT)/objects/libtre
-D_LIB=		$(ROOT)/lib
+D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/libtre
+D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
-############################################################
+# Common flags
+
+XFLAGS=
+CFLAGS=		@CFLAGS@
+CWARN=		@CWARN@ $(CWALL)
+CDEBUG=		@CDEBUG@
+CRELEASE=	@CRELEASE@
+LDDEBUG=	@LDDEBUG@
+LDRELEASE=	@LDRELEASE@
+
+CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
+CEXTRA=		@DEFS@ -DTRE_REGEX_T_FIELD=value
+
+ifeq ("$(BUILD_TYPE)","release")
+CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDRELEASE) @LDFLAGS@
+else
+CFLAGS+=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDDEBUG) @LDFLAGS@
+endif
+LDLIBS=		-L$(D_LIB) @LIBS@ @LIBMALLOC@ @EXTRALIBS@
+
+YFLAGS=		-d
+ARFLAGS=	rcv
+RMFLAGS=	-f
+RMDFLAGS=	-rf
+
+		   
+#########################################################################################
+# Targets
 
 ifeq ("yes","@ISWIN32@")
 RELIB=		$(D_LIB)/$(LP)tre_static$(A)
@@ -130,10 +148,18 @@ LIBS+=		$(REDLL)
 endif
 TSKS=
 
+
+#########################################################################################
 # Rules
 
-all:			source unpacked
+.PHONY:			build release debug
+build:			source unpacked
 unpacked:		./tre.h $(LIBS) $(TSKS) installinc
+
+release:
+		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
+debug:
+		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
 $(RELIB):		CEXTRA += -D__LIBTRE_BUILD -DLIBTRE_STATIC
 $(RELIB):		$(D_OBJ)/.created $(LIBOBJS)
@@ -146,7 +172,7 @@ $(REDLL):	DLLDEF = -export-symbols tre.def
 endif
 $(REDLL):		CEXTRA += -D__LIBTRE_BUILD -DLIBTRE_DLL
 $(REDLL):		$(D_OBJ)/.created $(DLLOBJS)
-		$(LIBTOOL) --mode=link $(CC) -o $@ $(DLLOBJS) -version-number $(VERSIONSPEC) \
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(DLLOBJS) -version-number $(VERSIONSPEC) \
 			-rpath $(D_LIB) -bindir $(D_BIN) $(DLLDEF) $(LDLIBS)
 
 source:			$(UNPACKEDLABEL)
@@ -205,3 +231,4 @@ $(D_OBJ)/%.res:		%.rc
 endif
 
 #end
+

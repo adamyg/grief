@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.76 2018/10/11 11:28:23 cvsuser Exp $
+# $Id: Makefile.in,v 1.78 2020/06/20 02:22:14 cvsuser Exp $
 # GRIEF editor makefile.
 #
 #
-# Copyright (c) 1998 - 2018, Adam Young.
+# Copyright (c) 1998 - 2020, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -43,6 +43,30 @@ XCLEAN=
 CC=		@CC@
 CXX=		@CXX@
 RM=		@RM@
+PERL=		@PERL@
+LIBTOOL=	@LIBTOOL@
+
+# Configuration
+
+ifeq ("$(BUILD_TYPE)","")	#default
+BUILD_TYPE=	debug
+MAKEFLAGS+=	BUILD_TYPE=debug
+endif
+ifneq ("$(BUILD_TYPE)","release")
+RTSUFFIX=d
+endif
+
+# Directories
+
+D_INC=		$(ROOT)/include
+D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/gr
+D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
+
+D_DEP=		.deps
+D_OBJDEP=	$(D_OBJ)/$(D_DEP)
+
+# Dependencies
 
 CCDEPEND=	@echo "\#no depend" > $(D_OBJDEP)/$<.Po
 
@@ -51,13 +75,16 @@ CCPROFILE=msvc.profile
 ifeq ("wcl386","@CC@")
 CCPROFILE=wc.profile
 endif
+ifeq ("owcc","@CC@")
+CCPROFILE=wc.profile
+endif
 ifeq ("gcc","@CC@")
 CCPROFILE=mingw.profile
 endif
-CCDEPEND=	@$(ROOT)/bin/makedepend \
+CCDEPEND=	@$(D_BIN)/makedepend \
 			-MM -MC $(ROOT)/win32/$(CCPROFILE) -MG -MP -D__MAKEDEPEND__ \
 				-f$(D_OBJDEP)/$(basename $(<F)).Po -MT$@ $(CDEPFLAGS) $<
-CXXDEPEND=	@$(ROOT)/bin/makedepend \
+CXXDEPEND=	@$(D_BIN)/makedepend \
 			-MM -MC $(ROOT)/win32/$(CCPROFILE) -MG -MP -D__MAKEDEPEND__ -D__cplusplus \
 				-f$(D_OBJDEP)/$(basename $(<F)).Po -MT$@ $(CDEPFLAGS) $<
 endif
@@ -85,7 +112,7 @@ CXXDEPEND?=	$(CCDEPEND)
 CWALL=
 ifeq (gcc,$(findstring gcc,$(CC)))
 ifdef WALL2
-WALL+=1
+WALL=1
 endif
 ifdef WALL
 CWALL+=		-Wall \
@@ -117,33 +144,56 @@ endif	#wall2
 endif	#wall
 endif	#gcc
 
-CWARN=		@CWARN@
+XFLAGS=
+CFLAGS=		@CFLAGS@
+CWARN=		@CWARN@ $(CWALL)
 CDEBUG=		@CDEBUG@
-LDEBUG=		@LDEBUG@
-COPT=		@CFLAGS@
-CXXOPT=		@CXXFLAGS@
-ifeq "" "$(CXXOPT)"
-CXXOPT=		$(COPT)
+CRELEASE=	@CRELEASE@
+CXXFLAGS=	@CXXFLAGS@
+CXXDEBUG=	@CXXDEBUG@
+ifeq ("$(CXXDEBUG)","")
+CXXDEBUG=	$(CDEBUG)
 endif
+CXXRELEASE=	@CXXRELEASE@
+ifeq ("$(CXXRELEASE)","")
+CXXRELEASE=	$(CRELEASE)
+endif
+LDDEBUG=	@LDDEBUG@
+LDRELEASE=	@LDRELEASE@
+
 CINCLUDE=	-I$(D_INC) @CINCLUDE@
-ifeq ("mingw32","@build_os@")
-CINCLUDE+=	-I../libw32
-endif
-CPPFLAGS=	@DEFS@ @LIBCURL_CPPFLAGS@ -DLIBTRE_DLL
+##ifeq ("mingw32","@build_os@")
+##CINCLUDE+=	-I../libw32
+##endif
+
+CEXTRA=		@DEFS@ @LIBCURL_CPPFLAGS@ -DLIBTRE_DLL
 ifdef PURIFY
-CPPFLAGS+=	-DUSING_PURIFY
+CEXTRA+=	-DUSING_PURIFY
 endif
-CFLAGS=		$(CPPFLAGS) $(CDEBUG) $(COPT) $(CWARN) $(CINCLUDE) $(XFLAGS)
-CXXFLAGS=	$(CPPFLAGS) $(CDEBUG) $(CXXOPT) $(CWARN) $(CINCLUDE) $(XFLAGS)
-CDEPFLAGS=	$(CPPFLAGS) $(CINCLUDE)
-LDFLAGS=	$(LDEBUG) @LDFLAGS@
+ifeq ("win32","@build_os@")
+CEXTRA+=	-DWIN32
+endif
+CDEPFLAGS=	$(CEXTRA) $(CINCLUDE)
+
+ifeq ("$(BUILD_TYPE)","release")
+CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CXXFLAGS+=	$(CXXRELEASE) $(CWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDRELEASE) @LDFLAGS@
+else
+CFLAGS+=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CXXFLAGS+=	$(CXXDEBUG) $(CWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
+LDFLAGS=	$(LDDEBUG) @LDFLAGS@
+endif
 ifeq (gcc,$(findstring gcc,$(CC)))
 ifeq ("linux","@build_os@")
 LDFLAGS+=	-rdynamic
 endif
 endif
+
 LDLIBS=		-L$(D_LIB) -lbsddb -lbsdfetch -lbsdio -lchartable -lvfs -lsplay -lllist -lmisc -lonigrx -ltre
-LDLIBS+=	@LIBS@ @LIBENCA@ @LIBSPELL@ @LIBICU@ @LIBICONV@ @LIBCURL@ @LIBOPENSSL@ @LIBARCHIVE@ @LIBMAGIC@ @LIBM@ @EXTRALIBS@
+LDLIBS+=	@LDLIBS@ @LIBS@
+LDLIBS+=	@LIBENCA@ @LIBSPELL@ @LIBICU@ @LIBICONV@ @LIBCURL@ @LIBOPENSSL@ @LIBARCHIVE@ @LIBMAGIC@
+LDLIBS+=	@LIBM@ @EXTRALIBS@
 ifeq ("mingw32","@build_os@")
 LDLIBS+=	-lw32 -lshlwapi -lshell32 -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
 else ifneq ("win32","@build_os@")
@@ -151,18 +201,14 @@ LDLIBS+=	@TERMLIB@ @LIBX11@
 endif
 LDLIBS+=	@LIBMALLOC@ @LIBTHREAD@
 
+YFLAGS=		-d
+ARFLAGS=	rcv
 RMFLAGS=	-f
+RMDFLAGS=	-rf
 
-# Directories
 
-D_BIN=		$(ROOT)/bin
-D_INC=		$(ROOT)/include
-D_OBJ=		$(ROOT)/objects
-D_LIB=		$(ROOT)/lib
-D_DEP=		.deps
-D_OBJDEP=	$(D_OBJ)/$(D_DEP)
-
-############################################################
+#########################################################################################
+# Targets
 
 TARGET=		gr$(E)
 VPATH=		.
@@ -202,7 +248,7 @@ CSRC=\
 	macrolib.c		\
 	macros.c		\
 	map.c			\
-	math.c			\
+	maths.c			\
 	mouse.c			\
 	object.c		\
 	playback.c		\
@@ -317,17 +363,29 @@ CSRC=\
 OBJS=		$(addprefix $(D_OBJ)/,$(patsubst %.c,%$(O),$(CSRC)))
 OBJS+=		$(addprefix $(D_OBJ)/,$(patsubst %.cpp,%$(O),$(CPPSRC)))
 
-all:		directories $(D_BIN)/$(TARGET)
+
+#########################################################################################
+# Rules
+
+.PHONY:			build release debug
+build:		directories $(D_BIN)/$(TARGET)
+
+release:
+		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
+debug:
+		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
 clean:
+		@echo $(BUILD_TYPE) clean
 		-@$(RM) $(RMFLAGS) $(BAK) $(D_BIN)/$(TARGET) $(TARGET) $(OBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
+		-@$(RM) $(RMFLAGS) $(BAK) $(TARGET) $(D_OBJDEP)/*.Po >/dev/null 2>&1
 
 .PHONY:		directories
-directories:		$(D_OBJDEP)/.created $(OBJS)
+directories:		$(D_OBJ)/.created $(D_OBJDEP)/.created $(OBJS)
 
 $(D_BIN)/$(TARGET):	MAPFILE=$(basename $@).map
 $(D_BIN)/$(TARGET):	$(OBJS)
-		$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS) @LDMAPFILE@
+		$(LIBTOOL) --mode=link $(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS) @LDMAPFILE@
 
 %/.created:
 		-@mkdir $(@D)
