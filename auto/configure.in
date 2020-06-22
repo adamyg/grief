@@ -1,10 +1,10 @@
-dnl $Id: configure.in,v 1.70 2020/06/20 21:38:37 cvsuser Exp $
+dnl $Id: configure.in,v 1.71 2020/06/22 00:43:15 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl
 
-AC_REVISION($Revision: 1.70 $)
+AC_REVISION($Revision: 1.71 $)
 ##	AC_COPYRIGHT(Adam Young 1995-2020, Paul Fox 1989-1991)
 AC_SUBST([PACKAGE])
 AC_INIT([GRIEF], [3.2.1], [griefedit@gmail.com])
@@ -35,12 +35,19 @@ LT_OBJDIR="$lt_cv_objdir"
 LIBTOOL='/bin/bash $(top_builddir)/libtool'
 
 AC_SUBST(PROGS)
+##	Stop AC_PROG_CC() assigning defaults.
+CFLAGS=""
 AC_PROG_CC(gcc cc clang c1 egcs)
 AC_PROG_CXX(g++ CC clang++)
 AC_PROG_GCC_TRADITIONAL
+
 #TODO
 #AX_COMPILER_VENDOR
 #AX_COMPILER_VERSION
+#AX_CHECK_COMPILE_FLAG([-std=c11],
+#	[AX_APPEND_FLAG([-std=c11])],
+#	[AC_MSG_WARN([-std=c11 not supported, you may have to set CFLAGS to enable C11 support.])
+#	])
 
 AC_PROG_CPP
 AC_SUBST(CPPDEP)
@@ -771,8 +778,10 @@ AC_MSG_RESULT([-  Configuration:])
 AC_MSG_RESULT([-])
 AC_MSG_RESULT([-         Compiler: $CC / $CXX])
 AC_MSG_RESULT([-           Depend: $CPPDEP])
-AC_MSG_RESULT([-           CFLAGS: $CFLAGS $EXTRA_CFLAGS $CWARN $CDEBUG])
-AC_MSG_RESULT([-         CXXFLAGS: $CXXFLAGS $EXTRA_CPPFLAGS $CXXWARN $CXXDEBUG])
+AC_MSG_RESULT([-           CFLAGS: $CFLAGS $EXTRA_CFLAGS $CWARN])
+AC_MSG_RESULT([-                     Debug:$CDEBUG, Release:$CRELEASE])
+AC_MSG_RESULT([-         CXXFLAGS: $CXXFLAGS $EXTRA_CPPFLAGS $CXXWARN])
+AC_MSG_RESULT([-                     Debug:$CXXDEBUG, Release:$CXXRELEASE])
 AC_MSG_RESULT([-          LDFLAGS: $LDFLAGS])
 AC_MSG_RESULT([-     Preprocessor: $EXTRA_CPPFLAGS $LIBCURL_CPPFLAGS])
 AC_MSG_RESULT([-    Mouse support: ${mouse_lib}])
