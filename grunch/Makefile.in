@@ -180,7 +180,7 @@ $(D_OBJ)/.created:
 		@echo "do not delete" > $@
 
 clean:
-		@echo ($BUILD_TYPE) clean
+		@echo $(BUILD_TYPE) clean
 		-@$(RM) $(RMFLAGS) $(BAK) $(D_BIN)/$(TARGET) $(TARGET) $(OBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
 
 $(D_OBJ)/%$(O):		%$(C)
