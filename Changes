@@ -1,5 +1,11 @@
 -*- encoding: utf-8; -*-
 
+Sat Apr  3 11:50:35 2021 adamy
+
+	* gcc 10.x and glib/threads.h
+
+	* mandoc cygwin compat issues.
+
 Wed Jun  3 21:42:20 2020 adamy
 
 	* appveyor
