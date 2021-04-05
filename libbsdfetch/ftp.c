@@ -250,7 +250,7 @@ ftp_cmd(conn_t *conn, const char *fmt, ...)
 		return (-1);
 	}
 
-	ED_TRACE(("cmd: <%.*s> (%d)\n", (int)(len - 2), msg, len))
+	ED_TRACE(("cmd: <%.*s> (%u)\n", (int)(len - 2), msg, (unsigned)len))
 	r = fetch_write(conn, msg, len);
 	free(msg);
 

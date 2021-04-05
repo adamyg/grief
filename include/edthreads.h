@@ -1,18 +1,18 @@
 #ifndef GR_EDTHREADS_H_INCLUDED
 #define GR_EDTHREADS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_h,"$Id: edthreads.h,v 1.15 2020/06/18 12:50:48 cvsuser Exp $")
+__CIDENT_RCSID(gr_edthreads_h,"$Id: edthreads.h,v 1.16 2021/04/03 03:42:53 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads.h,v 1.15 2020/06/18 12:50:48 cvsuser Exp $
+/* $Id: edthreads.h,v 1.16 2021/04/03 03:42:53 cvsuser Exp $
  * Threads interface
  * ISO/IEC 9899:201x Committee Draft
  * April 12, 2011 N1570
  *
  *
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2021, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -43,12 +43,13 @@ __CPRAGMA_ONCE
 #define __STDC_NO_THREADS__                     /*PTHREADS*/
 #endif
 
+#include <edsym.h>
+
 #if (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L) && !defined(__STDC_NO_THREADS__)) \
                 || defined(HAVE_THREADS_H)
 #include <threads.h>
 
 #else  /*NON-NATIVE*/
-#include <edsym.h>
 
 enum {
     mtx_plain       =0x0,
@@ -70,7 +71,6 @@ typedef void (*tss_dtor_t)(void *val);
 typedef int (*thrd_start_t)(void *arg);
 
 __CEND_DECLS
-
 
 #if defined(HAVE_THREAD_H)
 #include <edthreads_thread.h>
