@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crbin_c,"$Id: crbin.c,v 1.23 2020/04/20 22:49:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_crbin_c,"$Id: crbin.c,v 1.24 2021/04/05 09:09:48 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crbin.c,v 1.23 2020/04/20 22:49:22 cvsuser Exp $
+/* $Id: crbin.c,v 1.24 2021/04/05 09:09:48 cvsuser Exp $
  * Binary backend code generator.
  *
  *
@@ -126,7 +126,7 @@ genb_list(void)
     }
     push_byte(F_LIST);
     offset = (uint32_t)(byte_ptr - object_code);
-    ll_push(hd_list_stack, (void *) offset);
+    ll_push(hd_list_stack, (void *)((size_t)offset));
     push_byte(0);                                /* LISTSIZE, see end_list() */
     push_byte(0);
 }

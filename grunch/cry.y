@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cry.y,v 1.34 2020/05/04 20:12:45 cvsuser Exp $
+/* $Id: cry.y,v 1.35 2021/04/05 09:18:23 cvsuser Exp $
  * grunch/crunch grammer, extended c99
  *
  *
@@ -1220,9 +1220,9 @@ pointer_decl:
                 | O_MUL pointer_decl
                     { $$ = node(TO_PTR, $2, NULL); }
                 | O_MUL type_qualifier_list
-                    { $$ = node(TO_PTR, NULL, (node_t *) $2); }
+                    { $$ = node(TO_PTR, NULL, (node_t *)((size_t) $2)); }
                 | O_MUL type_qualifier_list pointer_decl
-                    { $$ = node(TO_PTR, $3, (node_t *) $2); }
+                    { $$ = node(TO_PTR, $3, (node_t *)((size_t) $2)); }
                 | O_AND
                     {
                         if (! xf_grunch) {
