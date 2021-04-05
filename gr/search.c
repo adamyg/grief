@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_search_c,"$Id: search.c,v 1.54 2020/06/05 15:50:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_search_c,"$Id: search.c,v 1.55 2021/04/05 08:22:53 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: search.c,v 1.54 2020/06/05 15:50:31 cvsuser Exp $
+/* $Id: search.c,v 1.55 2021/04/05 08:22:53 cvsuser Exp $
  * Search interface.
  *
  *  TODO:
@@ -2164,7 +2164,7 @@ re_exec(struct regprog *prog, const char *buf, int buflen, int offset)
 #if defined(SRCH_ENABLED)
         SRCH_TRACE(("exec: Standard-%s (at:%ld, captures:%d)\n",
             (RE_BRIEF == regexp->options.mode ? "brief" : "unix"), (long)(prog->start - buf), groupno))
-        SRCH_TRACE(("  <%.*s>\n", prog->end - prog->start, prog->start))
+        SRCH_TRACE(("  <%.*s>\n", (int)(prog->end - prog->start), prog->start))
         for (group = 0; group < groupno; ++group) {
             SRCH_TRACE(("  [%d] %2d - %2d <%.*s>\n", group, (int)(regexp->startp[group] - buf), (int)(regexp->endp[group] - buf),
                 (int)(regexp->endp[group] - regexp->startp[group]), regexp->startp[group]))
@@ -2320,8 +2320,8 @@ tre_exec(struct regprog *prog, const char *buf, int buflen, int offset)
 
 #if defined(SRCH_ENABLED)
         {   int rn;
-            SRCH_TRACE(("exec: TRE (at:%d, captures:%d)\n", prog->start - buf, groupno))
-            SRCH_TRACE(("  <%.*s>\n", prog->end - prog->start, prog->start))
+            SRCH_TRACE(("exec: TRE (at:%d, captures:%d)\n", (int)(prog->start - buf), groupno))
+            SRCH_TRACE(("  <%.*s>\n", (int)(prog->end - prog->start), prog->start))
             for (rn = 0; rn < groupno; ++rn) {
                 SRCH_TRACE(("  [%d] %2d - %2d <%.*s>\n", rn, regions[rn].rm_so, regions[rn].rm_eo,
                     (regions[rn].rm_eo - regions[rn].rm_so), buf + regions[rn].rm_so))

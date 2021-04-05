@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bsd_glob_c,"$Id: bsd_glob.c,v 1.7 2020/06/18 13:14:34 cvsuser Exp $")
+__CIDENT_RCSID(gr_bsd_glob_c,"$Id: bsd_glob.c,v 1.8 2021/04/05 08:13:52 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -109,6 +109,7 @@ __CEND_DECLS
 #define SEP2		'\\'
 #endif
 #define	STAR		'*'
+#undef  TILDE /*ioctl_compat.h*/
 #define	TILDE		'~'
 #define	UNDERSCORE	'_'
 #define	LBRACE		'{'

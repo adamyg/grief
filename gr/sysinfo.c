@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.46 2020/06/03 16:31:33 cvsuser Exp $")
+__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.47 2021/04/05 08:25:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sysinfo.c,v 1.46 2020/06/03 16:31:33 cvsuser Exp $
+/* $Id: sysinfo.c,v 1.47 2021/04/05 08:25:57 cvsuser Exp $
  * System information services.
  *
  *
@@ -44,6 +44,10 @@ __CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.46 2020/06/03 16:31:33 cvsuser E
 
 #if defined(__CYGWIN__)
 #include <sys/cygwin.h>                         /* cygwin_conv_path */
+#endif
+
+#if defined(__APPLE__)
+#include <libproc.h>                            /* proc_pidpath */
 #endif
 
 #if defined(WIN32) || defined(__CYGWIN__)

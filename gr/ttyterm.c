@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.101 2020/06/03 16:31:33 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.110 2021/04/05 08:04:31 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.101 2020/06/03 16:31:33 cvsuser Exp $
+/* $Id: ttyterm.c,v 1.110 2021/04/05 08:04:31 cvsuser Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -2233,7 +2233,7 @@ acs_dump(const char *bp)
     unsigned i;
 
     while (*p) {
-        const const char *desc = "unknown";
+        const char *desc = "unknown";
 
         ident = *p++;
         if (! isprint(ident)) {
