@@ -1,4 +1,4 @@
-dnl $Id: libterm.m4,v 1.5 2013/04/05 19:52:09 ayoung Exp $
+dnl $Id: libterm.m4,v 1.6 2021/04/05 04:07:34 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -90,7 +90,7 @@ AC_DEFUN([LIBTERM_CHECK_CONFIG],[
 # include <stdlib.h>
 # include <stddef.h>
 #endif
-main() {char *s; s=(char *)tgoto("%p1%d", 0, 1); exit(0); }],
+int main() {char *s; s=(char *)tgoto("%p1%d", 0, 1); return 0; }],
 					res="OK", res="FAIL", res="FAIL")
 				LIBS="$cf_save_LIBS"
 				if test "$res" = "OK"; then
@@ -118,13 +118,25 @@ main() {char *s; s=(char *)tgoto("%p1%d", 0, 1); exit(0); }],
 			LIBS="$LIBS $TERMLIB"
 
 			AC_MSG_CHECKING([for setupterm and tigetxxx()])
-			AC_TRY_LINK([],[
-setupterm("terminalwontexist",0,0); tigetstr("str"); tigetnum("num"); tigetflag("flag");],
+			AC_TRY_LINK([
+#ifdef HAVE_CURSES_H
+#include <curses.h>
+#endif
+#ifdef HAVE_TERM_H
+#include <term.h>
+#endif],
+				[setupterm("terminalwontexist",0,0); tigetstr("str"); tigetnum("num"); tigetflag("flag");],
 				[termlib_cv_terminfo=yes; AC_MSG_RESULT(yes)],
 				AC_MSG_RESULT(no))
 
 			AC_MSG_CHECKING([for tgetent() and tgetxxx()])
-			AC_TRY_LINK([],
+			AC_TRY_LINK([
+#ifdef HAVE_CURSES_H
+#include <curses.h>
+#endif
+#ifdef HAVE_TERM_H
+#include <term.h>
+#endif],
 				[char buffer[10000]; char *area = (char *)0;
 int res = tgetent(buffer, "terminalwontexist"); tgetstr("str", &area); tgetnum("num"); tgetflag("flag");],
 				[termlib_cv_termcap=yes; AC_MSG_RESULT(yes)],
@@ -156,10 +168,11 @@ int res = tgetent(buffer, "terminalwontexist"); tgetstr("str", &area); tgetnum("
 # include <stdlib.h>
 # include <stddef.h>
 #endif
-main()
+int main()
 {
     char *s; s=(char *)tgoto("%p1%d", 0, 1);
     exit(!strcmp(s==0 ? "" : s, "1"));
+    return 0;
 }])],
 		[termlib_cv_terminfo=no],
 		[termlib_cv_terminfo=yes],
@@ -169,14 +182,14 @@ main()
 	dnl library specific resources
 	dnl
 	dnl	ncurses / ncurses_g
-	dnl	ncursesw(*)
+	dnl	ncursesw
 	dnl	pdcurses(*)
 	dnl	tinfo(*)
 	dnl	curses
 	dnl	termcap
 	dnl	termlib
 	dnl
-	dnl	(*) Should in theory work, as yet not fully tested.
+	dnl	(*) should in theory work, yet fully tested.
 	dnl
 	if test "x$termlib_cv_terminfo" = "xyes"; then
 		AC_DEFINE([HAVE_TERMINFO], 1, [terminfo interface.])
@@ -237,11 +250,11 @@ main()
 			AC_CACHE_CHECK([what tgetent() returns for an unknown terminal], termlib_cv_tgent, [
 				AC_RUN_IFELSE([AC_LANG_PROGRAM([
 #ifdef HAVE_TERMCAP_H
-# include <termcap.h>
+#include <termcap.h>
 #endif
 #if STDC_HEADERS
-# include <stdlib.h>
-# include <stddef.h>
+#include <stdlib.h>
+#include <stddef.h>
 #endif
 main()
 {
@@ -263,7 +276,7 @@ main()
 	AC_MSG_CHECKING(whether termcap.h contains ospeed)
 	AC_TRY_LINK([
 #ifdef HAVE_TERMCAP_H
-# include <termcap.h>
+#include <termcap.h>
 #endif
 			], [ospeed = 20000],
 		AC_MSG_RESULT(yes); AC_DEFINE([HAVE_OSPEED], 1, [extern ospeed available.]),
@@ -271,7 +284,7 @@ main()
 		AC_MSG_CHECKING(whether ospeed can be extern)
 		AC_TRY_LINK([
 #ifdef HAVE_TERMCAP_H
-# include <termcap.h>
+#include <termcap.h>
 #endif
 extern short ospeed;
 			], [ospeed = 20000],
@@ -282,7 +295,7 @@ extern short ospeed;
 	AC_MSG_CHECKING([whether termcap.h contains UP, BC and PC])
 	AC_TRY_LINK([
 #ifdef HAVE_TERMCAP_H
-# include <termcap.h>
+#include <termcap.h>
 #endif
 		], [if (UP == 0 && BC == 0) PC = 1],
 		AC_MSG_RESULT(yes); AC_DEFINE([HAVE_UP_BC_PC], 1, [extern UP BC and PC available.]),
@@ -290,7 +303,7 @@ extern short ospeed;
 			AC_MSG_CHECKING([whether UP, BC and PC can be extern])
 		AC_TRY_LINK([
 #ifdef HAVE_TERMCAP_H
-# include <termcap.h>
+#include <termcap.h>
 #endif
 extern char *UP, *BC, PC;
 		], [if (UP == 0 && BC == 0) PC = 1],
@@ -301,17 +314,17 @@ extern char *UP, *BC, PC;
 	AC_MSG_CHECKING(whether tputs() uses outfuntype)
 	AC_TRY_COMPILE([
 #ifdef HAVE_TERMCAP_H
-# include <termcap.h>
+#include <termcap.h>
 #endif
 		], [extern int xx(); tputs("test", 1, (outfuntype)xx)],
 			[AC_MSG_RESULT(yes); AC_DEFINE([HAVE_OUTFUNTYPE], 1, [typedef outfuntype available.])],
 			[AC_MSG_RESULT(no); AC_MSG_CHECKING(determining tputs() function final argument type)
 			AC_EGREP_CPP([tputs.*[(][ \\\t]*char[ \\\t]*[)]],[
 #ifdef HAVE_TERM_H
-# include <term.h>
+#include <term.h>
 #endif
 #ifdef HAVE_CURSES_H
-# include <curses.h>
+#include <curses.h>
 #endif
 			], [AC_MSG_RESULT(char); AC_DEFINE([TPUTS_TAKES_CHAR], 1, [tputs character interface.])],
 				[AC_MSG_RESULT(not char, int assumed);
