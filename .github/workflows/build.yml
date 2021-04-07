@@ -1,0 +1,30 @@
+name: build
+on: [push]
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ilammy/msvc-dev-cmd@v1
+      if: runner.os == 'Windows'
+    - name: Generating Makefiles
+      shell: bash
+      run: |
+        if [[ "${{ runner.os }}" == "Windows" ]] ; then
+          perl makelib.pl --busybox=./win32/busybox --wget=./win32/wget --bison=c:\Cygwin64\bin\bison --flex=./bin/flex vc2019
+        else
+          ./support/config_withncurses
+        fi
+    - name: Compiling
+      shell: bash
+      run: |
+        if [[ "${{ runner.os }}" == "Windows" ]] ; then
+          .\win32\gmake-42 contrib
+          .\win32\gmake-42
+        else
+          make
+        fi
