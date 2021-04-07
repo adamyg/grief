@@ -20,14 +20,14 @@ jobs:
       if: runner.os == 'Windows'
       shell: cmd
       run: |
-        perl makelib.pl --busybox=./win32/busybox --wget=./win32/wget --bison=./bin/bison --flex=./bin/flex vc2019
+        perl makelib.pl --busybox=./win32/busybox --wget=./win32/wget --bison=./bin/bison --flex=./bin/flex --verbose vc2019
     - name: Windows, compiling
       if: runner.os == 'Windows'
       shell: cmd
       run: |
         @set PERL=C:/hostedtoolcache/windows/strawberry-perl/5.30.3/x64/perl/bin/perl
-        ./win32/gmake-42 contrib
-        ./win32/gmake-42
+        .\win32\gmake-42 contrib
+        .\win32\gmake-42
     - name: Linux, generating Makefiles
       if: runner.os == 'Linux'
       shell: bash
