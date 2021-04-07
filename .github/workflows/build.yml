@@ -20,7 +20,7 @@ jobs:
       shell: bash
       run: |
         if [[ "${{ runner.os }}" == "Windows" ]] ; then
-          C:/hostedtoolcache/windows/strawberry-perl/5.30.3/x64/perl/bin/perl makelib.pl --busybox=./win32/busybox --wget=./win32/wget --bison=./bin/bison --flex=./bin/flex vc2019
+          C:/hostedtoolcache/windows/strawberry-perl/5.30.3/x64/perl/bin/perl makelib.pl --perlpath=C:/hostedtoolcache/windows/strawberry-perl/5.30.3/x64/perl/bin/ --busybox=./win32/busybox --wget=./win32/wget --bison=./bin/bison --flex=./bin/flex vc2019
         else
           ./support/config_withncurses
         fi
@@ -28,6 +28,7 @@ jobs:
       shell: bash
       run: |
         if [[ "${{ runner.os }}" == "Windows" ]] ; then
+          set PERL=C:/hostedtoolcache/windows/strawberry-perl/5.30.3/x64/perl/bin/perl
           ./win32/gmake-42 contrib
           ./win32/gmake-42
         else
