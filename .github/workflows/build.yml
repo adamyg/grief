@@ -10,18 +10,17 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: ilammy/msvc-dev-cmd@v1
-      if: runner.os == 'Windows'
+      if: runner.os == 'Windows'     
     - uses: shogo82148/actions-setup-perl@v1
+      if: runner.os == 'Windows'
       with:
         perl-version: '5.30'
         distribution: strawberry
-    - run: cpanm --installdeps .
-    - run: prove -lv t
     - name: Generating Makefiles
       shell: bash
       run: |
         if [[ "${{ runner.os }}" == "Windows" ]] ; then
-          perl makelib.pl --busybox=./win32/busybox --wget=./win32/wget --bison=./bin/bison --flex=./bin/flex vc2019
+          C:\hostedtoolcache\windows\strawberry-perl\5.30.3\x64\perl\bin\perl makelib.pl --busybox=./win32/busybox --wget=./win32/wget --bison=./bin/bison --flex=./bin/flex vc2019
         else
           ./support/config_withncurses
         fi
