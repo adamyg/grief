@@ -17,10 +17,12 @@ jobs:
         perl-version: '5.30'
         distribution: strawberry
     - name: Generating Makefiles
+      if: runner.os == 'Windows'
       shell: cmd
       run: |
         C:/hostedtoolcache/windows/strawberry-perl/5.30.3/x64/perl/bin/perl makelib.pl --perlpath=C:/hostedtoolcache/windows/strawberry-perl/5.30.3/x64/perl/bin/ --busybox=./win32/busybox --wget=./win32/wget --bison=./bin/bison --flex=./bin/flex vc2019
     - name: Generating Makefiles
+      if: runner.os == 'Linux'
       shell: bash
       run: |
         ./support/config_withncurses
@@ -36,5 +38,4 @@ jobs:
       shell: bash
       run: |
         make
-
         
