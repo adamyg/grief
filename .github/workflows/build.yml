@@ -12,10 +12,11 @@ jobs:
     - uses: ilammy/msvc-dev-cmd@v1
       if: runner.os == 'Windows'
     - uses: shogo82148/actions-setup-perl@v1
-      if: runner.os == 'Windows'
       with:
         perl-version: '5.30'
         distribution: strawberry
+    - run: cpanm --installdeps .
+    - run: prove -lv t
     - name: Generating Makefiles
       shell: bash
       run: |
