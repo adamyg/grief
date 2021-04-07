@@ -15,7 +15,7 @@ jobs:
       shell: bash
       run: |
         if [[ "${{ runner.os }}" == "Windows" ]] ; then
-          perl makelib.pl --busybox=./win32/busybox --wget=./win32/wget --bison=/bin/bison --flex=./bin/flex vc2019
+          perl makelib.pl --busybox=./win32/busybox --wget=./win32/wget --bison=./bin/bison --flex=./bin/flex vc2019
         else
           ./support/config_withncurses
         fi
