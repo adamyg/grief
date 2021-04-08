@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.111 2020/06/20 22:38:29 cvsuser Exp $
+# $Id: makelib.pl,v 1.112 2021/04/08 15:24:20 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -2534,8 +2534,22 @@ CheckExec($$;$)         # (base, cmd, [exec])
 
     unlink("${base}.exe");
     my $ret = System($cmd);
-    $ret = -999
-        if (! -f "${base}.exe");
+    if (! -f "${base}.exe") {
+        my $out = "${base}.out";
+
+        printf "  ::<%s>\n", $out;
+        if ($o_verbose && -f $out) {
+            open(OUT, "<${out}") or
+                die "cannot open ${out}";
+            while (defined (my $line = <OUT>)) {
+                chomp $line;
+                printf "  |%s\n", $line;
+            }
+            close(OUT);
+        }
+        $ret = -999;
+    }
+
     $ret = System($base)
         if (0 == $ret && $exec);
 
