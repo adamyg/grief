@@ -14,7 +14,7 @@ jobs:
       with:
         arch: x86
     - uses: shogo82148/actions-setup-perl@v1
-      if: runner.os == 'Windows'
+      if: runner.os == 'XXWindows'
       with:
         perl-version: '5.30'
         distribution: strawberry
@@ -22,13 +22,16 @@ jobs:
       if: runner.os == 'Windows'
       shell: cmd
       run: |
-        perl makelib.pl --busybox=./win32/busybox --wget=./win32/wget --bison=./bin/bison --flex=./bin/flex --verbose vc2019
+        @set PERL=c:/Strawberry/perl/bin/perl
+        c:/Strawberry/perl/bin/perl makelib.pl --busybox=./win32/busybox --wget=./win32/wget --bison=./bin/bison --flex=./bin/flex --verbose vc2019
+        dir c:\
+        dir d:\        
     - name: Windows, compiling
       if: runner.os == 'Windows'
       shell: cmd
       run: |
-        @set PERL=C:/hostedtoolcache/windows/strawberry-perl/5.30.3/x64/perl/bin/perl
-        dir c:\
+        @REM set PERL=C:/hostedtoolcache/windows/strawberry-perl/5.30.3/x64/perl/bin/perl
+        @set PERL=c:/Strawberry/perl/bin/perl
         .\win32\gmake-42 contrib
         .\win32\gmake-42
     - name: Linux, generating Makefiles
