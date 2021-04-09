@@ -25,7 +25,7 @@ jobs:
         @set PERL=c:/Strawberry/perl/bin/perl
         c:/Strawberry/perl/bin/perl makelib.pl --busybox=./win32/busybox --wget=./win32/wget --bison=./bin/bison --flex=./bin/flex --verbose vc2019
         dir c:\tools
-        dir c:\msys32
+        dir c:\msys64
     - name: Windows, compiling
       if: runner.os == 'Windows'
       shell: cmd
