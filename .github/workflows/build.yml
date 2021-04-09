@@ -26,6 +26,7 @@ jobs:
         c:/Strawberry/perl/bin/perl makelib.pl --busybox=./win32/busybox --wget=./win32/wget --bison=./bin/bison --flex=./bin/flex --verbose vc2019
         dir c:\tools
         dir c:\msys64
+        dir c:\msys64\usr\bin
     - name: Windows, compiling
       if: runner.os == 'Windows'
       shell: cmd
@@ -34,6 +35,7 @@ jobs:
         @set PERL=c:/Strawberry/perl/bin/perl
         .\win32\gmake-42 contrib
         .\win32\gmake-42
+        exit 0
     - name: Windows, diagnose build errors
       if: runner.os == 'Windows'
       uses: actions/upload-artifact@v2
