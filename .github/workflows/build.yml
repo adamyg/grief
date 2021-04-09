@@ -24,8 +24,8 @@ jobs:
       run: |
         @set PERL=c:/Strawberry/perl/bin/perl
         c:/Strawberry/perl/bin/perl makelib.pl --busybox=./win32/busybox --wget=./win32/wget --bison=./bin/bison --flex=./bin/flex --verbose vc2019
-        dir c:\
-        dir d:\        
+        dir c:\tools
+        dir c:\msys32
     - name: Windows, compiling
       if: runner.os == 'Windows'
       shell: cmd
@@ -34,6 +34,7 @@ jobs:
         @set PERL=c:/Strawberry/perl/bin/perl
         .\win32\gmake-42 contrib
         .\win32\gmake-42
+        copy D:\a\grief\grief\libchartable\charsetlocales.h con
     - name: Linux, generating Makefiles
       if: runner.os == 'Linux'
       shell: bash
