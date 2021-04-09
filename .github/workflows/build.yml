@@ -34,7 +34,12 @@ jobs:
         @set PERL=c:/Strawberry/perl/bin/perl
         .\win32\gmake-42 contrib
         .\win32\gmake-42
-        copy D:\a\grief\grief\libchartable\charsetlocales.h con
+    - name: Windows, diagnose build errors
+      if: runner.os == 'Windows'
+      uses: actions/upload-artifact@v2
+      with:
+        name: code-build-artifacts
+        path: ./libchartable/charsetlocales.h
     - name: Linux, generating Makefiles
       if: runner.os == 'Linux'
       shell: bash
