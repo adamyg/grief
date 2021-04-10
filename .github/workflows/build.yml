@@ -13,17 +13,12 @@ jobs:
       if: runner.os == 'Windows'
       with:
         arch: x86
-    - uses: shogo82148/actions-setup-perl@v1
-      if: runner.os == 'XXWindows'
-      with:
-        perl-version: '5.30'
-        distribution: strawberry
     - name: Windows, generating Makefiles
       if: runner.os == 'Windows'
       shell: cmd
       run: |
         @set PERL=c:/Strawberry/perl/bin/perl
-        c:/Strawberry/perl/bin/perl makelib.pl --busybox=./win32/busybox --wget=./win32/wget --bison=./bin/bison --flex=./bin/flex --verbose vc2019
+        c:/Strawberry/perl/bin/perl makelib.pl --perlpath=c:/Strawberry/perl/bin --busybox=./win32/busybox --wget=./win32/wget --bison=c:/msys64/usr/bin/bison --flex=./bin/flex --verbose vc2019
         dir c:\tools
         dir c:\msys64
         dir c:\msys64\usr\bin
@@ -41,7 +36,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: code-build-artifacts
-        path: ./libchartable/charsetlocales.h
+        path: ./grunch/*
     - name: Linux, generating Makefiles
       if: runner.os == 'Linux'
       shell: bash
