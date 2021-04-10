@@ -1,11 +1,11 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.112 2021/04/08 15:24:20 cvsuser Exp $
+# $Id: makelib.pl,v 1.113 2021/04/10 09:51:56 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
 #
 #
-# Copyright (c) 1998 - 2020, Adam Young.
+# Copyright (c) 1998 - 2021, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -686,7 +686,7 @@ my %x_tokens        = (
         WGET                => 'wget',          # special
         BUSYBOX             => 'busybox',       # special
         INNO                => 'C:/Program Files (x86)/Inno Setup 5/Compil32',
-        PERL                => 'perl',
+        PERL                => "${PERLPATH}perl",
 
         LIBTOOL             => 'libtool',
         LIBTOOL_DEPS        => '',
@@ -1120,7 +1120,7 @@ main()
         if (! $o_clean && -f $cache) {
             eval {
                 print "loading <${cache}> ...\n";
-                do "$cache";
+                do "./${cache}";
             };
         };
 
