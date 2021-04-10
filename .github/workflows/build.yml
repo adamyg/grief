@@ -23,7 +23,7 @@ jobs:
       shell: cmd
       run: |
         @set PERL=c:/Strawberry/perl/bin/perl
-        c:/Strawberry/perl/bin/perl makelib.pl --busybox=./win32/busybox --wget=./win32/wget --bison=./bin/bison --flex=./bin/flex --verbose vc2019
+        c:/Strawberry/perl/bin/perl makelib.pl --perlpath=c:/Strawberry/perl/bin --busybox=./win32/busybox --wget=./win32/wget --bison=./bin/bison --flex=./bin/flex --verbose vc2019
         dir c:\tools
         dir c:\msys64
         dir c:\msys64\usr\bin
