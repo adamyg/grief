@@ -13,11 +13,6 @@ jobs:
       if: runner.os == 'Windows'
       with:
         arch: x86
-    - uses: shogo82148/actions-setup-perl@v1
-      if: runner.os == 'XXWindows'
-      with:
-        perl-version: '5.30'
-        distribution: strawberry
     - name: Windows, generating Makefiles
       if: runner.os == 'Windows'
       shell: cmd
@@ -41,7 +36,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: code-build-artifacts
-        path: ./libchartable/charsetlocales.h
+        path: ./grunch/*
     - name: Linux, generating Makefiles
       if: runner.os == 'Linux'
       shell: bash
