@@ -35,7 +35,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: package-win32
-        path: ./grief/bin.vs160/debug/*
+        path: ./bin.vs160/debug/*
 
     - name: Linux, generating Makefiles
       if: runner.os == 'Linux'
@@ -52,5 +52,5 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: package-linux
-        path: ./grief/bin.gcc/debug/*
+        path: ./bin.gcc/debug/*
         
