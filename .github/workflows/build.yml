@@ -8,7 +8,8 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2   
+   
     - uses: ilammy/msvc-dev-cmd@v1
       if: runner.os == 'Windows'
       with:
@@ -19,31 +20,37 @@ jobs:
       run: |
         @set PERL=c:/Strawberry/perl/bin/perl
         c:/Strawberry/perl/bin/perl makelib.pl --perlpath=c:/Strawberry/perl/bin --busybox=./win32/busybox --wget=./win32/wget --bison=c:/msys64/usr/bin/bison --flex=./bin/flex --verbose vc2019
-        dir c:\tools
-        dir c:\msys64
-        dir c:\msys64\usr\bin
+        @rem dir c:\tools
+        @rem dir c:\msys64
+        @rem dir c:\msys64\usr\bin
     - name: Windows, compiling
       if: runner.os == 'Windows'
       shell: cmd
       run: |
-        @REM set PERL=C:/hostedtoolcache/windows/strawberry-perl/5.30.3/x64/perl/bin/perl
         @set PERL=c:/Strawberry/perl/bin/perl
         .\win32\gmake-42 contrib
         .\win32\gmake-42
-        exit 0
-    - name: Windows, diagnose build errors
+    - name: Windows, package
       if: runner.os == 'Windows'
       uses: actions/upload-artifact@v2
       with:
-        name: code-build-artifacts
-        path: ./grunch/*
+        name: package-win32
+        path: ./grief/bin.vs160/debug/*
+
     - name: Linux, generating Makefiles
       if: runner.os == 'Linux'
       shell: bash
       run: |
-        ./support/config_withncurses        
+        ./support/config_withncurses      
     - name: Linux, compiling
       if: runner.os == 'Linux'
       shell: bash
       run: |
-        make        
+        make
+    - name: Linux, package
+      if: runner.os == 'Linux'
+      uses: actions/upload-artifact@v2
+      with:
+        name: package-linux
+        path: ./grief/bin.gcc/debug/*
+        
