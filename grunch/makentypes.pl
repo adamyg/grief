@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makentypes.pl,v 1.11 2018/10/03 23:46:32 cvsuser Exp $
+# $Id: makentypes.pl,v 1.12 2021/04/10 15:10:12 cvsuser Exp $
 # Generate crntypes.h from the gen and grunch symbols.
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 #
@@ -279,14 +279,14 @@ Export()
                     }
 
                     s/^\#define\s+([A-Z0-9_]+)
-                        \s*([0-9a-fx]+)
+                        \s*([-0-9a-fx]+)
                         \s*(\/*.*\*\/)/
                         "    e_${1} " .
                             ' 'x(23-length($1)) . ($o_value ? "= $2, " : "= $1, ") .
                             ' 'x(17-length($o_value ? $2 : $1)) . "$3"/exi ||
 
                     s/^\#define\s+([A-Z0-9_]+)
-                        \s*([0-9a-fx]+)
+                        \s*([-0-9a-fx]+)
                         .*$/
                         "    e_${1} " .
                             ' 'x(23-length($1)) . ($o_value ? "= $2," : "= $1,")/exi ||
