@@ -1,8 +1,8 @@
-# $Id: Makefile.in,v 1.8 2020/06/21 22:21:28 cvsuser Exp $
+# $Id: Makefile.in,v 1.9 2021/04/11 15:15:58 cvsuser Exp $
 # libduktape makefile.
 #
 #
-# Copyright (c) 2018 - 2020, Adam Young.
+# Copyright (c) 2018 - 2021, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -126,7 +126,7 @@ DUKTAPELIB=		$(D_LIB)/$(LP)duktape_static$(A)
 DUKTAPEDLL=		$(D_LIB)/$(LP)duktape.la
 DUK=			$(D_BIN)/duk$(E)
 
-VERSION=	2.3.0
+VERSION=	2.6.0
 VERSIONSPEC=	$(subst .,:,$(VERSION))
 VERSION_1	=$(word 1,$(subst ., ,$(VERSION)))
 VERSION_2	=$(word 2,$(subst ., ,$(VERSION)))
