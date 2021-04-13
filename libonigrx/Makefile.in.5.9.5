@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.11 2021/04/12 14:48:51 cvsuser Exp $
+# $Id: Makefile.in.5.9.5,v 1.1 2021/04/12 14:48:51 cvsuser Exp $
 # libonigrx - regular expression makefile.
 #
 #
@@ -77,11 +77,10 @@ LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
 
 CINCLUDE=	-I$(D_INC) @CINCLUDE@
+##ifeq ("mingw32","@build_os@")
+##CINCLUDE+=	-I../libw32
+##endif
 CEXTRA=		@DEFS@
-CEXTRA+=	-DUSE_POSIX_API -DUSE_BINARY_COMPATIBLE_POSIX_API
-ifeq ("wcl386","@CC@")
-CEXTRA+=	-D__STDC_WANT_LIB_EXT1__=1
-endif
 
 ifeq ("$(BUILD_TYPE)","release")
 CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
@@ -119,11 +118,11 @@ else
 RELIB=		$(D_LIB)/$(LP)onigrx$(A)
 endif
 
-VERSION=	6.9.6
+VERSION=	5.9.5
 VERSIONSPEC=	$(subst .,:,$(VERSION))
 REPACKED=	onig-$(VERSION).tgz
 
-RESRC=		./onig-$(VERSION)/src
+RESRC=		./onig-$(VERSION)
 
 LIBOBJS=\
 	$(D_OBJ)/regcomp$(O)		\
@@ -138,24 +137,10 @@ LIBOBJS=\
 	$(D_OBJ)/regsyntax$(O)		\
 	$(D_OBJ)/regtrav$(O)		\
 	$(D_OBJ)/regversion$(O)		\
-	$(D_OBJ)/st$(O)			\
-	$(D_OBJ)/onig_init$(O)
+	$(D_OBJ)/st$(O)
 
 LIBOBJS+=\
-	$(D_OBJ)/ascii$(O) \
-	$(D_OBJ)/utf8$(O) \
-	$(D_OBJ)/unicode$(O) \
-	$(D_OBJ)/utf16_be$(O) $(D_OBJ)/utf16_le$(O) \
-	$(D_OBJ)/utf32_be$(O) $(D_OBJ)/utf32_le$(O) \
-	$(addprefix $(D_OBJ)/,$(subst .c,$(O),$(notdir $(wildcard $(RESRC)/iso*.c)))) \
-	$(D_OBJ)/euc_jp$(O) $(D_OBJ)/sjis$(O) \
-	$(D_OBJ)/euc_tw$(O) $(D_OBJ)/euc_kr$(O) $(D_OBJ)/big5$(O) \
-	$(D_OBJ)/gb18030$(O) \
-	$(D_OBJ)/koi8_r$(O)  \
-	$(D_OBJ)/cp1251$(O) \
-	$(D_OBJ)/euc_jp_prop$(O) $(D_OBJ)/sjis_prop$(O) \
-	$(D_OBJ)/unicode_unfold_key$(O) $(D_OBJ)/unicode_fold1_key$(O) \
-	$(D_OBJ)/unicode_fold2_key$(O) $(D_OBJ)/unicode_fold3_key$(O)
+	$(addprefix $(D_OBJ)/enc/,$(subst .c,$(O),$(filter-out mktable.c,$(notdir $(wildcard $(RESRC)/enc/*.c)))))
 
 DLLOBJS=\
 	$(subst $(O),.lo,$(LIBOBJS))

@@ -1,16 +1,16 @@
 #ifndef WIN32_CONFIG_H_INCLUDED
 #define WIN32_CONFIG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.13 2020/06/18 14:32:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.14 2021/04/12 13:46:52 cvsuser Exp $")
 __CPRAGMA_ONCE
 /* -*- mode: c; set-indent: 4; -*- */
-/* $Id: w32config.hin,v 1.13 2020/06/18 14:32:40 cvsuser Exp $
+/* $Id: w32config.hin,v 1.14 2021/04/12 13:46:52 cvsuser Exp $
  * Machine configuration.
  *
  * System dependent <config.h> configuration template,
  * Windows targets (see makelib.pl for details).
  *
- * Copyright (c) 1998 - 2020, Adam Young.
+ * Copyright (c) 1998 - 2021, Adam Young.
  * All rights reserved.
  *
  * This file is part of the Grief Editor.
@@ -292,6 +292,7 @@ __CPRAGMA_ONCE
 #undef SIZEOF_LONG 4
 #undef SIZEOF_LONG_LONG 4
 #undef SIZEOF_VOID_P 4
+#define SIZEOF_VOIDP SIZEOF_VOID_P
 #undef SIZEOF_WCHAR_T
 
 #undef HAVE_INLINE

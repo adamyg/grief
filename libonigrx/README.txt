@@ -15,13 +15,17 @@
 
     Releases:
 
+        o 6.9.6 (patched), 5 Nov, 2020
+
+            WatcomC tweaks.
+
         o 5.9.5 (patched), October 21, 2013
 
             'onig_reg_init' modified, replaced regex_t reference.
 
     Copyright:
 
-        Copyright (c) 2002-2007  K.Kosako  <sndgk393 AT ybb DOT ne DOT jp>
+        Copyright (c) 2002-2020  K.Kosako  <kkosako0@gmail.com>
         All rights reserved.
 
         Redistribution and use in source and binary forms, with or without
