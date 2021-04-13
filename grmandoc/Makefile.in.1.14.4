@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.26 2021/04/05 15:22:36 cvsuser Exp $
+# $Id: Makefile.in.1.14.4,v 1.1 2021/04/05 15:29:25 cvsuser Exp $
 # libbsdmdoc and grmanddoc
 #
 #
-# Copyright (c) 2014 - 2021, Adam Young.
+# Copyright (c) 2014 - 2020, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -113,8 +113,8 @@ RMDFLAGS=	-rf
 #########################################################################################
 # Targets
 
-VERSION=	1.14.5.gr
-RELDATE=	10 March 2019
+VERSION=	1.14.4.gr
+RELDATE=	8 August 2018
 
 PACKED=		mandoc-$(VERSION).tgz
 VPATH=		./mandoc-$(VERSION) ./sqlite3
@@ -146,7 +146,6 @@ LIBMAN_OBJS=\
 	$(D_OBJ)/man_validate$(O)
 
 LIBMDOC_OBJS=\
-	$(D_OBJ)/arch$(O)		\
 	$(D_OBJ)/att$(O)		\
 	$(D_OBJ)/lib$(O)		\
 	$(D_OBJ)/mdoc$(O)		\
@@ -175,7 +174,6 @@ LIBMANDOC_OBJS=\
 	$(D_OBJ)/chars$(O)		\
 	$(D_OBJ)/mandoc$(O)		\
 	$(D_OBJ)/mandoc_aux$(O)		\
-	$(D_OBJ)/mandoc_msg$(O)		\
 	$(D_OBJ)/mandoc_ohash$(O)	\
 	$(D_OBJ)/mandoc_xr$(O)		\
 	$(D_OBJ)/msec$(O)		\
@@ -295,16 +293,6 @@ release:
 debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
-regress-exec:		.unpacked.$(VERSION).regress
-	cd ./mandoc-$(VERSION)/regress && $(PERL) ./regress.pl --path=$(D_BIN)/grmandoc .
-
-.unpacked.$(VERSION).regress: ./mandoc-$(VERSION)/regress/regress.tgz
-	@echo "do not delete, managed file" > $@
-	cd ./mandoc-$(VERSION)/regress && gzip -c -d regress.tgz | tar -xvf -
-
-regress-clean:
-	cd ./mandoc-$(VERSION)/regress && $(PERL) ./regress.pl . clean
-
 $(MANDOC):		MAPFILE=$(basename $@).map
 $(MANDOC):		$(MANDOC_OBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(MANDOC_OBJS) $(LDLIBS) @LDMAPFILE@
@@ -332,14 +320,10 @@ mdocversion.h:		Makefile
 source:			.unpacked.$(VERSION)
 		$(MAKE) unpacked
 
-ifeq ($(PACKED),)
-.unpacked.$(VERSION):
-else
 .unpacked.$(VERSION):	$(PACKED)
 		@echo "do not delete, managed file" > $@
 		@echo "unpacking source $(PACKED)"
 		@gzip -c -d $(PACKED) | tar -xvf -
-endif
 
 CLEAN +=
 

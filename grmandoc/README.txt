@@ -3,9 +3,10 @@
 
         The mandoc UNIX manpage compiler toolset (http://mdocml.bsd.lv/)
 
-        Current version 1.14.4 (August 8, 2018) using sqlite3 (version 3.25.2)
-        Previous version 1.13.4 (July 10, 2016) using sqlite3 (version 3.16.2)
-        Previous version 1.12.3 (December 31, 2013)
+        Current version 1.14.5 (March 10, 2019) using sqlite3 (version 3.25.2)
+        Version 1.14.4 (August 8, 2018) using sqlite3 (version 3.25.2)
+        Version 1.13.4 (July 10, 2016) using sqlite3 (version 3.16.2)
+        Version 1.12.3 (December 31, 2013)
 
         mandoc is a suite of tools compiling mdoc, the roff macro
         language of choice for BSD manual pages, and man, the
