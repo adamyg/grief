@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_undo_c,"$Id: undo.c,v 1.48 2019/01/26 22:27:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_undo_c,"$Id: undo.c,v 1.49 2021/04/14 14:09:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: undo.c,v 1.48 2019/01/26 22:27:09 cvsuser Exp $
+/* $Id: undo.c,v 1.49 2021/04/14 14:09:54 cvsuser Exp $
  * undo and redo facilities.
  *
  *
@@ -544,7 +544,10 @@ undo_command(undo_t *undo, int redo, UNDO_t *up, int pastwrite)
      *  Restore the character map, otherwise converting to and from column positions may
      *  cause problems if we're now viewing the buffer in a different mode.
      */
-    cur_cmap = undo->u_cmap;
+    if (cur_cmap != undo->u_cmap) {
+        cur_cmap = undo->u_cmap;
+        set_hooked();
+    }
 
     switch (undo->u_opcode) {
     case UO_REPLACE: {
