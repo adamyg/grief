@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.84 2020/06/03 16:01:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.86 2021/04/18 17:12:41 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: file.c,v 1.84 2020/06/03 16:01:35 cvsuser Exp $
+/* $Id: file.c,v 1.86 2021/04/18 17:12:41 cvsuser Exp $
  * File-buffer primitives and support.
  *
  *
@@ -47,6 +47,7 @@ __CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.84 2020/06/03 16:01:35 cvsuser Exp $")
 #include "echo.h"                               /* errorf, infof */
 #include "eval.h"
 #include "file.h"
+#include "getpwd.h"
 #include "line.h"
 #include "lisp.h"
 #include "lock.h"                               /* flock...() */
@@ -3613,7 +3614,7 @@ file_tilder(const char *file, char *path, int len)
     }
     return path;
 
-#elif defined(DOSISH)       /* / and \ */
+#elif defined(DOSISH)                           /* / and \ */
     if ('~' == *file && (file[1] == '/' || file[1] == '\\')) {
         char t_name[MAX_PATH];
         const char *home;
@@ -3642,36 +3643,43 @@ file_tilder(const char *file, char *path, int len)
          */
         const char *ofile = file;
         char t_name[MAX_PATH];
-        struct passwd *pwd;
+        passwd_t pwd = {0};
+        struct passwd *pw;
                                                 /* ~[/...] */
         if (*++file == PATH_SEPERATOR || 0 == *file) {
             if (PATH_SEPERATOR == *file) {
                 ++file;
             }
-            pwd = getpwuid(getuid());
-        } else {                                /* ~<name>/... */
-            char *cp;
+            pw = sys_getpwuid(&pwd, getuid());
 
-            for (cp = t_name; *file && *file != PATH_SEPERATOR;) {
+        } else {                                /* ~<name>/... */
+            char *cp = t_name,
+                *end = cp + (sizeof(t_name)-1);
+
+            while (cp < end && *file && *file != PATH_SEPERATOR) {
                 *cp++ = *file++;
             }
             if (PATH_SEPERATOR == *file) {
                 ++file;
             }
             *cp = 0;
-            pwd = getpwnam(t_name);
+
+            if (NULL == (pw = sys_getpwnam(&pwd, t_name))) {
+                ewprintx("tilder: cannot resolve user '%s'", t_name);
+            }
         }
 
-        if (NULL == pwd) {
+        if (NULL == pw) {
             path = NULL;                        /* unknown user */
         } else {
             if (path == ofile) {                /* same buffer */
-                sxprintf(path, len, "%s/%s", pwd->pw_dir, strxcpy(t_name, file, sizeof(t_name)));
+                sxprintf(path, len, "%s/%s", pw->pw_dir, strxcpy(t_name, file, sizeof(t_name)));
             } else {
-                sxprintf(path, len, "%s/%s", pwd->pw_dir, file);
+                sxprintf(path, len, "%s/%s", pw->pw_dir, file);
             }
         }
-        endpwent();
+
+        sys_getpwend(&pwd, pw);
 
     } else if (path != file) {
         strxcpy(path, file, len);
@@ -3934,12 +3942,15 @@ varend(char *dp, char *dpend, const int what)
  *      len - Length of the buffer, in bytes.
  *
  *  Returns:
- *      Path buffer.
+ *      Path buffer, otherwise NULL on error.
  */
 char *
 file_expand(const char *file, char *path, int len)
 {
-    return file_getenv(file_tilder(file, path, len), len);
+    if (NULL != (path = file_tilder(file, path, len))) {
+        return file_getenv(path, len);
+    }
+    return NULL;
 }
 
 

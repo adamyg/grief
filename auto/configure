@@ -27764,7 +27764,7 @@ for ac_func in \
 	strtok_r strerror_l strerror_r \
 	rand_r \
 	pread pwrite \
-	getlogin_r \
+	getlogin_r getpwnam_r getpwuid_r \
 	asctime_r ctime_r gmtime_r localtime_r \
 	timegm
 do :
