@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.48 2021/04/18 17:12:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.49 2021/04/19 16:28:49 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sysinfo.c,v 1.48 2021/04/18 17:12:58 cvsuser Exp $
+/* $Id: sysinfo.c,v 1.49 2021/04/19 16:28:49 cvsuser Exp $
  * System information services.
  *
  *
