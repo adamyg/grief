@@ -1,5 +1,5 @@
 /* -*- indent-width: 4; -*- */
-/* $Id: license.cr,v 1.11 2020/04/10 01:35:16 cvsuser Exp $
+/* $Id: license.cr,v 1.13 2021/04/15 15:18:43 cvsuser Exp $
  * License information.
  *
  *
@@ -8,7 +8,9 @@
 #include "grief.h"
 
 #define LICENSE_FILE    "license.txt"
-#define LICENSE_SOURCE  "http://griefedit.sourceforge.net/license.txt"
+
+    //#define LICENSE_SOURCE  "http://griefedit.sourceforge.net/license.txt"
+#define LICENSE_SOURCE  "https://github.com/adamyg/grief/blob/master/COPYING"
 #define LICENSE_TEXT    1001
 
 static list             license_import(void);
@@ -23,15 +25,15 @@ main()
             "",
             "   Glorious Reconfigurable Interactive Editing Facility",
             "",
-            "                __________  ________________",
-            "               / ____/ __ \\/  _/ ____/ ____/",
-            "              / / __/ /_/ // // __/ / /_",
-            "             / /_/ / _, _// // /___/ __/",
-            "             \\____/_/ |_/___/_____/_/",
+            "                         __________  ________________",
+            "                        / ____/ __ \\/  _/ ____/ ____/",
+            "                       / / __/ /_/ // // __/ / /_",
+            "                       / /_/ / _, _// // /___/ __/",
+            "                       \\____/_/ |_/___/_____/_/",
             "",
-            "         1000111 1110010 1101001 1100101 1100110",
+            "                   1000111 1110010 1101001 1100101 1100110",
             "",
-            "Copyright (c) 1998 - 2020, Adam Young.",
+            "Copyright (c) 1998 - 2021, Adam Young.",
             "All Rights Reserved.",
             "",
             "Derived from Crisp2.2, by Paul Fox, 1991.",

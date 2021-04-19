@@ -1,8 +1,8 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.9 2020/06/18 20:35:16 cvsuser Exp $
+# $Id: Makefile.in,v 1.10 2021/04/15 15:19:21 cvsuser Exp $
 # Help documentation.
 #
-# Copyright (c) 1998 - 2020, Adam Young.
+# Copyright (c) 1998 - 2021, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -98,7 +98,7 @@ release:
 debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
-help:			outdirs $(OBJS) prog user cshelp features
+help:			outdirs $(OBJS) prog user cshelp features license
 
 outdirs:		$(OUTDIR)/.created $(CSOUTDIR)/.created $(FEATOUTDIR)/.created
 
@@ -117,6 +117,9 @@ pdf:
 cshelp:		$(CSOBJS)
 
 features:	$(FEATOBJS)
+
+license:	../COPYING
+	@cp ../COPYING $(OUTDIR)/license.txt
 
 %/.created:
 	-@mkdir $(@D)
