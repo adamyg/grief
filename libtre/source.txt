@@ -1,0 +1,23 @@
+
+        Source: https://github.com/laurikari/tre/
+        
+        
+            Latest release was version 0.8.0 as at (20 Sep 2009).
+            
+            
+        Introduction
+
+            TRE is a lightweight, robust, and efficient POSIX compliant regexp matching 
+            library with some exciting features such as approximate (fuzzy) matching.
+
+            The matching algorithm used in TRE uses linear worst-case time in the length
+            of the text being searched, and quadratic worst-case time in the length of
+            the used regular expression.
+
+            In other words, the time complexity of the algorithm is O(M^2N), where M is
+            the length of the regular expression and N is the length of the text. The used
+            space is also quadratic on the length of the regex, but does not depend on the
+            searched string. This quadratic behaviour occurs only on pathological cases
+            which are probably very rare in practice.
+                        
+            

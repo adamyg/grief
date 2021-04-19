@@ -1,11 +1,11 @@
 #ifndef CR_CONFIG_H_INCLUDED
 #define CR_CONFIG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(config_h, "$Id: config.hin,v 1.50 2021/04/13 12:29:55 cvsuser Exp $")
+__CIDENT_RCSID(config_h, "$Id: config.hin,v 1.54 2021/04/19 14:57:19 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; set-indent: 4; -*- */
-/* $Id: config.hin,v 1.50 2021/04/13 12:29:55 cvsuser Exp $
+/* $Id: config.hin,v 1.54 2021/04/19 14:57:19 cvsuser Exp $
  * Machine configuration.
  *
  *
@@ -100,6 +100,7 @@ __CPRAGMA_ONCE
 #undef HAVE_WINSOCK2_H
 #undef HAVE_WINCRYPT_H
 #undef HAVE_WINIOCTL_H
+#undef HAVE_BCRYPT_H
 
 /* Explicit header checks */
 #undef HAVE_SYS_TYPES_H
@@ -114,7 +115,6 @@ __CPRAGMA_ONCE
 #undef HAVE_SYS_UTSNAME_H
 #undef HAVE_SYS_SELECT_H
 #undef HAVE_SYS_SOCKET_H
-#undef HAVE_SYS_UTIME_H
 #undef HAVE_SYS_WAIT_H
 #undef HAVE_SYS_STAT_H
 #undef HAVE_SYS_STATFS_H
@@ -134,6 +134,7 @@ __CPRAGMA_ONCE
 #undef HAVE_STDALIGN_H
 #undef HAVE_STDATOMIC_H
 #undef HAVE_THREADS_H
+#undef HAVE_XTHREADS_H
 
 #undef HAVE_THREAD_H
 #undef HAVE_PTHREAD_H
@@ -160,13 +161,14 @@ __CPRAGMA_ONCE
 #undef HAVE_STRINGS_H
 #undef HAVE_STRING_H
 #undef HAVE_UNISTD_H
-#undef HAVE_LIMITS_H
+#undef HAVE_MATH_H
+
 #undef HAVE_ARGZ_H
-#undef HAVE_UTIME_H
 #undef HAVE_LIBGEN_H
 #undef HAVE_REGEX_H
 #undef HAVE_ALLOCA_H
-
+#undef HAVE_ERR_H
+#undef HAVE_FTS_H
 
 /*
  *  Available allocator functionality
@@ -178,6 +180,8 @@ __CPRAGMA_ONCE
 #undef HAVE_LIBMALLOC
 #undef HAVE_MALLOC_STATS
 #undef HAVE_MALLOPT
+#undef HAVE_MALLINFO
+
 
 /*
  *  Available terminal functionality
@@ -213,6 +217,8 @@ __CPRAGMA_ONCE
 
 #undef HAVE_NCURSES_NCURSES_H
 #undef HAVE_NCURSES_CURSES_H
+#undef HAVE_NCURSES_TERMCAP_H
+#undef HAVE_NCURSES_TERM_H
 #undef HAVE_NCURSES_H
 
 #undef HAVE_NCURSESW_NCURSESW_H
@@ -251,6 +257,30 @@ __CPRAGMA_ONCE
 
 #undef HAVE_INLINE
 #undef HAVE___INLINE
+#undef HAVE___FORCEINLINE
+
+#undef HAVE_DECL_SIZE_MAX
+#undef HAVE_DECL_SSIZE_MAX
+#undef HAVE_DECL_INT16_C
+#undef HAVE_DECL_INT16_MIN
+#undef HAVE_DECL_INT16_MAX
+#undef HAVE_DECL_UINT16_MAX
+#undef HAVE_DECL_INT32_C
+#undef HAVE_DECL_INT32_MIN
+#undef HAVE_DECL_INT32_MAX
+#undef HAVE_DECL_UINT32_MAX
+#undef HAVE_DECL_INT64_C
+#undef HAVE_DECL_INT64_MIN
+#undef HAVE_DECL_INT64_MAX
+#undef HAVE_DECL_UINT64_MAX
+#undef HAVE_DECL_INTPTR_MIN
+#undef HAVE_DECL_INTPTR_MAX
+#undef HAVE_DECL_UINTPTR_MAX
+#undef HAVE_DECL_WCHAR_MIN
+#undef HAVE_DECL_WCHAR_MAX
+#undef HAVE_DECL_INTMAX_MIN
+#undef HAVE_DECL_INTMAX_MAX
+#undef HAVE_DECL_UINTMAX_MAX
 
 #undef HAVE_INTMAX_T
 #undef HAVE_UINTMAX_T
@@ -258,12 +288,27 @@ __CPRAGMA_ONCE
 #undef HAVE_UINTPTR_T
 #undef HAVE_LONG_LONG_INT
 #undef HAVE_UNSIGNED_LONG_LONG_INT
+#undef HAVE_INT8_T
+#undef HAVE_INT16_T
+#undef HAVE_INT32_T
 #undef HAVE_INT64_T
+#undef HAVE_UINT8_T
+#undef HAVE_UINT16_T
+#undef HAVE_UINT32_T
+#undef HAVE_UINT64_T
+#undef HAVE_UINT_FAST8_T
+#undef HAVE_UINT_FAST16_T
+#undef HAVE_UINT_FAST32_T
+#undef HAVE_UINT_FAST64_T
 #undef HAVE___INT64
 #undef HAVE___INT16
 #undef HAVE___INT32
 #undef HAVE___INT8
+#undef HAVE_WCHAR_T
 #undef HAVE_SSIZE_T
+#undef HAVE_C99BOOL
+#undef HAVE_BOOL
+#undef HAVE__BOOL
 
 #undef HAVE_ENDIAN_H
 #undef HAVE_MACHINE_ENDIAN_H
@@ -282,12 +327,7 @@ __CPRAGMA_ONCE
 #undef HAVE_INTTYPES_H
 #undef HAVE_STDINT_H
 #undef HAVE_STDBOOL_H
-#undef HAVE_STDATOMIC_H
-#undef HAVE_THREADS_H
 
-#undef HAVE_STDARG_H
-#undef HAVE_STDIO_H
-#undef HAVE_STDLIB_H
 #undef HAVE_WCTYPE_H
 #undef HAVE_WCHAR_H
 
@@ -305,6 +345,7 @@ __CPRAGMA_ONCE
  */
 
         /* environ support */
+	
 #undef HAVE_ENVIRON
 #undef HAVE__ENVIRON
 #undef HAVE___ENVIRON
@@ -315,30 +356,32 @@ __CPRAGMA_ONCE
 
         /* system library */
 
-#undef HAVE_ISASCII
-#undef HAVE___ISASCII
-#undef HAVE_ISBLANK
-#undef HAVE___ISBLANK
-#undef HAVE_ISCSYM
-#undef HAVE___ISCSYM
-
 #undef HAVE_BCMP
 #undef HAVE_BZERO
+#undef HAVE_BCOPY
 
 #undef HAVE_MEMCMP
 #undef HAVE_MEMSET
 #undef HAVE_MEMMOVE
+#undef HAVE_MEMCCPY
+#undef HAVE__MEMCCPY
+
+#undef HAVE_SECUREZEROMEMORY
+#undef HAVE_EXPLICIT_BZERO
+#undef HAVE_MEMSET_S
 
 #undef HAVE_MATHERR
 
 #undef HAVE_CHOWN
 #undef HAVE_CHROOT
+#undef HAVE_MKTEMP
 #undef HAVE_MKSTEMP
 #undef HAVE_SELECT
 #undef HAVE_POLL
 #undef HAVE_LINK
 #undef HAVE_LSTAT
 #undef HAVE_SYMLINK
+#undef HAVE_RENAME
 
 #undef HAVE_FGETPOS
 #undef HAVE_FSETPOS
@@ -346,7 +389,11 @@ __CPRAGMA_ONCE
 
 #undef HAVE_TRUNCATE
 #undef HAVE_FTRUNCATE
-#undef HAVE_RENAME
+
+#undef HAVE_OPENDIR
+#undef HAVE_READDIR_R
+#undef HAVE_FINDFIRST
+#undef HAVE__FINDFIRST
 
 #undef HAVE_GETLINE
 #undef HAVE_GETDELIM
@@ -356,19 +403,24 @@ __CPRAGMA_ONCE
 #undef HAVE_GETSUBOPT
 
 #undef HAVE_DECL_TZNAME
-#undef HAVE_GETLOGIN
 #undef HAVE_GETEXECNAME
+#undef HAVE_GETLOGIN
+#undef HAVE_GETLOGIN_R
+#undef HAVE_GETPWNAM_R
+#undef HAVE_GETPWUID_R
+
+#undef HAVE_INDEX
+#undef HAVE_RINDEX
 
 #undef HAVE_STRCASECMP
+#undef HAVE_STRNCASECMP
 #undef HAVE___STRCASECMP
 #undef HAVE_STRCHR
 #undef HAVE_STRERROR
 #undef HAVE_STRICMP
 #undef HAVE_STRRCHR
 #undef HAVE_STRDUP
-#undef HAVE_STRERROR
 #undef HAVE_STRFTIME
-#undef HAVE_STRICMP
 #undef HAVE_STRTOUL
 #undef HAVE_STRTOF
 #undef HAVE_STRTOLD
@@ -379,6 +431,19 @@ __CPRAGMA_ONCE
 #undef HAVE_STRNDUP
 #undef HAVE_STRLCPY
 #undef HAVE_STRLCAT
+#undef HAVE_STRSEP
+#undef HAVE_STRSTR
+#undef HAVE_STRNSTR
+#undef HAVE_STRCASESTR
+#undef HAVE_STRCASESTR_L
+#undef HAVE_STRTONUM
+
+#undef HAVE_ISASCII
+#undef HAVE___ISASCII
+#undef HAVE_ISBLANK
+#undef HAVE___ISBLANK
+#undef HAVE_ISCSYM
+#undef HAVE___ISCSYM
 
 #undef HAVE_SETPGID
 #undef HAVE_ISSETUGID
@@ -388,47 +453,46 @@ __CPRAGMA_ONCE
 #undef HAVE_STRTOK_R
 #undef HAVE_STRERROR_L
 #undef HAVE_STRERROR_R
+
 #undef HAVE_RAND_R
+
 #undef HAVE_PREAD
 #undef HAVE_PWRITE
-#undef HAVE_GETLOGIN_R
+
+#undef HAVE_GETW
+#undef HAVE_PUTW
+
+#undef HAVE_MKTIME
 #undef HAVE_ASCTIME_R
 #undef HAVE_CTIME_R
 #undef HAVE_GMTIME_R
+#undef HAVE_GMTIME_S
 #undef HAVE_LOCALTIME_R
 #undef HAVE_TIMEGM
-
-#undef HAVE_OPENDIR
-#undef HAVE_READDIR_R
+#undef HAVE__GET_TIMEZONE
+#undef HAVE_DECL_TZNAME
+#undef HAVE_STRUCT_TM_TM_ZONE
+#undef HAVE_TM_ZONE
 
 #undef HAVE_MERGESORT
 #undef HAVE_VERSIONSORT
 
-#undef HAVE_ROUND
-#undef HAVE_NEARBYINTF
-
-#undef HAVE_INDEX
-#undef HAVE_RINDEX
 #undef HAVE_SETPROCTITLE
 #undef HAVE_SETPROCNAME
 #undef HAVE_GETPROCNAME
 #undef HAVE_ERR
 #undef HAVE_MKDTEMP
 #undef HAVE_PLEDGE
-#undef HAVE_STRTONUM
-#undef HAVE_STRCASESTR
-#undef HAVE_STRSEP
 #undef HAVE_STRINGLIST
 #undef HAVE_REALLOCARRAY
 
 #undef HAVE_SIGSETMASK
 #undef HAVE_SIGACTION
 #undef HAVE_SIGINTERRUPT
+#undef HAVE_SIGFILLSET
 #undef HAVE_STRSIGNAL
 #undef HAVE_PRCTL
 
-#undef HAVE_WCHAR_H
-#undef HAVE_WCTYPE_H
 #undef HAVE_MBRTOWC
 #undef HAVE_WCRTOMB
 #undef HAVE_WCSCMP
@@ -448,6 +512,8 @@ __CPRAGMA_ONCE
 #undef CLOSEDIR_VOID
 #undef GETPGRP_VOID
 
+#undef HAVE_VA_COPY
+#undef HAVE___VA_COPY
 #undef HAVE_VPRINTF
 #if defined(HAVE_VPRINTF) && (HAVE_VPRINTF)
 #undef HAVE_PRINTF
@@ -459,16 +525,6 @@ __CPRAGMA_ONCE
 #undef HAVE__VSNPRINTF
 #undef HAVE_ASPRINTF
 #undef HAVE_VASPRINTF
-
-#undef HAVE_MBRTOWC
-#undef HAVE_WCRTOMB
-#undef HAVE_WCSCMP
-#undef HAVE_WCSCPY
-#undef HAVE_WCSLEN
-#undef HAVE_WCTOMB
-#undef HAVE_WMEMCMP
-#undef HAVE_WMEMCPY
-#undef HAVE_WMEMMOVE
 
 #undef HAVE_LOCALE_H
 #undef HAVE_SETLOCALE
@@ -486,6 +542,23 @@ __CPRAGMA_ONCE
 #undef HAVE_SPAWN_H
 #undef HAVE_POSIX_SPAWN
 #undef HAVE_POSIX_SPAWNP
+
+#undef HAVE_ROUND
+#undef HAVE_NEARBYINTF
+
+#undef HAVE_FECLEAREXCEPT
+#undef HAVE_FPCLASSIFY
+#undef HAVE_ISNAN
+#undef HAVE__ISNAN
+#undef HAVE_ISINF
+#undef HAVE__ISINF
+#undef HAVE_ISFINITE
+#undef HAVE__ISFINITE
+#undef HAVE_FINITE
+#undef HAVE__FINITE
+
+#undef HAVE_ALLOCA
+#undef HAVE__ALLOCA
 
         /* psuedo tty */
 #undef HAVE_PTY_H
@@ -584,6 +657,13 @@ __CPRAGMA_ONCE
 #undef HAVE_BZLIB_H
 #undef HAVE_LIBBZ2
 
+#undef HAVE_LIBLZMA
+#undef HAVE_LZMA_H
+
+        /* glib */
+#undef HAVE_GLIB
+#undef HAVE_GLIB_GLIB_H
+
         /* libguess */
 #undef HAVE_LIBGUESS
 #undef HAVE_LIBGUESS_EXTENSIONS
@@ -602,10 +682,12 @@ __CPRAGMA_ONCE
 #undef HAVE_DLFCN_H
 #undef HAVE_LIBLTDL
 #undef HAVE_LTDL_H
+#undef HAVE_DLADDR
 
         /* openssl */
 #undef HAVE_OPENSSL
 #undef HAVE_OPENSSL_SSL_H
+#undef HAVE_OPENSSL_CRYPTO_H
 #undef LIBCURL_FEATURE_SSL
 
         /* libcurl */

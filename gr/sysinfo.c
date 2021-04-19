@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.47 2021/04/05 08:25:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.48 2021/04/18 17:12:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sysinfo.c,v 1.47 2021/04/05 08:25:57 cvsuser Exp $
+/* $Id: sysinfo.c,v 1.48 2021/04/18 17:12:58 cvsuser Exp $
  * System information services.
  *
  *
@@ -64,6 +64,7 @@ __CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.47 2021/04/05 08:25:57 cvsuser E
 
 #include "debug.h"
 #include "system.h"
+#include "getpwd.h"
 #include "main.h"
 
 static const char *     tmpdir2(const char *env);
@@ -90,8 +91,9 @@ sysinfo_username(char *buf, int len)
 
     if (NULL == user) {
 #if defined(HAVE_PWD_H) && !defined(WIN32)
+        passwd_t passwd = {0};
         struct passwd *pw;
-        if (NULL != (pw = getpwuid(getuid()))) {
+        if (NULL != (pw = sys_getpwuid(&passwd, getuid()))) {
             user = pw->pw_name;
         }
 #endif
@@ -104,6 +106,10 @@ sysinfo_username(char *buf, int len)
         }
         user = chk_salloc(user);
         chk_leak(user);
+
+#if defined(HAVE_PWD_H) && !defined(WIN32)
+	sys_getpwend(&pwd, pw);			/* release system resources */ 
+#endif
     }
     return user && buf ? strxcpy(buf, user, len) : user;
 }
@@ -133,19 +139,13 @@ sysinfo_homedir(char *buf, int len)
         const char *p = NULL;
 
 #if defined(HAVE_PWD_H) && !defined(WIN32)
+        passwd_t passwd = {0};
         struct passwd *pw = NULL;
 
-#if defined(HAVE_GETLOGIN)
-        const char *login;
-
-        if (NULL != (login = getlogin()))
-            pw = getpwnam(login);
-#else
-            pw = getpwuid(getuid());
-#endif  /*HAVE_GETLOGIN*/
-
-        if (NULL != pw && *pw->pw_dir) {
-            p = pw->pw_dir;
+        if (NULL != (pw = sys_getpwlogin(&passwd))) {
+	    if (pw->pw_dir && *pw->pw_dir) {
+		p = pw->pw_dir; 		/* non-null */
+	    }
         }
 #endif  /*HAVE_PWD_H*/
 
@@ -212,10 +212,8 @@ sysinfo_homedir(char *buf, int len)
             fflush(stderr);
         }
 
-#if !defined(DOSISH)
-#ifdef HAVE_GETLOGIN
-        endpwent();                             /* release system resources */
-#endif
+#if defined(HAVE_PWD_H) && !defined(WIN32)
+	sys_getpwend(&pwd, pw);			/* release system resources */ 
 #endif
     }
     return (home && buf ? strxcpy(buf, home, len) : home);

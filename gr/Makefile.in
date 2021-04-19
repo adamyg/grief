@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.78 2020/06/20 02:22:14 cvsuser Exp $
+# $Id: Makefile.in,v 1.79 2021/04/18 16:16:57 cvsuser Exp $
 # GRIEF editor makefile.
 #
 #
-# Copyright (c) 1998 - 2020, Adam Young.
+# Copyright (c) 1998 - 2021, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -236,6 +236,7 @@ CSRC=\
 	eval.c			\
 	file.c			\
 	getkey.c		\
+	getpwd.c		\
 	hilite.c		\
 	keyboard.c		\
 	keywd.c			\
