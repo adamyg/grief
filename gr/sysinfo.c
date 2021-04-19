@@ -108,7 +108,7 @@ sysinfo_username(char *buf, int len)
         chk_leak(user);
 
 #if defined(HAVE_PWD_H) && !defined(WIN32)
-	sys_getpwend(&pwd, pw);			/* release system resources */ 
+        sys_getpwend(&passwd, pw);              /* release system resources */
 #endif
     }
     return user && buf ? strxcpy(buf, user, len) : user;
@@ -143,9 +143,9 @@ sysinfo_homedir(char *buf, int len)
         struct passwd *pw = NULL;
 
         if (NULL != (pw = sys_getpwlogin(&passwd))) {
-	    if (pw->pw_dir && *pw->pw_dir) {
-		p = pw->pw_dir; 		/* non-null */
-	    }
+            if (pw->pw_dir && *pw->pw_dir) {
+                p = pw->pw_dir;                 /* non-null */
+            }
         }
 #endif  /*HAVE_PWD_H*/
 
@@ -213,7 +213,7 @@ sysinfo_homedir(char *buf, int len)
         }
 
 #if defined(HAVE_PWD_H) && !defined(WIN32)
-	sys_getpwend(&pwd, pw);			/* release system resources */ 
+        sys_getpwend(&passwd, pw);              /* release system resources */
 #endif
     }
     return (home && buf ? strxcpy(buf, home, len) : home);
@@ -720,3 +720,5 @@ sysinfo_domainname(char *name, int len)
     return domain && name ? strxcpy(name, domain, len) : domain;
 }
 /*end*/
+
+
