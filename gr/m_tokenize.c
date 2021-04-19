@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_tokenize_c,"$Id: m_tokenize.c,v 1.26 2020/04/11 23:15:33 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_tokenize_c,"$Id: m_tokenize.c,v 1.27 2021/04/18 16:49:49 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_tokenize.c,v 1.26 2020/04/11 23:15:33 cvsuser Exp $
+/* $Id: m_tokenize.c,v 1.27 2021/04/18 16:49:49 cvsuser Exp $
  * String primitives.
  *
  *
@@ -355,7 +355,7 @@ split_buffer(struct split *sp, const char *str, unsigned length)
              *  string
              */
 asstring:;  if (lp) {
-                ED_TRACE(("\t\ttoken(STR,%d,%d) = %s\n", atoms, end - start, start))
+                ED_TRACE(("\t\ttoken(STR,%d,%d) = %s\n", atoms, (int)(end - start), start))
                 lp = atom_push_nstr(lp, start, end - start);
             } else {
                 ++sp->sp_strings;
@@ -464,7 +464,7 @@ split_isnumeric(char ch)
         o *TOK_NUMERIC_STRTOL* -
             Numeric fields are converted using <strtol> allowing
             support leading base specifications hexadecimal (0x), 
-	    octal (0) and binary (0b).
+            octal (0) and binary (0b).
 
         o *TOK_NUMERIC_STRICT* -
             Strict conversion of numeric fields where by any invalid
@@ -1228,7 +1228,7 @@ atom_push_nstr(LIST *lp, const char *value, int length) {
 
     atoms->type = F_LIT;
     atoms->length = length;
-    atoms->u.string = str = chk_alloc(length+1);
+    atoms->u.s = str = chk_alloc(length+1);
     memcpy((char *)str, value, length);
     str[length+1] = 0;
     return (LIST *)(atoms + 1);

@@ -1,5 +1,5 @@
 /* -*- mode: cr; tabs: 4; -*- */
-/* $Id: grief_tail.h,v 1.22 2020/04/13 20:48:55 cvsuser Exp $
+/* $Id: grief_tail.h,v 1.23 2021/04/15 15:44:59 cvsuser Exp $
  * Common GRIEF macro definitions -- tail.
  * Utilised by the makeinc.pl script.
  *
@@ -67,6 +67,13 @@ extern const int                O_TRUNC;
 extern const int                O_WRONLY;
 extern const int                O_BINARY;
 
+/*
+ *  access
+ */
+extern const int                F_OK;
+extern const int                R_OK;
+extern const int                W_OK;
+extern const int                X_OK;
 
 /*
  *  seek

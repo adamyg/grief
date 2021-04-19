@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_file_c,"$Id: m_file.c,v 1.40 2020/04/21 00:01:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_file_c,"$Id: m_file.c,v 1.41 2021/04/16 11:45:43 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_file.c,v 1.40 2020/04/21 00:01:56 cvsuser Exp $
+/* $Id: m_file.c,v 1.41 2021/04/16 11:45:43 cvsuser Exp $
  * File primitives.
  *
  *
@@ -1398,7 +1398,7 @@ do_fstype(void)                 /* int ([string path]) */
             F_OK - Check if file exists (0).
             X_OK - Check to see if file is executable (1).
             W_OK - Check if file is writable (2).
-            X_OK - Check if file is readable (3).
+            R_OK - Check if file is readable (3).
 
     Macro Returns:
         On successful return this primitive returns >= 0; -1 is

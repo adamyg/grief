@@ -1305,6 +1305,13 @@ extern const int                O_TRUNC;
 extern const int                O_WRONLY;
 extern const int                O_BINARY;
 
+/*
+ *  access
+ */
+extern const int                F_OK;
+extern const int                R_OK;
+extern const int                W_OK;
+extern const int                X_OK;
 
 /*
  *  seek
