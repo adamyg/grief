@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.40 2020/04/21 00:01:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.42 2021/06/10 08:13:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_string.c,v 1.40 2020/04/21 00:01:56 cvsuser Exp $
+/* $Id: m_string.c,v 1.42 2021/06/10 08:13:22 cvsuser Exp $
  * String primitives.
  *
  *
@@ -27,6 +27,8 @@ __CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.40 2020/04/21 00:01:56 cvsuser
 #include <limits.h>
 #include <stdlib.h>
 #include <math.h>                               /* HUGE_VAL */
+#include "../libchartable/libchartable.h"
+#include "../libchartable/utf8.h"
 #include <libstr.h>                             /* str_...()/sxprintf() */
 #include <edalt.h>
 
@@ -50,7 +52,7 @@ static const char *     x_strcasestr(const char *haystack, const char *needle);
 
 
 /*  Function:           do_strxlen
- *      Work-horse strlen() and strnlen() primitives.
+ *      Workhorse strlen() and strnlen() primitives.
  *
  *  Parameters:
  *      step - List step increment.
@@ -89,6 +91,56 @@ do_strxlen(int step)
             break;
         case F_RSTR:
             len = r_used(LGET_PTR2(const ref_t, lp));
+            break;
+        default:
+            len = 0;
+            break;
+        }
+
+        if (len > longest) {
+            longest = len;
+        }
+
+        for (s = 0; s < step && lp; ++s) {
+            lp = atom_next(lp);
+        }
+    }
+
+    return longest;
+}
+
+
+static accint_t
+do_wstrxlen(int step)
+{
+    accint_t len, longest = 0;
+    const LIST *lp;
+    int s;
+
+    if (isa_string(1)) {
+        return utf8len(get_str(1));
+    }
+
+    if (step <= 0) {
+        step = 1;                               /* default */
+    }
+
+    for (lp = get_list(1); lp && F_HALT != *lp;) {
+        switch (*lp) {
+        case F_STR:
+        case F_LIT:
+            len = (int)utf8len(LGET_PTR2(const char, lp));
+            break;
+        case F_ID: {
+                const int id = LGET_ID(lp);
+                const char *name = builtin[id].b_name;
+
+                assert(id >= 0 || (unsigned)id < builtin_count);
+                len = (int)utf8len(name);
+            }
+            break;
+        case F_RSTR:
+            len = (int)utf8len(r_ptr(LGET_PTR2(const ref_t, lp)));
             break;
         default:
             len = 0;
@@ -155,6 +207,13 @@ do_strlen(void)                 /* (string|list arg, [int step = 1]) */
 }
 
 
+void
+do_wstrlen(void)                /* (string|list arg, [int step = 1]) */
+{
+    acc_assign_int(do_wstrxlen(get_xinteger(2, 1)));
+}
+
+
 /*  Function:           do_strnlen
  *      strnlen primitive - return length of string argument or length of
  *      longest string in a list, limited to maxlen.
@@ -204,6 +263,16 @@ void
 do_strnlen(void)                /* (string str, int maxlen, [int step = 1]) */
 {
     const accint_t len = do_strxlen(get_xinteger(3, 1));
+    const accint_t maxlen = get_xinteger(2, 1);
+
+    acc_assign_int(len > maxlen ? maxlen : len);
+}
+
+
+void
+do_wstrnlen(void)               /* (string str, int maxlen, [int step = 1]) */
+{
+    const accint_t len = do_wstrxlen(get_xinteger(3, 1));
     const accint_t maxlen = get_xinteger(2, 1);
 
     acc_assign_int(len > maxlen ? maxlen : len);
@@ -267,7 +336,6 @@ do_atoi(void)                   /* int (string str, [int svalue = TRUE]) */
         acc_assign_int((accint_t) *((uint8_t *)cp));
     }
 }
-
 
 
 /*  Function:           do_itoa
@@ -725,6 +793,37 @@ do_index(void)                  /* int (string str, int ch|string s) */
 }
 
 
+void
+do_windex(void)                 /* int (string str, int ch|string s) */
+{
+    const char *str = get_str(1);
+    const char *cp;
+    int val = 0;
+
+    if (isa_integer(2)) {                       /* extension */
+        const int ch = get_xinteger(2, 0);
+
+        if (ch > 0) {
+            if (NULL != (cp = utf8chr(str, ch))) {
+                val = (cp - str) + 1;
+            }
+        }
+
+    } else {
+        const char *cp2 = get_xstr(2);
+
+        if (NULL == cp2 || 0 == *cp2) {
+            val = get_strlen(1) + 1;            /* EOS */
+
+        } else if (NULL != (cp = utf8str(str, cp2))) {
+            val = (cp - str) + 1;               /* character position */
+        }
+    }
+
+    acc_assign_int(val);
+}
+
+
 /*  Function:           do_firstof
  *      firstof primitive - first index of character.
  *
@@ -767,23 +866,50 @@ do_index(void)                  /* int (string str, int ch|string s) */
         lastof, index, rindex
  */
 void
-do_firstof(void)                /* int (string str, string chars [,int &result]) */
+do_firstof(void)                /* int (string str, string chars [, int &result]) */
 {
-    const char *start = get_str(1), *str = start,
-            *end = str + get_strlen(1);
-    const char *chars = get_xstr(2);
-    const char *cp;
-    int val = 0;
+    const char *str = get_str(1),
+        *characters = get_xstr(2), *pbrk;
+    SYMBOL *sp = get_symbol(3);
+    accint_t position = 0;
 
-    while (str < end)  {
-        if (NULL != (cp = strchr(chars, *str++))) {
-            val = str - start;                  /* starting from offset 1 */
-            break;
+    if (NULL != (pbrk = strpbrk(str, characters))) {
+        position = (accint_t)((pbrk - str) + 1);
+    }
+
+    if (sp) sym_assign_int(sp, (pbrk ? *pbrk : 0));
+    acc_assign_int(position);
+}
+
+
+void
+do_wfirstof(void)               /* int (string str, string chars [,int &result]) */
+{
+    const char *str = get_str(1),
+        *characters = get_xstr(2);
+    utf8_int32_t wch, wch2;
+    SYMBOL *sp = get_symbol(3);
+
+    if (characters && *characters) {
+        accint_t cursor;
+
+        for (cursor = 1; *str; ++cursor) {
+            const char *c = characters;
+
+            str = (const char *)utf8codepoint(str, &wch);
+            while (*c) {
+                c = (const char *)utf8codepoint(c, &wch2);
+                if (wch == wch2) {
+                    if (sp) sym_assign_int(sp, wch);
+                    acc_assign_int(cursor);
+                    return;
+                }
+            }
         }
     }
 
-    sym_assign_int(get_symbol(3), (val > 0 ? str[-1] : 0));
-    acc_assign_int(val);
+    if (sp) sym_assign_int(sp, 0);
+    acc_assign_int(0);
 }
 
 
@@ -852,6 +978,37 @@ do_rindex(void)                 /* int (string str, int ch|string s) */
 }
 
 
+void
+do_wrindex(void)                /* int (string str, int ch|string s) */
+{
+    const char *str = get_str(1);
+    const char *cp;
+    int val = 0;
+
+    if (isa_integer(2)) {                       /* extension 21/04/06 */
+        int ch = get_xinteger(2, 0);
+
+        if (ch > 0) {
+            if ((cp = utf8rchr(str, ch)) != NULL) {
+                val = (cp - str) + 1;
+            }
+        }
+
+    } else {
+        const char *str2 = get_str(2);
+        int len = get_strlen(2);
+
+        for (cp = str + get_strlen(1) - 1; cp >= str; --cp)
+            if (0 == utf8ncmp(cp, str2, len)) {
+                val = (cp - str) + 1;
+                break;
+            }
+    }
+
+    acc_assign_int(val);
+}
+
+
 /*  Function:           do_lastof
  *      lastof primitive - last index of character.
  *
@@ -899,6 +1056,7 @@ do_lastof(void)                 /* int (string str, string chars [,int &result])
     const char *start = get_str(1),
             *end = start + get_strlen(1), *str = end;
     const char *chars = get_xstr(2);
+    SYMBOL *sp = get_symbol(3);
     const char *cp;
     int val = 0;
 
@@ -909,8 +1067,40 @@ do_lastof(void)                 /* int (string str, string chars [,int &result])
         }
     }
 
-    sym_assign_int(get_symbol(3), (val > 0 ? *str : 0));
+    if (sp) sym_assign_int(sp, (val > 0 ? *str : 0));
     acc_assign_int(val);
+}
+
+
+void
+do_wlastof(void)                /* int (string str, string chars [,int &result]) */
+{
+    const char *str = get_str(1),
+        *characters = get_xstr(2);
+    SYMBOL *sp = get_symbol(3);
+    int position = 0, character = 0;
+    utf8_int32_t wch, wch2;
+
+    if (characters && *characters) {
+        accint_t cursor;
+        
+        for (cursor = 1; *str; ++cursor) {
+            const char *c = characters;
+
+            str = (const char *)utf8codepoint(str, &wch);
+            while (*c) {
+                c = (const char *)utf8codepoint(c, &wch2);
+                if (wch == wch2) {
+                    character = wch;
+                    position = cursor;
+                    /*continue*/
+                }
+            }
+        }
+    }
+
+    if (sp) sym_assign_int(sp, character);
+    acc_assign_int(position);
 }
 
 
@@ -968,6 +1158,7 @@ do_substr(void)                 /* string (string str, [int offset], [int length
     } else if (offset > slen) {
         offset = slen;
     }
+
     cp = str + offset;
     slen -= offset;
 
@@ -979,6 +1170,57 @@ do_substr(void)                 /* string (string str, [int offset], [int length
         length = slen;
     }
     acc_assign_str(cp, length);
+}
+
+
+void
+do_wsubstr(void)                /* string (string str, [int offset], [int length]) */
+{                                               /* MCHAR */
+    const char *str = get_str(1);
+    const int slen = get_strlen(1);
+    int offset = get_xinteger(2, 1);            /* non-optional?? */
+    const char *cp, *cp2, *end = str + slen;
+    int length;
+
+    if (--offset < 0) {                         /* index-1/TODO */
+        offset = 0;
+    } else if (offset > slen) {
+        offset = slen;
+    }
+
+    cp = str;
+    while (*cp && offset > 0) {
+        const char *cend;
+        int32_t wch;
+
+        if ((cend = charset_utf8_decode_safe(cp, end, &wch)) > cp) {
+            cp = cend;
+            --offset;
+            continue; //next
+        }
+        break; //error
+    }
+
+    if (isa_undef(3)) {
+        length = slen;
+    } else if ((length = get_xinteger(3, 0)) < 0) {
+        length = 0;
+    }
+
+    cp2 = cp;
+    while (*cp2 && length > 0) {
+        const char *cend;
+        int32_t wch;
+
+        if ((cend = charset_utf8_decode_safe(cp2, end, &wch)) > cp2) {
+            cp2 = cend;
+            --length;
+            continue; //next
+        }
+        break; //error
+    }
+
+    acc_assign_str(cp, cp2 - cp);
 }
 
 
@@ -1318,7 +1560,7 @@ do_upper(void)                  /* (string str|int character, [TODO int capitali
     if (isa_integer(1)) {                       /* 24/04/06 */
         int ch = get_xinteger(1, 0);
 
-        if (ch >= 'a' && ch <= 'z') {           /* ASCII/MCHAR??? */
+        if (ch >= 'a' && ch <= 'z') {           /* MCHAR??? */
             ch = toupper(ch);
         }
         acc_assign_int(ch);
@@ -1331,10 +1573,24 @@ do_upper(void)                  /* (string str|int character, [TODO int capitali
         for (; *cp; ++cp) {
             const int ch = *cp;
 
-            if (ch >= 'a' && ch <= 'z') {       /* ASCII/MCHAR??? */
+            if (ch >= 'a' && ch <= 'z') {       /* MCHAR??? */
                 *cp = (unsigned char)toupper(ch);
             }
         }
+    }
+}
+
+
+void
+do_wupper(void)                 /* (string str|int character, [TODO int capitalize) */
+{
+    if (isa_integer(1)) {
+        int ch = get_xinteger(1, 0);
+        acc_assign_int(utf8uprcodepoint(ch));
+
+    } else {
+        acc_assign_str(get_str(1), get_strlen(1));
+        utf8upr(acc_get_sbuf());
     }
 }
 
@@ -1379,7 +1635,7 @@ do_lower(void)                  /* string|int (string str|int character) */
     if (isa_integer(1)) {                       /* 24/04/06 */
         int ch = get_xinteger(1, 0);
 
-        if (ch >= 'A' && ch <= 'Z') {           /* ASCII/MCHAR??? */
+        if (ch >= 'A' && ch <= 'Z') {           /* MCHAR??? */
             ch = tolower(ch);
         }
         acc_assign_int(ch);
@@ -1393,10 +1649,36 @@ do_lower(void)                  /* string|int (string str|int character) */
         for (; *cp; ++cp) {
             const int ch = *cp;
 
-            if (ch >= 'A' && ch <= 'Z') {       /* ASCII/MCHAR??? */
+            if (ch >= 'A' && ch <= 'Z') {       /* MCHAR??? */
                 *cp = (unsigned char)tolower(ch);
             }
         }
+    }
+}
+
+
+/*
+    Various functions provided will do case insensitive compares, or transform utf8 strings from one case to another.
+    Given the vastness of unicode, and the authors lack of understanding beyond latin codepoints on whether case means anything,
+    the following categories are the only ones that will be checked in case insensitive code:
+
+        ASCII
+        Latin-1 Supplement
+        Latin Extended-A
+        Latin Extended-B
+        Greek and Coptic
+        Cyrillic
+ */
+void
+do_wlower(void)                 /* string|int (string str|int character) */
+{
+    if (isa_integer(1)) {
+        int ch = get_xinteger(1, 0);
+        acc_assign_int(utf8lwrcodepoint(ch));
+
+    } else {
+        acc_assign_str(get_str(1), get_strlen(1));
+        utf8lwr(acc_get_sbuf());
     }
 }
 
@@ -2582,6 +2864,22 @@ do_strcmp(void)                 /* int (string s1, string s2 [, int length]) */
 }
 
 
+void
+do_wstrcmp(void)                /* int (string s1, string s2 [, int length]) */
+{
+    const char *s1 = get_str(1);
+    const char *s2 = get_str(2);
+    int len = get_xinteger(3, -1);
+
+    if (len > 0) {
+        acc_assign_int(utf8ncmp(s1, s2, len));
+
+    } else {
+        acc_assign_int(utf8cmp(s1, s2));
+    }
+}
+
+
 /*  Function:           do_strcasecmp
  *      strcasecmp primitive.
  *
@@ -2631,6 +2929,22 @@ do_strcasecmp(void)             /* (string s1, string s2 [, int length]) */
 
     } else {
         acc_assign_int(str_icmp(s1, s2));
+    }
+}
+
+
+void
+do_wstrcasecmp(void)            /* (string s1, string s2 [, int length]) */
+{
+    const char *s1 = get_str(1);
+    const char *s2 = get_str(2);
+    int len = get_xinteger(3, -1);
+
+    if (len > 0) {
+        acc_assign_int(utf8ncasecmp(s1, s2, len));
+
+    } else {
+        acc_assign_int(utf8casecmp(s1, s2));
     }
 }
 
@@ -2728,7 +3042,7 @@ do_strpop(void)                 /* (string str, [int length = 1], [int encoding]
 
         if (rp && (used = r_used(rp)) > 0) {
             /*
-             *  decode character value
+             *  decode character value, MCHAR/???
              */
             if (length >= used) {
                 length = used;                  /* trim to symbol length */
@@ -2800,6 +3114,33 @@ do_strpbrk(void)                /* int (string str, string characters) */
 }
 
 
+void
+do_wstrpbrk(void)               /* int (string str, string characters) */
+{
+    const char *str = get_str(1),
+        *characters = get_xstr(2);
+    utf8_int32_t wch, wch2;
+
+    if (characters && *characters) {            /* firstof() */
+        accint_t cursor;
+
+        for (cursor = 1; *str; ++cursor) {
+            const char *c = characters;
+
+            str = (const char *)utf8codepoint(str, &wch);
+            while (*c) {
+                c = (const char *)utf8codepoint(c, &wch2);
+                if (wch == wch2) {
+                    acc_assign_int(cursor);
+                    return;
+                }
+            }
+        }
+    }
+
+    acc_assign_int(0);
+}
+
 
 /*  Function:           do_strstr
  *      strstr primitive.
@@ -2852,6 +3193,40 @@ do_strstr(void)                 /* int (string haystack, string needle) */
 }
 
 
+void
+do_wstrstr(void)                /* int (string haystack, string needle) */
+{
+    const char *haystack = get_xstr(1);
+    const char *needle = get_xstr(2);
+    accint_t position = 0;
+
+    if (haystack && needle) {
+        if (0 == *needle) {                     /* empty needle */
+            position = 1;
+
+        } else {                                /* non-empty needle */
+            utf8_int32_t t_wch;
+            accint_t cursor;
+
+            for (cursor = 1; *haystack; ++cursor) {
+                const char *h = haystack, *n = needle;
+
+                while (*h == *n && *h && *n) {
+                    ++h, ++n;
+                }
+
+                if (0 == *n) {                  /* eon, match? */
+                    position = cursor;
+                    break;
+                }
+
+                haystack = (const char *)utf8codepoint(haystack, &t_wch);
+            }
+        }
+    }
+    acc_assign_int(position);
+}
+
 
 /*  Function:           do_strrstr
  *      strrstr primitive.
@@ -2894,14 +3269,48 @@ do_strrstr(void)                /* int (string haystack, string needle) */
     accint_t position = 0;
 
     if (haystack && needle) {
-        const char *str;
-
-        if (NULL != (str = strstr(haystack, needle))) {
-            position = (accint_t)((str - haystack) + 1);
-
-                                /* FIXME - hack implementation */
-            while (NULL != (str = strstr(str + 1, needle))) {
+        if (*needle) {
+            const char *str;
+                                                /* initial search */
+            if (NULL != (str = strstr(haystack, needle))) {
                 position = (accint_t)((str - haystack) + 1);
+
+                                                /* continue search */
+                while (NULL != (str = strstr(str + 1, needle))) {
+                    position = (accint_t)((str - haystack) + 1);
+                }
+            }
+        }
+    }
+    acc_assign_int(position);
+}
+
+
+void
+do_wstrrstr(void)               /* int (string haystack, string needle) */
+{
+    const char *haystack = get_xstr(1);
+    const char *needle = get_xstr(2);
+    accint_t position = 0;
+
+    if (haystack && needle) {
+        if (*needle) {                          /* non-empty needle */
+            utf8_int32_t t_wch;
+            accint_t cursor;
+
+            for (cursor = 1; *haystack; ++cursor) {
+                const char *h = haystack, *n = needle;
+
+                while (*h == *n && *h && *n) {
+                    ++h, ++n;
+                }
+
+                if (0 == *n) {                  /* eon, match? */
+                    position = cursor;
+                    /*continue search*/
+                }
+
+                haystack = (const char *)utf8codepoint(haystack, &t_wch);
             }
         }
     }
@@ -3022,17 +3431,39 @@ x_strcasestr(const char *haystack, const char *needle)
         A Grief extension.
  */
 void
-do_characterat(void)            /* int (string str, int index) */
+do_characterat(void)            /* int (string str, int index, [int encoding]) */
 {
     const char *str = get_str(1);
     int length = get_strlen(1);
     accint_t position = get_xinteger(2, -1);
+/*- int encoding = (int) get_xinteger(3, -1); -*/
     accint_t val = -1;
 
     if (position > 0 && position <= length) {
-        val = str[position - 1];                /* TODO/MCHAR??? */
+        val = str[position - 1];                /* MCHAR??? */
     }
     acc_assign_int(val);
+}
+
+
+void
+do_wcharacterat(void)
+{
+    const char *str = get_str(1);
+    accint_t position = get_xinteger(2, -1);
+
+    if (str && position > 0) {
+        utf8_int32_t wch = 0;
+        const char *next;
+
+        for (; (next = utf8codepoint(str, &wch)) > str && wch; str = next) {
+            if (--position == 0) {
+                acc_assign_int(wch);
+                return;
+            }
+        }
+    }
+    acc_assign_int(-1);
 }
 
 
@@ -3061,4 +3492,5 @@ string_mul(const char *str, int len, int multiple)
 
     acc_assign_strlen(i);
 }
+
 /*end*/

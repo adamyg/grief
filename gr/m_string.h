@@ -1,11 +1,11 @@
 #ifndef GR_M_STRING_H_INCLUDED
 #define GR_M_STRING_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_string_h,"$Id: m_string.h,v 1.14 2015/07/08 21:08:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_string_h,"$Id: m_string.h,v 1.15 2021/06/10 06:13:02 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_string.h,v 1.14 2015/07/08 21:08:15 cvsuser Exp $
+/* $Id: m_string.h,v 1.15 2021/06/10 06:13:02 cvsuser Exp $
  * String primitives.
  *
  *
@@ -70,8 +70,25 @@ extern void                 do_substr(void);
 extern void                 do_trim(void);
 extern void                 do_upper(void);
 
+extern void                 do_wcharacterat(void);
+extern void                 do_wfirstof(void);
+extern void                 do_windex(void);
+extern void                 do_wlastof(void);
+extern void                 do_wlower(void);
+extern void                 do_wrindex(void);
+extern void                 do_wstrcasecmp(void);
+extern void                 do_wstrcmp(void);
+extern void                 do_wstrlen(void);
+extern void                 do_wstrnlen(void);
+extern void                 do_wstrpbrk(void);
+extern void                 do_wstrrstr(void);
+extern void                 do_wstrstr(void);
+extern void                 do_wsubstr(void);
+extern void                 do_wupper(void);
+
 extern void                 string_mul(const char *str, int len, int multipler);
 
 __CEND_DECLS
 
 #endif /*GR_M_STRING_H_INCLUDED*/
+

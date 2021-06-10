@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_mchar_c,"$Id: m_mchar.c,v 1.11 2014/10/22 02:33:05 ayoung Exp $")
+__CIDENT_RCSID(gr_m_mchar_c,"$Id: m_mchar.c,v 1.13 2021/06/10 11:57:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_mchar.c,v 1.11 2014/10/22 02:33:05 ayoung Exp $
+/* $Id: m_mchar.c,v 1.13 2021/06/10 11:57:23 cvsuser Exp $
  * Multibyte/locale primitives.
  *
  *
@@ -22,6 +22,7 @@ __CIDENT_RCSID(gr_m_mchar_c,"$Id: m_mchar.c,v 1.11 2014/10/22 02:33:05 ayoung Ex
 #include <chkalloc.h>
 
 #include "m_mchar.h"
+#include "../libchartable/libchartable.h"
 
 #include "accum.h"                              /* acc_...() */
 #include "buffer.h"                             /* buf_...() */
@@ -301,4 +302,21 @@ inq_encodings(void)             /* list ([int flags]) */
 {
     //TODO
 }
+
+
+void
+do_wcwidth(void)                /* int (string str | int character), [int default]] */
+{
+    int width = -1;
+
+    if (isa_integer(1)) {
+        width = charset_width_ucs(get_xinteger(1, 0), get_xinteger(2, -1));
+
+    } else if (isa_string(1)) {
+        width = charset_utf8_swidth(get_str(1));
+    }
+
+    acc_assign_int((accint_t) width);
+}
+
 /*end*/
