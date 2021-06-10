@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetwidth_c,"$Id: charsetwidth.c,v 1.14 2021/06/10 12:16:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetwidth_c,"$Id: charsetwidth.c,v 1.15 2021/06/10 14:35:26 cvsuser Exp $")
 
 /*
  * Source: https://github.com/termux/wcwidth
@@ -537,7 +537,7 @@ static struct width_interval WIDE_EASTASIAN[] = {
         {0x30000, 0x3fffd},  // (nil)                   ..(nil)
 };
 
-static bool intable(struct width_interval* table, int table_length, int c) {
+static int intable(struct width_interval* table, int table_length, int c) {
         // Binary search in table.
         int bot = 0;
         int top = table_length - 1;
