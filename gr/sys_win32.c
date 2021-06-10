@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.59 2020/05/03 21:41:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.61 2021/06/02 15:30:18 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_win32.c,v 1.59 2020/05/03 21:41:40 cvsuser Exp $
+/* $Id: sys_win32.c,v 1.61 2021/06/02 15:30:18 cvsuser Exp $
  * WIN32 system support.
  *
  *
@@ -842,7 +842,7 @@ sys_copy(
     __CUNUSED(owner)
 #endif
     if ((rc = CopyFileA(src, dst, FALSE)) != FALSE) {
-        (void) fileio_chmod(dst, perms);        /* FIXME: return */
+        (void) sys_chmod(dst, perms);           /* FIXME: return */
 #ifdef HAVE_CHOWN
         chown(dst, owner, group);
 #endif
@@ -852,14 +852,34 @@ sys_copy(
 }
 
 
-/*  Function:           sys_realpath
- *      Retrieve the real/absolute for the speified path.
- *
+/*  Function:           sys_xxx
+ *      System i/o primitives.
  */
+int
+sys_mkdir(const char *path, int amode)
+{
+    return w32_mkdir(path, amode);
+}
+
+
+int
+sys_access(const char *path, int amode)
+{
+    return w32_access(path, amode);
+}
+
+
+int
+sys_chmod(const char *path, int mode)
+{
+    return w32_chmod(path, (mode_t)mode);
+}
+
+
 int
 sys_realpath(const char *name, char *buf, int size)
 {
-    return (NULL == _fullpath(buf, name, size) ? -1 : 0);
+    return (NULL == w32_realpath2(name, buf, size) ? -1 : 0);
 }
 
 

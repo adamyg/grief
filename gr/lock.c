@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_lock_c,"$Id: lock.c,v 1.30 2020/06/03 16:22:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_lock_c,"$Id: lock.c,v 1.31 2021/06/02 13:25:28 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: lock.c,v 1.30 2020/06/03 16:22:15 cvsuser Exp $
+/* $Id: lock.c,v 1.31 2021/06/02 13:25:28 cvsuser Exp $
  * File locking support.
 
     When two users edit the same file at the same time, they are likely
@@ -263,11 +263,7 @@ info_get(const char *lfile, Info_t *i)
     memset((char *)i, 0, sizeof (*i));          /* zap */
 
     /* is symbolic link? */
-#if defined(unix) || defined(__APPLE__)
-    if (lstat(lfile, &st) == -1)
-#else
     if (sys_lstat(lfile, &st) == -1)
-#endif
     {
         if (errno == ENOENT) {
             return 1;                           /* doesnt exist */
@@ -285,17 +281,10 @@ info_get(const char *lfile, Info_t *i)
 //              n >= (int)sizeof(buf)-1) {
 //      return -1;
 //  }
-#if defined(unix) || defined(__APPLE__)
-    if ((n = readlink(lfile, buf, sizeof (buf)-1)) == -1 ||
-                n >= (int)sizeof(buf)-1) {
-        return -1;
-    }
-#else
     if ((n = sys_readlink(lfile, buf, sizeof (buf)-1)) == -1 ||
             n >= (int)sizeof(buf)-1) {
         return -1;
     }
-#endif
     buf[n] = '\0';
 
     /* user */
@@ -366,11 +355,7 @@ info_get(const char *lfile, Info_t *i)
 static int
 lck_create(const Info_t *i, const char *buf)
 {
-#if defined(unix) || defined(__APPLE__)
-    return symlink(buf, i->i_file);
-#else
     return sys_symlink(buf, i->i_file);
-#endif
 }
 
 
@@ -387,11 +372,7 @@ static int
 lck_remove(const Info_t *i)
 {
     if (i->i_file) {
-#if defined(unix) || defined(__APPLE__)
-        return unlink(i->i_file);
-#else
         return sys_unlink(i->i_file);
-#endif
     }
     return -1;
 }

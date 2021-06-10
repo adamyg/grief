@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_file_c,"$Id: m_file.c,v 1.41 2021/04/16 11:45:43 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_file_c,"$Id: m_file.c,v 1.42 2021/06/02 13:42:03 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_file.c,v 1.41 2021/04/16 11:45:43 cvsuser Exp $
+/* $Id: m_file.c,v 1.42 2021/06/02 13:42:03 cvsuser Exp $
  * File primitives.
  *
  *
@@ -326,7 +326,7 @@ do_searchpath(void)             /* int (string searchpath, string file, [string 
                     strxcat(path, extension, sizeof(path));
                 }
 
-                if (0 == stat(path, &sb)) {
+                if (0 == sys_stat(path, &sb)) {
                     const char *result = path;
 
                     if (expand) {
@@ -1468,7 +1468,7 @@ do_mkdir(void)                  /* (string pathname, int mode = 0755) */
     if (ret && EEXIST != ret) {
         struct stat sb;
 
-        if (0 == stat(pathname, &sb) && S_ISDIR(sb.st_mode)) {
+        if (0 == sys_stat(pathname, &sb) && S_ISDIR(sb.st_mode)) {
             ret = 0;                            /* ignore, false error */
         }
     }
@@ -2781,11 +2781,7 @@ do_readlink(void)               /* string (string path, [string &link]) */
 //TODO
 //  path = file_tilder(path, t_path, sizeof(t_path));
 //  if (vfs_readlink(name, link, sizeof(link)-1) == -1)
-#if defined(unix) || defined(__APPLE__)
-    if ((ret = readlink(name, linkpath, sizeof(linkpath)-1)) <= -1) {
-#else
     if ((ret = sys_readlink(name, linkpath, sizeof(linkpath)-1)) <= -1) {
-#endif
         acc_assign_int(errno == ENOSYS ? 0 : -1);
 
     } else {
@@ -2939,12 +2935,7 @@ do_symlink(void)                /* int (string, string) */
     int ret = -1;
 
     if (path1 && path2) {
-#if defined(unix) || defined(__APPLE__)
-        if ((ret = symlink(path1, path2)) <= -1)
-#else
-        if ((ret = sys_symlink(path1, path2)) <= -1)
-#endif
-        {
+        if ((ret = sys_symlink(path1, path2)) <= -1) {
             system_call(ret);
         }
     } else {

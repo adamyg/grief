@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.36 2020/05/03 21:09:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.37 2021/06/10 06:13:01 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.36 2020/05/03 21:09:41 cvsuser Exp $
+/* $Id: cmain.c,v 1.37 2021/06/10 06:13:01 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -354,7 +354,7 @@ static const char *     m_strings[MAX_M+1];     /* Array of pointer to -m string
 BUFFER_t *              curbp = NULL;           /* Current buffer. */
 WINDOW_t *              curwp = NULL;           /* Current window. */
 
-static void             path_cat(const char *path, const char *sub, char *buf);
+static int              path_cat(const char *path, const char *sub, char *buf);
 static char *           path_cook(const char *name);
 
 static void             argv_init(int *argcp, char **argv);
@@ -454,6 +454,10 @@ cmain(int argc, char **argv)
     _tzset();
 #else
     tzset();                                    /* localtime requirement */
+#endif
+
+#if defined(_WIN32)
+    w32_utf8filenames_enable();
 #endif
 
     if (argc < 0) cpp_linkage("");
@@ -635,7 +639,7 @@ panic(const char *fmt, ...)
 }
 
 
-static void
+static int
 path_cat(const char *path, const char *sub, char *buf)
 {
     char t_path[1024] = {0}, t_realpath[1024] = {0};
@@ -650,10 +654,13 @@ path_cat(const char *path, const char *sub, char *buf)
     }
 
     if (NULL == sub ||
-            0 == fileio_access(path, 0)) {      /* push if it exists */
+            0 == sys_access(path, 0)) {         /* push if it exists */
         strcat(buf, path);
         strcat(buf, sys_pathdelimiter());
+        return 1;
     }
+
+    return 0;
 }
 
 
@@ -1368,7 +1375,9 @@ env_setup(void)
 
         sprintf(buf, "GRPATH=");
         if (binpath[0]) {                       /* rel to binary image */
-            path_cat(binpath, "../macros", buf);
+            if (0 == path_cat(binpath, "../macros", buf)) {
+                path_cat(binpath, "../../macros", buf);
+            }
 #if defined(__MINGW32__)
             path_cat(binpath, "../lib/grief/macros", buf);
 #endif
@@ -1388,7 +1397,9 @@ env_setup(void)
 
         sprintf(buf, "GRHELP=");
         if (binpath[0]) {                      /* rel to binary image */
-            path_cat(binpath, "../help", buf);
+            if (0 == path_cat(binpath, "../help", buf)) {
+                path_cat(binpath, "../../help", buf);
+            }
 #if defined(__MINGW32__)
             path_cat(binpath, "../lib/grief/help", buf);
 #endif

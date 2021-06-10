@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.86 2021/04/18 17:12:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.88 2021/06/02 15:27:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: file.c,v 1.86 2021/04/18 17:12:41 cvsuser Exp $
+/* $Id: file.c,v 1.88 2021/06/02 15:27:08 cvsuser Exp $
  * File-buffer primitives and support.
  *
  *
@@ -189,7 +189,7 @@ do_output_file(void)            /* ([string filename]) */
 
     /* file image not exist */
     if (!BFTST(curbp, BF_SYSBUF) &&
-            fileio_access(fname, 0) >= 0) {
+            sys_access(fname, 0) >= 0) {
         errorf("Output file '%s' already exists.", fname);
         chk_free(fname);
         return;
@@ -833,7 +833,7 @@ buf_diskchanged(BUFFER_t *bp)
     struct stat sb;
 
     if (bp->b_fname[0] && bp->b_mtime) {        /* was read in */
-        if (stat(bp->b_fname, &sb) >= 0) {
+        if (sys_stat(bp->b_fname, &sb) >= 0) {
             if (sb.st_mtime > bp->b_mtime) {
                 if ((size_t)sb.st_size != bp->b_rsize) {
                     return 2;                   /* size change */
@@ -961,7 +961,7 @@ file_write(const char *fname, const int32_t flags)
             BFCLR(curbp, BF_CHANGED);
             BFCLR(curbp, BF_BACKUP);
             curbp->b_nummod = 0;
-            if (stat(curbp->b_fname, &sb) >= 0) {
+            if (sys_stat(curbp->b_fname, &sb) >= 0) {
                 curbp->b_mtime = sb.st_mtime;   /* on disk time-stamp */
                 curbp->b_rsize = sb.st_size;
             }
@@ -1833,7 +1833,7 @@ buf_writeout(BUFFER_t *bp, const char *fname, int undo, int append /*const char 
     __CUNUSED(undo)
 
     oflags = OPEN_W_BINARY | O_WRONLY | O_CREAT;
-    if (stat(fname, &sb) >= 0) {
+    if (sys_stat(fname, &sb) >= 0) {
         bp->b_mode = sb.st_mode;                /* update permissions */
     } else {
         oflags |= O_EXCL;
@@ -2193,7 +2193,7 @@ do_edit_file(int version)       /* int ([int mode], [string | list file ...]) */
         char path[MAX_PATH];
 
         if (NULL == get_xarg(fileidx, "Edit file: ", path, sizeof(path)))  {
-            if (xf_readonly || -1 == fileio_access(curbp->b_fname, W_OK)) {
+            if (xf_readonly || -1 == sys_access(curbp->b_fname, W_OK)) {
                 BFSET(curbp, BF_RDONLY);
             } else {
                 BFCLR(curbp, BF_RDONLY);
@@ -3061,7 +3061,7 @@ buf_rollbackups(BUFFER_t *bp, const char *path, int remove_flag)
     trace_log("\tVERSION=%d\n", bversion);
     if (bversion <= 1) {
         if (remove_flag) {
-            fileio_unlink(path);
+            sys_unlink(path);
         }
         return;
     }
@@ -3088,14 +3088,14 @@ buf_rollbackups(BUFFER_t *bp, const char *path, int remove_flag)
         }
                                                 /* $BACKUP/<version+1>/<filename> */
         sprintf(nname + dirlen, "%c%d%c%s", PATH_SEPERATOR, bversion + 1, PATH_SEPERATOR, filename);
-        fileio_unlink(nname);
+        sys_unlink(nname);
 
-        if (0 == fileio_access(oname, F_OK)) {
+        if (0 == sys_access(oname, F_OK)) {
             if (rename(oname, nname) < 0) {
                 char *tcp = strrchr(nname, PATH_SEPERATOR);
 
                 *tcp = 0;
-                (void) fileio_mkdir(nname, 0777 & ~x_umask);
+                sys_mkdir(nname, 0777 & ~x_umask);
                 *tcp = PATH_SEPERATOR;
                 if (-1 == rename(oname, nname)) {
                     eeprintx("unable to rename '%s' to '%s'", oname, nname);
@@ -3213,16 +3213,16 @@ buf_backup(BUFFER_t *bp)
 #if defined(HAVE_LINK)
 #if defined(HAVE_LSTAT)
     /* Let's look at the *real* entry and see if it is a symbolic link.  */
-    r = lstat(fname, &sb);
+    r = sys_lstat(fname, &sb);
     if (r == 0 && (sb.st_mode & S_IFLNK)) {
-        stat(fname, &sb);
+        sys_stat(fname, &sb);
         sb.st_nlink = 1 + 1;                    /* force backup via copy method */
 
     } else if (r < 0) {
         sb.st_nlink = 1 + 1;
     }
 #else
-    r = stat(fname, &sb)
+    r = sys_stat(fname, &sb)
     if (r < 0) {
         sb.st_nlink = 1 + 1;
     }
@@ -3419,11 +3419,11 @@ file_copy(
 
         if ((ifd = fileio_open(src, OPEN_R_BINARY | O_RDONLY, 0)) < 0) {
             fileio_close(ofd);
-            fileio_unlink(dst);
+            sys_unlink(dst);
             return TRUE;
         }
 
-        (void) fileio_chmod(dst, perms);        /* FIXME: return */
+        (void) sys_chmod(dst, perms);           /* FIXME: return */
 #ifdef HAVE_CHOWN
         if (-1 == chown(dst, owner, group))
             ewprintf("warning: unable to chown(%s)", dst);

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.49 2021/04/19 16:28:49 cvsuser Exp $")
+__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.51 2021/06/02 15:29:09 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sysinfo.c,v 1.49 2021/04/19 16:28:49 cvsuser Exp $
+/* $Id: sysinfo.c,v 1.51 2021/06/02 15:29:09 cvsuser Exp $
  * System information services.
  *
  *
@@ -161,7 +161,7 @@ sysinfo_homedir(char *buf, int len)
             t_path[0] = 0;                      /* XP+ */
             if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_PROFILE, NULL, 0, t_path)) && *t_path) {
                 t_path[sizeof(t_path) - 1] = 0;
-                if (0 == fileio_access(t_path, 0)) {
+                if (0 == sys_access(t_path, 0)) {
                     p = t_path;
                 } else {
                     char buffer[MAX_PATH*2];
@@ -255,7 +255,7 @@ sysinfo_tmpdir(void)
             t_path[0] = 0;                      /* XP+ */
             if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, t_path)) && *t_path) {
                 t_path[sizeof(t_path) - 1] = 0;
-                if (0 == fileio_access(t_path, 0)) {
+                if (0 == sys_access(t_path, 0)) {
                     p = t_path;
                 }
             } else {
@@ -265,7 +265,7 @@ sysinfo_tmpdir(void)
                         --pathlen;              /* remove trailing delimiter */
                     }
                     t_path[pathlen] = 0;
-                    if (0 == fileio_access(t_path, 0)) {
+                    if (0 == sys_access(t_path, 0)) {
                         p = t_path;
                     }
                 }
@@ -322,7 +322,7 @@ sysinfo_tmpdir(void)
                     }
                 }
 #endif
-                if (0 == fileio_access(xtmpdir, W_OK)) {
+                if (0 == sys_access(xtmpdir, W_OK)) {
                     p = tmpdirs[d];
                     break;
                 }
@@ -343,7 +343,7 @@ tmpdir2(const char *env)
     const char *p;
 
     if ((p = ggetenv(env)) != NULL && p[0] &&
-                0 == fileio_access(p, 0)) {
+                0 == sys_access(p, 0)) {
         return p;
     }
     return NULL;
@@ -467,13 +467,13 @@ resolve_execname(const char *name)
 #endif
 
     if (sys_isabspath(name)) {                  /* absolute path */
-        if (-1 != stat(name, &sb) && !S_ISDIR(sb.st_mode)) {
+        if (-1 != sys_stat(name, &sb) && !S_ISDIR(sb.st_mode)) {
             trace_log("execname: [abs], <%s>\n", name);
             goto done;
         }
                                                 /* relative, resolve and test */
     } else if (0 == sys_realpath((const char *)name, t_path, sizeof(t_path)) && t_path[0]) {
-        if (-1 != stat(t_path, &sb) && !S_ISDIR(sb.st_mode)) {
+        if (-1 != sys_stat(t_path, &sb) && !S_ISDIR(sb.st_mode)) {
             trace_log("execname: [rel], <%s>\n", t_path);
             name = t_path;
             goto done;
@@ -498,7 +498,7 @@ resolve_execname(const char *name)
             }
 
             trace_log("execname: [path], <%s>\n", t_path);
-            if (stat(t_path, &sb) >= 0 && !S_ISDIR(sb.st_mode)) {
+            if (sys_stat(t_path, &sb) >= 0 && !S_ISDIR(sb.st_mode)) {
                 name = t_path;
                 goto done;
             }
