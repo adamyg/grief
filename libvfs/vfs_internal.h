@@ -1,11 +1,11 @@
 #ifndef GR_VFS_INTERNAL_H_INCLUDED
 #define GR_VFS_INTERNAL_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_internal_h,"$Id: vfs_internal.h,v 1.20 2020/06/20 01:59:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_internal_h,"$Id: vfs_internal.h,v 1.21 2021/06/10 06:13:02 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_internal.h,v 1.20 2020/06/20 01:59:53 cvsuser Exp $
+/* $Id: vfs_internal.h,v 1.21 2021/06/10 06:13:02 cvsuser Exp $
  * Virtual File System Interface -- internal definitions.
  *
  *
@@ -115,11 +115,9 @@ __CBEGIN_DECLS
 #define vfsio_write(_fd, _ob, _is)  _write(_fd, _ob, _is)
 #define vfsio_lseek(_fd, _o, _w)    _lseek(_fd, _o, _w)
 
-#if !defined(vfsio_access)
-#define vfsio_access(_fn, _m)       _access(_fn, _m)
-#endif
-#define vfsio_chmod(_fn, _m)        _chmod(_fn, _m)
-#define vfsio_unlink(_fn)           _unlink(_fn)
+#define vfsio_access(_fn, _m)       w32_access(_fn, _m)
+#define vfsio_chmod(_fn, _m)        w32_chmod(_fn, _m)
+#define vfsio_unlink(_fn)           w32_unlink(_fn)
 
 #if !defined(vfsio_mkdir)
 #define vfsio_mkdir(_dn, _m)        _mkdir(_dn)
