@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crlex_c,"$Id: crlex.c,v 1.36 2020/04/23 12:35:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_crlex_c,"$Id: crlex.c,v 1.37 2021/06/07 16:04:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crlex.c,v 1.36 2020/04/23 12:35:50 cvsuser Exp $
+/* $Id: crlex.c,v 1.37 2021/06/07 16:04:23 cvsuser Exp $
  * Lexical analyser for the GRUNCH language.
  *
  *
@@ -236,6 +236,7 @@ static int              get_line(lexer_t *lexer);
 static void             get_while(lexer_t *lexer, int chclass);
 static void             get_string(lexer_t *lexer, int wchar);
 static void             get_unquoted(lexer_t *lexer, const int end);
+static const char *     utf8_decode(const void *src, const void *cpend, int *result);
 static int              utf8_encode(int ch, void *buffer);
 static int              get_character(lexer_t *lexer, int wchar);
 static int              get_escape(lexer_t *lexer, unsigned wchar, unsigned limit, int *value);
@@ -966,6 +967,88 @@ get_unquoted(lexer_t *lexer, const int end)
     }
 }
 
+/*
+ *  00000000-01111111  00-7F  0-127     Single-byte encoding (compatible with US-ASCII).
+ *  10000000-10111111  80-BF  128-191   Second, third, or fourth byte of a multi-byte sequence.
+ *  11000000-11000001  C0-C1  192-193   Overlong encoding: start of 2-byte sequence, but would encode a code point 127.
+ *  11000010-11011111  C2-DF  194-223   Start of 2-byte sequence.
+ *  11100000-11101111  E0-EF  224-239   Start of 3-byte sequence.
+ *  11110000-11110100  F0-F4  240-244   Start of 4-byte sequence.
+ *  11110101-11110111  F5-F7  245-247   Restricted by RFC 3629: start of 4-byte sequence for codepoint above 10FFFF.
+ *  11111000-11111011  F8-FB  248-251   Restricted by RFC 3629: start of 5-byte sequence.
+ *  11111100-11111101  FC-FD  252-253   Restricted by RFC 3629: start of 6-byte sequence.
+ *  11111110-11111111  FE-FF  254-255   Invalid: not defined by original UTF-8 specification.
+ */
+static const char *
+utf8_decode(const void *src, const void *cpend, int *result)
+{
+    register const unsigned char *t_src = (const unsigned char *)src;
+    unsigned char ch;
+    int32_t ret = 0;
+    int remain;
+
+    /*
+    //  Bits    Last code point     Byte 1      Byte 2      Byte 3      Byte 4      Byte 5      Byte 6
+    //  7       U+007F              0xxxxxxx
+    //  11      U+07FF              110xxxxx    10xxxxxx
+    //  16      U+FFFF              1110xxxx    10xxxxxx    10xxxxxx
+    //  21      U+1FFFFF            11110xxx    10xxxxxx    10xxxxxx    10xxxxxx
+    //  26      U+3FFFFFF           111110xx    10xxxxxx    10xxxxxx    10xxxxxx    10xxxxxx
+    //  31      U+7FFFFFFF          1111110x    10xxxxxx    10xxxxxx    10xxxxxx    10xxxxxx    10xxxxxx
+    */
+    assert(src < cpend);
+    ch = *t_src++;
+
+    if (ch & 0x80) {
+                                                /* C0-C1  192-193  Overlong encoding: start of 2-byte sequence. */
+        if ((ch & 0xE0) == 0xC0) {              /* C2-DF  194-223  Start of 2-byte sequence. */
+            remain = 1;
+            ret = ch & 0x1F;
+
+        } else if ((ch & 0xF0) == 0xE0) {       /* E0-EF  224-239  Start of 3-byte sequence. */
+            remain = 2;
+            ret = ch & 0x0F;
+
+        } else if ((ch & 0xF8) == 0xF0) {       /* F0-F4  240-244  Start of 4-byte sequence. */
+            remain = 3;
+            ret = ch & 0x07;
+
+        } else if ((ch & 0xFC) == 0xF8) {       /* F8-FB  248-251  Start of 5-byte sequence. */
+            remain = 4;
+            ret = ch & 0x03;
+
+        } else if ((ch & 0xFE) == 0xFC) {       /* FC-FD  252-253  Start of 6-byte sequence. */
+            remain = 5;
+            ret = ch & 0x01;
+
+        } else {                                /* invalid continuation (0x80 - 0xbf). */
+            ret = -ch;
+            goto done;
+        }
+
+        while (remain--) {
+            if (t_src >= (const unsigned char *)cpend) {
+                ret = -ret;
+                goto done;
+            }
+            ch = *t_src++;
+            if (0x80 != (0xc0 & ch)) {          /* invalid secondary byte (0x80 - 0xbf). */
+                --t_src;
+                ret = -ret;
+                goto done;
+            }
+            ret <<= 6;
+            ret |= (ch & 0x3f);
+        }
+    } else {
+        ret = ch;
+    }
+
+done:;
+    *result = ret;
+    return (const void *)t_src;
+}
+
 
 static int
 utf8_encode(int ch, void *buffer)
@@ -1033,6 +1116,7 @@ utf8_encode(int ch, void *buffer)
 static int
 get_character(lexer_t *lexer, int wchar)
 {
+    char buffer[6 + 1] = {0};                   /* UTF8 working buffer */
     int ch, error = 0;
     int value = 0;
 
@@ -1059,14 +1143,11 @@ bad:;       if (0 == ch) {
                 if (get_escape(lexer, wchar, FALSE, &ch) < 0) {
                     goto bad;
                 }
-
-                if (wchar) {                    /* upper bytes */
-                    value = (value << 8) + ((ch & 0xFFFFFF00) >> 8);
-                    ch &= 0x00FF;
-                }
             }
 
-            value = (value << 8) + ch;
+            value = ch;
+            if (nchars < (sizeof(buffer) - 1))
+                buffer[nchars] = ch;
             ++nchars;
 
             if ('\'' == (ch = lexget(lexer))) {
@@ -1074,11 +1155,16 @@ bad:;       if (0 == ch) {
             }
         }
 
-        if (nchars > 1) {
-            if (!error) {
+        if (nchars > 1 && !error) {
+            if (!wchar) {
                 crerrorx(RC_CHARACTER_WIDE, "character constant too large");
+                ++error;
+
+            } else if (nchars > 6 ||
+                    utf8_decode(buffer, buffer + nchars, &value) != (buffer + nchars)) {
+                crerrorx(RC_CHARACTER_WIDE, "invalid multi-character character constant");
+                ++error;
             }
-            ++error;
         }
     }
 
