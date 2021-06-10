@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.94 2020/06/18 14:40:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.96 2021/06/10 11:56:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keywd.c,v 1.94 2020/06/18 14:40:37 cvsuser Exp $
+/* $Id: keywd.c,v 1.96 2021/06/10 11:56:06 cvsuser Exp $
  * Keyword table.
  *
  *
@@ -119,9 +119,10 @@ const int cm_version = CM_VERSION;
 #define VERSION_203
 #define VERSION_204
 #define VERSION_205         /* 01/04/2020, register(), __lexicalblock(), isclose() and cast_xxx() */
+#define VERSION_206         /* 06/21, UTF8 */
 
-//  #define VERSION_206     /* array's, staged/experimental */
-//  #define VERSION_207     /* not implemented/alpha */
+//  #define VERSION_207     /* array's, staged/experimental */
+//  #define VERSION_208     /* not implemented/alpha */
 
 /*
  *  Keyword table, assumed to be in alphabetic order.
@@ -332,7 +333,7 @@ BUILTIN builtin[] = {
     {"below_eq", MACRO(do_com_op), ARG_INT, 0, MOP_BELOW_EQ, /* arith */
     2,  {ARG_NUM | ARG_STRING, ARG_NUM | ARG_STRING}},
 
-#if defined(VERSION_207)
+#if defined(VERSION_208)
     {"bless", MACRO(do_bless), ARG_INT, 0, 0,               /* macro */
     2,  {ARG_INT, ARG_OPT | ARG_STRING}},
 #endif
@@ -926,7 +927,7 @@ BUILTIN builtin[] = {
     {"get_region", MACRO(do_get_region), ARG_STRING, 0, 0,  /* scrap */
     1,  {ARG_OPT | ARG_INT}},
 
-#if defined(VERSION_206)
+#if defined(VERSION_207)
     {"get_system_resources", MACRO(do_get_system_resources), ARG_STRING, 0, 0,  /* env */
     1,  {ARG_OPT | ARG_INT}},
 #endif
@@ -1297,7 +1298,7 @@ BUILTIN builtin[] = {
     {"inq_prompt", MACRO(inq_prompt), ARG_INT, 0, 0,        /* screen */
     0,  {0}},
 
-#if defined(VERSION_206)
+#if defined(VERSION_207)
     {"inq_remember_buffer", MACRO(inq_remember_buffer), ARG_STRING, 0, 0, /* kbd */
     1,  {ARG_OPT | ARG_INT}},
 #endif
@@ -1422,7 +1423,7 @@ BUILTIN builtin[] = {
     {"int_to_key", MACRO(do_int_to_key), ARG_STRING, 0, 0,  /* kbd */
     1,  {ARG_INT}},
 
-#if defined(VERSION_206)
+#if defined(VERSION_207)
 #if defined(DO_ARRAY)
     {"is_array", MACRO(do_is_type), ARG_INT, 0, F_ARRAY,    /* var */
     1,  {ARG_LVAL | ARG_ANY}},
@@ -1476,7 +1477,7 @@ BUILTIN builtin[] = {
     {"isfinite", MACRO(do_isfinite), ARG_INT, 0, 0,         /* float, arith */
     1,  {ARG_FLOAT}},
 
-#if defined(VERSION_206)
+#if defined(VERSION_207)
     {"isgold", MACRO(do_isgold), ARG_INT, 0, 0,             /* string */
     2,  {ARG_INT | ARG_STRING, ARG_OPT | ARG_INT}},
 #endif
@@ -1548,7 +1549,7 @@ BUILTIN builtin[] = {
     {"length_of_list", MACRO(do_length_of_list), ARG_INT, 0, 0, /* list */
     1,  {ARG_LIST}},
 
-#if defined(VERSION_206)
+#if defined(VERSION_207)
     {"link", MACRO(do_link), ARG_INT, 0, 0,                 /* file */
     3,  {ARG_STR, ARG_STR, ARG_OPT | ARG_INT}},
 #endif
@@ -2117,7 +2118,7 @@ BUILTIN builtin[] = {
     {"spell_distance", MACRO(do_spell_distance), ARG_UNDEF, 0, 0, /* spell */
     2,  {ARG_STRING, ARG_STRING}},
 
-#if defined(VERSION_206)
+#if defined(VERSION_207)
     {"spell_dictionary", MACRO(do_spell_dictionary), ARG_UNDEF, 0, 0, /* spell */
     -3, {ARG_INT, ARG_OPT|ARG_INT, ARG_STRING|ARG_LIST}},
 #endif
@@ -2334,7 +2335,7 @@ BUILTIN builtin[] = {
     {"undo", MACRO(do_undo), ARG_INT, 0, -1,                /* buffer, kbd */
     3,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-#if defined(VERSION_206)
+#if defined(VERSION_207)
     {"unlink", MACRO(do_unlink), ARG_INT, 0, 0,             /* file */
     2,  {ARG_STR, ARG_OPT | ARG_INT}},
 #endif
@@ -2388,6 +2389,26 @@ BUILTIN builtin[] = {
     {"watch", MACRO(do_unimp), ARG_VOID, 0, 0,              /* debug */
     0,  {0}},
 
+#if defined(VERSION_206)
+    {"wcharacterat", MACRO(do_wcharacterat), ARG_INT, 0, 0, /* string */
+    2,  {ARG_STRING, ARG_INT}},
+
+    {"wcwidth", MACRO(do_wcwidth), ARG_INT, 0, 0,           /* string */
+    2,  {ARG_INT | ARG_STRING, ARG_OPT | ARG_INT}},
+
+    {"wfirstof", MACRO(do_wfirstof), ARG_INT, 0, 0,         /* string */
+    3,  {ARG_STRING, ARG_STRING, ARG_OPT | ARG_LVAL | ARG_INT}},
+
+    {"windex", MACRO(do_windex), ARG_INT, 0, 0,             /* string */
+    1,  {ARG_OPT | ARG_INT}},
+
+    {"wlastof", MACRO(do_wlastof), ARG_INT, 0, 0,           /* string */
+    3,  {ARG_STRING, ARG_STRING, ARG_OPT | ARG_LVAL | ARG_INT }},
+
+    {"wlower", MACRO(do_wlower), ARG_STRING, 0, 0,          /* string */
+    1,  {ARG_INT | ARG_STRING}},
+#endif
+
     {"while", MACRO(do_while), ARG_VOID, 0, 0,              /* macro */
     2,  {ARG_COND, ARG_OPT | ARG_REST}},
 
@@ -2407,8 +2428,45 @@ BUILTIN builtin[] = {
     {"write_block", MACRO(do_write_block), ARG_INT, 0, 0,   /* file, scrap */
     4,  {ARG_OPT | ARG_STRING, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
+#if defined(VERSION_206)
+    {"wrindex", MACRO(do_wrindex), ARG_INT, 0, 0,           /* string */
+    2,  {ARG_STRING, ARG_INT | ARG_STRING}},
+#endif
+
     {"write_buffer", MACRO(do_write_buffer), ARG_INT, 0, 0, /* file, buffer */
     2,  {ARG_OPT | ARG_STRING, ARG_OPT | ARG_INT}},
+
+    {"write_buffer", MACRO(do_write_buffer), ARG_INT, 0, 0, /* file, buffer */
+    2,  {ARG_OPT | ARG_STRING, ARG_OPT | ARG_INT}},
+
+#if defined(VERSION_206)
+    {"wstrcasecmp", MACRO(do_wstrcasecmp), ARG_INT, 0, 0,   /* string */
+    3,  {ARG_STRING, ARG_STRING, ARG_OPT | ARG_INT}},
+
+    {"wstrcmp",  MACRO(do_wstrcmp), ARG_INT, 0, 0,          /* string */
+    3,  {ARG_STRING, ARG_STRING, ARG_OPT | ARG_INT}},
+
+    {"wstrlen", MACRO(do_wstrlen), ARG_INT, 0, 0,           /* string */
+    2,  {ARG_STRING | ARG_LIST, ARG_OPT | ARG_INT}},
+
+    {"wstrnlen", MACRO(do_wstrnlen), ARG_INT, 0, 0,         /* string */
+    3,  {ARG_STRING | ARG_LIST, ARG_INT, ARG_OPT | ARG_INT}},
+
+    {"wstrpbrk", MACRO(do_wstrpbrk), ARG_INT, 0, 0,         /* string */
+    2,  {ARG_STRING, ARG_STRING}},
+
+    {"wstrrstr", MACRO(do_wstrrstr), ARG_INT, 0, 0,         /* string */
+    2,  {ARG_STRING, ARG_STRING}},
+
+    {"wstrstr", MACRO(do_wstrstr), ARG_INT, 0, 0,           /* string */
+    2,  {ARG_STRING, ARG_STRING}},
+
+    {"wsubstr", MACRO(do_wsubstr), ARG_STRING, 0, 0,        /* string */
+    3,  {ARG_STRING, ARG_INT, ARG_OPT | ARG_INT}},
+
+    {"wupper", MACRO(do_wupper), ARG_STRING, 0, 0,          /* string */
+    1,  {ARG_INT | ARG_STRING}},
+#endif
 
     {"|", MACRO(do_com_op), ARG_UNDEF, 0, MOP_BOR,          /* arith */
     2,  {ARG_INT, ARG_INT}},
