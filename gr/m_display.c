@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_display_c,"$Id: m_display.c,v 1.27 2020/06/05 15:51:34 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_display_c,"$Id: m_display.c,v 1.28 2021/06/10 06:13:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_display.c,v 1.27 2020/06/05 15:51:34 cvsuser Exp $
+/* $Id: m_display.c,v 1.28 2021/06/10 06:13:02 cvsuser Exp $
  * Display primitives.
  *
  *
@@ -864,4 +864,5 @@ do_view_screen(void)            /* int () */
     }
     acc_assign_int(ret);
 }
+
 /*end*/
