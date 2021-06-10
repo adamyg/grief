@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_getkey_c,"$Id: getkey.c,v 1.44 2015/02/11 23:25:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_getkey_c,"$Id: getkey.c,v 1.45 2021/06/10 06:13:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: getkey.c,v 1.44 2015/02/11 23:25:13 cvsuser Exp $
+/* $Id: getkey.c,v 1.45 2021/06/10 06:13:02 cvsuser Exp $
  * Low level input, both keyboard and mouse.
  *
  *
@@ -1544,5 +1544,3 @@ io_device_pollfds(int *count)
 #endif  /*HAVE_POLL*/
 
 /*end*/
-
-

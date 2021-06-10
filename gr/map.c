@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_map_c,"$Id: map.c,v 1.32 2015/02/11 23:25:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_map_c,"$Id: map.c,v 1.33 2021/06/10 06:13:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: map.c,v 1.32 2015/02/11 23:25:13 cvsuser Exp $
+/* $Id: map.c,v 1.33 2021/06/10 06:13:02 cvsuser Exp $
  * High-level character mapping functionality.
  *
  *
@@ -187,13 +187,25 @@ esccombined2:   while (escend < end) {          /* find escape-sequence */
 }
 
 
-LINE_t *
-linep(LINENO line)
+const LINE_t *
+linep0(LINENO line)
 {
     LINE_t *lp;
 
     if (NULL == curbp || NULL == (lp = linepx(curbp, line))) {
-        return x_static_line;                   /* XXX - yuk, buffer specific or NULL? */
+        return x_static_line;                   /* XXX/FIXME- replace with linep2 */
+    }
+    return lp;
+}
+
+
+LINE_t *
+linep2(LINENO line)
+{
+    LINE_t *lp;
+
+    if (NULL == curbp || NULL == (lp = linepx(curbp, line))) {
+        return NULL;
     }
     return lp;
 }
@@ -339,13 +351,13 @@ line_sizeregion(const LINE_t *lp, int col, int dot, int characters, LINENO *leng
 
         while (count < characters && cp < end) {
             int32_t t_ch;
-            int t_length,t_width =
+            int t_length, t_width =
                     character_decode(col, cp, end, &t_length, &t_ch, NULL);
 
 #if defined(DO_TRACE_CHARACTER)
             trace_character(t_ch, t_width, cp, t_length);
 #endif
-            cp  += t_length;
+            cp += t_length;
             length += t_length;
             col += t_width;
 
@@ -436,12 +448,12 @@ line_current_offset(int fill)
 int
 line_offset(const int line, const int col, int fill)
 {
-    int offset = 0;
+    int dot = 0;
     LINE_t *lp;
 
     if (curbp) {
         if (NULL != (lp = vm_lock_linex(curbp, line))) {
-            offset = line_offset2(lp, line, col, fill);
+            dot = line_offset_fill(lp, line, col, fill);
             vm_unlock(line);
         } else {
             curbp->b_vline      = line;
@@ -452,11 +464,11 @@ line_offset(const int line, const int col, int fill)
             curbp->b_vwidth     = 0;
         }
     }
-    return offset;
+    return dot;
 }
 
 
-/*  Function:           line_offset2
+/*  Function:           line_offset_fill
  *      Convert the specified 'column' position into an physical byte offset from the start
  *      of the current line.
  *
@@ -474,7 +486,7 @@ line_offset(const int line, const int col, int fill)
  *              No fill, returning complete character include leading colorization.
  *
  *      LOFFSET_LASTBYTE -
- *              No fill, return offset last byte within the character including are
+ *              No fill, return offset last byte within the character including any
  *              combined characters.
  *
  *      LOFFSET_NORMAL -
@@ -494,25 +506,20 @@ line_offset(const int line, const int col, int fill)
  *      Line Offset.
  */
 int
-line_offset2(LINE_t *lp, const int line, const int col, int fill)
+line_offset_fill(LINE_t *lp, const int line, const int col, int fill)
 {
-//  const int isuc = buf_isuc(curbp);           // UNICCODE
     const int isutf8 = buf_isutf8(curbp);       /* buffer encoding */
-    int used, length = 0, width = 0;
-    const LINECHAR *cp, *start, *end;
-    int vstatus = 0, pos = 1, offset = 0;
+    const LINECHAR *start = ltext(lp), 
+            *cp = start, *end = cp + llength(lp);
+    int length = 0, width = 0;
+    int pos = 1, offset = 0;
+    int vstatus = 0;
     int32_t ch = 0;
-
-    start = ltext(lp);
-    used = llength(lp);
-
-    cp = start;
-    end = start + used;
-
-    ED_ITRACE(("line_offset(line:%d, col:%d, fill:%d, used:%d)\n", line, col, fill, used))
 
     assert(col >= 1);
     assert(fill >= LOFFSET_LASTBYTE && fill <= LOFFSET_FILL_SPACE);
+
+    ED_ITRACE(("line_offset(line:%d, col:%d, fill:%d, used:%d)\n", line, col, fill, llength(lp)))
 
     if (col <= 0) {
         offset = 0;
@@ -570,6 +577,7 @@ line_offset2(LINE_t *lp, const int line, const int col, int fill)
                     if (t_width || t_ch <= 0xff || t_length <= 0) {
                         break;                  /* not combining character */
                     }
+
 #if defined(DO_TRACE_CHARACTER)
                     trace_character(t_ch, t_width, cp, t_length);
 #endif
@@ -671,6 +679,7 @@ line_offset2(LINE_t *lp, const int line, const int col, int fill)
                     if (t_ch != t_raw) {
                         vstatus |= BUFFERVSTATUS_ILLEGAL;
                     }
+
                     if (0 == combined) {
                         curbp->b_vwidth = t_width;
                     }
@@ -763,6 +772,14 @@ done:;
     ED_ITRACE(("\t==> (pos:%d, col:%d: length:%d) : offset:%d/0x%x\n", \
         pos, col, length, offset, offset))
     return offset;
+}
+
+
+int
+line_offset_const(const LINE_t *lp, const int line, const int col, int fill)
+{
+    assert(fill >= LOFFSET_LASTBYTE && fill <= LOFFSET_NORMAL_MATCH);
+    return line_offset_fill((LINE_t *)lp, line, col, fill);
 }
 
 
@@ -916,9 +933,9 @@ int
 line_column_eol(int line)
 {
     int column = 0;
-    LINE_t *lp;
+    const LINE_t *lp;
 
-    if (NULL != (lp = vm_lock_line(line))) {
+    if (NULL != (lp = vm_lock_line2(line))) {
         column = line_column2(lp, line, llength(lp));
         vm_unlock(line);
     }
@@ -930,9 +947,9 @@ int
 line_column(const int line, int offset)
 {
     int column = 0;
-    LINE_t *lp;
+    const LINE_t *lp;
 
-    if (NULL != (lp = vm_lock_line(line))) {
+    if (NULL != (lp = vm_lock_line2(line))) {
         column = line_column2(lp, line, offset);
         vm_unlock(line);
     }
@@ -1007,8 +1024,8 @@ line_tab_backfill(void)
 
     ED_TRACE2(("tab_backfill(line:%d,col:%d)\n", cline, ccol))
 
-    lp = vm_lock_line(cline);
-    if (! ledit(lp, 0)) {
+    lp = vm_lock_line2(cline);
+    if (NULL == lp || !ledit(lp, 0)) {
         vm_unlock(cline);
         return;
     }
@@ -1070,4 +1087,5 @@ line_tab_backfill(void)
 
     vm_unlock(cline);
 }
+
 /*end*/

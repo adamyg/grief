@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_search_c,"$Id: search.c,v 1.55 2021/04/05 08:22:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_search_c,"$Id: search.c,v 1.56 2021/06/10 06:13:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: search.c,v 1.55 2021/04/05 08:22:53 cvsuser Exp $
+/* $Id: search.c,v 1.56 2021/06/10 06:13:02 cvsuser Exp $
  * Search interface.
  *
  *  TODO:
@@ -2525,7 +2525,7 @@ buffer_search(struct re_state *rs, int cursor)
 
         const LINE_t *clp;
 
-        clp = vm_lock_line(search_line);
+        clp = vm_lock_line2(search_line);
         if (clp) {
             if (offset > 0) {
                 if (ltext(clp)) {               /* clip to length */
@@ -2945,10 +2945,8 @@ replace_buffer(struct re_state *rs, int interactive)
         rs->search_offset = edot + (0 == rs->search_result);
 	
     } else if (--rs->search_offset < 0) {
-        LINE_t *lp;
-
         if (--rs->search_line) {
-            lp = vm_lock_line(rs->search_line);
+            const LINE_t *lp = vm_lock_line(rs->search_line);
             rs->search_offset = llength(lp);
             vm_unlock(rs->search_offset);
         }

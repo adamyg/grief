@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmap_c,"$Id: cmap.c,v 1.32 2021/04/14 14:09:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmap_c,"$Id: cmap.c,v 1.33 2021/06/10 06:13:01 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmap.c,v 1.32 2021/04/14 14:09:54 cvsuser Exp $
+/* $Id: cmap.c,v 1.33 2021/06/10 06:13:01 cvsuser Exp $
  * Character map management/primitives.
  *
  *
@@ -1250,4 +1250,5 @@ do_set_char_map(void)           /* int (int mapid|string name, list definition) 
     }
 }
 #endif
+
 /*eof*/

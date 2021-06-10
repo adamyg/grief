@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_buffer_c,"$Id: buffer.c,v 1.48 2020/04/21 00:01:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_buffer_c,"$Id: buffer.c,v 1.49 2021/06/10 06:13:01 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: buffer.c,v 1.48 2020/04/21 00:01:55 cvsuser Exp $
+/* $Id: buffer.c,v 1.49 2021/06/10 06:13:01 cvsuser Exp $
  * Buffer managment.
  *
  *
@@ -952,7 +952,7 @@ buf_line_length(const BUFFER_t *bp, /*__CBOOL*/ int marked)
 
     for (line = a.start_line; line <= a.end_line; ++line) {
         if ((col = line_column_eol(line)) > maxcol) {
-            maxlinep = vm_lock_line(line);
+            maxlinep = vm_lock_line2(line);
             maxcol = col;
         }
     }

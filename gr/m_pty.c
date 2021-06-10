@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_pty_c,"$Id: m_pty.c,v 1.23 2020/04/21 00:01:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_pty_c,"$Id: m_pty.c,v 1.24 2021/06/10 06:13:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_pty.c,v 1.23 2020/04/21 00:01:56 cvsuser Exp $
+/* $Id: m_pty.c,v 1.24 2021/06/10 06:13:02 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -1379,7 +1379,7 @@ p_escape_decode(DISPLAY_t *dp)
                          */
                         if (NULL != (lp = linepx(curbp, cline))) {
                             if ((length = llength(lp)) > 0) {
-                                dot = line_offset2(lp, cline, ccol, LOFFSET_FIRSTBYTE);
+                                dot = line_offset_const(lp, cline, ccol, LOFFSET_FIRSTBYTE);
                                 dellen = p_sgrlength(ltext(lp) + dot, ltext(lp) + length, 'm');
                             }
                             vm_unlock(cline);

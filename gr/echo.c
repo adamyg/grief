@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.63 2015/02/19 00:16:51 ayoung Exp $")
+__CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.64 2021/06/10 06:13:01 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: echo.c,v 1.63 2015/02/19 00:16:51 ayoung Exp $
+/* $Id: echo.c,v 1.64 2021/06/10 06:13:01 cvsuser Exp $
  * Command/echo line implementation/interface.
  *
  *
@@ -2191,7 +2191,7 @@ inq_echo_format(void)           /* string () */
 
 
 /*  Function:           infof_truncated
- *      Print a message contained a filenamet, truncating the filename
+ *      Print a message contained a filename, truncating the filename
  *      if too long for the echo line.
  *
  *      The format argument must be a sprintf() style string containing
@@ -3056,4 +3056,5 @@ ef_version(char *cp, const struct _estate *s)
     sprintf(cp, "%s", x_version);
     return cp + strlen(cp);
 }
+
 /*end*/

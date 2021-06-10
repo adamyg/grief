@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mac1_c,"$Id: mac1.c,v 1.70 2020/04/21 00:01:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_mac1_c,"$Id: mac1.c,v 1.71 2021/06/10 06:13:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mac1.c,v 1.70 2020/04/21 00:01:57 cvsuser Exp $
+/* $Id: mac1.c,v 1.71 2021/06/10 06:13:02 cvsuser Exp $
  * Basic primitives.
  *
  *
@@ -369,12 +369,13 @@ do_delete_to_eol(void)          /* void () */
     LINE_t *lp;
     int dot, n;
 
-    lp = linep(cline);
-    dot = line_offset2(lp, cline, ccol, LOFFSET_NORMAL);
-    if ((n = llength(lp) - dot) > 0) {
-        ldelete(n);
+    if (NULL != (lp = vm_lock_line2(cline))) {
+        dot = line_offset_const(lp, cline, ccol, LOFFSET_NORMAL);
+        if ((n = llength(lp) - dot) > 0) {
+            ldelete(n);
+        }
+        vm_unlock(cline);
     }
-    vm_unlock(cline);
 }
 
 
@@ -417,10 +418,11 @@ do_delete_line(void)            /* void () */
 
     u_dot();
     *cur_col = 1;
-    lp = linep(cline);
-    ldelete(llength(lp) + 1);                   /* MCHAR, line plus EOL */
+    if (NULL != (lp = vm_lock_line2(cline))) {
+        ldelete(llength(lp) + 1);               /* MCHAR, line plus EOL */
+        vm_unlock(cline);
+    }
     *cur_col = ccol;
-    vm_unlock(cline);
 }
 
 
@@ -1842,6 +1844,7 @@ do_insert(int proc)             /* int (string str, [int num]) */
 
     /*
      *  Otherwise insert the specified string
+     *  MCHAR/??? utf8->iconv
      */
     cp = get_str(1);
     len = (int)strlen(cp);
@@ -1919,7 +1922,7 @@ do_insertf(void)                /* int (string fmt, ...) */
     } else {
         cp = get_str(1);
     }
-    if (cp) {
+    if (cp) {                                   /* MCHAR/??? utf8->iconv */
         linserts(cp, len);
     }
     acc_assign_int(len);
@@ -2514,7 +2517,7 @@ do_read(void)                   /* string ([int number], [int &status]) */
     } else {
         int dot, len, copy;
 
-        dot = line_offset2(lp, cline, ccol, LOFFSET_NORMAL);
+        dot = line_offset_const(lp, cline, ccol, LOFFSET_NORMAL);
         len = llength(lp) - dot;
 
         trace_ilog("read(line:%d,col:%d,dot:%d,length:%d) : %d\n", \
@@ -2530,6 +2533,7 @@ do_read(void)                   /* string ([int number], [int &status]) */
             copy = (value1 > len ? len : value1);
         }
 
+        // MCHAR/???, iconv->utf8
         if (copy <= 0) {
             acc_assign_str("\n", 1);            /* empty line */
 

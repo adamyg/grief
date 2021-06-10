@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_line_c,"$Id: m_line.c,v 1.19 2020/04/21 00:01:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_line_c,"$Id: m_line.c,v 1.20 2021/06/10 06:13:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_line.c,v 1.19 2020/04/21 00:01:56 cvsuser Exp $
+/* $Id: m_line.c,v 1.20 2021/06/10 06:13:02 cvsuser Exp $
  * Line primitives.
  *
  *
@@ -188,6 +188,7 @@ do_find_marker(void)            /* int ([int marker = L_MARKED]) */
     const lineflags_t marker = get_xinteger(1, L_MARKED);
     const LINENO numlines = curbp->b_numlines;
     LINENO line;
+    LINE_t *lp;
     int ret = 0;
 
     if (0 == (L_USER_MASK & marker) || 1 != flagcount(marker)) {
@@ -196,16 +197,16 @@ do_find_marker(void)            /* int ([int marker = L_MARKED]) */
     }
 
     for (line = *cur_line + 1; line <= numlines; ++line) {  /*NEWLINE*/
-        LINE_t *lp = vm_lock_line(line);
-
-        if (marker & lp->l_uflags) {
-            lp->l_uflags &= ~marker;            /* clear */
+        if (NULL != (lp = vm_lock_line2(line))) {
+            if (marker & lp->l_uflags) {
+                lp->l_uflags &= ~marker;        /* clear */
+                vm_unlock(line);
+                *cur_line = line;
+                ret = 1;
+                break;
+            }
             vm_unlock(line);
-            *cur_line = line;
-            ret = 1;
-            break;
         }
-        vm_unlock(line);
     }
 
     acc_assign_int(ret);
@@ -362,11 +363,12 @@ do_set_line_flags(void)         /* int ([int bufnum], [int start], [int end], [i
         }
 
         for (line = start; line < end; ++line) {
-            LINE_t *lp = vm_lock_line(line);
-
-            lp->l_uflags &= and_mask;
-            lp->l_uflags |= or_value;
-            vm_unlock(line);
+            LINE_t *lp = vm_lock_line2(line);
+            if (lp) {
+                lp->l_uflags &= and_mask;
+                lp->l_uflags |= or_value;
+                vm_unlock(line);
+            }
             ++ret;
         }
     }
@@ -473,7 +475,7 @@ do_find_line_flags(void)        /* int ([int bufnum], [int lineno],
             LINENO line;
 
             for (line = (uint32_t) start; line; --line) {
-                LINE_t *lp = vm_lock_line(line);
+                const LINE_t *lp = vm_lock_line(line);
 
                 if (((mode & LF_MATCH_EQ)  && (((lp->l_uflags & and_mask) | or_value) == value)) ||
                     ((mode & LF_MATCH_ANY) &&  ((lp->l_uflags & and_mask) != 0))) {

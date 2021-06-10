@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_undo_c,"$Id: undo.c,v 1.49 2021/04/14 14:09:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_undo_c,"$Id: undo.c,v 1.50 2021/06/10 06:13:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: undo.c,v 1.49 2021/04/14 14:09:54 cvsuser Exp $
+/* $Id: undo.c,v 1.50 2021/06/10 06:13:02 cvsuser Exp $
  * undo and redo facilities.
  *
  *
@@ -215,7 +215,7 @@ undo_close(void)
     if (u_fp) {
         fclose(u_fp);
         if (u_fname[0]) {
-            fileio_unlink(u_fname);
+            sys_unlink(u_fname);
         }
         u_fname[0] = 0;
         u_fp = NULL;
@@ -289,7 +289,7 @@ u_insert(FSIZE_t length, int dot)
     undo.u_length = n;
     uwrite_op(&undo);
 
-    lp = vm_lock_line(cline);
+    lp = vm_lock_line2(cline);
     while (n > 0 && cline <= numlines) {        /* NEWLINE */
         FSIZE_t x, w;
 

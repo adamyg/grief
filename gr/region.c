@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_region_c,"$Id: region.c,v 1.28 2014/10/22 02:33:16 ayoung Exp $")
+__CIDENT_RCSID(gr_region_c,"$Id: region.c,v 1.29 2021/06/10 06:13:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: region.c,v 1.28 2014/10/22 02:33:16 ayoung Exp $
+/* $Id: region.c,v 1.29 2021/06/10 06:13:02 cvsuser Exp $
  * Region primitives.
  *
  *
@@ -299,14 +299,14 @@ region_process(const REGION_t *r, region_process_t *rdata)
 static int
 textstart(const LINE_t *lp, int line, int col)
 {
-    return line_offset2((LINE_t *)lp, line, (col > 1 ? col : 1), LOFFSET_FIRSTBYTE);
+    return line_offset_const(lp, line, (col > 1 ? col : 1), LOFFSET_FIRSTBYTE);
 }
 
 
 static int
 textend(const LINE_t *lp, int line, int col)
 {
-    return line_offset2((LINE_t *)lp, line, (col > 1 ? col : 1), LOFFSET_LASTBYTE);
+    return line_offset_const(lp, line, (col > 1 ? col : 1), LOFFSET_LASTBYTE);
 }
 
 
