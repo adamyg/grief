@@ -1,14 +1,14 @@
 #ifndef LIBW32_DIRENT_H_INCLUDED
 #define LIBW32_DIRENT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_dirent_h,"$Id: dirent.h,v 1.18 2019/03/15 23:12:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_dirent_h,"$Id: dirent.h,v 1.19 2021/06/10 06:13:03 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 <dirent.h> implementation
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 2007, 2012 - 2021 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -38,15 +38,15 @@ __CPRAGMA_ONCE
 #if !defined(MAXPATHLEN)
 #define MAXPATHLEN      1024                    /* PATH_MAX */
 #endif
-#if !defined(MAXNAMLEN)
-#define MAXNAMLEN       1024                    /* PATH_MAX */
-#endif
 
 struct dirent {
 #define d_ino           d_fileno                /* Backward compatibility */
     unsigned long       d_fileno;               /* File number directory */
     unsigned short      d_reclen;               /* Length of this record */
-    unsigned short      d_namlen;               /* Length of string in d_name */
+    unsigned short      d_namlen;               /* Length of string in d_name, not including terminating null. */
+#ifndef _DIRENT_HAVE_D_NAMLEN
+#define _DIRENT_HAVE_D_NAMLEN                   /* BSD extension */
+#endif
 #if defined(_POSIX_SOURCE) && !defined(_DIRENT_SOURCE)
     time_t              d_reserved1;
     time_t              d_reserved2;
@@ -58,7 +58,25 @@ struct dirent {
     unsigned long       d_size;                 /* File size */
     unsigned long       d_attr;                 /* File attributes */
 #endif  /*_POSIX_SOURCE*/
-    char                d_name[ MAXNAMLEN+1 ];
+#if (0)
+    unsigned char       d_type;                 /* Type of the file, possibly unknown */
+#ifndef _DIRENT_HAVE_D_TYPE
+#define _DIRENT_HAVE_D_TYPE                     /* BSD extension */
+#endif
+#define DT_UNKNOWN      0   // The type is unknown. Only some filesystems have full support to return the type of the file, others might always return this value.
+#define DT_FIFO         1   // A named pipe, or FIFO. See FIFO Special Files.
+#define DT_CHR          2   // A character device.
+#define DT_DIR          4   // A directory.
+#define DT_REG          8   // A regular file.
+#define DT_LNK          10  // A symbolic link.
+#define DT_SOCK         12  // A local-domain socket.
+#define DT_BLK          14  // A block device.
+
+#define	IFTODT(mode)	(((mode) & 0170000) >> 12)
+#define	DTTOIF(dirtype)	((dirtype) << 12)
+#endif
+#define	MAXNAMLEN       255
+     char               d_name[MAXNAMLEN + 1];  /* File name */
 };
 
 
@@ -66,17 +84,19 @@ struct dirent {
 typedef void *DIR;
 #else
 #if defined(_DIRENT_SOURCE) || defined(DEBUG)
-    /*  _dirlist,
-     *      linked list of directory entries only required within 'dirent.c'.
+    /*
+     *  _dirlist -- linked list of directory entries only required within 'dirent.c'.
      */
     struct _dirlist {
         time_t          dl_ctime;
         time_t          dl_mtime;
+        struct _dirlist *dl_next;
         unsigned long   dl_size;
         unsigned long   dl_size2;
         unsigned long   dl_attr;
-        char *          dl_entry;
-        struct _dirlist *dl_next;
+        unsigned short  dl_namlen;              /* length of buffer d_name */
+        char            dl_name[1];
+            // trailing  name storage
     };
 #endif /*_DIRENT_SOURCE*/
 
@@ -95,6 +115,7 @@ typedef struct _dirdesc {
     unsigned long       dd_flags;
     struct _dirlist *   dd_contents;
     struct _dirlist *   dd_current;
+    void *              dd_handle;
 /* End of extensions */
 } DIR;
 #endif  /*_POSIX_SOURCE*/
@@ -104,6 +125,8 @@ typedef struct _dirdesc {
 __BEGIN_DECLS
 
 LIBW32_API DIR *        opendir __P((const char *));
+LIBW32_API DIR *        opendirA __P((const char *));
+LIBW32_API DIR *        opendirW __P((const wchar_t *));
 LIBW32_API int          closedir __P((DIR *));
 LIBW32_API struct dirent * readdir __P((DIR *));
 LIBW32_API void         rewinddir __P((DIR *));

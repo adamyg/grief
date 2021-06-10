@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_mknod_c,"$Id: w32_mknod.c,v 1.13 2019/03/15 23:12:18 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_mknod_c,"$Id: w32_mknod.c,v 1.14 2021/06/10 06:13:04 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 mknod() system calls.
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 2007, 2012 - 2021 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -198,5 +198,26 @@ mknod(const char *path, int mode, int dev)
     return -1;
 }
 
-/*end*/
 
+LIBW32_API int
+mknodA(const char *path, int mode, int dev)
+{
+    __CUNUSED(path)
+    __CUNUSED(mode)
+    __CUNUSED(dev)
+    errno = EIO;
+    return -1;
+}
+
+
+LIBW32_API int
+mknodW(const wchar_t *path, int mode, int dev)
+{
+    __CUNUSED(path)
+    __CUNUSED(mode)
+    __CUNUSED(dev)
+    errno = EIO;
+    return -1;
+}
+
+/*end*/

@@ -1,10 +1,10 @@
-#ifndef LIBW32_WIN32_H_INCLUDED
-#define LIBW32_WIN32_H_INCLUDED
+#ifndef LIBW32_LIBW32_H_INCLUDED
+#define LIBW32_LIBW32_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 public interface
  *
- * Copyright (c) 2007, 2012 - 2019 Adam Young.
+ * Copyright (c) 2007, 2012 - 2021 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -32,6 +32,7 @@
 #include <win32_time.h>
 #include <win32_child.h>
 #include <win32_io.h>
+#include <win32_direct.h>
 #include <win32_misc.h>
 
 #endif /*LIBW32_WIN32_H_INCLUDED*/

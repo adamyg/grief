@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_time_c,"$Id: w32_time.c,v 1.18 2019/03/15 23:12:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_time_c,"$Id: w32_time.c,v 1.19 2021/06/10 06:13:04 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -36,17 +36,26 @@ __CIDENT_RCSID(gr_w32_time_c,"$Id: w32_time.c,v 1.18 2019/03/15 23:12:21 cvsuser
  */
 
 #include <sys/cdefs.h>
+
 #include "win32_internal.h"
 #include <win32_time.h>
+
+#include <sys/socket.h>
+
 #if defined(HAVE_SYS_UTIME_H) ||\
-	defined(__MINGW32__)
+        defined(__MINGW32__)
 #include <sys/utime.h>
 #endif
 #if defined(HAVE_SYS_TIME_H)
 #include <sys/time.h>
 #endif
+
+#if defined(_MSC_VER) || defined(__WATCOMC__)
+#include <sys/timeb.h>
+#endif
 #include <time.h>
 #include <unistd.h>
+#include <assert.h>
 
 
 /*
@@ -145,18 +154,49 @@ w32_sleep (unsigned int secs)
 //      No errors are defined.
 //
 */
-int
+
+LIBW32_API int
 w32_gettimeofday(
     struct timeval *tv, /*struct timezone*/ void *tz)
 {
     __CUNUSED(tz)
     if (tv) {
-        //FIXME
-        tv->tv_usec = GetTickCount() * 1000;
-        tv->tv_sec = (long)time(NULL);
+#if defined(_MSC_VER) || defined(__WATCOMC__)
+        struct _timeb lt;
+
+        _ftime(&lt);
+        tv->tv_sec = (long)(lt.time + lt.timezone);
+        tv->tv_usec = lt.millitm * 1000;
+        assert(4 == sizeof(tv->tv_sec));
+
+#elif defined(__MINGW32__)
+#undef gettimeofday
+        return gettimeofday(tv, tz)
+ 
+#else //DEFAULT
+        FILETIME ft;
+        long long hnsec;
+ 
+        (void) GetSystemTimeAsFileTime(&ft);
+        hnsec = filetime_to_hnsec(&ft);
+        tv->tv_sec = hnsec / 10000000;
+        tv->tv_usec = (hnsec % 10000000) / 10;
+#endif
+        return 0;
     }
-    return 0;
+    errno = EINVAL;
+    return -1;
 }
+
+
+#if !defined(__MINGW32__)
+LIBW32_API int
+gettimeofday(
+    struct timeval *tv, struct timezone *tz)
+{
+    return w32_gettimeofday(tv, tz);
+}
+#endif
 
 
 /*
@@ -250,8 +290,32 @@ w32_gettimeofday(
 //          pathname string exceeded {PATH_MAX}.
 //
 */
-int
+LIBW32_API int
 w32_utime(const char *path, const struct utimbuf *times)
+{
+#if defined(UTF8FILENAMES)
+    if (w32_utf8filenames_state()) {
+        wchar_t wpath[WIN32_PATH_MAX];
+
+        if (NULL == path || NULL == times) {
+            errno = EFAULT;
+            return -1;
+        }
+
+        if (w32_utf2wc(path, wpath, _countof(wpath)) > 0) {
+            return w32_utimeW(wpath, times);
+        }
+
+        return -1;
+    }
+#endif  //UTF8FILENAMES
+
+    return w32_utimeA(path, times);
+}
+
+
+LIBW32_API int
+w32_utimeA(const char *path, const struct utimbuf *times)
 {
 #if defined(__MINGW32__)
 #undef utime
@@ -261,5 +325,16 @@ w32_utime(const char *path, const struct utimbuf *times)
 #endif
 }
 
-/*end*/
 
+LIBW32_API int
+w32_utimeW(const wchar_t *path, const struct utimbuf *times)
+{
+#if defined(__MINGW32__)
+#undef utime
+    return wutime(path, (struct utimbuf *)times);
+#else
+    return _wutime(path, (struct _utimbuf *)times);
+#endif
+}
+
+/*end*/

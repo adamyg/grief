@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_link_c,"$Id: w32_link.c,v 1.14 2020/04/20 23:18:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_link_c,"$Id: w32_link.c,v 1.15 2021/06/10 06:13:04 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win2 link system calls.
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 2007, 2012 - 2021 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -208,7 +208,7 @@ my_CreateHardLinkImp(LPCSTR lpFileName, LPCSTR lpExistingFileName, LPSECURITY_AT
         DWORD cnt;
 
         if (INVALID_HANDLE_VALUE ==             /* source image */
-                    (handle = CreateFile(lpExistingFileName, GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
+                    (handle = CreateFileA(lpExistingFileName, GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
                             FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_POSIX_SEMANTICS, NULL))) {
             w32_errno_set();
             CloseHandle(handle);

@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_poll_c,"$Id: w32_poll.c,v 1.6 2019/03/15 23:12:18 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_poll_c,"$Id: w32_poll.c,v 1.7 2021/06/10 06:13:04 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -209,7 +209,7 @@ w32_poll(int native, struct pollfd *fds, int cnt, int timeout)
     //      WINSOCK_API_LINKAGE int WSAAPI WSAPoll(LPWSAPOLLFD, ULONG, INT);
     //          ==> source: ws2_32.lib
     //
-    struct timeval tmval;
+    struct timeval tmval = {0};
     struct fd_set rfds;
     struct fd_set wfds;
     struct fd_set efds;
@@ -328,7 +328,7 @@ w32_poll(int native, struct pollfd *fds, int cnt, int timeout)
          -      OOB data is available for reading (only if SO_OOBINLINE is disabled).
          */
         BOOL    state;
-        u_long  val;
+        u_long  val = 0;
         int     len;
 
         for (i = 0; i < cnt; ++i) {

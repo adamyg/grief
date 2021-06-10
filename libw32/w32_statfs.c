@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_statfs_c,"$Id: w32_statfs.c,v 1.16 2020/04/20 23:16:18 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_statfs_c,"$Id: w32_statfs.c,v 1.17 2021/06/10 06:13:04 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 statfs()/statvfs() system calls.
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 2007, 2012 - 2021 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -97,12 +97,41 @@ __CIDENT_RCSID(gr_w32_statfs_c,"$Id: w32_statfs.c,v 1.16 2020/04/20 23:16:18 cvs
 //          [ENAMETOOLONG]  Pathname resolution of a symbolic link produced an intermediate result whose length exceeds{ PATH_MAX }.
 */
 int
-statfs(const char *path, struct statfs *sb)
+statfs(const char *path, struct statfs *buf)
+{
+#if defined(UTF8FILENAMES)
+    if (w32_utf8filenames_state()) {
+        wchar_t wpath[WIN32_PATH_MAX];
+
+        if (NULL == path || NULL == buf) {
+            errno = EFAULT;
+            return -1;
+        }
+
+        if (w32_utf2wc(path, wpath, _countof(wpath)) > 0) {
+            return statfsW(wpath, buf);
+        }
+
+        return -1;
+    }
+#endif  //UTF8FILENAMES
+
+    return statfsA(path, buf);
+}
+
+
+int
+statfsA(const char *path, struct statfs *sb)
 {
     char    volName[MNAMELEN], fsName[MFSNAMELEN];
     DWORD   SectorsPerCluster, BytesPerSector, FreeClusters, Clusters;
     DWORD   MaximumComponentLength, FileSystemFlags;
     int     mnamelen;
+
+    if (NULL == path || NULL == sb) {
+        errno = EFAULT;
+        return -1;
+    }
 
     (void) memset(sb, 0, sizeof(*sb));
 
@@ -153,13 +182,88 @@ statfs(const char *path, struct statfs *sb)
     }
 
     sb->f_type = MOUNT_PC;
-    strncpy(sb->f_fstypename, "unknown", MFSNAMELEN);
+    strncat(sb->f_fstypename, "unknown", MFSNAMELEN);
     if (GetVolumeInformationA(path,
             volName, MNAMELEN,                  /* VolumeName and size */
-            NULL, &MaximumComponentLength, &FileSystemFlags, fsName, MFSNAMELEN)) /* filesystem type */
+            NULL, &MaximumComponentLength, &FileSystemFlags, fsName, MNAMELEN)) /* filesystem type */
     {                                           /* FileSystem type/NTFS, FAT etc */
         if (fsName[0]) {
             strncpy(sb->f_fstypename, fsName, MFSNAMELEN);
+        }
+    }
+    return 0;
+}
+
+
+int
+statfsW(const wchar_t *path, struct statfs *sb)
+{
+    wchar_t volName[MNAMELEN], fsName[MFSNAMELEN];
+    DWORD   SectorsPerCluster, BytesPerSector, FreeClusters, Clusters;
+    DWORD   MaximumComponentLength, FileSystemFlags;
+    int     mnamelen;
+
+    if (NULL == path || NULL == sb) {
+        errno = EFAULT;
+        return -1;
+    }
+
+    (void) memset(sb, 0, sizeof(*sb));
+
+    sb->f_bsize = 1024;                         /* block size */
+
+    if (GetDiskFreeSpaceW(path, &SectorsPerCluster, &BytesPerSector, &FreeClusters, &Clusters)) {
+        /* KBytes available */
+        sb->f_bavail = (unsigned int)
+            (((__int64)SectorsPerCluster * BytesPerSector * FreeClusters) / 1024);
+
+        /* KBytes total */
+        sb->f_blocks = (unsigned int)
+            (((__int64)SectorsPerCluster * BytesPerSector * Clusters) / 1024);
+
+        /* inodes */
+        sb->f_ffree = FreeClusters/10;
+        sb->f_files = Clusters/10;
+    }
+
+    w32_wc2utf(path, sb->f_mntonname, sizeof(sb->f_mntonname));
+    w32_dos2unix(sb->f_mntonname);
+    if ((mnamelen = strlen(sb->f_mntonname)) > 3) {
+        if (sb->f_mntonname[mnamelen - 1] == '/') {
+            sb->f_mntonname[mnamelen - 1] = 0;
+                //remove trailing delimiter on mount-points.
+        }
+    }
+
+    switch (GetDriveTypeW(path)) {              /* device */
+    case DRIVE_REMOVABLE:
+        strncpy(sb->f_mntfromname, "Removable", MNAMELEN);
+        break;
+    case DRIVE_FIXED:
+        strncpy(sb->f_mntfromname, "Hard Disk", MNAMELEN);
+        break;
+    case DRIVE_REMOTE:
+        strncpy(sb->f_mntfromname, "Networked", MNAMELEN);
+        break;
+    case DRIVE_CDROM:
+        strncpy(sb->f_mntfromname, "CD-ROM", MNAMELEN);
+        break;
+    case DRIVE_RAMDISK:
+        strncpy(sb->f_mntfromname, "RAM disk", MNAMELEN);
+        break;
+    default:
+        strncpy(sb->f_mntfromname, "Unknown", MNAMELEN);
+        break;
+    }
+
+    sb->f_type = MOUNT_PC;
+    strncat(sb->f_fstypename, "unknown", MFSNAMELEN);
+    if (GetVolumeInformationW(path,
+            volName, MNAMELEN,                  /* VolumeName and size */
+            NULL, &MaximumComponentLength, &FileSystemFlags, fsName, MNAMELEN)) /* filesystem type */
+    {                                           /* FileSystem type/NTFS, FAT etc */
+        if (fsName[0]) {
+            w32_wc2utf(fsName, sb->f_fstypename, sizeof(sb->f_fstypename));
         }
     }
     return 0;
@@ -225,8 +329,8 @@ statvfs(const char *path, struct statvfs *vfs)
 //
 //          The memory allocated by getmntinfo() cannot be free'd by the application.
 */
-static struct statfs *enum_volumes(struct statfs *result, long resultsize, int *mnts);
 
+static struct statfs *enum_volumes(struct statfs *result, long resultsize, int *mnts);
 
 int
 getfsstat(struct statfs *buf, long bufsize, int mode)
@@ -253,7 +357,7 @@ getmntinfo(struct statfs **psb, int flags)
     static struct statfs *x_getmntinfo = NULL;  // global instance
     struct statfs *sb;
     char szDrivesAvail[32*4], *p;
-//  int numVolumes[32] = {0};
+    int numVolumes[32] = {0};
     int cnt;
 
     if (! psb) {                                // invalid
@@ -320,7 +424,6 @@ enum_volumes(struct statfs *result, long resultsize, int *mnts)
     struct statfs *sb = result;
 
     WCHAR   volume[1024] = {0};
-    char    path[1024];
     HANDLE  handle;
     BOOL    ret;
 
@@ -350,28 +453,27 @@ enum_volumes(struct statfs *result, long resultsize, int *mnts)
                     PWCHAR cursor, end;
                     for (cursor = names, end = cursor + count; cursor < end && *cursor; ++cursor) {
                         const unsigned len = wcslen(cursor);
-                        size_t cnt = wcstombs(path, cursor, sizeof(path) - 1);
-                        if (cnt && cnt < sizeof(path)) {
-                            if (sbcnt >= sballoc) {
-                                struct statfs *t_sb =
-                                        (NULL == result ? realloc(sb, (sballoc += 32) * sizeof(*sb)) : NULL);
-                                if (NULL == t_sb) {
-                                    sballoc = -1;
-                                    break;      // nomem/overflow.
-                                }
-                                sb = t_sb;
+                        if (sbcnt >= sballoc) {
+                            struct statfs *t_sb =
+                                    (NULL == result ? realloc(sb, (sballoc += 32) * sizeof(*sb)) : NULL);
+                            if (NULL == t_sb) {
+                                sballoc = -1;
+                                break;          // nomem/overflow.
                             }
-
-                            if (0 == statfs(path, sb + sbcnt)) {
-                                ++sbcnt;
-                            }
+                            sb = t_sb;
                         }
+
+                        if (0 == statfsW(cursor, sb + sbcnt)) {
+                            ++sbcnt;
+                        }
+
                         cursor += len;
                     }
                     free((void *)names);
                 }
 
-                if (-1 == sballoc) break;       // allocation error.
+                if (-1 == sballoc)              // allocation error.
+                    break;
             }
 
             //

@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_gethostname_c,"$Id: w32_gethostname.c,v 1.14 2020/06/20 01:28:48 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_gethostname_c,"$Id: w32_gethostname.c,v 1.15 2021/06/10 06:13:03 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -41,8 +41,6 @@ __CIDENT_RCSID(gr_w32_gethostname_c,"$Id: w32_gethostname.c,v 1.14 2020/06/20 01
 #include <sys/socket.h>
 
 #include <unistd.h>
-
-#include <libstr.h>
 
 #if !defined(WINDOWS_MEAN_AND_LEAN)
 #define WINDOWS_MEAN_AND_LEAN

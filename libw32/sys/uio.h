@@ -1,14 +1,14 @@
 #ifndef LIBW32_SYS_UIO_H_INCLUDED
 #define LIBW32_SYS_UIO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_uio_h,"$Id: uio.h,v 1.8 2018/09/29 02:25:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_uio_h,"$Id: uio.h,v 1.9 2021/06/10 06:13:05 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  *  win32 sys/uio.h
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2020, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -33,14 +33,18 @@ __CPRAGMA_ONCE
 
 __BEGIN_DECLS
 
-typedef struct iovec {
+struct iovec {
     void *     iov_base;
     int        iov_len;
-} iovec_t;
+};
 
-LIBW32_API size_t           readv(int, const struct iovec *, int);
-LIBW32_API size_t           writev(int, const struct iovec *, int);
+LIBW32_API int /*ssize_t*/  readv(int, const struct iovec *, int);
+LIBW32_API int /*ssize_t*/  writev(int, const struct iovec *, int);
 
+//  LIBW32_API ssize_t      preadv(int fd, const struct iovec *iov, int iovcnt, off_t offset);
+//  LIBW32_API ssize_t      pwritev(int fd, const struct iovec *iov, int iovcnt, off_t offset);
+//  LIBW32_API ssize_t      preadv2(int fd, const struct iovec *iov, int iovcnt, off_t offset, int flags);
+//  LIBW32_API ssize_t      pwritev2(int fd, const struct iovec *iov, int iovcnt, off_t offset, int flags);
 __END_DECLS
 
 #endif /*LIBW32_SYS_UIO_H_INCLUDED */

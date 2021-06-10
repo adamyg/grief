@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_socket2_c,"$Id: w32_socket2.c,v 1.7 2020/06/18 14:32:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_socket2_c,"$Id: w32_socket2.c,v 1.8 2021/06/10 06:13:04 cvsuser Exp $")
 
 /*
  * win32 socket () system calls
@@ -37,6 +37,7 @@ __CIDENT_RCSID(gr_w32_socket2_c,"$Id: w32_socket2.c,v 1.7 2020/06/18 14:32:40 cv
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/socket.h>
+#include <sys/uio.h>
 #include <poll.h>
 #include <unistd.h>
 
@@ -44,7 +45,12 @@ __CIDENT_RCSID(gr_w32_socket2_c,"$Id: w32_socket2.c,v 1.7 2020/06/18 14:32:40 cv
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <memory.h>
 #include <assert.h>
+
+#if defined(__WATCOMC__)
+#pragma disable_message(124)                    /* Comparison result always 0 */
+#endif
 
 
 /*
@@ -242,7 +248,7 @@ w32_getpeername_native(int fd, struct sockaddr *name, int *namelen)
  *  getsockname() system call.
  */
 LIBW32_API int
-w32_getsockname_native(int fd, struct sockaddr *name, int *namelen)
+w32_getsockname_native(int fd, struct sockaddr *name, socklen_t *namelen)
 {
     SOCKET osf;
     int ret;
@@ -321,6 +327,58 @@ w32_sendto_native(int fd, const void *buf, size_t len, int flags,
 
 
 /*
+ *  sendmsg() system call
+ */
+LIBW32_API int
+w32_sendmsg_native(int fd, const struct msghdr *message, int flags)
+{
+    SOCKET osf;
+    int ret = -1;
+
+    if (NULL == message || NULL == message->msg_iov ||
+            message->msg_iovlen < 0 || message->msg_iovlen > IOV_MAX) {
+        errno = EINVAL;                         /* invalid argument */
+
+    } else if (0 == message->msg_iovlen) {
+        ret = 0;                                /* nothing to send */
+
+    } else if ((osf = nativehandle(fd)) != (SOCKET)INVALID_SOCKET) {
+#if defined(_MSC_VER) || defined(__WATCOMC__)
+        WSABUF *wsabufs = _alloca(sizeof(WSABUF) * message->msg_iovlen);
+#else
+        WSABUF *wsabufs = alloca(sizeof(WSABUF) * message->msg_iovlen);
+#endif
+        const struct iovec *iov = message->msg_iov;
+        unsigned i, cnt;
+
+        for (i = 0, cnt = 0; i < message->msg_iovlen; ++i, ++iov) {
+            if (iov->iov_len) {
+                wsabufs[cnt].len = iov->iov_len;
+                wsabufs[cnt].buf = iov->iov_base;
+                ++cnt;
+            }
+        }
+
+        //  The WSASend function is used to write outgoing data from one or more buffers on a connection-oriented socket specified by s.
+        //  It can also be used, however, on connectionless sockets that have a stipulated default peer address established
+        //  through the connect or WSAConnect function.
+        //
+        ret = 0;
+        if (cnt) {
+            DWORD num_bytes_sent = 0;
+            const int srv = WSASend(osf, wsabufs, cnt, &num_bytes_sent, flags, NULL, NULL);
+            if (0 == srv) {
+	        return (int) num_bytes_sent;
+            }
+            w32_sockerror();
+            ret = -1;
+        }
+    }
+    return ret;
+}
+
+
+/*
  *  recv() system call
  */
 LIBW32_API int
@@ -354,6 +412,28 @@ w32_recvfrom_native(int fd, char *buf, int len, int flags,
         ret = -1;
     } else if ((ret = recvfrom((SOCKET)osf, buf, len, flags, from_addr, fromlen)) == -1 /*SOCKET_ERROR*/) {
         w32_sockerror();
+    }
+    return ret;
+}
+
+
+
+/*
+ *  sockblockingmode
+ */
+LIBW32_API int         
+w32_sockblockingmode_native(int fd, int enabled)
+{
+    SOCKET osf;
+    int ret;
+
+    if ((osf = nativehandle(fd)) == (SOCKET)INVALID_SOCKET) {
+        ret = -1;
+    } else {
+        u_long mode = (long)enabled;
+        if ((ret = ioctlsocket(osf, FIONBIO, &mode)) == -1 /*SOCKET_ERROR*/) {
+            w32_sockerror();
+        }
     }
     return ret;
 }

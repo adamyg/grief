@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_langinfo_c,"$Id: w32_langinfo.c,v 1.10 2019/03/15 23:12:17 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_langinfo_c,"$Id: w32_langinfo.c,v 1.11 2021/06/10 06:13:04 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -87,4 +87,3 @@ nl_langinfo(nl_item item)
 }
 
 /*end*/
-

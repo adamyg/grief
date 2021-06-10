@@ -1,3 +1,5 @@
+#ifndef LIBW32_WIN32_CDEF_H_INCLUDED
+#define LIBW32_WIN32_CDEF_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * internal definitions
@@ -27,3 +29,4 @@
 #include <sys/cdefs.h>
 
 /*end*/
+#endif /*LIBW32_WIN32_CDEF_H_INCLUDED*/

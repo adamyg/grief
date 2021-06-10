@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_sockfd_c,"$Id: w32_sockfd.c,v 1.5 2019/03/15 23:12:20 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_sockfd_c,"$Id: w32_sockfd.c,v 1.6 2021/06/10 06:13:04 cvsuser Exp $")
 
 /*
  * win32 socket file-descriptor support
@@ -158,6 +158,13 @@ w32_sockfd_close(int fd, SOCKET s)
 //	return 0;
 //  }
 
+static int
+IsSocket(HANDLE h)
+{
+    return (GetFileType(h) == FILE_TYPE_PIPE &&
+                0 == GetNamedPipeInfo(h, NULL, NULL, NULL, NULL));
+}
+
 LIBW32_API int
 w32_issockfd(int fd, SOCKET *s)
 {
@@ -175,15 +182,21 @@ w32_issockfd(int fd, SOCKET *s)
 
         } else if (fd >= x_fdinit ||            /* local socket mapping */
                     (t_s = x_fdsockets[fd]) == INVALID_SOCKET) {
+
             /*
-             *  MSVC 2015+ no longer suitable without fdlimit; asserts when out-of-range
+             *  MSVC 2015+ no longer suitable; asserts when out-of-range.
+             *  Unfortunately socket handles can be small numeric values yet so are file descriptors.
              */
-            if (fd >= x_fdlimit ||
+            if (fd >= 0x80 && 0 == (fd & 0x3) && IsSocket((HANDLE)fd)) {
+                t_s = (SOCKET)fd;
+
+            } else if (fd >= x_fdlimit ||
                     _get_osfhandle(fd) == (SOCKET)INVALID_HANDLE_VALUE) {
                 t_s = (SOCKET)fd;               /* invalid assume socket; otherwise file */
             }
         }
     }
+
     if (s) *s = t_s;
     return (t_s != INVALID_SOCKET);
 }

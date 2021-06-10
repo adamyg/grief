@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_fsync_c,"$Id: w32_fsync.c,v 1.13 2020/03/28 00:22:45 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_fsync_c,"$Id: w32_fsync.c,v 1.14 2021/06/10 06:13:03 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -94,35 +94,37 @@ __CIDENT_RCSID(gr_w32_fsync_c,"$Id: w32_fsync.c,v 1.13 2020/03/28 00:22:45 cvsus
 LIBW32_API int
 w32_fsync(int fd)
 {
-    HANDLE handle;
-    int ret = 0;
+    HANDLE handle = 0;
+    int ret = -1;
 
     if (fd < 0) {
         errno = EBADF;
-        ret = -1;
 
     } else if (fd >= WIN32_FILDES_MAX ||
             (handle = (HANDLE) _get_osfhandle(fd)) == INVALID_HANDLE_VALUE) {
         errno = EBADF;
-        ret = -1;
 
-    } else if (! FlushFileBuffers(handle)) {
-        const DWORD err = GetLastError();
-        switch (err) {
-        case ERROR_ACCESS_DENIED:
-            /* For a read-only handle, fsync should succeed, 
-             *  even though we have no way to sync the access-time changes.
-             */
-            return 0;
-        case ERROR_INVALID_HANDLE:
-            /* Most likely a non-supporting device, eg tty */
-            errno = EINVAL;
-            break;
-        default:
-            w32_errno_setas(err);
-            break;
+    } else {
+        if (FlushFileBuffers(handle)) {
+            ret = 0;
+
+        } else {
+            const DWORD err = GetLastError();
+            switch (err) {
+            case ERROR_ACCESS_DENIED:
+                /*  For a read-only handle, fsync should succeed, 
+                 *  even though we have no way to sync the access-time changes.
+                 */
+                return 0;
+            case ERROR_INVALID_HANDLE:
+                /* Most likely a non-supporting device, eg tty */
+                errno = EINVAL;
+                break;
+            default:
+                w32_errno_setas(err);
+                break;
+            }
         }
-        ret = -1;
     }
     return ret;
 }

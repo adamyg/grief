@@ -1,7 +1,7 @@
 #ifndef LIBW32_SYS_SOCKET_H_INCLUDED
 #define LIBW32_SYS_SOCKET_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_socket_h,"$Id: socket.h,v 1.13 2020/06/06 00:37:32 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_socket_h,"$Id: socket.h,v 1.14 2021/06/10 06:13:04 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -34,6 +34,16 @@ LIBW32_API extern int   w32_h_errno;
 
 struct pollfd;
 
+struct msghdr {
+    void               *msg_name;
+    socklen_t           msg_namelen;
+    struct iovec       *msg_iov;
+    size_t              msg_iovlen;
+    void               *msg_control;
+    socklen_t           msg_controllen;
+    int                 msg_flags;
+};
+
 LIBW32_API int          w32_sockinit(void);
 LIBW32_API int          w32_getaddrinfo(const char *nodename, const char *servname,
                             const struct addrinfo *hints, struct addrinfo **res);
@@ -57,7 +67,7 @@ LIBW32_API int          w32_getpeername_fd(int fd, struct sockaddr *name, sockle
 LIBW32_API int          w32_getpeername_native(int fd, struct sockaddr *name, socklen_t *namelen);
 LIBW32_API int          w32_getsockname_fd(int fd, struct sockaddr *name, socklen_t *namelen);
 LIBW32_API int          w32_getsockname_native(int fd, struct sockaddr *name, socklen_t *namelen);
-LIBW32_API int          w32_ioctlsocket(int fd, long cmd, int *argp);
+LIBW32_API int          w32_ioctlsocket_fd(int fd, long cmd, int *argp);
 LIBW32_API int          w32_ioctlsocket_native(int fd, long cmd, int *argp);
 LIBW32_API int          w32_bind_fd(int fd, const struct sockaddr *name, socklen_t namelen);
 LIBW32_API int          w32_bind_native(int fd, const struct sockaddr *name, socklen_t namelen);
@@ -69,10 +79,16 @@ LIBW32_API int          w32_send_fd(int fd, const void *buf, size_t len, int fla
 LIBW32_API int          w32_send_native(int fd, const void *buf, size_t len, int flags);
 LIBW32_API int          w32_sendto_fd(int fd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen);
 LIBW32_API int          w32_sendto_native(int fd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen);
+LIBW32_API int          w32_sendmsg_fd(int fd, const struct msghdr *message, int flags);
+LIBW32_API int          w32_sendmsg_native(int fd, const struct msghdr *message, int flags);
 LIBW32_API int          w32_recv_fd(int fd, char *buf, int len, int flags);
 LIBW32_API int          w32_recv_native(int fd, char *buf, int len, int flags);
 LIBW32_API int          w32_recvfrom_fd(int fd, char *buf, int len, int flags, struct sockaddr *from_addr, int *fromlen);
 LIBW32_API int          w32_recvfrom_native(int fd, char *buf, int len, int flags, struct sockaddr *from_addr, int *fromlen);
+LIBW32_API int          w32_shutdown_fd(int fd, int flags);
+LIBW32_API int          w32_shutdown_native(int fd, int flags);
+LIBW32_API int          w32_sockblockingmode_fd(int fd, int enabled);
+LIBW32_API int          w32_sockblockingmode_native(int fd, int enabled);
 LIBW32_API int          w32_sockwrite_fd(int fd, const void *buffer, unsigned int cnt);
 LIBW32_API int          w32_sockwrite_native(int fd, const void *buffer, unsigned int cnt);
 LIBW32_API int          w32_sockread_fd(int fd, void *buf, unsigned int nbyte);
@@ -91,9 +107,25 @@ LIBW32_API int          w32_socketpair_native(int af, int type, int proto, int s
 LIBW32_API int          w32_poll_fd(struct pollfd *fds, int cnt, int timeout);
 LIBW32_API int          w32_poll_native(struct pollfd *fds, int cnt, int timeout);
 
-#if defined(WIN32_SOCKET_MAP_FD) && defined(WIN32_SOCKET_MAP_NATIVE)
-#error both WIN32_SOCKET_MAP_FD and WIN32_SOCKET_MAP_NATIVE enabled ...
+
+/*
+ *  Compile time bindings
+ */
+#if defined(LIBW32_SOCKET_MAP_FD)
+#if !defined(WIN32_SOCKET_MAP_FD)
+#define WIN32_SOCKET_MAP_FD 1
 #endif
+#endif
+#if defined(LIBW32_SOCKET_MAP_NATIVE)
+#if !defined(WIN32_SOCKET_MAP_NATIVE)
+#define WIN32_SOCKET_MAP_NATIVE 1
+#endif
+#endif
+
+#if defined(WIN32_SOCKET_MAP_FD) && defined(WIN32_SOCKET_MAP_NATIVE)
+#error WIN32_SOCKET_MAP_FD and WIN32_SOCKET_MAP_NATIVE are mutually exclusive
+#endif
+
 
 #if defined(WIN32_SOCKET_MAP_FD) || defined(WIN32_SOCKET_MAP_NATIVE)
 /*
@@ -142,15 +174,20 @@ LIBW32_API int          w32_poll_native(struct pollfd *fds, int cnt, int timeout
 #define poll(a,b,c)             w32_poll_fd(a,b,c)
 #define send(a,b,c,d)           w32_send_fd(a,b,c,d)
 #define sendto(a,b,c,d,e)       w32_sendto_fd(a,b,c,d,e)
+#define sendmsg(a,b,c)          w32_sendmsg_fd(a,b,c)
 #define recv(a,b,c,d)           w32_recv_fd(a,b,c,d)
 #define recvfrom(a,b,c,d,e,f)   w32_recvfrom_fd(a,b,c,d,e,f)
 #define shutdown(a,b)           w32_shutdown_fd(a,b)
 #if !defined(LIBW32_SYS_POLL_H_INCLUDED)
 #define poll(a,b,c)             w32_poll_fd(a,b,c)
 #endif
+
+#define sockblockingmode(a,b)   w32_sockblockingmode_fd(a,b)
 #define sockread(a,b,c)         w32_sockread_fd(a,b,c)
 #define sockwrite(a,b,c)        w32_sockwrite_fd(a,b,c)
 #define sockclose(a)            w32_sockclose_fd(a)
+
+#define socketpair(a,b,c,d)     w32_socketpair_fd(a,b,c,d)
 
 #elif defined(WIN32_SOCKET_MAP_NATIVE)
 /*
@@ -169,15 +206,20 @@ LIBW32_API int          w32_poll_native(struct pollfd *fds, int cnt, int timeout
 #define poll(a,b,c)             w32_poll_native(a,b,c)
 #define send(a,b,c,d)           w32_send_native(a,b,c,d)
 #define sendto(a,b,c,d,e)       w32_sendto_native(a,b,c,d,e)
+#define sendmsg(a,b,c)          w32_sendmsg_native(a,b,c)
 #define recv(a,b,c,d)           w32_recv_native(a,b,c,d)
 #define recvfrom(a,b,c,d,e,f)   w32_recvfrom_native(a,b,c,d,e,f)
 #define shutdown(a,b)           w32_shutdown_native(a,b)
 #if !defined(LIBW32_SYS_POLL_H_INCLUDED)
 #define poll(a,b,c)             w32_poll_native(a,b,c)
 #endif /*SOCKET_MAPCALLS*/
+
+#define sockblockingmode(a,b)   w32_sockblockingmode_native(a,b)
 #define sockread(a,b,c)         w32_sockread_native(a,b,c)
 #define sockwrite(a,b,c)        w32_sockwrite_native(a,b,c)
 #define sockclose(a)            w32_sockclose_native(a)
+
+#define socketpair(a,b,c,d)     w32_socketpair_native(a,b,c,d)
 
 #endif /*WIN32_SOCKET_MAP_FD|NATIVE*/
 

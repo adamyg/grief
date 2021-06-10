@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_socket_c,"$Id: w32_socket.c,v 1.17 2020/06/06 00:37:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_socket_c,"$Id: w32_socket.c,v 1.18 2021/06/10 06:13:04 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -364,6 +364,27 @@ w32_recvfrom_fd(int fd, char *buf, int len, int flags,
 
 
 /*
+ *  socksetblockingmode()
+ */
+LIBW32_API int         
+w32_sockblockingmode_fd(int fd, int enabled)
+{
+    SOCKET osf;
+    int ret;
+
+    if ((osf = w32_sockhandle(fd)) == (SOCKET)INVALID_SOCKET) {
+        ret = -1;
+    } else {
+        u_long mode = (long)enabled;
+        if ((ret = ioctlsocket(osf, FIONBIO, &mode)) == -1 /*SOCKET_ERROR*/) {
+            w32_sockerror();
+        }
+    }
+    return ret;
+}
+ 
+
+/*
  *  sockwrite() system call; aka write() for sockets.
  */
 LIBW32_API int
@@ -417,8 +438,11 @@ w32_sockclose_fd(int fd)
 #undef closesocket
     if ((osf = w32_sockhandle(fd)) == (SOCKET)INVALID_SOCKET) {
         ret = -1;
-    } else if ((ret = closesocket(osf)) == -1 /*SOCKET_ERROR*/) {
-        w32_sockerror();
+    } else {
+        w32_sockfd_close(fd, osf);
+        if ((ret = closesocket(osf)) == -1 /*SOCKET_ERROR*/) {
+            w32_sockerror();
+        }
     }
     return ret;
 }

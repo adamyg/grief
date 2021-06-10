@@ -1,7 +1,7 @@
 #ifndef LIBW32_LANGINFO_H_INCLUDED
 #define LIBW32_LANGINFO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_langinfo_h,"$Id: langinfo.h,v 1.9 2019/03/15 23:12:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_langinfo_h,"$Id: langinfo.h,v 1.10 2021/06/10 06:13:03 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -37,6 +37,80 @@ __BEGIN_DECLS
 
 typedef enum {
     CODESET         = 0
+
+//  To be defined/implemented as required
+//
+//  D_T_FMT         = 1,        /* string for formatting date and time */
+//  D_FMT           = 2,        /* date format string */
+//  T_FMT           = 3,        /* time format string */
+//  T_FMT_AMPM      = 4,        /* a.m. or p.m. time formatting string */
+//  AM_STR          = 5,        /* Ante Meridian affix */
+//  PM_STR          = 6,        /* Post Meridian affix */
+//
+//  DAY_1           = 7,        /* week day names */
+//  DAY_2           = 8,
+//  DAY_3           = 9,
+//  DAY_4           = 10,
+//  DAY_5           = 11,
+//  DAY_6           = 12,
+//  DAY_7           = 13,
+//
+//  ABDAY_1         = 14,       /* abbreviated week day names */
+//  ABDAY_2         = 15,
+//  ABDAY_3         = 16,
+//  ABDAY_4         = 17,
+//  ABDAY_5         = 18,
+//  ABDAY_6         = 19,
+//  ABDAY_7         = 20,
+//                      
+//  MON_1           = 21,       /* month names */
+//  MON_2           = 22,
+//  MON_3           = 23,
+//  MON_4           = 24,
+//  MON_5           = 25,
+//  MON_6           = 26,
+//  MON_7           = 27,
+//  MON_8           = 28,
+//  MON_9           = 29,
+//  MON_10          = 30,
+//  MON_11          = 31,
+//  MON_12          = 32,
+//
+//  ABMON_1         = 33,       /* abbreviated month names */
+//  ABMON_2         = 34,
+//  ABMON_3         = 35,
+//  ABMON_4         = 36,
+//  ABMON_5         = 37,
+//  ABMON_6         = 38,
+//  ABMON_7         = 39,
+//  ABMON_8         = 40,
+//  ABMON_9         = 41,
+//  ABMON_10        = 42,
+//  ABMON_11        = 43,
+//  ABMON_12        = 44,
+//
+//  ERA             = 45,       /* era description segments */
+//  ERA_D_FMT       = 46,       /* era date format string */
+//  ERA_D_T_FMT     = 47,       /* era date and time format string */
+//  ERA_T_FMT       = 48,       /* era time format string */
+//  ALT_DIGITS      = 49,       /* alternative symbols for digits */
+//
+//  RADIXCHAR       = 50,       /* radix char */
+//  THOUSEP         = 51,       /* separator for thousands */
+//
+//  YESEXPR         = 52,       /* affirmative response expression */
+//  NOEXPR          = 53,       /* negative response expression */
+//
+//  #if !defined(_ANSI_SOURCE)
+//  YESSTR          = 54,       /* affirmative response for yes/no queries */
+//  NOSTR           = 55,       /* negative response for yes/no queries */
+//  #endif
+//
+//  CRNCYSTR        = 56,       /* currency symbol */
+//
+//  #if !defined(_ANSI_SOURCE)
+//  D_MD_ORDER      = 57        /* month/day order (local extension) */
+//  #endif
 } nl_item;
 
 
