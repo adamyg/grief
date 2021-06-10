@@ -1,17 +1,15 @@
 #ifndef GR_EDFILEIO_H_INCLUDED
 #define GR_EDFILEIO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edfileio_h,"$Id: edfileio.h,v 1.16 2020/06/18 12:53:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_edfileio_h,"$Id: edfileio.h,v 1.17 2021/06/02 15:27:37 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edfileio.h,v 1.16 2020/06/18 12:53:31 cvsuser Exp $
+/* $Id: edfileio.h,v 1.17 2021/06/02 15:27:37 cvsuser Exp $
  * File input/output functionality system api names.
  * Required by non-posix environments (ie. WIN32).
  *
- *
- *
- * Copyright (c) 1998 - 2020, Adam Young.
+ * Copyright (c) 1998 - 2021, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -58,17 +56,11 @@ __CBEGIN_DECLS
 /*
  *  MSVC and WATCOMC
  */
-#define fileio_open(_fn, _of, _om)  _open(_fn, _of, _om)
+#define fileio_open(_fn, _of, _om)  w32_open(_fn, _of, _om)
 #define fileio_close(_fd)           _close(_fd)
 #define fileio_read(_fd, _ib, _is)  _read(_fd, _ib, _is)
 #define fileio_write(_fd, _ob, _is) _write(_fd, _ob, _is)
 #define fileio_lseek(_fd, _o, _w)   _lseek(_fd, _o, _w)
-
-#define fileio_access(_fn, _m)      _access(_fn, _m)
-#define fileio_chmod(_fn, _m)       _chmod(_fn, _m)
-#define fileio_unlink(_fn)          _unlink(_fn)
-#define fileio_mkdir(_dn, _m)       w32_mkdir(_dn, _m)
-
 #define fileio_fdopen(_fd, _om)     _fdopen(_fd, _om)
 #define fileio_fileno(_fs)          _fileno(_fs)
 #define fileio_umask(_mk)           _umask(_mk)
@@ -79,12 +71,6 @@ __CBEGIN_DECLS
 #define fileio_read(_fd, _ib, _is)  read(_fd, _ib, _is)
 #define fileio_write(_fd, _ob, _is) write(_fd, _ob, _is)
 #define fileio_lseek(_fd, _o, _w)   lseek(_fd, _o, _w)
-
-#define fileio_access(_fn, _m)      access(_fn, _m)
-#define fileio_chmod(_fn, _m)       chmod(_fn, _m)
-#define fileio_unlink(_fn)          unlink(_fn)
-#define fileio_mkdir(_dn, _m)       mkdir(_dn, _m)
-
 #define fileio_fdopen(_fd, _om)     fdopen(_fd, _om)
 #define fileio_fileno(_fs)          fileno(_fs)
 #define fileio_umask(_mk)           umask(_mk)
@@ -93,4 +79,5 @@ __CBEGIN_DECLS
 __CEND_DECLS
 
 #endif /*GR_EDFILEIO_H_INCLUDED*/
+
 /*end*/
