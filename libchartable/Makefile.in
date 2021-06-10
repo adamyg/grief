@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.24 2020/06/18 20:35:17 cvsuser Exp $
+# $Id: Makefile.in,v 1.25 2021/06/06 06:03:13 cvsuser Exp $
 # libchartable makefile.
 #
 #
-# Copyright (c) 2010 - 2020, Adam Young.
+# Copyright (c) 2010 - 2021, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -127,7 +127,8 @@ CTBLOBJS=\
 	$(D_OBJ)/charsetutf16$(O)		\
 	$(D_OBJ)/charsetutf8$(O)		\
 	$(D_OBJ)/charsetwidth$(O)		\
-	$(D_OBJ)/charsetwidth_cjk$(O)
+	$(D_OBJ)/charsetwidth_cjk$(O)		\
+	$(D_OBJ)/utf8$(O)
 
 MODULES=	$(notdir $(basename $(wildcard cnvtables/cx*.c)))
 

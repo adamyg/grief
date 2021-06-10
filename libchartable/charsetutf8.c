@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetutf8_c,"$Id: charsetutf8.c,v 1.13 2018/10/01 22:10:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetutf8_c,"$Id: charsetutf8.c,v 1.16 2021/06/10 12:16:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* Multibyte character - UTF8 utility functionality.
  *
  *
- * Copyright (c) 2010 - 2018, Adam Young.
+ * Copyright (c) 2010 - 2021, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -182,6 +182,33 @@ charset_utf8_decode_safe(const void *src, const void *cpend, int32_t *cooked)
     }
     *cooked = result;
     return ret;
+}
+
+
+int
+charset_utf8_width(const void *src, const void *cpend)
+{
+    int width, result = 0;
+    const void *end;
+    int32_t wch;
+
+    while (src < cpend) {
+        if ((end = charset_utf8_decode_safe(src, cpend, &wch)) > src &&
+                (width = charset_width_ucs(wch, -1)) >= 0) {
+            result += width;
+            src = end;
+            continue;
+        }
+        break;
+    }
+    return result;
+}
+
+
+int
+charset_utf8_swidth(const void *src)
+{
+    return charset_utf8_width(src, (const char *)src + strlen((const char *)src));
 }
 
 
