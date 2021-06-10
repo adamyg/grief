@@ -129,12 +129,34 @@
 
     On UNIX variations (including cygwin), build by following these steps:
 
-      a. (optional) set the CFLAGS environment variable according to
-        your preference. If you are using a GNU compiler, then -O or -O2 (there is
-        little advantage in using -O2 and it usually builds larger executables) is fine.
+      a. Optionally the following external packages can be in additional 
+      functionality; auto-detected during 'conf
+
+			enchant-devel       Wrapper library for various s
+			hunspell-devel      Spell checker and morphologic
+			aspell-devel        GNU aspell.
+
+			enca-devel          Extremely Naive Charset Analy
+			libguess-devel      Speed character set detection
+
+			libexplain-devel    System message add-value.
+
+			libarchive-devel    Archive access.
+			libicu-devel        Character conversion.
+
+			libbz2-devel        bzip compression.
+			libzstd-devel       gz compression.
+			xz-devel            liblzma.
+			snappy-devel        google fast/compressor/decomp
+
+        plus the following, which are generally available.
+
+			ncurses-devel		Terminal interface library.
+			libcurl-devel       Network tools.
+			openssl-devel       OpenSSL.
 
       b. If you're building with a non-standard compiler or one known, by something
-       other than "cc" or "gcc" then you can set the environment variable "CC" to that.
+      other than "cc" or "gcc" then you can set the environment variable "CC" to that.
 
       c. Run the `configure' script by typing:
 
@@ -142,15 +164,15 @@
 
          Alternatively select one the available preset configurations
 
-            ./configure_withmost
-            ./configure_withcurses
-            ./configure_withncurses
-            ./configure_withncursesw
-            ./configure_withtermcap
-            ./configure_withtermlib
-            ./configure_withtinfo
+            ./support/configure_withmost
+            ./support/configure_withcurses
+            ./support/configure_withncurses
+            ./support/configure_withncursesw
+            ./support/configure_withtermcap
+            ./support/configure_withtermlib
+            ./support/configure_withtinfo
 
-      d. Note any errors. Please get back to me at the address below if you have any
+      d. Note any errors. Please get back to me via github below if you have any
       configure problems.
 
       e. This should built the entire set of makefiles and one include file in
@@ -160,7 +182,8 @@
 
       f. Build the entire tree with:
 
-            make
+            make 
+         or make release
 
       g. Note that the default installation paths (compiled into GRIEF, but may be
        overridden with environment variables or command line) are:
@@ -278,5 +301,5 @@ setting up terminal features.
 
 *Some* of this information may be obsolete, but most of it will be fine.
 
-$Id: INSTALL,v 1.14 2020/04/22 22:59:18 cvsuser Exp $
+$Id: INSTALL,v 1.15 2021/06/10 06:13:01 cvsuser Exp $
 
