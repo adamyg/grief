@@ -1,12 +1,12 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: nc.cr,v 1.31 2018/10/01 21:05:01 cvsuser Exp $
+/* $Id: nc.cr,v 1.33 2021/06/10 06:13:05 cvsuser Exp $
  * Norton Commander (NC) style directory services
  *
  *
  */
 
 #include "grief.h"
-#include "dialog.h"                             /* dialog manager */
+#include "dialog.h"                                 /* dialog manager */
 
 #if defined(DEBUG)
 #define Debug(x)            debug x;                /* local debug diag's */
@@ -24,8 +24,8 @@
 #define SMAXCOLUMNS         90
 #define SFILECOLUMNS        (nc_fwidth)
 #define SINFOCOLUMNS        38
-#define TYPEPOS             (ncwidth + 1)
-#define NAMEPOS             (ncwidth + 2)
+#define TYPEPOS(__base)     (__base + 1)
+#define NAMEPOS(__base)     (__base + 2)
 
 #if defined(MSDOS)
 #define MARKER              "\xfe"
@@ -226,6 +226,7 @@ nc(void)
     string cwd;                                 /* saved directory */
     int old_buffer, old_window;
     int dir_buffer;
+    int base;
 
     /* Initialise directory */
     old_buffer = inq_buffer();
@@ -239,6 +240,7 @@ nc(void)
     getwd(NULL, cwd);                           /* current working dir */
     set_buffer(dir_buffer);
     attach_syntax(SYNTAX);
+    set_buffer_type(NULL, BFTYP_UTF8);
     NcDirectory(cwd);
 
     create_window(nccols, ncrows + 4, nccols + ncwidth, 3,
@@ -262,7 +264,8 @@ nc(void)
             top_of_buffer();
             while (search_fwd("<\\c" + MARKER)) {
                 nclinebuf = read();
-                ncfilebuf = "./" + trim(substr(nclinebuf, NAMEPOS));
+                base = index(nclinebuf, '\t');
+                ncfilebuf = "./" + trim(substr(nclinebuf, NAMEPOS(base)));
                 down();
 
                 message("Loading \"%s\" for editing...", ncfilebuf);
@@ -589,7 +592,7 @@ static void
 NcDelete(void)
 {
     string answer;
-    int line;
+    int line, base;
 
     inq_position(line);
     raise_anchor();
@@ -616,9 +619,10 @@ NcDelete(void)
                 beginning_of_line();
                 down();
 
-                if (substr(nclinebuf, TYPEPOS, 1) == "D") {
+                base = index(nclinebuf, '\t');
+                if (substr(nclinebuf, TYPEPOS(base), 1) == "D") {
                                                 /* directory */
-                    ncfilebuf = trim(substr(nclinebuf, NAMEPOS));
+                    ncfilebuf = trim(substr(nclinebuf, NAMEPOS(base)));
                     if (ncfilebuf != "..") {
                         error("%s", nclinebuf);
                         message("Deleting Directory \"%s\"...", ncfilebuf);
@@ -628,9 +632,9 @@ NcDelete(void)
                         }
                     }
 
-                } else if (substr(nclinebuf, TYPEPOS, 1) == "F") {
+                } else if (substr(nclinebuf, TYPEPOS(base), 1) == "F") {
                                                 /* file */
-                    ncfilebuf = "./" + trim(substr(nclinebuf, NAMEPOS));
+                    ncfilebuf = "./" + trim(substr(nclinebuf, NAMEPOS(base)));
                     message("Deleting \"%s\"...", ncfilebuf);
                     if (remove(ncfilebuf) == -1) {
                         error("Unable to delete \"%s\" : %d (%s) - Press any key",
@@ -668,9 +672,10 @@ NcDelete(void)
         }
 
         if (upper(answer) == "Y") {
-            if (substr(nclinebuf, TYPEPOS, 1) == "D") {
+            base = index(nclinebuf, '\t');
+            if (substr(nclinebuf, TYPEPOS(base), 1) == "D") {
                                                 /* directory */
-                ncfilebuf = trim(substr(nclinebuf, NAMEPOS));
+                ncfilebuf = trim(substr(nclinebuf, NAMEPOS(base)));
                 if (ncfilebuf != "..") {
                     message("Deleting Directory \"%s\"...", ncfilebuf);
                     if (-1 == rmdir(ncfilebuf)) {
@@ -679,9 +684,9 @@ NcDelete(void)
                     }
                 }
 
-            } else if (substr(nclinebuf, TYPEPOS, 1) == "F") {
+            } else if (substr(nclinebuf, TYPEPOS(base), 1) == "F") {
                                                 /* file */
-                ncfilebuf = "./" + trim(substr(nclinebuf, NAMEPOS));
+                ncfilebuf = "./" + trim(substr(nclinebuf, NAMEPOS(base)));
                 message("Deleting \"%s\"...", ncfilebuf);
                 if (remove(ncfilebuf) == -1) {
                     error("Unable to delete \"%s\" : %d (%s) - Press any key",
@@ -708,7 +713,7 @@ NcDelete(void)
 static void
 NcEdit(void)
 {
-    int line;
+    int line, base;
 
     inq_position(line);
     nclinebuf = read();
@@ -719,8 +724,10 @@ NcEdit(void)
         ncfilebuf = MARKER;
 
     } else {
+        base = index(nclinebuf, '\t');
+
                                                 /* directory */
-        if (substr(nclinebuf, TYPEPOS, 1) == "D") {
+        if (substr(nclinebuf, TYPEPOS(base), 1) == "D") {
             error("Cannot edit directory, press any key...");
             beep();
             while(!inq_kbd_char())
@@ -730,8 +737,8 @@ NcEdit(void)
             return;
 
                                                 /* file */
-        } else if (substr(nclinebuf, TYPEPOS, 1) == "F") {
-            ncfilebuf = "./" + trim(substr(nclinebuf, NAMEPOS));
+        } else if (substr(nclinebuf, TYPEPOS(base), 1) == "F") {
+            ncfilebuf = "./" + trim(substr(nclinebuf, NAMEPOS(base)));
         }
     }
     exit();                                     /* exit 'nc' */
@@ -918,8 +925,11 @@ NcMarkInv(void)
 static int
 NcMark(void)
 {
+    int base;
+
     nclinebuf = read();
-    if (substr(nclinebuf, TYPEPOS, 1) != "F") {
+    base = index(nclinebuf, '\t');
+    if (substr(nclinebuf, TYPEPOS(base), 1) != "F") {
         return (-1);
     }
     delete_char();
@@ -942,6 +952,7 @@ static void
 NcMarkMultiple( int mark_typ )
 {
     list result;
+    int base;
 
     result[0] ="";
     result = field_list((mark_typ == MARK_SELECT ? "Select" :
@@ -963,11 +974,11 @@ NcMarkMultiple( int mark_typ )
         while (line_no) {
             move_abs(line_no, 1);
             nclinebuf = read();
-            ncfilebuf = trim(substr(nclinebuf, NAMEPOS));
+            base = index(nclinebuf, '\t');
 
-            if (substr(nclinebuf, TYPEPOS, 1) == "F" &&
+            if (substr(nclinebuf, TYPEPOS(base), 1) == "F" &&
                     re_search(NULL, pat, ncfilebuf) > 0) {
-                message(".. %s", ncfilebuf);
+                message(".. %s", trim(substr(nclinebuf, NAMEPOS(base))));
 
                 delete_char();
                 switch (mark_typ) {
@@ -1002,9 +1013,12 @@ NcMarkMultiple( int mark_typ )
 static void
 NcEnter(void)
 {
+    int base;
+
     nclinebuf = read();
-    if (substr(nclinebuf, TYPEPOS, 1) == "D") { /* Directory selection */
-        ncfilebuf = trim(substr(nclinebuf, NAMEPOS));
+    base = index(nclinebuf, '\t');
+    if (substr(nclinebuf, TYPEPOS(base), 1) == "D") { /* Directory selection */
+        ncfilebuf = trim(substr(nclinebuf, NAMEPOS(base)));
         if (ncfilebuf == "..") {
             NcCd(DIR_UP);
 
@@ -1012,8 +1026,8 @@ NcEnter(void)
             NcCd(DIR_DOWN + ncfilebuf);
         }
                                                 /* File selection */
-    } else if (substr(nclinebuf, TYPEPOS, 1) == "F") {
-        ncfilebuf = "./" + trim(substr(nclinebuf, NAMEPOS));
+    } else if (substr(nclinebuf, TYPEPOS(base), 1) == "F") {
+        ncfilebuf = "./" + trim(substr(nclinebuf, NAMEPOS(base)));
         exit();
     }
 }
@@ -1105,13 +1119,14 @@ NcDirectory(string cwd)
         while (find_file(name, bytes, mtime, NULL, mode)) {
             if  (S_IFDIR & mode) {
                 /*
-                 *    Directories
+                 *  Directories
                  */
                 if ((ncsortorder != "Unsorted" && 2 == pass) ||
                         name == "." ) {         /* skip on 2nd sort pass */
                     continue;                   /* or if '.' directory */
                 }
-                sprintf(buffer, " /%-*.*s|  <DIR>|", ncfwidth, ncfwidth, name);
+
+                sprintf(buffer, " /%-*.*S|  <DIR>|", ncfwidth, ncfwidth, name);
 
             } else {
                 /*
@@ -1131,7 +1146,7 @@ NcDirectory(string cwd)
                     sprintf(size, "%dG", bytes/1024);
                 }
 
-                sprintf(buffer, " %s%-*.*s|%7s|",
+                sprintf(buffer, " %s%-*.*S|%7s|",
                     substr(mode_string(mode, cwd+"/"+name, TRUE), 1, 1), ncfwidth, ncfwidth, name, size);
             }
 
@@ -1145,11 +1160,11 @@ NcDirectory(string cwd)
             }
             insert(buffer);
 
-            move_abs(0, TYPEPOS);               /* encode type details */
+         // move_abs(0, TYPEPOS);               /* encode type details */
             if (mode & S_IFDIR) {
-                insert("D" + name + "\n");
+                insert(" \tD" + name + "\n");
             } else {
-                insert("F" + name + "\n");
+                insert(" \tF" + name + "\n");
             }
             ++nclineno;
         }
