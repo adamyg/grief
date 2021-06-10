@@ -2,7 +2,7 @@
 /*
  * libtermemu console driver
  *
- * Copyright (c) 2007, 2012 - 2020 Adam Young.
+ * Copyright (c) 2007, 2012 - 2021 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -28,8 +28,14 @@
 #endif
 
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0500
+#define _WIN32_WINNT 0x601
+#else
+#if(_WIN32_WINNT < 0x601)
+#undef  _WIN32_WINNT
+#define _WIN32_WINNT 0x601
 #endif
+#endif
+
 #define PSAPI_VERSION               1           // EnumProcessModules and psapi.dll
 #if !defined(WINDOWS_MEAN_AND_LEAN)
 #define  WINDOWS_MEAN_AND_LEAN
@@ -50,6 +56,10 @@
 #endif
 #define WIN32_CONSOLEEXT                        /* extended console */
 #define WIN32_CONSOLE256                        /* enable 256 color console support */
+
+#if defined(__WATCOMC__)
+#pragma disable_message(124)                    /* Comparison result always 0 / 1 */
+#endif
 
 #pragma comment(lib, "Gdi32.lib")
 #pragma comment(lib, "User32.lib")
@@ -524,6 +534,8 @@ vio_trace(const char *fmt, ...)
     if (debug[len-1] != '\n') debug[len] = '\n', debug[len+1] = 0;
     OutputDebugStringA(debug);
     va_end(ap);
+#else   //_DEBUG
+    (void)fmt;
 #endif  //_DEBUG
 }
 
@@ -569,7 +581,9 @@ vio_init(void)
     } else if (rows > VIO_MAXROWS) {
         rows = VIO_MAXROWS;                     // limit to supported width.
     }
+
     if (cols < VIO_MINCOLS) cols = VIO_MINCOLS;
+        //Note: shouldnt occur, console limits ~6 to accommodate def buttons.
 
     if (fontprofile || vio.cols != cols || vio.rows != rows) {
         const WCHAR_INFO *oimage;
@@ -628,6 +642,7 @@ vio_init(void)
         vio.c_trashed = 1;
         vio.rows = rows;
         vio.cols = cols;
+
         vio_goto(vio.c_row, vio.c_col);         // limit current cursor
 
         for (l = 0; l < rows; ++l) {
@@ -1922,6 +1937,11 @@ CopyOutEx2(copyoutctx_t *ctx, size_t pos, size_t cnt, unsigned flags)
             do {
                 const WCHAR_INFO cell = *cursor++;
 
+                if (0 == cell.Char.UnicodeChar) {
+                    ++col;
+                    continue;                   // NULL, padding
+                }
+
                 //  ESC[<y>; <x> H              CUP, Cursor Position *Cursor moves to <x>; <y> coordinate within the viewport, where <x> is the column of the <y> line.
                 //
                 if (-1 == start) {
@@ -2268,6 +2288,7 @@ consolefontsenum(void)
     //              Typefaces for Source Code Beautification.
     //
     //      Fonts:
+    //          https://github.com/powerline/fonts
     //          http://www.proggyfonts.net/
     //          http://www.levien.com/type/myfonts/inconsolata.html
     //          http://terminus-font.sourceforge.net/ and https://files.ax86.net/terminus-ttf/
@@ -2764,15 +2785,16 @@ vio_save(void)
     rows = 1 + sbinfo.srWindow.Bottom - sbinfo.srWindow.Top;
     cols = 1 + sbinfo.srWindow.Right - sbinfo.srWindow.Left;
 
-    if (!vio_state.image || vio_state.rows != rows || vio_state.cols != cols) {
-        CHAR_INFO *newImage;
+    if (!vio_state.image ||                     // initial or size change
+            vio_state.rows != rows || vio_state.cols != cols) {
+        CHAR_INFO *nimage;
 
         if (rows <= 0 || cols <= 0 ||
-                NULL == (newImage = calloc(rows * cols, sizeof(CHAR_INFO)))) {
+                NULL == (nimage = calloc(rows * cols, sizeof(CHAR_INFO)))) {
             return;
         }
         free(vio_state.image);                  // release previous; if any
-        vio_state.image = newImage;
+        vio_state.image = nimage;
         vio_state.rows = rows;
         vio_state.cols = cols;
     }
@@ -2805,8 +2827,8 @@ ImageSave(HANDLE console, unsigned pos, unsigned cnt)
     wr.Top    = (SHORT)(pos / cols);
     wr.Bottom = (SHORT)((pos + (cnt - 1)) / cols);
 
-    is.Y      = (SHORT)(vio.rows - wr.Top);     // size of image.
-    is.X      = (SHORT)(vio.cols);
+    is.Y      = (SHORT)(rows - wr.Top);         // size of image.
+    is.X      = (SHORT)(cols);
 
     ic.X      = 0;                              // top left src cell in image.
     ic.Y      = 0;

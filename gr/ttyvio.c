@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.68 2020/05/03 18:24:42 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.69 2021/06/10 06:13:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.68 2020/05/03 18:24:42 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.69 2021/06/10 06:13:02 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -806,6 +806,8 @@ term_font(int setlen, char *font)
 static void
 term_print(int row, int col, int len, const VCELL_t *vvp)
 {
+    static VIOCELL null = { 0 };
+    
     if (len > 0) {
         const int isuc = (DC_CMAPFRAME & x_display_ctrl) || vtisutf8() || vtisunicode();
         VIOCELL *p = currScreen + (row * ttcols()) + col;
@@ -816,6 +818,12 @@ term_print(int row, int col, int len, const VCELL_t *vvp)
         while (len--) {
             const vbyte_t attr = VBYTE_ATTR_GET(vvp->primary);
             vbyte_t c = VBYTE_CHAR_GET(vvp->primary);
+
+            if (CH_PADDING == c) {              /* wide character padding */
+                *p++ = null;
+                ++vvp;
+                continue;
+            }
 
             if (cattr != attr) {		/* attribute change */
                 cattr = attr, term_attribute(cattr);
@@ -844,7 +852,7 @@ term_print(int row, int col, int len, const VCELL_t *vvp)
 
 
 /*  Function:           term_putc
- *      Write character to the display.
+ *      Write character to the display. Generally unsed, as term_print() has priority.
  *
  *  Parameters:
  *      c -                 Character value.
@@ -856,6 +864,10 @@ static void
 term_putc(vbyte_t c)
 {
     int ttrow = ttatrow(), ttcol = ttatcol();
+
+    if (CH_PADDING == c) {                      /* wide character padding */
+        return;
+    }
 
     term_attribute(VBYTE_ATTR_GET(c));
     c = VBYTE_CHAR_GET(c);

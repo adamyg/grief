@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.76 2020/04/13 14:29:18 cvsuser Exp $")
+__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.77 2021/06/10 06:13:01 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: display.c,v 1.76 2020/04/13 14:29:18 cvsuser Exp $
+/* $Id: display.c,v 1.77 2021/06/10 06:13:01 cvsuser Exp $
  * High level display interface.
  *
  *
@@ -24,6 +24,7 @@ __CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.76 2020/04/13 14:29:18 cvsuser E
 #include <editor.h>
 #include <edassert.h>
 #include <edconfig.h>
+#include "../libchartable/libchartable.h"
 #include <libstr.h>                             /* str_...()/sxprintf() */
 
 #include "accum.h"                              /* acc_...() */
@@ -2696,7 +2697,7 @@ draw_window(WINDOW_t *wp, int top, LINENO line, int end, const int bottom, int a
     curbp = bp;
 
     for (; top <= end; ++top, ++line) {
-        LINE_t *lp = vm_lock_line(line);
+        const LINE_t *lp = vm_lock_line2(line);
 
         if (VTDRAW_DIRTY & actions) {           /* skip clean/blank lines */
             if (NULL == lp || 0 == lisdirty(lp)) {
@@ -2905,9 +2906,10 @@ draw_title(const WINDOW_t *wp, const int top, const int line)
     const unsigned char *title =
             (unsigned char *)(!top ? wp->w_message :
                     (bp && BF2TST(bp, BF2_TITLE_FULL) && bp->b_fname[0] ? bp->b_fname : wp->w_title));
+    const unsigned char *titleend = (title ? title + strlen((const char *)title) : 0);
     const char *suffix  = NULL;
     const vbyte_t col   = framecolor(wp);
-    int  titlelen       = (title && *title ? (int)strlen((const char *) title) : 0);
+    int  titlelen       = (title && *title ? (int)charset_utf8_width(title, titleend) : 0); /*MCHAR*/
     int  left           = 0;
     int  right          = 0;
     char numbuf[20];
@@ -2998,15 +3000,31 @@ draw_title(const WINDOW_t *wp, const int top, const int line)
         int title_col = col;
 
         if (WFTST(wp, WF_SELECTED) || (wp->w_status & WFTOP)) {
-            title_col = titlecolor(wp);       /* 'selected' window */
+            title_col = titlecolor(wp);         /* 'selected' window */
         }
 
         ch = col | ' ';
         vtputb(ch);
         ((WINDOW_t *)wp)->w_disp_cmap = x_base_cmap;
-        while (*title && titlelen-- > 0) {
-            vtputb(*title++ | title_col);
+
+//      while (*title && titlelen-- > 0) {
+//          vtputb(*title++ | title_col);
+//      }
+        while (*title && titlelen > 0) {        /* MCHAR */
+            const unsigned char *cend;
+            int cwidth;
+            int32_t wch;
+
+            if ((cend = charset_utf8_decode_safe(title, titleend, &wch)) > title &&
+                    (cwidth = charset_width_ucs(wch, -1)) >= 0) {
+                vtputb(wch | title_col);
+                titlelen -= cwidth;
+                title = cend;
+                continue; //next
+            }
+            break; //error
         }
+
         if (titlelen > 0 && suffix) {
             while (*suffix && titlelen-- > 0) {
                 vtputb(*suffix++ | title_col);
