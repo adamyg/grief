@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charseticonv_c,"$Id: charseticonv.c,v 1.20 2021/06/16 13:56:04 cvsuser Exp $")
+__CIDENT_RCSID(gr_charseticonv_c,"$Id: charseticonv.c,v 1.21 2021/06/19 10:28:52 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* Conversion tables loader/interface.
@@ -494,7 +494,7 @@ ccs1_export(struct charset_iconv *ic, const char **inbuf, size_t *inbytes, char 
                         const char *end;
                         int32_t raw, ch;
 
-                        if (NULL == (end = charset_utf8_decode(icursor, icursor + icount, &ch, &raw))) {
+                        if (NULL == (end = charset_utf8_decode_cook(icursor, icursor + icount, &ch, &raw))) {
                             errno = EINVAL;     /* an complete sequence */
                             res = (size_t)-1;
                             break;
