@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetwidth_c,"$Id: charsetwidth.c,v 1.17 2021/06/19 09:40:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetwidth_c,"$Id: charsetwidth.c,v 1.18 2021/06/19 15:42:38 cvsuser Exp $")
 
 /*
     ------------------------------------------------------------------------------
@@ -124,7 +124,7 @@ charset_width_set_version(const char *label)
                         const unsigned value = (a * 10000) + (b * 100) + c;
                         if (value) {
                                 for (cursor = end; cursor-- != VERSIONS;) {
-                                        if (value <= cursor->value) {
+                                        if (value >= cursor->value) {
                                                 version = cursor;
                                                 return version->value;
                                         }
