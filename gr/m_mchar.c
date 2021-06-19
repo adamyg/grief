@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_mchar_c,"$Id: m_mchar.c,v 1.13 2021/06/10 11:57:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_mchar_c,"$Id: m_mchar.c,v 1.14 2021/06/13 16:01:34 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_mchar.c,v 1.13 2021/06/10 11:57:23 cvsuser Exp $
+/* $Id: m_mchar.c,v 1.14 2021/06/13 16:01:34 cvsuser Exp $
  * Multibyte/locale primitives.
  *
  *
@@ -90,12 +90,12 @@ __CIDENT_RCSID(gr_m_mchar_c,"$Id: m_mchar.c,v 1.13 2021/06/10 11:57:23 cvsuser E
       ! SCSU            BFTYP_SCSU
       ! UTF-7           BFTYP_UTF7      65002
 
-      ! UTF-4           BFTYP_UCS4
-      ! UTF-4be         BFTYP_UCS4
-      ! UTF-4le         BFTYP_UCS4
-      ! UTF-2           BFTYP_UCS2
+      ! UTF-2           BFTYP_UCS2                  BFTYP_UTF16 aliases
       ! UTF-2be         BFTYP_UCS2
       ! UTF-2le         BFTYP_UCS2
+      ! UTF-4           BFTYP_UCS4                  BFTYP_UTF32 aliases
+      ! UTF-4be         BFTYP_UCS4
+      ! UTF-4le         BFTYP_UCS4
 
       ! cp437           BFTYP_SBCS      437         OEM/US, ASCII
       ! cp737           BFTYP_SBCS      737         Greek, ISO-8859-7
@@ -317,6 +317,26 @@ do_wcwidth(void)                /* int (string str | int character), [int defaul
     }
 
     acc_assign_int((accint_t) width);
+}
+
+
+void
+do_set_unicode_version(void)
+{
+    int version = -1;
+
+    if (isa_string(1)) {
+        version = charset_width_set_version(get_str(1));
+    }
+
+    acc_assign_int((accint_t) version);
+}
+
+
+void
+inq_unicode_version(void)
+{
+    acc_assign_str(charset_width_version(), -1);
 }
 
 /*end*/

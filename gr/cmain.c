@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.37 2021/06/10 06:13:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.38 2021/06/13 16:02:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.37 2021/06/10 06:13:01 cvsuser Exp $
+/* $Id: cmain.c,v 1.38 2021/06/13 16:02:54 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -30,6 +30,7 @@ __CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.37 2021/06/10 06:13:01 cvsuser Exp $
 #include <libstr.h>                             /* str_...()/sxprintf() */
 
 #include "../libvfs/vfs.h"                      /* vfs_init() */
+#include "../libchartable/libchartable.h"
 
 #include "accum.h"                              /* acc_...() */
 #include "anchor.h"
@@ -144,6 +145,9 @@ static struct argoption options[] = {
 
     { "encoding",       arg_required,       NULL,       317,    "Default file encoding",
                             "<encoding>" },
+
+    { "ucsver",         arg_required,       NULL,       320,    "Unicode version; wcwidth support",
+                            "<x.y.z>" },
 
     { "nograph",        arg_none,           NULL,       5,      "Disable use of graphic characters" },
 
@@ -327,6 +331,8 @@ int                     x_bftype_default = BFTYP_UNDEFINED;
                                                 /* Default file encoding. */
 const char *            x_encoding_default = NULL;
 
+const char *            x_unicode_version = NULL;
+
 uint32_t                xf_test = 0;            /* BITMAP enables test code --- internal use only --- */
 
 int                     x_mflag = FALSE;        /* TRUE whilst processing -m strings to avoid messages. */
@@ -359,6 +365,8 @@ static char *           path_cook(const char *name);
 
 static void             argv_init(int *argcp, char **argv);
 static int              argv_process(int doerr, int argc, const char **argv);
+
+static void             unicode_init(void);
 
 static void             env_setup(void);
 static __CINLINE int    env_iswhite(const char ch);
@@ -450,7 +458,7 @@ cmain(int argc, char **argv)
 //  textdomain(PACKAGE);
 #endif
 #endif
-#if defined(_MSC_VER)
+#if defined(HAVE__TZSET)
     _tzset();
 #else
     tzset();                                    /* localtime requirement */
@@ -479,6 +487,7 @@ cmain(int argc, char **argv)
     search_init();                              /* regular expression engine */
     mchar_info_init();
     mchar_guess_init();
+    mchar_iconv_init();
     playback_init();
     bookmark_init();
     position_init();
@@ -512,6 +521,7 @@ cmain(int argc, char **argv)
     if (xf_spell) {
         spell_init();
     }
+    unicode_init();
     vtready();
     if (xf_mouse) {
         if (mouse_init("")) {                   /* mouse interface */
@@ -1275,6 +1285,10 @@ argv_process(int doerr, int argc, const char **argv)
             x_encoding_default = args.val;
             break;
 
+        case 320:           /* --ucsver=<version> */
+            x_unicode_version = args.val;
+            break;
+
         case 308:           /* --term=<TERM-override> */
             gputenv2("TERM", args.val);
             break;
@@ -1287,7 +1301,7 @@ argv_process(int doerr, int argc, const char **argv)
             gputenv2("GRHELP", args.val);
             break;
 
-	case 319:           /* --grprofile=<GRPROFILE-override> */
+        case 319:           /* --grprofile=<GRPROFILE-override> */
             gputenv2("GRPROFILE", args.val);
             break;
 
@@ -1342,6 +1356,16 @@ argv_process(int doerr, int argc, const char **argv)
         usage(1);
     }
     return args.ind;
+}
+
+
+static void
+unicode_init(void)
+{
+    if (NULL == x_unicode_version)
+        x_unicode_version = ggetenv("UNICODE_VERSION");
+    if (x_unicode_version)
+        charset_width_set_version(x_unicode_version);
 }
 
 

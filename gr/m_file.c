@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_file_c,"$Id: m_file.c,v 1.42 2021/06/02 13:42:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_file_c,"$Id: m_file.c,v 1.43 2021/06/19 09:42:03 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_file.c,v 1.42 2021/06/02 13:42:03 cvsuser Exp $
+/* $Id: m_file.c,v 1.43 2021/06/19 09:42:03 cvsuser Exp $
  * File primitives.
  *
  *
@@ -3409,5 +3409,5 @@ do_mktemp(void)                 /* string (string path) */
         acc_assign_str("", -1);
     }
 }
-/*end*/
 
+/*end*/

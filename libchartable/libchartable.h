@@ -1,7 +1,7 @@
 #ifndef GR_LIBCHARTABLE_H_INCLUDED
 #define GR_LIBCHARTABLE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libchartable_h,"$Id: libchartable.h,v 1.13 2021/06/03 14:01:11 cvsuser Exp $")
+__CIDENT_RCSID(gr_libchartable_h,"$Id: libchartable.h,v 1.15 2021/06/19 09:40:16 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -108,6 +108,7 @@ extern const char *             charset_current(const char *env, const char *def
 extern const char *             charset_canonicalize(const char *name, int namelen, char *buffer, int bufsiz);
 extern int                      charset_compare(const char *primary, const char *name, int namelen);
 
+extern void                     charset_iconv_init(void);
 extern void                     charset_iconv_home(const char *path);
 extern void                     charset_iconv_path(const char *path);
 extern struct charset_iconv *   charset_iconv_open(const char *name, int flags);
@@ -119,7 +120,9 @@ extern size_t                   charset_iconv_import(struct charset_iconv *ic,
                                             const char **inbuf, size_t *inbytes, char **outbuf, size_t *outbytes);
 extern size_t                   charset_iconv_export(struct charset_iconv *ic,
                                             const char **inbuf, size_t *inbytes, char **outbuf, size_t *outbytes);
-
+                                        
+extern int                      charset_width_set_version(const char *version);
+extern const char *             charset_width_version(void);
 extern int                      charset_width_ucs(int32_t ucs, int bad);
 extern int                      charset_swidth_ucs(const int32_t *pwcs, size_t n);
 
@@ -127,7 +130,8 @@ extern int                      charset_width_cjk(int32_t ucs);
 extern int                      charset_swidth_cjk(const int32_t *pwcs, size_t n);
 
 extern int                      charset_locale_utf8(const char *encoding);
-extern const void *             charset_utf8_decode(const void *src, const void *cpend, int32_t *cooked, int32_t *raw);
+extern const void *             charset_utf8_decode(const void *src, const void *cpend, int32_t *raw);
+extern const void *             charset_utf8_decode_cook(const void *src, const void *cpend, int32_t *cooked, int32_t *raw);
 extern const void *             charset_utf8_decode_safe(const void *src, const void *cpend, int32_t *cooked);
 extern int                      charset_utf8_encode(const int32_t ch, void *buffer);
 extern int                      charset_utf8_length(const int32_t ch);

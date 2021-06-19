@@ -1,6 +1,6 @@
 /* -*- mode: cr; indent-width: 4; -*- */
 /* charset=utf8
- * $Id: regress2.cr,v 1.21 2021/06/10 06:13:05 cvsuser Exp $
+ * $Id: regress2.cr,v 1.23 2021/06/19 09:39:45 cvsuser Exp $
  * Regression tests ... part2.
  *
  *
@@ -57,6 +57,7 @@ static void             test_sysinfo(void);
 static void             test_ini(void);
 static void             test_register_int(void);
 
+static void             test_unicode_version(void);
 static void             test_wcwidth(void);
 static void             test_wstrlen(void);
 static void             test_wstrnlen(void);
@@ -71,7 +72,7 @@ static void             test_wstrcmp(void);
 static void             test_wstrcasecmp(void);
 static void             test_wlower(void);
 static void             test_wupper(void);
-
+static void             test_wread(void);
 #endif //__PROTOTYPES__
 
 
@@ -149,7 +150,9 @@ regress2(void)
     test_ini();
     test_register_int();
 
-    test_wcwidth();                             // 06/2020
+    // 06/2020
+    test_unicode_version();
+    test_wcwidth();
     test_wstrlen();
     test_wstrnlen();
     test_wcharacterat();
@@ -163,6 +166,7 @@ regress2(void)
     test_wstrcasecmp();
     test_wlower();
     test_wupper();
+    test_wread();
 }
 
 
@@ -1320,90 +1324,101 @@ test_register_int(void)
 #endif
 
 static void
+test_unicode_version(void)
+{
+    string uv = inq_unicode_version();
+    TEST(1241, set_unicode_version("11.0.0") == 110000); //match
+    TEST(1242, set_unicode_version("13.0.0") == 130000); //match
+    TEST(1243, set_unicode_version("19.0.0") == 130000); //closet
+    set_unicode_version(uv);
+}
+
+
+static void
 test_wcwidth(void)
 {
-    TEST(1241, wcwidth("") == 0);
-    TEST(1242, wcwidth("a") == 1);
-    TEST(1243, wcwidth("The quick brown fox jumps over the lazy dog") == 43);
-    TEST(1244, wcwidth("ξεσκεπάζω την ψυχοφθόρα βδελυγμία") == 33);
+    TEST(1244, wcwidth("") == 0);
+    TEST(1245, wcwidth("a") == 1);
+    TEST(1246, wcwidth("The quick brown fox jumps over the lazy dog") == 43);
+    TEST(1247, wcwidth("ξεσκεπάζω την ψυχοφθόρα βδελυγμία") == 33);
 }
 
 
 static void
 test_wstrlen(void)
 {
-    TEST(1245, wstrlen("") == 0);
-    TEST(1246, wstrlen("a") == 1);
-    TEST(1247, wstrlen("The quick brown fox jumps over the lazy dog") == 43);
-    TEST(1248, wstrlen("ξεσκεπάζω την ψυχοφθόρα βδελυγμία") == 33);
+    TEST(1248, wstrlen("") == 0);
+    TEST(1249, wstrlen("a") == 1);
+    TEST(1250, wstrlen("The quick brown fox jumps over the lazy dog") == 43);
+    TEST(1251, wstrlen("ξεσκεπάζω την ψυχοφθόρα βδελυγμία") == 33);
 }
 
 
 static void
 test_wstrnlen(void)
 {
-    TEST(1249, wstrnlen("", 0) == 0);
-    TEST(1250, wstrnlen("a", 1) == 1);
-    TEST(1251, wstrnlen("The quick brown fox jumps over the lazy dog", 30) == 30);
-    TEST(1252, wstrnlen("ξεσκεπάζω την ψυχοφθόρα βδελυγμία", 34) == 33);
+    TEST(1252, wstrnlen("", 0) == 0);
+    TEST(1253, wstrnlen("a", 1) == 1);
+    TEST(1254, wstrnlen("The quick brown fox jumps over the lazy dog", 30) == 30);
+    TEST(1255, wstrnlen("ξεσκεπάζω την ψυχοφθόρα βδελυγμία", 34) == 33);
 }
 
 
 static void
 test_wcharacterat(void)
 {
-    TEST(1253, wcharacterat("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", 1)  == L'А')
-    TEST(1254, wcharacterat("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", 7)  == L'Ж')
-    TEST(1255, wcharacterat("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", 33) == -1)
+    TEST(1256, wcharacterat("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", 1)  == L'А')
+    TEST(1257, wcharacterat("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", 7)  == L'Ж')
+    TEST(1258, wcharacterat("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", 33) == -1)
 }
 
 
 static void
 test_wstrstr(void)
 {
-    TEST(1256, 4 == wstrstr("abcmandefg", "man"));
-    TEST(1257, 4 == wstrstr("abcmanmandefg", "man"));
-    TEST(1258, 0 == wstrstr("abcmanmandefg", "ban"));
-    TEST(1259, 1 == wstrstr("abcmanmandefg", ""));
+    TEST(1259, 4 == wstrstr("abcmandefg", "man"));
+    TEST(1260, 4 == wstrstr("abcmanmandefg", "man"));
+    TEST(1261, 0 == wstrstr("abcmanmandefg", "ban"));
+    TEST(1262, 1 == wstrstr("abcmanmandefg", ""));
 
-    TEST(1260, wstrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "БВ") == 2)
-    TEST(1261, wstrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "A")  == 0)
-    TEST(1262, wstrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "")   == 1)
+    TEST(1263, wstrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "БВ") == 2)
+    TEST(1264, wstrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "A")  == 0)
+    TEST(1265, wstrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "")   == 1)
 }
 
 
 static void
 test_wstrrstr(void)
 {
-    TEST(1263, 4 == wstrrstr("abcmandefg", "man"));
-    TEST(1264, 7 == wstrrstr("abcmanmandefg", "man"));
-    TEST(1265, 0 == wstrrstr("abcmanmandefg", "ban"));
-    TEST(1266, 0 == wstrrstr("abcmanmandefg", ""));
+    TEST(1266, 4 == wstrrstr("abcmandefg", "man"));
+    TEST(1267, 7 == wstrrstr("abcmanmandefg", "man"));
+    TEST(1268, 0 == wstrrstr("abcmanmandefg", "ban"));
+    TEST(1269, 0 == wstrrstr("abcmanmandefg", ""));
 
-    TEST(1267, wstrrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "БВ") == 34)
-    TEST(1268, wstrrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "A")  == 0)
-    TEST(1269, wstrrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "")   == 0)
+    TEST(1270, wstrrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "БВ") == 34)
+    TEST(1271, wstrrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "A")  == 0)
+    TEST(1272, wstrrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "")   == 0)
 }
 
 
 static void
 test_wsubstr(void)
 {
-    TEST(1270, wsubstr("ABC", 0, 3) == "ABC");
-    TEST(1271, wsubstr("ABC", -1000, 1000) == "ABC");
-    TEST(1272, wsubstr("ABC", 1000, 1000) == "");
-    TEST(1273, wsubstr("ABC", 1, 0) == "");
-    TEST(1274, wsubstr("ABC", 1, 1) == "A");
-    TEST(1275, wsubstr("ABC", 1, 2) == "AB");
-    TEST(1276, wsubstr("ABC", 1, 3) == "ABC");
-    TEST(1277, wsubstr("ABC", 1, 100) == "ABC");
-    TEST(1278, wsubstr("ABC", 3, 0) == "");
-    TEST(1279, wsubstr("ABC", 3, 1) == "C");
-    TEST(1280, wsubstr("ABC", 3, 100) == "C");
+    TEST(1273, wsubstr("ABC", 0, 3) == "ABC");
+    TEST(1274, wsubstr("ABC", -1000, 1000) == "ABC");
+    TEST(1275, wsubstr("ABC", 1000, 1000) == "");
+    TEST(1276, wsubstr("ABC", 1, 0) == "");
+    TEST(1277, wsubstr("ABC", 1, 1) == "A");
+    TEST(1278, wsubstr("ABC", 1, 2) == "AB");
+    TEST(1279, wsubstr("ABC", 1, 3) == "ABC");
+    TEST(1280, wsubstr("ABC", 1, 100) == "ABC");
+    TEST(1281, wsubstr("ABC", 3, 0) == "");
+    TEST(1282, wsubstr("ABC", 3, 1) == "C");
+    TEST(1283, wsubstr("ABC", 3, 100) == "C");
 
-    TEST(1281, wsubstr("ξεσκεπάζω την ψυχοφθόρα βδελυγμία", 33, 0) == "");
-    TEST(1282, wsubstr("ξεσκεπάζω την ψυχοφθόρα βδελυγμία", 1, 9)  == "ξεσκεπάζω");
-    TEST(1283, wsubstr("ξεσκεπάζω την ψυχοφθόρα βδελυγμία", 11, 3) == "την");
+    TEST(1284, wsubstr("ξεσκεπάζω την ψυχοφθόρα βδελυγμία", 33, 0) == "");
+    TEST(1285, wsubstr("ξεσκεπάζω την ψυχοφθόρα βδελυγμία", 1, 9)  == "ξεσκεπάζω");
+    TEST(1286, wsubstr("ξεσκεπάζω την ψυχοφθόρα βδελυγμία", 11, 3) == "την");
 }
 
 
@@ -1411,19 +1426,19 @@ static void
 test_wfirstof(void)
 {
     int wch;
-    TEST(1284, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "БВ", wch)  == 2 && wch == L'Б')
-    TEST(1285, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "CФВ", wch) == 3 && wch == L'В')
-    TEST(1286, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "XBC", wch) == 0 && wch == 0)
+    TEST(1287, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "БВ", wch)  == 2 && wch == L'Б')
+    TEST(1288, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "CФВ", wch) == 3 && wch == L'В')
+    TEST(1289, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "XBC", wch) == 0 && wch == 0)
 }
 
 
 static void
 test_wstrpbrk(void)
 {
-    TEST(1287,  3 == wstrpbrk("abcdefg", "dc"));
-    TEST(1288, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "БВ")  == 2)
-    TEST(1289, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "CФВ") == 3)
-    TEST(1290, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "XBC") == 0)
+    TEST(1290,  3 == wstrpbrk("abcdefg", "dc"));
+    TEST(1291, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "БВ")  == 2)
+    TEST(1292, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "CФВ") == 3)
+    TEST(1293, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "XBC") == 0)
 }
 
 
@@ -1431,45 +1446,87 @@ static void
 test_wlastof(void)
 {
     int wch;
-    TEST(1291, wlastof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "БВ", wch)  == 35 && wch == L'В')
-    TEST(1292, wlastof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "CФВ", wch) == 53 && wch == L'Ф')
-    TEST(1293, wlastof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "XBC", wch) == 0  && wch == 0)
+    TEST(1294, wlastof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "БВ", wch)  == 35 && wch == L'В')
+    TEST(1295, wlastof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "CФВ", wch) == 53 && wch == L'Ф')
+    TEST(1296, wlastof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "XBC", wch) == 0  && wch == 0)
 }
 
 
 static void
 test_wstrcmp(void)
 {
-    TEST(1294, 0 == wstrcmp("aaa", "aaa"));
-    TEST(1295, 0 == wstrcmp("aaa", "aaa"));
-    TEST(1296, 0 == wstrcmp("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"));
-    TEST(1297, 0 == wstrcmp("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯYYYY", "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯXXXX", 32));
+    TEST(1297, 0 == wstrcmp("aaa", "aaa"));
+    TEST(1298, 0 == wstrcmp("aaa", "aaa"));
+    TEST(1299, 0 == wstrcmp("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"));
+    TEST(1300, 0 == wstrcmp("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯYYYY", "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯXXXX", 32));
 }
 
 
 static void
 test_wstrcasecmp(void)
 {
-    TEST(1298, 0 == wstrcasecmp("AaA", "aAa"));
-    TEST(1299, 0 == wstrcasecmp("AaAXXX", "aAaYYY", 3));
+    TEST(1301, 0 == wstrcasecmp("AaA", "aAa"));
+    TEST(1302, 0 == wstrcasecmp("AaAXXX", "aAaYYY", 3));
 }
 
 
 static void
 test_wlower(void)
 {
-    TEST(1300, wlower("AbC") == "abc");
-    TEST(1301, wlower("ÓÓ") == "óó");
-    TEST(1302, wlower(L'Ó') == L'ó');
+    TEST(1303, wlower("AbC") == "abc");
+    TEST(1304, wlower("ÓÓ") == "óó");
+    TEST(1305, wlower(L'Ó') == L'ó');
 }
 
 
 static void
 test_wupper(void)
 {
-    TEST(1303, wupper("aBc") == "ABC");
-    TEST(1304, wupper("óó") == "ÓÓ");
-    TEST(1305, wupper(L'ó') == L'Ó');
+    TEST(1306, wupper("aBc") == "ABC");
+    TEST(1307, wupper("óó") == "ÓÓ");
+    TEST(1308, wupper(L'ó') == L'Ó');
+}
+
+
+static void
+test_wread(void)
+{
+    const string sval = "1234567890abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz\n";
+    const string wval = "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ\n";
+    const int wlen = wstrlen(wval);
+    int buf, status;
+    string line;
+
+    save_position();
+    if ((buf = create_buffer("-regress-wbuffer-", NULL, TRUE, 0, "utf8")) == -1) {
+        return;
+    }
+    set_buffer(buf);
+
+    top_of_buffer();
+    insert(sval);
+    top_of_buffer();
+    line = read(NULL, status);
+    TEST(1309, status == 1);                     /* EOF */
+    TEST(1310, line == sval);
+
+    top_of_buffer();
+    insert(wval);
+    top_of_buffer();
+    line = read(NULL, status);
+    TEST(1311, status == 1);                     /* EOF */
+    TEST(1312, line == wval);
+
+    line = read(wlen, status);
+    TEST(1313, status == 1);                     /* EOF */
+    TEST(1314, line == wval);
+
+    line = read(10, status);
+    TEST(1315, status == 0);                     /* partial */
+    TEST(1316, line == wsubstr(line, 1, 10));
+
+    restore_position(2);
+    delete_buffer(buf);
 }
 
 /*end*/

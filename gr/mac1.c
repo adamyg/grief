@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mac1_c,"$Id: mac1.c,v 1.71 2021/06/10 06:13:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_mac1_c,"$Id: mac1.c,v 1.72 2021/06/19 09:39:14 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mac1.c,v 1.71 2021/06/10 06:13:02 cvsuser Exp $
+/* $Id: mac1.c,v 1.72 2021/06/19 09:39:14 cvsuser Exp $
  * Basic primitives.
  *
  *
@@ -2506,7 +2506,7 @@ void
 do_read(void)                   /* string ([int number], [int &status]) */
 {
     const LINENO cline = *cur_line, ccol = *cur_col;
-    int status = 0;                             /* extension, status being -1=eof,1=eol,0=partial */
+    int status = 1;                             /* extension, status being -1=eof,1=eol,0=partial */
     LINE_t *lp;
 
     if (NULL == (lp = vm_lock_linex(curbp, cline))) {
@@ -2520,9 +2520,6 @@ do_read(void)                   /* string ([int number], [int &status]) */
         dot = line_offset_const(lp, cline, ccol, LOFFSET_NORMAL);
         len = llength(lp) - dot;
 
-        trace_ilog("read(line:%d,col:%d,dot:%d,length:%d) : %d\n", \
-            (int)cline, (int)ccol, dot, llength(lp), len);
-
         if (isa_undef(1)) {
             copy = len;                         /* EOL */
 
@@ -2533,16 +2530,51 @@ do_read(void)                   /* string ([int number], [int &status]) */
             copy = (value1 > len ? len : value1);
         }
 
+        trace_ilog("read(line:%d,col:%d,dot:%d,length:%d) : %d of %d\n", \
+            (int)cline, (int)ccol, dot, llength(lp), copy, len);
+
         // MCHAR/???, iconv->utf8
         if (copy <= 0) {
             acc_assign_str("\n", 1);            /* empty line */
 
-        } else if (copy < len) {                /* sub-line */
-            acc_assign_str((const char *) ltext(lp) + dot, copy);
-            status = 0;
+        } else {
+            const LINECHAR *start = ltext(lp) + dot;
 
-        } else {                                /* copied to EOL, must add \n */
-            acc_assign_str2((const char *) ltext(lp) + dot, copy, "\n", 1);
+            if (! BFTST(curbp, BF_BINARY)) {    /* MCHAR */
+                const LINECHAR *cp = start,
+                    *end = ltext(lp) + llength(lp);
+
+                if (copy >= len) {
+                    cp = end;
+                } else {
+                    LINENO pos = ccol;
+                    int32_t ch;
+
+                    while (copy > 0 && cp < end) {
+                        int length, width =
+                                character_decode(pos, cp, end, &length, &ch, NULL);
+                        if (width > 0) --copy;
+                        pos += width;
+                        cp += length;
+                    }
+                }
+
+                if (cp >= end) {                /* EOL + \n */
+                    acc_assign_str2((const char *) start, len, "\n", 1);
+                } else {                        /* partial */
+                    acc_assign_str((const char *) start, cp - start);
+                    status = 0;
+                }
+
+            } else {
+                if (copy >= len) {              /* EOL + \n */
+                    acc_assign_str2((const char *) start, copy, "\n", 1);
+
+                } else {                        /* partial */
+                    acc_assign_str((const char *) start, copy);
+                    status = 0;
+                }
+            }
         }
 
         vm_unlock(cline);

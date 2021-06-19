@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mchar_guess_c,"$Id: mchar_guess.c,v 1.27 2020/06/05 23:13:47 cvsuser Exp $")
+__CIDENT_RCSID(gr_mchar_guess_c,"$Id: mchar_guess.c,v 1.28 2021/06/19 09:50:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mchar_guess.c,v 1.27 2020/06/05 23:13:47 cvsuser Exp $
+/* $Id: mchar_guess.c,v 1.28 2021/06/19 09:50:23 cvsuser Exp $
  * Character-set conversion/file type guess logic.
  *
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2021, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -191,10 +191,10 @@ static const struct guessdecoder {
      *      guess -         Guesser (libguess).
      *      enca -          Extremely Naive Charset Analyser (libenca).
      *
-     *  Note, order is some-what important as the MBCS checks can result in 
+     *  Note, order is some-what important as the MBCS checks can result in
      *  false positives, as such are generally last in line.
      *
-     *  Module usage has evolved over time, with a number being pure 
+     *  Module usage has evolved over time, with a number being pure
      *  experimental alternatives.
      */
     { NAME("mark"),             guess_marker,           GUESS_FDEFAULT },
@@ -1065,8 +1065,8 @@ guess_guess(guessinfo_t *guess, const void *buffer, unsigned length)
  *      European languages, and a few Unicode variants, independently
  *      on language.
  *
- *      Currently it supports Belarusian, Bulgarian, Croatian, Czech, 
- *      Estonian, Hungarian, Latvian, Lithuanian, Polish, Russian, 
+ *      Currently it supports Belarusian, Bulgarian, Croatian, Czech,
+ *      Estonian, Hungarian, Latvian, Lithuanian, Polish, Russian,
  *      Slovak, Slovene, Ukrainian, Chinese, and some multibyte
  *      encodings independently on language.
  *
@@ -1076,8 +1076,8 @@ guess_guess(guessinfo_t *guess, const void *buffer, unsigned length)
  *      length -            Length of the buffer.
  *
  *  Warning:
- *      libenca is licensed under the GPLv2; the user *must* explicitly 
- *      build a local non-standard version and agree to *never* to 
+ *      libenca is licensed under the GPLv2; the user *must* explicitly
+ *      build a local non-standard version and agree to *never* to
  *      release.
  *
  *  References:
@@ -1737,8 +1737,8 @@ guess_utf8(guessinfo_t *guess, const void *buffer, unsigned length)
     guessterm_t linebreak = {0};
     register const unsigned char *cursor = buffer;
     const unsigned char *end = cursor + (length - 1);
-    int nonascii = 0, isutf8 = 0;
-    int32_t raw, ch = 0;
+    int nonascii = 0, noutf8 = 0, isutf8 = 0;
+    int32_t ch = 0;
 
     if (BFTYP_UNKNOWN == bomtype || BFTYP_UTF8 == bomtype) {
 
@@ -1749,24 +1749,31 @@ guess_utf8(guessinfo_t *guess, const void *buffer, unsigned length)
 
         while (cursor < end && isutf8 >= 0) {
             if ((ch = *cursor++) >= 0x80) {
-                if (NULL == (cursor = charset_utf8_decode(cursor - 1, end, &ch, &raw)) || ch != raw) {
+                /*
+                 *  utf8, allowing illegal and overlong only rejecting illformed.
+                 */
+                cursor = charset_utf8_decode(cursor - 1, end, &ch);
+                if (ch <= 0) {
                     trace_ilog("\t\t==> bad UTF8\n");
-                    isutf8 = -1;
-                    break;
+                    if (++noutf8 > (length/1)) { /* non utf8 >1% */
+                        isutf8 = -1;
+                        break;
+                    }
+                    continue;
                 }
                 isutf8 = 1;
             }
 
             if (ch <= 0xff) {
                 /*
-                *  [0x0A], [0x0D], [0x20 - 0x7F], [0x85], [0xA0 - 0xFF]
-                */
+                 *  [CR/LF], [BS], [FF], [0x20 - 0x7F], [0x85], [0xA0 - 0xFF]
+                 */
                 if (0 == (x_charflags[ch] & (A|X|I))) {
                     trace_ilog("\t\t==> non ASCII (%d/0x%02x)\n", ch, ch);
-                    if (++nonascii > 2) {
-                        isutf8 = -1;            /* neither ASCII nor Latin1 */
+                    if (++nonascii > 2) {       /* neither ASCII nor Latin1 */
+                        isutf8 = -1;
                     }
-                } else {
+                 } else {
                     linetally(&linebreak, ch);
                 }
             }
@@ -1935,7 +1942,7 @@ guess_gb18030(guessinfo_t *guess, const void *buffer, unsigned length)
     const unsigned char *cursor = (const unsigned char *)buffer,
             *end = cursor + length;
     int isgb = 0;
- 
+
     while (cursor < end && isgb >= 0) {
         const unsigned char c1 = *cursor++;
 
@@ -2203,4 +2210,5 @@ guess_ebcdic(guessinfo_t *guess, const void *buffer, unsigned length)
 #endif
     return 0;
 }
+
 /*end*/

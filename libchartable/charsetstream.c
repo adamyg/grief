@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetstream_c,"$Id: charsetstream.c,v 1.10 2018/10/01 22:10:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetstream_c,"$Id: charsetstream.c,v 1.11 2021/06/16 13:56:33 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* conversion stream support.
@@ -172,10 +172,11 @@ iconv_stream_open(iconv_cvtfn_t cnvfn, void *cd, iconv_rdfn_t rdfn, iconv_wrfn_t
 {
     iconv_stream_t *s;
 
-    if (NULL == (s = (iconv_stream_t *)malloc(sizeof(iconv_stream_t)))) {
+    if (NULL == (s = (iconv_stream_t *)calloc(sizeof(iconv_stream_t), 1))) {
         return NULL;
     }
     s->s_iconv      = cnvfn;
+    s->s_ierrno     = NULL;
     s->s_cd         = cd;
     s->s_inbytes    = 0;
     s->s_outbytes   = 0;

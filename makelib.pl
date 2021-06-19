@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.113 2021/04/10 09:51:56 cvsuser Exp $
+# $Id: makelib.pl,v 1.114 2021/06/13 16:14:18 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -787,6 +787,7 @@ my @x_headers       = (     #headers
         'pthread.h',                            # MINGW
         'string.h', 'strings.h',
         'errno.h',
+        'locale.h',                             # setlocale()
         'wchar.h', 'wctype.h',
         'time.h',                               # TIME_WITH_SYS_TIME
         'alloca.h',                             # alloca()
@@ -931,7 +932,10 @@ my @x_functions     = (
         'snprintf', '_snprintf', 'vsnprintf', '_vsnprintf',
         'strrchr', 'strdup',
         'asnprintf', 'vasnprintf',
+        'setlocale',
         'mbrtowc', 'wcrtomb', 'wcscmp', 'wcscpy', 'wcslen', 'wctomb', 'wmemcmp', 'wmemmove', 'wmemcpy',
+        'wcwidth',
+        '_tzset',                               # msvc
         'fgetpos', 'fsetpos',
         'fseeko', 'fgetln',                     # bsd/linux extensions
         'truncate', 'ftruncate',
@@ -2536,9 +2540,8 @@ CheckExec($$;$)         # (base, cmd, [exec])
     my $ret = System($cmd);
     if (! -f "${base}.exe") {
         my $out = "${base}.out";
-
-        printf "  ::<%s>\n", $out;
         if ($o_verbose && -f $out) {
+            printf "  ::<%s>\n", $out;
             open(OUT, "<${out}") or
                 die "cannot open ${out}";
             while (defined (my $line = <OUT>)) {

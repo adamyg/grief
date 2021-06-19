@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: regress.cr,v 1.36 2021/06/10 06:13:05 cvsuser Exp $
+/* $Id: regress.cr,v 1.37 2021/06/19 09:39:45 cvsuser Exp $
  *
  *  This set of macros are used when debugging and fixing CRISP to aid in regression testing and
  *  catching bugs introduced inadvertently. These tests dont attempt an exhaustive test, yet
@@ -2206,18 +2206,52 @@ test_buffer(void)
     //TODO
     //  set_attribute()
     //  inq_attribute()
-    //  inq_line_length
-    //  insert()
-    //  insertf()
     //  insert_buffer()
-    //  read()
-    //  set_buffer()
     //  inq_next_buffer()
     //  inq_prev_buffer()
     //
+    {   const string sval = "1234567890abcdefghijklmnopqrstuvwxyz"+
+                "1234567890abcdefghijklmnopqrstuvwxyz\n";
+        const int slen = strlen(sval);
+        int status, count;
+        string line;
+
+        top_of_buffer();
+        count = insert(sval);
+        TEST(559, slen == count);
+        TEST(560, slen == inq_line_length());
+
+        top_of_buffer();
+        line = read(NULL, status);
+        TEST(561, status == 1);                 /* EOF */
+        TEST(562, line == sval);
+
+        line = read(slen, status);
+        TEST(563, status == 1);                 /* EOF */
+        TEST(564, line == sval);
+
+        line = read(1, status);
+        TEST(565, status == 0);                 /* partial */
+        TEST(566, line == "1");
+
+        line = read(9, status);
+        TEST(567, status == 0);                 /* partial */
+        TEST(568, line == "123456789");
+
+        top_of_buffer();
+        count = insertf("%s\n", "abcdefg1234567890");
+        TEST(569, 18 == count);
+        TEST(570, slen == inq_line_length());
+
+        top_of_buffer();
+        line = read(NULL, status);
+        TEST(571, status == 1);                 /* EOF */
+        TEST(572, line == "abcdefg1234567890\n");
+    }
+
     restore_position(2);
-    TEST(559, curbuf == inq_buffer());
-    TEST(560, curwin == inq_window());
+    TEST(573, curbuf == inq_buffer());
+    TEST(574, curwin == inq_window());
     delete_buffer(buf);
 }
 
@@ -2225,7 +2259,7 @@ test_buffer(void)
 static void
 test_key(void)
 {
-    TEST(561, int_to_key(key_to_int("<Up>")) == "<Up>");
+    TEST(575, int_to_key(key_to_int("<Up>")) == "<Up>");
 }
 
 
@@ -2235,11 +2269,11 @@ test_debug(void)
     list l1;
 
     l1 = debug_support(DBG_INQ_VARS, 0);
-    TEST(562, is_list(l1));
+    TEST(576, is_list(l1));
     l1 = debug_support(DBG_STACK_TRACE, NULL, "");
-    TEST(563, is_list(l1));
+    TEST(577, is_list(l1));
     l1 = debug_support(DBG_INQ_VAR_INFO, 0, "l1");
-    TEST(564, is_list(l1));
+    TEST(578, is_list(l1));
 }
 
 
@@ -2249,27 +2283,27 @@ test_strtol(void)
     int ret, endp;
 
     ret = strtol("xxx");                        /* basic */
-    TEST(565, ret == 0);
+    TEST(579, ret == 0);
 
     ret = strtol("1");                          /* dec */
-    TEST(566, ret == 1);
+    TEST(580, ret == 1);
 
     ret = strtol("01");                         /* oct */
-    TEST(567, ret == 1);
+    TEST(581, ret == 1);
 
     ret = strtol("0x1");                        /* hex */
-    TEST(568, ret == 1);
+    TEST(582, ret == 1);
 
     ret = strtol("g", NULL, 36);                /* base 36 (0123456789abc...) */
-    TEST(569, ret == 16);
+    TEST(583, ret == 16);
 
     ret = strtol("xxx", endp);                  /* invalid */
-    TEST(570, ret == 0);
-    TEST(571, endp == 0);
+    TEST(584, ret == 0);
+    TEST(585, endp == 0);
 
     ret = strtol("12", endp);
-    TEST(572, ret == 12);
-    TEST(573, endp == 3);
+    TEST(586, ret == 12);
+    TEST(587, endp == 3);
 }
 
 
@@ -2280,24 +2314,24 @@ test_strtof(void)
     int endp;
 
     ret = strtof("0.0");                        /* dec */
-    TEST(574, ret == 0.0);
+    TEST(588, ret == 0.0);
 
     ret = strtof("1.0");                        /* dec */
-    TEST(575, ret == 1.0);
+    TEST(589, ret == 1.0);
 
     ret = strtof("xxx", endp);                  /* invalid */
-    TEST(576, ret == 0);
-    TEST(577, endp == 0);
+    TEST(590, ret == 0);
+    TEST(591, endp == 0);
 
     ret = strtof("0.0");                        /* dec */
-    TEST(578, ret == 0.0);
+    TEST(592, ret == 0.0);
 
     ret = strtof("1.0");                        /* dec */
-    TEST(579, ret == 1.0);
+    TEST(593, ret == 1.0);
 
     ret = strtof("xxx", endp);                  /* invalid */
-    TEST(580, ret == 0);
-    TEST(581, endp == 0);
+    TEST(594, ret == 0);
+    TEST(595, endp == 0);
 }
 
 
@@ -2308,45 +2342,45 @@ test_strtod(void)
     int endp;
 
     ret = strtod("0.0");                        /* dec */
-    TEST(582, ret == 0.0);
+    TEST(596, ret == 0.0);
 
     ret = strtod("1.0");                        /* dec */
-    TEST(583, ret == 1.0);
+    TEST(597, ret == 1.0);
 
     ret = strtod("xxx", endp);                  /* invalid */
-    TEST(584, ret == 0);
-    TEST(585, endp == 0);
+    TEST(598, ret == 0);
+    TEST(599, endp == 0);
 
     ret = strtod("0.0");                        /* dec */
-    TEST(586, ret == 0.0);
+    TEST(600, ret == 0.0);
 
     ret = strtod("1.0");                        /* dec */
-    TEST(587, ret == 1.0);
+    TEST(601, ret == 1.0);
 
     ret = strtod("xxx", endp);                  /* invalid */
-    TEST(588, ret == 0);
-    TEST(589, endp == 0);
+    TEST(602, ret == 0);
+    TEST(603, endp == 0);
 }
 
 
 static void
 test_defaults1(int value = 666)
 {
-    TEST(590, value == 666);
+    TEST(604, value == 666);
 }
 
 
 static void
 test_defaults2(string value = "666")
 {
-    TEST(591, value == "666");
+    TEST(605, value == "666");
 }
 
 
 static void
 test_defaults3(string value = 1.1)
 {
-    TEST(592, value == 1.1);
+    TEST(606, value == 1.1);
 }
 
 
@@ -2388,11 +2422,11 @@ test_reference(void)
     float fvalue = 1;
 
     test_reference1(ivalue);
-    TEST(593, ivalue == 2);
+    TEST(607, ivalue == 2);
     test_reference2(svalue);
-    TEST(594, svalue == "two");
+    TEST(608, svalue == "two");
     test_reference3(fvalue);
-    TEST(595, fvalue == 2);
+    TEST(609, fvalue == 2);
 }
 
 
@@ -2412,7 +2446,7 @@ test_pushpop(void)
         sprintf(msg, "work%04d", i);
         push(l, msg);
     }
-    TEST(596, length_of_list(l) == 1000);
+    TEST(610, length_of_list(l) == 1000);
 
     for (i = i-1; i >= 0; --i) {
         sprintf(msg, "work%04d", i);
@@ -2421,13 +2455,13 @@ test_pushpop(void)
             break;
         }
     }
-    TEST(597, success);
+    TEST(611, success);
 
-    TEST(598, length_of_list(l) == 0);
+    TEST(612, length_of_list(l) == 0);
     pause_on_error(0, FALSE);
     r = pop(l);
     pause_on_error(1, FALSE);
-    TEST(599, is_null(r));                      /* FIXME/XXX - is_null(pop(l)) broken/limitation of LVAL's */
+    TEST(613, is_null(r));                      /* FIXME/XXX - is_null(pop(l)) broken/limitation of LVAL's */
 }
 
 
@@ -2436,12 +2470,12 @@ test_globals(void)
 {
     int line, col;
 
-    TEST(600, inq_window() == current_window);
-    TEST(601, inq_buffer() == current_buffer);
+    TEST(614, inq_window() == current_window);
+    TEST(615, inq_buffer() == current_buffer);
     inq_position(line, col);
-    TEST(602, line == current_line);
+    TEST(616, line == current_line);
     inq_position(line, col);
-    TEST(603, col == current_col);
+    TEST(617, col == current_col);
 }
 
 
@@ -2452,7 +2486,7 @@ test_globals(void)
 static void
 test_search(void)
 {
-    TEST(604, quote_regexp("<>") == "\\<\\>");
+    TEST(618, quote_regexp("<>") == "\\<\\>");
 //  search string
 //  search buffer
 }
@@ -2470,17 +2504,17 @@ test_search(void)
 static void
 test_called(void)
 {
-    TEST(605, "test_called" == caller());
+    TEST(619, "test_called" == caller());
     set_calling_name("");
-    TEST(606, "" == caller());
+    TEST(620, "" == caller());
     set_calling_name("test_called");
-    TEST(607, "test_called" == caller());
+    TEST(621, "test_called" == caller());
     set_calling_name("hello_world");
-    TEST(608, "hello_world" == caller());
+    TEST(622, "hello_world" == caller());
     set_calling_name(inq_called());
-    TEST(609, "regress" == caller());
+    TEST(623, "regress" == caller());
     set_calling_name(NULL);                     /* extension, reset/clear */
-    TEST(610, "test_called" == caller());
+    TEST(624, "test_called" == caller());
 }
 
 
@@ -2501,16 +2535,16 @@ test_macro(void)
     int ret;
 
     ret = inq_macro("regress");                 /* defined */
-    TEST(611, ret == 1);
+    TEST(625, ret == 1);
 
     ret = inq_macro("list_of_dictionaries");    /* builtin */
-    TEST(612, ret == 0);
+    TEST(626, ret == 0);
 
     ret = inq_macro("cut");                     /* replacement */
-    TEST(613, ret == 2);
+    TEST(627, ret == 2);
 
     ret = inq_macro("this_should_not_be_undefined");
-    TEST(614, ret == -1);                       /* undefined */
+    TEST(628, ret == -1);                       /* undefined */
 }
 
 
@@ -2526,12 +2560,12 @@ test_undef(void)
 //  //  control how 'undefines' are handled??
 //  try {
         if (1) {
-            TEST(615, inq_symbol("undefined_ival") == 0);
-            TEST(616, inq_symbol("undefined_fval") == 0);
-            TEST(617, inq_symbol("undefined_sval") == 0);
-            TEST(618, undefined_ival == 0);     /* wont be executed! */
-            TEST(619, undefined_fval == 0);     /* wont be executed! */
-            TEST(620, undefined_sval == "");    /* wont be executed! */
+            TEST(629, inq_symbol("undefined_ival") == 0);
+            TEST(630, inq_symbol("undefined_fval") == 0);
+            TEST(631, inq_symbol("undefined_sval") == 0);
+            TEST(632, undefined_ival == 0);     /* wont be executed! */
+            TEST(633, undefined_fval == 0);     /* wont be executed! */
+            TEST(634, undefined_sval == "");    /* wont be executed! */
         }
 //  } catch {
 //  } finally {
@@ -2550,12 +2584,12 @@ test_history(void)
     const string top = inq_macro_history(0);
 
                                                 /* <Alt-10> or from features */
-    TEST(621, top == "execute_macro" || top == "sel_list");
-    TEST(622, inq_command() == inq_macro_history());
+    TEST(635, top == "execute_macro" || top == "sel_list");
+    TEST(636, inq_command() == inq_macro_history());
     set_macro_history(0, "function1");
     set_macro_history(1, "function2");
-    TEST(623, "function1" == inq_macro_history());
-    TEST(624, "function2" == inq_macro_history(1));
+    TEST(637, "function1" == inq_macro_history());
+    TEST(638, "function2" == inq_macro_history(1));
 }
 
 
@@ -2567,24 +2601,24 @@ static void
 test_scope(void)
 {
     if (first_time()) {                         /* can only be run once */
-        TEST(625, 1 == scope_1());
-        TEST(626, 2 == scope_1());
-        TEST(627, 3 == scope_1());
+        TEST(639, 1 == scope_1());
+        TEST(640, 2 == scope_1());
+        TEST(641, 3 == scope_1());
 
-        TEST(628, 1 == scope_2());
-        TEST(629, 2 == scope_2());
-        TEST(630, 3 == scope_2());
+        TEST(642, 1 == scope_2());
+        TEST(643, 2 == scope_2());
+        TEST(644, 3 == scope_2());
 
-        TEST(631, 1 == scope_3());
-        TEST(632, 2 == scope_3());
-        TEST(633, 3 == scope_3());
+        TEST(645, 1 == scope_3());
+        TEST(646, 2 == scope_3());
+        TEST(647, 3 == scope_3());
     } else {                                    /* emulate */
         extern int num_passed;
         num_passed += 9;
     }
 
-    TESTASYNC(634, 0 == inq_symbol("x_extern_dontexist"));
-    TEST(635, 0 != inq_symbol("x_static"));
+    TESTASYNC(648, 0 == inq_symbol("x_extern_dontexist"));
+    TEST(649, 0 != inq_symbol("x_static"));
 }
 
 
@@ -2640,38 +2674,38 @@ test_dict(void)
 
     /* create dictionaries */
     dict = create_dictionary();
-    TEST(636, dict);
+    TEST(650, dict);
 
     dict2 = create_dictionary("namedict");
-    TEST(637, dict2);
+    TEST(651, dict2);
 
     /* basic set/get primitives */
     set_property(dict, "property", 1234);
     var = get_property(dict, "property");
-    TEST(638, 1234 == var);
+    TEST(652, 1234 == var);
 
     set_property(dict, "property", "hello world");
     var = get_property(dict, "property");
-    TEST(639, "hello world" == var);
+    TEST(653, "hello world" == var);
 
     /* indirection operators */
     dict.value = "value1";                      /* FIXME/XXX - compiler issues yet resolved */
-    TEST(640, "value1" == dict.value);
+    TEST(654, "value1" == dict.value);
 
     dict2.value = "value2";
     dict.indirect = dict2;                      /* FIXME/XXX - reference count issues */
-    TEST(641, "value2" == dict.indirect.value);
+    TEST(655, "value2" == dict.indirect.value);
     ret = dict_exists(dict, "property");
-    TEST(642, ret);
+    TEST(656, ret);
 
     l1 = dict_list(dict);
-    TEST(643, is_list(l1));
-    TEST(644, 3 == length_of_list(l1));
+    TEST(657, is_list(l1));
+    TEST(658, 3 == length_of_list(l1));
 
     set_property(dict, "property2", 1234);
     set_property(dict, "property3", 5678);
     l1 = dict_list(dict);
-    TEST(645, 5 == length_of_list(l1));
+    TEST(659, 5 == length_of_list(l1));
 
     // FIXME/XXX --
     //  compiler bug, allows declare when string expected.
@@ -2684,36 +2718,36 @@ test_dict(void)
     while ((idx = dict_each(dict, key, value)) >= 0) {
         switch(key) {
         case "property":
-            TESTASYNC(646, "hello world" == value);
+            TESTASYNC(660, "hello world" == value);
             ++count;
             break;
         case "property2":
-            TESTASYNC(647, 1234 == value);
+            TESTASYNC(661, 1234 == value);
             ++count;
             break;
         case "property3":
-            TESTASYNC(648, 5678 == value);
+            TESTASYNC(662, 5678 == value);
             ++count;
             break;
         }
     }
-    TESTASYNC(649, 3 == count);
+    TESTASYNC(663, 3 == count);
 
     ret = dict_delete(dict, "property");
-    TEST(650, 0 == ret);
+    TEST(664, 0 == ret);
 
     l1 = dict_list(dict);
-    TEST(651, is_list(l1));
-    TEST(652, 4 == length_of_list(l1));
+    TEST(665, is_list(l1));
+    TEST(666, 4 == length_of_list(l1));
 
     l1 = list_of_dictionaries();
-    TEST(653, is_list(l1));
-    TEST(654, length_of_list(l1) >= 2);         /* all dictionaries */
+    TEST(667, is_list(l1));
+    TEST(668, length_of_list(l1) >= 2);         /* all dictionaries */
 
     ret = delete_dictionary(dict);
-    TEST(655, 0 == ret);
+    TEST(669, 0 == ret);
     ret = delete_dictionary(dict2);
-    TEST(656, 0 == ret);
+    TEST(670, 0 == ret);
 }
 
 
@@ -2725,7 +2759,7 @@ test_dict(void)
 static int
 test_leaks(void)
 {
-    TEST(657, leak_1(1000) == 1000);            /* list are limited 2^16 atoms */
+    TEST(671, leak_1(1000) == 1000);            /* list are limited 2^16 atoms */
 }
 
 
@@ -2830,8 +2864,8 @@ regress_renumber(void)
         while (re_search(0, "TES[A-Z]+([0-9]+,") > 0) {
             /*
              *  examples:
-             *      TEST(658,
-             *      TESTASYNC(659,
+             *      TEST(672,
+             *      TESTASYNC(673,
              */
             line = read(18);
             delete_char(index(line, ","));
@@ -2850,4 +2884,3 @@ regress_renumber(void)
 }
 
 /*end*/
-

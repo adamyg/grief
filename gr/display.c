@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.77 2021/06/10 06:13:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.78 2021/06/13 16:00:35 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: display.c,v 1.77 2021/06/10 06:13:01 cvsuser Exp $
+/* $Id: display.c,v 1.78 2021/06/13 16:00:35 cvsuser Exp $
  * High level display interface.
  *
  *
@@ -2590,8 +2590,9 @@ draw_window(WINDOW_t *wp, int top, LINENO line, int end, const int bottom, int a
     const int iscurrent  = (curwp == wp ? TRUE : FALSE);
     const int ledge      = win_ledge(wp);
     const int redge      = win_redge(wp);
-    const int syntax     = (BFTST(wp->w_bufp, BF_SYNTAX) && wp->w_bufp->b_syntax);
-
+    const int syntax     = (bp && BFTST(bp, BF_SYNTAX) && bp->b_syntax && //MCHAR???
+                                bp->b_type != BFTYP_UTF16 && bp->b_type != BFTYP_UTF32);
+                                                /* syntax parser not wchar safe/FIXME */
     const vbyte_t nattr  = normalcolor(wp);
     const vbyte_t lattr  = (syntax ? VBYTE_ATTR(ATTR_COLUMN_LINENO) : nattr);
     const vbyte_t sattr  = (syntax ? VBYTE_ATTR(ATTR_COLUMN_STATUS) : nattr);
@@ -2610,7 +2611,7 @@ draw_window(WINDOW_t *wp, int top, LINENO line, int end, const int bottom, int a
     wp->w_disp_anchor = NULL;
 
     anchor.type = MK_NONE;
-    if (wp->w_bufp) {
+    if (bp) {
         if (iscurrent || WFTST(wp, WF_SHOWANCHOR)) {
             if (anchor_get(wp, NULL, &anchor)) {
                 wp->w_disp_anchor = &anchor;    /* active anchor */

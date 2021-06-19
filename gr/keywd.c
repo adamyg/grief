@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.96 2021/06/10 11:56:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.98 2021/06/19 09:41:03 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keywd.c,v 1.96 2021/06/10 11:56:06 cvsuser Exp $
+/* $Id: keywd.c,v 1.98 2021/06/19 09:41:03 cvsuser Exp $
  * Keyword table.
  *
  *
@@ -1344,9 +1344,14 @@ BUILTIN builtin[] = {
          ARG_OPT | ARG_LVAL | ARG_INT,
          ARG_OPT | ARG_LVAL | ARG_INT}},
 
+#if defined(VERSION_206)
+    {"inq_unicode_version", MACRO(inq_unicode_version), ARG_STRING, 0, 0, /* display */
+    0,  {0}},
+#endif
+
     {"inq_username", MACRO(inq_username), ARG_STRING, 0, 0, /* env */
     0,  {0}},
-
+       
     {"inq_vfs_mounts", MACRO(inq_vfs_mounts), ARG_LIST, 0, 0, /* file */
     0,  {0}},
 
@@ -2062,6 +2067,11 @@ BUILTIN builtin[] = {
          ARG_OPT | ARG_INT,
          ARG_OPT | ARG_INT}},
 
+#if defined(VERSION_206)
+    {"set_unicode_version", MACRO(do_set_unicode_version), ARG_INT, 0, 0, /* display */
+    1,  {ARG_STRING}},
+#endif
+
     {"set_window", MACRO(do_set_window), ARG_INT, 0, 0,     /* window */
     1,  {ARG_INT}},
 
@@ -2398,15 +2408,6 @@ BUILTIN builtin[] = {
 
     {"wfirstof", MACRO(do_wfirstof), ARG_INT, 0, 0,         /* string */
     3,  {ARG_STRING, ARG_STRING, ARG_OPT | ARG_LVAL | ARG_INT}},
-
-    {"windex", MACRO(do_windex), ARG_INT, 0, 0,             /* string */
-    1,  {ARG_OPT | ARG_INT}},
-
-    {"wlastof", MACRO(do_wlastof), ARG_INT, 0, 0,           /* string */
-    3,  {ARG_STRING, ARG_STRING, ARG_OPT | ARG_LVAL | ARG_INT }},
-
-    {"wlower", MACRO(do_wlower), ARG_STRING, 0, 0,          /* string */
-    1,  {ARG_INT | ARG_STRING}},
 #endif
 
     {"while", MACRO(do_while), ARG_VOID, 0, 0,              /* macro */
@@ -2422,16 +2423,27 @@ BUILTIN builtin[] = {
          ARG_OPT | ARG_INT,
          ARG_OPT | ARG_INT}},
 
+#if defined(VERSION_206)
+    {"windex", MACRO(do_windex), ARG_INT, 0, 0,             /* string */
+    1,  {ARG_OPT | ARG_INT}},
+#endif
+
     {"window_color", MACRO(do_window_color), ARG_INT, 0, 0, /* window, screen */
     2,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
-    {"write_block", MACRO(do_write_block), ARG_INT, 0, 0,   /* file, scrap */
-    4,  {ARG_OPT | ARG_STRING, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
-
 #if defined(VERSION_206)
+    {"wlastof", MACRO(do_wlastof), ARG_INT, 0, 0,           /* string */
+    3,  {ARG_STRING, ARG_STRING, ARG_OPT | ARG_LVAL | ARG_INT }},
+
+    {"wlower", MACRO(do_wlower), ARG_STRING, 0, 0,          /* string */
+    1,  {ARG_INT | ARG_STRING}},
+
     {"wrindex", MACRO(do_wrindex), ARG_INT, 0, 0,           /* string */
     2,  {ARG_STRING, ARG_INT | ARG_STRING}},
 #endif
+
+    {"write_block", MACRO(do_write_block), ARG_INT, 0, 0,   /* file, scrap */
+    4,  {ARG_OPT | ARG_STRING, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
     {"write_buffer", MACRO(do_write_buffer), ARG_INT, 0, 0, /* file, buffer */
     2,  {ARG_OPT | ARG_STRING, ARG_OPT | ARG_INT}},
