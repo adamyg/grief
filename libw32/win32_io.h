@@ -1,7 +1,7 @@
 #ifndef LIBW32_WIN32_IO_H_INCLUDED
 #define LIBW32_WIN32_IO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_io_h,"$Id: win32_io.h,v 1.34 2021/06/10 14:29:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_io_h,"$Id: win32_io.h,v 1.35 2021/06/19 14:59:38 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -119,8 +119,13 @@ LIBW32_API int          w32_mkstempx (char *path);
 LIBW32_API int          w32_mkstempxA (char *path);
 LIBW32_API int          w32_mkstempxW (wchar_t *path);
 
-LIBW32_API int          w32_link (const char *, const char *);
+LIBW32_API int          w32_link (const char *path1, const char *path2);
+LIBW32_API int          w32_linkA (const char *path1, const char *path2);
+LIBW32_API int          w32_linkW (const wchar_t *path1, const wchar_t *path2);
+
 LIBW32_API int          w32_unlink (const char *fname);
+LIBW32_API int          w32_unlinkA (const char *fname);
+LIBW32_API int          w32_unlinkW (const wchar_t *fname);
 
 LIBW32_API int          w32_rename (const char *ofile, const char *nfile);
 LIBW32_API int          w32_renameA (const char *ofile, const char *nfile);
