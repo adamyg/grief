@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.78 2021/06/13 16:00:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.79 2021/07/05 15:01:26 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: display.c,v 1.78 2021/06/13 16:00:35 cvsuser Exp $
+/* $Id: display.c,v 1.79 2021/07/05 15:01:26 cvsuser Exp $
  * High level display interface.
  *
  *
@@ -24,7 +24,6 @@ __CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.78 2021/06/13 16:00:35 cvsuser E
 #include <editor.h>
 #include <edassert.h>
 #include <edconfig.h>
-#include "../libchartable/libchartable.h"
 #include <libstr.h>                             /* str_...()/sxprintf() */
 
 #include "accum.h"                              /* acc_...() */
@@ -1038,16 +1037,29 @@ vtmove(int row, int col)
  *      col - Cursor position on completion.
  *
  *  Returns:
- *      Resulting cursor location.
+ *      Resulting cursor location, accounting for wide-characters,
+ *      otherwise -1 if off screen.
  */
 int
 vtpute(vbyte_t ch, int col)
 {
-    if (vscreen)
-        if (col >= 0 && col < ttcols()) {
+    if (vscreen) {
+        WChar_t wch = VBYTE_CHAR_GET(ch);
+        const int width = (wch > 0xff ? Wcwidth(wch) : 1);
+
+        if (col >= 0 && (col + width) <= ttcols()) {
             vcell_set(vscreen[ttrows() - 1] + col, ch);
+            if (width >= 1) {
+                ++col;
+                if (width > 1) {
+                    vcell_set(vscreen[ttrows() - 1] + col, CH_PADDING);
+                    ++col;
+                }
+            }
+            return col;
         }
-    return col + 1;
+    }
+    return -1;  //off-screen
 }
 
 
@@ -1272,7 +1284,7 @@ vtwindow(WINDOW_t *wp)
             flags |= WDF_DIAG;
             lmargin += 3;                       /* line flag diagnostics */
         }
-
+        
         if (has_lines) {
             if (BFTST(bp, BF_BINARY) && bp->b_bin_chunk_size) {
                 flags |= WDF_OFFSET;
@@ -2429,10 +2441,9 @@ winputch(WINDOW_t *wp, const vbyte_t ch, const vbyte_t attr, int rclip)
             }
 
         } else {                                /* MCHAR??? */
-            int wcwidth = mchar_ucs_width(ch, 1);
-
+            int wcwidth = Wcwidth(ch);
             while (wcwidth-- > 0) {
-                winputm('?' | attr);             /* ? or ??  */
+                winputm('?' | attr);            /* ? or ??  */
             }
         }
 
@@ -2910,7 +2921,7 @@ draw_title(const WINDOW_t *wp, const int top, const int line)
     const unsigned char *titleend = (title ? title + strlen((const char *)title) : 0);
     const char *suffix  = NULL;
     const vbyte_t col   = framecolor(wp);
-    int  titlelen       = (title && *title ? (int)charset_utf8_width(title, titleend) : 0); /*MCHAR*/
+    int  titlelen       = (title && *title ? (int)utf8_width(title, titleend) : 0); /*MCHAR*/
     int  left           = 0;
     int  right          = 0;
     char numbuf[20];
@@ -2918,7 +2929,7 @@ draw_title(const WINDOW_t *wp, const int top, const int line)
 
     /* read-only/modified suffix */
     if (titlelen > 0) {
-        if (bp) {                               /* MCHAR??? */
+        if (bp) {
             if (BFTST(bp, BF_RDONLY)) {
                 if ((DC_ROSUFFIX & x_display_ctrl)  || BF2TST(bp, BF2_SUFFIX_RO)) {
                     suffix = " (ro)";
@@ -3017,7 +3028,7 @@ draw_title(const WINDOW_t *wp, const int top, const int line)
             int32_t wch;
 
             if ((cend = charset_utf8_decode_safe(title, titleend, &wch)) > title &&
-                    (cwidth = charset_width_ucs(wch, -1)) >= 0) {
+                    (cwidth = Wcwidth(wch)) >= 0) {
                 vtputb(wch | title_col);
                 titlelen -= cwidth;
                 title = cend;
@@ -3409,7 +3420,7 @@ draw_line(const vbyte_t nattr, const vbyte_t wattr,
 
             wch = 0;
             if ((wcp = mchar_decode_safe(iconv, ocp, end, &wch)) > ocp &&
-                    (wwidth = mchar_ucs_width(wch, 1)) >= 0) {
+                    (wwidth = Wcwidth(wch)) >= 0) {
                 /*
                  *  apply cursor rules and increment buffers
                  */

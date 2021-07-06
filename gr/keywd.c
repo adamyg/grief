@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.98 2021/06/19 09:41:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.100 2021/07/03 10:44:33 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keywd.c,v 1.98 2021/06/19 09:41:03 cvsuser Exp $
+/* $Id: keywd.c,v 1.100 2021/07/03 10:44:33 cvsuser Exp $
  * Keyword table.
  *
  *
@@ -462,10 +462,7 @@ BUILTIN builtin[] = {
     1,  {ARG_OPT | ARG_INT}},
 
     {"create_nested_buffer", MACRO(do_create_buffer), ARG_INT, 0, TRUE, /* buffer */
-    4,  {ARG_STRING,
-         ARG_OPT | ARG_STRING,
-         ARG_OPT | ARG_INT,
-         ARG_OPT | ARG_INT}},
+    4,  {ARG_STRING, ARG_OPT | ARG_STRING, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
     {"create_syntax", MACRO(do_create_syntax), ARG_INT, 0, 0, /* syntax */
     1,  {ARG_STRING}},
@@ -2425,7 +2422,7 @@ BUILTIN builtin[] = {
 
 #if defined(VERSION_206)
     {"windex", MACRO(do_windex), ARG_INT, 0, 0,             /* string */
-    1,  {ARG_OPT | ARG_INT}},
+    2,  {ARG_STRING, ARG_INT | ARG_STRING}},
 #endif
 
     {"window_color", MACRO(do_window_color), ARG_INT, 0, 0, /* window, screen */
@@ -2550,7 +2547,7 @@ builtin_init(void)
 
 #if !defined(__NOFUNCTIONS__)
         if (i && b_sort(bp - 1, bp) > 0)  {
-            trace_log("\t'%s' and '%s' are not ordered\n", bp[-1].b_name, bp->b_name);
+            trace_log("\t'%s' and '%s' are not ordered\n", bp[-1].b_name, c_string(bp->b_name));
         }
 #endif
     }

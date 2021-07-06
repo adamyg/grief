@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_lisp_c,"$Id: lisp.c,v 1.44 2020/06/18 14:40:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_lisp_c,"$Id: lisp.c,v 1.45 2021/07/05 15:01:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: lisp.c,v 1.44 2020/06/18 14:40:37 cvsuser Exp $
+/* $Id: lisp.c,v 1.45 2021/07/05 15:01:27 cvsuser Exp $
  * List primitives.
  *
  *
@@ -652,7 +652,7 @@ atom_assign_sym(const LIST *lp, SYMBOL *sp)
     case F_NULL:
         return 1;
 
-//  case F_STR:        
+//  case F_STR:
 //  case F_ID:
 //  case F_SYM:
 //  case F_REG:
