@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mac1_c,"$Id: mac1.c,v 1.72 2021/06/19 09:39:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_mac1_c,"$Id: mac1.c,v 1.73 2021/07/05 15:01:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mac1.c,v 1.72 2021/06/19 09:39:14 cvsuser Exp $
+/* $Id: mac1.c,v 1.73 2021/07/05 15:01:27 cvsuser Exp $
  * Basic primitives.
  *
  *
@@ -1915,17 +1915,18 @@ void
 do_insertf(void)                /* int (string fmt, ...) */
 {
     const char *cp;
-    int len = 0;
+    int len = 0, width = 0;
 
     if (margc > 1) {
-        cp = print_formatted(0, &len);          /* sprintf style output */
+        cp = print_formatted(0, &len, &width);  /* sprintf style output */
     } else {
         cp = get_str(1);
+        len = width = get_strlen(1);
     }
-    if (cp) {                                   /* MCHAR/??? utf8->iconv */
+    if (cp) {
         linserts(cp, len);
     }
-    acc_assign_int(len);
+    acc_assign_int(width);
 }
 
 
@@ -1992,7 +1993,7 @@ do_insert_buffer(void)          /* int (int bufnum, string | expr ....) */
 {
     BUFFER_t *bp;
     const char *cp;
-    int len = 0;
+    int len = 0, width = 0;
 
     if (NULL == (bp = buf_lookup(get_xinteger(1, -1)))) {
         ewprintf("insert_buffer: no such buffer");
@@ -2001,9 +2002,10 @@ do_insert_buffer(void)          /* int (int bufnum, string | expr ....) */
     }
 
     if (margc > 2) {
-        cp = print_formatted(1, &len);          /* sprintf style output */
+        cp = print_formatted(1, &len, &width);  /* sprintf style output */
     } else {
         cp = get_str(2);                        /* just quote string */
+        len = width = get_strlen(2);
     }
 
     if (cp) {
@@ -2017,7 +2019,7 @@ do_insert_buffer(void)          /* int (int bufnum, string | expr ....) */
         curbp = saved_bp;
         set_hooked();
     }
-    acc_assign_int(len);
+    acc_assign_int(width);
 }
 
 

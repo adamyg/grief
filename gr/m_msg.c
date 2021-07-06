@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_msg_c,"$Id: m_msg.c,v 1.30 2014/10/27 23:27:55 ayoung Exp $")
+__CIDENT_RCSID(gr_m_msg_c,"$Id: m_msg.c,v 1.31 2021/07/05 15:01:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_msg.c,v 1.30 2014/10/27 23:27:55 ayoung Exp $
+/* $Id: m_msg.c,v 1.31 2021/07/05 15:01:27 cvsuser Exp $
  * Message and formatting primitives.
  *
  *
@@ -435,7 +435,7 @@ void
 do_message(void)                /* (string format, ...) */
 {
     int len = -1;
-    const char *cp = print_formatted(0, &len);
+    const char *cp = print_formatted(0, &len, NULL);
 
     if (cp && len) {
         infos(cp);
@@ -523,7 +523,7 @@ void
 do_error(void)                  /* int (string format, ...) */
 {
     int len = -1;
-    const char *cp = print_formatted(0, &len);
+    const char *cp = print_formatted(0, &len, NULL);
 
     if (cp && len) {
         errorf("%s", cp);
@@ -630,7 +630,7 @@ do_print(void)                  /* int () */
 void
 do_printf(void)                 /* (string format, ...) */
 {
-    const char *cp = print_formatted(0, NULL);
+    const char *cp = print_formatted(0, NULL, NULL);
 
     if (NULL == cp) {
         acc_assign_int(-1);
@@ -714,7 +714,7 @@ do_printf(void)                 /* (string format, ...) */
 void
 do_dprintf(void)                /* (string format, ...) */
 {
-    const char *cp = print_formatted(0, NULL);
+    const char *cp = print_formatted(0, NULL, NULL);
 
     if (NULL == cp) {
         acc_assign_int(-1);
@@ -787,13 +787,13 @@ do_sprintf(void)                /* int (string buffer, string format, ...) */
 {
     SYMBOL *sp = get_symbol(1);
     const char *cp;
-    int len = 0;
+    int len = 0, width = 0;
 
-    cp = print_formatted(1, &len);
+    cp = print_formatted(1, &len, &width);
     if (cp) {
         sym_assign_str(sp, cp);
     }
-    acc_assign_int(len);
+    acc_assign_int(width);
 }
 
 
@@ -857,9 +857,10 @@ void
 do_format(void)                 /* (string format, ...) */
 {
     const char *cp;
+    int len = 0;
 
-    cp = print_formatted(0, NULL);
-    acc_assign_str(cp, -1);
+    cp = print_formatted(0, &len, NULL);
+    acc_assign_str(cp, len);
 }
 
 
