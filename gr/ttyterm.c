@@ -32,6 +32,7 @@ __CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.110 2021/04/05 08:04:31 cvsuser 
 #include <edtermio.h>
 #include <edenv.h>                              /* gputenvv(), ggetenv() */
 
+
 #if defined(_VMS)
 #include <unixlib.h>
 #include <unixio.h>
@@ -1326,8 +1327,8 @@ ttinit(void)
     } else if (term_xtermlike(term)) {          /* eg. xterm-color */
         t_attributes = TA_XTERM | TA_XTERMLIKE;
 #if defined(__CYGWIN__)
-	if (ggetenv("COMSPEC")) {
-	    t_attributes |= TA_DARK;		/* assume cmd/mintty */
+        if (ggetenv("COMSPEC")) {
+            t_attributes |= TA_DARK;            /* assume cmd/mintty */
         }
 #endif  /*__CYGWIN__*/
     }
@@ -1813,9 +1814,9 @@ term_ready(int repaint, scrprofile_t *profile)
         }
 
     } else if (t_attributes & TA_MINTTY) {
-//      if (! xf_mouse) {
+        if (xf_mouse) {                         /* mouse enabled? */
             ttpush("\033[?7786h");              /* mouse-wheel reports only */
-//      }
+        }
 
     } else if (t_attributes & TA_VT100LIKE) {
         ttpush("\033=\033[?1]");                /* enable cursor keys */
@@ -1896,8 +1897,11 @@ term_feature(int ident, scrprofile_t *profile)
         break;
 
     case TF_ENCODING:
+        break;
     case TF_UNICODE_VERSION:
-    case TF_UNICODE_WIDTH:
+        if (x_pt.pt_unicode_version[0]) {
+            ucs_width_set(x_pt.pt_unicode_version);
+        }
         break;
     }
 }
@@ -4724,11 +4728,11 @@ term_putc(vbyte_t c)
          *  width character enabled displays
          */
         if (isutf8 && MCHAR_ISUTF8(c)) {        /* MCHAR */
-            if ((width = mchar_ucs_width(c, -1)) >= 0) {
+            if ((width = ucs_width(c)) >= 0) {
                 ED_TRACE3(("ttputc_utf8(row:%d, col:%d, char:%d/0x%x, width:%d)\n",\
                     ttrow, ttcol, c, c, width))
                 term_graphic_exit();
-                t_count += mchar_ucs_encode(c, (char *)(t_buffer + t_count));
+                t_count += charset_utf8_encode(c, (char *)(t_buffer + t_count));
                 goto complete;
             }
             width = 1;                          /* control */
@@ -5213,4 +5217,3 @@ do_copy_screen(void)            /* void () */
 }
 
 #endif  /*!USE_VIO_BUFFER && !DJGPP */
-

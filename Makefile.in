@@ -1,8 +1,8 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.47 2020/06/18 20:35:15 cvsuser Exp $
+# $Id: Makefile.in,v 1.48 2021/07/05 15:01:26 cvsuser Exp $
 # GRIEF - top level makefile.
 #
-# Copyright (c) 1998 - 2020, Adam Young.
+# Copyright (c) 1998 - 2021, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -248,6 +248,7 @@ LIBS+=\
 	$(LW)onigrx			\
 	$(LW)tre			\
 	$(LW)chartable			\
+	$(LW)widechar			\
 	$(LW)charudet			\
 	$(LW)vfs			\
 	$(LW)duktape			\
@@ -412,6 +413,7 @@ endif
 		$(MAKE) -C libonigrx clean
 		$(MAKE) -C libtre clean
 		$(MAKE) -C libchartable clean
+		$(MAKE) -C libwidechar clean
 		$(MAKE) -C libcharudet clean
 		$(MAKE) -C libvfs clean
 		$(MAKE) -C libduktape clean
@@ -448,6 +450,7 @@ distclean:		clean
 			libonigrx/Makefile \
 			libtre/Makefile \
 			libchartable/Makefile \
+			libwidechar/Makefile \
 			libcharudet/Makefile \
 			libvfs/Makefile \
 			libduktape/Makefile \

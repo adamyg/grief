@@ -1,10 +1,10 @@
-dnl $Id: configure.in,v 1.73 2021/04/18 15:56:40 cvsuser Exp $
+dnl $Id: configure.in,v 1.74 2021/07/05 16:01:04 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl
 
-AC_REVISION($Revision: 1.73 $)
+AC_REVISION($Revision: 1.74 $)
 ##	AC_COPYRIGHT(Adam Young 1995-2021, Paul Fox 1989-1991)
 AC_SUBST([PACKAGE])
 AC_INIT([GRIEF], [3.2.1], [griefedit@gmail.com])
@@ -607,7 +607,7 @@ AC_CHECK_TYPE(u_char, unsigned char)
 
 dnl Wide character support
 AC_CHECK_HEADERS(wchar.h wctype.h)
-AC_CHECK_FUNCS(mbrtowc wcrtomb wcscmp wcscpy wcslen wctomb wmemcmp wmemmove wmemcpy)
+AC_CHECK_FUNCS(mbrtowc wcrtomb wcscmp wcscpy wcslen wctomb wmemcmp wmemmove wmemcpy wcwidth)
 
 dnl Checks for library functions
 dnl
@@ -740,6 +740,7 @@ AC_CONFIG_FILES([\
 	libonigrx/Makefile \
 	libtre/Makefile \
 	libchartable/Makefile \
+	libwidechar/Makefile \
 	libcharudet/Makefile \
 	libduktape/Makefile \
 	gr/Makefile \

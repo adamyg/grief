@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.17 2020/04/21 00:01:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.18 2021/06/22 15:52:44 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_terminal.c,v 1.17 2020/04/21 00:01:56 cvsuser Exp $
+/* $Id: m_terminal.c,v 1.18 2021/06/22 15:52:44 cvsuser Exp $
  * Terminal screen and keyboard primitives.
  *
  *
@@ -173,8 +173,7 @@ static struct pt_map    pt_features[] = {
     { TF_VT_DAVERSION,          PT_MKINT(x_pt.pt_vtdaversion),            "vt_daversion" },
 
     { TF_ENCODING,              PT_MKSTR(x_pt.pt_encoding),               "encoding" },
-    { TF_UNICODE_VERSION,       PT_MKINT(x_pt.pt_unicode_version),        "unicode_version" },
-    { TF_UNICODE_WIDTH,         PT_MKINT(x_pt.pt_unicode_width),          "unicode_width" },
+    { TF_UNICODE_VERSION,       PT_MKSTR(x_pt.pt_unicode_version),        "unicode_version" },
 
     { -2,                       0, NULL, 0, "" }
     };
@@ -538,9 +537,8 @@ do_set_term_characters(void)    /* int ([int ident string desc], [string|int] va
 
   ! TF_ENCODING             encoding                String      Terminal character encoding.
 
-  ! TF_UNICODE_VERSION      unicode_version         Integer     UNICODE interface version.
-
-  ! TF_UNICODE_WIDTH        unicode_width           Integer     UNICODE character width.
+  ! TF_UNICODE_VERSION      unicode_version         String      UNICODE interface version, for
+                                                                example "6.0.1".                                                                 
 (end table)
 
     TF_ATTRIBUTE:

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_window_c,"$Id: window.c,v 1.42 2021/06/10 06:13:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_window_c,"$Id: window.c,v 1.43 2021/07/05 15:01:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: window.c,v 1.42 2021/06/10 06:13:02 cvsuser Exp $
+/* $Id: window.c,v 1.43 2021/07/05 15:01:27 cvsuser Exp $
  * Window basics.
  *
  *
@@ -24,6 +24,7 @@ __CIDENT_RCSID(gr_window_c,"$Id: window.c,v 1.42 2021/06/10 06:13:02 cvsuser Exp
 
 #include <editor.h>
 #include "../libchartable/libchartable.h"
+#include "../libwidechar/widechar.h"
 #include <libstr.h>                             /* str_...()/sxprintf() */
 
 #include "accum.h"                              /* acc_...() */
@@ -202,7 +203,7 @@ window_create(int type, const char *title, int x, int y, int w, int h)
             wp->w_w = (uint16_t)(ttcols() - 1);
 
         } else {
-            const int titlelen = (title ? (int)charset_utf8_swidth(title) : 0); /*MCHAR*/
+            const int titlelen = (title ? (int)utf8_swidth(title) : 0); /*MCHAR*/
 
             if (x < 0) {                        /* x within view */
                 x = 0;

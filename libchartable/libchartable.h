@@ -1,7 +1,7 @@
 #ifndef GR_LIBCHARTABLE_H_INCLUDED
 #define GR_LIBCHARTABLE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libchartable_h,"$Id: libchartable.h,v 1.15 2021/06/19 09:40:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_libchartable_h,"$Id: libchartable.h,v 1.16 2021/07/05 15:01:27 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -120,11 +120,6 @@ extern size_t                   charset_iconv_import(struct charset_iconv *ic,
                                             const char **inbuf, size_t *inbytes, char **outbuf, size_t *outbytes);
 extern size_t                   charset_iconv_export(struct charset_iconv *ic,
                                             const char **inbuf, size_t *inbytes, char **outbuf, size_t *outbytes);
-                                        
-extern int                      charset_width_set_version(const char *version);
-extern const char *             charset_width_version(void);
-extern int                      charset_width_ucs(int32_t ucs, int bad);
-extern int                      charset_swidth_ucs(const int32_t *pwcs, size_t n);
 
 extern int                      charset_width_cjk(int32_t ucs);
 extern int                      charset_swidth_cjk(const int32_t *pwcs, size_t n);
@@ -136,8 +131,8 @@ extern const void *             charset_utf8_decode_safe(const void *src, const 
 extern int                      charset_utf8_encode(const int32_t ch, void *buffer);
 extern int                      charset_utf8_length(const int32_t ch);
 
-extern int                      charset_utf8_width(const void *src, const void *cpend);
-extern int                      charset_utf8_swidth(const void *src);
+extern int                      charset_utf8_count(const void *src, const void *cpend);
+extern int                      charset_utf8_scount(const void *src);
 
 extern const void *             charset_utf16_decode(int endian, const void *src, const void *cpend, int32_t *cooked, int32_t *raw);
 extern const void *             charset_utf16_decode_safe(int endian, const void *src, const void *cpend, int32_t *cooked);

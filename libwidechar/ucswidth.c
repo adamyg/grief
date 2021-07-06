@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetwidth_c,"$Id: charsetwidth.c,v 1.18 2021/06/19 15:42:38 cvsuser Exp $")
+__CIDENT_RCSID(gr_wcwidth_c,"$Id: ucswidth.c,v 1.2 2021/07/05 15:40:38 cvsuser Exp $")
 
 /*
     ------------------------------------------------------------------------------
@@ -36,18 +36,33 @@ __CIDENT_RCSID(gr_charsetwidth_c,"$Id: charsetwidth.c,v 1.18 2021/06/19 15:42:38
     ------------------------------------------------------------------------------
  */
 
+#if defined(HAVE_CONFIG_H)
+#include <config.h>
+#endif
+
+#if defined(HAVE_WCHAR_H)
+#if defined(HAVE_WCWIDTH)
+#define _GNU_SOURCE
+#define _POSIX_C_SOURCE 1
+#endif
+#endif
+
 #include <editor.h>
-#include "libchartable.h"
+#include "widechar.h"
+
+#if defined(HAVE_WCHAR_H)
+#if defined(HAVE_WCWIDTH)
+#include <wchar.h>
+#endif
+#endif
 
 struct width_interval {
         int start;
         int end;
 };
 
-
 #include "table_wide.h"
 #include "table_zero.h"
-
 
 #define _elementsof(__type) (sizeof(__type)/sizeof(__type[0]))
 
@@ -106,12 +121,22 @@ static int intable(const struct width_interval *table, int table_length, int c) 
 
 
 int
-charset_width_set_version(const char *label)
+ucs_width_set(const char *label)
 {
-        if (version) {
+        if (label) {
                 const struct width_version *cursor,
                         *end = VERSIONS + _elementsof(VERSIONS);
                 unsigned a = 0, b = 0, c = 0;
+
+                if (0 == strcmp(label, "system")) {
+#if defined(HAVE_WCWIDTH)
+                        version = NULL;
+                        return 1;
+#else
+                        return -1;
+#endif
+
+                }
 
                 for (cursor = VERSIONS; cursor != end; ++cursor) {
                         if (0 == strcmp(label, cursor->label)) { //match
@@ -137,20 +162,22 @@ charset_width_set_version(const char *label)
 
 
 const char *
-charset_width_version(void)
+ucs_width_version(void)
 {
         return version->label;
 }
 
 
-
 int
-charset_width_ucs(int32_t ucs, int bad)
+ucs_width(int32_t ucs)
 {
-#if (USYSTEM)
-        return wcwidth(ucs);
+#if defined(HAVE_WCWIDTH)
+        // Behavior of wcwidth() depends on the LC_CTYPE category of the current locale.
+        if (NULL == version) {
+                return wcwidth(ucs);
+        }
+#endif
 
-#else
         // NOTE: created by hand, there isn't anything identifiable other than
         // general Cf category code to identify these, and some characters in Cf
         // category code are of non-zero width.
@@ -165,29 +192,14 @@ charset_width_ucs(int32_t ucs, int bad)
         }
 
         // C0/C1 control characters.
-        if (ucs < 32 || (0x07F <= ucs && ucs < 0x0A0)) return bad;
+        if (ucs < 32 || (0x07F <= ucs && ucs < 0x0A0))
+                return -1;
 
         // Combining characters with zero width.
         if (intable(version->zero, version->zero_elements, ucs))
                 return 0;
 
         return intable(version->width, version->width_elements, ucs) ? 2 : 1;
-#endif
-}
-
-
-int
-charset_swidth_ucs(const int32_t *pwcs, size_t n)
-{
-        int w, width = 0;
-
-        for (;*pwcs && n-- > 0; ++pwcs) {
-                if ((w = charset_width_ucs(*pwcs, -1)) < 0) {
-                        return -1;
-                }
-                width += w;
-        }
-        return width;
 }
 
 /*end*/

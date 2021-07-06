@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_line_c,"$Id: line.c,v 1.45 2021/06/10 06:13:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_line_c,"$Id: line.c,v 1.46 2021/07/05 15:01:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: line.c,v 1.45 2021/06/10 06:13:02 cvsuser Exp $
+/* $Id: line.c,v 1.46 2021/07/05 15:01:27 cvsuser Exp $
  * Line management.
  *
  *
@@ -24,7 +24,6 @@ __CIDENT_RCSID(gr_line_c,"$Id: line.c,v 1.45 2021/06/10 06:13:02 cvsuser Exp $")
 
 #include <editor.h>
 #include "../libvfs/vfs.h"
-#include "../libchartable/libchartable.h"
 
 #include "accum.h"                              /* acc_...() */
 #include "anchor.h"                             /* anchor_...() */
@@ -629,7 +628,7 @@ linsertc(int ch)
         const int isutf8 = buf_isutf8(bp);      /* legacy/dialog buffer encoding */
 
         if (isutf8 && MCHAR_ISUTF8(ch)) {
-            linsert((const char *)buffer, mchar_ucs_encode(ch, buffer), FALSE);
+            linsert((const char *)buffer, Wctoutf8(ch, buffer, sizeof(buffer)), FALSE);
 
         } else {                                /* NORMAL */
             *((unsigned char *)buffer) = (unsigned char) ch;

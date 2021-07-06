@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.69 2021/06/10 06:13:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.72 2021/07/05 15:01:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.69 2021/06/10 06:13:02 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.72 2021/07/05 15:01:27 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -25,6 +25,8 @@ __CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.69 2021/06/10 06:13:02 cvsuser Exp
 #include <edtrace.h>
 #include <edenv.h>                              /* gputenvv(), ggetenv() */
 #include <edalt.h>
+#include "../libchartable/libchartable.h"
+#include "../libwidechar/widechar.h"
 
 #if defined(WIN32)
 #ifndef _WIN32_WINNT
@@ -403,8 +405,11 @@ term_feature(int ident, scrprofile_t *profile)
         break;
 
     case TF_ENCODING:
+        break;
     case TF_UNICODE_VERSION:
-    case TF_UNICODE_WIDTH:
+        if (x_pt.pt_unicode_version[0]) {
+            ucs_width_set(x_pt.pt_unicode_version);
+        }
         break;
     }
 }
@@ -809,7 +814,7 @@ term_print(int row, int col, int len, const VCELL_t *vvp)
     static VIOCELL null = { 0 };
     
     if (len > 0) {
-        const int isuc = (DC_CMAPFRAME & x_display_ctrl) || vtisutf8() || vtisunicode();
+        const int isuc = (DC_CMAPFRAME & x_display_ctrl) || vtisunicode() || vtisutf8();
         VIOCELL *p = currScreen + (row * ttcols()) + col;
         vbyte_t cattr = VBYTE_ATTR_GET(vvp->primary);
 
@@ -876,7 +881,7 @@ term_putc(vbyte_t c)
      *  special characters
      */
     if (c >= CH_MIN && c <= CH_MAX) {
-        const int isuc = (DC_CMAPFRAME & x_display_ctrl) || vtisutf8() || vtisunicode();
+        const int isuc = (DC_CMAPFRAME & x_display_ctrl) || vtisunicode() || vtisutf8();
         int unicode;
 
         if (isuc && (unicode = cmap_specunicode(c)) > 0) {

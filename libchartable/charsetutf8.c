@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetutf8_c,"$Id: charsetutf8.c,v 1.18 2021/06/19 09:40:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetutf8_c,"$Id: charsetutf8.c,v 1.19 2021/07/05 15:01:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* Multibyte character - UTF8 utility functionality.
@@ -134,8 +134,8 @@ utf8_decode(const void *src, const void *cpend, int32_t *result)
             ret = ch & 0x01;
 
         } else {                                /* invalid continuation (0x80 - 0xbf). */
+            remain = 0;
             ret = -ch;
-            goto done;
         }
 
         while (remain--) {
@@ -202,16 +202,15 @@ charset_utf8_decode_safe(const void *src, const void *cpend, int32_t *cooked)
 
 
 int
-charset_utf8_width(const void *src, const void *cpend)
+charset_utf8_count(const void *src, const void *cpend)
 {
-    int width, result = 0;
+    int result = 0;
     const void *end;
     int32_t wch;
 
     while (src < cpend) {
-        if ((end = charset_utf8_decode_safe(src, cpend, &wch)) > src &&
-                (width = charset_width_ucs(wch, -1)) >= 0) {
-            result += width;
+        if ((end = charset_utf8_decode_safe(src, cpend, &wch)) > src) {
+            ++result;
             src = end;
             continue;
         }
@@ -222,9 +221,9 @@ charset_utf8_width(const void *src, const void *cpend)
 
 
 int
-charset_utf8_swidth(const void *src)
+charset_utf8_scount(const void *src)
 {
-    return charset_utf8_width(src, (const char *)src + strlen((const char *)src));
+    return charset_utf8_count(src, (const char *)src + strlen((const char *)src));
 }
 
 

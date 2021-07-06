@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.26 2021/07/05 15:01:27 cvsuser Exp $
-# libchartable makefile.
+# $Id: Makefile.in,v 1.1 2021/07/05 15:01:28 cvsuser Exp $
+# libwidechar makefile.
 #
 #
-# Copyright (c) 2010 - 2021, Adam Young.
+# Copyright (c) 2021, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -68,7 +68,7 @@ endif
 D_INC=		$(ROOT)/include
 D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
 D_BINCTBL=	$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)/ctbl
-D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/libchartable
+D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/libwidechar
 D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 OBJMKDIR :=	$(shell test -d $(ROOT)/objects) || mkdir $(ROOT)/objects)
@@ -112,31 +112,39 @@ RMDFLAGS=	-rf
 #########################################################################################
 # Targets
 
-CTBLLIB=	$(D_LIB)/$(LP)chartable$(A)
+WIDECHARLIB=	$(D_LIB)/$(LP)widechar$(A)
 
-CTBLOBJS=\
-	$(D_OBJ)/charseticonv$(O)		\
-	$(D_OBJ)/charsetstream$(O)		\
-	$(D_OBJ)/charsetistream$(O)		\
-	$(D_OBJ)/charsetfstream$(O)		\
-	$(D_OBJ)/charsettable$(O)		\
-	$(D_OBJ)/charsetutil$(O)		\
-	$(D_OBJ)/charsetalias$(O)		\
-	$(D_OBJ)/charsetlocale$(O)		\
-	$(D_OBJ)/charsetutf32$(O)		\
-	$(D_OBJ)/charsetutf16$(O)		\
-	$(D_OBJ)/charsetutf8$(O)		\
-	$(D_OBJ)/charsetwidth_cjk$(O)		\
+WIDECHAROBJS=\
+	$(D_OBJ)/ucswidth$(O)			\
 	\
-	$(D_OBJ)/utf8$(O)
+	$(D_OBJ)/wcscasecmp$(O)			\
+	$(D_OBJ)/wcscat$(O)			\
+	$(D_OBJ)/wcschr$(O)			\
+	$(D_OBJ)/wcscmp$(O)			\
+	$(D_OBJ)/wcscpy$(O)			\
+	$(D_OBJ)/wcslcat$(O)			\
+	$(D_OBJ)/wcslcpy$(O)			\
+	$(D_OBJ)/wcslen$(O)			\
+	$(D_OBJ)/wcsncat$(O)			\
+	$(D_OBJ)/wcsncmp$(O)			\
+	$(D_OBJ)/wcsncpy$(O)			\
+	$(D_OBJ)/wcspbrk$(O)			\
+	$(D_OBJ)/wcsrchr$(O)			\
+	$(D_OBJ)/wcsspn$(O)			\
+	$(D_OBJ)/wcsstr$(O)			\
+	$(D_OBJ)/wcstok$(O)			\
+	$(D_OBJ)/wcswcs$(O)			\
+	$(D_OBJ)/wcswidth$(O)			\
+	$(D_OBJ)/wcwidth$(O)			\
+	$(D_OBJ)/wmemchr$(O)			\
+	$(D_OBJ)/wmemcmp$(O)			\
+	$(D_OBJ)/wmemcpy$(O)			\
+	$(D_OBJ)/wmemmove$(O)			\
+	$(D_OBJ)/wmemset$(O)			\
+	$(D_OBJ)/wcutf8$(O)
 
-MODULES=	$(notdir $(basename $(wildcard cnvtables/cx*.c)))
-
-MODULEOBJS=	$(addprefix $(D_OBJ)/,$(addsuffix .lo,$(MODULES)))
-MODULELIBS=	$(addprefix $(D_LIB)/,$(addsuffix .la,$(MODULES)))
-
-OBJS=		$(CTBLOBJS) $(MODULEOBJS)
-LIBS=		$(CTBLLIB)
+OBJS=		$(WIDECHAROBJS)
+LIBS=		$(WIDECHARLIB)
 TSKS=
 
 
@@ -144,64 +152,23 @@ TSKS=
 # Rules
 
 .PHONY:			build release debug
-build:			data/.import $(CTBLLIB)
-		$(MAKE) modules
+build:			$(WIDECHARLIB)
 
 release:
 		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
 debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
-$(CTBLLIB):		charsetlocales.h		\
-			charsettable.c			\
-			$(D_OBJ)/.created		\
-			$(CTBLOBJS)
+$(WIDECHARLIB):		$(D_OBJ)/.created		\
+			$(WIDECHAROBJS)
 		$(RM) $(RMFLAGS) $@
-		$(AR) $(ARFLAGS) $@ $(CTBLOBJS)
+		$(AR) $(ARFLAGS) $@ $(WIDECHAROBJS)
 		$(RANLIB) $@
 
-XCLEAN+=	charsettables.h charsetnames.h charsetdesc.h charsetlocales.h
+XCLEAN+=	
 
 clean:
 		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(OBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
-		-@$(LIBTOOL) --mode=clean $(RM) $(MODULELIBS)
-
-charsetlocales.h:	makelocale.pl
-		$(PERL) makelocale.pl > charsetlocales.h
-
-charsettable.c:		charsettables.h
-
-charsettables.h:	makechartable.pl cnvtables/.created
-		@echo building character tables
-		$(PERL) makechartable.pl --crunch --dynamic --packaged
-
-modules:		$(D_BINCTBL)/.created		\
-			$(MODULELIBS)
-		@echo dynamic character conversion modules built ...
-
-data/.import:		data/.created			\
-			data/MAPPINGS/.import		\
-			data/Unihan.zip			\
-			data/UCD.zip			\
-			data/uniset.tar.gz		\
-			data/Zeichenreferenz
-		@echo "++ do not delete, managed content ++" > $@
-
-data/MAPPINGS/.import:	data/MAPPINGS/.created
-		$(WGET) -P data -r -nv -nH -e robots=off --cut-dirs=1 --no-parent --reject "index.html.*" http://ftp.unicode.org/Public/MAPPINGS/
-		@echo "++ do not delete, managed content ++" > $@
-
-data/Unihan.zip:
-		$(WGET) -P data -nv http://ftp.unicode.org/Public/UNIDATA/Unihan.zip
-
-data/UCD.zip:
-		$(WGET) -P data -nv http://ftp.unicode.org/Public/UNIDATA/UCD.zip
-
-data/uniset.tar.gz:
-		$(WGET) -P data -nv --no-check-certificate http://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz
-
-data/Zeichenreferenz:
-		$(WGET) -P data -nv --no-check-certificate http://de.selfhtml.org/html/referenz/zeichen.htm
 
 %/.created:
 		-@mkdir $(@D)
@@ -209,10 +176,7 @@ data/Zeichenreferenz:
 
 $(D_LIB)/%.la:		%.lo
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(D_OBJ)/$< \
-			-module -avoid-version -bindir $(D_BINCTBL) $(LDLIBS)
-
-%.lo:			cnvtables/%.c
-		$(LIBTOOL) --mode=compile $(CC) -DMODULE_LOADABLE $(CFLAGS) -o $(D_OBJ)/$@ -c $<
+			-module -avoid-version -bindir $(D_BINWIDECHAR) $(LDLIBS)
 
 $(D_OBJ)/%$(O):		%.c
 		$(CC) $(CFLAGS) -o $@ -c $<

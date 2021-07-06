@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_map_c,"$Id: map.c,v 1.33 2021/06/10 06:13:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_map_c,"$Id: map.c,v 1.34 2021/07/05 15:01:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: map.c,v 1.33 2021/06/10 06:13:02 cvsuser Exp $
+/* $Id: map.c,v 1.34 2021/07/05 15:01:27 cvsuser Exp $
  * High-level character mapping functionality.
  *
  *
@@ -86,7 +86,7 @@ character_decode(int pos, const LINECHAR *cp, const LINECHAR *end, int *lenp, in
     if ((wcp = iconv->ic_decode(iconv, cp, end, &ch, &wraw)) > cp) {
         length = wcp - cp;
         if (ch > 0xff) {                        /* wide character, FIXME - iconv() specific?? */
-            width = vtcharwidth(ch, mchar_ucs_width(ch, 1));
+            width = vtcharwidth(ch, Wcwidth(ch));
             *lenp = length;
             if (rawp) *rawp = wraw;
             *chp = ch;

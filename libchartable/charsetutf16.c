@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetutf16_c,"$Id: charsetutf16.c,v 1.10 2018/10/01 22:10:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetutf16_c,"$Id: charsetutf16.c,v 1.11 2021/07/05 15:01:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* Multibyte character - UTF16 utility functionality.
@@ -101,7 +101,7 @@ utf16_legal(const int32_t ch)
     }
     return 1;
 }
-
+ 
 
 const void *
 charset_utf16_decode(int endian, const void *src, const void *cpend, int32_t *cooked, int32_t *raw)

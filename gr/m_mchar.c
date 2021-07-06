@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_mchar_c,"$Id: m_mchar.c,v 1.14 2021/06/13 16:01:34 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_mchar_c,"$Id: m_mchar.c,v 1.15 2021/07/05 15:01:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_mchar.c,v 1.14 2021/06/13 16:01:34 cvsuser Exp $
+/* $Id: m_mchar.c,v 1.15 2021/07/05 15:01:27 cvsuser Exp $
  * Multibyte/locale primitives.
  *
  *
@@ -23,6 +23,7 @@ __CIDENT_RCSID(gr_m_mchar_c,"$Id: m_mchar.c,v 1.14 2021/06/13 16:01:34 cvsuser E
 
 #include "m_mchar.h"
 #include "../libchartable/libchartable.h"
+#include "../libwidechar/widechar.h"
 
 #include "accum.h"                              /* acc_...() */
 #include "buffer.h"                             /* buf_...() */
@@ -310,10 +311,12 @@ do_wcwidth(void)                /* int (string str | int character), [int defaul
     int width = -1;
 
     if (isa_integer(1)) {
-        width = charset_width_ucs(get_xinteger(1, 0), get_xinteger(2, -1));
+        if ((width = ucs_width(get_xinteger(1, 0))) < 0) {
+            width = get_xinteger(2, -1);
+        }
 
     } else if (isa_string(1)) {
-        width = charset_utf8_swidth(get_str(1));
+        width = utf8_swidth(get_str(1));
     }
 
     acc_assign_int((accint_t) width);
@@ -326,7 +329,7 @@ do_set_unicode_version(void)
     int version = -1;
 
     if (isa_string(1)) {
-        version = charset_width_set_version(get_str(1));
+        version = ucs_width_set(get_str(1));
     }
 
     acc_assign_int((accint_t) version);
@@ -336,7 +339,7 @@ do_set_unicode_version(void)
 void
 inq_unicode_version(void)
 {
-    acc_assign_str(charset_width_version(), -1);
+    acc_assign_str(ucs_width_version(), -1);
 }
 
 /*end*/
