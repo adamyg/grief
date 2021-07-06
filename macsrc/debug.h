@@ -22,7 +22,6 @@
 
 #define DBG_INQ_OPCODES         8           /* OPCODE descriptions */
 
-
 /*
  *  Debug flags
  */

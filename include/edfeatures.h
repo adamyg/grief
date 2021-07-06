@@ -1,11 +1,11 @@
 #ifndef GR_EDFEATURES_H_INCLUDED
 #define GR_EDFEATURES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edfeatures_h,"$Id: edfeatures.h,v 1.13 2019/03/15 23:03:05 cvsuser Exp $")
+__CIDENT_RCSID(gr_edfeatures_h,"$Id: edfeatures.h,v 1.14 2021/07/05 15:01:27 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edfeatures.h,v 1.13 2019/03/15 23:03:05 cvsuser Exp $
+/* $Id: edfeatures.h,v 1.14 2021/07/05 15:01:27 cvsuser Exp $
  * Editor features.
  *
  *
@@ -101,8 +101,7 @@ __CBEGIN_DECLS
 
 #define TF_ENCODING             100             /* terminal character encoding */
 #define TF_ENCODING_GUESS       101             /* text encoding guess specification */
-#define TF_UNICODE_VERSION      102             /* UNICODE version, 300 = 3.00 */
-#define TF_UNICODE_WIDTH        103             /* width table version */
+#define TF_UNICODE_VERSION      102             /* UNICODE version; eg. "6.0.0" */
 /*--end--*/
 
 /*--export--defines--*/
@@ -234,8 +233,7 @@ struct _features {
     int         pt_screen_rows;                 /* INT,         Screen rows. */
     int         pt_screen_cols;                 /* INT,         Screen columns. */
 
-    int         pt_unicode_version;             /* INT,         UNICODE version. */
-    int         pt_unicode_width;               /* INT,         UNICODE width version. */
+    char        pt_unicode_version[PT_NAME];    /* STRING,      UNICODE version. */
     char        pt_encoding[PT_NAME];           /* STRING,      Encoding. */
 
     char        pt_colormap[512];               /* STRING,      XTERM color map. */
