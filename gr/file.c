@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.88 2021/06/02 15:27:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.89 2021/07/02 15:37:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: file.c,v 1.88 2021/06/02 15:27:08 cvsuser Exp $
+/* $Id: file.c,v 1.89 2021/07/02 15:37:58 cvsuser Exp $
  * File-buffer primitives and support.
  *
  *
@@ -89,7 +89,7 @@ static int              buf_trimline(BUFFER_t *bp, const LINECHAR *text, LINENO 
 static int              file_copy(const char *src, const char *dst, mode_t perms, uid_t owner, gid_t group);
 static int              file_cmp_char(const int c1, const int c2);
 
-static void             file_canonicalize2(const char *fname, char *buf);
+static void             file_canonicalize2(const char *filename, char *path, int length);
 
 static size_t           varlen(const char *dp, const char *dpend);
 static char *           varend(char *dp, char *dpend, const int what);
@@ -4140,18 +4140,21 @@ file_cwdd(int drv, char *cwdd, unsigned length)
 char *
 file_canonicalize(const char *filename, char *path, int length)
 {
-    if (path && filename != path && length >= MAX_PATH) {
-        file_canonicalize2(filename, path);     /* normal case, correctly sized buffer */
+    assert(filename);
+
+    if (path && length >= MAX_PATH) {           /* explicit buffer */
+        file_canonicalize2(filename, path, length);
         return path;
 
     } else {
-        char t_path[MAX_PATH];
+        char t_path[MAX_PATH] = {0};
 
-        file_canonicalize2(filename, t_path);
-        if (path && length > 0) {               /* local result */
+        file_canonicalize2(filename, t_path, sizeof(t_path));
+        if (path && length > 0) {               /* local result; may truncate/FIXME */
             strxcpy(path, (const char *)t_path, length);
             return path;
         }
+
         return chk_salloc(t_path);              /* dynamic */
     }
     /*NOTREACHED*/
@@ -4159,22 +4162,15 @@ file_canonicalize(const char *filename, char *path, int length)
 
 
 static void
-file_canonicalize2(const char *filename, char *path)
+file_canonicalize2(const char *filename, char *path, int length)
 {
-    char t_filename[MAX_PATH];
-    int unc = FALSE, len;
-    char *p, *s;
-
-    strxcpy(t_filename, filename, sizeof(t_filename));
-    filename = t_filename;                      /* working copy */
-
 #if defined(_VMS)
     if (strchr(filename, PATH_SEPERATOR) != NULL) {
-        filename = sys_fname_unix_to_vms(filename, path, sizeof(t_filename));
+        filename = sys_fname_unix_to_vms(filename, path, length);
     }
 
     if (filename != path) {
-        strxcpy(path, (const char *)filename, sizeof(t_filename));
+        strxcpy(path, (const char *)filename, length);
     }
 
     if (strchr(path, ':') == NULL) {
@@ -4183,9 +4179,18 @@ file_canonicalize2(const char *filename, char *path)
 
 #else   /*!VMS*/
 
+    const int filenamelen = strlen(filename) + 1 /*nul*/;
+    char *t_filename = alloca(filenamelen);
+    int unc = FALSE, len;
+    char *p, *s;
+
+    assert(length >= MAX_PATH);
+
+    memcpy(t_filename, filename, filenamelen);  /* copy, allow emplace */
 #if defined(DOSISH)                             /* normalize */
     file_slashes(t_filename);
 #endif
+    filename = t_filename;
 
     /* preserve UNC paths (//servername/...) */
     if (PATH_SEPERATOR == filename[0] && PATH_SEPERATOR == filename[1]) {
@@ -4196,10 +4201,11 @@ file_canonicalize2(const char *filename, char *path)
         }
 
         if (*cursor && cursor > filename + 2) { /* trailing separator */
-            while (filename < cursor) {
+            while (length && filename < cursor) {
                 *path++ = *filename++;
+                --length;
             }
-            strcpy(path, filename);
+            strxcpy(path, filename, length);
             unc = TRUE;
         }
     }
@@ -4218,8 +4224,10 @@ file_canonicalize2(const char *filename, char *path)
                 drv = cwd[0];
                 cwd += 2;
             }
+
         } else {
             cwd = file_cwd(NULL, 0);
+
             if (isalpha(*((unsigned char *)cwd)) && ':' == cwd[1]) {
                 drv = cwd[0];
                 cwd += 2;
@@ -4227,28 +4235,36 @@ file_canonicalize2(const char *filename, char *path)
             } else if (PATH_SEPERATOR == cwd[0] && PATH_SEPERATOR == cwd[1]) {
                 *path++ = *cwd++;
                 *path++ = *cwd++;
-                while (*cwd && PATH_SEPERATOR != *cwd) {
+                length -= 2;
+
+                while (length && *cwd && PATH_SEPERATOR != *cwd) {
                     *path++ = *cwd++;           /* preserve UNC */
+                    --length;
                 }
                 unc = TRUE;
             }
         }
+
         if (drv > 0) {                          /* assign and preserve drive */
             *path++ = drv;
             *path++ = ':';
+            length -= 2;
         }
 #endif /*DOSISH*/
 
         if (PATH_SEPERATOR == *filename) {      /* absolute */
-            strcpy(path, filename);
+            strxcpy(path, filename, length);
+
         } else {
             if (NULL == cwd) cwd = file_cwd(NULL, 0);
             if (PATH_SEPERATOR == cwd[0] && 0 == cwd[1]) {
                                                 /* /<fn> */
-                sprintf(path, "%c%s", PATH_SEPERATOR, filename);
+                len = snprintf(path, length, "%c%s", PATH_SEPERATOR, filename);
             } else {                            /* <cwd/fn> */
-                sprintf(path, "%s%c%s", cwd, PATH_SEPERATOR, filename);
+                len = snprintf(path, length, "%s%c%s", cwd, PATH_SEPERATOR, filename);
             }
+            if (len < 0 || len >= length) 
+                path[length - 1] = 0;           /* overflow/FIXME */
         }
     }
 
@@ -4294,6 +4310,7 @@ file_canonicalize2(const char *filename, char *path)
     if ((len = (int)strlen(path)) < 2) {
         return;
     }
+    assert(len < length);
 
     if (PATH_SEPERATOR == path[len - 1]) {      /* XXX/  -> XXX */
         path[len - 1] = 0;
@@ -4354,4 +4371,5 @@ file_canonicalize2(const char *filename, char *path)
     }
 #endif  /*! _VMS*/
 }
+
 /*end*/
