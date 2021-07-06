@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mchar_guess_c,"$Id: mchar_guess.c,v 1.28 2021/06/19 09:50:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_mchar_guess_c,"$Id: mchar_guess.c,v 1.29 2021/07/05 15:01:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mchar_guess.c,v 1.28 2021/06/19 09:50:23 cvsuser Exp $
+/* $Id: mchar_guess.c,v 1.29 2021/07/05 15:01:27 cvsuser Exp $
  * Character-set conversion/file type guess logic.
  *
  *
@@ -1737,7 +1737,8 @@ guess_utf8(guessinfo_t *guess, const void *buffer, unsigned length)
     guessterm_t linebreak = {0};
     register const unsigned char *cursor = buffer;
     const unsigned char *end = cursor + (length - 1);
-    int nonascii = 0, noutf8 = 0, isutf8 = 0;
+    unsigned nonascii = 0, noutf8 = 0;
+    int isutf8 = 0;
     int32_t ch = 0;
 
     if (BFTYP_UNKNOWN == bomtype || BFTYP_UTF8 == bomtype) {
