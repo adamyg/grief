@@ -238,8 +238,8 @@ _FUNCNAME(mbsrtowcs_priv)(_ENCODING_INFO * __restrict ei,
 	_DIAGASSERT(nresult != 0);
 	_DIAGASSERT(ei != NULL);
 	_DIAGASSERT(psenc != NULL);
-	_DIAGASSERT(s == NULL);
-	_DIAGASSERT(*s == NULL);
+	_DIAGASSERT(s != NULL);
+	_DIAGASSERT(*s != NULL);
 
 	/* if pwcs is NULL, ignore n */
 	if (pwcs == NULL)
