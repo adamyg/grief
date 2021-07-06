@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; tabs: 8; -*-
- * $Id: xterm.cr,v 1.20 2014/10/22 02:34:43 ayoung Exp $
+ * $Id: xterm.cr,v 1.21 2021/07/06 10:50:50 adamy Exp $
  * terminal description file for the xterm window under X11, an VT-100 like emulator.
  *
  *
@@ -265,7 +265,7 @@ main()
 
     if (-2 == datype) {
         if (daversion > 0 && daversion < 166) {
-            set_term_feature(TF_UNICODE_WIDTH, 300);
+            set_term_feature(TF_UNICODE_VERSION, "3.0.0");
         }
         xterm_locale();
     }
