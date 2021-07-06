@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.38 2021/06/13 16:02:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.39 2021/07/05 15:01:26 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.38 2021/06/13 16:02:54 cvsuser Exp $
+/* $Id: cmain.c,v 1.39 2021/07/05 15:01:26 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -30,7 +30,6 @@ __CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.38 2021/06/13 16:02:54 cvsuser Exp $
 #include <libstr.h>                             /* str_...()/sxprintf() */
 
 #include "../libvfs/vfs.h"                      /* vfs_init() */
-#include "../libchartable/libchartable.h"
 
 #include "accum.h"                              /* acc_...() */
 #include "anchor.h"
@@ -1365,7 +1364,7 @@ unicode_init(void)
     if (NULL == x_unicode_version)
         x_unicode_version = ggetenv("UNICODE_VERSION");
     if (x_unicode_version)
-        charset_width_set_version(x_unicode_version);
+        ucs_width_set(x_unicode_version);
 }
 
 
