@@ -1,11 +1,11 @@
 #ifndef GR_PRNTF_H_INCLUDED
 #define GR_PRNTF_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_prntf_h,"$Id: prntf.h,v 1.5 2014/10/22 02:33:14 ayoung Exp $")
+__CIDENT_RCSID(gr_prntf_h,"$Id: prntf.h,v 1.6 2021/07/05 15:01:27 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: prntf.h,v 1.5 2014/10/22 02:33:14 ayoung Exp $
+/* $Id: prntf.h,v 1.6 2021/07/05 15:01:27 cvsuser Exp $
  * Print formatter.
  *
  *
@@ -25,7 +25,7 @@ __CPRAGMA_ONCE
 
 __CBEGIN_DECLS
 
-extern const char *         print_formatted(int offset, int *len);
+extern const char *         print_formatted(int offset, int *len, int *width);
 
 __CEND_DECLS
 

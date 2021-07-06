@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: key.cr,v 1.22 2014/10/27 23:28:23 ayoung Exp $
+/* $Id: key.cr,v 1.23 2021/07/05 15:01:28 cvsuser Exp $
  * Key definition tools.
  *
  *
@@ -421,7 +421,7 @@ static void
 _key_learn_print(list def, string prefix, int quote)
 {
     int defs = length_of_list(def);
-    int d, c;
+    int d, w;
 
     if (defs > 1) {                             /* list? */
         insert(" ", 12 - strlen(prefix));
@@ -429,11 +429,11 @@ _key_learn_print(list def, string prefix, int quote)
     }
 
     if (def[0] == "") {                         /* arg1 */
-        c = insert("NULL");
+        w = insert("NULL");
     } else if (quote) {
-        c = insertf("\"%s\"", def[0]);
+        w = insertf("\"%s\"", def[0]);
     } else {
-        c = insert(def[0]);
+        w = insert(def[0]);
     }
 
     for (d = 1; d < defs; d++) {                /* arg2 ... x */
@@ -442,16 +442,16 @@ _key_learn_print(list def, string prefix, int quote)
             insert(" ", 12 - strlen(prefix));
             insert(prefix );
         } else {
-            c += insert(", ");
-            insert(" ", 16 - c);
+            w += insert(", ");
+            insert(" ", 16 - w);
         }
 
         if (def[d] == "") {
-            c = insert("NULL");
+            w = insert("NULL");
         } else if (quote) {
-            c = insertf("\"%s\"", def[d]);
+            w = insertf("\"%s\"", def[d]);
         } else {
-            c = insert(def[d]);
+            w = insert(def[d]);
         }
     }
 }

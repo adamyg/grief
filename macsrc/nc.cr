@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: nc.cr,v 1.33 2021/06/10 06:13:05 cvsuser Exp $
+/* $Id: nc.cr,v 1.34 2021/07/05 15:01:29 cvsuser Exp $
  * Norton Commander (NC) style directory services
  *
  *
@@ -264,7 +264,7 @@ nc(void)
             top_of_buffer();
             while (search_fwd("<\\c" + MARKER)) {
                 nclinebuf = read();
-                base = index(nclinebuf, '\t');
+                base = index(nclinebuf, '\t');  /* delimiter */
                 ncfilebuf = "./" + trim(substr(nclinebuf, NAMEPOS(base)));
                 down();
 
@@ -619,7 +619,8 @@ NcDelete(void)
                 beginning_of_line();
                 down();
 
-                base = index(nclinebuf, '\t');
+                base = index(nclinebuf, '\t');  /* delimiter */
+
                 if (substr(nclinebuf, TYPEPOS(base), 1) == "D") {
                                                 /* directory */
                     ncfilebuf = trim(substr(nclinebuf, NAMEPOS(base)));
@@ -672,7 +673,8 @@ NcDelete(void)
         }
 
         if (upper(answer) == "Y") {
-            base = index(nclinebuf, '\t');
+            base = index(nclinebuf, '\t');      /* delimiter */
+
             if (substr(nclinebuf, TYPEPOS(base), 1) == "D") {
                                                 /* directory */
                 ncfilebuf = trim(substr(nclinebuf, NAMEPOS(base)));
@@ -724,7 +726,7 @@ NcEdit(void)
         ncfilebuf = MARKER;
 
     } else {
-        base = index(nclinebuf, '\t');
+        base = index(nclinebuf, '\t');          /* delimiter */
 
                                                 /* directory */
         if (substr(nclinebuf, TYPEPOS(base), 1) == "D") {
@@ -928,7 +930,7 @@ NcMark(void)
     int base;
 
     nclinebuf = read();
-    base = index(nclinebuf, '\t');
+    base = index(nclinebuf, '\t');              /* delimiter */
     if (substr(nclinebuf, TYPEPOS(base), 1) != "F") {
         return (-1);
     }
@@ -974,7 +976,7 @@ NcMarkMultiple( int mark_typ )
         while (line_no) {
             move_abs(line_no, 1);
             nclinebuf = read();
-            base = index(nclinebuf, '\t');
+            base = index(nclinebuf, '\t');      /* delimiter */
 
             if (substr(nclinebuf, TYPEPOS(base), 1) == "F" &&
                     re_search(NULL, pat, ncfilebuf) > 0) {
@@ -1016,7 +1018,8 @@ NcEnter(void)
     int base;
 
     nclinebuf = read();
-    base = index(nclinebuf, '\t');
+    base = index(nclinebuf, '\t');              /* delimiter */
+
     if (substr(nclinebuf, TYPEPOS(base), 1) == "D") { /* Directory selection */
         ncfilebuf = trim(substr(nclinebuf, NAMEPOS(base)));
         if (ncfilebuf == "..") {
@@ -1126,7 +1129,7 @@ NcDirectory(string cwd)
                     continue;                   /* or if '.' directory */
                 }
 
-                sprintf(buffer, " /%-*.*S|  <DIR>|", ncfwidth, ncfwidth, name);
+                sprintf(buffer, " /%-*.*W|  <DIR>|", ncfwidth, ncfwidth, name);
 
             } else {
                 /*
@@ -1146,7 +1149,7 @@ NcDirectory(string cwd)
                     sprintf(size, "%dG", bytes/1024);
                 }
 
-                sprintf(buffer, " %s%-*.*S|%7s|",
+                sprintf(buffer, " %s%-*.*W|%7s|",
                     substr(mode_string(mode, cwd+"/"+name, TRUE), 1, 1), ncfwidth, ncfwidth, name, size);
             }
 
@@ -1160,8 +1163,7 @@ NcDirectory(string cwd)
             }
             insert(buffer);
 
-         // move_abs(0, TYPEPOS);               /* encode type details */
-            if (mode & S_IFDIR) {
+            if (mode & S_IFDIR) {               /* <delimiter><type><name><nl> */
                 insert(" \tD" + name + "\n");
             } else {
                 insert(" \tF" + name + "\n");

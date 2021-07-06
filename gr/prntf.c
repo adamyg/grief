@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_prntf_c,"$Id: prntf.c,v 1.15 2021/06/10 06:38:26 cvsuser Exp $")
+__CIDENT_RCSID(gr_prntf_c,"$Id: prntf.c,v 1.16 2021/07/05 15:01:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: prntf.c,v 1.15 2021/06/10 06:38:26 cvsuser Exp $
+/* $Id: prntf.c,v 1.16 2021/07/05 15:01:27 cvsuser Exp $
  * Print formatter.
  *
  *
@@ -21,6 +21,7 @@ __CIDENT_RCSID(gr_prntf_c,"$Id: prntf.c,v 1.15 2021/06/10 06:38:26 cvsuser Exp $
 #include <editor.h>
 #include <stdarg.h>
 #include "../libchartable/libchartable.h"
+#include "../libwidechar/widechar.h"
 #include <libstr.h>                             /* str_...()/sxprintf() */
 
 #include "prntf.h"
@@ -58,6 +59,7 @@ typedef struct {
     int         width;
     int         precision;
 
+    int         wadjust;                        /* wchar adjust */
     char *      obp;
 
 #define ORESET(_x)      (_x)->obp = buf_ptr
@@ -72,13 +74,13 @@ typedef struct {
 
 static int              get_value(const char **fmt, int *arg);
 static void             prtl(io_t *io, const LIST *lp, unsigned level);
-static void             outs(io_t *io, const char *s);
-static void             outls(io_t *io, const char *s);
+static void             outs(io_t *io, const char *s, int slen);
+static void             wouts(io_t *io, const char *s, int slen);
+static void             Wouts(io_t *io, const char *s, int slen);
 static void             outb(io_t *io, accuint_t ul, const char *p);
 static void             outl(io_t *io, int radix, accint_t lval);
 static void             outf(io_t *io, const char *format, accfloat_t dval);
 static void             outr(io_t *io, const char *s, int len);
-static void             outlr(io_t *io, const char *s, int width);
 static void             out_check(io_t *io, int n);
 static void             uitoa(accuint_t value, char *buffer, int base);
 
@@ -97,22 +99,26 @@ static int              buf_size;
  *
  *  Parameters:
  *      offset -            Format offset within the argument list.
- *
- *      len -               Address of buffer populated with resulting length.
+ *      length -            Address of buffer populated with resulting length.
+ *      width -             Character width.
  *
  *  Returns:
  *      Address of internal formatted text buffer, reused on each call.
  *
  */
 const char *
-print_formatted(int offset, int *len)
+print_formatted(int offset, int *length, int *width)
 {
+    static const char xBSTR[] = "<bad-string>";
+    static const char xNULL[] = "<NULL>";
+
     const char *fmt;
     int arg = offset + 2;
-    io_t io, *iop = &io;
+    io_t io = {0}, *iop = &io;
     accint_t lval;
     const char *sval;
     char type;
+    int slen;
 
     if (NULL == buf_ptr) {                      /* prime buffer */
         buf_size = PRINTF_SIZE;
@@ -226,10 +232,13 @@ literal:;   OCHECK(iop, 1);
 
         switch (type) {
         case 's':               /* string */
-            sval = "<bad-string>";              /* undefined */
+            slen = 0;
             if (isa_string(arg)) {
-                if (NULL == (sval = get_str(arg))) {
-                    sval = "<NULL>";
+                if (NULL != (sval = get_str(arg))) {
+                    slen = get_strlen(arg);
+                } else {
+                    sval = xNULL;
+                    slen = sizeof(xNULL)-1;
                 }
             } else if (isa_list(arg)) {         /* 04/04/10 */
                 prtl(iop, get_list(arg), 0);
@@ -241,22 +250,53 @@ literal:;   OCHECK(iop, 1);
                 outl(iop, 10, (accint_t)get_accfloat(arg));
                 sval = NULL;
             } else if (isa_null(arg)) {         /* 04/04/10 */
-                sval = "<NULL>";
+                sval = xNULL;
+                slen = sizeof(xNULL)-1;
+            } else {
+                sval = xBSTR;
+                slen = sizeof(xBSTR)-1;
             }
-            if (sval) outs(iop, sval);
+            if (sval) outs(iop, sval, slen);
             ++arg;
             break;
 
-        case 'S':               /* wide-string/utf8 */
-            sval = "<bad-string>";              /* undefined */
+        case 'S':               /* wide/utf8 - characters */
+            slen = 0;
             if (isa_string(arg)) {
-                if (NULL == (sval = get_str(arg))) {
-                    sval = "<NULL>";
+                if (NULL != (sval = get_str(arg))) {
+                    slen = get_strlen(arg);
+                } else {
+                    sval = xNULL;
+                    slen = sizeof(xNULL)-1;
                 }
             } else if (isa_null(arg)) {
-                sval = "<NULL>";
+                sval = xNULL;
+                slen = sizeof(xNULL)-1;
+            } else {
+                sval = xBSTR;
+                slen = sizeof(xBSTR)-1;
             }
-            if (sval) outls(iop, sval);
+            if (sval) wouts(iop, sval, slen);
+            ++arg;
+            break;
+
+        case 'W':               /* wide/utf8 - display width */
+            slen = 0;
+            if (isa_string(arg)) {
+                if (NULL != (sval = get_str(arg))) {
+                    slen = get_strlen(arg);
+                } else {
+                    sval = xNULL;
+                    slen = sizeof(xNULL)-1;
+                }
+            } else if (isa_null(arg)) {
+                sval = xNULL;
+                slen = sizeof(xNULL)-1;
+            } else {
+                sval = xBSTR;
+                slen = sizeof(xBSTR)-1;
+            }
+            if (sval) Wouts(iop, sval, slen);
             ++arg;
             break;
 
@@ -311,7 +351,7 @@ literal:;   OCHECK(iop, 1);
              */
             lval = get_xaccint(arg++, 0);
             if (NULL == (sval = get_xstr(arg++))) {
-                sval = "<bad-string>";
+                sval = xBSTR;
             }
             outb(iop, (accuint_t) lval, sval);
             break;
@@ -367,8 +407,11 @@ literal:;   OCHECK(iop, 1);
         }
     }
 
-end_format:;
-    if (len) *len = OLENGTH(iop);
+end_format:; 
+    {   const int olength = OLENGTH(iop);
+        if (length) *length = olength;
+        if (width) *width = olength - iop->wadjust;
+    }
     OPUTC(iop, '\0');
     return buf_ptr;
 }
@@ -497,15 +540,12 @@ prtl(io_t *io, const LIST *lp, unsigned level)
 
 /* string output */
 static void
-outs(io_t *io, const char *s)
+outs(io_t *io, const char *s, int slen)
 {
-    int slen;
-
     /*
-     *  The precision specifies the maximum number of characters to be
-     *  printed. Characters in excess of precision are not printed.
+     *  Precision specifies the maximum number of characters to be printed.
+     *  Characters in excess of precision are not printed.
      */
-    slen = strlen(s);                           /* retrieve string length */
     if (io->precision > 0) {
         if (io->precision < slen) {
             slen = io->precision;               /* trim */
@@ -515,23 +555,99 @@ outs(io_t *io, const char *s)
 }
 
 
-/* long/wide string output */
+/* long/wide string output - length limited */
 static void
-outls(io_t *io, const char *s)
+wouts(io_t *io, const char *s, int slen)
 {
-    int swidth;
+    const char *cursor = s, *end = cursor + slen;
+    int precision = (io->precision > 0 ? io->precision : INT_MAX);
+    int padding = 0, length = 0, buflen = 0;
 
     /*
-     *  The precision specifies the maximum number of characters to be
-     *  printed. Characters in excess of precision are not printed.
+     *  Precision specifies the maximum number of characters to be printed.
+     *  Characters in excess of precision are not printed.
+     *
+     *  Width defines the upper display width, padding if required.
      */
-    swidth = charset_utf8_swidth(s);            /* retrieve string width */
-    if (io->precision > 0) {
-        if (io->precision < swidth) {
-            swidth = io->precision;             /* trim */
+    while (cursor < end && precision > 0) {
+        const char *cend;                       /* MCHAR */
+        int32_t wch;
+
+        if ((cend = charset_utf8_decode_safe(cursor, end, &wch)) > cursor) {
+            --precision;
+            buflen += (cend - cursor);
+            cursor = cend;
+            ++length;
+            continue;
         }
+        break;  //done
     }
-    outlr(io, s, swidth);
+
+    if (io->width > length) {
+        padding = io->width - length;
+    }
+
+    OCHECK(io, padding + buflen);
+    if ((io->flags & F_LEFTJUST) == 0)
+        while (padding-- > 0) {
+            OPUTC(io, ' ');
+        }
+    io->wadjust = buflen - length;              /* wchar/char delta */
+    OPUTS(io, s, buflen);
+    if (io->flags & F_LEFTJUST)
+        while (padding-- > 0) {
+            OPUTC(io, ' ');
+        }
+}
+
+
+/* long/wide string output - display width limited */
+static void
+Wouts(io_t *io, const char *s, int slen)
+{
+    const char *cursor = s, *end = cursor + slen;
+    int precision = (io->precision > 0 ? io->precision : INT_MAX);
+    int padding = 0, width = 0, buflen = 0;
+
+    /*
+     *  Precision specifies the maximum number of characters to be printed.
+     *  Characters in excess of precision are not printed.
+     *
+     *  Width defines the upper display width, padding if required.
+     */
+    while (cursor < end && precision > 0) {
+        const char *cend;                       /* MCHAR */
+        int32_t wch;
+        int wc;
+
+        if ((cend = charset_utf8_decode_safe(cursor, end, &wch)) > cursor &&
+                (wc = Wcwidth(wch)) >= 0) {
+            if (wc <= precision) {
+                precision -= wc;
+                buflen += (cend - cursor);
+                cursor = cend;
+                width += wc;
+                continue;
+            }
+        }
+        break;  //done
+    }
+
+    if (io->width > width) {
+        padding = io->width - width;
+    }
+
+    OCHECK(io, padding + buflen);
+    if ((io->flags & F_LEFTJUST) == 0)
+        while (padding-- > 0) {
+            OPUTC(io, ' ');
+        }
+    io->wadjust = buflen - width;               /* wchar/char delta */
+    OPUTS(io, s, buflen);
+    if (io->flags & F_LEFTJUST)
+        while (padding-- > 0) {
+            OPUTC(io, ' ');
+        }
 }
 
 
@@ -760,7 +876,7 @@ outf(io_t *io, const char *format, accfloat_t fval)
 
 /* string write */
 static void
-outr(io_t *io, const char *s, int len)
+outr(io_t *io, const char *s, int length)
 {
     int padding = 0;
 
@@ -777,49 +893,10 @@ outr(io_t *io, const char *s, int len)
      *  is not given, all characters of the value are printed (subject to the precision
      *  specification).
      */
+    assert(length >= 0);
     if (io->width > 0) {
-        padding = io->width - len;              /* width specifies output columns */
-    }
-
-    OCHECK(io, padding + len);
-    if ((io->flags & F_LEFTJUST) == 0)
-        while (padding-- > 0) {
-            OPUTC(io, ' ');
-        }
-    OPUTS(io, s, len);
-    if (io->flags & F_LEFTJUST)
-        while (padding-- > 0) {
-            OPUTC(io, ' ');
-        }
-}
-
-
-/* long/wide string write */
-static void
-outlr(io_t *io, const char *s, int width)
-{
-    const char *cursor = s, *end = cursor + strlen(cursor);
-    int padding = 0, length = 0;
-
-    if (io->width > 0) {
-        padding = io->width - width;            /* width specifies output columns */
-    }
-
-    while (width > 0) {
-        const char *cend;                       /* MCHAR, determine buffer length */
-        int cwidth;
-        int32_t wch;
-
-        if ((cend = charset_utf8_decode_safe(cursor, end, &wch)) > cursor &&
-                (cwidth = charset_width_ucs(wch, -1)) >= 0) {
-            if (cwidth <= width) {
-                width -= cwidth;
-                length += (cend - cursor);
-                cursor = cend;
-                continue; //next
-            }
-        }
-        break; //error
+        padding = io->width - length;           /* width specifies output columns */
+        assert(padding >= 0);
     }
 
     OCHECK(io, padding + length);

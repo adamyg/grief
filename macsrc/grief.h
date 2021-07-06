@@ -97,8 +97,7 @@
 
 #define TF_ENCODING             100         /* terminal character encoding */
 #define TF_ENCODING_GUESS       101         /* text encoding guess specification */
-#define TF_UNICODE_VERSION      102         /* UNICODE version, 300 = 3.00 */
-#define TF_UNICODE_WIDTH        103         /* width table version */
+#define TF_UNICODE_VERSION      102         /* UNICODE version; eg. "6.0.0" */
 
 /*
  *  Terminal characters flags.

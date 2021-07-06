@@ -1,6 +1,6 @@
 /* -*- mode: cr; indent-width: 4; -*- */
 /* charset=utf8
- * $Id: regress2.cr,v 1.23 2021/06/19 09:39:45 cvsuser Exp $
+ * $Id: regress2.cr,v 1.24 2021/07/05 15:01:29 cvsuser Exp $
  * Regression tests ... part2.
  *
  *
@@ -73,6 +73,7 @@ static void             test_wstrcasecmp(void);
 static void             test_wlower(void);
 static void             test_wupper(void);
 static void             test_wread(void);
+static void             test_wsprintf(void);
 #endif //__PROTOTYPES__
 
 
@@ -167,6 +168,7 @@ regress2(void)
     test_wlower();
     test_wupper();
     test_wread();
+    test_wsprintf();
 }
 
 
@@ -1529,4 +1531,25 @@ test_wread(void)
     delete_buffer(buf);
 }
 
+
+static void
+test_wsprintf(void)
+{
+    const string sval = "1234567890abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz";
+    const string wval = "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
+    const string dval = "他們所有的設備和儀器彷彿都是有生命的";
+    string buffer;
+    int wc;
+
+    wc = sprintf(buffer, "%s", sval);           // string, by length.
+    TEST(1317, wc == strlen(sval));
+
+    wc = sprintf(buffer, "%S", wval);           // wide-string, by length.
+    TEST(1318, wc == wstrlen(wval));
+
+    wc = sprintf(buffer, "%W", dval);           // by width
+    TEST(1319, wc == wcwidth(dval));
+}
+
 /*end*/
+

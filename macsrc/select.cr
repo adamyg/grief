@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: select.cr,v 1.43 2021/06/10 06:13:05 cvsuser Exp $
+/* $Id: select.cr,v 1.44 2021/07/05 15:01:29 cvsuser Exp $
  * Selection macros implementing buffer based popup user interface.
  *
  *
@@ -590,9 +590,9 @@ selfile_list(string path, string wild_card, string title, int dirs, int multi)
             continue;                           // ignore, only directories
         }
         if (multi) {
-            sprintf(tmpbuf, " %s%s", name, (mode & S_IFDIR) ? "/" : "");
+            sprintf(tmpbuf, " %S%s", name, (mode & S_IFDIR) ? "/" : "");
         } else {
-            sprintf(tmpbuf, "%s%s", name, (mode & S_IFDIR) ? "/" : "");
+            sprintf(tmpbuf, "%S%s", name, (mode & S_IFDIR) ? "/" : "");
         }
         if (0 == (S_IFDIR & mode)) {            // inserts files etc
             insert(tmpbuf + "\n");
@@ -830,6 +830,7 @@ select_list(string title, string message_string, int step,
     old_buffer = inq_buffer();
     buffer = create_buffer(title, NULL, 1);
     set_buffer(buffer);
+    set_buffer_type(NULL, BFTYP_UTF8);
     width = strlen(title) + 4;
 
     len = length_of_list(items);

@@ -1,5 +1,5 @@
 /* -*- mode: cr; tabs: 4; -*- */
-/* $Id: tetris.cr,v 1.13 2014/10/27 23:28:32 ayoung Exp $
+/* $Id: tetris.cr,v 1.14 2021/06/19 16:26:25 cvsuser Exp $
  * Tetris game.
  *
  *  This implementation is based on the X11 version by Rob Mayoff
@@ -220,6 +220,7 @@ tetris()
 #define LEFT_X  20
     win = create_window(LEFT_X, HEIGHT + 1, LEFT_X + PWIDTH * WIDTH + 20, 1);
     set_buffer(buf);
+    set_buffer_type(NULL, BFTYP_UNIX);
     if (tetris_cmap < 0) {
         create_syntax(TETRISMODE);
         syntax_token(SYNT_OPERATOR, BLOCK);
