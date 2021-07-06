@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.59 2020/06/03 14:12:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.61 2021/07/04 08:39:35 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: builtin.c,v 1.59 2020/06/03 14:12:36 cvsuser Exp $
+/* $Id: builtin.c,v 1.61 2021/07/04 08:39:35 cvsuser Exp $
  * Builtin expresssion evaluation.
  *
  *
@@ -738,7 +738,7 @@ execute_builtin(const BUILTIN *bp, const LIST *lp)
 
     } else {
         assert(0 == argtype && 0 == *argtypes);
-        assert(op == *lp);
+        assert((NULL == lp && op == F_HALT) || op == *lp);
 
         if (F_HALT != op) {                     /* unexpected argments */
             arg_error(bp, ERR_TOOMANY, lsaved, ssp, 0);
@@ -1114,7 +1114,7 @@ set_hooked(void)
 
     if (curbp != currentbp) {
         trace_ilog("set_hooked(line:%d,col:%d,num:%d,fname:\"%s\")\n", \
-            *cur_line, *cur_col, (curbp ? curbp->b_bufnum : -1), (curbp ? curbp->b_fname : ""));
+            *cur_line, *cur_col, (curbp ? curbp->b_bufnum : -1), (curbp ? c_string(curbp->b_fname) : ""));
         currentbp = curbp;
     }
 

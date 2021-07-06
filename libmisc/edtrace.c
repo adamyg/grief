@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edtrace_c,"$Id: edtrace.c,v 1.43 2020/06/18 13:13:45 cvsuser Exp $")
+__CIDENT_RCSID(gr_edtrace_c,"$Id: edtrace.c,v 1.44 2021/07/05 15:01:28 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edtrace.c,v 1.43 2020/06/18 13:13:45 cvsuser Exp $
+/* $Id: edtrace.c,v 1.44 2021/07/05 15:01:28 cvsuser Exp $
  * Simple diagnostic trace.
  *
  *
@@ -340,7 +340,7 @@ trace_str(const char *str)
 const char *
 c_string(const char *str)
 {
-    static char buf[1024];                      /* MAGIC */
+    static char buf[4 * 1024];                  /* MAGIC */
     const char *endbp = (buf + (sizeof(buf) - 10));
     register char *bp = buf;
     char c;

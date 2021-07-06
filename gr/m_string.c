@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.42 2021/06/10 08:13:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.44 2021/07/05 15:51:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_string.c,v 1.42 2021/06/10 08:13:22 cvsuser Exp $
+/* $Id: m_string.c,v 1.44 2021/07/05 15:51:56 cvsuser Exp $
  * String primitives.
  *
  *
@@ -1393,7 +1393,7 @@ do_compress(void)               /* (string str, [int trim = FALSE],
     Macro: trim - Chomp characters from a string.
 
         string
-        trim(string str, [string chars = " \t\r\n"])
+        trim(string str, [string chars = " \\t\\r\\n"])
 
     Macro Description:
         The 'trim()' primitive removes leading and trailing characters
@@ -1446,7 +1446,7 @@ do_trim(void)                   /* (string str, [string chars = NULL]) */
     Macro: rtrim - Chomp characters from the end of a string.
 
         string
-        rtrim(string str, string chars = " \t\r\n")
+        rtrim(string str, string chars =  \\t \\r \\n )
 
     Macro Description:
         The 'rtrim()' primitive removes trailing (or right) characters
@@ -1491,7 +1491,7 @@ do_rtrim(void)                  /* (string str, [string chars = NULL]) */
     Macro: ltrim - Chomp characters from the front of a string.
 
         string
-        ltrim(string str, [string chars = NULL])
+        ltrim(string str, [string chars = " \\t\\r\\n"])
 
     Macro Description:
         The 'ltrim()' primitive removes leading (or left) characters
@@ -3440,7 +3440,7 @@ do_characterat(void)            /* int (string str, int index, [int encoding]) *
     accint_t val = -1;
 
     if (position > 0 && position <= length) {
-        val = str[position - 1];                /* MCHAR??? */
+        val = str[position - 1];
     }
     acc_assign_int(val);
 }
@@ -3455,7 +3455,7 @@ do_wcharacterat(void)
     if (str && position > 0) {
         utf8_int32_t wch = 0;
         const char *next;
-
+                                                /* MCHAR */
         for (; (next = utf8codepoint(str, &wch)) > str && wch; str = next) {
             if (--position == 0) {
                 acc_assign_int(wch);

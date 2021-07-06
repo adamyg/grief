@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_position_c,"$Id: position.c,v 1.6 2014/10/22 02:33:14 ayoung Exp $")
+__CIDENT_RCSID(gr_position_c,"$Id: position.c,v 1.7 2021/07/04 08:14:01 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: position.c,v 1.6 2014/10/22 02:33:14 ayoung Exp $
+/* $Id: position.c,v 1.7 2021/07/04 08:14:01 cvsuser Exp $
  * Buffer position/status.
  *
  *
@@ -170,7 +170,7 @@ position_dump(void)
 
         trace_log("\t[%2d] %d%d %d/%d ", idx, pos->p_winnum, pos->p_bufnum, pos->p_cur_line, pos->p_cur_col);
         if (bp) {
-            trace_log(" active \"%s ...\"\n", bp->b_title ? bp->b_title : "n.s.");
+            trace_log(" active \"%s ...\"\n", bp->b_title ? c_string(bp->b_title) : "n.s.");
         } else {
             trace_log(" closed \"%s ...\"\n", pos->p_name);
         }

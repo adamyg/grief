@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_debug_c,"$Id: debug.c,v 1.35 2020/04/21 00:01:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_debug_c,"$Id: debug.c,v 1.36 2021/07/04 08:39:16 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: debug.c,v 1.35 2020/04/21 00:01:55 cvsuser Exp $
+/* $Id: debug.c,v 1.36 2021/07/04 08:39:16 cvsuser Exp $
  * internal debug/diagnositics.
  *
  *
@@ -230,7 +230,7 @@ trace_lines(void)
     for (bp = buf_first(); bp; bp = buf_next((BUFFER_t *)bp)) {
         register const LINE_t *lp;
 
-        trace_log("Buffer %s:\n", bp->b_fname);
+        trace_log("Buffer %s:\n", c_string(bp->b_fname));
         TAILQ_FOREACH(lp, &bp->b_lineq, l_node) {
             sxprintf(buf, sizeof(buf), "\tLine %3u: old=%u, used=%2d, size=%2d, fl=0x%x, chunk=%p\n",
                 (unsigned)++lineno, (unsigned)lp->l_oldlineno, (int)lp->l_used, (int)lp->l_size,
@@ -459,7 +459,7 @@ trace_refs(void)
         const BUILTIN *bp, *endbp = builtin + builtin_count;
 
         for (bp = builtin; bp < endbp; ++bp) {
-            trace_log("%5u  %5u  %s\n", bp->b_reference, bp->b_replacement, bp->b_name);
+            trace_log("%5u  %5u  %s\n", bp->b_reference, bp->b_replacement, c_string(bp->b_name));
 #if defined(DO_PROFILE)
 #endif
         }
