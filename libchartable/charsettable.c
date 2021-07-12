@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsettable_c,"$Id: charsettable.c,v 1.13 2018/10/01 22:10:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsettable_c,"$Id: charsettable.c,v 1.14 2021/07/12 15:37:11 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* conversion tables.
  *
  *
- * Copyright (c) 2012 - 2018, Adam Young.
+ * Copyright (c) 2012 - 2021, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -121,27 +121,43 @@ done:;
 
 
 const char *
-charset_description(int32_t ch, char *buffer, int buflen)
+charset_description(int32_t unicode, char *buffer, int buflen)
 {
-    if (ch >= 0) {
-        const unsigned char *desc = charsetdesc((uint32_t)ch);
+    if (unicode >= 0) {
+        const unsigned char *desc = charsetdesc((uint32_t)unicode);
 
         if (desc) {
             char *cursor = buffer,
                 *end = cursor + (buflen - 1);
             unsigned char dc;
+            int32_t idx;
 
             while (0 != (dc = *desc) && (cursor < end)) {
                 if (dc >= 0x60) {               /* word reference, UFT8 encoded character */
 
-                    desc = utf8_decode(desc, &ch);
+                    desc = utf8_decode(desc, &idx);
 
-                    if ((ch -= 0x60) >= 0 &&
-                            ch < (sizeof(x_charsetdesc_words)/sizeof(x_charsetdesc_words[0]))) {
+                    if ((idx -= 0x60) >= 0 &&
+                            idx < (sizeof(x_charsetdesc_words)/sizeof(x_charsetdesc_words[0]))) {
 
-                        const char *word = x_charsetdesc_words[ch];
+                        const char *word = x_charsetdesc_words[idx];
+
+                        if (*word == '-') {     /* leading '-', join previous word */
+                            if (cursor > buffer && cursor[-1] == ' ') {
+                                --cursor;
+                            }
+                        }
 
                         while (0 != (dc = *word++) && (cursor < end)) {
+                            if ('#' == dc) {    /* inline character-value */
+                                char t_charvalue[16], *charvalue = t_charvalue;
+
+                                sprintf(t_charvalue, "%X", (unsigned)unicode);
+                                while (0 != (dc = *charvalue++) && (cursor < end)) {
+                                    *cursor++ = dc;
+                                }
+                                continue;
+                            }
                             *cursor++ = dc;
                         }
 
@@ -154,6 +170,11 @@ charset_description(int32_t ch, char *buffer, int buflen)
                     }
 
                 } else {
+                    if (dc == '-') {            /* leading '-', join previous word */
+                        if (cursor > buffer && cursor[-1] == ' ') {
+                            --cursor;
+                        }
+                    }
                     *cursor++ = dc;             /* character literal */
                     ++desc;
                 }
@@ -181,6 +202,7 @@ sizearray(const char **array)
     for (;*array;++array) {
         bytes += strlen(*array) + 1; //non-unique string!!;
     }
+    return bytes;
 }
 
 void

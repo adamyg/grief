@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
-# $Id: makechartable.pl,v 1.20 2020/03/27 12:36:03 cvsuser Exp $
+# $Id: makechartable.pl,v 1.21 2021/07/12 15:37:11 cvsuser Exp $
 # Character table generation.
 #
-# Copyright (c) 2010 - 2020, Adam Young.
+# Copyright (c) 2010 - 2021, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -253,11 +253,12 @@ my  $COPYRIGHT          =
     " * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n".
     " * See the License for more details.\n";
 
-my  %description_uchar;
-my  %description_index;
-my  @description_strings;
-my  @description_hits;
+my  %description_text;                          # unique description text
+my  %description_index;                         # description index by unicode
 
+my  @description_strings;                       # description by index
+my  @description_unicode;                       # unicode by index
+my  @description_hits;                          # hits by index
 
 my  $x_timestamp        = ctime(time());
 chomp($x_timestamp);
@@ -969,25 +970,26 @@ description_push($$)    #(uchar, desc, source)
     $desc =~ s/[\t ]+/ /g;                  # compress
     $desc = uc($desc);
 
-    if (! exists $description_uchar{$uchar}) {
+    if (! exists $description_index{$uchar}) {
         #   new value/
         #       asign description record
         #
-        if (! exists $description_index{$desc}) {
+        if (! exists $description_text{$desc}) {
             #   new description/
             #       assign unique description index
             #
-            $description_index{$desc} = scalar @description_strings;
+            $description_text{$desc} = scalar @description_strings;
             push @description_strings, $desc;
             push @description_hits, 0;
         }
-        my $sidx = $description_index{$desc};
-        $description_uchar{$uchar} = $sidx;
+        my $sidx = $description_text{$desc};
+        $description_index{$uchar} = $sidx;
+        $description_unicode[$sidx] = $uchar;
         $description_hits[$sidx]++;
 
     } else {
         if ($x_warnings) {                  # description diff
-            my $t_desc = $description_strings[$description_uchar{$uchar}];
+            my $t_desc = $description_strings[$description_index{$uchar}];
             printf "WARNING: $source ($.): ${t_desc} != ${desc}\n"
                 if ($t_desc ne $desc);
         }
@@ -1205,6 +1207,7 @@ DescriptionTable($)     #(tablename)
 
         for (my $sidx = 0; $sidx < scalar @description_strings; ++$sidx) {
             my $desc = $description_strings[$sidx];
+            my $hex  = sprintf("%X", $description_unicode[$sidx]);
 
             $desc =~ s/-/ -/g;                  # seperate words
             $description_strings[$sidx] = $desc;
@@ -1222,6 +1225,11 @@ DescriptionTable($)     #(tablename)
                 die "bad desc '$desc'\n"
                     if ($desc =~ /[^<>A-Z0-9 ,.()=-]/);
             }
+
+            if ($desc =~ /${hex}/i) {           # replace inline character-value with '#'
+                $desc =~ s/-${hex}/-#/i;
+                $description_strings[$sidx] = $desc;
+            }
         }
 
         my $last = $longest--;
@@ -1233,7 +1241,7 @@ DescriptionTable($)     #(tablename)
             --$longest;
 
             for (my $sidx = 0; $sidx < scalar @description_strings; ++$sidx) {
-                my $desc = $description_strings[$sidx];
+                my $desc  = $description_strings[$sidx];
                 my @words = split(/[ ]+/, $desc);
                 my $wcnt  = scalar @words;
                 my $widx  = 0;
@@ -1273,7 +1281,7 @@ DescriptionTable($)     #(tablename)
                             $delimiter = 1;
                         }
                     }
-                    $new =~ s/ -/-/g;           # join words
+                    $new =~ s/ \-/-/g;          # join words
                     $desccooked[$sidx] = $new;
 
                 } else {
@@ -1379,8 +1387,8 @@ DescriptionTable($)     #(tablename)
 ##  my $hits_run = 0;
     my $idx = 0;
 
-    foreach my $val (sort { $a <=> $b } keys %description_uchar) {
-        my $sidx = $description_uchar{$val};
+    foreach my $val (sort { $a <=> $b } keys %description_index) {
+        my $sidx = $description_index{$val};
         my $hits = $description_hits[$sidx];
 
         # multiple instances, replace with common definition
@@ -1408,6 +1416,10 @@ DescriptionTable($)     #(tablename)
 
         # single instance
         my $desc = $description_strings[$sidx];
+        my $hex  = sprintf("%X", $val);
+
+        $desc =~ s/ -/-/g;                      # join words
+        $desc =~ s/-#/-${hex}/;                 # inline character-value
 
         if ($x_crunch) {
             my $cook = $desccooked[$sidx];
@@ -1447,7 +1459,7 @@ DescriptionTable($)     #(tablename)
         "} x_${tablename}_lookup[] = {\n";
 
     my ($last, $count, $offset) = (0, 0, 0);
-    foreach my $val (sort { $a <=> $b } keys %description_uchar) {
+    foreach my $val (sort { $a <=> $b } keys %description_index) {
         if (($last + 1) == $val) {
             ++$count;
         } else {
