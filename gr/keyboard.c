@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.64 2021/07/11 13:36:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.65 2021/07/12 15:55:01 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keyboard.c,v 1.64 2021/07/11 13:36:16 cvsuser Exp $
+/* $Id: keyboard.c,v 1.65 2021/07/12 15:55:01 cvsuser Exp $
  * Manipulate key maps and bindings.
  *
  *
@@ -226,88 +226,110 @@ static const struct map keystring_tbl[] = {
  */
 static const struct w32key {
     WORD                vk;                     /* windows virtual key code */
-    int                 mods;                   /* modifiers */
-#define MOD_ALL             -1
-#define MOD_ENHANCED        -2
+    int32_t             mods;                   /* modifiers */
+#define VKMOD_ANY           -1
+#define VKMOD_ENHANCED      -2
+#define VKMOD_NONENHANCED   -3
+#define VKMOD_NONSHIFT      -4
 
     const char *        desc;                   /* description */
     KEY                 code;                   /* interval key value */
 
 } w32Keys[] = {
-    { VK_BACK,          0,              "Back",         KEY_BACKSPACE },
-    { VK_TAB,           0,              "TAB",          KEY_TAB },
-    { VK_BACK,          MOD_SHIFT,      "S-Back",       SHIFT_BACKSPACE },
-    { VK_TAB,           MOD_SHIFT,      "S-TAB",        BACK_TAB },
-    { VK_BACK,          MOD_CTRL,       "C-Back",       CTRL_BACKSPACE },
-    { VK_TAB,           MOD_CTRL,       "C-TAB",        CTRL_TAB },
-    { VK_BACK,          MOD_META,       "A-Back",       ALT_BACKSPACE },
-    { VK_TAB,           MOD_META,       "A-TAB",        ALT_TAB },
-    { VK_ESCAPE,        MOD_ALL,        "ESC",          KEY_ESC },
-    { VK_RETURN,        MOD_ALL,        "Return",       KEY_ENTER },
-    { VK_RETURN,        MOD_ENHANCED,   "Return",       KEYPAD_ENTER },
-    { VK_PAUSE,         MOD_ALL,        "Pause",        KEYPAD_PAUSE },
-    { VK_PRIOR,         MOD_ALL,        "PRIOR",        KEY_PAGEUP },
-    { VK_NEXT,          MOD_ALL,        "NEXT",         KEY_PAGEDOWN },
-    { VK_END,           MOD_ALL,        "END",          KEY_END },
-    { VK_HOME,          MOD_ALL,        "HOME",         KEY_HOME },
-    { VK_LEFT,          MOD_ALL,        "LEFT",         KEY_LEFT },
-    { VK_UP,            MOD_ALL,        "UP",           KEY_UP },
-    { VK_RIGHT,         MOD_ALL,        "RIGHT",        KEY_RIGHT },
-    { VK_DOWN,          MOD_ALL,        "DOWN",         KEY_DOWN },
-    { VK_INSERT,        MOD_ALL,        "INSERT",       KEY_INS },
-    { VK_DELETE,        MOD_ALL,        "DELETE",       KEY_DEL },
-    { VK_HELP,          MOD_ALL,        "HELP",         KEY_HELP },
-
-    /*
-     *  XXX - others?
-
-    { VK_POUND/0x9C     MOD_ALL,        "POUND",        KEY_POUND },
-
-     */
+    { VK_BACK,          0,                  "Back",             KEY_BACKSPACE },
+    { VK_TAB,           0,                  "Tab",              KEY_TAB },
+    { VK_BACK,          MOD_SHIFT,          "Shift-Back",       SHIFT_BACKSPACE },
+    { VK_TAB,           MOD_SHIFT,          "Shift-Tab",        BACK_TAB },
+    { VK_BACK,          MOD_CTRL,           "Ctrl-Back",        CTRL_BACKSPACE },
+    { VK_TAB,           MOD_CTRL,           "Ctrl-Tab",         CTRL_TAB },
+    { VK_BACK,          MOD_META,           "Alt-Back",         ALT_BACKSPACE },
+    { VK_TAB,           MOD_META,           "Alt-Tab",          ALT_TAB },
+    { VK_ESCAPE,        VKMOD_ANY,          "Esc",              KEY_ESC },
+    { VK_RETURN,        VKMOD_ANY,          "Return",           KEY_ENTER },
+    { VK_RETURN,        VKMOD_ENHANCED,     "Return",           KEYPAD_ENTER },
+    { VK_PAUSE,         VKMOD_ANY,          "Pause",            KEYPAD_PAUSE },
+    { VK_PRIOR,         VKMOD_ANY,          "Prior",            KEY_PAGEUP },
+    { VK_NEXT,          VKMOD_ANY,          "Next",             KEY_PAGEDOWN },
+    { VK_END,           VKMOD_ANY,          "End",              KEY_END },
+    { VK_HOME,          VKMOD_ANY,          "Home",             KEY_HOME },
+    { VK_LEFT,          VKMOD_ANY,          "Left",             KEY_LEFT },
+    { VK_UP,            VKMOD_ANY,          "Uo",               KEY_UP },
+    { VK_RIGHT,         VKMOD_ANY,          "Right",            KEY_RIGHT },
+    { VK_DOWN,          VKMOD_ANY,          "Down",             KEY_DOWN },
+    { VK_INSERT,        VKMOD_ANY,          "Insert",           KEY_INS },
+    { VK_DELETE,        VKMOD_ANY,          "Delete",           KEY_DEL },
+    { VK_HELP,          VKMOD_ANY,          "Help",             KEY_HELP },
 
     /* VK_NUMPAD1 thru VK_NUMPAD0 are ignored allowing user selection via the NumLock */
 
-    { VK_SUBTRACT,      MOD_ALL,        "-",            KEYPAD_MINUS },
-    { VK_MULTIPLY,      MOD_ALL,        "*",            KEYPAD_STAR },
-    { VK_ADD,           MOD_ALL,        "+",            KEYPAD_PLUS },
-    { VK_DIVIDE,        MOD_ALL,        "/",            KEYPAD_DIV },
+//  { VK_PRIOR,         VKMOD_NONENHANCED,  "Keypad-PgUp",      KEYPAD_PAGEUP },
+//  { VK_NEXT,          VKMOD_NONENHANCED,  "Keypad-PgDn",      KEYPAD_PAGEDOWN },
+//  { VK_END,           VKMOD_NONENHANCED,  "Keypad-End",       KEYPAD_END },
+//  { VK_HOME,          VKMOD_NONENHANCED,  "Keypad-Home",      KEYPAD_HOME },
+//  { VK_LEFT,          VKMOD_NONENHANCED,  "Keypad-Left",      KEYPAD_LEFT },
+//  { VK_CLEAR,         VKMOD_NONENHANCED,  "Keypad-5",         KEYPAD_5 },
+//  { VK_UP,            VKMOD_NONENHANCED,  "Keypad-Up",        KEYPAD_UP },
+//  { VK_RIGHT,         VKMOD_NONENHANCED,  "Keypad-Right",     KEYPAD_RIGHT },
+//  { VK_DOWN,          VKMOD_NONENHANCED,  "Keypad-Down",      KEYPAD_DOWN },
+//  { VK_INSERT,        VKMOD_NONENHANCED,  "Keypad-Ins",       KEYPAD_INS },
+//  { VK_DELETE,        VKMOD_NONENHANCED,  "Keypad-Delete",    KEYPAD_DEL },
+//  { VK_HELP,          VKMOD_NONENHANCED,  "Keypad-Help",      KEY_HELP },
+    { VK_SUBTRACT,      VKMOD_ANY,          "Keypad-Minus",     KEYPAD_MINUS },
+    { VK_MULTIPLY,      VKMOD_ANY,          "Keypad-Star",      KEYPAD_STAR },
+    { VK_ADD,           VKMOD_ANY,          "Keypad-Plus",      KEYPAD_PLUS },
+    { VK_DIVIDE,        VKMOD_ANY,          "Keypad-Divide",    KEYPAD_DIV },
 
     /* VK_0 thru VK_9 are the same as ASCII '0' thru '9' (0x30 - 0x39) */
 
-    { 0x30,             MOD_CTRL,       "0",            CTRL_0 },
-    { 0x31,             MOD_CTRL,       "1",            CTRL_1 },
-    { 0x32,             MOD_CTRL,       "2",            CTRL_2 },
-    { 0x33,             MOD_CTRL,       "3",            CTRL_3 },
-    { 0x34,             MOD_CTRL,       "4",            CTRL_4 },
-    { 0x35,             MOD_CTRL,       "5",            CTRL_5 },
-    { 0x36,             MOD_CTRL,       "6",            CTRL_6 },
-    { 0x37,             MOD_CTRL,       "7",            CTRL_7 },
-    { 0x38,             MOD_CTRL,       "8",            CTRL_8 },
-    { 0x39,             MOD_CTRL,       "9",            CTRL_9 },
+    { 0x30,             MOD_CTRL,           "0",                CTRL_0 },
+    { 0x31,             MOD_CTRL,           "1",                CTRL_1 },
+    { 0x32,             MOD_CTRL,           "2",                CTRL_2 },
+    { 0x33,             MOD_CTRL,           "3",                CTRL_3 },
+    { 0x34,             MOD_CTRL,           "4",                CTRL_4 },
+    { 0x35,             MOD_CTRL,           "5",                CTRL_5 },
+    { 0x36,             MOD_CTRL,           "6",                CTRL_6 },
+    { 0x37,             MOD_CTRL,           "7",                CTRL_7 },
+    { 0x38,             MOD_CTRL,           "8",                CTRL_8 },
+    { 0x39,             MOD_CTRL,           "9",                CTRL_9 },
 
-    { VK_F1,            MOD_ALL,        "F1",           F(1) },
-    { VK_F2,            MOD_ALL,        "F2",           F(2) },
-    { VK_F3,            MOD_ALL,        "F3",           F(3) },
-    { VK_F4,            MOD_ALL,        "F4",           F(4) },
-    { VK_F5,            MOD_ALL,        "F5",           F(5) },
-    { VK_F6,            MOD_ALL,        "F6",           F(6) },
-    { VK_F7,            MOD_ALL,        "F7",           F(7) },
-    { VK_F8,            MOD_ALL,        "F8",           F(8) },
-    { VK_F9,            MOD_ALL,        "F9",           F(9) },
-    { VK_F10,           MOD_ALL,        "F10",          F(10) },
-    { VK_F11,           MOD_ALL,        "F11",          F(11) },
-    { VK_F12,           MOD_ALL,        "F12",          F(12) },
-    { VK_F13,           MOD_ALL,        "F13",          F(13) },
-    { VK_F14,           MOD_ALL,        "F14",          F(14) },
-    { VK_F15,           MOD_ALL,        "F15",          F(15) },
-    { VK_F16,           MOD_ALL,        "F16",          F(16) },
-    { VK_F17,           MOD_ALL,        "F17",          F(17) },
-    { VK_F18,           MOD_ALL,        "F18",          F(18) },
-    { VK_F19,           MOD_ALL,        "F19",          F(19) },
-    { VK_F20,           MOD_ALL,        "F20",          F(20) },
+    /* VK_A - VK_Z are the same as ASCII 'A' - 'Z' (0x41 - 0x5A) */
 
-    { VK_NUMLOCK,       MOD_ALL,        "Numlock",      KEYPAD_NUMLOCK },
-    { VK_SCROLL,        MOD_ALL,        "Scroll",       KEYPAD_SCROLL }
+    { VK_F1,            VKMOD_ANY,          "F1",               F(1) },
+    { VK_F2,            VKMOD_ANY,          "F2",               F(2) },
+    { VK_F3,            VKMOD_ANY,          "F3",               F(3) },
+    { VK_F4,            VKMOD_ANY,          "F4",               F(4) },
+    { VK_F5,            VKMOD_ANY,          "F5",               F(5) },
+    { VK_F6,            VKMOD_ANY,          "F6",               F(6) },
+    { VK_F7,            VKMOD_ANY,          "F7",               F(7) },
+    { VK_F8,            VKMOD_ANY,          "F8",               F(8) },
+    { VK_F9,            VKMOD_ANY,          "F9",               F(9) },
+    { VK_F10,           VKMOD_ANY,          "F10",              F(10) },
+    { VK_F11,           VKMOD_ANY,          "F11",              F(11) },
+    { VK_F12,           VKMOD_ANY,          "F12",              F(12) },
+    { VK_F13,           VKMOD_ANY,          "F13",              F(13) },
+    { VK_F14,           VKMOD_ANY,          "F14",              F(14) },
+    { VK_F15,           VKMOD_ANY,          "F15",              F(15) },
+    { VK_F16,           VKMOD_ANY,          "F16",              F(16) },
+    { VK_F17,           VKMOD_ANY,          "F17",              F(17) },
+    { VK_F18,           VKMOD_ANY,          "F18",              F(18) },
+    { VK_F19,           VKMOD_ANY,          "F19",              F(19) },
+    { VK_F20,           VKMOD_ANY,          "F20",              F(20) },
+
+    { VK_NUMLOCK,       VKMOD_ANY,          "Numlock",          KEYPAD_NUMLOCK },
+    { VK_SCROLL,        VKMOD_ANY,          "Scroll",           KEYPAD_SCROLL },
+
+//  { VK_OEM_PLUS,      VKMOD_NONSHIFT,     "+"                 '+' },
+//  { VK_OEM_COMMA,     VKMOD_NONSHIFT,     ","                 ',' },
+//  { VK_OEM_MINUS,     VKMOD_NONSHIFT,     "-"                 '-' },
+//  { VK_OEM_PERIOD,    VKMOD_NONSHIFT,     "."                 '.' },
+//  { VK_OEM_3,         VKMOD_NONSHIFT,     "~"                 '~' },
+
+#if (1)
+    { VK_OEM_NEC_EQUAL, VKMOD_ANY,          "Keypad-Equal",     KEYPAD_EQUAL },
+#endif
+
+//  { VK_ICO_HELP,      VKMOD_ANY,          "Help",             KEY_HELP },
+
     };
 #endif  /*WIN32 || __CYGWIN__*/
 
@@ -325,6 +347,30 @@ void
 key_init(void)
 {
     unsigned i;
+
+    assert((KEY_MASK   & (RANGE_MASK | MOD_MASK)) == 0);
+    assert((RANGE_MASK & (KEY_MASK | MOD_MASK)) == 0);
+    assert((MOD_MASK   & (KEY_MASK | RANGE_MASK)) == 0);
+
+    assert((RANGE_CHARACTER & ~RANGE_MASK) == 0);
+    assert((RANGE_KEYPAD & ~RANGE_MASK) == 0 && (RANGE_KEYPAD & RANGE_MASK));
+    assert((RANGE_MISC & ~RANGE_MASK) == 0 && (RANGE_MISC & RANGE_MASK));
+    assert((RANGE_MULTIKEY & ~RANGE_MASK) == 0 && (RANGE_MULTIKEY & RANGE_MASK));
+    assert((RANGE_PRIVATE & ~RANGE_MASK) == 0 && (RANGE_PRIVATE & RANGE_MASK));
+    assert((RANGE_BUTTON & ~RANGE_MASK) == 0 && (RANGE_BUTTON & RANGE_MASK));
+    assert((RANGE_MASK & ~RANGE_MASK) == 0 && (RANGE_MASK & RANGE_MASK));
+    assert((RANGE_MAX & ~RANGE_MASK) == 0 && (RANGE_MAX & RANGE_MASK));
+
+    assert((MOD_SHIFT & ~MOD_MASK) == 0 && (MOD_SHIFT & MOD_MASK));
+    assert((MOD_CTRL & ~MOD_MASK) == 0 && (MOD_CTRL & MOD_MASK));
+    assert((MOD_META & ~MOD_MASK) == 0 && (MOD_META & MOD_MASK));
+    assert((MOD_APP & ~MOD_MASK) == 0 && (MOD_APP & MOD_MASK));
+
+    assert(IS_CHARACTER(' '));
+    assert(IS_CHARACTER(0x1ff));
+    assert(IS_FUNCTION(F(1)));
+    assert(IS_BUTTON(BUTTON1_DOWN));
+    assert(IS_BUTTON(BUTTON_DRAG));
 
     TAILQ_INIT(&x_kbdlist);
     x_kbdstack = ll_init();
@@ -942,7 +988,7 @@ key_name2code(const char *string, int *lenp)
         /* function key, F<xx> */
         if ('F' == *cp && isdigit(cp[1])) {
             key = atoi(++cp) - 1;
-            flags |= RANGE_FN;
+            flags |= RANGE_FUNCTION;
             while (isdigit(*cp)) {
                 ++cp;
             }
@@ -1145,79 +1191,79 @@ key_name2code(const char *string, int *lenp)
         For examples review current supplied macro code.
 
 (start table,format=simple)
-    |Key            |Description            |Keypad|Shift|Ctrl |Alt  |Meta |
-    |ASCII          |ASCII key              |      |  x  |  x  |  x  |  x  |
+    |Key            |Description           |Keypad|Shift|Ctrl |Alt  |Meta |
+    |ASCII          |ASCII key             |      |  x  |  x  |  x  |  x  |
 
-    |F1..F12        |Function keys          |      |  x  |  x  |  x  |  x  |
+    |F1..F12        |Function keys         |      |  x  |  x  |  x  |  x  |
 
-    |PgDn           |Page Down              |      |     |     |     |     |
-    |PgUp           |Page Up                |      |     |     |     |     |
+    |PgDn           |Page Down             |      |     |     |     |     |
+    |PgUp           |Page Up               |      |     |     |     |     |
 
-    |Left           |Cursor Left            |  x   |  x  |  x  |  x  |     |
-    |Right          |Cursor Right           |  x   |  x  |  x  |  x  |     |
-    |Up             |Cursor Up              |  x   |  x  |  x  |  x  |     |
-    |Down           |Cursor Down            |  x   |  x  |  x  |  x  |     |
+    |Left           |Cursor Left           |  x   |  x  |  x  |  x  |     |
+    |Right          |Cursor Right          |  x   |  x  |  x  |  x  |     |
+    |Up             |Cursor Up             |  x   |  x  |  x  |  x  |     |
+    |Down           |Cursor Down           |  x   |  x  |  x  |  x  |     |
 
-    |Tab            |                       |      |     |     |     |     |
-    |Back-Tab       |Shifted Tab            |      |     |     |     |     |
-    |Backspace      |                       |      |     |     |     |     |
-    |Back           |                       |      |     |     |     |     |
-    |Del            |Delete                 |      |     |     |     |     |
+    |Tab            |                      |      |     |     |     |     |
+    |Back-Tab       |Shifted Tab           |      |     |     |     |     |
+    |Backspace      |                      |      |     |     |     |     |
+    |Back           |                      |      |     |     |     |     |
+    |Del            |Delete                |      |     |     |     |     |
 
-    |Enter          |Enter/Return Key       |  x   |     |     |     |     |
-    |Esc            |Escape key             |      |     |     |     |     |
-    |Space          |Space ( )              |      |     |     |     |     |
+    |Enter          |Enter/Return Key      |  x   |     |     |     |     |
+    |Esc            |Escape key            |      |     |     |     |     |
+    |Space          |Space ( )             |      |     |     |     |     |
 
-    |Home           |Cursor Home            |  x   |     |     |     |     |
-    |End            |Cursor End             |  x   |     |     |     |     |
+    |Home           |Cursor Home           |  x   |     |     |     |     |
+    |End            |Cursor End            |  x   |     |     |     |     |
 
-    |Ins            |Insert                 |  x   |     |     |     |     |
-    |Plus           |Plus (+)               |  x   |     |     |     |     |
-    |Minus          |Minus (-)              |  x   |     |     |     |     |
-    |Star           |Multiply (*)           |  x   |     |     |     |     |
-    |Divide         |Div (/)                |  x   |     |     |     |     |
-    |Equals         |Equal (=)              |  x   |     |     |     |     |
+    |Ins            |Insert                |  x   |     |     |     |     |
+    |Plus           |Plus (+)              |  x   |     |     |     |     |
+    |Minus          |Minus (-)             |  x   |     |     |     |     |
+    |Star           |Multiply (*)          |  x   |     |     |     |     |
+    |Divide         |Div (/)               |  x   |     |     |     |     |
+    |Equals         |Equal (=)             |  x   |     |     |     |     |
 
-    |Cancel         |Cancel Key             |      |     |     |     |     |
-    |Command        |Command Key            |      |     |     |     |     |
-    |Copy           |Copy Key               |      |     |     |     |     |
-    |Cut            |Cut Key                |      |     |     |     |     |
-    |Exit           |Exit Key               |      |     |     |     |     |
-    |Help           |Help Key               |      |     |     |     |     |
-    |Menu           |Menu Key               |      |     |     |     |     |
-    |Next           |Next Key               |      |     |     |     |     |
-    |Open           |Open key               |      |     |     |     |     |
-    |Paste          |Paste key              |      |     |     |     |     |
-    |Prev           |Prev Key               |      |     |     |     |     |
-    |Prtsc          |Print-Screen Key       |      |     |     |     |     |
-    |Redo           |Redo Key               |      |     |     |     |     |
-    |Replace        |Replace                |      |     |     |     |     |
-    |Save           |Save                   |      |     |     |     |     |
-    |Scroll         |Scroll                 |      |     |     |     |     |
-    |Search         |Search                 |      |     |     |     |     |
-    |Undo           |Undo                   |      |     |     |     |     |
+    |Cancel         |Cancel Key            |      |     |     |     |     |
+    |Command        |Command Key           |      |     |     |     |     |
+    |Copy           |Copy Key              |      |     |     |     |     |
+    |Cut            |Cut Key               |      |     |     |     |     |
+    |Exit           |Exit Key              |      |     |     |     |     |
+    |Help           |Help Key              |      |     |     |     |     |
+    |Menu           |Menu Key              |      |     |     |     |     |
+    |Next           |Next Key              |      |     |     |     |     |
+    |Open           |Open key              |      |     |     |     |     |
+    |Paste          |Paste key             |      |     |     |     |     |
+    |Prev           |Prev Key              |      |     |     |     |     |
+    |Prtsc          |Print-Screen Key      |      |     |     |     |     |
+    |Redo           |Redo Key              |      |     |     |     |     |
+    |Replace        |Replace               |      |     |     |     |     |
+    |Save           |Save                  |      |     |     |     |     |
+    |Scroll         |Scroll                |      |     |     |     |     |
+    |Search         |Search                |      |     |     |     |     |
+    |Undo           |Undo                  |      |     |     |     |     |
 
-    |Keypad-#       |Keypad 0..9            |      |  x  |  x  |  x  |  x  |
+    |Keypad-#       |Keypad 0..9           |      |  x  |  x  |  x  |  x  |
 
-    |Grey-#         |Aliases for keypad     |      |     |     |     |     |
+    |Grey-#         |Aliases for keypad    |      |     |     |     |     |
 
-    |Button#        |Button number #        |      |     |     |     |     |
+    |Button#        |Button number #       |      |     |     |     |     |
 
-    |Button#-Up     |                       |      |     |     |     |     |
+    |Button#-Up     |                      |      |     |     |     |     |
 
-    |Button#-Double |                       |      |     |     |     |     |
+    |Button#-Double |                      |      |     |     |     |     |
 
-    |Button#-Motion |                       |      |     |     |     |     |
+    |Button#-Motion |                      |      |     |     |     |     |
 
-    |Button#-Down   |                       |      |     |     |     |     |
+    |Button#-Down   |                      |      |     |     |     |     |
 
-    |Private#       |Private keys           |      |     |     |     |     |
+    |Private#       |Private keys          |      |     |     |     |     |
 
-    |Mouse          |Special Mouse Event    |      |     |     |     |     |
+    |Mouse          |Special Mouse Event   |      |     |     |     |     |
 
-    |Wheel-Up       |Mousewheel up movement |      |     |     |     |     |
+    |Wheel-Up       |Mousewheel up movement|      |     |     |     |     |
 
-    |wheel-Down     |Mousewheel down        |      |     |     |     |     |
+    |wheel-Down     |Mousewheel down       |      |     |     |     |     |
                      movement
 (end table)
 
@@ -1450,12 +1496,7 @@ key_cache_mouse(ref_t *pp, int code, int front, int x, int y, int win, int where
     KEY buffer[(sizeof(KEY) + sizeof(struct IOMouse))/2] = {0},
             *msg = buffer;
 
-#if defined(USE_UNICODE)
-    assert(code > 0 && code != KEY_VOID);
-#else
-    assert(code > 0 && code < KEY_VOID);
-#endif
-
+    assert(code > 0 && code <= (MOD_MASK|RANGE_MASK|KEY_MASK) && code != KEY_VOID);
     *msg++ = (KEY)code;
 
     if (RANGE_BUTTON == (RANGE_MASK & code)) {
@@ -1505,11 +1546,7 @@ key_cache_pop(ref_t *pp, struct IOEvent *evt)
     assert(used >= (int)sizeof(KEY));
     code = (int) *msg;
 
-#if defined(USE_UNICODE)
-    assert(code > 0 && code != KEY_VOID);
-#else
-    assert(code > 0 && code < KEY_VOID);
-#endif
+    assert(code > 0 && code <= (MOD_MASK|RANGE_MASK|KEY_MASK) && code != KEY_VOID);
     evt->type = EVT_KEYDOWN;
 
     if (RANGE_BUTTON == (RANGE_MASK & code)) {
@@ -1560,24 +1597,23 @@ key_cache_test(ref_t *pp)
         key_to_int(string key, int raw)
 
     Macro Description:
-        The 'key_to_int()' primitive converts a mnemonic key string
-        to an integer.
+        The 'key_to_int()' primitive converts a mnemonic key string to an integer.
 
-        The following scheme is utilised for encoding internal
-        key-codes, allowing for simple conversion of ASCII character
-        code to the internal codes and vice-versa.
-
+        The following scheme is utilised for encoding internal key-codes,
+        allowing for simple conversion of ASCII character code to the internal
+        codes and vice-versa.
+        
         Firstly key-codes are divided into several ranges.
 
 (start table)
         [Key Code           [Range          [Description                        ]
-      ! RANGE_ASCII         0x0000..0x0ff   ASCII range.
-      ! RANGE_FN            0x0100..0x1ff   Support for up to 255 function keys.
-      ! RANGE_KEYPAD        0x0200..0x2ff   Up to 255 keypad keys.
-      ! RANGE_MISC          0x0300..0x3ff   Miscellaneous.
-      ! RANGE_MULTIKEY      0x0400..0x7ff   Multi-key stroke.
-      ! RANGE_PRIVATE       0x0800..0x8ff   Private key definitions for users.
-      ! RANGE_BUTTON        0x0900..0x9ff   Mouse buttons and movement.
+      ! RANGE_CHARACTER     0x0 ... 1fffff  Character ASCII/Unicode range.
+      ! RANGE_FUNCTION      0x02000...      Function keys.
+      ! RANGE_KEYPAD        0x03000...      Keypad keys.
+      ! RANGE_MISC          0x04000...      Miscellaneous.
+      ! RANGE_MULTIKEY      0x05000...      Multi-key stroke.
+      ! RANGE_PRIVATE       0x06000...      Private key definitions for users.
+      ! RANGE_BUTTON        0x07000...      Mouse buttons and movement.
 (end table)
 
         These ranges can be OR'ed with one or more of the following
@@ -1586,9 +1622,9 @@ key_cache_test(ref_t *pp)
 
 (start table)
         [Modifier           [Code           [Description                        ]
-      ! MOD_SHIFT           0x1000          Shift'ed.
-      ! MOD_CTRL            0x2000          Ctrl.
-      ! MOD_META            0x4000          Meta or Alt.
+      ! MOD_SHIFT           0x00200000      Shift'ed.
+      ! MOD_CTRL            0x00400000      Control.
+      ! MOD_META            0x00800000      Meta or Alt.
 (end table)
 
         To further simplify key handling, the follow special key
@@ -1972,7 +2008,7 @@ do_normal:
         sprintf(bp, "Private-%d", key & KEY_MASK);
         break;
 
-    case RANGE_FN:
+    case RANGE_FUNCTION:
         sprintf(bp, "F%d", (key & KEY_MASK) + 1);
         break;
 
@@ -1993,11 +2029,6 @@ do_normal:
         break;
 
     case RANGE_MULTIKEY:
-#if !defined(USE_UNICODE)
-    case RANGE_MULTIKEY + 0x100:
-    case RANGE_MULTIKEY + 0x200:
-    case RANGE_MULTIKEY + 0x300:
-#endif
         if (NULL == x_multitbl || (key >= RANGE_MULTIKEY + x_multiseq)) {
             strcpy(bp, "undefined");            /* out side range */
 
@@ -2572,7 +2603,7 @@ cygwin_to_int(const char *buf)
 int
 key_mapwin32(unsigned dwCtrlKeyState, unsigned wVirtKeyCode, unsigned CharCode)
 {
-    const struct w32key *key = w32Keys + VSIZEOF(w32Keys);
+    const struct w32key *key = w32Keys + _countof(w32Keys);
     int mod = 0, ch = -1;
 
     /* modifiers */
@@ -2591,32 +2622,30 @@ key_mapwin32(unsigned dwCtrlKeyState, unsigned wVirtKeyCode, unsigned CharCode)
     }
 
     /* virtual keys */
-    while (--key >= w32Keys)
+    while (--key >= w32Keys) {
         if (key->vk == wVirtKeyCode &&
-                ((key->mods == MOD_ALL) ||
-                 (key->mods == MOD_ENHANCED && (dwCtrlKeyState & (ENHANCED_KEY))) ||
+                ((key->mods == VKMOD_ANY) ||
+                 (key->mods == VKMOD_ENHANCED    && 0 != (dwCtrlKeyState & (ENHANCED_KEY))) ||
+                 (key->mods == VKMOD_NONENHANCED && 0 == (dwCtrlKeyState & (ENHANCED_KEY))) ||
+                 (key->mods == VKMOD_NONSHIFT    && 0 == (dwCtrlKeyState & (SHIFT_PRESSED))) ||
                  (key->mods >= 0 && key->mods == mod) )) {
             if ((ch = key->code) >= 0) {
-                if (key->mods == MOD_ALL) {
+                if (key->mods == VKMOD_ANY) {
                     ch |= mod;                  /* apply modifiers */
                 }
             }
             break;
         }
+    }
 
     /* ascii */
-#if defined(USE_UNICODE)
     assert((CharCode & ~KEY_MASK) == 0);
     if (-1 == ch && (CharCode & KEY_MASK)) {
         ch = (CharCode & KEY_MASK);             /* UNICODE value */
-#else
-    if (-1 == ch && (CharCode & 0xff)) {
-        ch = (CharCode & 0xff);                 /* ASCII value */
-#endif
 
         if (MOD_META == mod || (MOD_META|MOD_SHIFT) == mod) {
             /*
-             *  Special handling for ALT-ASCII .. 
+             *  Special handling for ALT-ASCII ..
              *  other modifiers SHIFT and CONTROL are already applied to the ASCII value.
              */
             if (ch >= 'a' && ch <= 'z') {

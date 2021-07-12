@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.62 2021/07/11 08:24:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.63 2021/07/12 15:55:01 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_win32.c,v 1.62 2021/07/11 08:24:15 cvsuser Exp $
+/* $Id: sys_win32.c,v 1.63 2021/07/12 15:55:01 cvsuser Exp $
  * WIN32 system support.
  *
  *
@@ -542,40 +542,28 @@ sys_getevent(struct IOEvent *evt, int tmo)
         ticks = DiffTicks(ticks);               /* ticks (ms) as end */
 
         if (rc == WAIT_OBJECT_0 &&
-#if defined(USE_UNICODE)
                 ReadConsoleInputW(hKbd, &k, 1, &count)) {
-#else
-                ReadConsoleInputA(hKbd, &k, 1, &count)) {
-#endif
 
             switch (k.EventType) {
             case KEY_EVENT: {
                     const KEY_EVENT_RECORD *ke = &k.Event.KeyEvent;
 
-#if defined(USE_UNICODE)                        /* Alt+KeyCode (experimental) */
-                    {   const int altstate = AltPlusEvent(ke, evt);
+                    {                           /* Alt+KeyCode (experimental) */
+                        const int altstate = AltPlusEvent(ke, evt);
                         if (altstate == 0) return 0;
                         if (altstate == 1) break;
                     }
-#endif
 
                     if (k.Event.KeyEvent.bKeyDown) {
                         int code;
                                                 /* see kbd.c */
                         if ((code = key_mapwin32((unsigned) ke->dwControlKeyState,
-#if defined(USE_UNICODE)
                                         ke->wVirtualKeyCode, ke->uChar.UnicodeChar)) != -1) {
-#else
-                                        ke->wVirtualKeyCode, ke->uChar.AsciiChar)) != -1) {
-#endif
+
                             evt->type = EVT_KEYDOWN;
                             evt->code = code;
                             evt->modifiers = Modifiers(ke->dwControlKeyState);
-#if defined(USE_UNICODE)
-                            assert(code > 0 && code != KEY_VOID);
-#else
-                            assert(code > 0 && code < KEY_VOID);
-#endif
+                            assert(code > 0 && code <= (MOD_MASK|RANGE_MASK|KEY_MASK) && code != KEY_VOID);
                             return 0;
                         }
 

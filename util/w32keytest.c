@@ -16,106 +16,106 @@
 static const struct w32key {
     WORD                wVirtualKeyCode;    /* windows virtual key code */
 
-#define MODIFIER_META           (0x10000000)
-#define MODIFIER_CTRL           (0x20000000)
-#define MODIFIER_SHIFT          (0x30000000)
-#define MODIFIER_NONSHIFT       (0x40000000)
-#define MODIFIER_ALL            (0x50000000)
-#define MODIFIER_ENHANCED       (0x60000000)
-#define MODIFIER_NOTENHANCED    (0x70000000)
+#define VKMOD_ANY               (0x10000000)
+#define VKMOD_META              (0x20000000)
+#define VKMOD_CTRL              (0x30000000)
+#define VKMOD_SHIFT             (0x40000000)
+#define VKMOD_NONSHIFT          (0x50000000)
+#define VKMOD_ENHANCED          (0x60000000)
+#define VKMOD_NOTENHANCED       (0x70000000)
 
     DWORD               modifiers;          /* modifiers */
     const wchar_t *     desc;               /* description */
 
 } w32Keys[] = {
-    { VK_BACK,          0,                      L"Back"             },
-    { VK_TAB,           0,                      L"Tab"              },
-    { VK_BACK,          MODIFIER_SHIFT,         L"Back"             },
-    { VK_TAB,           MODIFIER_SHIFT,         L"Tab"              },
-    { VK_BACK,          MODIFIER_CTRL,          L"Back"             },
-    { VK_TAB,           MODIFIER_CTRL,          L"Tab"              },
-    { VK_BACK,          MODIFIER_META,          L"Back"             },
-    { VK_TAB,           MODIFIER_META,          L"Tab"              },
-    { VK_ESCAPE,        MODIFIER_ALL,           L"Esc"              },
-    { VK_RETURN,        MODIFIER_ALL,           L"Return"           },
-    { VK_RETURN,        MODIFIER_ENHANCED,      L"Keypad-Return"    },
-    { VK_PAUSE,         MODIFIER_ALL,           L"Keypad-Pause"     },
-    { VK_PRIOR,         MODIFIER_ALL,           L"PgUp"             },
-    { VK_NEXT,          MODIFIER_ALL,           L"PgDn"             },
-    { VK_END,           MODIFIER_ALL,           L"End"              },
-    { VK_HOME,          MODIFIER_ALL,           L"Home"             },
-    { VK_LEFT,          MODIFIER_ALL,           L"Left"             },
-    { VK_UP,            MODIFIER_ALL,           L"Up"               },
-    { VK_RIGHT,         MODIFIER_ALL,           L"Right"            },
-    { VK_DOWN,          MODIFIER_ALL,           L"Down"             },
-    { VK_INSERT,        MODIFIER_ALL,           L"Ins"              },
-    { VK_DELETE,        MODIFIER_ALL,           L"Delete"           },
+    { VK_BACK,          0,                  L"Back"             },
+    { VK_TAB,           0,                  L"Tab"              },
+    { VK_BACK,          VKMOD_SHIFT,        L"Back"             },
+    { VK_TAB,           VKMOD_SHIFT,        L"Tab"              },
+    { VK_BACK,          VKMOD_CTRL,         L"Back"             },
+    { VK_TAB,           VKMOD_CTRL,         L"Tab"              },
+    { VK_BACK,          VKMOD_META,         L"Back"             },
+    { VK_TAB,           VKMOD_META,         L"Tab"              },
+    { VK_ESCAPE,        VKMOD_ANY,          L"Esc"              },
+    { VK_RETURN,        VKMOD_ANY,          L"Return"           },
+    { VK_RETURN,        VKMOD_ENHANCED,     L"Keypad-Return"    },
+    { VK_PAUSE,         VKMOD_ANY,          L"Keypad-Pause"     },
+    { VK_PRIOR,         VKMOD_ANY,          L"PgUp"             },
+    { VK_NEXT,          VKMOD_ANY,          L"PgDn"             },
+    { VK_END,           VKMOD_ANY,          L"End"              },
+    { VK_HOME,          VKMOD_ANY,          L"Home"             },
+    { VK_LEFT,          VKMOD_ANY,          L"Left"             },
+    { VK_UP,            VKMOD_ANY,          L"Up"               },
+    { VK_RIGHT,         VKMOD_ANY,          L"Right"            },
+    { VK_DOWN,          VKMOD_ANY,          L"Down"             },
+    { VK_INSERT,        VKMOD_ANY,          L"Ins"              },
+    { VK_DELETE,        VKMOD_ANY,          L"Delete"           },
 
-    { VK_HELP,          MODIFIER_ALL,           L"Help"             },
+    { VK_HELP,          VKMOD_ANY,          L"Help"             },
 #if defined(VK_ICO_HELP)
-    { VK_ICO_HELP,      MODIFIER_ALL,           L"Help"             },
+    { VK_ICO_HELP,      VKMOD_ANY,          L"Help"             },
 #endif
 
-    { VK_PRIOR,         MODIFIER_NOTENHANCED,   L"Keypad-PgUp"      },
-    { VK_NEXT,          MODIFIER_NOTENHANCED,   L"Keypad-PgDn"      },
-    { VK_END,           MODIFIER_NOTENHANCED,   L"Keypad-End"       },
-    { VK_HOME,          MODIFIER_NOTENHANCED,   L"Keypad-Home"      },
-    { VK_LEFT,          MODIFIER_NOTENHANCED,   L"Keypad-Left"      },
-    { VK_CLEAR,         MODIFIER_NOTENHANCED,   L"Keypad-5"         },
-    { VK_UP,            MODIFIER_NOTENHANCED,   L"Keypad-Up"        },
-    { VK_RIGHT,         MODIFIER_NOTENHANCED,   L"Keypad-Right"     },
-    { VK_DOWN,          MODIFIER_NOTENHANCED,   L"Keypad-Down"      },
-    { VK_INSERT,        MODIFIER_NOTENHANCED,   L"Keypad-Ins"       },
-    { VK_DELETE,        MODIFIER_NOTENHANCED,   L"Keypad-Delete"    },
-    { VK_HELP,          MODIFIER_NOTENHANCED,   L"Keypad-Help"      },
-    { VK_SUBTRACT,      MODIFIER_ALL,           L"Keypad-Minus"     },
-    { VK_MULTIPLY,      MODIFIER_ALL,           L"Keypad-Star"      },
-    { VK_ADD,           MODIFIER_ALL,           L"Keypad-Plus"      },
-    { VK_DIVIDE,        MODIFIER_ALL,           L"Keypad-Divide"    },
+    { VK_PRIOR,         VKMOD_NOTENHANCED,  L"Keypad-PgUp"      },
+    { VK_NEXT,          VKMOD_NOTENHANCED,  L"Keypad-PgDn"      },
+    { VK_END,           VKMOD_NOTENHANCED,  L"Keypad-End"       },
+    { VK_HOME,          VKMOD_NOTENHANCED,  L"Keypad-Home"      },
+    { VK_LEFT,          VKMOD_NOTENHANCED,  L"Keypad-Left"      },
+    { VK_CLEAR,         VKMOD_NOTENHANCED,  L"Keypad-5"         },
+    { VK_UP,            VKMOD_NOTENHANCED,  L"Keypad-Up"        },
+    { VK_RIGHT,         VKMOD_NOTENHANCED,  L"Keypad-Right"     },
+    { VK_DOWN,          VKMOD_NOTENHANCED,  L"Keypad-Down"      },
+    { VK_INSERT,        VKMOD_NOTENHANCED,  L"Keypad-Ins"       },
+    { VK_DELETE,        VKMOD_NOTENHANCED,  L"Keypad-Delete"    },
+    { VK_HELP,          VKMOD_NOTENHANCED,  L"Keypad-Help"      },
+    { VK_SUBTRACT,      VKMOD_ANY,          L"Keypad-Minus"     },
+    { VK_MULTIPLY,      VKMOD_ANY,          L"Keypad-Star"      },
+    { VK_ADD,           VKMOD_ANY,          L"Keypad-Plus"      },
+    { VK_DIVIDE,        VKMOD_ANY,          L"Keypad-Divide"    },
 
     /* VK_0 thru VK_9 are the same as ASCII '0' thru '9' (0x30 - 0x39) */
-    /* VK_A - VK_Z are the same as ASCII 'A' - 'Z' (0x41 - 0x5A) */
+    /* VK_A - VK_Z are the same as ASCII 'A'- 'Z' (0x41 - 0x5A) */
 
-    { 0x30,             MODIFIER_CTRL,          L"0"                },
-    { 0x31,             MODIFIER_CTRL,          L"1"                },
-    { 0x32,             MODIFIER_CTRL,          L"2"                },
-    { 0x33,             MODIFIER_CTRL,          L"3"                },
-    { 0x34,             MODIFIER_CTRL,          L"4"                },
-    { 0x35,             MODIFIER_CTRL,          L"5"                },
-    { 0x36,             MODIFIER_CTRL,          L"6"                },
-    { 0x37,             MODIFIER_CTRL,          L"7"                },
-    { 0x38,             MODIFIER_CTRL,          L"8"                },
-    { 0x39,             MODIFIER_CTRL,          L"9"                },
+    { 0x30,             VKMOD_CTRL,         L"0"                },
+    { 0x31,             VKMOD_CTRL,         L"1"                },
+    { 0x32,             VKMOD_CTRL,         L"2"                },
+    { 0x33,             VKMOD_CTRL,         L"3"                },
+    { 0x34,             VKMOD_CTRL,         L"4"                },
+    { 0x35,             VKMOD_CTRL,         L"5"                },
+    { 0x36,             VKMOD_CTRL,         L"6"                },
+    { 0x37,             VKMOD_CTRL,         L"7"                },
+    { 0x38,             VKMOD_CTRL,         L"8"                },
+    { 0x39,             VKMOD_CTRL,         L"9"                },
 
-    { VK_F1,            MODIFIER_ALL,           L"F1"               },
-    { VK_F2,            MODIFIER_ALL,           L"F2"               },
-    { VK_F3,            MODIFIER_ALL,           L"F3"               },
-    { VK_F4,            MODIFIER_ALL,           L"F4"               },
-    { VK_F5,            MODIFIER_ALL,           L"F5"               },
-    { VK_F6,            MODIFIER_ALL,           L"F6"               },
-    { VK_F7,            MODIFIER_ALL,           L"F7"               },
-    { VK_F8,            MODIFIER_ALL,           L"F8"               },
-    { VK_F9,            MODIFIER_ALL,           L"F9"               },
-    { VK_F10,           MODIFIER_ALL,           L"F10"              },
-    { VK_F11,           MODIFIER_ALL,           L"F11"              },
-    { VK_F12,           MODIFIER_ALL,           L"F12"              },
-    { VK_F13,           MODIFIER_ALL,           L"F13"              },
-    { VK_F14,           MODIFIER_ALL,           L"F14"              },
-    { VK_F15,           MODIFIER_ALL,           L"F15"              },
-    { VK_F16,           MODIFIER_ALL,           L"F16"              },
-    { VK_F17,           MODIFIER_ALL,           L"F17"              },
-    { VK_F18,           MODIFIER_ALL,           L"F18"              },
-    { VK_F19,           MODIFIER_ALL,           L"F19"              },
-    { VK_F20,           MODIFIER_ALL,           L"F20"              },
+    { VK_F1,            VKMOD_ANY,          L"F1"               },
+    { VK_F2,            VKMOD_ANY,          L"F2"               },
+    { VK_F3,            VKMOD_ANY,          L"F3"               },
+    { VK_F4,            VKMOD_ANY,          L"F4"               },
+    { VK_F5,            VKMOD_ANY,          L"F5"               },
+    { VK_F6,            VKMOD_ANY,          L"F6"               },
+    { VK_F7,            VKMOD_ANY,          L"F7"               },
+    { VK_F8,            VKMOD_ANY,          L"F8"               },
+    { VK_F9,            VKMOD_ANY,          L"F9"               },
+    { VK_F10,           VKMOD_ANY,          L"F10"              },
+    { VK_F11,           VKMOD_ANY,          L"F11"              },
+    { VK_F12,           VKMOD_ANY,          L"F12"              },
+    { VK_F13,           VKMOD_ANY,          L"F13"              },
+    { VK_F14,           VKMOD_ANY,          L"F14"              },
+    { VK_F15,           VKMOD_ANY,          L"F15"              },
+    { VK_F16,           VKMOD_ANY,          L"F16"              },
+    { VK_F17,           VKMOD_ANY,          L"F17"              },
+    { VK_F18,           VKMOD_ANY,          L"F18"              },
+    { VK_F19,           VKMOD_ANY,          L"F19"              },
+    { VK_F20,           VKMOD_ANY,          L"F20"              },
 
-    { VK_NUMLOCK,       MODIFIER_ALL,           L"Keypad-Numlock"   },
-    { VK_SCROLL,        MODIFIER_ALL,           L"Keypad-Scroll"    },
+    { VK_NUMLOCK,       VKMOD_ANY,          L"Keypad-Numlock"   },
+    { VK_SCROLL,        VKMOD_ANY,          L"Keypad-Scroll"    },
 
-    { VK_OEM_PLUS,      MODIFIER_NONSHIFT,      L"+"                },
-    { VK_OEM_COMMA,     MODIFIER_NONSHIFT,      L","                },
-    { VK_OEM_MINUS,     MODIFIER_NONSHIFT,      L"-"                },
-    { VK_OEM_PERIOD,    MODIFIER_NONSHIFT,      L"."                },
-    { VK_OEM_3,         MODIFIER_NONSHIFT,      L"~"                },
+    { VK_OEM_PLUS,      VKMOD_NONSHIFT,     L"+"                },
+    { VK_OEM_COMMA,     VKMOD_NONSHIFT,     L","                },
+    { VK_OEM_MINUS,     VKMOD_NONSHIFT,     L"-"                },
+    { VK_OEM_PERIOD,    VKMOD_NONSHIFT,     L"."                },
+    { VK_OEM_3,         VKMOD_NONSHIFT,     L"~"                },
     };
 
 #define ISHEX(_uc) \
@@ -212,7 +212,7 @@ Process(HANDLE in)
                 // Key details
 
                 wprintf(L"\n");
-                offset = wprintf(L"%4d: U+%04x %c   %s %03u %04x %-12s %04x %08x %s = %d", 
+                offset = wprintf(L"%4d: U+%04x %c   %s %03u %04x %-12s %04x %08x %s = %d",
                     event_count, (WORD) ker->uChar.UnicodeChar,
                         (ker->uChar.UnicodeChar > 32 ? ker->uChar.UnicodeChar : ' '),
                     (ker->bKeyDown ? L"down" : L" up "), ker->wRepeatCount,
@@ -232,7 +232,7 @@ Process(HANDLE in)
                         }
                     }
 
-                    if (0 == (CTRLSTATUSMASK & ker->dwControlKeyState) && 
+                    if (0 == (CTRLSTATUSMASK & ker->dwControlKeyState) &&
                                 0x1b == ker->uChar.UnicodeChar) {
                         if (++esc_state >= 2) { // Escape
                             puts("\nbye...");
@@ -250,20 +250,20 @@ Process(HANDLE in)
 
 //  Alt+<key-code> event handler
 //
-//      Alt+KeyCode works and behaves well when character only input is required, by simply 
-//      reporting any down or up key events which populate the 'UnicodeChar' value. Whereas 
+//      Alt+KeyCode works and behaves well when character only input is required, by simply
+//      reporting any down or up key events which populate the 'UnicodeChar' value. Whereas
 //      when extended keystroke handling is required, for example arrow and numpad keys,
 //      additional effort is needed.
 //
 //      Alt+Keycodes are only reported within the 'UnicodeChar' value of up event on a "ALT" key
-//      post the valid entry of one-or-more hex characters. During KeyCode entry the API unfortunately 
-//      does not publiciy indicate this state plus continues to return the associated virtual keys, 
+//      post the valid entry of one-or-more hex characters. During KeyCode entry the API unfortunately
+//      does not publiciy indicate this state plus continues to return the associated virtual keys,
 //      including the leading 'keypad-plus' and any associated key-code elements, wherefore we need
-//      to filter.  Furthermore, if during the key-code entry an invalid non-hex key combination is 
+//      to filter.  Furthermore, if during the key-code entry an invalid non-hex key combination is
 //      given, the key-code is invalidated and UnicodeChar=0 is returned on the ALT release.
 //
-//      Notes: 
-//       o Requires the registry REG_SZ value "EnableHexNumpad" under 
+//      Notes:
+//       o Requires the registry REG_SZ value "EnableHexNumpad" under
 //         "HKEY_Current_User/Control Panel/Input Method" to be "1".
 //
 //       o Hex-value overflow goes unreported, limiting input to a 16-bit result.
@@ -298,7 +298,7 @@ AltPlusEvent(const KEY_EVENT_RECORD *ke, int offset)
                     (ke->uChar.UnicodeChar && 0 == ISXDIGIT(ke->uChar.UnicodeChar))) {
                 // new control status or non-hex, emit "Alt-Plus" and reset state
                 swprintf(completion, _countof(completion), L"Alt-Plus");
-                alt_code = 0;  
+                alt_code = 0;
 
             } else {
                 ++alt_code;                     // associated key count
@@ -368,18 +368,22 @@ key_description(const KEY_EVENT_RECORD *ker)
     while (--key >= w32Keys) {
         if (key->wVirtualKeyCode == wVirtualKeyCode) {
             const DWORD modifiers = key->modifiers;
-            if (MODIFIER_ALL == modifiers) {
+            if (VKMOD_ANY == modifiers) {
                 break;
-            } else if (MODIFIER_ENHANCED == modifiers) {
+            } else if (VKMOD_SHIFT == modifiers) {
+                if (0 != (dwControlKeyState & SHIFT_PRESSED)) {
+                    break;
+                }
+            } else if (VKMOD_NONSHIFT == modifiers) {
+                if (0 == (dwControlKeyState & SHIFT_PRESSED)) {
+                    break;
+                }
+            } else if (VKMOD_ENHANCED == modifiers) {
                 if (0 != (dwControlKeyState & ENHANCED_KEY)) {
                     break;
                 }
-            } else if (MODIFIER_NOTENHANCED == modifiers) {
+            } else if (VKMOD_NOTENHANCED == modifiers) {
                 if (0 == (dwControlKeyState & ENHANCED_KEY)) {
-                    break;
-                }
-            } else if (MODIFIER_NONSHIFT == modifiers) {
-                if (0 == (dwControlKeyState & SHIFT_PRESSED)) {
                     break;
                 }
             } else if (0 == modifiers || (dwControlKeyState & modifiers)) {
@@ -428,7 +432,7 @@ key_description(const KEY_EVENT_RECORD *ker)
         }
 
         if (desc) {
-            cursor += swprintf(cursor, end - cursor, desc);                 
+            cursor += swprintf(cursor, end - cursor, desc);
         } else {
             if (uc > ' ' && uc < 0xff) {        // ASCII
                 if ((dwControlKeyState & CTRLSTATUSMASK) && uc >= 'a' && uc <= 'z') {
@@ -680,7 +684,7 @@ ImmTest(void)
     HWND hIME = ImmGetDefaultIMEWnd(hWnd);
     LRESULT status = SendMessage(hIME, WM_IME_CONTROL, IMC_GETOPENSTATUS, 0);
     HIMC imc = ImmCreateContext(),
-        oldimc = ImmAssociateContext(hWnd, imc), 
+        oldimc = ImmAssociateContext(hWnd, imc),
         retimc = ImmGetContext(hWnd);
     ImmSetOpenStatus(imc, TRUE);
     BOOL isopen = ImmGetOpenStatus(imc);

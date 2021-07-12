@@ -1,4 +1,4 @@
-/* $Id: alt.h,v 1.11 2021/07/11 13:36:16 cvsuser Exp $
+/* $Id: alt.h,v 1.12 2021/07/12 15:55:11 cvsuser Exp $
  * Key definitions
  *
  */
@@ -10,41 +10,13 @@
 /*
  *  The following scheme is used for encoding function keys.
  *
- *  This scheme is used because it simplifies converting ASCII key names to the
- *  internal codes and vice-versa. Also we keep the internal keycodes out of the
- *  ASCII range so users are free to use those for input if necessary, e.g. on
- *  foreign language keyboards.
+ *  Unicode defines a codespace for 1,114,112 code points in range
+ *  0 to 10FFFF leaving the top bits.
  *
+ *  These are utilised for attributes are used to create seperate
+ *  namespaces for UNICODE, FUNCTION and others.
  *
- *  0x000..0x0ff    ASCII           ASCII range.
- *  0x100..0x1ff    Fn keys         Support for upto 255 unshifted function keys
- *  0x200..0x2ff    Keypad          Upto 256 keypad keys.
- *  0x300..0x3ff    Misc            Miscellaneous
- *  0x400..0x7ff    Multikey        Used when user does something like:
- *                                  assign_to_key("xyz", .. ie. multi-key stroke.
- *  0x800..0x8ff    Private         Private key definitions for users.
- *  0x900..0x91f    Button down     Mouse buttons
- *  0x920..0x93f    Button up       Mouse buttons
- *  0x940..0x95f    Pointer motion  Mouse buttons
- *
- *  These ranges can be OR'ed with the following bits to indicate
- *  a modifier key is in operation.
- *
- *  0x1000          SHIFT
- *  0x2000          CTRL            Not used for ASCII range.
- *  0x4000          META
- *
- */
-
-/*
- *  New Key encoding:
- *
- *      Unicode defines a codespace for 1,114,112 code points in range
- *      0 to 10FFFF leaving the top bits.
- *
- *      These are utilised for attributes are used to create seperate
- *      namespaces for ASCII, UNICODE, FUNCTION and others, plus
- *      Shift, Ctrl and Meta modifiers.
+ *  Within these ranges can be OR'ed with the modifiers SHIFT, CTRL and META.
  *
  *      -----------------------------------------------------------------
  *      |   attributes        |             character                   |
@@ -52,14 +24,18 @@
  *      4 3 2 1 4 3 2 1 4 3 2   1 4 2 3 1 4 3 2 1 4 2 3 1 4 3 2 1 4 2 3 1
  *                              1 f . . . f . . . f . . . f . . . f . . .
  *
- *                          x   Shift
- *                        x     Ctrl/control
- *                      x       Meta
- *      s . . . r r r r         Character ranges/namespaces
+ *                          x   Shift                       - MOD_SHIFT
+ *                        x     Ctrl/control                - MOD_CTRL
+ *                      x       Meta                        - MOD_META
+ *                    x         App                         - MOD_APP  
+ *      s . r r r r .           Character ranges/namespaces - RANGE_MASK
  *
-
-typedef int32_t KEY;
-
+ *              RANGE_CHARACTER, RANGE_FUNCTION, RANGE_KEYPAD,
+ *              RANGE_MISC, RANGE_MULTIKEY, RANGE_PRIVATE, RANGE_BUTTON
+ *
+ *      s = sign/reserved.
+ *      . = reserved/unused.
+ *
  */
 
 #if defined(_WIN32) || defined(WIN32)
@@ -94,13 +70,9 @@ typedef int32_t KEY;
 #undef KEY_BACKSPACE
 #endif
 
-#define USE_UNICODE 1
-
 /*
  *  Standard names
  */
-
-
 #define __ESC                   0x1b
 #define __BACKSPACE             0x08
 #define __TAB                   '\t'
@@ -112,65 +84,38 @@ typedef int32_t KEY;
 #define KEY_ENTER               __ENTER
 #define KEY_NEWLINE             '\n'
 
-#if defined(USE_UNICODE)
-
-#define UNICODE_MASK            0x001fffff
+/* 
+ *  Namespaces and modifiers.
+ */
 #define KEY_MASK                0x001fffff      // 0..10ffff
-//#define KEY_ATTRMASK            0x8fe00000
-
 #define RANGE_CHARACTER         0x00000000      // namespaces
-#define RANGE_FN                0x02000000
-#define RANGE_KEYPAD            0x03000000
-#define RANGE_MISC              0x04000000
-#define RANGE_MULTIKEY          0x05000000
-#define RANGE_PRIVATE           0x06000000
-#define RANGE_BUTTON            0x07000000
-#define RANGE_MASK              0x0f000000
+#define RANGE_FUNCTION          (1 << 26)
+#define RANGE_KEYPAD            (2 << 26)
+#define RANGE_MISC              (3 << 26)
+#define RANGE_MULTIKEY          (4 << 26)
+#define RANGE_PRIVATE           (5 << 26)
+#define RANGE_BUTTON            (6 << 26)
+#define RANGE_MAX               (15 << 26)
+#define RANGE_MASK              0x3c000000
 
-#define IS_CHARACTER(x)         ((x & ~KEY_MASK) == RANGE_CHARACTER)
-#define IS_MULTIKEY(x)          ((x) >= RANGE_MULTIKEY && (x) <= RANGE_MULTIKEY + MULTIKEY_SIZE)
+#define MULTIKEY_SIZE           0x0400
+#define IS_CHARACTER(x)         (((x) & ~KEY_MASK) == 0) // unmodified character.
+#define IS_FUNCTION(x)          (((x) & RANGE_MASK) == RANGE_FUNCTION) // function key.
+#define IS_MULTIKEY(x)          ((x) >= RANGE_MULTIKEY && (x) <= (RANGE_MULTIKEY + MULTIKEY_SIZE))
+#define IS_BUTTON(x)            (((x) & RANGE_MASK) == RANGE_BUTTON) // mouse button.
 
 #define MOD_SHIFT               0x00200000      // modifiers
 #define MOD_CTRL                0x00400000
 #define MOD_META                0x00800000
+#define MOD_APP                 0x01000000      // reserved
+#define MOD_MASK                0x01e00000
 
-#define KEY_VOID                0x001fffff
-#define KEY_WINCH               0x001ffffe
+/*
+ *  Specials
+ */
+#define KEY_VOID                0x001fffff      // null 
+#define KEY_WINCH               0x001ffffe      // winch/resize event
 #define KEY_UNICODE             0x001ffff0      // keyboard special
-
-#else
-/*
- *  Test macros
- */
-#define KEY_MASK                0x00ff
-#define IS_ASCII(x)             ((x & ~KEY_MASK) == 0)
-#define IS_MULTIKEY(x)          ((x) >= RANGE_MULTIKEY && (x) <= RANGE_MULTIKEY + MULTIKEY_SIZE)
-
-/*
- *  Modifier bits.
- */
-#define MOD_SHIFT               0x1000
-#define MOD_CTRL                0x2000
-#define MOD_META                0x4000
-
-/*
- *  Key ranges.
- */
-#define RANGE_ASCII             0x0000
-#define RANGE_FN                0x0100
-#define RANGE_KEYPAD            0x0200
-#define RANGE_MISC              0x0300
-#define RANGE_MULTIKEY          0x0400          /* 0x400 .. 0x7ff */
-#define RANGE_PRIVATE           0x0800          /* 0x800 .. 0x8ff */
-#define RANGE_BUTTON            0x0900
-#define RANGE_MASK              0x0f00
-
-#define KEY_WINCH               0x7ffe
-#define KEY_VOID                0x7fff
-#endif
-
-#define MULTIKEY_SIZE           0x0400
-
 
 /*
  *  Control characters
@@ -219,11 +164,11 @@ typedef int32_t KEY;
 /*
  *  Function key definitions.
  */
-#define F(__x)                  (RANGE_FN + (__x) - 1)
-#define SF(__x)                 (MOD_SHIFT | (RANGE_FN + (__x) - 1))
-#define CF(__x)                 (MOD_CTRL  | (RANGE_FN + (__x) - 1))
-#define CSF(__x)                (MOD_CTRL  | MOD_SHIFT | (RANGE_FN + (__x) - 1))
-#define AF(__x)                 (MOD_META  | (RANGE_FN + (__x) - 1))
+#define F(__x)                  (RANGE_FUNCTION + (__x) - 1)
+#define SF(__x)                 (MOD_SHIFT | (RANGE_FUNCTION + (__x) - 1))
+#define CF(__x)                 (MOD_CTRL  | (RANGE_FUNCTION + (__x) - 1))
+#define CSF(__x)                (MOD_CTRL  | MOD_SHIFT | (RANGE_FUNCTION + (__x) - 1))
+#define AF(__x)                 (MOD_META  | (RANGE_FUNCTION + (__x) - 1))
 
 /*
  *  Alt-letter definitions.

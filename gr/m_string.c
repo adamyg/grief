@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.44 2021/07/05 15:51:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.45 2021/07/12 15:55:01 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_string.c,v 1.44 2021/07/05 15:51:56 cvsuser Exp $
+/* $Id: m_string.c,v 1.45 2021/07/12 15:55:01 cvsuser Exp $
  * String primitives.
  *
  *
@@ -1894,7 +1894,7 @@ do_isgold(void)                 /* int (string str|int character) */
         const int ch = get_xinteger(1, 0);
 
         if (ch > 0) {
-            if (ch & (RANGE_FN|RANGE_KEYPAD|RANGE_MISC|RANGE_MULTIKEY|
+            if (ch & (RANGE_FUNCTION|RANGE_KEYPAD|RANGE_MISC|RANGE_MULTIKEY|
                         RANGE_PRIVATE|RANGE_BUTTON|RANGE_MASK)) {
                 ret = 1;
             }
