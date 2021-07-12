@@ -1,15 +1,15 @@
 #ifndef GR_EDALT_H_INCLUDED
 #define GR_EDALT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edalt_h,"$Id: edalt.h,v 1.27 2020/06/18 12:53:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_edalt_h,"$Id: edalt.h,v 1.29 2021/07/11 10:59:36 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edalt.h,v 1.27 2020/06/18 12:53:03 cvsuser Exp $
+/* $Id: edalt.h,v 1.29 2021/07/11 10:59:36 cvsuser Exp $
  * Key definitions.
  * ==noguard==
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2021, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -86,26 +86,6 @@ __CPRAGMA_ONCE
 
 typedef int32_t KEY;
 
-#define KEY_MASK                0x001fffff      // 0..10ffff
-#define KEY_ATTRMASK            0x8fe00000
-
-#define RANGE_ASCII             0x00000000      // namespaces
-#define RANGE_UNICODE           0x01000000
-#define RANGE_FN                0x02000000
-#define RANGE_KEYPAD            0x03000000
-#define RANGE_MISC              0x04000000
-#define RANGE_MULTIKEY          0x05000000
-#define RANGE_PRIVATE           0x0a000000
-#define RANGE_BUTTON            0x0b000000
-#define RANGE_MASK              0x0f000000
-
-#define MOD_SHIFT               0x00200000      // modifiers
-#define MOD_CTRL                0x00400000
-#define MOD_META                0x00800000
-
-#define KEY_VOID                0x001fffff
-
- *
  */
 
 #if defined(_WIN32) || defined(WIN32)
@@ -140,9 +120,12 @@ typedef int32_t KEY;
 #undef KEY_BACKSPACE
 #endif
 
+#define USE_UNICODE 1
+
 /*
  *  Standard names
  */
+
 #define __ESC                   0x1b
 #define __BACKSPACE             0x08
 #define __TAB                   '\t'
@@ -153,15 +136,40 @@ typedef int32_t KEY;
 #define KEY_TAB                 __TAB
 #define KEY_ENTER               __ENTER
 #define KEY_NEWLINE             '\n'
-#define KEY_WINCH               0x7ffe
-#define KEY_VOID                0x7fff
 
-/*
- *  Macro to check whether key is a normal ASCII key.
- */
-#define IS_ASCII(x)             ((x & ~KEY_MASK) == 0)
+#if defined(USE_UNICODE)
+
+#define UNICODE_MASK            0x001fffff
+#define KEY_MASK                0x001fffff      // 0..10ffff
+//#define KEY_ATTRMASK            0x8fe00000
+
+#define RANGE_CHARACTER         0x00000000      // namespaces
+#define RANGE_FN                0x02000000
+#define RANGE_KEYPAD            0x03000000
+#define RANGE_MISC              0x04000000
+#define RANGE_MULTIKEY          0x05000000
+#define RANGE_PRIVATE           0x06000000
+#define RANGE_BUTTON            0x07000000
+#define RANGE_MASK              0x0f000000
+
+#define IS_CHARACTER(x)         ((x & ~KEY_MASK) == RANGE_CHARACTER)
 #define IS_MULTIKEY(x)          ((x) >= RANGE_MULTIKEY && (x) <= RANGE_MULTIKEY + MULTIKEY_SIZE)
+
+#define MOD_SHIFT               0x00200000      // modifiers
+#define MOD_CTRL                0x00400000
+#define MOD_META                0x00800000
+
+#define KEY_VOID                0x001fffff
+#define KEY_WINCH               0x001ffffe
+#define KEY_UNICODE             0x001ffff0      // keyboard special
+
+#else
+/*
+ *  Test macros
+ */
 #define KEY_MASK                0x00ff
+#define IS_CHARACTER(x)         ((x & ~KEY_MASK) == 0)
+#define IS_MULTIKEY(x)          ((x) >= RANGE_MULTIKEY && (x) <= RANGE_MULTIKEY + MULTIKEY_SIZE)
 
 /*
  *  Modifier bits.
@@ -173,7 +181,7 @@ typedef int32_t KEY;
 /*
  *  Key ranges.
  */
-#define RANGE_ASCII             0x0000
+#define RANGE_CHARACTER         0x0000
 #define RANGE_FN                0x0100
 #define RANGE_KEYPAD            0x0200
 #define RANGE_MISC              0x0300
@@ -182,7 +190,12 @@ typedef int32_t KEY;
 #define RANGE_BUTTON            0x0900
 #define RANGE_MASK              0x0f00
 
+#define KEY_WINCH               0x7ffe
+#define KEY_VOID                0x7fff
+#endif
+
 #define MULTIKEY_SIZE           0x0400
+
 
 /*
  *  Control characters
@@ -336,7 +349,7 @@ typedef int32_t KEY;
 /*
  *  Control keypad keys.
  */
-#define __CTRL_KEYPAD(__x)     (MOD_CTRL | RANGE_KEYPAD | (__x))
+#define __CTRL_KEYPAD(__x)      (MOD_CTRL | RANGE_KEYPAD | (__x))
 #define CTRL_KEYPAD_0           __CTRL_KEYPAD(0)
 #define CTRL_KEYPAD_1           __CTRL_KEYPAD(1)
 #define CTRL_KEYPAD_2           __CTRL_KEYPAD(2)

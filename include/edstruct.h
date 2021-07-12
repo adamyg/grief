@@ -1,11 +1,11 @@
 #ifndef GR_EDSTRUCT_H_INCLUDED
 #define GR_EDSTRUCT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.69 2020/06/18 12:51:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.70 2021/07/11 08:24:59 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edstruct.h,v 1.69 2020/06/18 12:51:55 cvsuser Exp $
+/* $Id: edstruct.h,v 1.70 2021/07/11 08:24:59 cvsuser Exp $
  * Window, buffer, line and character-map definitions.
  *
  *
@@ -75,7 +75,7 @@ enum _marks {
  *  Key table element
  */
 struct k_tbl {
-    uint16_t            key;
+    KEY                 key;
     const char *        name;
 };
 

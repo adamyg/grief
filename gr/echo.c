@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.69 2021/07/06 16:55:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.70 2021/07/11 08:24:15 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: echo.c,v 1.69 2021/07/06 16:55:31 cvsuser Exp $
+/* $Id: echo.c,v 1.70 2021/07/11 08:24:15 cvsuser Exp $
  * Command/echo line implementation/interface.
  *
  *
@@ -168,8 +168,8 @@ eyorn(const char *msg)
     echo_color = ATTR_QUESTION;
     while (1) {
         ewprintf("%s [yn]? ", msg);
-        s = (KEY)io_get_key(0);
-        if ((s & RANGE_MASK) == RANGE_ASCII) {
+        s = (KEY) io_get_key(0);
+        if (IS_CHARACTER(s)) {
             if (strchr("yYnN\033", s)) {        /* Y[es], N[o] or ESC */
                 break;
             }
@@ -899,7 +899,7 @@ badkey:;    {   const char *oecho_cmdline = echo_cmdline;
             /*FALLTHRU*/
 
         default:
-            if ((c & RANGE_MASK) != RANGE_ASCII) {
+            if (0 == IS_CHARACTER(c)) {
                 goto badkey;                    /* invalid key */
 
             } else if (bpos >= (bufsiz - 1)) {

@@ -1,11 +1,11 @@
 #ifndef GR_EDTYPES_H_INCLUDED
 #define GR_EDTYPES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edtypes_h,"$Id: edtypes.h,v 1.36 2020/04/21 21:19:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_edtypes_h,"$Id: edtypes.h,v 1.37 2021/07/11 08:25:15 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edtypes.h,v 1.36 2020/04/21 21:19:41 cvsuser Exp $
+/* $Id: edtypes.h,v 1.37 2021/07/11 08:25:15 cvsuser Exp $
  * Editor base types.
  *
  *
@@ -131,7 +131,7 @@ typedef unsigned long u_long;
 typedef unsigned char uchar_t;
 typedef unsigned int uint_t;
 typedef off_t FSIZE_t;                          /* Type for file/region sizes */
-typedef unsigned short KEY;                     /* Type for internal keystrokes */
+typedef uint32_t KEY;                           /* Type for internal keystrokes */
 
 #define LINEMAX                 0x7fffffff
 

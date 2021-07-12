@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_select_c,"$Id: w32_select.c,v 1.12 2020/04/20 23:18:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_select_c,"$Id: w32_select.c,v 1.13 2021/07/11 13:36:16 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -280,14 +280,23 @@ sel_console(Select_t *selfd)
         selfd->s_avail |= T_WRITE;
 
     if (selfd->s_wanted & T_READ)
-        while (PeekConsoleInput(h, &k, 1, &count) && count) {
+#if defined(USE_UNICODE)
+        while (PeekConsoleInputW(h, &k, 1, &count) && count) {
+#else
+        while (PeekConsoleInputA(h, &k, 1, &count) && count) {
+#endif
             if (k.EventType == KEY_EVENT) {
                 if (k.Event.KeyEvent.bKeyDown) {
                     selfd->s_avail |= T_READ;
                     break;
                 }
             }
-	    (void) ReadConsoleInput (h, &k, 1, &count);
+
+#if defined(USE_UNICODE)
+	    (void) ReadConsoleInputW(h, &k, 1, &count);
+#else
+	    (void) ReadConsoleInputA(h, &k, 1, &count);
+#endif
         }
 }
 

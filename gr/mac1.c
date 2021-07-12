@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mac1_c,"$Id: mac1.c,v 1.73 2021/07/05 15:01:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_mac1_c,"$Id: mac1.c,v 1.74 2021/07/11 08:24:15 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mac1.c,v 1.73 2021/07/05 15:01:27 cvsuser Exp $
+/* $Id: mac1.c,v 1.74 2021/07/11 08:24:15 cvsuser Exp $
  * Basic primitives.
  *
  *
@@ -1760,15 +1760,15 @@ do_redraw(void)                 /* ([int winch]) */
     Macro: insert - Insert string into current buffer.
 
         int
-        insert(string str, [int num = 1])
+        insert(string|int val, [int num = 1])
 
     Macro Description:
-        The 'insert()' primitive inserts the specified string 'str'
-        into the current buffer. The string shall be inserted 'num'
-        times, which if omitted defaults to 1.
+        The 'insert_process()' primitive inserts the specified string or
+        integer character value 'val' into the current buffer. The value
+        shall be inserted 'num' times, which if omitted defaults to 1.
 
     Macro Parameters:
-        str - String value to be inserted.
+        val - String or integer character value to be inserted.
 
         num - Option integer number stating the repeat count, if
             specified then the string is inserted the given number of
@@ -1789,16 +1789,16 @@ do_redraw(void)                 /* ([int winch]) */
     Macro: insert_process - Send string to a attached process.
 
         int
-        insert_process(string str, [int num = 1])
+        insert_process(string|int val, [int num = 1])
 
     Macro Description:
-        The 'insert_process()' primitive inserts the specified string
-        'str' into the process attached to the current buffer. The
-        string shall be inserted 'num' times, which if omitted
-        defaults to 1.
+        The 'insert_process()' primitive inserts the specified string or
+        integer character value 'val' into the process attached to the 
+        current buffer. The value shall be inserted 'num' times, which
+        if omitted defaults to 1.
 
     Macro Parameters:
-        str - String value to be inserted.
+        val - String or integer character value to be inserted.
 
         num - Option integer number stating the repeat count, if
             specified then the string is inserted the given number
@@ -1815,7 +1815,7 @@ do_redraw(void)                 /* ([int winch]) */
         insert, insertf, insert_buffer, insert_process
  */
 void
-do_insert(int proc)             /* int (string str, [int num]) */
+do_insert(int proc)             /* int (string str | int character, [int num]) */
 {
     const char *cp;
     accint_t num;

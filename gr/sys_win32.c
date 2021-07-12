@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.61 2021/06/02 15:30:18 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.62 2021/07/11 08:24:15 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_win32.c,v 1.61 2021/06/02 15:30:18 cvsuser Exp $
+/* $Id: sys_win32.c,v 1.62 2021/07/11 08:24:15 cvsuser Exp $
  * WIN32 system support.
  *
  *
@@ -351,11 +351,14 @@ ResizeCheck(unsigned *checks)
 static int
 Modifiers(const DWORD dwControlKeyState)
 {
+#define CTRLSTATUSMASK  (LEFT_ALT_PRESSED|LEFT_CTRL_PRESSED|RIGHT_ALT_PRESSED|RIGHT_CTRL_PRESSED|SHIFT_PRESSED)
+#define ALT_PRESSED     (LEFT_ALT_PRESSED|RIGHT_ALT_PRESSED)
+#define CTRL_PRESSED    (LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED)
     int modifiers = 0;
 
-    if (dwControlKeyState & (LEFT_ALT_PRESSED|RIGHT_ALT_PRESSED))
+    if (dwControlKeyState & ALT_PRESSED)
         modifiers |= MOD_META;
-    if (dwControlKeyState & (LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED))
+    if (dwControlKeyState & CTRL_PRESSED)
         modifiers |= MOD_CTRL;
     if (dwControlKeyState & SHIFT_PRESSED)
         modifiers |= MOD_SHIFT;
@@ -385,6 +388,122 @@ MouseEvent(const DWORD dwEventFlags, const DWORD dwButtonState)
         return (multi ? BUTTON3_DOUBLE : BUTTON3_DOWN);
     }
     return 0;
+}
+
+
+//  Alt+<key-code> event handler
+//
+//      Alt+KeyCode works and behaves well when character only input is required, by simply 
+//      reporting any down or up key events which populate the 'UnicodeChar' value. Whereas 
+//      when extended keystroke handling is required, for example arrow and numpad keys,
+//      additional effort is needed.
+//
+//      Alt+Keycodes are only reported within the 'UnicodeChar' value of up event on a "ALT" key
+//      post the valid entry of one-or-more hex characters. During KeyCode entry the API unfortunately 
+//      does not publiciy indicate this state plus continues to return the associated virtual keys, 
+//      including the leading 'keypad-plus' and any associated key-code elements, wherefore we need
+//      to filter.  Furthermore, if during the key-code entry an invalid non-hex key combination is 
+//      given, the key-code is invalidated and UnicodeChar=0 is returned on the ALT release.
+//
+//      Notes: 
+//       o To enable requires the registry REG_SZ value "EnableHexNumpad" under 
+//          "HKEY_Current_User/Control Panel/Input Method" to be "1".
+//
+//       o Hex-value overflow goes unreported, limiting input to a 16-bit unicode result.
+//
+
+#pragma comment(lib, "Imm32.lib")
+
+static int
+AltPlusEnabled(void)
+{
+    HKEY hKey = 0;
+    int enabled = 0;
+
+    if (RegOpenKeyExA(HKEY_CURRENT_USER,
+            "Control Panel\\Input Method", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+        char szEnableHexNumpad[100] = {0};
+        DWORD dwSize = _countof(szEnableHexNumpad);
+        if (RegQueryValueExA(hKey, "EnableHexNumpad", NULL, NULL, (LPBYTE) szEnableHexNumpad, &dwSize) == ERROR_SUCCESS) {
+            if (szEnableHexNumpad[0] == '1' && szEnableHexNumpad[1] == 0) {
+                enabled = 1;
+            }
+        }
+        RegCloseKey(hKey);
+    }
+    return enabled;
+}
+
+static int
+AltPlusEvent(const KEY_EVENT_RECORD *ke, struct IOEvent *evt)
+{
+#define ISXDIGIT(_uc) \
+            ((_uc >= '0' && _uc <= '9') || (_uc >= 'a' && _uc <= 'f') || (_uc >= 'A' && _uc <= 'F') ? 1 : 0)
+
+    static int alt_code = -2;                    // >0=active, 0=enabled, -1=disabled, -2=auto.
+    static DWORD alt_control = 0;
+
+    if (alt_code < 0) {
+        if (-1 == alt_code) return -1;
+        if (! AltPlusEnabled()) {
+            alt_code = -1;
+            return -1;
+        }
+        alt_code = 0;
+    }
+
+    if (ke->bKeyDown) {                         // down event
+        const unsigned controlKeyState = (CTRLSTATUSMASK & ke->dwControlKeyState);
+
+        if (VK_ADD == ke->wVirtualKeyCode &&
+                (LEFT_ALT_PRESSED == controlKeyState || RIGHT_ALT_PRESSED == controlKeyState)) {
+            // "Alt + ..." event
+            alt_control = controlKeyState;
+            if (alt_code == 0) {
+                alt_code = 1;
+            }
+            return 1;                           // consume
+
+        } else if (alt_code) {
+            if (alt_control != controlKeyState ||
+                    (ke->uChar.UnicodeChar && 0 == ISXDIGIT(ke->uChar.UnicodeChar))) {
+                // new control status or non-hex, emit "Alt-Plus" and reset state
+                evt->type = EVT_KEYDOWN;
+                evt->code = KEYPAD_PLUS;
+                evt->modifiers = MOD_ALT;
+                alt_code = 0;  
+                return 0;
+            }
+
+            ++alt_code;                         // associated key count
+            return 1;                           // consume
+        }
+
+    } else if (alt_code) {                      // up event
+        if (VK_MENU == ke->wVirtualKeyCode &&
+                (0 == (ke->dwControlKeyState & ALT_PRESSED))) {
+            // Alt completion
+            const int oalt_code = alt_code;
+
+            alt_code = 0;
+            if (1 == oalt_code && 0 == ke->uChar.UnicodeChar) {
+                // "Alt-Plus" only, emit
+                evt->type = EVT_KEYDOWN;
+                evt->code = KEYPAD_PLUS;
+                evt->modifiers = MOD_ALT;
+                return 0;
+
+            } else if (ke->uChar.UnicodeChar) {
+                // "Alt-Plus keycode", return keycode.
+                evt->type = EVT_KEYDOWN;
+                evt->code = ke->uChar.UnicodeChar;
+                evt->modifiers = 0;
+                return 0;
+            }
+        }
+    }
+
+    return -1;                                  // unhandled
 }
 
 
@@ -423,24 +542,46 @@ sys_getevent(struct IOEvent *evt, int tmo)
         ticks = DiffTicks(ticks);               /* ticks (ms) as end */
 
         if (rc == WAIT_OBJECT_0 &&
-                ReadConsoleInput(hKbd, &k, 1, &count)) {
+#if defined(USE_UNICODE)
+                ReadConsoleInputW(hKbd, &k, 1, &count)) {
+#else
+                ReadConsoleInputA(hKbd, &k, 1, &count)) {
+#endif
 
             switch (k.EventType) {
-            case KEY_EVENT:
-                if (k.Event.KeyEvent.bKeyDown) {
+            case KEY_EVENT: {
                     const KEY_EVENT_RECORD *ke = &k.Event.KeyEvent;
-                    int code;
-                                                /* see kbd.c */
-                    if ((code = key_mapwin32((unsigned) ke->dwControlKeyState,
-                                    ke->wVirtualKeyCode, ke->uChar.AsciiChar)) != -1) {
-                        evt->type = EVT_KEYDOWN;
-                        evt->code = code;
-                        evt->modifiers = Modifiers(ke->dwControlKeyState);
-                        assert(code > 0 && code < KEY_VOID);
-                        return 0;
+
+#if defined(USE_UNICODE)                        /* Alt+KeyCode (experimental) */
+                    {   const int altstate = AltPlusEvent(ke, evt);
+                        if (altstate == 0) return 0;
+                        if (altstate == 1) break;
                     }
-                } else {
-                    resize = ResizeCheck(&checks);
+#endif
+
+                    if (k.Event.KeyEvent.bKeyDown) {
+                        int code;
+                                                /* see kbd.c */
+                        if ((code = key_mapwin32((unsigned) ke->dwControlKeyState,
+#if defined(USE_UNICODE)
+                                        ke->wVirtualKeyCode, ke->uChar.UnicodeChar)) != -1) {
+#else
+                                        ke->wVirtualKeyCode, ke->uChar.AsciiChar)) != -1) {
+#endif
+                            evt->type = EVT_KEYDOWN;
+                            evt->code = code;
+                            evt->modifiers = Modifiers(ke->dwControlKeyState);
+#if defined(USE_UNICODE)
+                            assert(code > 0 && code != KEY_VOID);
+#else
+                            assert(code > 0 && code < KEY_VOID);
+#endif
+                            return 0;
+                        }
+
+                    } else {
+                        resize = ResizeCheck(&checks);
+                    }
                 }
                 break;
 

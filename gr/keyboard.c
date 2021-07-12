@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.62 2020/05/03 18:25:44 cvsuser Exp $")
+__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.64 2021/07/11 13:36:16 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keyboard.c,v 1.62 2020/05/03 18:25:44 cvsuser Exp $
+/* $Id: keyboard.c,v 1.64 2021/07/11 13:36:16 cvsuser Exp $
  * Manipulate key maps and bindings.
  *
  *
@@ -79,6 +79,8 @@ typedef struct _keyboard {
     int                 kt_pushed;              /* push state. */
 } keyboard_t;
 
+#define IS_UNICODE(x)   (IS_CHARACTER(x) && x > 0xff)
+
 #define HIST_DEPTH      16                      /* AUTOCONF - configuration item. */
 #define HIST_NAME       64                      /* AUTOCONF */
 
@@ -125,27 +127,27 @@ static char *           historyget(int idx);
  *  internal codes labels
  */
 static const char *     keypad_names[] = {
-    "Ins",                  /* 0         */
-    "End",                  /* 1         */
-    "Down",                 /* 2         */
-    "PgDn",                 /* 3         */
-    "Left",                 /* 4         */
-    "5",                    /* 5         */
-    "Right",                /* 6         */
-    "Home",                 /* 7         */
-    "Up",                   /* 8         */
-    "PgUp",                 /* 9         */
-    "Del",                  /* 10 Delete */
-    "Plus",                 /* 11 +      */
-    "Minus",                /* 12 -      */
-    "Star",                 /* 13 *      */
-    "Divide",               /* 14 /      */
-    "Equals",               /* 15 =      */
-    "Enter",                /* 16 <cr>   */
-    "Pause",                /* 17        */
-    "PrtSc",                /* 18        */
-    "Scroll",               /* 19        */
-    "NumLock"               /* 20        */
+    "Ins",                  /* KEYPAD_0       - 0         */
+    "End",                  /* KEYPAD_1       - 1         */
+    "Down",                 /* KEYPAD_2       - 2         */
+    "PgDn",                 /* KEYPAD_3       - 3         */
+    "Left",                 /* KEYPAD_4       - 4         */
+    "5",                    /* KEYPAD_5       - 5         */
+    "Right",                /* KEYPAD_6       - 6         */
+    "Home",                 /* KEYPAD_7       - 7         */
+    "Up",                   /* KEYPAD_8       - 8         */
+    "PgUp",                 /* KEYPAD_9       - 9         */
+    "Del",                  /* KEYPAD_DEL     - 10 Delete */
+    "Plus",                 /* KEYPAD_PLUS    - 11 +      */
+    "Minus",                /* KEYPAD_MINUS   - 12 -      */
+    "Star",                 /* KEYPAD_STAR    - 13 *      */
+    "Divide",               /* KEYPAD_DIV     - 14 /      */
+    "Equals",               /* KEYPAD_EQUAL   - 15 =      */
+    "Enter",                /* KEYPAD_ENTER   - 16 <cr>   */
+    "Pause",                /* KEYPAD_PAUSE   - 17        */
+    "PrtSc",                /* KEYPAD_PRTSC   - 18        */
+    "Scroll",               /* KEYPAD_SCROLL  - 19        */
+    "NumLock"               /* KEYPAD_NUMLOCK - 20        */
     };
 
 struct map {
@@ -263,7 +265,7 @@ static const struct w32key {
 
      */
 
-    /* VK_NUMPAD1 thru VK_NUMPAD0   are ignored allowing user selection via the NumLock */
+    /* VK_NUMPAD1 thru VK_NUMPAD0 are ignored allowing user selection via the NumLock */
 
     { VK_SUBTRACT,      MOD_ALL,        "-",            KEYPAD_MINUS },
     { VK_MULTIPLY,      MOD_ALL,        "*",            KEYPAD_STAR },
@@ -388,7 +390,7 @@ key_shutdown(void)
 
 
 /*  Function:           key_typeables
- *      Initialise typeable key assignments
+ *      Enable all typeable key assignments as "self_insert".
  *
  *  Parameters:
  *      none
@@ -401,9 +403,10 @@ key_typeables(void)
 {
     unsigned i;
 
-    for (i = 0; i < 256; ++i) {                 /* 0 .. 25, extended ASCII */
+    for (i = 0; i <= 0xff; ++i) {               /* 0 .. 25, extended ASCII */
         key_macro_add(i, NULL);
     }
+    key_macro_add(KEY_UNICODE, NULL);           /* >= 256 x <= KEY_UNICODE */
 }
 
 
@@ -477,7 +480,7 @@ key_define_key_seq(int key, const char *str)
      */
     sp = spblk(sizeof(keyseq_t) + len);
     ks = (keyseq_t *) sp->data;
-    ks->ks_code = (KEY)key_code;
+    ks->ks_code = (KEY) key_code;
     memcpy(ks->ks_buf, str, len + 1);
     sp->key = ks->ks_buf;
     spenq(sp, x_kseqtree);
@@ -579,12 +582,9 @@ keyboard_free(keyboard_t *kp)
 /*  Function:           keyboard_find
  *      Keyboard lookup, searchings both the pushed stack or the popped stack.
  *
- *      If inc_ref is TRUE, then we are creating a new reference to it.
- *      Otherwise we're just going to look at it
- *
  *  Parameters:
  *      id - Keyboard identifier.
- *      incref - Reference count increment.
+ *      incref - Reference count increment on success.
  *
  *  Results:
  *      Keyboard object, otherwise NULL.
@@ -761,19 +761,23 @@ key_macro_find(int key)
 
     if (curbp->b_keyboard) {                    /* buffer specific */
         sep = stype_lookup(curbp->b_keyboard->kt_macros, (stypekey_t) key);
+        if (NULL == sep && IS_UNICODE(key)) {
+            sep = stype_lookup(curbp->b_keyboard->kt_macros, (stypekey_t) KEY_UNICODE);
+        }
     }
 
     if (NULL == sep) {                          /* keyboard */
         sep = stype_lookup(x_kbdcur->kt_macros, (stypekey_t) key);
+        if (NULL == sep && IS_UNICODE(key)) {
+            sep = stype_lookup(x_kbdcur->kt_macros, (stypekey_t) KEY_UNICODE);
+        }
     }
 
     if (NULL == sep) {
         cp = "nothing";
-
     } else {
         cp = key_macro_value((const object_t *)sep->se_ptr);
     }
-
     return cp;
 }
 
@@ -1121,7 +1125,7 @@ key_name2code(const char *string, int *lenp)
         supported.
 
             #xxx -  Substitutes the '#' lead sequence of digits with
-                    the represent value. For example '#!23' result in
+                    the represent value. For example '#123' result in
                     the key code 123.
 
             ^x -    The '^' characters treats the following character
@@ -1168,9 +1172,11 @@ key_name2code(const char *string, int *lenp)
     |End            |Cursor End             |  x   |     |     |     |     |
 
     |Ins            |Insert                 |  x   |     |     |     |     |
-    |Plus           |plus (+)               |  x   |     |     |     |     |
-    |Minus          |minus (-)              |  x   |     |     |     |     |
-    |Star           |star (*)               |  x   |     |     |     |     |
+    |Plus           |Plus (+)               |  x   |     |     |     |     |
+    |Minus          |Minus (-)              |  x   |     |     |     |     |
+    |Star           |Multiply (*)           |  x   |     |     |     |     |
+    |Divide         |Div (/)                |  x   |     |     |     |     |
+    |Equals         |Equal (=)              |  x   |     |     |     |     |
 
     |Cancel         |Cancel Key             |      |     |     |     |     |
     |Command        |Command Key            |      |     |     |     |     |
@@ -1444,7 +1450,11 @@ key_cache_mouse(ref_t *pp, int code, int front, int x, int y, int win, int where
     KEY buffer[(sizeof(KEY) + sizeof(struct IOMouse))/2] = {0},
             *msg = buffer;
 
+#if defined(USE_UNICODE)
+    assert(code > 0 && code != KEY_VOID);
+#else
     assert(code > 0 && code < KEY_VOID);
+#endif
 
     *msg++ = (KEY)code;
 
@@ -1495,7 +1505,11 @@ key_cache_pop(ref_t *pp, struct IOEvent *evt)
     assert(used >= (int)sizeof(KEY));
     code = (int) *msg;
 
+#if defined(USE_UNICODE)
+    assert(code > 0 && code != KEY_VOID);
+#else
     assert(code > 0 && code < KEY_VOID);
+#endif
     evt->type = EVT_KEYDOWN;
 
     if (RANGE_BUTTON == (RANGE_MASK & code)) {
@@ -1764,7 +1778,7 @@ key_code2name(int key)
     /*
      *  parse the user definable 'kbd_labels' list, if defined.
      */
-    if (! IS_ASCII(key) &&
+    if (! IS_CHARACTER(key) &&
             NULL != (sp = sym_global_lookup("kbd_labels")) && F_LIST == sp->s_type) {
         /*
          *  iterate table, abort on error.
@@ -1806,9 +1820,9 @@ key_code2name(int key)
         }
     }
 
-    /* normal ASCII case */
+    /* normal character case */
 do_normal:
-    if (IS_ASCII(key)) {
+    if (IS_CHARACTER(key)) {
         key_to_char(buf, key);
         assert(strlen(buf) < sizeof(buf));
         return buf;
@@ -1831,145 +1845,125 @@ do_normal:
             case MOUSE_KEY:
                 desc ="Mouse";
                 break;
-
             case BACK_TAB:
                 desc = "Back-Tab";
                 break;
-
             case CTRL_TAB:
                 desc = "Ctrl-Tab";
                 break;
-
             case ALT_TAB:
                 desc = "Alt-Tab";
                 break;
-
             case SHIFT_BACKSPACE:
                 desc = "Shift-Backspace";
                 break;
-
             case CTRL_BACKSPACE:
                 desc = "Ctrl-Backspace";
                 break;
-
             case ALT_BACKSPACE:
                 desc = "Alt-Backspace";
                 break;
-
             case KEY_UNDO_CMD:
             case KEY_UNDO:
                 desc = "Undo";
                 break;
-
             case KEY_COPY_CMD:
             case KEY_COPY:
                 desc = "Copy";
                 break;
-
             case KEY_CUT_CMD:
             case KEY_CUT:
                 desc = "Cut";
                 break;
-
             case KEY_PASTE:
                 desc = "Paste";
                 break;
-
             case KEY_HELP:
                 desc = "Help";
                 break;
-
             case KEY_REDO:
                 desc = "Redo";
                 break;
-
             case KEY_SEARCH:
                 desc = "Search";
                 break;
-
             case KEY_REPLACE:
                 desc = "Replace";
                 break;
-
             case KEY_CANCEL:
                 desc = "Cancel";
                 break;
-
             case KEY_COMMAND:
                 desc = "Command";
                 break;
-
             case KEY_EXIT:
                 desc = "Exit";
                 break;
-
             case KEY_NEXT:
                 desc = "Next";
                 break;
-
             case KEY_PREV:
                 desc = "Prev";
                 break;
-
             case KEY_OPEN:
                 desc = "Open";
                 break;
-
             case KEY_SAVE:
                 desc = "Save";
                 break;
-
             case KEY_MENU:
                 desc = "Menu";
                 break;
-
             case WHEEL_UP:
                 desc = "Wheel-Up";
                 break;
-
             case WHEEL_DOWN:
                 desc = "Wheel-Down";
                 break;
-
             default:
-                goto DEFAULT;
+                sprintf(bp, "#%u", key);
+                break;
             }
-            strcpy(bp, desc);
+            if (desc) strcpy(bp, desc);
         }
         break;
 
-    case RANGE_ASCII: {
-            const char *desc = NULL,
-                key8 = (char) (key & KEY_MASK);
-
-            switch (key8) {
-            case KEY_ENTER:
-                desc = "Enter";
-                break;
-            case KEY_ESC:
-                desc = "Esc";
-                break;
-            case KEY_BACKSPACE:
-                desc = "Backspace";
-                break;
-            case KEY_TAB:
-                desc = "Tab";
-                break;
-            case ' ':
-                if (key & (MOD_META|MOD_CTRL|MOD_SHIFT)) {
-                    desc = "Space";
-                }
-                break;
-            default:
-                break;
-            }
-
-            if (desc) {
-                strcpy(bp, desc);
-                bp += strlen(desc);
+    case RANGE_CHARACTER: {
+            if ((key & KEY_MASK) > 0xff) {
+                sprintf(bp, "#%u", key);
             } else {
-                *bp++ = key8;
-                *bp = '\0';
+                const char *desc = NULL,
+                    key8 = (char) (key & KEY_MASK);
+
+                switch (key8) {
+                case KEY_ENTER:
+                    desc = "Enter";
+                    break;
+                case KEY_ESC:
+                    desc = "Esc";
+                    break;
+                case KEY_BACKSPACE:
+                    desc = "Backspace";
+                    break;
+                case KEY_TAB:
+                    desc = "Tab";
+                    break;
+                case ' ':
+                    if (key & (MOD_META|MOD_CTRL|MOD_SHIFT)) {
+                        desc = "Space";
+                    }
+                    break;
+                default:
+                    break;
+                }
+
+                if (desc) {
+                    strcpy(bp, desc);
+                    bp += strlen(desc);
+                } else {
+                    *bp++ = key8;
+                    *bp = '\0';
+                }
             }
         }
         break;
@@ -1999,9 +1993,11 @@ do_normal:
         break;
 
     case RANGE_MULTIKEY:
+#if !defined(USE_UNICODE)
     case RANGE_MULTIKEY + 0x100:
     case RANGE_MULTIKEY + 0x200:
     case RANGE_MULTIKEY + 0x300:
+#endif
         if (NULL == x_multitbl || (key >= RANGE_MULTIKEY + x_multiseq)) {
             strcpy(bp, "undefined");            /* out side range */
 
@@ -2038,8 +2034,7 @@ do_normal:
         /*FALLTHRU*/
 
     default:
-DEFAULT:
-        sprintf(bp, "#%d", key);
+        sprintf(bp, "#%u", key);
         break;
     }
     strcat(buf, ">");
@@ -2049,9 +2044,7 @@ DEFAULT:
 
 
 /*  Function:           key_to_char
- *      Function to convert a single 8-bit character into the
- *      canonic notation.
- *
+ *      Convert a single 8-bit character into the canonic notation.
  */
 static char *
 key_to_char(char *buf, int key)
@@ -2109,31 +2102,36 @@ key_to_char(char *buf, int key)
 
 
 /*  Function:           key_execute
- *      Function called to execute the macro associated
- *      with an internal key code.
+ *      Execute the macro associated with an internal key code.
  */
 void
-key_execute(int c)
+key_execute(int key)
 {
     sentry_t *sep = NULL;
     const char *cp;
 
-    if (KEY_WINCH == c) {
+    assert(key >= 0);
+    if (KEY_WINCH == key) {
         trace_log("\nKEY_EXEC(WINCH) 0x%x\n", KEY_WINCH);
         return;                                 /* WINCH event; ignore */
     }
 
     if (curbp && curbp->b_keyboard) {           /* buffer specific */
-        sep = stype_lookup(curbp->b_keyboard->kt_macros, c);
+        sep = stype_lookup(curbp->b_keyboard->kt_macros, key);
+        if (NULL == sep && IS_UNICODE(key)) {
+            sep = stype_lookup(curbp->b_keyboard->kt_macros, (stypekey_t) KEY_UNICODE);
+        }
     }
 
     if (NULL == sep) {                          /* current keyboard */
-        sep = stype_lookup(x_kbdcur->kt_macros, c);
+        sep = stype_lookup(x_kbdcur->kt_macros, key);
+        if (NULL == sep && IS_UNICODE(key)) {
+            sep = stype_lookup(x_kbdcur->kt_macros, (stypekey_t) KEY_UNICODE);
+        }
     }
 
     if (NULL == sep) {
         cp = "";
-
     } else {
         cp = key_macro_value((const object_t *)sep->se_ptr);
     }
@@ -2142,13 +2140,12 @@ key_execute(int c)
      *  execute/
      */
     u_chain();
-    x_character = (int32_t) c;                  /* save internal key-code */
+    x_character = (int32_t) key;                /* save internal key-code */
     playback_macro(cp);                         /* record key-stroke */
 
     /*
      *  history/
-     *      Commands with names beginning with an
-     *      underscore (_) are ignored.
+     *      Commands with names beginning with an underscore (_) are ignored.
      */
     assert(x_histhead >= 0);
     assert(x_histhead <  HIST_DEPTH);
@@ -2176,7 +2173,7 @@ key_execute(int c)
     }
 
     trace_log("\nKEY_EXEC(%s) 0x%x/%d (%02d) => %s\n",
-        key_code2name(c), (unsigned)c, (int)x_character, x_histhead, cp);
+        key_code2name(key), (unsigned)key, (int)x_character, x_histhead, cp);
 
     if (0 == *cp) {
         trigger(REG_UNASSIGNED /*REG_INVALID*/);
@@ -2567,13 +2564,13 @@ cygwin_to_int(const char *buf)
  *  Parameters:
  *      dwCtrlKeyState - Control key status.
  *      wVirtKeyCode - Virtual key code.
- *      AsciiChar - Ascii character code, if any.
+ *      CharCode - Character code, if any.
  *
  *  Results:
  *      nothing
  */
 int
-key_mapwin32(unsigned dwCtrlKeyState, unsigned wVirtKeyCode, unsigned AsciiChar)
+key_mapwin32(unsigned dwCtrlKeyState, unsigned wVirtKeyCode, unsigned CharCode)
 {
     const struct w32key *key = w32Keys + VSIZEOF(w32Keys);
     int mod = 0, ch = -1;
@@ -2608,13 +2605,19 @@ key_mapwin32(unsigned dwCtrlKeyState, unsigned wVirtKeyCode, unsigned AsciiChar)
         }
 
     /* ascii */
-    if (-1 == ch && (AsciiChar & 0xff)) {
-        ch = (AsciiChar & 0xff);                /* ASCII value */
+#if defined(USE_UNICODE)
+    assert((CharCode & ~KEY_MASK) == 0);
+    if (-1 == ch && (CharCode & KEY_MASK)) {
+        ch = (CharCode & KEY_MASK);             /* UNICODE value */
+#else
+    if (-1 == ch && (CharCode & 0xff)) {
+        ch = (CharCode & 0xff);                 /* ASCII value */
+#endif
 
         if (MOD_META == mod || (MOD_META|MOD_SHIFT) == mod) {
             /*
-             *  Special handling for ALT-ASCII .. other modifiers SHIFT and CONTROL
-             *  are already applied to the ASCII value.
+             *  Special handling for ALT-ASCII .. 
+             *  other modifiers SHIFT and CONTROL are already applied to the ASCII value.
              */
             if (ch >= 'a' && ch <= 'z') {
                 ch = toupper(ch);
@@ -2623,9 +2626,9 @@ key_mapwin32(unsigned dwCtrlKeyState, unsigned wVirtKeyCode, unsigned AsciiChar)
         }
     }
 
-    trace_log("W32KEY %c%c%c = %d (%s=%s)\n",
+    trace_log("W32KEY %c%c%c = %d/0x%x (%s=%s)\n",
         (mod & MOD_META  ? 'M' : '.'), (mod & MOD_CTRL  ? 'C' : '.'), (mod & MOD_SHIFT ? 'S' : '.'),
-        ch, (ch == -1 ? "n/a" : (key >= w32Keys ? key->desc : "ASCII")), key_code2name(ch));
+        ch, ch, (ch == -1 ? "n/a" : (key >= w32Keys ? key->desc : "ASCII")), key_code2name(ch));
     return (ch);
 }
 #endif  /*WIN32 || __CYGWIN__*/
