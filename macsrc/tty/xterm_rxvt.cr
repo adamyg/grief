@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: xterm_rxvt.cr,v 1.9 2014/10/22 02:34:43 ayoung Exp $
+/* $Id: xterm_rxvt.cr,v 1.10 2021/07/11 08:26:12 cvsuser Exp $
  *
     rxvt is a very popular xterm replacement.
 
@@ -245,7 +245,7 @@ main()
 
         BACK_TAB,           "\x1b[Z",           /* Shift-Tab */
         BACK_TAB,           "\x1b\t",           /* Alt-Tab */
-        BACKSPACE,          "\x7f"
+        KEY_BACKSPACE,      "\x7f"
         );
 
     xterm_altmeta_keys();

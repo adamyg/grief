@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; tabs: 8; -*-
- * $Id: xterm.cr,v 1.21 2021/07/06 10:50:50 adamy Exp $
+ * $Id: xterm.cr,v 1.22 2021/07/11 08:26:12 cvsuser Exp $
  * terminal description file for the xterm window under X11, an VT-100 like emulator.
  *
  *
@@ -401,7 +401,7 @@ main()
 
         BACK_TAB,           "\x1b[Z",           /* rxvt and others */
         BACK_TAB,           "\x1b\t",           /* alt-form, older VT100.Trans */
-        BACKSPACE,          "\x7f",
+        KEY_BACKSPACE,      "\x7f",
 
         /* VT100.Trans */
         ALT_MINUS,          "\xad",

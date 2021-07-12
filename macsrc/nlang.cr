@@ -1,7 +1,6 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: nlang.cr,v 1.4 2014/10/22 02:34:21 ayoung Exp $
+/* $Id: nlang.cr,v 1.5 2021/07/11 08:26:12 cvsuser Exp $
  * Macro to allow insertion of national language chars
- * XXX - needs work
  *
  *
  */
@@ -10,44 +9,44 @@
 
 static list greek =
     {
-        "\xe0",                     /* alpha - a */
-        "\xe1"                      /* beta - b */
+        0xe0,                       /* alpha - a */
+        0xe1                        /* beta - b */
     };
 
 static list graves =
     {
-        "\x85",                     /* A */
-        "\x85",                     /* a */
-        "\x8a",                     /* e */
-        "\x95",                     /* o */
-        "\x97"                      /* u */
+        0x85,                       /* A */
+        0x85,                       /* a */
+        0x8a,                       /* e */
+        0x95,                       /* o */
+        0x97                        /* u */
     };
 
 static list acutes =
     {
-        "\xa0",                     /* A */
-        "\xa0",                     /* a */
-        "\x82",                     /* e */
-        "\xa2",                     /* o */
-        "\xa3"                      /* u */
+        0xa0,                       /* A */
+        0xa0,                       /* a */
+        0x82,                       /* e */
+        0xa2,                       /* o */
+        0xa3                        /* u */
     };
 
 static list circs =
     {
-        "\x83",                     /* A */
-        "\x83",                     /* a */
-        "\x88",                     /* e */
-        "\x93",                     /* o */
-        "\x96"                      /* u */
+        0x83,                       /* A */
+        0x83,                       /* a */
+        0x88,                       /* e */
+        0x93,                       /* o */
+        0x96                        /* u */
     };
 
 static list umlauts =
     {
-        "\x8e",                     /* A */
-        "\x84",                     /* a */
-        "\x88",                     /* e */
-        "\x94",                     /* o */
-        "\x81"                      /* u */
+        0x8e,                       /* A */
+        0x84,                       /* a */
+        0x88,                       /* e */
+        0x94,                       /* o */
+        0x81                        /* u */
     };
 
 
@@ -58,24 +57,68 @@ static list umlauts =
 void
 nlang()                             /*MCHAR???*/
 {
-    string letters = "Aaeou";
+    string letters = "Aaeou", ch;
     int accent, letter, i;
-    string ch;
 
-    message("Type '[%s] [acgu]' or 'g[letter]' (Greek).", letters);
+    message("Type '[%s] [acgu]', 'g[letter]' (Greek) or x[hexchar].", letters);
 
-    /* Read in two characters and allow <Esc> to abort selection. */
+    /* Read mode selection charcater */
     while ((letter = read_char()) == -1)
         ;
-
-    if (letter == key_to_int("<Esc>"))
+    if (letter == key_to_int("<Esc>")) {
+        message("esc");
         return;
+    }
 
+    if (letter == 'x') {
+        int hexval = 0, value;
+        int done = 0;
+
+        while (1) {
+            message("hexval=0x%x", hexval);
+            while ((letter = read_char()) == -1)
+                ;
+            if (letter == key_to_int("<Esc>")) {
+                message("esc");
+                return;
+            }
+
+            if (letter == key_to_int("<Return>")) {
+                done = 1;
+                break;
+            }
+
+            sprintf(ch, "%c", letter);
+            if (!isxdigit(letter) || 
+                    1 != sscanf(ch, "%x", value)) {
+                break;
+            }
+
+            hexval <<= 4;
+            hexval += value;
+            if (hexval > 0x10ffff) {
+                done = 1;
+                break;
+            }
+        }
+
+        if (done) {
+            message("hexval=0x%x, done", hexval);
+            insert(hexval);
+            return;
+        }
+
+        error("nlang - invalid hexval");
+        return;
+    }
+
+    /* Accent selection */
     while ((accent = read_char()) == -1)
         ;
-
-    if (accent == key_to_int("<Esc>"))
+    if (accent == key_to_int("<Esc>")) {
+        message("esc");
         return;
+    }
 
     /* Handle Greek alphabet. */
     if (letter == 'g') {
@@ -92,32 +135,33 @@ nlang()                             /*MCHAR???*/
 
     /* o" and c" are open and close double angle brackets (<< and >>) */
     if (letter == 'o' && accent == '"') {
-        insert("\xae");
+        insert(0xae);
         message("");
         return;
 
     } else if (letter == 'c' && accent == '"') {
-        insert("\xaf");
+        insert(0xaf);
         message("");
         return;
 
     } else if (letter == 'c' && accent == 'c') {
         /* Handle C-cedilla. */
-        insert("\x87");
+        insert(0x87);
         message("");
         return;
 
     } else if (letter == 'n' && accent == 'n') {
         /* Handle Spanish n with a twiddle on top. */
-        insert("\xa4");
+        insert(0xa4);
         message("");
         return;
     }
 
     sprintf(ch, "%c", letter);
-    i = index(letters, ch) - 1;
-    if (i < 0)
+    if ((i = index(letters, ch) - 1) < 0) {
+        error("nlang - unknown character sequence.");
         return;
+    }
 
     switch (accent) {
     case key_to_int("a"):
@@ -132,12 +176,12 @@ nlang()                             /*MCHAR???*/
     case key_to_int("u"):
         insert(umlauts[i]);
         break;
-    default: {
-            error("Unknown character sequence.");
-            return;
-        }
+    default:
+        error("nlang - unknown character sequence.");
+        return;
     }
     message("");
 }
 
 /*end*/
+

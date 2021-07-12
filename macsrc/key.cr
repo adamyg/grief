@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: key.cr,v 1.23 2021/07/05 15:01:28 cvsuser Exp $
+/* $Id: key.cr,v 1.24 2021/07/11 10:59:08 cvsuser Exp $
  * Key definition tools.
  *
  *
@@ -146,22 +146,25 @@ key(void)
 void
 keyx()
 {
-    int seq = 6;
+    string description;
+    int seq = 7;
 
     while (--seq > 0) {
-        message("keyx (%d):", seq);
+        message("keyx (%d): %s", seq, description);
         int key = read_char(1000, -1);          /* next event */
         if (key >= 0) {
             if (IsMouse(key)) {
                 int x, y;
-
                 get_mouse_pos(x, y);
-                message("keyx=%s (%d,%d)", int_to_key(key), x, y);
+                sprintf(description, "keyx=%s (%d,%d)", int_to_key(key), x, y);
+
             } else {
-                message("keyx=" + int_to_key(key));
+                sprintf(description, "keyx=" + int_to_key(key));
             }
-            sleep(2);
-            seq = 4;
+            seq = 7;
+
+        } else {
+            description = "";
         }
     }
     message("");

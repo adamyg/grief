@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: xterm_linux.cr,v 1.22 2014/10/22 02:34:43 ayoung Exp $
+/* $Id: xterm_linux.cr,v 1.23 2021/07/11 08:26:12 cvsuser Exp $
  * terminal description file for the xterm window under X11/Linux.
  *
  *
@@ -130,7 +130,7 @@ main()
         KEYPAD_STAR,        "\x1bOj",       /* Keypad-*         */
         KEYPAD_MINUS,       "\x1bOm",       /* Keypad--         */
         KEYPAD_PLUS,        "\x1bOk",       /* Keypad-+         */
-        ENTER,              "\x1bOM",       /* Keypad-enter     */
+        KEYPAD_ENTER,       "\x1bOM",       /* Keypad-enter     */
 
         SHIFT_KEYPAD_2,     "\x1bO2B",      /* down             */
         SHIFT_KEYPAD_4,     "\x1bO2D",      /* left             */

@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: xterm_mintty.cr,v 1.4 2014/10/22 02:34:43 ayoung Exp $
+/* $Id: xterm_mintty.cr,v 1.5 2021/07/11 08:26:12 cvsuser Exp $
  * Mintty terminal profile.
  *
  *
@@ -112,7 +112,7 @@ main()
         //  Miscellous keys
         //
         BACK_TAB,           "\x1b[Z",
-        BACKSPACE,          "\x7f"
+        KEY_BACKSPACE,      "\x7f"
     );
 }
 

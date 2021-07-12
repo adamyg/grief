@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: xterm_mrxvt.cr,v 1.3 2014/10/22 02:34:43 ayoung Exp $
+/* $Id: xterm_mrxvt.cr,v 1.4 2021/07/11 08:26:12 cvsuser Exp $
  * mrxvt terminal
  *
  *      The mrxvt program is a terminal emulator for X Window System. It provides DEC VT102
@@ -170,7 +170,7 @@ main()
 
         BACK_TAB,           "\x1b[Z",           /* Shift-Tab, may require Xdefault resource about */
         BACK_TAB,           "\x1b\t",           /* Alt-Tab */
-        BACKSPACE,          "\x7f"
+        KEY_BACKSPACE,      "\x7f"
         );
 
     xterm_altmeta_keys();

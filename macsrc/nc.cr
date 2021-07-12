@@ -1,15 +1,15 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: nc.cr,v 1.34 2021/07/05 15:01:29 cvsuser Exp $
+/* $Id: nc.cr,v 1.35 2021/07/11 08:26:12 cvsuser Exp $
  * Norton Commander (NC) style directory services
  *
  *
  */
 
 #include "grief.h"
-#include "dialog.h"                                 /* dialog manager */
+#include "dialog.h"                             /* dialog manager */
 
 #if defined(DEBUG)
-#define Debug(x)            debug x;                /* local debug diag's */
+#define Debug(x)            debug x;            /* local debug diag's */
 #else
 #define Debug(x)
 #endif
@@ -20,7 +20,7 @@
 #define FORWARD_SLASH       '/'
 #define BACKWARD_SLASH      '\\'
 #define WILD                "?*"
-#define SMINCOLUMNS         62                      /* screen width */
+#define SMINCOLUMNS         62                  /* screen width */
 #define SMAXCOLUMNS         90
 #define SFILECOLUMNS        (nc_fwidth)
 #define SINFOCOLUMNS        38
@@ -128,14 +128,14 @@ main()
     syntax_rule("^[ =]\\*[^ ]+",    "lsexecute");
     syntax_rule("^[ =]\\@[^ ]+",    "lssymlink");
     syntax_rule("^[ =]\\|[^ ]+",    "lspipe");
-    syntax_rule("^[ =]\\![^ ]+",    "lserror"); // broken link
+    syntax_rule("^[ =]\\![^ ]+",    "lserror"); /* broken link */
     syntax_rule("^[ =][-=S+][^ ]+", "lsspecial");
     syntax_rule("^[ =][^-/~@|!*=$+][^ ]+", "lsnormal");
     syntax_build(__COMPILETIME__);
 
     /* build keyboard definition */
     keyboard_push();
-    keyboard_typeables();                       // keys 0...127
+    keyboard_typeables();                       /* keys 0...127 */
 
     assign_to_key("<Enter>",        "::NcEnter");
     assign_to_key("<Backspace>",    "::NcSelBack");
