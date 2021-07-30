@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.114 2021/06/13 16:14:18 cvsuser Exp $
+# $Id: makelib.pl,v 1.116 2021/07/15 11:13:20 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -53,6 +53,7 @@ use Text::ParseWords;
 my $CWD                     = getcwd();
 my $BINPATH                 = '';
 my $PERLPATH                = '';
+my $MFCDIR                  = undef;
 my $BUSYBOX                 = undef;
 my $WGET                    = undef;
 my $INNO                    = undef;
@@ -151,8 +152,8 @@ my %x_environment   = (
             LDMAPFILE       => '-MAP:$(MAPFILE)',
 
             MFCDIR          => '',
-            MFCCFLAGS       => '-nologo -RTC1 @RTLIBRARY@',
-            MFCCXXFLAGS     => '-nologo -RTC1 @RTLIBRARY@ -EHsc',
+            MFCCFLAGS       => '-nologo @RTLIBRARY@',
+            MFCCXXFLAGS     => '-nologo @RTLIBRARY@ -EHsc',
             MFCCOPT         => '-Zc:wchar_t- -Zc:forScope -Gm',
             MFCCXXOPT       => '-Zc:wchar_t- -Zc:forScope -Gm',
             MFCCINCLUDE     => '',
@@ -211,9 +212,11 @@ my %x_environment   = (
                         # -Fm:  if positioned before /link
                         # -MAP: if positioned afer /link
 
+            # 7600.16385.1: Windows Driver Kit Version 7.1.0
+            #   ==> http://www.microsoft.com/download/en/details.aspx?displaylang=en&id=11800
             MFCDIR          => '/tools/WinDDK/7600.16385.1',
-            MFCCFLAGS       => '-nologo -RTC1 @RTLIBRARY@',
-            MFCCXXFLAGS     => '-nologo -RTC1 @RTLIBRARY@ -EHsc',
+            MFCCFLAGS       => '-nologo @RTLIBRARY@',
+            MFCCXXFLAGS     => '-nologo @RTLIBRARY@ -EHsc',
             MFCCOPT         => '-Zc:wchar_t- -Zc:forScope -Gm',
             MFCCXXOPT       => '-Zc:wchar_t- -Zc:forScope -Gm',
             MFCCINCLUDE     => '-I$(MFCDIR)/inc/atl71 -I$(MFCDIR)/inc/mfc42',
@@ -245,6 +248,16 @@ my %x_environment   = (
             LDMAPFILE       => '-MAP:$(MAPFILE)',
                         # -Fm:  if positioned before /link
                         # -MAP: if positioned afer /link
+
+            # 7600.16385.1: Windows Driver Kit Version 7.1.0
+            #   ==> http://www.microsoft.com/download/en/details.aspx?displaylang=en&id=11800
+            MFCDIR          => '/tools/WinDDK/7600.16385.1',
+            MFCCFLAGS       => '-nologo @RTLIBRARY@',
+            MFCCXXFLAGS     => '-nologo @RTLIBRARY@ -EHsc',
+            MFCCOPT         => '-Zc:wchar_t- -Zc:forScope -Gm',
+            MFCCXXOPT       => '-Zc:wchar_t- -Zc:forScope -Gm',
+            MFCCINCLUDE     => '-I$(MFCDIR)/inc/atl71 -I$(MFCDIR)/inc/mfc42',
+            MFCLIBS         => '/LIBPATH:$(MFCDIR)\lib\atl\i386 /LIBPATH:$(MFCDIR)\lib\mfc\i386'
             },
 
        'vc1900'        => {    # 2015, Visual Studio 19
@@ -273,6 +286,16 @@ my %x_environment   = (
             LDMAPFILE       => '-MAP:$(MAPFILE)',
                         # -Fm:  if positioned before /link
                         # -MAP: if positioned afer /link
+
+            # 7600.16385.1: Windows Driver Kit Version 7.1.0
+            #   ==> http://www.microsoft.com/download/en/details.aspx?displaylang=en&id=11800
+            MFCDIR          => '/tools/WinDDK/7600.16385.1',
+            MFCCFLAGS       => '-nologo @RTLIBRARY@',
+            MFCCXXFLAGS     => '-nologo @RTLIBRARY@ -EHsc',
+            MFCCOPT         => '-Zc:wchar_t- -Zc:forScope -Gm',
+            MFCCXXOPT       => '-Zc:wchar_t- -Zc:forScope -Gm',
+            MFCCINCLUDE     => '-I$(MFCDIR)/inc/atl71 -I$(MFCDIR)/inc/mfc42',
+            MFCLIBS         => '/LIBPATH:$(MFCDIR)\lib\atl\i386 /LIBPATH:$(MFCDIR)\lib\mfc\i386'
             },
 
        # See: VsDevCmd.bat
@@ -313,13 +336,15 @@ my %x_environment   = (
                         # -Fm:  if positioned before /link
                         # -MAP: if positioned afer /link
 
-        #   MFCDIR          => '/tools/WinDDK/7600.16385.1',
-        #   MFCCFLAGS       => '-nologo -RTC1 @RTLIBRARY@',
-        #   MFCCXXFLAGS     => '-nologo -RTC1 @RTLIBRARY@ -EHsc',
-        #   MFCCOPT         => '-Zc:wchar_t- -Zc:forScope -Gm',
-        #   MFCCXXOPT       => '-Zc:wchar_t- -Zc:forScope -Gm',
-        #   MFCCINCLUDE     => '-I$(MFCDIR)/inc/atl71 -I$(MFCDIR)/inc/mfc42',
-        #   MFCLIBS         => '/LIBPATH:$(MFCDIR)\lib\atl\i386 /LIBPATH:$(MFCDIR)\lib\mfc\i386'
+            MFCDIR          => '',
+            MFCCFLAGS       => '-nologo @RTLIBRARY@',
+            MFCCXXFLAGS     => '-nologo @RTLIBRARY@ -EHsc',
+            MFCCOPT         => '-Zc:wchar_t- -Zc:forScope',
+            MFCCXXOPT       => '-Zc:wchar_t- -Zc:forScope',
+          # MFCCINCLUDE     => '-I$(MFCDIR)/inc/atl71 -I$(MFCDIR)/inc/mfc42',
+          # MFCLIBS         => '/LIBPATH:$(MFCDIR)\lib\atl\i386 /LIBPATH:$(MFCDIR)\lib\mfc\i386'
+            MFCCINCLUDE     => '',
+            MFCLIBS         => ''
             },
 
        'vc1920'        => {    # 2019, Visual Studio 19.2x
@@ -348,6 +373,16 @@ my %x_environment   = (
             LDMAPFILE       => '-MAP:$(MAPFILE)',
                         # -Fm:  if positioned before /link
                         # -MAP: if positioned afer /link
+
+            MFCDIR          => '',
+            MFCCFLAGS       => '-nologo @RTLIBRARY@',
+            MFCCXXFLAGS     => '-nologo @RTLIBRARY@ -EHsc',
+            MFCCOPT         => '-Zc:wchar_t- -Zc:forScope',
+            MFCCXXOPT       => '-Zc:wchar_t- -Zc:forScope',
+          # MFCCINCLUDE     => '-I$(MFCDIR)/inc/atl71 -I$(MFCDIR)/inc/mfc42',
+          # MFCLIBS         => '/LIBPATH:$(MFCDIR)\lib\atl\i386 /LIBPATH:$(MFCDIR)\lib\mfc\i386'
+            MFCCINCLUDE     => '',
+            MFCLIBS         => ''
             },
 
         'wc1300'        => {    # Watcom 11
@@ -1054,6 +1089,7 @@ main()
                 'bison=s'       => \$BISON,
                 'flex=s'        => \$FLEX,
                 'busybox=s'     => \$BUSYBOX,
+                'mfcdir=s'      => \$MFCDIR,
                 'wget=s'        => \$WGET,
                 'inno=s'        => \$INNO,
                 'version=i'     => \$o_version,
@@ -1344,6 +1380,10 @@ Configure($$)           # (type, version)
 
     foreach my $entry (keys %$env) {            # target profile
         $x_tokens{$entry} = $$env{$entry};
+    }
+    if ($MFCDIR) { #override
+        print "MFCDIR:   ${MFCDIR}\n";
+        $x_tokens{MFCDIR} = $MFCDIR;
     }
 
     MakelibConfigure($type, $env);
