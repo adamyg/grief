@@ -1,11 +1,11 @@
 #ifndef GR_EDALT_H_INCLUDED
 #define GR_EDALT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edalt_h,"$Id: edalt.h,v 1.30 2021/07/12 15:54:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_edalt_h,"$Id: edalt.h,v 1.31 2021/07/21 15:53:31 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edalt.h,v 1.30 2021/07/12 15:54:07 cvsuser Exp $
+/* $Id: edalt.h,v 1.31 2021/07/21 15:53:31 cvsuser Exp $
  * Key definitions.
  * ==noguard==
  *
@@ -97,6 +97,7 @@ typedef int32_t KEY;
 #undef KEY_REPLACE
 #undef KEY_ENTER
 #undef KEY_BACKSPACE
+#undef KEY_BREAK
 #endif
 
 /*
@@ -112,6 +113,7 @@ typedef int32_t KEY;
 #define KEY_TAB                 __TAB
 #define KEY_ENTER               __ENTER
 #define KEY_NEWLINE             '\n'
+#define KEY_DELETE              0x7f
 
 /* 
  *  Namespaces and modifiers.
@@ -415,6 +417,7 @@ typedef int32_t KEY;
 #define KEY_OPEN                (RANGE_MISC | 20)
 #define KEY_SAVE                (RANGE_MISC | 21)
 #define KEY_MENU                (RANGE_MISC | 22)
+#define KEY_BREAK               (RANGE_MISC | 23)
 
 #define WHEEL_UP                (RANGE_MISC | 31)   /* Mouse scroll wheel */
 #define WHEEL_DOWN              (RANGE_MISC | 32)
