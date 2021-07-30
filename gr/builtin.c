@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.61 2021/07/04 08:39:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.62 2021/07/18 23:03:18 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: builtin.c,v 1.61 2021/07/04 08:39:35 cvsuser Exp $
+/* $Id: builtin.c,v 1.62 2021/07/18 23:03:18 cvsuser Exp $
  * Builtin expresssion evaluation.
  *
  *
@@ -60,7 +60,7 @@ static void             execute_builtin(const BUILTIN *bp, const LIST *lp);
 static void __CINLINE   arg_error(const BUILTIN *bp, enum ARGERRORS msg, struct SAVED *saved_str, struct SAVED *ssp, int arg);
 static void __CINLINE   arg_free(struct SAVED *saved_str, struct SAVED *ssp);
 
-static int              arg_expand(const BUILTIN *bp, int varargs, int largc, 
+static int              arg_expand(const BUILTIN *bp, int varargs, int largc,
                             LISTV **largv, LISTV **lap, struct SAVED **lsaved, struct SAVED **ssp);
 
 static int              execute_expr2(const argtype_t arg, const LIST *argp, LISTV *lap);
@@ -108,7 +108,7 @@ iscsym(int c) /*TODO: compat_iscsym()*/
 
 /*
  *  execute_str ---
- *      Take a string, possiblity entered via the the command prompt, taking the 
+ *      Take a string, possiblity entered via the the command prompt, taking the
  *      form <macro [arguments ... ]>, parse and then execute the specified macro.
  *
  *      Arguments can be either int, float otherwise treated as a string.
@@ -526,7 +526,7 @@ exec_macro:
     ++mptr->m_hits;
 #endif
 
-    if (bp) bp->b_macro = mptr;                 /* pop chain */ 
+    if (bp) bp->b_macro = mptr;                 /* pop chain */
 
     mptr->m_ftime = FALSE;                      /* first time */
     x_msglevel = omsglevel;                     /* restore message level */
@@ -648,7 +648,7 @@ execute_builtin(const BUILTIN *bp, const LIST *lp)
             case F_NULL:
                 break;
             case EEXECUTE:                          /* ... */
-                goto execute; 
+                goto execute;
             case EERROR:
                 /*
                  *  One last chance --
@@ -676,7 +676,7 @@ execute_builtin(const BUILTIN *bp, const LIST *lp)
             }
 
             /*
-             *  Move onto the next argument descriptor. 
+             *  Move onto the next argument descriptor.
              *  Note: Don't move if an indefinite list and last descriptor; as it repeats.
              */
             if (! varargs || argtypes[1] /*not-last*/) {
@@ -866,12 +866,12 @@ arg_expand(const BUILTIN *bp, int varargs, int largc, LISTV **largv, LISTV **lap
     const size_t lapi = (size_t)(*lap - *largv);
     const size_t sspi = (size_t)(*ssp - *lsaved);
 
-    struct SAVED *nlsaved = NULL; 
+    struct SAVED *nlsaved = NULL;
     LISTV *nlargv;
     int nvarargs;
 
     /*
-     *  Varargs available ? 
+     *  Varargs available ?
      */
     assert(varargs >= -1);
     if (! varargs) {
@@ -956,8 +956,8 @@ static const int state_tbl[][12] = {
     /*ls-i*/ {-1,     -1,      F_INT,   -1,      F_STR,   F_LIT,   F_LIST,  -1,      -1,      F_RSTR,  F_RLIST, -1      },
     /*lsf-*/ {-1,     -1,      -1,      F_FLOAT, F_STR,   F_LIT,   F_LIST,  -1,      -1,      F_RSTR,  F_RLIST, -1      },
     /*lsfi*/ {-1,     -1,      F_INT,   F_FLOAT, F_STR,   F_LIT,   F_LIST,  -1,      F_NULL,  F_RSTR,  F_RLIST, -1      },
-    };                                                                                                                  
-                                                                                                                        
+    };
+
 static const int state2_tbl[][11] = {
     /*
      *  Symbol type conversions.

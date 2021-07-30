@@ -28,6 +28,9 @@ static const struct w32key {
     const wchar_t *     desc;               /* description */
 
 } w32Keys[] = {
+    // Only reportsd as an up event, down redirected to event handler.
+//  { VK_CANCEL,        MOD_CTRL,           L"Ctrl-Break"       },
+
     { VK_BACK,          0,                  L"Back"             },
     { VK_TAB,           0,                  L"Tab"              },
     { VK_BACK,          VKMOD_SHIFT,        L"Back"             },
@@ -52,9 +55,7 @@ static const struct w32key {
     { VK_DELETE,        VKMOD_ANY,          L"Delete"           },
 
     { VK_HELP,          VKMOD_ANY,          L"Help"             },
-#if defined(VK_ICO_HELP)
     { VK_ICO_HELP,      VKMOD_ANY,          L"Help"             },
-#endif
 
     { VK_PRIOR,         VKMOD_NOTENHANCED,  L"Keypad-PgUp"      },
     { VK_NEXT,          VKMOD_NOTENHANCED,  L"Keypad-PgDn"      },
@@ -123,6 +124,7 @@ static const struct w32key {
 
 static void Usage(const struct argparms *args);
 static void Process(HANDLE in);
+static BOOL WINAPI CtrlHandler(DWORD fdwCtrlType);
 static int AltPlusEvent(const KEY_EVENT_RECORD *ke, int offset);
 static int AltPlusEnabled(void);
 static const wchar_t *key_description(const KEY_EVENT_RECORD *ker);
@@ -142,15 +144,23 @@ main(void)
     GetConsoleMode(in, &mode);
     if (xf_mouse) {                             /* mouse enabled */
         if (! SetConsoleMode(in, ENABLE_EXTENDED_FLAGS|\
-                    ENABLE_WINDOW_INPUT|ENABLE_MOUSE_INPUT|ENABLE_PROCESSED_INPUT)) {
+                    ENABLE_WINDOW_INPUT|ENABLE_MOUSE_INPUT/*|ENABLE_PROCESSED_INPUT*/)) {
                 // Note: Stating ENABLE_EXTENDED_FLAGS disables ENABLE_INSERT_MODE and/or ENABLE_QUICK_EDIT_MODE.
                 //  required for correct mouse operation; restored within sys_shutdown().
-            SetConsoleMode(in, ENABLE_WINDOW_INPUT|ENABLE_MOUSE_INPUT|ENABLE_PROCESSED_INPUT);
+            SetConsoleMode(in, ENABLE_WINDOW_INPUT|ENABLE_MOUSE_INPUT/*|ENABLE_PROCESSED_INPUT*/);
                 // No extended support/XP.
         }
     } else {
-        SetConsoleMode(in, ENABLE_WINDOW_INPUT|ENABLE_PROCESSED_INPUT);
+        SetConsoleMode(in, ENABLE_WINDOW_INPUT/*|ENABLE_PROCESSED_INPUT*/);
     }
+
+        // The ENABLE_LINE_INPUT and ENABLE_ECHO_INPUT modes only affect processes that use ReadFile or ReadConsole
+        // to read  from the console's input buffer. Similarly, the ENABLE_PROCESSED_INPUT mode primarily affects
+        // ReadFile and ReadConsole users, except that it also determines whether CTRL+C input is reported in the
+        // input buffer (to be read by the ReadConsoleInput function) or is passed to a function defined by
+        // the application.
+    SetConsoleCtrlHandler(CtrlHandler, TRUE);
+
     Process(in);
     SetConsoleMode(in, mode);
 
@@ -244,6 +254,34 @@ Process(HANDLE in)
                 }
             }
         }
+    }
+}
+
+
+static BOOL WINAPI
+CtrlHandler(DWORD fdwCtrlType)
+{
+    switch (fdwCtrlType) {
+    case CTRL_C_EVENT:      // Ctrl-C signal.
+        printf("\nCtrl-C event\n");
+        return TRUE;
+    case CTRL_BREAK_EVENT:  // Ctrl-Break signal.
+        printf("\nCtrl-Break event\n");
+        return TRUE;
+    case CTRL_CLOSE_EVENT:  // Ctrl-Close: confirm that the user wants to exit.
+        printf("\nCtrl-Close event\n");
+        Beep(600, 200);
+        return TRUE;
+    case CTRL_LOGOFF_EVENT:
+        printf("\nCtrl-Logoff event\n");
+        Beep(1000, 200);
+        return FALSE;
+    case CTRL_SHUTDOWN_EVENT:
+        printf("\nCtrl-Shutdown event\n");
+        Beep(750, 500);
+        return FALSE;
+    default:
+        return FALSE;              
     }
 }
 

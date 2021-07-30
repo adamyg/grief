@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.70 2021/07/11 08:24:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.71 2021/07/18 23:03:19 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: echo.c,v 1.70 2021/07/11 08:24:15 cvsuser Exp $
+/* $Id: echo.c,v 1.71 2021/07/18 23:03:19 cvsuser Exp $
  * Command/echo line implementation/interface.
  *
  *
@@ -653,11 +653,11 @@ elineedit(const char *prompt, const char *defstr, char *result, int bufsiz, int 
                  *  First key and it is a special one,
                  *      then user has accepted the default prompt unmark.
                  */
-            case KEY_TAB:   case CTRL_H:
-            case KEY_HOME:  case KEY_END:
-            case KEY_WLEFT: case KEY_WRIGHT:
-            case KEY_LEFT:  case KEY_RIGHT:
-            case 0x7f:      case KEY_DEL:
+            case KEY_TAB:    case CTRL_H:
+            case KEY_HOME:   case KEY_END:
+            case KEY_WLEFT:  case KEY_WRIGHT:
+            case KEY_LEFT:   case KEY_RIGHT:
+            case KEY_DELETE: case KEY_DEL:
                 bpos = Wcsfromutf8(defstr, buf, bufsiz);
                 break;
 
@@ -1017,7 +1017,7 @@ eposition(const WChar_t *buf, int bpos, int bleft)
         pos += eprintable(buf[i++], NULL, NULL);
     }
 
-    /* 
+    /*
      *  if cursor off screen, reframe
      */
     if (bpos < bleft) {
@@ -1039,7 +1039,7 @@ eposition(const WChar_t *buf, int bpos, int bleft)
         bleft = i;
     }
 
-    /* 
+    /*
      *  Redraw prompt, pad with trailing spaces.
      */
     buf += bleft;
@@ -1081,7 +1081,7 @@ edisplay(void)
 
     trace_log("edisplay: prompt[%d,%d]:<", offset, echo_prompt_width);
 
-    for (cp = wecho_line, ep = cp + echo_prompt_len, 
+    for (cp = wecho_line, ep = cp + echo_prompt_len,
             ap = echo_attr; *cp; ++cp, ++ap) {
         const int32_t wch = *cp;
 
@@ -1472,7 +1472,7 @@ eprint(const char *prompt, const char *defstr)
         }
     }
 
-    /* 
+    /*
      *  import prompt, default and display
      */
     echo_prompt_len = Wcsfromutf8(prompt, wecho_line, _countof(wecho_line));
@@ -1496,7 +1496,7 @@ eprint(const char *prompt, const char *defstr)
     }
 
     echo_prompt_width = eprintlen(wecho_line);  /* display width */
-    
+
     if (!defstr || !*defstr) {
         echo_default = 0;                       /* no default */
     } else {
@@ -1847,7 +1847,7 @@ elinecol(int flags)
         The virtual character status is represented by one of the
         following otherwise blank if a normal character.
 
-           X    - Virtual space, for example logical space created as 
+           X    - Virtual space, for example logical space created as
                     the result of tab expansion.
 
            $    - End of line.

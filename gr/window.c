@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_window_c,"$Id: window.c,v 1.43 2021/07/05 15:01:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_window_c,"$Id: window.c,v 1.44 2021/07/18 23:03:19 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: window.c,v 1.43 2021/07/05 15:01:27 cvsuser Exp $
+/* $Id: window.c,v 1.44 2021/07/18 23:03:19 cvsuser Exp $
  * Window basics.
  *
  *
@@ -197,9 +197,9 @@ window_create(int type, const char *title, int x, int y, int w, int h)
         acc_assign_int((accint_t) wp->w_num);
 
         if (W_MENU == type) {
-            wp->w_x = 0; 
+            wp->w_x = 0;
             wp->w_y = 0;
-            wp->w_h = 1; 
+            wp->w_h = 1;
             wp->w_w = (uint16_t)(ttcols() - 1);
 
         } else {

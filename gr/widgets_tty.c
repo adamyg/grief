@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_widgets_tty_c,"$Id: widgets_tty.c,v 1.35 2020/04/19 23:55:19 cvsuser Exp $")
+__CIDENT_RCSID(gr_widgets_tty_c,"$Id: widgets_tty.c,v 1.36 2021/07/18 23:03:19 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: widgets_tty.c,v 1.35 2020/04/19 23:55:19 cvsuser Exp $
+/* $Id: widgets_tty.c,v 1.36 2021/07/18 23:03:19 cvsuser Exp $
  * Dialog widgets, tty interface.
  *
  *
@@ -3497,7 +3497,7 @@ increment:;     if (*ef->ef_buffer) {
         break;
 
     case KEY_DEL:           /* <DEL>        delete character under the cursor */
-    case 0x7F:
+    case KEY_DELETE:
     case CTRL_D:
         if (ef->ef_editable) {
             if (ef->ef_marked) {

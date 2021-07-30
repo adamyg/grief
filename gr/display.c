@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.79 2021/07/05 15:01:26 cvsuser Exp $")
+__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.80 2021/07/18 23:03:19 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: display.c,v 1.79 2021/07/05 15:01:26 cvsuser Exp $
+/* $Id: display.c,v 1.80 2021/07/18 23:03:19 cvsuser Exp $
  * High level display interface.
  *
  *
@@ -1284,7 +1284,7 @@ vtwindow(WINDOW_t *wp)
             flags |= WDF_DIAG;
             lmargin += 3;                       /* line flag diagnostics */
         }
-        
+
         if (has_lines) {
             if (BFTST(bp, BF_BINARY) && bp->b_bin_chunk_size) {
                 flags |= WDF_OFFSET;
@@ -4152,4 +4152,5 @@ do_screen_dump(void)            /* int ([string filename], [string encoding]) */
     acc_assign_int(0);
     fclose(fp);
 }
+
 /*end*/

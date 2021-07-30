@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.65 2021/07/12 15:55:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.66 2021/07/18 23:03:19 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keyboard.c,v 1.65 2021/07/12 15:55:01 cvsuser Exp $
+/* $Id: keyboard.c,v 1.66 2021/07/18 23:03:19 cvsuser Exp $
  * Manipulate key maps and bindings.
  *
  *
@@ -211,6 +211,7 @@ static const struct map keystring_tbl[] = {
     { 4,    "OPEN",         RANGE_MISC,     KEY_OPEN },
     { 4,    "SAVE",         RANGE_MISC,     KEY_SAVE },
     { 4,    "MENU",         RANGE_MISC,     KEY_MENU },
+    { 5,    "BREAK",        RANGE_MISC,     KEY_BREAK },
     { 0,    NULL,           0,              0}
     };
 
@@ -236,6 +237,22 @@ static const struct w32key {
     KEY                 code;                   /* interval key value */
 
 } w32Keys[] = {
+    // Only reportsd as an up event, down redirected to event handler.
+//  { VK_CANCEL,        MOD_CTRL,           "Ctrl-Break",       KEY_BREAK },
+
+//  { VK_KANA,                              "IME Kana mode",    0 },
+//  { VK_HANGUL,                            "IME Hangul mode",  0 },
+//  { VK_IME_ON,                            "IME On",           0 },
+//  { VK_JUNJA,                             "IME Junja mode",   0 },
+//  { VK_FINAL,                             "IME final mode",   0 },
+//  { VK_HANJA,                             "IME Hanja mode",   0 },
+//  { VK_KANJI,                             "IME Kanji mode",   0 },
+//  { VK_IME_OFF,                           "IME Off",          0 },
+//  { VK_CONVERT,                           "IME convert",      0 },
+//  { VK_NONCONVERT,                        "IME nonconvert",   0 },
+//  { VK_ACCEPT,                            "IME accept",       0 },
+//  { VK_MODECHANGE,                        "IME mode change",  0 },
+
     { VK_BACK,          0,                  "Back",             KEY_BACKSPACE },
     { VK_TAB,           0,                  "Tab",              KEY_TAB },
     { VK_BACK,          MOD_SHIFT,          "Shift-Back",       SHIFT_BACKSPACE },
@@ -273,7 +290,6 @@ static const struct w32key {
 //  { VK_DOWN,          VKMOD_NONENHANCED,  "Keypad-Down",      KEYPAD_DOWN },
 //  { VK_INSERT,        VKMOD_NONENHANCED,  "Keypad-Ins",       KEYPAD_INS },
 //  { VK_DELETE,        VKMOD_NONENHANCED,  "Keypad-Delete",    KEYPAD_DEL },
-//  { VK_HELP,          VKMOD_NONENHANCED,  "Keypad-Help",      KEY_HELP },
     { VK_SUBTRACT,      VKMOD_ANY,          "Keypad-Minus",     KEYPAD_MINUS },
     { VK_MULTIPLY,      VKMOD_ANY,          "Keypad-Star",      KEYPAD_STAR },
     { VK_ADD,           VKMOD_ANY,          "Keypad-Plus",      KEYPAD_PLUS },
@@ -318,17 +334,20 @@ static const struct w32key {
     { VK_NUMLOCK,       VKMOD_ANY,          "Numlock",          KEYPAD_NUMLOCK },
     { VK_SCROLL,        VKMOD_ANY,          "Scroll",           KEYPAD_SCROLL },
 
+//  { VK_OEM_1,                             // ';:' for US
 //  { VK_OEM_PLUS,      VKMOD_NONSHIFT,     "+"                 '+' },
 //  { VK_OEM_COMMA,     VKMOD_NONSHIFT,     ","                 ',' },
 //  { VK_OEM_MINUS,     VKMOD_NONSHIFT,     "-"                 '-' },
 //  { VK_OEM_PERIOD,    VKMOD_NONSHIFT,     "."                 '.' },
-//  { VK_OEM_3,         VKMOD_NONSHIFT,     "~"                 '~' },
+//  { VK_OEM_2,                             // '/?' for US
+//  { VK_OEM_3,         VKMOD_NONSHIFT,     "~",                '~' },
+//  { VK_OEM_4,                             //  '[{' for US
+//  { VK_OEM_5,                             //  '\|' for US
+//  { VK_OEM_6,                             //  ']}' for US
+//  { VK_OEM_7,                             //  ''"' for US
 
-#if (1)
     { VK_OEM_NEC_EQUAL, VKMOD_ANY,          "Keypad-Equal",     KEYPAD_EQUAL },
-#endif
-
-//  { VK_ICO_HELP,      VKMOD_ANY,          "Help",             KEY_HELP },
+    { VK_ICO_HELP,      VKMOD_ANY,          "Help",             KEY_HELP },
 
     };
 #endif  /*WIN32 || __CYGWIN__*/
@@ -1602,7 +1621,7 @@ key_cache_test(ref_t *pp)
         The following scheme is utilised for encoding internal key-codes,
         allowing for simple conversion of ASCII character code to the internal
         codes and vice-versa.
-        
+
         Firstly key-codes are divided into several ranges.
 
 (start table)
@@ -1632,44 +1651,46 @@ key_cache_test(ref_t *pp)
 
 (start table)
         [Key Code           [Description                                        ]
-      ! CTRL_1 .. CTRL_10
-      ! ALT_1 .. ALT_10
-      ! CTRL_A .. CTRL_Z
-      ! ALT_Z .. ALT_Z
+      ! CTRL_1 .. CTRL_10   Control 1 thru 10.
+      ! ALT_1 .. ALT_10     Alt 1 thru 10.
+      ! CTRL_A .. CTRL_Z    Control A thru Z.
+      ! ALT_Z .. ALT_Z      Alt A thru Z.
       ! KEY_BACKSPACE       Backspace.
-      ! KEY_CANCEL
-      ! KEY_CLOSE
+      ! KEY_BREAK           Break.
+      ! KEY_CANCEL          Cancel key.
+      ! KEY_CLOSE           Close key.
       ! KEY_COMMAND
-      ! KEY_COPY
-      ! KEY_COPY_CMD
-      ! KEY_CUT
+      ! KEY_COPY            Copy to clipboard.
+      ! KEY_COPY_CMD        
+      ! KEY_CUT             Cut to clipboard.
       ! KEY_CUT_CMD
-      ! KEY_DEL
-      ! KEY_END
+      ! KEY_DEL             Delete, rubout.
+      ! KEY_DOWN            Move down, down arrow.
+      ! KEY_END             End key.
       ! KEY_ENTER           Enter key.
       ! KEY_ESC             Escape.
       ! KEY_EXIT
-      ! KEY_HELP
-      ! KEY_HOME
-      ! KEY_INS
-      ! KEY_LEFT
-      ! KEY_MENU
+      ! KEY_HELP            Help, usage.
+      ! KEY_HOME            Home key.
+      ! KEY_INS             Insert.
+      ! KEY_LEFT            Move left, left arrow.
+      ! KEY_MENU            Menu key.
       ! KEY_NEWLINE         New line.
-      ! KEY_NEXT
-      ! KEY_OPEN
-      ! KEY_PAGEDOWN
-      ! KEY_PAGEUP
-      ! KEY_PASTE
-      ! KEY_PREV
-      ! KEY_REDO
+      ! KEY_NEXT            Next.
+      ! KEY_OPEN            Open key.
+      ! KEY_PAGEDOWN        Page down.
+      ! KEY_PAGEUP          Page up.
+      ! KEY_PASTE           Paste clipboard.
+      ! KEY_PREV            Prior, previous.
+      ! KEY_REDO            Redo, again.
       ! KEY_REPLACE
-      ! KEY_RIGHT
+      ! KEY_RIGHT           Move right, right arrow.
       ! KEY_SAVE
-      ! KEY_SEARCH
+      ! KEY_SEARCH          Search.
       ! KEY_TAB             Tab.
-      ! KEY_UNDO
-      ! KEY_UNDO_CMD
-      ! KEY_UP
+      ! KEY_UNDO            Undo key.
+      ! KEY_UNDO_CMD        Undo key.
+      ! KEY_UP              Move up, up arrow.
       ! KEY_WDOWN
       ! KEY_WDOWN2
       ! KEY_WLEFT
@@ -1949,6 +1970,9 @@ do_normal:
                 break;
             case KEY_MENU:
                 desc = "Menu";
+                break;
+            case KEY_BREAK:
+                desc = "Break";
                 break;
             case WHEEL_UP:
                 desc = "Wheel-Up";
