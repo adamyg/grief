@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.71 2021/07/18 23:03:19 cvsuser Exp $")
+__CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.72 2021/08/01 14:34:04 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: echo.c,v 1.71 2021/07/18 23:03:19 cvsuser Exp $
+/* $Id: echo.c,v 1.72 2021/08/01 14:34:04 cvsuser Exp $
  * Command/echo line implementation/interface.
  *
  *
@@ -451,35 +451,39 @@ ereplyask(const char *prompt, const char *defstr,
     echo_color = attr;
     echo_standout = standout;
     eprint(prompt, (defstr ? defstr : ""));
-    if ('\001' == *prompt) {
-        ++prompt;                               /* consume hilite marker \001 */
-    }
-
-    trace_log("ereplyask: <%s>(%d:%d)\n", prompt, bufsiz, one);
 
     if (nflags && 0 == (nflags & DB_PROMPT)) {
         nflags = 0;                             /* disable debug prompt */
     }
 
     /* trigger start */
-    if (!one) {
-        static const char _prompt_begin[] = "_prompt_begin";
+    {   const char *t_prompt = prompt;
 
-        if (macro_lookup(_prompt_begin)) {
-            char ebuf[EBUFSIZ + 20];
+        if ('\001' == *prompt) {                /* hilite marker \001 */
+            ++t_prompt;
+        }
 
-            sxprintf(ebuf, sizeof(ebuf), "%s \"%s\"", _prompt_begin, prompt);
-            trace_flagsset(nflags);
-            execute_str(ebuf);
-            /*
-             *  TODO, BRIEF compat ---
-             *      The new default response should be returned as a
-             *      string if changed, otherwise return an integer/null
-             *      to indicate no change.
-             */
-            trace_flagsset(saved_flags);
-        } else {
-            trace_log("ereplyask: _prompt_begin not found\n");
+        trace_log("ereplyask: <%s>(%d:%d)\n", t_prompt, bufsiz, one);
+
+        if (! one) {
+            static const char _prompt_begin[] = "_prompt_begin";
+
+            if (macro_lookup(_prompt_begin)) {
+                char ebuf[EBUFSIZ + 20];
+
+                sxprintf(ebuf, sizeof(ebuf), "%s \"%s\"", _prompt_begin, t_prompt);
+                trace_flagsset(nflags);
+                execute_str(ebuf);
+                /*
+                 *  TODO, BRIEF compat ---
+                 *      The new default response should be returned as a
+                 *      string if changed, otherwise return an integer/null
+                 *      to indicate no change.
+                 */
+                trace_flagsset(saved_flags);
+            } else {
+                trace_log("ereplyask: _prompt_begin not found\n");
+            }
         }
     }
 
