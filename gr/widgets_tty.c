@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_widgets_tty_c,"$Id: widgets_tty.c,v 1.36 2021/07/18 23:03:19 cvsuser Exp $")
+__CIDENT_RCSID(gr_widgets_tty_c,"$Id: widgets_tty.c,v 1.37 2021/08/01 14:42:51 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: widgets_tty.c,v 1.36 2021/07/18 23:03:19 cvsuser Exp $
+/* $Id: widgets_tty.c,v 1.37 2021/08/01 14:42:51 cvsuser Exp $
  * Dialog widgets, tty interface.
  *
  *
@@ -32,7 +32,9 @@ __CIDENT_RCSID(gr_widgets_tty_c,"$Id: widgets_tty.c,v 1.36 2021/07/18 23:03:19 c
 #include "kill.h"
 #include "line.h"
 #include "lisp.h"
+#include "mchar.h"
 #include "main.h"
+
 #include "tty.h"
 #include "widgets.h"
 #include "widgets_tty.h"
@@ -285,15 +287,16 @@ tty_str(LINEATTR attr, const char *str)
  *      ch -
  *
  *  Returns:
- *      nothing.
+ *      int - Character display width.
  */
-static void
+static int
 tty_char(LINEATTR attr, int ch)
 {
     const LINEATTR oattr = *cur_attr;
     *cur_attr = attr;
     lwritec(ch);
     *cur_attr = oattr;
+    return  Wcwidth(ch);
 }
 
 
@@ -302,7 +305,8 @@ tty_isunicode(int special)
 {
     __CUNUSED(special)
 #if defined(WIN32) || defined(__CYGWIN__)
-    if (special) return FALSE;                  /* generally aren't available */
+    if (special)        /* FIXME; generally aren't available. */
+        return FALSE;
 #endif
     return (DC_UNICODE == ((DC_UNICODE|DC_ASCIIONLY) & x_display_ctrl));
 }
@@ -2926,6 +2930,7 @@ lb_paint(Listbox_t *lb, WIDGET_t *w, int repaint)
                     }
                 }
 
+                move(w, 1, frame + y);          /* left align */
                 ++y, ++idx;
             }
         }
@@ -3033,9 +3038,17 @@ typedef struct {
 
     int                 ef_length;              /* buffer length, in bytes */
     const char *        ef_placeholder;         /* placeholder text, if any */
-    char                ef_buffer[ MAX_CMDLINE ];
+
+#define EWIDECHAR
+#if defined(EWIDECHAR)
+#define ECHAR WChar_t
+    char                ef_xbuffer[ MAX_CMDLINE ];
+#else
+#define ECHAR char
+#endif
+    ECHAR               ef_buffer[ MAX_CMDLINE ];
+    ECHAR               ef_restore[ MAX_CMDLINE ];
     char                ef_complete[ MAX_CMDLINE ];
-    char                ef_restore[ MAX_CMDLINE ];
 } Editfield_t;
 
 static void             ef_init(Editfield_t *ef, uint32_t flags);
@@ -3045,6 +3058,8 @@ static void             ef_destroy(Editfield_t *ef);
 static void             ef_save(Editfield_t *ef);
 static void             ef_restore(Editfield_t *ef);
 static void             ef_set(Editfield_t *ef, const char *value);
+static const char *     ef_get(Editfield_t *ef);
+static int              ef_empty(const Editfield_t *ef);
 static int              ef_assign(Editfield_t *ef, const WIDGETDATA_t *data);
 static int              ef_value_set(Editfield_t *ef, const WIDGETARG_t p1, const WIDGETDATA_t *data);
 static int              ef_value_get(Editfield_t *ef, const WIDGETARG_t p1, WIDGETDATA_t *data);
@@ -3067,7 +3082,7 @@ ef_init(Editfield_t *ef, uint32_t flags)
     ef->ef_changed      = 0;
     ef->ef_format       = EDITFORMAT_TEXT;
     ef->ef_seqno        = 0;
-    ef->ef_length       = sizeof(ef->ef_buffer) - 1;
+    ef->ef_length       = _countof(ef->ef_buffer)-1;
     ef->ef_editable     = TRUE;
     ef->ef_visibility   = TRUE;
     ef->ef_validate     = FALSE;
@@ -3079,6 +3094,9 @@ ef_init(Editfield_t *ef, uint32_t flags)
     ef->ef_filters      = 0;
     ef->ef_placeholder  = NULL;
     ef->ef_buffer[0]    = 0;
+#if defined(EWIDECHAR)
+    ef->ef_xbuffer[0]   = 0;
+#endif
     ef->ef_complete[0]  = 0;
     ef->ef_restore[0]   = 0;
     ef->ef_restoreseqno = 0;
@@ -3129,17 +3147,22 @@ ef_destroy(Editfield_t *ef)
 static void
 ef_save(Editfield_t *ef)
 {
-    const int diff = strcmp(ef->ef_buffer, ef->ef_restore);
+    const ECHAR *buffer = ef->ef_buffer;
+#if defined(EWIDECHAR)
+    const int diff = Wcscmp(buffer, ef->ef_restore);
+    Wcscpy(ef->ef_restore, buffer);
+#else
+    const int diff = strcmp(buffer, ef->ef_restore);
+    strcpy(ef->ef_restore, buffer);
+#endif
 
-    strcpy(ef->ef_restore, (const char *)ef->ef_buffer);
     ef->ef_restoreseqno = ef->ef_seqno;
-
     if (diff) ++ef->ef_seqno;
     ef->ef_quote        = FALSE;
     ef->ef_cursor       = 0;
     ef->ef_loffset      = 0;
     ef->ef_marked       =
-        (((EF_FISAUTOCOMPLETE & ef->ef_flags) || 1 == ef->ef_seqno) && ef->ef_buffer[0] ? TRUE : FALSE);
+        (((EF_FISAUTOCOMPLETE & ef->ef_flags) || 1 == ef->ef_seqno) && buffer[0] ? TRUE : FALSE);
     ef->ef_append       = FALSE;
     ef->ef_changed      = 0;
     ef->ef_complete[0]  = 0;
@@ -3149,7 +3172,8 @@ ef_save(Editfield_t *ef)
 static void
 ef_restore(Editfield_t *ef)
 {
-    strcpy(ef->ef_buffer, (const char *)ef->ef_restore);
+    assert(sizeof(ef->ef_buffer) == sizeof(ef->ef_restore));
+    memcpy(ef->ef_buffer, (const void *)ef->ef_restore, sizeof(ef->ef_buffer));
     ef->ef_seqno        = ef->ef_restoreseqno;
     ef->ef_quote        = FALSE;
     ef->ef_changed      = 0;
@@ -3164,9 +3188,35 @@ ef_set(Editfield_t *ef, const char *value)
     ef->ef_quote        = FALSE;
     ef->ef_marked       = FALSE;
     ef->ef_append       = FALSE;
+#if defined(EWIDECHAR)
+    Wcsfromutf8((value ? value : ""), ef->ef_buffer, _countof(ef->ef_buffer));
+#else
     strxcpy(ef->ef_buffer, (value ? value : ""), sizeof(ef->ef_buffer));
+#endif
     ef->ef_complete[0]  = 0;
     ++ef->ef_changed;
+}
+
+
+static const char *
+ef_get(Editfield_t *ef)
+{
+#if defined(EWIDECHAR)
+    ef->ef_xbuffer[0] = 0;
+    if (ef->ef_buffer[0]) {
+        Wcstoutf8(ef->ef_buffer, ef->ef_xbuffer, sizeof(ef->ef_xbuffer));
+    }
+    return ef->ef_xbuffer;
+#else
+    return ef->ef_buffer;
+#endif
+}
+
+
+static int
+ef_empty(const Editfield_t *ef)
+{
+    return (*ef->ef_buffer == 0);
 }
 
 
@@ -3266,7 +3316,7 @@ ef_value_get(Editfield_t *ef, const WIDGETARG_t p1, WIDGETDATA_t *data)
 
     switch (attr) {
     case DLGA_VALUE:
-        data->d_u.svalue = ef->ef_buffer;
+        data->d_u.svalue = ef_get(ef);
         data->d_type = D_STR;
         return TRUE;
     case DLGA_EDEDITABLE:
@@ -3376,13 +3426,18 @@ ef_value_get(Editfield_t *ef, const WIDGETARG_t p1, WIDGETDATA_t *data)
 static int
 ef_key(Editfield_t *ef, WIDGET_t *w, int key, int (*validate)(Editfield_t *, WIDGET_t *w, void *), void *arg)
 {
-    char previous_buffer[ MAX_CMDLINE ];
-    int  oipos = ef->ef_cursor, ipos = oipos;
-    char *buf = ef->ef_buffer;
-    int  repaint = FALSE;
-    int  edit = FALSE;
+    ECHAR previous_buffer[ MAX_CMDLINE ];
+    ECHAR *buf = ef->ef_buffer;
+    int   oipos = ef->ef_cursor, ipos = oipos;
+    int   repaint = FALSE;
+    int   edit = FALSE;
 
+#if defined(EWIDECHAR)
+    Wcsncpy(previous_buffer, (const WChar_t *)buf, _countof(previous_buffer));
+#else
     strxcpy(previous_buffer, (const char *)buf, sizeof(previous_buffer));
+#endif
+
     if (ef->ef_quote) {
         ef->ef_quote = FALSE;
         goto quote;
@@ -3431,22 +3486,38 @@ ef_key(Editfield_t *ef, WIDGET_t *w, int key, int (*validate)(Editfield_t *, WID
         if (ef->ef_marked) {
             repaint = TRUE, ef->ef_marked = 0;
         }
+#if defined(EWIDECHAR)
+        ipos = (int)Wcslen(buf);
+#else
         ipos = (int)strlen(buf);
+#endif
         break;
 
     case KEY_WLEFT:         /* <Left>       Cursor word left/decrement */
     case KEY_WLEFT2: {
             double val = 0;
             if (EF_FISNUMERIC & ef->ef_flags) {
-decrement:;     if (*ef->ef_buffer) {
-                    val = atof(ef->ef_buffer);
+decrement:;     if (*buf) {
+#if defined(EWIDECHAR)
+                    val = Wcstod(buf, NULL);
+#else
+                    val = atof(buf);
+#endif
                 }
                 val -= ef->ef_increment;
+#if defined(EWIDECHAR)
                 if (ef->ef_digits <= 0) {
-                    ipos = sprintf(ef->ef_buffer, "%d", (int) val);
+                    ipos = Wsnprintf(buf, _countof(ef->ef_buffer), "%d", (int) val);
                 } else {
-                    ipos = sprintf(ef->ef_buffer, "%*f", ef->ef_digits, val);
+                    ipos = Wsnprintf(buf, _countof(ef->ef_buffer), "%*f", ef->ef_digits, val);
                 }
+#else
+                if (ef->ef_digits <= 0) {
+                    ipos = sprintf(buf, "%d", (int) val);
+                } else {
+                    ipos = sprintf(buf, "%*f", ef->ef_digits, val);
+                }
+#endif
                 edit = TRUE;
             } else {
                 while (isspace(buf[ipos]) && ipos > 0) {
@@ -3463,15 +3534,27 @@ decrement:;     if (*ef->ef_buffer) {
     case KEY_WRIGHT2: {
             double val = 0;
             if (EF_FISNUMERIC & ef->ef_flags) {
-increment:;     if (*ef->ef_buffer) {
-                    val = atof(ef->ef_buffer);
+increment:;     if (*buf) {
+#if defined(EWIDECHAR)
+                    val = Wcstod(buf, NULL);
+#else
+                    val = atof(buf);
+#endif
                 }
                 val += ef->ef_increment;
+#if defined(EWIDECHAR)
                 if (ef->ef_digits <= 0) {
-                    ipos = sprintf(ef->ef_buffer, "%d", (int) val);
+                    ipos = Wsnprintf(buf, _countof(ef->ef_buffer), "%d", (int) val);
                 } else {
-                    ipos = sprintf(ef->ef_buffer, "%*f", ef->ef_digits, val);
+                    ipos = Wsnprintf(buf, _countof(ef->ef_buffer), "%*f", ef->ef_digits, val);
                 }
+#else
+                if (ef->ef_digits <= 0) {
+                    ipos = sprintf(buf, "%d", (int) val);
+                } else {
+                    ipos = sprintf(buf, "%*f", ef->ef_digits, val);
+                }
+#endif
                 edit = TRUE;
             } else {
                 while (isspace(buf[ipos]) && buf[ipos]) {
@@ -3490,7 +3573,12 @@ increment:;     if (*ef->ef_buffer) {
                 repaint = TRUE, ef->ef_marked = 0;
             }
             if (ipos > 0) {
-                --ipos, strcpy(buf + ipos, buf + ipos + 1);
+                --ipos;
+#if defined(EWIDECHAR)
+                Wcscpy(buf + ipos, buf + ipos + 1);
+#else
+                strcpy(buf + ipos, buf + ipos + 1);
+#endif
                 edit = TRUE;
             }
         }
@@ -3501,13 +3589,18 @@ increment:;     if (*ef->ef_buffer) {
     case CTRL_D:
         if (ef->ef_editable) {
             if (ef->ef_marked) {
-                edit = TRUE, ef->ef_marked = 0;
+                ef->ef_marked = 0;
                 memset(ef->ef_complete, 0, sizeof(ef->ef_complete));
-                memset(buf, 0, ef->ef_length);
+                memset(buf, 0, sizeof(ef->ef_buffer));
+                edit = TRUE;
                 ipos = 0;
 
             } else if (buf[ipos]) {
+#if defined(EWIDECHAR)
+                Wcscpy(buf + ipos, buf + ipos + 1);
+#else
                 strcpy(buf + ipos, buf + ipos + 1);
+#endif
                 edit = TRUE;
             }
         }
@@ -3525,9 +3618,9 @@ increment:;     if (*ef->ef_buffer) {
     case CTRL_X:
     case CTRL_U:
         if (ef->ef_editable) {
-            ipos = 0;
             buf[0] = '\0';
             edit = TRUE;
+            ipos = 0;
         }
         break;
 
@@ -3545,7 +3638,11 @@ increment:;     if (*ef->ef_buffer) {
             } else {
                 while (ipos < ef->ef_length && scount--) {
                     if (ef->ef_insmode) {
+#if defined(EWIDECHAR)
+                        Wmemmove(buf + ipos + 1, (const WChar_t *)(buf + ipos), (size_t)ef->ef_length - ipos);
+#else
                         memmove(buf + ipos + 1, (const char *)(buf + ipos), (size_t)ef->ef_length - ipos);
+#endif
                     }
                     if (0 == buf[ ipos ]) {
                         buf[ ipos+1 ] = '\0';
@@ -3595,7 +3692,11 @@ increment:;     if (*ef->ef_buffer) {
                 goto decrement;
 
             } else if ('.' == key) {
-                if (ef->ef_digits <= 0 || strchr(ef->ef_buffer, '.')) {
+#if defined(EWIDECHAR)
+                if (ef->ef_digits <= 0 || Wcschr(buf, '.')) {
+#else
+                if (ef->ef_digits <= 0 || strchr(buf, '.')) {
+#endif
                     return FALSE;
                 }
 
@@ -3609,8 +3710,13 @@ increment:;     if (*ef->ef_buffer) {
             }
         }
 
-quote:; if (ef->ef_marked) {                    /* zap marked text */
+    quote:;
+        if (ef->ef_marked) {                    /* zap marked text */
+#if defined(EWIDECHAR)
+            Wmemset(buf, 0, ef->ef_length);
+#else
             memset(buf, 0, ef->ef_length);
+#endif
             ef->ef_marked = 0;
             edit = TRUE;
             ipos = 0;
@@ -3620,7 +3726,11 @@ quote:; if (ef->ef_marked) {                    /* zap marked text */
             ttbeep();                           /* end-of-buffer */
         } else {
             if (ef->ef_insmode) {               /* insert mode */
+#if defined(EWIDECHAR)
+                Wmemmove(buf + ipos + 1, (const WChar_t *)(buf + ipos), (size_t)ef->ef_length - ipos);
+#else
                 memmove(buf + ipos + 1, (const char *)(buf + ipos), (size_t)ef->ef_length - ipos);
+#endif
             }
             if (0 == buf[ ipos ]) {             /* make sure buffer is terminated */
                 buf[ ipos+1 ] = '\0';
@@ -3636,13 +3746,22 @@ quote:; if (ef->ef_marked) {                    /* zap marked text */
         ++ef->ef_changed;
         if (validate) {
             if (! validate(ef, w, arg)) {       /* reject, restore previous value */
-                strxcpy(ef->ef_buffer, (const char *)previous_buffer, sizeof(ef->ef_buffer));
+#if defined(EWIDECHAR)
+                Wcsncpy(buf, (const WChar_t *)previous_buffer, _countof(ef->ef_buffer));
+#else
+                strxcpy(buf, (const char *)previous_buffer, sizeof(ef->ef_buffer));
+#endif
                 --ef->ef_changed;
                 ef->ef_cursor = oipos;
                 edit = FALSE;
             } else {
                 if (ef->ef_complete[0]) {       /* auto-complete, trim cursor */
-                    if ((ipos = (int)strlen(ef->ef_buffer)) < ef->ef_cursor) {
+#if defined(EWIDECHAR)
+                    ipos = (int)Wcslen(buf);
+#else
+                    ipos = (int)strlen(buf);
+#endif
+                    if (ipos < ef->ef_cursor) {
                         ef->ef_cursor = ipos;
                     }
                 }
@@ -3672,12 +3791,16 @@ ef_paint(Editfield_t *ef, WIDGET_t *w)
     const int32_t cols    =
                    (EF_FISCOMBO    & ef->ef_flags ? (w->w_cols > 3 ? w->w_cols - 3 : 1) :
                     (EF_FISNUMERIC & ef->ef_flags ? (w->w_cols > 4 ? w->w_cols - 4 : 1) : w->w_cols));
-    const char *complete = (ef->ef_append ? ef->ef_complete : "");
-    const char *buffer   = (!HasFocus(w) && ef->ef_placeholder && !*ef->ef_buffer && !*complete ?
-                                ef->ef_placeholder : ef->ef_buffer);
 
-    int32_t len2   = (int32_t)strlen(complete);
-    int32_t len    = (int32_t)strlen(buffer);
+    const char *complete  = (ef->ef_append ? ef->ef_complete : "");
+    const int placeholder = (!HasFocus(w) && ef->ef_placeholder && ef_empty(ef) && !*complete ? 1 : 0);
+
+    int32_t len2 = (int32_t)strlen(complete);
+#if defined(EWIDECHAR)
+    int32_t len = (int32_t)(placeholder ? strlen(ef->ef_placeholder) : Wcslen(ef->ef_buffer));
+#else
+    int32_t len = (int32_t)(placeholder ? strlen(ef->ef_placeholder) : strlen(ef->ef_buffer));
+#endif
     int32_t offset = ef->ef_loffset;
     int32_t cursor = 0;
 
@@ -3692,25 +3815,33 @@ ef_paint(Editfield_t *ef, WIDGET_t *w)
             len = cols;
         }
 
-        buffer += offset;
-        if (ef->ef_visibility ||                /* normal/visible mode/placeholder-text */
-                (buffer == ef->ef_placeholder)) {
+        if (placeholder) {                      /* placeholder text */
+            const char *buffer = ef->ef_placeholder + offset;
+
             tty_move(w, 0, 0);
             tty_strn(attr, buffer, len);
             cursor += len;
+
+        } else if (ef->ef_visibility) {         /* normal/visible mode text */
+            const ECHAR *buffer = ef->ef_buffer + offset;
+
+            while (len-- > 0) {
+                tty_move(w, cursor, 0);
+                cursor += tty_char(attr, *buffer++);
+            }
 
         } else {                                /* invisible, only show previous character when focused */
             const int vcharacter = ef->ef_invisiblech;
 
             if (vcharacter > 0) {               /* 0=hidden text (ie. no user feeback) */
+                const ECHAR *buffer = ef->ef_buffer + offset;
                 const int vpos =
                     (HasFocus(w) && ef->ef_changed ? (ef->ef_cursor - offset) - 1 : -1);
 
                 while (len-- > 0) {
                     tty_move(w, cursor, 0);     /* only if last changed character */
-                    tty_char(attr, 0 == len && vpos == cursor ? *buffer : vcharacter);
+                    cursor += tty_char(attr, 0 == len && vpos == cursor ? *buffer : vcharacter);
                     ++buffer;
-                    ++cursor;
                 }
             }
         }
@@ -4282,7 +4413,7 @@ combofield_open(WCombofield_t *cf)
     Listbox_t *lb = &cf->cf_listimpl;
     int32_t idx = -1;
                                                 /* prime active and cursor */
-    idx = lb_active(lb, lb_item_match(lb, NULL, ef->ef_buffer, &idx) ? idx : -1);
+    idx = lb_active(lb, lb_item_match(lb, NULL, ef_get(ef), &idx) ? idx : -1);
     lb_cursor(lb, w, idx);
 
     ef_save(ef);                                /* open and save edit buffer */
@@ -4394,7 +4525,7 @@ combofield_autocomplete(Editfield_t *ef, WIDGET_t *w, void *arg)
 {
     WCombofield_t *cf = (WCombofield_t *)arg;
     Listbox_t *lb = &cf->cf_listimpl;
-    char *buffer = ef->ef_buffer;
+    const char *buffer = ef_get(ef);
     char *complete = ef->ef_complete;
     const ListboxItem_t *n = NULL;
     int32_t idx = 0;
@@ -4407,14 +4538,18 @@ combofield_autocomplete(Editfield_t *ef, WIDGET_t *w, void *arg)
         n = lb_item_find(lb, "", 0, &idx);
                                                 /* element index */
     } else if ((LB_FINDEXMODE & lb->lb_flags) && isdigit(*buffer)) {
+        char t_buffer[32];
         int value;
 
         if ((value = strtol(buffer, NULL, 10)) < 1 || value > (int)lb_item_count(lb) ||
                 NULL == (n = lb_item_get(lb, idx = (uint32_t)(value - 1)))) {
             return FALSE;
         }
+
         lb_filter(lb, 0, NULL);
-        sxprintf(buffer, sizeof(ef->ef_buffer), "%d", value);
+        sxprintf(t_buffer, sizeof(t_buffer), "%d", value);
+        ef_set(ef, t_buffer);
+
         strxcpy(complete + 1, n->li_display, sizeof(ef->ef_complete) - 1);
         complete[0] = '-';
 
@@ -4488,15 +4623,15 @@ combofield_listbox(WCombofield_t *cf, const int state)
 
     switch (state) {
 //  case CB_POPUPSTATE_HIDDEN:
-//        switch (current_state) {
-//        case CB_POPUPSTATE_FOCUS:
-//        case CB_POPUPSTATE_VISIBLE:
-//            if (dialog_tty_popup_focus(w->w_root, -1)) {
-//                cf->cf_popupstate = CB_POPUPSTATE_HIDDEN;
-//            }
-//            break;
-//        }
-//        break;
+//      switch (current_state) {
+//      case CB_POPUPSTATE_FOCUS:
+//      case CB_POPUPSTATE_VISIBLE:
+//          if (dialog_tty_popup_focus(w->w_root, -1)) {
+//              cf->cf_popupstate = CB_POPUPSTATE_HIDDEN;
+//          }
+//          break;
+//      }
+//      break;
 
     case CB_POPUPSTATE_VISIBLE:
         switch (current_state) {
@@ -4546,13 +4681,13 @@ combofield_value_get(WCombofield_t *cf, int iscomplete)
 {
     Editfield_t *ef = &cf->cf_editimpl;
     Listbox_t *lb = &cf->cf_listimpl;
-    const char *buffer = ef->ef_buffer;
+    const char *buffer = ef_get(ef);
     char *outbuffer = cf->cf_buffer;
     const ListboxItem_t *n;
 
     if (! iscomplete) {
         if (! cf->cf_open) {                    /* current value */
-            strxcpy(outbuffer, (const char *)ef->ef_buffer, sizeof(ef->ef_buffer));
+            strxcpy(outbuffer, buffer, sizeof(cf->cf_buffer));
             return outbuffer;
         }
     }
@@ -4578,7 +4713,11 @@ combofield_value_get(WCombofield_t *cf, int iscomplete)
             /*FALLTHRU*/
 
         default:
+#if defined(EWIDECHAR)
+            Wcstoutf8(ef->ef_restore, outbuffer, sizeof(cf->cf_buffer));
+#else
             strxcpy(outbuffer, ef->ef_restore, sizeof(cf->cf_buffer));
+#endif
             if (iscomplete) {
                 ef_restore(ef);
                 iscomplete = FALSE;
@@ -4590,7 +4729,7 @@ combofield_value_get(WCombofield_t *cf, int iscomplete)
     }
 
     if (iscomplete) {
-       strxcpy(ef->ef_buffer, outbuffer, sizeof(ef->ef_buffer));
+        ef_set(ef, outbuffer);
     }
     return outbuffer;
 }
@@ -4894,4 +5033,6 @@ combofield_callback(WCombofield_t *cf, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETAR
     }
     return FALSE;
 }
+
 /*end*/
+
