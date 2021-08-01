@@ -20,6 +20,7 @@
 #include <stddef.h>
 #include <stdarg.h>
 
+    //#define MB_LEN_MAX 6
 typedef int WChar_t;
 
 #ifdef __cplusplus
@@ -40,6 +41,8 @@ WChar_t *   Wcstok(WChar_t * s, const WChar_t * delim, WChar_t ** last);
 
 int         Wcscasecmp(const WChar_t *s1, const WChar_t *s2);
 int         Wcsncasecmp(const WChar_t *s1, const WChar_t *s2, size_t n);
+
+double      Wcstod(const WChar_t *nptr, WChar_t **endptr);
 
 WChar_t *   Wmemchr(const WChar_t *s, WChar_t c, size_t n);
 int         Wmemcmp(const WChar_t *s1, const WChar_t *s2, size_t n);

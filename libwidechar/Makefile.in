@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.1 2021/07/05 15:01:28 cvsuser Exp $
+# $Id: Makefile.in,v 1.2 2021/08/01 15:35:02 cvsuser Exp $
 # libwidechar makefile.
 #
 #
@@ -132,6 +132,7 @@ WIDECHAROBJS=\
 	$(D_OBJ)/wcsrchr$(O)			\
 	$(D_OBJ)/wcsspn$(O)			\
 	$(D_OBJ)/wcsstr$(O)			\
+	$(D_OBJ)/wcstod$(O)			\
 	$(D_OBJ)/wcstok$(O)			\
 	$(D_OBJ)/wcswcs$(O)			\
 	$(D_OBJ)/wcswidth$(O)			\
@@ -165,7 +166,7 @@ $(WIDECHARLIB):		$(D_OBJ)/.created		\
 		$(AR) $(ARFLAGS) $@ $(WIDECHAROBJS)
 		$(RANLIB) $@
 
-XCLEAN+=	
+XCLEAN+=
 
 clean:
 		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(OBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1

@@ -60,7 +60,7 @@ Wcsfromutf8(const char *mbstr, WChar_t *buf, int buflen)
 			break;
 		}
 		*cursor++ = ch;
-                --remaining;
+		--remaining;
 		mbstr = cend;
 	}
         assert(cursor < (buf + buflen));
@@ -73,22 +73,32 @@ Wcsfromutf8(const char *mbstr, WChar_t *buf, int buflen)
 int
 Wcstoutf8(const WChar_t *wstr, char *buf, int buflen)
 {
-	int remaining = buflen;
-	char *cursor = buf;
 	WChar_t ch;
+	int len = 0;
 
-	assert(wstr && buf && buflen > 0);
-	for (--remaining /*nul*/; remaining && 0 != (ch = *wstr++);) {
-		const int len = charset_utf8_length(ch);
-		if (len > remaining) {
-			break;
+	if (NULL == buf) {
+		assert(wstr);
+		while (0 != (ch = *wstr++)) {
+			len += charset_utf8_length(ch);
 		}
-		cursor += charset_utf8_encode(ch, cursor);
-		remaining -= len;
+	} else {
+		int remaining = buflen;
+		char *cursor = buf;
+
+		assert(wstr && buflen > 0);
+		for (--remaining /*nul*/; remaining && 0 != (ch = *wstr++);) {
+			const int len = charset_utf8_length(ch);
+			if (len > remaining) {
+				break;
+			}
+			cursor += charset_utf8_encode(ch, cursor);
+			remaining -= len;
+		}
+		assert(cursor < (buf + buflen));
+		*cursor = 0;
+		len = (cursor - buf);
 	}
-	assert(cursor < (buf + buflen));
-	*cursor = 0;
-	return cursor - buf;
+	return len;
 }
 
 
