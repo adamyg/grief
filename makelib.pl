@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.116 2021/07/15 11:13:20 cvsuser Exp $
+# $Id: makelib.pl,v 1.117 2021/08/01 16:35:47 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -894,6 +894,8 @@ my @x_types         = (     #stdint/inttypes/types.h
         'uintmax_t',
         'intptr_t',
         'uintptr_t',
+        'ptrdiff_t',
+        'long double',
         'long long int',
         'unsigned long long int',
         'int8_t',

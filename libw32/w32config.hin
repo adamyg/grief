@@ -1,10 +1,10 @@
 #ifndef WIN32_CONFIG_H_INCLUDED
 #define WIN32_CONFIG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.16 2021/06/12 15:33:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.17 2021/08/01 16:36:01 cvsuser Exp $")
 __CPRAGMA_ONCE
 /* -*- mode: c; set-indent: 4; -*- */
-/* $Id: w32config.hin,v 1.16 2021/06/12 15:33:50 cvsuser Exp $
+/* $Id: w32config.hin,v 1.17 2021/08/01 16:36:01 cvsuser Exp $
  * Machine configuration.
  *
  * System dependent <config.h> configuration template,
@@ -336,6 +336,8 @@ __CPRAGMA_ONCE
 #undef HAVE_UINTMAX_T
 #undef HAVE_INTPTR_T
 #undef HAVE_UINTPTR_T
+#undef HAVE_PTRDIFF_T
+#undef HAVE_LONG_DOUBLE
 #undef HAVE_LONG_LONG_INT
 #undef HAVE_UNSIGNED_LONG_LONG_INT
 #undef HAVE_INT8_T
