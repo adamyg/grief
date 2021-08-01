@@ -1,4 +1,5 @@
 charsetdesc.h
+charsetdict.h
 charsetlocales.h
 charsetnames.h
 charsettables.h

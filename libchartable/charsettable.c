@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsettable_c,"$Id: charsettable.c,v 1.14 2021/07/12 15:37:11 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsettable_c,"$Id: charsettable.c,v 1.15 2021/08/01 15:44:53 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* conversion tables.
@@ -193,6 +193,7 @@ charset_description(int32_t unicode, char *buffer, int buflen)
 //
 //  test framework
 //
+#include "./charsetdict.h"
 #include <stdio.h>
 
 static size_t

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
-# $Id: makechartable.pl,v 1.21 2021/07/12 15:37:11 cvsuser Exp $
+# $Id: makechartable.pl,v 1.22 2021/08/01 15:44:53 cvsuser Exp $
 # Character table generation.
 #
 # Copyright (c) 2010 - 2021, Adam Young.
@@ -240,7 +240,7 @@ my  %QUOTES = (                 # Unicode quotes
     );
 
 my  $COPYRIGHT          =
-    " * Copy"."right (c) 2010 - 2020, Adam Young.\n".
+    " * Copy"."right (c) 2010 - 2021, Adam Young.\n".
     " * All rights reserved.\n".
     " *\n".
     " * This"." file is part of the GRIEF Editor.\n".
@@ -255,6 +255,7 @@ my  $COPYRIGHT          =
 
 my  %description_text;                          # unique description text
 my  %description_index;                         # description index by unicode
+my  %description_words;                         # word index
 
 my  @description_strings;                       # description by index
 my  @description_unicode;                       # unicode by index
@@ -284,6 +285,7 @@ sub ImportUnicodeData($);
 sub NameTable($);
 sub DefinitionTable($);
 sub DescriptionTable($);
+sub DictionaryTable($);
 sub Unicode2UTF8($);
 sub Usage;
 
@@ -374,6 +376,7 @@ Main()                  #()
     NameTable("charsetnames");
     DefinitionTable("charsettables");
     DescriptionTable("charsetdesc");
+    DictionaryTable("charsetdict");
 }
 
 
@@ -1205,6 +1208,8 @@ DescriptionTable($)     #(tablename)
 
         print "crunching\n";
 
+        # initial checks/filters
+
         for (my $sidx = 0; $sidx < scalar @description_strings; ++$sidx) {
             my $desc = $description_strings[$sidx];
             my $hex  = sprintf("%X", $description_unicode[$sidx]);
@@ -1231,6 +1236,8 @@ DescriptionTable($)     #(tablename)
                 $description_strings[$sidx] = $desc;
             }
         }
+
+        # build string table
 
         my $last = $longest--;
         for (my $phase = 1; $phase <= $last; ++$phase) {
@@ -1339,7 +1346,7 @@ DescriptionTable($)     #(tablename)
         "\n";
 
     # sentences
-    #
+
     for (my $sidx = 0; $sidx < scalar @description_strings; ++$sidx) {
         if ($description_hits[$sidx] > 1) {
             my $desc = $description_strings[$sidx];
@@ -1359,7 +1366,7 @@ DescriptionTable($)     #(tablename)
     }
 
     # word table
-    #
+
     print OUT
         "\n".
         "static const char * x_${tablename}_words[] = {\n";
@@ -1377,7 +1384,7 @@ DescriptionTable($)     #(tablename)
         "\n";
 
     # character table
-    #
+
     print OUT
         "\n".
         "static const char * x_${tablename}_characters[] = {\n";
@@ -1448,13 +1455,13 @@ DescriptionTable($)     #(tablename)
         "    };\n";
 
     # lookup table
-    #
+
     print OUT
         "\n".
         "static const struct charsetdesc {\n".
-        "    uint32_t   base;\n".
-        "    uint32_t   offset;\n".
-        "    uint32_t   count;\n".
+        "    uint32_t base;\n".
+        "    uint32_t offset;\n".
+        "    uint32_t count;\n".
         "\n".
         "} x_${tablename}_lookup[] = {\n";
 
@@ -1479,7 +1486,102 @@ DescriptionTable($)     #(tablename)
         "};\n".
         "\n".
         "/*end*/\n";
+    close(OUT);
+}
 
+
+#   Function:           DescriptionTable
+#       Generate description table.
+#
+#   Parameters:
+#       none.
+#
+#   Return:
+#       nothing.
+#
+sub
+DictionaryTable($)      #(tablename)
+{
+    my ($tablename) = @_;
+
+    return if (! $x_crunch);
+
+    print "generating ${tablename}.h ..\n";
+
+    # word dictionary by unicode-character
+
+    for (my $sidx = 0; $sidx < scalar @description_strings; ++$sidx) {
+        my $desc  = $description_strings[$sidx];
+        my $uc    = $description_unicode[$sidx];
+        my $hex   = sprintf("%X", $uc);
+        my @words = split(/[ ]+/, $desc);
+
+        foreach my $word (@words) {
+            $word = uc($word);
+            $word =~ s/[-<>#]//g;               # remove specials.
+
+            next if ($word eq '');              # empty.
+            next if ($word eq $hex);            # filter character-value.
+            next if ($word =~ /\d/);            # nuemric values.
+
+            $description_words{$word} = ()
+                if (! exists $description_words{$word});
+
+            push @{$description_words{$word}}, $uc;
+        }
+    }
+
+    # export
+
+    open(OUT, ">${tablename}.h") or
+        die "can't create '${tablename}.h' : $!";
+
+    print OUT
+        "/* -*- mode: c; tabs: 8; indent-width: 4; -*-\n".
+        " *\n".
+        " *           -::- AN AUTO GENERATED FILE, DO NOT EDIT -::-\n".
+        " *\n".
+        " * Built: ${x_timestamp}\n".
+        " */\n".
+        "\n";
+
+    foreach my $word (sort keys %description_words) {
+        printf OUT
+            "static int32_t X_${word}[]%*s = { ", 24 - length($word), "";
+        if (scalar @{$description_words{$word}} > 25) {
+            my $count = 0;
+            foreach my $uc (@{$description_words{$word}}) {
+                printf OUT "\n    "
+                    if (0 == ($count++ % 25));
+                printf OUT "0x%x, ", $uc;
+            }
+        } else {
+            foreach my $uc (@{$description_words{$word}}) {
+                printf OUT "0x%x, ", $uc;
+            }
+        }
+        print OUT
+            "0 };\n";
+    }
+
+    printf OUT
+        "\n".
+        "static const struct charsetdict {\n".
+        "    const char *word;\n".
+        "    const int32_t *unicode;\n".
+        "    uint32_t count;\n".
+        "\n".
+        "} x_${tablename}_lookup[] = {\n";
+
+    foreach my $word (sort keys %description_words) {
+        printf OUT
+            "    { \"${word}\", X_${word}, %u },\n", scalar @{$description_words{$word}};
+    }
+
+    print OUT
+        "};\n".
+        "\n".
+        "/*end*/\n";
     close(OUT);
 }
 
@@ -1611,7 +1713,7 @@ options:
 
     --warnings, -w          enable warnings.
 
-    --crunch                crunch description table.
+    --crunch                crunch description and dictionary tables.
     --dynamic               dynamic loader support.
 
     --labels                generate verbose character descriptions/comments.
@@ -1622,3 +1724,4 @@ USAGE
 }
 
 #end
+
