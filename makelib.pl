@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.117 2021/08/01 16:35:47 cvsuser Exp $
+# $Id: makelib.pl,v 1.118 2021/08/02 16:09:53 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -812,6 +812,7 @@ my @x_headers       = (     #headers
         'stdarg.h',
         'stdlib.h',
         'stdio.h',
+        'stddef.h',
         'limits.h',
         'inttypes.h',                           # c99
         'stdint.h',                             # c99

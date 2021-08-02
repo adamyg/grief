@@ -1,10 +1,10 @@
-dnl $Id: configure.in,v 1.74 2021/07/05 16:01:04 cvsuser Exp $
+dnl $Id: configure.in,v 1.75 2021/08/02 13:12:44 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl
 
-AC_REVISION($Revision: 1.74 $)
+AC_REVISION($Revision: 1.75 $)
 ##	AC_COPYRIGHT(Adam Young 1995-2021, Paul Fox 1989-1991)
 AC_SUBST([PACKAGE])
 AC_INIT([GRIEF], [3.2.1], [griefedit@gmail.com])
@@ -537,6 +537,7 @@ AC_CHECK_HEADERS( \
 	sys/select.h sys/socket.h \
 	sys/stat.h sys/statfs.h sys/statvfs.h sys/vfs.h \
 	stdarg.h stdlib.h stdio.h limits.h \
+	stddef.h float.h \
 	sys/utsname.h \
 	sys/resource.h \
 	fcntl.h \
