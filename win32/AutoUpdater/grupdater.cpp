@@ -1,4 +1,4 @@
-// $Id: grupdater.cpp,v 1.7 2021/08/12 13:47:32 cvsuser Exp $
+// $Id: grupdater.cpp,v 1.8 2021/08/14 13:43:47 cvsuser Exp $
 //
 //  GRIEF AutoUpdater command line.
 //
@@ -37,7 +37,7 @@ main(int argc, char *argv[])
     int ch;
 
     x_progname = Basename(argv[0]);
-    while (-1 != (ch = Updater::Getopt(argc, argv, "V:H:ivh"))) {
+    while (-1 != (ch = Updater::Getopt(argc, argv, "V:H:icvh"))) {
         switch (ch) {
         case 'V':   /* application version */
             version= Updater::optarg;
@@ -47,6 +47,9 @@ main(int argc, char *argv[])
             break;
         case 'i':   /* interactive */
             ++interactive;
+            break;
+        case 'c':   /* console */
+            autoupdate_set_console_mode(1);
             break;
         case 'v':   /* verbose */
             autoupdate_logger_stdout(1);
@@ -87,6 +90,13 @@ main(int argc, char *argv[])
         mode = -1;
     } else if (0 == _stricmp("dump", arg)) {
         mode = -2;
+    } else if (0 == _stricmp("config", arg)) {
+        std::cout 
+            << GR_PACKAGE_NAME << "\n"
+            << "Built:   " << GR_BUILD_DATE << "\n"
+            << "Version: " << version << "\n"
+            << "Host:    " << hosturl << "\n";
+        return 0;                        
     } else {
         std::cerr << "\n" <<
             x_progname << ": unknown mode '" << arg << "'" << std::endl;
@@ -128,6 +138,9 @@ Usage()
         "   enable -            Enable periodic checks.\n"\
         "   disable -           Disable automatic periodic checks.\n"\
         "   reset -             Reset the updater status.\n"\
+        "\n"\
+        "   config -            Configuration.\n"\
+        "\n"\
         "\n"\
         "Options:\n"\
         "   -V <version>        Version label.\n"\
