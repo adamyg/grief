@@ -1,0 +1,3 @@
+[submodule "win32/libappupdater"]
+	path = win32/libappupdater
+	url = https://github.com/adamyg/libappupdater
