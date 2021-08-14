@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: regress.cr,v 1.37 2021/06/19 09:39:45 cvsuser Exp $
+/* $Id: regress.cr,v 1.38 2021/08/14 17:08:33 cvsuser Exp $
  *
  *  This set of macros are used when debugging and fixing CRISP to aid in regression testing and
  *  catching bugs introduced inadvertently. These tests dont attempt an exhaustive test, yet
@@ -630,83 +630,91 @@ test_arith(void)
 
     TEST(79, 12 % 10    == 2);                  // MOD
 
-    TEST(80, 1 << 10 == 1024);                  // LSH
-    TEST(81, 8 >> 3  == 1);                     // RSH
-    TEST(82, (10 ^ 2) == 8);                    // XOR
 
-    TEST(83, (0xff54 & 0xff) == 0x54);          // AND
-    TEST(84, (0xff54 | 0xff) == 0xffff);        // OR
+    TEST(80, 1 << 10    == 1024);               // LSH
+    TEST(81, 8 >> 3     == 1);                  // RSH
 
-    TEST(85, (~0 & 0xffff) == 0xffff);          // COM
-    TEST(86, !0 == 1);                          // NOT
+#pragma warning(push)
+#pragma warning(off)
+    TEST(82, 1 << 0     == 1);                  // LSH
+    TEST(83, 8 >> 0     == 8);                  // RSH
+#pragma warning(pop)
 
-    TEST(87, -(+1) == -1);                      // NEG
-    TEST(88, +(-1) == -1);                      // PLUS
-    TEST(89, ((-(-2)) == +2));
-    TEST(90, (3 - (-2) == 5));
+    TEST(84, (10 ^ 2) == 8);                    // XOR
+
+    TEST(85, (0xff54 & 0xff) == 0x54);          // AND
+    TEST(86, (0xff54 | 0xff) == 0xffff);        // OR
+
+    TEST(87, (~0 & 0xffff) == 0xffff);          // COM
+    TEST(88, !0 == 1);                          // NOT
+
+    TEST(89, -(+1) == -1);                      // NEG
+    TEST(90, +(-1) == -1);                      // PLUS
+    TEST(91, ((-(-2)) == +2));
+    TEST(92, (3 - (-2) == 5));
 
 
     /*
      *  operators
      *      non-contant expressions
      */
-    i = 1;      TEST(91, i + 2      == 3);
-    f = 1.5;    TEST(92, f + 2      == 3.5);
+    i = 1;      TEST(93, i + 2      == 3);
+    f = 1.5;    TEST(94, f + 2      == 3.5);
 
-    i = 2;      TEST(93, i - 1      == 1);
-    f = 2.5;    TEST(94, f - 1      == 1.5);
+    i = 2;      TEST(95, i - 1      == 1);
+    f = 2.5;    TEST(96, f - 1      == 1.5);
 
-    i = 8;      TEST(95, i / 2      == 4);
-    f = 9;      TEST(96, f / 2      == 4.5);
+    i = 8;      TEST(97, i / 2      == 4);
+    f = 9;      TEST(98, f / 2      == 4.5);
 
-    i = 5;      TEST(97, i * 5      == 25);
-    f = 5;      TEST(98, f * 5.1    == 25.5);
+    i = 5;      TEST(99, i * 5      == 25);
+    f = 5;      TEST(100, f * 5.1    == 25.5);
 
-    i = 12;     TEST(99, i % 10     == 2);
-    i = 0;      TEST(100, (~i & 0xffff) == 0xffff);
-    i = 0;      TEST(101, (! i)      == 1);
+    i = 12;     TEST(101, i % 10     == 2);
+    i = 0;      TEST(102, (~i & 0xffff) == 0xffff);
+    i = 0;      TEST(103, (! i)      == 1);
 
-    i = 1;      TEST(102, i << 10    == 1024);
-    i = 8;      TEST(103, i >> 3     == 1);
-    i = 10;     TEST(104, (i ^ 2)    == 8);
-    i = 0xff54; TEST(105, (i & 0xff) == 0x54);
-    i = 0xff54; TEST(106, (i | 0xff) == 0xffff);
+    i = 1;      TEST(104, i << 10    == 1024);
+    i = 8;      TEST(105, i >> 3     == 1);
+    i = 10;     TEST(106, (i ^ 2)    == 8);
+    i = 0xff54; TEST(107, (i & 0xff) == 0x54);
+    i = 0xff54; TEST(108, (i | 0xff) == 0xffff);
 
     /*
      *  operators
      *      non-contant assignment expressions
      */
-    i = 1;      TEST(107, i + 2      == 3);
-    i = 2;      TEST(108, i - 1      == 1);
-    i = 8;      TEST(109, i / 2      == 4);
-    i = 5;      TEST(110, i * 5      == 25);
-    i = 12;     TEST(111, i % 10     == 2);
+    i = 1;      TEST(109, i + 2      == 3);
+    i = 2;      TEST(110, i - 1      == 1);
+    i = 8;      TEST(111, i / 2      == 4);
+    i = 5;      TEST(112, i * 5      == 25);
+    i = 12;     TEST(113, i % 10     == 2);
 
-    i = 1;      TEST(112, i << 10    == 1024);
-    i = 8;      TEST(113, i >> 3     == 1);
-    i = 10;     TEST(114, (i ^ 2)    == 8);
-    i = 0xff54; TEST(115, (i & 0xff) == 0x54);
-    i = 0xff54; TEST(116, (i | 0xff) == 0xffff);
+    i = 1;      TEST(114, i << 10    == 1024);
+    i = 8;      TEST(115, i >> 3     == 1);
+    i = 10;     TEST(116, (i ^ 2)    == 8);
+    i = 0xff54; TEST(117, (i & 0xff) == 0x54);
+    i = 0xff54; TEST(118, (i | 0xff) == 0xffff);
 
-    i = 69;     TEST(117, (i += 10)  == 79   && i == 79);
-    i = 42;     TEST(118, (i -= 40)  == 2    && i == 2);
-    i = 99;     TEST(119, (i /= 3)   == 33   && i == 33);
-    i = 41;     TEST(120, (i *= 3)   == 123  && i == 123);
-    i = 102;    TEST(121, (i %= 10)  == 2    && i == 2);
+    i = 69;     TEST(119, (i += 10)  == 79   && i == 79);
+    i = 42;     TEST(120, (i -= 40)  == 2    && i == 2);
+    i = 99;     TEST(121, (i /= 3)   == 33   && i == 33);
+    i = 41;     TEST(122, (i *= 3)   == 123  && i == 123);
+    i = 102;    TEST(123, (i %= 10)  == 2    && i == 2);
 
-    i = 42;     TEST(122, (i <<= 3)  == 336  && i == 336);
-    i = 8;      TEST(123, (i >>= 3)  == 1    && i == 1);
-    i = 10;     TEST(124, (i ^= 2)   == 8    && i == 8);
-    i = 0xf7;   TEST(125, (i &= 0xf) == 0x7  && i == 0x7);
-    i = 0xf7;   TEST(126, (i |= 0xf) == 0xff && i == 0xff);
+    i = 42;     TEST(124, (i <<= 3)  == 336  && i == 336);
+    i = 8;      TEST(125, (i >>= 3)  == 1    && i == 1);
+    i = 10;     TEST(126, (i ^= 2)   == 8    && i == 8);
+    i = 0xf7;   TEST(127, (i &= 0xf) == 0x7  && i == 0x7);
+    i = 0xf7;   TEST(128, (i |= 0xf) == 0xff && i == 0xff);
 
     /*
      *  type conversion
      */
     f = 2.34;
     i = f;
-    TEST(127, i == 2);
-    TEST(128, is_integer(i));
+    TEST(129, i == 2);
+    TEST(130, is_integer(i));
 }
 
 
@@ -720,27 +728,27 @@ test_typeof(void)
     declare d1;
 
     d1 = "hello";
-    TEST(129, typeof(d1) == "string");
+    TEST(131, typeof(d1) == "string");
 
     d1 = 1;
-    TEST(130, typeof(d1) == "integer");
+    TEST(132, typeof(d1) == "integer");
 
     d1 = 1.2334;
-    TEST(131, typeof(d1) == "float");
+    TEST(133, typeof(d1) == "float");
 
     d1 = NULL;
-    TEST(132, typeof(d1) == "NULL");
+    TEST(134, typeof(d1) == "NULL");
 
     d1 = quote_list("one", "two");
-    TEST(133, typeof(d1) == "list");
+    TEST(135, typeof(d1) == "list");
 
     /*
      *  FIXME/XXX - unsure. review bug or feature
      *      assigning NULL to list zeros the list yet the type is still "list".
      */
     d1 = NULL;
-    TEST(134, typeof(d1) == "list");
-    TEST(135, is_null(d1));
+    TEST(136, typeof(d1) == "list");
+    TEST(137, is_null(d1));
 }
 
 
@@ -754,19 +762,19 @@ test_for(void)
     int x, y;
 
     for (x = 0; x < 2; ++x) { }
-    TEST(136, 2 == x);
+    TEST(138, 2 == x);
 
     for (x = 0, y = 1234; x < 2; ++x) {
         break; y = 0;
     }
-    TEST(137, 1234 == y);
-    TEST(138, 0 == x);
+    TEST(139, 1234 == y);
+    TEST(140, 0 == x);
 
     for (x = 0; x < 2; ++x) {
         if (0 == x) continue;
-        TEST(139, 1 == x);
+        TEST(141, 1 == x);
     }
-    TEST(140, 2 == x);
+    TEST(142, 2 == x);
 }
 
 
@@ -781,14 +789,14 @@ test_while(void)
 
     x = 0;
     while (x < 2) { ++x; }
-    TEST(141, 2 == x);
+    TEST(143, 2 == x);
 
     x = 0; y = 1234;
     while (x < 2) {
         break; y = 0; ++x;
     }
-    TEST(142, 1234 == y);
-    TEST(143, 0 == x);
+    TEST(144, 1234 == y);
+    TEST(145, 0 == x);
 
     x = 0;
     while (x < 2) {
@@ -796,10 +804,10 @@ test_while(void)
             x++;
             continue;
         }
-        TEST(144, 1 == x);
+        TEST(146, 1 == x);
         ++x;
     }
-    TEST(145, 2 == x);
+    TEST(147, 2 == x);
 }
 
 
@@ -814,14 +822,14 @@ test_do(void)
 
     x = 0;
     do { ++x; } while (x < 2);
-    TEST(146, 2 == x);
+    TEST(148, 2 == x);
 
     x = 0; y = 1234;
     do {
         break; y = 0; ++x;
     } while (x < 2);
-    TEST(147, 1234 == y);
-    TEST(148, 0 == x);
+    TEST(149, 1234 == y);
+    TEST(150, 0 == x);
 
     x = 0;
     do {
@@ -829,10 +837,10 @@ test_do(void)
             x++;
             continue;
         }
-        TEST(149, 1 == x);
+        TEST(151, 1 == x);
         ++x;
     } while (x < 2);
-    TEST(150, 2 == x);
+    TEST(152, 2 == x);
 }
 
 
@@ -850,16 +858,16 @@ test_switch(void)
     for (i = 1; i <= 8; i *= 2) {
         switch (i) {
         case 1:
-            TEST(151, 1 == i);
+            TEST(153, 1 == i);
             break;
         case 2:
         case 3:
-            TEST(152, 2 == i);
+            TEST(154, 2 == i);
         case 5:
         case 4:
-            TEST(153, 4 == i);
+            TEST(155, 4 == i);
         default:
-            TEST(154, 8 == i);
+            TEST(156, 8 == i);
             break;
         }
     }
@@ -870,14 +878,14 @@ test_switch(void)
     case 2: i = 102; break;
     case 3: i = 103; break;
     }
-    TEST(155, i == 103);
+    TEST(157, i == 103);
 
     switch("hello") {
     case "hello, everybod": s1 = "first"; break;
     case "hello": s1 = "second";  break;
     default: s1 = "default";
     }
-    TEST(156, s1 == "second");
+    TEST(158, s1 == "second");
 
     s1 = "hello, everybod";
     s2 = "hello";
@@ -888,17 +896,17 @@ test_switch(void)
     default: s1 = "default"; break;
     }
 #pragma warning on
-    TEST(157, s1 == "second");
+    TEST(159, s1 == "second");
 
-    TEST(158, "none"  == switchi(0));
-    TEST(159, "one"   == switchi(1));
-    TEST(160, "two"   == switchi(2));
-    TEST(161, "three" == switchi(3));
+    TEST(160, "none"  == switchi(0));
+    TEST(161, "one"   == switchi(1));
+    TEST(162, "two"   == switchi(2));
+    TEST(163, "three" == switchi(3));
 
-    TEST(162, 0 == switchs(""));
-    TEST(163, 1 == switchs("1"));
-    TEST(164, 2 == switchs("22"));
-    TEST(165, 3 == switchs("333"));
+    TEST(164, 0 == switchs(""));
+    TEST(165, 1 == switchs("1"));
+    TEST(166, 2 == switchs("22"));
+    TEST(167, 3 == switchs("333"));
 }
 
 
@@ -955,7 +963,7 @@ test_cexpr(void)
 
     do "";  while (++i <= 6);
 
-    TEST(166, 7 == i);
+    TEST(168, 7 == i);
 }
 
 
@@ -973,36 +981,36 @@ test_math(void)
 
     float modintegral, modfractional;
 
-    TEST(167, abs(1)        == 1);
-    TEST(168, abs(-2)       == 2);
+    TEST(169, abs(1)        == 1);
+    TEST(170, abs(-2)       == 2);
 
-    TEST(169, 0 == isclose(1.233, 1.4566));
-    TEST(170, 1 == isclose(1.233, 1.233));
-    TEST(171, 1 == isclose(1.233, 1.233000001));
+    TEST(171, 0 == isclose(1.233, 1.4566));
+    TEST(172, 1 == isclose(1.233, 1.233));
+    TEST(173, 1 == isclose(1.233, 1.233000001));
 
-    TEST(172, acos(0.55)    == 0.9884320889261531);
-    TEST(173, acos(-0.55)   == 2.15316056466364);
+    TEST(174, acos(0.55)    == 0.9884320889261531);
+    TEST(175, acos(-0.55)   == 2.15316056466364);
 
-    TEST(174, asin(0.55)    == 0.5823642378687435);
-    TEST(175, asin(-0.55)   == -0.5823642378687435);
+    TEST(176, asin(0.55)    == 0.5823642378687435);
+    TEST(177, asin(-0.55)   == -0.5823642378687435);
 
-    TEST(176, atan(67.0)    == 1.5558720618048116);
-    TEST(177, atan(-21.0)   == -1.5232132235179132);
+    TEST(178, atan(67.0)    == 1.5558720618048116);
+    TEST(179, atan(-21.0)   == -1.5232132235179132);
 
-    TEST(178, atan2(8.0, 5.0) == 1.0121970114513341);
-    TEST(179, atan2(20.0, 10.0) == 1.1071487177940904);
+    TEST(180, atan2(8.0, 5.0) == 1.0121970114513341);
+    TEST(181, atan2(20.0, 10.0) == 1.1071487177940904);
 
-    TEST(180, ceil(9.2)     == 10.0);
-    TEST(181, ceil(-9.2)    == -9.0);
+    TEST(182, ceil(9.2)     == 10.0);
+    TEST(183, ceil(-9.2)    == -9.0);
 
     // TODO: comb() [ Python ]
     // TODO: copysign() [ Python ]
 
-    TEST(182, cos(0.0)      == 1.0);
-    TEST(183, cos(3.14159265359) == -1.0);
+    TEST(184, cos(0.0)      == 1.0);
+    TEST(185, cos(3.14159265359) == -1.0);
 
-    TEST(184, cosh(1.0)     == 1.5430806348152437);
-    TEST(185, cosh(0.0)     == 1.0);
+    TEST(186, cosh(1.0)     == 1.5430806348152437);
+    TEST(187, cosh(0.0)     == 1.0);
 
     // TODO: degrees() [ Python ]
     // TODO: dist() [ Python ]
@@ -1010,85 +1018,85 @@ test_math(void)
     // TODO: erfc() [ Python ]
     // TODO: div()
 
-    TEST(186, isclose(exp(23.0), 9744803446.248903));
-    TEST(187, exp(-1.234)   == 0.2911257425960852);
+    TEST(188, isclose(exp(23.0), 9744803446.248903));
+    TEST(189, exp(-1.234)   == 0.2911257425960852);
 
-    TEST(188, fabs(2.0)     == 2.0);
-    TEST(189, fabs(-4.0)    == 4.0);
+    TEST(190, fabs(2.0)     == 2.0);
+    TEST(191, fabs(-4.0)    == 4.0);
 
     // TODO: fdiv()
     // TODO: factorial() [ Python ]
 
-    TEST(190, floor(9.2)    == 9.0);
-    TEST(191, floor(-9.2)   == -10.0);
+    TEST(192, floor(9.2)    == 9.0);
+    TEST(193, floor(-9.2)   == -10.0);
 
-    TEST(192, fmod(67.0, 7.0) == 4.0);
-    TEST(193, fmod(17.0, 4.0) == 1.0);
+    TEST(194, fmod(67.0, 7.0) == 4.0);
+    TEST(195, fmod(17.0, 4.0) == 1.0);
 
     expmantissa = frexp(4.0, expret);
-    TEST(194, expmantissa == 0.5 && expret == 3);
+    TEST(196, expmantissa == 0.5 && expret == 3);
     expmantissa = frexp(7.9, expret);
-    TEST(195, expmantissa == 0.9875 && expret == 3);
+    TEST(197, expmantissa == 0.9875 && expret == 3);
 
     // TODO: fsum [ Python ]
     // TODO: gamma [ Python ]
 
-    TEST(196, isfinite(-45.34));
-    TEST(197, isfinite(+45.34));
+    TEST(198, isfinite(-45.34));
+    TEST(199, isfinite(+45.34));
         // FIXME: +45.34 grunch should handle leading '+'
-    TEST(198, ! isfinite(NAN));
-    TEST(199, ! isfinite(INFINITY));
-    TEST(200, ! isfinite(-INFINITY));
+    TEST(200, ! isfinite(NAN));
+    TEST(201, ! isfinite(INFINITY));
+    TEST(202, ! isfinite(-INFINITY));
 
-    TEST(201, isinf(INFINITY));
-    TEST(202, isinf(-INFINITY));
-    TEST(203, ! isinf(56.00));
-    TEST(204, ! isinf(NAN));
+    TEST(203, isinf(INFINITY));
+    TEST(204, isinf(-INFINITY));
+    TEST(205, ! isinf(56.00));
+    TEST(206, ! isinf(NAN));
 
-    TEST(205, isnan(NAN));
-    TEST(206, ! isnan(56.00));
-    TEST(207, ! isnan(INFINITY));
-    TEST(208, ! isnan(-INFINITY));
+    TEST(207, isnan(NAN));
+    TEST(208, ! isnan(56.00));
+    TEST(209, ! isnan(INFINITY));
+    TEST(210, ! isnan(-INFINITY));
 
     // TODO: isqrt [ Python ]
     // TODO: ldexp
     // TODO: lgamma [ Python ]
 
-    TEST(209, fabs(log(2.0) - 0.693147) < 0.000001);
-    TEST(210, isclose(log(2.0), 0.693147, 1e-5));
-    TEST(211, fabs(log(4.0) - 1.386294) < 0.000001);
-    TEST(212, isclose(log(4.0), 1.386294, 1e-5));
+    TEST(211, fabs(log(2.0) - 0.693147) < 0.000001);
+    TEST(212, isclose(log(2.0), 0.693147, 1e-5));
+    TEST(213, fabs(log(4.0) - 1.386294) < 0.000001);
+    TEST(214, isclose(log(4.0), 1.386294, 1e-5));
 
-    TEST(213, log10(10.0)   == 1.0);
-    TEST(214, log10(100.0)  == 2.0);
+    TEST(215, log10(10.0)   == 1.0);
+    TEST(216, log10(100.0)  == 2.0);
 
     modfractional = modf(52.42, modintegral);
-    TEST(215, modintegral == 52 && isclose(modfractional, 0.42));
+    TEST(217, modintegral == 52 && isclose(modfractional, 0.42));
     modfractional = modf(NAN, modintegral);
-    TEST(216, isnan(modfractional));
+    TEST(218, isnan(modfractional));
 
-    TEST(217, pow(9.0, 3.0) == 729.0);
+    TEST(219, pow(9.0, 3.0) == 729.0);
 
-    TEST(218, sin(0.0)      == 0.0);
-    TEST(219, sin(10.0)     == -0.5440211108893698);
-    TEST(220, sin(PI / 2)   == 1.0);
+    TEST(220, sin(0.0)      == 0.0);
+    TEST(221, sin(10.0)     == -0.5440211108893698);
+    TEST(222, sin(PI / 2)   == 1.0);
 
-    TEST(221, sinh(0.0)     == 0.0);
-    TEST(222, isclose(sinh(-23.45), -7641446994.979367));
-    TEST(223, isclose(sinh(23.0), 4872401723.124452));
-    TEST(224, isclose(sinh(PI), 11.548739357257748));
+    TEST(223, sinh(0.0)     == 0.0);
+    TEST(224, isclose(sinh(-23.45), -7641446994.979367));
+    TEST(225, isclose(sinh(23.0), 4872401723.124452));
+    TEST(226, isclose(sinh(PI), 11.548739357257748));
 
-    TEST(225, sqrt(4.0)     == 2.0);
-    TEST(226, isclose(sqrt(10.0), 3.162278, 0.000001));
+    TEST(227, sqrt(4.0)     == 2.0);
+    TEST(228, isclose(sqrt(10.0), 3.162278, 0.000001));
 
-    TEST(227, tan(90.0)     == -1.995200412208242);
-    TEST(228, tan(-90.0)    == 1.995200412208242);
-    TEST(229, tan(45.0)     == 1.6197751905438615);
-    TEST(230, tan(60.0)     == 0.320040389379563);
+    TEST(229, tan(90.0)     == -1.995200412208242);
+    TEST(230, tan(-90.0)    == 1.995200412208242);
+    TEST(231, tan(45.0)     == 1.6197751905438615);
+    TEST(232, tan(60.0)     == 0.320040389379563);
 
-    TEST(231, isclose(tanh(8.0), 0.9999997749296758, 1e14));
-    TEST(232, isclose(tanh(1.0), 0.7615941559557649, 1e14));
-    TEST(233, tanh(-6.2)    == -0.9999917628565104);
+    TEST(233, isclose(tanh(8.0), 0.9999997749296758, 1e14));
+    TEST(234, isclose(tanh(1.0), 0.7615941559557649, 1e14));
+    TEST(235, tanh(-6.2)    == -0.9999917628565104);
 
     // TODO: trunc
 }
@@ -1103,11 +1111,11 @@ test_cast(void)
 {
     declare x;
 
-    TEST(234, (int)1.1 == 1);
-    x = ((int)1.1); TEST(235, is_integer(x));
+    TEST(236, (int)1.1 == 1);
+    x = ((int)1.1); TEST(237, is_integer(x));
 
-    TEST(236, (float)3 == 3.0);
-    x = ((float)1); TEST(237, is_float(x));
+    TEST(238, (float)3 == 3.0);
+    x = ((float)1); TEST(239, is_float(x));
 }
 
 
@@ -1118,14 +1126,14 @@ test_cast(void)
 static void
 test_escapes(void)
 {
-    TEST(238, '\cA' == 0x00 && '\0' == 0x00 && '\000' == 0x00);
+    TEST(240, '\cA' == 0x00 && '\0' == 0x00 && '\000' == 0x00);
                                                 // NUL
-    TEST(239, '\c[' == 0x1b && '\e' == 0x1b);   // ESC
+    TEST(241, '\c[' == 0x1b && '\e' == 0x1b);   // ESC
 #pragma warning(push, off)
-    TEST(240, L'\u2b3c'     == 0x2b3c);         // Unicode
-    TEST(241, L'\U00012b3c' == 0x12b3c);        // Unicode (76604 dec)
-    TEST(242, L'\x{1a2b}'   == 0x1a2b);         // Extended hexidecimal contants.
-    TEST(243, L'\o{1234}'   == 01234);          // Extended octal contants.
+    TEST(242, L'\u2b3c'     == 0x2b3c);         // Unicode
+    TEST(243, L'\U00012b3c' == 0x12b3c);        // Unicode (76604 dec)
+    TEST(244, L'\x{1a2b}'   == 0x1a2b);         // Extended hexidecimal contants.
+    TEST(245, L'\o{1234}'   == 01234);          // Extended octal contants.
 #pragma warning(pop)
 }
 
@@ -1142,47 +1150,47 @@ test_string(void)
     int i;
 
     // operations on string scalars
-    TEST(244, !empty);                          // undocumented feature, scalar reference.
-    TEST(245, nonempty);                        //  only function as 'single' expression NOT within compound
+    TEST(246, !empty);                          // undocumented feature, scalar reference.
+    TEST(247, nonempty);                        //  only function as 'single' expression NOT within compound
 
     // string addition
     s1 = "xyz"; s1 += "abc";
-    TEST(246, s1 == "xyzabc");
+    TEST(248, s1 == "xyzabc");
 
     s1 = "xyz"; s2 = "abc"; s1 += s2;
-    TEST(247, s1 == "xyzabc");
+    TEST(249, s1 == "xyzabc");
 
     s1 = "xyz"; s2 = s1; s1 += s2;
-    TEST(248, s1 == "xyzxyz");
+    TEST(250, s1 == "xyzxyz");
 
     s1 = "xyz";
-    TEST(249, (s1 += "abc") == "xyzabc");
+    TEST(251, (s1 += "abc") == "xyzabc");
 
     s1 = "xyz";
-    TEST(250, (s1 += s1) == "xyzxyz");
+    TEST(252, (s1 += s1) == "xyzxyz");
 
     s1 = "xyz";
-    TEST(251, (s1 = s1) == "xyz");
+    TEST(253, (s1 = s1) == "xyz");
 
     // numeric conversion
     i = 99;
     s1 = "abc";
     s1 = s1 + i;
-    TEST(252, s1 == "abc99");
+    TEST(254, s1 == "abc99");
 
     i = 99;
     s1 = "abc";
     s1 = i + s1;
-    TEST(253, s1 == "99abc");
+    TEST(255, s1 == "99abc");
 
     s1 = "abc";
     s1 += 0;
-    TEST(254, s1 == "abc0");
+    TEST(256, s1 == "abc0");
 
     f = 1.234;
     s1 = "abc";
     s1 = f + s1;
-    TEST(255, s1 == "1.234abc");
+    TEST(257, s1 == "1.234abc");
 
     // string multipler
     //  trailing or leading
@@ -1190,96 +1198,96 @@ test_string(void)
     //
     i = 0;
     s1 = "xyz" * i;
-    TEST(256, s1 == "");
+    TEST(258, s1 == "");
     s1 = i * "xyz";
-    TEST(257, s1 == "");
+    TEST(259, s1 == "");
 
     i = 1;
     s1 = "xyz" * i;
-    TEST(258, s1 == "xyz");
+    TEST(260, s1 == "xyz");
     s1 = i * "xyz";
-    TEST(259, s1 == "xyz");
+    TEST(261, s1 == "xyz");
 
     i = 2;
     s1 = "xyz" * i;
-    TEST(260, s1 == "xyzxyz");
+    TEST(262, s1 == "xyzxyz");
     s1 = i * "xyz";
-    TEST(261, s1 == "xyzxyz");
+    TEST(263, s1 == "xyzxyz");
 
     f = 1.1;
     s1 = "xyz" * f;
     f = 2.2;
     s1 = "xyz" * f;
-    TEST(262, s1 == "xyzxyz");
+    TEST(264, s1 == "xyzxyz");
 
     // string accumulator tests
-    TEST(263, "abc" + "def" == "abcdef");
-    TEST(264, 1 + "def" == "1def");
-    TEST(265, "abc" + 1 == "abc1");
-    TEST(266, 1.2 + "def" == "1.2def");
-    TEST(267, "abc" + 1.2 == "abc1.2");
+    TEST(265, "abc" + "def" == "abcdef");
+    TEST(266, 1 + "def" == "1def");
+    TEST(267, "abc" + 1 == "abc1");
+    TEST(268, 1.2 + "def" == "1.2def");
+    TEST(269, "abc" + 1.2 == "abc1.2");
 
     // string primitives
-    TEST(268, trim("  harry  ") == "harry");
-    TEST(269, rtrim("harry  ") == "harry");
-    TEST(270, ltrim("  harry") == "harry");
+    TEST(270, trim("  harry  ") == "harry");
+    TEST(271, rtrim("harry  ") == "harry");
+    TEST(272, ltrim("  harry") == "harry");
 
     s1 = "  harry  ";
-    TEST(271, rtrim(s1) == "  harry");
-    TEST(272, ltrim(s1) == "harry  ");
+    TEST(273, rtrim(s1) == "  harry");
+    TEST(274, ltrim(s1) == "harry  ");
 
-    TEST(273, atoi("98") == 98);
-    TEST(274, strlen("abcd") == 4);
+    TEST(275, atoi("98") == 98);
+    TEST(276, strlen("abcd") == 4);
     s1 = "abcd" + " ";
-    TEST(275, strlen(s1) == 5);
+    TEST(277, strlen(s1) == 5);
 
-    TEST(276, strlen("nothing") == 7);
+    TEST(278, strlen("nothing") == 7);
 
     s1 = "1234554321";
-    TEST(277, index(s1, "4") == 4);
-    TEST(278, index(s1, "") == 11);
-    TEST(279, rindex(s1, "5") == 6);
+    TEST(279, index(s1, "4") == 4);
+    TEST(280, index(s1, "") == 11);
+    TEST(281, rindex(s1, "5") == 6);
 
     s1 = "";
     s1 = substr(s1, index(s1, ";") + 1);
-    TEST(280, s1 == "");
+    TEST(282, s1 == "");
 
     gs1 = "";
     get_parm(2, gs1);
     gs1 = substr(gs1, index(gs1, ";") + 1);
-    TEST(281, gs1 == "");
+    TEST(283, gs1 == "");
 
-    TEST(282, upper("aBc") == "ABC");
-    TEST(283, lower("AbC") == "abc");
-    TEST(284, 5 == string_count("axba bax", "abz"));
+    TEST(284, upper("aBc") == "ABC");
+    TEST(285, lower("AbC") == "abc");
+    TEST(286, 5 == string_count("axba bax", "abz"));
 
-    TEST(285, 0 == strcasecmp("AaA", "aAa"));
-    TEST(286, strerror(0) == "Success");
+    TEST(287, 0 == strcasecmp("AaA", "aAa"));
+    TEST(288, strerror(0) == "Success");
 
     s1 = "abAB";
-    TEST(287, "a"  == strpop(s1));
-    TEST(288, "b"  == strpop(s1));
-    TEST(289, "AB" == strpop(s1, 2));
-    TEST(290, ""   == strpop(s1));
+    TEST(289, "a"  == strpop(s1));
+    TEST(290, "b"  == strpop(s1));
+    TEST(291, "AB" == strpop(s1, 2));
+    TEST(292, ""   == strpop(s1));
 
     s1 = "abcdefg";
-    TEST(291, 3 == strpbrk(s1, "dc"));
+    TEST(293, 3 == strpbrk(s1, "dc"));
 
     // strstr, strrstr and strcasestr
     s1 = "abcmandefg";
-    TEST(292, 4 == strstr(s1, "man"));
-    TEST(293, 4 == strrstr(s1, "man"));
-    TEST(294, 4 == strcasestr(s1, "MAN"));
+    TEST(294, 4 == strstr(s1, "man"));
+    TEST(295, 4 == strrstr(s1, "man"));
+    TEST(296, 4 == strcasestr(s1, "MAN"));
 
     s1 = "abcmanmandefg";
-    TEST(295, 4 == strstr(s1, "man"));
-    TEST(296, 7 == strrstr(s1, "man"));
+    TEST(297, 4 == strstr(s1, "man"));
+    TEST(298, 7 == strrstr(s1, "man"));
 
-    TEST(297, 0 == strstr(s1, "ban"));
-    TEST(298, 0 == strrstr(s1, "ban"));
+    TEST(299, 0 == strstr(s1, "ban"));
+    TEST(300, 0 == strrstr(s1, "ban"));
 
-    TEST(299, 1 == strstr(s1, ""));
-    TEST(300, 0 == strrstr(s1, ""));
+    TEST(301, 1 == strstr(s1, ""));
+    TEST(302, 0 == strrstr(s1, ""));
 }
 
 
@@ -1299,66 +1307,66 @@ test_regexp(void)
     //      test offset and length returns.
     //
     i = -1;
-    TEST(301, 6 == search_string(" [worl]+", s1, i, -2 /*MAXIMUM*/, FALSE));
-    TEST(302, 5 == i);
+    TEST(303, 6 == search_string(" [worl]+", s1, i, -2 /*MAXIMUM*/, FALSE));
+    TEST(304, 5 == i);
 
     i = -1;                                     /* FIXME/XXX - Brief minimal logic needs reviewing */
-    TEST(303, 6 == re_search(SF_BRIEF|SF_IGNORE_CASE, " [worl]+", s1, NULL, i));
-    TEST(304, 2 == i);
+    TEST(305, 6 == re_search(SF_BRIEF|SF_IGNORE_CASE, " [worl]+", s1, NULL, i));
+    TEST(306, 2 == i);
 
     i = -1;
-    TEST(305, 6 == re_search(SF_BRIEF|SF_MAXIMAL|SF_IGNORE_CASE, " [worl]+", s1, NULL, i));
-    TEST(306, 5 == i);
-
-    i = -1;
-    TEST(307, 6 == re_search(SF_UNIX|SF_IGNORE_CASE, " [worl]+", s1, NULL, i));
+    TEST(307, 6 == re_search(SF_BRIEF|SF_MAXIMAL|SF_IGNORE_CASE, " [worl]+", s1, NULL, i));
     TEST(308, 5 == i);
 
     i = -1;
-    TEST(309, 6 == re_search(SF_EXTENDED|SF_IGNORE_CASE, " [worl]+", s1, NULL, i));
+    TEST(309, 6 == re_search(SF_UNIX|SF_IGNORE_CASE, " [worl]+", s1, NULL, i));
     TEST(310, 5 == i);
 
     i = -1;
-    TEST(311, 6 == re_search(SF_PERL|SF_IGNORE_CASE, " [worl]+", s1, NULL, i));
+    TEST(311, 6 == re_search(SF_EXTENDED|SF_IGNORE_CASE, " [worl]+", s1, NULL, i));
     TEST(312, 5 == i);
 
     i = -1;
-    TEST(313, 6 == re_search(SF_TRE|SF_IGNORE_CASE, " [worl]+", s1, NULL, i));
+    TEST(313, 6 == re_search(SF_PERL|SF_IGNORE_CASE, " [worl]+", s1, NULL, i));
     TEST(314, 5 == i);
 
-    TEST(315, 6 == re_search(SF_PERL|SF_IGNORE_CASE, " [worl]+", s1, NULL, i));
+    i = -1;
+    TEST(315, 6 == re_search(SF_TRE|SF_IGNORE_CASE, " [worl]+", s1, NULL, i));
     TEST(316, 5 == i);
 
-    s1 = "Hello World";
-    TEST(317, 6 == re_search(SF_PERL|SF_IGNORE_CASE, " ([worl]+)", s1, NULL, i));
+    TEST(317, 6 == re_search(SF_PERL|SF_IGNORE_CASE, " [worl]+", s1, NULL, i));
     TEST(318, 5 == i);
+
+    s1 = "Hello World";
+    TEST(319, 6 == re_search(SF_PERL|SF_IGNORE_CASE, " ([worl]+)", s1, NULL, i));
+    TEST(320, 5 == i);
 
     //  captures
     //
     s1 = "y aabbccddee z";
     s2 = "y XaabbccddeeX z";
 
-    TEST(319, re_search(SF_BRIEF,       " {[abcde]+} ", s1, NULL, i) == 2);
+    TEST(321, re_search(SF_BRIEF,       " {[abcde]+} ", s1, NULL, i) == 2);
 
-    TEST(320, re_search(SF_UNIX,        " \\([abcde]+\\) ", s1, NULL, i) == 2);
+    TEST(322, re_search(SF_UNIX,        " \\([abcde]+\\) ", s1, NULL, i) == 2);
 
-    TEST(321, re_search(SF_EXTENDED,    " ([abcde]+) ", s1, NULL, i) == 2);
+    TEST(323, re_search(SF_EXTENDED,    " ([abcde]+) ", s1, NULL, i) == 2);
 
-    TEST(322, re_search(SF_PERL,        " ([abcde]+) ", s1, NULL, i) == 2);
+    TEST(324, re_search(SF_PERL,        " ([abcde]+) ", s1, NULL, i) == 2);
 
-    TEST(323, re_translate(SF_BRIEF|SF_MAXIMAL, "{[abcde]+}", "X\\0X", s1) == s2);
+    TEST(325, re_translate(SF_BRIEF|SF_MAXIMAL, "{[abcde]+}", "X\\0X", s1) == s2);
 
-    TEST(324, re_translate(SF_UNIX,     "\\([abcde]+\\)", "X\\0X", s1) == s2);
+    TEST(326, re_translate(SF_UNIX,     "\\([abcde]+\\)", "X\\0X", s1) == s2);
 
-    TEST(325, re_translate(SF_EXTENDED, "([abcde]+)", "X\\0X", s1) == s2);
+    TEST(327, re_translate(SF_EXTENDED, "([abcde]+)", "X\\0X", s1) == s2);
 
-    TEST(326, re_translate(SF_PERL,     "([abcde]+)", "X$1X", s1) == s2);
+    TEST(328, re_translate(SF_PERL,     "([abcde]+)", "X$1X", s1) == s2);
 
-    TEST(327, re_translate(SF_PERL,     "([abcde]+)", "$`", s1) == "y y  z");
+    TEST(329, re_translate(SF_PERL,     "([abcde]+)", "$`", s1) == "y y  z");
 
-    TEST(328, re_translate(SF_PERL,     "([abcde]+)", "$'", s1) == "y  z z");
+    TEST(330, re_translate(SF_PERL,     "([abcde]+)", "$'", s1) == "y  z z");
 
-    TEST(329, re_translate(SF_TRE,      "([abcde]+)", "X$1X", s1) == s2);
+    TEST(331, re_translate(SF_TRE,      "([abcde]+)", "X$1X", s1) == s2);
 }
 
 
@@ -1369,20 +1377,20 @@ test_regexp(void)
 static void
 test_sub(void)
 {
-    TEST(330, gsub("ana", "anda", "banana") == "bandana");
-    TEST(331, gsub("a",   "-&-",  "banana") == "b-a-n-a-n-a-");
-    TEST(332, gsub("a+",  "-&-",  "banana") == "b-a-n-a-n-a-");
-    TEST(333, gsub("a+",  "-a-",  "baaaanaaaaanaaaa") == "b-a-n-a-n-a-");
-    TEST(334, sub("ana",  "anda", "banana") == "bandana");
-    TEST(335, sub("a",    "-&-",  "banana") == "b-a-nana");
-    TEST(336, sub("a+",   "-&-",  "banana") == "b-a-nana");
-    TEST(337, sub("a+",   "-a-",  "baaaanaaaaanaaaa") == "b-a-naaaaanaaaa");
-    TEST(338, sub("na$",  "na.",  "banana") == "banana.");
-    TEST(339, gsub("^a",  "A",    "anana")  == "Anana");
-    TEST(340, gsub("n.n", "[&]",  "banana") == "ba[nan]a");
-    TEST(341, gsub("a|n", "z",    "anna")   == "zzzz");
+    TEST(332, gsub("ana", "anda", "banana") == "bandana");
+    TEST(333, gsub("a",   "-&-",  "banana") == "b-a-n-a-n-a-");
+    TEST(334, gsub("a+",  "-&-",  "banana") == "b-a-n-a-n-a-");
+    TEST(335, gsub("a+",  "-a-",  "baaaanaaaaanaaaa") == "b-a-n-a-n-a-");
+    TEST(336, sub("ana",  "anda", "banana") == "bandana");
+    TEST(337, sub("a",    "-&-",  "banana") == "b-a-nana");
+    TEST(338, sub("a+",   "-&-",  "banana") == "b-a-nana");
+    TEST(339, sub("a+",   "-a-",  "baaaanaaaaanaaaa") == "b-a-naaaaanaaaa");
+    TEST(340, sub("na$",  "na.",  "banana") == "banana.");
+    TEST(341, gsub("^a",  "A",    "anana")  == "Anana");
+    TEST(342, gsub("n.n", "[&]",  "banana") == "ba[nan]a");
+    TEST(343, gsub("a|n", "z",    "anna")   == "zzzz");
 
-    TEST(342, sub("f\\(.*\\)t",   "F\\1T", "first:second") == "FirsT:second");
+    TEST(344, sub("f\\(.*\\)t",   "F\\1T", "first:second") == "FirsT:second");
 }
 
 
@@ -1397,37 +1405,37 @@ test_substr(void)
     string s1;
 
     s1 = substr("ABC", 0, 3);
-    TEST(343, s1 == "ABC");
+    TEST(345, s1 == "ABC");
 
     s1 = substr("ABC", -1000, 1000);
-    TEST(344, s1 == "ABC");
+    TEST(346, s1 == "ABC");
 
     s1 = substr("ABC", 1000, 1000);
-    TEST(345, s1 == "");
+    TEST(347, s1 == "");
 
     s1 = substr("ABC", 1, 0);
-    TEST(346, s1 == "");
+    TEST(348, s1 == "");
 
     s1 = substr("ABC", 1, 1);
-    TEST(347, s1 == "A");
+    TEST(349, s1 == "A");
 
     s1 = substr("ABC", 1, 2);
-    TEST(348, s1 == "AB");
+    TEST(350, s1 == "AB");
 
     s1 = substr("ABC", 1, 3);
-    TEST(349, s1 == "ABC");
+    TEST(351, s1 == "ABC");
 
     s1 = substr("ABC", 1, 100);
-    TEST(350, s1 == "ABC");
+    TEST(352, s1 == "ABC");
 
     s1 = substr("ABC", 3, 0);
-    TEST(351, s1 == "");
+    TEST(353, s1 == "");
 
     s1 = substr("ABC", 3, 1);
-    TEST(352, s1 == "C");
+    TEST(354, s1 == "C");
 
     s1 = substr("ABC", 3, 100);
-    TEST(353, s1 == "C");
+    TEST(355, s1 == "C");
 }
 
 
@@ -1439,15 +1447,15 @@ static void
 test_compress(void)
 {
     // basic
-    TEST(354, compress("  harry  ", 0) == " harry ");
-    TEST(355, compress("  harry  ", 1) == "harry");
-    TEST(356, compress("  h  a  r   r  y  ", 0) == " h a r r y ");
-    TEST(357, compress(" h  a  r   r  y ", 0) == " h a r r y ");
-    TEST(358, compress("  h  a  r   r  y  ", 1) == "h a r r y");
+    TEST(356, compress("  harry  ", 0) == " harry ");
+    TEST(357, compress("  harry  ", 1) == "harry");
+    TEST(358, compress("  h  a  r   r  y  ", 0) == " h a r r y ");
+    TEST(359, compress(" h  a  r   r  y ", 0) == " h a r r y ");
+    TEST(360, compress("  h  a  r   r  y  ", 1) == "h a r r y");
 
     // extended features
-    TEST(359, compress("  harry  ", 0, " r") == " ha y ");
-    TEST(360, compress("  harry  ", 0, " r", 'x') == "xhaxyx");
+    TEST(361, compress("  harry  ", 0, " r") == " ha y ");
+    TEST(362, compress("  harry  ", 0, " r", 'x') == "xhaxyx");
 }
 
 
@@ -1465,198 +1473,198 @@ test_list(void)
 
     // 1.
     l1 = quote_list(123, 1.23, "xyz", hello()); /* int, float, string and symbol */
-    TEST(361, length_of_list(l1) == 4);
+    TEST(363, length_of_list(l1) == 4);
 
     l2 = l1;
-    TEST(362, length_of_list(l2) == 4);
-    TEST(363, l1[0] == l2[0]);
-    TEST(364, l1[1] == l2[1]);
-    TEST(365, l1[2] == l2[2]);
+    TEST(364, length_of_list(l2) == 4);
+    TEST(365, l1[0] == l2[0]);
+    TEST(366, l1[1] == l2[1]);
+    TEST(367, l1[2] == l2[2]);
 
     d1 = l1[0];
-    TEST(366, is_integer(d1));                  /* 123 */
-    TEST(367, is_type(d1, "integer"));
+    TEST(368, is_integer(d1));                  /* 123 */
+    TEST(369, is_type(d1, "integer"));
 
     d1 = l1[1];
-    TEST(368, is_float(d1));                    /* 1.23 */
-    TEST(369, is_type(d1, "float"));
+    TEST(370, is_float(d1));                    /* 1.23 */
+    TEST(371, is_type(d1, "float"));
 
     d1 = l1[2];
-    TEST(370, is_string(d1));                   /* "xyz" */
-    TEST(371, is_type(d1, "string"));
+    TEST(372, is_string(d1));                   /* "xyz" */
+    TEST(373, is_type(d1, "string"));
 
     d1 = l1[3];
-    TEST(372, is_list(d1));                     /* hello() */
-    TEST(373, is_type(d1, "list"));
+    TEST(374, is_list(d1));                     /* hello() */
+    TEST(375, is_type(d1, "list"));
 
     pause_on_error(0, FALSE);
     d1 = l1[4];                                 /* range error */
     pause_on_error(1, FALSE);
-    TEST(374, is_null(d1));
-    TEST(375, is_type(d1, "null"));
+    TEST(376, is_null(d1));
+    TEST(377, is_type(d1, "null"));
 
     // 2.
     l1 = quote_list(1);
     l1[0] = 2;
-    TEST(376, l1[0] == 2);
+    TEST(378, l1[0] == 2);
 
     l1 = quote_list(1, "abc");
     l1[0] = 2;
-    TEST(377, l1[0] == 2);
+    TEST(379, l1[0] == 2);
 
     l1 = quote_list("abc");
     l1[0] = 2;
-    TEST(378, l1[0] == 2);
+    TEST(380, l1[0] == 2);
 
     l1 = quote_list("abc", 1);
     l1[1] = 2;
-    TEST(379, l1[1] == 2);
+    TEST(381, l1[1] == 2);
 
     l1 = quote_list(1, "abc", 3);
     l1[1] = 2;
-    TEST(380, l1[1] == 2);
+    TEST(382, l1[1] == 2);
 
     l1 = quote_list(1, 2, 3);
     l1[1] = "abc";
-    TEST(381, l1[1] == "abc");
+    TEST(383, l1[1] == "abc");
 
     l1 = quote_list(1, 2, 3);
     l2 = l1;
     l1[1] = l2;
-    TEST(382, length_of_list(l1) == 5);
+    TEST(384, length_of_list(l1) == 5);
 
     l1 = quote_list(1, 2, 3);
     l1[1] = quote_list(1, 2, 3);
-    TEST(383, length_of_list(l1) == 5);
+    TEST(385, length_of_list(l1) == 5);
 
-    TEST(384, 1. == 1);
+    TEST(386, 1. == 1);
 
     l1 = quote_list(1, 2, 3);
     l1[1] = make_list(quote_list(1, 2, 3));
     l1[3] = "end";
-    TEST(385, l1[3] == "end");
-    TEST(386, length_of_list(l1) == 4);
+    TEST(387, l1[3] == "end");
+    TEST(388, length_of_list(l1) == 4);
 
     l3[0] = 0;
     l3[1] = 1;
     l3[2] = 2;
-    TEST(387, l3[0] == 0);
-    TEST(388, l3[1] == 1);
-    TEST(389, l3[2] == 2);
+    TEST(389, l3[0] == 0);
+    TEST(390, l3[1] == 1);
+    TEST(391, l3[2] == 2);
 
     l1 = NULL;
-    TEST(390, length_of_list(l1) == 0);
+    TEST(392, length_of_list(l1) == 0);
 
     l1[0] = "hello";
-    TEST(391, l1[0] == "hello");
+    TEST(393, l1[0] == "hello");
 
     s1 = "abc";
     l1[0] = s1;
-    TEST(392, l1[0] == "abc");
+    TEST(394, l1[0] == "abc");
 
     s1 = "abc";
     l1[0] = s1;
     s1 = "123456789";
-    TEST(393, l1[0] == "abc");
+    TEST(395, l1[0] == "abc");
 
     b57 = "hello";
     a57 = b57;
-    TEST(394, a57 == "hello");
+    TEST(396, a57 == "hello");
 
-    TEST(395, test_6() == 99);
+    TEST(397, test_6() == 99);
 
     l1 = quote_list("one", "", "three");
     s1 = "TWO";
     l1[1] = s1;
     l1[1] = s1;
-    TEST(396, l1[1] == "TWO");
+    TEST(398, l1[1] == "TWO");
 
     l1 = quote_list(1, 2, 3);
     l2 = make_list(l1);
     l1[1] = l2;
-    TEST(397, length_of_list(l1) == 3);
+    TEST(399, length_of_list(l1) == 3);
 
     l1 = quote_list("hello", "list", 1, NULL, 2.3);
     l2 = make_list(l1);
     l1[1] = l2;
-    TEST(398, length_of_list(l1) == 5);
+    TEST(400, length_of_list(l1) == 5);
 
     l1 = quote_list(1, 2, 3);
     l1[1] = make_list(quote_list(1, 2, 3));
-    TEST(399, length_of_list(l1) == 3);
+    TEST(401, length_of_list(l1) == 3);
 
     l1 = quote_list(1, 2, 3);
     l1[2] = make_list(quote_list(1, 2, 3));
-    TEST(400, length_of_list(l1) == 3);
+    TEST(402, length_of_list(l1) == 3);
 
     l1 = quote_list(1, 2, 3);
     l1[0] = make_list(quote_list(1, 2, 3));
-    TEST(401, length_of_list(l1) == 3);
+    TEST(403, length_of_list(l1) == 3);
 
     l1 = make_list(quote_list(1, 2, 3));
     l1 += "abc";
     l1 += "def";
     l1[1] = 1;
-    TEST(402, length_of_list(l1) == 3);
+    TEST(404, length_of_list(l1) == 3);
 
     l1 = make_list(quote_list(1, 2, 3), quote_list(1, 2, 3));
-    TEST(403, car(car(l1)) == 1);
-    TEST(404, length_of_list(l1) == 2);
+    TEST(405, car(car(l1)) == 1);
+    TEST(406, length_of_list(l1) == 2);
 
     l1 = NULL;
-    TEST(405, length_of_list(l1) == 0);
+    TEST(407, length_of_list(l1) == 0);
     pause_on_error(0, FALSE);
     nth(l1, 99);                                /* subscript out of range */
     pause_on_error(1, FALSE);
 
     // list functions
     l1 = command_list();
-    TEST(406, is_list(l1));
-
-    l1 = macro_list();
-    TEST(407, is_list(l1));
-
-    l1 = get_term_keyboard();
     TEST(408, is_list(l1));
 
-    l1 = key_list();
+    l1 = macro_list();
     TEST(409, is_list(l1));
 
-    l1 = bookmark_list();
+    l1 = get_term_keyboard();
     TEST(410, is_list(l1));
 
+    l1 = key_list();
+    TEST(411, is_list(l1));
+
+    l1 = bookmark_list();
+    TEST(412, is_list(l1));
+
     l1 = macro_list();
-    TEST(411, strlen(l1) != 0);
-    TEST(412, length_of_list(cdr(macro_list())) > 0);
-    TEST(413, search_list(NULL, "def", quote_list("abc", "def", "ghi")) == 1);
+    TEST(413, strlen(l1) != 0);
+    TEST(414, length_of_list(cdr(macro_list())) > 0);
+    TEST(415, search_list(NULL, "def", quote_list("abc", "def", "ghi")) == 1);
     l1 = quote_list("abc");
     l1 += "def";
     l1 += "ghi";
-    TEST(414, search_list(NULL, "def", l1) == 1);
+    TEST(416, search_list(NULL, "def", l1) == 1);
 
     // features
     l1 = inq_feature();
-    TEST(415, is_list(l1));
+    TEST(417, is_list(l1));
 
     // list concat
     l1 = quote_list(1, "2", 3.0);
     l1 = l1 + l1;
-    TEST(416, length_of_list(l1) == 6);
+    TEST(418, length_of_list(l1) == 6);
     l2 = l1;
 
     // element insert
     l1[3] = quote_list("a", "b", "c");
-    TEST(417, length_of_list(l1) == 8);
+    TEST(419, length_of_list(l1) == 8);
 
     // element replace
     l1[0] = 99;
-    TEST(418, l1[0] != l2[0]);
+    TEST(420, l1[0] != l2[0]);
 
     // re_search
     l1 = quote_list("abc");
     l1 += "def";
     l1 += "ghi";
-    TEST(419, re_search(NULL, "def", l1) == 1);
+    TEST(421, re_search(NULL, "def", l1) == 1);
 }
 
 
@@ -1669,27 +1677,27 @@ test_list2(void)
 {
     list l1 = {"one", "two", "three", "four"};
 
-    TEST(420, shift(l1) == "one");
-    TEST(421, 3 == length_of_list(l1));         // two, three, four
+    TEST(422, shift(l1) == "one");
+    TEST(423, 3 == length_of_list(l1));         // two, three, four
 
-    TEST(422, 5 == unshift(l1, "first", "second"));
-    TEST(423, 5 == length_of_list(l1));         // first, second, two, three, four
+    TEST(424, 5 == unshift(l1, "first", "second"));
+    TEST(425, 5 == length_of_list(l1));         // first, second, two, three, four
 
-    TEST(424, pop(l1) == "four");               // first, second, two, three
-    TEST(425, 4 == length_of_list(l1));
+    TEST(426, pop(l1) == "four");               // first, second, two, three
+    TEST(427, 4 == length_of_list(l1));
 
-    TEST(426, shift(l1) == "first" && shift(l1) == "second");
-    TEST(427, 2 == length_of_list(l1));         // two, three
+    TEST(428, shift(l1) == "first" && shift(l1) == "second");
+    TEST(429, 2 == length_of_list(l1));         // two, three
 
-    TEST(428, pop(l1) == "three");              // two
-    TEST(429, 1 == length_of_list(l1));
+    TEST(430, pop(l1) == "three");              // two
+    TEST(431, 1 == length_of_list(l1));
 
-    TEST(430, shift(l1) == "two");              // null
-    TEST(431, 0 ==  length_of_list(l1));
-    TEST(432, is_null(l1));
+    TEST(432, shift(l1) == "two");              // null
+    TEST(433, 0 ==  length_of_list(l1));
+    TEST(434, is_null(l1));
 
     push(l1, "five", "six");
-    TEST(433, 2 ==  length_of_list(l1));
+    TEST(435, 2 ==  length_of_list(l1));
 }
 
 
@@ -1707,27 +1715,27 @@ test_list3(void)
     while ((idx = list_each(l1, value)) >= 0) {
         switch(idx) {
         case 0:
-            TEST(434, 1 == value);
+            TEST(436, 1 == value);
             break;
         case 1:
-            TEST(435, "2" == value);
+            TEST(437, "2" == value);
             break;
         case 2:
-            TEST(436, 3.3 == value);
+            TEST(438, 3.3 == value);
             break;
         case 3:
-            TEST(437, 4 == value);
+            TEST(439, 4 == value);
             break;
         case 4:
-            TEST(438, "5" == value);
+            TEST(440, "5" == value);
             break;
         case 5:
-            TEST(439, 6.6 == value);
+            TEST(441, 6.6 == value);
             break;
         }
         ++count;
     }
-    TEST(440, length_of_list(l1) == count);
+    TEST(442, length_of_list(l1) == count);
 }
 
 
@@ -1741,16 +1749,16 @@ test_nth(void)
     declare d1;
 
     gl1[1] = "TWO";
-    TEST(441, gl1[1] == "TWO");
-    TEST(442, gl1[3][0] == "x");
-    TEST(443, gl1[3][1] == "y");
-    TEST(444, gl1[2][1][1] == "2.1.1");
-    TEST(445, gl1[gl2[0]][gl2[1]][gl2[2]] == "2.1.1");
-    TEST(446, gl1[test_10(2)][test_10(1)][test_10(1)] == "2.1.1");
+    TEST(443, gl1[1] == "TWO");
+    TEST(444, gl1[3][0] == "x");
+    TEST(445, gl1[3][1] == "y");
+    TEST(446, gl1[2][1][1] == "2.1.1");
+    TEST(447, gl1[gl2[0]][gl2[1]][gl2[2]] == "2.1.1");
+    TEST(448, gl1[test_10(2)][test_10(1)][test_10(1)] == "2.1.1");
     pause_on_error(0, FALSE);
     d1 = gl1[2][1][4];                          /* range error */
     pause_on_error(1, FALSE);
-    TEST(447, is_null(d1));
+    TEST(449, is_null(d1));
 }
 
 
@@ -1776,23 +1784,23 @@ splice_1(void)
 
     /* [a, b, a, b] */
     l += l;
-    TEST(448, length_of_list(l) == 4 && l[0] == "a" && l[1] == "b" && l[2] == "a" && l[3] == "b");
+    TEST(450, length_of_list(l) == 4 && l[0] == "a" && l[1] == "b" && l[2] == "a" && l[3] == "b");
 
     /* [x, x, b, a, b] */
     l[0] = x;
-    TEST(449, length_of_list(l) == 5 && l[0] == "x" && l[1] == "x");
+    TEST(451, length_of_list(l) == 5 && l[0] == "x" && l[1] == "x");
 
     /* [x, x, b, a, b, Nul, Nul, Nul, Nul, x, x] */
     l[9] = x;
-    TEST(450, length_of_list(l) == 11 && l[9] == "x");
+    TEST(452, length_of_list(l) == 11 && l[9] == "x");
 
     /* Join */
     l = splice_l1 + splice_l1;
-    TEST(451, length_of_list(l) == 6);
+    TEST(453, length_of_list(l) == 6);
 
     /* Append */
     l += splice_l1;
-    TEST(452, length_of_list(l) == 9);
+    TEST(454, length_of_list(l) == 9);
 }
 
 
@@ -1814,22 +1822,22 @@ splice_2(void)
     list l = quote_list("red", "green", "blue");
 
     splice(l, -1);
-    TEST(453, length_of_list(l) == 3 && l[2] == "blue");
-
-    splice(l, 999);
-    TEST(454, length_of_list(l) == 3 && l[2] == "blue");
-
-    splice(l, 3);
     TEST(455, length_of_list(l) == 3 && l[2] == "blue");
 
+    splice(l, 999);
+    TEST(456, length_of_list(l) == 3 && l[2] == "blue");
+
+    splice(l, 3);
+    TEST(457, length_of_list(l) == 3 && l[2] == "blue");
+
     splice(l, 2);
-    TEST(456, length_of_list(l) == 2 && l[1] == "green");
+    TEST(458, length_of_list(l) == 2 && l[1] == "green");
 
     splice(l, 0);
-    TEST(457, length_of_list(l) == 0);
+    TEST(459, length_of_list(l) == 0);
 
     splice(l, 0);
-    TEST(458, length_of_list(l) == 0);
+    TEST(460, length_of_list(l) == 0);
 }
 
 
@@ -1840,13 +1848,13 @@ splice_3(void)
     list l2 = quote_list("red", "green", "blue");
 
     splice(l1, 1, 2, "yellow", "orange", "pink");
-    TEST(459, length_of_list(l1) == 4 && l1[0] == "red" && l1[1] == "yellow" && l1[2] == "orange" && l1[3] == "pink");
+    TEST(461, length_of_list(l1) == 4 && l1[0] == "red" && l1[1] == "yellow" && l1[2] == "orange" && l1[3] == "pink");
 
     splice(l2, 1, 2, "yellow");
-    TEST(460, length_of_list(l2) == 2 && l2[0] == "red" && l2[1] == "yellow");
+    TEST(462, length_of_list(l2) == 2 && l2[0] == "red" && l2[1] == "yellow");
 
     splice(l2, -1, 0, "orange");
-    TEST(461, length_of_list(l2) == 3 && l2[0] == "red" && l2[1] == "yellow" && l2[2] == "orange");
+    TEST(463, length_of_list(l2) == 3 && l2[0] == "red" && l2[1] == "yellow" && l2[2] == "orange");
 }
 
 
@@ -1860,13 +1868,13 @@ splice_4(void)
     list l0 = quote_list(l1, l2, l3);
 
     splice(l0, 0, 3, l1, l2, l3, l4);
-    TEST(462, length_of_list(l0) == 4);
+    TEST(464, length_of_list(l0) == 4);
 
     splice(l0, 0, 0, l1, l2, l3, l4, l1, l2, l3, l4, l1, l2, l3, l4, l1, l2, l3, l4);
-    TEST(463, length_of_list(l0) == 20);
+    TEST(465, length_of_list(l0) == 20);
 
     splice(l0, -1, 0, l0);                      /* self reference */
-    TEST(464, length_of_list(l0) == 21);
+    TEST(466, length_of_list(l0) == 21);
 }
 
 
@@ -1899,49 +1907,49 @@ test_sort_list(void)
     list r;
 
     r = sort_list(NULL);                        // error
-    TEST(465, is_null(r));
+    TEST(467, is_null(r));
     r = sort_list(list_0);
-    TEST(466, is_null(r));
+    TEST(468, is_null(r));
     r = sort_list(list_1);
-    TEST(467, length_of_list(r) == 1 && r[0] == "a");
+    TEST(469, length_of_list(r) == 1 && r[0] == "a");
     r = sort_list(list_2);
-    TEST(468, length_of_list(r) == 2 && r[0] == "a");
+    TEST(470, length_of_list(r) == 2 && r[0] == "a");
     r = sort_list(list_3);
-    TEST(469, length_of_list(r) == 3 && r[0] == "a");
+    TEST(471, length_of_list(r) == 3 && r[0] == "a");
     r = sort_list(list_7);
-    TEST(470, length_of_list(r) == 7 && r[0] == "a");
-
-    r = sort_list(list_2, 0);                   // forward
-    TEST(471, length_of_list(r) == 2 && r[0] == "a");
-    r = sort_list(list_7, 0);
     TEST(472, length_of_list(r) == 7 && r[0] == "a");
 
+    r = sort_list(list_2, 0);                   // forward
+    TEST(473, length_of_list(r) == 2 && r[0] == "a");
+    r = sort_list(list_7, 0);
+    TEST(474, length_of_list(r) == 7 && r[0] == "a");
+
     r = sort_list(list_2, 1);                   // backwards
-    TEST(473, length_of_list(r) == 2 && r[0] == "b");
+    TEST(475, length_of_list(r) == 2 && r[0] == "b");
     r = sort_list(list_7, 1);
-    TEST(474, length_of_list(r) == 7 && r[0] == "z");
+    TEST(476, length_of_list(r) == 7 && r[0] == "z");
 
     r = sort_list(list_2, "::sort_forward");
-    TEST(475, length_of_list(r) == 2 && r[0] == "a");
+    TEST(477, length_of_list(r) == 2 && r[0] == "a");
     r = sort_list(list_7, "::sort_forward");
-    TEST(476, length_of_list(r) == 7 && r[0] == "a");
+    TEST(478, length_of_list(r) == 7 && r[0] == "a");
 
     r = sort_list(list_2, "::sort_backward");
-    TEST(477, length_of_list(r) == 2 && r[0] == "b");
+    TEST(479, length_of_list(r) == 2 && r[0] == "b");
     r = sort_list(list_7, "::sort_backward");
-    TEST(478, length_of_list(r) == 7 && r[0] == "z");
+    TEST(480, length_of_list(r) == 7 && r[0] == "z");
 
     // qsort
     r = sort_list(list_7, NULL, 1);
-    TEST(479, length_of_list(r) == 7 && r[0] == "a");
+    TEST(481, length_of_list(r) == 7 && r[0] == "a");
 
     // mergesort
     r = sort_list(list_7, NULL, 2);
-    TEST(480, length_of_list(r) == 7 && r[0] == "a");
+    TEST(482, length_of_list(r) == 7 && r[0] == "a");
 
     // heapsort
     r = sort_list(list_7, NULL, 3);
-    TEST(481, length_of_list(r) == 7 && r[0] == "a");
+    TEST(483, length_of_list(r) == 7 && r[0] == "a");
 }
 
 
@@ -1956,42 +1964,42 @@ test_sprintf(void)
     int i;
 
     // enhanced features
-    TEST(482, sprintf(s1, "Hello world") == 11);
-    TEST(483, sprintf(s1, "%*s", 20, "") == 20);
-    TEST(484, sprintf(s1, "%b", 0xf3) == 8 && s1 == "11110011");
-    TEST(485, sprintf(s1, "val=%B", 3, "\10\2BITTWO\1BITONE") == 20 &&
+    TEST(484, sprintf(s1, "Hello world") == 11);
+    TEST(485, sprintf(s1, "%*s", 20, "") == 20);
+    TEST(486, sprintf(s1, "%b", 0xf3) == 8 && s1 == "11110011");
+    TEST(487, sprintf(s1, "val=%B", 3, "\10\2BITTWO\1BITONE") == 20 &&
                 s1 == "val=3<BITTWO,BITONE>");
-    TEST(486, sprintf(s1, "12345%n6", "i") == 6 && i == 5);
+    TEST(488, sprintf(s1, "12345%n6", "i") == 6 && i == 5);
 
     // error cases
-    TEST(487, sprintf(s1, "%s", NULL)   && s1 == "<NULL>");
-    TEST(488, sprintf(s1, "%s")         && s1 == "<bad-string>");
-    TEST(489, sprintf(s1, "%d", NULL)   && s1 == "0");
-    TEST(490, sprintf(s1, "%c", NULL)   && s1 == " ");
-    TEST(491, sprintf(s1, "%.2f", NULL) && s1 == "0.00");
-    TEST(492, sprintf(s1, "%y")         && s1 == "y");
+    TEST(489, sprintf(s1, "%s", NULL)   && s1 == "<NULL>");
+    TEST(490, sprintf(s1, "%s")         && s1 == "<bad-string>");
+    TEST(491, sprintf(s1, "%d", NULL)   && s1 == "0");
+    TEST(492, sprintf(s1, "%c", NULL)   && s1 == " ");
+    TEST(493, sprintf(s1, "%.2f", NULL) && s1 == "0.00");
+    TEST(494, sprintf(s1, "%y")         && s1 == "y");
 
     // format
-    TEST(493, format("Hello World") == "Hello World");
-    TEST(494, format("%b", 0xf3) == "11110011");
+    TEST(495, format("Hello World") == "Hello World");
+    TEST(496, format("%b", 0xf3) == "11110011");
 
     // large argument list
-    TEST(495, format("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+    TEST(497, format("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
                         "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "11.", "12.", "13.", "14.", "15.", "16.")
                   == "1.2.3.4.5.6.7.8.9.10.11.12.13.14.15.16.");
 
-    TEST(496, format("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+    TEST(498, format("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
                         "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "11.", "12.", "13.", "14.", "15.", "16.",
                         "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "11.", "12.", "13.", "14.", "15.", "16.")
                   == "1.2.3.4.5.6.7.8.9.10.11.12.13.14.15.16.1.2.3.4.5.6.7.8.9.10.11.12.13.14.15.16.");
 
-    TEST(497, format("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+    TEST(499, format("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
                         "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "11.", "12.", "13.", "14.", "15.", "16.",
                         "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "11.", "12.", "13.", "14.", "15.", "16.",
                         "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "11.", "12.", "13.", "14.", "15.", "16.")
                   == "1.2.3.4.5.6.7.8.9.10.11.12.13.14.15.16.1.2.3.4.5.6.7.8.9.10.11.12.13.14.15.16.1.2.3.4.5.6.7.8.9.10.11.12.13.14.15.16.");
 
-    TEST(498, format("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+    TEST(500, format("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
 			"1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "11.", "12.", "13.", "14.", "15.", "16.",
 			"1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "11.", "12.", "13.", "14.", "15.", "16.",
 			"1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "11.", "12.", "13.", "14.", "15.", "16.",
@@ -2019,35 +2027,35 @@ __regress_replacement(int x,
         //  return original 2th parameter
         //
         ret = __regress_replacement(2, a, b, c, d);
-        TEST(499, ret == a);
+        TEST(501, ret == a);
         break;
 
     case 2:
         //  return original 2th parameter
         //
         ret = __regress_replacement(2, NULL, b, c, d);
-        TEST(500, ret == a);
+        TEST(502, ret == a);
         break;
 
     case 3:
         //  return override 2th parameter
         //
         ret = __regress_replacement(2, 999, b, c, d);
-        TEST(501, ret == 999);
+        TEST(503, ret == 999);
         break;
 
     case 4:
         //  return original 6th parameter
         //
         ret = __regress_replacement(6, a, b, c, d);
-        TEST(502, ret == e);
+        TEST(504, ret == e);
         break;
 
     case 5:
         //  return original 6th parameter
         //
         ret = __regress_replacement(6, a, b, c, d, NULL);
-        TEST(503, ret == e);
+        TEST(505, ret == e);
     }
     return 42;
 }
@@ -2065,7 +2073,7 @@ test_replacement(void)
     ret = __regress_replacement(3, 1, "2", l3, 4, 5, "6", l7, 8);
     ret = __regress_replacement(4, 1, "2", l3, 4, 5, "6", l7, 8);
     ret = __regress_replacement(5, 1, "2", l3, 4, 5, "6", l7, 8);
-    TEST(504, ret == 42);
+    TEST(506, ret == 42);
 }
 
 
@@ -2076,21 +2084,21 @@ test_replacement(void)
 static void
 test_isa(void)
 {
-    TEST(505, isalpha('A'));
-    TEST(506, isascii('A'));
-    TEST(507, iscntrl(0x01));
-    TEST(508, iscsym('_'));
-    TEST(509, isgraph('A'));
-    TEST(510, isprint('A'));
-    TEST(511, ispunct('!'));
+    TEST(507, isalpha('A'));
+    TEST(508, isascii('A'));
+    TEST(509, iscntrl(0x01));
+    TEST(510, iscsym('_'));
+    TEST(511, isgraph('A'));
+    TEST(512, isprint('A'));
+    TEST(513, ispunct('!'));
 
-    TEST(512, isdigit('1')   && isdigit(0x30)     && isdigit("a1a", 2));
-    TEST(513, isdigit("1a1") && isdigit("a1a", 2) && !isdigit("a1a", -1) && !isdigit("", 1));
-    TEST(514, islower('a')   && !islower('A'));
-    TEST(515, isupper('A')   && !isupper('a'));
-    TEST(516, isalnum('Z')   && !isalnum('*'));
-    TEST(517, isxdigit('f')  && isxdigit('F')     && isxdigit('1'));
-    TEST(518, isspace(' ')   && isspace('\t')     && isspace('\n')       && !isspace('a'));
+    TEST(514, isdigit('1')   && isdigit(0x30)     && isdigit("a1a", 2));
+    TEST(515, isdigit("1a1") && isdigit("a1a", 2) && !isdigit("a1a", -1) && !isdigit("", 1));
+    TEST(516, islower('a')   && !islower('A'));
+    TEST(517, isupper('A')   && !isupper('a'));
+    TEST(518, isalnum('Z')   && !isalnum('*'));
+    TEST(519, isxdigit('f')  && isxdigit('F')     && isxdigit('1'));
+    TEST(520, isspace(' ')   && isspace('\t')     && isspace('\n')       && !isspace('a'));
 }
 
 
@@ -2101,23 +2109,23 @@ test_isa(void)
 static void
 test_basedir(void)
 {
-    TEST(519, basename("dir/file") == "file");
-    TEST(520, basename("dir/file.c", ".c") == "file");
-    TEST(521, basename("", "") == "");
-    TEST(522, basename("//", "") == "/");
-    TEST(523, basename("dir/file/") == "file");
-    TEST(524, basename("dir\\file/") == "file");
-    TEST(525, basename("/x/") == "x");
-    TEST(526, basename("x/") == "x");
-    TEST(527, basename("/x") == "x");
+    TEST(521, basename("dir/file") == "file");
+    TEST(522, basename("dir/file.c", ".c") == "file");
+    TEST(523, basename("", "") == "");
+    TEST(524, basename("//", "") == "/");
+    TEST(525, basename("dir/file/") == "file");
+    TEST(526, basename("dir\\file/") == "file");
+    TEST(527, basename("/x/") == "x");
+    TEST(528, basename("x/") == "x");
+    TEST(529, basename("/x") == "x");
 
-    TEST(528, dirname(".") == ".");
-    TEST(529, dirname("/") == "/");
-    TEST(530, dirname("//") == "/");
-    TEST(531, dirname("/xx") == "/");
-    TEST(532, dirname("//xx") == "/");
-    TEST(533, dirname("aaa/bbb") == "aaa");
-    TEST(534, dirname("aaaa//bbb/cccc///") == "aaaa//bbb" );
+    TEST(530, dirname(".") == ".");
+    TEST(531, dirname("/") == "/");
+    TEST(532, dirname("//") == "/");
+    TEST(533, dirname("/xx") == "/");
+    TEST(534, dirname("//xx") == "/");
+    TEST(535, dirname("aaa/bbb") == "aaa");
+    TEST(536, dirname("aaaa//bbb/cccc///") == "aaaa//bbb" );
 }
 
 
@@ -2129,21 +2137,21 @@ static void
 test_env(void)
 {
     putenv("GRREGRESS", "home");
-    TEST(535, getenv("GRREGRESS") == "home");
-    TEST(536, expandpath("$$/filename", 0x3) == "$/filename");
-    TEST(537, expandpath("$GRREGRESS", 0x3) == "home");
-    TEST(538, expandpath("$GRREGRESS/", 0x3) == "home/");
-    TEST(539, expandpath("${GRREGRESS}xxx/", 0x3) == "homexxx/");
-    TEST(540, expandpath("$(GRREGRESS)xxx/", 0x3) == "homexxx/");
+    TEST(537, getenv("GRREGRESS") == "home");
+    TEST(538, expandpath("$$/filename", 0x3) == "$/filename");
+    TEST(539, expandpath("$GRREGRESS", 0x3) == "home");
+    TEST(540, expandpath("$GRREGRESS/", 0x3) == "home/");
+    TEST(541, expandpath("${GRREGRESS}xxx/", 0x3) == "homexxx/");
+    TEST(542, expandpath("$(GRREGRESS)xxx/", 0x3) == "homexxx/");
 
     /*invalid*/
-    TEST(541, expandpath("${GRREGRESSxxx/", 0x3) == "${GRREGRESSxxx/");
-    TEST(542, expandpath("$(GRREGRESSxxx/", 0x3) == "$(GRREGRESSxxx/");
-    TEST(543, expandpath("${GRREGRESSxxx", 0x3) == "${GRREGRESSxxx");
-    TEST(544, expandpath("$(GRREGRESSxxx", 0x3) == "$(GRREGRESSxxx");
-    TEST(545, expandpath("$UNKNOWN/", 0x3) == "/");
-    TEST(546, expandpath("$(UNKNOWN)xxx/", 0x3) == "xxx/");
-    TEST(547, expandpath("${UNKNOWN}xxx/", 0x3) == "xxx/");
+    TEST(543, expandpath("${GRREGRESSxxx/", 0x3) == "${GRREGRESSxxx/");
+    TEST(544, expandpath("$(GRREGRESSxxx/", 0x3) == "$(GRREGRESSxxx/");
+    TEST(545, expandpath("${GRREGRESSxxx", 0x3) == "${GRREGRESSxxx");
+    TEST(546, expandpath("$(GRREGRESSxxx", 0x3) == "$(GRREGRESSxxx");
+    TEST(547, expandpath("$UNKNOWN/", 0x3) == "/");
+    TEST(548, expandpath("$(UNKNOWN)xxx/", 0x3) == "xxx/");
+    TEST(549, expandpath("${UNKNOWN}xxx/", 0x3) == "xxx/");
 }
 
 
@@ -2158,22 +2166,22 @@ test_register(void)
 
     register_macro(REG_REGRESS, "__regress_event");
     call_registered_macro(REG_REGRESS);
-    TEST(548, 1 == event);
+    TEST(550, 1 == event);
 
     event = 0;
     register_macro(REG_REGRESS, "__regress_event");
     reregister_macro(REG_REGRESS, "__regress_event");
     call_registered_macro(REG_REGRESS);
-    TEST(549, 2 == event);
+    TEST(551, 2 == event);
 
     event = 0;
     unregister_macro(REG_REGRESS, "__regress_event");
     call_registered_macro(REG_REGRESS);
-    TEST(550, 1 == event);
+    TEST(552, 1 == event);
 
     event = 0;
     unregister_macro(REG_REGRESS, "__regress_event");
-    TEST(551, 0 == event);
+    TEST(553, 0 == event);
 }
 
 
@@ -2196,13 +2204,13 @@ test_buffer(void)
     if ((buf = create_buffer("-regress-buffer-", NULL, TRUE)) == -1) {
         return;
     }
-    TEST(552, curbuf == inq_buffer());
-    TEST(553, curbuf == set_buffer(buf));
-    TEST(554, buf == inq_buffer());
-    TEST(555, 0 != inq_system());
-    TEST(556, (inq_buffer_flags(buf) & BF_SYSBUF) == BF_SYSBUF);
-    TEST(557, 0 != inq_buffer_flags(NULL, "sysbuf"));
-    TEST(558, 0 == inq_modified());
+    TEST(554, curbuf == inq_buffer());
+    TEST(555, curbuf == set_buffer(buf));
+    TEST(556, buf == inq_buffer());
+    TEST(557, 0 != inq_system());
+    TEST(558, (inq_buffer_flags(buf) & BF_SYSBUF) == BF_SYSBUF);
+    TEST(559, 0 != inq_buffer_flags(NULL, "sysbuf"));
+    TEST(560, 0 == inq_modified());
     //TODO
     //  set_attribute()
     //  inq_attribute()
@@ -2218,40 +2226,40 @@ test_buffer(void)
 
         top_of_buffer();
         count = insert(sval);
-        TEST(559, slen == count);
-        TEST(560, slen == inq_line_length());
+        TEST(561, slen == count);
+        TEST(562, slen == inq_line_length());
 
         top_of_buffer();
         line = read(NULL, status);
-        TEST(561, status == 1);                 /* EOF */
-        TEST(562, line == sval);
-
-        line = read(slen, status);
         TEST(563, status == 1);                 /* EOF */
         TEST(564, line == sval);
 
+        line = read(slen, status);
+        TEST(565, status == 1);                 /* EOF */
+        TEST(566, line == sval);
+
         line = read(1, status);
-        TEST(565, status == 0);                 /* partial */
-        TEST(566, line == "1");
+        TEST(567, status == 0);                 /* partial */
+        TEST(568, line == "1");
 
         line = read(9, status);
-        TEST(567, status == 0);                 /* partial */
-        TEST(568, line == "123456789");
+        TEST(569, status == 0);                 /* partial */
+        TEST(570, line == "123456789");
 
         top_of_buffer();
         count = insertf("%s\n", "abcdefg1234567890");
-        TEST(569, 18 == count);
-        TEST(570, slen == inq_line_length());
+        TEST(571, 18 == count);
+        TEST(572, slen == inq_line_length());
 
         top_of_buffer();
         line = read(NULL, status);
-        TEST(571, status == 1);                 /* EOF */
-        TEST(572, line == "abcdefg1234567890\n");
+        TEST(573, status == 1);                 /* EOF */
+        TEST(574, line == "abcdefg1234567890\n");
     }
 
     restore_position(2);
-    TEST(573, curbuf == inq_buffer());
-    TEST(574, curwin == inq_window());
+    TEST(575, curbuf == inq_buffer());
+    TEST(576, curwin == inq_window());
     delete_buffer(buf);
 }
 
@@ -2259,7 +2267,7 @@ test_buffer(void)
 static void
 test_key(void)
 {
-    TEST(575, int_to_key(key_to_int("<Up>")) == "<Up>");
+    TEST(577, int_to_key(key_to_int("<Up>")) == "<Up>");
 }
 
 
@@ -2269,11 +2277,11 @@ test_debug(void)
     list l1;
 
     l1 = debug_support(DBG_INQ_VARS, 0);
-    TEST(576, is_list(l1));
-    l1 = debug_support(DBG_STACK_TRACE, NULL, "");
-    TEST(577, is_list(l1));
-    l1 = debug_support(DBG_INQ_VAR_INFO, 0, "l1");
     TEST(578, is_list(l1));
+    l1 = debug_support(DBG_STACK_TRACE, NULL, "");
+    TEST(579, is_list(l1));
+    l1 = debug_support(DBG_INQ_VAR_INFO, 0, "l1");
+    TEST(580, is_list(l1));
 }
 
 
@@ -2283,27 +2291,27 @@ test_strtol(void)
     int ret, endp;
 
     ret = strtol("xxx");                        /* basic */
-    TEST(579, ret == 0);
+    TEST(581, ret == 0);
 
     ret = strtol("1");                          /* dec */
-    TEST(580, ret == 1);
-
-    ret = strtol("01");                         /* oct */
-    TEST(581, ret == 1);
-
-    ret = strtol("0x1");                        /* hex */
     TEST(582, ret == 1);
 
+    ret = strtol("01");                         /* oct */
+    TEST(583, ret == 1);
+
+    ret = strtol("0x1");                        /* hex */
+    TEST(584, ret == 1);
+
     ret = strtol("g", NULL, 36);                /* base 36 (0123456789abc...) */
-    TEST(583, ret == 16);
+    TEST(585, ret == 16);
 
     ret = strtol("xxx", endp);                  /* invalid */
-    TEST(584, ret == 0);
-    TEST(585, endp == 0);
+    TEST(586, ret == 0);
+    TEST(587, endp == 0);
 
     ret = strtol("12", endp);
-    TEST(586, ret == 12);
-    TEST(587, endp == 3);
+    TEST(588, ret == 12);
+    TEST(589, endp == 3);
 }
 
 
@@ -2314,24 +2322,24 @@ test_strtof(void)
     int endp;
 
     ret = strtof("0.0");                        /* dec */
-    TEST(588, ret == 0.0);
+    TEST(590, ret == 0.0);
 
     ret = strtof("1.0");                        /* dec */
-    TEST(589, ret == 1.0);
+    TEST(591, ret == 1.0);
 
     ret = strtof("xxx", endp);                  /* invalid */
-    TEST(590, ret == 0);
-    TEST(591, endp == 0);
+    TEST(592, ret == 0);
+    TEST(593, endp == 0);
 
     ret = strtof("0.0");                        /* dec */
-    TEST(592, ret == 0.0);
+    TEST(594, ret == 0.0);
 
     ret = strtof("1.0");                        /* dec */
-    TEST(593, ret == 1.0);
+    TEST(595, ret == 1.0);
 
     ret = strtof("xxx", endp);                  /* invalid */
-    TEST(594, ret == 0);
-    TEST(595, endp == 0);
+    TEST(596, ret == 0);
+    TEST(597, endp == 0);
 }
 
 
@@ -2342,45 +2350,45 @@ test_strtod(void)
     int endp;
 
     ret = strtod("0.0");                        /* dec */
-    TEST(596, ret == 0.0);
+    TEST(598, ret == 0.0);
 
     ret = strtod("1.0");                        /* dec */
-    TEST(597, ret == 1.0);
+    TEST(599, ret == 1.0);
 
     ret = strtod("xxx", endp);                  /* invalid */
-    TEST(598, ret == 0);
-    TEST(599, endp == 0);
+    TEST(600, ret == 0);
+    TEST(601, endp == 0);
 
     ret = strtod("0.0");                        /* dec */
-    TEST(600, ret == 0.0);
+    TEST(602, ret == 0.0);
 
     ret = strtod("1.0");                        /* dec */
-    TEST(601, ret == 1.0);
+    TEST(603, ret == 1.0);
 
     ret = strtod("xxx", endp);                  /* invalid */
-    TEST(602, ret == 0);
-    TEST(603, endp == 0);
+    TEST(604, ret == 0);
+    TEST(605, endp == 0);
 }
 
 
 static void
 test_defaults1(int value = 666)
 {
-    TEST(604, value == 666);
+    TEST(606, value == 666);
 }
 
 
 static void
 test_defaults2(string value = "666")
 {
-    TEST(605, value == "666");
+    TEST(607, value == "666");
 }
 
 
 static void
 test_defaults3(string value = 1.1)
 {
-    TEST(606, value == 1.1);
+    TEST(608, value == 1.1);
 }
 
 
@@ -2422,11 +2430,11 @@ test_reference(void)
     float fvalue = 1;
 
     test_reference1(ivalue);
-    TEST(607, ivalue == 2);
+    TEST(609, ivalue == 2);
     test_reference2(svalue);
-    TEST(608, svalue == "two");
+    TEST(610, svalue == "two");
     test_reference3(fvalue);
-    TEST(609, fvalue == 2);
+    TEST(611, fvalue == 2);
 }
 
 
@@ -2446,7 +2454,7 @@ test_pushpop(void)
         sprintf(msg, "work%04d", i);
         push(l, msg);
     }
-    TEST(610, length_of_list(l) == 1000);
+    TEST(612, length_of_list(l) == 1000);
 
     for (i = i-1; i >= 0; --i) {
         sprintf(msg, "work%04d", i);
@@ -2455,13 +2463,13 @@ test_pushpop(void)
             break;
         }
     }
-    TEST(611, success);
+    TEST(613, success);
 
-    TEST(612, length_of_list(l) == 0);
+    TEST(614, length_of_list(l) == 0);
     pause_on_error(0, FALSE);
     r = pop(l);
     pause_on_error(1, FALSE);
-    TEST(613, is_null(r));                      /* FIXME/XXX - is_null(pop(l)) broken/limitation of LVAL's */
+    TEST(615, is_null(r));                      /* FIXME/XXX - is_null(pop(l)) broken/limitation of LVAL's */
 }
 
 
@@ -2470,12 +2478,12 @@ test_globals(void)
 {
     int line, col;
 
-    TEST(614, inq_window() == current_window);
-    TEST(615, inq_buffer() == current_buffer);
+    TEST(616, inq_window() == current_window);
+    TEST(617, inq_buffer() == current_buffer);
     inq_position(line, col);
-    TEST(616, line == current_line);
+    TEST(618, line == current_line);
     inq_position(line, col);
-    TEST(617, col == current_col);
+    TEST(619, col == current_col);
 }
 
 
@@ -2486,7 +2494,7 @@ test_globals(void)
 static void
 test_search(void)
 {
-    TEST(618, quote_regexp("<>") == "\\<\\>");
+    TEST(620, quote_regexp("<>") == "\\<\\>");
 //  search string
 //  search buffer
 }
@@ -2504,17 +2512,17 @@ test_search(void)
 static void
 test_called(void)
 {
-    TEST(619, "test_called" == caller());
-    set_calling_name("");
-    TEST(620, "" == caller());
-    set_calling_name("test_called");
     TEST(621, "test_called" == caller());
+    set_calling_name("");
+    TEST(622, "" == caller());
+    set_calling_name("test_called");
+    TEST(623, "test_called" == caller());
     set_calling_name("hello_world");
-    TEST(622, "hello_world" == caller());
+    TEST(624, "hello_world" == caller());
     set_calling_name(inq_called());
-    TEST(623, "regress" == caller());
+    TEST(625, "regress" == caller());
     set_calling_name(NULL);                     /* extension, reset/clear */
-    TEST(624, "test_called" == caller());
+    TEST(626, "test_called" == caller());
 }
 
 
@@ -2535,16 +2543,16 @@ test_macro(void)
     int ret;
 
     ret = inq_macro("regress");                 /* defined */
-    TEST(625, ret == 1);
+    TEST(627, ret == 1);
 
     ret = inq_macro("list_of_dictionaries");    /* builtin */
-    TEST(626, ret == 0);
+    TEST(628, ret == 0);
 
     ret = inq_macro("cut");                     /* replacement */
-    TEST(627, ret == 2);
+    TEST(629, ret == 2);
 
     ret = inq_macro("this_should_not_be_undefined");
-    TEST(628, ret == -1);                       /* undefined */
+    TEST(630, ret == -1);                       /* undefined */
 }
 
 
@@ -2560,12 +2568,12 @@ test_undef(void)
 //  //  control how 'undefines' are handled??
 //  try {
         if (1) {
-            TEST(629, inq_symbol("undefined_ival") == 0);
-            TEST(630, inq_symbol("undefined_fval") == 0);
-            TEST(631, inq_symbol("undefined_sval") == 0);
-            TEST(632, undefined_ival == 0);     /* wont be executed! */
-            TEST(633, undefined_fval == 0);     /* wont be executed! */
-            TEST(634, undefined_sval == "");    /* wont be executed! */
+            TEST(631, inq_symbol("undefined_ival") == 0);
+            TEST(632, inq_symbol("undefined_fval") == 0);
+            TEST(633, inq_symbol("undefined_sval") == 0);
+            TEST(634, undefined_ival == 0);     /* wont be executed! */
+            TEST(635, undefined_fval == 0);     /* wont be executed! */
+            TEST(636, undefined_sval == "");    /* wont be executed! */
         }
 //  } catch {
 //  } finally {
@@ -2584,12 +2592,12 @@ test_history(void)
     const string top = inq_macro_history(0);
 
                                                 /* <Alt-10> or from features */
-    TEST(635, top == "execute_macro" || top == "sel_list");
-    TEST(636, inq_command() == inq_macro_history());
+    TEST(637, top == "execute_macro" || top == "sel_list");
+    TEST(638, inq_command() == inq_macro_history());
     set_macro_history(0, "function1");
     set_macro_history(1, "function2");
-    TEST(637, "function1" == inq_macro_history());
-    TEST(638, "function2" == inq_macro_history(1));
+    TEST(639, "function1" == inq_macro_history());
+    TEST(640, "function2" == inq_macro_history(1));
 }
 
 
@@ -2601,24 +2609,24 @@ static void
 test_scope(void)
 {
     if (first_time()) {                         /* can only be run once */
-        TEST(639, 1 == scope_1());
-        TEST(640, 2 == scope_1());
-        TEST(641, 3 == scope_1());
+        TEST(641, 1 == scope_1());
+        TEST(642, 2 == scope_1());
+        TEST(643, 3 == scope_1());
 
-        TEST(642, 1 == scope_2());
-        TEST(643, 2 == scope_2());
-        TEST(644, 3 == scope_2());
+        TEST(644, 1 == scope_2());
+        TEST(645, 2 == scope_2());
+        TEST(646, 3 == scope_2());
 
-        TEST(645, 1 == scope_3());
-        TEST(646, 2 == scope_3());
-        TEST(647, 3 == scope_3());
+        TEST(647, 1 == scope_3());
+        TEST(648, 2 == scope_3());
+        TEST(649, 3 == scope_3());
     } else {                                    /* emulate */
         extern int num_passed;
         num_passed += 9;
     }
 
-    TESTASYNC(648, 0 == inq_symbol("x_extern_dontexist"));
-    TEST(649, 0 != inq_symbol("x_static"));
+    TESTASYNC(650, 0 == inq_symbol("x_extern_dontexist"));
+    TEST(651, 0 != inq_symbol("x_static"));
 }
 
 
@@ -2674,38 +2682,38 @@ test_dict(void)
 
     /* create dictionaries */
     dict = create_dictionary();
-    TEST(650, dict);
+    TEST(652, dict);
 
     dict2 = create_dictionary("namedict");
-    TEST(651, dict2);
+    TEST(653, dict2);
 
     /* basic set/get primitives */
     set_property(dict, "property", 1234);
     var = get_property(dict, "property");
-    TEST(652, 1234 == var);
+    TEST(654, 1234 == var);
 
     set_property(dict, "property", "hello world");
     var = get_property(dict, "property");
-    TEST(653, "hello world" == var);
+    TEST(655, "hello world" == var);
 
     /* indirection operators */
     dict.value = "value1";                      /* FIXME/XXX - compiler issues yet resolved */
-    TEST(654, "value1" == dict.value);
+    TEST(656, "value1" == dict.value);
 
     dict2.value = "value2";
     dict.indirect = dict2;                      /* FIXME/XXX - reference count issues */
-    TEST(655, "value2" == dict.indirect.value);
+    TEST(657, "value2" == dict.indirect.value);
     ret = dict_exists(dict, "property");
-    TEST(656, ret);
+    TEST(658, ret);
 
     l1 = dict_list(dict);
-    TEST(657, is_list(l1));
-    TEST(658, 3 == length_of_list(l1));
+    TEST(659, is_list(l1));
+    TEST(660, 3 == length_of_list(l1));
 
     set_property(dict, "property2", 1234);
     set_property(dict, "property3", 5678);
     l1 = dict_list(dict);
-    TEST(659, 5 == length_of_list(l1));
+    TEST(661, 5 == length_of_list(l1));
 
     // FIXME/XXX --
     //  compiler bug, allows declare when string expected.
@@ -2718,36 +2726,36 @@ test_dict(void)
     while ((idx = dict_each(dict, key, value)) >= 0) {
         switch(key) {
         case "property":
-            TESTASYNC(660, "hello world" == value);
+            TESTASYNC(662, "hello world" == value);
             ++count;
             break;
         case "property2":
-            TESTASYNC(661, 1234 == value);
+            TESTASYNC(663, 1234 == value);
             ++count;
             break;
         case "property3":
-            TESTASYNC(662, 5678 == value);
+            TESTASYNC(664, 5678 == value);
             ++count;
             break;
         }
     }
-    TESTASYNC(663, 3 == count);
+    TESTASYNC(665, 3 == count);
 
     ret = dict_delete(dict, "property");
-    TEST(664, 0 == ret);
+    TEST(666, 0 == ret);
 
     l1 = dict_list(dict);
-    TEST(665, is_list(l1));
-    TEST(666, 4 == length_of_list(l1));
+    TEST(667, is_list(l1));
+    TEST(668, 4 == length_of_list(l1));
 
     l1 = list_of_dictionaries();
-    TEST(667, is_list(l1));
-    TEST(668, length_of_list(l1) >= 2);         /* all dictionaries */
+    TEST(669, is_list(l1));
+    TEST(670, length_of_list(l1) >= 2);         /* all dictionaries */
 
     ret = delete_dictionary(dict);
-    TEST(669, 0 == ret);
+    TEST(671, 0 == ret);
     ret = delete_dictionary(dict2);
-    TEST(670, 0 == ret);
+    TEST(672, 0 == ret);
 }
 
 
@@ -2759,7 +2767,7 @@ test_dict(void)
 static int
 test_leaks(void)
 {
-    TEST(671, leak_1(1000) == 1000);            /* list are limited 2^16 atoms */
+    TEST(673, leak_1(1000) == 1000);            /* list are limited 2^16 atoms */
 }
 
 
@@ -2864,8 +2872,8 @@ regress_renumber(void)
         while (re_search(0, "TES[A-Z]+([0-9]+,") > 0) {
             /*
              *  examples:
-             *      TEST(672,
-             *      TESTASYNC(673,
+             *      TEST(674,
+             *      TESTASYNC(675,
              */
             line = read(18);
             delete_char(index(line, ","));

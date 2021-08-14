@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cry.y,v 1.35 2021/04/05 09:18:23 cvsuser Exp $
+/* $Id: cry.y,v 1.36 2021/08/14 17:09:30 cvsuser Exp $
  * grunch/crunch grammer, extended c99
  *
  *
@@ -525,9 +525,9 @@ additive_expression:
 shift_expression:
                   additive_expression
                 | shift_expression O_LSHIFT additive_expression
-                    { $$ = node(O_LSHIFT, $1, $3); }
+                    { $$ = node_opt(O_LSHIFT, $1, $3); }
                 | shift_expression O_RSHIFT additive_expression
-                    { $$ = node(O_RSHIFT, $1, $3); }
+                    { $$ = node_opt(O_RSHIFT, $1, $3); }
                 ;
 
 relational_expression:

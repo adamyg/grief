@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crsubs_c,"$Id: crsubs.c,v 1.28 2020/04/23 12:35:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_crsubs_c,"$Id: crsubs.c,v 1.29 2021/08/14 17:09:30 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crsubs.c,v 1.28 2020/04/23 12:35:50 cvsuser Exp $
+/* $Id: crsubs.c,v 1.29 2021/08/14 17:09:30 cvsuser Exp $
  * Parser ultities.
  *
  *
@@ -393,7 +393,7 @@ node_opt(int op, node_t *b, node_t *c)
             return b;
         case O_MOD:
             if (0 == c->atom.ival) {
-                crwarn(RC_ERROR, "constant expression modulo zero");
+                crwarn(RC_ERROR, "constant expression modulo by zero");
                 b->atom.ival = 0;
             } else {
                 b->atom.ival %= c->atom.ival;
@@ -407,6 +407,22 @@ node_opt(int op, node_t *b, node_t *c)
             return b;
         case O_AND:
             b->atom.ival &= c->atom.ival;
+            return b;
+        case O_LSHIFT:
+            if (0 == c->atom.ival) {
+                crwarn(RC_ERROR, "constant expression shift by zero");
+            } else if (c->atom.ival < 0 || c->atom.ival >= (sizeof(accint_t) * 8)) {
+                crwarn(RC_ERROR, "constant expression shift overflow");
+            }
+            b->atom.ival <<= c->atom.ival;
+            return b;
+        case O_RSHIFT:
+            if (0 == c->atom.ival) {
+                crwarn(RC_ERROR, "constant expression shift by zero");
+            } else if (c->atom.ival < 0 || c->atom.ival >= (sizeof(accint_t) * 8)) {
+                crwarn(RC_ERROR, "constant expression shift overflow");
+            }
+            b->atom.ival >>= c->atom.ival;
             return b;
         default:
             break;
