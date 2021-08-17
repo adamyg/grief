@@ -103,6 +103,7 @@
 
 /* Define to 1 if you have the `getline' function. */
     //#define HAVE_GETLINE
+#undef HAVE_GETLINE
 
 /* Define to 1 if you have the <getopt.h> header file. */
 #define HAVE_GETOPT_H
@@ -132,28 +133,26 @@
 
 /* Define to 1 if you have the <limits.h> header file. */
 #if !defined(HAVE_LIMITS_H) && (defined(_MSC_VER) || defined(__WATCOMC__))
-#define HAVE_LIMITS_H
+#define HAVE_LIMITS_H 1
 #endif
 
 /* Define to 1 if you have the <locale.h> header file. */
-#if defined(__WATCOMC__)
-#undef HAVE_LOCALE_H
-#endif
+    //#undef HAVE_LOCALE_H
 
 /* Define to 1 if you have the `localtime_r' function. */
     //#undef HAVE_LOCALTIME_R
 
 /* Define to 1 if mbrtowc and mbstate_t are properly declared. */
 #if !defined(HAVE_MBRTOWC) && (defined(_MSC_VER) || defined(__WATCOMC__))
-#define HAVE_MBRTOWC
+#define HAVE_MBRTOWC 1
 #endif
 
 /* Define to 1 if <wchar.h> declares mbstate_t. */
-#define HAVE_MBSTATE_T
+#define HAVE_MBSTATE_T 1
 
 /* Define to 1 if you have the <memory.h> header file. */
 #if !defined(HAVE_MEMORY_H) && (defined(_MSC_VER) || defined(__WATCOMC__))
-#define HAVE_MEMORY_H
+#define HAVE_MEMORY_H 1
 #endif
 
 /* Define to 1 if you have the `mkostemp' function. */
@@ -183,16 +182,16 @@
     //#undef HAVE_SIG_T
 
 /* Define to 1 if you have the <stddef.h> header file. */
-#define HAVE_STDDEF_H
+#define HAVE_STDDEF_H 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #if !defined(HAVE_STDINT_H) && (defined(_MSC_VER) || defined(__WATCOMC__))
-#define HAVE_STDINT_H
+#define HAVE_STDINT_H 1
 #endif
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #if !defined(HAVE_STDLIB_H) && (defined(_MSC_VER) || defined(__WATCOMC__))
-#define HAVE_STDLIB_H
+#define HAVE_STDLIB_H 1
 #endif
 
 /* Define to 1 if you have the `strcasestr' function. */
@@ -200,7 +199,7 @@
 
 /* Define to 1 if you have the `strerror' function. */
 #if !defined(HAVE_STRERROR) && (defined(_MSC_VER) || defined(__WATCOMC__))
-#define HAVE_STRERROR
+#define HAVE_STRERROR 1
 #endif
 
 /* Define to 1 if you have the <strings.h> header file. */
@@ -208,7 +207,7 @@
 
 /* Define to 1 if you have the <string.h> header file. */
 #if !defined(HAVE_STRING_H) && (defined(_MSC_VER) || defined(__WATCOMC__))
-#define HAVE_STRING_H
+#define HAVE_STRING_H 1
 #endif
 
 /* Define to 1 if you have the `strlcat' function. */
@@ -227,7 +226,7 @@
     //#define HAVE_STRTOUL
 
 /* HAVE_STRUCT_OPTION */
-#define HAVE_STRUCT_OPTION
+#define HAVE_STRUCT_OPTION 1
 
 /* Define to 1 if `st_rdev' is a member of `struct stat'. */
     //#undef HAVE_STRUCT_STAT_ST_RDEV
@@ -275,7 +274,7 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #if !defined(HAVE_UNISTD_H) && (defined(_MSC_VER) || defined(__WATCOMC__))
-#define HAVE_UNISTD_H
+#define HAVE_UNISTD_H 1
 #endif
 
 /* Define to 1 if you have the `uselocale' function. */
