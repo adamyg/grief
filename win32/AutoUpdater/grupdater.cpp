@@ -1,4 +1,4 @@
-// $Id: grupdater.cpp,v 1.8 2021/08/14 13:43:47 cvsuser Exp $
+// $Id: grupdater.cpp,v 1.9 2021/08/17 06:02:21 cvsuser Exp $
 //
 //  GRIEF AutoUpdater command line.
 //
@@ -37,13 +37,16 @@ main(int argc, char *argv[])
     int ch;
 
     x_progname = Basename(argv[0]);
-    while (-1 != (ch = Updater::Getopt(argc, argv, "V:H:icvh"))) {
+    while (-1 != (ch = Updater::Getopt(argc, argv, "V:H:L:icvh"))) {
         switch (ch) {
         case 'V':   /* application version */
             version= Updater::optarg;
             break;
         case 'H':   /* host URL */
             hosturl = Updater::optarg;
+            break;
+        case 'L':   /* logpath */
+            autoupdate_logger_path(Updater::optarg);
             break;
         case 'i':   /* interactive */
             ++interactive;
@@ -91,12 +94,12 @@ main(int argc, char *argv[])
     } else if (0 == _stricmp("dump", arg)) {
         mode = -2;
     } else if (0 == _stricmp("config", arg)) {
-        std::cout 
+        std::cout
             << GR_PACKAGE_NAME << "\n"
             << "Built:   " << GR_BUILD_DATE << "\n"
             << "Version: " << version << "\n"
             << "Host:    " << hosturl << "\n";
-        return 0;                        
+        return 0;
     } else {
         std::cerr << "\n" <<
             x_progname << ": unknown mode '" << arg << "'" << std::endl;
@@ -133,8 +136,9 @@ Usage()
         "Modes:\n"\
         "   auto -              Periodically check for updates.\n"\
         "   prompt -            Re-prompt user when periodic updates are disabled.\n"\
-        "   force -             Unconditionally prompt, even when skipped.\n"\
-        "   reinstall -         Prompt for install, even if uptodate.\n"\
+        "   force -             Prompt ignoring skip status.\n"\
+        "   reinstall -         Prompt unconditionally, even if up-to-date/skipped.\n"\
+        "\n"\
         "   enable -            Enable periodic checks.\n"\
         "   disable -           Disable automatic periodic checks.\n"\
         "   reset -             Reset the updater status.\n"\
@@ -145,6 +149,7 @@ Usage()
         "Options:\n"\
         "   -V <version>        Version label.\n"\
         "   -H <host>           Host URL.\n"\
+        "   -L <logpath>        Diagnostics log path.\n"\
         "   -i                  Interactive ('auto' only).\n"\
         "   -v                  Verbose diagnostice.\n"\
         "\n" << std::endl;
