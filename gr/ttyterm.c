@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.110 2021/04/05 08:04:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.115 2021/10/15 10:32:48 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.110 2021/04/05 08:04:31 cvsuser Exp $
+/* $Id: ttyterm.c,v 1.115 2021/10/15 10:32:48 cvsuser Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -180,15 +180,29 @@ typedef struct {
     const char *        termcapname;            /* termcap name */
     const char *        terminfoname;           /* terminfo name */
     const char *        comment;                /* comment string */
-    void *              token;                  /* optional user token */
 #define TC_DESC(__desc)         __desc
-#define TC_TOKEN(__token)       (void *)(__token)
-
-    union {
-        const char     *i_str;
-        int             i_val;
-    } value;                                    /* value */
 } Term_t;
+
+typedef struct {
+    Term_t              term;
+    int                 key;
+#define TC_TOKEN(__token)       __token
+    const char *        svalue;                 /* runtime value */
+} TermKey_t;
+
+typedef struct {
+    Term_t              term;
+    const char **       stoken;
+#define TC_STRING(__token)      __token
+    const char *        svalue;                 /* runtime value */
+} TermString_t;
+
+typedef struct {
+    Term_t              term;
+    int *               itoken;
+#define TC_FLAG(__token)        __token
+    int                 ivalue;                 /* runtime value*/
+} TermNumeric_t;
 
 static void             term_open(scrprofile_t *profile);
 static void             term_ready(int repaint, scrprofile_t *profile);
@@ -522,11 +536,11 @@ static GraphicChars_t term_characters[] =  {    /* graphic characters */
     { TACS_VLINE,           TC_DESC("vertical line") }
     };
 
-static Term_t term_strings[] = {                /* strings - termcap/terminfo elements */
-    { "ac", "acsc",         TC_DESC("acs characters"), &tc_graphic_pairs },
+static TermString_t term_strings[] = {          /* strings - termcap/terminfo elements */
+    { "ac", "acsc",         TC_DESC("acs characters"), TC_STRING(&tc_graphic_pairs) },
     { "bt", "cbt",          TC_DESC("back tab")},
-    { "bl", "bel",          TC_DESC("audible signal (bell)"), &tc_bl },
-    { "cr", "cr",           TC_DESC("carriage return"), &tc_cr },
+    { "bl", "bel",          TC_DESC("audible signal (bell)"), TC_STRING(&tc_bl) },
+    { "cr", "cr",           TC_DESC("carriage return"), TC_STRING(&tc_cr) },
     { "ZA", "cpi",          TC_DESC("change number of characters per inch") },
     { "ZB", "lpi",          TC_DESC("change number of lines per inch") },
     { "ZC", "chr",          TC_DESC("change horizontal resolution") },
@@ -676,9 +690,9 @@ static Term_t term_strings[] = {                /* strings - termcap/terminfo el
     { "PU", "pulse",        TC_DESC("select pulse dialling") },
     { "QD", "qdial",        TC_DESC("dial number #1 without checking") },
     { "RC", "rmclk",        TC_DESC("remove clock") },
-    { "rp", "rep",          TC_DESC("repeat char #1 #2 times"), &tc_rp},
+    { "rp", "rep",          TC_DESC("repeat char #1 #2 times"), &tc_rp },
     { "RF", "rfi",          TC_DESC("send next input char (for ptys)") },
-    { "rs", NULL,           TC_DESC("terminal reset string"), &tc_rs},
+    { "rs", NULL,           TC_DESC("terminal reset string"), &tc_rs },
     { "r1", "rs1",          TC_DESC("reset string") },
     { "r2", "rs2",          TC_DESC("reset string") },
     { "r3", "rs3",          TC_DESC("reset string") },
@@ -803,8 +817,8 @@ static Term_t term_strings[] = {                /* strings - termcap/terminfo el
     /*
      *  Others
      */
-    { "cS", NULL,           TC_DESC("change region to line #1 to line #2, alt form"), &tc_cS},
-    { "bc", NULL,           TC_DESC("move left, if not ^H (old-style)"), &tc_bc},
+    { "cS", NULL,           TC_DESC("change region to line #1 to line #2, alt form"), &tc_cS },
+    { "bc", NULL,           TC_DESC("move left, if not ^H (old-style)"), &tc_bc },
     { "nl", NULL,           TC_DESC("use to move down") },
  /* { "ko", NULL,           TC_DESC("list of self-mapped keycaps") }, */
  /* { "ma", NULL,           TC_DESC("map arrow keys rogue(1) motion keys") }, */
@@ -859,7 +873,7 @@ static const struct {
 #endif  /*XXX_KO*/
 
 
-static Term_t term_numbers[] = {                /* numeric - termcap/terminfo elements */
+static TermNumeric_t term_numbers[] = {         /* numeric - termcap/terminfo elements */
     /*
      *  standard
      */
@@ -901,7 +915,7 @@ static Term_t term_numbers[] = {                /* numeric - termcap/terminfo el
     };
 
 
-static Term_t term_keys[] = {                  /* keys - termcap/terminfo elements */
+static TermKey_t term_keys[] = {                /* keys - termcap/terminfo elements */
     { "!1",  "kSAV",        TC_DESC("shifted save key") },
     { "!2",  "kSPD",        TC_DESC("shifted suspend key") },
     { "!3",  "kUND",        TC_DESC("shifted undo key"), TC_TOKEN(KEY_REDO) },
@@ -1053,14 +1067,14 @@ static Term_t term_keys[] = {                  /* keys - termcap/terminfo elemen
     { "ku",  "kcuu1",       TC_DESC("up-arrow key"), TC_TOKEN(KEY_UP) },
     };
 
-static Term_t term_flags[] = {                  /* boolean - termcap/terminfo elements */
+static TermNumeric_t term_flags[] = {           /* boolean - termcap/terminfo elements */
     { "5i",  "mc5i",        TC_DESC("printer won't echo on screen") },
     { "HC",  "chts",        TC_DESC("cursor is hard to see") },
-    { "LP",  NULL,          TC_DESC("last column of last line will not scroll"), TC_TOKEN(&tf_LP) },
+    { "LP",  NULL,          TC_DESC("last column of last line will not scroll"), TC_FLAG(&tf_LP) },
     { "MT",  NULL,          TC_DESC("has meta key") },          /* TODO */
     { "ND",  "ndscr",       TC_DESC("scrolling region is non-destructive") },
-    { "NL",  NULL,          TC_DESC("move down with \\n"), TC_TOKEN(&tf_NL) },
-    { "NP",  "npc",         TC_DESC("pad character does not exist"), TC_TOKEN(&tf_npc) },
+    { "NL",  NULL,          TC_DESC("move down with \\n"), TC_FLAG(&tf_NL) },
+    { "NP",  "npc",         TC_DESC("pad character does not exist"), TC_FLAG(&tf_npc) },
     { "NR",  "nrrmc",       TC_DESC("smcup does not reverse rmcup") },
     { "YA",  "xhpa",        TC_DESC("only positive motion for hpa/mhpa caps") },
     { "YB",  "crxm",        TC_DESC("using cr turns off micro mode") },
@@ -1069,37 +1083,37 @@ static Term_t term_flags[] = {                  /* boolean - termcap/terminfo el
     { "YE",  "sam",         TC_DESC("printing in last column causes cr") },
     { "YF",  "cpix",        TC_DESC("changing character pitch changes resolution") },
     { "YG",  "lpix",        TC_DESC("changing line pitch changes resolution") },
-    { "am",  "am",          TC_DESC("terminal has automatic margins"), TC_TOKEN(&tf_am) },
-    { "be",  NULL,          TC_DESC("back color erase"), TC_TOKEN(&tf_be) },
-    { "bs",  NULL,          TC_DESC("uses ^H to move left"), TC_TOKEN(&tf_bs) },
+    { "am",  "am",          TC_DESC("terminal has automatic margins"), TC_FLAG(&tf_am) },
+    { "be",  NULL,          TC_DESC("back color erase"), TC_FLAG(&tf_be) },
+    { "bs",  NULL,          TC_DESC("uses ^H to move left"), TC_FLAG(&tf_bs) },
     { "bw",  "bw",          TC_DESC("cub1 wraps from column 0 to last column") },
     { "cc",  "ccc",         TC_DESC("terminal can re-define existing colors") },
     { "da",  "da",          TC_DESC("display may be retained above the screen") },
     { "db",  "db",          TC_DESC("display may be retained below the screen") },
     { "eo",  "eo",          TC_DESC("can erase overstrikes with a blank") },
     { "es",  "eslok",       TC_DESC("escape can be used on the status line") },
-    { "gn",  "gn",          TC_DESC("generic line type"), TC_TOKEN(&tf_gn) },
-    { "hc",  "hc",          TC_DESC("hardcopy terminal"), TC_TOKEN(&tf_hc) },
+    { "gn",  "gn",          TC_DESC("generic line type"), TC_FLAG(&tf_gn) },
+    { "hc",  "hc",          TC_DESC("hardcopy terminal"), TC_FLAG(&tf_hc) },
     { "hl",  "hls",         TC_DESC("terminal uses only HLS color notation (tektronix)") },
     { "hs",  "hs",          TC_DESC("has extra status line") },
-    { "hz",  "hz",          TC_DESC("can't print ~'s (hazeltine)"), TC_TOKEN(&tf_hz) },
+    { "hz",  "hz",          TC_DESC("can't print ~'s (hazeltine)"), TC_FLAG(&tf_hz) },
     { "in",  "in",          TC_DESC("insert mode distinguishes nulls") },
-    { "km",  "km",          TC_DESC("Has a meta key, sets msb high"), TC_TOKEN(&tf_km) },
+    { "km",  "km",          TC_DESC("Has a meta key, sets msb high"), TC_FLAG(&tf_km) },
     { "mi",  "mir",         TC_DESC("safe to move while in insert mode") },
-    { "ms",  "msgr",        TC_DESC("safe to move while in standout/underline mode"), TC_TOKEN(&tf_ms) },
+    { "ms",  "msgr",        TC_DESC("safe to move while in standout/underline mode"), TC_FLAG(&tf_ms) },
     { "nc",  NULL,          TC_DESC("no way to go to start of line") },
     { "ns",  NULL,          TC_DESC("crt cannot scroll") },
-    { "nx",  "nxon",        TC_DESC("padding won't work, xon/xoff required"), TC_TOKEN(&tf_xonoff) },
+    { "nx",  "nxon",        TC_DESC("padding won't work, xon/xoff required"), TC_FLAG(&tf_xonoff) },
     { "os",  "os",          TC_DESC("terminal can overstrike") },
     { "pt",  NULL,          TC_DESC("has 8-char tabs invoked with ^I") },
     { "ul",  "ul",          TC_DESC("underline character overstrikes") },
-    { "ut",  "bce",         TC_DESC("screen erased with background color"), TC_TOKEN(&tf_ut) },
+    { "ut",  "bce",         TC_DESC("screen erased with background color"), TC_FLAG(&tf_ut) },
     { "xb",  "xsb",         TC_DESC("beehive (f1=escape, f2=ctrl C)") },
-    { "xn",  "xenl",        TC_DESC("newline ignored after 80 cols (concept)"), TC_TOKEN(&tf_xn) },
-    { "xo",  NULL,          TC_DESC("terminal uses xon/xoff handshaking"), TC_TOKEN(&tf_xonoff) },
+    { "xn",  "xenl",        TC_DESC("newline ignored after 80 cols (concept)"), TC_FLAG(&tf_xn) },
+    { "xo",  NULL,          TC_DESC("terminal uses xon/xoff handshaking"), TC_FLAG(&tf_xonoff) },
     { "xr",  "xon",         TC_DESC("return clears the line") },
-    { "xs",  "xhp",         TC_DESC("standout not erased by overwriting (hp)"), TC_TOKEN(&tf_xs) },
-    { "xt",  "xt",          TC_DESC("tabs destructive, magic so char (Telray 1061)"), TC_TOKEN(&tf_xt) }
+    { "xs",  "xhp",         TC_DESC("standout not erased by overwriting (hp)"), TC_FLAG(&tf_xs) },
+    { "xt",  "xt",          TC_DESC("tabs destructive, magic so char (Telray 1061)"), TC_FLAG(&tf_xt) }
     };
 
 
@@ -1152,11 +1166,13 @@ static const struct colormap {                  /* BRIEF -> XTERM color map */
     { COLOR_NONE,   -1,     -1,     -1,     -1,     -1,     -1,     -1      }
     };
 
+
 /*
  *  Scroll window
  */
 static int              tt_top = -1;            /* Top of scroll region. */
 static int              tt_bot = -1;            /* Bottom of scroll region. */
+
 
 /*
  *  Color information
@@ -1364,17 +1380,18 @@ ttinit(void)
             /*
              *  string values
              */
-            const Term_t *ti = term_strings + i;
-            const char *name = ttiname(ti);
+            TermString_t *ti = term_strings + i;
+            const Term_t *term = &ti->term;
+            const char *name = ttiname(term);
 
-            if (name && NULL != (cp = ttigetstr(ti))) {
-                const char **token = term_strings[i].token;
+            if (name && NULL != (cp = ttigetstr(term))) {
+                const char **token = ti->stoken;
 
-                term_strings[i].value.i_str = cp;
+                ti->svalue = cp;
                 if (token) {
-                    *token = cp;
+                    *token = ti->svalue;
                 }
-                trace_log("\t%-50s%c %-5s : %s\n", term_strings[i].comment,
+                trace_log("\t%-50s%c %-5s : %s\n", term->comment,
                     (token ? '*' : ' '), name, c_string(cp));
 
                 if (token == &tc_graphic_pairs) {
@@ -1400,15 +1417,16 @@ ttinit(void)
             /*
              *  keys
              */
-            const Term_t *ti = term_keys + i;
-            const char *name = ttiname(ti);
+            TermKey_t *ti = term_keys + i;
+            const Term_t *term = &ti->term;
+            const char *name = ttiname(term);
 
-            if (name && NULL != (cp = ttigetstr(ti))) {
-                const size_t kcode = (size_t)term_keys[i].token;
+            if (name && NULL != (cp = ttigetstr(term))) {
+                const size_t kcode = (size_t)ti->key;
 
-                term_keys[i].value.i_str = cp;  /* loaded later by ttkeys() */
+                ti->svalue = cp;                /* loaded later by ttkeys() */
 
-                trace_log("\t%-50s%c %-5s : %s\n", term_keys[i].comment,
+                trace_log("\t%-50s%c %-5s : %s\n", term->comment,
                     (kcode ? '*' : ' '), name, c_string(cp));
 
                 if (kcode >= F(1) && kcode <= F(10)) {
@@ -1426,16 +1444,17 @@ ttinit(void)
             /*
              *  numbers
              */
-            const Term_t *ti = term_numbers + i;
-            const char *name = ttiname(ti);
+            TermNumeric_t *ti = term_numbers + i;
+            const Term_t *term = &ti->term;
+            const char *name = ttiname(term);
 
             if (name) {
-                term_numbers[i].value.i_val = ttigetnum(ti);
-                if (term_numbers[i].token) {
-                    *((int *)term_numbers[i].token) = term_numbers[i].value.i_val;
+                ti->ivalue = ttigetnum(term);
+                if (ti->itoken) {
+                    *ti->itoken = ti->ivalue;
                 }
-                trace_log("\t%-50s%c %-5s : %d\n", term_numbers[i].comment,
-                    (term_numbers[i].token ? '*' : ' '), name, term_numbers[i].value.i_val);
+                trace_log("\t%-50s%c %-5s : %d\n", term->comment,
+                    (ti->itoken ? '*' : ' '), name, ti->ivalue);
             }
         }
 
@@ -1444,16 +1463,17 @@ ttinit(void)
             /*
              *  flags
              */
-            const Term_t *ti = term_flags + i;
-            const char *name = ttiname(ti);
+            TermNumeric_t *ti = term_flags + i;
+            const Term_t *term = &ti->term;
+            const char *name = ttiname(term);
 
             if (name) {
-                term_flags[i].value.i_val = ttigetflag(ti);
-                if (term_flags[i].token) {
-                    *((int *)term_flags[i].token) = term_flags[i].value.i_val;
+                ti->ivalue = ttigetflag(term);
+                if (ti->itoken) {
+                    *ti->itoken = ti->ivalue;
                 }
-                trace_log("\t%-50s%c %-5s : %d\n", term_flags[i].comment,
-                    (term_flags[i].token ? '*' : ' '), name, term_flags[i].value.i_val);
+                trace_log("\t%-50s%c %-5s : %d\n", term->comment,
+                    (ti->itoken ? '*' : ' '), name, ti->ivalue);
             }
         }
     }
@@ -2408,8 +2428,8 @@ ttkeys(void)
      *  Keys
      */
     for (i = 0; i < (sizeof(term_keys)/sizeof(term_keys[0])); ++i)
-        if (term_keys[i].value.i_str && term_keys[i].token) {
-            key_define_key_seq((int)term_keys[i].token, term_keys[i].value.i_str);
+        if (term_keys[i].svalue && term_keys[i].key) {
+            key_define_key_seq(term_keys[i].key, term_keys[i].svalue);
         }
 
     /*
@@ -3116,9 +3136,9 @@ term_tidy(void)
             ttpush("\033[?2000l");              /* disable RAW mode */
         }
     } else if (t_attributes & TA_MINTTY) {
-//TODO  if (! xf_mouse) {
-            ttpush("\033[?7786l");              /* disable mouse-wheel reports */
-//      }
+	if (xf_mouse) { 			/* mouse enabled? */
+	    ttpush("\033[?7786l");              /* disable mouse-wheel reports */
+	}
     }
 
     term_graphic_exit();                        /* graphic mode */
