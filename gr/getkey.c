@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_getkey_c,"$Id: getkey.c,v 1.45 2021/06/10 06:13:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_getkey_c,"$Id: getkey.c,v 1.46 2021/10/15 08:58:07 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: getkey.c,v 1.45 2021/06/10 06:13:02 cvsuser Exp $
+/* $Id: getkey.c,v 1.46 2021/10/15 08:58:07 cvsuser Exp $
  * Low level input, both keyboard and mouse.
  *
  *
@@ -299,8 +299,8 @@ io_wait(int state, struct IOEvent *evt, accint_t utmo)
                 assert(EVT_NONE != evt->type);
                 return 0;
             }
-            Sleep(250);
-        } while ((tmo -= 250) > 0);
+            Sleep(50);
+        } while ((tmo -= 50) > 0);
         return event;
     }
 #endif  /*CYGWIN*/
