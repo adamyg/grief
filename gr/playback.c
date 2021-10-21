@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_playback_c,"$Id: playback.c,v 1.32 2019/01/26 22:27:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_playback_c,"$Id: playback.c,v 1.33 2021/10/17 12:12:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: playback.c,v 1.32 2019/01/26 22:27:08 cvsuser Exp $
+/* $Id: playback.c,v 1.33 2021/10/17 12:12:06 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -744,7 +744,7 @@ playback_grab(int popit)
 void
 playback_macro(const char *cp)
 {
-    BUFFER_t *bp, *saved_bp = curbp;
+    BUFFER_t *bp, *ocurbp = curbp;
 
     if (!x_playback_recording || x_rem_string[0] == 'P') {
         return;
@@ -765,8 +765,7 @@ playback_macro(const char *cp)
         return;
     }
 
-    curbp = bp;
-    set_hooked();
+    set_curbp(bp);
     BFSET(curbp, BF_NO_UNDO);
 
     if ('s' == *cp && 0 == strcmp(cp, "self_insert")) {
@@ -838,7 +837,6 @@ playback_macro(const char *cp)
         }
         rem_doing_self_insert = FALSE;
     }
-    curbp = saved_bp;
-    set_hooked();
+    set_curbp(ocurbp);
 }
 /*end*/

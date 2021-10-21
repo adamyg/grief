@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_position_c,"$Id: position.c,v 1.7 2021/07/04 08:14:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_position_c,"$Id: position.c,v 1.8 2021/10/17 12:10:13 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: position.c,v 1.7 2021/07/04 08:14:01 cvsuser Exp $
+/* $Id: position.c,v 1.8 2021/10/17 12:10:13 cvsuser Exp $
  * Buffer position/status.
  *
  *
@@ -128,8 +128,7 @@ position_restore(int what)
                 move_abs(pos->p_cur_line, pos->p_cur_col);
 
                 if (1 == what) {                /* position restore, but not buffer */
-                    curbp = saved_bp;
-                    set_hooked();
+                    set_curbp(saved_bp);
                 } else {
                     attach_buffer(curwp, curbp);
                 }

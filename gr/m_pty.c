@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_pty_c,"$Id: m_pty.c,v 1.24 2021/06/10 06:13:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_pty_c,"$Id: m_pty.c,v 1.25 2021/10/18 13:12:13 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_pty.c,v 1.24 2021/06/10 06:13:02 cvsuser Exp $
+/* $Id: m_pty.c,v 1.25 2021/10/18 13:12:13 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -904,9 +904,8 @@ p_push(BUFFER_t *bp, const char *str)
     DISPLAY_t *dp = bp->b_display;
     const char *start = NULL;
 
-    curbp = bp;
+    set_curbp(bp);
     BFSET(curbp, BF_NO_UNDO);
-    set_hooked();
 
     if ((*cur_line = dp->d_curline) < 1) {
         *cur_line = 1;
@@ -1029,11 +1028,10 @@ p_push(BUFFER_t *bp, const char *str)
     if (curwp && curwp->w_bufp == curbp) {
         set_buffer_parms(bp, curwp);
     }
-    curbp = saved_bp;
+    set_curbp(saved_bp);
     if (! saved_no_undo) {
         BFCLR(curbp, BF_NO_UNDO);
     }
-    set_hooked();
 }
 
 
@@ -1584,7 +1582,7 @@ void
 pty_poll(void)
 {
     static int entry = 0;
-    BUFFER_t *saved_curbp = curbp;
+    BUFFER_t *ocurbp = curbp;
     int updated;
     char buf[1024+1];
 
@@ -1631,8 +1629,7 @@ start_again:
          *  Update screen if necessary and make sure that the current buffer is restored
          *  so that cursor goes at right place and in case we exit this loop
          */
-        curbp = saved_curbp;
-        set_hooked();
+        set_curbp(ocurbp);
         if (updated) {
             vtupdate();
         }

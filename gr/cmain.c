@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.39 2021/07/05 15:01:26 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.40 2021/10/18 13:17:16 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.39 2021/07/05 15:01:26 cvsuser Exp $
+/* $Id: cmain.c,v 1.40 2021/10/18 13:17:16 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -585,8 +585,8 @@ cmain(int argc, char **argv)
                 firstbp = curbp;
             }
         }
-        buf_show(curbp = firstbp, curwp);
-        set_hooked();
+        set_curbp(firstbp);
+        buf_show(curbp, curwp);
 
     } else  {                                   /* load default quietly */
         const char *grfile = ggetenv("GRFILE");
@@ -1675,7 +1675,6 @@ editor_setup(void)
     }
 
     k_init(bp);
-    curbp = bp;                                 /* current ones. */
     bp->b_nwnd = 1;                             /* displayed. */
     bp->b_keyboard = NULL;
 
@@ -1688,17 +1687,13 @@ editor_setup(void)
     wp->w_type = W_TILED;
     wp->w_tab = 0;                              /* TABLINE */
     window_append(wp);
-    curwp = wp;
-
-    cur_line = &bp->b_line;
-    cur_col = &bp->b_col;
 
     wp->w_w = (uint16_t)(ttcols() - 2);         /* 0..78 */
     wp->w_h = (uint16_t)(ttrows() - 3);
     wp->w_status = WFHARD;
 
     window_title(wp, "*scratch*", "");
-    set_hooked();
+    set_curwpbp(wp, bp);
 }
 
 

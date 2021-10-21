@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_basic_c,"$Id: basic.c,v 1.30 2021/06/10 06:13:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_basic_c,"$Id: basic.c,v 1.31 2021/10/18 13:14:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: basic.c,v 1.30 2021/06/10 06:13:01 cvsuser Exp $
+/* $Id: basic.c,v 1.31 2021/10/18 13:14:57 cvsuser Exp $
  * Basic cursor movement.
  *
  *
@@ -800,11 +800,9 @@ do_move_abs(void)               /* int ([int line = -1], [int col = -1], [int bu
             if (bp && bp != curbp) {
                 BUFFER_t *ocurbp = curbp;
 
-                curbp = bp;
-                set_hooked();
+                set_curbp(bp);
                 move2((LINENO) line, (LINENO) col, (clip ? MOVE_CLIP : 0));
-                curbp = ocurbp;
-                set_hooked();
+                set_curbp(ocurbp);
                 return;
             }
         }

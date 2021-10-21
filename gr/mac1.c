@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mac1_c,"$Id: mac1.c,v 1.74 2021/07/11 08:24:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_mac1_c,"$Id: mac1.c,v 1.75 2021/10/18 13:07:25 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mac1.c,v 1.74 2021/07/11 08:24:15 cvsuser Exp $
+/* $Id: mac1.c,v 1.75 2021/10/18 13:07:25 cvsuser Exp $
  * Basic primitives.
  *
  *
@@ -2009,15 +2009,13 @@ do_insert_buffer(void)          /* int (int bufnum, string | expr ....) */
     }
 
     if (cp) {
-        BUFFER_t *saved_bp = curbp;
+        BUFFER_t *ocurbp = curbp;
 
         if (bp != curbp) {
-            curbp = bp;
-            set_hooked();
+            set_curbp(bp);
         }
         linserts(cp, len);
-        curbp = saved_bp;
-        set_hooked();
+        set_curbp(ocurbp);
     }
     acc_assign_int(width);
 }

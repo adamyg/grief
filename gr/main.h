@@ -1,11 +1,11 @@
 #ifndef GR_MAIN_H_INCLUDED
 #define GR_MAIN_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_main_h,"$Id: main.h,v 1.28 2020/05/03 21:10:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_main_h,"$Id: main.h,v 1.29 2021/10/17 12:12:23 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: main.h,v 1.28 2020/05/03 21:10:56 cvsuser Exp $
+/* $Id: main.h,v 1.29 2021/10/17 12:12:23 cvsuser Exp $
  * Globals and main process primitives.
  *
  *
@@ -118,6 +118,10 @@ extern uint32_t             xf_test;            /* TRUE enables test code --- in
 
 extern BUFFER_t *           curbp;              /* Current buffer */
 extern WINDOW_t *           curwp;              /* Current window */
+
+extern void                 set_curbp(BUFFER_t *bp);
+extern void                 set_curwp(WINDOW_t *wp);
+extern void                 set_curwpbp(WINDOW_t *wp, BUFFER_t *bp);
 
 extern void                 panic(const char *msg, ...) __ATTRIBUTE_FORMAT__((printf, 1, 2));
 extern void                 gr_exit(int);

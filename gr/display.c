@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.80 2021/07/18 23:03:19 cvsuser Exp $")
+__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.81 2021/10/18 13:22:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: display.c,v 1.80 2021/07/18 23:03:19 cvsuser Exp $
+/* $Id: display.c,v 1.81 2021/10/18 13:22:21 cvsuser Exp $
  * High level display interface.
  *
  *
@@ -2704,9 +2704,8 @@ draw_window(WINDOW_t *wp, int top, LINENO line, int end, const int bottom, int a
      *  Body
      */
     saved_wp = curwp;                           /* requirement of lower level functionality (draw_line). */
-    curwp = wp;
     saved_bp = curbp;
-    curbp = bp;
+    set_curwpbp(wp, bp);
 
     for (; top <= end; ++top, ++line) {
         const LINE_t *lp = vm_lock_line2(line);
@@ -2876,9 +2875,7 @@ draw_window(WINDOW_t *wp, int top, LINENO line, int end, const int bottom, int a
     }
 
     wp->w_disp_anchor = NULL;
-    curwp = saved_wp;                           /* restore state */
-    curbp = saved_bp;
-    set_hooked();
+    set_curwpbp(saved_wp, saved_bp);            /* restore state */
 }
 
 

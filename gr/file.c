@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.89 2021/07/02 15:37:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.90 2021/10/18 13:19:59 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: file.c,v 1.89 2021/07/02 15:37:58 cvsuser Exp $
+/* $Id: file.c,v 1.90 2021/10/18 13:19:59 cvsuser Exp $
  * File-buffer primitives and support.
  *
  *
@@ -674,7 +674,7 @@ static int
 buf_insert(BUFFER_t *bp, const char *fname, int inserting, const int32_t flags, const char *encoding)
 {
     const int startup = ((EDIT_STARTUP & flags) ? TRUE : FALSE);
-    BUFFER_t *saved_bp = curbp;
+    BUFFER_t *ocurbp = curbp;
     int fd, readonly = 0;
 
 #if (TODO_POPEN)
@@ -750,8 +750,7 @@ buf_insert(BUFFER_t *bp, const char *fname, int inserting, const int32_t flags, 
                 BFSET(bp, BF_SYSBUF);
             }
 
-            curbp = bp;
-            set_hooked();
+            set_curbp(bp);
             numlines = buf_readin(bp, fd, fname, sb.st_size, flags, encoding);
             vfs_close(fd);
             fd = -1;
@@ -778,8 +777,7 @@ buf_insert(BUFFER_t *bp, const char *fname, int inserting, const int32_t flags, 
                     wp->w_status |= WFHARD;
                 }
 
-            curbp = saved_bp;
-            set_hooked();
+            set_curbp(ocurbp);
             return (numlines >= 0 ? 0 : -1);
         }
     }
@@ -1853,7 +1851,7 @@ buf_writeout(BUFFER_t *bp, const char *fname, int undo, int append /*const char 
         return FALSE;
     }
 
-    curbp = bp;
+    set_curbp(bp);
     termlen = file_terminator_get(bp, termbuf, sizeof(termbuf), NULL);
 
     infof("Writing ...");
@@ -1931,7 +1929,7 @@ buf_writeout(BUFFER_t *bp, const char *fname, int undo, int append /*const char 
             errorf("Error closing file: File system may be full.");
         }
     }
-    curbp = saved_bp;
+    set_curbp(saved_bp);
     return TRUE;
 
 error:;
@@ -1954,7 +1952,7 @@ error:;
     } else {
         vfs_fclose(fp);
     }
-    curbp = saved_bp;
+    set_curbp(saved_bp);
     return FALSE;
 }
 
@@ -2718,8 +2716,7 @@ file_load(const char *fname, const int32_t flags, const char *encoding)
 
     if (0 == (EDIT_AGAIN & flags) && BFTST(bp, BF_READ)) {
         trace_log("=> already(2)\n");
-        curbp = bp;                             /* already read */
-        set_hooked();
+        set_curbp(bp);                         /* already read */
         ret = 2;
 
     } else {
@@ -2769,9 +2766,7 @@ file_load(const char *fname, const int32_t flags, const char *encoding)
                 buf_type_default(bp);
             }
         }
-
-        curbp = bp;
-        set_hooked();
+        set_curbp(bp);
 
         lrenumber(bp);
         if (!noundo) {

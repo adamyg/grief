@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dialog_tty_c,"$Id: dialog_tty.c,v 1.26 2020/04/21 00:01:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_dialog_tty_c,"$Id: dialog_tty.c,v 1.27 2021/10/18 13:14:34 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dialog_tty.c,v 1.26 2020/04/21 00:01:55 cvsuser Exp $
+/* $Id: dialog_tty.c,v 1.27 2021/10/18 13:14:34 cvsuser Exp $
  * Dialog manager, TTY interface.
  *
  *
@@ -391,9 +391,7 @@ dlg_close(DIALOG_t *d)
 
     d->d_ucontrol = NULL;
     c->cx_current = NULL;
-    curbp = c->cx_obp;                          /* restore */
-    curwp = c->cx_owp;
-    set_hooked();
+    set_curwpbp(c->cx_owp, c->cx_obp);          /* restore */
 
     ttyframe_close(&c->cx_popup, TRUE);
     ttyframe_close(&c->cx_base, TRUE);
@@ -431,8 +429,7 @@ ttyframe_create(TTYFrame_t *frame, int clear, const char *title, int x, int y, i
             chk_free(cp);
         }
 
-        curwp = NULL; curbp = bp;
-        set_hooked();
+        set_curwpbp(NULL, bp);
 
         bp->b_termtype = LTERM_UNIX;            /* UNIX style line feeds */
         bp->b_imode = TRUE;                     /* localised insert-mode */
@@ -454,8 +451,7 @@ ttyframe_create(TTYFrame_t *frame, int clear, const char *title, int x, int y, i
      *  Create the window,
      */
     if (-1 == window_create(W_POPUP, "", x, y, cols, rows)) {
-        curwp = owp; curbp = obp;
-        set_hooked();
+        set_curwpbp(owp, obp);
         buf_kill(bp->b_bufnum);
         return FALSE;
     }
@@ -467,8 +463,7 @@ ttyframe_create(TTYFrame_t *frame, int clear, const char *title, int x, int y, i
     WFSET(wp, WF_DIALOG);
     attach_buffer(wp, bp);
     wp->w_ctrl_state = 0;                       /* disable scrollbars etc */
-    curwp = owp; curbp = obp;
-    set_hooked();
+    set_curwpbp(owp, obp);
     frame->f_wp = wp;
     frame->f_bp = bp;
     return TRUE;
@@ -480,9 +475,7 @@ ttyframe_focus(const TTYFrame_t *frame)
 {
     if (frame && frame->f_wp && frame->f_bp) {
         if (curwp != frame->f_wp || curbp != frame->f_bp) {
-            curwp = frame->f_wp;
-            curbp = frame->f_bp;
-            set_hooked();
+            set_curwpbp(frame->f_wp, frame->f_bp);
         }
         return TRUE;
     }
@@ -534,9 +527,7 @@ dlg_controller(DIALOG_t *d, unsigned op, int p1, ...)
 
             ttyframe_focus(&c->cx_base);
             dlg_update(d);
-            curbp = savbp;
-            curwp = savwp;
-            set_hooked();
+            set_curwpbp(savwp, savbp);
         }
         break;
 

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_search_c,"$Id: search.c,v 1.56 2021/06/10 06:13:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_search_c,"$Id: search.c,v 1.57 2021/10/17 12:09:17 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: search.c,v 1.56 2021/06/10 06:13:02 cvsuser Exp $
+/* $Id: search.c,v 1.57 2021/10/17 12:09:17 cvsuser Exp $
  * Search interface.
  *
  *  TODO:
@@ -917,8 +917,7 @@ do_re_search(void)              /* int ([int flags], [string pattern], [declare 
 
             if (bp != curbp) {
                 saved_bp = curbp;
-                curbp = bp;
-                set_hooked();
+                set_curbp(bp);
             }
 
             if (SF_CAPTURES & flags) {          /* captures, globalise state */
@@ -946,8 +945,7 @@ do_re_search(void)              /* int ([int flags], [string pattern], [declare 
             }
 
             if (saved_bp) {
-                curbp = saved_bp;
-                set_hooked();
+                set_curbp(saved_bp);
             }
         }
         acc_assign_int(result);
@@ -1359,13 +1357,11 @@ do_re_translate(void)           /* ([int flags], string pattern, [string replace
 
             if (bp != curbp) {
                 saved_bp = curbp;
-                curbp = bp;
-                set_hooked();
+                set_curbp(bp);
             }
             translate_buf(dir, global, flags, -2, 3);
             if (saved_bp) {
-                curbp = saved_bp;
-                set_hooked();
+                set_curbp(saved_bp);
             }
         }
 

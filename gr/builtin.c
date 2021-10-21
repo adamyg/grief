@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.62 2021/07/18 23:03:18 cvsuser Exp $")
+__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.63 2021/10/18 13:21:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: builtin.c,v 1.62 2021/07/18 23:03:18 cvsuser Exp $
+/* $Id: builtin.c,v 1.63 2021/10/18 13:21:23 cvsuser Exp $
  * Builtin expresssion evaluation.
  *
  *
@@ -1079,6 +1079,31 @@ check_hooked(void)
     assert(t_cur_cmap == cur_cmap);
 }
 #endif  //!NDEBUG
+
+
+void
+set_curbp(BUFFER_t *bp)
+{
+    curbp = bp;
+    set_hooked();
+}
+
+
+void
+set_curwp(WINDOW_t *wp)
+{
+    curwp = wp;
+    set_hooked();
+}
+
+
+void
+set_curwpbp(WINDOW_t *wp, BUFFER_t *bp)
+{
+    curwp = wp;
+    curbp = bp;
+    set_hooked();
+}
 
 
 void
