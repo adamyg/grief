@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.15 2021/10/15 07:46:29 cvsuser Exp $
+# $Id: Makefile.in,v 1.16 2021/10/19 15:50:56 cvsuser Exp $
 # libautoupdater and utils makefile
 #
 #
@@ -108,7 +108,7 @@ EXPATSRC=		../libappupdater/expat
 #endif
 SIGNSRC=		../libappupdater/sign
 
-VPATH=		$(UPDATERSRC) $(UPDATERSRC)/src $(UPDATERSRC)/localisation $(EXPATSRC) $(SIGNSRC) ./sign
+VPATH=		$(UPDATERSRC) $(UPDATERSRC)/src $(UPDATERSRC)/localisation $(UPDATERSRC)/localisation/test $(EXPATSRC) $(SIGNSRC) ./sign
 
 DLLOBJS=\
 	$(D_OBJ)/libautoupdater.lo	\
