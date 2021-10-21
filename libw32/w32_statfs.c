@@ -1,9 +1,9 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_statfs_c,"$Id: w32_statfs.c,v 1.17 2021/06/10 06:13:04 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_statfs_c,"$Id: w32_statfs.c,v 1.18 2021/10/19 13:20:43 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
- * win32 statfs()/statvfs() system calls.
+ * win32 statfs()/statvfs() and getmntinfo() system calls.
  *
  * Copyright (c) 2007, 2012 - 2021 Adam Young.
  * All rights reserved.
@@ -53,14 +53,15 @@ __CIDENT_RCSID(gr_w32_statfs_c,"$Id: w32_statfs.c,v 1.17 2021/06/10 06:13:04 cvs
 //      #include <sys/statvfs.h>
 //
 //      int fstatvfs(int fildes, struct statvfs *buf);
-//      int statvfs(const char *restrict path, struct statvfs *restrict buf); [Option End]
+//      int statvfs(const char *restrict path, struct statvfs *restrict buf);
 //
 //  DESCRIPTION
 //      The fstatvfs() function shall obtain information about the file system containing the file referenced by fildes.
 //
 //      The statvfs() function shall obtain information about the file system containing the file named by path.
 //
-//      For both functions, the buf argument is a pointer to a statvfs structure that shall be filled.Read, write, or execute permission of the named file is not required.
+//      For both functions, the buf argument is a pointer to a statvfs structure that shall be filled.
+//      Read, write, or execute permission of the named file is not required.
 //
 //      The following flags can be returned in the f_flag member :
 //

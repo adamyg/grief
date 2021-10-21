@@ -1,14 +1,14 @@
 #ifndef LIBW32_ERR_H_INCLUDED
 #define LIBW32_ERR_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_err_h,"$Id: err.h,v 1.1 2021/06/10 06:13:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_err_h,"$Id: err.h,v 1.2 2021/10/15 12:35:03 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win <errt.h>
  *
- * Copyright (c) 1998 - 2020, Adam Young.
+ * Copyright (c) 1998 - 2021, Adam Young.
  * All rights reserved.
  *
  * This file is part of the Midnight Commander.
