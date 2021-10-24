@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.40 2021/10/18 13:17:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.41 2021/10/24 16:46:45 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.40 2021/10/18 13:17:16 cvsuser Exp $
+/* $Id: cmain.c,v 1.41 2021/10/24 16:46:45 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -585,8 +585,8 @@ cmain(int argc, char **argv)
                 firstbp = curbp;
             }
         }
+        buf_show(firstbp, curwp);
         set_curbp(firstbp);
-        buf_show(curbp, curwp);
 
     } else  {                                   /* load default quietly */
         const char *grfile = ggetenv("GRFILE");
