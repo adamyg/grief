@@ -1,0 +1,5 @@
+yygen.h
+y.tab.c
+crntypes.h
+Makefile
+*.err
