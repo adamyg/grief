@@ -1,11 +1,11 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: libtool_win32.pl,v 1.35 2020/06/20 02:06:56 cvsuser Exp $
+# $Id: libtool_win32.pl,v 1.36 2022/03/21 14:31:25 cvsuser Exp $
 # libtool emulation for WIN32 builds.
 #
 #   **Warning**
 #
-#       Functionality is limited to the current GRIEF/MC build requirements.
+#       Functionality is limited to the current GRIEF/MC/WINRSH build requirements.
 #
 #   Example usage:
 #
@@ -18,10 +18,12 @@
 #       $(D_LIB)/%.lo:      %.cpp
 #               $(LIBTOOL) --mode=compile $(CXX) $(CXXFLAGS) -o $(D_OBJ)/$@ -c $<
 #
-# Copyright Adam Young 2012-2020
+# Copyright Adam Young 2012-2022
+# All rights reserved.
 #
 # This file is part of the GRIEF Editor.
 #
+
 use strict;
 use warnings 'all';
 
@@ -325,7 +327,7 @@ sub
 Link() {
     my $cc = shift @ARGV;
 
-    my ($output, $rpath, $bindir, $module, $mapfile);
+    my ($output, $dlbase, $rpath, $bindir, $module, $mapfile);
     my $version_number = '';
     my $wc_fastcall = -1;                       # fastcall (Watcom) convention.
     my $wc_debugger = '';
@@ -421,6 +423,12 @@ Link() {
             Error("link: $_ $val, not a valid directory : $!")
                 if (! -d $val);
             $bindir = $val;
+
+        } elsif (/^-dlbase[=]?(.*)/) {          # -dlbase[=]<output> (extension)
+            my $val = ($1 ? $1 : shift @ARGV);
+            Error("link: multiple dll base names specified <$dlbase> and <$val>")
+                if ($dlbase);
+            $dlbase = $val;     # dll base name, version is appended.
 
         } elsif (/^-dlopen(.*)$/) {
             Error("link: $_ not supported\n");
@@ -655,24 +663,28 @@ Link() {
     if ($version_number) {
         if ($version_number =~ /^\s*(\d+)\s*$/) {
             # <major>
-            ($dll_major, $dll_minor) = ($1, 0);
+            $dll_version = "$1.0";              # <name>major.0
+            $version_number = ".$1";
 
-            $dll_version = "$1";                # <name>major
-            $version_number = "$1";
+        } elsif ($version_number =~ /^\s*(\d+):(\d+)$/) {
+            # <major>:<minor>
+            $dll_version = "$1.$2";             # major.minor
+            $version_number = ".$1.$2";         # <name>.<major.dll
 
-        } elsif ($version_number =~ /^\s*(\d+):(\d+)/) {
-            # <major>[:<minor>[:<revision>]]
-            ($dll_major, $dll_minor) = ($1, $2);
+        } elsif ($version_number =~ /^\s*(\d+):(\d+):(\d+)$/) {
+            # <major>:<minor>:<revision>
+            $dll_version = "$1.$2";             # major.minor
+            $version_number = ".$1.$2.$3";      # <name>.<major.<revision>.dll
 
+        } elsif ($version_number =~ /^\s*(\d+)\s*\.\s*(\d+)$/) {
+            # <major>.<minor>
             $dll_version = "$1.$2";             # major.minor
             $version_number = ".$1.$2";         # <name>.<major.<minor>.dll
 
-        } elsif ($version_number =~ /^\s*(\d+)\s*\.\s*(\d+)/) {
-            # <major>[.<minor>[.<revision>]]
-            ($dll_major, $dll_minor) = ($1, $2);
-
+        } elsif ($version_number =~ /^\s*(\d+)\s*\.\s*(\d+)\.\s*(\d+)$/) {
+            # <major>.<minor>.<revision>
             $dll_version = "$1.$2";             # major.minor
-            $version_number = ".$1.$2";         # <name>.<major.<minor>.dll
+            $version_number = ".$1.$2.$3";      # <name>.<major.<revision>.dll
 
         } else {
             Error("link: invalid -version_number <$version_number>\n");
@@ -683,11 +695,15 @@ Link() {
     my $basedir  = unix2dos(dirname($output));
     my $basename = unix2dos(basename($output, '.la'));
     my $basepath = $basedir.'\\'.$basename;
-    my $dllname  = "${basename}${version_number}.dll";
-    my $dllpath  = "${basepath}${version_number}.dll";
-    my $pdbpath  = "${basepath}${version_number}.pdb";
-    my $mappath  = ($mapfile ? $mapfile : "${basepath}${version_number}.map");
-    my $manifestpath = "${basepath}${version_number}.dll.manifest";
+    my $dllbasename = $dlbase ? unix2dos($dlbase) : $basename;
+    my $dllbasepath = $basedir.'\\'.$dllbasename;
+
+    my $dllname  = "${dllbasename}${version_number}.dll";
+    my $dllpath  = "${dllbasepath}${version_number}.dll";
+    my $pdbpath  = "${dllbasepath}${version_number}.pdb";
+    my $mappath  = ($mapfile ? $mapfile :
+                        ($linktype eq 'dll' ? "${dllbasepath}${version_number}.map" : "${basepath}.map"));
+    my $manifestpath = "${dllbasepath}${version_number}.dll.manifest";
     my $libpath  = "${basepath}.lib";           # import library
     my $exppath  = "${basepath}.exp";           # export library
         # Notes:
@@ -796,7 +812,6 @@ print "*** non-libtool objects @BAD_OBJECTS is not portable!\n";
 
         open(CMD, ">${cmdfile}") or
             die "cannot create <${$cmdfile}>: $!\n";
-
         if ($linktype eq 'dll') {
             print CMD "system   nt_dll initinstance terminstance\n";
                 #
@@ -838,7 +853,7 @@ print "*** non-libtool objects @BAD_OBJECTS is not portable!\n";
             if ($o_quiet || $o_silent);
 
       if (! $wc_debugger) {                     # options are exclusive; plus before objects.
-        $sympath = "${basepath}${version_number}.sym";
+        $sympath = "${dllbasepath}${version_number}.sym";
         print CMD "option   symfile=${sympath}\n";
             #XXX: consider default when -d1, allowing use within a production environment
       } elsif ($wc_debugger eq 'w') {
@@ -928,6 +943,8 @@ print "*** non-libtool objects @BAD_OBJECTS is not portable!\n";
             "#  can be result of an incorrect version of cvtres.exe due to dual VC10/VC2012 installations,\n".
             "#  rename 'C:/Program Files (x86)/Microsoft Visual Studio 10/VC/Bin/cvtres.exe' => cvtres_org.exe\n".
             "#\n";
+#           $o_verbose = 0;
+#           System("which cvtres");
         }
         exit ($ret);
     }
