@@ -1,11 +1,11 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.118 2021/08/02 16:09:53 cvsuser Exp $
+# $Id: makelib.pl,v 1.119 2022/03/21 15:24:49 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
 #
 #
-# Copyright (c) 1998 - 2021, Adam Young.
+# Copyright (c) 1998 - 2022, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -1121,20 +1121,16 @@ main()
     (-f $o_makelib) or
         Usage("missing makelib.in");
 
-    # see: https://en.wikipedia.org/wiki/Microsoft_Visual_C%2B%2B
+    #   See: https://en.wikipedia.org/wiki/Microsoft_Visual_C%2B%2B
     #
     #   MSVC++ 9.0   _MSC_VER == 1500 (Visual Studio 2008 version 9.0)
     #   MSVC++ 10.0  _MSC_VER == 1600 (Visual Studio 2010 version 10.0)
     #   MSVC++ 11.0  _MSC_VER == 1700 (Visual Studio 2012 version 11.0)
     #   MSVC++ 12.0  _MSC_VER == 1800 (Visual Studio 2013 version 12.0)
     #   MSVC++ 14.0  _MSC_VER == 1900 (Visual Studio 2015 version 14.0)
-    #   MSVC++ 14.1  _MSC_VER == 1910 (Visual Studio 2017 version 15.0)
-    #   MSVC++ 14.11 _MSC_VER == 1911 (Visual Studio 2017 version 15.3)
-    #   MSVC++ 14.12 _MSC_VER == 1912 (Visual Studio 2017 version 15.5)
-    #   MSVC++ 14.13 _MSC_VER == 1913 (Visual Studio 2017 version 15.6)
-    #   MSVC++ 14.14 _MSC_VER == 1914 (Visual Studio 2017 version 15.7)
-    #   MSVC++ 14.16 _MSC_VER == 1916 (Visual Studio 2017 version 15.9)
-    #   MSVC++ 14.20 _MSC_VER == 1920 (Visual Studio 2019 version 15.7)
+    #   MSVC++ 14.1x _MSC_VER == 1910 (Visual Studio 2017 version 15.x)
+    #   MSVC++ 14.2x _MSC_VER == 192x (Visual Studio 2019 version 16.x)
+    #   MSVC++ 14.3x _MSC_VER == 193x (Visual Studio 2022 version 17.x)
     #
     if    ('vc12' eq $cmd)      { $o_version = 1200, $cmd = 'vc'  }
     elsif ('vc14' eq $cmd)      { $o_version = 1400; $cmd = 'vc'  } elsif ('vc2005' eq $cmd) { $o_version = 1400; $cmd = 'vc' }
@@ -1144,6 +1140,7 @@ main()
     elsif ('vc19' eq $cmd)      { $o_version = 1900; $cmd = 'vc'  } elsif ('vc2015' eq $cmd) { $o_version = 1900; $cmd = 'vc' }
     elsif ('vc1910' eq $cmd)    { $o_version = 1910; $cmd = 'vc'  } elsif ('vc2017' eq $cmd) { $o_version = 1910; $cmd = 'vc' }
     elsif ('vc1920' eq $cmd)    { $o_version = 1920; $cmd = 'vc'  } elsif ('vc2019' eq $cmd) { $o_version = 1920; $cmd = 'vc' }
+    elsif ('vc1930' eq $cmd)    { $o_version = 1930; $cmd = 'vc'  } elsif ('vc2022' eq $cmd) { $o_version = 1930; $cmd = 'vc' }
     elsif ('owc19' eq $cmd)     { $o_version = 1900; $cmd = 'owc' }
     elsif ('owc20' eq $cmd)     { $o_version = 2000; $cmd = 'owc' }
 
