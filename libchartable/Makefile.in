@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.27 2021/07/12 15:38:23 cvsuser Exp $
+# $Id: Makefile.in,v 1.29 2022/03/21 15:11:49 cvsuser Exp $
 # libchartable makefile.
 #
 #
-# Copyright (c) 2010 - 2021, Adam Young.
+# Copyright (c) 2010 - 2022, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -188,7 +188,7 @@ data/.import:		data/.created			\
 		@echo "++ do not delete, managed content ++" > $@
 
 data/MAPPINGS/.import:	data/MAPPINGS/.created
-		$(WGET) -P data -r -nv -nH -e robots=off --cut-dirs=1 --no-parent --reject "index.html.*" http://ftp.unicode.org/Public/MAPPINGS/
+		$(WGET) -P data -r -nv -nH -e robots=off --cut-dirs=1 --no-parent --reject "index.html?*"  http://ftp.unicode.org/Public/MAPPINGS/
 		@echo "++ do not delete, managed content ++" > $@
 
 data/Unihan.zip:
