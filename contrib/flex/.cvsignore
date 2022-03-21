@@ -2,3 +2,9 @@ flex-2.5.10
 .unpacked.*
 Makefile
 *.err
+parse.c
+parse.h
+scan.c
+skel.c
+
+
