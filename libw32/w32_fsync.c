@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_fsync_c,"$Id: w32_fsync.c,v 1.14 2021/06/10 06:13:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_fsync_c,"$Id: w32_fsync.c,v 1.15 2022/03/21 14:29:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 fsync() system calls
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -21,10 +21,10 @@ __CIDENT_RCSID(gr_w32_fsync_c,"$Id: w32_fsync.c,v 1.14 2021/06/10 06:13:03 cvsus
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Notice: Portions of this text are reprinted and reproduced in electronic form. from
@@ -112,7 +112,7 @@ w32_fsync(int fd)
             const DWORD err = GetLastError();
             switch (err) {
             case ERROR_ACCESS_DENIED:
-                /*  For a read-only handle, fsync should succeed, 
+                /*  For a read-only handle, fsync should succeed,
                  *  even though we have no way to sync the access-time changes.
                  */
                 return 0;
@@ -130,4 +130,3 @@ w32_fsync(int fd)
 }
 
 /*end*/
-

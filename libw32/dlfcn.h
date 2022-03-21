@@ -1,14 +1,14 @@
 #ifndef GR_DLFCN_H_INCLUDED
 #define GR_DLFCN_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_dlfcn_h,"$Id: dlfcn.h,v 1.8 2019/03/15 23:12:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_dlfcn_h,"$Id: dlfcn.h,v 1.9 2022/03/21 14:29:39 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
- * <dlfnc.h> for windows
+ * <dlfcn.h> for windows
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -24,14 +24,15 @@ __CPRAGMA_ONCE
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  */
 
 #include <sys/cdefs.h>
+#include <wchar.h>
 
 __BEGIN_DECLS
 
@@ -42,6 +43,8 @@ __BEGIN_DECLS
 #define RTLD_LOCAL      0x08    /* all symbols are not made available for relocation processing by other modules. */
 
 LIBW32_API void *       dlopen(const char *file, int mode);
+LIBW32_API void *       dlopenA(const char *file, int mode);
+LIBW32_API void *       dlopenW(const wchar_t *file, int mode);
 LIBW32_API void *       dlsym(void *__restrict handle, const char *__restrict name);
 LIBW32_API int          dlclose(void *handle);
 LIBW32_API char *       dlerror(void);

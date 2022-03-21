@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_write_c,"$Id: w32_write.c,v 1.17 2020/06/20 02:00:20 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_write_c,"$Id: w32_write.c,v 1.18 2022/03/21 14:29:42 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 write() system calls,
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -21,10 +21,10 @@ __CIDENT_RCSID(gr_w32_write_c,"$Id: w32_write.c,v 1.17 2020/06/20 02:00:20 cvsus
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Notice: Portions of this text are reprinted and reproduced in electronic form. from
@@ -36,7 +36,7 @@ __CIDENT_RCSID(gr_w32_write_c,"$Id: w32_write.c,v 1.17 2020/06/20 02:00:20 cvsus
  */
 
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT        0x0501             /* enable xp+ features */
+#define _WIN32_WINNT 0x0501                     /* enable xp+ features */
 #endif
 
 #include "win32_internal.h"
@@ -44,7 +44,6 @@ __CIDENT_RCSID(gr_w32_write_c,"$Id: w32_write.c,v 1.17 2020/06/20 02:00:20 cvsus
 #include <unistd.h>
 
 #pragma comment(lib, "Ws2_32.lib")
-
 
 /*
 //  NAME
@@ -389,4 +388,3 @@ pwrite(int fildes, const void *buf, size_t nbyte, off_t offset)
     return ret;
 #endif
 }
-

@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_strtoll_c,"$Id: w32_strtoll.c,v 1.8 2018/10/11 01:49:38 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_strtoll_c,"$Id: w32_strtoll.c,v 1.9 2022/03/21 14:29:42 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*-
@@ -154,4 +154,3 @@ __stdlibrary_has_strtoll(void)
 #endif
 
 /*end*/
-

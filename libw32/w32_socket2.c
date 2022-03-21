@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_socket2_c,"$Id: w32_socket2.c,v 1.8 2021/06/10 06:13:04 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_socket2_c,"$Id: w32_socket2.c,v 1.9 2022/03/21 14:29:41 cvsuser Exp $")
 
 /*
  * win32 socket () system calls
  * Light weight replacement functions, which maintain the global errno.
  *
- * Copyright (c) 2007, 2012 - 2019 Adam Young.
+ * Copyright (c) 2007, 2012 - 2022 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -20,11 +20,11 @@ __CIDENT_RCSID(gr_w32_socket2_c,"$Id: w32_socket2.c,v 1.8 2021/06/10 06:13:04 cv
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
- * ==extra==
+ * license for more details.
+ * ==end==
  */
 
 #ifndef _WIN32_WINNT
@@ -229,7 +229,7 @@ w32_accept_native(int fd, struct sockaddr *addr, int *addrlen)
  *  getpeername() system call
  */
 LIBW32_API int
-w32_getpeername_native(int fd, struct sockaddr *name, int *namelen)
+w32_getpeername_native(int fd, struct sockaddr *name, socklen_t *namelen)
 {
     SOCKET osf;
     int ret;
@@ -421,7 +421,7 @@ w32_recvfrom_native(int fd, char *buf, int len, int flags,
 /*
  *  sockblockingmode
  */
-LIBW32_API int         
+LIBW32_API int
 w32_sockblockingmode_native(int fd, int enabled)
 {
     SOCKET osf;
@@ -511,11 +511,10 @@ w32_shutdown_native(int fd, int how)
 #undef shutdown
     if ((osf = nativehandle(fd)) == (SOCKET)INVALID_SOCKET) {
         ret = -1;
-    } else if ((ret = shutdown((SOCKET)osf, how)) == -1 /*SOCKET_ERROR*/) {
+    } else if ((ret = shutdown((SOCKET)osf, how)) == -1) {
         w32_sockerror();
     }
     return ret;
 }
 
 /*end*/
-

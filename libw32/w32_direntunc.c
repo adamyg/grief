@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_direntunc_c,"$Id: w32_direntunc.c,v 1.1 2021/06/10 06:13:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_direntunc_c,"$Id: w32_direntunc.c,v 1.2 2022/03/21 14:29:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 unc directory access services ...
  *
- * Copyright (c) 2007, 2012 - 2021 Adam Young.
+ * Copyright (c) 2007, 2012 - 2022 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -20,10 +20,10 @@ __CIDENT_RCSID(gr_w32_direntunc_c,"$Id: w32_direntunc.c,v 1.1 2021/06/10 06:13:0
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  */
 
@@ -62,8 +62,8 @@ static void unc_errno(void);
 //  For other types of shares, such as Distributed File System (DFS) or WebDAV shares,
 //  use Windows Networking (WNet) functions, which support all types of shares.
 
-DIR *
-w32_unc_populateA(const char *servername)
+int
+w32_unc_iterateA(const char *servername, unc_push_t push, void *data)
 {
     wchar_t wservername[256], *param = NULL;
 
@@ -73,26 +73,26 @@ w32_unc_populateA(const char *servername)
         }
         param = wservername;
     }
-    return w32_unc_populateW(param);
+
+    return w32_unc_iterateW(param, push, data);
 }
 
 
-DIR *
-w32_unc_populateW(const wchar_t *servername)
+int
+w32_unc_iterateW(const wchar_t *servername, unc_push_t push, void *data)
 {
     SHARE_INFO_502 *buffer = NULL;
     NET_API_STATUS res = 0;
-    DIR *dp;
+    int ret = 0;
 
-    if (NULL == (dp = w32_dir_alloc())) {
-        return (DIR *)NULL;
-    }
-
+    assert(NULL != push);
+    assert(NULL != data);
     do {
         DWORD entries = (DWORD)-1, tr = 0, resume = 0;
 
-        if (servername && !*servername)         // DNS or NetBIOS name
+        if (servername && !*servername) {       // DNS or NetBIOS name
             servername = NULL;                  // NULL == localserver
+        }
 
         res = NetShareEnum((wchar_t *)servername, 502, (LPBYTE *)&buffer, MAX_PREFERRED_LENGTH, &entries, &tr, &resume);
         if (ERROR_SUCCESS == res || ERROR_MORE_DATA == res) {
@@ -103,18 +103,18 @@ w32_unc_populateW(const wchar_t *servername)
             // build directory ..
             for (e = 0, ent = buffer; e < entries; ++e, ++ent) {
                 if (STYPE_DISKTREE == ent->shi502_type) {
-                    const WCHAR *filenamew = ent->shi502_netname;
+                    const WCHAR *filename = ent->shi502_netname;
 
-                    if ('p' == filenamew[0]) {  // prnproc$ or print$
-                        if (0 == wcscmp(filenamew, L"prnproc$") ||
-                                0 == wcscmp(filenamew, L"print$")) {
+                    if ('p' == filename[0]) {   // prnproc$ or print$
+                        if (0 == wcscmp(filename, L"prnproc$") ||
+                                0 == wcscmp(filename, L"print$")) {
                             continue;
                         }
                     }
 
                     if ((1 == ++count &&        // implied
-                            NULL == w32_dir_pushA(dp, "..")) ||
-                            NULL == w32_dir_pushW(dp, filenamew)) {
+                            -1 == (ret = push(data, L".."))) ||
+                            -1 == (ret = push(data, filename))) {
                         break;
                     }
                 }
@@ -123,9 +123,7 @@ w32_unc_populateW(const wchar_t *servername)
         }
     } while (ERROR_MORE_DATA == res);
 
-    dp->dd_current = dp->dd_contents;           // seed cursor
-
-    return dp;
+    return ret;
 }
 
 
@@ -140,11 +138,6 @@ w32_unc_opendirA(const char *dirname)
     DWORD result;
     DIR *dp;
 
-//  if (! w32_unc_validA(dirname)) {
-//      errno = ENOTDIR;
-//      return NULL;
-//  }
-
     nrw.dwScope = RESOURCE_GLOBALNET;
     nrw.dwType  = RESOURCETYPE_DISK;
     nrw.dwDisplayType = RESOURCEDISPLAYTYPE_SERVER;
@@ -153,6 +146,7 @@ w32_unc_opendirA(const char *dirname)
 
     result = WNetOpenEnumA(RESOURCE_GLOBALNET, RESOURCETYPE_DISK, RESOURCEUSAGE_CONNECTABLE, &nrw, &handle);
     if (NO_ERROR != result) {
+        errno = ENOTDIR;
         return (DIR *)NULL;
     }
 
@@ -162,6 +156,7 @@ w32_unc_opendirA(const char *dirname)
     }
 
     dp->dd_handle = handle;
+    dp->dd_magic = DIR_UMAGIC;
     return dp;
 }
 
@@ -174,11 +169,6 @@ w32_unc_opendirW(const wchar_t *dirname)
     DWORD result;
     DIR *dp;
 
-//  if (! w32_unc_validW(dirname)) {
-//      errno = ENOTDIR;
-//      return NULL;
-//  }
-
     nrw.dwScope = RESOURCE_GLOBALNET;
     nrw.dwType = RESOURCETYPE_DISK;
     nrw.dwDisplayType = RESOURCEDISPLAYTYPE_SERVER;
@@ -187,6 +177,7 @@ w32_unc_opendirW(const wchar_t *dirname)
 
     result = WNetOpenEnumW(RESOURCE_GLOBALNET, RESOURCETYPE_DISK, RESOURCEUSAGE_CONNECTABLE, &nrw, &handle);
     if (NO_ERROR != result) {
+        unc_errno();
         return (DIR *)NULL;
     }
 
@@ -196,6 +187,7 @@ w32_unc_opendirW(const wchar_t *dirname)
     }
 
     dp->dd_handle = handle;
+    dp->dd_magic = DIR_UMAGIC;
     return dp;
 }
 
@@ -212,7 +204,7 @@ w32_unc_readdirA(DIR *dp)
         errno = EBADF;
         return NULL;
     }
-    assert(DIR_MAGIC == dp->dd_magic);
+    assert(DIR_UMAGIC == dp->dd_magic);
 
     if (NULL == (buffer = alloca(bufsize))) return NULL;
     result = WNetEnumResourceA(dp->dd_handle, &count, buffer, &bufsize);
@@ -256,7 +248,7 @@ w32_unc_readdirW(DIR *dp)
         errno = EBADF;
         return NULL;
     }
-    assert(DIR_MAGIC == dp->dd_magic);
+    assert(DIR_UMAGIC == dp->dd_magic);
 
     if (NULL == (buffer = alloca(bufsize))) return NULL;
     result = WNetEnumResourceW(dp->dd_handle, &count, buffer, &bufsize);

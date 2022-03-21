@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_getsubopt_c,"$Id: w32_getsubopt.c,v 1.7 2021/06/10 06:13:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_getsubopt_c,"$Id: w32_getsubopt.c,v 1.8 2022/03/21 14:29:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*-
@@ -98,4 +98,3 @@ getsubopt(char **optionp, char * const *tokens, char **valuep)
 }
 
 /*end*/
-

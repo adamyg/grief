@@ -1,11 +1,13 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_dirent_c,"$Id: w32_dirent.c,v 1.31 2021/06/10 06:13:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_dirent_c,"$Id: w32_dirent.c,v 1.32 2022/03/21 14:29:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
- * win32 directory services
+ * win32 directory access services ...
  *
- * Copyright (c) 2007, 2012 - 2021 Adam Young.
+ *      opendir, closedir, readdir, seekdir, rewindir, telldir
+ *
+ * Copyright (c) 2007, 2012 - 2022 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -21,10 +23,10 @@ __CIDENT_RCSID(gr_w32_dirent_c,"$Id: w32_dirent.c,v 1.31 2021/06/10 06:13:03 cvs
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Notice: Portions of this text are reprinted and reproduced in electronic form. from
@@ -42,11 +44,6 @@ __CIDENT_RCSID(gr_w32_dirent_c,"$Id: w32_dirent.c,v 1.31 2021/06/10 06:13:03 cvs
 #define _DIRENT_SOURCE
 #include "win32_internal.h"
 #include <unistd.h>
-
-#pragma comment(lib, "Netapi32.lib")
-#pragma comment(lib, "Advapi32.lib")
-#include <lm.h>                                 /* NetEnum... */
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -63,14 +60,24 @@ __CIDENT_RCSID(gr_w32_dirent_c,"$Id: w32_dirent.c,v 1.31 2021/06/10 06:13:03 cvs
 #define MAXHOSTNAMELEN 64
 #endif
 
+#define SIZEOF_DIRENT           (sizeof(struct dirent) - sizeof(((struct dirent *)0)->d_name))
+
 typedef BOOL (WINAPI *Wow64DisableWow64FsRedirection_t)(PVOID *OldValue);
 typedef BOOL (WINAPI *Wow64RevertWow64FsRedirection_t)(PVOID OldValue);
 
 static BOOL                     isshortcutA(const char *path);
 static BOOL                     isshortcutW(const wchar_t *path);
 
+static DIR *                    unc_populateA(const char *servername);
+static DIR *                    unc_populateW(const wchar_t *servername);
+
 static int                      dir_populateA(DIR *dp, const char *path);
 static int                      dir_populateW(DIR *dp, const wchar_t *path);
+
+static struct _dirlist *        dir_pushA(DIR *dp, const char *filename);
+static struct _dirlist *        dir_pushW(DIR *dp, const wchar_t *filename);
+static void                     dir_read(DIR *dp, struct dirent *ent);
+
 
 static void                     dir_list_free(struct _dirlist *);
 
@@ -84,8 +91,6 @@ static BOOL                     d_Wow64RevertWow64FsRedirection(PVOID OldValue);
 
 static Wow64DisableWow64FsRedirection_t x_Wow64DisableWow64FsRedirection;
 static Wow64RevertWow64FsRedirection_t x_Wow64RevertWow64FsRedirection;
-
-static int                      x_dirid = 1;    /* singleton */
 
 
 /*
@@ -167,7 +172,7 @@ opendir(const char *dirname)
 
 
 LIBW32_API DIR *
-opendirA(const char *name)
+opendirA(const char *dirname)
 {
     char fullpath[ MAX_PATH ], symlink[ MAX_PATH ], reparse[ MAX_PATH ],
         *path = fullpath;
@@ -176,16 +181,22 @@ opendirA(const char *name)
     int  i, len;
 
     /* Copy to working buffer */
-    if (0 == (len = strlen(name))) {
+    if (NULL == dirname) {
+        errno = EFAULT;
+        return (DIR *)NULL;
+    } else if (0 == (len = strlen(dirname))) {
         errno = ENOTDIR;
         return (DIR *)NULL;
     }
 
+    memset(symlink, 0, sizeof(symlink));
+    memset(reparse, 0, sizeof(reparse));
+
     /* Convert path (note, UNC safe) */
-    if (NULL == w32_realpathA(name, fullpath, _countof(fullpath))) {
+    if (NULL == w32_realpathA(dirname, fullpath, _countof(fullpath))) {
         char *last;                             /* unknown, assume DOS */
 
-        strncpy(fullpath, name, _countof(fullpath));
+        strncpy(fullpath, dirname, _countof(fullpath));
         fullpath[_countof(fullpath)-1] = 0;
         for (i = 0; fullpath[i]; ++i) {
             if (fullpath[i] == '/') {
@@ -244,7 +255,7 @@ opendirA(const char *name)
 
         if (rc) {
             if (w32_unc_rootA(path, NULL)) {    // "//servername[/]"
-                return w32_unc_populateA(path);
+                return unc_populateA(path);
             }
             errno = rc;
             return (DIR *)NULL;
@@ -264,14 +275,14 @@ opendirA(const char *name)
     while (len > 0) {
         --len;
         if (path[len] == '\\') {
-            path[len] = '\0';                   /* remove slash */
+            path[len] = '\0';                   // remove slash
         } else {
-            ++len;                              /* end of path */
+            ++len;                              // end of path
             break;
         }
     }
 
-    path[len++] = '\\';                         /* insert pattern */
+    path[len++] = '\\';                         // insert pattern
     path[len++] = '*';
     path[len++] = '.';
     path[len++] = '*';
@@ -303,7 +314,7 @@ opendirA(const char *name)
 
 
 LIBW32_API DIR *
-opendirW(const wchar_t *name)
+opendirW(const wchar_t *dirname)
 {
     wchar_t fullpath[ MAX_PATH ], symlink[ MAX_PATH ], reparse[ MAX_PATH ],
         *path = fullpath;
@@ -312,16 +323,19 @@ opendirW(const wchar_t *name)
     int  i, len;
 
     /* Copy to working buffer */
-    if (0 == (len = wcslen(name))) {
+    if (NULL == dirname) {
+        errno = EFAULT;
+        return (DIR *)NULL;
+    } else if (0 == (len = wcslen(dirname))) {
         errno = ENOTDIR;
         return (DIR *)NULL;
     }
 
     /* Convert path (note, UNC safe) */
-    if (NULL == w32_realpathW(name, fullpath, _countof(fullpath))) {
+    if (NULL == w32_realpathW(dirname, fullpath, _countof(fullpath))) {
         wchar_t *last;                          /* unknown, assume DOS */
 
-        wcsncpy(fullpath, name, _countof(fullpath));
+        wcsncpy(fullpath, dirname, _countof(fullpath));
         fullpath[_countof(fullpath)-1] = 0;
         for (i = 0; fullpath[i]; ++i) {
             if (fullpath[i] == '/') {
@@ -331,12 +345,12 @@ opendirW(const wchar_t *name)
         last = &fullpath[len - 1];
 
         /*
-            *  o/s can be very picky about its directory names; the following are valid.
-            *      c:/  c:.  c:name/name1
-            *
-            *  whereas the following are not valid
-            *      c:name/
-            */
+         *  o/s can be very picky about its directory names; the following are valid.
+         *      c:/  c:.  c:name/name1
+         *
+         *  whereas the following are not valid
+         *      c:name/
+         */
         if ((*last == '\\') && (len > 1) && (!((len == 3) &&
                     (fullpath[1] == ':')))) {
             *(last--) = 0;
@@ -380,7 +394,7 @@ opendirW(const wchar_t *name)
 
         if (rc) {
             if (w32_unc_rootW(path, NULL)) {    // "//servername[/]"
-                return w32_unc_populateW(path);
+                return unc_populateW(path);
             }
             errno = rc;
             return (DIR *)NULL;
@@ -400,14 +414,14 @@ opendirW(const wchar_t *name)
     while (len > 0) {
         --len;
         if (path[len] == '\\') {
-            path[len] = '\0';                   /* remove slash */
+            path[len] = '\0';                   // remove slash
         } else {
-            ++len;                              /* end of path */
+            ++len;                              // end of path
             break;
         }
     }
 
-    path[len++] = '\\';                         /* insert pattern */
+    path[len++] = '\\';                         // insert pattern
     path[len++] = '*';
     path[len++] = '.';
     path[len++] = '*';
@@ -475,11 +489,52 @@ isshortcutW(const wchar_t *name)
 }
 
 
+static int
+unc_push(void *data, const wchar_t *filename)
+{
+    if (dir_pushW((DIR *)data, filename)) {
+        return 0; //success
+    }
+    return -1; //error
+}
+
+
+static DIR *
+unc_populateA(const char *servername)
+{
+    DIR *dp;
+
+    if (NULL == (dp = w32_dir_alloc()) ||       // alloc and populate
+            -1 == w32_unc_iterateA(servername, unc_push, dp)) {
+        w32_dir_free(dp);
+        return (DIR *)NULL;
+    }
+
+    dp->dd_current = dp->dd_contents;           // seed cursor
+    return dp;
+}
+
+
+static DIR *
+unc_populateW(const wchar_t *servername)
+{
+    DIR *dp;
+
+    if (NULL == (dp = w32_dir_alloc()) ||       // alloc and populate
+            -1 == w32_unc_iterateW(servername, unc_push, dp)) {
+        w32_dir_free(dp);
+        return (DIR *)NULL;
+    }
+
+    dp->dd_current = dp->dd_contents;           // seed cursor
+    return dp;
+}
+
 
 static int
 dir_populateA(DIR *dp, const char *path)
 {
-    WIN32_FIND_DATAA finddata = {0};
+    WIN32_FIND_DATAA fd = {0};
     HANDLE hSearch = INVALID_HANDLE_VALUE;
     struct _dirlist *dplist;
     UINT errormode;
@@ -487,7 +542,7 @@ dir_populateA(DIR *dp, const char *path)
     int rc, ret = 0;
 
     errormode = SetErrorMode(0);                // disable hard errors
-    hSearch = FindFirstFileA(path, &finddata);
+    hSearch = FindFirstFileA(path, &fd);
     (void) SetErrorMode(errormode);             // restore errors
 
     if (INVALID_HANDLE_VALUE == hSearch) {
@@ -498,29 +553,39 @@ dir_populateA(DIR *dp, const char *path)
     if (isHPFS) dp->dd_flags = DIR_FISHPF;
 
     do {
+
 #if defined(FILE_ATTRIBUTE_VOLUME)              // skip volume labels
         // Not listed by Microsoft but it's there.
         //  Indicates a directory entry without corresponding file, used only to denote the name of a hard drive volume.
         //  Was used to 'hack' the long file name system of Windows 95.
-        if (finddata.dwFileAttributes & FILE_ATTRIBUTE_VOLUME) {
+        if (fd.dwFileAttributes & FILE_ATTRIBUTE_VOLUME) {
             continue;
         }
 #endif
                                                 // skip '.'
-        if ('.' == finddata.cFileName[0] && 0 == finddata.cFileName[1]) {
+        if ('.' == fd.cFileName[0] && 0 == fd.cFileName[1]) {
             continue;
         }
 
-        if (NULL == (dplist = w32_dir_pushA(dp, finddata.cFileName))) {
+        if (NULL == (dplist = dir_pushA(dp, fd.cFileName))) {
             FindClose(hSearch);
             return ENOMEM;
         }
 
-        dplist->dl_size2 = finddata.nFileSizeHigh;
-        dplist->dl_size  = finddata.nFileSizeLow;
-        dplist->dl_attr  = finddata.dwFileAttributes;
+        dplist->dl_size2 = fd.nFileSizeHigh;
+        dplist->dl_size = fd.nFileSizeLow;
+        dplist->dl_attr = fd.dwFileAttributes;
 
-    } while (FindNextFileA(hSearch, &finddata));
+        dplist->dl_type = DT_UNKNOWN;
+        if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            dplist->dl_type = DT_DIR;
+        } else if ((fd.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) && (fd.dwReserved0 == IO_REPARSE_TAG_MOUNT_POINT)) {
+            dplist->dl_type = DT_LNK;
+        } else {
+            dplist->dl_type = DT_REG;
+        }
+
+    } while (FindNextFileA(hSearch, &fd));
 
     if ((rc = GetLastError()) == ERROR_NO_MORE_FILES) {
         dp->dd_current = dp->dd_contents;       // seed cursor
@@ -528,6 +593,7 @@ dir_populateA(DIR *dp, const char *path)
     } else {
         ret = dir_errno(rc);
     }
+
     FindClose(hSearch);
     return ret;
 }
@@ -536,7 +602,7 @@ dir_populateA(DIR *dp, const char *path)
 static int
 dir_populateW(DIR *dp, const wchar_t *path)
 {
-    WIN32_FIND_DATAW finddata = {0};
+    WIN32_FIND_DATAW fd = {0};
     struct _dirlist *dplist = NULL;
     HANDLE hSearch = INVALID_HANDLE_VALUE;
     UINT errormode;
@@ -544,7 +610,7 @@ dir_populateW(DIR *dp, const wchar_t *path)
     int rc, ret = 0;
 
     errormode = SetErrorMode(0);                // disable hard errors
-    hSearch = FindFirstFileW(path, &finddata);
+    hSearch = FindFirstFileW(path, &fd);
     (void) SetErrorMode(errormode);             // restore errors
 
     if (INVALID_HANDLE_VALUE == hSearch) {
@@ -556,36 +622,47 @@ dir_populateW(DIR *dp, const wchar_t *path)
     dp->dd_flags |= DIR_FISUTF8;
 
     do {
+
 #if defined(FILE_ATTRIBUTE_VOLUME)              // skip volume labels
         // Not listed by Microsoft but it's there.
         //  Indicates a directory entry without corresponding file, used only to denote the name of a hard drive volume.
         //  Was used to 'hack' the long file name system of Windows 95.
-        if (finddata.dwFileAttributes & FILE_ATTRIBUTE_VOLUME) {
+        if (fd.dwFileAttributes & FILE_ATTRIBUTE_VOLUME) {
             continue;
         }
 #endif
                                                 // skip '.'
-        if ('.' == finddata.cFileName[0] && 0 == finddata.cFileName[1]) {
+        if ('.' == fd.cFileName[0] && 0 == fd.cFileName[1]) {
             continue;
         }
 
-        if (NULL == (dplist = w32_dir_pushW(dp, finddata.cFileName))) {
+        if (NULL == (dplist = dir_pushW(dp, fd.cFileName))) {
             FindClose(hSearch);
             return ENOMEM;
         }
 
-        dplist->dl_size2 = finddata.nFileSizeHigh;
-        dplist->dl_size  = finddata.nFileSizeLow;
-        dplist->dl_attr  = finddata.dwFileAttributes;
+        dplist->dl_size2 = fd.nFileSizeHigh;
+        dplist->dl_size = fd.nFileSizeLow;
+        dplist->dl_attr = fd.dwFileAttributes;
 
-    } while (FindNextFileW(hSearch, &finddata));
+        dplist->dl_type = DT_UNKNOWN;
+        if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            dplist->dl_type = DT_DIR;
+        } else if ((fd.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) && (fd.dwReserved0 == IO_REPARSE_TAG_MOUNT_POINT)) {
+            dplist->dl_type = DT_LNK;
+        } else {
+            dplist->dl_type = DT_REG;
+        }
+
+    } while (FindNextFileW(hSearch, &fd));
 
     if ((rc = GetLastError()) == ERROR_NO_MORE_FILES) {
-        dp->dd_current = dp->dd_contents;       /* seed cursor */
+        dp->dd_current = dp->dd_contents;       // seed cursor
         dp->dd_flags |= DIR_FHAVESTATS;
     } else {
         ret = dir_errno(rc);
     }
+
     FindClose(hSearch);
     return ret;
 }
@@ -594,18 +671,34 @@ dir_populateW(DIR *dp, const wchar_t *path)
 DIR *
 w32_dir_alloc(void)
 {
+    const int dd_len = SIZEOF_DIRENT + (sizeof(char) * DIRBLKSIZ); /* working dirent storage */
     DIR *dp;
+
+#if defined(NAME_MAX)
+    assert(MAXNAMLEN >= NAME_MAX);              /* POSIX requirement, verify */
+#endif
+    assert(DIRBLKSIZ > MAXNAMLEN);
+
     if (NULL == (dp = (DIR *)calloc(sizeof(DIR), 1)) ||
-            NULL == (dp->dd_buf = (char *)calloc(sizeof(struct dirent), 1))) {
+            NULL == (dp->dd_buf = (void *)calloc(dd_len, 1))) {
         free(dp);
         return (DIR *)NULL;
     }
 
     dp->dd_magic = DIR_MAGIC;                   /* structure magic */
-    dp->dd_id = ++x_dirid;                      /* generate unique directory identifier */
+    dp->dd_len = dd_len;                        /* underlying dd_buf length, in bytes */
+    dp->dd_id = w32_dir_identifier();           /* generate unique directory identifier */
     dp->dd_fd = -1;                             /* file descriptor */
 
     return dp;
+}
+
+
+int
+w32_dir_identifier(void)
+{
+    static int dir_identifer;
+    return ++dir_identifer;
 }
 
 
@@ -615,7 +708,7 @@ w32_dir_free(DIR *dp)
     if (dp) {
         assert(DIR_MAGIC == dp->dd_magic);
         dir_list_free(dp->dd_contents);
-        free((void *)dp->dd_buf);
+        free((void *)dp->dd_buf);               /* working dirent storage */
         free((void *)dp);
     }
 }
@@ -641,46 +734,92 @@ dir_errno(DWORD rc)
 
 
 /*
- *  w32_dir_pushA ---
+ *  dir_pushA ---
  *      Create a directory list element.
  */
-struct _dirlist *
-w32_dir_pushA(DIR *dp, const char *filename)
+static struct _dirlist *
+dir_pushA(DIR *dp, const char *filename)
 {
-    const size_t namlen = strlen(filename);
+    size_t nambytes, namlen = strlen(filename);
     struct _dirlist *dplist;
 
+    assert(namlen < DIRBLKSIZ);                 // d_name limit
+    if (namlen >= DIRBLKSIZ) namlen = DIRBLKSIZ-1;
+
+    nambytes = sizeof(wchar_t) * (namlen + 1 /*nul*/);
     if (NULL == (dplist =
-            (struct _dirlist *)malloc(sizeof(struct _dirlist) + namlen + 1 /*nul*/))) {
+            (struct _dirlist *)malloc(sizeof(struct _dirlist) + nambytes))) {
         return NULL;
     }
 
     memset(dplist, 0, sizeof(*dplist));
     if (dp->dd_contents) {
-        dp->dd_current  =
+        dp->dd_current =
             dp->dd_current->dl_next = dplist;
     } else {
         dp->dd_contents = dp->dd_current = dplist;
     }
 
     dplist->dl_namlen = (unsigned short)namlen;
-    memcpy(dplist->dl_name, filename, namlen + 1);
+    memcpy(dplist->dl_name, filename, nambytes);
     dplist->dl_next = NULL;
     return dplist;
 }
 
 
 /*
- *  w32_dir_pushW ---
+ *  dir_pushW ---
  *      Create a directory list element.
  */
 struct _dirlist *
-w32_dir_pushW(DIR *dp, const wchar_t *filename)
+dir_pushW(DIR *dp, const wchar_t *filename)
 {
-    char t_filename[MAX_PATH];
+    char t_filename[DIRBLKSIZ];                 // d_name limit
 
     w32_wc2utf(filename, t_filename, _countof(t_filename));
-    return w32_dir_pushA(dp, t_filename);
+    return dir_pushA(dp, t_filename);
+}
+
+
+
+/*
+ *  dir_read ---
+ *      Read the next directory element.
+ */
+static void
+dir_read(DIR *dp, struct dirent *ent)
+{
+    struct _dirlist *dplist = dp->dd_current;
+    size_t nambytes;
+
+    assert(dplist);
+
+    /* Standard fields */
+    assert((dplist->dl_namlen + 1 /*nul*/) <= DIRBLKSIZ);
+    nambytes = sizeof(char) * (dplist->dl_namlen + 1 /*nul*/);
+    memcpy(ent->d_name, dplist->dl_name, nambytes);
+    ent->d_namlen = dplist->dl_namlen;
+    ent->d_reclen = (unsigned short)(SIZEOF_DIRENT + nambytes);
+
+    if (0 == (dp->dd_flags & DIR_FISHPF)) {     // not HPFS, convert case.
+#if defined(_WIN32) && defined(_MSC_VER)
+        _strlwr(ent->d_name);
+#else
+        strlwr(ent->d_name);
+#endif
+    }
+    ent->d_fileno = 0;
+
+    /* Extension fields */
+    ent->d_ctime = dplist->dl_ctime;
+    ent->d_mtime = dplist->dl_mtime;
+    ent->d_size = dplist->dl_size;
+    ent->d_attr = dplist->dl_attr;
+    ent->d_type = dplist->dl_type;
+
+    /* Update current location */
+    dp->dd_current = dplist->dl_next;
+    ++dp->dd_loc;
 }
 
 
@@ -748,7 +887,7 @@ closedir(DIR *dp)
 //
 //      struct dirent *readdir(DIR *dirp);
 //      int readdir_r(DIR *restrict dirp, struct dirent *restrict entry,
-//              struct dirent **restrict result); [Option End]
+//              struct dirent **restrict result);
 //
 //  DESCRIPTION
 //      The type DIR, which is defined in the <dirent.h> header, represents a directory
@@ -826,8 +965,7 @@ closedir(DIR *dp)
 //      The readdir() function shall fail if:
 //
 //      [EOVERFLOW]
-//          One of the values in the structure to be returned cannot be represented
-//          correctly.
+//          One of the values in the structure to be returned cannot be represented correctly.
 //
 //      The readdir() function may fail if:
 //
@@ -841,50 +979,65 @@ closedir(DIR *dp)
 //
 //      [EBADF]
 //          The dirp argument does not refer to an open directory stream.
+//
+//      [ENAMETOOLONG]
+//          A directory entry whose name was too long to be read was encountered.
+//
 */
 LIBW32_API struct dirent *
 readdir(DIR *dp)
 {
-    struct _dirlist *pEntry;
-    struct dirent *dpent;
+    struct dirent *entry = (struct dirent *)dp->dd_buf; // working buffer.
 
     if (NULL == dp) {
         errno = EBADF;
-        return NULL;
-    }
-    assert(DIR_MAGIC == dp->dd_magic);
-
-    /* Retrieve associated fields */
-    if (dp->dd_current == (struct _dirlist *)NULL) {
         return (struct dirent *)NULL;
     }
-    pEntry = dp->dd_current;
-    dpent = (struct dirent *)dp->dd_buf;
-
-    /* Standard fields */
-    memcpy(dpent->d_name, pEntry->dl_name, pEntry->dl_namlen + 1 /*nul*/);
-    dpent->d_namlen = pEntry->dl_namlen;
-    dpent->d_reclen = sizeof(struct dirent);
-    if (0 == (dp->dd_flags & DIR_FISHPF)) {     // not HPFS, convert case
-#if defined(_WIN32) && defined(_MSC_VER)
-        _strlwr(dpent->d_name);
-#else
-        strlwr(dpent->d_name);
-#endif
+    assert(DIR_MAGIC == dp->dd_magic);
+    if (DIR_MAGIC != dp->dd_magic) {
+        errno = EBADF;
+        return (struct dirent *)NULL;
     }
-    dpent->d_fileno = 0;
 
-    /* The following field are extensions */
-    dpent->d_ctime = pEntry->dl_ctime;
-    dpent->d_mtime = pEntry->dl_mtime;
-    dpent->d_size  = pEntry->dl_size;
-    dpent->d_attr  = pEntry->dl_attr;
+    if ((struct _dirlist *)NULL == dp->dd_current) {
+        errno = ENOENT;
+        return (struct dirent *)NULL;
+    }
 
-    /* Update current location */
-    dp->dd_current = pEntry->dl_next;
-    dp->dd_loc++;
+    dir_read(dp, entry);                        // retrieve next entry.
 
-    return dpent;
+    return entry;
+}
+
+
+LIBW32_API int
+readdir_r(DIR *dp, struct dirent *entry, struct dirent **result)
+{
+    if (NULL == dp) {
+        return EBADF;
+    } else if (NULL == entry || NULL == result) {
+        return EINVAL;
+    }
+    assert(DIR_MAGIC == dp->dd_magic);
+    if (DIR_MAGIC != dp->dd_magic) {
+        *result = NULL;
+        return EBADF;
+    }
+
+    if ((struct _dirlist *)NULL == dp->dd_current) {
+        *result = NULL;
+        return ENOENT;
+    }
+
+    if (dp->dd_current->dl_namlen > MAXNAMLEN) {
+        *result = NULL;
+        return ENAMETOOLONG;
+    }
+
+    dir_read(dp, entry);                        // retrieve next entry.
+    *result = entry;
+
+    return 0;
 }
 
 
@@ -895,7 +1048,7 @@ readdir(DIR *dp)
 //  SYNOPSIS
 //      #include <dirent.h>
 //
-//      void seekdir(DIR *dirp, long loc); [Option End]
+//      void seekdir(DIR *dirp, long loc);
 //
 //  DESCRIPTION
 //      The seekdir() function shall set the position of the next readdir() operation on
@@ -926,11 +1079,11 @@ seekdir(DIR *dp, long off)
     }
     assert(DIR_MAGIC == dp->dd_magic);
 
-    if (off > 0) {
+    if (off >= 0) {
         for (dplist = dp->dd_contents; --i >= 0 && dplist; dplist = dplist->dl_next) {
-            /*cont*/;
+            /*continue*/;
         }
-        dp->dd_loc = off - (i+1);
+        dp->dd_loc = off - (i + 1);
         dp->dd_current = dplist;
     }
 }

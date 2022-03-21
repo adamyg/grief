@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_reparse_c,"$Id: w32_reparse.c,v 1.7 2021/06/10 06:13:04 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_reparse_c,"$Id: w32_reparse.c,v 1.8 2022/03/21 14:29:41 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 reparse support
  *
- * Copyright (c) 2007, 2012 - 2021 Adam Young.
+ * Copyright (c) 2007, 2012 - 2022 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -20,10 +20,10 @@ __CIDENT_RCSID(gr_w32_reparse_c,"$Id: w32_reparse.c,v 1.7 2021/06/10 06:13:04 cv
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Sourced originally from a public domain implementation and highly.
@@ -277,7 +277,7 @@ w32_reparse_readW(const wchar_t *name, wchar_t *buf, int maxlen)
 
                     } else if (0 == wcsncmp(mount, L"\\??\\", 4)) {
                         if (0 == wcsncmp(mount, L"\\??\\Volume{", 11)) {
-                                            /* mount, resolve volume. */
+                                                /* mount, resolve volume. */
                             wchar_t volume[1024], pathNames[1024 * 4];
                             DWORD pathLen = 0;
 
@@ -288,7 +288,7 @@ w32_reparse_readW(const wchar_t *name, wchar_t *buf, int maxlen)
                                 wcsncpy_s(buf, maxlen, pathNames, maxlen);
                                 ret = 0;
                             }
-                        } else {            /* junction, remove leading "\??\" */
+                        } else {                /* junction, remove leading "\??\" */
                             wcsncpy_s(buf, maxlen, mount + 4, maxlen);
                         }
 

@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_getrusage_c,"$Id: w32_getrusage.c,v 1.1 2020/05/03 21:34:19 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_getrusage_c,"$Id: w32_getrusage.c,v 1.2 2022/03/21 14:29:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 getrusage() system calls
  *
- * Copyright (c) 2020, Adam Young.
+ * Copyright (c) 2020 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -21,10 +21,10 @@ __CIDENT_RCSID(gr_w32_getrusage_c,"$Id: w32_getrusage.c,v 1.1 2020/05/03 21:34:1
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Notice: Portions of this text are reprinted and reproduced in electronic form. from
@@ -51,20 +51,20 @@ __CIDENT_RCSID(gr_w32_getrusage_c,"$Id: w32_getrusage.c,v 1.1 2020/05/03 21:34:1
 //      [XSI] [Option Start] #include <sys/resource.h>
 //
 //      int getrusage(int who, struct rusage *r_usage); [Option End]
-//  
+//
 //  DESCRIPTION
-//    
+//
 //      The getrusage() function shall provide measures of the resources used by the current process or its terminated
-//      and waited-for child processes. If the value of the who argument is RUSAGE_SELF, information shall be returned 
-//      about resources used by the current process. If the value of the who argument is RUSAGE_CHILDREN, information 
-//      shall be returned about resources used by the terminated and waited-for children of the current process. 
-//      
-//      If the child is never waited for (for example, if the parent has SA_NOCLDWAIT set or sets SIGCHLD to SIG_IGN), 
-//      the resource information for the child process is discarded and not included in the resource information 
+//      and waited-for child processes. If the value of the who argument is RUSAGE_SELF, information shall be returned
+//      about resources used by the current process. If the value of the who argument is RUSAGE_CHILDREN, information
+//      shall be returned about resources used by the terminated and waited-for children of the current process.
+//
+//      If the child is never waited for (for example, if the parent has SA_NOCLDWAIT set or sets SIGCHLD to SIG_IGN),
+//      the resource information for the child process is discarded and not included in the resource information
 //      provided by getrusage().
-//  
+//
 //      The r_usage argument is a pointer to an object of type struct rusage in which the returned information is stored.
-//  
+//
 //  RETURN VALUE
 //
 //      Upon successful completion, getrusage() shall return 0; otherwise, -1 shall be returned
@@ -78,7 +78,7 @@ __CIDENT_RCSID(gr_w32_getrusage_c,"$Id: w32_getrusage.c,v 1.1 2020/05/03 21:34:1
 //          The value of the who argument is not valid.
 */
 
-static void 
+static void
 totimeval(const FILETIME *ft, struct timeval *tv)
 {
     ULARGE_INTEGER time;
@@ -113,7 +113,7 @@ getrusage(int who, struct rusage *usage)
                 ! GetProcessMemoryInfo(hProcess, &pmc, sizeof(pmc))) {
                 w32_errno_set();
 
-            } else { 
+            } else {
                 totimeval(&kerneltime, &usage->ru_stime);   // system CPU time used
                 totimeval(&usertime, &usage->ru_utime);     // user CPU time used
                 usage->ru_majflt = pmc.PageFaultCount;      // page faults (hard page faults)

@@ -281,7 +281,7 @@ CtrlHandler(DWORD fdwCtrlType)
         Beep(750, 500);
         return FALSE;
     default:
-        return FALSE;              
+        return FALSE;
     }
 }
 

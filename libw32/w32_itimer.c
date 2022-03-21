@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_itimer_c,"$Id: w32_itimer.c,v 1.3 2021/06/10 06:13:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_itimer_c,"$Id: w32_itimer.c,v 1.4 2022/03/21 14:29:41 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 itimer system calls -- INCOMPLETE, signal interface required.
  *
- * Copyright (c) 2018 - 2019, Adam Young.
+ * Copyright (c) 2018 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -21,10 +21,10 @@ __CIDENT_RCSID(gr_w32_itimer_c,"$Id: w32_itimer.c,v 1.3 2021/06/10 06:13:03 cvsu
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Notice: Portions of this text are reprinted and reproduced in electronic form. from
@@ -161,7 +161,7 @@ timer_thread(LPVOID param)
 
         } else if (WAIT_TIMEOUT == rc) {        /* trigger */
 #if defined(SIGALRM)
-            w32_raise(SIGALRM);     //HOW???
+            w32_raise(SIGALRM);
 #endif
             waitms = INFINITE;
 
@@ -252,7 +252,3 @@ setitimer(int which, const struct itimerval *value, struct itimerval *ovalue)
 }
 
 /*end*/
-
-
-
-

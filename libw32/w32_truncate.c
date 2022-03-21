@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_truncate_c,"$Id: w32_truncate.c,v 1.12 2021/06/10 06:13:04 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_truncate_c,"$Id: w32_truncate.c,v 1.13 2022/03/21 14:29:42 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 ftruncate()/truncate() system calls.
  *
- * Copyright (c) 2007, 2012 - 2021 Adam Young.
+ * Copyright (c) 2007, 2012 - 2022 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -21,10 +21,10 @@ __CIDENT_RCSID(gr_w32_truncate_c,"$Id: w32_truncate.c,v 1.12 2021/06/10 06:13:04
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Notice: Portions of this text are reprinted and reproduced in electronic form. from
@@ -169,8 +169,6 @@ ftruncate(int fildes, off_t length)
         return -1;
     }
 
-//  _chsize(fildes, length);
-
     if (0xFFFFFFFF == SetFilePointer (handle, 0, NULL, FILE_CURRENT) ||
                 0xFFFFFFFF == SetFilePointer (handle, length, NULL, FILE_BEGIN) ||
             !SetEndOfFile (handle)) {
@@ -286,4 +284,3 @@ truncateW(const wchar_t *path, off_t length)
 //  }
 
 /*end*/
-

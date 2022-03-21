@@ -1,16 +1,16 @@
 #ifndef GR_EDSTACKTRACE_H_INCLUDED
 #define GR_EDSTACKTRACE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edstacktrace_h,"$Id: edstacktrace.h,v 1.7 2019/03/15 23:03:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_edstacktrace_h,"$Id: edstacktrace.h,v 1.8 2022/03/21 14:55:27 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edstacktrace.h,v 1.7 2019/03/15 23:03:09 cvsuser Exp $
+/* $Id: edstacktrace.h,v 1.8 2022/03/21 14:55:27 cvsuser Exp $
  * Diagnostics support.
  *
  *
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -1,12 +1,12 @@
 #ifndef LIBW32_ARPA_FTP_H_INCLUDED
 #define LIBW32_ARPA_FTP_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_arpa_ftp_h,"$Id: ftp.h,v 1.7 2018/09/30 23:32:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_arpa_ftp_h,"$Id: ftp.h,v 1.8 2022/03/21 14:29:42 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
- * Copyright (c) 1998 - 2017, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

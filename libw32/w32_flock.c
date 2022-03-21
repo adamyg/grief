@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_flock_c,"$Id: w32_flock.c,v 1.1 2021/06/10 06:13:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_flock_c,"$Id: w32_flock.c,v 1.2 2022/03/21 14:29:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -21,10 +21,10 @@ __CIDENT_RCSID(gr_w32_flock_c,"$Id: w32_flock.c,v 1.1 2021/06/10 06:13:03 cvsuse
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Notice: Portions of this text are reprinted and reproduced in electronic form. from
@@ -76,7 +76,7 @@ __CIDENT_RCSID(gr_w32_flock_c,"$Id: w32_flock.c,v 1.1 2021/06/10 06:13:03 cvsuse
 //      treated independently by flock(). An attempt to lock the file using one of these file descriptors may be denied by
 //      a lock that the calling process has already placed via another descriptor.
 //
-//      A process may only hold one type of lock (shared or exclusive) on a file. Subsequent flock() calls on an already 
+//      A process may only hold one type of lock (shared or exclusive) on a file. Subsequent flock() calls on an already
 //      locked file will convert an existing lock to the new lock mode.
 //
 //      Locks created by flock() are preserved across an execve(2).

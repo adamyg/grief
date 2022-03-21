@@ -1,15 +1,15 @@
 #ifndef GR_VFS_NODE_H_INCLUDED
 #define GR_VFS_NODE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_node_h,"$Id: vfs_node.h,v 1.10 2019/03/15 23:23:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_node_h,"$Id: vfs_node.h,v 1.11 2022/03/21 14:27:23 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_node.h,v 1.10 2019/03/15 23:23:02 cvsuser Exp $
+/* $Id: vfs_node.h,v 1.11 2022/03/21 14:27:23 cvsuser Exp $
  * Virtual File System Interface -- node definitions.
  *
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -63,14 +63,14 @@ typedef struct vfs_node {
     unsigned            v_childcount;
     unsigned            v_childedit;            /* edit count (inc on each ins/del) */
     unsigned            v_childseq;             /* next child fileno */
-    TAILQ_ENTRY(vfs_node) 
+    TAILQ_ENTRY(vfs_node)
                         v_listnode;             /* list node */
     struct vfs_cache *  v_cache;                /* cache (if any) */
     unsigned            v_cachelen;             /* length of the name buffer */
     unsigned            v_cachehash;            /* name hash */
     const char *        v_cachename;            /* cache entry name */
     RB_ENTRY(vfs_node)  v_cachetree;            /* name cache node */
-    TAILQ_ENTRY(vfs_node) 
+    TAILQ_ENTRY(vfs_node)
                         v_cachelru;             /* cache lru node */
     unsigned            v_flags;                /* operational flags */
 #define VNODE_FCACHED           0x0001

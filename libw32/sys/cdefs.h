@@ -1,14 +1,14 @@
 #ifndef LIBW32_SYS_CDEFS_H_INCLUDED
 #define LIBW32_SYS_CDEFS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_cdefs_h,"$Id: cdefs.h,v 1.15 2018/09/30 23:24:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_cdefs_h,"$Id: cdefs.h,v 1.16 2022/03/21 14:29:42 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*-
  *
  * win32 declaration helpers
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -34,7 +34,7 @@ __CPRAGMA_ONCE
 #pragma warning(disable:4115)   /* forward reference of struct * */
 #endif
 
-/* 
+/*
  *  Library binding.
  */
 #if !defined(LIBW32_API)
@@ -64,7 +64,7 @@ __CPRAGMA_ONCE
 #endif //!LIBW32_API
 
 
-/* 
+/*
  *  Binding:
  *
  * Usage:

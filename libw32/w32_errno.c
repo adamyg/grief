@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_errno_c,"$Id: w32_errno.c,v 1.21 2020/04/21 21:16:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_errno_c,"$Id: w32_errno.c,v 1.22 2022/03/21 14:29:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 errno mapping support
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -21,10 +21,10 @@ __CIDENT_RCSID(gr_w32_errno_c,"$Id: w32_errno.c,v 1.21 2020/04/21 21:16:55 cvsus
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Notice: Portions of this text are reprinted and reproduced in electronic form. from
@@ -365,7 +365,7 @@ static const int    xlaterrno[] = {
     ENOSPC,         /* 314 (0x13A)    ERROR_DISK_RESOURCES_EXHAUSTED           The physical resources of this disk have been exhausted. */
     EINVAL,         /* 315 (0x13B)    ERROR_INVALID_TOKEN                      The token representing the data is invalid. */
     ENOSYS,         /* 316 (0x13C)    ERROR_DEVICE_FEATURE_NOT_SUPPORTED       The device does not support the command feature. */
-    -1,             /* 317 (0x13D)    ERROR_MR_MID_NOT_FOUND                   The system cannot find message text for message number 0x % 1 in the message file for %2. */
+    -1,             /* 317 (0x13D)    ERROR_MR_MID_NOT_FOUND                   The system cannot find message text for message number 0x%1 in the message file for %2. */
     ENOENT,         /* 318 (0x13E)    ERROR_SCOPE_NOT_FOUND                    The scope specified was not found. */
     -1,             /* 319 (0x13F)    ERROR_UNDEFINED_SCOPE                    The Central Access Policy specified is not defined on the target machine. */
     EINVAL,         /* 320 (0x140)    ERROR_INVALID_CAP                        The Central Access Policy obtained from Active Directory is invalid. */
@@ -887,4 +887,3 @@ w32_strerror(int errnum)
 }
 
 /*end*/
-

@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetstream_c,"$Id: charsetstream.c,v 1.11 2021/06/16 13:56:33 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetstream_c,"$Id: charsetstream.c,v 1.12 2022/03/21 14:59:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* conversion stream support.
  *
  *
- * Copyright (c) 2010 - 2018, Adam Young.
+ * Copyright (c) 2010 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

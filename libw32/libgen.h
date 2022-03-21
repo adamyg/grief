@@ -1,14 +1,14 @@
 #ifndef LIBW32_LIBGEN_H_INCLUDED
 #define LIBW32_LIBGEN_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libgen_h,"$Id: libgen.h,v 1.2 2019/03/15 23:12:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_libgen_h,"$Id: libgen.h,v 1.3 2022/03/21 14:29:39 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 <libgen.h> implementation
  *
- * Copyright (c) 2007, 2012 - 2019 Adam Young.
+ * Copyright (c) 2007, 2012 - 2022 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -23,10 +23,10 @@ __CPRAGMA_ONCE
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  */
 

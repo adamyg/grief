@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_user_c,"$Id: w32_user.c,v 1.17 2021/06/10 06:13:04 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_user_c,"$Id: w32_user.c,v 1.18 2022/03/21 14:29:42 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 user identification functionality
  *
- * Copyright (c) 2007, 2012 - 2021 Adam Young.
+ * Copyright (c) 2007, 2012 - 2022 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -21,10 +21,10 @@ __CIDENT_RCSID(gr_w32_user_c,"$Id: w32_user.c,v 1.17 2021/06/10 06:13:04 cvsuser
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Notice: Portions of this text are reprinted and reproduced in electronic form. from
@@ -406,10 +406,10 @@ initialise_user()
             x_passwd.pw_uid = 500;              // Built-in admin account.
             x_passwd.pw_gid = 513;              // PrimaryGroupID.
                 //
-                // By default, all Active Directory users have a PrimaryGroupID of 513, 
+                // By default, all Active Directory users have a PrimaryGroupID of 513,
                 // which is associated with the Domain Users group.
                 // However, if the user needed to be seen as a Domain Admin for POSIX,
-                // the PrimaryGroupID needed to be 512, the RID for that group. 
+                // the PrimaryGroupID needed to be 512, the RID for that group.
                 // The Enterprise Admins group, 519, is also used to grant this level in POSIX.
                 //
 

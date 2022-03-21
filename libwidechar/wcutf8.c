@@ -87,12 +87,12 @@ Wcstoutf8(const WChar_t *wstr, char *buf, int buflen)
 
 		assert(wstr && buflen > 0);
 		for (--remaining /*nul*/; remaining && 0 != (ch = *wstr++);) {
-			const int len = charset_utf8_length(ch);
-			if (len > remaining) {
+			const int t_len = charset_utf8_length(ch);
+			if (t_len > remaining) {
 				break;
 			}
 			cursor += charset_utf8_encode(ch, cursor);
-			remaining -= len;
+			remaining -= t_len;
 		}
 		assert(cursor < (buf + buflen));
 		*cursor = 0;

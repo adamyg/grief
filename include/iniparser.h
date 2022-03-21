@@ -1,16 +1,16 @@
 #ifndef GR_INIPARSER_H_INCLUDED
 #define GR_INIPARSER_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_iniparser_h,"$Id: iniparser.h,v 1.7 2019/03/15 23:03:10 cvsuser Exp $")
+__CIDENT_RCSID(gr_iniparser_h,"$Id: iniparser.h,v 1.8 2022/03/21 14:55:28 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: iniparser.h,v 1.7 2019/03/15 23:03:10 cvsuser Exp $
+/* $Id: iniparser.h,v 1.8 2022/03/21 14:55:28 cvsuser Exp $
  * INI parser.
  *
  *
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charseticonv_c,"$Id: charseticonv.c,v 1.21 2021/06/19 10:28:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_charseticonv_c,"$Id: charseticonv.c,v 1.22 2022/03/21 14:59:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* Conversion tables loader/interface.
  *
  *
- * Copyright (c) 2010 - 2021, Adam Young.
+ * Copyright (c) 2010 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

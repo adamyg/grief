@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_writev_c,"$Id: w32_writev.c,v 1.2 2021/10/15 12:35:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_writev_c,"$Id: w32_writev.c,v 1.3 2022/03/21 14:29:42 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 writev() system calls,
  *
- * Copyright (c) 2018 - 2021, Adam Young.
+ * Copyright (c) 2018 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -21,10 +21,10 @@ __CIDENT_RCSID(gr_w32_writev_c,"$Id: w32_writev.c,v 1.2 2021/10/15 12:35:03 cvsu
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Notice: Portions of this text are reprinted and reproduced in electronic form. from
@@ -47,8 +47,8 @@ __CIDENT_RCSID(gr_w32_writev_c,"$Id: w32_writev.c,v 1.2 2021/10/15 12:35:03 cvsu
 
 #pragma comment(lib, "Ws2_32.lib")
 
- 
-LIBW32_API int /*ssize_t*/ 
+
+LIBW32_API int /*ssize_t*/
 writev(int fildes, const struct iovec *iov, int iovcnt)
 {
     SOCKET s = (SOCKET)-1;

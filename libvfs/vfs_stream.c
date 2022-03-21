@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_stream_c,"$Id: vfs_stream.c,v 1.13 2020/04/14 23:13:32 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_stream_c,"$Id: vfs_stream.c,v 1.14 2022/03/21 14:27:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_stream.c,v 1.13 2020/04/14 23:13:32 cvsuser Exp $
+/* $Id: vfs_stream.c,v 1.14 2022/03/21 14:27:23 cvsuser Exp $
  * Virtual file system interface - streams.
  *
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

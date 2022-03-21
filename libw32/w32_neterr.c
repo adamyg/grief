@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_neterr_c,"$Id: w32_neterr.c,v 1.11 2019/03/15 23:12:18 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_neterr_c,"$Id: w32_neterr.c,v 1.12 2022/03/21 14:29:41 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 network errno mapping support
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -21,10 +21,10 @@ __CIDENT_RCSID(gr_w32_neterr_c,"$Id: w32_neterr.c,v 1.11 2019/03/15 23:12:18 cvs
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Notice: Portions of this text are reprinted and reproduced in electronic form. from
@@ -151,4 +151,3 @@ w32_sockerrno_map(int nerrno)
     return nerrno;
 }
 #endif //DEFUNCT
-

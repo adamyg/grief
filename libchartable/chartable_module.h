@@ -1,14 +1,14 @@
 #ifndef GR_CHARTABLE_MODULE_H_INCLUDED
 #define GR_CHARTABLE_MODULE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_chartable_module_h,"$Id: chartable_module.h,v 1.17 2020/06/18 13:09:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_chartable_module_h,"$Id: chartable_module.h,v 1.18 2022/03/21 14:59:58 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* Chartable module interface
  *
  *
- * Copyright (c) 2010 - 2018, Adam Young.
+ * Copyright (c) 2010 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

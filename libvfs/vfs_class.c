@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_class_c,"$Id: vfs_class.c,v 1.12 2019/03/15 23:23:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_class_c,"$Id: vfs_class.c,v 1.13 2022/03/21 14:27:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_class.c,v 1.12 2019/03/15 23:23:01 cvsuser Exp $
+/* $Id: vfs_class.c,v 1.13 2022/03/21 14:27:22 cvsuser Exp $
  * Virtual file system - utility functions.
  *
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -73,13 +73,13 @@ vfs_class_shutdown(void)
     if (NULL != (vfs = TAILQ_FIRST(&x_instanceq))) {
         do {
             struct vfs_class *t_vfs = TAILQ_NEXT(vfs, v_node);
-            
+
             if (vfs->v_prefix[0])  {
                 vfs_class_delete(vfs);          /* all but the root class */
             }
             vfs = t_vfs;
         } while (vfs);
-    }      
+    }
 }
 
 
@@ -88,7 +88,7 @@ vfs_class_shutdown(void)
  *
  *  Parameters;
  *      desc -              Description.
- *      prefix -            Clas prefix associated virtual file-system 
+ *      prefix -            Clas prefix associated virtual file-system
  *                          class, for examples ('ftp' and 'tar').
  *      impl -              Implementation virtual operators.
  *
@@ -106,7 +106,7 @@ vfs_class_new(const char *desc, const char *prefix, struct vfs_implementation *i
     assert(prefix);
 
     /*
-     *  enforce basic rules, 
+     *  enforce basic rules,
      *      length >= 3 (stop possible confusion with DOS/WIN32 drive specifications) and must
      *      lead with an alpha and contain only trailing alpha-numeric characters. the only
      *      exception is the root class which is representing using an empty prefix.
@@ -116,12 +116,12 @@ vfs_class_new(const char *desc, const char *prefix, struct vfs_implementation *i
          *  [a-z][a-z0-9]{2,}
          */
         const char *t_prefix = prefix;
-        
-        if (prefixlength < 3 || !isalpha(*t_prefix)) {  
+
+        if (prefixlength < 3 || !isalpha(*t_prefix)) {
             errno = EINVAL;                     /* xxx[xxxx] */
             return NULL;
         }
-        
+
         while (*++t_prefix) {
             if (! isalnum(*t_prefix)) {
                 errno = EINVAL;
@@ -156,7 +156,7 @@ vfs_class_new(const char *desc, const char *prefix, struct vfs_implementation *i
         if (0 != (*impl->i_initialise)(vfs)) {
             /*
              *  initialisation failure\
-             *      destroy c;ass   
+             *      destroy c;ass
              */
             vfs->v_impl.i_shutdown = NULL;      /* dont call shutdown */
             vfs_class_delete(vfs);
@@ -221,7 +221,7 @@ vfs_class_delete(struct vfs_class *vfs)
 {
     assert(vfs);
     assert(VINSTANCE_MAGIC == vfs->v_magic);
-    
+
     VFS_TRACE(("\tvfs_class_delete('%s', '%s')\n", vfs->v_desc, vfs->v_prefix))
 
     assert(0 == vfs->v_references);

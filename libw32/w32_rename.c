@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_rename_c,"$Id: w32_rename.c,v 1.1 2021/06/10 06:13:04 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_rename_c,"$Id: w32_rename.c,v 1.2 2022/03/21 14:29:41 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 rename() system calls.
  *
- * Copyright (c) 2020 - 2021 Adam Young.
+ * Copyright (c) 2020 - 2022 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -21,10 +21,10 @@ __CIDENT_RCSID(gr_w32_rename_c,"$Id: w32_rename.c,v 1.1 2021/06/10 06:13:04 cvsu
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Notice: Portions of this text are reprinted and reproduced in electronic form. from
@@ -114,7 +114,6 @@ w32_rename(const char *ofile, const char *nfile)
 #if defined(UTF8FILENAMES)
     if (w32_utf8filenames_state()) {
         wchar_t wofile[WIN32_PATH_MAX], wnfile[WIN32_PATH_MAX];
-        int mode = 0;
 
         if (NULL == ofile || NULL == nfile) {
             errno = EFAULT;

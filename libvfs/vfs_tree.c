@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_tree_c,"$Id: vfs_tree.c,v 1.21 2020/06/18 13:18:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_tree_c,"$Id: vfs_tree.c,v 1.22 2022/03/21 14:27:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_tree.c,v 1.21 2020/06/18 13:18:07 cvsuser Exp $
+/* $Id: vfs_tree.c,v 1.22 2022/03/21 14:27:23 cvsuser Exp $
  * Virtual file system interface - tree management.
  *
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -843,7 +843,7 @@ vfs_tree_vopen(struct vfs_mount *vmount, const char *path, int mode, int mask)
             mode &= ~O_CREAT;
         }
     } else {
-#if defined(O_NOFOLLOW) && (O_NOFOLLOW)         /* nonstandard */ 
+#if defined(O_NOFOLLOW) && (O_NOFOLLOW)         /* nonstandard */
         unsigned flags = ((mode & O_NOFOLLOW) ? 0 : LK_FFOLLOW) |
                             LK_FNOCROSSMOUNT /*| LK_FLOCKLEAF*/;
 #else
@@ -922,7 +922,7 @@ vfs_tree_vclose(struct vfs_handle *vhandle)
 
     } else {
         if (vhandle->h_ihandle >= 0) {
-	    vfsio_close(vhandle->h_ihandle);		
+	    vfsio_close(vhandle->h_ihandle);
             vhandle->h_ihandle = -1;
         }
     }
@@ -1054,7 +1054,7 @@ vfs_tree_vioctl(struct vfs_handle *vhandle, int op, void *data)
     } else {
         if (vhandle->h_ihandle >= 0) {
 #if defined(_WIN32) || defined(WIN32) || !defined(HAVE_IOCTL)
-            errno = EOPNOTSUPP; 
+            errno = EOPNOTSUPP;
             ret = -1;
 #else
             ret = ioctl(vhandle->h_ihandle, op, data);

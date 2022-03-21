@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.38 2021/06/10 06:13:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.39 2022/03/21 14:29:41 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -7,7 +7,7 @@ __CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.38 2021/06/10 06:13:03 cvsuser Exp
  *
  *      stat, lstat, fstat, readlink, symlink, open
  *
- * Copyright (c) 2007, 2012 - 2021 Adam Young.
+ * Copyright (c) 2007, 2012 - 2022 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -23,10 +23,10 @@ __CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.38 2021/06/10 06:13:03 cvsuser Exp
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Notice: Portions of this text are reprinted and reproduced in electronic form. from
@@ -190,7 +190,7 @@ w32_utf8filenames_enable (void)
 }
 
 
-int
+LIBW32_API int
 w32_utf8filenames_state (void)
 {
     return x_utf8filenames;
@@ -1848,6 +1848,9 @@ ApplyOwner(struct stat *sb, const DWORD dwAttributes, HANDLE handle)
     // Inquire
     if (handle && INVALID_HANDLE_VALUE != handle) {
         PSID owner = NULL, group = NULL;
+#if defined(_DEBUG) && (0)
+        int uid = -1, gid = -1;
+#endif
 
         if (GetSecurityInfo(handle, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION,
                 &owner, NULL, NULL, NULL, NULL) == ERROR_SUCCESS) {
@@ -2468,7 +2471,7 @@ ReadlinkW(const wchar_t *path, const char **suffixes, wchar_t *buf, int maxlen)
     }
 
     if (ret > 0) {
-        w32_wdos2unix(buf);
+        w32_dos2unixW(buf);
     }
     return ret;
 }
@@ -2941,6 +2944,7 @@ StatW(const wchar_t *name, struct stat *sb)
 {
     wchar_t fullname[WIN32_PATH_MAX] = {0}, *pfname = NULL;
     int flength, ret = -1;
+    BOOL domagic = 0;
 
     if (name == NULL || sb == NULL) {
         ret = -EFAULT;                          /* basic checks */

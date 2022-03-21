@@ -1,14 +1,14 @@
 #ifndef LIBW32_SYS_FILE_H_INCLUDED
 #define LIBW32_SYS_FILE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_file_h,"$Id: file.h,v 1.1 2021/06/10 06:13:04 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_file_h,"$Id: file.h,v 1.2 2022/03/21 14:29:42 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 sys/file.h
  *
- * Copyright (c) 2020, Adam Young.
+ * Copyright (c) 2020 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -1,15 +1,15 @@
 #ifndef GR_VFS_TREE_H_INCLUDED
 #define GR_VFS_TREE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_tree_h,"$Id: vfs_tree.h,v 1.10 2019/03/15 23:23:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_tree_h,"$Id: vfs_tree.h,v 1.11 2022/03/21 14:27:23 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_tree.h,v 1.10 2019/03/15 23:23:02 cvsuser Exp $
+/* $Id: vfs_tree.h,v 1.11 2022/03/21 14:27:23 cvsuser Exp $
  * Virtual File System Interface -- node tree definitions.
  *
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -76,7 +76,7 @@ struct vfs_treevops {
     int     (* vop_seek)(struct vfs_tree *tree, struct vfs_handle *handle, off_t offset, int whence);
     int     (* vop_ioctl)(struct vfs_tree *tree, struct vfs_handle *handle, int op, void *data);
     int     (* vop_close)(struct vfs_tree *tree, struct vfs_handle *handle);
-    
+
     int     (* vop_localget)(struct vfs_tree *tree, struct vfs_node *node, int mode, int mask, int *fd);
     int     (* vop_localput)(struct vfs_tree *tree, struct vfs_node *node, int changed);
 };
@@ -92,7 +92,7 @@ typedef struct vfs_tree {
     unsigned            t_magic;                /* structure magic */
     struct vfs_mount *  t_mount;                /* owner/mount point */
     struct vfs_treevops t_vops;                 /* tree interface operations */
-    TAILQ_ENTRY(vfs_tree) 
+    TAILQ_ENTRY(vfs_tree)
                         t_nodelist;             /* list node */
     struct vfs_node *   t_root;                 /* root node */
     struct vfs_cache    t_cache;                /* node cache */

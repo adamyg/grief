@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
-# $Id: makechartable.pl,v 1.22 2021/08/01 15:44:53 cvsuser Exp $
+# $Id: makechartable.pl,v 1.23 2022/03/21 14:59:58 cvsuser Exp $
 # Character table generation.
 #
-# Copyright (c) 2010 - 2021, Adam Young.
+# Copyright (c) 2010 - 2022, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -240,7 +240,7 @@ my  %QUOTES = (                 # Unicode quotes
     );
 
 my  $COPYRIGHT          =
-    " * Copy"."right (c) 2010 - 2021, Adam Young.\n".
+    " * Copy"."right (c) 2010 - 2022, Adam Young.\n".
     " * All rights reserved.\n".
     " *\n".
     " * This"." file is part of the GRIEF Editor.\n".

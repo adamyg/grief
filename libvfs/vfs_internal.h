@@ -1,15 +1,15 @@
 #ifndef GR_VFS_INTERNAL_H_INCLUDED
 #define GR_VFS_INTERNAL_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_internal_h,"$Id: vfs_internal.h,v 1.21 2021/06/10 06:13:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_internal_h,"$Id: vfs_internal.h,v 1.22 2022/03/21 14:27:23 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_internal.h,v 1.21 2021/06/10 06:13:02 cvsuser Exp $
+/* $Id: vfs_internal.h,v 1.22 2022/03/21 14:27:23 cvsuser Exp $
  * Virtual File System Interface -- internal definitions.
  *
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

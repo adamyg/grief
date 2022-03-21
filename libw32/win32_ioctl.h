@@ -1,7 +1,7 @@
 #ifndef LIBW32_WIN32_IOCTL_H_INCLUDED
 #define LIBW32_WIN32_IOCTL_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_ioctl_h,"$Id: win32_ioctl.h,v 1.2 2018/10/18 13:08:59 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_ioctl_h,"$Id: win32_ioctl.h,v 1.3 2022/03/21 14:29:42 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -24,10 +24,10 @@ __CPRAGMA_ONCE
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.th this program.
+ * license for more details.
  * ==end==
  */
 

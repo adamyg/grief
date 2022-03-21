@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_node_c,"$Id: vfs_node.c,v 1.12 2019/03/15 23:23:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_node_c,"$Id: vfs_node.c,v 1.13 2022/03/21 14:27:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_node.c,v 1.12 2019/03/15 23:23:02 cvsuser Exp $
+/* $Id: vfs_node.c,v 1.13 2022/03/21 14:27:23 cvsuser Exp $
  * Virtual file system interface - node management.
  *
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -78,7 +78,7 @@ vfs_node_new(unsigned type, const char *name, unsigned namlen, unsigned namhash,
         ++parent->v_childcount;
         ++parent->v_childedit;
     }
-    node->v_parent = parent;  
+    node->v_parent = parent;
     return node;
 }
 
@@ -125,7 +125,7 @@ vfs_node_destroy(struct vfs_node *node)
     if (NULL != (parent = node->v_parent)) {
         assert(VNODE_MAGIC == parent->v_magic);
         assert(parent->v_childcount);
-        
+
         TAILQ_REMOVE(&parent->v_childlist, node, v_listnode);
         --parent->v_childcount;
         ++parent->v_childedit;
@@ -155,7 +155,7 @@ vfs_node_type2str(unsigned type)
     case VNODE_REG:  return "reg";
     case VNODE_LNK:  return "lnk";
     case VNODE_BAD:  return "bad";
-    case VNODE_UNKNOWN: 
+    case VNODE_UNKNOWN:
         return "Unknown";
     }
     return "<unknown-type>";
@@ -186,7 +186,7 @@ vfs_node_unlink(struct vfs_node *node)
     if (VNODE_DIR == node->v_type) {
         errno = EISDIR;                         /* can not unlink a directory */
         return -1;
-    }  
+    }
     assert(0 == node->v_childcount);
     assert(node->v_references);
     if (node->v_references <= 1) {              /* allow references==0 */
@@ -227,7 +227,7 @@ vfs_node_first(struct vfs_node *node)
  */
 struct vfs_node *
 vfs_node_next(struct vfs_node *node)
-{        
+{
     assert(node);
     assert(VNODE_MAGIC == node->v_magic);
     return TAILQ_NEXT(node, v_listnode);

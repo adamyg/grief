@@ -1,7 +1,9 @@
+#ifndef LIBW32_W32_COLORS256_H_INCLUDED
+#define LIBW32_W32_COLORS256_H_INCLUDED
 /*
  * RGB Colors -- win32 slang emulation.
  *
- * Copyright (c) 2015 - 2019, Adam Young.
+ * Copyright (c) 2015 - 2022, Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -16,10 +18,10 @@
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  */
 
@@ -280,3 +282,5 @@
     { 0xda, 0xda, 0xda },       /* 253 */
     { 0xe4, 0xe4, 0xe4 },       /* 254 */
     { 0xee, 0xee, 0xee },       /* 255 */
+
+#endif /*LIBW32_W32_COLORS256_H_INCLUDED*/

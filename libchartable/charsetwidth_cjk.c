@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetwidth_cjk_c,"$Id: charsetwidth_cjk.c,v 1.13 2018/10/01 22:10:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetwidth_cjk_c,"$Id: charsetwidth_cjk.c,v 1.14 2022/03/21 15:50:55 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -149,7 +149,7 @@ charset_width_cjk(int32_t ucs)
 	    sizeof(ambiguous) / sizeof(struct interval) - 1)) {
         return 2;
     }
-    return charset_width_ucs(ucs, -1);
+    return ucs_width(ucs, -1);
 }
 
 

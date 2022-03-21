@@ -1,14 +1,14 @@
 #ifndef LIBW32_WIN32_IO_H_INCLUDED
 #define LIBW32_WIN32_IO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_io_h,"$Id: win32_io.h,v 1.35 2021/06/19 14:59:38 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_io_h,"$Id: win32_io.h,v 1.36 2022/03/21 14:29:42 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 io functionality.
  *
- * Copyright (c) 2007, 2012 - 2021 Adam Young.
+ * Copyright (c) 2007, 2012 - 2022 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -24,33 +24,16 @@ __CPRAGMA_ONCE
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  */
 
 #undef DATADIR                                  /* namespace issue */
 
 #if defined(_MSC_VER)
-#if (_MSC_VER != 1200)                          /* MSVC 6 */
-#if (_MSC_VER != 1400)                          /* MSVC 8/2005 */
-#if (_MSC_VER != 1500)                          /* MSVC 9/2008 */
-#if (_MSC_VER != 1600)                          /* MSVC 10/2010 */
-#if (_MSC_VER != 1900)                          /* MSVC 19/2015 */
-#if (_MSC_VER <  1910 || _MSC_VER > 1916)       /* MSVC 19.10 .. 16/2017 */
-#if (_MSC_VER > 1929)                           /* MSVC 19.20 / 2019.09 */
-#error unistd.h: untested MSVC Version (2005 -- 2019.08) only ...
-	 //see: https://en.wikipedia.org/wiki/Microsoft_Visual_C%2B%2B
-#endif //2019
-#endif //2017
-#endif //2015
-#endif //2010
-#endif //2008
-#endif //2005
-#endif //_MSC_VER
-
 #pragma  warning(disable:4115)
 
 #elif defined(__WATCOMC__)
