@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.50 2022/03/22 08:27:09 cvsuser Exp $
+# $Id: Makefile.in,v 1.51 2022/03/22 08:43:18 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2022, Adam Young.
@@ -128,7 +128,7 @@ ifeq ("$(BUILD_TYPE)","")	#default
 help clean vclean build package:
 ifneq ("$(word 1,$(MAKECMDGOALS))","debug")
 ifneq ("$(word 1,$(MAKECMDGOALS))","release")
-	@$(ECHO) -n -e '\
+	@$(ECHO) -n -e "\
 		|\n\
 		| make [release or debug] target \n\
 		|\n\
@@ -141,7 +141,7 @@ ifneq ("$(word 1,$(MAKECMDGOALS))","release")
 		|	clean   - delete everything which can be remade. \n\
 		|	vclean  - delete all. \n\
 		|	help    - command line usage. \n\
-		'
+		"
 endif
 endif
 	@echo .
@@ -317,7 +317,7 @@ build:				directories artifacts libs bins import
 
 .PHONY:				help
 help:
-	@$(ECHO) -e '\
+	@$(ECHO) -e "\
 		|\n\
 		| make [release or debug] target \n\
 		|\n\
@@ -329,7 +329,7 @@ help:
 		|	package - build all packages. \n\
 		|	clean   - delete everything which can be remade. \n\
 		|	help    - command line usage. \n\
-		'
+		"
                 
 .PHONY:				release
 release:
