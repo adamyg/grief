@@ -11,6 +11,12 @@
 #define CTRL_PRESSED            (LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED)
 #define APP_PRESSED             0x0200      /* APPS enabled, extension */
 
+#if defined(__WATCOMC__)
+#if !defined(_countof)
+#define _countof(array) (sizeof(array) / sizeof(array[0]))
+#endif
+#endif
+
 #define CTRLSTATUSMASK          (LEFT_ALT_PRESSED|LEFT_CTRL_PRESSED|RIGHT_ALT_PRESSED|RIGHT_CTRL_PRESSED|SHIFT_PRESSED|APP_PRESSED)
 
 static const struct w32key {
@@ -195,14 +201,14 @@ Process(HANDLE in)
 
     for (;;) {
         INPUT_RECORD ir[1] = {0};
-        DWORD cEventsRead = 0;
+        DWORD i, cEventsRead = 0;
 
         if (! ReadConsoleInputW(in, ir, 1, &cEventsRead)) {
             puts("ReadConsoleInput failed!");
             return;
         }
 
-        for (DWORD i = 0; i < cEventsRead; ++i, ++event_count) {
+        for (i = 0; i < cEventsRead; ++i, ++event_count) {
             if (ir[i].EventType & KEY_EVENT) {
                 const KEY_EVENT_RECORD *ker = &ir[i].Event.KeyEvent;
 

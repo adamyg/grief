@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.49 2022/03/22 08:05:50 cvsuser Exp $
+# $Id: Makefile.in,v 1.50 2022/03/22 08:27:09 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2022, Adam Young.
@@ -112,9 +112,14 @@ XCLEAN=		$(D_BIN)/*.map
 
 # Configuration
 
+ifneq "" "$(filter win32,@build_os@)"
 BUSYBOX=	@BUSYBOX@
 ifeq ($(BUSYBOX),busybox)
 BUSYBOX=	$(shell which busybox 2>/dev/null)
+endif
+ECHO=           $(BUSYBOX) echo
+else
+ECHO=           echo
 endif
 
 ifeq ("$(BUILD_TYPE)","")	#default
@@ -123,7 +128,7 @@ ifeq ("$(BUILD_TYPE)","")	#default
 help clean vclean build package:
 ifneq ("$(word 1,$(MAKECMDGOALS))","debug")
 ifneq ("$(word 1,$(MAKECMDGOALS))","release")
-	@$(BUSYBOX) echo -n -e '\
+	@$(ECHO) -n -e '\
 		|\n\
 		| make [release or debug] target \n\
 		|\n\
@@ -312,7 +317,7 @@ build:				directories artifacts libs bins import
 
 .PHONY:				help
 help:
-	@$(BUSYBOX) echo -e '\
+	@$(ECHO) -e '\
 		|\n\
 		| make [release or debug] target \n\
 		|\n\
