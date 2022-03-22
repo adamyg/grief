@@ -1,19 +1,16 @@
 CVS/
+defunct/
 .makelib/
-/contrib/include/
-<<<<<<< .gitignore
-/defunct/
-=======
-/win32/Autoupdater/
->>>>>>> 1.5
-/EXTRA/
-/doc/
+contrib/include/
+win32/Autoupdater/
+EXTRA/
+doc/
 bin
 bin.*/
 lib.*/
 objects*/
-/macros/
-/help/
+macros/
+help/
 Makefile
 GIT_Notes.txt
 GIT*.bat

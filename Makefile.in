@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.51 2022/03/22 08:43:18 cvsuser Exp $
+# $Id: Makefile.in,v 1.52 2022/03/22 10:50:24 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2022, Adam Young.
@@ -36,7 +36,7 @@ PKG_TARNAME	= @PACKAGE_TARNAME@
 PKG_URL		= @PACKAGE_URL@
 PKG_VERSION	= @PACKAGE_VERSION@
 ifeq ("","$(PKG_VERSION)")
-PKG_VERSION	= 3.2.1
+PKG_VERSION	= 3.2.2
 endif
 PKG_VERSION_1	=$(word 1,$(subst ., ,$(PKG_VERSION)))
 PKG_VERSION_2	=$(word 2,$(subst ., ,$(PKG_VERSION)))
@@ -117,9 +117,9 @@ BUSYBOX=	@BUSYBOX@
 ifeq ($(BUSYBOX),busybox)
 BUSYBOX=	$(shell which busybox 2>/dev/null)
 endif
-ECHO=           $(BUSYBOX) echo
+ECHO=		$(BUSYBOX) echo
 else
-ECHO=           echo
+ECHO=		echo
 endif
 
 ifeq ("$(BUILD_TYPE)","")	#default

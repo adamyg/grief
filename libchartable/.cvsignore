@@ -1,4 +1,5 @@
 Makefile
+*.err
 charsetdesc.h
 charsetdict.h
 charsetlocales.h
