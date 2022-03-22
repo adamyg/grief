@@ -1,7 +1,7 @@
 #ifndef LIBW32_SYS_STATFS_H_INCLUDED
 #define LIBW32_SYS_STATFS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_statfs_h,"$Id: statfs.h,v 1.9 2022/03/21 14:29:43 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_statfs_h,"$Id: statfs.h,v 1.10 2022/03/22 08:05:09 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -26,6 +26,7 @@ __CPRAGMA_ONCE
 #include <sys/cdefs.h>
 #include <sys/utypes.h>
 #include <sys/mount.h>
+#include <wchar.h>
 
 #define FS_MAGIC    0x11954                     /* Taken from HP-UX */
 

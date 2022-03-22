@@ -38,8 +38,8 @@ jobs:
       shell: cmd
       run: |
         @set PERL=c:/Strawberry/perl/bin/perl
-        .\win32\gmake-42 contrib
-        .\win32\gmake-42
+        .\win32\gmake-42 release contrib
+        .\win32\gmake-42 release
 
     - name: Windows, package
       if: runner.os == 'Windows'

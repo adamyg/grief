@@ -1,4 +1,4 @@
-# $Id: makeconfig.pm,v 1.2 2020/06/20 22:38:28 cvsuser Exp $
+# $Id: makeconfig.pm,v 1.3 2022/03/22 08:02:55 cvsuser Exp $
 # Makefile generation under Win32.
 # -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -7,14 +7,21 @@
 # Copyright (c) 2020, Adam Young.
 # All rights reserved.
 #
-# This file is part of the Midnight Commander.
+# This file is part of GRIEF
 #
-# The Midnight Commander is free software: you can redistribute it
+# The applications are free software: you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
-# published by the Free Software Foundation, either version 3 of the License,
-# or (at your option) any later version.
+# published by the Free Software Foundation, version 3.
 #
-# The Midnight Commander is distributed in the hope that it will be useful,
+# Redistributions of source code must retain the above copyright
+# notice, and must be distributed with the license document above.
+#
+# Redistributions in binary form must reproduce the above copyright
+# notice, and must include the license document above in
+# the documentation and/or other materials provided with the
+# distribution.
+#
+# The applications are distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -35,7 +42,13 @@ my  $x_tokens = undef;
 my  $o_verbose = undef;
 
 our $PACKAGE        = undef;
-our $PACKAGE_NAME   = undef;
+our $PACKAGE_NAME   = '';
+our $PACKAGE_VERSION = '';
+
+our $PACKAGE_BUGREPORT = '';
+our $PACKAGE_TARNAME = '';
+our $PACKAGE_URL    = '';
+
 our $PACKAGE_PATH   = undef;
 our $PACKAGE_H      = undef;                    # defunct, use PACKAGE_FILE
 our $PACKAGE_FILE   = 'package.h';
@@ -275,8 +288,8 @@ sub __ExportConfigurations {
         }
     }
 
-    $self->{PACKAGE}        = $PACKAGE;
-    $self->{PACKAGE_NAME}   = $PACKAGE_NAME if ($PACKAGE_NAME);
+    $self->{PACKAGE}        = $PACKAGE if (defined $PACKAGE);
+    $self->{PACKAGE_NAME}   = $PACKAGE_NAME;
     $self->{PACKAGE_PATH}   = $PACKAGE_PATH if ($PACKAGE_PATH);
     $self->{PACKAGE_H}      = $PACKAGE_H    if ($PACKAGE_H);
     $self->{PACKAGE_FILE}   = $PACKAGE_FILE if ($PACKAGE_FILE);
@@ -288,6 +301,12 @@ sub __ExportConfigurations {
     $self->{LIBRARIES}      = \@LIBRARIES;
     $self->{LIBRARIES2}     = \@LIBRARIES2;
     $self->{OPTLIBRARIES}   = \@OPTLIBRARIES;
+
+    $$x_tokens{PACKAGE_VERSION} = $PACKAGE_VERSION;
+    $$x_tokens{PACKAGE_STRING} = $PACKAGE_NAME . ' ' . $PACKAGE_VERSION;
+    $$x_tokens{PACKAGE_URL} = $ PACKAGE_URL;
+    $$x_tokens{PACKAGE_BUGREPORT} = $PACKAGE_BUGREPORT;
+    $$x_tokens{PACKAGE_TARNAME} = $PACKAGE_TARNAME;
 
     $$x_tokens{CC}          = $CC;
     $$x_tokens{CXX}         = $CXX;

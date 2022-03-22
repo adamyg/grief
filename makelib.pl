@@ -1,5 +1,7 @@
+#!/usr/bin/perl
+# $Id: makelib.pl,v 1.123 2022/03/22 08:07:31 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
-# -*- tabs: 8; indent-width: 4; -*-
+# -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
 #
 #
@@ -8,8 +10,9 @@
 #
 # This file is part of the GRIEF Editor.
 #
-# The GRIEF Editor is free software: you can redistribute it
-# and/or modify it under the terms of the GRIEF Editor License.
+# The applications are free software: you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation, version 3.
 #
 # Redistributions of source code must retain the above copyright
 # notice, and must be distributed with the license document above.
@@ -19,10 +22,10 @@
 # the documentation and/or other materials provided with the
 # distribution.
 #
-# The GRIEF Editor is distributed in the hope that it will be useful,
+# The applications are distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# License for more details.
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 # ==end==
 #
 
@@ -387,7 +390,7 @@ my %x_environment   = (
             TOOLCHAIN       => 'vs170',
             TOOLCHAINEXT    => '.vs170',
             CC              => 'cl',
-            COMPILERPATHS   => '%VS160COMNTOOLS%/../../VC/bin|%VCToolsInstallDir%/bin/Hostx86/x86',
+            COMPILERPATHS   => '%VS170COMNTOOLS%/../../VC/bin|%VCToolsInstallDir%/bin/Hostx86/x86',
             COMPILERPATH    => '',
             VSWITCH         => '',
             VPATTERN        => undef,
@@ -877,7 +880,6 @@ my @x_headers       = (     #headers
         'memory.h',
         'process.h',
         'libgen.h',                             # basename(), dirname()
-        'limits.h',
         'share.h',
         'signal.h',
         'utime.h',
@@ -1050,7 +1052,7 @@ my %CONFIG_O        = (     # optional config.h values
         HAVE_EIGHTBIT           => '1'
         );
 
-my %CONFIG_H        = (     # predefined config.h values
+our %CONFIG_H       = (     # predefined config.h values
         IS_LITTLE_ENDIAN        => '1',         # TODO
         STDC_HEADERS            => '1',
         HAVE_EIGHTBIT           => '1',
@@ -1081,7 +1083,7 @@ my $x_command       = '';
 my $x_signature     = undef;
 
 my $o_makelib       = './makelib.in';
-my $o_keep          = 1;
+my $o_keep          = 0;
 my $o_verbose       = 0;
 my $o_version       = undef;
 my $o_gnuwin32      = 'auto';
@@ -1221,9 +1223,9 @@ main()
         $Data::Dumper::Purity = 1;
         $Data::Dumper::Sortkeys = 1;
         print CACHE Data::Dumper->Dump([\%x_tokens],   [qw(*XXTOKENS)]);
-        print CACHE Data::Dumper->Dump([\%CONFIG_H],   [qw(*XXCONFIG_H)]);
         print CACHE Data::Dumper->Dump([\@HEADERS],    [qw(*XXHEADERS)]);
         print CACHE Data::Dumper->Dump([\@EXTHEADERS], [qw(*XXEXTHEADERS)]);
+        print CACHE Data::Dumper->Dump([\%CONFIG_H],   [qw(*CONFIG_H)]);
         print CACHE Data::Dumper->Dump([\%DECLS],      [qw(*DECLS)]);
         print CACHE Data::Dumper->Dump([\%TYPES],      [qw(*TYPES)]);
         print CACHE Data::Dumper->Dump([\%SIZES],      [qw(*SIZES)]);
@@ -1491,6 +1493,12 @@ Configure($$)           # (type, version)
         my $include = "";
         my $check = -1;
 
+        my $name = $header;
+        $name =~ s/[\/.]/_/g;
+        $name = "HAVE_".uc($name);              # HAVE_XXXX_H
+
+        my $cached = (exists $CONFIG_H{$name});
+
         # present check
         print "header:   ${header} present ...";
         print " " x (28 - (length($header)+8));
@@ -1508,9 +1516,9 @@ Configure($$)           # (type, version)
         if ($headers2) {
             $check = ($fullpath ? 0 : -1);      # found?
         } else {
-            $check = CheckHeader($header, $headerdefines); # build check
+            $check = ($cached ? 0 : CheckHeader($header, $headerdefines)); # build check
         }
-        print "[".(0 == $check ? "yes" : "no")."]\n";
+        print "[".(0 == $check ? "yes" : "no").($cached?", cached":"")."]\n";
 
         if (0 == $check) {
             if ($headers2) {                    # headers2
@@ -1521,11 +1529,8 @@ Configure($$)           # (type, version)
                     if ($include ne $x_libw32);
             }
 
-            my $t_header = $header;
-            $t_header =~ s/[\/.]/_/g;
-            $t_header = uc($t_header);
-            $CONFIG_H{"HAVE_${t_header}"} = '1';
-            $headerdefines .= "#define HAVE_${t_header} 1\n";
+            $CONFIG_H{$name} = '1';
+            $headerdefines .= "#define ${name} 1\n";
         }
     }
 

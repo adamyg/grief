@@ -1,8 +1,8 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.48 2021/07/05 15:01:26 cvsuser Exp $
+# $Id: Makefile.in,v 1.49 2022/03/22 08:05:50 cvsuser Exp $
 # GRIEF - top level makefile.
 #
-# Copyright (c) 1998 - 2021, Adam Young.
+# Copyright (c) 1998 - 2022, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -105,18 +105,58 @@ E=
 A=		.a
 O=		.o
 LP=		lib
+E=		.exe
 
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
-XCLEAN=
+XCLEAN=		$(D_BIN)/*.map
 
 # Configuration
 
-ifeq ("$(BUILD_TYPE)","")	#default
-BUILD_TYPE=	debug
-MAKEFLAGS+=	BUILD_TYPE=debug
+BUSYBOX=	@BUSYBOX@
+ifeq ($(BUSYBOX),busybox)
+BUSYBOX=	$(shell which busybox 2>/dev/null)
 endif
-ifneq ("$(BUILD_TYPE)","release")
+
+ifeq ("$(BUILD_TYPE)","")	#default
+
+.PHONY:				help clean vclean build package
+help clean vclean build package:
+ifneq ("$(word 1,$(MAKECMDGOALS))","debug")
+ifneq ("$(word 1,$(MAKECMDGOALS))","release")
+	@$(BUSYBOX) echo -n -e '\
+		|\n\
+		| make [release or debug] target \n\
+		|\n\
+		|	Build one or more of the following targets recursively within each sub-directory. \n\
+		|\n\
+		| Targets: \n\
+		|\n\
+		|	build   - build everything. \n\
+		|	package - build package. \n\
+		|	clean   - delete everything which can be remade. \n\
+		|	vclean  - delete all. \n\
+		|	help    - command line usage. \n\
+		'
+endif
+endif
+	@echo .
+
+.PHONY:				release
+release:
+		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
+
+.PHONY:				debug
+debug:
+		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
+
+else	# BUILD_TYPE
+
+ifeq ("$(BUILD_TYPE)","debug")
 RTSUFFIX=d
+else
+ifneq ("$(BUILD_TYPE)","release")
+$(error invalid BUILD_TYPE; debug or release expected)
+endif
 endif
 
 # Directories
@@ -140,6 +180,7 @@ D_HLPDOC=	$(ROOT)/hlpdoc
 
 BUILDNUMBER=	BUILDNUMBER.in
 BUILDINFO=	include/edbuildinfo.h
+PACKAGEINFO=	include/edpackageinfo.h
 
 # Compilers, programs
 
@@ -167,10 +208,6 @@ INNO=		"C:/Program Files (x86)/Inno Setup 5/Compil32"
 endif
 endif
 
-BUSYBOX=	@BUSYBOX@
-ifeq ($(BUSYBOX),busybox)
-BUSYBOX=	$(shell which busybox 2>/dev/null)
-endif
 
 # Common flags
 
@@ -233,7 +270,10 @@ BINS=\
 	$(D_BIN)/grcpp$(E)		\
 	$(D_BIN)/grmandoc$(E)		\
 	$(D_BIN)/grunch$(E)
-
+ifneq "" "$(filter mingw32 win32,@build_os@)"
+BINS+=	$(D_BIN)/grwc$(E)
+endif
+        
 LIBS=
 ifneq "" "$(filter mingw32 win32,@build_os@)"
 LIBS+=	$(LW)win32
@@ -265,13 +305,32 @@ DIRECTORIES=\
 #########################################################################################
 # Rules
 
-.PHONY:				build release debug directories install
-build:				directories buildinfo libs bins import
+.PHONY:				build directories install
+build:				directories artifacts libs bins import
 		$(MAKE) -C $(D_HLPDOC)
 		$(MAKE) -C $(D_MACSRC)
 
+.PHONY:				help
+help:
+	@$(BUSYBOX) echo -e '\
+		|\n\
+		| make [release or debug] target \n\
+		|\n\
+		|	Build one or more of the following targets recursively within each sub-directory. \n\
+		|\n\
+		| Targets: \n\
+		|\n\
+		|	build   - build everything. \n\
+		|	package - build all packages. \n\
+		|	clean   - delete everything which can be remade. \n\
+		|	help    - command line usage. \n\
+		'
+                
+.PHONY:				release
 release:
 		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
+
+.PHONY:				debug
 debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
@@ -285,13 +344,11 @@ endif
 
 directories:			$(DIRECTORIES)
 
+artifacts:			buildinfo
+
 %/.created:
 		-@$(PERL) ./win32/mkdir_p.pl $(@D)
 		@echo "++ do not delete, grief edit managed content ++" > $@
-
-.PHONY:		package
-package:			import
-		$(INNO) ./win32/gr-inno-setup.iss
 
 .PHONY:		import
 import:				$(IMPORT)
@@ -315,19 +372,49 @@ $(D_BIN)/$(PLBRNAME).dll:	$(LIBPLBRPATH)
 		@$(CP) -f $(subst /,\,$^) $@
 endif
 
+.PHONY:		package
+package:	import packageinfo
+	$(INNO) ./win32/gr-inno-setup.iss
+	-$(RM) $(PACKAGEINFO)
 
 #########################################################################################
 # Applications
 
-buildinfo:		$(BUILDINFO)
+BUILD_DATE=		$(shell date +'%Y%m%d')
+ifneq ($(APPVEYOR_BUILD_NUMBER),)
+BUILD_NUMBER=		$(APPVEYOR_BUILD_NUMBER)
+else ifneq ($(GITHUB_RUN_NUMBER),)
+BUILD_NUMBER=		$(GITHUB_RUN_NUMBER)
+else
+BUILD_NUMBER=		$(shell cat ./$(BUILDNUMBER))
+endif
 
-PKG_BUILD_DATE=		$(shell date +'%Y%m%d')
-PKG_BUILD_NUMBER=	$(shell cat ./$(BUILDNUMBER))
+.PHONY:				buildinfo
+$(BUILDINFO):		Makefile $(BUILDNUMBER) buildinfo
+buildinfo:
+		@echo updating buildinfo.h ...
+		-@$(PERL) ./buildinfo.pl -o $(BUILDINFO) --prefix="GR_" --package="$(PACKAGE)" --name="$(PKG_NAME)" --version="$(PKG_VERSION)" \
+			--date="$(BUILD_DATE)" --build="$(BUILD_NUMBER)" --toolchain="@TOOLCHAINEXT@" --type="$(BUILD_TYPE)" \
+			--bindir="$(BINDIR)" --sbindir="$(SBINDIR)" --libexecdir="$(LIBEXECDIR)" --libdir="$(LIBDIR)" --datadir="$(DATADIR)"
 
-$(BUILDINFO):		Makefile $(BUILDNUMBER)
-			-@$(PERL) ./buildinfo.pl -o $@ --prefix="GR_" --package="$(PACKAGE)" --name="$(PKG_NAME)" --version="$(PKG_VERSION)" \
-				--date="$(PKG_BUILD_DATE)" --build="$(PKG_BUILD_NUMBER)" --toolchain="@TOOLCHAINEXT@" --type="$(BUILD_TYPE)" \
-				--bindir="$(BINDIR)" --sbindir="$(SBINDIR)" --libexecdir="$(LIBEXECDIR)" --libdir="$(LIBDIR)" --datadir="$(DATADIR)"
+.PHONY:				packageinfo
+packageinfo:
+		-@$(PERL) ./buildinfo.pl -o $(PACKAGEINFO) --prefix="GR_" --package="$(PACKAGE)" --name="$(PKG_NAME)" --version="$(PKG_VERSION)" \
+			--date="$(BUILD_DATE)" --build="$(BUILD_NUMBER)" --toolchain="@TOOLCHAINEXT@" --type="$(BUILD_TYPE)"
+
+buildinfo.h:			BUILDNUMBER buildinfo.pl
+
+ifneq ($(APPVEYOR_BUILD_NUMBER),)
+BUILDNUMBER:
+		@echo importing appveyor build number ...
+		@echo $(APPVEYOR_BUILD_NUMBER)>$@
+endif
+
+ifneq ($(GITHUB_RUN_NUMBER),)
+BUILDNUMBER:
+		@echo importing github build number ...
+		@echo $(GITHUB_RUN_NUMBER)>$@
+endif
 
 .PHONY:			new_buildnumber
 new_buildnumber:
@@ -359,7 +446,9 @@ $(D_BIN)/grmandoc$(E):	$(D_BIN)/.created libs
 
 $(D_BIN)/grunch$(E):	$(D_BIN)/.created libs
 		$(MAKE) -C $(D_GRUNCH)
-
+                
+$(D_BIN)/grwc$(E):	$(D_BIN)/.created libs
+		$(MAKE) -C util
 
 #########################################################################################
 # Rules
@@ -468,3 +557,5 @@ distclean:		clean
 #	endif
 
 #end
+
+endif	# BUILD_TYPE
