@@ -4,3 +4,5 @@ mandoc-1.14.*
 mdocversion.h
 Makefile
 .unpacked*
+*.err
+

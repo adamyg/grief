@@ -1,5 +1,3 @@
-#!/usr/bin/perl
-# $Id: makelib.pl,v 1.119 2022/03/21 15:24:49 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -474,9 +472,13 @@ my %x_environment   = (
             LDRELEASE       => '',
             LDMAPFILE       => '-fm=$(MAPFILE)',
 
+            # 7600.16385.1: Windows Driver Kit Version 7.1.0
+            #   ==> http://www.microsoft.com/download/en/details.aspx?displaylang=en&id=11800
             MFCDIR          => '/tools/WinDDK/7600.16385.1',
-            MFCCOPT         => '-q -j -ei -6r -d2  -hw -db -ofr -zlf -bt=nt -bm -br -aa',
-            MFCCXXOPT       => '-q -j -ei -6r -d2i     -db -ofr -zlf -bt=nt -bm -br -xs -xr -cc++',
+            MFCCFLAGS       => '-q -j -ei -6r -d2  -hw -db -ofr -zlf -bt=nt -bm -br -aa',
+            MFCCXXFLAGS     => '-q -j -ei -6r -d2i     -db -ofr -zlf -bt=nt -bm -br -xs -xr -cc++',
+            MFCCOPT         => '',
+            MFCCXXOPT       => '',
             MFCCINCLUDE     => '-I$(MFCDIR)/inc/atl71 -I$(MFCDIR)/inc/mfc42',
             MFCLIBS         => '/LIBPATH:$(MFCDIR)\lib\atl\i386 /LIBPATH:$(MFCDIR)\lib\mfc\i386'
             },
@@ -1032,7 +1034,8 @@ my @LIBS            = ();
 my @EXTRALIBS       = ();
 my @DLLS            = ();
 
-my $x_tmpdir        = '.makelib';
+my $x_workdir       = '.makelib';
+my $x_tmpdir        = undef;
 my $x_compiler      = '';
 my $x_version       = '';
 my @x_include       = ();
@@ -1040,9 +1043,9 @@ my $x_command       = '';
 my $x_signature     = undef;
 
 my $o_makelib       = './makelib.in';
-my $o_keep          = 0;
-my $o_version       = undef;
+my $o_keep          = 1;
 my $o_verbose       = 0;
+my $o_version       = undef;
 my $o_gnuwin32      = 'auto';
 my $o_contrib       = 1;
 my $o_gnulibs       = 0;
@@ -1061,6 +1064,7 @@ sub Configure($$);
 sub ExeRealpath($);
 sub LoadContrib($$$$$);
 sub CheckCompiler($$);
+sub CheckHeader($$);
 sub CheckDecl($$);
 sub CheckType($$);
 sub CheckSize($$);
@@ -1155,7 +1159,7 @@ main()
             $cmd eq 'owc' || $cmd eq 'wc' ||
             $cmd eq 'dj' ||  $cmd eq 'mingw') {
 
-        my $cache = "${x_tmpdir}/${cmd}${o_version}.cache";
+        my $cache = "${x_workdir}/${cmd}${o_version}.cache";
 
         if (! $o_clean && -f $cache) {
             eval {
@@ -1389,6 +1393,11 @@ Configure($$)           # (type, version)
     MakelibConfigure($type, $env);
 
     # toolchain dynamic configuration
+    (-d $x_workdir || mkdir($x_workdir)) or
+        die "makelib: unable to access/create workdir <$x_workdir> : $!\n";
+
+    $x_tmpdir = "${x_workdir}/${type}${version}";
+
     (-d $x_tmpdir || mkdir($x_tmpdir)) or
         die "makelib: unable to access/create tmpdir <$x_tmpdir> : $!\n";
 
@@ -1435,35 +1444,51 @@ Configure($$)           # (type, version)
 
     print "Scanning: @INCLUDE\n"
         if ($o_verbose);
+
+    my $headerdefines = "";
     my $idx = -1;
     foreach my $header (@x_headers, @x_headers2) {
         my $headers2 = (++$idx >= scalar @x_headers);
-        my $fullpath = undef;
+        my $fullpath = "";
+        my $include = "";
+        my $check = -1;
 
-        print "header:   ${header} ...";
-        print " " x (28 - length($header));
-        foreach my $include (@INCLUDE) {
+        # present check
+        print "header:   ${header} present ...";
+        print " " x (28 - (length($header)+8));
+        foreach $include (@INCLUDE) {
             $fullpath = "${include}/${header}";
             $fullpath =~ s/\\/\//g;
-            if (-f $fullpath) {
-                print "[${fullpath}]";
-
-                if ($headers2) {               # headers2
-                    push @EXTHEADERS, $header;
-                } else {
-                    push @HEADERS, $header;
-                    push @EXTHEADERS, $header
-                        if ($include ne $x_libw32);
-                }
-                $header =~ s/[\/.]/_/g;
-                $header = uc($header);
-                $CONFIG_H{"HAVE_${header}"} = '1';
-                last;
-            }
-            $fullpath = undef;
+            last if (-f $fullpath);
+            $fullpath = "";
         }
-        print "[not found]" if (! defined $fullpath);
-        print "\n";
+        print "[".($fullpath ? "yes" : "no")."] <$fullpath>\n";
+
+        # usability check
+        print "header:   ${header} usability ... ";
+        print " " x (28 - (length($header)+11));
+        if ($headers2) {
+            $check = ($fullpath ? 0 : -1);      # found?
+        } else {
+            $check = CheckHeader($header, $headerdefines); # build check
+        }
+        print "[".(0 == $check ? "yes" : "no")."]\n";
+
+        if (0 == $check) {
+            if ($headers2) {                    # headers2
+                push @EXTHEADERS, $header;
+            } else {
+                push @HEADERS, $header;
+                push @EXTHEADERS, $header
+                    if ($include ne $x_libw32);
+            }
+
+            my $t_header = $header;
+            $t_header =~ s/[\/.]/_/g;
+            $t_header = uc($t_header);
+            $CONFIG_H{"HAVE_${t_header}"} = '1';
+            $headerdefines .= "#define HAVE_${t_header} 1\n";
+        }
     }
 
     # decls
@@ -2061,7 +2086,7 @@ CheckDecl($$)           # (type, name)
             die "cannot create ${x_tmpdir}/$SOURCE : $!\n";
     print TMP<<EOT;
 /*
- *  Generated by makelib.pl, $asctime (CheckSize)
+ *  Generated by makelib.pl, $asctime (CheckDecl)
 $cmdparts
  */
 ${config}
@@ -2074,6 +2099,44 @@ int main(int argc, char **argv) {
     const int ret = strlen(STRIZE($name));
     printf("${name}=%s : ", STRIZE($name));
     return ret ? 0 : 1;
+}
+EOT
+    close TMP;
+
+    return CheckExec($BASE, $cmd, 1);
+}
+
+
+#   Function: CheckHeader
+#       Determine whether of the stated 'header' is usage.
+#
+sub
+CheckHeader($$)         # (header, $headerdefines)
+{
+    my ($header, $headerdefines) = @_;
+
+    my $t_header = $header;
+    $t_header =~ s/[\\\/\. ]/_/g;
+
+    my $BASE   = "header_${t_header}";
+    my $SOURCE = "${BASE}.c";
+    my ($cmd, $cmdparts)
+            = CheckCommand($BASE, $SOURCE);
+    my $config = CheckConfig();
+
+    my $asctime = asctime(localtime());
+    chop($asctime);
+    open(TMP, ">${x_tmpdir}/$SOURCE") or
+            die "cannot create ${x_tmpdir}/$SOURCE : $!\n";
+    print TMP<<EOT;
+/*
+ *  Generated by makelib.pl, $asctime (CheckHeader)
+$cmdparts
+ */
+${headerdefines}
+#include <$header>
+int main(int argc, char **argv) {
+    return 0;
 }
 EOT
     close TMP;
@@ -2930,8 +2993,12 @@ Makefile($$$)           # (type, dir, file)
         die "cannot create $dir/$file";
     if ($file eq 'Makefile') {
         print MAKEFILE "# Generated by makelib.pl, $asctime\n";
-    } elsif ($file =~ /.h$/) {
-        print MAKEFILE "/* Generated by makelib.pl, $asctime */\n";
+    } else {
+        if (! ($file =~ s/\@configure_input\@/Generated by makelib.pl, $asctime/)) {
+            if ($file =~ /.h$/) {
+                print MAKEFILE "/* Generated by makelib.pl, $asctime */\n";
+            }
+        }
     }
 
     if ($file eq 'Makefile') {                  # compact whitespace
