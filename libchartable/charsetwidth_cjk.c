@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetwidth_cjk_c,"$Id: charsetwidth_cjk.c,v 1.14 2022/03/21 15:50:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetwidth_cjk_c,"$Id: charsetwidth_cjk.c,v 1.15 2022/03/22 11:07:48 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -36,6 +36,7 @@ __CIDENT_RCSID(gr_charsetwidth_cjk_c,"$Id: charsetwidth_cjk.c,v 1.14 2022/03/21 
  */
 
 #include <editor.h>
+#include "../libwidechar/widechar.h"
 #include "libchartable.h"
 
 struct interval {
