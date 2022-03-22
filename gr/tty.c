@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_tty_c,"$Id: tty.c,v 1.29 2014/10/22 02:33:22 ayoung Exp $")
+__CIDENT_RCSID(gr_tty_c,"$Id: tty.c,v 1.30 2021/06/22 15:52:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: tty.c,v 1.29 2014/10/22 02:33:22 ayoung Exp $
+/* $Id: tty.c,v 1.30 2021/06/22 15:52:54 cvsuser Exp $
  * Common basic tty functionality.
  *
  *
@@ -92,9 +92,6 @@ ttdefaults(void)
     x_pt.pt_lineno_columns = -1;                /* Line-number display columns. */
     x_pt.pt_window_minrows = -1;                /* Window rows limit. */
     x_pt.pt_window_mincols = -1;                /* Window column limit. */
-
-    x_pt.pt_unicode_version = 500;              /* Unicode 5.00 */
-    x_pt.pt_unicode_width = 500;                /* 300 or 500 */
 }
 
 

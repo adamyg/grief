@@ -1,10 +1,10 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_sockpair_c,"$Id: w32_sockpair.c,v 1.6 2020/04/20 23:18:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_sockpair_c,"$Id: w32_sockpair.c,v 1.9 2022/03/21 14:29:41 cvsuser Exp $")
 
 /*
  * win32 socket file-descriptor support
  *
- * Copyright (c) 2007, 2012 - 2019 Adam Young.
+ * Copyright (c) 2007, 2012 - 2022 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -19,11 +19,11 @@ __CIDENT_RCSID(gr_w32_sockpair_c,"$Id: w32_sockpair.c,v 1.6 2020/04/20 23:18:24 
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
- * ==notice==
+ * license for more details.
+ * ==end==
  */
 
 #ifndef _WIN32_WINNT
@@ -164,23 +164,25 @@ w32_socketpair_fd(int af, int type, int proto, int sock[2])
     int ret;
 
     if (0 == (ret = w32_socketpair_native(af, type, proto, sock))) {
-        int s1, s2;
+        int s0 = -1, s1 = -1;
 
-        if ((s1 = (int)sock[0]) < WIN32_FILDES_MAX &&
-                (s2 = _open_osfhandle((long)sock[0], 0)) == -1 ||
-            (s2 = (int)sock[1]) < WIN32_FILDES_MAX &&
-                (s2 = _open_osfhandle((long)sock[1], 0)) == -1) {
+        if (sock[0] < WIN32_FILDES_MAX ||
+                (s0 = _open_osfhandle((long)sock[0], 0)) == -1 ||
+            sock[1] < WIN32_FILDES_MAX ||
+                (s1 = _open_osfhandle((long)sock[1], 0)) == -1) {
+
             closesocket((SOCKET)sock[1]);
-            closesocket((SOCKET)sock[0]);
+            if (s0 >= 0) _close(s0);
+            else closesocket((SOCKET)sock[0]);
             errno = EMFILE;
             ret = -1;
 
         } else {
-            w32_sockfd_open(s1, sock[0]);       /* associate file-descriptor */
-            sock[0] = s1;
+            w32_sockfd_open(s0, sock[0]);       /* associate file-descriptor */
+            sock[0] = s0;
 
-            w32_sockfd_open(s2, sock[1]);       /* associate file-descriptor */
-            sock[1] = s2;
+            w32_sockfd_open(s0, sock[1]);       /* associate file-descriptor */
+            sock[1] = s1;
         }
     }
     return ret;
@@ -200,12 +202,13 @@ w32_socketpair_native(int af, int type, int proto, int sock[2])
     int addr2_len = sizeof (addr2);
     int nerr;
 
+    sock[0] = INVALID_SOCKET;
     sock[1] = INVALID_SOCKET;
-    sock[2] = INVALID_SOCKET;
 
-    assert(af == AF_INET && type == SOCK_STREAM && (proto == IPPROTO_IP || proto == IPPROTO_TCP));
+    assert(af == AF_INET && type == SOCK_STREAM && (0 == proto || IPPROTO_IP == proto || IPPROTO_TCP == proto));
 
 #undef socket
+    if (0 == proto) proto = IPPROTO_IP;
     if ((listen_sock = socket(af, type, proto)) == INVALID_SOCKET)
         goto error;
 
@@ -274,4 +277,3 @@ error:
 }
 
 /*end*/
-

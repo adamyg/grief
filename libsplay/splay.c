@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(cr_splay_c,"$Id: splay.c,v 1.13 2018/10/01 22:14:55 cvsuser Exp $")
+__CIDENT_RCSID(cr_splay_c,"$Id: splay.c,v 1.14 2022/03/21 15:17:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: splay.c,v 1.13 2018/10/01 22:14:55 cvsuser Exp $
+/* $Id: splay.c,v 1.14 2022/03/21 15:17:20 cvsuser Exp $
  * libsplay version 2.0 - SPLAY tree implementation.
  *
  * The basic splay tree algorithms were originally presented in:
@@ -12,7 +12,7 @@ __CIDENT_RCSID(cr_splay_c,"$Id: splay.c,v 1.13 2018/10/01 22:14:55 cvsuser Exp $
  *   of Computing (Boston, Apr 1983) 235-245.
  *
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

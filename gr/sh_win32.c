@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sh_win32_c,"$Id: sh_win32.c,v 1.25 2020/04/13 01:24:51 cvsuser Exp $")
+__CIDENT_RCSID(gr_sh_win32_c,"$Id: sh_win32.c,v 1.26 2022/03/21 15:39:39 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sh_win32.c,v 1.25 2020/04/13 01:24:51 cvsuser Exp $
+/* $Id: sh_win32.c,v 1.26 2022/03/21 15:39:39 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -169,7 +169,7 @@ sys_shell(const char *cmd, const char *macro,
     argv[3] = NULL;
 
     args.argv = argv;                           // create the process
-    if ((hProc = w32_child_exec(&args, pd.hInput, pd.hOutput, pd.hError)) == 0) {
+    if ((hProc = w32_child_execA(&args, pd.hInput, pd.hOutput, pd.hError)) == 0) {
         ShellCleanup((void *)&pd);
         status = -1;
 

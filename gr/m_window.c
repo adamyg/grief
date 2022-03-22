@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_window_c,"$Id: m_window.c,v 1.25 2020/06/03 16:22:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_window_c,"$Id: m_window.c,v 1.28 2021/10/18 13:09:48 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_window.c,v 1.25 2020/06/03 16:22:53 cvsuser Exp $
+/* $Id: m_window.c,v 1.28 2021/10/18 13:09:48 cvsuser Exp $
  * Window primitives.
  *
  *
@@ -19,6 +19,8 @@ __CIDENT_RCSID(gr_m_window_c,"$Id: m_window.c,v 1.25 2020/06/03 16:22:53 cvsuser
  */
 
 #include <editor.h>
+#include "../libchartable/libchartable.h"
+#include "../libwidechar/widechar.h"
 #include <libstr.h>                             /* str_...()/sxprintf() */
 
 #include "m_window.h"                           /* public interface */
@@ -1288,8 +1290,8 @@ do_change_window_pos(void)      /* ([int x], [int y], [int w], [int h], [int win
         x = vtcols - 1;
     }
 
-    w1 = (wp->w_message ? strlen(wp->w_message) : 0) + 4;
-    w2 = (wp->w_title ? strlen(wp->w_title) : 0) + 4;
+    w1 = (wp->w_message ? utf8_swidth(wp->w_message) : 0) + 4; /*MCHAR*/
+    w2 = (wp->w_title ? utf8_swidth(wp->w_title) : 0) + 4;
     if (w < w1) w = w1;
     if (w < w2) w = w2;
 
@@ -1456,8 +1458,7 @@ do_set_window(void)             /* ([int winnum]) */
             curwp->w_status |= WFHARD;
         }
         wp->w_status |= WFHARD;
-        curwp = wp;
-        set_hooked();
+        set_curwp(wp);
         ret = 1;
     }
     acc_assign_int(ret);
@@ -1577,8 +1578,7 @@ do_delete_window(void)          /* void ([int winnum]) */
         return;
 
     if (wp == curwp) {
-        curwp = &x_window_null;
-        set_hooked();
+        set_curwp(&x_window_null);
     }
 
     ismenu = (W_MENU == wp->w_type);

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.in,v 1.6 2020/06/18 20:35:15 cvsuser Exp $
+# $Id: makelib.in,v 1.8 2021/07/05 17:18:41 cvsuser Exp $
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 # makelib configuration
 #
@@ -36,6 +36,7 @@ $PACKAGE_FILE   = 'edpackage.h';
         'vfs',
         'charudet',
         'chartable',
+        'widechar',
         'teken',
         'duktape',                              # duktape embeddable JavaScript engine.
             'duktape_static',
@@ -97,6 +98,7 @@ $PACKAGE_FILE   = 'edpackage.h';
         'libduktape',
         'libvfs',
         'libchartable',
+        'libwidechar',
         'libcharudet',
         'libteken',
         'libonigrx',

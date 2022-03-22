@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.36 2020/05/03 21:09:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.41 2021/10/24 16:46:45 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.36 2020/05/03 21:09:41 cvsuser Exp $
+/* $Id: cmain.c,v 1.41 2021/10/24 16:46:45 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -144,6 +144,9 @@ static struct argoption options[] = {
 
     { "encoding",       arg_required,       NULL,       317,    "Default file encoding",
                             "<encoding>" },
+
+    { "ucsver",         arg_required,       NULL,       320,    "Unicode version; wcwidth support",
+                            "<x.y.z>" },
 
     { "nograph",        arg_none,           NULL,       5,      "Disable use of graphic characters" },
 
@@ -327,6 +330,8 @@ int                     x_bftype_default = BFTYP_UNDEFINED;
                                                 /* Default file encoding. */
 const char *            x_encoding_default = NULL;
 
+const char *            x_unicode_version = NULL;
+
 uint32_t                xf_test = 0;            /* BITMAP enables test code --- internal use only --- */
 
 int                     x_mflag = FALSE;        /* TRUE whilst processing -m strings to avoid messages. */
@@ -354,11 +359,13 @@ static const char *     m_strings[MAX_M+1];     /* Array of pointer to -m string
 BUFFER_t *              curbp = NULL;           /* Current buffer. */
 WINDOW_t *              curwp = NULL;           /* Current window. */
 
-static void             path_cat(const char *path, const char *sub, char *buf);
+static int              path_cat(const char *path, const char *sub, char *buf);
 static char *           path_cook(const char *name);
 
 static void             argv_init(int *argcp, char **argv);
 static int              argv_process(int doerr, int argc, const char **argv);
+
+static void             unicode_init(void);
 
 static void             env_setup(void);
 static __CINLINE int    env_iswhite(const char ch);
@@ -450,10 +457,14 @@ cmain(int argc, char **argv)
 //  textdomain(PACKAGE);
 #endif
 #endif
-#if defined(_MSC_VER)
+#if defined(HAVE__TZSET)
     _tzset();
 #else
     tzset();                                    /* localtime requirement */
+#endif
+
+#if defined(_WIN32)
+    w32_utf8filenames_enable();
 #endif
 
     if (argc < 0) cpp_linkage("");
@@ -475,6 +486,7 @@ cmain(int argc, char **argv)
     search_init();                              /* regular expression engine */
     mchar_info_init();
     mchar_guess_init();
+    mchar_iconv_init();
     playback_init();
     bookmark_init();
     position_init();
@@ -508,6 +520,7 @@ cmain(int argc, char **argv)
     if (xf_spell) {
         spell_init();
     }
+    unicode_init();
     vtready();
     if (xf_mouse) {
         if (mouse_init("")) {                   /* mouse interface */
@@ -572,8 +585,8 @@ cmain(int argc, char **argv)
                 firstbp = curbp;
             }
         }
-        buf_show(curbp = firstbp, curwp);
-        set_hooked();
+        buf_show(firstbp, curwp);
+        set_curbp(firstbp);
 
     } else  {                                   /* load default quietly */
         const char *grfile = ggetenv("GRFILE");
@@ -635,7 +648,7 @@ panic(const char *fmt, ...)
 }
 
 
-static void
+static int
 path_cat(const char *path, const char *sub, char *buf)
 {
     char t_path[1024] = {0}, t_realpath[1024] = {0};
@@ -650,10 +663,13 @@ path_cat(const char *path, const char *sub, char *buf)
     }
 
     if (NULL == sub ||
-            0 == fileio_access(path, 0)) {      /* push if it exists */
+            0 == sys_access(path, 0)) {         /* push if it exists */
         strcat(buf, path);
         strcat(buf, sys_pathdelimiter());
+        return 1;
     }
+
+    return 0;
 }
 
 
@@ -1268,6 +1284,10 @@ argv_process(int doerr, int argc, const char **argv)
             x_encoding_default = args.val;
             break;
 
+        case 320:           /* --ucsver=<version> */
+            x_unicode_version = args.val;
+            break;
+
         case 308:           /* --term=<TERM-override> */
             gputenv2("TERM", args.val);
             break;
@@ -1280,7 +1300,7 @@ argv_process(int doerr, int argc, const char **argv)
             gputenv2("GRHELP", args.val);
             break;
 
-	case 319:           /* --grprofile=<GRPROFILE-override> */
+        case 319:           /* --grprofile=<GRPROFILE-override> */
             gputenv2("GRPROFILE", args.val);
             break;
 
@@ -1339,6 +1359,16 @@ argv_process(int doerr, int argc, const char **argv)
 
 
 static void
+unicode_init(void)
+{
+    if (NULL == x_unicode_version)
+        x_unicode_version = ggetenv("UNICODE_VERSION");
+    if (x_unicode_version)
+        ucs_width_set(x_unicode_version);
+}
+
+
+static void
 env_setup(void)
 {
     const char *execname, *env;
@@ -1368,7 +1398,9 @@ env_setup(void)
 
         sprintf(buf, "GRPATH=");
         if (binpath[0]) {                       /* rel to binary image */
-            path_cat(binpath, "../macros", buf);
+            if (0 == path_cat(binpath, "../macros", buf)) {
+                path_cat(binpath, "../../macros", buf);
+            }
 #if defined(__MINGW32__)
             path_cat(binpath, "../lib/grief/macros", buf);
 #endif
@@ -1388,7 +1420,9 @@ env_setup(void)
 
         sprintf(buf, "GRHELP=");
         if (binpath[0]) {                      /* rel to binary image */
-            path_cat(binpath, "../help", buf);
+            if (0 == path_cat(binpath, "../help", buf)) {
+                path_cat(binpath, "../../help", buf);
+            }
 #if defined(__MINGW32__)
             path_cat(binpath, "../lib/grief/help", buf);
 #endif
@@ -1641,7 +1675,6 @@ editor_setup(void)
     }
 
     k_init(bp);
-    curbp = bp;                                 /* current ones. */
     bp->b_nwnd = 1;                             /* displayed. */
     bp->b_keyboard = NULL;
 
@@ -1654,17 +1687,13 @@ editor_setup(void)
     wp->w_type = W_TILED;
     wp->w_tab = 0;                              /* TABLINE */
     window_append(wp);
-    curwp = wp;
-
-    cur_line = &bp->b_line;
-    cur_col = &bp->b_col;
 
     wp->w_w = (uint16_t)(ttcols() - 2);         /* 0..78 */
     wp->w_h = (uint16_t)(ttrows() - 3);
     wp->w_status = WFHARD;
 
     window_title(wp, "*scratch*", "");
-    set_hooked();
+    set_curwpbp(wp, bp);
 }
 
 

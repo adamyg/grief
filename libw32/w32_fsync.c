@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_fsync_c,"$Id: w32_fsync.c,v 1.13 2020/03/28 00:22:45 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_fsync_c,"$Id: w32_fsync.c,v 1.15 2022/03/21 14:29:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 fsync() system calls
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -21,10 +21,10 @@ __CIDENT_RCSID(gr_w32_fsync_c,"$Id: w32_fsync.c,v 1.13 2020/03/28 00:22:45 cvsus
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Notice: Portions of this text are reprinted and reproduced in electronic form. from
@@ -94,38 +94,39 @@ __CIDENT_RCSID(gr_w32_fsync_c,"$Id: w32_fsync.c,v 1.13 2020/03/28 00:22:45 cvsus
 LIBW32_API int
 w32_fsync(int fd)
 {
-    HANDLE handle;
-    int ret = 0;
+    HANDLE handle = 0;
+    int ret = -1;
 
     if (fd < 0) {
         errno = EBADF;
-        ret = -1;
 
     } else if (fd >= WIN32_FILDES_MAX ||
             (handle = (HANDLE) _get_osfhandle(fd)) == INVALID_HANDLE_VALUE) {
         errno = EBADF;
-        ret = -1;
 
-    } else if (! FlushFileBuffers(handle)) {
-        const DWORD err = GetLastError();
-        switch (err) {
-        case ERROR_ACCESS_DENIED:
-            /* For a read-only handle, fsync should succeed, 
-             *  even though we have no way to sync the access-time changes.
-             */
-            return 0;
-        case ERROR_INVALID_HANDLE:
-            /* Most likely a non-supporting device, eg tty */
-            errno = EINVAL;
-            break;
-        default:
-            w32_errno_setas(err);
-            break;
+    } else {
+        if (FlushFileBuffers(handle)) {
+            ret = 0;
+
+        } else {
+            const DWORD err = GetLastError();
+            switch (err) {
+            case ERROR_ACCESS_DENIED:
+                /*  For a read-only handle, fsync should succeed,
+                 *  even though we have no way to sync the access-time changes.
+                 */
+                return 0;
+            case ERROR_INVALID_HANDLE:
+                /* Most likely a non-supporting device, eg tty */
+                errno = EINVAL;
+                break;
+            default:
+                w32_errno_setas(err);
+                break;
+            }
         }
-        ret = -1;
     }
     return ret;
 }
 
 /*end*/
-

@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_sysdir_c,"$Id: w32_sysdir.c,v 1.12 2019/03/15 23:12:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_sysdir_c,"$Id: w32_sysdir.c,v 1.14 2022/03/21 14:29:42 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 interface support
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 2007, 2012 - 2022 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -21,10 +21,10 @@ __CIDENT_RCSID(gr_w32_sysdir_c,"$Id: w32_sysdir.c,v 1.12 2019/03/15 23:12:21 cvs
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Notice: Portions of this text are reprinted and reproduced in electronic form. from
@@ -32,6 +32,7 @@ __CIDENT_RCSID(gr_w32_sysdir_c,"$Id: w32_sysdir.c,v 1.12 2019/03/15 23:12:21 cvs
  * 2001-2003 by the Institute of. Electrical and Electronics Engineers, Inc and The Open
  * Group. Copyright remains with the authors and the original Standard can be obtained
  * online at http://www.opengroup.org/unix/online.html.
+ * ==extra==
  */
 
 #include "win32_internal.h"
@@ -43,55 +44,179 @@ __CIDENT_RCSID(gr_w32_sysdir_c,"$Id: w32_sysdir.c,v 1.12 2019/03/15 23:12:21 cvs
 
 
 LIBW32_API int
-w32_getsysdir(
-    int id, char *buf, int maxlen)
+w32_getsysdir(int id, char *buf, int maxlen)
 {
-    char szPath[ MAX_PATH ];
+#if defined(UTF8FILENAMES)
+    if (w32_utf8filenames_state()) {
+        wchar_t wpath[WIN32_PATH_MAX];
+
+        if (w32_getsysdirW(id, wpath, _countof(wpath)) > 0) {
+            return w32_wc2utf(wpath, buf, maxlen);
+        }
+        return -1;
+    }
+#endif
+
+    return w32_getsysdirA(id, buf, maxlen);
+}
+
+
+static int
+map_csidl(int id)
+{
+    // https://docs.microsoft.com/en-us/windows/win32/shell/csidl
+    switch (id) {
+    case SYSDIR_TEMP:
+        return CSIDL_INTERNET_CACHE;
+    case SYSDIR_WINDOWS:
+        return CSIDL_WINDOWS;
+    case SYSDIR_SYSTEM:
+        return CSIDL_SYSTEM;
+    case SYSDIR_PROGRAM_FILES:
+        return CSIDL_PROGRAM_FILES;
+    }
+    return -1;
+}
+
+
+LIBW32_API int
+w32_getsysdirA(int id, char *buf, int maxlen)
+{
+    char t_path[ MAX_PATH ], *path = buf;
     HRESULT hres;
     int len;
 
-    switch (id) {
-    case SYSDIR_TEMP:
-        id = CSIDL_INTERNET_CACHE;
-        break;
-    default:
+    if (NULL == buf || maxlen < 4 ||
+            -1 == (id = map_csidl(id))) {
         return -1;
     }
 
-    hres = SHGetSpecialFolderPath(NULL, szPath, id, FALSE);
-    if (SUCCEEDED(hres) &&
-            (len = (int)strlen(szPath)) <= maxlen) {
-        (void) strcpy(buf, (const char *)szPath);
-        return len;
+    if (maxlen < MAX_PATH) path = t_path;
+    hres = SHGetSpecialFolderPathA(NULL, path, id, FALSE);
+    if (SUCCEEDED(hres)) {
+        len = (int)strlen(path);
+        if (path == buf) {                      // direct
+            return len;
+        } else if (len < maxlen) {              // indirect
+            (void) strcpy(buf, (const char *)t_path);
+            return len;
+        }
     }
-    return (-1);
+    return -1;
+}
+
+
+LIBW32_API int
+w32_getsysdirW(int id, wchar_t *buf, int maxlen)
+{
+    wchar_t t_path[ MAX_PATH ], *path = buf;
+    HRESULT hres;
+    int len;
+
+    if (NULL == buf || maxlen < 4 ||
+            -1 == (id = map_csidl(id))) {
+        return -1;
+    }
+
+    if (maxlen < MAX_PATH) path = t_path;
+    hres = SHGetSpecialFolderPathW(NULL, path, id, FALSE);
+    if (SUCCEEDED(hres)) {
+        len = (int)wcslen(path);
+        if (path == buf) {                      // direct
+            return len;
+        } else if (len < maxlen) {              // indirect
+            (void) wcscpy(buf, (const wchar_t *)t_path);
+            return len;
+        }
+    }
+    return -1;
 }
 
 
 LIBW32_API const char *
-w32_selectfolder(
-    const char *strMessage, char *szBuffer)
+w32_selectfolder(const char *message, char *buffer, int buflen)
 {
-    char const * Result = NULL;
-    BROWSEINFO BrowseInfo;
-    LPITEMIDLIST pList;
+    if (NULL == message || NULL == buffer || buflen < MAX_PATH) {
+        return NULL;
+    }
+
+#if defined(UTF8FILENAMES)
+     if (w32_utf8filenames_state()) {
+        wchar_t wpath[MAX_PATH + 1], *wmessage;
+        const wchar_t *wresult;
+        char *result = NULL;
+
+        if (NULL != (wmessage = w32_utf2wca(message, NULL))) {
+            if (NULL != (wresult = w32_selectfolderW(wmessage, wpath, _countof(wpath)))) {
+                if (w32_wc2utf(wresult, buffer, buflen) > 0) {
+                    result = buffer;
+                }
+            }
+            free(wmessage);
+        }
+        return result;
+    }
+#endif
+
+    return w32_selectfolderA(message, buffer, buflen);
+}
+
+
+LIBW32_API const char *
+w32_selectfolderA(const char *message, char *buffer, int buflen)
+{
+    const char *result = NULL;
+    BROWSEINFOA bi;
+    LPITEMIDLIST pl;
+
+    if (NULL == message || NULL == buffer || buflen < MAX_PATH) {
+        return NULL;
+    }
 
     /* Throw display dialog */
-    memset(&BrowseInfo, 0, sizeof(BrowseInfo));
-    BrowseInfo.hwndOwner = NULL;                /* XXX */
-    BrowseInfo.pszDisplayName = szBuffer;
-    BrowseInfo.lpszTitle = strMessage;
-    BrowseInfo.ulFlags = BIF_RETURNONLYFSDIRS;
-    pList = SHBrowseForFolder(&BrowseInfo);
+    memset(&bi, 0, sizeof(bi));
+    bi.hwndOwner = NULL;
+    bi.pszDisplayName = buffer;
+    bi.lpszTitle = message;
+    bi.ulFlags = BIF_RETURNONLYFSDIRS;
+    pl = SHBrowseForFolderA(&bi);
 
     /* Convert from MIDLISt to real string path */
-    if (pList != NULL) {
-        SHGetPathFromIDList(pList, szBuffer);
-        CoTaskMemFree(pList);
-        Result = szBuffer;
+    if (pl != NULL) {
+        SHGetPathFromIDListA(pl, buffer);
+        CoTaskMemFree(pl);
+        result = buffer;
     }
-    return (Result);
+    return result;
+}
+
+
+LIBW32_API const wchar_t *
+w32_selectfolderW(const wchar_t *message, wchar_t *buffer, int buflen)
+{
+    const wchar_t *result = NULL;
+    BROWSEINFOW bi;
+    LPITEMIDLIST pl;
+
+    if (NULL == message || NULL == buffer || buflen < MAX_PATH) {
+        return NULL;
+    }
+
+    /* Throw display dialog */
+    memset(&bi, 0, sizeof(bi));
+    bi.hwndOwner = NULL;
+    bi.pszDisplayName = buffer;
+    bi.lpszTitle = message;
+    bi.ulFlags = BIF_RETURNONLYFSDIRS;
+    pl = SHBrowseForFolderW(&bi);
+
+    /* Convert from MIDLISt to real string path */
+    if (pl != NULL) {
+        SHGetPathFromIDListW(pl, buffer);
+        CoTaskMemFree(pl);
+        result = buffer;
+    }
+    return result;
 }
 
 /*end*/
-

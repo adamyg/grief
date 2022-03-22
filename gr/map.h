@@ -1,11 +1,11 @@
 #ifndef GR_MAP_H_INCLUDED
 #define GR_MAP_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_map_h,"$Id: map.h,v 1.14 2014/10/22 02:33:13 ayoung Exp $")
+__CIDENT_RCSID(gr_map_h,"$Id: map.h,v 1.15 2021/06/10 06:13:02 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: map.h,v 1.14 2014/10/22 02:33:13 ayoung Exp $
+/* $Id: map.h,v 1.15 2021/06/10 06:13:02 cvsuser Exp $
  * Character/line mapping ulitlies.
  *
  *
@@ -25,7 +25,8 @@ __CPRAGMA_ONCE
 
 __CBEGIN_DECLS
 
-#define vm_lock_line(__ln)  linep(__ln)
+#define vm_lock_line(__ln)  linep0(__ln)
+#define vm_lock_line2(__ln) linep2(__ln)
 #define vm_lock_linex(__bp,__ln) \
                             linepx(__bp, __ln)
 #define vm_unlock(__ln)
@@ -42,14 +43,15 @@ enum {
     LOFFSET_LASTBYTE        =-2,                /* last byte, including ESC/combined */
     LOFFSET_FIRSTBYTE       =-1,                /* first byte */
     LOFFSET_NORMAL          =0,                 /* first normal character roffset */
-    LOFFSET_NORMAL_MATCH    =1,                 /* first normal and match cursor on completion */
+    LOFFSET_NORMAL_MATCH    =1,                 /* first normal and match/update cursor on completion */
     LOFFSET_FILL_VSPACE     =2,                 /* fill virtual-space and EOL */
     LOFFSET_FILL_SPACE      =3                  /* fill virtual-space, tabs and EOL */
 };
 
 extern int                  character_decode(int pos, const LINECHAR *cp, const LINECHAR *end, int *lengthp, int32_t *chp, int32_t *rawp);
 
-extern LINE_t *             linep(LINENO line);
+extern const LINE_t *       linep0(LINENO line);
+extern LINE_t *             linep2(LINENO line);
 extern LINE_t *             linepx(BUFFER_t *bp, LINENO line);
 extern void                 linep_flush(BUFFER_t *bp);
 
@@ -59,7 +61,8 @@ extern int                  line_current_status(int *value, int count);
 
 extern int                  line_current_offset(int fill);
 extern int                  line_offset(const int line, const int col, int fill);
-extern int                  line_offset2(LINE_t *lp, const int line, const int col, int fill);
+extern int                  line_offset_const(const LINE_t *lp, const int line, const int col, int fill);
+extern int                  line_offset_fill(LINE_t *lp, const int line, const int col, int fill);
 
 extern int                  line_current_column(int offset);
 extern int                  line_column_eol(int line);

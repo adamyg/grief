@@ -1,10 +1,10 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_sockfd_c,"$Id: w32_sockfd.c,v 1.5 2019/03/15 23:12:20 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_sockfd_c,"$Id: w32_sockfd.c,v 1.7 2022/03/21 14:29:41 cvsuser Exp $")
 
 /*
  * win32 socket file-descriptor support
  *
- * Copyright (c) 2007, 2012 - 2019 Adam Young.
+ * Copyright (c) 2007, 2012 - 2022 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -19,11 +19,11 @@ __CIDENT_RCSID(gr_w32_sockfd_c,"$Id: w32_sockfd.c,v 1.5 2019/03/15 23:12:20 cvsu
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
- * ==extra==
+ * license for more details.
+ * ==end==
  */
 
 #ifndef _WIN32_WINNT
@@ -158,6 +158,13 @@ w32_sockfd_close(int fd, SOCKET s)
 //	return 0;
 //  }
 
+static int
+IsSocket(HANDLE h)
+{
+    return (GetFileType(h) == FILE_TYPE_PIPE &&
+                0 == GetNamedPipeInfo(h, NULL, NULL, NULL, NULL));
+}
+
 LIBW32_API int
 w32_issockfd(int fd, SOCKET *s)
 {
@@ -175,18 +182,23 @@ w32_issockfd(int fd, SOCKET *s)
 
         } else if (fd >= x_fdinit ||            /* local socket mapping */
                     (t_s = x_fdsockets[fd]) == INVALID_SOCKET) {
+
             /*
-             *  MSVC 2015+ no longer suitable without fdlimit; asserts when out-of-range
+             *  MSVC 2015+ no longer suitable; asserts when out-of-range.
+             *  Unfortunately socket handles can be small numeric values yet so are file descriptors.
              */
-            if (fd >= x_fdlimit ||
+            if (fd >= 0x80 && 0 == (fd & 0x3) && IsSocket((HANDLE)fd)) {
+                t_s = (SOCKET)fd;
+
+            } else if (fd >= x_fdlimit ||
                     _get_osfhandle(fd) == (SOCKET)INVALID_HANDLE_VALUE) {
                 t_s = (SOCKET)fd;               /* invalid assume socket; otherwise file */
             }
         }
     }
+
     if (s) *s = t_s;
     return (t_s != INVALID_SOCKET);
 }
 
 /*end*/
-

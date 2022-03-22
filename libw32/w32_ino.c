@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_ino_c,"$Id: w32_ino.c,v 1.13 2020/04/20 23:18:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_ino_c,"$Id: w32_ino.c,v 1.15 2022/03/21 14:29:41 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 ino implementation
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 2007, 2012 - 2022 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -21,10 +21,10 @@ __CIDENT_RCSID(gr_w32_ino_c,"$Id: w32_ino.c,v 1.13 2020/04/20 23:18:24 cvsuser E
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Notice: Portions of this text are reprinted and reproduced in electronic form. from
@@ -65,6 +65,34 @@ w32_ino_hash(const char *name)
             c = '/';
         } else {
             c = (char)tolower(*p);
+        }
+        hash = (hash << 7) + hash + (ino_t)c;
+    }
+    return hash + (ino_t)(p - name);
+}
+
+
+/*
+ *  w32_ino_has ---
+ *      Generate a file inode based on a simple hash of the specific file-name.
+ */
+LIBW32_API ino_t
+w32_ino_whash(const wchar_t *name)
+{
+    const wchar_t *p = name;
+    short hash = 0;
+    wchar_t c;
+
+    if (name[0] && name[1] == ':') {
+        p += 2;                                 /* remove drive */
+    }
+
+    for (;*p; ++p) {
+        if (ISSLASH(*p)) {                      /* convert slashes */
+            c = '/';
+        } else {
+            c = *p;
+            if (c < 0x7f) c = (wchar_t)tolower((char)c);
         }
         hash = (hash << 7) + hash + (ino_t)c;
     }
@@ -192,5 +220,21 @@ w32_ino_file(const char *path)
     return 0;
 }
 
-/*end*/
 
+LIBW32_API ino_t
+w32_ino_wfile(const wchar_t *path)
+{
+    HANDLE handle;
+
+    if (NULL != path && *path &&
+            INVALID_HANDLE_VALUE != (handle =
+                CreateFileW(path, 0, 0, NULL, OPEN_EXISTING,
+                            FILE_FLAG_BACKUP_SEMANTICS | FILE_ATTRIBUTE_READONLY, NULL))) {
+        const ino_t ino = w32_ino_handle(handle);
+        CloseHandle(handle);
+        return ino;
+    }
+    return 0;
+}
+
+/*end*/

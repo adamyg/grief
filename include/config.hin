@@ -1,11 +1,11 @@
 #ifndef CR_CONFIG_H_INCLUDED
 #define CR_CONFIG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(config_h, "$Id: config.hin,v 1.54 2021/04/19 14:57:19 cvsuser Exp $")
+__CIDENT_RCSID(config_h, "$Id: config.hin,v 1.57 2021/08/02 16:10:31 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; set-indent: 4; -*- */
-/* $Id: config.hin,v 1.54 2021/04/19 14:57:19 cvsuser Exp $
+/* $Id: config.hin,v 1.57 2021/08/02 16:10:31 cvsuser Exp $
  * Machine configuration.
  *
  *
@@ -79,6 +79,7 @@ __CPRAGMA_ONCE
 #undef HAVE_STDARG_H
 #undef HAVE_STDLIB_H
 #undef HAVE_STDIO_H
+#undef HAVE_STDDEF_H
 #undef HAVE_LIMITS_H
 
 /* AC_HEADER_DIRENT */
@@ -115,6 +116,7 @@ __CPRAGMA_ONCE
 #undef HAVE_SYS_UTSNAME_H
 #undef HAVE_SYS_SELECT_H
 #undef HAVE_SYS_SOCKET_H
+#undef HAVE_SYS_SENDFILE_H
 #undef HAVE_SYS_WAIT_H
 #undef HAVE_SYS_STAT_H
 #undef HAVE_SYS_STATFS_H
@@ -138,6 +140,7 @@ __CPRAGMA_ONCE
 
 #undef HAVE_THREAD_H
 #undef HAVE_PTHREAD_H
+#undef HAVE_PTHREAD_PRIO_INHERIT
 
 #undef HAVE_FCNTL_H
 #undef HAVE_SHARE_H
@@ -169,6 +172,7 @@ __CPRAGMA_ONCE
 #undef HAVE_ALLOCA_H
 #undef HAVE_ERR_H
 #undef HAVE_FTS_H
+
 
 /*
  *  Available allocator functionality
@@ -223,6 +227,8 @@ __CPRAGMA_ONCE
 
 #undef HAVE_NCURSESW_NCURSESW_H
 #undef HAVE_NCURSESW_CURSES_H
+#undef HAVE_NCURSESW_TERMCAP_H
+#undef HAVE_NCURSESW_TERM_H
 #undef HAVE_NCURSESW_H
 
 #undef HAVE_CURSES_H
@@ -345,7 +351,7 @@ __CPRAGMA_ONCE
  */
 
         /* environ support */
-	
+
 #undef HAVE_ENVIRON
 #undef HAVE__ENVIRON
 #undef HAVE___ENVIRON
@@ -379,9 +385,11 @@ __CPRAGMA_ONCE
 #undef HAVE_SELECT
 #undef HAVE_POLL
 #undef HAVE_LINK
+#undef HAVE_STAT
 #undef HAVE_LSTAT
 #undef HAVE_SYMLINK
 #undef HAVE_RENAME
+#undef HAVE_FSEEKO
 
 #undef HAVE_FGETPOS
 #undef HAVE_FSETPOS
@@ -458,6 +466,7 @@ __CPRAGMA_ONCE
 
 #undef HAVE_PREAD
 #undef HAVE_PWRITE
+#undef HAVE_SENDFILE
 
 #undef HAVE_GETW
 #undef HAVE_PUTW
@@ -486,6 +495,8 @@ __CPRAGMA_ONCE
 #undef HAVE_STRINGLIST
 #undef HAVE_REALLOCARRAY
 
+#undef HAVE_LIBNSL
+
 #undef HAVE_SIGSETMASK
 #undef HAVE_SIGACTION
 #undef HAVE_SIGINTERRUPT
@@ -502,6 +513,7 @@ __CPRAGMA_ONCE
 #undef HAVE_WMEMCMP
 #undef HAVE_WMEMMOVE
 #undef HAVE_WMEMCPY
+#undef HAVE_WCWIDTH
 
 #undef HAVE_MMAP
 #undef HAVE_MPROTECT
@@ -577,6 +589,7 @@ __CPRAGMA_ONCE
 #undef HAVE_X11_XFT_XFT_H
 #undef HAVE_X11_XKBLIB_H
 #undef HAVE_X11_XLIB_H
+#undef HAVE_XFT_XLBLIB_H
 #undef HAVE_XFT_XFT_H
 #undef HAVE_XKBBELL
 #undef HAVE_LIBX11
@@ -668,6 +681,7 @@ __CPRAGMA_ONCE
 #undef HAVE_LIBGUESS
 #undef HAVE_LIBGUESS_EXTENSIONS
 #undef HAVE_LIBGUESS_H
+#undef HAVE_LIBGUESS_LIBGUESS_H
 
         /* libmagic and magic.h */
 #undef HAVE_LIBMAGIC
@@ -743,4 +757,3 @@ __CPRAGMA_ONCE
 #define GRIEF_DATADIR "/usr/local/lib/grief/"
 
 #endif  /*CR_CONFIG_H_INCLUDED*/
-

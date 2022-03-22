@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_handle_c,"$Id: vfs_handle.c,v 1.12 2019/03/15 23:23:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_handle_c,"$Id: vfs_handle.c,v 1.13 2022/03/21 14:27:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_handle.c,v 1.12 2019/03/15 23:23:01 cvsuser Exp $
+/* $Id: vfs_handle.c,v 1.13 2022/03/21 14:27:22 cvsuser Exp $
  * Virtual file system - file handle management.
  *
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -142,7 +142,7 @@ vfs_handle_get(int handle)
          *      should address most sequental read/write operations.
          */
         vhandle = x_handlecache;
-    
+
     } else {
         /*
          *  Lookup
@@ -156,7 +156,7 @@ vfs_handle_get(int handle)
             return vhandle;
         }
         x_handlecache = vhandle;
-    }    
+    }
     VFS_TRACE(("vfs_handle_get(%d) : NULL\n", handle))
     return NULL;
 }

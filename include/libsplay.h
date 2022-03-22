@@ -1,11 +1,11 @@
 #ifndef GR_LIBSPLAY_H_INCLUDED
 #define GR_LIBSPLAY_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libsplay_h,"$Id: libsplay.h,v 1.19 2019/03/15 23:03:10 cvsuser Exp $")
+__CIDENT_RCSID(gr_libsplay_h,"$Id: libsplay.h,v 1.20 2022/03/21 14:55:28 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: libsplay.h,v 1.19 2019/03/15 23:03:10 cvsuser Exp $
+/* $Id: libsplay.h,v 1.20 2022/03/21 14:55:28 cvsuser Exp $
  *  A SPLAY tree is a self-adjusting binary search tree with the additional property that
  *  recently accessed elements are quick to access again. It performs basic operations such as
  *  insertion, look-up and removal in O(log n) amortized time. For many sequences of non-random
@@ -23,7 +23,7 @@ __CPRAGMA_ONCE
  *  Reference: https://www.cs.cmu.edu/~sleator/papers/self-adjusting.pdf
  *
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

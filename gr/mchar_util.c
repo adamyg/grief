@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mchar_util_c,"$Id: mchar_util.c,v 1.17 2018/10/01 20:59:48 cvsuser Exp $")
+__CIDENT_RCSID(gr_mchar_util_c,"$Id: mchar_util.c,v 1.19 2021/07/05 15:01:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mchar_util.c,v 1.17 2018/10/01 20:59:48 cvsuser Exp $
+/* $Id: mchar_util.c,v 1.19 2021/07/05 15:01:27 cvsuser Exp $
  * Locale/multibyte character utility functionality.
  *
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2021, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -31,32 +31,6 @@ __CIDENT_RCSID(gr_mchar_util_c,"$Id: mchar_util.c,v 1.17 2018/10/01 20:59:48 cvs
 
 #include <assert.h>
 #include "mchar.h"                              /* mchar_...() */
-#include "../libchartable/libchartable.h"
-
-
-/*  Function:           mchar_ucs_width
- *      Retrieve the character width of the specified Unicode character.
- *
- *  Parameters:
- *      ch -                Character value.
- *
- *      bad -               Method of evaluating invalid character values.
- *
- *  Returns:
- *      Character width.
- */
-int
-mchar_ucs_width(int32_t ch, int bad)
-{
-    return charset_width_ucs(ch, bad);
-}
-
-
-int
-mchar_ucs_encode(int32_t ch, char *buffer)
-{
-    return charset_utf8_encode(ch, buffer);
-}
 
 
 /*  Function:           mchar_locale_utf8
@@ -161,9 +135,5 @@ sys_unicode_locale(int isterminal)
 {
     return mchar_locale_utf8(sys_get_locale(isterminal));
 }
+
 /*end*/
-
-
-
-
-

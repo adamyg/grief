@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_langinfo_c,"$Id: w32_langinfo.c,v 1.10 2019/03/15 23:12:17 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_langinfo_c,"$Id: w32_langinfo.c,v 1.12 2022/03/21 14:29:41 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 langinfo() implementation
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -21,10 +21,10 @@ __CIDENT_RCSID(gr_w32_langinfo_c,"$Id: w32_langinfo.c,v 1.10 2019/03/15 23:12:17
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Notice: Portions of this text are reprinted and reproduced in electronic form. from
@@ -80,11 +80,10 @@ LIBW32_API const char *
 nl_langinfo(nl_item item)
 {
     switch (item) {
-    case CODESET:               /* assume terminal is UTF-8 */
-        return "UTF-8";
+    case CODESET:                               /* assume terminal is UTF-8 */
+        return "UTF-8";                         /* TODO: Hook vio driver*/
     }
     return "n/a";
 }
 
 /*end*/
-

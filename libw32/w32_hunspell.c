@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_hunspell_c,"$Id: w32_hunspell.c,v 1.18 2020/06/18 13:24:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_hunspell_c,"$Id: w32_hunspell.c,v 1.19 2022/03/21 14:29:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -21,10 +21,10 @@ __CIDENT_RCSID(gr_w32_hunspell_c,"$Id: w32_hunspell.c,v 1.18 2020/06/18 13:24:24
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Notice: Portions of this text are reprinted and reproduced in electronic form. from

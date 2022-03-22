@@ -1,2 +1,3 @@
-Makefile
+Makefile 
+*.err
 version.h

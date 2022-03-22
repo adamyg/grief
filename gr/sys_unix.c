@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_unix_c,"$Id: sys_unix.c,v 1.61 2020/06/03 16:31:33 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_unix_c,"$Id: sys_unix.c,v 1.63 2021/06/02 15:28:38 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_unix.c,v 1.61 2020/06/03 16:31:33 cvsuser Exp $
+/* $Id: sys_unix.c,v 1.63 2021/06/02 15:28:38 cvsuser Exp $
  * System dependent functionality - UNIX.
  *
  *
@@ -788,10 +788,30 @@ sys_copy(const char *src, const char *dst, int perms, int owner, int group)
 }
 
 
-/*  Function:           sys_realpath
- *      Retrieve the real/absolute for the specified path.
- *
+/*  Function:           sys_xxx
+ *      System i/o primitives.
  */
+int
+sys_mkdir(const char *path, int amode)
+{
+    return mkdir(path, amode);
+}
+
+
+int
+sys_access(const char *path, int amode)
+{
+    return access(path, amode);
+}
+
+
+int
+sys_chmod(const char *path, int mode)
+{
+    return chmod(path, mode);
+}
+
+
 int
 sys_realpath(const char *name, char *buf, int size)
 {
@@ -814,6 +834,41 @@ sys_realpath(const char *name, char *buf, int size)
         return 0;
     }
     return (NULL == realpath(name, buf) ? -1 : 0);
+}
+
+
+int
+sys_stat(const char *path, struct stat *sb)
+{
+    return stat(path, sb);
+}
+
+
+int
+sys_lstat(const char *path, struct stat *sb)
+{
+    return lstat(path, sb);
+}
+
+
+int
+sys_readlink(const char *path, char *buf, int maxlen)
+{
+    return readlink(path, buf, maxlen);
+}
+
+
+int
+sys_symlink(const char *name1, const char *name2)
+{
+    return symlink(name1, name2);
+}
+
+
+int
+sys_unlink(const char *fname)
+{
+    return unlink(fname);
 }
 
 

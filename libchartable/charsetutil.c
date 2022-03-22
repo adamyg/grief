@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetutil_c,"$Id: charsetutil.c,v 1.11 2020/06/18 13:09:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetutil_c,"$Id: charsetutil.c,v 1.12 2022/03/21 14:59:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* utility functions.
  *
  *
- * Copyright (c) 2010 - 2018, Adam Young.
+ * Copyright (c) 2010 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -1,11 +1,11 @@
 #ifndef GR_MCHAR_H_INCLUDED
 #define GR_MCHAR_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mchar_h,"$Id: mchar.h,v 1.15 2014/10/22 02:33:13 ayoung Exp $")
+__CIDENT_RCSID(gr_mchar_h,"$Id: mchar.h,v 1.17 2021/07/05 15:01:27 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mchar.h,v 1.15 2014/10/22 02:33:13 ayoung Exp $
+/* $Id: mchar.h,v 1.17 2021/07/05 15:01:27 cvsuser Exp $
  * Multibyte character support.
  *
  *
@@ -22,6 +22,9 @@ __CPRAGMA_ONCE
  */
 
 #include <edsym.h>
+
+#include "../libchartable/libchartable.h"
+#include "../libwidechar/widechar.h"
 
 __CBEGIN_DECLS
 
@@ -163,7 +166,8 @@ extern char *               mchar_guess_default(void);
 
 extern const mcharcharsetinfo_t *
                             mchar_info(mcharcharsetinfo_t *info, const char *name, int namelen);
-
+       
+extern void                 mchar_iconv_init(void);
 extern mchar_iconv_t *      mchar_iconv_open(const char *encoding);
 extern void                 mchar_iconv_close(mchar_iconv_t *iconv);
 #define                     mchar_encoding(__ic) \
@@ -178,9 +182,6 @@ extern void                 mchar_iconv_close(mchar_iconv_t *iconv);
                                 ((* (__ic)->ic_encode)(__ic, __ch, __buffer))
 #define                     mchar_length(__ic, __ch) \
                                 ((* (__ic)->ic_length)(__ic, __ch))
-
-extern int                  mchar_ucs_width(int32_t ch, int bad);
-extern int                  mchar_ucs_encode(int32_t ch, char *buffer);
 
 extern mchar_istream_t *    mchar_stream_open(mchar_iconv_t *ic, int handle, const char *filename, const char *mode);
 extern void                 mchar_stream_push(mchar_istream_t *is, const char *buffer, size_t buflen);

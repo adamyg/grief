@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.63 2015/02/19 00:16:51 ayoung Exp $")
+__CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.72 2021/08/01 14:34:04 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: echo.c,v 1.63 2015/02/19 00:16:51 ayoung Exp $
+/* $Id: echo.c,v 1.72 2021/08/01 14:34:04 cvsuser Exp $
  * Command/echo line implementation/interface.
  *
  *
@@ -40,6 +40,7 @@ __CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.63 2015/02/19 00:16:51 ayoung Exp $")
 #include "kill.h"
 #include "m_time.h"
 #include "macros.h"                             /* macro_lookup */
+#include "mchar.h"
 #include "main.h"
 #include "map.h"
 #include "playback.h"
@@ -68,7 +69,9 @@ struct _estate {
     int         vf_status;
     int         vf_values[4];
     int         position;
-    char        buffer[200];
+#define buffer_end(__state) \
+            (__state->buffer + (_countof(__state->buffer) - 1 /*nul*/))
+    WChar_t     buffer[200];
     MAGIC_t     magic2;
 };
 
@@ -78,31 +81,33 @@ static int              ereplyask(const char *prompt, const char *defstr, char *
 static int              elineedit(const char *prompt, const char *defstr, char *buf, int nbuf, int one);
 static void             eprompt(int force, int buflen);
 static void             edisplay(void);
-static int              eposition(const char *buf, int bpos, int left);
+
+static int              eposition(const WChar_t *buf, int bpos, int bleft);
 
 static int              emaxcols(void);
 static int              eputc(int col, int c, vbyte_t attr);
-static int              eputs(int col, vbyte_t *buf, int len, vbyte_t attr);
+static int              eputs(int col, const vbyte_t *buf, int len, vbyte_t attr);
 
-static int              estrlen(const char *str, int hilite);
-static int              eprintable(const vbyte_t ch, vbyte_t *buf);
+static int              eprintlen(const WChar_t *str);
+static int              eprintable(const vbyte_t ch, vbyte_t *buf, int *buflen);
 
-static void             ef_format(const char *fmt, char *cp, struct _estate *s);
-static char *           ef_space(char *cp);
-static char *           ef_integer(char *cp, int ivalue, int width);
-static char *           ef_buffer(char *cp, const char *buf);
-static char *           ef_ovmode(char *cp, const struct _estate *s);
-static char *           ef_charvalue(char *cp, struct _estate *s);
-static char *           ef_virtual(char *cp, struct _estate *s);
-static char *           ef_imode(char *cp, const struct _estate *s);
-static char *           ef_line(char *cp, const struct _estate *s);
-static char *           ef_numlines(char *cp, const struct _estate *s);
-static char *           ef_filemode(char *cp, const struct _estate *s);
-static char *           ef_col(char *cp, const struct _estate *s);
-static char *           ef_percent(char *cp, const struct _estate *s);
-static char *           ef_time(char *cp, const struct _estate *s, int hour24);
-static char *           ef_date(char *cp, const struct _estate *s, int format);
-static char *           ef_version(char *cp, const struct _estate *s);
+static void             ef_format(const char *fmt, struct _estate *s);
+static WChar_t *        ef_space(WChar_t *cp, const struct _estate *s);
+static WChar_t *        ef_buffer(WChar_t *cp, const char *buf, const struct _estate *s);
+static WChar_t *        ef_utf8(WChar_t *cp, const char *buf, const struct _estate *s);
+static WChar_t *        ef_integer(WChar_t *cp, int ivalue, int width, const struct _estate *s);
+static WChar_t *        ef_ovmode(WChar_t *cp, const struct _estate *s);
+static WChar_t *        ef_charvalue(WChar_t *cp, struct _estate *s);
+static WChar_t *        ef_virtual(WChar_t *cp, struct _estate *s);
+static WChar_t *        ef_imode(WChar_t *cp, const struct _estate *s);
+static WChar_t *        ef_line(WChar_t *cp, const struct _estate *s);
+static WChar_t *        ef_numlines(WChar_t *cp, const struct _estate *s);
+static WChar_t *        ef_filemode(WChar_t *cp, const struct _estate *s);
+static WChar_t *        ef_col(WChar_t *cp, const struct _estate *s);
+static WChar_t *        ef_percent(WChar_t *cp, const struct _estate *s);
+static WChar_t *        ef_time(WChar_t *cp, int hour24, const struct _estate *s);
+static WChar_t *        ef_date(WChar_t *cp, int format, const struct _estate *s);
+static WChar_t *        ef_version(WChar_t *cp, const struct _estate *s);
 
 int                     xf_echoflags =          /* echo line status */
                             E_CHARVALUE | E_VIRTUAL | E_LINE | E_COL | E_CURSOR | E_REMEMBER | E_TIME;
@@ -122,16 +127,19 @@ static struct _estate   lc_state;               /* current echo_line state */
 static vbyte_t          echo_color = ATTR_MESSAGE;
 static vbyte_t          echo_standout = 0;
 
-static unsigned char    echo_line[EBUFSIZ*2];   /* echo line buffer */
-static unsigned char    echo_attr[EBUFSIZ+2];   /* character attributes 0=normal,1=standout */
+#define ECHOLINESZ          (MAX_CMDLINE + EBUFSIZ)
 
-static int              echo_prompt;            /* length of prompt, in characters */
+static WChar_t          wecho_line[ECHOLINESZ]; /* echo line buffer */
+static unsigned char    echo_attr[ECHOLINESZ];  /* character attributes 0=normal,1=standout */
+
+static int              echo_prompt_len;        /* length of prompt in characters */
+static int              echo_prompt_width;      /* display width of prompt, in characters */
 
 static int              echo_default;           /* length of default abs() +active,-inactive */
 
 static int              echo_offset;            /* displayed offset within echo line when prompt > vtcols */
 
-static char *           echo_cmdline;           /* pointer to string just typed in by user (see inq_cmd_line) */
+static const char *     echo_cmdline;           /* pointer to string just typed in by user (see inq_cmd_line) */
 
 static char             last_msg[MSG_SIZE];     /* last message printed. */
 
@@ -160,8 +168,8 @@ eyorn(const char *msg)
     echo_color = ATTR_QUESTION;
     while (1) {
         ewprintf("%s [yn]? ", msg);
-        s = (KEY)io_get_key(0);
-        if ((s & RANGE_MASK) == RANGE_ASCII) {
+        s = (KEY) io_get_key(0);
+        if (IS_CHARACTER(s)) {
             if (strchr("yYnN\033", s)) {        /* Y[es], N[o] or ESC */
                 break;
             }
@@ -427,7 +435,7 @@ equestion(const char *prompt, char *buf, int nbuf)
  */
 static int
 ereplyask(const char *prompt, const char *defstr,
-    char *buf, int nbuf, int attr, int standout, int one)
+    char *buf, int bufsiz, int attr, int standout, int one)
 {
     const int saved_flags = trace_flags();
     const int omsglevel = x_msglevel;
@@ -443,40 +451,44 @@ ereplyask(const char *prompt, const char *defstr,
     echo_color = attr;
     echo_standout = standout;
     eprint(prompt, (defstr ? defstr : ""));
-    if ('\001' == *prompt) {
-        ++prompt;                               /* consume hilite marker \001 */
-    }
-
-    trace_log("ereplyask: <%s>(%d:%d)\n", prompt, nbuf, one);
 
     if (nflags && 0 == (nflags & DB_PROMPT)) {
         nflags = 0;                             /* disable debug prompt */
     }
 
     /* trigger start */
-    if (!one) {
-        static const char _prompt_begin[] = "_prompt_begin";
+    {   const char *t_prompt = prompt;
 
-        if (macro_lookup(_prompt_begin)) {
-            char ebuf[EBUFSIZ + 20];
+        if ('\001' == *prompt) {                /* hilite marker \001 */
+            ++t_prompt;
+        }
 
-            sxprintf(ebuf, sizeof(ebuf), "%s \"%s\"", _prompt_begin, prompt);
-            trace_flagsset(nflags);
-            execute_str(ebuf);
-            /*
-             *  TODO, BRIEF compat ---
-             *      The new default response should be returned as a
-             *      string if changed, otherwise return an integer/null
-             *      to indicate no change.
-             */
-            trace_flagsset(saved_flags);
-        } else {
-            trace_log("ereplyask: _prompt_begin not found\n");
+        trace_log("ereplyask: <%s>(%d:%d)\n", t_prompt, bufsiz, one);
+
+        if (! one) {
+            static const char _prompt_begin[] = "_prompt_begin";
+
+            if (macro_lookup(_prompt_begin)) {
+                char ebuf[EBUFSIZ + 20];
+
+                sxprintf(ebuf, sizeof(ebuf), "%s \"%s\"", _prompt_begin, t_prompt);
+                trace_flagsset(nflags);
+                execute_str(ebuf);
+                /*
+                 *  TODO, BRIEF compat ---
+                 *      The new default response should be returned as a
+                 *      string if changed, otherwise return an integer/null
+                 *      to indicate no change.
+                 */
+                trace_flagsset(saved_flags);
+            } else {
+                trace_log("ereplyask: _prompt_begin not found\n");
+            }
         }
     }
 
     /* line-editor implementation */
-    ret = elineedit(prompt, defstr, buf, nbuf, one);
+    ret = elineedit(prompt, defstr, buf, bufsiz, one);
 
     /* completion */
     echo_standout = t_echo_standout;
@@ -566,7 +578,7 @@ ereplyask(const char *prompt, const char *defstr,
  *
  *      Ctrl+V, Ctrl+Y (*)          Paste from clipboard.
  *
- *  TODO:
+ *  TODO (plus key mapping):
  *
  *      Ctrl+C, Ctrl+W (*)          Cut to clipboard.
  *
@@ -587,38 +599,44 @@ ereplyask(const char *prompt, const char *defstr,
  *      otherwise TRUE with result contained within 'buf'.
  */
 static int
-elineedit(const char *prompt, const char *defstr, char *buf, int bufsiz, int one)
+elineedit(const char *prompt, const char *defstr, char *result, int bufsiz, int one)
 {
-    char ndefstr[MAX_CMDLINE] = {0};
-    int  left = 0, bpos = 0, imode = TRUE;
-    int  first_key = TRUE;
-    KEY  c;
+    WChar_t buf[EBUFSIZ];
+    char ndefstr[EBUFSIZ];
+    int bleft = 0, bpos = 0, imode = TRUE;
+    int first_key = TRUE;
+    KEY c = 0;
 
-    assert(bufsiz >= 2);
+    assert(bufsiz >= 2 /*&& bufsiz <= EBUFSIZ*/);
+    if (bufsiz > _countof(buf)) bufsiz = _countof(buf);
 
-    memset(buf, 0, bufsiz);                     /* zap reply */
+    memset(buf, 0, sizeof(buf));
+    memset(ndefstr, 0, sizeof(ndefstr));
+
     if (NULL == defstr) defstr = "";
-    strxcpy(buf, defstr, bufsiz);
-    --bufsiz;                                   /* remove terminator */
+    Wcsfromutf8(defstr, buf, bufsiz);
 
     last_msg[0] = '\0';
     x_prompting = TRUE;
     ecursor(imode);
     ttcolornormal();
 
+    trace_log("elineedit:\n");
+
     while (1) {
         /* update prompt/cursor */
+        assert(bpos >= 0 && bpos <= bufsiz);
         if (! first_key) {
             if (0 == bpos) {
-                echo_offset = left = 0;         /* home */
+                echo_offset = bleft = 0;        /* home */
             }
-            eprompt(FALSE, (int)strlen(buf));
-            left = eposition(buf, bpos, left);
+            eprompt(FALSE, (int) Wcslen(buf));
+            bleft = eposition(buf, bpos, bleft);
         }
 
         /* next key */
         ttflush();
-        c = (KEY)io_get_key(0);
+        c = (KEY) io_get_key(0);
 
         if (one) {
             /*
@@ -628,7 +646,7 @@ elineedit(const char *prompt, const char *defstr, char *buf, int bufsiz, int one
              */
             if (KEY_ESC != c) {
                 buf[0] = (c > 0x7f ? 0 : (char)c);
-                buf[1] =  '\0';
+                buf[1] = '\0';
                 goto done;
             }
             goto cancel;
@@ -639,13 +657,12 @@ elineedit(const char *prompt, const char *defstr, char *buf, int bufsiz, int one
                  *  First key and it is a special one,
                  *      then user has accepted the default prompt unmark.
                  */
-            case KEY_TAB:   case CTRL_H:
-            case KEY_HOME:  case KEY_END:
-            case KEY_WLEFT: case KEY_WRIGHT:
-            case KEY_LEFT:  case KEY_RIGHT:
-            case 0x7f:      case KEY_DEL:
-                strxcpy(buf, defstr, bufsiz + 1);
-                bpos = (int)strlen(buf);
+            case KEY_TAB:    case CTRL_H:
+            case KEY_HOME:   case KEY_END:
+            case KEY_WLEFT:  case KEY_WRIGHT:
+            case KEY_LEFT:   case KEY_RIGHT:
+            case KEY_DELETE: case KEY_DEL:
+                bpos = Wcsfromutf8(defstr, buf, bufsiz);
                 break;
 
                 /*
@@ -695,51 +712,64 @@ cancel:;    ecursor(buf_imode(curbp));
         case KEY_UP:
         case WHEEL_UP:
         case WHEEL_DOWN:
-badkey:;    {   const char *sacc;
-                char *oecho_cmdline = echo_cmdline;
+badkey:;    {   const char *oecho_cmdline = echo_cmdline;
+                const int t_bufsiz = Wcslen(buf) * 4;
+                const char *sacc;
+                char *t_buf = NULL;
+
+                trace_log("elineedit: badkey\n");
+                if (t_bufsiz) {
+                    if (NULL == (t_buf = malloc(t_bufsiz))) {
+                        goto cancel;
+                    }
+                    Wcstoutf8(buf, t_buf, t_bufsiz);
+                }
 
                 key_cache_key(x_push_ref, c, FALSE);
                 trigger(REG_INVALID);           /* old interface, use of _bad_key() preferred */
+
+                echo_cmdline = (t_buf ? t_buf : "");
                 x_prompting  = FALSE;
-                echo_cmdline = buf;
-                execute_str("_bad_key");        /* XXX - should pass the keycode */
+                execute_str("_bad_key");        /* pass the keycode?? */
                 echo_cmdline = oecho_cmdline;
                 x_prompting  = TRUE;
+                free(t_buf);
 
                 if (NULL == (sacc = acc_get_sval())) {
                     goto cancel;
                 }
 
                 strxcpy(ndefstr, sacc, sizeof(ndefstr));
-                strxcpy(buf, sacc, bufsiz + 1);
+                Wcsfromutf8(sacc, buf, bufsiz);
+
                 eprint(prompt, ndefstr);
                 defstr = ndefstr;
                 first_key = TRUE;
             }
-            continue;
+            break;
 
         case KEY_WLEFT:     /* <Left>, cursor movement */
         case KEY_WLEFT2:
-            while (isspace(buf[bpos]) && bpos > 0) {
+            while (bpos > 0 && isspace(buf[bpos])) {
                 --bpos;
             }
-            while (!isspace(buf[bpos]) && bpos > 0) {
+            while (bpos > 0 && !isspace(buf[bpos])) {
                 --bpos;
             }
             break;
 
         case KEY_WRIGHT:    /* <Right>, cursor movement */
         case KEY_WRIGHT2:
-            while (isspace(buf[bpos]) && buf[bpos]) {
+            while (bpos < bufsiz && isspace(buf[bpos]) && buf[bpos]) {
                 ++bpos;
             }
-            while (!isspace(buf[bpos]) && buf[bpos]) {
+            while (bpos < bufsiz && !isspace(buf[bpos]) && buf[bpos]) {
                 ++bpos;
             }
             break;
 
         case KEY_RIGHT:     /* <Right>, cursor movement */
-            if (buf[bpos]) {
+            if (bpos < bufsiz && buf[bpos]) {
                 ++bpos;
             }
             break;
@@ -756,7 +786,7 @@ badkey:;    {   const char *sacc;
             break;
 
         case KEY_END:       /* <End>,   cursor movement */
-            bpos = (int)strlen(buf);
+            bpos = (int)Wcslen(buf);
             break;
 
         case ALT_I:         /* <Alt-i>, toggle insert/overstrike mode */
@@ -776,11 +806,11 @@ badkey:;    {   const char *sacc;
         case KEY_DEL:       /* <Del>,   delete character under the cursor */
         case 0x7F:
         case CTRL_D: {
-                char *bcursor = buf + bpos;
-                size_t rlen = strlen(bcursor);
+                WChar_t *bcursor = buf + bpos;
+                size_t rlen = Wcslen(bcursor);
 
                 if (rlen) {
-                    if (--rlen) memmove(bcursor, bcursor + 1, rlen);
+                    if (--rlen) Wmemmove(bcursor, bcursor + 1, rlen);
                     bcursor[rlen] = 0;
                 }
             }
@@ -794,79 +824,123 @@ badkey:;    {   const char *sacc;
         case ALT_D:         /* <Alt-d>, delete line/buffer */
         case CTRL_X:
         case CTRL_U:
-            bpos = 0;
             buf[0] = '\0';
+            bpos = 0;
             break;
 
         case KEY_INS:       /* <Ins>,   insert scrap into prompt */
         case KEY_PASTE:
         case CTRL_V:
         case CTRL_Y: {
-                const char *cpp;
-                int scount = 0;
-                char *bcursor;
+                WChar_t t_buf[sizeof(buf)] = {0};
+                const char *scrap_buffer = NULL;
+                int scrap_size = 0;
 
-                k_seek();
-                if ((scount = k_read(&cpp)) <= 0) {
-                    ttbeep();
-                    continue;
+                if (bpos >= (bufsiz - 1)) {
+                    ttbeep();                   /* end-of-buffer */
+                    break;
                 }
 
-                while (estrlen(buf, FALSE) <= bufsiz && --scount) {
-                    if (bpos > bufsiz) {
-                        ttbeep();
-                        break;
+                k_seek();                       /* MCHAR/???, utf8 assumption */
+                while (0 == (scrap_size = k_read(&scrap_buffer))) {
+                    continue;                   /* first non-empty line */
+                }
+
+                if (scrap_size < 0 /*eof*/) {
+                    ttbeep();                   /* nothing available */
+
+                } else {
+                    const int blen = Wcslen(buf);
+                    const int trailing = (bpos < blen ? blen - bpos : 0);
+                    const int remaining = bufsiz - (bpos + (imode ? trailing : 0));
+
+                    assert(bpos <= blen);
+                    if (remaining > imode) {    /* space available, inc nul */
+                        int copied;
+
+                        memcpy(t_buf, buf, sizeof(buf));
+                        if ((copied = Wcsfromutf8(scrap_buffer, buf + bpos, remaining)) > 0) {
+                            assert((bpos + copied) < bufsiz);
+                            if (trailing) {
+                                const int binsert = bpos + copied;
+                                if (imode) {    /* append original */
+                                    assert((binsert + trailing) < bufsiz);
+                                    Wmemcpy(buf + binsert, t_buf + bpos, trailing + 1 /*nul*/);
+                                } else {        /* replace null with previous value */
+                                    if (binsert < blen) {
+                                        buf[binsert] = t_buf[binsert];
+                                    }
+                                }
+                            }
+                            assert(Wcslen(buf) < (size_t)bufsiz);
+                        }
+                        scrap_size -= copied;
                     }
-                    bcursor = buf + bpos;
-                    if (0 == *bcursor) {
-                        bcursor[1] = '\0';
-                    } else if (imode) {
-                        memmove(bcursor + 1, bcursor, bufsiz - bpos);
+
+                    if (scrap_size) {
+                        ttbeep();               /* overflow */
                     }
-                    *bcursor = *cpp++;
-                    ++bpos;
                 }
             }
             break;
 
         case 0:
         case KEY_VOID:
-            continue;
+            break;
+
+        case KEY_WINCH:                         /* resize event */
+            vtwinch(ttcols(), ttrows());
+            vtupdate();
+            elinecol(LC_DONTENABLE);
+            break;
 
         case ALT_Q:         /* <Alt-q>, quote the next input character */
         case CTRL_Q:
-            c = (KEY)io_get_raw(0);
+            c = (KEY) io_get_raw(0);
             if (0 == c || c >= KEY_VOID) {
-                continue;
+                break;
             }
             /*FALLTHRU*/
 
-        default: {
-                if ((c & RANGE_MASK) != RANGE_ASCII) {
-                    goto badkey;
-                }
+        default:
+            if (0 == IS_CHARACTER(c)) {
+                goto badkey;                    /* invalid key */
 
-                if (0 == (c & 0xff) || bpos > bufsiz ||
-                        estrlen(buf, FALSE) > bufsiz) {
-                    ttbeep();
+            } else if (bpos >= (bufsiz - 1)) {
+                ttbeep();                       /* end-of-buffer */
+
+            } else {
+                const int blen = Wcslen(buf);
+                const int trailing = (bpos < blen ? blen - bpos : 0);
+                const int remaining = bufsiz - (bpos + (imode ? trailing : 0));
+
+                assert(bpos <= blen);           /* space available, minus nul */
+                if (remaining > imode) {
+                    WChar_t *binsert = buf + bpos++;
+                    if (*binsert) {
+                        assert(trailing);
+                        if (imode) {            /* insert, otherwise replace */
+                            assert((binsert + trailing) < (buf + bufsiz));
+                            Wmemmove(binsert + 1, binsert, trailing + 1 /*nul*/);
+                        }
+                    } else {
+                        binsert[1] = '\0';      /* end-of-string */
+                    }
+                    *binsert = c;
+                    assert(Wcslen(buf) < (size_t)bufsiz);
 
                 } else {
-                    char *bcursor = buf + bpos;
-
-                    if (0 == *bcursor) {
-                        bcursor[1] = '\0';
-                    } else if (imode) {
-                        memmove(bcursor + 1, bcursor, bufsiz - bpos);
-                    }
-                    *bcursor = (char) c;
-                    ++bpos;
+                    ttbeep();                   /* overflow */
                 }
             }
             break;
         }
     }
+
 done:;
-    assert(0 == buf[bufsiz]);
+    assert(Wcslen(buf) < (size_t)bufsiz);
+    Wcstoutf8(buf, result, bufsiz);
+    assert((int)strlen(result) < bufsiz);
     x_prompting = FALSE;
     ecursor(buf_imode(curbp));
     return TRUE;
@@ -888,7 +962,7 @@ eprompt(int force, int buflen)
 {
     const int odisabled = lc_disabled;
     const int ooffset   = echo_offset;
-    const int length    = echo_prompt +         /* total length */
+    const int length    = echo_prompt_width +   /* total length */
                 (buflen >= 0 ? buflen : echo_default);
 
     /* disable line/col? */
@@ -902,7 +976,7 @@ eprompt(int force, int buflen)
         echo_offset = 0;                        /* home */
 
     } else  {                                   /* >3/4 shall be prompt */
-        echo_offset = echo_prompt - (ttcols() * 3) / 4;
+        echo_offset = echo_prompt_width - (ttcols() * 3) / 4;
         if (echo_offset < 0) {
             echo_offset = 0;
         }
@@ -927,64 +1001,66 @@ eprompt(int force, int buflen)
  *  Parameters:
  *      buf - Address of user buffer.
  *      bpos - Current buffer position (cursor).
- *      left - Storage of working variable contained the 'left' margin.
+ *      bleft - Storage of working variable contained the 'left' margin.
  *
  *  Return:
- *      New 'left' value.
+ *      Resultng 'left' value.
  */
 static int
-eposition(const char *buf, int bpos, int left)
+eposition(const WChar_t *buf, int bpos, int bleft)
 {
     const vbyte_t attr = VBYTE_ATTR(echo_color);
-    int col = echo_prompt - echo_offset;        /* user buffer base column */
+    int col = echo_prompt_width - echo_offset;  /* user buffer base column */
     int cursor = -1;                            /* cursor position */
-    int pos = 0;
-    int partial = 0;
-    int len, i;
+    int i, pos = 0;
 
-    /* figure out where the cursor is going to land */
+    /*
+     *  Size output buffer ...
+     */
     for (i = 0; i < bpos && buf[i];) {
-        pos += eprintable(buf[i++], NULL);
+        pos += eprintable(buf[i++], NULL, NULL);
     }
 
-    /* if cursor off the screen then we need to reframe the users input */
-    if (bpos < left) {
-        while (i > 0 && left > bpos) {
-            pos -= eprintable(buf[--i], NULL);
-            --left;
+    /*
+     *  if cursor off screen, reframe
+     */
+    if (bpos < bleft) {
+        while (i > 0 && bleft > bpos) {
+            pos -= eprintable(buf[--i], NULL, NULL);
+            --bleft;
         }
 
-    } else if (col + pos - left >= lc_column) {
+    } else if (col + pos - bleft >= lc_column) {
         pos = lc_column;
-
-        --i;
-        while (pos > col && i >= 0) {
-            pos -= eprintable(buf[i--], NULL);
+        while (pos >= col && i >= 0) {
+            const int width = eprintable(buf[i--], NULL, NULL);
+            if ((pos - width) <= col) {
+                ++i;
+                break;
+            }
+            pos -= width;
         }
-        ++i;
-        if (pos < col) {
-            partial = col - pos;
-        }
-        ++i;
-        left = i;
+        bleft = i;
     }
 
-    /* redraw the line, pad with trailing spaces */
-    buf += left;
-    for (i = left; col < lc_column; ++i) {
+    /*
+     *  Redraw prompt, pad with trailing spaces.
+     */
+    buf += bleft;
+    for (i = bleft; col < lc_column; ++i) {
         const int ch = (*buf ? *buf++ : ' ');
-        vbyte_t vbuf[10] = {0};
+        vbyte_t vbuf[16] = {0};
+        int vlen = _countof(vbuf);
 
-        if (i == bpos) {                        /* cursor located */
-            cursor = col;
-        }
-        len = eprintable(ch, vbuf);
-        col = eputs(col, vbuf + partial, len - partial, attr);
-        partial = 0;
+        if (i == bpos) cursor = col;            /* cursor located */
+
+        eprintable(ch, vbuf, &vlen);
+        col = eputs(col, vbuf, vlen, attr);
     }
+
     vtupdate_bottom(cursor);
 
-    return left;
+    return bleft;
 }
 
 
@@ -1003,28 +1079,35 @@ edisplay(void)
     const vbyte_t normal = VBYTE_ATTR(echo_color);
     const vbyte_t standout = VBYTE_ATTR(echo_standout);
     const vbyte_t completion = VBYTE_ATTR(ATTR_PROMPT_COMPLETE);
-    unsigned char *cp, *ap, *ep;                /* buffer working pointers */
-    int cursor, col = 0;
+    const WChar_t *cp, *ep;                     /* buffer working pointers */
+    const unsigned char *ap;
+    int offset = echo_offset, cursor, col = 0;
 
-    trace_log("edisplay: prompt[%d]:<", echo_prompt);
+    trace_log("edisplay: prompt[%d,%d]:<", offset, echo_prompt_width);
 
-    ep = echo_line + echo_prompt;               /* display prompt, hilite if required */
-    for (cp = echo_line + echo_offset, ap = echo_attr + echo_offset; *cp; ++cp, ++ap) {
+    for (cp = wecho_line, ep = cp + echo_prompt_len,
+            ap = echo_attr; *cp; ++cp, ++ap) {
+        const int32_t wch = *cp;
+
+        if (offset > 0) {                       /* consume off-screen */
+            --offset;
+            continue;
+        }
 
         if (lc_column && col >= lc_column) {
             break;                              /* trim */
         }
 
-        trace_log("%c", *cp);
+        trace_log("%c", wch);
 
-        if (cp < ep && *ap && standout) {
-            col = eputc(col, *cp, standout);    /* prompt */
+        if (standout && col < echo_prompt_width && *ap) {
+            col = eputc(col, wch, standout);    /* prompt */
 
         } else if (echo_default > 0 && cp >= ep) {
-            col = eputc(col, *cp, completion);  /* default/completion */
+            col = eputc(col, wch, completion);  /* default/completion */
 
         } else {
-            col = eputc(col, *cp, normal);      /* user text */
+            col = eputc(col, wch, normal);      /* user text */
         }
     }
 
@@ -1038,32 +1121,6 @@ edisplay(void)
     }
 
     vtupdate_bottom(cursor);                    /* flush results */
-}
-
-
-/*  Function:           estrlen
- *      Determine the display length of the specified buffer 'str'.
- *
- *  Parameters:
- *      str - Buffer.
- *      hilite - TRUE or FALSE, process hilite markers.
- *
- *  Returns:
- *      Length of the buffer in bytes.
- */
-static int
-estrlen(const char *str, int hilite)
-{
-    int ch, len = 0;
-
-    if (str) {
-        while (0 != (ch = *str++)) {
-            if (! hilite || '^' != ch) {
-                len += eprintable((ch >= ' ' ? ch : (ch | 0x80)), NULL);
-            }
-        }
-    }
-    return len;
 }
 
 
@@ -1102,7 +1159,10 @@ estrlen(const char *str, int hilite)
 void
 inq_message(void)
 {
-    acc_assign_str((char *)echo_line, -1);
+    char t_echo_line[ECHOLINESZ] = {0};
+
+    Wcstoutf8(wecho_line, t_echo_line, sizeof(t_echo_line));
+    acc_assign_str((const char *)t_echo_line, -1);
 }
 
 
@@ -1170,8 +1230,7 @@ inq_prompt(void)
         none
 
     Macro Returns:
-        The 'inq_cmd_line' returns a string containing the current
-        prompt.
+        The 'inq_cmd_line' returns a string containing the current prompt.
 
     Macro Portability:
         n/a
@@ -1184,8 +1243,12 @@ inq_cmd_line(void)
 {
     if (echo_cmdline) {
         acc_assign_str((const char *)echo_cmdline, -1);
+
     } else {
-        acc_assign_str((const char *)(echo_line + echo_prompt), -1);
+        char t_cmd_line[EBUFSIZ] = {0};
+
+        Wcstoutf8(wecho_line + echo_prompt_len, t_cmd_line, sizeof(t_cmd_line));
+        acc_assign_str((const char *)t_cmd_line, -1);
     }
 }
 
@@ -1213,8 +1276,7 @@ inq_cmd_line(void)
         none
 
     Macro Returns:
-        The 'inq_line_col()' primitive returns the current echo line
-        status.
+        The 'inq_line_col()' primitive returns the current echo line status.
 
     Macro Portability:
         n/a
@@ -1225,7 +1287,10 @@ inq_cmd_line(void)
 void
 inq_line_col(void)
 {
-    acc_assign_str(lc_state.buffer, -1);
+    char t_line_col[_countof(lc_state.buffer) * 4] = {0};
+
+    Wcstoutf8(lc_state.buffer, t_line_col, sizeof(t_line_col));
+    acc_assign_str(t_line_col, -1);
 }
 
 
@@ -1284,7 +1349,6 @@ ewprintx(const char *fmt, ...)
 void
 eeprintf(const char *fmt, ...)
 {
-//  const vbyte_t t_echo_color = echo_color;
     char iobuf[EBUFSIZ];
     va_list ap;
 
@@ -1298,7 +1362,6 @@ eeprintf(const char *fmt, ...)
 void
 eeprintx(const char *fmt, ...)
 {
-//  const vbyte_t t_echo_color = echo_color;
     const int xerrno = errno;
     char iobuf[EBUFSIZ];
     va_list ap;
@@ -1413,40 +1476,37 @@ eprint(const char *prompt, const char *defstr)
         }
     }
 
-    /* save prompt */
-    echo_prompt = estrlen(prompt, hilite);
+    /*
+     *  import prompt, default and display
+     */
+    echo_prompt_len = Wcsfromutf8(prompt, wecho_line, _countof(wecho_line));
 
     memset(echo_attr, 0, sizeof(echo_attr));
-     if (hilite) {
-        const unsigned char *p = (const unsigned char *)prompt;
-        unsigned char *echo = echo_line,
-                *end = echo + (sizeof(echo_line) - 1);
-        unsigned char *attr = echo_attr;
-        unsigned char ch;
+    if (hilite) {
+        WChar_t *cp = wecho_line, *out = cp,
+            *end = cp + (_countof(wecho_line) - 1), wch;
+        unsigned char *ap = echo_attr;
 
-        while (echo < end && 0 != (ch = *p++)) {
-            if ('^' == ch) {                    /* hilite next character */
-                *attr = 1;
-            } else {
-                *echo++ = ch;
-                ++attr;
+        while (cp < end && 0 != (wch = *cp++)) {
+            if ('^' == wch && *cp) {            /* hilite next character */
+                --echo_prompt_len;
+                *ap = 1;
+                continue;
             }
+            *out++ = wch;
+            ++ap;
         }
-        *echo = 0;
-    } else {
-        strxcpy((char *)echo_line, prompt, sizeof(echo_line));
+        *out = 0;
     }
 
-    /* save default (if any) */
+    echo_prompt_width = eprintlen(wecho_line);  /* display width */
+
     if (!defstr || !*defstr) {
         echo_default = 0;                       /* no default */
-
     } else {
-        strxcat((char *)echo_line, defstr, sizeof(echo_line));
-        echo_default = (int)strlen(defstr);
+        echo_default = Wcsfromutf8(defstr, wecho_line + echo_prompt_len, _countof(wecho_line) - echo_prompt_len);
     }
 
-    /* display */
     eprompt(TRUE, -1);
 }
 
@@ -1473,9 +1533,8 @@ emaxcols(void)
 
 
 /*  Function:           eputc
- *      Write to the virtual display, using the existing attribute. The
- *      specified character is converted to it printable form prior to being
- *      displayed.
+ *      Write to the virtual display, using the existing attribute.
+ *      The specified character is converted to it printable form prior to being displayed.
  *
  *  Parameter:
  *      pp - Cursor.
@@ -1488,12 +1547,14 @@ emaxcols(void)
 static int
 eputc(int col, int c, vbyte_t attr)
 {
-    vbyte_t vbuf[10] = {0};
+    vbyte_t vbuf[16] = {0};
+    int vlen = _countof(vbuf);
 
     if ('\r' == c || '\n' == c) {
         return col;
     }
-    return eputs(col, vbuf, eprintable(c, vbuf), attr);
+    eprintable(c, vbuf, &vlen);
+    return eputs(col, vbuf, vlen, attr);
 }
 
 
@@ -1510,7 +1571,7 @@ eputc(int col, int c, vbyte_t attr)
  *      Resulting cursor position.
  */
 static int
-eputs(int col, vbyte_t *buf, int len, vbyte_t attr)
+eputs(int col, const vbyte_t *buf, int len, vbyte_t attr)
 {
     assert(col >= 0);
     assert(col < ttcols());
@@ -1518,13 +1579,12 @@ eputs(int col, vbyte_t *buf, int len, vbyte_t attr)
     assert(lc_column <= ttcols());
 
     if (col >= 0) {
-        while (len-- > 0) {
-            if (col < lc_column) {
-                if (vtpute((vbyte_t)(*buf++ | attr), col) < 0) {
-                    break;                      /* error, abort */
-                }
-                ++col;
+        while (len-- > 0 && col < lc_column) {
+            const int ncol = vtpute((vbyte_t)(*buf++ | attr), col);
+            if (-1 == ncol) {
+                break;                          /* off-screen */
             }
+            col = ncol;
         }
     }
     return col;
@@ -1628,11 +1688,11 @@ elinecol(int flags)
     state.buffer[0] = '\0';
 
     if (xf_echofmt && (E_FORMAT & xf_echoflags)) {
-        ef_format(xf_echofmt, state.buffer, &state);
+        ef_format(xf_echofmt, &state);
 
     } else {
         const int echoflags = xf_echoflags;
-        char *cp = state.buffer;
+        WChar_t *cp = state.buffer;
 
         if (curwp && W_TILED == curwp->w_type) {
             if (echoflags & E_CHARVALUE) {
@@ -1644,15 +1704,15 @@ elinecol(int flags)
         }
 
         if (echoflags & E_LINE)  {              /* line */
-            cp = ef_line(ef_space(cp), &state);
+            cp = ef_line(ef_space(cp, &state), &state);
         }
 
         if (echoflags & E_COL) {                /* column */
-            cp = ef_col(ef_space(cp), &state);
+            cp = ef_col(ef_space(cp, &state), &state);
         }
 
         if (echoflags & E_PERCENT)  {           /* cursor percentage within file */
-            cp = ef_percent(ef_space(cp), &state);
+            cp = ef_percent(ef_space(cp, &state), &state);
         }
 
         if (echoflags & E_CURSOR) {
@@ -1660,48 +1720,52 @@ elinecol(int flags)
         }
 
         if ((echoflags & E_REMEMBER) && x_rem_string[0] != ' ') {
-            cp = ef_buffer(cp, x_rem_string);   /* RE/PA */
-            cp = ef_space(cp);
+            cp = ef_buffer(cp, x_rem_string, &state); /* RE/PA */
+            cp = ef_space(cp, &state);
         }
 
         if (echoflags & (E_TIME|E_TIME24)) {    /* current time */
-            cp = ef_time(ef_space(cp), &state, (E_TIME24 & echoflags) ? TRUE : FALSE);
+            cp = ef_time(ef_space(cp, &state), (E_TIME24 & echoflags) ? TRUE : FALSE, &state);
         }
     }
 
     assert(ESTATE_MAGIC == state.magic);
     assert(ESTATE_MAGIC == state.magic2);
-    lc_length = (int)strlen(state.buffer);      /* line length */
+    lc_length = (int)Wcslen(state.buffer);      /* line length */
     assert(lc_length < (int) sizeof(state.buffer));
 
     /* update */
     lc_column = emaxcols() - lc_length;         /* left column */
 
     if ((LC_FORCE & flags) || lc_state.position != lc_column ||
-            0 != strcmp(lc_state.buffer, state.buffer)) {
+            0 != Wcscmp(lc_state.buffer, state.buffer)) {
         const vbyte_t attr = VBYTE_ATTR(ATTR_ECHOLINE);
-        const char *cp;
+        const WChar_t *cp;
         int col = 0;
                                                 /* erase characters longer needed */
         if (0 == lc_state.position || lc_state.position >= lc_column) {
             col = lc_column;
         } else {
             col += lc_state.position;
-            while (col < lc_column) {
-                vtpute(' ' | attr, col++);
+            while (col >= 0 && col < lc_column) {
+                const int ncol = vtpute(' ' | attr, col);
+                if (-1 == ncol) {
+                    break;                      /* off-screen */
+                }
+                col = ncol;
             }
         }
 
-        for (cp = state.buffer; *cp; ++cp) {    /* now draw in the line/col string */
-            vtpute(*cp | attr, col++);
+        for (cp = state.buffer; *cp; ++cp) {
+            col = vtpute(*cp | attr, col);      /* now draw in the line/col string */
         }
 
         if (! ttlastsafe()) {                   /* clear last character */
-            vtpute(' ' | VBYTE_ATTR(ATTR_NORMAL), col++);
+            col = vtpute(' ' | VBYTE_ATTR(ATTR_NORMAL), col);
         }
 
         vtupdate_bottom(-1);                    /* updated */
-        strcpy(lc_state.buffer, state.buffer);
+        Wcscpy(lc_state.buffer, state.buffer);
         lc_state.position = lc_column;
     }
 }
@@ -1787,7 +1851,7 @@ elinecol(int flags)
         The virtual character status is represented by one of the
         following otherwise blank if a normal character.
 
-           X    - Virtual space, for example logical space created as 
+           X    - Virtual space, for example logical space created as
                     the result of tab expansion.
 
            $    - End of line.
@@ -2191,7 +2255,7 @@ inq_echo_format(void)           /* string () */
 
 
 /*  Function:           infof_truncated
- *      Print a message contained a filenamet, truncating the filename
+ *      Print a message contained a filename, truncating the filename
  *      if too long for the echo line.
  *
  *      The format argument must be a sprintf() style string containing
@@ -2326,6 +2390,29 @@ errorfx(const char *fmt, ...)
 }
 
 
+/*  Function:           eprintlen
+ *      Determine the display length of the specified buffer 'str'.
+ *
+ *  Parameters:
+ *      str - Buffer.
+ *
+ *  Returns:
+ *      Length of the buffer in bytes.
+ */
+static int
+eprintlen(const WChar_t *str)
+{
+    WChar_t ch;
+    int len = 0;
+    if (str) {
+        while (0 != (ch = *str++)) {
+            len += eprintable(ch, NULL, NULL);
+        }
+    }
+    return len;
+}
+
+
 /*  Function:           eprintable
  *      Converts a character to a printable format taking into account whether
  *      the terminal can support printable 8-bit chars, etc.
@@ -2333,17 +2420,18 @@ errorfx(const char *fmt, ...)
  *  Parameters:
  *      ch - Character value.
  *      buf - Destination buffer.
+ *      buflen - Length, in bytes, of the output buffer.
  *
  *  Returns:
- *      length of the printed version.
+ *      Display width.
  */
 static int
-eprintable(const vbyte_t c, vbyte_t *buf)
+eprintable(const vbyte_t c, vbyte_t *buf, int *buflen)
 {
     const vbyte_t attr = VBYTE_ATTR_GET(c);
     vbyte_t ch = VBYTE_CHAR_GET(c);
-    char cp[32];                                /* MCHAR */
-    int len = 0;
+    char t_buffer[32];
+    int idx, len = 0;
 
     if (ch <= 0xff) {
         /*
@@ -2354,20 +2442,19 @@ eprintable(const vbyte_t c, vbyte_t *buf)
         len = mc->mc_length;
         if (buf) {
             const unsigned char *mccp = (unsigned char *) mc->mc_str;
-            int idx;
-
-            if (NULL == cp) {
+            if (NULL == mccp) {
                 if ((ch = mc->mc_chr) > 0 && ch < 0x80) {
                     *buf++ = ch | attr;
                 } else {
                     goto ischaracter;
                 }
             } else {
-                assert(len <= 10);
+                assert(len < *buflen);
                 for (idx = 0; idx < len; ++idx) {
                     *buf++ = mccp[idx] | attr;
                 }
             }
+            *buflen = len;
         }
         return len;
     }
@@ -2376,14 +2463,24 @@ eprintable(const vbyte_t c, vbyte_t *buf)
      *  extended character values
      */
 ischaracter:;
-    len = sxprintf(cp, sizeof(cp), "u%04x", ch);
-    if (buf) {
-        int idx;
-
-        assert(len <= 10);
-        for (idx = 0; idx < len; ++idx) {
-            *buf++ = cp[idx] | attr;
+    if (vtisunicode() || vtisutf8()) {
+        const int width = Wcwidth(ch);
+        if (width >= 0) {
+            if (buf) {
+                buf[0] = (ch & VBYTE_CHAR_MASK) | attr;
+                buf[1] = 0;
+                *buflen = 1;
+            }
+            return width;
         }
+    }
+    len = sxprintf(t_buffer, sizeof(t_buffer), "u%04x", ch);
+    if (buf) {
+        assert(len < *buflen);
+        for (idx = 0; idx < len; ++idx) {
+            *buf++ = t_buffer[idx] | attr;
+        }
+        *buflen = len;
     }
     return len;
 }
@@ -2414,14 +2511,15 @@ eredraw(void)
  *  Parameters:
  *      fmt - Echo line format specification.
  *      cp - Buffer pointer.
- *      state - State information, buffer and time/date.
+ *      status - Edit state information, buffer and time/date.
  *
  *  Returns:
  *      nothing
  */
 static void
-ef_format(const char *fmt, char *cp, struct _estate *state)
+ef_format(const char *fmt, struct _estate *s)
 {
+    WChar_t *cp = s->buffer;
     if (fmt) {
         char ch;
 
@@ -2474,7 +2572,7 @@ ef_format(const char *fmt, char *cp, struct _estate *state)
                     case 1:         /* Number as decimal */
                         break;
                     default:        /* Title */
-                        cp = ef_buffer(cp, curbp->b_title);
+                        cp = ef_utf8(cp, curbp->b_title, s);
                         break;
                     }
                 }
@@ -2502,90 +2600,90 @@ ef_format(const char *fmt, char *cp, struct _estate *state)
 
             case 'n':       /* File name with directory */
                 if (curbp) {
-                    cp = ef_buffer(cp, curbp->b_fname);
+                    cp = ef_utf8(cp, curbp->b_fname, s);
                 }
                 break;
 
             case 'N':       /* File name without the directory */
                 if (curbp && curbp->b_fname) {
-                    cp = ef_buffer(cp, sys_basename(curbp->b_fname));
+                    cp = ef_utf8(cp, sys_basename(curbp->b_fname), s);
                 }
                 break;
 
             case 'p':       /* Percent string */
-                cp = ef_percent(cp, state);
+                cp = ef_percent(cp, s);
                 break;
 
             case 'c':       /* Column number */
                 switch (modifier) {
                 case 1:             /* xxx */
-                    cp = ef_integer(cp, state->bf_col, 0);
+                    cp = ef_integer(cp, s->bf_col, 0, s);
                     break;
                 default:            /* Col: xxx */
-                    cp = ef_col(cp, state);
+                    cp = ef_col(cp, s);
                 }
                 break;
 
             case 'm':       /* Mode string (i.e. --rw-rw-rw) */
-                cp = ef_filemode(cp, state);
+                cp = ef_filemode(cp, s);
                 break;
 
             case 'o':       /* Overwrite mode, " OV" otherwise "" */
-                cp = ef_ovmode(cp, state);
+                cp = ef_ovmode(cp, s);
                 break;
 
             case 'O':       /* Overwrite/insert flag - like %o, but shows OV/RE */
-                cp = ef_imode(cp, state);
+                cp = ef_imode(cp, s);
                 break;
 
             case 'C':       /* Character value */
-                cp = ef_charvalue(cp, state);
+                cp = ef_charvalue(cp, s);
                 break;
 
             case 'V':       /* Virtual character indicator */
-                cp = ef_virtual(cp, state);
+                cp = ef_virtual(cp, s);
                 break;
 
             case 'r':       /* Remember flag */
                 if (x_rem_string[0] != ' ') {
-                    cp = ef_buffer(cp, x_rem_string);
-                    cp = ef_space(cp);
+                    cp = ef_buffer(cp, x_rem_string, s);
+                    cp = ef_space(cp, s);
                 }
                 break;
 
             case 'l':       /* Line number */
                 switch (modifier) {
                 case 1:             /* xxx */
-                    cp = ef_integer(cp, state->bf_line, 0);
+                    cp = ef_integer(cp, s->bf_line, 0, s);
                     break;
                 default:            /* Line: xxx */
-                    cp = ef_line(cp, state);
+                    cp = ef_line(cp, s);
                 }
                 break;
 
             case 'L':       /* Number of lines in the file */
-                cp = ef_numlines(cp, state);
+                cp = ef_numlines(cp, s);
                 break;
 
             case 't':       /* Time (12 or 24 hour) */
-                cp = ef_time(cp, state, modifier ? TRUE : FALSE);
+                cp = ef_time(cp, modifier ? TRUE : FALSE, s);
                 break;
 
             case 'd':       /* Date, optional format */
-                cp = ef_date(cp, state, modifier);
+                cp = ef_date(cp, modifier, s);
                 break;
 
             case 'v':       /* Version */
-                cp = ef_version(cp, state);
+                cp = ef_version(cp, s);
                 break;
 
             case 'Y':       /* Year */
                 switch (modifier) {
                 case 1:             /* YY */
-                    cp = ef_integer(cp, state->tm_year%100, 2);
+                    cp = ef_integer(cp, s->tm_year%100, 2, s);
                     break;
                 default:            /* YYYY */
-                    cp = ef_integer(cp, state->tm_year, 4);
+                    cp = ef_integer(cp, s->tm_year, 4, s);
                     break;
                 }
                 break;
@@ -2593,16 +2691,16 @@ ef_format(const char *fmt, char *cp, struct _estate *state)
             case 'M':       /* Month of the year */
                 switch (modifier) {
                 case 3:             /* Abbrev */
-                    cp = ef_buffer(cp, tm_month_abbrev(state->tm_month - 1));
+                    cp = ef_buffer(cp, tm_month_abbrev(s->tm_month - 1), s);
                     break;
                 case 2:             /* Name */
-                    cp = ef_buffer(cp, tm_month_name(state->tm_month - 1));
+                    cp = ef_buffer(cp, tm_month_name(s->tm_month - 1), s);
                     break;
                 case 1:             /* M[M] */
-                    cp = ef_integer(cp, state->tm_month, 0);
+                    cp = ef_integer(cp, s->tm_month, 0, s);
                     break;
                 default:            /* MM */
-                    cp = ef_integer(cp, state->tm_month, 2);
+                    cp = ef_integer(cp, s->tm_month, 2, s);
                     break;
                 }
                 break;
@@ -2610,16 +2708,16 @@ ef_format(const char *fmt, char *cp, struct _estate *state)
             case 'D':       /* Day of the month */
                 switch (modifier) {
                 case 3:             /* Abbrev */
-                    cp = ef_buffer(cp, tm_day_abbrev(state->tm_day - 1));
+                    cp = ef_buffer(cp, tm_day_abbrev(s->tm_day - 1), s);
                     break;
                 case 2:             /* Name */
-                    cp = ef_buffer(cp, tm_day_abbrev(state->tm_day - 1));
+                    cp = ef_buffer(cp, tm_day_abbrev(s->tm_day - 1), s);
                     break;
                 case 1:             /* D[D] */
-                    cp = ef_integer(cp, state->tm_day, 0);
+                    cp = ef_integer(cp, s->tm_day, 0, s);
                     break;
                 default:            /* DD */
-                    cp = ef_integer(cp, state->tm_day, 2);
+                    cp = ef_integer(cp, s->tm_day, 2, s);
                     break;
                 }
                 break;
@@ -2640,16 +2738,64 @@ ef_format(const char *fmt, char *cp, struct _estate *state)
  *
  *  Parameters:
  *      cp - Echo-line buffer cursor.
+ *      s - Edit state.
  *
  *  Returns:
- *      resulting buffer cursor
+ *      resulting buffer cursor.
  */
-static char *
-ef_space(char *cp)
+static WChar_t *
+ef_space(WChar_t *cp, const struct _estate *s)
 {
-    *cp++ = ' ';
-    *cp = 0;
+    const WChar_t *end = buffer_end(s);
+    if (cp < end) {
+        *cp++ = ' ';
+        *cp = 0;
+    }
     return cp;
+}
+
+
+/*  Function:           ef_buffer
+ *      Insert the specfied buffer 'buf' into the echo_line buffer.
+ *
+ *  Parameters:
+ *      cp - Echo-line buffer cursor.
+ *      buf - Buffer to be inserted.
+ *      s - Edit state.
+ *
+ *  Returns:
+ *      resulting buffer cursor.
+ */
+static WChar_t *
+ef_buffer(WChar_t *cp, const char *buf, const struct _estate *s)
+{
+    const WChar_t *end = buffer_end(s);
+    if (buf && cp < end) {
+        WChar_t c;
+        while (cp < end && 0 != (c = *buf++)) {
+            *cp++ = c;
+        }
+        *cp = 0;
+    }
+    return cp;
+}
+
+
+/*  Function:           ef_utf8
+ *      Insert the specfied utf8 encoded buffer 'buf' into the echo_line buffer.
+ *
+ *  Parameters:
+ *      cp - Echo-line buffer cursor.
+ *      buf - Buffer to be inserted.
+ *      s - Edit state.
+ *
+ *  Returns:
+ *      resulting buffer cursor.
+ */
+static WChar_t *
+ef_utf8(WChar_t *cp, const char *buf, const struct _estate *s)
+{
+    return cp + (buf ? Wcsfromutf8(buf, cp, buffer_end(s) - cp) : 0);
 }
 
 
@@ -2660,44 +2806,25 @@ ef_space(char *cp)
  *      cp - Echo-line buffer cursor.
  *      ivalue - Integer value.
  *      width - Optional field width.
+ *      s - Edit state.
  *
  *  Returns:
  *      resulting buffer cursor
  */
-static char *
-ef_integer(char *cp, int ivalue, int width)
+static WChar_t *
+ef_integer(WChar_t *cp, int ivalue, int width, const struct _estate *s)
 {
+    char t_buffer[32];
     if (width > 0) {
-        sprintf(cp, "%0*d", width, ivalue);
+        sprintf(t_buffer, "%0*d", width, ivalue);
     } else if (width < 0) {
-        sprintf(cp, "%*d", width * -1, ivalue);
+        sprintf(t_buffer, "%*d", width * -1, ivalue);
     } else {
-        sprintf(cp, "%d", ivalue);
+        sprintf(t_buffer, "%d", ivalue);
     }
-    return cp + strlen(cp);
+    return ef_buffer(cp, t_buffer, s);
 }
 
-
-/*  Function:           ef_buffer
- *      Insert the specfied buffer 'buf' into the echo_line buffer.
- *
- *  Parameters:
- *      cp - Echo-line buffer cursor.
- *      buf - Buffer to be inserted.
- *
- *  Returns:
- *      resulting buffer cursor
- */
-static char *
-ef_buffer(char *cp, const char *buf)
-{
-    if (buf) {
-        while ((*cp = *buf++) != '\0') {
-            ++cp;
-        }
-    }
-    return cp;
-}
 
 
 /*  Function:           ef_ovmode
@@ -2705,12 +2832,13 @@ ef_buffer(char *cp, const char *buf)
  *
  *  Parameters:
  *      cp - Echo-line buffer cursor.
+ *      s - Edit state.
  *
  *  Returns:
- *      resulting buffer cursor
+ *      resulting buffer cursor.
  */
-static char *
-ef_ovmode(char *cp, const struct _estate *s)
+static WChar_t *
+ef_ovmode(WChar_t *cp, const struct _estate *s)
 {
     __CUNUSED(s)
     if (0 == x_pt.pt_icursor[0]) {              /* visual cursor not available */
@@ -2730,17 +2858,20 @@ ef_ovmode(char *cp, const struct _estate *s)
  *
  *  Parameters:
  *      cp - Character value.
+ *      s - Edit state.
  *
  *  Returns:
- *      resulting buffer cursor
+ *      resulting buffer cursor.
  */
-static char *
-ef_charvalue(char *cp, struct _estate *s)
+static WChar_t *
+ef_charvalue(WChar_t *cp, struct _estate *s)
 {
     int vstatus, charvalue;
+    char t_buffer[32];
 
     __CUNUSED(s)
 
+    t_buffer[0] = 0;
     if (-999 == (vstatus = s->vf_status)) {     /* loaded? */
         s->vf_status = vstatus = line_current_status(s->vf_values, 4);
     }
@@ -2748,42 +2879,44 @@ ef_charvalue(char *cp, struct _estate *s)
 
     if (0 == (BUFFERVSTATUS_ILLEGAL & vstatus)) {
         if ((BUFFERVSTATUS_EOL|BUFFERVSTATUS_XEOL|BUFFERVSTATUS_PEOL) & vstatus) {
-            return cp + sprintf(cp, " EOL ");   /* <EOL> */
+            strcpy(t_buffer, " EOL ");          /* <EOL> */
 
         } else if (BUFFERVSTATUS_EOF == vstatus) {
-            return cp + sprintf(cp, " EOF ");   /* <EOF> */
+            strcpy(t_buffer, " EOF ");          /* <EOF> */
 
         } else if (charvalue <= 0) {
-            return cp + sprintf(cp, " NUL ");
+            strcpy(t_buffer, " NUL ");
                                                 /* control */
         } else if (charvalue <= 0x1f) {
-            return cp + sprintf(cp, " ^%c  ", 'A' + (charvalue - 1));
+            sprintf(t_buffer, " ^%c  ", 'A' + (charvalue - 1));
 
                                                 /* ascii */
         } else if (charvalue <= 0x7f && isprint(charvalue)) {
-            return cp + sprintf(cp, " [%c] ", charvalue);
+            sprintf(t_buffer, " [%c] ", charvalue);
         }
     }
 
-    if (0 == charvalue) {                       /* others */
-        strcpy(cp, "u0000 ");
-    } else {
-        unsigned i;
+    if (0 == t_buffer[0]) {
+        if (0 == charvalue) {                   /* others */
+            strcpy(t_buffer, "u0000 ");
 
-        for (i = 0; i < 4 && (charvalue = s->vf_values[i]) > 0; ++i) {
-            if (charvalue <= 0xff) {
-                sprintf(cp, "%c0x%02x ", (i ? '+' : ' '), charvalue);
+        } else {
+            unsigned i;
+            for (i = 0; i < 4 && (charvalue = s->vf_values[i]) > 0; ++i) {
+                if (charvalue <= 0xff) {
+                    sprintf(t_buffer, "%c0x%02x ", (i ? '+' : ' '), charvalue);
 
-            } else if (charvalue <= 0xffff) {
-                sprintf(cp, "%cu%04x ", (i ? '+' : ' '), charvalue);
+                } else if (charvalue <= 0xffff) {
+                    sprintf(t_buffer, "%cu%04x ", (i ? '+' : ' '), charvalue);
 
-            } else {
-                sprintf(cp, "%cU%06x ", (i ? '+' : ' '), charvalue);
+                } else {
+                    sprintf(t_buffer, "%cU%06x ", (i ? '+' : ' '), charvalue);
+                }
             }
-            cp += strlen(cp);
         }
     }
-    return cp + strlen(cp);
+
+    return ef_buffer(cp, t_buffer, s);
 }
 
 
@@ -2792,12 +2925,13 @@ ef_charvalue(char *cp, struct _estate *s)
  *
  *  Parameters:
  *      cp - Echo-line buffer cursor.
+ *      s - Edit state.
  *
  *  Returns:
- *      resulting buffer cursor
+ *      resulting buffer cursor.
  */
-static char *
-ef_virtual(char *cp, struct _estate *s)
+static WChar_t *
+ef_virtual(WChar_t *cp, struct _estate *s)
 {
     int status;
 
@@ -2823,12 +2957,13 @@ ef_virtual(char *cp, struct _estate *s)
  *
  *  Parameters:
  *      cp - Echo-line buffer cursor.
+ *      s - Edit state.
  *
  *  Returns:
- *      resulting buffer cursor
+ *      resulting buffer cursor.
  */
-static char *
-ef_imode(char *cp, const struct _estate *s)
+static WChar_t *
+ef_imode(WChar_t *cp, const struct _estate *s)
 {
     __CUNUSED(s)
     if (buf_imode(curbp)) {
@@ -2848,19 +2983,20 @@ ef_imode(char *cp, const struct _estate *s)
  *
  *  Parameters:
  *      cp - Echo-line buffer cursor.
- *      s - Edit status.
+ *      s - Edit state.
  *
  *  Returns:
- *      resulting buffer cursor
+ *      resulting buffer cursor.
  */
-static char *
-ef_numlines(char *cp, const struct _estate *s)
+static WChar_t *
+ef_numlines(WChar_t *cp, const struct _estate *s)
 {
     const int numlines = (int)(curbp ? curbp->b_numlines : 1);
+    char t_buffer[32];
 
     __CUNUSED(s)
-    sprintf(cp, numlines > 9999 ? "%u" : "%-4u", numlines);
-    return cp + strlen(cp);
+    sprintf(t_buffer, numlines > 9999 ? "%u" : "%-4u", numlines);
+    return ef_buffer(cp, t_buffer, s);
 }
 
 
@@ -2869,21 +3005,20 @@ ef_numlines(char *cp, const struct _estate *s)
  *
  *  Parameters:
  *      cp - Echo-line buffer cursor.
- *      s - Edit status.
+ *      s - Edit state.
  *
  *  Returns:
  *      resulting buffer cursor
  */
-static char *
-ef_filemode(char *cp, const struct _estate *s)
+static WChar_t *
+ef_filemode(WChar_t *cp, const struct _estate *s)
 {
     int mode = (curbp ? curbp->b_mode : 0);
-    char buffer[16];
+    char t_buffer[16];
 
     __CUNUSED(s)
-    file_modedesc((mode_t)mode, NULL, 0, buffer, sizeof(buffer));
-    strcpy(cp, (const char *)buffer);
-    return cp + strlen(cp);
+    file_modedesc((mode_t)mode, NULL, 0, t_buffer, sizeof(t_buffer));
+    return ef_buffer(cp, t_buffer, s);
 }
 
 
@@ -2892,16 +3027,17 @@ ef_filemode(char *cp, const struct _estate *s)
  *
  *  Parameters:
  *      cp - Echo-line buffer cursor.
- *      s - Edit status.
+ *      s - Edit state.
  *
  *  Returns:
- *      resulting buffer cursor
+ *      resulting buffer cursor.
  */
-static char *
-ef_line(char *cp, const struct _estate *s)
+static WChar_t *
+ef_line(WChar_t *cp, const struct _estate *s)
 {
-    sprintf(cp, s->bf_line > 9999 ? "Line:%-5u" : "Line: %-4u", s->bf_line);
-    return cp + strlen(cp);
+    char t_buffer[32];
+    sprintf(t_buffer, s->bf_line > 9999 ? "Line:%-5u" : "Line: %-4u", s->bf_line);
+    return ef_buffer(cp, t_buffer, s);
 }
 
 
@@ -2910,16 +3046,17 @@ ef_line(char *cp, const struct _estate *s)
  *
  *  Parameters:
  *      cp - Echo-line buffer cursor.
- *      s - Edit status.
+ *      s - Edit state.
  *
  *  Returns:
  *      resulting buffer cursor
  */
-static char *
-ef_col(char *cp, const struct _estate *s)
+static WChar_t *
+ef_col(WChar_t *cp, const struct _estate *s)
 {
-    sprintf(cp, s->bf_col > 99 ? "Col:%-3u" : "Col: %-2u", s->bf_col);
-    return cp + strlen(cp);
+    char t_buffer[32];
+    sprintf(t_buffer, s->bf_col > 99 ? "Col:%-3u" : "Col: %-2u", s->bf_col);
+    return ef_buffer(cp, t_buffer, s);
 }
 
 
@@ -2928,26 +3065,24 @@ ef_col(char *cp, const struct _estate *s)
  *
  *  Parameters:
  *      cp - Echo-line buffer cursor.
- *      s - Edit status.
+ *      s - Edit state.
  *
  *  Returns:
- *      resulting buffer cursor
+ *      resulting buffer cursor.
  */
-static char *
-ef_percent(char *cp, const struct _estate *s)
+static WChar_t *
+ef_percent(WChar_t *cp, const struct _estate *s)
 {
+    char t_buffer[32];
     accint_t perc;
 
     perc = ((accint_t)s->bf_line * 100) / (accint_t)(curbp && curbp->b_numlines > 0 ? curbp->b_numlines : 1);
-    if (perc > 100) {
-        perc = 100;
-    }
     if (perc >= 100) {
-        strcpy(cp, "END");
+        strcpy(t_buffer, "END");
     } else {
-        sprintf(cp, "%2lu%%", perc);
+        sprintf(t_buffer, "%2lu%%", perc);
     }
-    return cp + strlen(cp);
+    return ef_buffer(cp, t_buffer, s);
 }
 
 
@@ -2956,23 +3091,24 @@ ef_percent(char *cp, const struct _estate *s)
  *
  *  Parameters:
  *      cp - Echo-line buffer cursor.
- *      s - Edit status.
- *
+ *      s - Edit state.
+  *
  *  Returns:
- *      resulting buffer cursor
+ *      resulting buffer cursor.
  */
-static char *
-ef_time(char *cp, const struct _estate *s, int hour24)
+static WChar_t *
+ef_time(WChar_t *cp, int hour24, const struct _estate *s)
 {
-    if (hour24) {
-        sprintf(cp, "%02d:%02d", s->tm_hour, s->tm_min);
+    char t_buffer[32];
 
+    if (hour24) {
+        sprintf(t_buffer, "%02d:%02d", s->tm_hour, s->tm_min);
     } else {
-        sprintf(cp, "%d:%02d%cm",
+        sprintf(t_buffer, "%d:%02d%cm",
             (s->tm_hour > 12 ? s->tm_hour - 12 : (s->tm_hour == 0 ? 12 : s->tm_hour)),
             s->tm_min, s->tm_hour >= 12 ? 'p' : 'a');
     }
-    return cp + strlen(cp);
+    return ef_buffer(cp, t_buffer, s);
 }
 
 
@@ -2981,15 +3117,15 @@ ef_time(char *cp, const struct _estate *s, int hour24)
  *
  *  Parameters:
  *      cp - Echo-line buffer cursor.
- *      s - Edit status.
+ *      s - Edit state.
  *
  *  Returns:
  *      resulting buffer cursor
  */
-static char *
-ef_date(char *cp, const struct _estate *s, int format)
+static WChar_t *
+ef_date(WChar_t *cp, int format, const struct _estate *s)
 {
-    char t_month[16];
+    char t_buffer[32], t_month[16];
     char delim = '-';
 
     /* 30.. delimiter as '/' */
@@ -3010,32 +3146,32 @@ ef_date(char *cp, const struct _estate *s, int format)
 
     switch (format) {
     case 7:             /* mm-dd */
-        sprintf(cp, "%s%c%02d", t_month, delim, s->tm_day);
+        sprintf(t_buffer, "%s%c%02d", t_month, delim, s->tm_day);
         break;
     case 6:             /* dd-mm[m] */
-        sprintf(cp, "%02d%c%s", s->tm_day, delim, t_month);
+        sprintf(t_buffer, "%02d%c%s", s->tm_day, delim, t_month);
         break;
     case 5:             /* mm[m]-dd-yy */
-        sprintf(cp, "%s%c%02d%c%02d", t_month, delim, s->tm_day, delim, s->tm_year%100);
+        sprintf(t_buffer, "%s%c%02d%c%02d", t_month, delim, s->tm_day, delim, s->tm_year%100);
         break;
     case 4:             /* dd-mm[m]-yy */
-        sprintf(cp, "%02d%c%s%c%02d", s->tm_day, delim, t_month, delim, s->tm_year%100);
+        sprintf(t_buffer, "%02d%c%s%c%02d", s->tm_day, delim, t_month, delim, s->tm_year%100);
         break;
     case 3:             /* mm[m]-dd-yyyy */
-        sprintf(cp, "%s%c%02d%c%04d", t_month, delim, s->tm_day, delim, s->tm_year);
+        sprintf(t_buffer, "%s%c%02d%c%04d", t_month, delim, s->tm_day, delim, s->tm_year);
         break;
     case 2:             /* dd-mm[m]-yyyy */
-        sprintf(cp, "%02d%c%s%c%04d", s->tm_day, delim, t_month, delim, s->tm_year);
+        sprintf(t_buffer, "%02d%c%s%c%04d", s->tm_day, delim, t_month, delim, s->tm_year);
         break;
     case 1:             /* yy-mm[m]-dd */
-        sprintf(cp, "%02d%c%s%c%02d", s->tm_year%100, delim, t_month, delim, s->tm_day);
+        sprintf(t_buffer, "%02d%c%s%c%02d", s->tm_year%100, delim, t_month, delim, s->tm_day);
         break;
     case 0:             /* yyyy-mm[m]-dd */
     default:
-        sprintf(cp, "%04d%c%s%c%02d", s->tm_year, delim, t_month, delim, s->tm_day);
+        sprintf(t_buffer, "%04d%c%s%c%02d", s->tm_year, delim, t_month, delim, s->tm_day);
         break;
     }
-    return cp + strlen(cp);
+    return ef_buffer(cp, t_buffer, s);
 }
 
 
@@ -3044,16 +3180,16 @@ ef_date(char *cp, const struct _estate *s, int format)
  *
  *  Parameters:
  *      cp - Echo-line buffer cursor.
- *      s - Edit status.
+ *      s - Edit state.
  *
  *  Returns:
  *      resulting buffer cursor
  */
-static char *
-ef_version(char *cp, const struct _estate *s)
+static WChar_t *
+ef_version(WChar_t *cp, const struct _estate *s)
 {
     __CUNUSED(s)
-    sprintf(cp, "%s", x_version);
-    return cp + strlen(cp);
+    return ef_buffer(cp, x_version, s);
 }
+
 /*end*/

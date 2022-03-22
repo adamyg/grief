@@ -1,11 +1,11 @@
 #ifndef GR_SYSTEM_H_INCLUDED
 #define GR_SYSTEM_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_system_h,"$Id: system.h,v 1.37 2020/06/18 12:46:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_system_h,"$Id: system.h,v 1.38 2021/06/02 15:29:27 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: system.h,v 1.37 2020/06/18 12:46:40 cvsuser Exp $
+/* $Id: system.h,v 1.38 2021/06/02 15:29:27 cvsuser Exp $
  * System interface.
  *
  *
@@ -55,6 +55,9 @@ extern int                  sys_isabspath(const char *path);
 extern const char *         sys_pathdelimiter(void);
 extern const char *         sys_pathseparator(void);
 
+extern int                  sys_mkdir(const char *path, int amode);
+extern int                  sys_access(const char *path, int amode);
+extern int                  sys_chmod(const char *path, int mode);
 extern int                  sys_realpath(const char *path, char *real, int size);
 extern const char *         sys_cwd(char *cwd, int size);
 extern int                  sys_read(int fd, void *buf, int size);

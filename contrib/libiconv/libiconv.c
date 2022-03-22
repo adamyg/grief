@@ -1,4 +1,4 @@
-/* $Id: libiconv.c,v 1.3 2012/09/03 23:10:15 ayoung Exp $
+/* $Id: libiconv.c,v 1.4 2021/06/13 16:33:45 cvsuser Exp $
  *
  * Copyright (c)2003 Citrus Project,
  * All rights reserved.
@@ -62,6 +62,16 @@ iconv_open(const char *out, const char *in)
 {
 	int ret;
 	struct _citrus_iconv *handle;
+	char *s;
+
+	// gnu-iconv compat, remove //IGNORE, //TRANSLIT and other options
+	if (NULL != (s = strchr(out, '/'))) {
+		const size_t outlen = s - out;
+		char *t_out = alloca(outlen + 1);
+
+		memcpy(t_out, out, outlen), t_out[outlen] = 0;
+		out = t_out;
+	}
 
 	ret = _citrus_iconv_open(&handle, _PATH_ICONV, in, out);
 	if (ret) {
@@ -89,7 +99,7 @@ iconv_close(iconv_t handle)
 
 LIBICONV_LINKAGE size_t LIBICONV_ENTRY
 iconv(iconv_t handle, const char **__restrict in, size_t *__restrict szin, 
-            char ** __restrict out, size_t * __restrict szout)
+		char ** __restrict out, size_t * __restrict szout)
 {
 	int err;
 	size_t ret;
@@ -120,7 +130,7 @@ iconv_errno(void)
 
 LIBICONV_LINKAGE size_t LIBICONV_ENTRY
 __iconv(iconv_t handle, const char **in, size_t *szin, char **out,
-	        size_t *szout, unsigned flags, size_t *invalids)
+		size_t *szout, unsigned flags, size_t *invalids)
 {
 	int err;
 	size_t ret;

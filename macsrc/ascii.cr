@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: ascii.cr,v 1.13 2014/10/27 23:28:16 ayoung Exp $
+/* $Id: ascii.cr,v 1.14 2021/06/10 12:58:11 cvsuser Exp $
  * Display an ASCII and UNICODE table display.
  *
  *
@@ -176,10 +176,9 @@ chart(int radix, int unicode)
             while ((ch < 0x20 && c1_mode) || (ch < 0x01 && !c0_mode)) {
                 insertf(fmt, ch);
                 insert(c0[ch]);
+                insert(unicode ? " |" : "|");
                 if (7 == (ch & 7)) {
                     insert("\n");
-                } else {
-                    insert(unicode ? " |" : "|");
                 }
                 ++ch;
             }
@@ -188,10 +187,9 @@ chart(int radix, int unicode)
             while (ch < 0xa0 && ch < ascii_mode) {
                 insertf(fmt, ch);
                 insert(c1[ch - 0x7f]);
+                insert(unicode ? " |" : "|");
                 if (7 == (ch & 7)) {
                     insert("\n");
-                } else {
-                    insert(unicode ? " |" : "|");
                 }
                 ++ch;
             }
@@ -203,10 +201,9 @@ chart(int radix, int unicode)
                 insertf(fmt + " ", ch);
                 insert(ch);
             }
+            insert(unicode ? "  |" : " |");
             if (7 == (ch & 7)) {
                 insert("\n");
-            } else {
-                insert(unicode ? "  |" : " |");
             }
             ++ch;
         }
@@ -225,7 +222,6 @@ chart(int radix, int unicode)
                 0x18B0, 0x18ff,                 // Undefined
                 0x1980, 0x1cff,                 // Undefined
                 0x1d80, 0x1dff,                 // Undefined
-            //  0x2c00, 0x2e7f,                 // Undefined, UNICODE 6.0 available
                 0x2fe0, 0x2fef,                 // Undefined
                 0x31c0, 0x31ef,                 // Undefined
                 0x9fb0, 0x9fff,                 // Undefined
@@ -250,11 +246,13 @@ chart(int radix, int unicode)
             while (ch < last) {                 // export characters
                 insertf(fmt + " ", ch);
                 insert(ch);
+                switch (wcwidth(ch, 0)) {
+                case 0: insert("   |"); break;
+                case 1: insert("  |"); break;
+                case 2: insert(" |"); break;
+                }
                 if (7 == (ch & 7)) {
                     insert("\n");
-                } else {
-                    move_abs(NULL, ((ch & 7) + 1) * len);
-                    insert("|");
                 }
                 ++ch;
             }
@@ -265,10 +263,9 @@ chart(int radix, int unicode)
             } else {
                 while (ch <= last) {            // pad area
                     insertf(fmt, ch);
+                    insert("    |");
                     if (7 == (ch & 7)) {
                         insert("\n");
-                    } else {
-                        insert("    |");
                     }
                     ++ch;
                 }

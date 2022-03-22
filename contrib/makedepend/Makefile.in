@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.8 2020/06/18 20:35:16 cvsuser Exp $
+# $Id: Makefile.in,v 1.9 2022/03/21 17:12:44 cvsuser Exp $
 # makedepend makefile
 #
 #
@@ -45,6 +45,7 @@ D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
 D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/makedepend
 D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
+
 # Common flags
 
 XFLAGS=
@@ -79,12 +80,13 @@ RMDFLAGS=	-rf
 #########################################################################################
 # Targets
 
-MKDEPENDUTIL=	$(D_BIN)/makedepend$(E)
-
 MKDEPENDSRC=		./makedepend-1.0.5
 VPATH=		$(MKDEPENDSRC)
 
-UTILOBJS=\
+BINS=\
+	$(D_BIN)/makedepend$(E)
+
+MAKEDEPENDOBJS=\
 	$(D_OBJ)/main$(O)		\
 	$(D_OBJ)/cppsetup$(O)		\
 	$(D_OBJ)/ifparser$(O)		\
@@ -92,24 +94,27 @@ UTILOBJS=\
 	$(D_OBJ)/parse$(O)		\
 	$(D_OBJ)/pr$(O)
 
-OBJS=		$(UTILOBJS)
-TSKS=		$(MKDEPENDUTIL)
+OBJS=		$(MAKEDEPENDOBJS)
+
 
 #########################################################################################
 # Rules
 
 .PHONY:			build release debug
-build:			object $(TSKS)
+build:			object $(BINS)
 
 release:
 		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
+
 debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
 .PHONY:		object
 object:			$(D_OBJ)/.created
-$(MKDEPENDUTIL):	$(UTILOBJS)
-		$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
+
+$(D_BIN)/makedepend$(E):	MAPFILE=$(basename $@).map
+$(D_BIN)/makedepend$(E):	$(MAKEDEPENDOBJS)
+		$(CC) $(LDFLAGS) -o $@ $(MAKEDEPENDOBJS) $(LDLIBS) @LDMAPFILE@
 
 %/.created:
 		-@mkdir $(@D)
@@ -123,5 +128,4 @@ $(D_OBJ)/%$(O):		%.c
 		$(CC) $(CFLAGS) -o $@ -c $<
 
 #end
-
 

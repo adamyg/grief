@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.79 2021/04/18 16:16:57 cvsuser Exp $
+# $Id: Makefile.in,v 1.80 2021/07/05 15:01:26 cvsuser Exp $
 # GRIEF editor makefile.
 #
 #
@@ -190,7 +190,7 @@ LDFLAGS+=	-rdynamic
 endif
 endif
 
-LDLIBS=		-L$(D_LIB) -lbsddb -lbsdfetch -lbsdio -lchartable -lvfs -lsplay -lllist -lmisc -lonigrx -ltre
+LDLIBS=		-L$(D_LIB) -lbsddb -lbsdfetch -lbsdio -lwidechar -lchartable -lvfs -lsplay -lllist -lmisc -lonigrx -ltre
 LDLIBS+=	@LDLIBS@ @LIBS@
 LDLIBS+=	@LIBENCA@ @LIBSPELL@ @LIBICU@ @LIBICONV@ @LIBCURL@ @LIBOPENSSL@ @LIBARCHIVE@ @LIBMAGIC@
 LDLIBS+=	@LIBM@ @EXTRALIBS@

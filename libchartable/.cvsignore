@@ -1,7 +1,11 @@
 Makefile
+*.err
 charsetdesc.h
+charsetdict.h
 charsetlocales.h
 charsetnames.h
 charsettables.h
+charsettable.*
 cnvtables
 data
+ref

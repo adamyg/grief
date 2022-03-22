@@ -1,16 +1,16 @@
 #ifndef GR_EDSTRUCT_H_INCLUDED
 #define GR_EDSTRUCT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.69 2020/06/18 12:51:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.71 2022/03/21 14:55:27 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edstruct.h,v 1.69 2020/06/18 12:51:55 cvsuser Exp $
+/* $Id: edstruct.h,v 1.71 2022/03/21 14:55:27 cvsuser Exp $
  * Window, buffer, line and character-map definitions.
  *
  *
  *
- * Copyright (c) 1998 - 2020, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -75,7 +75,7 @@ enum _marks {
  *  Key table element
  */
 struct k_tbl {
-    uint16_t            key;
+    KEY                 key;
     const char *        name;
 };
 

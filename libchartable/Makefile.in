@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.24 2020/06/18 20:35:17 cvsuser Exp $
+# $Id: Makefile.in,v 1.29 2022/03/21 15:11:49 cvsuser Exp $
 # libchartable makefile.
 #
 #
-# Copyright (c) 2010 - 2020, Adam Young.
+# Copyright (c) 2010 - 2022, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -126,8 +126,9 @@ CTBLOBJS=\
 	$(D_OBJ)/charsetutf32$(O)		\
 	$(D_OBJ)/charsetutf16$(O)		\
 	$(D_OBJ)/charsetutf8$(O)		\
-	$(D_OBJ)/charsetwidth$(O)		\
-	$(D_OBJ)/charsetwidth_cjk$(O)
+	$(D_OBJ)/charsetwidth_cjk$(O)		\
+	\
+	$(D_OBJ)/utf8$(O)
 
 MODULES=	$(notdir $(basename $(wildcard cnvtables/cx*.c)))
 
@@ -153,6 +154,7 @@ debug:
 
 $(CTBLLIB):		charsetlocales.h		\
 			charsettable.c			\
+			charsetdesc.h			\
 			$(D_OBJ)/.created		\
 			$(CTBLOBJS)
 		$(RM) $(RMFLAGS) $@
@@ -170,7 +172,7 @@ charsetlocales.h:	makelocale.pl
 
 charsettable.c:		charsettables.h
 
-charsettables.h:	makechartable.pl cnvtables/.created
+charsetdesc.h charsettables.h:	makechartable.pl cnvtables/.created
 		@echo building character tables
 		$(PERL) makechartable.pl --crunch --dynamic --packaged
 
@@ -182,12 +184,11 @@ data/.import:		data/.created			\
 			data/MAPPINGS/.import		\
 			data/Unihan.zip			\
 			data/UCD.zip			\
-			data/uniset.tar.gz		\
-			data/Zeichenreferenz
+			data/uniset.tar.gz
 		@echo "++ do not delete, managed content ++" > $@
 
 data/MAPPINGS/.import:	data/MAPPINGS/.created
-		$(WGET) -P data -r -nv -nH -e robots=off --cut-dirs=1 --no-parent --reject "index.html.*" http://ftp.unicode.org/Public/MAPPINGS/
+		$(WGET) -P data -r -nv -nH -e robots=off --cut-dirs=1 --no-parent --reject "index.html?*"  http://ftp.unicode.org/Public/MAPPINGS/
 		@echo "++ do not delete, managed content ++" > $@
 
 data/Unihan.zip:

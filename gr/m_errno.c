@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_errno_c,"$Id: m_errno.c,v 1.26 2014/10/22 02:33:02 ayoung Exp $")
+__CIDENT_RCSID(gr_m_errno_c,"$Id: m_errno.c,v 1.27 2021/07/05 15:01:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_errno.c,v 1.26 2014/10/22 02:33:02 ayoung Exp $
+/* $Id: m_errno.c,v 1.27 2021/07/05 15:01:27 cvsuser Exp $
  * errno symbol primitives.
  *
  *
@@ -845,7 +845,7 @@ do_perror(void)                 /* ([int errno], string format, ...) */
 {
     int msglen = -1, errlen;
     const int xerrno = get_xinteger(1, (int) *x_errno_ptr);
-    const char *msg = print_formatted(2, &msglen);
+    const char *msg = print_formatted(2, &msglen, NULL);
     char err[80];
 
     errlen = sxprintf(err, sizeof(err), ": %s (%d)", str_error(xerrno), xerrno);

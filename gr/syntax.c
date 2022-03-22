@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntax_c,"$Id: syntax.c,v 1.58 2020/04/13 01:22:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntax_c,"$Id: syntax.c,v 1.59 2021/06/10 06:13:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntax.c,v 1.58 2020/04/13 01:22:57 cvsuser Exp $
+/* $Id: syntax.c,v 1.59 2021/06/10 06:13:02 cvsuser Exp $
  * Syntax pre-processor.
  *
  *
@@ -2297,8 +2297,8 @@ parse_lines(SyntaxTable_t *st, LINENO lineno, LINENO num)
     ED_TRACE(("syntax::parse_lines(flags:0x%04x, lineno:%d, num:%d, numline:%d)\n", \
         st->st_flags, lineno, num, (int)curbp->b_numlines))
 
-    lp = vm_lock_line(lineno);
-    while (1) {                                 /* parse current line */
+    lp = vm_lock_line2(lineno);
+    while (lp) {                                /* parse current line */
         lineflags_t state = parse_line(st, lp);
 
         liflagclr(lp, LI_DIRTY);

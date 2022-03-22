@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_spell_c,"$Id: m_spell.c,v 1.42 2020/04/21 00:01:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_spell_c,"$Id: m_spell.c,v 1.43 2021/06/10 06:13:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_spell.c,v 1.42 2020/04/21 00:01:56 cvsuser Exp $
+/* $Id: m_spell.c,v 1.43 2021/06/10 06:13:02 cvsuser Exp $
  * Spell primitives.
  *
  *      Enchant - AbiWord spell-checker generic interface
@@ -21,7 +21,6 @@ __CIDENT_RCSID(gr_m_spell_c,"$Id: m_spell.c,v 1.42 2020/04/21 00:01:56 cvsuser E
  *      myspell
  *          http://linguscomponent.openoffice.org
  *              OpenOffice original - based on pspell now aspell
- *
  *
  * Copyright (c) 1998 - 2018, Adam Young.
  * This file is part of the GRIEF Editor.
@@ -346,7 +345,7 @@ spell_check_buffer(LINENO start, LINENO end, int tokenize, int suggest, int uniq
         for (line = start; line < end; ++line) {
             LINE_t *clp;
 
-            if (NULL != (clp = vm_lock_line(line))) {
+            if (NULL != (clp = vm_lock_line2(line))) {
                 const LINECHAR *text;
                 int length;
 
@@ -354,8 +353,8 @@ spell_check_buffer(LINENO start, LINENO end, int tokenize, int suggest, int uniq
                     lst = spell_check_string(bp, (const char *)text, length,
                                 tokenize, suggest, line, (unique ? &wordtbl : NULL), lst, &len);
                 }
+                vm_unlock(line);
             }
-            vm_unlock(line);
         }
         stbl_clear(&wordtbl);
         if (lst) {
@@ -1316,5 +1315,5 @@ do_spell_distance(void)         /* int (string a, string b) */
     ret = EditDistance(s1, s2);
     acc_assign_int(ret);
 }
-/*end*/
 
+/*end*/

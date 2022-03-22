@@ -1,11 +1,11 @@
 #ifndef GR_BUILTIN_H_INCLUDED
 #define GR_BUILTIN_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_builtin_h,"$Id: builtin.h,v 1.25 2020/04/21 00:01:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_builtin_h,"$Id: builtin.h,v 1.26 2021/10/18 13:20:42 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: builtin.h,v 1.25 2020/04/21 00:01:55 cvsuser Exp $
+/* $Id: builtin.h,v 1.26 2021/10/18 13:20:42 cvsuser Exp $
  * Builtin primitive table.
  *
  *
@@ -34,6 +34,7 @@ extern void                 execute_event_ctrlc(void);
 extern void                 execute_event_usr1(void);
 extern void                 execute_event_usr2(void);
 extern const char *         execute_name(void);
+
 extern void                 set_hooked(void);
 
 extern LINENO              *cur_line, *cur_col;

@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_select_c,"$Id: w32_select.c,v 1.12 2020/04/20 23:18:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_select_c,"$Id: w32_select.c,v 1.14 2022/03/21 14:29:41 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  *  Windows 'select' compat interface
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -21,10 +21,10 @@ __CIDENT_RCSID(gr_w32_select_c,"$Id: w32_select.c,v 1.12 2020/04/20 23:18:24 cvs
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Notice: Portions of this text are reprinted and reproduced in electronic form. from
@@ -280,14 +280,23 @@ sel_console(Select_t *selfd)
         selfd->s_avail |= T_WRITE;
 
     if (selfd->s_wanted & T_READ)
-        while (PeekConsoleInput(h, &k, 1, &count) && count) {
+#if defined(USE_UNICODE)
+        while (PeekConsoleInputW(h, &k, 1, &count) && count) {
+#else
+        while (PeekConsoleInputA(h, &k, 1, &count) && count) {
+#endif
             if (k.EventType == KEY_EVENT) {
                 if (k.Event.KeyEvent.bKeyDown) {
                     selfd->s_avail |= T_READ;
                     break;
                 }
             }
-	    (void) ReadConsoleInput (h, &k, 1, &count);
+
+#if defined(USE_UNICODE)
+	    (void) ReadConsoleInputW(h, &k, 1, &count);
+#else
+	    (void) ReadConsoleInputA(h, &k, 1, &count);
+#endif
         }
 }
 
@@ -341,4 +350,3 @@ sel_unknown(Select_t *selfd)
 }
 
 /*end*/
-

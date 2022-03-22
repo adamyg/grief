@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_buffer_c,"$Id: buffer.c,v 1.48 2020/04/21 00:01:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_buffer_c,"$Id: buffer.c,v 1.50 2021/10/18 13:16:15 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: buffer.c,v 1.48 2020/04/21 00:01:55 cvsuser Exp $
+/* $Id: buffer.c,v 1.50 2021/10/18 13:16:15 cvsuser Exp $
  * Buffer managment.
  *
  *
@@ -309,9 +309,9 @@ buf_anycb(void)
     for (bp = buf_first(); bp; bp = buf_next(bp)) {
         if (buf_isdirty(bp)) {
             if (BFTST(bp, BF_AUTOWRITE)) {      /* unconditonal write */
-                curbp = bp;
+                set_curbp(bp);
                 if (file_write(NULL, 0 /*TODO - WRITE_NOTRIGGER*/) < 0) {
-                    curbp = saved_curbp;
+                    set_curbp(saved_curbp);
                     return TRUE;
                 }
             } else {
@@ -319,7 +319,7 @@ buf_anycb(void)
             }
         }
     }
-    curbp = saved_curbp;
+    set_curbp(saved_curbp);
 
     if (0 == mods) {
         return FALSE;
@@ -350,15 +350,15 @@ buf_anycb(void)
 
     for (bp = buf_first(); bp; bp = buf_next(bp)) {
         if (buf_isdirty(bp)) {
-            curbp = bp;
+            set_curbp(bp);
             if (file_write(NULL, 0 /*XXX - WRITE_NOTRIGGER*/) < 0) {
-                curbp = saved_curbp;
+                set_curbp(saved_curbp);
                 return TRUE;
             }
         }
     }
 
-    curbp = saved_curbp;
+    set_curbp(saved_curbp);
     return FALSE;
 }
 
@@ -746,7 +746,7 @@ buf_kill(int bufnum)
             }
         }
         if (NULL == curbp) {
-            curbp = buf_first();
+             curbp = buf_first();
         }
         assert(curbp != bp);
         set_hooked();
@@ -943,8 +943,7 @@ buf_line_length(const BUFFER_t *bp, /*__CBOOL*/ int marked)
         woldline = curwp->w_old_line;
     }
 
-    curbp = (BUFFER_t *)bp;
-    set_hooked();
+    set_curbp((BUFFER_t *)bp);
     if (! marked || FALSE == anchor_get(NULL, NULL, &a)) {
         a.start_line = 1;
         a.end_line = curbp->b_numlines;         /* NEWLINE */
@@ -952,7 +951,7 @@ buf_line_length(const BUFFER_t *bp, /*__CBOOL*/ int marked)
 
     for (line = a.start_line; line <= a.end_line; ++line) {
         if ((col = line_column_eol(line)) > maxcol) {
-            maxlinep = vm_lock_line(line);
+            maxlinep = vm_lock_line2(line);
             maxcol = col;
         }
     }
@@ -962,8 +961,7 @@ buf_line_length(const BUFFER_t *bp, /*__CBOOL*/ int marked)
         curbp->b_maxlength = maxcol;
     }
 
-    curbp = saved_curbp;
-    set_hooked();
+    set_curbp(saved_curbp);
 
     /* Make sure buffer is repositioned where it was. */
     if (curwp) {
@@ -990,9 +988,7 @@ buf_change_window(WINDOW_t *wp)
     set_buffer_parms(curbp, curwp);
     curwp->w_status |= WFHARD;
     wp->w_status |= WFHARD;
-    curwp = wp;
-    curbp = curwp->w_bufp;
-    set_hooked();
+    set_curwpbp(wp, wp->w_bufp);
 }
 
 

@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mchar_info_c,"$Id: mchar_info.c,v 1.19 2018/10/01 20:59:48 cvsuser Exp $")
+__CIDENT_RCSID(gr_mchar_info_c,"$Id: mchar_info.c,v 1.20 2021/06/13 16:28:51 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mchar_info.c,v 1.19 2018/10/01 20:59:48 cvsuser Exp $
+/* $Id: mchar_info.c,v 1.20 2021/06/13 16:28:51 cvsuser Exp $
  * Locale/multibyte character information.
  *
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2021, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -253,7 +253,7 @@ mchar_info_init(void)
      *      GRPATH/charset.alias
      */
     charset_alias_init();
-    mchar_alias_load(CHARSET_MODE_INI, "crcharset.list");
+    mchar_alias_load(CHARSET_MODE_INI, "grcharset.list");
     mchar_alias_load(CHARSET_MODE_X11, "charset.alias");
     return 0;
 }
@@ -607,5 +607,5 @@ charset_map(const char *name, int namelen)
     }
     return NULL;
 }
-/*end*/
 
+/*end*/

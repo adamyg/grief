@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: ff.cr,v 1.39 2020/05/04 20:11:58 cvsuser Exp $
+/* $Id: ff.cr,v 1.40 2021/07/05 15:01:28 cvsuser Exp $
  * Find find and other assorted directory/file searches.
  *
  *  ff      File find.
@@ -26,6 +26,7 @@
 #define BACKWARD_SLASH      '\\'
 #define WILD                "?*"
 #define CURRENTDIR          "."
+#define DELIMIT             ";"
 
 #define FF_MINWIDTH         68
 
@@ -50,6 +51,7 @@
 #define F_PIPE              0x0400
 #define F_DIR               0x0800
 #define F_CURRBUFFER        0x1000
+#define F_TOPLINE           0x2000
 
 /* Globals */
 static string               ffslashc;
@@ -116,6 +118,7 @@ ff(~string, ~string, ~int)
         return "";
     }
     set_buffer(ff_buf);
+    set_buffer_type(NULL, BFTYP_UTF8);
     tabs(7, 13);
 
     if (alldirs == "<") {
@@ -271,10 +274,11 @@ dir(~string, ~string)
 string
 tree(~string)
 {
-    string  directory, tmpstr;
-    int     old_buf = inq_buffer(),
-               msg_level = inq_msg_level();
-    int     tree_buf, picked_no;
+    string  directory, curdir, result, tmp;
+    int old_buf = inq_buffer(),
+            msg_level = inq_msg_level();
+    int tree_buf, picked_no;
+    int ilen;
 
     /* Retrieve base directory */
     if (! get_parm(0, directory, "Directory: ", NULL, CURRENTDIR)) {
@@ -290,19 +294,20 @@ tree(~string)
         return "";
     }
 
-    tmpstr = directory;
-    if (rindex(tmpstr, sysslash()) != strlen(tmpstr)) {
-        tmpstr += sysslash();
+    tmp = directory;
+    if (rindex(tmp, sysslash()) != strlen(tmp)) {
+        tmp += sysslash();
     }
 
     if ((tree_buf =
-            create_buffer("Directory Tree", tmpstr + TREE_FILE, FALSE)) < 0) {
+            create_buffer("Directory Tree", tmp + TREE_FILE, FALSE)) < 0) {
         message("tree: Unable to access directory buffer.");
         return "";
     }
 
     set_buffer(tree_buf);
     set_buffer_flags(tree_buf, BF_SYSBUF|BF_NO_UNDO, ~BF_BACKUP);
+    set_buffer_type(NULL, BFTYP_UTF8);
 
     if (inq_lines() <= 1) ffrescan = 1;         /* new buffer; scan */
 
@@ -315,18 +320,20 @@ tree(~string)
             end_of_buffer(); delete_block();
             write_buffer();
 
-            /* Insert BASE directory */
-            getwd("", tmpstr);
+            /* Base directory */
+            getwd("", curdir);
             cd(directory);
             getwd("", directory);
-            insert(directory);
-            move_abs(0, TREE_WIDTH);
-            insert(";" + directory);
 
-            /* Create the TREE from the base directory */
-                                                /* recursive, tree */
-            _ff(directory, "", "", F_RECURSIVE|F_SPECIALS|F_DIRTREE);
-            cd(tmpstr);
+            if ((ilen = wcwidth(directory)) > TREE_WIDTH) {
+                ilen = TREE_WIDTH;
+            }
+            insertf("%S%*s%S", directory,
+                TREE_WIDTH - ilen, DELIMIT, directory);
+
+            /* Recursive, tree */
+            _ff(directory, "", "", F_RECURSIVE|F_SPECIALS|F_DIRTREE|F_TOPLINE);
+            cd(curdir);
             write_buffer();                     /* flush result */
             message("");
             ffrescan = 0;
@@ -348,7 +355,7 @@ tree(~string)
                                                 /* Left,bottom,right,top */
             _dialog_menu(col, (sline / 3) * 2, col+width, 3,
                 "DirTree", "<Esc>, <Enter>, <F2> Re-Scan, <F5> Search",
-                NULL, tree_buf, "_tree_act", TRUE, picked_no, tmpstr);
+                NULL, tree_buf, "_tree_act", TRUE, picked_no, result);
 
             set_buffer(tree_buf);
         }
@@ -359,9 +366,9 @@ tree(~string)
                 directory = "";
             } else {
                 top_of_buffer();
-                move_abs(0, TREE_WIDTH + 1);
-                directory = trim(read());
-                directory += substr(tmpstr, index(tmpstr, ";")+1);
+                tmp = rtrim(read());
+                directory = substr(tmp, rindex(tmp, DELIMIT) + 1);
+                directory += substr(result, rindex(result, DELIMIT) + 1);
             }
             break;
         }
@@ -573,6 +580,7 @@ tsmain(int flags, string pattern, string file, string caller)
 
     set_buffer(tsbuf);
     set_buffer_flags(NULL, BF_NO_UNDO, ~BF_BACKUP);
+    set_buffer_type(NULL, BFTYP_UTF8);
 
     /* search */
     if (flags & F_PIPE) {                       /* piping search results */
@@ -1018,11 +1026,12 @@ _ff(string rootdir, string fmask, string pattern, int flags)
 
     setwidth(pattern);                          /* set display width */
 
-    _ff_lines = 0;
+    _ff_lines   = 0;
+    if (flags & F_TOPLINE) _ff_lines = 1;
     _ff_rootdir = rootdir;
-    _ff_fmask = fmask;
+    _ff_fmask   = fmask;
     _ff_pattern = pattern;
-    _ff_flags = flags;
+    _ff_flags   = flags;
 
     return _ff2((flags & F_DIRTREE ? 1 : 0), 0);
 }
@@ -1035,8 +1044,8 @@ _ff2(int dirtree, int dirmask)
     extern int _ff_lines, _ff_flags;
     string curdir, subdir, buffer, name;
     int dircnt, diridx;
+    int mode, ilen, i;
     list dirlst;
-    int mode, i;
 
     /* Process files within the directory */
     getwd("", curdir);
@@ -1065,24 +1074,26 @@ _ff2(int dirtree, int dirmask)
         date(cyear, NULL, NULL);
         file_pattern(_ff_fmask);
         while (find_file(name, size, mtime, NULL, mode)) {
-                                                /* append to directory list */
+
+            /* Append to directory list */
             if (mode & S_IFDIR) {
-                if (_ff_fmask == WILD)
-                    if (substr(name, 1, 1) != ".")
+                if (_ff_fmask == WILD) {
+                    if (wsubstr(name, 1, 1) != ".")
                     {/* Save the need the scan directory twice */
                         dirlst += name;
-                        dircnt++;
+                        ++dircnt;
                     }
+                }
                 continue;
-            }
-
+            }   
+            
             /* Filter specials */
             if (0 == (mode & S_IFDIR) && 0 == (_ff_flags & F_SPECIALS)) {
                 if (name == GRRESTORE_FILE || name == GRSTATE_FILE) {
                     continue;                   /* grief internal */
                 }
 
-                if (substr(name, 1, 1) == ".") {
+                if (wsubstr(name, 1, 1) == ".") {
                     continue;                   /* special name */
                 }
             }
@@ -1096,39 +1107,37 @@ _ff2(int dirtree, int dirmask)
             }
 
             /* Default action, build directory list */
-            buffer = curdir+name;
-            if ((i = strlen(buffer)) > flen) {
-                buffer = substr(buffer, i-flen);
-                if ((i = index(buffer, sysslash()))) {
-                    buffer = substr(buffer, i);
+            buffer = curdir + name;
+            if ((i = wstrlen(buffer)) > flen) {
+                buffer = wsubstr(buffer, i - flen);
+                if ((i = windex(buffer, sysslash())) > 0) {
+                    buffer = wsubstr(buffer, i);
                 }
                 buffer = "..." + buffer;
             }
 
-            if (mode & S_IFDIR) {
-                sprintf(buffer,  " %-" + flen + "s <DIR>  ",
-                    buffer+sysslash());
+            if (_ff_lines) insert("\n");
+            if (mode & S_IFDIR) {               /* file/dir name/size */
+                insertf(" %-*S <DIR>  ", flen, buffer + sysslash());
             } else {
-                sprintf(buffer, " %-" + flen + "s %7d", buffer, size);
+                insertf(" %-*S %7d", flen, buffer, size);
             }
-            insert(buffer);                     /* file/dir name/size */
 
             if (smode) {                        /* mode */
                 insert(" " + mode_string(mode));
             }
 
-                                                /* modification date/time */
+            /* Modification date/time */
             localtime(mtime, year, NULL, day, mon, NULL, hour, min, NULL);
             if (cyear == year) {
-                sprintf(buffer,  " %s %2d %02d:%02d ;", substr(mon,1,3), day, hour, min);
+                insertf(" %s %2d %02d:%02d ", substr(mon,1,3), day, hour, min);
             } else {
-                sprintf(buffer, " %s %2d  %04d ;", substr(mon,1,3), day, year);
+                insertf(" %s %2d  %04d ", substr(mon,1,3), day, year);
             }
-            insert(buffer);
 
-            insert(curdir + name + "\n");       /* full path */
-
-            if (++_ff_lines % 100 == 0) {
+            /* Full path */
+            insert(DELIMIT + curdir + name);
+            if ((++_ff_lines % 50) == 0) {
                  if (aborted_pressed()) {
                      return ".";                /* user abort ? */
                 }
@@ -1147,13 +1156,12 @@ _ff2(int dirtree, int dirmask)
         while (find_file(name, NULL, NULL, NULL, mode))
             if ((mode & S_IFDIR) && substr(name, 1, 1) != ".") {
 #if defined(S_IFLNK)
-                if (0 == lstat(name, NULL, NULL, NULL, NULL, mode) &&
-                        (mode & S_IFLNK)) {
+                if (0 == lstat(name, NULL, NULL, NULL, NULL, mode) && (mode & S_IFLNK)) {
                     continue;                   /* dont follow links */
                 }
 #endif
                 dirlst += name;                 /* append to directory list */
-                dircnt++;
+                ++dircnt;
             }
     }
 
@@ -1166,9 +1174,9 @@ _ff2(int dirtree, int dirmask)
     }
 
     /* Recurse list */
-    diridx = 0;                                 /* directory list, into list */
+    diridx = 0;                                 // directory list, into list
     while (diridx < dircnt) {
-        name = dirlst[ diridx ];                /* Next directory name */
+        name = dirlst[ diridx ];                // next directory name
         subdir = curdir + name + sysslash();
 
         /*  Draw tree structure:
@@ -1177,42 +1185,30 @@ _ff2(int dirtree, int dirmask)
          *      a given level.
          */
         if (dirtree) {
-            buffer = "\n";
+            buffer = "";
 
-#if defined(MSDOS) && (0)                       // MCHAR???
-            for (i=2; i<dirtree; ++i) {         // parents
-                if (dirmask & (1<<i)) {
-                    buffer += "     ";
-                } else {
-                    buffer += "\xB3    ";
-                }
-            }
-            if (diridx+1 >= dircnt) {           // level
-                dirmask |= (1 << dirtree);
-                buffer += "\xC0";
-            } else {
-                buffer += "\xC3";
-            }
-            buffer += "\xC4\xC4\xC4\xC4\xC4" + upper(name);
-#else
-            for (i=2; i<dirtree; ++i) {         // parents
-                if (dirmask & (1<<i)) {
+            for (i = 2; i < dirtree; ++i) {     // parents
+                if (dirmask & (1 << i)) {
                     buffer += "     ";
                 } else {
                     buffer += "|    ";
                 }
             }
-            if (diridx+1 >= dircnt) {           // level
+
+            if ((diridx + 1) >= dircnt) {       // level
                 dirmask |= (1 << dirtree);
             }
-            buffer += "+----" + upper(name);
-#endif
-            insert(buffer);
 
-            move_abs(0, TREE_WIDTH);            // save the whole directory path
-            insert(";");
-            insert(lower(substr(subdir, strlen(_ff_rootdir)+1)) );
-            if (++_ff_lines % 200 == 0) {
+            buffer += "+---- ";
+            buffer += name;
+
+            if ((ilen = wcwidth(buffer)) > TREE_WIDTH) {
+                ilen = TREE_WIDTH;
+            }
+            insertf("\n%S%*s%S", buffer, TREE_WIDTH - ilen, DELIMIT,
+                lower(substr(subdir, strlen(_ff_rootdir) + 1)));
+
+            if ((++_ff_lines % 100) == 0) {
                 if (aborted_pressed()) {
                     return ".";
                 }
@@ -1228,8 +1224,7 @@ _ff2(int dirtree, int dirmask)
         }
         cd(curdir);                             // restore directory
 
-        /* Increment list reference */
-        diridx++;
+        ++diridx;                               // list reference
     }
     return "";
 }
@@ -1261,16 +1256,14 @@ shortname( string name, int add )
 {
     int len, maxlen, i;
 
-    if (add == 0) {
-        add = 10;
-    }
-    len = strlen(name);
+    if (add == 0) add = 10;
+    len = wstrlen(name);
     maxlen = ffwidth - (31 + add);              // 31=std status line length
     if (len < maxlen || maxlen < 0) {
         return name;
     }
-    i = maxlen/2;
-    return substr(name, 1, i) + "~" + substr(name, len - (maxlen - (i + 2)));
+    i = maxlen / 2;
+    return wsubstr(name, 1, i) + "~" + wsubstr(name, len - (maxlen - (i + 2)));
 }
 
 
@@ -1294,8 +1287,8 @@ validdir(string newdir, int restore)
     if (cd(newdir) == FALSE) {
         int ctm;
 
-        error("%s : (%s)", shortname(newdir, strlen(strerror())+4), strerror());
-        ctm = time()+5;
+        error("%s : (%s)", shortname(newdir, strlen(strerror()) + 4), strerror());
+        ctm = time() + 5;
         while (read_char(1) == -1 && ctm > time()) {
             refresh();
         }
@@ -1399,7 +1392,7 @@ searchbuffer(int dest)
         int hlen = strlen(home);
 
         if (hlen && (home == substr(file, 1, hlen))) {
-            file = "~"+substr(file, hlen + 1);  /* strip home dir */
+            file = "~"+substr(file, hlen + 1);  // strip home dir
         }
         set_buffer(dest);
         insert(" File: " + file + " Pattern: " + _ff_pattern + "\n");
@@ -1447,8 +1440,7 @@ readline(string file)
     text_line = rtrim(read(flen));
     beginning_of_line();
     down();
-    sprintf( text_line, " %5d,%3d %-" + flen + "s;%s\n",
-        line, col, text_line, file);
+    sprintf(text_line, " %5d,%3d %-" + flen + "S;%S\n", line, col, text_line, file);
     return(text_line);
 }
 

@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_poll_c,"$Id: w32_poll.c,v 1.6 2019/03/15 23:12:18 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_poll_c,"$Id: w32_poll.c,v 1.8 2022/03/21 14:29:41 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 poll system calls
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -21,10 +21,10 @@ __CIDENT_RCSID(gr_w32_poll_c,"$Id: w32_poll.c,v 1.6 2019/03/15 23:12:18 cvsuser 
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Notice: Portions of this text are reprinted and reproduced in electronic form. from
@@ -209,7 +209,7 @@ w32_poll(int native, struct pollfd *fds, int cnt, int timeout)
     //      WINSOCK_API_LINKAGE int WSAAPI WSAPoll(LPWSAPOLLFD, ULONG, INT);
     //          ==> source: ws2_32.lib
     //
-    struct timeval tmval;
+    struct timeval tmval = {0};
     struct fd_set rfds;
     struct fd_set wfds;
     struct fd_set efds;
@@ -328,7 +328,7 @@ w32_poll(int native, struct pollfd *fds, int cnt, int timeout)
          -      OOB data is available for reading (only if SO_OOBINLINE is disabled).
          */
         BOOL    state;
-        u_long  val;
+        u_long  val = 0;
         int     len;
 
         for (i = 0; i < cnt; ++i) {
@@ -371,4 +371,3 @@ w32_poll(int native, struct pollfd *fds, int cnt, int timeout)
 }
 
 /*end*/
-

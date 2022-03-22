@@ -1,8 +1,8 @@
-/* $Id: libpaths.c,v 1.8 2015/03/01 02:56:37 cvsuser Exp $
+/* $Id: libpaths.c,v 1.10 2021/06/14 14:12:57 cvsuser Exp $
  *
  * libcitrus <paths.h> implementation
  *
- * Copyright (c) 2012-2015 Adam Young.
+ * Copyright (c) 2012-2021 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,6 +53,7 @@ static const char *     x_application_dir = APPLICATIONDIR;
 
 static const char *     getpath(const char *application, const char *dir, char *buffer, const int buflen);
 static int              getexedir(char *buf, int maxlen);
+static int              getdlldir(char *buf, int maxlen);
 static void             dospath(char *path);
 
 
@@ -197,12 +198,23 @@ getpath(const char *application, const char *dir, char *buffer, const int buflen
 {
     int len, done = FALSE;
 
-    // <EXEPATH>, generally same as INSTALLDIR
-    if ((len = getexedir(buffer, buflen)) > 0) {
+    // <DLLPATH>, generally same as INSTALLDIR
+    if ((len = getdlldir(buffer, buflen)) > 0) {
         _snprintf(buffer + len, buflen - len, "/%s", dir);
         buffer[buflen - 1] = 0;
         if (0 == _access(buffer, 0)) {
             done = TRUE;
+        }
+    }
+
+    // <EXEPATH>, generally same as INSTALLDIR
+    if (! done) {
+        if ((len = getexedir(buffer, buflen)) > 0) {
+            _snprintf(buffer + len, buflen - len, "/%s", dir);
+            buffer[buflen - 1] = 0;
+            if (0 == _access(buffer, 0)) {
+                done = TRUE;
+            }
         }
     }
 
@@ -256,14 +268,43 @@ getpath(const char *application, const char *dir, char *buffer, const int buflen
 static int
 getexedir(char *buf, int maxlen)
 {
-    if (GetModuleFileName(NULL, buf, maxlen)) {
+    if (GetModuleFileNameA(NULL, buf, maxlen)) {
         const int len = strlen(buf);
         char *cp;
 
-        for (cp = buf + len; (cp > buf) && (*cp != '\\'); cp--)
+        for (cp = buf + len; (cp > buf) && (*cp != '\\'); --cp)
             /*cont*/;
         if ('\\' == *cp) {
             cp[1] = '\0';                       // remove program
+            return (cp - buf) + 1;
+        }
+        return len;
+    }
+    return -1;
+}
+
+
+static int
+getdlldir(char *buf, int maxlen)
+{
+#if defined(__WATCOMC__)
+    HMODULE hm = NULL;
+
+    if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCSTR) &__citrus_PATH_ICONV, &hm) != 0 &&
+        GetModuleFileNameA(hm, buf, maxlen)) {
+#else
+    EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+
+    if (GetModuleFileNameA((HINSTANCE)&__ImageBase, buf, maxlen)) {
+#endif
+        const int len = strlen(buf);
+        char *cp;
+
+        for (cp = buf + len; (cp > buf) && (*cp != '\\'); --cp)
+            /*cont*/;
+        if ('\\' == *cp) {
+            cp[1] = '\0';                       // remove library
             return (cp - buf) + 1;
         }
         return len;
@@ -290,3 +331,4 @@ dospath(char *path)
     }
     *path = 0;
 }
+

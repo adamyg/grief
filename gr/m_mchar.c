@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_mchar_c,"$Id: m_mchar.c,v 1.11 2014/10/22 02:33:05 ayoung Exp $")
+__CIDENT_RCSID(gr_m_mchar_c,"$Id: m_mchar.c,v 1.15 2021/07/05 15:01:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_mchar.c,v 1.11 2014/10/22 02:33:05 ayoung Exp $
+/* $Id: m_mchar.c,v 1.15 2021/07/05 15:01:27 cvsuser Exp $
  * Multibyte/locale primitives.
  *
  *
@@ -22,6 +22,8 @@ __CIDENT_RCSID(gr_m_mchar_c,"$Id: m_mchar.c,v 1.11 2014/10/22 02:33:05 ayoung Ex
 #include <chkalloc.h>
 
 #include "m_mchar.h"
+#include "../libchartable/libchartable.h"
+#include "../libwidechar/widechar.h"
 
 #include "accum.h"                              /* acc_...() */
 #include "buffer.h"                             /* buf_...() */
@@ -89,12 +91,12 @@ __CIDENT_RCSID(gr_m_mchar_c,"$Id: m_mchar.c,v 1.11 2014/10/22 02:33:05 ayoung Ex
       ! SCSU            BFTYP_SCSU
       ! UTF-7           BFTYP_UTF7      65002
 
-      ! UTF-4           BFTYP_UCS4
-      ! UTF-4be         BFTYP_UCS4
-      ! UTF-4le         BFTYP_UCS4
-      ! UTF-2           BFTYP_UCS2
+      ! UTF-2           BFTYP_UCS2                  BFTYP_UTF16 aliases
       ! UTF-2be         BFTYP_UCS2
       ! UTF-2le         BFTYP_UCS2
+      ! UTF-4           BFTYP_UCS4                  BFTYP_UTF32 aliases
+      ! UTF-4be         BFTYP_UCS4
+      ! UTF-4le         BFTYP_UCS4
 
       ! cp437           BFTYP_SBCS      437         OEM/US, ASCII
       ! cp737           BFTYP_SBCS      737         Greek, ISO-8859-7
@@ -301,4 +303,43 @@ inq_encodings(void)             /* list ([int flags]) */
 {
     //TODO
 }
+
+
+void
+do_wcwidth(void)                /* int (string str | int character), [int default]] */
+{
+    int width = -1;
+
+    if (isa_integer(1)) {
+        if ((width = ucs_width(get_xinteger(1, 0))) < 0) {
+            width = get_xinteger(2, -1);
+        }
+
+    } else if (isa_string(1)) {
+        width = utf8_swidth(get_str(1));
+    }
+
+    acc_assign_int((accint_t) width);
+}
+
+
+void
+do_set_unicode_version(void)
+{
+    int version = -1;
+
+    if (isa_string(1)) {
+        version = ucs_width_set(get_str(1));
+    }
+
+    acc_assign_int((accint_t) version);
+}
+
+
+void
+inq_unicode_version(void)
+{
+    acc_assign_str(ucs_width_version(), -1);
+}
+
 /*end*/

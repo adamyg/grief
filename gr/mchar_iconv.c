@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mchar_iconv_c,"$Id: mchar_iconv.c,v 1.22 2018/10/01 20:59:48 cvsuser Exp $")
+__CIDENT_RCSID(gr_mchar_iconv_c,"$Id: mchar_iconv.c,v 1.24 2021/06/19 09:41:55 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mchar_iconv.c,v 1.22 2018/10/01 20:59:48 cvsuser Exp $
+/* $Id: mchar_iconv.c,v 1.24 2021/06/19 09:41:55 cvsuser Exp $
  * Character-set conversion/mapping interface and adapters.
  *
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2021, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -124,8 +124,6 @@ static mchar_istream_t *        icnv_stream_open(struct mchar_iconv *ic, int fd,
 static void                     icnv_stream_close(mchar_iconv_t *ic, mchar_istream_t *is);
 #endif
 
-extern void                     charset_iconv_init(void);       /* FIXME/XXX */
-
 static mchar_iconv_t            x_iconv_internal[] = {
             { 0, "binary", 1,
                     uchar_decode,
@@ -164,6 +162,21 @@ static mchar_iconv_t            x_iconv_internal[] = {
                     utf32_length,
             }
         };
+
+
+/*  Function:           mchar_iconv_init
+ *      Run-time initialisation
+ *
+ */
+void
+mchar_iconv_init(void)
+{
+#if defined(_WIN32) && defined(WIN32_DYNAMIC_ICONV)
+#if defined(HAVE_LIBICONV_CITRUS_DLL)
+    w32_iconv_dllname(HAVE_LIBICONV_CITRUS_DLL);
+#endif
+#endif
+}
 
 
 /*  Function:           mchar_iconv_open
@@ -459,7 +472,7 @@ static const void *
 utf8_decode(mchar_iconv_t *ic, const void *src, const void *cpend, int32_t *cooked, int32_t *raw)
 {
     __CUNUSED(ic)
-    return charset_utf8_decode(src, cpend, cooked, raw);
+    return charset_utf8_decode_cook(src, cpend, cooked, raw);
 }
 
 
@@ -934,10 +947,10 @@ icnv_open(const char *encoding)
     mchar_iconv_t *ic;
 
     if (encoding) strxcpy(toencoding, encoding, sizeof(toencoding));
-    strxcat(toencoding, " //TRANSLIT", sizeof(toencoding));
+    strxcat(toencoding, "//TRANSLIT", sizeof(toencoding));
 
     if (NULL == (ic = chk_alloc(sizeof(mchar_iconv_t) + encodinglen)) ||
-            ICONV_NULL == (ihandle = my_iconv_open("utf-8 //IGNORE", encoding)) ||
+            ICONV_NULL == (ihandle = my_iconv_open("utf-8//TRANSLIT", encoding)) || /*IGNORE or TRANSLIT?*/
             ICONV_NULL == (ohandle = my_iconv_open(toencoding, "utf-8"))) {
         if (ic) {
             if (ICONV_NULL != ihandle) {

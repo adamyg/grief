@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.25 2020/06/20 01:29:20 cvsuser Exp $
+# $Id: Makefile.in,v 1.27 2022/03/21 14:29:39 cvsuser Exp $
 # libwin32 makefile.
 #
 #
-# Copyright (c) 1998 - 2020, Adam Young.
+# Copyright (c) 2007, 2012 - 2022 Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -88,7 +88,7 @@ LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
 
 CINCLUDE=	-I$(D_INC) @CINCLUDE@ -I.
-CEXTRA=		@DEFS@
+CEXTRA=		-DUTF8FILENAMES=1 @DEFS@
 
 ifeq ("$(BUILD_TYPE)","release")
 CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
@@ -113,24 +113,32 @@ YFLAGS=		-d
 W32LIB=		$(D_LIB)/$(LP)w32_static$(A)
 W32DLL=		$(D_LIB)/$(LP)w32.la
 
-VERSION=	1.1.0
+VERSION=	1.2.0
 VERSIONSPEC=	$(subst .,:,$(VERSION))
 
 CSOURCES=\
+	w32_access.c \
 	w32_check.c \
 	w32_child.c \
+	w32_chmod.c \
 	w32_chown.c \
 	w32_close.c \
 	w32_dir.c \
 	w32_dirent.c \
+	w32_wdirent.c \
 	w32_dlfcn.c \
+	w32_direntunc.c \
 	w32_domainname.c \
+	w32_err.c \
 	w32_errno.c \
+	w32_flock.c \
 	w32_fcntl.c \
 	w32_fsync.c \
 	w32_getcwd.c \
+	w32_getcwdd.c \
 	w32_gethostname.c \
 	w32_getopt.c \
+	w32_getopt_long.c \
 	w32_getrusage.c \
 	w32_getsubopt.c \
 	w32_getlocale.c \
@@ -153,7 +161,9 @@ CSOURCES=\
 	w32_progname.c \
 	w32_pwd.c \
 	w32_read.c \
+	w32_readv.c \
 	w32_realpath.c \
+	w32_rename.c \
 	w32_reparse.c \
 	w32_rwlock.c \
 	w32_select.c \
@@ -181,7 +191,8 @@ CSOURCES=\
 	w32_unlink.c \
 	w32_user.c \
 	w32_util.c \
-	w32_write.c
+	w32_write.c \
+	w32_writev.c
 
 LIBOBJS=\
 	$(addprefix $(D_OBJ)/,$(subst .c,$(O),$(CSOURCES)))
@@ -197,7 +208,7 @@ endif
 OBJS=		$(LIBOBJS) $(DLLOBJS)
 LIBS=		$(W32LIB) $(W32DLL)
 TSKS=
-
+INSTALLED=
 
 #########################################################################################
 # Rules
@@ -216,6 +227,7 @@ $(W32LIB):		$(D_OBJ)/.created $(LIBOBJS)
 		$(AR) $(ARFLAGS) $@ $(LIBOBJS)
 		$(RANLIB) $@
 
+INSTALLED+=	$(D_BIN)/libw32.$(VERSION).dll
 $(W32DLL):		CEXTRA += -DLIBW32_DYNAMIC -DLIBW32_LIBRARY
 $(W32DLL):		DLLDEF = -export-symbols libw32.def
 $(W32DLL):		$(DLLOBJS)
@@ -229,7 +241,7 @@ $(D_OBJ)/.created:
 clean:
 		@echo $(BUILD_TYPE) clean
 		-@$(LIBTOOL) --mode=clean $(RM) $(W32DLL) $(DLLOBJS) >/dev/null 2>&1
-		-@$(RM) $(RMFLAGS) $(BAK) $(W32LIB) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
+		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(INSTALLED) $(W32LIB) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
 		-@$(RM) $(RMFLAGS) $(LIBOBJS) >/dev/null 2>&1
 
 $(D_OBJ)/%$(O):		%.c

@@ -1,14 +1,14 @@
 #ifndef GR_ICONV_STREAM_H_INCLUDED
 #define GR_ICONV_STREAM_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_iconv_stream_h,"$Id: iconv_stream.h,v 1.11 2018/10/01 22:10:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_iconv_stream_h,"$Id: iconv_stream.h,v 1.12 2022/03/21 14:59:58 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* iconv_stream.
  *
  *
- * Copyright (c) 2010 - 2018, Adam Young.
+ * Copyright (c) 2010 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

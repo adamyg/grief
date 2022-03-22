@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_err_c,"$Id: w32_err.c,v 1.3 2020/06/18 14:28:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_err_c,"$Id: w32_err.c,v 1.4 2022/03/21 14:29:40 cvsuser Exp $")
 
 /*
  * Copyright (c) 1993
@@ -61,7 +61,7 @@ vwarni(const char *fmt, va_list ap)
 	vwarnxi(fmt, ap);
 	if (fmt != NULL)
 		fputs(": ", stderr);
-	fprintf(stderr, "%s\n", w32_strerror(sverrno)); 
+	fprintf(stderr, "%s\n", w32_strerror(sverrno));
 }
 
 

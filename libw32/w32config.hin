@@ -1,16 +1,16 @@
 #ifndef WIN32_CONFIG_H_INCLUDED
 #define WIN32_CONFIG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.15 2021/04/19 15:17:47 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.19 2022/03/21 14:29:42 cvsuser Exp $")
 __CPRAGMA_ONCE
 /* -*- mode: c; set-indent: 4; -*- */
-/* $Id: w32config.hin,v 1.15 2021/04/19 15:17:47 cvsuser Exp $
+/* $Id: w32config.hin,v 1.19 2022/03/21 14:29:42 cvsuser Exp $
  * Machine configuration.
  *
  * System dependent <config.h> configuration template,
  * Windows targets (see makelib.pl for details).
  *
- * Copyright (c) 1998 - 2021, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the Grief Editor.
@@ -24,7 +24,6 @@ __CPRAGMA_ONCE
  * License for more details.
  * ==end==
  */
-
 
 /*
  *  Target compiler
@@ -115,6 +114,7 @@ __CPRAGMA_ONCE
 #undef HAVE_STDARG_H
 #undef HAVE_STDLIB_H
 #undef HAVE_STDIO_H
+#undef HAVE_STDDEF_H
 #undef HAVE_LIMITS_H
 
 /* AC_HEADER_DIRENT */
@@ -336,6 +336,8 @@ __CPRAGMA_ONCE
 #undef HAVE_UINTMAX_T
 #undef HAVE_INTPTR_T
 #undef HAVE_UINTPTR_T
+#undef HAVE_PTRDIFF_T
+#undef HAVE_LONG_DOUBLE
 #undef HAVE_LONG_LONG_INT
 #undef HAVE_UNSIGNED_LONG_LONG_INT
 #undef HAVE_INT8_T
@@ -472,6 +474,7 @@ __CPRAGMA_ONCE
 #undef HAVE_GETLOGIN_R
 #undef HAVE_GETPWNAM_R
 #undef HAVE_GETPWUID_R
+#undef HAVE__TZSET
 
 #undef HAVE_INDEX
 #undef HAVE_RINDEX
@@ -557,6 +560,7 @@ __CPRAGMA_ONCE
 #undef HAVE_STRSIGNAL
 #undef HAVE_PRCTL
 
+#undef HAVE_WCWIDTH
 #undef HAVE_MBRTOWC
 #undef HAVE_WCRTOMB
 #undef HAVE_WCSCMP
@@ -726,9 +730,9 @@ __CPRAGMA_ONCE
 #undef HAVE_LIBCHARSET_H
 #undef HAVE_LOCALCHARSET_H
 
-#undef HAVE_ICONVL_H
-#undef HAVE_LIBICONVL_DLL
 #undef HAVE_LIBCITRUS
+#undef HAVE_ICONV_CITRUS_H
+#undef HAVE_LIBICONV_CITRUS_DLL
 
         /* compression */
 #undef HAVE_ZLIB_H

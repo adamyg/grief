@@ -42,9 +42,9 @@
 #endif
 
 //disabled functionality
-//  USE_MBRTOWC
-//	 USE_MMAP
-//	 USE_DTOA
+// USE_MBRTOWC
+// USE_MMAP
+// USE_DTOA
 
 #ifdef HAVE_STDARG_H
 #include <stdarg.h>

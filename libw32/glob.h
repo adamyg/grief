@@ -1,12 +1,14 @@
 #ifndef GR_GLOB_H_INCLUDED
 #define GR_GLOB_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_glob_h,"$Id: glob.h,v 1.3 2018/10/11 01:46:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_glob_h,"$Id: glob.h,v 1.4 2022/03/21 14:29:39 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win <glob.h>
+ *
+ * This file is part of the GRIEF Editor.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -21,10 +23,10 @@ __CPRAGMA_ONCE
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Path name pattern matching

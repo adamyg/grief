@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetutf8_c,"$Id: charsetutf8.c,v 1.13 2018/10/01 22:10:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetutf8_c,"$Id: charsetutf8.c,v 1.20 2022/03/21 14:59:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* Multibyte character - UTF8 utility functionality.
  *
  *
- * Copyright (c) 2010 - 2018, Adam Young.
+ * Copyright (c) 2010 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -54,17 +54,26 @@ static __CINLINE int
 utf8_overlong(const int32_t ch, const size_t length)
 {
     if (ch <= 0x80) {
-        if (1 != length) return TRUE;
+        if (1 != length) 
+            return TRUE;
     } else if (ch < 0x800) {
-        if (2 != length) return TRUE;
+        if (2 != length) 
+            return TRUE;
     } else if (ch < 0x10000) {
-        if (3 != length) return TRUE;
+        if (3 != length) 
+            return TRUE;
     } else if (ch < 0x200000) {
-        if (4 != length) return TRUE;
-    } else if (ch < 0x4000000) {
-        if (5 != length) return TRUE;
+        if (4 != length) 
+            return TRUE;
     } else {
-        if (6 != length) return TRUE;
+//      if (ch < 0x4000000) {
+//          if (5 != length) 
+//              return TRUE;
+//      } else {
+//          if (6 != length) 
+//              return TRUE;
+//      }
+        return TRUE;   // RFC 3629, <= 4 bytes
     }
     return FALSE;
 }
@@ -125,8 +134,8 @@ utf8_decode(const void *src, const void *cpend, int32_t *result)
             ret = ch & 0x01;
 
         } else {                                /* invalid continuation (0x80 - 0xbf). */
+            remain = 0;
             ret = -ch;
-            goto done;
         }
 
         while (remain--) {
@@ -154,7 +163,14 @@ done:;
 
 
 const void *
-charset_utf8_decode(const void *src, const void *cpend, int32_t *cooked, int32_t *raw)
+charset_utf8_decode(const void *src, const void *cpend, int32_t *raw)
+{
+    return utf8_decode(src, cpend, raw);
+}
+
+
+const void *
+charset_utf8_decode_cook(const void *src, const void *cpend, int32_t *cooked, int32_t *raw)
 {
     int32_t result = 0;
     const char *ret = utf8_decode(src, cpend, &result);
@@ -182,6 +198,32 @@ charset_utf8_decode_safe(const void *src, const void *cpend, int32_t *cooked)
     }
     *cooked = result;
     return ret;
+}
+
+
+int
+charset_utf8_count(const void *src, const void *cpend)
+{
+    int result = 0;
+    const void *end;
+    int32_t wch;
+
+    while (src < cpend) {
+        if ((end = charset_utf8_decode_safe(src, cpend, &wch)) > src) {
+            ++result;
+            src = end;
+            continue;
+        }
+        break;
+    }
+    return result;
+}
+
+
+int
+charset_utf8_scount(const void *src)
+{
+    return charset_utf8_count(src, (const char *)src + strlen((const char *)src));
 }
 
 
@@ -256,4 +298,5 @@ charset_utf8_encode(const int32_t ch, void *buffer)
     }
     return count;
 }
+
 /*end*/

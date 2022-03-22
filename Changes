@@ -1,6 +1,33 @@
 -*- encoding: utf-8; -*-
 
+Tue Mar 22 18:46:50 2022 adamy
+
+	* BUILD 21, version: 3.2.2
+
+	* libw32 merge.
+
+Mon Jul 12 22:52:00 2021 adamy
+
+	* echo-line winch handling.
+
+	* width-character
+
+		o wcwidth(), set_unique_version() and inq_unicode_version() primitives.
+		o wxxx() primitives().
+		o %S and %W printf formats.
+		o buffer insertion primitives (insert() and insertf()) return width not characters.
+		o read() primitive encoding aware.
+		o wide-character aware cursor movements.
+		o unicode description table, inline character-value.
+		o libiconv() dll relative paths.
+		o 32-bit internal key-codes.
+		o Alt+Keycode handler (win32 - experimental).
+
+	* utf8 filenames.
+
 Mon Apr 12 20:50:30 2021 adamy
+
+	* BUILD 17 release
 
 	* duktape 2.6.0
 

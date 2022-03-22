@@ -1,12 +1,12 @@
 #ifndef GR_INET_H_INCLUDED
 #define GR_INET_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_arpa_inet_h,"$Id: inet.h,v 1.5 2017/01/29 02:22:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_arpa_inet_h,"$Id: inet.h,v 1.6 2022/03/21 14:29:42 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
- * Copyright (c) 1998 - 2017, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

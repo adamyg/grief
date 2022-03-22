@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_search_c,"$Id: search.c,v 1.55 2021/04/05 08:22:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_search_c,"$Id: search.c,v 1.57 2021/10/17 12:09:17 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: search.c,v 1.55 2021/04/05 08:22:53 cvsuser Exp $
+/* $Id: search.c,v 1.57 2021/10/17 12:09:17 cvsuser Exp $
  * Search interface.
  *
  *  TODO:
@@ -917,8 +917,7 @@ do_re_search(void)              /* int ([int flags], [string pattern], [declare 
 
             if (bp != curbp) {
                 saved_bp = curbp;
-                curbp = bp;
-                set_hooked();
+                set_curbp(bp);
             }
 
             if (SF_CAPTURES & flags) {          /* captures, globalise state */
@@ -946,8 +945,7 @@ do_re_search(void)              /* int ([int flags], [string pattern], [declare 
             }
 
             if (saved_bp) {
-                curbp = saved_bp;
-                set_hooked();
+                set_curbp(saved_bp);
             }
         }
         acc_assign_int(result);
@@ -1359,13 +1357,11 @@ do_re_translate(void)           /* ([int flags], string pattern, [string replace
 
             if (bp != curbp) {
                 saved_bp = curbp;
-                curbp = bp;
-                set_hooked();
+                set_curbp(bp);
             }
             translate_buf(dir, global, flags, -2, 3);
             if (saved_bp) {
-                curbp = saved_bp;
-                set_hooked();
+                set_curbp(saved_bp);
             }
         }
 
@@ -2525,7 +2521,7 @@ buffer_search(struct re_state *rs, int cursor)
 
         const LINE_t *clp;
 
-        clp = vm_lock_line(search_line);
+        clp = vm_lock_line2(search_line);
         if (clp) {
             if (offset > 0) {
                 if (ltext(clp)) {               /* clip to length */
@@ -2945,10 +2941,8 @@ replace_buffer(struct re_state *rs, int interactive)
         rs->search_offset = edot + (0 == rs->search_result);
 	
     } else if (--rs->search_offset < 0) {
-        LINE_t *lp;
-
         if (--rs->search_line) {
-            lp = vm_lock_line(rs->search_line);
+            const LINE_t *lp = vm_lock_line(rs->search_line);
             rs->search_offset = llength(lp);
             vm_unlock(rs->search_offset);
         }

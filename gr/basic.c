@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_basic_c,"$Id: basic.c,v 1.29 2015/02/11 23:25:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_basic_c,"$Id: basic.c,v 1.31 2021/10/18 13:14:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: basic.c,v 1.29 2015/02/11 23:25:12 cvsuser Exp $
+/* $Id: basic.c,v 1.31 2021/10/18 13:14:57 cvsuser Exp $
  * Basic cursor movement.
  *
  *
@@ -800,11 +800,9 @@ do_move_abs(void)               /* int ([int line = -1], [int col = -1], [int bu
             if (bp && bp != curbp) {
                 BUFFER_t *ocurbp = curbp;
 
-                curbp = bp;
-                set_hooked();
+                set_curbp(bp);
                 move2((LINENO) line, (LINENO) col, (clip ? MOVE_CLIP : 0));
-                curbp = ocurbp;
-                set_hooked();
+                set_curbp(ocurbp);
                 return;
             }
         }
@@ -889,12 +887,13 @@ move_next_char(int n, int flags_notused)
              */
             LINENO dot = 0, count = 0;
 
-            lp = vm_lock_line(line);
-            dot = (col > 1 ? line_offset2(lp, line, col, LOFFSET_NORMAL) : 0);
-            if (dot < (LINENO)llength(lp)) {
-                count = line_sizeregion(lp, col, dot, n, NULL, &col);
+            if (NULL != (lp = vm_lock_line2(line))) {
+                dot = (col > 1 ? line_offset_const(lp, line, col, LOFFSET_NORMAL) : 0);
+                if (dot < (LINENO)llength(lp)) {
+                    count = line_sizeregion(lp, col, dot, n, NULL, &col);
+                }
+                vm_unlock(line);
             }
-            vm_unlock(line);
             if ((n -= count) <= 0) {
                 goto done;
             }
@@ -909,28 +908,28 @@ done:;  trace_ilog("\tdone (line:%d, col:%d)\n", (int)line, (int)col);
          *  binary/8bit
          */
         const int nl = (BFTST(curbp, BF_BINARY) ? 0 : 1);
-        int offset, length;
-        LINE_t *lp;
+        int dot, length;
+        const LINE_t *lp;
 
         while (n > 0 && line < bottomline) {
-            lp = vm_lock_line(line);
-            offset = (col > 1 ? line_offset2(lp, line, col, LOFFSET_NORMAL) : 0);
-            length = llength(lp);
+            if (NULL != (lp = vm_lock_line2(line))) {
+                dot = (col > 1 ? line_offset_const(lp, line, col, LOFFSET_NORMAL) : 0);
+                length = llength(lp);
 
-            if (offset + n <= length) {         /* EOL, move to next line */
-                if (offset + n == length) {
-                    vm_unlock(line);
-                    ++line;
-                    col = 1;
-                } else {                        /* otherwise, position within current line */
-                    col = line_column2(lp, line, offset + n);
-                    vm_unlock(line);
+                if ((dot + n) <= length) {      /* EOL, move to next line */
+                    if ((dot + n) == length) {
+                        vm_unlock(line);
+                        ++line;
+                        col = 1;
+                    } else {                    /* otherwise, position within current line */
+                        col = line_column2(lp, line, dot + n);
+                        vm_unlock(line);
+                    }
+                    break;                      /* done */
                 }
-                break;                          /* done */
+                n -= (length - dot) + nl;       /* remove line, plus optional nl */
+                vm_unlock(line);
             }
-            n -= (length - offset) + nl;        /* remove line, plus optional nl */
-
-            vm_unlock(line);
             ++line, col = 1;
         }
     }
@@ -958,13 +957,13 @@ move_prev_char(int n)
          */
         const LINECHAR *cp, *start, *end;
         int count, column;
-        LINE_t *lp;
 
         while (n > 0 && line >= 1) {            /* MCHAR */
             /*
              *  setup line references
              */
-            lp = vm_lock_line(line);
+            const LINE_t *lp = vm_lock_line(line);
+
             cp = start = ltext(lp);
             end = start + llength(lp);
             ED_TRACE_LINE2(lp)
@@ -1056,7 +1055,7 @@ done:;  trace_ilog("==> line:%d, col:%d\n", line, col);
                     line = 1;                   /* top of buffer */
                     break;
                 }
-                dot = llength(linep(line));     /* EOL */
+                dot = llength(linep0(line));    /* EOL */
                 n -= nl;
             }
         }
@@ -1130,25 +1129,75 @@ mov_gotoline(int n)
 
 
 static void
-mov_char(const int n, const int direction)
+mov_char(const int cnt, const int direction)
 {
     const LINENO cline = *cur_line, ccol = *cur_col;
     int ncol;
 
-    assert(n > 0);
+    assert(cnt > 0);
     assert(0 == direction || 1 == direction);
 
     if (direction) {                            /* right */
-        if ((ncol = ccol + n) < ccol) {
+        if ((ccol + cnt) >= LINEMAX) {
             ncol = LINEMAX;
-        }
-    } else {                                    /* left */
-        if (n >= ccol) {
-            ncol = 1;
+
         } else {
-            ncol = ccol - n;
+            ncol = ccol + cnt;
+
+            if (! BFTST(curbp, BF_BINARY)) {    /* MCHAR */       
+                const LINE_t *lp = vm_lock_line2(cline);
+                if (lp) {                       /* TODO: LI_MBSWIDE */
+                    int pos = 1, width, length;
+                    const LINECHAR *cp = ltext(lp), 
+                        *end = cp + llength(lp);
+                    int32_t ch = 0;
+
+                    while (pos < ncol && cp < end) {
+                        width = character_decode(pos, cp, end, &length, &ch, NULL);
+                        if ((pos + width) > ncol) {
+                            assert(width > 1);
+                            ncol = pos + width; /* align to next wide-character */
+                            break;
+                        }
+                        pos += width;
+                        cp  += length;
+                    }
+                    vm_unlock(cline);
+                }
+            }
+        }
+
+    } else {                                    /* left */
+        if (cnt >= ccol) {
+            ncol = 1;
+
+        } else {
+            ncol = ccol - cnt;
+
+            if (! BFTST(curbp, BF_BINARY)) {    /* MCHAR */
+                const LINE_t *lp = vm_lock_line2(cline);
+                if (lp) {                       /* TODO: LI_MBSWIDE */
+                    int pos = 1, width, length;
+                    const LINECHAR *cp = ltext(lp), 
+                        *end = cp + llength(lp);
+                    int32_t ch = 0;
+
+                    while (pos < ncol && cp < end) {
+                        width = character_decode(pos, cp, end, &length, &ch, NULL);
+                        if ((pos + width) > ncol) {
+                            assert(width > 1);
+                            ncol = pos;         /* align to prev wide-character */
+                            break;
+                        }
+                        pos += width;
+                        cp  += length;
+                    }
+                    vm_unlock(cline);
+                }
+            }
         }
     }
+
     move(cline, ncol, MOVE_OBEY);
 }
 
@@ -1157,11 +1206,12 @@ static void
 mov_line(const int n, const int direction)
 {
     const LINENO cline = *cur_line, ccol = *cur_col;
-    int nline;
+    int nline, ncol = ccol;
 
     assert(n > 0);
     assert(0 == direction || 1 == direction);
 
+    /* reposition line */
     if (direction) {                            /* down */
         if ((nline = cline + n) < cline) {
             nline = LINEMAX;
@@ -1173,7 +1223,31 @@ mov_line(const int n, const int direction)
             nline = cline - n;
         }
     }
-    move(nline, ccol, MOVE_OBEY);
+
+    /* realign column, if within a wide-character */
+    if (! BFTST(curbp, BF_BINARY)) {            /* MCHAR */
+        const LINE_t *lp = vm_lock_line2(nline);
+        if (lp) {                               /* TODO: LI_MBSWIDE */
+            int pos = 1, width, length;
+            const LINECHAR *cp = ltext(lp), 
+                *end = cp + llength(lp);
+            int32_t ch = 0;
+
+            while (pos < ccol && cp < end) {
+                width = character_decode(pos, cp, end, &length, &ch, NULL);
+                if ((pos + width) > ccol) {
+                    assert(width > 1);
+                    ncol = pos;                 /* align wide-character */
+                    break;
+                }
+                pos += width;
+                cp  += length;
+            }
+            vm_unlock(nline);
+        }
+    }
+
+    move(nline, ncol, MOVE_OBEY);
 }
 
 
@@ -1294,4 +1368,5 @@ move(LINENO nline, LINENO ncol, int flags)
     trace_ilog("\t= [line:%d, col:%d] : %d\n", (int)nline, (int)ncol, ret);
     return ret;
 }
+
 /*end*/

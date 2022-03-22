@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.86 2021/04/18 17:12:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.90 2021/10/18 13:19:59 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: file.c,v 1.86 2021/04/18 17:12:41 cvsuser Exp $
+/* $Id: file.c,v 1.90 2021/10/18 13:19:59 cvsuser Exp $
  * File-buffer primitives and support.
  *
  *
@@ -89,7 +89,7 @@ static int              buf_trimline(BUFFER_t *bp, const LINECHAR *text, LINENO 
 static int              file_copy(const char *src, const char *dst, mode_t perms, uid_t owner, gid_t group);
 static int              file_cmp_char(const int c1, const int c2);
 
-static void             file_canonicalize2(const char *fname, char *buf);
+static void             file_canonicalize2(const char *filename, char *path, int length);
 
 static size_t           varlen(const char *dp, const char *dpend);
 static char *           varend(char *dp, char *dpend, const int what);
@@ -189,7 +189,7 @@ do_output_file(void)            /* ([string filename]) */
 
     /* file image not exist */
     if (!BFTST(curbp, BF_SYSBUF) &&
-            fileio_access(fname, 0) >= 0) {
+            sys_access(fname, 0) >= 0) {
         errorf("Output file '%s' already exists.", fname);
         chk_free(fname);
         return;
@@ -674,7 +674,7 @@ static int
 buf_insert(BUFFER_t *bp, const char *fname, int inserting, const int32_t flags, const char *encoding)
 {
     const int startup = ((EDIT_STARTUP & flags) ? TRUE : FALSE);
-    BUFFER_t *saved_bp = curbp;
+    BUFFER_t *ocurbp = curbp;
     int fd, readonly = 0;
 
 #if (TODO_POPEN)
@@ -750,8 +750,7 @@ buf_insert(BUFFER_t *bp, const char *fname, int inserting, const int32_t flags, 
                 BFSET(bp, BF_SYSBUF);
             }
 
-            curbp = bp;
-            set_hooked();
+            set_curbp(bp);
             numlines = buf_readin(bp, fd, fname, sb.st_size, flags, encoding);
             vfs_close(fd);
             fd = -1;
@@ -778,8 +777,7 @@ buf_insert(BUFFER_t *bp, const char *fname, int inserting, const int32_t flags, 
                     wp->w_status |= WFHARD;
                 }
 
-            curbp = saved_bp;
-            set_hooked();
+            set_curbp(ocurbp);
             return (numlines >= 0 ? 0 : -1);
         }
     }
@@ -833,7 +831,7 @@ buf_diskchanged(BUFFER_t *bp)
     struct stat sb;
 
     if (bp->b_fname[0] && bp->b_mtime) {        /* was read in */
-        if (stat(bp->b_fname, &sb) >= 0) {
+        if (sys_stat(bp->b_fname, &sb) >= 0) {
             if (sb.st_mtime > bp->b_mtime) {
                 if ((size_t)sb.st_size != bp->b_rsize) {
                     return 2;                   /* size change */
@@ -961,7 +959,7 @@ file_write(const char *fname, const int32_t flags)
             BFCLR(curbp, BF_CHANGED);
             BFCLR(curbp, BF_BACKUP);
             curbp->b_nummod = 0;
-            if (stat(curbp->b_fname, &sb) >= 0) {
+            if (sys_stat(curbp->b_fname, &sb) >= 0) {
                 curbp->b_mtime = sb.st_mtime;   /* on disk time-stamp */
                 curbp->b_rsize = sb.st_size;
             }
@@ -1833,7 +1831,7 @@ buf_writeout(BUFFER_t *bp, const char *fname, int undo, int append /*const char 
     __CUNUSED(undo)
 
     oflags = OPEN_W_BINARY | O_WRONLY | O_CREAT;
-    if (stat(fname, &sb) >= 0) {
+    if (sys_stat(fname, &sb) >= 0) {
         bp->b_mode = sb.st_mode;                /* update permissions */
     } else {
         oflags |= O_EXCL;
@@ -1853,7 +1851,7 @@ buf_writeout(BUFFER_t *bp, const char *fname, int undo, int append /*const char 
         return FALSE;
     }
 
-    curbp = bp;
+    set_curbp(bp);
     termlen = file_terminator_get(bp, termbuf, sizeof(termbuf), NULL);
 
     infof("Writing ...");
@@ -1931,7 +1929,7 @@ buf_writeout(BUFFER_t *bp, const char *fname, int undo, int append /*const char 
             errorf("Error closing file: File system may be full.");
         }
     }
-    curbp = saved_bp;
+    set_curbp(saved_bp);
     return TRUE;
 
 error:;
@@ -1954,7 +1952,7 @@ error:;
     } else {
         vfs_fclose(fp);
     }
-    curbp = saved_bp;
+    set_curbp(saved_bp);
     return FALSE;
 }
 
@@ -2193,7 +2191,7 @@ do_edit_file(int version)       /* int ([int mode], [string | list file ...]) */
         char path[MAX_PATH];
 
         if (NULL == get_xarg(fileidx, "Edit file: ", path, sizeof(path)))  {
-            if (xf_readonly || -1 == fileio_access(curbp->b_fname, W_OK)) {
+            if (xf_readonly || -1 == sys_access(curbp->b_fname, W_OK)) {
                 BFSET(curbp, BF_RDONLY);
             } else {
                 BFCLR(curbp, BF_RDONLY);
@@ -2718,8 +2716,7 @@ file_load(const char *fname, const int32_t flags, const char *encoding)
 
     if (0 == (EDIT_AGAIN & flags) && BFTST(bp, BF_READ)) {
         trace_log("=> already(2)\n");
-        curbp = bp;                             /* already read */
-        set_hooked();
+        set_curbp(bp);                         /* already read */
         ret = 2;
 
     } else {
@@ -2769,9 +2766,7 @@ file_load(const char *fname, const int32_t flags, const char *encoding)
                 buf_type_default(bp);
             }
         }
-
-        curbp = bp;
-        set_hooked();
+        set_curbp(bp);
 
         lrenumber(bp);
         if (!noundo) {
@@ -3061,7 +3056,7 @@ buf_rollbackups(BUFFER_t *bp, const char *path, int remove_flag)
     trace_log("\tVERSION=%d\n", bversion);
     if (bversion <= 1) {
         if (remove_flag) {
-            fileio_unlink(path);
+            sys_unlink(path);
         }
         return;
     }
@@ -3088,14 +3083,14 @@ buf_rollbackups(BUFFER_t *bp, const char *path, int remove_flag)
         }
                                                 /* $BACKUP/<version+1>/<filename> */
         sprintf(nname + dirlen, "%c%d%c%s", PATH_SEPERATOR, bversion + 1, PATH_SEPERATOR, filename);
-        fileio_unlink(nname);
+        sys_unlink(nname);
 
-        if (0 == fileio_access(oname, F_OK)) {
+        if (0 == sys_access(oname, F_OK)) {
             if (rename(oname, nname) < 0) {
                 char *tcp = strrchr(nname, PATH_SEPERATOR);
 
                 *tcp = 0;
-                (void) fileio_mkdir(nname, 0777 & ~x_umask);
+                sys_mkdir(nname, 0777 & ~x_umask);
                 *tcp = PATH_SEPERATOR;
                 if (-1 == rename(oname, nname)) {
                     eeprintx("unable to rename '%s' to '%s'", oname, nname);
@@ -3213,16 +3208,16 @@ buf_backup(BUFFER_t *bp)
 #if defined(HAVE_LINK)
 #if defined(HAVE_LSTAT)
     /* Let's look at the *real* entry and see if it is a symbolic link.  */
-    r = lstat(fname, &sb);
+    r = sys_lstat(fname, &sb);
     if (r == 0 && (sb.st_mode & S_IFLNK)) {
-        stat(fname, &sb);
+        sys_stat(fname, &sb);
         sb.st_nlink = 1 + 1;                    /* force backup via copy method */
 
     } else if (r < 0) {
         sb.st_nlink = 1 + 1;
     }
 #else
-    r = stat(fname, &sb)
+    r = sys_stat(fname, &sb)
     if (r < 0) {
         sb.st_nlink = 1 + 1;
     }
@@ -3419,11 +3414,11 @@ file_copy(
 
         if ((ifd = fileio_open(src, OPEN_R_BINARY | O_RDONLY, 0)) < 0) {
             fileio_close(ofd);
-            fileio_unlink(dst);
+            sys_unlink(dst);
             return TRUE;
         }
 
-        (void) fileio_chmod(dst, perms);        /* FIXME: return */
+        (void) sys_chmod(dst, perms);           /* FIXME: return */
 #ifdef HAVE_CHOWN
         if (-1 == chown(dst, owner, group))
             ewprintf("warning: unable to chown(%s)", dst);
@@ -4140,18 +4135,21 @@ file_cwdd(int drv, char *cwdd, unsigned length)
 char *
 file_canonicalize(const char *filename, char *path, int length)
 {
-    if (path && filename != path && length >= MAX_PATH) {
-        file_canonicalize2(filename, path);     /* normal case, correctly sized buffer */
+    assert(filename);
+
+    if (path && length >= MAX_PATH) {           /* explicit buffer */
+        file_canonicalize2(filename, path, length);
         return path;
 
     } else {
-        char t_path[MAX_PATH];
+        char t_path[MAX_PATH] = {0};
 
-        file_canonicalize2(filename, t_path);
-        if (path && length > 0) {               /* local result */
+        file_canonicalize2(filename, t_path, sizeof(t_path));
+        if (path && length > 0) {               /* local result; may truncate/FIXME */
             strxcpy(path, (const char *)t_path, length);
             return path;
         }
+
         return chk_salloc(t_path);              /* dynamic */
     }
     /*NOTREACHED*/
@@ -4159,22 +4157,15 @@ file_canonicalize(const char *filename, char *path, int length)
 
 
 static void
-file_canonicalize2(const char *filename, char *path)
+file_canonicalize2(const char *filename, char *path, int length)
 {
-    char t_filename[MAX_PATH];
-    int unc = FALSE, len;
-    char *p, *s;
-
-    strxcpy(t_filename, filename, sizeof(t_filename));
-    filename = t_filename;                      /* working copy */
-
 #if defined(_VMS)
     if (strchr(filename, PATH_SEPERATOR) != NULL) {
-        filename = sys_fname_unix_to_vms(filename, path, sizeof(t_filename));
+        filename = sys_fname_unix_to_vms(filename, path, length);
     }
 
     if (filename != path) {
-        strxcpy(path, (const char *)filename, sizeof(t_filename));
+        strxcpy(path, (const char *)filename, length);
     }
 
     if (strchr(path, ':') == NULL) {
@@ -4183,9 +4174,18 @@ file_canonicalize2(const char *filename, char *path)
 
 #else   /*!VMS*/
 
+    const int filenamelen = strlen(filename) + 1 /*nul*/;
+    char *t_filename = alloca(filenamelen);
+    int unc = FALSE, len;
+    char *p, *s;
+
+    assert(length >= MAX_PATH);
+
+    memcpy(t_filename, filename, filenamelen);  /* copy, allow emplace */
 #if defined(DOSISH)                             /* normalize */
     file_slashes(t_filename);
 #endif
+    filename = t_filename;
 
     /* preserve UNC paths (//servername/...) */
     if (PATH_SEPERATOR == filename[0] && PATH_SEPERATOR == filename[1]) {
@@ -4196,10 +4196,11 @@ file_canonicalize2(const char *filename, char *path)
         }
 
         if (*cursor && cursor > filename + 2) { /* trailing separator */
-            while (filename < cursor) {
+            while (length && filename < cursor) {
                 *path++ = *filename++;
+                --length;
             }
-            strcpy(path, filename);
+            strxcpy(path, filename, length);
             unc = TRUE;
         }
     }
@@ -4218,8 +4219,10 @@ file_canonicalize2(const char *filename, char *path)
                 drv = cwd[0];
                 cwd += 2;
             }
+
         } else {
             cwd = file_cwd(NULL, 0);
+
             if (isalpha(*((unsigned char *)cwd)) && ':' == cwd[1]) {
                 drv = cwd[0];
                 cwd += 2;
@@ -4227,28 +4230,36 @@ file_canonicalize2(const char *filename, char *path)
             } else if (PATH_SEPERATOR == cwd[0] && PATH_SEPERATOR == cwd[1]) {
                 *path++ = *cwd++;
                 *path++ = *cwd++;
-                while (*cwd && PATH_SEPERATOR != *cwd) {
+                length -= 2;
+
+                while (length && *cwd && PATH_SEPERATOR != *cwd) {
                     *path++ = *cwd++;           /* preserve UNC */
+                    --length;
                 }
                 unc = TRUE;
             }
         }
+
         if (drv > 0) {                          /* assign and preserve drive */
             *path++ = drv;
             *path++ = ':';
+            length -= 2;
         }
 #endif /*DOSISH*/
 
         if (PATH_SEPERATOR == *filename) {      /* absolute */
-            strcpy(path, filename);
+            strxcpy(path, filename, length);
+
         } else {
             if (NULL == cwd) cwd = file_cwd(NULL, 0);
             if (PATH_SEPERATOR == cwd[0] && 0 == cwd[1]) {
                                                 /* /<fn> */
-                sprintf(path, "%c%s", PATH_SEPERATOR, filename);
+                len = snprintf(path, length, "%c%s", PATH_SEPERATOR, filename);
             } else {                            /* <cwd/fn> */
-                sprintf(path, "%s%c%s", cwd, PATH_SEPERATOR, filename);
+                len = snprintf(path, length, "%s%c%s", cwd, PATH_SEPERATOR, filename);
             }
+            if (len < 0 || len >= length) 
+                path[length - 1] = 0;           /* overflow/FIXME */
         }
     }
 
@@ -4294,6 +4305,7 @@ file_canonicalize2(const char *filename, char *path)
     if ((len = (int)strlen(path)) < 2) {
         return;
     }
+    assert(len < length);
 
     if (PATH_SEPERATOR == path[len - 1]) {      /* XXX/  -> XXX */
         path[len - 1] = 0;
@@ -4354,4 +4366,5 @@ file_canonicalize2(const char *filename, char *path)
     }
 #endif  /*! _VMS*/
 }
+
 /*end*/

@@ -1,6 +1,6 @@
 @echo off
 rem
-rem Microsoft Visual Studio C/C++ 2013+
+rem Microsoft Visual Studio C/C++ 2015+
 rem
 if not defined GNUWIN32 (
         set GNUWIN32=\devl\gnuwin32

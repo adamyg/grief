@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmap_c,"$Id: cmap.c,v 1.32 2021/04/14 14:09:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmap_c,"$Id: cmap.c,v 1.34 2021/07/18 23:03:18 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmap.c,v 1.32 2021/04/14 14:09:54 cvsuser Exp $
+/* $Id: cmap.c,v 1.34 2021/07/18 23:03:18 cvsuser Exp $
  * Character map management/primitives.
  *
  *
@@ -260,7 +260,7 @@ cmap_build(cmap_t *cmap)
                 cmapchr_str(mc, (const char *)(cp - 2));
             }
                                                 /* printable non-ascii/C1 characters */
-        } else if (isutf8 || (is8bit && i < 0xff)) {
+        } else if (isutf8 || (is8bit && i <= 0xff)) {
             *cp++ = (unsigned char)i;
             *cp++ = 0;
             cmapchr_str(mc, (const char *)(cp - 2));
@@ -1250,4 +1250,5 @@ do_set_char_map(void)           /* int (int mapid|string name, list definition) 
     }
 }
 #endif
+
 /*eof*/

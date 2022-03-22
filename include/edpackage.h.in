@@ -1,15 +1,15 @@
 #ifndef GR_EDPACKAGE_H_INCLUDED
 #define GR_EDPACKAGE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(edpackage_h, "$Id: edpackage.h.in,v 1.7 2020/06/18 20:35:17 cvsuser Exp $")
+__CIDENT_RCSID(edpackage_h, "$Id: edpackage.h.in,v 1.8 2022/03/21 14:55:27 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: h; set-indent: 4; -*- */
-/* $Id: edpackage.h.in,v 1.7 2020/06/18 20:35:17 cvsuser Exp $
+/* $Id: edpackage.h.in,v 1.8 2022/03/21 14:55:27 cvsuser Exp $
  * Package configuration.
  *
  *
- * Copyright (c) 1998 - 2020, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

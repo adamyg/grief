@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charseticonv_c,"$Id: charseticonv.c,v 1.19 2020/06/18 13:10:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_charseticonv_c,"$Id: charseticonv.c,v 1.22 2022/03/21 14:59:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* Conversion tables loader/interface.
  *
  *
- * Copyright (c) 2010 - 2018, Adam Young.
+ * Copyright (c) 2010 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -44,6 +44,8 @@ __CIDENT_RCSID(gr_charseticonv_c,"$Id: charseticonv.c,v 1.19 2020/06/18 13:10:07
 #include <assert.h>
 #include <tailqueue.h>
 #include <unistd.h>
+
+#include <libstr.h>                             /* str_...()/sxprintf() */
 
 #if defined(ENOSYS)
 #define ENOTSUPPORTED       ENOSYS
@@ -223,10 +225,10 @@ charset_iconv_open(const char *name, int flags)
     namelen = strlen(name);
 
     if (NULL != (mod = strchr(name, '/'))) {    /* giconv style modifiers */
-        if (0 == strcmp(mod, "//TRANSLIT")) {
+        if (0 == str_icmp(mod, "//TRANSLIT")) {
             flags |= CS_ICONV_TRANSLIT;
 
-        } else if (0 == strcmp(mod, "//IGNORE")) {
+        } else if (0 == str_icmp(mod, "//IGNORE")) {
             flags |= CS_ICONV_IGNORE;
         }
         namelen = mod - name;                   /* remove modifier */
@@ -241,12 +243,12 @@ charset_iconv_open(const char *name, int flags)
         unsigned i;
 
         if (NULL != (charset = charset_canonicalize(name, namelen, canon_buffer, sizeof(canon_buffer))) ||
-		    NULL != (charset = charset_alias_lookup(name, namelen))) {
-	    charsetlen = strlen(charset);
-	    if (charsetlen == namelen && 0 == charset_compare(charset, name, namelen)) {
-		charset = NULL;
-	    }
-	}
+                    NULL != (charset = charset_alias_lookup(name, namelen))) {
+            charsetlen = strlen(charset);
+            if (charsetlen == namelen && 0 == charset_compare(charset, name, namelen)) {
+                charset = NULL;
+            }
+        }
 
         if (NULL != (dlmod = dlmod_byname(name, namelen)) ||
                 (charset && NULL != (dlmod = dlmod_byname(charset, charsetlen)))) {
@@ -388,7 +390,7 @@ iconv_alloc(struct dlmodule *dlmod, int flags)
             if (CHARTABLE_SIGNATURE(CHARTABLE_CCS, 0x100) == signature) {
                 ic->ic_desc = dlmod->dl_names[0];
                 ic->ic_data = cm->cm_desc;
-		ic->ic_decode = ccs1_decode;
+                ic->ic_decode = ccs1_decode;
                 ic->ic_encode = ccs1_encode;
                 ic->ic_import = ccs1_import;
                 ic->ic_export = ccs1_export;
@@ -492,7 +494,7 @@ ccs1_export(struct charset_iconv *ic, const char **inbuf, size_t *inbytes, char 
                         const char *end;
                         int32_t raw, ch;
 
-                        if (NULL == (end = charset_utf8_decode(icursor, icursor + icount, &ch, &raw))) {
+                        if (NULL == (end = charset_utf8_decode_cook(icursor, icursor + icount, &ch, &raw))) {
                             errno = EINVAL;     /* an complete sequence */
                             res = (size_t)-1;
                             break;
@@ -740,7 +742,7 @@ dlmod_byname(const char *name, int namelen)
         const char **names = dlmod->dl_names;
 
         if (names) {
-	    const char *charset;
+            const char *charset;
 
             while (NULL != (charset = *names++)) {
                 if (0 == charset_compare(charset, name, namelen)) {
@@ -912,5 +914,5 @@ dospath(char *path)
     }
     *path = 0;
 }
-#endif	/*WIN32*/
+#endif  /*WIN32*/
 /*end*/

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_line_c,"$Id: line.c,v 1.44 2020/06/05 15:40:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_line_c,"$Id: line.c,v 1.46 2021/07/05 15:01:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: line.c,v 1.44 2020/06/05 15:40:35 cvsuser Exp $
+/* $Id: line.c,v 1.46 2021/07/05 15:01:27 cvsuser Exp $
  * Line management.
  *
  *
@@ -24,7 +24,6 @@ __CIDENT_RCSID(gr_line_c,"$Id: line.c,v 1.44 2020/06/05 15:40:35 cvsuser Exp $")
 
 #include <editor.h>
 #include "../libvfs/vfs.h"
-#include "../libchartable/libchartable.h"
 
 #include "accum.h"                              /* acc_...() */
 #include "anchor.h"                             /* anchor_...() */
@@ -416,7 +415,7 @@ lchange(int flag, LINENO count)
         if (count < 1) count = 1;
 
         for (cline = line, eline = line + count; cline < eline; ++cline) {
-            if (NULL != (lp = linep(cline))) {
+            if (NULL != (lp = vm_lock_line(cline))) {
                 const LINENO length = llength(lp);
 
                 if (bp->b_maxlinep == lp) {     /* length change? */
@@ -432,6 +431,8 @@ lchange(int flag, LINENO count)
                         bp->b_maxlinep   = (LINE_t *)lp;
                     }
                 }
+
+                vm_unlock(cline);
             }
         }
     }
@@ -627,7 +628,7 @@ linsertc(int ch)
         const int isutf8 = buf_isutf8(bp);      /* legacy/dialog buffer encoding */
 
         if (isutf8 && MCHAR_ISUTF8(ch)) {
-            linsert((const char *)buffer, mchar_ucs_encode(ch, buffer), FALSE);
+            linsert((const char *)buffer, Wctoutf8(ch, buffer, sizeof(buffer)), FALSE);
 
         } else {                                /* NORMAL */
             *((unsigned char *)buffer) = (unsigned char) ch;
@@ -708,10 +709,10 @@ lnewline(void)
         return;
     }
     llinepad();
-    if (NULL != (lp = vm_lock_line(cline))) {
+    if (NULL != (lp = vm_lock_line2(cline))) {
         assert(cline == *cur_line);
         assert(ccol == *cur_col);
-        newlinedot(lp, line_offset2(lp, cline, ccol, LOFFSET_NORMAL_MATCH));
+        newlinedot(lp, line_offset_const(lp, cline, ccol, LOFFSET_NORMAL_MATCH));
         vm_unlock(cline);
     }
 }
@@ -798,10 +799,12 @@ linsert(const char *buffer, LINENO length, int nl)
 
     assert(nl || length > 0);
     llinepad();
-    lp = vm_lock_line(cline);
-    assert(lp != x_static_line);
+    lp = vm_lock_line2(cline);
+    assert(lp);
+    if (NULL == lp)
+        goto false_exit;
 
-    dot = line_offset2(lp, cline, ccol, LOFFSET_FILL_VSPACE);
+    dot = line_offset_fill(lp, cline, ccol, LOFFSET_FILL_VSPACE);
     if (length) {
         if (FALSE == lexpand(lp, dot, length)) {
             goto false_exit;
@@ -860,8 +863,8 @@ lwrite(const char *buffer, LINENO length, int characters)
         int replace = FALSE;
         LINE_t *lp;
 
-        lp = vm_lock_line(cline);
-        dot = line_offset2(lp, cline, ccol, LOFFSET_FILL_SPACE);
+        lp = vm_lock_line2(cline);
+        dot = line_offset_fill(lp, cline, ccol, LOFFSET_FILL_SPACE);
         count = line_sizeregion(lp, ccol, dot, characters, &olength, NULL);
         if (olength < length) {
             if ((dot + length) <= (LINENO)llength(lp)) {
@@ -891,6 +894,7 @@ lwrite(const char *buffer, LINENO length, int characters)
                 }
             }
         }
+
         *cur_col += characters;                 /* XXX - issues when line is filled */
         vm_unlock(cline);
     }
@@ -910,7 +914,7 @@ ldeletec(int cnt)
     while (cnt > 0) {
         const LINENO cline = *cur_line, ccol = *cur_col;
         const LINENO numlines = curbp->b_numlines;
-        LINENO count, length, dot;
+        LINENO count = 1, length, dot;
         LINE_t *lp;
 
         ED_TRACE(("\tline:%d,col:%d,numlines:%d,cnt:%d\n", cline, ccol, numlines, cnt))
@@ -920,14 +924,15 @@ ldeletec(int cnt)
             break;
         }
 
-        lp = vm_lock_line(cline);
-        dot = line_offset2(lp, cline, ccol, LOFFSET_NORMAL_MATCH);
-        if (0 == (count = line_sizeregion(lp, ccol, dot, cnt, &length, NULL))) {
-            count = length = 1;                 /* <EOL> */
+        if (NULL != (lp = vm_lock_line2(cline))) {
+            dot = line_offset_const(lp, cline, ccol, LOFFSET_NORMAL_MATCH);
+            if (0 == (count = line_sizeregion(lp, ccol, dot, cnt, &length, NULL))) {
+                count = length = 1;             /* <EOL> */
+            }
+            ldeletedot(length, dot);
+            vm_unlock(cline);
         }
-        ldeletedot(length, dot);
-        vm_unlock(cline);
-        cnt -= count;
+        cnt -= count;                           /* MCHAR/characters */
     }
     ED_TRACE(("==> cnt:%d\n", cnt))
 }
@@ -1029,19 +1034,20 @@ lreplacedot(const char *buffer, int ins, int del, int dot, int *edot)
 
     /*
      *  simple case/
-     *      insert-size < delete-size and no new-lines
+     *      insert-size < delete-size and no new-lines.
      */
-    lp = vm_lock_line(cline);
-    if (ledit(lp, 0)) {
-        lchange(WFEDIT, 0);
-        u_replace((const char *)(ltext(lp) + dot), del, ins);
-        if (diff) {
-            line_move(lp, dot + ins, dot + del, llength(lp) - dot - del);
-            lp->l_used -= diff;
+    if (NULL != (lp = vm_lock_line2(cline))) {
+        if (ledit(lp, 0)) {
+            lchange(WFEDIT, 0);
+            u_replace((const char *)(ltext(lp) + dot), del, ins);
+            if (diff) {
+                line_move(lp, dot + ins, dot + del, llength(lp) - dot - del);
+                lp->l_used -= diff;
+            }
+            line_set(lp, dot, buffer, ins, *cur_attr, 1);
         }
-        line_set(lp, dot, buffer, ins, *cur_attr, 1);
+        vm_unlock(cline);
     }
-    vm_unlock(cline);
     if (edot) {
         *edot = dot + ins;
     }
@@ -1072,8 +1078,7 @@ ldeletedot(LINENO cnt, int dot)
 
     ED_TRACE(("ldeletedot(line:%d, col:%d, dot:%d, cnt:%d)\n", *cur_line, *cur_col, dot, cnt))
     assert(cnt > 0);
-    if (NULL == (lp = vm_lock_line(cline))) {
-        vm_unlock(cline);
+    if (NULL == (lp = vm_lock_line2(cline))) {
         return;
     }
 
@@ -1505,4 +1510,5 @@ line_set(LINE_t *lp, LINENO dst, const char *src, LINENO len, LINEATTR attr, LIN
         }
     }
 }
+
 /*end*/

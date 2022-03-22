@@ -1,11 +1,11 @@
 #ifndef GR_EDCONFIG_H_INCLUDED
 #define GR_EDCONFIG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edconfig_h,"$Id: edconfig.h,v 1.12 2019/03/15 23:03:05 cvsuser Exp $")
+__CIDENT_RCSID(gr_edconfig_h,"$Id: edconfig.h,v 1.13 2022/03/21 14:55:27 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edconfig.h,v 1.12 2019/03/15 23:03:05 cvsuser Exp $
+/* $Id: edconfig.h,v 1.13 2022/03/21 14:55:27 cvsuser Exp $
  * Configuration.
  *
  *  GRINIT_FILE
@@ -29,7 +29,7 @@ __CPRAGMA_ONCE
  *  GRINIT_OBJECT
  *      Initialisation macro object, containing GRINIT_MACRO.
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_spell_hunspell_c,"$Id: spell_hunspell.c,v 1.17 2014/10/26 22:13:13 ayoung Exp $")
+__CIDENT_RCSID(gr_spell_hunspell_c,"$Id: spell_hunspell.c,v 1.18 2021/06/10 06:13:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: spell_hunspell.c,v 1.17 2014/10/26 22:13:13 ayoung Exp $
+/* $Id: spell_hunspell.c,v 1.18 2021/06/10 06:13:02 cvsuser Exp $
  * Spell implementation - hunspell driver.
  *
  *  http://sourceforge.net/hunspell/projects
@@ -513,7 +513,7 @@ hs_dict_resolve(const char **paths, const char *name, int len, const char *ext)
         }
         if (NULL != (expanded = file_expand(buf, expand, sizeof(expand)))) {
             trace_log("=> resolve [%s -> %s]\n", buf, expanded);
-            if (0 == access(expanded, R_OK)) {
+            if (0 == sys_access(expanded, R_OK)) {
                 return chk_salloc(expanded);
             }
         }

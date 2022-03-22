@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_iconv_c,"$Id: w32_iconv.c,v 1.17 2020/06/18 13:24:42 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_iconv_c,"$Id: w32_iconv.c,v 1.20 2022/03/21 14:29:41 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 iconv dynamic loader.
  *
- * Copyright (c) 1998 - 2020, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -21,10 +21,10 @@ __CIDENT_RCSID(gr_w32_iconv_c,"$Id: w32_iconv.c,v 1.17 2020/06/18 13:24:42 cvsus
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Notice: Portions of this text are reprinted and reproduced in electronic form. from
@@ -58,6 +58,13 @@ __CIDENT_RCSID(gr_w32_iconv_c,"$Id: w32_iconv.c,v 1.17 2020/06/18 13:24:42 cvsus
 typedef void *          (DLLLINKAGE * iconvopenfn_t)(const char *to, const char *from);
 typedef void            (DLLLINKAGE * iconvclosefn_t)(void *fd);
 typedef int             (DLLLINKAGE * iconvfn_t)(void *fd, const char **from, size_t *fromlen, char **to, size_t *tolen);
+typedef int             (DLLLINKAGE * iconverrnofn_t)(void);
+
+#if defined(HAVE_LIBCITRUS)
+typedef const char *    (DLLLINKAGE * iconv_PATH_ESDB_t)(void);
+typedef const char *    (DLLLINKAGE * iconv_PATH_CSMAPPER_t)(void);
+typedef const char *    (DLLLINKAGE * iconv_PATH_ICONV_t)(void);
+#endif
 
 static HINSTANCE        x_iconvdll;
 static HINSTANCE        x_msvcrtdll;
@@ -65,8 +72,30 @@ static HINSTANCE        x_msvcrtdll;
 static iconvopenfn_t    x_iconv_open;
 static iconvclosefn_t   x_iconv_close;
 static iconvfn_t        x_iconv;
-//  static void *           x_iconvctl;
-//  static void *           x_iconv_errno;
+//  static void *       x_iconvctl;
+//  static void *       x_iconv_errno;
+
+static const char *     x_iconvnames[] = {
+        NULL,                                   // place-holder
+#if defined(ICONVDLL_NAME)
+        ICONVDLL_NAME,                          // compile-time configuration
+#else
+#define ICONVDLL_NAME   "[lib]iconv[2].dll"     // dynamic
+        "libiconv2.dll",
+        "libiconv.dll",
+        "iconv2.dll",
+        "iconv.dll",
+#endif
+       };
+
+
+LIBW32_API void
+w32_iconv_dllname(const char *dllname)
+{
+    if (x_iconvnames[0]) free((void *)x_iconvnames[0]);
+    x_iconvnames[0] = (dllname && *dllname ? strdup(dllname) : NULL);
+}
+
 
 LIBW32_API int
 w32_iconv_connect(int verbose)
@@ -74,19 +103,6 @@ w32_iconv_connect(int verbose)
 #ifndef MSVCRTDLL_NAME
 #define MSVCRTDLL_NAME  "msvcrt.dll"
 #endif
-   static const char *iconvnames[] = {
-#if defined(ICONVDLL_NAME)
-        ICONVDLL_NAME,                          // configuration
-#else
-#define ICONVDLL_NAME   "[lib]iconv[2].dll"
-        "libiconv2.dll",
-        "libiconv.dll",
-        "iconv2.dll",
-        "iconv.dll",
-#endif
-       NULL
-       };
-
     const char *name;
     char fullname[1024], *end;
     unsigned i;
@@ -96,15 +112,21 @@ w32_iconv_connect(int verbose)
     }
 
     fullname[0] = 0;
-    GetModuleFileName(GetModuleHandle(NULL), fullname, sizeof(fullname));
+    GetModuleFileNameA(GetModuleHandle(NULL), fullname, sizeof(fullname));
     if (NULL != (end = (char *)strrchr(fullname, '\\'))) {
         *++end = 0;
     }
 
-    for (i = 0; NULL != (name = iconvnames[i]); ++i) {
+    for (i = 0; i < sizeof(x_iconvnames)/sizeof(x_iconvnames[0]); ++i) {
+
+        if (NULL == (name = x_iconvnames[i])) {
+            continue;                           // empty slot
+        }
+
 #if defined(DO_TRACE_LOG)
         trace_log("iconv_dll(%s)\n", name);
 #endif
+
         if (end) {
             strncpy(end, name, sizeof(fullname) - (end - fullname));
             fullname[sizeof(fullname)-1] = 0;
@@ -147,10 +169,16 @@ w32_iconv_connect(int verbose)
 
     fullname[0] = 0;                            // resolve symbols, iconvctl() is optional
     GetModuleFileNameA(x_iconvdll, fullname, sizeof(fullname));
-    x_iconv       = (iconvfn_t)GetProcAddress(x_iconvdll, "libiconv");
-    x_iconv_open  = (iconvopenfn_t)GetProcAddress(x_iconvdll, "libiconv_open");
-    x_iconv_close = (iconvclosefn_t)GetProcAddress(x_iconvdll, "libiconv_close");
-//  x_iconvctl    = (void *)GetProcAddress(x_iconvdll, "libiconvctl");
+    if (NULL != (x_iconv = (iconvfn_t)GetProcAddress(x_iconvdll, "libiconv"))) {
+        x_iconv_open = (iconvopenfn_t)GetProcAddress(x_iconvdll, "libiconv_open");
+        x_iconv_close = (iconvclosefn_t)GetProcAddress(x_iconvdll, "libiconv_close");
+
+    } else if (NULL != (x_iconv = (iconvfn_t)GetProcAddress(x_iconvdll, "iconv"))) {
+        x_iconv_open = (iconvopenfn_t)GetProcAddress(x_iconvdll, "iconv_open");
+        x_iconv_close = (iconvclosefn_t)GetProcAddress(x_iconvdll, "iconv_close");
+    }
+
+//  x_iconvctl = (void *)GetProcAddress(x_iconvdll, "libiconvctl");
 //  x_iconv_errno = (void *)GetProcAddress(x_iconvdll, "libiconv_errno");
 //  if (NULL == x_iconv_errno) {
 //      x_iconv_errno = (void *)GetProcAddress(x_msvcrtdll, "_errno");
@@ -234,4 +262,3 @@ w32_iconv(void * fd, const char **from, size_t *fromlen, char **to, size_t *tole
 
 #endif  /*WIN32*/
 /*end*/
-

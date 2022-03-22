@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_util_c,"$Id: vfs_util.c,v 1.20 2020/06/18 13:18:30 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_util_c,"$Id: vfs_util.c,v 1.21 2022/03/21 14:27:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_util.c,v 1.20 2020/06/18 13:18:30 cvsuser Exp $
+/* $Id: vfs_util.c,v 1.21 2022/03/21 14:27:23 cvsuser Exp $
  * Virtual file system - utility functions.
  *
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -66,7 +66,7 @@ void
 vfs_init(void)
 {
     assert(VFS_VOPMAX == sizeof(struct vfs_implementation)/sizeof(void (*)()));
-    
+
     VFS_TRACE(("vfs_init()\n"))
     vfs_tree_start();
     vfs_class_start();
@@ -92,7 +92,7 @@ vfs_init(void)
  */
 void
 vfs_shutdown(void)
-{ 
+{
     VFS_TRACE(("vfs_shutdown()\n"))
  /* x_root = NULL; */                           /* include root */
     vfs_mount_shutdown();                       /* unmount 'all' virtual file-systems */
@@ -128,7 +128,7 @@ vfs_root(void)
  *  Returns:
  *      Address of root mount-point.
  */
-void             
+void
 vfs_trace(const char *fmt, ...)
 {
     va_list ap;
@@ -298,12 +298,12 @@ vfs_tempnam(int *fd)
  *  Returns:
  *      Hash value.
  */
-unsigned         
+unsigned
 vfs_name_hash(const char *path, unsigned pathlen)
 {
     unsigned hash = (unsigned)-1;
     unsigned char ch;
-    
+
     while (pathlen-- && (ch = (unsigned char)*path++) != 0) {
         if (! VFS_ISSEP(ch)) {                  /* ignore seperators */
             hash = hash * 127 + tolower(ch);    /* and case */

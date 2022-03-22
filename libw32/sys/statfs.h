@@ -1,14 +1,14 @@
 #ifndef LIBW32_SYS_STATFS_H_INCLUDED
 #define LIBW32_SYS_STATFS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_statfs_h,"$Id: statfs.h,v 1.7 2018/09/29 02:25:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_statfs_h,"$Id: statfs.h,v 1.10 2022/03/22 08:05:09 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 [f]statfs implementation
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 2012 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -26,6 +26,7 @@ __CPRAGMA_ONCE
 #include <sys/cdefs.h>
 #include <sys/utypes.h>
 #include <sys/mount.h>
+#include <wchar.h>
 
 #define FS_MAGIC    0x11954                     /* Taken from HP-UX */
 
@@ -57,8 +58,10 @@ struct statfs {
 
 __BEGIN_DECLS
 
-LIBW32_API int      statfs(const char *, struct statfs *);
-LIBW32_API int      fstatfs(int, struct statfs *);
+LIBW32_API int      statfs(const char *path, struct statfs *buf);
+LIBW32_API int      statfsA(const char *path, struct statfs *buf);
+LIBW32_API int      statfsW(const wchar_t *path, struct statfs *buf);
+LIBW32_API int      fstatfs(int fd, struct statfs *buf);
 
 __END_DECLS
 

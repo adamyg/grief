@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_backup_c,"$Id: m_backup.c,v 1.18 2014/10/22 02:33:00 ayoung Exp $")
+__CIDENT_RCSID(gr_m_backup_c,"$Id: m_backup.c,v 1.19 2021/06/02 13:40:03 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_backup.c,v 1.18 2014/10/22 02:33:00 ayoung Exp $
+/* $Id: m_backup.c,v 1.19 2021/06/02 13:40:03 cvsuser Exp $
  * File backup option/configuration primitives.
  *
  *
@@ -25,6 +25,7 @@ __CIDENT_RCSID(gr_m_backup_c,"$Id: m_backup.c,v 1.18 2014/10/22 02:33:00 ayoung 
 
 #include "m_backup.h"                           /* public interface */
 
+#include "system.h"
 #include "accum.h"                              /* acc_...() */
 #include "buffer.h"                             /* buf_...() */
 #include "debug.h"                              /* trace_...() */
@@ -202,7 +203,7 @@ bkcfg_ask(const char *fname)
     if (! xf_backups) {
         ret = FALSE;
     } else {
-        if (stat(fname, &sb) >= 0) {
+        if (sys_stat(fname, &sb) >= 0) {
             if (x_backup_dont && sb.st_size >= x_backup_dont) {
                 ret = FALSE;
             } else if (x_backup_ask && sb.st_size >= x_backup_ask) {

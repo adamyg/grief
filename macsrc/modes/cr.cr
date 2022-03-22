@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: cr.cr,v 1.14 2014/10/22 02:34:33 ayoung Exp $
+/* $Id: cr.cr,v 1.15 2021/07/05 15:01:29 cvsuser Exp $
  * GRIEF/Crisp syntax definition mode.
  *
  *
@@ -111,17 +111,17 @@ main(void)
 
     syntax_rule("%" + "\\[[^\\]]\\]",           // regular expressions, character-set.
         "group=string:operator");
-                                                // format specifications (includes c99).
-    syntax_rule("%" + "[-+ #0']?[0-9]*\\.[0-9]*[hlL]*[bdiuoxXDOUfeEgGcCsSpn]",
+                                                // format specifications (includes c99 and 'W' extensions).
+    syntax_rule("%" + "[-+ #0']?[0-9]*\\.[0-9]*[hlL]*[bdiuoxXDOUfeEgGcCsSWpn]",
         "group=string,quick:operator");
 
-    syntax_rule("%" + "[-+ #0']?[0-9]*[hlL]*[bdiuoxXDOUfeEgGcCsSpn]",
+    syntax_rule("%" + "[-+ #0']?[0-9]*[hlL]*[bdiuoxXDOUfeEgGcCsSWpn]",
         "group=string,quick:operator");
 
-    syntax_rule("%" + "[-+ #0']?[*]?\\.[*]?[hlL]*[bdiuoxXDOUfeEgGcCsSpn]",
+    syntax_rule("%" + "[-+ #0']?[*]?\\.[*]?[hlL]*[bdiuoxXDOUfeEgGcCsSWpn]",
         "group=string,quick:operator");
 
-    syntax_rule("%" + "[-+ #0']?[*]?[hlL]*[bdiuoxXDOUfeEgGcCsSpn]",
+    syntax_rule("%" + "[-+ #0']?[*]?[hlL]*[bdiuoxXDOUfeEgGcCsSWpn]",
         "group=string,quick:operator");
 
     syntax_rule("%" + "[^ \"]+",                // non-standard character escapes.

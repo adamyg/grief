@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_anchor_c,"$Id: anchor.c,v 1.45 2020/04/21 00:01:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_anchor_c,"$Id: anchor.c,v 1.46 2021/06/10 06:13:01 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: anchor.c,v 1.45 2020/04/21 00:01:54 cvsuser Exp $
+/* $Id: anchor.c,v 1.46 2021/06/10 06:13:01 cvsuser Exp $
  * Anchor primitives.
  *
  *
@@ -638,7 +638,7 @@ do_raise_anchor(void)           /* int () */
         inq_marked, raise_anchor, drop_anchor
  */
 void
-do_mark(void)			/* int ([int type = NULL]) */
+do_mark(void)                   /* int ([int type = NULL]) */
 {
     if (curbp) {
 
@@ -787,13 +787,13 @@ greatest_line(LINENO start_line, LINENO end_line)
     }
 
     while (line <= end_line) {
-        const LINE_t *lp = linep(line);
-
+        const LINE_t *lp = vm_lock_line(line);
         if (lp) {
             const int col = line_column2(lp, line, (int) llength(lp));
             if (col > maxcol) {
                 maxcol = col;
             }
+            vm_unlock(line);
         }
         ++line;
     }
@@ -875,3 +875,4 @@ do_swap_anchor(void)            /* int () */
 }
 
 /*end*/
+

@@ -1,11 +1,11 @@
 #ifndef GR_TTYX11KB_H_INCLUDED
 #define GR_TTYX11KB_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyx11kb_h,"$Id: ttyx11kb.h,v 1.4 2014/10/22 02:33:24 ayoung Exp $")
+__CIDENT_RCSID(gr_ttyx11kb_h,"$Id: ttyx11kb.h,v 1.5 2021/07/18 23:03:19 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyx11kb.h,v 1.4 2014/10/22 02:33:24 ayoung Exp $
+/* $Id: ttyx11kb.h,v 1.5 2021/07/18 23:03:19 cvsuser Exp $
  * X11 keyboard translation tables.
  *
  *  These tables direct the translation of X keyboard events into our internal
@@ -90,7 +90,7 @@ static const KeyboardXlat   plainXlatSeed[] = {
     { XK_Find,                  KEY_SEARCH },
     { XK_Cancel,                KEY_CANCEL },
     { XK_Help,                  KEY_HELP },
-    { XK_Break,                 KEY_VOID },
+    { XK_Break,                 KEY_BREAK },
     { XK_Mode_switch,           KEY_VOID },
     { XK_script_switch,         KEY_VOID },
     { XK_Num_Lock,              KEY_VOID },

@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_glob_c,"$Id: w32_glob.c,v 1.5 2020/06/18 14:32:39 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_glob_c,"$Id: w32_glob.c,v 1.6 2022/03/21 14:29:40 cvsuser Exp $")
 
 /*
  * win <glob.h>
@@ -20,10 +20,10 @@ __CIDENT_RCSID(gr_w32_glob_c,"$Id: w32_glob.c,v 1.5 2020/06/18 14:32:39 cvsuser 
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Copyright (c) 1989, 1993
@@ -243,7 +243,7 @@ glob(const char * /*__restrict*/ pattern, int flags, int (*errfunc)(const char *
 #endif
 	if (flags & GLOB_NOESCAPE) {
 		while (bufnext < bufend && (c = *patnext++) != EOS)
-			*bufnext++ = c;
+			*bufnext++ = (Char)c;
 	} else {
 		/* Protect the quoted characters. */
 		while (bufnext < bufend && (c = *patnext++) != EOS)
@@ -261,10 +261,10 @@ glob(const char * /*__restrict*/ pattern, int flags, int (*errfunc)(const char *
 					c = QUOTE;
 					--patnext;
 				}
-				*bufnext++ = c | M_PROTECT;
+				*bufnext++ = (Char)(c | M_PROTECT);
 			}
 			else
-				*bufnext++ = c;
+				*bufnext++ = (Char)c;
 	}
 	*bufnext = EOS;
 

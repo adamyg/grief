@@ -1,8 +1,10 @@
+#ifndef LIBW32_WIN32_CDEF_H_INCLUDED
+#define LIBW32_WIN32_CDEF_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * internal definitions
  *
- * Copyright (c) 2016 - 2019 Adam Young.
+ * Copyright (c) 2016 - 2022 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -17,13 +19,14 @@
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  */
 
 #include <sys/cdefs.h>
 
 /*end*/
+#endif /*LIBW32_WIN32_CDEF_H_INCLUDED*/

@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_progname_c,"$Id: w32_progname.c,v 1.7 2020/06/18 14:30:48 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_progname_c,"$Id: w32_progname.c,v 1.9 2022/03/21 14:29:41 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 set/getprogname
  *
- * Copyright (c) 2016 - 2020, Adam Young.
+ * Copyright (c) 2016 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -21,10 +21,10 @@ __CIDENT_RCSID(gr_w32_progname_c,"$Id: w32_progname.c,v 1.7 2020/06/18 14:30:48 
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  *
  * Notice: Portions of this text are reprinted and reproduced in electronic form. from
@@ -40,6 +40,8 @@ __CIDENT_RCSID(gr_w32_progname_c,"$Id: w32_progname.c,v 1.7 2020/06/18 14:30:48 
 #include <unistd.h>
 
 static const char *progname = NULL;
+static const wchar_t *wprogname = NULL;
+
 
 LIBW32_API void
 setprogname(const char *name)
@@ -52,8 +54,8 @@ setprogname(const char *name)
         name = (p1 > p2 ? p1 : p2) + 1;  //consume leading path.
     }
 
-    free((char *)progname);
-    progname = _strdup(name); //clone buffer.
+    free((void *)progname);
+    progname = WIN32_STRDUP(name); //clone buffer.
 
     if (NULL != (p = strrchr(progname, '.')) &&
             (0 == stricmp(p, ".exe") || 0 == stricmp(p, ".com"))) {
@@ -65,8 +67,55 @@ setprogname(const char *name)
     }
 }
 
+
+LIBW32_API void
+setprognameW(const wchar_t *name)
+{
+    const wchar_t *p1 = wcsrchr(name, '\\'),
+        *p2 = wcsrchr(name, '/');
+    wchar_t *p;
+
+    if (p1 || p2) { //last component.
+        name = (p1 > p2 ? p1 : p2) + 1; //consume leading path.
+    }
+
+    free((void *)wprogname);
+    wprogname = WIN32_STRDUPW(name); //clone buffer.
+
+    if (NULL != (p = wcsrchr(wprogname, '.')) &&
+            (0 == _wcsicmp(p, L".exe") || 0 == _wcsicmp(p, L".com"))) {
+        *p = 0; //consume trailing exe/com extension.
+    }
+
+    for (p = (wchar_t *)wprogname; *p; ++p) { //hide case issues.
+        if (*p < 0x7f) *p = tolower((char)*p);
+    }
+}
+
+
 LIBW32_API const char *
 getprogname(void)
+{
+#if defined(UTF8FILENAMES)
+    if (w32_utf8filenames_state()) {
+        if (NULL == progname) {
+            char path[1024];
+            const wchar_t *wpath;
+            if (NULL != (wpath = getprognameW())) {
+                w32_wc2utf(wpath, path, sizeof(path));
+                setprogname(path);
+            }
+        }
+        return (progname ? progname : "program");
+    }
+#endif  //UTF8FILENAMES
+
+    return getprognameA();
+}
+
+
+LIBW32_API const char *
+getprognameA(void)
 {
     if (NULL == progname) {
         char t_buffer[1024];
@@ -79,5 +128,19 @@ getprogname(void)
     return (progname ? progname : "program");
 }
 
-/*end*/
 
+LIBW32_API const wchar_t *
+getprognameW(void)
+{
+    if (NULL == wprogname) {
+        wchar_t t_buffer[1024];
+        DWORD buflen;
+        if ((buflen = GetModuleFileNameW(NULL, t_buffer, _countof(t_buffer)-1)) > 0) {
+            t_buffer[buflen] = 0;
+            setprognameW(t_buffer);
+        }
+    }
+    return (wprogname ? wprogname : L"program");
+}
+
+/*end*/

@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: select.cr,v 1.41 2014/10/27 23:28:27 ayoung Exp $
+/* $Id: select.cr,v 1.44 2021/07/05 15:01:29 cvsuser Exp $
  * Selection macros implementing buffer based popup user interface.
  *
  *
@@ -135,7 +135,7 @@ buffer_list(~ int shortmode, ~ int sysbuffers)
     listbuf = create_buffer("Buffer List", NULL, 1);
 
     homedir = inq_home();
-    homelen = strlen(homedir);
+    homelen = wstrlen(homedir);
 
     /* dynamic sizing */
 #define MINWIN      74                          /* below this, window is truncated */
@@ -165,7 +165,7 @@ buffer_list(~ int shortmode, ~ int sysbuffers)
                 int t_len;
 
                 inq_names(NULL, NULL, buf_name);
-                if ((t_len = strlen(buf_name)) > len) {
+                if ((t_len = wcwidth(buf_name)) > len) {
                     len = t_len;
                 }
             }
@@ -199,7 +199,7 @@ buffer_list(~ int shortmode, ~ int sysbuffers)
                 inq_names(file_name, NULL, buf_name);
 
                 /* buffer name */
-                if ((len = strlen(buf_name)) > buflen) {
+                if ((len = wcwidth(buf_name)) > buflen) {
                                                 /* .. shorten name */
                     buf_name = buf_shortname(buf_name, len, buflen);
 
@@ -212,17 +212,17 @@ buffer_list(~ int shortmode, ~ int sysbuffers)
 
                 /* format file name */
                 if (homelen &&                  /* .. strip home */
-                        (homedir == substr(file_name, 1, homelen)))  {
-                    t_file_name = "~" + substr(file_name, homelen + 1);
+                        (homedir == wsubstr(file_name, 1, homelen)))  {
+                    t_file_name = "~" + wsubstr(file_name, homelen + 1);
 
                 } else {
                     t_file_name = file_name;
                 }
 
-                if ((len = strlen(t_file_name)) > pathlen) {
+                if ((len = wcwidth(t_file_name)) > pathlen) {
                     /*
-                    *  truncate image
-                    */
+                     *  truncate image
+                     */
                     int plen, flen;
                                                 /* .. determine path length */
                     if (0 == (plen = rindex(t_file_name, "/"))) {
@@ -235,12 +235,12 @@ buffer_list(~ int shortmode, ~ int sysbuffers)
                     }
 
                     t_file_name =               /* .. shorten name to 'flen' */
-                        substr(t_file_name, 1, plen) +
-                        buf_shortname(substr(t_file_name, plen+1), len-plen, flen);
+                        wsubstr(t_file_name, 1, plen) +
+                        buf_shortname(wsubstr(t_file_name, plen + 1), len - plen, flen);
 
-                    if ((len = strlen(t_file_name)) > pathlen) {
+                    if ((len = wcwidth(t_file_name)) > pathlen) {
                         t_file_name =           /* .. shorten path */
-                            ".." + substr(t_file_name, len - (pathlen-3));
+                            ".." + wsubstr(t_file_name, len - (pathlen - 3));
                     }
                 }
 
@@ -249,7 +249,8 @@ buffer_list(~ int shortmode, ~ int sysbuffers)
                  *          within the global 'flaglen' parameter.
                  */
                 if (shortmode) {
-                    sprintf(line, "%s %s%s", buf_name, t_file_name, inq_modified() ? "*" : "");
+                    if (inq_modified()) t_file_name += "*";
+                    sprintf(line, "%s %-*S", buf_name, pathlen + 10, t_file_name);
 
                 } else {
                     inq_position(position);
@@ -288,12 +289,12 @@ buffer_list(~ int shortmode, ~ int sysbuffers)
                     }
 
                     if (sysbuffers) {           /* sys mode, include buffer identifier */
-                        sprintf(line, "%s (%3d) %s %5d %s %s %s",
-                            buf_name, inq_buffer(), lines, position, modes, encoding, t_file_name);
+                        sprintf(line, "%S (%3d) %s %5d %s %s %-*S",
+                            buf_name, inq_buffer(), lines, position, modes, encoding, pathlen + 10, t_file_name);
 
                     } else {                    /* normal mode */
-                        sprintf(line, "%s %s %5d %s %s %s",
-                            buf_name, lines, position, modes, encoding, t_file_name);
+                        sprintf(line, "%S %s %5d %s %s %-*S",
+                            buf_name, lines, position, modes, encoding, pathlen + 10, t_file_name);
                     }
                 }
 
@@ -303,9 +304,8 @@ buffer_list(~ int shortmode, ~ int sysbuffers)
                 insert(nl);
                 nl = "\n";
                 insert(line);
-                                                /* insert fullname for Alt-D */
-                move_abs(0, buflen + flaglen + pathlen + 10);
-                insert(DELIMIT);
+
+                insert(DELIMIT);                /* insert fullname for Alt-D */
                 insert(file_name);
 
                 ++buf_no;
@@ -333,6 +333,7 @@ buffer_list(~ int shortmode, ~ int sysbuffers)
     set_ctrl_state(WCTRLO_VERT_SCROLL, WCTRLS_SHOW, win);
 
     set_buffer(listbuf);
+    set_buffer_type(NULL, BFTYP_UTF8);
     sort_buffer();
     set_buffer(curbuf);
     retval = select_buffer(listbuf, win, SEL_NORMAL, "buf_keys", NULL, "Buffer List");
@@ -372,7 +373,7 @@ buf_shortname(string name, int len, int maxlen)
     if (len < maxlen) {
         return name;
     }
-    return substr(name, 1, i) + "~" + substr(name, len - (maxlen - (i+2)));
+    return wsubstr(name, 1, i) + "~" + wsubstr(name, len - (maxlen - (i+2)));
 }
 
 
@@ -562,9 +563,12 @@ selfile_list(string path, string wild_card, string title, int dirs, int multi)
     int ret;
 
     curbuf = inq_buffer();
-    min_width = strlen(path) + 6;
+    if ((min_width = strlen(path) + 6) < 28) {
+        min_width = 28;
+    }
     buf = create_buffer(title != "" ? title : path, NULL, 1);
     set_buffer(buf);
+    set_buffer_type(NULL, BFTYP_UTF8);
 
     if (wild_card == "" || wild_card == "*" ||
             substr(wild_card, strlen(wild_card) - 1, 1) == "/") {
@@ -586,9 +590,9 @@ selfile_list(string path, string wild_card, string title, int dirs, int multi)
             continue;                           // ignore, only directories
         }
         if (multi) {
-            sprintf(tmpbuf, " %s%s", name, (mode & S_IFDIR) ? "/" : "");
+            sprintf(tmpbuf, " %S%s", name, (mode & S_IFDIR) ? "/" : "");
         } else {
-            sprintf(tmpbuf, "%s%s", name, (mode & S_IFDIR) ? "/" : "");
+            sprintf(tmpbuf, "%S%s", name, (mode & S_IFDIR) ? "/" : "");
         }
         if (0 == (S_IFDIR & mode)) {            // inserts files etc
             insert(tmpbuf + "\n");
@@ -826,6 +830,7 @@ select_list(string title, string message_string, int step,
     old_buffer = inq_buffer();
     buffer = create_buffer(title, NULL, 1);
     set_buffer(buffer);
+    set_buffer_type(NULL, BFTYP_UTF8);
     width = strlen(title) + 4;
 
     len = length_of_list(items);

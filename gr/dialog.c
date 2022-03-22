@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dialog_c,"$Id: dialog.c,v 1.29 2019/01/26 22:27:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_dialog_c,"$Id: dialog.c,v 1.30 2021/07/18 23:03:18 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dialog.c,v 1.29 2019/01/26 22:27:08 cvsuser Exp $
+/* $Id: dialog.c,v 1.30 2021/07/18 23:03:18 cvsuser Exp $
  * Dialog manager.
  *
  *
@@ -237,7 +237,7 @@ dialog_shutdown(void)
  *<<GRIEF>>
     Macro: dialog_create - Build a dialog resource.
 
-        int 
+        int
         dialog_create(list decl)
 
     Macro Description:
@@ -296,7 +296,7 @@ dialog_shutdown(void)
       ! DLGA_TOOLTIP            String  Tooltip topic.
 
       ! DLGA_X                  Int     Horizontal position.
-      ! DLGA_Y                  Int     Vertical position.   
+      ! DLGA_Y                  Int     Vertical position.
       ! DLGA_COLS               Int     Width in columns.
       ! DLGA_ROWS               Int     Height in rows.
 
@@ -328,14 +328,14 @@ dialog_shutdown(void)
       ! DLGA_TEXT_ONLY          n/a
       ! DLGA_GUI_ONLY           n/a
       ! DLGA_ACCELERATOR        String
-      ! DLGA_HOTKEY             Integer  
+      ! DLGA_HOTKEY             Integer
       ! DLGA_GREYED             n/a
       ! DLGA_ACTIVE             n/a
-      ! DLGA_SENSITIVE          Integer  
-      ! DLGA_PADX               Integer  
-      ! DLGA_PADY               Integer  
+      ! DLGA_SENSITIVE          Integer
+      ! DLGA_PADX               Integer
+      ! DLGA_PADY               Integer
 
-      ! DLGA_ORIENTATION        Integer  
+      ! DLGA_ORIENTATION        Integer
       ! DLGA_HIDDEN             n/a
       ! DLGA_VISIBLE            n/a
       ! DLGA_KEYDOWN            Boolean
@@ -345,9 +345,9 @@ dialog_shutdown(void)
       ! DLCA_USERDATA           Int
 
       ! DLGA_EDEDITABLE         Boolean
-      ! DLGA_EDMAXLENGTH        Integer 
+      ! DLGA_EDMAXLENGTH        Integer
       ! DLGA_EDVISIBLITY        Boolean
-      ! DLGA_EDPOSITION         Integer 
+      ! DLGA_EDPOSITION         Integer
       ! DLGA_EDPLACEHOLDER      String
 
       ! DLGA_LBCOUNT            Integer
@@ -358,20 +358,20 @@ dialog_shutdown(void)
       ! DLGA_LBDUPLICATES       Integer
       ! DLGA_LBCLEAR            n/a
 
-      ! DLGA_LBCURSOR           Integer 
-      ! DLGA_LBACTIVE           Integer 
-      ! DLGA_LBDISPLAYTEXT      Integer 
-      ! DLGA_LBDISPLAYTEXTLEN   Integer 
-      ! DLGA_LBTEXT             Integer 
-      ! DLGA_LBTEXTLEN          Integer 
+      ! DLGA_LBCURSOR           Integer
+      ! DLGA_LBACTIVE           Integer
+      ! DLGA_LBDISPLAYTEXT      Integer
+      ! DLGA_LBDISPLAYTEXTLEN   Integer
+      ! DLGA_LBTEXT             Integer
+      ! DLGA_LBTEXTLEN          Integer
       ! DLGA_LBPAGEMODE         Boolean
       ! DLGA_LBINDEXMODE        Boolean
-                                
+
       ! DLGA_CBEDITABLE         Boolean
-      ! DLGA_CBRELAXMODE        Integer 
-      ! DLGA_CBAUTOCOMPLETEMODE Integer 
-      ! DLGA_CBPOPUPMODE        Integer 
-      ! DLGA_CBPOPUPSTATE       Integer 
+      ! DLGA_CBRELAXMODE        Integer
+      ! DLGA_CBAUTOCOMPLETEMODE Integer
+      ! DLGA_CBPOPUPMODE        Integer
+      ! DLGA_CBPOPUPSTATE       Integer
 
       ! DLGA_GAUGEMIN           Int|Str
       ! DLGA_GAUGEMAX           Int|Str
@@ -683,7 +683,7 @@ do_dialog_run(void)             /* int (int dialog, [string args]) */
             current dialog is referenced.
 
     Macro Returns:
-        The 'dialog_delete()' primitive return non-zero on success, 
+        The 'dialog_delete()' primitive return non-zero on success,
         otherwise zero on error.
 
     Macro Portability:
@@ -732,7 +732,7 @@ do_dialog_delete(void)          /* int (int dialog) */
         The 'dialog_exit()' primitive exits the current dialog.
 
     Macro Parameters:
-        retval - Integer return value, returned to the 
+        retval - Integer return value, returned to the
                     original <dialog_run> caller.
 
         dialog - Optional dialog instance handle, if omitted the
@@ -834,7 +834,7 @@ inq_dialog(void)                /* int () */
             mutliple elements.
 
     Macro Returns:
-        The 'widget_set()' primitive returns the assigned value, 
+        The 'widget_set()' primitive returns the assigned value,
         otherwise NULL on error.
 
     Macro Portability:
@@ -939,7 +939,7 @@ do_widget_set(void)             /* ([int dialog], [int name|string name], declar
             multiple elements.
 
     Macro Returns:
-        The 'widget_get()' primitive returns the assigned value, 
+        The 'widget_get()' primitive returns the assigned value,
         otherwise NULL on error.
 
     Macro Portability:

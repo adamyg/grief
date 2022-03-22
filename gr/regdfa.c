@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_regdfa_c,"$Id: regdfa.c,v 1.32 2020/04/21 00:01:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_regdfa_c,"$Id: regdfa.c,v 1.33 2021/06/18 14:41:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: regdfa.c,v 1.32 2020/04/21 00:01:57 cvsuser Exp $
+/* $Id: regdfa.c,v 1.33 2021/06/18 14:41:57 cvsuser Exp $
  * DFA regular expression engine.
  * Streamlined engine for use by the syntax hiliting code.
  *
@@ -2004,4 +2004,5 @@ regdfa_pmatch(struct regdfa *regex, const char *str, int sol, const char **start
     }
     return -1;
 }
+
 /*end*/

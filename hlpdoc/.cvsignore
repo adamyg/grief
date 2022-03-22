@@ -3,5 +3,7 @@ doc/html/
 doc/mandoc/
 ndplus
 Makefile
+*.err
+*.pdf
 ref
 

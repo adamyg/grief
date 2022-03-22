@@ -1,14 +1,14 @@
 #ifndef LIBW32_ALLOCA_H_INCLUDED
 #define LIBW32_ALLOCA_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_alloca_h,"$Id: alloca.h,v 1.7 2019/03/15 23:12:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_alloca_h,"$Id: alloca.h,v 1.8 2022/03/21 14:29:39 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 <alloc.h> implementation
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -24,13 +24,14 @@ __CPRAGMA_ONCE
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  */
 
 #include <malloc.h>
 
 #endif /*LIBW32_ALLOCA_H_INCLUDED*/
+

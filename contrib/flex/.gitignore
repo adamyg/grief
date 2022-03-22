@@ -2,3 +2,9 @@ file-2.510/
 .unpacked.*
 Makefile
 *.err
+parse.c
+parse.h
+scan.c
+skel.c
+
+

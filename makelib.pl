@@ -1,17 +1,18 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.113 2021/04/10 09:51:56 cvsuser Exp $
+# $Id: makelib.pl,v 1.123 2022/03/22 08:07:31 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
-# -*- tabs: 8; indent-width: 4; -*-
+# -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
 #
 #
-# Copyright (c) 1998 - 2021, Adam Young.
+# Copyright (c) 1998 - 2022, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
 #
-# The GRIEF Editor is free software: you can redistribute it
-# and/or modify it under the terms of the GRIEF Editor License.
+# The applications are free software: you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation, version 3.
 #
 # Redistributions of source code must retain the above copyright
 # notice, and must be distributed with the license document above.
@@ -21,10 +22,10 @@
 # the documentation and/or other materials provided with the
 # distribution.
 #
-# The GRIEF Editor is distributed in the hope that it will be useful,
+# The applications are distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# License for more details.
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 # ==end==
 #
 
@@ -53,6 +54,7 @@ use Text::ParseWords;
 my $CWD                     = getcwd();
 my $BINPATH                 = '';
 my $PERLPATH                = '';
+my $MFCDIR                  = undef;
 my $BUSYBOX                 = undef;
 my $WGET                    = undef;
 my $INNO                    = undef;
@@ -151,8 +153,8 @@ my %x_environment   = (
             LDMAPFILE       => '-MAP:$(MAPFILE)',
 
             MFCDIR          => '',
-            MFCCFLAGS       => '-nologo -RTC1 @RTLIBRARY@',
-            MFCCXXFLAGS     => '-nologo -RTC1 @RTLIBRARY@ -EHsc',
+            MFCCFLAGS       => '-nologo @RTLIBRARY@',
+            MFCCXXFLAGS     => '-nologo @RTLIBRARY@ -EHsc',
             MFCCOPT         => '-Zc:wchar_t- -Zc:forScope -Gm',
             MFCCXXOPT       => '-Zc:wchar_t- -Zc:forScope -Gm',
             MFCCINCLUDE     => '',
@@ -211,9 +213,11 @@ my %x_environment   = (
                         # -Fm:  if positioned before /link
                         # -MAP: if positioned afer /link
 
+            # 7600.16385.1: Windows Driver Kit Version 7.1.0
+            #   ==> http://www.microsoft.com/download/en/details.aspx?displaylang=en&id=11800
             MFCDIR          => '/tools/WinDDK/7600.16385.1',
-            MFCCFLAGS       => '-nologo -RTC1 @RTLIBRARY@',
-            MFCCXXFLAGS     => '-nologo -RTC1 @RTLIBRARY@ -EHsc',
+            MFCCFLAGS       => '-nologo @RTLIBRARY@',
+            MFCCXXFLAGS     => '-nologo @RTLIBRARY@ -EHsc',
             MFCCOPT         => '-Zc:wchar_t- -Zc:forScope -Gm',
             MFCCXXOPT       => '-Zc:wchar_t- -Zc:forScope -Gm',
             MFCCINCLUDE     => '-I$(MFCDIR)/inc/atl71 -I$(MFCDIR)/inc/mfc42',
@@ -245,6 +249,16 @@ my %x_environment   = (
             LDMAPFILE       => '-MAP:$(MAPFILE)',
                         # -Fm:  if positioned before /link
                         # -MAP: if positioned afer /link
+
+            # 7600.16385.1: Windows Driver Kit Version 7.1.0
+            #   ==> http://www.microsoft.com/download/en/details.aspx?displaylang=en&id=11800
+            MFCDIR          => '/tools/WinDDK/7600.16385.1',
+            MFCCFLAGS       => '-nologo @RTLIBRARY@',
+            MFCCXXFLAGS     => '-nologo @RTLIBRARY@ -EHsc',
+            MFCCOPT         => '-Zc:wchar_t- -Zc:forScope -Gm',
+            MFCCXXOPT       => '-Zc:wchar_t- -Zc:forScope -Gm',
+            MFCCINCLUDE     => '-I$(MFCDIR)/inc/atl71 -I$(MFCDIR)/inc/mfc42',
+            MFCLIBS         => '/LIBPATH:$(MFCDIR)\lib\atl\i386 /LIBPATH:$(MFCDIR)\lib\mfc\i386'
             },
 
        'vc1900'        => {    # 2015, Visual Studio 19
@@ -273,6 +287,16 @@ my %x_environment   = (
             LDMAPFILE       => '-MAP:$(MAPFILE)',
                         # -Fm:  if positioned before /link
                         # -MAP: if positioned afer /link
+
+            # 7600.16385.1: Windows Driver Kit Version 7.1.0
+            #   ==> http://www.microsoft.com/download/en/details.aspx?displaylang=en&id=11800
+            MFCDIR          => '/tools/WinDDK/7600.16385.1',
+            MFCCFLAGS       => '-nologo @RTLIBRARY@',
+            MFCCXXFLAGS     => '-nologo @RTLIBRARY@ -EHsc',
+            MFCCOPT         => '-Zc:wchar_t- -Zc:forScope -Gm',
+            MFCCXXOPT       => '-Zc:wchar_t- -Zc:forScope -Gm',
+            MFCCINCLUDE     => '-I$(MFCDIR)/inc/atl71 -I$(MFCDIR)/inc/mfc42',
+            MFCLIBS         => '/LIBPATH:$(MFCDIR)\lib\atl\i386 /LIBPATH:$(MFCDIR)\lib\mfc\i386'
             },
 
        # See: VsDevCmd.bat
@@ -313,13 +337,15 @@ my %x_environment   = (
                         # -Fm:  if positioned before /link
                         # -MAP: if positioned afer /link
 
-        #   MFCDIR          => '/tools/WinDDK/7600.16385.1',
-        #   MFCCFLAGS       => '-nologo -RTC1 @RTLIBRARY@',
-        #   MFCCXXFLAGS     => '-nologo -RTC1 @RTLIBRARY@ -EHsc',
-        #   MFCCOPT         => '-Zc:wchar_t- -Zc:forScope -Gm',
-        #   MFCCXXOPT       => '-Zc:wchar_t- -Zc:forScope -Gm',
-        #   MFCCINCLUDE     => '-I$(MFCDIR)/inc/atl71 -I$(MFCDIR)/inc/mfc42',
-        #   MFCLIBS         => '/LIBPATH:$(MFCDIR)\lib\atl\i386 /LIBPATH:$(MFCDIR)\lib\mfc\i386'
+            MFCDIR          => '',
+            MFCCFLAGS       => '-nologo @RTLIBRARY@',
+            MFCCXXFLAGS     => '-nologo @RTLIBRARY@ -EHsc',
+            MFCCOPT         => '-Zc:wchar_t- -Zc:forScope',
+            MFCCXXOPT       => '-Zc:wchar_t- -Zc:forScope',
+          # MFCCINCLUDE     => '-I$(MFCDIR)/inc/atl71 -I$(MFCDIR)/inc/mfc42',
+          # MFCLIBS         => '/LIBPATH:$(MFCDIR)\lib\atl\i386 /LIBPATH:$(MFCDIR)\lib\mfc\i386'
+            MFCCINCLUDE     => '',
+            MFCLIBS         => ''
             },
 
        'vc1920'        => {    # 2019, Visual Studio 19.2x
@@ -348,6 +374,54 @@ my %x_environment   = (
             LDMAPFILE       => '-MAP:$(MAPFILE)',
                         # -Fm:  if positioned before /link
                         # -MAP: if positioned afer /link
+
+            MFCDIR          => '',
+            MFCCFLAGS       => '-nologo @RTLIBRARY@',
+            MFCCXXFLAGS     => '-nologo @RTLIBRARY@ -EHsc',
+            MFCCOPT         => '-Zc:wchar_t- -Zc:forScope',
+            MFCCXXOPT       => '-Zc:wchar_t- -Zc:forScope',
+          # MFCCINCLUDE     => '-I$(MFCDIR)/inc/atl71 -I$(MFCDIR)/inc/mfc42',
+          # MFCLIBS         => '/LIBPATH:$(MFCDIR)\lib\atl\i386 /LIBPATH:$(MFCDIR)\lib\mfc\i386'
+            MFCCINCLUDE     => '',
+            MFCLIBS         => ''
+            },
+
+       'vc1930'        => {    # 2022, Visual Studio 19.3x
+            TOOLCHAIN       => 'vs170',
+            TOOLCHAINEXT    => '.vs170',
+            CC              => 'cl',
+            COMPILERPATHS   => '%VS170COMNTOOLS%/../../VC/bin|%VCToolsInstallDir%/bin/Hostx86/x86',
+            COMPILERPATH    => '',
+            VSWITCH         => '',
+            VPATTERN        => undef,
+            OSWITCH         => '-Fo',
+            LSWITCH         => '',
+            XSWITCH         => '-Fe',
+            AR              => 'lib',
+            CINCLUDE        => '',
+            RTLIBRARY       => '-MDd',
+            CFLAGS          => '-nologo @RTLIBRARY@ -fp:precise',
+            CXXFLAGS        => '-nologo @RTLIBRARY@ -EHsc -fp:precise',
+            CDEBUG          => '-Zi -RTC1 -Od',
+            CRELEASE        => '-O2 -GL -Gy -DNDEBUG',
+            CWARN           => '-W3',
+            CXXWARN         => '-W3',
+            LDFLAGS         => '-nologo @RTLIBRARY@',
+            LDDEBUG         => '-Zi -RTC1',
+            LDRELEASE       => '-GL',
+            LDMAPFILE       => '-MAP:$(MAPFILE)',
+                        # -Fm:  if positioned before /link
+                        # -MAP: if positioned afer /link
+
+            MFCDIR          => '',
+            MFCCFLAGS       => '-nologo @RTLIBRARY@',
+            MFCCXXFLAGS     => '-nologo @RTLIBRARY@ -EHsc',
+            MFCCOPT         => '-Zc:wchar_t- -Zc:forScope',
+            MFCCXXOPT       => '-Zc:wchar_t- -Zc:forScope',
+          # MFCCINCLUDE     => '-I$(MFCDIR)/inc/atl71 -I$(MFCDIR)/inc/mfc42',
+          # MFCLIBS         => '/LIBPATH:$(MFCDIR)\lib\atl\i386 /LIBPATH:$(MFCDIR)\lib\mfc\i386'
+            MFCCINCLUDE     => '',
+            MFCLIBS         => ''
             },
 
         'wc1300'        => {    # Watcom 11
@@ -439,9 +513,13 @@ my %x_environment   = (
             LDRELEASE       => '',
             LDMAPFILE       => '-fm=$(MAPFILE)',
 
+            # 7600.16385.1: Windows Driver Kit Version 7.1.0
+            #   ==> http://www.microsoft.com/download/en/details.aspx?displaylang=en&id=11800
             MFCDIR          => '/tools/WinDDK/7600.16385.1',
-            MFCCOPT         => '-q -j -ei -6r -d2  -hw -db -ofr -zlf -bt=nt -bm -br -aa',
-            MFCCXXOPT       => '-q -j -ei -6r -d2i     -db -ofr -zlf -bt=nt -bm -br -xs -xr -cc++',
+            MFCCFLAGS       => '-q -j -ei -6r -d2  -hw -db -ofr -zlf -bt=nt -bm -br -aa',
+            MFCCXXFLAGS     => '-q -j -ei -6r -d2i     -db -ofr -zlf -bt=nt -bm -br -xs -xr -cc++',
+            MFCCOPT         => '',
+            MFCCXXOPT       => '',
             MFCCINCLUDE     => '-I$(MFCDIR)/inc/atl71 -I$(MFCDIR)/inc/mfc42',
             MFCLIBS         => '/LIBPATH:$(MFCDIR)\lib\atl\i386 /LIBPATH:$(MFCDIR)\lib\mfc\i386'
             },
@@ -777,6 +855,7 @@ my @x_headers       = (     #headers
         'stdarg.h',
         'stdlib.h',
         'stdio.h',
+        'stddef.h',
         'limits.h',
         'inttypes.h',                           # c99
         'stdint.h',                             # c99
@@ -787,6 +866,7 @@ my @x_headers       = (     #headers
         'pthread.h',                            # MINGW
         'string.h', 'strings.h',
         'errno.h',
+        'locale.h',                             # setlocale()
         'wchar.h', 'wctype.h',
         'time.h',                               # TIME_WITH_SYS_TIME
         'alloca.h',                             # alloca()
@@ -800,7 +880,6 @@ my @x_headers       = (     #headers
         'memory.h',
         'process.h',
         'libgen.h',                             # basename(), dirname()
-        'limits.h',
         'share.h',
         'signal.h',
         'utime.h',
@@ -858,6 +937,8 @@ my @x_types         = (     #stdint/inttypes/types.h
         'uintmax_t',
         'intptr_t',
         'uintptr_t',
+        'ptrdiff_t',
+        'long double',
         'long long int',
         'unsigned long long int',
         'int8_t',
@@ -931,7 +1012,10 @@ my @x_functions     = (
         'snprintf', '_snprintf', 'vsnprintf', '_vsnprintf',
         'strrchr', 'strdup',
         'asnprintf', 'vasnprintf',
+        'setlocale',
         'mbrtowc', 'wcrtomb', 'wcscmp', 'wcscpy', 'wcslen', 'wctomb', 'wmemcmp', 'wmemmove', 'wmemcpy',
+        'wcwidth',
+        '_tzset',                               # msvc
         'fgetpos', 'fsetpos',
         'fseeko', 'fgetln',                     # bsd/linux extensions
         'truncate', 'ftruncate',
@@ -968,7 +1052,7 @@ my %CONFIG_O        = (     # optional config.h values
         HAVE_EIGHTBIT           => '1'
         );
 
-my %CONFIG_H        = (     # predefined config.h values
+our %CONFIG_H       = (     # predefined config.h values
         IS_LITTLE_ENDIAN        => '1',         # TODO
         STDC_HEADERS            => '1',
         HAVE_EIGHTBIT           => '1',
@@ -990,7 +1074,8 @@ my @LIBS            = ();
 my @EXTRALIBS       = ();
 my @DLLS            = ();
 
-my $x_tmpdir        = '.makelib';
+my $x_workdir       = '.makelib';
+my $x_tmpdir        = undef;
 my $x_compiler      = '';
 my $x_version       = '';
 my @x_include       = ();
@@ -999,8 +1084,8 @@ my $x_signature     = undef;
 
 my $o_makelib       = './makelib.in';
 my $o_keep          = 0;
-my $o_version       = undef;
 my $o_verbose       = 0;
+my $o_version       = undef;
 my $o_gnuwin32      = 'auto';
 my $o_contrib       = 1;
 my $o_gnulibs       = 0;
@@ -1019,6 +1104,7 @@ sub Configure($$);
 sub ExeRealpath($);
 sub LoadContrib($$$$$);
 sub CheckCompiler($$);
+sub CheckHeader($$);
 sub CheckDecl($$);
 sub CheckType($$);
 sub CheckSize($$);
@@ -1050,6 +1136,7 @@ main()
                 'bison=s'       => \$BISON,
                 'flex=s'        => \$FLEX,
                 'busybox=s'     => \$BUSYBOX,
+                'mfcdir=s'      => \$MFCDIR,
                 'wget=s'        => \$WGET,
                 'inno=s'        => \$INNO,
                 'version=i'     => \$o_version,
@@ -1078,20 +1165,16 @@ main()
     (-f $o_makelib) or
         Usage("missing makelib.in");
 
-    # see: https://en.wikipedia.org/wiki/Microsoft_Visual_C%2B%2B
+    #   See: https://en.wikipedia.org/wiki/Microsoft_Visual_C%2B%2B
     #
     #   MSVC++ 9.0   _MSC_VER == 1500 (Visual Studio 2008 version 9.0)
     #   MSVC++ 10.0  _MSC_VER == 1600 (Visual Studio 2010 version 10.0)
     #   MSVC++ 11.0  _MSC_VER == 1700 (Visual Studio 2012 version 11.0)
     #   MSVC++ 12.0  _MSC_VER == 1800 (Visual Studio 2013 version 12.0)
     #   MSVC++ 14.0  _MSC_VER == 1900 (Visual Studio 2015 version 14.0)
-    #   MSVC++ 14.1  _MSC_VER == 1910 (Visual Studio 2017 version 15.0)
-    #   MSVC++ 14.11 _MSC_VER == 1911 (Visual Studio 2017 version 15.3)
-    #   MSVC++ 14.12 _MSC_VER == 1912 (Visual Studio 2017 version 15.5)
-    #   MSVC++ 14.13 _MSC_VER == 1913 (Visual Studio 2017 version 15.6)
-    #   MSVC++ 14.14 _MSC_VER == 1914 (Visual Studio 2017 version 15.7)
-    #   MSVC++ 14.16 _MSC_VER == 1916 (Visual Studio 2017 version 15.9)
-    #   MSVC++ 14.20 _MSC_VER == 1920 (Visual Studio 2019 version 15.7)
+    #   MSVC++ 14.1x _MSC_VER == 1910 (Visual Studio 2017 version 15.x)
+    #   MSVC++ 14.2x _MSC_VER == 192x (Visual Studio 2019 version 16.x)
+    #   MSVC++ 14.3x _MSC_VER == 193x (Visual Studio 2022 version 17.x)
     #
     if    ('vc12' eq $cmd)      { $o_version = 1200, $cmd = 'vc'  }
     elsif ('vc14' eq $cmd)      { $o_version = 1400; $cmd = 'vc'  } elsif ('vc2005' eq $cmd) { $o_version = 1400; $cmd = 'vc' }
@@ -1101,6 +1184,7 @@ main()
     elsif ('vc19' eq $cmd)      { $o_version = 1900; $cmd = 'vc'  } elsif ('vc2015' eq $cmd) { $o_version = 1900; $cmd = 'vc' }
     elsif ('vc1910' eq $cmd)    { $o_version = 1910; $cmd = 'vc'  } elsif ('vc2017' eq $cmd) { $o_version = 1910; $cmd = 'vc' }
     elsif ('vc1920' eq $cmd)    { $o_version = 1920; $cmd = 'vc'  } elsif ('vc2019' eq $cmd) { $o_version = 1920; $cmd = 'vc' }
+    elsif ('vc1930' eq $cmd)    { $o_version = 1930; $cmd = 'vc'  } elsif ('vc2022' eq $cmd) { $o_version = 1930; $cmd = 'vc' }
     elsif ('owc19' eq $cmd)     { $o_version = 1900; $cmd = 'owc' }
     elsif ('owc20' eq $cmd)     { $o_version = 2000; $cmd = 'owc' }
 
@@ -1115,7 +1199,7 @@ main()
             $cmd eq 'owc' || $cmd eq 'wc' ||
             $cmd eq 'dj' ||  $cmd eq 'mingw') {
 
-        my $cache = "${x_tmpdir}/${cmd}${o_version}.cache";
+        my $cache = "${x_workdir}/${cmd}${o_version}.cache";
 
         if (! $o_clean && -f $cache) {
             eval {
@@ -1139,9 +1223,9 @@ main()
         $Data::Dumper::Purity = 1;
         $Data::Dumper::Sortkeys = 1;
         print CACHE Data::Dumper->Dump([\%x_tokens],   [qw(*XXTOKENS)]);
-        print CACHE Data::Dumper->Dump([\%CONFIG_H],   [qw(*XXCONFIG_H)]);
         print CACHE Data::Dumper->Dump([\@HEADERS],    [qw(*XXHEADERS)]);
         print CACHE Data::Dumper->Dump([\@EXTHEADERS], [qw(*XXEXTHEADERS)]);
+        print CACHE Data::Dumper->Dump([\%CONFIG_H],   [qw(*CONFIG_H)]);
         print CACHE Data::Dumper->Dump([\%DECLS],      [qw(*DECLS)]);
         print CACHE Data::Dumper->Dump([\%TYPES],      [qw(*TYPES)]);
         print CACHE Data::Dumper->Dump([\%SIZES],      [qw(*SIZES)]);
@@ -1341,10 +1425,19 @@ Configure($$)           # (type, version)
     foreach my $entry (keys %$env) {            # target profile
         $x_tokens{$entry} = $$env{$entry};
     }
+    if ($MFCDIR) { #override
+        print "MFCDIR:   ${MFCDIR}\n";
+        $x_tokens{MFCDIR} = $MFCDIR;
+    }
 
     MakelibConfigure($type, $env);
 
     # toolchain dynamic configuration
+    (-d $x_workdir || mkdir($x_workdir)) or
+        die "makelib: unable to access/create workdir <$x_workdir> : $!\n";
+
+    $x_tmpdir = "${x_workdir}/${type}${version}";
+
     (-d $x_tmpdir || mkdir($x_tmpdir)) or
         die "makelib: unable to access/create tmpdir <$x_tmpdir> : $!\n";
 
@@ -1391,35 +1484,54 @@ Configure($$)           # (type, version)
 
     print "Scanning: @INCLUDE\n"
         if ($o_verbose);
+
+    my $headerdefines = "";
     my $idx = -1;
     foreach my $header (@x_headers, @x_headers2) {
         my $headers2 = (++$idx >= scalar @x_headers);
-        my $fullpath = undef;
+        my $fullpath = "";
+        my $include = "";
+        my $check = -1;
 
-        print "header:   ${header} ...";
-        print " " x (28 - length($header));
-        foreach my $include (@INCLUDE) {
+        my $name = $header;
+        $name =~ s/[\/.]/_/g;
+        $name = "HAVE_".uc($name);              # HAVE_XXXX_H
+
+        my $cached = (exists $CONFIG_H{$name});
+
+        # present check
+        print "header:   ${header} present ...";
+        print " " x (28 - (length($header)+8));
+        foreach $include (@INCLUDE) {
             $fullpath = "${include}/${header}";
             $fullpath =~ s/\\/\//g;
-            if (-f $fullpath) {
-                print "[${fullpath}]";
-
-                if ($headers2) {               # headers2
-                    push @EXTHEADERS, $header;
-                } else {
-                    push @HEADERS, $header;
-                    push @EXTHEADERS, $header
-                        if ($include ne $x_libw32);
-                }
-                $header =~ s/[\/.]/_/g;
-                $header = uc($header);
-                $CONFIG_H{"HAVE_${header}"} = '1';
-                last;
-            }
-            $fullpath = undef;
+            last if (-f $fullpath);
+            $fullpath = "";
         }
-        print "[not found]" if (! defined $fullpath);
-        print "\n";
+        print "[".($fullpath ? "yes" : "no")."] <$fullpath>\n";
+
+        # usability check
+        print "header:   ${header} usability ... ";
+        print " " x (28 - (length($header)+11));
+        if ($headers2) {
+            $check = ($fullpath ? 0 : -1);      # found?
+        } else {
+            $check = ($cached ? 0 : CheckHeader($header, $headerdefines)); # build check
+        }
+        print "[".(0 == $check ? "yes" : "no").($cached?", cached":"")."]\n";
+
+        if (0 == $check) {
+            if ($headers2) {                    # headers2
+                push @EXTHEADERS, $header;
+            } else {
+                push @HEADERS, $header;
+                push @EXTHEADERS, $header
+                    if ($include ne $x_libw32);
+            }
+
+            $CONFIG_H{$name} = '1';
+            $headerdefines .= "#define ${name} 1\n";
+        }
     }
 
     # decls
@@ -2017,7 +2129,7 @@ CheckDecl($$)           # (type, name)
             die "cannot create ${x_tmpdir}/$SOURCE : $!\n";
     print TMP<<EOT;
 /*
- *  Generated by makelib.pl, $asctime (CheckSize)
+ *  Generated by makelib.pl, $asctime (CheckDecl)
 $cmdparts
  */
 ${config}
@@ -2030,6 +2142,44 @@ int main(int argc, char **argv) {
     const int ret = strlen(STRIZE($name));
     printf("${name}=%s : ", STRIZE($name));
     return ret ? 0 : 1;
+}
+EOT
+    close TMP;
+
+    return CheckExec($BASE, $cmd, 1);
+}
+
+
+#   Function: CheckHeader
+#       Determine whether of the stated 'header' is usage.
+#
+sub
+CheckHeader($$)         # (header, $headerdefines)
+{
+    my ($header, $headerdefines) = @_;
+
+    my $t_header = $header;
+    $t_header =~ s/[\\\/\. ]/_/g;
+
+    my $BASE   = "header_${t_header}";
+    my $SOURCE = "${BASE}.c";
+    my ($cmd, $cmdparts)
+            = CheckCommand($BASE, $SOURCE);
+    my $config = CheckConfig();
+
+    my $asctime = asctime(localtime());
+    chop($asctime);
+    open(TMP, ">${x_tmpdir}/$SOURCE") or
+            die "cannot create ${x_tmpdir}/$SOURCE : $!\n";
+    print TMP<<EOT;
+/*
+ *  Generated by makelib.pl, $asctime (CheckHeader)
+$cmdparts
+ */
+${headerdefines}
+#include <$header>
+int main(int argc, char **argv) {
+    return 0;
 }
 EOT
     close TMP;
@@ -2536,9 +2686,8 @@ CheckExec($$;$)         # (base, cmd, [exec])
     my $ret = System($cmd);
     if (! -f "${base}.exe") {
         my $out = "${base}.out";
-
-        printf "  ::<%s>\n", $out;
         if ($o_verbose && -f $out) {
+            printf "  ::<%s>\n", $out;
             open(OUT, "<${out}") or
                 die "cannot open ${out}";
             while (defined (my $line = <OUT>)) {
@@ -2887,8 +3036,12 @@ Makefile($$$)           # (type, dir, file)
         die "cannot create $dir/$file";
     if ($file eq 'Makefile') {
         print MAKEFILE "# Generated by makelib.pl, $asctime\n";
-    } elsif ($file =~ /.h$/) {
-        print MAKEFILE "/* Generated by makelib.pl, $asctime */\n";
+    } else {
+        if (! ($file =~ s/\@configure_input\@/Generated by makelib.pl, $asctime/)) {
+            if ($file =~ /.h$/) {
+                print MAKEFILE "/* Generated by makelib.pl, $asctime */\n";
+            }
+        }
     }
 
     if ($file eq 'Makefile') {                  # compact whitespace

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mac1_c,"$Id: mac1.c,v 1.70 2020/04/21 00:01:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_mac1_c,"$Id: mac1.c,v 1.75 2021/10/18 13:07:25 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mac1.c,v 1.70 2020/04/21 00:01:57 cvsuser Exp $
+/* $Id: mac1.c,v 1.75 2021/10/18 13:07:25 cvsuser Exp $
  * Basic primitives.
  *
  *
@@ -369,12 +369,13 @@ do_delete_to_eol(void)          /* void () */
     LINE_t *lp;
     int dot, n;
 
-    lp = linep(cline);
-    dot = line_offset2(lp, cline, ccol, LOFFSET_NORMAL);
-    if ((n = llength(lp) - dot) > 0) {
-        ldelete(n);
+    if (NULL != (lp = vm_lock_line2(cline))) {
+        dot = line_offset_const(lp, cline, ccol, LOFFSET_NORMAL);
+        if ((n = llength(lp) - dot) > 0) {
+            ldelete(n);
+        }
+        vm_unlock(cline);
     }
-    vm_unlock(cline);
 }
 
 
@@ -417,10 +418,11 @@ do_delete_line(void)            /* void () */
 
     u_dot();
     *cur_col = 1;
-    lp = linep(cline);
-    ldelete(llength(lp) + 1);                   /* MCHAR, line plus EOL */
+    if (NULL != (lp = vm_lock_line2(cline))) {
+        ldelete(llength(lp) + 1);               /* MCHAR, line plus EOL */
+        vm_unlock(cline);
+    }
     *cur_col = ccol;
-    vm_unlock(cline);
 }
 
 
@@ -1758,15 +1760,15 @@ do_redraw(void)                 /* ([int winch]) */
     Macro: insert - Insert string into current buffer.
 
         int
-        insert(string str, [int num = 1])
+        insert(string|int val, [int num = 1])
 
     Macro Description:
-        The 'insert()' primitive inserts the specified string 'str'
-        into the current buffer. The string shall be inserted 'num'
-        times, which if omitted defaults to 1.
+        The 'insert_process()' primitive inserts the specified string or
+        integer character value 'val' into the current buffer. The value
+        shall be inserted 'num' times, which if omitted defaults to 1.
 
     Macro Parameters:
-        str - String value to be inserted.
+        val - String or integer character value to be inserted.
 
         num - Option integer number stating the repeat count, if
             specified then the string is inserted the given number of
@@ -1787,16 +1789,16 @@ do_redraw(void)                 /* ([int winch]) */
     Macro: insert_process - Send string to a attached process.
 
         int
-        insert_process(string str, [int num = 1])
+        insert_process(string|int val, [int num = 1])
 
     Macro Description:
-        The 'insert_process()' primitive inserts the specified string
-        'str' into the process attached to the current buffer. The
-        string shall be inserted 'num' times, which if omitted
-        defaults to 1.
+        The 'insert_process()' primitive inserts the specified string or
+        integer character value 'val' into the process attached to the 
+        current buffer. The value shall be inserted 'num' times, which
+        if omitted defaults to 1.
 
     Macro Parameters:
-        str - String value to be inserted.
+        val - String or integer character value to be inserted.
 
         num - Option integer number stating the repeat count, if
             specified then the string is inserted the given number
@@ -1813,7 +1815,7 @@ do_redraw(void)                 /* ([int winch]) */
         insert, insertf, insert_buffer, insert_process
  */
 void
-do_insert(int proc)             /* int (string str, [int num]) */
+do_insert(int proc)             /* int (string str | int character, [int num]) */
 {
     const char *cp;
     accint_t num;
@@ -1842,6 +1844,7 @@ do_insert(int proc)             /* int (string str, [int num]) */
 
     /*
      *  Otherwise insert the specified string
+     *  MCHAR/??? utf8->iconv
      */
     cp = get_str(1);
     len = (int)strlen(cp);
@@ -1912,17 +1915,18 @@ void
 do_insertf(void)                /* int (string fmt, ...) */
 {
     const char *cp;
-    int len = 0;
+    int len = 0, width = 0;
 
     if (margc > 1) {
-        cp = print_formatted(0, &len);          /* sprintf style output */
+        cp = print_formatted(0, &len, &width);  /* sprintf style output */
     } else {
         cp = get_str(1);
+        len = width = get_strlen(1);
     }
     if (cp) {
         linserts(cp, len);
     }
-    acc_assign_int(len);
+    acc_assign_int(width);
 }
 
 
@@ -1989,7 +1993,7 @@ do_insert_buffer(void)          /* int (int bufnum, string | expr ....) */
 {
     BUFFER_t *bp;
     const char *cp;
-    int len = 0;
+    int len = 0, width = 0;
 
     if (NULL == (bp = buf_lookup(get_xinteger(1, -1)))) {
         ewprintf("insert_buffer: no such buffer");
@@ -1998,23 +2002,22 @@ do_insert_buffer(void)          /* int (int bufnum, string | expr ....) */
     }
 
     if (margc > 2) {
-        cp = print_formatted(1, &len);          /* sprintf style output */
+        cp = print_formatted(1, &len, &width);  /* sprintf style output */
     } else {
         cp = get_str(2);                        /* just quote string */
+        len = width = get_strlen(2);
     }
 
     if (cp) {
-        BUFFER_t *saved_bp = curbp;
+        BUFFER_t *ocurbp = curbp;
 
         if (bp != curbp) {
-            curbp = bp;
-            set_hooked();
+            set_curbp(bp);
         }
         linserts(cp, len);
-        curbp = saved_bp;
-        set_hooked();
+        set_curbp(ocurbp);
     }
-    acc_assign_int(len);
+    acc_assign_int(width);
 }
 
 
@@ -2503,7 +2506,7 @@ void
 do_read(void)                   /* string ([int number], [int &status]) */
 {
     const LINENO cline = *cur_line, ccol = *cur_col;
-    int status = 0;                             /* extension, status being -1=eof,1=eol,0=partial */
+    int status = 1;                             /* extension, status being -1=eof,1=eol,0=partial */
     LINE_t *lp;
 
     if (NULL == (lp = vm_lock_linex(curbp, cline))) {
@@ -2514,11 +2517,8 @@ do_read(void)                   /* string ([int number], [int &status]) */
     } else {
         int dot, len, copy;
 
-        dot = line_offset2(lp, cline, ccol, LOFFSET_NORMAL);
+        dot = line_offset_const(lp, cline, ccol, LOFFSET_NORMAL);
         len = llength(lp) - dot;
-
-        trace_ilog("read(line:%d,col:%d,dot:%d,length:%d) : %d\n", \
-            (int)cline, (int)ccol, dot, llength(lp), len);
 
         if (isa_undef(1)) {
             copy = len;                         /* EOL */
@@ -2530,15 +2530,51 @@ do_read(void)                   /* string ([int number], [int &status]) */
             copy = (value1 > len ? len : value1);
         }
 
+        trace_ilog("read(line:%d,col:%d,dot:%d,length:%d) : %d of %d\n", \
+            (int)cline, (int)ccol, dot, llength(lp), copy, len);
+
+        // MCHAR/???, iconv->utf8
         if (copy <= 0) {
             acc_assign_str("\n", 1);            /* empty line */
 
-        } else if (copy < len) {                /* sub-line */
-            acc_assign_str((const char *) ltext(lp) + dot, copy);
-            status = 0;
+        } else {
+            const LINECHAR *start = ltext(lp) + dot;
 
-        } else {                                /* copied to EOL, must add \n */
-            acc_assign_str2((const char *) ltext(lp) + dot, copy, "\n", 1);
+            if (! BFTST(curbp, BF_BINARY)) {    /* MCHAR */
+                const LINECHAR *cp = start,
+                    *end = ltext(lp) + llength(lp);
+
+                if (copy >= len) {
+                    cp = end;
+                } else {
+                    LINENO pos = ccol;
+                    int32_t ch;
+
+                    while (copy > 0 && cp < end) {
+                        int length, width =
+                                character_decode(pos, cp, end, &length, &ch, NULL);
+                        if (width > 0) --copy;
+                        pos += width;
+                        cp += length;
+                    }
+                }
+
+                if (cp >= end) {                /* EOL + \n */
+                    acc_assign_str2((const char *) start, len, "\n", 1);
+                } else {                        /* partial */
+                    acc_assign_str((const char *) start, cp - start);
+                    status = 0;
+                }
+
+            } else {
+                if (copy >= len) {              /* EOL + \n */
+                    acc_assign_str2((const char *) start, copy, "\n", 1);
+
+                } else {                        /* partial */
+                    acc_assign_str((const char *) start, copy);
+                    status = 0;
+                }
+            }
         }
 
         vm_unlock(cline);

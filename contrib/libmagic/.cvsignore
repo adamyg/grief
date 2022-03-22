@@ -1,0 +1,6 @@
+Makefile
+*.err
+.unpacked.*
+magic
+magic.mgc
+

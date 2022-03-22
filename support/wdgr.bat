@@ -1,2 +1,2 @@
 @echo off
-wd bin\gr.exe --nosigtrap %1 %2 %3 %4 %5 %6 %7 %8 %9
+wd ..\bin.owc19\debug\gr.exe -DGRPATH=..\macros -DGRHELP=..help --nosigtrap %1 %2 %3 %4 %5 %6 %7 %8 %9

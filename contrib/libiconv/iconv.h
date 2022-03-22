@@ -1,10 +1,10 @@
 #ifndef ICONV_H_INCLUDED
 #define ICONV_H_INCLUDED
-/* $Id: iconv.h,v 1.5 2020/06/18 19:52:45 cvsuser Exp $
+/* $Id: iconv.h,v 1.6 2021/06/13 16:32:03 cvsuser Exp $
  *
  * win32 <iconv.h> - libiconv
  *
- * Copyright (c) 2012-2015 Adam Young.
+ * Copyright (c) 2012-2021 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -62,7 +62,7 @@ LIBICONV_LINKAGE int LIBICONV_ENTRY         iconv_close(iconv_t cd);
 LIBICONV_LINKAGE int LIBICONV_ENTRY         iconv_errno(void);
 
 LIBICONV_LINKAGE size_t LIBICONV_ENTRY      __iconv(iconv_t handle, const char **in, size_t *szin, char **out,
-	                                                size_t *szout, unsigned flags, size_t *invalids);
+                                                    size_t *szout, unsigned flags, size_t *invalids);
 
 LIBICONV_LINKAGE int LIBICONV_ENTRY         __iconv_get_list(char ***rlist, size_t *rsz);
 
@@ -73,6 +73,10 @@ LIBICONV_LINKAGE const char *LIBICONV_ENTRY __iconv_PATH_ESDB(void);
 LIBICONV_LINKAGE const char *LIBICONV_ENTRY __iconv_PATH_CSMAPPER(void);
 
 LIBICONV_LINKAGE const char *LIBICONV_ENTRY __iconv_PATH_ICONV(void);
+
+#if !defined(__ICONV_F_HIDE_INVALID)
+#define __ICONV_F_HIDE_INVALID 0x0001
+#endif
 
 __END_DECLS
 

@@ -2,7 +2,7 @@
 /*
  * libtermemu console driver
  *
- * Copyright (c) 2007, 2012 - 2020 Adam Young.
+ * Copyright (c) 2007, 2012 - 2022 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -18,7 +18,7 @@
 
 /*
  * Notes:
- *   o Extended 256 color mode is experimental/work in progress.
+ *   o 256 color mode available under both Legacy and Win10 enhanced console.
  *   o Use of non-monospaced fonts are not advised unless UNICODE characters are required.
  *   o Neither wide nor combined characters are fully addressed.
  */
@@ -28,8 +28,14 @@
 #endif
 
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0500
+#define _WIN32_WINNT 0x601
+#else
+#if(_WIN32_WINNT < 0x601)
+#undef  _WIN32_WINNT
+#define _WIN32_WINNT 0x601
 #endif
+#endif
+
 #define PSAPI_VERSION               1           // EnumProcessModules and psapi.dll
 #if !defined(WINDOWS_MEAN_AND_LEAN)
 #define  WINDOWS_MEAN_AND_LEAN
@@ -50,6 +56,10 @@
 #endif
 #define WIN32_CONSOLEEXT                        /* extended console */
 #define WIN32_CONSOLE256                        /* enable 256 color console support */
+
+#if defined(__WATCOMC__)
+#pragma disable_message(124)                    /* Comparison result always 0 / 1 */
+#endif
 
 #pragma comment(lib, "Gdi32.lib")
 #pragma comment(lib, "User32.lib")
@@ -524,6 +534,8 @@ vio_trace(const char *fmt, ...)
     if (debug[len-1] != '\n') debug[len] = '\n', debug[len+1] = 0;
     OutputDebugStringA(debug);
     va_end(ap);
+#else   //_DEBUG
+    (void)fmt;
 #endif  //_DEBUG
 }
 
@@ -569,7 +581,9 @@ vio_init(void)
     } else if (rows > VIO_MAXROWS) {
         rows = VIO_MAXROWS;                     // limit to supported width.
     }
+
     if (cols < VIO_MINCOLS) cols = VIO_MINCOLS;
+        //Note: shouldnt occur, console limits ~6 to accommodate def buttons.
 
     if (fontprofile || vio.cols != cols || vio.rows != rows) {
         const WCHAR_INFO *oimage;
@@ -593,7 +607,7 @@ vio_init(void)
         assert(vio.chandle);
         assert(vio.whandle);
 
-        vio.size = rows * cols;
+        vio.size = rows * cols;                 // buffer size, in elements
         oimage = vio.image;
         vio.image = (WCHAR_INFO *)calloc(vio.size, sizeof(WCHAR_INFO));
         if (oimage) {                           // screen has resized
@@ -628,6 +642,7 @@ vio_init(void)
         vio.c_trashed = 1;
         vio.rows = rows;
         vio.cols = cols;
+
         vio_goto(vio.c_row, vio.c_col);         // limit current cursor
 
         for (l = 0; l < rows; ++l) {
@@ -859,7 +874,7 @@ vio_profile(int rebuild)
                 vio.fcfamily  = cfix.FontFamily;
                 vio.fcweight  = cfix.FontWeight;
                 vio.fcfamily  = -1;
-                wcstombs(vio.fcfacename, cfix.FaceName, sizeof(vio.fcfacename));
+                wcstombs(vio.fcfacename, cfix.FaceName, sizeof(vio.fcfacename) /*bytes*/);
             }
 
         } else {
@@ -948,7 +963,7 @@ vio_profile(int rebuild)
                 TRACE_LOG(("Console Facenames (%u)\n", (unsigned)count))
                 TRACE_LOG(("  Idx  W x  H   Fam   Wgt  Facename\n"))
                 for (f = 0; f < count; ++f, ++cursor) {
-                    wcstombs(t_facename, cursor->FaceName, sizeof(t_facename));
+                    wcstombs(t_facename, cursor->FaceName, sizeof(t_facename) /*bytes*/);
                     TRACE_LOG(("  %2d: %2u x %2u, %4u, %4u, <%s>\n", (int)cursor->nFont, \
                         (unsigned)cursor->dwFontSize.X, (unsigned)cursor->dwFontSize.Y, \
                         (unsigned)cursor->FontFamily, (unsigned)cursor->FontWeight, t_facename))
@@ -1031,7 +1046,8 @@ IsVirtualConsole(int *depth)
 #endif
 #if !defined(ENABLE_INSERT_MODE)
 #define ENABLE_INSERT_MODE 0x0020
-    // When enabled, text entered in a console window will be inserted at the current cursor location and all text following that location will not be overwritten.
+    // When enabled, text entered in a console window will be inserted at the current cursor location and
+    // all text following that location will not be overwritten.
     // When disabled, all following text will be overwritten.
     // To enable this mode, use ENABLE_INSERT_MODE | ENABLE_EXTENDED_FLAGS.
     // To disable this mode, use ENABLE_EXTENDED_FLAGS without this flag.
@@ -1043,7 +1059,7 @@ IsVirtualConsole(int *depth)
     // To disable this mode, use ENABLE_EXTENDED_FLAGS without this flag.
 #endif
 #if !defined(ENABLE_EXTENDED_FLAGS)
-#define ENABLE_EXTENDED_FLAGS 0x0080    
+#define ENABLE_EXTENDED_FLAGS 0x0080
     // Required to enable or disable extended flags. See ENABLE_INSERT_MODE and ENABLE_QUICK_EDIT_MODE.
 #endif
 
@@ -1066,7 +1082,7 @@ IsVirtualConsole(int *depth)
                 *depth = t_depth;
                 return TRUE;
             } else if (SetConsoleMode(chandle, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING)) {
-                (void)SetConsoleMode(chandle, mode);
+                (void) SetConsoleMode(chandle, mode);
                 *depth = t_depth;
                 return TRUE;
             }
@@ -1478,7 +1494,7 @@ CopyOut(copyoutctx_t *ctx, unsigned pos, unsigned cnt, unsigned flags)
         if (-1 == ctx->cursormode) {            // hide cursor, if visible
             GetConsoleCursorInfo(chandle, &ctx->cursorinfo);
             if (0 != (ctx->cursormode = ctx->cursorinfo.bVisible)) {
-                ctx->cursorinfo.bVisible = FALSE; 
+                ctx->cursorinfo.bVisible = FALSE;
                 (void) SetConsoleCursorInfo(chandle, &ctx->cursorinfo);
             }
         }
@@ -1730,7 +1746,7 @@ CopyOutEx(copyoutctx_t *ctx, size_t pos, size_t cnt, unsigned flags)
                 const WCHAR_INFO cell = *cursor++;
 
                 if (start >= 0) {               // attribute run
-                    if (SameAttributesFGBG(&cell, &info, fg, bg, VIO_BOLD|VIO_BLINK|VIO_ITALIC|VIO_FAINT)) {
+                    if (SameAttributesFGBG(&cell, &info, fg, bg, VIO_BOLD|VIO_BLINK|VIO_ITALIC|VIO_FAINT|VIO_INVERSE)) {
                         ocursor[col++] = cell;  // update out image
                         *text = (WCHAR)cell.Char.UnicodeChar;
                         if (++text >= etext)
@@ -1753,14 +1769,17 @@ CopyOutEx(copyoutctx_t *ctx, size_t pos, size_t cnt, unsigned flags)
                 text  = textbuf;
                 info  = cell.Info;
                 COLOR256(&info, &fg, &bg);
+                if (info.Attributes & VIO_INVERSE) {
+                    SWAPRGB(fg, bg);
+                }
 
                 if (start > 0) {                // if previous is space, also redraw; address font cell draw bleeding.
                     const WCHAR_INFO backcell = cursor[-2];
 
                     if ((IsSpace(cell.Char.UnicodeChar) &&
-                            SameAttributesFGBG(&backcell, &info, fg, bg, VIO_BOLD | VIO_BLINK | VIO_ITALIC | VIO_FAINT)) ||
+                            SameAttributesFGBG(&backcell, &info, fg, bg, VIO_BOLD|VIO_BLINK|VIO_ITALIC|VIO_FAINT|VIO_INVERSE)) ||
                         (IsSpace(backcell.Char.UnicodeChar) &&
-                            SameAttributesBG(&backcell, &info, bg, VIO_BOLD | VIO_BLINK | VIO_ITALIC | VIO_FAINT))) {
+                            SameAttributesBG(&backcell, &info, bg, VIO_BOLD|VIO_BLINK|VIO_ITALIC|VIO_FAINT|VIO_INVERSE))) {
                         *text++ = (WCHAR)backcell.Char.UnicodeChar;
                         --start;
                     }
@@ -1922,11 +1941,16 @@ CopyOutEx2(copyoutctx_t *ctx, size_t pos, size_t cnt, unsigned flags)
             do {
                 const WCHAR_INFO cell = *cursor++;
 
+                if (0 == cell.Char.UnicodeChar) {
+                    ++col;
+                    continue;                   // NULL, padding
+                }
+
                 //  ESC[<y>; <x> H              CUP, Cursor Position *Cursor moves to <x>; <y> coordinate within the viewport, where <x> is the column of the <y> line.
                 //
                 if (-1 == start) {
                     if (0 == (flags & TRASHED) &&
-                        SameCell(&cell, ocursor + col)) {
+                            SameCell(&cell, ocursor + col)) {
                         ++col;
                         continue;               // up-to-date
                     }
@@ -2268,6 +2292,7 @@ consolefontsenum(void)
     //              Typefaces for Source Code Beautification.
     //
     //      Fonts:
+    //          https://github.com/powerline/fonts
     //          http://www.proggyfonts.net/
     //          http://www.levien.com/type/myfonts/inconsolata.html
     //          http://terminus-font.sourceforge.net/ and https://files.ax86.net/terminus-ttf/
@@ -2544,18 +2569,25 @@ WCHAR_BUILD(const uint32_t ch, const struct WCHAR_COLORINFO *info, WCHAR_INFO *c
 
 
 static BOOL
+WATTR_COMPARE(const WCHAR_INFO *c1, const struct WCHAR_COLORINFO *info2)
+{
+    if (c1->Info.Flags || info2->Flags) {
+        return (c1->Info.Flags == info2->Flags &&
+                    c1->Info.Attributes == info2->Attributes &&
+                    c1->Info.fg == info2->fg &&
+                    c1->Info.bg == info2->bg &&
+                    c1->Info.fgrgb == info2->fgrgb &&
+                    c1->Info.bgrgb == info2->bgrgb);
+    }
+    return (c1->Info.Attributes == info2->Attributes);
+}
+
+
+static BOOL
 WCHAR_COMPARE(const WCHAR_INFO *c1, const WCHAR_INFO *c2)
 {
     if (c1->Char.UnicodeChar == c2->Char.UnicodeChar) {
-        if (c1->Info.Flags || c2->Info.Flags) {
-            return (c1->Info.Flags == c2->Info.Flags &&
-                       c1->Info.Attributes == c2->Info.Attributes &&
-                       c1->Info.fg == c2->Info.fg &&
-                       c1->Info.bg == c2->Info.bg &&
-                       c1->Info.fgrgb == c2->Info.fgrgb &&
-                       c1->Info.bgrgb == c2->Info.bgrgb);
-        }
-        return (c1->Info.Attributes == c2->Info.Attributes);
+        return WATTR_COMPARE(c1, &c2->Info);
     }
     return FALSE;
 }
@@ -2764,15 +2796,16 @@ vio_save(void)
     rows = 1 + sbinfo.srWindow.Bottom - sbinfo.srWindow.Top;
     cols = 1 + sbinfo.srWindow.Right - sbinfo.srWindow.Left;
 
-    if (!vio_state.image || vio_state.rows != rows || vio_state.cols != cols) {
-        CHAR_INFO *newImage;
+    if (!vio_state.image ||                     // initial or size change
+            vio_state.rows != rows || vio_state.cols != cols) {
+        CHAR_INFO *nimage;
 
         if (rows <= 0 || cols <= 0 ||
-                NULL == (newImage = calloc(rows * cols, sizeof(CHAR_INFO)))) {
+                NULL == (nimage = calloc(rows * cols, sizeof(CHAR_INFO)))) {
             return;
         }
         free(vio_state.image);                  // release previous; if any
-        vio_state.image = newImage;
+        vio_state.image = nimage;
         vio_state.rows = rows;
         vio_state.cols = cols;
     }
@@ -2805,8 +2838,8 @@ ImageSave(HANDLE console, unsigned pos, unsigned cnt)
     wr.Top    = (SHORT)(pos / cols);
     wr.Bottom = (SHORT)((pos + (cnt - 1)) / cols);
 
-    is.Y      = (SHORT)(vio.rows - wr.Top);     // size of image.
-    is.X      = (SHORT)(vio.cols);
+    is.Y      = (SHORT)(rows - wr.Top);         // size of image.
+    is.X      = (SHORT)(cols);
 
     ic.X      = 0;                              // top left src cell in image.
     ic.Y      = 0;
@@ -3164,6 +3197,7 @@ vio_goto(int row, int col)
 {
     if (row >= vio.rows) row = vio.rows-1;
     vio.c_row = row;
+
     if (col >= vio.cols) col = vio.cols-1;
     vio.c_col = col;
 }
@@ -3221,6 +3255,8 @@ vio_define_attr(int obj, const char *what, const char *fg, const char *bg)
 //  }
 
     if (VIO_INVERSE & (fattr|battr)) {          // apply inverse.
+        fattr &= ~VIO_INVERSE;
+        battr &= ~VIO_INVERSE;
         SWAPFGBG(fcolor, bcolor);
         SWAPRGB(frgb, brgb);
     }
@@ -3282,7 +3318,11 @@ vio_define_winattr(int obj, int fg, int bg, uint16_t attributes)
     assert(bg >= WIN_COLOR_MIN && bg < WIN_COLOR_NUM);
     if (obj < 0 || obj >= MAXOBJECTS) return;
 
-    if (VIO_INVERSE & attributes) SWAPFGBG(fg, bg);
+    if (VIO_INVERSE & attributes) {
+        attributes &= ~VIO_INVERSE;
+        SWAPFGBG(fg, bg);
+    }
+
     if (fg < 0 || bg < 0) {                     // specials, dynamic
         vio.c_attrs[obj].Flags = VIO_F16;       // vt/xterm
         vio.c_attrs[obj].Attributes = attributes;
@@ -3314,8 +3354,13 @@ vio_define_vtattr(int obj, int fg, int bg, uint16_t attributes)
         vio.c_attrs[obj].Flags = VIO_F256;
         if (vio.maxcolors > 16) vio.activecolors = 256;
     }
+
+    if (VIO_INVERSE & attributes) {
+        attributes &= ~VIO_INVERSE;
+        SWAPFGBG(fg, bg);
+    }
+
     vio.c_attrs[obj].Attributes = attributes;
-    if (VIO_INVERSE & attributes) SWAPFGBG(fg, bg);
     vio.c_attrs[obj].fg = (short)vtnormal(fg);
     vio.c_attrs[obj].bg = (short)vtnormal(bg);
     vio.c_attrs[obj].fgrgb = (COLORREF)-1;
@@ -3333,8 +3378,13 @@ vio_define_rgbattr(int obj, int fg, int bg, uint16_t attributes)
 
     vio.c_attrs[obj].Flags = VIO_FRGB;          // true-color
     if (vio.maxcolors > 16) vio.activecolors = 256;
+
+    if (VIO_INVERSE & attributes) {
+        attributes &= ~VIO_INVERSE;
+        SWAPFGBG(fg, bg);
+    }
+
     vio.c_attrs[obj].Attributes = attributes;
-    if (VIO_INVERSE & attributes) SWAPFGBG(fg, bg);
     vio.c_attrs[obj].fg = (short)rgb_search(16, fg); // shadow colors (vt/xterm)
     vio.c_attrs[obj].bg = (short)rgb_search(16, bg);
     vio.c_attrs[obj].fgrgb = (COLORREF)fg;      // true-colors
@@ -3394,7 +3444,11 @@ vio_set_wincolor(int fg, int bg, uint16_t attributes)
     assert(fg >= WIN_COLOR_MIN && fg < WIN_COLOR_NUM);
     assert(bg >= WIN_COLOR_MIN && bg < WIN_COLOR_NUM);
 
-    if (VIO_INVERSE & attributes) SWAPFGBG(fg, bg);
+    if (VIO_INVERSE & attributes) {
+        attributes &= ~VIO_INVERSE;
+        SWAPFGBG(fg, bg);
+    }
+
     if (fg < 0 || bg < 0) {                     // specials, dynamic
         vio.c_color.Flags = VIO_F16;            // vt/xterm
         vio.c_color.Attributes = attributes;
@@ -3425,8 +3479,12 @@ vio_set_vtcolor(int fg, int bg, uint16_t attributes)
 
     vio.c_color.Flags = VIO_F16;
     if (fg >= 16 || bg >= 16) vio.c_color.Flags = VIO_F256;
+    if (VIO_INVERSE & attributes) {
+        attributes &= ~VIO_INVERSE;
+        SWAPFGBG(fg, bg);
+    }
+
     vio.c_color.Attributes = attributes;
-    if (VIO_INVERSE & attributes) SWAPFGBG(fg, bg);
     vio.c_color.fg = (short)vtnormal(fg);       // primary colors (vt/xterm)
     vio.c_color.bg = (short)vtnormal(bg);
     vio.c_color.fgrgb = (COLORREF)-1;           // true-colors (none)
@@ -3446,8 +3504,12 @@ vio_set_rgbcolor(int32_t fg, int32_t bg, uint16_t attributes)
 
     vio.c_color.Flags = VIO_FRGB;
     if (vio.maxcolors > 16) vio.activecolors = 256;
+    if (VIO_INVERSE & attributes) {
+        attributes &= VIO_INVERSE;
+        SWAPFGBG(fg, bg);
+    }
+
     vio.c_color.Attributes = attributes;
-    if (VIO_INVERSE & attributes) SWAPFGBG(fg, bg);
     vio.c_color.fg = (short)rgb_search(16, fg); // shadow colors (vt/xterm)
     vio.c_color.bg = (short)rgb_search(16, bg);
     vio.c_color.fgrgb = (COLORREF)fg;           // true-colors

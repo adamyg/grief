@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_pty_win32_c,"$Id: pty_win32.c,v 1.21 2018/11/18 00:20:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_pty_win32_c,"$Id: pty_win32.c,v 1.22 2022/03/21 15:39:39 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: pty_win32.c,v 1.21 2018/11/18 00:20:21 cvsuser Exp $
+/* $Id: pty_win32.c,v 1.22 2022/03/21 15:39:39 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -154,7 +154,7 @@ dpcreate(DISPLAY_t *dp, const char *shell, const char *cwd)
     //
     assert(sizeof(HANDLE) == sizeof(dp->d_handle_in));
     in = _open_osfhandle((long) hInputWrite, _O_NOINHERIT);
-    if ((pid = w32_spawn(&args, in, -1, &out)) <= 0) {
+    if ((pid = w32_spawnA(&args, in, -1, &out)) <= 0) {
         CloseHandle((HANDLE) hInputRead);
         fileio_close(in);
 

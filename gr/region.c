@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_region_c,"$Id: region.c,v 1.28 2014/10/22 02:33:16 ayoung Exp $")
+__CIDENT_RCSID(gr_region_c,"$Id: region.c,v 1.30 2021/10/17 12:09:43 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: region.c,v 1.28 2014/10/22 02:33:16 ayoung Exp $
+/* $Id: region.c,v 1.30 2021/10/17 12:09:43 cvsuser Exp $
  * Region primitives.
  *
  *
@@ -299,14 +299,14 @@ region_process(const REGION_t *r, region_process_t *rdata)
 static int
 textstart(const LINE_t *lp, int line, int col)
 {
-    return line_offset2((LINE_t *)lp, line, (col > 1 ? col : 1), LOFFSET_FIRSTBYTE);
+    return line_offset_const(lp, line, (col > 1 ? col : 1), LOFFSET_FIRSTBYTE);
 }
 
 
 static int
 textend(const LINE_t *lp, int line, int col)
 {
-    return line_offset2((LINE_t *)lp, line, (col > 1 ? col : 1), LOFFSET_LASTBYTE);
+    return line_offset_const(lp, line, (col > 1 ? col : 1), LOFFSET_LASTBYTE);
 }
 
 
@@ -474,8 +474,7 @@ do_transfer(void)               /* int (int bufnum, int sline, int scolumn, int 
         REGION_t r;
 
         saved_scrap = k_set(curbp);             /* destination */
-        curbp = bp;                             /* source */
-        set_hooked();
+        set_curbp(bp);                          /* source */
 
         if (isa_undef(4) && isa_undef(5)) {     /* line mode */
             a.type = MK_LINE;
@@ -506,8 +505,7 @@ do_transfer(void)               /* int (int bufnum, int sline, int scolumn, int 
         }
 
         k_set(saved_scrap);                     /* restore default scrap */
-        curbp = saved_bp;
-        set_hooked();
+        set_curbp(saved_bp);
     }
 
     acc_assign_int(ret);

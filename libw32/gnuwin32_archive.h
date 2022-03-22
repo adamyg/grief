@@ -1,7 +1,7 @@
 #ifndef GR_GNUWIN32_ARCHIVE_H_INCLUDED
 #define GR_GNUWIN32_ARCHIVE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_gnuwin32_archive_h,"$Id: gnuwin32_archive.h,v 1.9 2019/03/15 23:12:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_gnuwin32_archive_h,"$Id: gnuwin32_archive.h,v 1.10 2022/03/21 14:29:39 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -22,10 +22,10 @@ __CPRAGMA_ONCE
  * the documentation and/or other materials provided with the
  * distribution.
  *
- * The GRIEF Editor is distributed in the hope that it will be useful,
+ * This project is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * License for more details.
+ * license for more details.
  * ==end==
  */
 #endif /*GR_GNUWIN32_ARCHIVE_H_INCLUDED*/

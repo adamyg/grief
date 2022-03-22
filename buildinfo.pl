@@ -1,9 +1,31 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: buildinfo.pl,v 1.3 2020/06/21 00:21:41 cvsuser Exp $
-# grief buildinfo generation
+# $Id: buildinfo.pl,v 1.5 2022/03/22 08:07:53 cvsuser Exp $
+# buildinfo generation
 #
-# Copyright Adam Young 2018-2020
+# Copyright Adam Young 2018-2022
+# All rights reserved.
+#
+# The applications are free software: you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation, version 3.
+#
+# Redistributions of source code must retain the above copyright
+# notice, and must be distributed with the license document above.
+#
+# Redistributions in binary form must reproduce the above copyright
+# notice, and must include the license document above in
+# the documentation and/or other materials provided with the
+# distribution.
+#
+# The applications are distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# ==end==
 #
 
 use strict;
@@ -104,6 +126,7 @@ Generate	#()
 #define ${prefix}VERSION_1 ${version1}
 #define ${prefix}VERSION_2 ${version2}
 #define ${prefix}VERSION_3 ${version3}
+#define ${prefix}VERSION_4 ${buildnumber}
 #define ${prefix}BUILD_DATE "${builddate}"
 #define ${prefix}BUILD_NUMBER "${buildnumber}"
 EOT
@@ -114,10 +137,10 @@ EOT
 	if ($buildtype) {
 		print FILE "#define BUILD_TYPE \"${buildtype}\"\n";
 
-		die "makeconfig.pm: build type verb 'release' or 'debug' expected.\n"
+		die "buildinfo.pm: build type verb 'release' or 'debug' expected.\n"
 			if ($buildtype !~ /release/ && $buildtype !~ /debug/);
-			
-		die "makeconfig.pm: build type verbs 'release' and 'debug' are mutually exclusive.\n"
+
+		die "buildinfo.pm: build type verbs 'release' and 'debug' are mutually exclusive.\n"
 			if ($buildtype =~ /release/ && $buildtype =~ /debug/);
 
 		print FILE "#define BUILD_TYPE_RELEASE 1\n"
@@ -175,5 +198,4 @@ EOU
 1;
 
 #end
-
 

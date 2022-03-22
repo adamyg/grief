@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.76 2020/04/13 14:29:18 cvsuser Exp $")
+__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.81 2021/10/18 13:22:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: display.c,v 1.76 2020/04/13 14:29:18 cvsuser Exp $
+/* $Id: display.c,v 1.81 2021/10/18 13:22:21 cvsuser Exp $
  * High level display interface.
  *
  *
@@ -1037,16 +1037,29 @@ vtmove(int row, int col)
  *      col - Cursor position on completion.
  *
  *  Returns:
- *      Resulting cursor location.
+ *      Resulting cursor location, accounting for wide-characters,
+ *      otherwise -1 if off screen.
  */
 int
 vtpute(vbyte_t ch, int col)
 {
-    if (vscreen)
-        if (col >= 0 && col < ttcols()) {
+    if (vscreen) {
+        WChar_t wch = VBYTE_CHAR_GET(ch);
+        const int width = (wch > 0xff ? Wcwidth(wch) : 1);
+
+        if (col >= 0 && (col + width) <= ttcols()) {
             vcell_set(vscreen[ttrows() - 1] + col, ch);
+            if (width >= 1) {
+                ++col;
+                if (width > 1) {
+                    vcell_set(vscreen[ttrows() - 1] + col, CH_PADDING);
+                    ++col;
+                }
+            }
+            return col;
         }
-    return col + 1;
+    }
+    return -1;  //off-screen
 }
 
 
@@ -2428,10 +2441,9 @@ winputch(WINDOW_t *wp, const vbyte_t ch, const vbyte_t attr, int rclip)
             }
 
         } else {                                /* MCHAR??? */
-            int wcwidth = mchar_ucs_width(ch, 1);
-
+            int wcwidth = Wcwidth(ch);
             while (wcwidth-- > 0) {
-                winputm('?' | attr);             /* ? or ??  */
+                winputm('?' | attr);            /* ? or ??  */
             }
         }
 
@@ -2589,8 +2601,9 @@ draw_window(WINDOW_t *wp, int top, LINENO line, int end, const int bottom, int a
     const int iscurrent  = (curwp == wp ? TRUE : FALSE);
     const int ledge      = win_ledge(wp);
     const int redge      = win_redge(wp);
-    const int syntax     = (BFTST(wp->w_bufp, BF_SYNTAX) && wp->w_bufp->b_syntax);
-
+    const int syntax     = (bp && BFTST(bp, BF_SYNTAX) && bp->b_syntax && //MCHAR???
+                                bp->b_type != BFTYP_UTF16 && bp->b_type != BFTYP_UTF32);
+                                                /* syntax parser not wchar safe/FIXME */
     const vbyte_t nattr  = normalcolor(wp);
     const vbyte_t lattr  = (syntax ? VBYTE_ATTR(ATTR_COLUMN_LINENO) : nattr);
     const vbyte_t sattr  = (syntax ? VBYTE_ATTR(ATTR_COLUMN_STATUS) : nattr);
@@ -2609,7 +2622,7 @@ draw_window(WINDOW_t *wp, int top, LINENO line, int end, const int bottom, int a
     wp->w_disp_anchor = NULL;
 
     anchor.type = MK_NONE;
-    if (wp->w_bufp) {
+    if (bp) {
         if (iscurrent || WFTST(wp, WF_SHOWANCHOR)) {
             if (anchor_get(wp, NULL, &anchor)) {
                 wp->w_disp_anchor = &anchor;    /* active anchor */
@@ -2691,12 +2704,11 @@ draw_window(WINDOW_t *wp, int top, LINENO line, int end, const int bottom, int a
      *  Body
      */
     saved_wp = curwp;                           /* requirement of lower level functionality (draw_line). */
-    curwp = wp;
     saved_bp = curbp;
-    curbp = bp;
+    set_curwpbp(wp, bp);
 
     for (; top <= end; ++top, ++line) {
-        LINE_t *lp = vm_lock_line(line);
+        const LINE_t *lp = vm_lock_line2(line);
 
         if (VTDRAW_DIRTY & actions) {           /* skip clean/blank lines */
             if (NULL == lp || 0 == lisdirty(lp)) {
@@ -2863,9 +2875,7 @@ draw_window(WINDOW_t *wp, int top, LINENO line, int end, const int bottom, int a
     }
 
     wp->w_disp_anchor = NULL;
-    curwp = saved_wp;                           /* restore state */
-    curbp = saved_bp;
-    set_hooked();
+    set_curwpbp(saved_wp, saved_bp);            /* restore state */
 }
 
 
@@ -2905,9 +2915,10 @@ draw_title(const WINDOW_t *wp, const int top, const int line)
     const unsigned char *title =
             (unsigned char *)(!top ? wp->w_message :
                     (bp && BF2TST(bp, BF2_TITLE_FULL) && bp->b_fname[0] ? bp->b_fname : wp->w_title));
+    const unsigned char *titleend = (title ? title + strlen((const char *)title) : 0);
     const char *suffix  = NULL;
     const vbyte_t col   = framecolor(wp);
-    int  titlelen       = (title && *title ? (int)strlen((const char *) title) : 0);
+    int  titlelen       = (title && *title ? (int)utf8_width(title, titleend) : 0); /*MCHAR*/
     int  left           = 0;
     int  right          = 0;
     char numbuf[20];
@@ -2915,7 +2926,7 @@ draw_title(const WINDOW_t *wp, const int top, const int line)
 
     /* read-only/modified suffix */
     if (titlelen > 0) {
-        if (bp) {                               /* MCHAR??? */
+        if (bp) {
             if (BFTST(bp, BF_RDONLY)) {
                 if ((DC_ROSUFFIX & x_display_ctrl)  || BF2TST(bp, BF2_SUFFIX_RO)) {
                     suffix = " (ro)";
@@ -2998,15 +3009,31 @@ draw_title(const WINDOW_t *wp, const int top, const int line)
         int title_col = col;
 
         if (WFTST(wp, WF_SELECTED) || (wp->w_status & WFTOP)) {
-            title_col = titlecolor(wp);       /* 'selected' window */
+            title_col = titlecolor(wp);         /* 'selected' window */
         }
 
         ch = col | ' ';
         vtputb(ch);
         ((WINDOW_t *)wp)->w_disp_cmap = x_base_cmap;
-        while (*title && titlelen-- > 0) {
-            vtputb(*title++ | title_col);
+
+//      while (*title && titlelen-- > 0) {
+//          vtputb(*title++ | title_col);
+//      }
+        while (*title && titlelen > 0) {        /* MCHAR */
+            const unsigned char *cend;
+            int cwidth;
+            int32_t wch;
+
+            if ((cend = charset_utf8_decode_safe(title, titleend, &wch)) > title &&
+                    (cwidth = Wcwidth(wch)) >= 0) {
+                vtputb(wch | title_col);
+                titlelen -= cwidth;
+                title = cend;
+                continue; //next
+            }
+            break; //error
         }
+
         if (titlelen > 0 && suffix) {
             while (*suffix && titlelen-- > 0) {
                 vtputb(*suffix++ | title_col);
@@ -3390,7 +3417,7 @@ draw_line(const vbyte_t nattr, const vbyte_t wattr,
 
             wch = 0;
             if ((wcp = mchar_decode_safe(iconv, ocp, end, &wch)) > ocp &&
-                    (wwidth = mchar_ucs_width(wch, 1)) >= 0) {
+                    (wwidth = Wcwidth(wch)) >= 0) {
                 /*
                  *  apply cursor rules and increment buffers
                  */
@@ -4122,4 +4149,5 @@ do_screen_dump(void)            /* int ([string filename], [string encoding]) */
     acc_assign_int(0);
     fclose(fp);
 }
+
 /*end*/

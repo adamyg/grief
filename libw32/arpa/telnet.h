@@ -1,13 +1,13 @@
 #ifndef LIBW32_ARPA_TELNET_H_INCLUDED
 #define LIBW32_ARPA_TELNET_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_arpa_telnet_h,"$Id: telnet.h,v 1.6 2018/09/29 02:25:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_arpa_telnet_h,"$Id: telnet.h,v 1.7 2022/03/21 14:29:42 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: telnet.h,v 1.6 2018/09/29 02:25:24 cvsuser Exp $ */
+/* $Id: telnet.h,v 1.7 2022/03/21 14:29:42 cvsuser Exp $ */
 /*
- * Copyright (c) 1998 - 2017, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -54,7 +54,6 @@ __CPRAGMA_ONCE
  *
  *	@(#)telnet.h	8.2 (Berkeley) 12/15/93
  */
-
 
 /*
  * Definitions for the TELNET protocol.
