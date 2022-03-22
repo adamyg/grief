@@ -383,6 +383,44 @@ my %x_environment   = (
             MFCLIBS         => ''
             },
 
+       'vc1930'        => {    # 2022, Visual Studio 19.3x
+            TOOLCHAIN       => 'vs170',
+            TOOLCHAINEXT    => '.vs170',
+            CC              => 'cl',
+            COMPILERPATHS   => '%VS160COMNTOOLS%/../../VC/bin|%VCToolsInstallDir%/bin/Hostx86/x86',
+            COMPILERPATH    => '',
+            VSWITCH         => '',
+            VPATTERN        => undef,
+            OSWITCH         => '-Fo',
+            LSWITCH         => '',
+            XSWITCH         => '-Fe',
+            AR              => 'lib',
+            CINCLUDE        => '',
+            RTLIBRARY       => '-MDd',
+            CFLAGS          => '-nologo @RTLIBRARY@ -fp:precise',
+            CXXFLAGS        => '-nologo @RTLIBRARY@ -EHsc -fp:precise',
+            CDEBUG          => '-Zi -RTC1 -Od',
+            CRELEASE        => '-O2 -GL -Gy -DNDEBUG',
+            CWARN           => '-W3',
+            CXXWARN         => '-W3',
+            LDFLAGS         => '-nologo @RTLIBRARY@',
+            LDDEBUG         => '-Zi -RTC1',
+            LDRELEASE       => '-GL',
+            LDMAPFILE       => '-MAP:$(MAPFILE)',
+                        # -Fm:  if positioned before /link
+                        # -MAP: if positioned afer /link
+
+            MFCDIR          => '',
+            MFCCFLAGS       => '-nologo @RTLIBRARY@',
+            MFCCXXFLAGS     => '-nologo @RTLIBRARY@ -EHsc',
+            MFCCOPT         => '-Zc:wchar_t- -Zc:forScope',
+            MFCCXXOPT       => '-Zc:wchar_t- -Zc:forScope',
+          # MFCCINCLUDE     => '-I$(MFCDIR)/inc/atl71 -I$(MFCDIR)/inc/mfc42',
+          # MFCLIBS         => '/LIBPATH:$(MFCDIR)\lib\atl\i386 /LIBPATH:$(MFCDIR)\lib\mfc\i386'
+            MFCCINCLUDE     => '',
+            MFCLIBS         => ''
+            },
+
         'wc1300'        => {    # Watcom 11
             TOOLCHAIN       => 'wc11',
             TOOLCHAINEXT    => '.wc11',
