@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.52 2022/03/22 10:50:24 cvsuser Exp $
+# $Id: Makefile.in,v 1.53 2022/03/22 16:21:21 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2022, Adam Young.
@@ -276,9 +276,10 @@ BINS=\
 	$(D_BIN)/grmandoc$(E)		\
 	$(D_BIN)/grunch$(E)
 ifneq "" "$(filter mingw32 win32,@build_os@)"
-BINS+=	$(D_BIN)/grwc$(E)
+BINS+=	$(D_BIN)/grwc$(E)		\
+	$(D_BIN)/grupdater$(E)
 endif
-        
+
 LIBS=
 ifneq "" "$(filter mingw32 win32,@build_os@)"
 LIBS+=	$(LW)win32
@@ -330,7 +331,7 @@ help:
 		|	clean   - delete everything which can be remade. \n\
 		|	help    - command line usage. \n\
 		"
-                
+
 .PHONY:				release
 release:
 		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
@@ -381,6 +382,7 @@ endif
 package:	import packageinfo
 	$(INNO) ./win32/gr-inno-setup.iss
 	-$(RM) $(PACKAGEINFO)
+
 
 #########################################################################################
 # Applications
@@ -451,9 +453,13 @@ $(D_BIN)/grmandoc$(E):	$(D_BIN)/.created libs
 
 $(D_BIN)/grunch$(E):	$(D_BIN)/.created libs
 		$(MAKE) -C $(D_GRUNCH)
-                
+
 $(D_BIN)/grwc$(E):	$(D_BIN)/.created libs
 		$(MAKE) -C util
+
+$(D_BIN)/grupdater$(E):	$(D_BIN)/.created libs
+		$(MAKE) -C win32/AutoUpdater
+
 
 #########################################################################################
 # Rules
