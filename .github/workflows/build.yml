@@ -14,6 +14,15 @@ jobs:
       if: runner.os == 'Windows'
       with:
         arch: x86
+
+    - uses: msys2/setup-msys2@v2
+      if: runner.os == 'Windows'
+      with:
+        release: false      
+        update: true
+        install: >-
+        bison
+
     - name: Windows, generating Makefiles
       if: runner.os == 'Windows'
       shell: cmd
@@ -23,6 +32,7 @@ jobs:
         @rem dir c:\tools
         @rem dir c:\msys64
         @rem dir c:\msys64\usr\bin
+
     - name: Windows, compiling
       if: runner.os == 'Windows'
       shell: cmd
@@ -30,12 +40,13 @@ jobs:
         @set PERL=c:/Strawberry/perl/bin/perl
         .\win32\gmake-42 contrib
         .\win32\gmake-42
+
     - name: Windows, package
       if: runner.os == 'Windows'
       uses: actions/upload-artifact@v2
       with:
         name: package-win32
-        path: ./bin.vs160/debug/*
+        path: ./bin.vs170/debug/*
 
     - name: Linux, generating Makefiles
       if: runner.os == 'Linux'
