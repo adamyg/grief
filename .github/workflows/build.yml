@@ -57,7 +57,7 @@ jobs:
       if: runner.os == 'Linux'
       shell: bash
       run: |
-        make
+        make release
     - name: Linux, package
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v2
