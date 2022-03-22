@@ -1,5 +1,11 @@
 -*- encoding: utf-8; -*-
 
+Tue Mar 22 18:46:50 2022 adamy
+
+	* BUILD 21, version: 3.2.2
+
+	* libw32 merge.
+
 Mon Jul 12 22:52:00 2021 adamy
 
 	* echo-line winch handling.
