@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.8 2020/06/18 20:35:16 cvsuser Exp $
+# $Id: Makefile.in,v 1.9 2022/03/22 04:10:50 cvsuser Exp $
 # liblzma makefile and grxz
 #
 #
@@ -234,6 +234,8 @@ TSKS=		$(LZMAUTIL)
 LZMA=no
 ifeq ("@TOOLCHAIN@","owc20")
 else ifeq ("@TOOLCHAIN@","owc19")
+else ifeq ("@TOOLCHAIN@","vs170")
+LZMA=yes
 else ifeq ("@TOOLCHAIN@","vs160")
 LZMA=yes
 else ifeq ("@TOOLCHAIN@","vs150")
