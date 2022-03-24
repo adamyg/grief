@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.9 2022/03/21 17:12:44 cvsuser Exp $
+# $Id: Makefile.in,v 1.10 2022/03/24 02:59:45 cvsuser Exp $
 # makedepend makefile
 #
 #
@@ -26,7 +26,8 @@ CC=		@CC@
 AR=		@AR@
 RANLIB=		@RANLIB@
 RM=		@RM@
-
+PERL=		@PERL@
+LIBTOOL=	@LIBTOOL@
 
 # Configuration
 
@@ -114,7 +115,7 @@ object:			$(D_OBJ)/.created
 
 $(D_BIN)/makedepend$(E):	MAPFILE=$(basename $@).map
 $(D_BIN)/makedepend$(E):	$(MAKEDEPENDOBJS)
-		$(CC) $(LDFLAGS) -o $@ $(MAKEDEPENDOBJS) $(LDLIBS) @LDMAPFILE@
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(MAKEDEPENDOBJS) $(LDLIBS) @LDMAPFILE@
 
 %/.created:
 		-@mkdir $(@D)
@@ -128,4 +129,3 @@ $(D_OBJ)/%$(O):		%.c
 		$(CC) $(CFLAGS) -o $@ -c $<
 
 #end
-
