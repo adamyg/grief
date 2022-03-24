@@ -7,8 +7,14 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest]
+        
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Checkout submodules
+      run: |
+        git submodule update --init --recursive
 
     - uses: ilammy/msvc-dev-cmd@v1
       if: runner.os == 'Windows'
