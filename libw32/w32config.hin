@@ -1,10 +1,10 @@
 #ifndef WIN32_CONFIG_H_INCLUDED
 #define WIN32_CONFIG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.19 2022/03/21 14:29:42 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.20 2022/03/24 07:15:21 cvsuser Exp $")
 __CPRAGMA_ONCE
 /* -*- mode: c; set-indent: 4; -*- */
-/* $Id: w32config.hin,v 1.19 2022/03/21 14:29:42 cvsuser Exp $
+/* $Id: w32config.hin,v 1.20 2022/03/24 07:15:21 cvsuser Exp $
  * Machine configuration.
  *
  * System dependent <config.h> configuration template,
@@ -59,6 +59,9 @@ __CPRAGMA_ONCE
 #if !defined(__cplusplus)
 #pragma disable_message(136)                    // comparison equivalent to 'unsigned == 0'
 #pragma disable_message(138)                    // no newline at end of file
+#if (__WATCOMC__ >= 1300)                       // owc2.0
+#pragma disable_message(303)                    // parameter 'xxx' has been defined, but not referenced.
+#endif
 #endif
 #pragma disable_message(201)                    // unreachable code
 #pragma disable_message(202)                    // symbol 'xxx' has been defined, but not referenced
