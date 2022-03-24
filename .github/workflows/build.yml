@@ -52,7 +52,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: package-win32
-        path: ./bin.vs170/debug/*
+        path: ./bin.vs170/release/*
 
     - name: Linux, generating Makefiles
       if: runner.os == 'Linux'
@@ -69,5 +69,5 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: package-linux
-        path: ./bin.gcc/debug/*
+        path: ./bin.gcc/release/*
 
