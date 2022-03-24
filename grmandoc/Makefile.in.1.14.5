@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.28 2022/03/24 05:46:20 cvsuser Exp $
+# $Id: Makefile.in.1.14.5,v 1.1 2022/03/24 05:46:20 cvsuser Exp $
 # libbsdmdoc and grmanddoc
 #
 #
@@ -113,8 +113,8 @@ RMDFLAGS=	-rf
 #########################################################################################
 # Targets
 
-VERSION=	1.14.6.gr
-RELDATE=	23 Sept 2021
+VERSION=	1.14.5.gr
+RELDATE=	10 March 2019
 
 PACKED=		mandoc-$(VERSION).tgz
 VPATH=		./mandoc-$(VERSION) ./sqlite3
@@ -127,7 +127,6 @@ COMPAT_OBJS=\
 	$(D_OBJ)/compat_getline$(O)	\
 	$(D_OBJ)/compat_getsubopt$(O)	\
 	$(D_OBJ)/compat_mkdtemp$(O)	\
-	$(D_OBJ)/compat_mkstemps$(O)	\
 	$(D_OBJ)/compat_ohash$(O)	\
 	$(D_OBJ)/compat_progname$(O)	\
 	$(D_OBJ)/compat_reallocarray$(O) \
@@ -206,7 +205,6 @@ MANDOC_TERM_OBJS=\
 	$(D_OBJ)/term_ascii$(O)		\
 	$(D_OBJ)/term_ps$(O)		\
 	$(D_OBJ)/term_tab$(O)		\
-	$(D_OBJ)/term_tag$(O)		\
 	$(D_OBJ)/tbl_term$(O)
 
 MANDOC_SEARCH_OBJS=\
@@ -244,7 +242,6 @@ CGI_OBJS=\
 	$(D_OBJ)/cgi$(O)		\
 	$(D_OBJ)/mansearch$(O)		\
 	$(D_OBJ)/out$(O)		\
-	$(D_OBJ)/tag$(O)		\
 	$(MANDOC_DB_OBJS)
 
 CGI=	$(D_BIN)/grman.cgi$(E)
@@ -252,8 +249,7 @@ CGI=	$(D_BIN)/grman.cgi$(E)
 	#---------------------------------------------------
 
 DEMANDOC_OBJS=\
-	$(D_OBJ)/demandoc$(O)		\
-	$(D_OBJ)/tag$(O)
+	$(D_OBJ)/demandoc$(O)
 
 DEMANDOC=	$(D_BIN)/grdemandoc$(E)
 

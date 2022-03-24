@@ -1,10 +1,10 @@
 #ifndef MANDOC_CONFIG_H_INCLUDED
 #define MANDOC_CONFIG_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: config.h,v 1.19 2020/06/18 12:50:24 cvsuser Exp $
+/* $Id: config.h,v 1.21 2022/03/24 05:51:34 cvsuser Exp $
  * mandoc config.h
  *
- * Copyright (c) 2014 - 2020, Adam Young.
+ * Copyright (c) 2014 - 2022, Adam Young.
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software for any
@@ -69,6 +69,8 @@
 
 /*FIXME: edbuildinfo.h*/
 #define  OSNAME "GRIEF Edit 3.2"
+#define  OSENUM MANDOC_OS_OTHER
+#define  BINM_PAGER "less"
 
 #include "mdocversion.h"        /*VERSION and binary names*/
 
@@ -213,4 +215,3 @@ extern int                      isblank(int ch);
 
 #endif  /*MANDOC_CONFIG_H_INCLUDED*/
 /*end*/
-
