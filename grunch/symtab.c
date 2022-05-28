@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_symtab_c,"$Id: symtab.c,v 1.30 2020/04/23 12:35:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_symtab_c,"$Id: symtab.c,v 1.31 2022/05/27 03:13:33 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: symtab.c,v 1.30 2020/04/23 12:35:50 cvsuser Exp $
+/* $Id: symtab.c,v 1.31 2022/05/27 03:13:33 cvsuser Exp $
  * Symbol table.
  *
  *
@@ -574,13 +574,13 @@ sym_push(Head_p *hd, int order, const char *name, node_t *np, symtype_t type, sy
 
     for (lp = ll_first(*hd); lp; lp = ll_next(lp)) {
         unsigned symerr = 0;
-        symtype_t t_ty, t_sc, t_istag;
+        symtype_t /*t_sc, t_ty,*/ t_istag;
 
         sp = (symbol_t *) ll_elem(lp);
         D_SYMBOL_MAGIC(assert(sp->magic == SYMBOL_MAGIC);)
 
-        t_sc = (sp->s_type & SC_MASK) >> SC_SHIFT;
-        t_ty = sp->s_type & TY_MASK;
+     // t_sc = (sp->s_type & SC_MASK) >> SC_SHIFT;
+     // t_ty = sp->s_type & TY_MASK;
         t_istag = symtype_istag(sp->s_type);
 
         if (sp->s_level > 1) {                  /* non-parameter */
