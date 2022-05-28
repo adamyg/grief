@@ -12,17 +12,6 @@
       
 #define VERSION "1.7.0"
 
-#include "hunspell_mktemp.h"
-#include <stdio.h>
 #include <unistd.h>
-
-#if defined(__MINGW32__)
-#define fdopen(__a,__b)     hunspell_fdopen(__a,__b)
-#else
-#if !defined(WIN32)
-#define WIN32
-#endif
-#define fdopen(__a,__b)     _fdopen(__a,__b)
-#endif
 
 #endif  /*CONFIG_H_INCLUDED*/

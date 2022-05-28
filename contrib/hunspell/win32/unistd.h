@@ -1,7 +1,7 @@
 /*
- * MSVC/OWC <unistd.h>
+ *  MSVC/OWC/MINGW <unistd.h>
  */
-
+ 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -24,8 +24,15 @@
 
 #include "../hunspell_mktemp.h"
 
+#if defined(_MSC_VER) || defined(__WATCOMC__)
 #if !defined(mode_t)
 #define mode_t      unsigned short
+#endif
+#endif
+
+#if defined(__MINGW32__)
+#define S_IRWXG     0
+#define S_IRWXO     0
 #endif
 
 #if defined(_MSC_VER)

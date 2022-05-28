@@ -24,7 +24,7 @@ Facility, was a popular programmer's text editor in the 1980s and early 1990s.
    * Supported operating systems
 
         * Linux
-        * Microsoft Windows (native/cygwin/mingw)
+        * Microsoft Windows (native/cygwin)
         * AIX
         * HP-UX
         * Mac OS/X
