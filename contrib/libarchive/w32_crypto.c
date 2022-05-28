@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_crypto_c,"$Id: w32_crypto.c,v 1.4 2020/05/04 20:17:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_crypto_c,"$Id: w32_crypto.c,v 1.5 2022/05/27 18:10:49 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * crypt32.dll dynamic loader ...
  *
- * Copyright (c) 2017 - 2020, Adam Young.
+ * Copyright (c) 2017 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -41,7 +41,11 @@ __CIDENT_RCSID(gr_w32_crypto_c,"$Id: w32_crypto.c,v 1.4 2020/05/04 20:17:24 cvsu
 
 #include <windows.h>
 #include <stdio.h>
+#if defined(__MINGW32__)
+#include "mingw_bcrypt.h"
+#else
 #include <bcrypt.h>
+#endif
 
 typedef NTSTATUS (WINAPI * BCryptOpenAlgorithmProvider_t)(BCRYPT_ALG_HANDLE *phAlgorithm, LPCWSTR pszAlgId, LPCWSTR pszImplementation, ULONG dwFlags);
 typedef NTSTATUS (WINAPI * BCryptEnumAlgorithms_t)(ULONG dwAlgOperations, ULONG *pAlgCount, BCRYPT_ALGORITHM_IDENTIFIER **ppAlgList, ULONG dwFlags);
@@ -161,7 +165,8 @@ static HMODULE                                      x_Crypt32dll;
 
 
 static void
-load_error() {
+load_error()
+{
     const DWORD rc = GetLastError();
     char  error[256] = {0};
     char  message[512] = {0};
@@ -177,7 +182,8 @@ load_error() {
 
 
 static int
-load_library() {
+load_library()
+{
     if (0 == x_Crypt32dll) {
         if (0 != (x_Crypt32dll = LoadLibraryA("crypt32.dll"))) {
             x_Crypt32dll = (HMODULE)-1;
@@ -191,16 +197,22 @@ load_library() {
 
 
 static NTSTATUS WINAPI
-BCrypt_STATUS_NOT_SUPPORTED() {
+BCrypt_STATUS_NOT_SUPPORTED()
+{
     return STATUS_NOT_SUPPORTED;
 }
 
 
 static VOID WINAPI
-BCrypt_VOID() {
+BCrypt_VOID()
+{
     return;
 }
 
+
+#if defined(__MINGW32__)
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
 
 #define RESOLVE_CRYPT32_API(__name) \
     if (0 == x_pfn##__name) { \
@@ -255,8 +267,8 @@ NTSTATUS WINAPI BCryptCloseAlgorithmProvider(BCRYPT_ALG_HANDLE hAlgorithm, ULONG
         (hAlgorithm, dwFlags);
 }
 
-VOID    WINAPI BCryptFreeBuffer(PVOID pvBuffer) {
-    RESOLVE_CRYPT32_API_VOID(BCryptFreeBuffer);
+VOID WINAPI BCryptFreeBuffer(PVOID pvBuffer) {
+    RESOLVE_CRYPT32_API_VOID(BCryptFreeBuffer)
         (pvBuffer);
 }
 
@@ -472,7 +484,6 @@ NTSTATUS WINAPI BCryptGetFipsAlgorithmMode(BOOLEAN *pfEnabled ) {
 }
 
 #endif  //_WIN32
-
 
 /*end*/
 
