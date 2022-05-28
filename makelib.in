@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.in,v 1.8 2021/07/05 17:18:41 cvsuser Exp $
+# $Id: makelib.in,v 1.10 2022/05/26 12:57:27 cvsuser Exp $
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 # makelib configuration
 #
@@ -62,6 +62,7 @@ $PACKAGE_FILE   = 'edpackage.h';
       # 'libz_static',
         );
 
+@TESTLIBRARIES  = ();  # library test
 @OPTLIBRARIES   = (    # optional libraries
         'aspell',
         'iconv',
@@ -128,8 +129,8 @@ $PACKAGE_FILE   = 'edpackage.h';
 sub
 Configure()
 {
-        # Visual studio
         ################################################################################
+        # Visual studio
 
         if ($TOOLCHAIN =~ /^vs/) {
 
@@ -160,6 +161,22 @@ Configure()
                 add_xinclude('$(ROOT)/libw32');
 
                 add_application_library('libw32.lib');
+        }
+
+        ################################################################################
+        # MingGW
+
+        if ($TOOLCHAIN =~ /^mingw/) {
+
+                remove_define('WIN32');
+                add_define('HAVE_CONFIG_H');
+                add_define('WIN32_WINNT=0x501');
+
+                # Extra includes; C and compiler tests.
+                add_xinclude('$(ROOT)/libw32');
+
+                add_application_library('libw32.a');
+                push @TESTLIBRARIES, "pthread|LIBTHREAD";
         }
 }
 

@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.53 2022/03/22 16:21:21 cvsuser Exp $
+# $Id: Makefile.in,v 1.54 2022/05/27 03:33:16 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2022, Adam Young.
@@ -276,8 +276,10 @@ BINS=\
 	$(D_BIN)/grmandoc$(E)		\
 	$(D_BIN)/grunch$(E)
 ifneq "" "$(filter mingw32 win32,@build_os@)"
-BINS+=	$(D_BIN)/grwc$(E)		\
-	$(D_BIN)/grupdater$(E)
+BINS+=	$(D_BIN)/grwc$(E)
+endif
+ifneq "" "$(filter win32,@build_os@)"
+BINS+=	$(D_BIN)/grupdater$(E)
 endif
 
 LIBS=
