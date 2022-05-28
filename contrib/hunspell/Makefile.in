@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.18 2020/06/18 20:35:15 cvsuser Exp $
+# $Id: Makefile.in,v 1.19 2022/05/28 10:05:09 cvsuser Exp $
 # libhunspell, hunspell, hzip and hunzip makefile
 #
 #
@@ -55,6 +55,11 @@ CWARN=		@CWARN@
 CDEBUG=		@CDEBUG@
 CRELEASE=	@CRELEASE@
 CXXFLAGS=	@CXXFLAGS@
+CXXWARN=	@CXXWARN@
+ifeq ("gcc","@CC@")
+CXXWARN=	-Wno-conversion-null -Wno-deprecated-declarations
+endif
+
 CXXDEBUG=	@CXXDEBUG@
 ifeq ("$(CXXDEBUG)","")
 CXXDEBUG=	$(CDEBUG)
@@ -67,7 +72,10 @@ endif
 LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
 
-CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
+CINCLUDE=	-I. -I$(D_INC)
+ifneq ("gcc","@CC@")
+CINCLUDE=	-I./win32
+endif
 CEXTRA=		@DEFS@
 ifeq ("yes","@ISWIN32@")
 CEXTRA+=	-D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
@@ -75,14 +83,14 @@ endif
 
 ifeq ("$(BUILD_TYPE)","release")
 CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-CXXFLAGS+=	$(CXXRELEASE) $(CWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
+CXXFLAGS+=	$(CXXRELEASE) $(CXXWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
 LDFLAGS=	$(LDRELEASE) @LDFLAGS@
 else
 CFLAGS+=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-CXXFLAGS+=	$(CXXDEBUG) $(CWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
+CXXFLAGS+=	$(CXXDEBUG) $(CXXWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
 LDFLAGS=	$(LDDEBUG) @LDFLAGS@
 endif
-LDLIBS=		-L$(D_LIB) @LIBS@ @EXTRALIBS@
+LDLIBS=		-L$(D_LIB) $(filter-out libw32.%, @LIBS@ @EXTRALIBS@)
 
 YFLAGS=		-d
 ARFLAGS=	rcv
@@ -96,14 +104,47 @@ RMDFLAGS=	-rf
 HUNSPELLLIB=	$(D_LIB)/$(LP)hunspell_static$(A)
 HUNSPELLDLL=	$(D_LIB)/$(LP)hunspell.la
 
+HUNSPELLVER=1.7.0
+ifeq ("@TOOLCHAIN@","owc20")
+HUNSPELLVER=1.3.3
+else ifeq ("@TOOLCHAIN@","owc19")
+HUNSPELLVER=1.3.3
+else ifeq ("@TOOLCHAIN@","vs170")
+else ifeq ("@TOOLCHAIN@","vs160")
+else ifeq ("@TOOLCHAIN@","vs150")
+else ifeq ("@TOOLCHAIN@","vs140")
+else ifeq ("@TOOLCHAIN@","mingw")
+endif
+
+ifeq ("1.7.0","$(HUNSPELLVER)")
+VERSION=	1.7.0
+VERSIONSPEC=	$(subst .,:,$(VERSION))
+PACKED=		hunspell-$(VERSION).tgz
+else
 VERSION=	1.3.3
 VERSIONSPEC=	$(subst .,:,$(VERSION))
 PACKED= 	hunspell-$(VERSION).patched.tgz
+endif
 
 HUNSPELLSRC=	./hunspell-$(VERSION)/src/hunspell
 PARSERSSRC=	./hunspell-$(VERSION)/src/parsers
 TOOLSSRC=	./hunspell-$(VERSION)/src/tools
 
+ifeq ("1.7.0","$(VERSION)")
+LIBOBJS=\
+	$(D_OBJ)/lib_affentry$(O)		\
+	$(D_OBJ)/lib_affixmgr$(O)		\
+	$(D_OBJ)/lib_csutil$(O)			\
+	$(D_OBJ)/lib_filemgr$(O)		\
+	$(D_OBJ)/lib_hashmgr$(O)		\
+	$(D_OBJ)/lib_hunspell$(O)		\
+	$(D_OBJ)/lib_hunzip$(O)			\
+	$(D_OBJ)/lib_phonet$(O)			\
+	$(D_OBJ)/lib_replist$(O)		\
+	$(D_OBJ)/lib_suggestmgr$(O)		\
+	\
+	$(D_OBJ)/hunspell_mktemp$(O)
+else
 LIBOBJS=\
 	$(D_OBJ)/lib_affentry$(O)		\
 	$(D_OBJ)/lib_affixmgr$(O)		\
@@ -116,6 +157,7 @@ LIBOBJS=\
 	$(D_OBJ)/lib_phonet$(O)			\
 	$(D_OBJ)/lib_replist$(O)		\
 	$(D_OBJ)/lib_suggestmgr$(O)
+endif
 
 DLLOBJS=\
 	$(D_OBJ)/hunspell_dllmain.lo		\
@@ -131,11 +173,10 @@ HUNSPELLOBJS=\
 	$(D_OBJ)/manparser$(O)			\
 	$(D_OBJ)/textparser$(O)
 
-ifeq ("1.3.3","$(VERSION)")
+#1.3.3
 HUNSPELLOBJS+=\
 	$(D_OBJ)/xmlparser$(O)			\
 	$(D_OBJ)/odfparser$(O)
-endif
 
 OBJS=		$(LIBOBJS) $(DLLOBJS)
 LIBS=		$(HUNSPELLLIB) $(HUNSPELLDLL)
@@ -217,6 +258,9 @@ $(D_OBJ)/lib_%.lo:	$(HUNSPELLSRC)/%.cxx
 $(D_OBJ)/%.lo:		%.cxx
 		$(LIBTOOL) --mode=compile $(CXX) $(filter-out -hw,$(CXXFLAGS)) -o $@ -c $<
 
+$(D_OBJ)/%.lo:		%.c
+		$(LIBTOOL) --mode=compile $(CC) $(filter-out -hw,$(CFLAGS)) -o $@ -c $<
+
 $(D_OBJ)/%$(O):		$(TOOLSSRC)/%.cxx
 		$(CXX) $(filter-out -hw,$(CXXFLAGS)) -o $@ -c $<
 
@@ -224,6 +268,9 @@ $(D_OBJ)/%$(O):		$(PARSERSSRC)/%.cxx
 		$(CXX) $(filter-out -hw,$(CXXFLAGS)) -o $@ -c $<
 
 $(D_OBJ)/%$(O):		$(TOOLSSRC)/%.c
+		$(CC) $(filter-out -hw,$(CFLAGS)) -o $@ -c $<
+
+$(D_OBJ)/%$(O):		%.c
 		$(CC) $(filter-out -hw,$(CFLAGS)) -o $@ -c $<
 
 #end
