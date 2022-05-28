@@ -1,11 +1,11 @@
 #ifndef GR_EDTHREADS_WIN32_H_INCLUDED
 #define GR_EDTHREADS_WIN32_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_win32_h,"$Id: edthreads_win32.h,v 1.17 2022/03/21 14:55:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_edthreads_win32_h,"$Id: edthreads_win32.h,v 1.18 2022/05/26 16:02:26 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads_win32.h,v 1.17 2022/03/21 14:55:28 cvsuser Exp $
+/* $Id: edthreads_win32.h,v 1.18 2022/05/26 16:02:26 cvsuser Exp $
  * Threads interface
  * ISO/IEC 9899:201x Committee Draft
  * April 12, 2011 N1570
@@ -120,11 +120,10 @@ __CPRAGMA_ONCE
 #include <time.h>
 
 //Mutex and conditional time specificiation <time.h>
-    //TODO: #include <win32_timespec.h>
 #if !defined(HAVE_TIMESPEC)
 #if (defined(_MSC_VER) && (_MSC_VER < 1900)) || \
     (defined(__WATCOMC__) && (__WATCOMC__ < 1300)) || \
-        (!defined(__WATCOMC__) && !defined(_MSC_VER))
+        (!defined(__WATCOMC__) && !defined(_MSC_VER) && !defined(__MINGW32__))
 struct timespec {
     time_t tv_sec;
     long tv_nsec;
@@ -137,7 +136,7 @@ struct timespec {
     time_t tv_sec;
     long tv_nsec;
 };
-#endif //_TIMESPEC_DEFINED
+#endif
 #endif
 #endif /*TODO - HAVE_TIMESPEC*/
 
