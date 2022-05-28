@@ -185,7 +185,7 @@ void
 __sinit(void)
 {
 //	_THREAD_PRIVATE_MUTEX(__sinit_mutex);
-	int i;
+	unsigned i;
 
 //	_THREAD_PRIVATE_MUTEX_LOCK(__sinit_mutex);
 	if (__sdidinit)

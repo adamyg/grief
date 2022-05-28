@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.8 2020/06/18 20:35:17 cvsuser Exp $
+# $Id: Makefile.in,v 1.9 2022/05/28 10:12:07 cvsuser Exp $
 # libbsddb makefile.
 #
 #
@@ -76,9 +76,6 @@ LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
 
 CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
-##ifeq ("mingw32","@build_os@")
-##CINCLUDE+=	-I../libw32
-##endif
 CEXTRA=		@DEFS@
 CEXTRA+=	-D__DBINTERFACE_PRIVATE -DHAVE_NBTOOL_CONFIG_H -DDEBUG -DSTATISTICS
 

@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: libpaths.c,v 1.7 2020/06/18 12:54:52 cvsuser Exp $
+/* $Id: libpaths.c,v 1.9 2022/05/26 13:36:07 cvsuser Exp $
  *
  * libbsddb <libpath.c>
  *
@@ -50,8 +50,9 @@
 #endif
 #endif /*WIN32*/
 
+#include "paths.h"
 
-#if !defined(_PATH_TMP)
+#if defined(NEED_libbsddb_PATH_TMP)
 
 #if defined(_WIN32) || defined(WIN32)
 #define access(__p,__m) _access(__p,__m)

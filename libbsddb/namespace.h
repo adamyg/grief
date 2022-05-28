@@ -1,6 +1,6 @@
 #ifndef DBHASH_NAMESPACE_H_INCLUDED
 #define DBHASH_NAMESPACE_H_INCLUDED
-/* $Id: namespace.h,v 1.10 2020/06/18 12:54:27 cvsuser Exp $
+/* $Id: namespace.h,v 1.11 2022/05/26 10:38:45 cvsuser Exp $
  *
  * libbsdb <namespace.h>
  *
@@ -103,7 +103,7 @@
 
 #ifndef __CONCAT
 #if defined(__STDC__) || defined(_MSC_VER) || defined(__WATCOMC__) || \
-            defined(__cplusplus)
+            defined(__MINGW32__) || defined(__cplusplus)
 #define __CONCAT(x,y)           x ## y
 #else
 #define __CONCAT(x,y)           x/**/y
@@ -135,7 +135,11 @@
 #endif /*WIN32*/
 
 #ifndef EFTYPE
+#if defined(EPROTONOSUPPORT)
 #define EFTYPE                  EPROTONOSUPPORT
+#else
+#define EFTYPE                  ENODEV
+#endif
 #endif
 
 #endif /*DBHASH_NAMESPACE_H_INCLUDED*/

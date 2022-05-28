@@ -1,6 +1,6 @@
 #ifndef LIBDBHASH_PATHS_H_INCLUDED
 #define LIBDBHASH_PATHS_H_INCLUDED
-/* $Id: paths.h,v 1.3 2015/02/19 00:17:01 ayoung Exp $
+/* $Id: paths.h,v 1.4 2022/05/26 13:36:07 cvsuser Exp $
  *
  * libbsddb <paths.h>
  *
@@ -37,6 +37,7 @@
 #endif
 
 #if !defined(_PATH_TMP)
+#define NEED_libbsddb_PATH_TMP
 #define _PATH_TMP               libbsddb_PATH_TMP()
 
 __CBEGIN_DECLS

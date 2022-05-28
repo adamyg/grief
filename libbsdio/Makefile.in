@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.7 2020/06/20 02:20:28 cvsuser Exp $
+# $Id: Makefile.in,v 1.9 2022/05/28 10:11:35 cvsuser Exp $
 # libbsdio makefile.
 #
 #
@@ -80,9 +80,6 @@ LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
 
 CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
-##ifeq ("mingw32","@build_os@")
-##CINCLUDE+=	-I../libw32
-##endif
 CEXTRA=		@DEFS@
 CEXTRA+=	-D__POSIX_VISIBLE=199506 -D__BSTDIO_INTERNAL -DFLOATING_POINT
 
@@ -100,9 +97,6 @@ endif
 endif
 
 LDLIBS=		-L$(D_LIB) $(LINKLIBS) @LIBS@ @LIBMALLOC@ @LIBTHREAD@ @EXTRALIBS@
-##ifeq ("mingw32","@build_os@")
-##LDLIBS+=	-lw32 -lshlwapi -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
-##endif
 
 YFLAGS=		-d
 ARFLAGS=	rcv
