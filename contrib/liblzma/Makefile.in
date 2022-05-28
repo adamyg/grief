@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.9 2022/03/22 04:10:50 cvsuser Exp $
+# $Id: Makefile.in,v 1.11 2022/05/27 02:29:46 cvsuser Exp $
 # liblzma makefile and grxz
 #
 #
@@ -51,7 +51,12 @@ D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 XFLAGS=
 CFLAGS=		@CFLAGS@
+ifeq ("gcc","@CC@")
+CWARN=		$(filter-out -Wshadow -Wmissing-prototypes -Wsign-compare -Wimplicit-fallthrough, @CWARN@)
+CWARN+=		-Wno-sign-compare -Wno-implicit-fallthrough -Wno-type-limits -Wno-unused-but-set-variable -Wno-implicit-function-declaration
+else
 CWARN=		@CWARN@
+endif
 CDEBUG=		@CDEBUG@
 CRELEASE=	@CRELEASE@
 LDDEBUG=	@LDDEBUG@
@@ -86,8 +91,13 @@ LZMALIB=	$(D_LIB)/$(LP)lzma_static$(A)
 LZMADLL=	$(D_LIB)/$(LP)lzma.la
 LZMAUTIL=	$(D_BIN)/grxz$(E)
 
+#ifeq ("gcc","@CC@")
+#VERSION=	5.2.5
+#LZMAPACKED=	xz-$(VERSION).tgz
+#else
 VERSION=	5.2.3
 LZMAPACKED=	xz-$(VERSION).gr.tgz
+#endif
 LZMASRC=	./xz-$(VERSION)/src
 LIBLZMASRC=	./xz-$(VERSION)/src/liblzma
 LIBINC=		\
@@ -242,6 +252,8 @@ else ifeq ("@TOOLCHAIN@","vs150")
 LZMA=yes
 else ifeq ("@TOOLCHAIN@","vs140")
 LZMA=yes
+else ifeq ("@TOOLCHAIN@","mingw")
+LZMA=yes
 endif
 
 .PHONY:			build release debug
@@ -272,7 +284,7 @@ $(LZMADLL):		$(DLLOBJS) liblzma.sym
 			-rpath $(D_LIB) -bindir $(D_BIN) -export-symbols=liblzma.sym $(LDLIBS) @LDMAPFILE@
 
 $(LZMAUTIL):		$(UTILOBJS)
-		$(CC) $(LDFLAGS) $^ -o $@ $(D_LIB)/liblzma$(A) $(LDLIBS)
+		$(LIBTOOL) --mode=link $(CC) $(CC) $(LDFLAGS) $^ -o $@ $(D_LIB)/liblzma$(A) $(LDLIBS)
 
 source:			.unpacked.$(VERSION)
 		$(MAKE) unpacked
