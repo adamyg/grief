@@ -594,14 +594,14 @@ do {                                                                         \
 	(len)++;                                                             \
 } while (/* CONSTCOND */ 0)
 
-static const WChar_t nil[6]  = {'(', 'n', 'i', 'l', ')', 0};
-static const WChar_t null[7] = {'(', 'n', 'u', 'l', 'l', ')', 0};
-static const WChar_t NAN[4]  = {'N', 'A', 'N', 0};
-static const WChar_t nan[4]  = {'n', 'a', 'n', 0};
-static const WChar_t INF[4]  = {'I', 'N', 'F', 0};
-static const WChar_t inf[4]  = {'i', 'n', 'f', 0};
-static const WChar_t HEX[]   = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 0};
-static const WChar_t hex[]   = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 0};
+static const WChar_t nil[6]   = {'(', 'n', 'i', 'l', ')', 0};
+static const WChar_t null[7]  = {'(', 'n', 'u', 'l', 'l', ')', 0};
+static const WChar_t WNAN[4]  = {'N', 'A', 'N', 0};
+static const WChar_t wnan[4]  = {'n', 'a', 'n', 0};
+static const WChar_t WINF[4]  = {'I', 'N', 'F', 0};
+static const WChar_t winf[4]  = {'i', 'n', 'f', 0};
+static const WChar_t HEX[]    = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 0};
+static const WChar_t hex[]    = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 0};
 
 static void fmtstrw(WChar_t *, size_t *, size_t, const WChar_t *, int, int, int);
 static void fmtstrW(WChar_t *, size_t *, size_t, const wchar_t *, int, int, int);
@@ -911,6 +911,7 @@ Wvsnprintf(WChar_t *str, size_t size, const char *format, va_list args)
 					fmtstr(str, &len, size, va_arg(args, char *), width, precision, flags);
 					break;
 				}
+				break;
 			case 'S':
 				fmtstrw(str, &len, size, va_arg(args, WChar_t *), width, precision, flags);
 				break;
@@ -1251,9 +1252,9 @@ fmtflt(WChar_t *str, size_t *len, size_t size, LDOUBLE fvalue, int width, int pr
 		sign = ' ';
 
 	if (ISNAN(fvalue))
-		infnan = (flags & PRINT_F_UP) ? NAN : nan;
+		infnan = (flags & PRINT_F_UP) ? WNAN : wnan;
 	else if (ISINF(fvalue))
-		infnan = (flags & PRINT_F_UP) ? INF : inf;
+		infnan = (flags & PRINT_F_UP) ? WINF : winf;
 
 	if (infnan != NULL) {
 		if (sign != 0)
