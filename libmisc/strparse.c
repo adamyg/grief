@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strparse_c,"$Id: strparse.c,v 1.13 2020/05/03 21:09:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_strparse_c,"$Id: strparse.c,v 1.14 2022/05/25 15:44:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strparse.c,v 1.13 2020/05/03 21:09:06 cvsuser Exp $
+/* $Id: strparse.c,v 1.14 2022/05/25 15:44:02 cvsuser Exp $
  * libstr - String to numeric (float/integer) parser.
  *
  *
@@ -448,7 +448,7 @@ chxmatch(struct parse *p, const char *s)
             if (ch != match) {                  /* same case */
                 break;
             }
-            assert(count < sizeof(stack));
+            assert(count < (int)sizeof(stack));
             stack[count++] = ch;
             ch = -1;
         }
@@ -478,7 +478,7 @@ chmatch(struct parse *p, const char *s)
             if (tolower(ch) != tolower(match)) {/* case insensitive */
                 break;
             }
-            assert(count < sizeof(stack));
+            assert(count < (int)sizeof(stack));
             stack[count++] = ch;
             ch = -1;
         }

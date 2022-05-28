@@ -1,7 +1,7 @@
 #ifndef GR_WIN32WSA_H_INCLUDED
 #define GR_WIN32WSA_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: win32wsa.h,v 1.9 2017/01/29 04:33:32 cvsuser Exp $
+/* $Id: win32wsa.h,v 1.10 2022/05/25 15:45:31 cvsuser Exp $
  * WSA Error Codes
  * Reproduced from a number of sources.
  *
@@ -176,9 +176,11 @@
     { ETIMEDOUT,                    // 138
         "Connection timed out (POSIX.1)"
         },
+#if defined(ETXTBSY)
     { ETXTBSY,                      // 139
         "Text file busy (POSIX.1)"
         },
+#endif
     { EWOULDBLOCK,                  // 140
         "Operation would block (POSIX.1)"
         },

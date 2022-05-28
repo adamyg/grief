@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bsd_radixsort_c,"$Id: bsd_radixsort.c,v 1.9 2020/06/05 23:29:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_bsd_radixsort_c,"$Id: bsd_radixsort.c,v 1.10 2022/05/25 15:44:02 cvsuser Exp $")
 
 /*- -*- indent-width: 8; tabs: 8; -*-
  * Copyright (c) 1990, 1993
@@ -64,6 +64,10 @@ typedef struct {
 	const u_char **sa;
 	int sn, si;
 } stack;
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#endif
 
 static __CINLINE void simplesort(const u_char **, int, int, const u_char *, u_int);
 static void r_sort_a(const u_char **, int, int, const u_char *, u_int);

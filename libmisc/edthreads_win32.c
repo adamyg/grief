@@ -1,14 +1,14 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_win32_c,"$Id: edthreads_win32.c,v 1.18 2020/06/21 01:36:17 cvsuser Exp $")
+__CIDENT_RCSID(gr_edthreads_win32_c,"$Id: edthreads_win32.c,v 1.20 2022/05/26 16:02:19 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads_win32.c,v 1.18 2020/06/21 01:36:17 cvsuser Exp $
+/* $Id: edthreads_win32.c,v 1.20 2022/05/26 16:02:19 cvsuser Exp $
  * C11 threads implementation, for windows
  * based on ISO/IEC 9899:201x Committee Draft, April 12, 2011 N1570
  *
  *
  *
- * Copyright (c) 1998 - 2020, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -58,7 +58,8 @@ edthreads_win32_native(void)
 //      with the following 'other' POSIX realtime functions missing.
 //
 #if !defined(HAVE_PTHREAD_H)
-#error pthreads expected under mingw32
+#define WIN32_NATIVE_MUTEX
+#pragma message "pthreads expected under mingw32; enabling local implementation"
 #endif
 
 #ifndef  WIN32_LEAN_AND_MEAN
@@ -94,11 +95,15 @@ nanosleep(const struct timespec *rqtp, struct timespec *rmtp /*notused*/)
     return usleep(rqtp->tv_sec * 1000000 + rqtp->tv_nsec / 1000);
 }
 
-
 #elif defined(_WIN32) || defined(WIN32)
+#define WIN32_NATIVE_MUTEX
+#endif
+
 //
-//  Native Win threading
+//  Native Windows threading
 //
+#if defined(WIN32_NATIVE_MUTEX)
+
 #if defined(__CYGWIN__)
 #error incorrect target, win32 only
 #endif
@@ -106,8 +111,6 @@ nanosleep(const struct timespec *rqtp, struct timespec *rmtp /*notused*/)
 #define ED_ASSERT
 #include <edassert.h>
 #include <tailqueue.h>
-
-
 
 #define MTX_MAGIC               MKMAGIC('W','M','t','x')
 
@@ -900,6 +903,7 @@ timespec_get(struct timespec *ts, int __unused_based)
 #endif	/*FIXME - HAVE_TIMESPEC_GET*/
 
 
+// typedef VOID (NTAPI *PIMAGE_TLS_CALLBACK) (PVOID DllHandle, DWORD Reason, PVOID Reserved);
 static void WINAPI
 __tss_callback(void *image, DWORD reason, void *pv)
 {
@@ -963,6 +967,7 @@ __tss_init(void)
  *      XCL         library inits
  *      XCU         user inits
  *
+ * Runtime hooks:
  *      XCA/XCZ     C++ initializers
  *      XIA/XIZ     C initializers
  *      XPA/XPZ     C pre-terminators
@@ -974,6 +979,16 @@ __declspec(allocate(".CRT$XLC")) void *__edthr_xlc = __tss_callback;
 
 #pragma section(".CRT$XIU",long,read)
 __declspec(allocate(".CRT$XIU")) void *__edthr_xiu = __tss_init;
+
+#elif defined(__MINGW32__)
+#pragma data_seg(".CRT$XLC","DATA")
+void *__edthr_xlc = __tss_callback;
+
+__attribute__((constructor))
+static void tss_constructor() {
+    // objdump -x edthreads_win32.o | grep ctors
+    __tss_init();
+}
 
 #else
 #pragma data_seg(".CRT$XLC","DATA")
