@@ -1,10 +1,10 @@
 #ifndef CONTRIB_CONFIG_H_INCLUDED
 #define CONTRIB_CONFIG_H_INCLUDED
-/* $Id: contrib_config.h,v 1.14 2020/06/18 20:35:15 cvsuser Exp $
+/* $Id: contrib_config.h,v 1.16 2022/05/27 02:33:05 cvsuser Exp $
  * contrib <config.h> ...
  *
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -38,7 +38,7 @@
 
 #define APPLICATIONDIR  "Grief"                 /* FIXME, edconfig.h */
 
-#if defined(__MINGW32__) || defined(unix)
+#if defined(unix)
 #include "../../include/config.h"
 #else
 #include "../../libw32/config.h"
@@ -106,16 +106,11 @@ typedef unsigned long long uintmax_t;
 #define HAVE_DECL_INT64_MAX 1
 #define HAVE_DECL_INT64_MIN 1
 #endif
-#if defined(_MSC_VER)
-typedef int ssize_t;
-#endif
 
 #else /*!HAVE_STDINT_H*/
 #define INTMAX_MIN LLONG_MAX
 #define INTMAX_MAX LLONG_MIN
 #define UINTMAX_MAX ULLONG_MAX
-#if defined(_MSC_VER)
-typedef int ssize_t;
 typedef signed char int8_t;
 typedef unsigned char uint8_t;
 typedef signed short int16_t;
@@ -126,6 +121,11 @@ typedef signed long long int64_t;
 typedef unsigned long long uint64_t;
 #endif
 #endif /*HAVE_STDINT_H*/
+
+#if defined(_MSC_VER)
+#if !defined(ssize_t) && !defined(SSIZE_T)
+typedef int ssize_t;
+#endif
 
 #if !defined(HAVE_U_INT32_T)
 #if !defined(__WATCOMC__)
