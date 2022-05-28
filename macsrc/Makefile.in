@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.21 2021/04/23 12:16:03 cvsuser Exp $
+# $Id: Makefile.in,v 1.22 2022/05/28 17:15:06 cvsuser Exp $
 # GRIEF macro library makefile.
 #
 #
-# Copyright (c) 1998 - 2021, Adam Young.
+# Copyright (c) 1998 - 2022, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -47,15 +47,16 @@ D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 GRUNCH=		$(D_BIN)/grunch
 
-M=		$(ROOT)/macros
-MKBD=		$(M)/kbd
-MTTY=		$(M)/tty
-MDEMOS=		$(M)/demos
-MBENCHMARKS=	$(M)/benchmarks
-MMODES=		$(M)/modes
-MPROFILES=	$(M)/profiles
-MCOLORS=	$(M)/colors
-MACRODIRS=	$(M) $(MKBD) $(MTTY) $(MDEMOS) $(MBENCHMARKS) $(MMODES) $(MPROFILES) $(MCOLORS)
+MACROS=		$(ROOT)/macros
+MKBD=		$(MACROS)/kbd
+MTTY=		$(MACROS)/tty
+MDEMOS=		$(MACROS)/demos
+MBENCHMARKS=	$(MACROS)/benchmarks
+MMODES=		$(MACROS)/modes
+MPROFILES=	$(MACROS)/profiles
+MCOLORS=	$(MACROS)/colors
+
+MACRODIRS=	$(MACROS) $(MKBD) $(MTTY) $(MDEMOS) $(MBENCHMARKS) $(MMODES) $(MPROFILES) $(MCOLORS)
 
 
 #########################################################################################
@@ -70,41 +71,37 @@ debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
 SOURCE=		$(wildcard *.cr kbd/*.cr tty/*.cr demos/*.cr benchmarks/*.cr modes/*.cr profiles/*.cr colors/*.cr)
-OBJECTS=	$(wildcard $(M)/*.cm $(MKBD)/*.cm $(MTTY)/*.cm $(MDEMOS)/*.cm $(MBENCHMARKS)/*.cm $(MMODES)/*.cm $(MPROFILES)/*.cm  $(MCOLORS)/*.cm)
+OBJECTS=	$(wildcard $(MACROS)/*.cm $(MKBD)/*.cm $(MTTY)/*.cm $(MDEMOS)/*.cm $(MBENCHMARKS)/*.cm $(MMODES)/*.cm $(MPROFILES)/*.cm  $(MCOLORS)/*.cm)
 
 macros:			$(MACRODIRS)
-		$(GRUNCH) -w -m -A autoload.inc -o $M $(SOURCE)
+		$(GRUNCH) -w -m -A autoload.inc -o $(MACROS) $(SOURCE)
 
 force:			$(MACRODIRS)
-		${GRUNCH} -w -A autoload.inc -o $M $(SOURCE)
+		${GRUNCH} -w -A autoload.inc -o $(MACROS) $(SOURCE)
 
 withdebug:		$(MACRODIRS)
-		$(GRUNCH) -w -g -A autoload.inc -o $M $(SOURCE)
-		${GRUNCH} -w $M grief.cr debug.cr
+		$(GRUNCH) -w -g -A autoload.inc -o $(MACROS) $(SOURCE)
+		${GRUNCH} -w $(MACROS) grief.cr debug.cr
 
-$M:
-		-mkdir $M
+$(MACROS):		$(MACROS)/.created
 
-$(MKBD):
-		-mkdir $(MKBD)
+$(MKBD):		$(MKBD)/.created
 
-$(MTTY):
-		-mkdir $(MTTY)
+$(MTTY):		$(MTTY)/.created
 
-$(MDEMOS):
-		-mkdir $(MDEMOS)
+$(MDEMOS):		$(MDEMOS)/.created
 
-$(MBENCHMARKS):
-		-mkdir $(MBENCHMARKS)
+$(MBENCHMARKS):		$(MBENCHMARKS)/.created
 
-$(MMODES):
-		-mkdir $(MMODES)
+$(MMODES):		$(MMODES)/.created
 
-$(MPROFILES):
-		-mkdir $(MPROFILES)
+$(MPROFILES):		$(MPROFILES)/.created
 
-$(MCOLORS):
-		-mkdir $(MCOLORS)
+$(MCOLORS):		$(MCOLORS)/.created
+
+%/.created:
+		-@$(PERL) ../win32/mkdir_p.pl $(@D)
+		@echo "++ do not delete, grief edit managed content ++" > $@
 
 clean:
 		@echo $(BUILD_TYPE) clean
