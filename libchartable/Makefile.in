@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.29 2022/03/21 15:11:49 cvsuser Exp $
+# $Id: Makefile.in,v 1.30 2022/05/26 02:11:26 cvsuser Exp $
 # libchartable makefile.
 #
 #
@@ -183,8 +183,7 @@ modules:		$(D_BINCTBL)/.created		\
 data/.import:		data/.created			\
 			data/MAPPINGS/.import		\
 			data/Unihan.zip			\
-			data/UCD.zip			\
-			data/uniset.tar.gz
+			data/UCD.zip
 		@echo "++ do not delete, managed content ++" > $@
 
 data/MAPPINGS/.import:	data/MAPPINGS/.created
