@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: libtool_win32.pl,v 1.36 2022/03/21 14:31:25 cvsuser Exp $
+# $Id: libtool_win32.pl,v 1.41 2022/05/28 04:32:02 cvsuser Exp $
 # libtool emulation for WIN32 builds.
 #
 #   **Warning**
@@ -21,7 +21,27 @@
 # Copyright Adam Young 2012-2022
 # All rights reserved.
 #
-# This file is part of the GRIEF Editor.
+# The applications are free software: you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation, either version 3 of the License,
+# or (at your option) any later version.
+#
+# Redistributions of source code must retain the above copyright
+# notice, and must be distributed with the license document above.
+#
+# Redistributions in binary form must reproduce the above copyright
+# notice, and must include the license document above in
+# the documentation and/or other materials provided with the
+# distribution.
+#
+# The applications are distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# ==end==
 #
 
 use strict;
@@ -51,7 +71,7 @@ my $o_extra = '';
 sub Compile();
 sub Link();
 sub true_object($);
-sub true_library($);
+sub true_library($;$);
 sub unix2dos($);
 sub dos2unix($);
 sub Help;
@@ -146,7 +166,8 @@ Main
 #       Compile a library object.
 #
 sub
-Compile() {
+Compile()
+{
     my $cc = shift @ARGV;
     my $object;
     my $source;
@@ -239,7 +260,7 @@ Compile() {
     $source = shift @ARGV;
 
     Error("compile: unsupported compiler <$cc>")
-        if (!('cl' eq $cc || 'wcl386' eq $cc || 'owcc' eq $cc || 'gcc' eq $cc));
+        if (!('cl' eq $cc || 'wcl386' eq $cc || 'owcc' eq $cc || 'gcc' eq $cc || 'g++' eq $cc));
     Error("compile: unable to determine object")
         if (!$object);
     Error("compile: object file suffix not <.lo>")
@@ -289,7 +310,7 @@ Compile() {
         $cmd .= " -o \"$true_object\"";
         $cmd .= " -c $source";
 
-    } elsif ('gcc' eq $cc) {
+    } elsif ('gcc' eq $cc || 'g++' eq $cc) {
         $cmd  = "$cc @STUFF -D DLL=1 -shared";
         foreach (@DEFINES) { $cmd .= " -D $_"; }
         foreach (@INCLUDES) { $cmd .= " -I \"$_\""; }
@@ -324,7 +345,8 @@ Compile() {
 #       Link a library object.
 #
 sub
-Link() {
+Link()
+{
     my $cc = shift @ARGV;
 
     my ($output, $dlbase, $rpath, $bindir, $module, $mapfile);
@@ -334,6 +356,7 @@ Link() {
     my $linktype = 'dll';
     my $cl_ltcg = 0;
     my $cl_debug = undef;
+    my $gcc_debugger = 0;
     my @OBJECTS;
     my @RESOURCES;
     my @EXPORTS;
@@ -342,6 +365,7 @@ Link() {
     my @LIBPATHS;
     my @STUFF;
 
+    $cc = 'gcc' if ('g++' eq $cc);              # alises
     while (scalar @ARGV) {
         $_ = shift @ARGV;
 
@@ -400,7 +424,13 @@ Link() {
         } elsif (/^(.*)\.rc$/) {
             Error("link: $_ not supported\n");
 
-        } elsif (/^(.*)\.la$/ || /^(.*)\.a$/ || /^(.*)\.lib$/i) {
+        } elsif (/^(.*)\.a$/ || /^(.*)\.lib$/i) {
+            my $libname = $_;
+            $libname =~ s/^lib//                # libxxxx.a => xxxx.a
+                if ('gcc' eq $cc);
+            push @LIBRARIES, $libname;
+
+        } elsif (/^(.*)\.la$/) {
             push @LIBRARIES, $_;
 
         } elsif (/^-l(.*)$/) {
@@ -534,7 +564,16 @@ Link() {
             Error("link: $_ not supported\n");
 
         } elsif (/^-Xlinker(.*)$/) {
-            Error("link: $_ not supported\n");
+            my $opt = ($1 ? $1 : shift @ARGV);
+
+            if ($opt =~ /^-Map=(.+)$/) {
+                my $val = $1;
+                Error("link: multiple mapfile specified <$mapfile> and <$val>")
+                    if ($mapfile);
+                $mapfile = $val;
+            } else {
+                Error("link: -Xlinker ${opt} opt supported\n");
+            }
 
         } elsif (/^-XCClinker(.*)$/) {
             Error("link: $_ not supported\n");
@@ -601,7 +640,7 @@ Link() {
                 # Debugger support:
                 #   -h[wcd]     Watcom,Codeview,Dwarf
                 #
-                } elsif (/^-h([wc])$/) {
+                } elsif (/^-h([wcd])$/) {
                     $wc_debugger = $1;
                 }
 
@@ -633,6 +672,11 @@ Link() {
                 # Debugger
                 } elsif (/^-g([wcd])$/) {       # -g[wcd] Watcom,Codeview,Dwarf
                     $wc_debugger = $1;
+                }
+
+            } elsif ('gcc' eq $cc) {            # process
+                if (/^-g$/) {                   # -g
+                    $gcc_debugger = 1;
                 }
             }
 
@@ -812,6 +856,7 @@ print "*** non-libtool objects @BAD_OBJECTS is not portable!\n";
 
         open(CMD, ">${cmdfile}") or
             die "cannot create <${$cmdfile}>: $!\n";
+
         if ($linktype eq 'dll') {
             print CMD "system   nt_dll initinstance terminstance\n";
                 #
@@ -874,7 +919,12 @@ print "*** non-libtool objects @BAD_OBJECTS is not portable!\n";
         print CMD "export   ".WatcomExportDef($_, $wc_fastcall)."\n";
       }
       foreach(@LIBPATHS) {
-        print CMD "libpath  ".unix2dos($_)."\n";
+        my $u2d = unix2dos($_);
+        if ($u2d =~ / /) {
+            print CMD "libpath  '${u2d}'\n";
+        } else {
+            print CMD "libpath  ${u2d}\n";
+        }
       }
       foreach(@LIBRARIES) {
         print CMD "library  ".unix2dos(true_library($_))."\n";
@@ -894,21 +944,36 @@ print "*** non-libtool objects @BAD_OBJECTS is not portable!\n";
 
         open(CMD, ">${cmdfile}") or
             die "cannot create <${cmdfile}>: $!\n";
-        print CMD "-o ".dos2unix($dllpath)."\n";
-        print CMD "-shared\n";
+        if ($linktype eq 'dll') {
+            print CMD "-o ".dos2unix($dllpath)."\n";
+            print CMD "-shared\n";
+            print CMD "-Wl,--subsystem,windows\n";
+            print CMD "-Wl,--out-implib,".dos2unix("${basepath}.a")."\n";
+        } else {
+            print CMD "-o ".dos2unix($output)."\n";
+            print CMD "-Wl,--subsystem,console\n";
+        }
+        print CMD "-g\n"
+            if ($gcc_debugger);
+
       foreach(@OBJECTS) {
         print CMD dos2unix(true_object($_))."\n";
       }
         print "warning: resources ignored @RESOURCES\n"
             if (scalar @RESOURCES);
-        print CMD "-Wl,--subsystem,windows\n";
-        print CMD "-Wl,--out-implib,".dos2unix("${basepath}.a")."\n";
         print CMD "-Xlinker -Map=".dos2unix($mappath)."\n";
       foreach(@LIBPATHS) {
         print CMD "-L ".dos2unix($_)."\n";
       }
       foreach(@LIBRARIES) {
-        print CMD "-l".dos2unix($_)."\n";
+        my $d2u = dos2unix(true_library($_, 1));
+        if ($d2u =~ /\//) {                     # path ?
+            print CMD "${d2u}\n";
+        } else {
+            $d2u =~ s/\.lib$//;                 # xxxx.lib  => xxxx
+            $d2u =~ s/\.a$//;                   # xxxx.a    => xxxx
+            print CMD "-l${d2u}\n";
+        }
       }
 
       if (scalar @EXPORTS) {
@@ -974,7 +1039,7 @@ print "*** non-libtool objects @BAD_OBJECTS is not portable!\n";
         close(LA);
     }
 
-    if ('gcc' eq $cc) {
+    if ('gcc' eq $cc && "${basepath}.a" ne $libpath) {
         copy("${basepath}.a", $libpath) or
             die "link: unable to copy <${basepath}.a> to <${libpath}> : $!\n";
     }
@@ -993,7 +1058,8 @@ print "*** non-libtool objects @BAD_OBJECTS is not portable!\n";
 
 
 sub
-OpenCommandFile($) {
+OpenCommandFile($)
+{
     my ($file) = @_;
     my @NARGV;
 
@@ -1032,7 +1098,8 @@ OpenCommandFile($) {
 #       STUB:filename
 #
 sub
-ParseDefFile($$$) {
+ParseDefFile($$$)
+{
     my ($file, $EXPORTSRef, $DESCRIPTIONRef) = @_;
     my $mode = 0;
 
@@ -1095,7 +1162,8 @@ ParseDefFile($$$) {
 #           --> /EXPORT:entryname[,@ordinal][,NONAME][,DATA]
 #
 sub
-MSVCExportDef($) {
+MSVCExportDef($)
+{
     my ($def) = @_;
     my @parts = split(/ /, $def);
     my $name = $parts[0];
@@ -1125,7 +1193,8 @@ MSVCExportDef($) {
 #           --> entryname[.ordinal]=internalname [PRIVATE]
 #
 sub
-WatcomExportDef($$) {
+WatcomExportDef($$)
+{
     my ($def, $fastcall) = @_;
     my @parts = split(/ /, $def);
     my $name = $parts[0];
@@ -1170,7 +1239,8 @@ WatcomExportDef($$) {
 
 
 sub
-ParseSymFile($$) {
+ParseSymFile($$)
+{
     my ($file, $EXPORTSRef) = @_;
     my $mode = 0;
 
@@ -1190,7 +1260,8 @@ ParseSymFile($$) {
 #       Cleanup library object.
 #
 sub
-Clean() {
+Clean()
+{
     my $rm = shift @ARGV;
 
     my @OBJECTS;
@@ -1287,9 +1358,9 @@ true_object($)          #(lo)
 #       Retrieve the true object name for the specified 'la' image.
 #
 sub
-true_library($)         #(la)
+true_library($;$)       #(la [,striplib])
 {
-    my ($la) = @_;
+    my ($la,$striplib) = @_;
     my $true_library;
 
     return $la
@@ -1306,6 +1377,8 @@ true_library($)         #(la)
     }
     close(LA);
     die "internal: la truename missing <$la>" if (!$true_library);
+    $true_library =~ s/^lib//                   # libxxxx.a => xxxx.a
+        if (defined $striplib && $striplib);
     return $true_library;
 }
 
