@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charseticonv_c,"$Id: charseticonv.c,v 1.22 2022/03/21 14:59:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_charseticonv_c,"$Id: charseticonv.c,v 1.23 2022/05/26 01:57:30 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* Conversion tables loader/interface.
@@ -240,7 +240,7 @@ charset_iconv_open(const char *name, int flags)
         char canon_buffer[64];
         const char *charset;
         int charsetlen = 0;
-        unsigned i;
+        unsigned c;
 
         if (NULL != (charset = charset_canonicalize(name, namelen, canon_buffer, sizeof(canon_buffer))) ||
                     NULL != (charset = charset_alias_lookup(name, namelen))) {
@@ -255,7 +255,7 @@ charset_iconv_open(const char *name, int flags)
             return iconv_alloc(dlmod, flags);   /* pre-existing */
         }
 
-        for (i = 0, ct = charsettables; i < (sizeof(charsettables)/sizeof(charsettables[0])); ++i, ++ct) {
+        for (c = 0, ct = charsettables; c < (sizeof(charsettables)/sizeof(charsettables[0])); ++ct, ++c) {
 
             if (NULL == ct->module && ct->container) {
                                                 /* dynamic binding */
@@ -601,7 +601,7 @@ dlmod_open(const char *module, int flag, const char *path, struct dlmodule ** re
             if (CHARTABLE_PACKAGE_MAGIC == pkg->cp_magic) {
                 const struct chartable_module * const *modules = pkg->cp_modules;
                 uint32_t count = pkg->cp_count;
-                int t_ret, cnt = 0, ret = 0;
+                int t_ret, cnt = 0;
 
                 while (*modules && count-- > 0) {
                     if (0 == (t_ret = dlmod_push(*modules, handle, module, path, &dlmod))) {

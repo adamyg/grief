@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetstream_c,"$Id: charsetstream.c,v 1.12 2022/03/21 14:59:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetstream_c,"$Id: charsetstream.c,v 1.13 2022/05/26 01:55:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* conversion stream support.
@@ -87,7 +87,7 @@ stream_write(iconv_stream_t *s, const void *buf, size_t insize)
         ssize_t cnt;                            /* flush converted text */
 
         outbuf = s->s_iobuf;
-        while ((cnt = s->s_write(s->s_handle, outbuf, outsize, &t_errno)) < outsize) {
+        while ((cnt = s->s_write(s->s_handle, outbuf, outsize, &t_errno)) < (ssize_t)outsize) {
             if (cnt <= 0) {
                 if (EINTR == t_errno) {
                     continue;
@@ -213,7 +213,7 @@ iconv_stream_write(iconv_stream_t *s, const void *buf, size_t insize)
      */
     if (s->s_buffer && s->s_buflen) {
         char *buffer = s->s_buffer;
-        size_t left, buflen;
+        ssize_t left, buflen;
 
         if ((buflen = s->s_buflen) >= ICONVSTREAMBUFSZ) {
             errno = E2BIG;
@@ -221,7 +221,7 @@ iconv_stream_write(iconv_stream_t *s, const void *buf, size_t insize)
         }
 
         do {                                    /* concat previous and new data */
-            assert(buflen < ICONVSTREAMBUFSZ);
+            assert(buflen > 0 && buflen < ICONVSTREAMBUFSZ);
             if ((left = (ICONVSTREAMBUFSZ - buflen)) > size) {
                 left = size;
             }

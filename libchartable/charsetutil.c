@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetutil_c,"$Id: charsetutil.c,v 1.12 2022/03/21 14:59:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetutil_c,"$Id: charsetutil.c,v 1.13 2022/05/26 01:54:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* utility functions.
@@ -194,7 +194,7 @@ const char *
 charset_canonicalize(const char *name, int namelen, char *buffer, int bufsiz)
 {
     char t_name[CS_NAMELEN+1];
-    const char *end = name + (namelen > 0 ? namelen : strlen(name));
+    const char *end = name + (namelen > 0 ? namelen : (int)strlen(name));
     int t_namelen = 0;
 
     assert(bufsiz >= 16);
