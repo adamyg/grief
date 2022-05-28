@@ -1,7 +1,7 @@
 #ifndef MANDOC_CONFIG_H_INCLUDED
 #define MANDOC_CONFIG_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: config.h,v 1.21 2022/03/24 05:51:34 cvsuser Exp $
+/* $Id: config.h,v 1.22 2022/05/26 16:25:19 cvsuser Exp $
  * mandoc config.h
  *
  * Copyright (c) 2014 - 2022, Adam Young.
@@ -25,7 +25,7 @@
 /*
  */
 
-#if (defined(_WIN32) || defined(WIN32)) && !defined(__MINGW32__)
+#if defined(_WIN32) || defined(WIN32)
 
 #include "../libw32/config.h"
 
@@ -60,7 +60,11 @@
 #ifndef  lstat
 #define  lstat w32_lstat
 #endif
-#define  inline _inline
+
+#if !defined(__MINGW32__)
+#define inline _inline
+#endif
+
 #include "../libw32/win32_child.h"
 
 #else /*!WIN32*/

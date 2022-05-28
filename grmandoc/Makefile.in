@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.28 2022/03/24 05:46:20 cvsuser Exp $
+# $Id: Makefile.in,v 1.29 2022/05/27 03:14:09 cvsuser Exp $
 # libbsdmdoc and grmanddoc
 #
 #
@@ -73,7 +73,12 @@ D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 XFLAGS=
 CFLAGS=		@CFLAGS@
-CWARN=		@CWARN@
+ifeq ("gcc","@CC@")
+CWARN=		$(filter-out -Wshadow -Wmissing-prototypes -Wsign-compare, @CWARN@ $(CWALL))
+CWARN+=		-Wno-sign-compare -Wno-unused-variable -Wno-implicit-fallthrough -Wno-implicit-function-declaration
+else
+CWARN=		@CWARN@ $(CWALL)
+endif
 CDEBUG=		@CDEBUG@
 CRELEASE=	@CRELEASE@
 LDDEBUG=	@LDDEBUG@
