@@ -35,4 +35,4 @@
 #include <win32_direct.h>
 #include <win32_misc.h>
 
-#endif /*LIBW32_WIN32_H_INCLUDED*/
+#endif /*LIBW32_LIBW32_H_INCLUDED*/
