@@ -1282,7 +1282,9 @@ done:
 static int
 __grow_type_table(unsigned char **typetable, int *tablesize)
 {
+#if defined(USE_MMAP)
 	unsigned char *oldtable = *typetable;
+#endif
 	int newsize = *tablesize * 2;
 
 #if defined(USE_MMAP)
