@@ -1,11 +1,11 @@
 #ifndef GR_VFS_TREE_H_INCLUDED
 #define GR_VFS_TREE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_tree_h,"$Id: vfs_tree.h,v 1.11 2022/03/21 14:27:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_tree_h,"$Id: vfs_tree.h,v 1.12 2022/05/27 18:49:42 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_tree.h,v 1.11 2022/03/21 14:27:23 cvsuser Exp $
+/* $Id: vfs_tree.h,v 1.12 2022/05/27 18:49:42 cvsuser Exp $
  * Virtual File System Interface -- node tree definitions.
  *
  *
@@ -81,7 +81,7 @@ struct vfs_treevops {
     int     (* vop_localput)(struct vfs_tree *tree, struct vfs_node *node, int changed);
 };
 
-typedef void (* vfs_treevfunc_t)();             /* generic callback interface */
+typedef int (* vfs_treevfunc_t)();              /* generic callback interface */
 
 
 /*

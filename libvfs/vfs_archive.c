@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_archive_c,"$Id: vfs_archive.c,v 1.21 2022/03/21 14:27:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_archive_c,"$Id: vfs_archive.c,v 1.22 2022/05/27 18:49:42 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_archive.c,v 1.21 2022/03/21 14:27:22 cvsuser Exp $
+/* $Id: vfs_archive.c,v 1.22 2022/05/27 18:49:42 cvsuser Exp $
  * Virtual file system interface - libarchive driver.
  *
  *
@@ -102,7 +102,7 @@ vfsarc_mount(struct vfs_mount *vmount, const char *argument)
     struct archive *a;
     struct archive_entry *entry;
     char path[VFS_MAXPATH+1];
-    const char *err = NULL;
+//  const char *err = NULL;
     int rcode = -1;
 
     VFS_TRACE(("vfsarc_mount(%s, %s)\n", vmount->mt_mount, (argument ? argument : "")))
@@ -138,7 +138,7 @@ vfsarc_mount(struct vfs_mount *vmount, const char *argument)
                 }
 
                 if (ARCHIVE_OK != rcode) {
-                    err = archive_error_string(a);
+//                  err = archive_error_string(a);
                     rcode = -1;
                     break;
                 }
@@ -179,7 +179,7 @@ vfsarc_mount(struct vfs_mount *vmount, const char *argument)
         vfs_tree_destroy(vmount->mt_tree);
         vmount->mt_tree = NULL;
 
-    }  else {
+    } else {
         /*
          *  configure
          *      RDONLY, implied with current implementation
