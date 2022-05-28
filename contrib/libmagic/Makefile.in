@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.16 2020/06/18 20:35:16 cvsuser Exp $
+# $Id: Makefile.in,v 1.17 2022/05/27 03:33:16 cvsuser Exp $
 # libmagic makefile
 #
 #
@@ -179,7 +179,7 @@ $(MAGICDLL):		$(DLLOBJS)
 			-rpath $(D_LIB) -bindir $(D_BIN) $^ $(LDLIBS) @LDMAPFILE@
 
 $(MAGICUTIL):		$(UTILOBJS)
-		$(CC) $(LDFLAGS) $^ -o $@ $(D_LIB)/libmagic$(A) $(LDLIBS)
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ -o $@ $(D_LIB)/libmagic$(A) $(LDLIBS)
 
 $(MAGICDB):		magic.mgc
 		@echo publishing magicdb $(MAGICDB) ...
