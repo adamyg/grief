@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.19 2022/05/28 10:05:09 cvsuser Exp $
+# $Id: Makefile.in,v 1.20 2022/05/28 12:26:26 cvsuser Exp $
 # libhunspell, hunspell, hzip and hunzip makefile
 #
 #
@@ -74,7 +74,7 @@ LDRELEASE=	@LDRELEASE@
 
 CINCLUDE=	-I. -I$(D_INC)
 ifneq ("gcc","@CC@")
-CINCLUDE=	-I./win32
+CINCLUDE+=	-I./win32
 endif
 CEXTRA=		@DEFS@
 ifeq ("yes","@ISWIN32@")
