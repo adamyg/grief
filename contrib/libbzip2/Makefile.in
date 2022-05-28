@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.9 2020/06/18 20:35:15 cvsuser Exp $
+# $Id: Makefile.in,v 1.10 2022/05/27 01:48:40 cvsuser Exp $
 # libbz2 makefile
 #
 #
@@ -50,7 +50,11 @@ D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 XFLAGS=
 CFLAGS=		@CFLAGS@
+ifeq ("gcc","@CC@")
+CWARN=		$(filter-out -Wshadow -Wmissing-prototypes -Wsign-compare -Wimplicit-fallthrough, @CWARN@) -Wno-sign-compare -Wno-implicit-fallthrough -Wno-unused-parameter
+else
 CWARN=		@CWARN@
+endif
 CDEBUG=		@CDEBUG@
 CRELEASE=	@CRELEASE@
 LDDEBUG=	@LDDEBUG@
