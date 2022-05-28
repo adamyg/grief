@@ -1,7 +1,7 @@
-#ifndef GR_INET_H_INCLUDED
-#define GR_INET_H_INCLUDED
+#ifndef LIBW32_ARPA_INET_H_INCLUDED
+#define LIBW32_ARPA_INET_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_arpa_inet_h,"$Id: inet.h,v 1.6 2022/03/21 14:29:42 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_arpa_inet_h,"$Id: inet.h,v 1.7 2022/05/26 12:18:35 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -34,4 +34,4 @@ __CPRAGMA_ONCE
  *  uint16_t    ntohs(uint16_t);
  */
 
-#endif /*GR_INET_H_INCLUDED*/
+#endif /*LIBW32_ARPA_INET_H_INCLUDED*/

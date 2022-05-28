@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_rwlock_c,"$Id: w32_rwlock.c,v 1.12 2022/03/21 14:29:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_rwlock_c,"$Id: w32_rwlock.c,v 1.13 2022/05/26 11:20:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -35,14 +35,16 @@ __CIDENT_RCSID(gr_w32_rwlock_c,"$Id: w32_rwlock.c,v 1.12 2022/03/21 14:29:41 cvs
  * ==extra==
  */
 
+#if defined(_WIN32_WINNT) && (_WIN32_WINNT < 0x601)
+#undef _WIN32_WINNT
+#endif
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT        0x0601              /* enable vista features */
 #endif
 
 #include <sys/rwlock.h>
 
-#define  WINDOWS_MEAN_AND_LEAN
-#include <windows.h>
+#include "win32_include.h"
 #include <assert.h>
 
 typedef void (WINAPI *InitializeSRWLock_t)(PSRWLOCK);

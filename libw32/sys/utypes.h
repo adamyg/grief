@@ -1,7 +1,7 @@
 #ifndef LIBW32_SYS_UTYPES_H_INCLUDED
 #define LIBW32_SYS_UTYPES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_utypes_h,"$Id: utypes.h,v 1.30 2022/03/21 14:29:43 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_utypes_h,"$Id: utypes.h,v 1.33 2022/05/28 10:12:45 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -45,17 +45,17 @@ __CPRAGMA_ONCE
 #define _UNIXTYPES_T_DEFINED
 #if defined(_BSD_SOURCE)
 #if !defined(_BSDTYPES_DEFINED)
-typedef unsigned char   u_char;                 /* BSD compatibility */
-typedef unsigned short  u_short;
-typedef unsigned int    u_int;
-typedef unsigned long   u_long;
+typedef unsigned char u_char;                   /* BSD compatibility */
+typedef unsigned short u_short;
+typedef unsigned int u_int;
+typedef unsigned long u_long;
 #define _BSDTYPES_DEFINED                       /* winsock[2].h and others */
 #endif /*_BSDTYPES_DEFINED*/
 #endif /*_BSD_SOURCE*/
-typedef unsigned char   uchar;                  /* Sys V compatibility */
-typedef unsigned short  ushort;
-typedef unsigned int    uint;
-typedef unsigned long   ulong;
+typedef unsigned char uchar;                    /* Sys V compatibility */
+typedef unsigned short ushort;
+typedef unsigned int uint;
+typedef unsigned long ulong;
 #endif
 
 /* [u]int8_t, [u]int16_t, [u]int32_t optional [u]int64_t */
@@ -115,14 +115,29 @@ typedef unsigned long fixpt_t;                  /* fixed point number */
         (defined(__WATCOMC__) && (__WATCOMC__ < 1300 /*owc20*/))
 typedef int pid_t;                              /* process identifier */
 #endif
-#define HAVE_PID_T
+#define HAVE_PID_T 1
 #endif
 
+#if !defined(HAVE_SSIZE_T)
+#ifdef _WIN64
+#define ssize_t long long
+#else
+#define ssize_t long
+#endif
+#define HAVE_SSIZE_T 1
+#endif
+
+#ifdef _WIN64
+typedef long long suseconds_t;                  /* sys/types.h */
+typedef unsigned long long useconds_t;
+#else
 typedef long suseconds_t;                       /* sys/types.h */
+typedef unsigned long useconds_t;
+#endif
 
 #if defined(_MSC_VER) && \
-	!defined(__WATCOMC__)
-		/* check for !WATCOMC, at times we masquerade WC as MSVC */
+        !defined(__WATCOMC__)
+                /* check for !WATCOMC, at times we masquerade WC as MSVC */
 #if !defined(uid_t) && !defined(gid_t)
 typedef int uid_t;
 typedef int gid_t;
@@ -144,7 +159,11 @@ typedef unsigned short mode_t;
 typedef int uid_t;
 typedef int gid_t;
 #endif
+#if !defined(id_t)
+typedef int id_t;                               /* used as a general identifier; can contain least a pid_t, uid_t, or gid_t. */
 #endif
+
+#endif /*_MSC_VER || __MINGW32__*/
 
 #if !defined(HAVE_NLINK_T)
 #if !defined(__WATCOMC__) || \

@@ -1,7 +1,7 @@
 #ifndef LIBW32_POLL_H_INCLUDED
 #define LIBW32_POLL_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_poll_h,"$Id: poll.h,v 1.11 2022/03/21 14:29:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_poll_h,"$Id: poll.h,v 1.12 2022/05/26 12:15:51 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -86,12 +86,12 @@ __BEGIN_DECLS
 LIBW32_API int          w32_poll_fd(struct pollfd *fds, int cnt, int timeout);
 LIBW32_API int          w32_poll_native(struct pollfd *fds, int cnt, int timeout);
 
-#if defined(WIN32_SOCKET_MAP_FD)
+#if defined(LIBW32_SOCKET_MAP_FD) || defined(WIN32_SOCKET_MAP_FD)
 #if !defined(WIN32_SOCKET_H_INCLUDED)
 #define poll(a,b,c)             w32_poll_fd(a,b,c)
 #endif
 
-#elif defined(WIN32_SOCKET_MAP_NATIVE)
+#elif defined(LIBW32_SOCKET_MAP_NATIVE) || defined(WIN32_SOCKET_MAP_NATIVE)
 #if !defined(WIN32_SOCKET_H_INCLUDED)
 #define poll(a,b,c)             w32_poll_native(a,b,c)
 #endif

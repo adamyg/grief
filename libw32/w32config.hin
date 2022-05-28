@@ -1,10 +1,10 @@
 #ifndef WIN32_CONFIG_H_INCLUDED
 #define WIN32_CONFIG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.20 2022/03/24 07:15:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.21 2022/05/26 11:18:42 cvsuser Exp $")
 __CPRAGMA_ONCE
 /* -*- mode: c; set-indent: 4; -*- */
-/* $Id: w32config.hin,v 1.20 2022/03/24 07:15:21 cvsuser Exp $
+/* $Id: w32config.hin,v 1.21 2022/05/26 11:18:42 cvsuser Exp $
  * Machine configuration.
  *
  * System dependent <config.h> configuration template,
@@ -31,9 +31,11 @@ __CPRAGMA_ONCE
 
 #if !defined(_MSC_VER)
 #if !defined(__WATCOMC__)
+#if !defined(__MINGW32__)
 #error config.h: MSVC or WATCOMC targets only ...
 #endif
-#endif /*MSC || WATCOM*/
+#endif
+#endif /*MSC || WATCOM || MINGW */
 
 #undef MAKELIB_CC_COMPILER
 #undef MAKELIB_CC_VERSION

@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_direntunc_c,"$Id: w32_direntunc.c,v 1.2 2022/03/21 14:29:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_direntunc_c,"$Id: w32_direntunc.c,v 1.3 2022/05/26 13:28:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -225,7 +225,8 @@ w32_unc_readdirA(DIR *dp)
             struct dirent *dpent = (struct dirent *)dp->dd_buf;
             int namlen = strlen(cursor);
 
-            if (namlen >= sizeof(dpent->d_name)) namlen = sizeof(dpent->d_name) - 1;
+            if (namlen >= (int)sizeof(dpent->d_name))
+                namlen = sizeof(dpent->d_name) - 1;
             dpent->d_namlen = namlen;
             memcpy(dpent->d_name, cursor, namlen + 1 /*nul*/);
             dpent->d_reclen = sizeof(struct dirent);
@@ -314,7 +315,7 @@ w32_unc_validA(const char *path)
         if (NULL == (scan = strpbrk(path, "*?|<>\"\\/"))
                 || IS_PATH_SEP(scan[0])) {
             const size_t namelen =              // servername length
-                    (scan ? (scan - path) : strlen(path));
+                    (scan ? (size_t)(scan - path) : strlen(path));
 
             if (namelen > 0) {
                 return namelen;
@@ -335,7 +336,7 @@ w32_unc_validW(const wchar_t *path)
         if (NULL == (scan = wcspbrk(path, L"*?|<>\"\\/"))
                 || IS_PATH_SEP(scan[0])) {
             const size_t namelen =              // servername length
-                    (scan ? (scan - path) : wcslen(path));
+                    (scan ? (size_t)(scan - path) : wcslen(path));
 
             if (namelen > 0) {
                 return namelen;
@@ -366,7 +367,7 @@ w32_unc_rootA(const char *path, int *length)
 
             if (length) *length = namelen;
             if (GetComputerNameA(computerName, &computerSz)) {
-                if (namelen == computerSz &&
+                if ((DWORD)namelen == computerSz &&
                         0 == _strnicmp(path + 2, computerName, namelen)) {
                     return 2;                   // local server
                 }
@@ -394,7 +395,7 @@ w32_unc_rootW(const wchar_t *path, int *length)
 
             if (length) *length = namelen;
             if (GetComputerNameW(computerName, &computerSz)) {
-                if (namelen == computerSz &&
+                if ((DWORD)namelen == computerSz &&
                         0 == _wcsnicmp(path + 2, computerName, namelen)) {
                     return 2;                   // local server
                 }

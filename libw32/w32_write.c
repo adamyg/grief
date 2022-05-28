@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_write_c,"$Id: w32_write.c,v 1.18 2022/03/21 14:29:42 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_write_c,"$Id: w32_write.c,v 1.19 2022/05/26 12:11:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -388,3 +388,5 @@ pwrite(int fildes, const void *buf, size_t nbyte, off_t offset)
     return ret;
 #endif
 }
+
+/*end*/

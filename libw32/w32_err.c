@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_err_c,"$Id: w32_err.c,v 1.4 2022/03/21 14:29:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_err_c,"$Id: w32_err.c,v 1.5 2022/05/26 11:13:28 cvsuser Exp $")
 
 /*
  * Copyright (c) 1993
@@ -32,6 +32,7 @@ __CIDENT_RCSID(gr_w32_err_c,"$Id: w32_err.c,v 1.4 2022/03/21 14:29:40 cvsuser Ex
 
 #include "win32_internal.h"
 #include <unistd.h>
+#include <err.h>
 
 #include <errno.h>
 #include <stdarg.h>

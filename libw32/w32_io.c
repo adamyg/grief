@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.39 2022/03/21 14:29:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.40 2022/05/26 11:18:09 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -2944,7 +2944,9 @@ StatW(const wchar_t *name, struct stat *sb)
 {
     wchar_t fullname[WIN32_PATH_MAX] = {0}, *pfname = NULL;
     int flength, ret = -1;
+#if defined(DO_FILEMAGIC)
     BOOL domagic = 0;
+#endif
 
     if (name == NULL || sb == NULL) {
         ret = -EFAULT;                          /* basic checks */

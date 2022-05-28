@@ -1,7 +1,7 @@
 #ifndef LIBW32_WIN32_INCLUDE_H_INCLUDED
 #define LIBW32_WIN32_INCLUDE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_include_h,"$Id: win32_include.h,v 1.10 2022/03/21 14:29:42 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_include_h,"$Id: win32_include.h,v 1.12 2022/05/26 12:06:56 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -31,6 +31,7 @@ __CPRAGMA_ONCE
  * ==end==
  */
 
+#if defined(_MSC_VER)
 #if !defined(_CRT_SECURE_NO_DEPRECATE)
 #define _CRT_SECURE_NO_DEPRECATE                /* disable deprecate warnings */
 #endif
@@ -38,15 +39,19 @@ __CPRAGMA_ONCE
 #if !defined(_CRT_NO_POSIX_ERROR_CODES)
 #define _CRT_NO_POSIX_ERROR_CODES               /* disable POSIX error number, see <errno.h> */
 #endif
+#endif
 
 #if !defined(HAVE_WINSOCK2_H_INCLUDED)
 #define HAVE_WINSOCK2_H_INCLUDED
+#if !defined(_WINSOCK2_H)                       /* MINGW32 guard */
 #undef gethostname                              /* unistd.h name mangling */
 #if defined(u_char)
 #undef u_char                                   /* namespace issues (_BSD_SOURCE) */
 #endif
 #include <winsock2.h>
 #include <ws2tcpip.h>                           /* getaddrinfo() */
+#include <mswsock.h>                            /* IOCP */
+#endif /*_WINSOCK2_H*/
 #endif /*HAVE_WINSOCK2_H_INCLUDED*/
 
 #if !defined(HAVE_WINDOWS_H_INCLUDED)

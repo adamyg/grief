@@ -1,7 +1,7 @@
 #ifndef LIBW32_WIN32_INTERNAL_H_INCLUDED
 #define LIBW32_WIN32_INTERNAL_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_internal_h,"$Id: win32_internal.h,v 1.13 2022/03/21 14:29:42 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_internal_h,"$Id: win32_internal.h,v 1.14 2022/05/26 11:21:00 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -41,7 +41,8 @@ __CPRAGMA_ONCE
 #include <unistd.h>
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1400) || \
-    defined(__WATCOMC__)
+    defined(__WATCOMC__) || \
+    defined(__MINGW32__)
 #define WIN32_OPEN      _open
 #define WIN32_WOPEN     _wopen
 #define WIN32_CLOSE     _close

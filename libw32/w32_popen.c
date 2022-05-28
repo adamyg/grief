@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_popen_c,"$Id: w32_popen.c,v 1.14 2022/03/21 14:29:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_popen_c,"$Id: w32_popen.c,v 1.15 2022/05/26 11:17:39 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -619,8 +619,10 @@ w32_pclose(FILE *file)
         if (pipe) {
             int status = 0, ret = 0;
 
-            if ('w' == pipe->readOrWrite) fclose(file); Close2(pipe->hIn, "pclose/stdin");
-            if ('r' == pipe->readOrWrite) fclose(file); Close2(pipe->hOut, "pclose/stdout");
+            if ('w' == pipe->readOrWrite) fclose(file);
+            Close2(pipe->hIn,  "pclose/stdin");
+            if ('r' == pipe->readOrWrite) fclose(file);
+            Close2(pipe->hOut, "pclose/stdout");
             Close2(pipe->hErr, "pclose/stderr");
             if (! w32_child_wait(pipe->handle, &status, FALSE /*block*/)) {
                 ret = -1;

@@ -1,7 +1,7 @@
-#ifndef LIBW32_SYS_TIME_H
-#define LIBW32_SYS_TIME_H
+#ifndef LIBW32_SYS_TIME_H_INCLUDED
+#define LIBW32_SYS_TIME_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_time_h,"$Id: time.h,v 1.14 2022/03/21 14:29:43 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_time_h,"$Id: time.h,v 1.18 2022/05/26 13:17:35 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -28,7 +28,7 @@ __CPRAGMA_ONCE
 #include <sys/select.h>
 #include <time.h>
 
-#if defined(NEED_TIMEVAL)
+#if defined(NEED_TIMEVAL) || defined(__MINGW32__)
 #if !defined(_WINSOCKAPI_) && !defined(_WINSOCK2API_)
 //
 //  The <sys/time.h> header shall define the timeval structure that includes at
@@ -39,12 +39,15 @@ __CPRAGMA_ONCE
 //
 //  yet current winsock definitions are as follows.
 //
+#ifndef _TIMEVAL_DEFINED
+#define _TIMEVAL_DEFINED
 struct timeval {
     long                tv_sec;         /* seconds */
     long                tv_usec;        /* and microseconds */
 };
-#endif
-#endif
+#endif //_TIMEVAL_DEFINED
+#endif //_WINSOCK2API_
+#endif //NEED_TIMEVAL
 
 struct w32_timeval {
     time_t              tv_sec;         /* seconds */
@@ -122,8 +125,8 @@ LIBW32_API int          getitimer(int which, struct itimerval *value);
 LIBW32_API int          setitimer(int which, const struct itimerval *value, struct itimerval *ovalue);
 
 #if defined(_WINSOCKAPI_) || defined(_WINSOCK2API_)
-LIBW32_API int          w32_gettimeofday(struct timeval *, /*struct timezone*/ void *);
-LIBW32_API int          w32_select(int, fd_set *, fd_set *, fd_set *, struct timeval *timeout);
+LIBW32_API int          w32_gettimeofday(struct timeval *tv, struct timezone *tz);
+LIBW32_API int          w32_select(int, fd_set *, fd_set *, fd_set *, const struct timeval *timeout);
 #endif
 
 #if defined(NEED_TIMEVAL) || \
@@ -146,5 +149,4 @@ LIBW32_API struct tm *  gmtime_r(const time_t *ctm, struct tm *res);
 
 __END_DECLS
 
-#endif  /*LIBW32_SYS_TIME_H*/
-
+#endif /*LIBW32_SYS_TIME_H_INCLUDED*/

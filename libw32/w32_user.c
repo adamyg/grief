@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_user_c,"$Id: w32_user.c,v 1.18 2022/03/21 14:29:42 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_user_c,"$Id: w32_user.c,v 1.20 2022/05/26 11:53:01 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -41,6 +41,8 @@ __CIDENT_RCSID(gr_w32_user_c,"$Id: w32_user.c,v 1.18 2022/03/21 14:29:42 cvsuser
 
 #include "win32_internal.h"
 #include "win32_child.h"
+#include "win32_misc.h"
+
 #include <pwd.h>
 #include <grp.h>
 #include <unistd.h>
@@ -477,7 +479,7 @@ RID(PSID sid)
 }
 
 
-#if defined(_MSC_VER) && (_MSC_VER < 1500)
+#if (defined(_MSC_VER) && (_MSC_VER < 1500)) || defined(__MINGW32__)
 #define TokenElevation  20
 typedef struct _TOKEN_ELEVATION {
     DWORD TokenIsElevated;

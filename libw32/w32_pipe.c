@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_signal_c,"$Id: w32_signal.c,v 1.16 2022/05/26 12:15:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_pipe_c,"$Id: w32_pipe.c,v 1.1 2022/05/26 12:12:47 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
- * win32 signal support
+ * win32 pipe() system calls,
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 2018 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -35,62 +35,35 @@ __CIDENT_RCSID(gr_w32_signal_c,"$Id: w32_signal.c,v 1.16 2022/05/26 12:15:16 cvs
  * ==extra==
  */
 
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0501                     /* enable xp+ features */
+#endif
+
 #include "win32_internal.h"
+#include "win32_misc.h"
 #include <unistd.h>
-#include <signal.h>
-
-#if !defined(__MINGW32__)
-/*
-//  NAME
-//      sigemptyset - initialize and empty a signal set
-//
-//  SYNOPSIS
-//      #include <signal.h>
-//
-//      int sigemptyset(sigset_t *set); [Option End]
-//
-//  DESCRIPTION
-//      The sigemptyset() function initializes the signal set pointed to by set, such that all signals defined in POSIX.1-2017 are excluded.
-//
-//  RETURN VALUE
-//      Upon successful completion, sigemptyset() shall return 0; otherwise, it shall return -1 and set errno to indicate the error.
-//
-//  ERRORS
-//      No errors are defined.
-//
-*/
-LIBW32_API int
-sigemptyset(sigset_t *ss)
-{
-    if (ss) {
-        memset(ss, 0, sizeof(*ss));
-        return 0;
-    }
-    errno = EINVAL;
-    return -1;
-}
-
 
 LIBW32_API int
-sigaction(int sig, struct sigaction *sa, struct sigaction *osa)
+w32_pipe(int fildes[2])
 {
-    switch (sig) {
-    case SIGPIPE:
+    HANDLE hReadPipe = 0, hWritePipe = 0;
+    const BOOL ret = CreatePipe(&hReadPipe, &hWritePipe, NULL, 0);
+
+    if (ret) {
+        fildes[0] = _open_osfhandle((int)hReadPipe, O_NOINHERIT);
+        if (fildes[0] < 0) {
+            CloseHandle(hReadPipe), CloseHandle(hWritePipe);
+            return -1;
+        }
+        fildes[1] = _open_osfhandle((int)hWritePipe, O_NOINHERIT);
+        if (fildes[1] < 0) {
+            _close(fildes[0]), CloseHandle(hWritePipe);
+            return -1;
+        }
         return 0;
     }
-
-//  if (sa) {
-//      if (osa) {
-//          osa->sa_handler = signal(sig, (void (__cdecl *)(int))sa->sa_handler);
-//
-//      } else {
-//          signal(sig, (void (__cdecl *)(int))sa->sa_handler);
-//      }
-//  }
-    errno = EINVAL;
+    w32_errno_set();
     return -1;
 }
-
-#endif /*__MINGW32__*/
 
 /*end*/

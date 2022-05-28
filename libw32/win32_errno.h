@@ -1,7 +1,7 @@
 #ifndef LIBW32_WIN32_ERRNO_H_INCLUDED
 #define LIBW32_WIN32_ERRNO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_errno_h,"$Id: win32_errno.h,v 1.10 2022/03/21 14:29:42 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_errno_h,"$Id: win32_errno.h,v 1.11 2022/05/26 12:11:25 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -388,6 +388,6 @@ __CPRAGMA_ONCE
 #define ELOOP           10062                   /* 10062 "Too many levels of symbolic links" */
 #endif
 
-#endif  //!LIBW32_ERRNO_WINSOCK
+#endif /*LIBW32_WIN32_ERRNO_H_INCLUDED*/
 
 /*end*/

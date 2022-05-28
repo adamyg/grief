@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.27 2022/03/21 14:29:39 cvsuser Exp $
+# $Id: Makefile.in,v 1.30 2022/05/26 16:08:16 cvsuser Exp $
 # libwin32 makefile.
 #
 #
@@ -139,6 +139,7 @@ CSOURCES=\
 	w32_gethostname.c \
 	w32_getopt.c \
 	w32_getopt_long.c \
+	w32_getrlimit.c \
 	w32_getrusage.c \
 	w32_getsubopt.c \
 	w32_getlocale.c \
@@ -156,8 +157,10 @@ CSOURCES=\
 	w32_mkstemp.c \
 	w32_mmap.c \
 	w32_neterr.c \
+	w32_pipe.c \
 	w32_poll.c \
 	w32_popen.c \
+	w32_proctitle.c \
 	w32_progname.c \
 	w32_pwd.c \
 	w32_read.c \
@@ -166,6 +169,7 @@ CSOURCES=\
 	w32_rename.c \
 	w32_reparse.c \
 	w32_rwlock.c \
+	w32_setrlimit.c \
 	w32_select.c \
 	w32_shell.c \
 	w32_signal.c \

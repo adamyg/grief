@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_dlfcn_c,"$Id: w32_dlfcn.c,v 1.14 2022/03/21 14:29:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_dlfcn_c,"$Id: w32_dlfcn.c,v 1.16 2022/05/26 12:15:51 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -41,7 +41,7 @@ __CIDENT_RCSID(gr_w32_dlfcn_c,"$Id: w32_dlfcn.c,v 1.14 2022/03/21 14:29:40 cvsus
 
 #include <dlfcn.h>
 
-#include <tailqueue.h>
+#include <sys/queue.h>
 
 #define DLERROR_LEN             1024            /* error buffer size */
 
@@ -56,7 +56,11 @@ typedef struct globallib {
     char                        g_name[1];
 } globallib_t;
 
-__declspec(thread) static char  x_dlerror[DLERROR_LEN];
+#if defined(__MINGW32__)
+static __thread char x_dlerror[DLERROR_LEN];
+#else
+__declspec(thread) static char x_dlerror[DLERROR_LEN];
+#endif
 
 static unsigned                 x_dlopen;
 static CRITICAL_SECTION         x_guard;

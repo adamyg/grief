@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_signal_c,"$Id: w32_signal.c,v 1.16 2022/05/26 12:15:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_setrlimit_c,"$Id: w32_setrlimit.c,v 1.2 2022/05/26 13:17:35 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
- * win32 signal support
+ * win32 setrlimit() system calls
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 2020 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -36,61 +36,39 @@ __CIDENT_RCSID(gr_w32_signal_c,"$Id: w32_signal.c,v 1.16 2022/05/26 12:15:16 cvs
  */
 
 #include "win32_internal.h"
+
+#include <sys/resource.h>
+#include <stdio.h>
 #include <unistd.h>
-#include <signal.h>
 
-#if !defined(__MINGW32__)
-/*
-//  NAME
-//      sigemptyset - initialize and empty a signal set
-//
-//  SYNOPSIS
-//      #include <signal.h>
-//
-//      int sigemptyset(sigset_t *set); [Option End]
-//
-//  DESCRIPTION
-//      The sigemptyset() function initializes the signal set pointed to by set, such that all signals defined in POSIX.1-2017 are excluded.
-//
-//  RETURN VALUE
-//      Upon successful completion, sigemptyset() shall return 0; otherwise, it shall return -1 and set errno to indicate the error.
-//
-//  ERRORS
-//      No errors are defined.
-//
-*/
-LIBW32_API int
-sigemptyset(sigset_t *ss)
+int
+setrlimit(int resource, const struct rlimit *rlp)
 {
-    if (ss) {
-        memset(ss, 0, sizeof(*ss));
-        return 0;
+    if (NULL == rlp) {
+        errno = EINVAL;
+    } else if (rlp->rlim_cur > rlp->rlim_max) {
+        errno = EINVAL;
+    } else {
+        switch (resource) {
+        case RLIMIT_NOFILE: {
+                int newmax, ret = 0;
+                if (rlp->rlim_max > WIN32_FILDES_DEF) {
+#if defined(__WATCOMC__)
+                    if (_grow_handles(rlp->rlim_max) < rlp->rlim_max) {
+#else
+                    if (-1 == (newmax = _setmaxstdio(rlp->rlim_max))) {
+#endif
+                        errno = EINVAL;
+                        ret = -1;
+                    }
+                    w32_sockfd_limit(rlp->rlim_max);
+                }
+                return ret;
+            }
+        }
+        errno = ENOSYS;
     }
-    errno = EINVAL;
     return -1;
 }
-
-
-LIBW32_API int
-sigaction(int sig, struct sigaction *sa, struct sigaction *osa)
-{
-    switch (sig) {
-    case SIGPIPE:
-        return 0;
-    }
-
-//  if (sa) {
-//      if (osa) {
-//          osa->sa_handler = signal(sig, (void (__cdecl *)(int))sa->sa_handler);
-//
-//      } else {
-//          signal(sig, (void (__cdecl *)(int))sa->sa_handler);
-//      }
-//  }
-    errno = EINVAL;
-    return -1;
-}
-
-#endif /*__MINGW32__*/
 
 /*end*/
