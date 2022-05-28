@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_lisp_c,"$Id: lisp.c,v 1.45 2021/07/05 15:01:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_lisp_c,"$Id: lisp.c,v 1.46 2022/05/26 16:36:12 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: lisp.c,v 1.45 2021/07/05 15:01:27 cvsuser Exp $
+/* $Id: lisp.c,v 1.46 2022/05/26 16:36:12 cvsuser Exp $
  * List primitives.
  *
  *
@@ -325,7 +325,7 @@ atom_next(const LIST *lp)
 
 
 const LIST *
-atom_next_nonnull(const register LIST *lp)
+atom_next_nonnull(register const LIST *lp)
 {
     assert(lp && *lp < F_MAX);
     switch (*lp) {
@@ -600,6 +600,8 @@ atom_assign_acc(const LIST *lp)
 //  case F_STR:
     default:
         panic("atom_assign_acc: Unexpected type (0x%x/%d)", *lp, *lp);
+        /*NOTREACHED*/
+        break;
     case F_HALT:
         acc_assign_null();
         return -1;
@@ -658,6 +660,8 @@ atom_assign_sym(const LIST *lp, SYMBOL *sp)
 //  case F_REG:
     default:
         panic("atom_assign_sym: Unexpected type (0x%x/%d)", *lp, *lp);
+        /*NOTREACHED*/
+        break;
     case F_HALT:
         return -1;
     }
@@ -843,7 +847,7 @@ argv_size(const LISTV *lvp)
  *      int - size of list element in bytes.
  */
 int
-argv_copy(LIST *lp, const register LISTV *lvp)
+argv_copy(LIST *lp, register const LISTV *lvp)
 {
     LIST atom = lvp->l_flags;
 
@@ -2563,6 +2567,8 @@ do_is_type(int type)            /* int (declare symbol, [int | string type]) */
                 break;
             case F_NULL:
                 ret = 1;
+                break;
+            default:
                 break;
             }
         } else {

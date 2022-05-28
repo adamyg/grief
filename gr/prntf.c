@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_prntf_c,"$Id: prntf.c,v 1.16 2021/07/05 15:01:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_prntf_c,"$Id: prntf.c,v 1.17 2022/05/26 16:39:07 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: prntf.c,v 1.16 2021/07/05 15:01:27 cvsuser Exp $
+/* $Id: prntf.c,v 1.17 2022/05/26 16:39:07 cvsuser Exp $
  * Print formatter.
  *
  *
@@ -761,6 +761,7 @@ outl(io_t *io, int radix, accint_t lval)
         switch (radix) {
         case 2:
             TSTORE(io, 'B');
+            break;
         case 8:
             TSTORE(io, '0');
             break;

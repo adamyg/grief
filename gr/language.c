@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_language_c,"$Id: language.c,v 1.48 2020/04/21 21:23:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_language_c,"$Id: language.c,v 1.49 2022/05/26 16:35:35 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: language.c,v 1.48 2020/04/21 21:23:03 cvsuser Exp $
+/* $Id: language.c,v 1.49 2022/05/26 16:35:35 cvsuser Exp $
  * Module loader and inline compiler for lisp source.
  *
  *
@@ -713,7 +713,7 @@ again:
         if ((_chars_[fppeek()] & _XXDIGIT) == 0) {
             goto alpha;
         }
-
+        /*FALLTHRU*/
     case '0':
     case '1':
     case '2':

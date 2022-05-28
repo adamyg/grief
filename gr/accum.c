@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_accum_c,"$Id: accum.c,v 1.36 2020/04/21 00:01:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_accum_c,"$Id: accum.c,v 1.37 2022/05/26 16:33:10 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: accum.c,v 1.36 2020/04/21 00:01:54 cvsuser Exp $
+/* $Id: accum.c,v 1.37 2022/05/26 16:33:10 cvsuser Exp $
  * Accumulator manipulating.
  *
  *
@@ -64,8 +64,8 @@ typedef struct accumulator {
     } ac;
 } accumulator_t;
 
-static void __CINLINE           acc_zap(void);
-static void __CINLINE           acc_size(int len);
+static __CINLINE void           acc_zap(void);
+static __CINLINE void           acc_size(int len);
 
 static accumulator_t __CCACHEALIGN accum = {    /* global accumulator */
         F_INT
@@ -103,7 +103,7 @@ acc_expand(int len)
  *  acc_size ---
  *      Size the accumulator to accomdate 'len' bytes.
  */
-static void __CINLINE
+static __CINLINE void
 acc_size(int len)
 {
     assert(len >= 0);
@@ -141,7 +141,7 @@ acc_size(int len)
  *  acc_zap ---
  *      Release any external accumulator references.
  */
-static void __CINLINE
+static __CINLINE void
 acc_zap(void)
 {
     switch (accum.ac_type) {

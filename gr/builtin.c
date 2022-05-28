@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.63 2021/10/18 13:21:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.64 2022/05/26 16:33:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: builtin.c,v 1.63 2021/10/18 13:21:23 cvsuser Exp $
+/* $Id: builtin.c,v 1.64 2022/05/26 16:33:29 cvsuser Exp $
  * Builtin expresssion evaluation.
  *
  *
@@ -57,8 +57,8 @@ struct SAVED {                                  /* Save argument references */
 static void             execute_event(int event);
 static void             execute_builtin(const BUILTIN *bp, const LIST *lp);
 
-static void __CINLINE   arg_error(const BUILTIN *bp, enum ARGERRORS msg, struct SAVED *saved_str, struct SAVED *ssp, int arg);
-static void __CINLINE   arg_free(struct SAVED *saved_str, struct SAVED *ssp);
+static __CINLINE void   arg_error(const BUILTIN *bp, enum ARGERRORS msg, struct SAVED *saved_str, struct SAVED *ssp, int arg);
+static __CINLINE void   arg_free(struct SAVED *saved_str, struct SAVED *ssp);
 
 static int              arg_expand(const BUILTIN *bp, int varargs, int largc,
                             LISTV **largv, LISTV **lap, struct SAVED **lsaved, struct SAVED **ssp);
@@ -74,7 +74,6 @@ static unsigned         x_evtno = 0;
 static unsigned         x_evttail = 0;
 static unsigned         x_evthead = 0;
 static unsigned         x_evtactive = FALSE;
-static unsigned         x_evtctrlc = 0;         /* SIGINT count */
 static unsigned         x_evtqueue[REGEVTNUM];  /* Event queue */
 
 static LISTV            x_margv[MAX_ARGC];      /* Initial stack frame */

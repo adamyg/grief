@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.63 2021/07/12 15:55:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.64 2022/05/26 16:41:38 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_win32.c,v 1.63 2021/07/12 15:55:01 cvsuser Exp $
+/* $Id: sys_win32.c,v 1.64 2022/05/26 16:41:38 cvsuser Exp $
  * WIN32 system support.
  *
  *
@@ -18,11 +18,12 @@ __CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.63 2021/07/12 15:55:01 cvsus
  * ==end==
  */
 
-#ifdef  WIN32
+#ifdef WIN32
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0601
 #endif
-#define WINVER 0x0601
+#undef WINVER
+#define WINVER _WIN32_WINNT
 #endif
 
 #include <editor.h>

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.66 2021/07/18 23:03:19 cvsuser Exp $")
+__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.67 2022/05/26 16:35:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keyboard.c,v 1.66 2021/07/18 23:03:19 cvsuser Exp $
+/* $Id: keyboard.c,v 1.67 2022/05/26 16:35:06 cvsuser Exp $
  * Manipulate key maps and bindings.
  *
  *
@@ -346,8 +346,23 @@ static const struct w32key {
 //  { VK_OEM_6,                             //  ']}' for US
 //  { VK_OEM_7,                             //  ''"' for US
 
+#ifndef VK_OEM_NEC_EQUAL
+#define VK_OEM_NEC_EQUAL    0x92
+#endif
+#ifndef VK_ICO_CLEAR
+#define VK_ICO_CLEAR        0xE6
+#endif
+#ifndef VK_ICO_HELP
+#define VK_ICO_HELP         0xE3
+#endif
+#ifndef VK_OEM_CLEAR
+#define VK_OEM_CLEAR        0xFE
+#endif
+
     { VK_OEM_NEC_EQUAL, VKMOD_ANY,          "Keypad-Equal",     KEYPAD_EQUAL },
+//  { VK_ICO_CLEAR,     VKMOD_ANY,          "Clear",            KEYPAD_CLEAR },
     { VK_ICO_HELP,      VKMOD_ANY,          "Help",             KEY_HELP },
+//  { VK_OEM_CLEAR,     VKMOD_ANY,          "Clear",            KEYPAD_CLEAR },
 
     };
 #endif  /*WIN32 || __CYGWIN__*/

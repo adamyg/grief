@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.72 2021/08/01 14:34:04 cvsuser Exp $")
+__CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.73 2022/05/26 16:34:18 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: echo.c,v 1.72 2021/08/01 14:34:04 cvsuser Exp $
+/* $Id: echo.c,v 1.73 2022/05/26 16:34:18 cvsuser Exp $
  * Command/echo line implementation/interface.
  *
  *
@@ -608,7 +608,7 @@ elineedit(const char *prompt, const char *defstr, char *result, int bufsiz, int 
     KEY c = 0;
 
     assert(bufsiz >= 2 /*&& bufsiz <= EBUFSIZ*/);
-    if (bufsiz > _countof(buf)) bufsiz = _countof(buf);
+    if (bufsiz > (int)_countof(buf)) bufsiz = _countof(buf);
 
     memset(buf, 0, sizeof(buf));
     memset(ndefstr, 0, sizeof(ndefstr));

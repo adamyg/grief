@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sh_win32_c,"$Id: sh_win32.c,v 1.26 2022/03/21 15:39:39 cvsuser Exp $")
+__CIDENT_RCSID(gr_sh_win32_c,"$Id: sh_win32.c,v 1.27 2022/05/26 16:39:50 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sh_win32.c,v 1.26 2022/03/21 15:39:39 cvsuser Exp $
+/* $Id: sh_win32.c,v 1.27 2022/05/26 16:39:50 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -406,13 +406,13 @@ EnumWindowsProc(HWND hwnd, LPARAM lParam)
      *      return TRUE; to stop enumeration, it must return FALSE.
      */
     struct _enum_win_info *info = (struct _enum_win_info *)lParam;
-    DWORD thread, pid, status;
+    DWORD pid, status;
 
-    thread = GetWindowThreadProcessId(hwnd, &pid);
+    (void) GetWindowThreadProcessId(hwnd, &pid);
     return pid != info->dwProcessId ||
-                GetExitCodeProcess(info->hProcess, &status) &&
-                status == STILL_ACTIVE &&       // value = 259
-                PostMessage(hwnd, WM_CLOSE, 0, 0);
+                (GetExitCodeProcess(info->hProcess, &status) &&
+                 status == STILL_ACTIVE &&       // value = 259
+                 PostMessage(hwnd, WM_CLOSE, 0, 0));
 }
 
 

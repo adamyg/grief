@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_scan_c,"$Id: m_scan.c,v 1.24 2018/10/11 22:37:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_scan_c,"$Id: m_scan.c,v 1.25 2022/05/26 16:42:10 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_scan.c,v 1.24 2018/10/11 22:37:23 cvsuser Exp $
+/* $Id: m_scan.c,v 1.25 2022/05/26 16:42:10 cvsuser Exp $
  * scanf implementation.
  *
  *
@@ -256,12 +256,14 @@ literal:;   if ((c = ioget(io)) < 0) {
 
         case 'S':                               /* long string */
             flags |= F_LONG;
+            /*FALLTHRU*/
         case 's':                               /* string */
             conv = D_STRING;
             break;
 
         case 'C':                               /* long character */
             flags |= F_LONG;
+            /*FALLTHRU*/
         case 'c':                               /* character */
             flags |= F_WANTWHITE;
             conv = D_CHARACTER;

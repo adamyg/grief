@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_feature_c,"$Id: m_feature.c,v 1.25 2020/06/21 00:21:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_feature_c,"$Id: m_feature.c,v 1.26 2022/05/26 16:35:41 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_feature.c,v 1.25 2020/06/21 00:21:31 cvsuser Exp $
+/* $Id: m_feature.c,v 1.26 2022/05/26 16:35:41 cvsuser Exp $
  * Features.
  *
  *
@@ -89,6 +89,7 @@ struct ft_map {
 int                     xf_fsync = FALSE;       //TODO
 int                     x_history_depth = -1;   //TODO
 
+#if (TODO)
 static struct ft_map    ft_features[] = {
 #define FT_MKSTR(__x)           FT_STR, (void *)&__x
 #define FT_MKINT(__x)           FT_INT, (void *)&__x
@@ -124,6 +125,8 @@ static struct ft_map    ft_features[] = {
 #undef  FT_MKINT
 #undef  FT_MKFLG
     };
+#endif  /*TODO*/
+
 
 /*
  *  Build features

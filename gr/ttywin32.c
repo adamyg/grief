@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.52 2021/07/11 08:24:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.53 2022/05/26 16:41:12 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttywin32.c,v 1.52 2021/07/11 08:24:15 cvsuser Exp $
+/* $Id: ttywin32.c,v 1.53 2022/05/26 16:41:12 cvsuser Exp $
  * WIN32 VIO driver.
  *  see: http://www.edm2.com/index.php/Category:Vio
  *
@@ -21,9 +21,13 @@ __CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.52 2021/07/11 08:24:15 cvsuser
 #if defined(WIN32)
 
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0601
+#define _WIN32_WINNT 0x601
+#elif (_WIN32_WINNT < 0x601)
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x601
 #endif
-#define WINVER 0x0601
+#undef WINVER
+#define WINVER _WIN32_WINNT
 
 #include <editor.h>
 
@@ -33,7 +37,8 @@ __CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.52 2021/07/11 08:24:15 cvsuser
 #include <assert.h>
 
 #if !defined(WINDOWS_MEAN_AND_LEAN)
-#define  WINDOWS_MEAN_AND_LEAN
+#define WINDOWS_MEAN_AND_LEAN
+#define PSAPI_VERSION               1           // EnumProcessModules and psapi.dll
 #include <windows.h>
 #include <wincon.h>
 #endif  //WINDOWS_MEAN_AND_LEAN
@@ -51,7 +56,6 @@ __CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.52 2021/07/11 08:24:15 cvsuser
 
 static void             VioInitialise(void);
 static void             VioEncoding(void);
-
 
 
 /*private*/

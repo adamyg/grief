@@ -1,11 +1,11 @@
 #ifndef GR_M_FTP_H_INCLUDED
 #define GR_M_FTP_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_ftp_h,"$Id: m_ftp.h,v 1.6 2014/11/16 17:28:40 ayoung Exp $")
+__CIDENT_RCSID(gr_m_ftp_h,"$Id: m_ftp.h,v 1.7 2022/05/26 16:36:19 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_ftp.h,v 1.6 2014/11/16 17:28:40 ayoung Exp $
+/* $Id: m_ftp.h,v 1.7 2022/05/26 16:36:19 cvsuser Exp $
  * FTP primitives -- beta/undocumented.
  *
  *
@@ -69,6 +69,7 @@ void                        do_ftp_register(void);
 void                        do_ftp_remove(void);
 void                        do_ftp_rename(void);
 void                        do_ftp_set_options(void);
+void                        do_ftp_get_options(void);
 void                        do_ftp_sitename(void);
 void                        do_ftp_stat(void);
 void                        do_ftp_timeout(void);

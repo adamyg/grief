@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.72 2021/07/05 15:01:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.73 2022/05/26 16:41:38 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.72 2021/07/05 15:01:27 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.73 2022/05/26 16:41:38 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -25,18 +25,23 @@ __CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.72 2021/07/05 15:01:27 cvsuser Exp
 #include <edtrace.h>
 #include <edenv.h>                              /* gputenvv(), ggetenv() */
 #include <edalt.h>
+
 #include "../libchartable/libchartable.h"
 #include "../libwidechar/widechar.h"
 
 #if defined(WIN32)
+
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0601
+#define _WIN32_WINNT 0x601
+#elif (_WIN32_WINNT < 0x601)
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x601
 #endif
-#ifndef WINVER
-#define WINVER 0x0601
-#endif
+#undef WINVER
+#define WINVER _WIN32_WINNT
+
 #if !defined(WINDOWS_MEAN_AND_LEAN)
-#define  WINDOWS_MEAN_AND_LEAN
+#define WINDOWS_MEAN_AND_LEAN
 #include <windows.h>
 #endif
 #pragma comment(lib, "gdi32.lib")
@@ -1257,12 +1262,10 @@ term_colvalue(const colvalue_t ca, unsigned def)
 static void
 term_attr(int fg, int bg)
 {
-    if (fg <= COLOR_NONE &&
-            (fg = tt_colormap[fg].c16) < 0 || fg >= tt_colors) {
+    if ((fg <= COLOR_NONE && (fg = tt_colormap[fg].c16) < 0) || fg >= tt_colors) {
         fg = tt_defaultfg;
     }
-    if (fg <= COLOR_NONE &&
-            (bg = tt_colormap[bg].c16) < 0 || bg >= tt_colors) {
+    if ((fg <= COLOR_NONE && (bg = tt_colormap[bg].c16) < 0) || bg >= tt_colors) {
         bg = tt_defaultbg;
     }
     term_hue(fg, bg);

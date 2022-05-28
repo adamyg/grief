@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_math_c,"$Id: maths.c,v 1.34 2020/06/18 14:40:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_math_c,"$Id: maths.c,v 1.35 2022/05/26 16:38:25 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: maths.c,v 1.34 2020/06/18 14:40:37 cvsuser Exp $
+/* $Id: maths.c,v 1.35 2022/05/26 16:38:25 cvsuser Exp $
  * Math operators/primitives.
  *
  *
@@ -1501,6 +1501,7 @@ xfloat:     switch (op) {
                 break;
             case MOP_NE:                        /* (!=) not-equals */
                 val = (float1 != float2);
+                break;
             case MOP_LT:                        /* (<)  less-than */
                 val = (float1 < float2);
                 break;
