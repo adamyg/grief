@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.10 2022/05/27 01:48:40 cvsuser Exp $
+# $Id: Makefile.in,v 1.11 2022/05/29 08:04:09 cvsuser Exp $
 # libbz2 makefile
 #
 #
@@ -87,10 +87,11 @@ RMDFLAGS=	-rf
 BZ2LIB=		$(D_LIB)/$(LP)bz2_static$(A)
 BZ2DLL=		$(D_LIB)/$(LP)bz2.la
 
-VERSION=	1.0.6
+VERSION=	1.0.8
 VERSIONSPEC=	$(subst .,:,$(VERSION))
-BZ2PACKED=	bzip2-1.0.6.gr.tgz
-BZ2SRC=		./bzip2-1.0.6
+BZ2PACKED=	bzip2-$(VERSION).gr.tgz
+BZ2SRC=		./bzip2-$(VERSION)
+
 VPATH=		$(BZ2SRC)
 
 LIBOBJS=\

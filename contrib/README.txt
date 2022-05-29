@@ -59,52 +59,50 @@
 
   flex/
 
-	Version 2.5.10 released 2002-7-24
+            Version 2.5.10 released 2002-7-24
 
-	Flex carries the copyright used for BSD software, slightly modified
-	because it originated at the Lawrence Berkeley (not Livermore!) Laboratory,
-	which operates under a contract with the Department of Energy:
+            Flex carries the copyright used for BSD software, slightly modified
+            because it originated at the Lawrence Berkeley (not Livermore!) Laboratory,
+            which operates under a contract with the Department of Energy:
 
-	Copyright (c) 2001 by W. L. Estes <wlestes@uncg.edu>
+            Copyright (c) 2001 by W. L. Estes <wlestes@uncg.edu>
 
-	Copyright (c) 1990, 1997 The Regents of the University of California.
-	All rights reserved.
+            Copyright (c) 1990, 1997 The Regents of the University of California.
+            All rights reserved.
 
-	This code is derived from software contributed to Berkeley by
-	Vern Paxson.
+            This code is derived from software contributed to Berkeley by
+            Vern Paxson.
 
-	The United States Government has rights in this work pursuant
-	to contract no. DE-AC03-76SF00098 between the United States
-	Department of Energy and the University of California.
+            The United States Government has rights in this work pursuant
+            to contract no. DE-AC03-76SF00098 between the United States
+            Department of Energy and the University of California.
 
-	Redistribution and use in source and binary forms, with or without
-	modification, are permitted provided that the following conditions
-	are met:
+            Redistribution and use in source and binary forms, with or without
+            modification, are permitted provided that the following conditions
+            are met:
 
-	1. Redistributions of source code must retain the above copyright
-	notice, this list of conditions and the following disclaimer.
-	2. Redistributions in binary form must reproduce the above copyright
-	notice, this list of conditions and the following disclaimer in the
-	documentation and/or other materials provided with the distribution.
+            1. Redistributions of source code must retain the above copyright
+            notice, this list of conditions and the following disclaimer.
+            2. Redistributions in binary form must reproduce the above copyright
+            notice, this list of conditions and the following disclaimer in the
+            documentation and/or other materials provided with the distribution.
 
-	Neither the name of the University nor the names of its contributors
-	may be used to endorse or promote products derived from this software
-	without specific prior written permission.
+            Neither the name of the University nor the names of its contributors
+            may be used to endorse or promote products derived from this software
+            without specific prior written permission.
 
-	THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
-	IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
-	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-	PURPOSE.
+            THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
+            IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
+            WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+            PURPOSE.
 
-	This basically says "do whatever you please with this software except
-	remove this notice or take advantage of the University's (or the flex
-	authors') name".
+            This basically says "do whatever you please with this software except
+            remove this notice or take advantage of the University's (or the flex
+            authors') name".
 
-	Note that the "flex.skl" scanner skeleton carries no copyright notice.
-	You are free to do whatever you please with scanners generated using flex;
-	for them, you are not even bound by the above copyright.
-
-
+            Note that the "flex.skl" scanner skeleton carries no copyright notice.
+            You are free to do whatever you please with scanners generated using flex;
+            for them, you are not even bound by the above copyright.
 
   libregex/
 
@@ -186,7 +184,7 @@
 
   libbzip2/
 
-        o bzip2 1.0.6
+        o bzip2 1.0.8
 
             The bzip2 file compression program was developed by Julian Seward and
             launched on the 18th of July in 1996. It has remained an open source
@@ -206,7 +204,7 @@
         Copyright notice:
 
             This program, "bzip2", the associated library "libbzip2", and all
-            documentation, are copyright (C) 1996-2010 Julian R Seward.  All
+            documentation, are copyright (C) 1996-2019 Julian R Seward.  All
             rights reserved.
 
             Redistribution and use in source and binary forms, with or without
@@ -214,19 +212,19 @@
             are met:
 
             1. Redistributions of source code must retain the above copyright
-               notice, this list of conditions and the following disclaimer.
+            notice, this list of conditions and the following disclaimer.
 
             2. The origin of this software must not be misrepresented; you must
-               not claim that you wrote the original software.  If you use this
-               software in a product, an acknowledgment in the product
-               documentation would be appreciated but is not required.
+            not claim that you wrote the original software.  If you use this
+            software in a product, an acknowledgment in the product
+            documentation would be appreciated but is not required.
 
             3. Altered source versions must be plainly marked as such, and must
-               not be misrepresented as being the original software.
+            not be misrepresented as being the original software.
 
             4. The name of the author may not be used to endorse or promote
-               products derived from this software without specific prior written
-               permission.
+            products derived from this software without specific prior written
+            permission.
 
             THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
             OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -240,8 +238,8 @@
             NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
             SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-            Julian Seward, jseward@bzip.org
-            bzip2/libbzip2 version 1.0.6 of 6 September 2010
+            Julian Seward, jseward@acm.org
+            bzip2/libbzip2 version 1.0.8 of 13 July 2019
 
   liblzma/
 
@@ -407,7 +405,7 @@
 
   hunspell/
 
-        o hunspell 1.3.2
+        o hunspell 1.3.3 and 1.7.0
 
             Author of Hunspell:
             László Németh (nemethl (at) gyorsposta.hu)
@@ -433,7 +431,7 @@
 
   libarchive/
 
-        o libarchive 3.0.4
+        o libarchive 3.6.1
 
             Copyright (c) 2003-2009 <author(s)>
             All rights reserved.
