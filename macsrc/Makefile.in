@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.22 2022/05/28 17:15:06 cvsuser Exp $
+# $Id: Makefile.in,v 1.23 2022/05/29 06:11:35 cvsuser Exp $
 # GRIEF macro library makefile.
 #
 #
@@ -55,9 +55,16 @@ MBENCHMARKS=	$(MACROS)/benchmarks
 MMODES=		$(MACROS)/modes
 MPROFILES=	$(MACROS)/profiles
 MCOLORS=	$(MACROS)/colors
-
 MACRODIRS=	$(MACROS) $(MKBD) $(MTTY) $(MDEMOS) $(MBENCHMARKS) $(MMODES) $(MPROFILES) $(MCOLORS)
 
+# Compilers, programs
+
+RM=		@RM@
+RMDIR=		@RMDIR@
+PERL=		@PERL@
+
+RMFLAGS=	-f
+RMDFLAGS=	-rf
 
 #########################################################################################
 # Rules
@@ -71,7 +78,7 @@ debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
 SOURCE=		$(wildcard *.cr kbd/*.cr tty/*.cr demos/*.cr benchmarks/*.cr modes/*.cr profiles/*.cr colors/*.cr)
-OBJECTS=	$(wildcard $(MACROS)/*.cm $(MKBD)/*.cm $(MTTY)/*.cm $(MDEMOS)/*.cm $(MBENCHMARKS)/*.cm $(MMODES)/*.cm $(MPROFILES)/*.cm  $(MCOLORS)/*.cm)
+OBJECTS=	$(wildcard $(MACROS)/*.cm $(MACROS)/*.m $(MKBD)/*.cm $(MTTY)/*.cm $(MDEMOS)/*.cm $(MBENCHMARKS)/*.cm $(MMODES)/*.cm $(MPROFILES)/*.cm  $(MCOLORS)/*.cm)
 
 macros:			$(MACRODIRS)
 		$(GRUNCH) -w -m -A autoload.inc -o $(MACROS) $(SOURCE)
@@ -103,11 +110,19 @@ $(MCOLORS):		$(MCOLORS)/.created
 		-@$(PERL) ../win32/mkdir_p.pl $(@D)
 		@echo "++ do not delete, grief edit managed content ++" > $@
 
+reverse = $(if $(1),$(call reverse,$(wordlist 2,$(words $(1)),$(1)))) $(firstword $(1))
+RMACRODIRS = $(call reverse, $(MACRODIRS))
+
+vclean:			clean
+		-$(RM) $(RMDFLAGS) $(addsuffix /.created, $(RMACRODIRS))
+		-$(RMDIR) $(RMACRODIRS)
+
 clean:
 		@echo $(BUILD_TYPE) clean
-		-rm -f a.out mon.out crisp.log core
-		-rm -f $(OBJECTS)
-		-rm -f *.m */*.m
+		-$(RM) $(RMFLAGS) a.out mon.out crisp.log core
+ifneq ("$(OBJECTS)","")
+		-$(RM) $(RMFLAGS) $(OBJECTS)
+endif
 
 #end
 
