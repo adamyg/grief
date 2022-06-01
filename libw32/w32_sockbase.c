@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_sockbase_c,"$Id: w32_sockbase.c,v 1.7 2022/03/21 14:29:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_sockbase_c,"$Id: w32_sockbase.c,v 1.8 2022/06/01 17:36:26 cvsuser Exp $")
 
 /*
  * win32 socket () system calls
@@ -58,6 +58,11 @@ __CIDENT_RCSID(gr_w32_sockbase_c,"$Id: w32_sockbase.c,v 1.7 2022/03/21 14:29:41 
 static int x_sockinit = 0;                      /* initialisation status */
 LIBW32_API int w32_h_errno = 0;                 /* lookup error */
 
+#undef getaddrinfo
+#if defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR)
+INT WSAAPI getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, const ADDRINFOA *pHints, PADDRINFOA *ppResult);
+#endif
+
 
 /*
  *  w32_sockinit() system run-time initialisation.
@@ -90,7 +95,6 @@ w32_getaddrinfo(const char *nodename, const char *servname,
 {
     int done = 0, ret;
 
-#undef getaddrinfo
 retry:;
     if (0 != (ret = getaddrinfo(nodename, servname, hints, res))) {
         if (0 == done++) {
