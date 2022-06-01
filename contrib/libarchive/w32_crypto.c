@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_crypto_c,"$Id: w32_crypto.c,v 1.5 2022/05/27 18:10:49 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_crypto_c,"$Id: w32_crypto.c,v 1.6 2022/05/31 15:21:53 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -41,7 +41,7 @@ __CIDENT_RCSID(gr_w32_crypto_c,"$Id: w32_crypto.c,v 1.5 2022/05/27 18:10:49 cvsu
 
 #include <windows.h>
 #include <stdio.h>
-#if defined(__MINGW32__)
+#if defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR)
 #include "mingw_bcrypt.h"
 #else
 #include <bcrypt.h>

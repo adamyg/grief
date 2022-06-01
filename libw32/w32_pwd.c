@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_pwd_c,"$Id: w32_pwd.c,v 1.16 2022/05/26 11:20:45 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_pwd_c,"$Id: w32_pwd.c,v 1.17 2022/05/31 16:18:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -458,7 +458,7 @@ static struct WellKnownSID {
     DWORD SubAuth[2];
 
 } well_known_sids[] = {
-#if defined(__MINGW32__)
+#if defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR)
 #define SECURITY_THIS_ORGANIZATION_RID 15
 #define SECURITY_LOCAL_SERVICE_RID 19
 #define SECURITY_NETWORK_SERVICE_RID 20

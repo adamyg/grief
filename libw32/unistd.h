@@ -1,7 +1,7 @@
 #ifndef LIBW32_UNISTD_H_INCLUDED
 #define LIBW32_UNISTD_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_unistd_h,"$Id: unistd.h,v 1.62 2022/05/28 12:03:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_unistd_h,"$Id: unistd.h,v 1.63 2022/05/31 16:18:23 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -455,13 +455,18 @@ LIBW32_API extern char *suboptarg;
 LIBW32_API int          getsubopt (char **optionp, char * const *tokens, char **valuep);
 
 /* <string.h> */
+
 #if defined(_MSC_VER) || defined(__WATCOMC__)
+#define NEED_STRCASECMP                         /*see: w32_string.c*/
+#endif
+#if defined(NEED_STRCASECMP)
 LIBW32_API int          strcasecmp(const char *s1, const char *s2);
 LIBW32_API int          strncasecmp(const char *s1, const char *s2, size_t len);
-#endif /*_MSC_VER*/
+#endif /*NEED_STRCASECMP*/
 
 #if (defined(_MSC_VER) && (_MSC_VER < 1400)) || \
-            defined(__MINGW32__) || defined(__WATCOMC__)
+            defined(__WATCOMC__) || \
+            defined(__MINGW32__)
 #define NEED_STRNLEN                            /*see: w32_string.c*/
 #endif
 #if defined(NEED_STRNLEN)

@@ -1,6 +1,6 @@
 @echo off
 rem
-rem Open Watcom C/C++ 1.9
+rem Open Watcom C/C++ 2.0
 rem
 if not defined GNUWIN32 (
         set GNUWIN32=\devl\gnuwin32

@@ -1,3 +1,7 @@
+Tue May 31 19:15:55 2022 adamy
+
+	* MinGW-w64, include <ntdef.h>
+
 Fri May 27 20:51:20 2022 adamy
 
 	* libarchive 3.6,1

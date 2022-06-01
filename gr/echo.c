@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.73 2022/05/26 16:34:18 cvsuser Exp $")
+__CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.74 2022/05/31 16:18:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: echo.c,v 1.73 2022/05/26 16:34:18 cvsuser Exp $
+/* $Id: echo.c,v 1.74 2022/05/31 16:18:21 cvsuser Exp $
  * Command/echo line implementation/interface.
  *
  *
@@ -3080,7 +3080,7 @@ ef_percent(WChar_t *cp, const struct _estate *s)
     if (perc >= 100) {
         strcpy(t_buffer, "END");
     } else {
-        sprintf(t_buffer, "%2lu%%", perc);
+        sprintf(t_buffer, "%2u%%", (unsigned)perc);
     }
     return ef_buffer(cp, t_buffer, s);
 }

@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.15 2022/05/27 01:47:27 cvsuser Exp $
+# $Id: Makefile.in,v 1.16 2022/05/31 17:15:47 cvsuser Exp $
 # External packages.
 #
 #
@@ -59,7 +59,7 @@ define contrib-all
 	$(MAKE) -C libarchive
 	$(MAKE) -C hunspell
 endef
-ifeq ("win32","@build_os@")
+ifneq "" "$(filter mingw32 mingw64 win32,@build_os@)"
 define contrib-allx
 	$(MAKE) -C flex
 	$(MAKE) -C libcitrus
@@ -79,7 +79,7 @@ define contrib-clean
 	$(MAKE) -C libarchive  clean
 	$(MAKE) -C hunspell    clean
 endef
-ifeq ("win32","@build_os@")
+ifneq "" "$(filter mingw32 mingw64 win32,@build_os@)"
 define contrib-cleanx
 	$(MAKE) -C libcitrus   clean
 	$(MAKE) -C libintl     clean

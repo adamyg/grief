@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(libucpp_lexer_c,"$Id: lexer.c,v 1.2 2012/03/18 16:59:25 ayoung Exp $")
+__CIDENT_RCSID(libucpp_lexer_c,"$Id: lexer.c,v 1.3 2022/05/31 16:18:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 8; -*- */
 /*
@@ -37,6 +37,7 @@ __CIDENT_RCSID(libucpp_lexer_c,"$Id: lexer.c,v 1.2 2012/03/18 16:59:25 ayoung Ex
 #include <string.h>
 #include <stddef.h>
 #include <limits.h>
+#include <assert.h>
 #include "ucppi.h"
 #include "mem.h"
 #ifdef UCPP_MMAP
@@ -688,7 +689,7 @@ static int utf8_to_string(unsigned char buf[], unsigned long utf8)
 		val = x4 | (x3 << 6) | (x2 << 12) | (x1 << 16);
 	} else val = utf8;
 	if (val < 128) {
-		buf[0] = val;
+		buf[0] = (unsigned char)val;
 		buf[1] = 0;
 		return 1;
 	} else if (val < 0xffffUL) {
@@ -954,6 +955,8 @@ static inline int read_token(struct lexer_state *ls)
 						put_char(ls, outc);
 						outc = 0;
 					}
+					//if (c != '\n' && !comment /*HOW*/?)
+					// TODO: stop dup newline .. 
 					put_char(ls, c);
 				}
 			}
@@ -961,6 +964,10 @@ static inline int read_token(struct lexer_state *ls)
 			&& ls->condcomp) {
 			/* this is a hack: we need to dump a pending slash */
 			put_char(ls, outc);
+			outc = 0;
+		} else if (outc == '%' && !(ls->flags & LEXER) && ls->condcomp) {
+			/* XXX: flush pending % */
+			put_char(ls, '%');
 			outc = 0;
 		}
 		if (ttPUT(nstat)) {

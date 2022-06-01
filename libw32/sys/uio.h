@@ -1,7 +1,7 @@
 #ifndef LIBW32_SYS_UIO_H_INCLUDED
 #define LIBW32_SYS_UIO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_uio_h,"$Id: uio.h,v 1.12 2022/05/26 12:17:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_uio_h,"$Id: uio.h,v 1.13 2022/05/31 16:18:23 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -26,11 +26,13 @@ __CPRAGMA_ONCE
 #include <sys/cdefs.h>
 
 #include <stddef.h>         /* size_t */
-#include <limits.h>         /* INT_MAX, maybe SSIZE_MAX (mingw) */
+#include <limits.h>         /* INT_MAX */
 
 #define IOV_MAX             64
+#if !defined(__MINGW32__)
 #if !defined(SSIZE_MAX)
 #define SSIZE_MAX           INT_MAX
+#endif
 #endif
 
 __BEGIN_DECLS

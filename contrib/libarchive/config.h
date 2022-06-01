@@ -118,6 +118,10 @@ NTSTATUS WINAPI BCryptDeriveKeyPBKDF2(BCRYPT_ALG_HANDLE hPrf, PUCHAR pbPassword,
 #endif
 
 #if defined(__MINGW32__)
+#if defined(__MINGW64_VERSION_MAJOR)
+#include <ntdef.h>
+#endif
+
 #undef S_ISLNK
 #undef S_ISSOCK
 #undef S_ISUID

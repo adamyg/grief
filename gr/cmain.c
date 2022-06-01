@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.42 2022/05/26 16:33:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.43 2022/05/31 16:18:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.42 2022/05/26 16:33:55 cvsuser Exp $
+/* $Id: cmain.c,v 1.43 2022/05/31 16:18:21 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -1564,7 +1564,7 @@ env_define(const char *cp)
     if (F_STR == type) {
         trace_log("-D%s=%s (string)\n", name, svalue);
     } else {
-        trace_log("-D%s=%ld (integer)\n", name, ivalue);
+        trace_log("-D%s=%" ACCINT_FMT " (integer)\n", name, ivalue);
     }
     if (svalue) {
         svalue[-1] = '=';                       /* restore */

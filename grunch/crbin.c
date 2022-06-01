@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crbin_c,"$Id: crbin.c,v 1.24 2021/04/05 09:09:48 cvsuser Exp $")
+__CIDENT_RCSID(gr_crbin_c,"$Id: crbin.c,v 1.25 2022/05/31 16:18:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crbin.c,v 1.24 2021/04/05 09:09:48 cvsuser Exp $
+/* $Id: crbin.c,v 1.25 2022/05/31 16:18:22 cvsuser Exp $
  * Binary backend code generator.
  *
  *
@@ -447,7 +447,8 @@ push_int(accint_t ival)
     LIST t_buf[sizeof(accint_t)+1];
     unsigned i;
 
-    assert(SIZEOF_LONG == sizeof(accint_t));    /* verify env */
+//  assert(SIZEOF_LONG == sizeof(accint_t));    /* verify env */
+    assert(CM_ATOMSIZE == sizeof(accint_t));    /* verify env */
     LPUT_INT(t_buf, ival);
     for (i = 1; i < sizeof(t_buf); ++i) {
         push_byte(t_buf[i]);

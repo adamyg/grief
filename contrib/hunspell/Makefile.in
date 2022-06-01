@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.21 2022/05/28 14:19:59 cvsuser Exp $
+# $Id: Makefile.in,v 1.22 2022/05/31 15:20:12 cvsuser Exp $
 # libhunspell, hunspell, hzip and hunzip makefile
 #
 #
@@ -111,6 +111,8 @@ else ifeq ("@TOOLCHAIN@","vs160")
 else ifeq ("@TOOLCHAIN@","vs150")
 else ifeq ("@TOOLCHAIN@","vs140")
 else ifeq ("@TOOLCHAIN@","mingw")
+else ifeq ("@TOOLCHAIN@","mingw32")
+else ifeq ("@TOOLCHAIN@","mingw64")
 endif
 
 ifeq ("1.7.0","$(HUNSPELLVER)")
@@ -159,7 +161,6 @@ endif
 DLLOBJS=\
 	$(D_OBJ)/hunspell_dllmain.lo		\
 	$(D_OBJ)/hunspell_dllc.lo		\
-	$(D_OBJ)/hunspell_dlls.lo		\
 	$(subst $(O),.lo,$(LIBOBJS))
 
 HUNSPELLOBJS=\

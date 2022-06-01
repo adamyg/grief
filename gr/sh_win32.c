@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sh_win32_c,"$Id: sh_win32.c,v 1.27 2022/05/26 16:39:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_sh_win32_c,"$Id: sh_win32.c,v 1.28 2022/05/31 16:18:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sh_win32.c,v 1.27 2022/05/26 16:39:50 cvsuser Exp $
+/* $Id: sh_win32.c,v 1.28 2022/05/31 16:18:21 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -434,24 +434,25 @@ SendCloseMessage(HANDLE hProc)
 
 
 /*
- *  popen ---
+ *  sys_popen ---
  *      Pipe open implementation for WIN32.
  */
 FILE *
-popen(const char *cmd, const char *mode)
+sys_popen(const char *cmd, const char *mode)
 {
     return w32_popen(cmd, mode);
 }
 
 
 /*
- *  pclose ---
+ *  sys_pclose ---
  *      Pipe close implementation for WIN32.
  */
 int
-pclose(FILE *file)
+sys_pclose(FILE *file)
 {
     return w32_pclose(file);
 }
 
 #endif /*WIN32*/
+

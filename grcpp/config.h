@@ -32,6 +32,7 @@
 #if defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 
 /* ====================================================================== */

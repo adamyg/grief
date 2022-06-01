@@ -355,7 +355,11 @@ gettempdir(char *path)
 
         for (;;) {
                 errno = 0;
+#if defined(__MINGW64_VERSION_MAJOR)
+                if (0 == mkdir(path)) {
+#else
                 if (0 == _mkdir(path)) {
+#endif
                         return MKSUCCESS;
                 }
                 if (EEXIST != errno) {

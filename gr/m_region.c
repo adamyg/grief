@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_region_c,"$Id: m_region.c,v 1.10 2014/10/22 02:33:06 ayoung Exp $")
+__CIDENT_RCSID(gr_m_region_c,"$Id: m_region.c,v 1.11 2022/05/31 16:18:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_region.c,v 1.10 2014/10/22 02:33:06 ayoung Exp $
+/* $Id: m_region.c,v 1.11 2022/05/31 16:18:21 cvsuser Exp $
  * Block primitives.
  *
  *
@@ -216,7 +216,7 @@ do_write_block(void)            /* int ([string fname], [int append = FALSE], [i
      */
     if ('|' == *fname) {                        /* PIPE */
         pipe_open = TRUE;
-        fp = popen(fname + 1, open_mode);
+        fp = sys_popen(fname + 1, open_mode);
         if (fp != NULL && pipe_msg) {           /* allow user to view exec */
             proc_prep_stop(TRUE);
         }
@@ -237,7 +237,7 @@ do_write_block(void)            /* int ([string fname], [int append = FALSE], [i
     region_write(fp, pipe_open ? (const char *)NULL : "Writing", &r);
 
     if (pipe_open) {
-        pclose(fp);
+        sys_pclose(fp);
         if (pipe_msg) {
             static const char contmsg[] = "Press any <Enter> to continue: ";
 

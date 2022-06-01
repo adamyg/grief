@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_popen_c,"$Id: w32_popen.c,v 1.15 2022/05/26 11:17:39 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_popen_c,"$Id: w32_popen.c,v 1.16 2022/05/31 16:18:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -249,7 +249,7 @@ PipeA(const char *cmd, const char *mode)
             argv[2] = cmd;
         } else {
             argv[2] = cmd2 = WIN32_STRDUP(cmd);
-            strncpy(strstr("2>&1", cmd2), "    ", 4);
+            memcpy(strstr("2>&1", cmd2), "    ", 4);
             redirect_error = TRUE;
         }
         argv[3] = NULL;
@@ -745,7 +745,7 @@ DisplayErrorA(
     int len;
 
     len = _snprintf(buffer, sizeof(buffer),
-            "Internal Error: %s = %d (%s).\n", msg, rc, rcmsg);
+            "Internal Error: %s = %u (%s).\n", msg, (unsigned)rc, rcmsg);
     WriteConsoleA(hOutput, buffer, len, NULL, NULL);
 }
 

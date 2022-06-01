@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_errno_c,"$Id: w32_errno.c,v 1.23 2022/05/26 11:23:11 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_errno_c,"$Id: w32_errno.c,v 1.24 2022/05/31 16:18:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -871,7 +871,7 @@ w32_strerror(int errnum)
 #endif
 
     default:
-        _snprintf(errbuffer, sizeof(errbuffer),
+        _snprintf(errbuffer, sizeof(errbuffer), "%s [%d]",
              (errnum >= WSABASEERR ? "unknown winsock error" : "unknown error"), errnum);
         err = errbuffer;
         break;

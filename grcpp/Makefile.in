@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.11 2020/06/20 02:17:37 cvsuser Exp $
+# $Id: Makefile.in,v 1.12 2022/05/31 16:18:22 cvsuser Exp $
 # GRIEF preprocessor makefile.
 #
 #
-# Copyright (c) 1998 - 2020, Adam Young.
+# Copyright (c) 1998 - 2022, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -32,30 +32,25 @@ top_builddir=	@top_builddir@
 
 # File extensions
 
+C=		.c
 E=
 O=		.o
-C=		.c
 H=		.h
-Y=		.y
 
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
 XCLEAN=
 
 # Compilers, programs
 
-ifdef PURIFY
-CC=		purify @CC@
-else
 CC=		@CC@
+CXX=		@CXX@
+ifeq ("$(CXX)","")
+CXX=		$(CC)
 endif
-HAVE_BISON=	1
-YACC=		@YACC@
-GREP=		@GREP@
 RM=		@RM@
+RC=		@RC@
 PERL=		@PERL@
 LIBTOOL=	@LIBTOOL@
-LANG=C
-export LANG	#RH 8 has a LANG=en_US.UTF-8
 
 # Configuration
 
@@ -109,23 +104,34 @@ CFLAGS=		@CFLAGS@
 CWARN=		@CWARN@ $(CWALL)
 CDEBUG=		@CDEBUG@
 CRELEASE=	@CRELEASE@
+CXXFLAGS=	@CXXFLAGS@
+CXXDEBUG=	@CXXDEBUG@
+ifeq ("$(CXXDEBUG)","")
+CXXDEBUG=	$(CDEBUG)
+endif
+CXXRELEASE=	@CXXRELEASE@
+ifeq ("$(CXXRELEASE)","")
+CXXRELEASE=	$(CRELEASE)
+endif
 LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
 
 CINCLUDE=	-I$(D_INC) @CINCLUDE@
-CEXTRA=		@DEFS@
+CEXTRA=		-DUCPP_CONFIG @DEFS@
 
 ifeq ("$(BUILD_TYPE)","release")
 CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CXXFLAGS+=	$(CXXRELEASE) $(CWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
 LDFLAGS=	$(LDRELEASE) @LDFLAGS@
 else
 CFLAGS+=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
+CXXFLAGS+=	$(CXXDEBUG) $(CWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
 LDFLAGS=	$(LDDEBUG) @LDFLAGS@
 endif
-LDLIBS+=	-L$(D_LIB) -lsplay -lllist -lmisc @LDLIBS@ @LIBS@ @LIBMALLOC@ @EXTRALIBS@
+LDLIBS=		-L$(D_LIB) $(LINKLIBS) @LIBS@ @EXTRALIBS@
 
-YFLAGS=		-d
 ARFLAGS=	rcv
+YFLAGS=		-d
 RMFLAGS=	-f
 RMDFLAGS=	-rf
 
@@ -135,32 +141,50 @@ RMDFLAGS=	-rf
 
 TARGET=		grcpp$(E)
 
-OBJS=		$(D_OBJ)/cpp$(O)		\
-		$(D_OBJ)/mem$(O)		\
-		$(D_OBJ)/nhash$(O)		\
-		$(D_OBJ)/lexer$(O)		\
-		$(D_OBJ)/assert$(O)		\
-		$(D_OBJ)/macro$(O)		\
-		$(D_OBJ)/eval$(O)		\
-		\
-		$(D_OBJ)/cppmain$(O)
+CSOURCES=\
+	assert.c		\
+	cpp.c			\
+	eval.c			\
+	lexer.c			\
+	macro.c			\
+	mem.c			\
+	nhash.c 		\
+	\
+	cppmain.c
 
-XFLAGS+=	-DUCPP_CONFIG -DGRUNCH
+RESOURCES=\
+	grcpp.rc
+
+OBJS+=		$(addprefix $(D_OBJ)/,$(subst .cpp,$(O),$(CPPSOURCES)))
+OBJS+=		$(addprefix $(D_OBJ)/,$(subst .c,$(O),$(CSOURCES)))
+ifeq (mingw,$(findstring mingw,"@build_os@"))
+OBJS+=		$(addprefix $(D_OBJ)/,$(subst .rc,_res.o,$(RESOURCES)))
+else
+OBJS+=		$(addprefix $(D_OBJ)/,$(subst .rc,.res,$(RESOURCES)))
+endif
+
+XCLEAN=		uccp_license.h
 
 
 #########################################################################################
 # Rules
 
-.PHONY:			build release debug
-build:			$(D_BIN)/$(TARGET)
+.PHONY:			build resources release debug
+build:		resources $(D_BIN)/$(TARGET)
 
 release:
 		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
 debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
+resources:		ucpp_license.h
+
+ucpp_license.h:		LICENSE ../util/mklicense.pl
+		@$(PERL) ../util/mklicense.pl $< $@ ucpp_license
+
 $(D_BIN)/$(TARGET):	MAPFILE=$(basename $@).map
-$(D_BIN)/$(TARGET):	$(D_OBJ)/.created $(OBJS)
+$(D_BIN)/$(TARGET):	LINKLIBS=-lmisc
+$(D_BIN)/$(TARGET):	$(D_OBJ)/.created $(OBJS) $(RESOURCES)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS) @LDMAPFILE@
 
 $(D_OBJ)/.created:
@@ -172,5 +196,14 @@ clean:
 
 $(D_OBJ)/%$(O):		%$(C)
 		$(CC) $(CFLAGS) -o $@ -c $<
+
+$(D_OBJ)/%$(O):		%.cpp
+		$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(D_OBJ)/%.res:		%.rc
+		$(RC) -fo $@ $<
+
+$(D_OBJ)/%_res.o:	%.rc
+		$(RC) -o $@ $<
 
 #end

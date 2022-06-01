@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.40 2022/05/26 11:18:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.41 2022/05/31 16:18:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -38,7 +38,11 @@ __CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.40 2022/05/26 11:18:09 cvsuser Exp
  */
 
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT        0x0501              /* enable xp+ features */
+#define _WIN32_WINNT 0x0501                     /* enable xp+ features */
+#endif
+#if defined(__MINGW32__)
+#undef  _WIN32_VER
+#define _WIN32_VER _WIN32_WINNT
 #endif
 
 #include <assert.h>

@@ -1,11 +1,11 @@
 #ifndef GR_SYSTEM_H_INCLUDED
 #define GR_SYSTEM_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_system_h,"$Id: system.h,v 1.38 2021/06/02 15:29:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_system_h,"$Id: system.h,v 1.39 2022/05/31 16:18:22 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: system.h,v 1.38 2021/06/02 15:29:27 cvsuser Exp $
+/* $Id: system.h,v 1.39 2022/05/31 16:18:22 cvsuser Exp $
  * System interface.
  *
  *
@@ -83,6 +83,9 @@ extern int                  sys_getpid(void);
 extern int                  sys_core(const char *msg, const char *path, const char *fname);
 extern void                 sys_abort(void);
 
+FILE *                      sys_popen(const char *cmd, const char *mode);
+int                         sys_pclose(FILE *file);
+
 typedef void (*signal_handler_t)(int);
 extern signal_handler_t     sys_signal(int sig, signal_handler_t func);
 
@@ -96,8 +99,6 @@ extern int                  sys_drive_set(int);
 
 #if (defined(_WIN32) || defined(WIN32)) && !defined(__CYGWIN__)
 #define mkdir(__p,__m)      _mkdir(__p)         /* name mangling */
-FILE *                      popen(const char *cmd, const char *mode);
-int                         pclose(FILE *file);
 #endif /*WIN32*/
 
 #if defined(_WIN32) || defined(WIN32)

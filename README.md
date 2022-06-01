@@ -29,9 +29,12 @@ Facility, was a popular programmer's text editor in the 1980s and early 1990s.
 
         * Linux
         * Microsoft Windows (native/cygwin)
-        * AIX
-        * HP-UX
         * Mac OS/X
+        
+   * Other operating systems; working may be required
+
+        * HP-UX
+        * AIX
         * Solaris (SPARC and x86)
 
 Examples
@@ -100,6 +103,6 @@ can be found at the following.
 
     * <http://www.crisp.com>
 
-last update: May/2020
+last update: May/2022
 
 -end-

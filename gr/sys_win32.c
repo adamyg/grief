@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.64 2022/05/26 16:41:38 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.65 2022/05/31 16:18:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_win32.c,v 1.64 2022/05/26 16:41:38 cvsuser Exp $
+/* $Id: sys_win32.c,v 1.65 2022/05/31 16:18:21 cvsuser Exp $
  * WIN32 system support.
  *
  *
@@ -1193,11 +1193,9 @@ sys_signal(int sig, signal_handler_t func)
 int
 sys_running(int pid)
 {
-//  DWORD rc;
     if (GetProcessVersion((DWORD)pid) != 0) {
         return 1;
     }
-//  rc = GetLastError();
     return 0;
 }
 #endif  /*WIN32*/

@@ -1,7 +1,7 @@
 #ifndef LIBW32_WIN32_ERRNO_H_INCLUDED
 #define LIBW32_WIN32_ERRNO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_errno_h,"$Id: win32_errno.h,v 1.11 2022/05/26 12:11:25 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_errno_h,"$Id: win32_errno.h,v 1.12 2022/05/31 16:18:23 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -70,6 +70,16 @@ __CPRAGMA_ONCE
 #if (_MSC_VER == 1600) && !defined(__WATCOMC__)
 #include "msvc_errno.h"
 #endif
+#if (__MINGW64_VERSION_MAJOR)                   /* unconditionally defined */
+    /*
+     *  RETHINK, as the following are assumed by the native pthread package:
+     *
+     *      #define ETIMEDOUT   138
+     *      #define ENOTSUP	129
+     *      #define EWOULDBLOCK	140
+     */
+#include "msvc_errno.h"
+#endif
 #endif
 
 /*
@@ -111,7 +121,7 @@ __CPRAGMA_ONCE
      *  WinSock errors are aliased to their BSD/POSIX counter part.
      *
      *  Note: This works for *most* errors, yet the following result in conflicts and are
-     *      explicity remapped during i/o operations.
+     *      explicity remapped during i/o operations: see w32_neterrno_map()
      *
 #define EINTR           WSAEINTR                // 10004 "Interrupted system call"
 #define EBADF           WSAEBADF                // 10009 "Bad file number"

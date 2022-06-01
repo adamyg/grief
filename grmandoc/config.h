@@ -1,7 +1,7 @@
 #ifndef MANDOC_CONFIG_H_INCLUDED
 #define MANDOC_CONFIG_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: config.h,v 1.22 2022/05/26 16:25:19 cvsuser Exp $
+/* $Id: config.h,v 1.23 2022/05/31 16:44:23 cvsuser Exp $
  * mandoc config.h
  *
  * Copyright (c) 2014 - 2022, Adam Young.

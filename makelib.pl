@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.127 2022/05/27 03:33:16 cvsuser Exp $
+# $Id: makelib.pl,v 1.129 2022/06/01 12:36:03 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -27,6 +27,17 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 # ==end==
+#
+# MSYS/MINGW install
+#
+#   Download and install: msys2-x86_64-YYYYMMDD.exe, then
+#
+#       pacman -S base-devel
+#
+#       pacman -S mingw-w64-x86_64-gcc          [64-bit]
+#    or pacman -S mingw-w64-x86_64-toolchain
+#
+#       pacman -S mingw-w64-i686-gcc            [32-bit]
 #
 
 use strict;
@@ -78,7 +89,7 @@ my %x_environment   = (
             CWARN           => '-W -Wall -Wshadow -Wmissing-prototypes',
             },
 
-        'mingw'         => {    # MingW
+        'mingw'         => {    # MingW32 or MingW64 (default os)
             build_os        => 'mingw32',
             TOOLCHAIN       => 'mingw',
             TOOLCHAINEXT    => '.mingw',
@@ -91,10 +102,68 @@ my %x_environment   = (
             XSWITCH         => '-o',
             AR              => 'ar',
             RC              => 'windres -DGCC_WINDRES',
-            DEFS            => '-DHAVE_CONFIG_H -D_WIN32_WINNT=0x501',
+            DEFS            => '-DHAVE_CONFIG_H',
             CINCLUDE        => '',
             CFLAGS          => '-std=gnu11 -fno-strength-reduce',
             CXXFLAGS        => '-std=c++11 -fno-strength-reduce',
+            CDEBUG          => '-g',
+            CWARN           => '-W -Wall -Wshadow -Wmissing-prototypes',
+            CXXWARN         => '-W -Wall -Wshadow',
+            LDFLAGS         => '',
+            LDDEBUG         => '-g',
+            LDRELEASE       => '',
+            LDMAPFILE       => '-Xlinker -Map=$(MAPFILE)',
+            EXTRALIBS       => '-lshlwapi -lpsapi -lole32 -luuid -lgdi32 '.
+                                    '-luserenv -lnetapi32 -ladvapi32 -lshell32 -lmpr -lWs2_32',
+            LIBMALLOC       => '-ldlmalloc',
+            },
+
+        'mingw32'       => {    # MingW64 (32-bit mode)
+            build_os        => 'mingw32',
+            TOOLCHAIN       => 'mingw32',
+            TOOLCHAINEXT    => '.mingw32',
+            CC              => 'gcc',
+            CXX             => 'g++',
+            VSWITCH         => '--version',
+            VPATTERN        => 'gcc \([^)]*\) ([0-9\.]+)',
+            OSWITCH         => '',
+            LSWITCH         => '-l',
+            XSWITCH         => '-o',
+            AR              => 'ar',
+            RC              => 'windres -DGCC_WINDRES',
+            DEFS            => '-DHAVE_CONFIG_H',
+            CINCLUDE        => '',
+            CFLAGS          => '-m32 -std=gnu11 -fno-strength-reduce',
+            CXXFLAGS        => '-m32 -std=c++11 -fno-strength-reduce',
+            CDEBUG          => '-g',
+            CWARN           => '-W -Wall -Wshadow -Wmissing-prototypes',
+            CXXWARN         => '-W -Wall -Wshadow',
+            LDFLAGS         => '',
+            LDDEBUG         => '-g',
+            LDRELEASE       => '',
+            LDMAPFILE       => '-Xlinker -Map=$(MAPFILE)',
+            EXTRALIBS       => '-lshlwapi -lpsapi -lole32 -luuid -lgdi32 '.
+                                    '-luserenv -lnetapi32 -ladvapi32 -lshell32 -lmpr -lWs2_32',
+            LIBMALLOC       => '-ldlmalloc',
+            },
+
+        'mingw64'       => {    # MingW64 (64-bit mode)
+            build_os        => 'mingw64',
+            TOOLCHAIN       => 'mingw64',
+            TOOLCHAINEXT    => '.mingw64',
+            CC              => 'gcc',
+            CXX             => 'g++',
+            VSWITCH         => '--version',
+            VPATTERN        => 'gcc \([^)]*\) ([0-9\.]+)',
+            OSWITCH         => '',
+            LSWITCH         => '-l',
+            XSWITCH         => '-o',
+            AR              => 'ar',
+            RC              => 'windres -DGCC_WINDRES',
+            DEFS            => '-DHAVE_CONFIG_H',
+            CINCLUDE        => '',
+            CFLAGS          => '-m64 -std=gnu11 -fno-strength-reduce',
+            CXXFLAGS        => '-m64 -std=c++11 -fno-strength-reduce',
             CDEBUG          => '-g',
             CWARN           => '-W -Wall -Wshadow -Wmissing-prototypes',
             CXXWARN         => '-W -Wall -Wshadow',
@@ -850,6 +919,7 @@ my @x_headers       = (     #headers
         'sys/wait.h',
         'sys/mman.h',
         'sys/utime.h',
+        'sys/timeb.h',
         'sys/mount.h',
         'sys/stat.h',
         'sys/statfs.h',
@@ -902,19 +972,19 @@ my @x_headers2      = (     #headers; check only
         'windows.h',
         'wincrypt.h',
         'bcrypt.h',
-        'afunix.h'
+        'intrin.h',
+        'afunix.h'                              # AF_UNIX
         );
 
 my @x_predefines    = (
-        '_MSC_VER',
+        '_MSC_VER|_MSC_FULL_VER',
         '__WATCOMC__',
-        '__GNUC__',
-        '__MINGW32__',
-        '__STDC__',
-        '__STDC_VERSION__',
-        'cpp,__cplusplus',
-        'cpp,__STDC_HOSTED__',
-        'cpp,__STDC_NO_ATOMICS__',
+        '__GNUC__|__GNUC_MINOR__',
+        '__MINGW32__|__MINGW64__|__MINGW64_VERSION_MAJOR|__MINGW64_VERSION_MINOR',
+        '__STDC__|__STDC_VERSION__',
+        'cpp=__cplusplus',
+        'cpp=__STDC_HOSTED__',
+        'cpp=__STDC_NO_ATOMICS__',
         );
 
 my @x_decls         = (     #stdint/intypes.h
@@ -1211,6 +1281,9 @@ main()
     elsif ('vc1930' eq $cmd)    { $o_version = 1930; $cmd = 'vc'  } elsif ('vc2022' eq $cmd) { $o_version = 1930; $cmd = 'vc' }
     elsif ('owc19' eq $cmd)     { $o_version = 1900; $cmd = 'owc' }
     elsif ('owc20' eq $cmd)     { $o_version = 2000; $cmd = 'owc' }
+    elsif ('mingw' eq $cmd)     { $o_version = 0;    $cmd = 'mingw' }
+    elsif ('mingw32' eq $cmd)   { $o_version = 32;   $cmd = 'mingw' }
+    elsif ('mingw64' eq $cmd)   { $o_version = 64;   $cmd = 'mingw' }
 
     if (! $o_version) { # default versions
         if ($cmd eq 'vc')       { $o_version = 1400; } # review???
@@ -1559,50 +1632,53 @@ Configure($$)           # (type, version)
     }
 
     # predefines/decls
-    foreach my $declspec (@x_predefines, @x_decls) {
-        my $name   = $declspec;
-        my $define = uc($declspec);
-        my $cpp    = 0;
+    foreach my $t_declspec (@x_predefines, @x_decls) {
+        my $cpp = 0;
 
-        $define =~ s/ /_/g;
-        if ($declspec =~ /^(.+):(.+)$/) {
-            $name   = $1;
-            $define = $2;                       # optional explicit #define
-        }
-
-        if ($name =~ /^cpp,(.+)$/) {            # cpp prefix
-            $define = uc($1);
-            $name = $1;
+        if ($t_declspec =~ /^cpp=(.+)$/) {      # cpp prefix
+            $t_declspec = $1;
             $cpp = 1;
         }
 
-        my $cached = (exists $DECLS{$name});
-        my $status = ($cached ? $DECLS{$name} : -1);
-        my $value  = ($cached ? $DECLSVALUE{$name} : "");
+        my @predefines = split('\|', $t_declspec);
+        foreach my $declspec (@predefines) {
+            my $name   = $declspec;
+            my $define = uc($declspec);
 
-        print "decl:     ${name} ...";
-        print " " x (28 - length($name));
-
-        if (-1 == $status) {
-            $value = CheckDecl($type, $name, $cpp);
-            $status = 1
-                if ($value ne "");
-        }
-
-        if (1 == $status) {
-            $DECLS{$name} = 1;
-            $CONFIG_H{"HAVE_DECL_${define}"} = 1;
-            if ($cached) {
-               print "${define}=${value} [yes, cached]";
-            } else {
-               $DECLSVALUE{$name} = $value;
-               print "[yes]";
+            $define =~ s/ /_/g;
+            if ($declspec =~ /^(.+):(.+)$/) {
+                $name   = $1;
+                $define = $2;                   # optional explicit #define
             }
-        } else {
-            $DECLS{$name} = 0;
-            print ($cached ? "[no, cached]" : "[no]");
+
+            my $cached = (exists $DECLS{$name});
+            my $status = ($cached ? $DECLS{$name} : -1);
+            my $value  = ($cached ? $DECLSVALUE{$name} : "");
+
+            print "decl:     ${name} ...";
+            print " " x (28 - length($name));
+
+            if (-1 == $status) {
+                $value = CheckDecl($type, $name, $cpp);
+                $status = 1
+                    if ($value ne "");
+            }
+
+            if (1 == $status) {
+                $DECLS{$name} = 1;
+                $CONFIG_H{"HAVE_DECL_${define}"} = 1;
+                if ($cached) {
+                    print "${define}=${value} [yes, cached]";
+                } else {
+                    $DECLSVALUE{$name} = $value;
+                    print "[yes]";
+                }
+            } else {
+                $DECLS{$name} = 0;
+                print ($cached ? "[no, cached]" : "[no]");
+            }
+            print "\n";
         }
-        print "\n";
     }
 
     # types

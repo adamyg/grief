@@ -1,7 +1,7 @@
 #ifndef LIBW32_SYS_SOCKET_H_INCLUDED
 #define LIBW32_SYS_SOCKET_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_socket_h,"$Id: socket.h,v 1.18 2022/05/26 13:17:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_socket_h,"$Id: socket.h,v 1.20 2022/05/31 16:58:41 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -23,10 +23,13 @@ __CPRAGMA_ONCE
  * ==end==
  */
 
+#if !defined(_WINSOCK2_H)                       /* MINGW32 guard */
 #include <win32_include.h>                      /* winsock and windows.h guard */
+#endif
 #include <win32_errno.h>
 
 #include <sys/cdefs.h>
+#include <time.h>
 
 __BEGIN_DECLS
 
@@ -231,7 +234,42 @@ LIBW32_API int          w32_poll_native(struct pollfd *fds, int cnt, int timeout
 #endif /*WIN32_SOCKET_MAP_FD|NATIVE*/
                                        
 LIBW32_API int                  w32_select(int, fd_set *, fd_set *, fd_set *, const struct timeval *timeout);
-
+                                       
 __END_DECLS
+                                       
+/* missing definitions */
+
+#if defined(_MSC_VER) || \
+    defined(__MINGW64_VERSION_MAJOR) /* MingGW-w64/32 */
+#include <Iphlpapi.h>                           /* if_nametoindex() */
+#endif
+
+#if defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR)
+INT WSAAPI inet_pton(INT Family, PCSTR pszAddrString, PVOID pAddrBuf);
+PCSTR WSAAPI inet_ntop(INT Family, const VOID *pAddr, PSTR pStringBuf, size_t StringBufSize);
+
+ULONG WINAPI if_nametoindex(PCSTR InterfaceName);
+
+typedef struct addrinfo ADDRINFOA, *PADDRINFOA;
+INT WSAAPI getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, const ADDRINFOA *pHints, PADDRINFOA *ppResult);
+VOID WSAAPI freeaddrinfo(PADDRINFOA pAddrInfo);
+#endif
+
+#if defined(__WATCOMC__)
+#if !defined(HAVE_TIMESPEC)                     /* missing definitions */
+#define HAVE_TIMESPEC
+#endif
+#if !defined(_TIMESPEC_DEFINED) && (__WATCOMC__ < 1300)
+#define _TIMESPEC_DEFINED                       /* OWC1.9=1290, OWC2.0=1300 */
+struct timespec {
+        time_t tv_sec;
+        long tv_nsec;
+};
+#else
+#include <signal.h>
+#endif  /*TIMESPEC_STRUCT_T*/
+
+ULONG WINAPI if_nametoindex(PCSTR InterfaceName);
+#endif
 
 #endif /*LIBW32_SYS_SOCKET_H_INCLUDED*/

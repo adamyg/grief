@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.64 2022/05/26 16:33:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.65 2022/05/31 16:18:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: builtin.c,v 1.64 2022/05/26 16:33:29 cvsuser Exp $
+/* $Id: builtin.c,v 1.65 2022/05/31 16:18:21 cvsuser Exp $
  * Builtin expresssion evaluation.
  *
  *
@@ -187,7 +187,7 @@ execute_str(const char *str)
                 (*cp == '.' && (cp[1] >= '0' && cp[1] <= '9')))
         {
             accfloat_t fval;
-            accint_t ival;
+            long /*accint_t*/ ival;
             int ret, len = 0;
 
             ret = str_numparse((const char *)cp, &fval, &ival, &len);

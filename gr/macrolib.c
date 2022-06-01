@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_macrolib_c,"$Id: macrolib.c,v 1.18 2015/02/19 00:16:52 ayoung Exp $")
+__CIDENT_RCSID(gr_macrolib_c,"$Id: macrolib.c,v 1.19 2022/05/31 16:18:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: macrolib.c,v 1.18 2015/02/19 00:16:52 ayoung Exp $
+/* $Id: macrolib.c,v 1.19 2022/05/31 16:18:21 cvsuser Exp $
  * Macro library support - experimental.
  *
  *
@@ -354,7 +354,7 @@ libarc_index(const char *lpath)
                 continue;                       /* not a macro extension */
             }
 
-            if (fsize < sizeof(CM_t) ||
+            if (fsize < (off_t)sizeof(CM_t) ||
                     (rcode = (size_t) archive_read_data(a, cm, sizeof(cmbuf))) < sizeof(CM_t)) {
                 if (0 == rcode) {
                     err = archive_error_string(a);

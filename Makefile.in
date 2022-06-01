@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.54 2022/05/27 03:33:16 cvsuser Exp $
+# $Id: Makefile.in,v 1.55 2022/05/31 16:18:21 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2022, Adam Young.
@@ -283,7 +283,7 @@ BINS+=	$(D_BIN)/grupdater$(E)
 endif
 
 LIBS=
-ifneq "" "$(filter mingw32 win32,@build_os@)"
+ifneq "" "$(filter mingw32 mingw64 win32,@build_os@)"
 LIBS+=	$(LW)win32
 endif
 LIBS+=\
@@ -343,7 +343,7 @@ debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
 .PHONY:
-ifneq "" "$(filter mingw32 win32,@build_os@)"
+ifneq "" "$(filter mingw32 mingw64 win32,@build_os@)"
 contrib:			directories buildinfo $(LW)win32 $(LW)misc
 		$(MAKE) -C contrib
 else
@@ -504,7 +504,7 @@ install:		build
 clean:
 		@echo $(BUILD_TYPE) clean
 		$(MAKE) -C libmisc clean
-ifneq "" "$(filter mingw32 win32,@build_os@)"
+ifneq "" "$(filter mingw32 mingw64 win32,@build_os@)"
 		$(MAKE) -C libw32
 endif
 		$(MAKE) -C libmalloc clean

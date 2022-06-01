@@ -1715,7 +1715,7 @@ SameAttributesBG(const WCHAR_INFO *cell, const struct WCHAR_COLORINFO *info, con
  *      nothing.
  **/
 static void
-CopyOutEx(copyoutctx_t *ctx, size_t pos, size_t cnt, unsigned flags)
+CopyOutEx(copyoutctx_t *ctx, unsigned pos, unsigned cnt, unsigned flags)
 {
     const WCHAR_INFO *cursor = vio.image + pos, *end = cursor + cnt;
     const int rows = vio.rows, cols = vio.cols;
@@ -2051,7 +2051,7 @@ CopyOutEx2(copyoutctx_t *ctx, size_t pos, size_t cnt, unsigned flags)
  *      nothing.
  **/
 static void
-UnderOutEx(copyoutctx_t *ctx, size_t pos, size_t cnt)
+UnderOutEx(copyoutctx_t *ctx, unsigned pos, unsigned cnt)
 {
     const WCHAR_INFO *cursor = vio.image + pos, *end = cursor + cnt;
     const int rows = vio.rows, cols = vio.cols;
@@ -2122,7 +2122,7 @@ UnderOutEx(copyoutctx_t *ctx, size_t pos, size_t cnt)
  *      nothing.
  **/
 static void
-StrikeOutEx(copyoutctx_t *ctx, size_t pos, size_t cnt)
+StrikeOutEx(copyoutctx_t *ctx, unsigned pos, unsigned cnt)
 {
     const WCHAR_INFO *cursor = vio.image + pos, *end = cursor + cnt;
     const int rows = vio.rows, cols = vio.cols;

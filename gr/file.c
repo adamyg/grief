@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.91 2022/05/26 16:34:43 cvsuser Exp $")
+__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.92 2022/05/31 16:18:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: file.c,v 1.91 2022/05/26 16:34:43 cvsuser Exp $
+/* $Id: file.c,v 1.92 2022/05/31 16:18:21 cvsuser Exp $
  * File-buffer primitives and support.
  *
  *
@@ -3011,7 +3011,7 @@ percentage(
                 m = 'G';
             }
         }
-        sxprintf(iobuf, sizeof(iobuf), "[%s %%s%%s: %ld%%%%/%d%c done]", str, pc, (int)sz, m);
+        sxprintf(iobuf, sizeof(iobuf), "[%s %%s%%s: %" ACCINT_FMT "%%%%/%d%c done]", str, pc, (int)sz, m);
         infof_truncated(iobuf, str1);
         cache_pc = pc;
     }

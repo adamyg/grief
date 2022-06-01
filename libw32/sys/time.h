@@ -1,7 +1,7 @@
 #ifndef LIBW32_SYS_TIME_H_INCLUDED
 #define LIBW32_SYS_TIME_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_time_h,"$Id: time.h,v 1.18 2022/05/26 13:17:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_time_h,"$Id: time.h,v 1.20 2022/06/01 12:46:55 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -24,11 +24,15 @@ __CPRAGMA_ONCE
  */
 
 #include <sys/cdefs.h>
+#if defined(__MINGW32__)
+#include_next <sys/time.h>              /* struct timeval */
+#else
+#include <sys/socket.h>                 /* struct timeval */
+#endif
 #include <sys/utypes.h>                 /* suseconds_t */
-#include <sys/select.h>
 #include <time.h>
 
-#if defined(NEED_TIMEVAL) || defined(__MINGW32__)
+#if defined(NEED_TIMEVAL) /*|| defined(__MINGW64_VERSION_MAJOR)*/
 #if !defined(_WINSOCKAPI_) && !defined(_WINSOCK2API_)
 //
 //  The <sys/time.h> header shall define the timeval structure that includes at
@@ -58,13 +62,6 @@ struct itimerval {
     struct timeval      it_interval;    /* timer interval */
     struct timeval      it_value;       /* current value */
 };
-
-/*
- -  struct timezone {
- -      int tz_minuteswest;             // minutes west of Greenwich
- -      int tz_dsttime;                 // type of dst correction
- -  };
- */
 
 #if !defined(TIMEVAL_TO_TIMESPEC)
 #define TIMEVAL_TO_TIMESPEC(tv, ts) {       \
