@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.30 2022/05/31 16:44:23 cvsuser Exp $
+# $Id: Makefile.in,v 1.31 2022/06/01 14:21:19 cvsuser Exp $
 # libbsdmdoc and grmanddoc
 #
 #
@@ -86,7 +86,7 @@ LDRELEASE=	@LDRELEASE@
 
 CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
 CEXTRA=		@DEFS@
-ifeq "win32" "@build_os@"
+ifeq ("win32","@build_os@")
 CEXTRA+=	-DWIN32
 endif
 
@@ -104,9 +104,6 @@ endif
 endif
 
 LDLIBS=		-L$(D_LIB) -lbsdmdoc -lmisc @LIBZ@ @LIBREGEX@ @LDLIBS@ @LIBS@ @LIBM@ @EXTRALIBS@
-##ifeq ("mingw32","@build_os@")
-##LDLIBS+=	-lw32 -lshlwapi -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
-##endif
 LDLIBS+=	@LIBMALLOC@ @LIBTHREAD@
 
 YFLAGS=		-d

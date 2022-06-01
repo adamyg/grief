@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.65 2022/05/31 16:18:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.66 2022/06/01 15:44:51 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_win32.c,v 1.65 2022/05/31 16:18:21 cvsuser Exp $
+/* $Id: sys_win32.c,v 1.66 2022/06/01 15:44:51 cvsuser Exp $
  * WIN32 system support.
  *
  *
@@ -62,7 +62,11 @@ static int                  Resize(int winch);
 static int                  ResizeCheck(unsigned *checks);
 
 #if defined(__WATCOMC__)
-extern char volatile        __WD_Present;
+#if (__WATCOMC__ >= 1300)   /*XXX, still supported?*/
+volatile char               __WD_Present = 0;
+#else
+extern volatile char        __WD_Present;
+#endif
 #if defined(_M_IX86)
 extern void                 EnterDebugger(void);
 #pragma aux EnterDebugger = "int 3"

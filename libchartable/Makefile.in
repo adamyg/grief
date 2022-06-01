@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.30 2022/05/26 02:11:26 cvsuser Exp $
+# $Id: Makefile.in,v 1.31 2022/06/01 14:21:19 cvsuser Exp $
 # libchartable makefile.
 #
 #
@@ -85,9 +85,6 @@ LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
 
 CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
-##ifeq ("mingw32","@build_os@")
-##CINCLUDE+=	-I../libw32
-##endif
 CEXTRA=		@DEFS@
 
 ifeq ("$(BUILD_TYPE)","release")
@@ -99,9 +96,6 @@ LDFLAGS=	$(LDDEBUG) @LDFLAGS@
 endif
 
 LDLIBS=		-L$(D_LIB) @LIBS@ -lmisc @LIBMALLOC@ @LIBTHREAD@ @EXTRALIBS@
-##ifeq ("mingw32","@build_os@")
-##LDLIBS+=	-lw32 -lshlwapi -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
-##endif
 
 YFLAGS=		-d
 ARFLAGS=	rcv

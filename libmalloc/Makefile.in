@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.15 2022/05/31 16:18:22 cvsuser Exp $
+# $Id: Makefile.in,v 1.16 2022/06/01 14:21:19 cvsuser Exp $
 # libdlmalloc makefile.
 #
 #
@@ -85,9 +85,6 @@ LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
 
 CINCLUDE=	-I$(D_INC) @CINCLUDE@
-##ifeq ("mingw32","@build_os@")
-##CINCLUDE+=	-I../libw32
-##endif
 
 CEXTRA=		@DEFS@
 ifeq ("win32","@build_os@")

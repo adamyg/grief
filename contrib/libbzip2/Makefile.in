@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.12 2022/05/31 15:20:58 cvsuser Exp $
+# $Id: Makefile.in,v 1.13 2022/06/01 14:21:18 cvsuser Exp $
 # libbz2 makefile
 #
 #
@@ -108,8 +108,8 @@ LIBOBJS=\
 DLLOBJS=\
 	$(subst $(O),.lo,$(LIBOBJS))
 
-ifeq ("yes","@ISWIN32@")
-ifeq (mingw,$(findstring mingw,"@build_os@"))
+ifeq ("win32","@build_os@")
+ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
 DLLOBJS+=	$(D_OBJ)/libbz2_res.o
 else
 DLLOBJS+=	$(D_OBJ)/libbz2.res

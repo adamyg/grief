@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.1 2020/06/18 19:57:47 cvsuser Exp $
+# $Id: Makefile.in,v 1.2 2022/06/01 14:21:18 cvsuser Exp $
 # libssh2 makefile.
 #
 #
@@ -133,10 +133,13 @@ LIBOBJS=\
 
 DLLOBJS=\
 	$(subst $(O),.lo,$(LIBOBJS))
-ifeq ("mingw32","@build_os@")
+
+ifeq ("win32","@build_os@")
+ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
 DLLOBJS+=	$(D_OBJ)/libssh2_res.o
-else ifeq ("win32","@build_os@")
+else
 DLLOBJS+=	$(D_OBJ)/libssh2.res
+endif
 endif
 
 LIBS=		$(SSH2LIB)

@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.30 2022/05/26 16:08:16 cvsuser Exp $
+# $Id: Makefile.in,v 1.31 2022/06/01 14:21:19 cvsuser Exp $
 # libwin32 makefile.
 #
 #
@@ -203,10 +203,13 @@ LIBOBJS=\
 
 DLLOBJS=\
 	$(subst $(O),.lo,$(LIBOBJS))
-ifeq ("mingw32","@build_os@")
+
+ifeq ("win32","@build_os@")
+ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
 DLLOBJS+=	$(D_OBJ)/libw32_res.o
-else ifeq ("win32","@build_os@")
+else
 DLLOBJS+=	$(D_OBJ)/libw32.res
+endif
 endif
 
 OBJS=		$(LIBOBJS) $(DLLOBJS)

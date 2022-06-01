@@ -1,4 +1,4 @@
-// $Id: upgetopt.cpp,v 1.2 2021/08/12 14:48:38 cvsuser Exp $
+// $Id: upgetopt.cpp,v 1.4 2022/06/01 14:21:19 cvsuser Exp $
 //
 //  getopt() implementation
 //

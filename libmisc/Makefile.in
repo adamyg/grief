@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.42 2020/06/18 20:35:17 cvsuser Exp $
+# $Id: Makefile.in,v 1.43 2022/06/01 14:21:19 cvsuser Exp $
 # libmisc makefile.
 #
 #
@@ -85,9 +85,6 @@ LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
 
 CINCLUDE=	-I$(D_INC) @CINCLUDE@
-##ifeq ("mingw32","@build_os@")
-##CINCLUDE+=	-I../libw32
-##endif
 
 CEXTRA=		@DEFS@
 ifeq ("win32","@build_os@")
@@ -110,9 +107,6 @@ endif
 endif
 
 LDLIBS=		-L$(D_LIB) @LDLIBS@ @LIBS@ @LIBMALLOC@ @EXTRALIBS@
-##ifeq ("mingw32","@build_os@")
-##LDLIBS+=	-lw32 -lshlwapi -lshell32 -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
-##endif
 
 YFLAGS=		-d
 ARFLAGS=	rcv
