@@ -1,4 +1,6 @@
-[![Website](https://img.shields.io/badge/View-Website-blue)](https://sourceforge.net/projects/grief/) [![GitHub release](https://img.shields.io/github/release/Naereen/StrapDown.js.svg)](https://GitHub.com/adamyg/grief/releases/)
+[![Website](https://img.shields.io/badge/View-Website-blue)](https://sourceforge.net/projects/grief/)
+[![GitHub release](https://img.shields.io/github/release/Naereen/StrapDown.js.svg)](https://GitHub.com/adamyg/grief/releases/)
+[![Workflow](https://github.com/adamyg/grief/actions/workflows/build.yml/badge.svg)](https://github.com/adamyg/grief/actions)
 
 [![Build status](https://ci.appveyor.com/api/projects/status/3tx1vwwclydfp1t6?svg=true&passingText=Ubuntu%20Passing&failingText=Ubuntu%20Failing&pendingText=Ubuntu%20Pending)](https://ci.appveyor.com/project/adamyg/grief-ubuntu)
 [![Build status](https://ci.appveyor.com/api/projects/status/k63ggto1v8t1c28d?svg=true&passingText=MacOS%20Passing&failingText=MacOS%20Failing&pendingText=MacOS%20Pending)](https://ci.appveyor.com/project/adamyg/grief-macos)
