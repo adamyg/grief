@@ -1,4 +1,4 @@
-/* $Id: namespace.h,v 1.6 2022/06/02 03:59:33 cvsuser Exp $
+/* $Id: namespace.h,v 1.7 2022/06/02 11:11:25 cvsuser Exp $
  *
  * libiconv <namespace.h>
  *
@@ -71,8 +71,9 @@
 #endif
 
 #if defined(_MSC_VER) || \
-        (defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR))
+        defined(__MINGW32__)
 #define LC_MESSAGES     (LC_MAX + 1) /*XXX*/
 #endif
 
 /*end*/
+

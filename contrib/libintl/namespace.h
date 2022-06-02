@@ -49,7 +49,7 @@ extern char *           libintl_strsep(char **stringp, const char *delim);
 #endif
 
 #if defined(_MSC_VER) || \
-        (defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR))
+        defined(__MINGW32__)
 #define LC_MESSAGES     (LC_MAX + 1) /*XXX*/
 #endif
 
