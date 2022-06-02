@@ -12,7 +12,8 @@ Please submit bug reports to the Xorg bugzilla:
 The master development code repository can be found at:
 
         git://anongit.freedesktop.org/git/xorg/util/makedepend
-
+        
+        https://gitlab.freedesktop.org/xorg/util/makedepend [2022]
         http://cgit.freedesktop.org/xorg/util/makedepend
 
 For patch submission instructions, see:

@@ -1,7 +1,7 @@
 /*
 
 Copyright (c) 1993, 1994, 1998 The Open Group.
-Copyright (c) 2012-2018, Adam Young
+Copyright (c) 2012-2022, Adam Young
 
 Permission to use, copy, modify, distribute, and sell this software and its
 documentation for any purpose is hereby granted without fee, provided that

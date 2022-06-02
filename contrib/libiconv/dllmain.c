@@ -1,9 +1,9 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dllmain.c,v 1.4 2015/03/01 02:58:51 cvsuser Exp $
+/* $Id: dllmain.c,v 1.5 2022/06/02 03:59:51 cvsuser Exp $
  *
  * win32 <libiconv.lib> - dllmain
  *
- * Copyright (c) 2012-2015 Adam Young.
+ * Copyright (c) 2012-2022 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD reason, LPVOID reserved);
 BOOL APIENTRY
 DllMain(HINSTANCE hInst, DWORD reason, LPVOID reserved)
 {
@@ -52,6 +53,7 @@ DllMain(HINSTANCE hInst, DWORD reason, LPVOID reserved)
 }
 
 
+extern void trace_log(const char *fmt, ...);
 void
 trace_log(const char *fmt, ...)
 {

@@ -263,8 +263,10 @@ fdefined(const char *symbol, struct inclist *file, struct inclist **srcfile)
 	debug(2,("Looking for %s in %s\n", symbol, file->i_file));
 	file->i_flags |= DEFCHECKED;
 	if ((val = slookup(symbol, file)))
+	{
 		debug(1,("%s defined in %s as %s\n",
 			 symbol, file->i_file, (*val)->s_value));
+	}
 	if (val == NULL && file->i_list)
 	{
 		for (ip = file->i_list, i=0; i < file->i_listlen; i++, ip++)
@@ -542,7 +544,7 @@ int
 find_includes(struct filepointer *filep, struct inclist *file,
 	      struct inclist *file_red, int recursion, boolean failOK)
 {
-	struct inclist	*inclistp;
+	struct inclist	*t_inclistp;
 	const char	**includedirsp;
 	register char	*line;
 	register int	type;
@@ -614,9 +616,11 @@ find_includes(struct filepointer *filep, struct inclist *file,
 		case ELIF:
 			if (!recursion)
 				gobble(filep, file, file_red);
+			/*FALLTHRU*/
 		case ENDIF:
 			if (recursion)
 				return(type);
+			/*FALLTHRU*/
 		case DEFINE:
 			define(line, file);
 			break;
@@ -635,12 +639,12 @@ find_includes(struct filepointer *filep, struct inclist *file,
 		case INCLUDEDOT:
 		case INCLUDENEXT:
 		case INCLUDENEXTDOT:
-			inclistp = inclistnext;
+			t_inclistp = inclistnext;
 			includedirsp = includedirsnext;
 			debug(2,("%s, reading %s, includes %s\n",
 				file_red->i_file, file->i_file, line));
 			add_include(filep, file, file_red, line, type, failOK);
-			inclistnext = inclistp;
+			inclistnext = t_inclistp;
 			includedirsnext = includedirsp;
 			break;
 		case ERROR:

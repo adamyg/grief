@@ -1,7 +1,7 @@
 /*
 
 Copyright (c) 1993, 1994, 1998 The Open Group
-Copyright (c) 2012-2018, Adam Young.
+Copyright (c) 2012-2022, Adam Young.
 
 Permission to use, copy, modify, distribute, and sell this software and its
 documentation for any purpose is hereby granted without fee, provided that
@@ -273,7 +273,7 @@ main(int argc, char *argv[])
 		argc = 1;
 		for (p = args; argc < nargc; p += strlen(p) + 1)
 			if (*p) nargv[argc++] = p;
-				argv = nargv;
+		argv = nargv;
 	}
 
 	for(argc--, argv++; argc; argc--, argv++) {
@@ -688,15 +688,15 @@ main(int argc, char *argv[])
 	/*
 	 *  normalize slashes
 	 */
-	{	register char **pp, *p;
+	{	register char **pp;
 
 		for (pp = (char **)includedirs; *pp; ++pp) {
-			p = *pp;
+			char *d = *pp;
 			do {
-				if ((p = strchr(p, '\\')) != NULL) {
-					*p = '/';
+				if ((d = strchr(d, '\\')) != NULL) {
+					*d = '/';
 				}
-			} while (p && *p);
+			} while (d && *d);
 		}
 	}
 
@@ -705,17 +705,17 @@ main(int argc, char *argv[])
 	 *      simple -MM detection.
 	 */
 	if (MFLAG_NOSYSTEM & mflags) {
-		register char **pp, *p;
+		register char **pp;
 		register int len;
 
 		for (pp = (char **)systemdirs; *pp; ++pp) {
 			len = strlen(*pp);
-			if ( (*pp)[ len-1 ] != '/' ) {
-				p = malloc(len+2);
-				(void) strcpy(p, (const char *)*pp);
-				p[ len ] = '/', p[ len+1 ] = '\0';
-				debug(1, ("conv -Y%s\n", p));
-				*pp = p;
+			if ((*pp)[ len-1 ] != '/' ) {
+				char *d = malloc(len + 2);
+				(void) strcpy(d, (const char *)*pp);
+				d[ len ] = '/', d[ len+1 ] = '\0';
+				debug(1, ("conv -Y%s\n", d));
+				*pp = d;
 			}
 		}
 	}
@@ -809,13 +809,13 @@ main(int argc, char *argv[])
 
 
 static void /*APY*/
-profile(const char *name)
+profile(const char *profilename)
 {
 	char buf[ BUFSIZ ];
 	FILE *fdin;
 
-	if (NULL == (fdin = fopen(name, "r"))) {
-		fatalerr("cannot open \"%s\"\n", name);
+	if (NULL == (fdin = fopen(profilename, "r"))) {
+		fatalerr("cannot open \"%s\"\n", profilename);
 	}
 
 	while (fgets(buf, BUFSIZ, fdin)) {
@@ -1165,7 +1165,7 @@ redirect(const char *line, const char *makefile)
 				if (verbose)
 					warning("Creating dependencies file \"%s\"", makefile);
 				st.st_mode = 0666;
-				goto create; /* APY, autogenerate */
+				goto create; /* autogenerate */
 			}
 			fatalerr("\"%s\" is not present\n", makefile);
 		}
@@ -1493,11 +1493,11 @@ static void /*APY*/
 copyright(void)
 {
 	static const char *copytext[] = {
-	    "makedepend-1.0.5 (modified)",
+	    "makedepend-1.0.6 (modified)",
 	    "",
 	    "",
 	    "       Copyright (c) 1993, 1994, 1998 The Open Group",
-	    "       Copyright (c) 2012 - 2018, Adam Young.",
+	    "       Copyright (c) 2012 - 2022, Adam Young.",
 	    "",
 	    "       Permission to use, copy, modify, distribute, and sell this software and its",
 	    "       documentation for any purpose is hereby granted without fee, provided that",

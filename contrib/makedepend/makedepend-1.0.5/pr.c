@@ -1,7 +1,7 @@
 /*
 
 Copyright (c) 1993, 1994, 1998 The Open Group
-Copyright (c) 2012-2018, Adam Young
+Copyright (c) 2012-2022, Adam Young
 
 Permission to use, copy, modify, distribute, and sell this software and its
 documentation for any purpose is hereby granted without fee, provided that
@@ -115,7 +115,7 @@ pr(struct inclist *ip, const char *file, const char *base)
 			char ch;
 
 			for (i_file = ip->i_file; 0 != (ch = *i_file); ++i_file) {
-				if (olen < (sizeof(buf) - 2)) {
+				if (olen < (int)(sizeof(buf) - 2)) {
 					if (ch == ' ') buf[olen++] = '\\';
 					buf[olen++] = ch;
 				}
