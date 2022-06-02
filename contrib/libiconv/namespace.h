@@ -1,8 +1,8 @@
-/* $Id: namespace.h,v 1.5 2017/01/23 00:22:37 cvsuser Exp $
+/* $Id: namespace.h,v 1.6 2022/06/02 03:59:33 cvsuser Exp $
  *
  * libiconv <namespace.h>
  *
- * Copyright (c) 2012-2015 Adam Young.
+ * Copyright (c) 2012-2022 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -70,8 +70,9 @@
 #define strdup          _strdup
 #endif
 
-#if defined(_MSC_VER)
-#define LC_MESSAGES     (LC_MAX + 1)
+#if defined(_MSC_VER) || \
+        (defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR))
+#define LC_MESSAGES     (LC_MAX + 1) /*XXX*/
 #endif
 
 /*end*/

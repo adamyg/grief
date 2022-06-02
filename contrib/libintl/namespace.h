@@ -55,4 +55,3 @@ extern char *           libintl_strsep(char **stringp, const char *delim);
 
 /*end*/
 
-
