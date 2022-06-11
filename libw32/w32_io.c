@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.41 2022/05/31 16:18:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.42 2022/06/11 04:01:45 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -687,7 +687,7 @@ my_GetFinalPathNameByHandleW(HANDLE handle, LPWSTR path, int length)
                             (GetFinalPathNameByHandleW_t)GetProcAddress(hinst, "GetFinalPathNameByHandleW"))) {
                                                 // XP+
             x_GetFinalPathNameByHandleW = my_GetFinalPathNameByHandleWImp;
-            (void)FreeLibrary(hinst);
+            if (hinst) FreeLibrary(hinst);
         }
     }
 
@@ -860,7 +860,7 @@ my_GetFinalPathNameByHandleA(HANDLE handle, char *path, int length)
                           (GetFinalPathNameByHandleA_t)GetProcAddress(hinst, "GetFinalPathNameByHandleA"))) {
                                                 // XP+
             x_GetFinalPathNameByHandleA = my_GetFinalPathNameByHandleAImp;
-            (void)FreeLibrary(hinst);
+            if (hinst) FreeLibrary(hinst);
         }
     }
 
@@ -1218,7 +1218,7 @@ my_CreateSymbolicLinkW(LPCWSTR lpSymlinkFileName, LPCWSTR lpTargetFileName, DWOR
                         (CreateSymbolicLinkW_t)GetProcAddress(hinst, "CreateSymbolicLinkW"))) {
                                                 // XP+
             x_CreateSymbolicLinkW = my_CreateSymbolicLinkWImp;
-            (void) FreeLibrary(hinst);
+            if (hinst) FreeLibrary(hinst);
         }
     }
     return x_CreateSymbolicLinkW(lpSymlinkFileName, lpTargetFileName, dwFlags);
@@ -1250,7 +1250,7 @@ my_CreateSymbolicLinkA(const char *lpSymlinkFileName, const char *lpTargetFileNa
                         (CreateSymbolicLinkA_t)GetProcAddress(hinst, "CreateSymbolicLinkA"))) {
                                                 // XP+
             x_CreateSymbolicLinkA = my_CreateSymbolicLinkAImp;
-            (void) FreeLibrary(hinst);
+            if (hinst) FreeLibrary(hinst);
         }
     }
     return x_CreateSymbolicLinkA(lpSymlinkFileName, lpTargetFileName, dwFlags);

@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_child_c,"$Id: w32_child.c,v 1.17 2022/05/26 12:03:00 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_child_c,"$Id: w32_child.c,v 1.18 2022/06/11 04:01:44 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -653,9 +653,11 @@ w32_child_execA(
     si.hStdOutput = hStdOut;
     si.hStdError  = hStdErr;
 
+#if !defined(NDEBUG)
     if (hStdIn)  { DWORD flags; assert(GetHandleInformation(hStdIn,  &flags) && (HANDLE_FLAG_INHERIT & flags)); }
     if (hStdOut) { DWORD flags; assert(GetHandleInformation(hStdOut, &flags) && (HANDLE_FLAG_INHERIT & flags)); }
     if (hStdErr) { DWORD flags; assert(GetHandleInformation(hStdErr, &flags) && (HANDLE_FLAG_INHERIT & flags)); }
+#endif
 
     si.dwFlags = STARTF_USESTDHANDLES;
     si.dwFlags |= STARTF_USESHOWWINDOW;
@@ -774,9 +776,11 @@ w32_child_execW(
     si.hStdOutput = hStdOut;
     si.hStdError  = hStdErr;
 
+#if !defined(NDEBUG)
     if (hStdIn)  { DWORD flags; assert(GetHandleInformation(hStdIn,  &flags) && (HANDLE_FLAG_INHERIT & flags)); }
     if (hStdOut) { DWORD flags; assert(GetHandleInformation(hStdOut, &flags) && (HANDLE_FLAG_INHERIT & flags)); }
     if (hStdErr) { DWORD flags; assert(GetHandleInformation(hStdErr, &flags) && (HANDLE_FLAG_INHERIT & flags)); }
+#endif
 
     si.dwFlags = STARTF_USESTDHANDLES;
     si.dwFlags |= STARTF_USESHOWWINDOW;

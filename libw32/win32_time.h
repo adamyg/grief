@@ -1,7 +1,7 @@
 #ifndef LIBW32_WIN32_TIME_H_INCLUDED
 #define LIBW32_WIN32_TIME_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_time_h,"$Id: win32_time.h,v 1.17 2022/05/27 03:15:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_time_h,"$Id: win32_time.h,v 1.18 2022/06/11 04:01:45 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -44,7 +44,7 @@ struct timezone;
 LIBW32_API int          w32_gettimeofday(struct timeval *tv, struct timezone *tz);
 #if !defined(HAVE_GETTIMEOFDAY)
 #define HAVE_GETTIMEOFDAY
-#if !defined(__MINGW32__)
+#if !defined(__MINGW32__) && !defined(_MSC_VER)
 LIBW32_API int          gettimeofday(struct timeval *tv, struct timezone *tz);
 #endif
 #endif
@@ -55,9 +55,11 @@ LIBW32_API int          w32_utime(const char *path, const struct utimbuf *times)
 LIBW32_API int          w32_utimeA(const char *path, const struct utimbuf *times);
 LIBW32_API int          w32_utimeW(const wchar_t *path, const struct utimbuf *times);
 
+#if (0) //libcompat
 #if defined(_MSC_VER) || defined(__WATCOMC__)
 LIBW32_API time_t       timegm(struct tm *tm);
 #endif
+#endif //libcompat
 
 LIBW32_API char *       w32_strptime(const char *buf, const char *fmt, struct tm *tm);
 

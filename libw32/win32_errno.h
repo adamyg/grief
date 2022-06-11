@@ -1,7 +1,7 @@
 #ifndef LIBW32_WIN32_ERRNO_H_INCLUDED
 #define LIBW32_WIN32_ERRNO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_errno_h,"$Id: win32_errno.h,v 1.12 2022/05/31 16:18:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_errno_h,"$Id: win32_errno.h,v 1.13 2022/06/11 04:01:45 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -90,8 +90,8 @@ __CPRAGMA_ONCE
      *  General use error codes,
      *      which utilise their defined value under MSVC POSIX definition, see <errno.h>
      *
-     *  MSVC: Their definitions are disabled using _CRT_NO_POSIX_ERROR_CODES,
-     *      as many conflict with the WinSock aliases below,
+     *  MSVC: Their definitions can be disabled using _CRT_NO_POSIX_ERROR_CODES, as many conflict with the 
+     *      WinSock aliases below, but this generates complication errors within C++ code elements.
      */
 #define EBADMSG         104                     /* Bad message. */
 #define ECANCELED       105                     /* Operation canceled. */
@@ -121,7 +121,7 @@ __CPRAGMA_ONCE
      *  WinSock errors are aliased to their BSD/POSIX counter part.
      *
      *  Note: This works for *most* errors, yet the following result in conflicts and are
-     *      explicity remapped during i/o operations: see w32_neterrno_map()
+     *      explicitly remapped during i/o operations: see w32_neterrno_map()
      *
 #define EINTR           WSAEINTR                // 10004 "Interrupted system call"
 #define EBADF           WSAEBADF                // 10009 "Bad file number"
@@ -386,16 +386,32 @@ __CPRAGMA_ONCE
 #define EOPNOTSUPP      10045                   /* 10045 "Operation not supported on socket" */
 #endif
 
+#if !defined(ENETUNREACH)
+#define ENETUNREACH      10051                  /* 10051 "Network is unreachable" */
+#elif (ENETUNREACH != 10051)
+#error Inconsistent ENETUNREACH definition ....
+#endif
+
+#if !defined(ECONNRESET)
+#define ECONNRESET      10054                   /* 10054 "Connection reset by peer" */
+#elif (ECONNRESET != 10054)
+#error Inconsistent ECONNRESET definition ....
+#endif
+
 #if !defined(ENOBUFS)
 #define ENOBUFS         10055                   /* 10055 "No buffer space available" */
 #endif
 
 #if !defined(ETIMEDOUT)
 #define ETIMEDOUT       10060                   /* 10060 "Connection timed out" */
+#elif (ETIMEDOUT != 10060)
+#error Inconsistent ETIMEDOUT definition ....
 #endif
 
 #if !defined(ELOOP)
 #define ELOOP           10062                   /* 10062 "Too many levels of symbolic links" */
+#elif (ELOOP != 10062)
+#error Inconsistent ELOOP definition ....
 #endif
 
 #endif /*LIBW32_WIN32_ERRNO_H_INCLUDED*/

@@ -1,7 +1,7 @@
 #ifndef LIBW32_SYS_UTYPES_H_INCLUDED
 #define LIBW32_SYS_UTYPES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_utypes_h,"$Id: utypes.h,v 1.35 2022/06/01 12:37:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_utypes_h,"$Id: utypes.h,v 1.36 2022/06/11 04:00:16 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -119,24 +119,19 @@ typedef int pid_t;                              /* process identifier */
 #define HAVE_PID_T 1
 #endif
 
-#if !defined(HAVE_SSIZE_T)
-#define HAVE_SSIZE_T 1
-#ifdef _WIN64
-#define ssize_t long long
-#else
-#define ssize_t long
-#endif
-#define HAVE_SSIZE_T 1
-#endif
-             
 #if !defined(__MINGW32__) || \
         (defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR))
+
+#if !defined(USECONDS_T)
+#define USECONDS_T 1
 #ifdef _WIN64
 typedef unsigned long long useconds_t;
 #else
 typedef unsigned long useconds_t;
 #endif
-#endif
+#endif /*USECONDS_T*/
+#endif /*__MINHW32__*/
+
 #ifdef _WIN64
 typedef long long suseconds_t;
 #else
@@ -161,6 +156,7 @@ typedef __int64 ssize_t;
 #else
 typedef signed ssize_t;
 #endif
+#define ssize_t ssize_t
 #endif
 
 #if !defined(mode_t)

@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_getopt_c,"$Id: w32_getopt_long.c,v 1.4 2022/05/26 15:58:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_getopt_c,"$Id: w32_getopt_long.c,v 1.5 2022/06/11 04:01:44 cvsuser Exp $")
 
 /*-
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
@@ -38,15 +38,13 @@ __CIDENT_RCSID(gr_w32_getopt_c,"$Id: w32_getopt_long.c,v 1.4 2022/05/26 15:58:31
 #include <err.h>
 #include <errno.h>
 
-//  #if defined(HAVE_GETOPT_H) && defined(HAVE_STRUCT_OPTION)
 #include <getopt.h>
-//  #endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-//#define REPLACE_GETOPT
+    //#define REPLACE_GETOPT
 
 #ifndef _DIAGASSERT
 #define _DIAGASSERT	assert

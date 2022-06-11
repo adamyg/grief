@@ -1,7 +1,7 @@
 #ifndef LIBW32_WIN32_INCLUDE_H_INCLUDED
 #define LIBW32_WIN32_INCLUDE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_include_h,"$Id: win32_include.h,v 1.14 2022/05/31 16:58:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_include_h,"$Id: win32_include.h,v 1.15 2022/06/11 04:01:45 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -45,9 +45,9 @@ __CPRAGMA_ONCE
 #endif
 #endif /*_MSC_VER*/
 
-    //#if defined(__WATCOMC__)
+    //#if defined(__WATCOMC__) && (__WATCOMC__ < 1300)
     //#if !defined(NTDDI_VERSION)
-    //#define NTDDI_VERSION 0x06000000              /* iphlpapi.h requirement */
+    //#define NTDDI_VERSION 0x06000000              /* iphlpapi.h requirement, inet_ntop .. */
     //#endif
     //#endif
 

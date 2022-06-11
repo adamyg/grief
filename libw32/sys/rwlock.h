@@ -1,7 +1,7 @@
 #ifndef GR_SYS_RWLOCK_H_INCLUDED
 #define GR_SYS_RWLOCK_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_rwlock_h,"$Id: rwlock.h,v 1.11 2022/06/02 10:37:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_rwlock_h,"$Id: rwlock.h,v 1.12 2022/06/11 04:00:16 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -45,3 +45,4 @@ LIBW32_API int          rwlock_status(struct rwlock *rw);
 __END_DECLS
 
 #endif /*GR_SYS_RWLOCK_H_INCLUDED*/
+

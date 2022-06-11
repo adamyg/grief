@@ -1,10 +1,10 @@
 #ifndef WIN32_CONFIG_H_INCLUDED
 #define WIN32_CONFIG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.21 2022/05/26 11:18:42 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.22 2022/06/11 04:01:45 cvsuser Exp $")
 __CPRAGMA_ONCE
 /* -*- mode: c; set-indent: 4; -*- */
-/* $Id: w32config.hin,v 1.21 2022/05/26 11:18:42 cvsuser Exp $
+/* $Id: w32config.hin,v 1.22 2022/06/11 04:01:45 cvsuser Exp $
  * Machine configuration.
  *
  * System dependent <config.h> configuration template,
@@ -162,6 +162,7 @@ __CPRAGMA_ONCE
 #undef HAVE_SYS_STATVFS_H
 #undef HAVE_SYS_VFS_H
 #undef HAVE_SYS_MMAN_H
+#undef HAVE_SYS_TIMEB_H
 #undef HAVE_WAIT_H
 #undef HAVE_POLL_H
 #undef HAVE_SYS_PRCTL_H
@@ -176,6 +177,7 @@ __CPRAGMA_ONCE
 #undef HAVE_STDATOMIC_H
 #undef HAVE_THREADS_H
 #undef HAVE_XTHREADS_H
+#undef HAVE_LIBPTHREAD
 
 #undef HAVE_THREAD_H
 #undef HAVE_PTHREAD_H
@@ -416,7 +418,7 @@ __CPRAGMA_ONCE
  */
 
         /* environ support */
-	
+
 #undef HAVE_ENVIRON
 #undef HAVE__ENVIRON
 #undef HAVE___ENVIRON
@@ -487,9 +489,11 @@ __CPRAGMA_ONCE
 #undef HAVE_STRCASECMP
 #undef HAVE_STRNCASECMP
 #undef HAVE___STRCASECMP
+#undef HAVE___STRNCASECMP
 #undef HAVE_STRCHR
 #undef HAVE_STRERROR
 #undef HAVE_STRICMP
+#undef HAVE_STRNICMP
 #undef HAVE_STRRCHR
 #undef HAVE_STRDUP
 #undef HAVE_STRFTIME
@@ -509,6 +513,7 @@ __CPRAGMA_ONCE
 #undef HAVE_STRCASESTR
 #undef HAVE_STRCASESTR_L
 #undef HAVE_STRTONUM
+#undef HAVE_STRTOK_R
 
 #undef HAVE_ISASCII
 #undef HAVE___ISASCII
@@ -522,7 +527,6 @@ __CPRAGMA_ONCE
 #undef HAVE_SETPGRP
 #undef HAVE_SETSID
 
-#undef HAVE_STRTOK_R
 #undef HAVE_STRERROR_L
 #undef HAVE_STRERROR_R
 
