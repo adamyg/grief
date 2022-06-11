@@ -1,8 +1,8 @@
 # -*- mode: sh; -*-
-# $Id: wc.profile,v 1.5 2018/10/18 01:54:41 cvsuser Exp $
+# $Id: wc.profile,v 1.6 2022/06/02 12:42:28 cvsuser Exp $
 # makedepend Open Watcom C/C++ profile
 #
-__WATCOMC__=1300
+__WATCOMC__=1290
 #   __WATCOMC__ = 1290      /* 1.9 */
 #   __WATCOMC__ = 1300      /* 2.0 */
 

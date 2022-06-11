@@ -1,4 +1,4 @@
-# $Id: makeconfig.pm,v 1.5 2022/05/26 12:57:10 cvsuser Exp $
+# $Id: makeconfig.pm,v 1.6 2022/06/11 03:58:10 cvsuser Exp $
 # Makefile generation under Win32.
 # -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -66,7 +66,9 @@ our @TESTLIBRARIES  = ();                       # external libraries, tested whe
 our @OPTLIBRARIES   = ();                       # optional libraries
 
 my  $CC = '';
+my  $CCVER = '';
 my  $CXX = '';
+my  $CXXVER = '';
 my  $RTLIBRARY = '';
 my  $WINSDKLIB = '';
 
@@ -176,8 +178,14 @@ sub __ImportConfigurations
     $CC = $$x_tokens{CC}                                            # Program for compiling C programs.
         if (defined $$x_tokens{CC});
 
+    $CCVER = $$x_tokens{CCVER}                                      # C standard
+        if (defined $$x_tokens{CCVER});
+
     $CXX = $$x_tokens{CXX}                                          # Program for compiling C++ programs.
         if (defined $$x_tokens{CXX});
+
+    $CXXVER = $$x_tokens{CXXVER}                                    # C++ standard
+        if (defined $$x_tokens{CXXVER});
 
     $RTLIBRARY = $$x_tokens{RTLIBRARY}                              # Default Run-Time library.
         if (defined $$x_tokens{RTLIBRARY});
@@ -321,7 +329,9 @@ sub __ExportConfigurations
     $$x_tokens{PACKAGE_TARNAME} = $PACKAGE_TARNAME;
 
     $$x_tokens{CC}          = $CC;
+    $$x_tokens{CCVER}       = $CCVER;
     $$x_tokens{CXX}         = $CXX;
+    $$x_tokens{CXXVER}      = $CXXVER;
     $$x_tokens{RTLIBRARY}   = $RTLIBRARY;
     $$x_tokens{WINSDKLIB}   = $WINSDKLIB;
 
@@ -418,6 +428,52 @@ sub __PrintArrayX
         }
     }
     return $s;
+}
+
+
+# Function:
+#   set_c_standard
+# Parameters:
+#   standard - C standad, 90, 99, 11, 17, 23
+#
+sub
+set_c_standard($)
+{
+    my ($standard) = @_;
+    my $version = int($standard);
+
+    ($version == 98 || $version == 99 || $version == 11 || $version == 17) or
+        die "set_C_standard: invalid standard <${standard}>\n";
+
+    if ('gcc' eq $CC || 'g++' eq $CC) {
+        $CCVER = "-std=c${version}";
+
+    } else {
+        die "set_c_standard: unsupport toolchain <${CC}>\n";
+    }
+}
+
+
+# Function:
+#   set_cxx_standard
+# Parameters:
+#   standard - C++ standad, 98, 11, 14, or 17.
+#
+sub
+set_cxx_standard($)
+{
+    my ($standard) = @_;
+    my $version = int($standard);
+
+    ($version == 98 || $version == 11 || $version == 14 || $version == 17) or
+        die "set_CXX_standard: invalid standard <${standard}>\n";
+
+    if ('gcc' eq $CC || 'g++' eq $CC) {
+        $CXXVER = "-std=c++${version}";
+
+    } else {
+        die "set_cxx_standard: unsupport toolchain <${CC}>\n";
+    }
 }
 
 
@@ -800,3 +856,4 @@ verbose {
 }
 
 1;
+

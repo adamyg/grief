@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.57 2022/06/01 16:07:38 cvsuser Exp $
+# $Id: Makefile.in,v 1.58 2022/06/11 03:57:33 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2022, Adam Young.
@@ -132,7 +132,8 @@ ifneq ("$(word 1,$(MAKECMDGOALS))","release")
 		|\n\
 		| make [release or debug] target \n\
 		|\n\
-		|	Build one or more of the following targets recursively within each sub-directory. \n\
+		|	Build one or more of the following targets recursively within each sub-directory\n\
+		|	for the toolchain @TOOLCHAIN@. \n\
 		|\n\
 		| Targets: \n\
 		|\n\
@@ -333,7 +334,8 @@ help:
 		|\n\
 		| make [release or debug] target \n\
 		|\n\
-		|	Build one or more of the following targets recursively within each sub-directory. \n\
+		|	Build one or more of the following targets recursively within each sub-directory\n\
+		|	for the toolchain @TOOLCHAIN@. \n\
 		|\n\
 		| Targets: \n\
 		|\n\

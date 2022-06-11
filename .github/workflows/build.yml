@@ -21,6 +21,12 @@ jobs:
            toolversion: mingw64
           }
         - {
+           name: "Windows Latest OWC",
+           os: windows-latest,
+           toolchain: owc20,
+           toolversion: owc20
+          }
+        - {
            name: "Ubuntu Latest GCC",
            os: ubuntu-latest,
            toolchain: gcc,
@@ -42,18 +48,28 @@ jobs:
       with:
         arch: x86
 
-    - name: MinGW-w64 setup
+    - name: MinGW64 setup
       if: startsWith(matrix.config.name, 'Windows Latest MinGW')
       shell: cmd
       run: |
         c:\msys64\usr\bin\pacman --noconfirm -S base-devel
         c:\msys64\usr\bin\pacman --noconfirm -S mingw-w64-x86_64-gcc
+        c:\msys64\usr\bin\pacman --noconfirm -S mingw-w64-i686-gcc
+
+    - name: OpenWatcom setup
+      uses: open-watcom/setup-watcom@v0
+      if: startsWith(matrix.config.name, 'Windows Latest OWC')
+      with:
+        version: "2.0"
+        location: "C:\\Watcom"
 
     - name: Windows, generate
       if: startsWith(matrix.config.name, 'Windows Latest')
       shell: cmd
       run: |
+        @if "${{ matrix.config.toolchain }}"=="mingw32" set PATH=c:\msys64\mingw32\bin;%PATH%
         @if "${{ matrix.config.toolchain }}"=="mingw64" set PATH=c:\msys64\mingw64\bin;%PATH%
+        @if "${{ matrix.config.toolchain }}"=="owc20"  call .\support\owc20setenv.bat C:\Watcom
         @if NOT "${{ matrix.config.toolchain }}"=="mingw64" c:\msys64\usr\bin\pacman --noconfirm -S bison
         @set PERL=c:/Strawberry/perl/bin/perl
         c:/Strawberry/perl/bin/perl makelib.pl --perlpath=c:/Strawberry/perl/bin --busybox=./win32/busybox --wget=./win32/wget --bison=c:/msys64/usr/bin/bison --flex=./bin/flex --verbose "${{ matrix.config.toolchain }}"
@@ -62,11 +78,12 @@ jobs:
       if: startsWith(matrix.config.name, 'Windows Latest')
       shell: cmd
       run: |
+        @if "${{ matrix.config.toolchain }}"=="mingw32" set PATH=c:\msys64\mingw32\bin;%PATH%
         @if "${{ matrix.config.toolchain }}"=="mingw64" set PATH=c:\msys64\mingw64\bin;%PATH%
+        @if "${{ matrix.config.toolchain }}"=="owc20"  call .\support\owc20setenv.bat C:\Watcom
         @set PERL=c:/Strawberry/perl/bin/perl
         .\win32\gmake-42 release contrib
         .\win32\gmake-42 release
-
 
     - name: Ubuntu, generate
       if: startsWith(matrix.config.name, 'Ubuntu Latest')
@@ -81,7 +98,6 @@ jobs:
         make release
 
     - name: Package
-      if: runner.os == 'Linux'
       uses: actions/upload-artifact@v2
       with:
         name: package-${{ matrix.config.toolchain }}
