@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.58 2022/06/11 03:57:33 cvsuser Exp $
+# $Id: Makefile.in,v 1.59 2022/06/11 05:01:42 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2022, Adam Young.
@@ -193,11 +193,13 @@ PACKAGEINFO=	include/edpackageinfo.h
 CC=		@CC@
 CXX=		@CXX@
 AR=		@AR@
+RANLIB=		@RANLIB@
 RM=		@RM@
 RMDIR=		@RMDIR@
 CP=		@CP@
 RC=		@RC@
 PERL=		@PERL@
+LIBTOOL=	@LIBTOOL@
 TAR=		@TAR@
 LEX=		@LEX@
 YACC=		@YACC@
@@ -207,7 +209,7 @@ INSTALL=	@INSTALL@
 INSTALL_PROGRAM=@INSTALL_PROGRAM@
 INSTALL_DATA=	@INSTALL_DATA@
 
-ifneq "" "$(filter win32,@build_os@)"
+ifeq ("win32","@build_os@")
 INNO=		@INNO@
 ifeq ($(INNO),) # Inno5: allowing legacy XP installations
 INNO=		"C:/Program Files (x86)/Inno Setup 5/Compil32"
@@ -257,9 +259,18 @@ CLBRNAME=	clbr19
 MT7RNAME=	mt7r19
 PLBRNAME=	plbr19
 endif
+
+	# As path format is dependent on which variant,
+	# firstly resolve using WATCOM envvar, otherwise fallback to which.
+LIBCLBRPATH=	$(subst \,/,$(wildcard $(WATCOM)/binnt/$(CLBRNAME).dll))
+ifeq ("","$(LIBCLBRPATH)")
 LIBCLBRPATH=	$(shell which $(CLBRNAME).dll)
 LIBMT7RPATH=	$(shell which $(MT7RNAME).dll)
 LIBPLBRPATH=	$(shell which $(PLBRNAME).dll)
+else
+LIBMT7RPATH=	$(subst \,/,$(wildcard $(WATCOM)/binnt/$(MT7RNAME).dll))
+LIBPLBRPATH=	$(subst \,/,$(wildcard $(WATCOM)/binnt/$(PLBRNAME).dll))
+endif
 endif
 
 IMPORT=
