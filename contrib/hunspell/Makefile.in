@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.22 2022/05/31 15:20:12 cvsuser Exp $
+# $Id: Makefile.in,v 1.23 2022/06/11 04:40:20 cvsuser Exp $
 # libhunspell, hunspell, hzip and hunzip makefile
 #
 #
@@ -207,15 +207,15 @@ $(HUNSPELLDLL):		$(DLLOBJS)
 
 $(D_BIN)/hunspell$(E):	CEXTRA += -I$(TOOLSSRC) -I$(PARSERSSRC) -I$(HUNSPELLSRC) -DHUNSPELL_STATIC
 $(D_BIN)/hunspell$(E):	$(HUNSPELLOBJS)
-		$(CXX) $(LDFLAGS) -o $@ $^ $(D_LIB)/libhunspell_static$(A) $(LDLIBS)
+		$(LIBTOOL) --mode=link $(CXX) $(LDFLAGS) -o $@ $^ $(D_LIB)/libhunspell_static$(A) $(LDLIBS)
 
 $(D_BIN)/hzip$(E):	CEXTRA += -I$(TOOLSSRC) -I$(HUNSPELLSRC) -DHUNSPELL_STATIC
 $(D_BIN)/hzip$(E):	$(D_OBJ)/hzip$(O)
-		$(CXX) $(LDFLAGS) -o $@ $^ $(D_LIB)/libhunspell_static$(A) $(LDLIBS)
+		$(LIBTOOL) --mode=link $(CXX) $(LDFLAGS) -o $@ $^ $(D_LIB)/libhunspell_static$(A) $(LDLIBS)
 
 $(D_BIN)/hunzip$(E):	CEXTRA += -I$(TOOLSSRC) -I$(HUNSPELLSRC) -DHUNSPELL_STATIC
 $(D_BIN)/hunzip$(E):	$(D_OBJ)/hunzip$(O)
-		$(CXX) $(LDFLAGS) -o $@ $^ $(D_LIB)/libhunspell_static$(A) $(LDLIBS)
+		$(LIBTOOL) --mode=link $(CXX) $(LDFLAGS) -o $@ $^ $(D_LIB)/libhunspell_static$(A) $(LDLIBS)
 
 source:			.unpacked.$(VERSION)
 		$(MAKE) unpacked
