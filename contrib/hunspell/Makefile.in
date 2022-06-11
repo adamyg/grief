@@ -1,6 +1,6 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.23 2022/06/11 04:40:20 cvsuser Exp $
-# libhunspell, hunspell, hzip and hunzip makefile
+# $Id: Makefile.in,v 1.24 2022/06/11 14:44:04 cvsuser Exp $
+# libhunspell, hunspell, hzip and hunzip makefile.
 #
 #
 #
@@ -29,6 +29,7 @@ RANLIB=		@RANLIB@
 RM=		@RM@
 PERL=		@PERL@
 LIBTOOL=	@LIBTOOL@
+RC=		@RC@
 
 # Configuration
 
@@ -163,6 +164,14 @@ DLLOBJS=\
 	$(D_OBJ)/hunspell_dllc.lo		\
 	$(subst $(O),.lo,$(LIBOBJS))
 
+ifeq ("win32","@build_os@")
+ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
+DLLOBJS+=	$(D_OBJ)/libhunspell_res.o
+else
+DLLOBJS+=	$(D_OBJ)/libhunspell.res
+endif
+endif
+
 HUNSPELLOBJS=\
 	$(D_OBJ)/hunspell$(O)			\
 	$(D_OBJ)/firstparser$(O)		\
@@ -179,14 +188,14 @@ HUNSPELLOBJS+=\
 OBJS=		$(LIBOBJS) $(DLLOBJS)
 LIBS=		$(HUNSPELLLIB) $(HUNSPELLDLL)
 TSKS=		$(D_BIN)/hunspell$(E) $(D_BIN)/hzip$(E) $(D_BIN)/hunzip$(E)
-
+INSTALLED=
 
 #########################################################################################
 # Rules
 
 .PHONY:			build release debug
 all:			source unpacked
-unpacked:		object $(LIBS) $(TSKS) $(HUNSPELLDB) installinc
+unpacked:		version.h object $(LIBS) $(TSKS) $(HUNSPELLDB) installinc
 
 release:
 		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
@@ -200,6 +209,7 @@ $(HUNSPELLLIB):		$(LIBOBJS)
 		$(RANLIB) $@
 
 #note build as static, only exported are via hunspell_dlls./c modules
+INSTALLED+=	$(D_BIN)/libhunspell.$(VERSION).dll
 $(HUNSPELLDLL):		CEXTRA += -I$(HUNSPELLSRC) -DHUNSPELL_STATIC
 $(HUNSPELLDLL):		$(DLLOBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ -version-number $(VERSIONSPEC) \
@@ -229,11 +239,15 @@ source:			.unpacked.$(VERSION)
 object:			$(D_OBJ)/.created
 
 .PHONY:		installinc
+INSTALLED+=	../include/hunspell.h ../include/hunspell.hxx ../include/hunvisapi.h
 installinc:		../include/.created
 		@echo publishing headers ...
 		-cp $(HUNSPELLSRC)/hunspell.h   ../include
 		-cp $(HUNSPELLSRC)/hunspell.hxx ../include
 		-cp $(HUNSPELLSRC)/hunvisapi.h  ../include
+
+version.h:		Makefile
+		$(PERL) ./version.pl --version "$(VERSION)"
 
 %/.created:
 		-@mkdir $(@D)
@@ -241,8 +255,8 @@ installinc:		../include/.created
 
 clean:
 		@echo $(BUILD_TYPE) clean
-		-@$(RM) $(RMFLAGS) $(TSKS) $(LIBS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
 		-@$(LIBTOOL) --mode=clean $(RM) $(DLLOBJS) >/dev/null 2>&1
+		-@$(RM) $(RMFLAGS) $(TSKS) $(INSTALLED) $(LIBS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
 		-@$(RM) $(LIBOBJS) >/dev/null 2>&1
 
 # XXX: open-watcom debug breaks due to the module size, must filter out -hw
@@ -270,5 +284,11 @@ $(D_OBJ)/%$(O):		$(TOOLSSRC)/%.c
 
 $(D_OBJ)/%$(O):		%.c
 		$(CC) $(filter-out -hw,$(CFLAGS)) -o $@ -c $<
+
+$(D_OBJ)/%.res:		%.rc
+		$(RC) -fo $@ $<
+
+$(D_OBJ)/%_res.o:	%.rc
+		$(RC) -o $@ $<
 
 #end

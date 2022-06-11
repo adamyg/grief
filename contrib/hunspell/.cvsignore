@@ -3,3 +3,5 @@ hunspell-1.7.0
 Makefile
 *.err
 .unpacked.*
+version.h
+
