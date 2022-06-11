@@ -1,7 +1,7 @@
 #ifndef LIBW32_SYS_SOCKET_H_INCLUDED
 #define LIBW32_SYS_SOCKET_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_socket_h,"$Id: socket.h,v 1.21 2022/06/01 17:36:26 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_socket_h,"$Id: socket.h,v 1.22 2022/06/11 04:00:16 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -33,7 +33,7 @@ __CPRAGMA_ONCE
 
 __BEGIN_DECLS
 
-LIBW32_API extern int   w32_h_errno;
+LIBW32_VAR int          w32_h_errno;
 
 struct pollfd;
 

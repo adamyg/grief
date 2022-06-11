@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_sockbase_c,"$Id: w32_sockbase.c,v 1.8 2022/06/01 17:36:26 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_sockbase_c,"$Id: w32_sockbase.c,v 1.9 2022/06/11 04:01:45 cvsuser Exp $")
 
 /*
  * win32 socket () system calls
@@ -56,7 +56,7 @@ __CIDENT_RCSID(gr_w32_sockbase_c,"$Id: w32_sockbase.c,v 1.8 2022/06/01 17:36:26 
 #pragma comment(lib, "Ws2_32.lib")
 
 static int x_sockinit = 0;                      /* initialisation status */
-LIBW32_API int w32_h_errno = 0;                 /* lookup error */
+/*LIBW32_API*/ int w32_h_errno = 0;             /* lookup error */
 
 #undef getaddrinfo
 #if defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR)

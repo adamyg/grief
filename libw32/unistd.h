@@ -1,7 +1,7 @@
 #ifndef LIBW32_UNISTD_H_INCLUDED
 #define LIBW32_UNISTD_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_unistd_h,"$Id: unistd.h,v 1.63 2022/05/31 16:18:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_unistd_h,"$Id: unistd.h,v 1.64 2022/06/11 04:01:44 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -113,6 +113,9 @@ __CPRAGMA_ONCE
 #include <sys/stat.h>
 #if defined(HAVE_SYS_STATFS_H)
 #include <sys/statfs.h>
+#endif
+#if defined(HAVE_SYS_UTIME_H)
+#include <sys/utime.h>
 #endif
 #include <time.h>                               /* required to replace strfime() */
 #include <stddef.h>                             /* offsetof() */
@@ -406,7 +409,7 @@ __BEGIN_DECLS
 #define SIGWINCH        -102
 #define SIGPIPE         -103
 
-#if !defined(__MINGW32__)
+#if !defined(__MINGW64_)
 typedef struct {
     unsigned            junk;
 } sigset_t;
@@ -425,7 +428,7 @@ struct sigaction {
 
 LIBW32_API int          sigemptyset (sigset_t *);
 LIBW32_API int          sigaction (int, struct sigaction *, struct sigaction *);
-#endif /*__MINGW32__*/
+#endif /*__MINGW64__*/
 
 /*shell support*/
 #if !defined(WNOHANG)
@@ -450,12 +453,12 @@ LIBW32_API int          WIFSTOPPED(int status);
 #endif
 
 /* <stdlib.h> */
-LIBW32_API extern char *suboptarg;
+LIBW32_VAR char         *suboptarg;
 
 LIBW32_API int          getsubopt (char **optionp, char * const *tokens, char **valuep);
 
 /* <string.h> */
-
+//#if (0) //libcompat
 #if defined(_MSC_VER) || defined(__WATCOMC__)
 #define NEED_STRCASECMP                         /*see: w32_string.c*/
 #endif
@@ -472,18 +475,19 @@ LIBW32_API int          strncasecmp(const char *s1, const char *s2, size_t len);
 #if defined(NEED_STRNLEN)
 LIBW32_API size_t       strnlen(const char *s, size_t maxlen);
 #endif /*NEED_STRNLEN*/
+//#endif //libcompat
+
+LIBW32_API int          w32_gethostname (char *name, size_t namelen);
+LIBW32_API int          w32_getdomainname (char *name, size_t namelen);
 
 #if defined(WIN32_UNISTD_MAP)
 #if !defined(_WINSOCKAPI_) && !defined(_WINSOCK2API_)
 #define gethostname(__name,__namelen) \
                 w32_gethostname (__name, __namelen)
-#endif
 #define getdomainname(__name,__namelen) \
                 w32_getdomainname (__name, __namelen)
+#endif
 #endif /*WIN32_UNISTD_MAP*/
-
-LIBW32_API int          w32_gethostname (char *name, size_t namelen);
-LIBW32_API int          w32_getdomainname (char *name, size_t namelen);
 
 LIBW32_API const char * getlogin (void);
 LIBW32_API int          getlogin_r (char *name, size_t namesize);
@@ -697,6 +701,7 @@ LIBW32_API int          w32_fcntl (int fd, int ctrl, int);
 LIBW32_API int          w32_fsync (int fildes);
 
 /*string.h*/
+//#if (0) //libcompat
 LIBW32_API char *       strsep (char **stringp, const char *delim);
 #if !defined(HAVE_STRSEP)
 #define HAVE_STRSEP     1
@@ -708,6 +713,8 @@ LIBW32_API char *       strsep (char **stringp, const char *delim);
 #endif 
 LIBW32_API size_t       strlcat (char *dst, const char *src, size_t siz);
 LIBW32_API size_t       strlcpy (char *dst, const char *src, size_t siz);
+//#endif //libcompat
+
 #if (_MSC_VER <= 1600)
 LIBW32_API unsigned long long strtoull (const char * nptr, char ** endptr, int base);
 LIBW32_API long long    strtoll (const char * nptr, char ** endptr, int base);
