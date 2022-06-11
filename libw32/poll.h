@@ -1,7 +1,7 @@
 #ifndef LIBW32_POLL_H_INCLUDED
 #define LIBW32_POLL_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_poll_h,"$Id: poll.h,v 1.15 2022/06/01 12:50:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_poll_h,"$Id: poll.h,v 1.16 2022/06/11 04:01:44 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -48,7 +48,7 @@ struct w32_pollfd {
 #if !defined(POLLIN)
 #if (defined(_MSC_VER) && (_MSC_VER >= 1400)) || \
         defined(__WATCOMC__) || \
-        (defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR))
+        (defined(__MINGW32__) && (_WIN32_WINNT < 0x600 || !defined(__MINGW64_VERSION_MAJOR)))
 /*
  *  POLLRDNORM          Data on priority band 0 may be read.
  *  POLLRDBAND          Data on priority bands greater than 0 may be read.
