@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.in,v 1.12 2022/06/11 03:58:10 cvsuser Exp $
+# $Id: makelib.in,v 1.13 2022/06/13 13:13:32 cvsuser Exp $
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 # makelib configuration
 #
@@ -134,9 +134,9 @@ sub
 Configure()
 {
         ################################################################################
-	# Common
+        # Common
 
-	################################################################################
+        ################################################################################
         # Visual studio
 
         if ($TOOLCHAIN =~ /^vs/) {
@@ -146,11 +146,11 @@ Configure()
                 remove_define('WIN32');
                 add_define('HAVE_CONFIG_H');
                 add_define('WIN32_WINNT=0x501');
-		add_define('_CRT_SECURE_NO_WARNINGS');
-		add_define('_CRT_SECURE_NO_DEPRECATE');
-		add_define('_CRT_NONSTDC_NO_DEPRECATE');
+                add_define('_CRT_SECURE_NO_WARNINGS');
+                add_define('_CRT_SECURE_NO_DEPRECATE');
+                add_define('_CRT_NONSTDC_NO_DEPRECATE');
 
-		add_xinclude('$(ROOT)/libw32'); 	# Extra includes; C and compiler tests.
+                add_xinclude('$(ROOT)/libw32');         # Extra includes; C and compiler tests.
                 add_xinclude('$(ROOT)/libw32/msvc');    # MSVC specials
 
                 add_application_library('libw32.lib');
@@ -165,7 +165,7 @@ Configure()
                 remove_define('WIN32');
                 add_define('HAVE_CONFIG_H');
                 add_define('WIN32_WINNT=0x501');
-		add_define('__STDC_WANT_LIB_EXT1__');
+                add_define('__STDC_WANT_LIB_EXT1__');
 
                 add_xinclude('$(ROOT)/libw32');
 
@@ -179,27 +179,27 @@ Configure()
 
                 remove_define('WIN32');
                 add_define('HAVE_CONFIG_H');
-		add_define('_WIN32_WINNT=0x501');	# Windows SDK
-		add_define('_WIN32_VER=0x501');
+                add_define('_WIN32_WINNT=0x501');       # Windows SDK
+                add_define('_WIN32_VER=0x501');
 
-		add_xinclude('$(ROOT)/libw32');
-		add_application_library('libw32.a');
+                add_xinclude('$(ROOT)/libw32');
+                add_application_library('libw32.a');
 
-		if ($TOOLCHAIN =~ /^mingw(64|32)/) {	# debug helpers
-			add_system_library('-lDbghelp');
-			add_system_library('-lBcrypt');
-		}
+                if ($TOOLCHAIN =~ /^mingw(64|32)/) {    # newer libraries
+                        add_system_library('-lDbghelp');
+                        add_system_library('-lBcrypt');
+                        add_system_library('-lNcrypt');
+                }
 
-             	add_system_library('-lComctl32');       # updater, common controls
-             	add_system_library('-lOleAut32');
+                add_system_library('-lComctl32');       # updater, common controls
+                add_system_library('-lOleAut32');
 
-		add_system_library('-lMswsock');
-		add_system_library('-lNcrypt');
-		add_system_library('-lCrypt32');
-		add_system_library('-lRpcrt4');
-		add_system_library('-lWinmm');
-		add_system_library('-lIphlpapi');
-		add_system_library('-lVersion');
+                add_system_library('-lMswsock');
+                add_system_library('-lCrypt32');
+                add_system_library('-lRpcrt4');
+                add_system_library('-lWinmm');
+                add_system_library('-lIphlpapi');
+                add_system_library('-lVersion');
 
                 push @TESTLIBRARIES, "pthread|LIBTHREAD";
         }
@@ -254,4 +254,3 @@ Configure()
 #
 
 1;
-

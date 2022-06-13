@@ -1,7 +1,7 @@
 #ifndef LIBW32_WIN32_TIME_H_INCLUDED
 #define LIBW32_WIN32_TIME_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_time_h,"$Id: win32_time.h,v 1.19 2022/06/13 06:51:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_time_h,"$Id: win32_time.h,v 1.20 2022/06/13 13:13:00 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -37,19 +37,33 @@ __CPRAGMA_ONCE
 
 __BEGIN_DECLS
 
-#if !defined(__MINGW32__)
 #if !defined(USECONDS_T)
 #define USECONDS_T 1
+#if defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR)
+typedef unsigned long useconds_t __MINGW_ATTRIB_DEPRECATED;
+
+#elif !defined(__MINGW32__)
 #ifdef _WIN64
 typedef unsigned long long useconds_t;
 #else
 typedef unsigned long useconds_t;
 #endif
-#endif /*USECONDS_T*/
 #endif /*__MINGW32__*/
+#endif /*USECONDS_T*/
 
 LIBW32_API unsigned int sleep(unsigned int);
+
+#if defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations" /*useconds_t, POSIX.1-2008*/
+#endif
 LIBW32_API int          usleep(useconds_t useconds);
+#if defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR)
+#pragma GCC diagnostic pop
+#endif
+
+struct timespec;
+LIBW32_API int          nanosleep(const struct timespec *rqtp, struct timespec *rmtp /*notused*/);
 
 struct timeval;
 struct timezone;

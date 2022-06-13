@@ -1,6 +1,6 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.19 2022/06/01 14:21:19 cvsuser Exp $
-# libarchive makefile
+# $Id: Makefile.in,v 1.20 2022/06/13 12:58:06 cvsuser Exp $
+# libz makefile
 #
 #
 #
@@ -140,7 +140,7 @@ endif
 OBJS=		$(LIBOBJS) $(DLLOBJS)
 LIBS=		$(ZLIB) $(ZDLL)
 TSKS=
-
+INSTALLED=
 
 #########################################################################################
 # Rules
@@ -162,6 +162,7 @@ $(ZLIB):		$(LIBOBJS)
 		$(AR) $(ARFLAGS) $@ $^
 		$(RANLIB) $@
 
+INSTALLED+=	$(D_BIN)/libz.$(VERSION).dll
 $(ZDLL):		CEXTRA += -DZLIB_DLL
 ifeq ("yes","@ISWIN32@")
 $(ZDLL):		ZDEF = -export-symbols $(ZSRC)/win32/zlib.def --export-fastcall
@@ -195,7 +196,7 @@ installinc:		../include/.created
 clean:
 		@echo $(BUILD_TYPE) clean
 		-@$(LIBTOOL) --mode=clean $(RM) $(ZDLL) $(DLLOBJS) >/dev/null 2>&1
-		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
+		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(INSTALLED) $(LIBS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
 		-@$(RM) $(LIBOBJS) >/dev/null 2>&1
 
 $(D_OBJ)/%$(O):		%.c

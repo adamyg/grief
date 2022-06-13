@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_main_cpp,"$Id: main.cpp,v 1.16 2022/05/31 16:18:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_main_cpp,"$Id: main.cpp,v 1.17 2022/06/13 13:14:07 cvsuser Exp $")
 
 /* -*- mode: cpp; indent-width: 4; -*- */
-/* $Id: main.cpp,v 1.16 2022/05/31 16:18:21 cvsuser Exp $
+/* $Id: main.cpp,v 1.17 2022/06/13 13:14:07 cvsuser Exp $
  * main(), address c/c++ linkage for several environments.
  * Regardless of configuration force binding to the C++ runtime library.
  *
@@ -15,6 +15,10 @@ __CIDENT_RCSID(gr_main_cpp,"$Id: main.cpp,v 1.16 2022/05/31 16:18:21 cvsuser Exp
     // additional research required, yet there is limited information detailing _CRT_NO_POSIX_ERROR_CODES usage and how these interact with winsocks.
 #endif //_MSC_VER
 #endif //_CRT_NO_POSIX_ERROR_CODES
+
+#if defined(__MINGW32__) && !defined(__MINGW32_VERSION_MAJOR)
+#include <unistd.h>                             /* before C++ headers, ELOOP/EOVERFLOW redef */
+#endif
 
 #include <iostream>
 #include <exception>

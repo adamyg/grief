@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_win32_c,"$Id: edthreads_win32.c,v 1.20 2022/05/26 16:02:19 cvsuser Exp $")
+__CIDENT_RCSID(gr_edthreads_win32_c,"$Id: edthreads_win32.c,v 1.21 2022/06/13 12:47:44 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads_win32.c,v 1.20 2022/05/26 16:02:19 cvsuser Exp $
+/* $Id: edthreads_win32.c,v 1.21 2022/06/13 12:47:44 cvsuser Exp $
  * C11 threads implementation, for windows
  * based on ISO/IEC 9899:201x Committee Draft, April 12, 2011 N1570
  *
@@ -61,39 +61,6 @@ edthreads_win32_native(void)
 #define WIN32_NATIVE_MUTEX
 #pragma message "pthreads expected under mingw32; enabling local implementation"
 #endif
-
-#ifndef  WIN32_LEAN_AND_MEAN
-#define  WIN32_LEAN_AND_MEAN
-#endif
-#undef   u_char
-#include <windows.h>
-#include <time.h>
-#include <errno.h>
-
-
-int
-usleep(/*usecond_t*/ const unsigned useconds)
-{
-    HANDLE timer = 0;
-    LARGE_INTEGER due = {0};
-
-    due.QuadPart = -(10 * (__int64)useconds);
-    SetWaitableTimer(timer, &due, 0, NULL, NULL, 0);
-    WaitForSingleObject(timer, INFINITE);
-    CloseHandle(timer);
-    return 0;
-}
-
-
-int
-nanosleep(const struct timespec *rqtp, struct timespec *rmtp /*notused*/)
-{
-    if (!rqtp || rqtp->tv_nsec > 999999999) {
-        errno = EINVAL;
-        return -1;
-    }
-    return usleep(rqtp->tv_sec * 1000000 + rqtp->tv_nsec / 1000);
-}
 
 #elif defined(_WIN32) || defined(WIN32)
 #define WIN32_NATIVE_MUTEX
