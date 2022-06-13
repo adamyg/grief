@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_child_c,"$Id: w32_child.c,v 1.18 2022/06/11 04:01:44 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_child_c,"$Id: w32_child.c,v 1.19 2022/06/13 06:51:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -314,7 +314,7 @@ w32_waitpid(int pid, int *status, int options)
         /*
          *  wait for the child whose process ID is equal to the value of pid.
          */
-        if (w32_child_wait((HANDLE)pid, status, options & WNOHANG)) {
+        if (w32_child_wait(w32_ITOH(pid), status, options & WNOHANG)) {
             ret = pid;
         }
     }
@@ -442,7 +442,7 @@ LIBW32_API int
 w32_kill(int pid, int value)
 {
     if (pid > 0) {
-        HANDLE hProc = (HANDLE)pid;
+        HANDLE hProc = w32_ITOH(pid);
 
         /* Still running ?? */
         if (WaitForSingleObject(hProc, 0) != WAIT_TIMEOUT) {
@@ -1151,7 +1151,6 @@ BuildEnvA(const char **envv)
  *      null, "_wenviron" is used instead. File handle info is passed in the environment
  *      if _fileinfo is !0.
  */
-
 static int
 BuildVectorsW(win32_spawnw_t *args, wchar_t **argblk,  wchar_t **envblk)
 {

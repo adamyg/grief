@@ -1,7 +1,7 @@
 #ifndef LIBW32_WIN32_INTERNAL_H_INCLUDED
 #define LIBW32_WIN32_INTERNAL_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_internal_h,"$Id: win32_internal.h,v 1.15 2022/06/11 04:01:45 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_internal_h,"$Id: win32_internal.h,v 1.16 2022/06/13 06:51:23 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -70,11 +70,18 @@ __CPRAGMA_ONCE
 #define WIN32_STRDUPW   wcsdup
 #endif
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1400) || \
+#if (defined(_MSC_VER) && _MSC_VER >= 1400) || \
     defined(__MINGW32__)
 #define WIN32_TZSET     _tzset
 #else
 #define WIN32_TZSET     tzset
+#endif
+
+#if (defined(_MSC_VER) && defined(_WIN64)) || \
+    defined(__MINGW64__)
+#define OSFHANDLE       intptr_t
+#else
+#define OSFHANDLE       long
 #endif
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1400)

@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_direntunc_c,"$Id: w32_direntunc.c,v 1.3 2022/05/26 13:28:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_direntunc_c,"$Id: w32_direntunc.c,v 1.4 2022/06/13 06:51:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -88,13 +88,14 @@ w32_unc_iterateW(const wchar_t *servername, unc_push_t push, void *data)
     assert(NULL != push);
     assert(NULL != data);
     do {
-        DWORD entries = (DWORD)-1, tr = 0, resume = 0;
+        DWORD entries = (DWORD)-1, tr = 0;
+        DWORD resume_handle = 0;
 
         if (servername && !*servername) {       // DNS or NetBIOS name
             servername = NULL;                  // NULL == localserver
         }
 
-        res = NetShareEnum((wchar_t *)servername, 502, (LPBYTE *)&buffer, MAX_PREFERRED_LENGTH, &entries, &tr, &resume);
+        res = NetShareEnum((wchar_t *)servername, 502, (LPBYTE *)&buffer, MAX_PREFERRED_LENGTH, &entries, &tr, &resume_handle);
         if (ERROR_SUCCESS == res || ERROR_MORE_DATA == res) {
             const SHARE_INFO_502 *ent;
             unsigned count = 0;

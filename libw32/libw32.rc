@@ -66,7 +66,7 @@ BEGIN
 				LIBW32_VERSION "\0"
 
 			VALUE "Comments",
-				"For more information visit https://sourceforge.net/p/grief/\0"
+				"For more information visit https://github.com/adamyg/grief\0"
 		END
 	END
 	BLOCK "VarFileInfo"

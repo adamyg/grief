@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_time_c,"$Id: w32_time.c,v 1.22 2022/05/26 12:10:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_time_c,"$Id: w32_time.c,v 1.23 2022/06/13 06:51:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -123,6 +123,13 @@ w32_sleep (unsigned int secs)
     return (0);
 }
 
+int
+usleep (useconds_t useconds)
+{
+    if (useconds >= 1000000) return EINVAL;
+    Sleep((DWORD)(useconds / 1000)); //XXX
+    return 0;
+}
 
 /*
 //  NAME

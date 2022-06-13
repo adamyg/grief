@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_getopt_c,"$Id: w32_getopt.c,v 1.12 2022/05/26 16:08:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_getopt_c,"$Id: w32_getopt.c,v 1.13 2022/06/13 06:51:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -41,12 +41,12 @@ __CIDENT_RCSID(gr_w32_getopt_c,"$Id: w32_getopt.c,v 1.12 2022/05/26 16:08:16 cvs
 
 #include "getopt.h"
 
-LIBW32_API int      opterr = 1,                 /* if error message should be printed */
+/*LIBW32_VAR*/ int  opterr = 1,                 /* if error message should be printed */
                     optind = 1,                 /* index into parent argv vector */
                     optopt = '?',               /* character checked for validity */
                     optreset = 0;               /* reset getopt */
 
-LIBW32_API char *   optarg = NULL;              /* argument associated with option */
+/*LIBW32_VAR*/ char *optarg = NULL;             /* argument associated with option */
 
 static const char *__progname = "";             /* derived progname */
 
