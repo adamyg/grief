@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.24 2022/06/11 14:44:04 cvsuser Exp $
+# $Id: Makefile.in,v 1.25 2022/06/15 13:25:04 cvsuser Exp $
 # libhunspell, hunspell, hzip and hunzip makefile.
 #
 #
@@ -111,6 +111,12 @@ else ifeq ("@TOOLCHAIN@","vs170")
 else ifeq ("@TOOLCHAIN@","vs160")
 else ifeq ("@TOOLCHAIN@","vs150")
 else ifeq ("@TOOLCHAIN@","vs140")
+else ifeq ("@TOOLCHAIN@","vs120")
+else ifeq ("@TOOLCHAIN@","vs110")
+else ifeq ("@TOOLCHAIN@","vs100")
+HUNSPELLVER=1.3.3
+else ifeq ("@TOOLCHAIN@","vs90")
+HUNSPELLVER=1.3.3
 else ifeq ("@TOOLCHAIN@","mingw")
 else ifeq ("@TOOLCHAIN@","mingw32")
 else ifeq ("@TOOLCHAIN@","mingw64")

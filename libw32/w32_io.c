@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.44 2022/06/13 06:58:47 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.45 2022/06/15 12:11:30 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -230,7 +230,8 @@ w32_HTOI(HANDLE handle)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
 #endif
-#if defined(_WIN32)
+#if defined(_WIN32) && \
+        (!defined(_MSC_VER) || (_MSC_VER >= 1600 /*2010*/))
     assert((0xffffffff00000000LLU & (uint64_t)handle) == 0 || handle == INVALID_HANDLE_VALUE);
 #endif
     if (INVALID_HANDLE_VALUE == handle) return -1;

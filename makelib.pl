@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.132 2022/06/11 03:58:10 cvsuser Exp $
+# $Id: makelib.pl,v 1.133 2022/06/15 12:00:23 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -245,9 +245,10 @@ my %x_environment   = (
             LSWITCH         => '',
             XSWITCH         => '-Fe',
             AR              => 'lib',
+            RC              => 'rc',        # no, /nologo option
             CINCLUDE        => '',
             RTLIBRARY       => '-MDd',
-            CFLAGS          => '-nologo @RTLIBRARY@',
+            CFLAGS          => '-nologo @RTLIBRARY@ -Dinline=__inline',
             CXXFLAGS        => '-nologo @RTLIBRARY@ -EHsc',
             CDEBUG          => '-Zi -RTC1 -Od',
             CRELEASE        => '-O2 -DNDEBUG',

@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_time_c,"$Id: w32_time.c,v 1.25 2022/06/15 04:38:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_time_c,"$Id: w32_time.c,v 1.26 2022/06/15 12:11:30 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -202,7 +202,7 @@ extern int gettimeofday (struct timeval *p, void *z);
 #endif
 
 #else
-static inline long long
+static __inline long long
 filetime_to_hsec(const FILETIME *ft)
 {
         // Returns the 100-nanoseconds ("hecto-nanoseconds") since the epoch.

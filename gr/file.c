@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.92 2022/05/31 16:18:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.93 2022/06/15 12:16:32 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: file.c,v 1.92 2022/05/31 16:18:21 cvsuser Exp $
+/* $Id: file.c,v 1.93 2022/06/15 12:16:32 cvsuser Exp $
  * File-buffer primitives and support.
  *
  *
@@ -33,6 +33,9 @@ __CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.92 2022/05/31 16:18:21 cvsuser Exp $")
 
 #if defined(WIN32)
 #include <../libw32/win32_io.h>
+#if defined(_MSC_VER) && (_MSC_VER <= 1600 /*2010*/)
+#define snprintf _snprintf
+#endif
 #endif
 
 #include "accum.h"                              /* acc_...() */
