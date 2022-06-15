@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_time_c,"$Id: w32_time.c,v 1.24 2022/06/13 13:13:00 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_time_c,"$Id: w32_time.c,v 1.25 2022/06/15 04:38:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -128,21 +128,29 @@ w32_sleep (unsigned int secs)
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations" /*useconds_t*/
 #endif
 
-int
-usleep(useconds_t useconds)
+static void 
+sleepticks(__int64 ticks)
 {
     HANDLE timer = 0;
     LARGE_INTEGER due = {0};
 
-//  if (useconds >= 1000000)
-//      return EINVAL;
-//  Sleep((DWORD)(useconds / 1000));
-//  return 0;
-
-    due.QuadPart = -(10 * (__int64)useconds);
-    SetWaitableTimer(timer, &due, 0, NULL, NULL, 0);
+    if (ticks <= 0) return;
+    due.QuadPart = -ticks; // 100 nanosecond intervals, negative indicate relative time.
+    timer = CreateWaitableTimer(NULL, FALSE, NULL);
+    SetWaitableTimer(timer, &due, 0, NULL, NULL, FALSE);
+#if !defined(NDEBUG)
+    assert(0 == WaitForSingleObject(timer, INFINITE));
+#else
     WaitForSingleObject(timer, INFINITE);
+#endif
     CloseHandle(timer);
+}
+
+
+int
+usleep(useconds_t useconds)
+{
+    sleepticks(((__int64)useconds) * 10); // usec to 100-nanosecond interval.
     return 0;
 }
 
@@ -154,7 +162,9 @@ nanosleep(const struct timespec *rqtp, struct timespec *rmtp /*notused*/)
         errno = EINVAL;
         return -1;
     }
-    return usleep(rqtp->tv_sec * 1000000 + rqtp->tv_nsec / 1000);
+    // 100 nanosecond intervals.
+    sleepticks((rqtp->tv_sec * 1000000 * 10) + (rqtp->tv_nsec / 100));
+    return 0;
 }
 
 
@@ -191,30 +201,23 @@ nanosleep(const struct timespec *rqtp, struct timespec *rmtp /*notused*/)
 extern int gettimeofday (struct timeval *p, void *z);
 #endif
 
-#elif !defined(_MSC_VER) && !defined(__WATCOMC__)
+#else
 static inline long long
 filetime_to_hsec(const FILETIME *ft)
 {
-        // Returns the 100-nanoseconds ("hekto nanoseconds") since the epoch.
+        // Returns the 100-nanoseconds ("hecto-nanoseconds") since the epoch.
         const long long hsecs = ((long long)ft->dwHighDateTime << 32) + ft->dwLowDateTime;
         return hsecs - 116444736000000000LL; // delta 01/01/1970 and 01/01/1601
 }
 #endif
+
 
 LIBW32_API int
 w32_gettimeofday(struct timeval *tv, struct timezone *tz)
 {
     __CUNUSED(tz)
     if (tv) {
-#if defined(_MSC_VER) || defined(__WATCOMC__)
-        struct _timeb lt;
-
-        _ftime(&lt);
-        tv->tv_sec = (long)(lt.time + lt.timezone);
-        tv->tv_usec = lt.millitm * 1000;
-        assert(4 == sizeof(tv->tv_sec));
-
-#elif defined(__MINGW32__)
+#if defined(__MINGW32__)
 #undef gettimeofday
         return gettimeofday(tv, tz);
 
@@ -222,9 +225,9 @@ w32_gettimeofday(struct timeval *tv, struct timezone *tz)
         FILETIME ft;
         long long hsec;
 
-        (void) GetSystemTimeAsFileTime(&ft);
+        (void) GetSystemTimeAsFileTime(&ft); //UTC
         hsec = filetime_to_hsec(&ft);
-        tv->tv_sec = hsec / 10000000;
+        tv->tv_sec = (long)(hsec / 10000000);
         tv->tv_usec = (hsec % 10000000) / 10;
 #endif
         return 0;

@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_socket_c,"$Id: w32_socket.c,v 1.21 2022/06/13 06:51:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_socket_c,"$Id: w32_socket.c,v 1.22 2022/06/15 04:43:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -375,6 +375,11 @@ w32_socknonblockingio_fd(int fd, int enabled)
     if ((osf = w32_sockhandle(fd)) == (SOCKET)INVALID_SOCKET) {
         ret = -1;
     } else {
+        /* FIONBIO ---
+         *  enables or disables the blocking mode for the socket based on the numerical value of iMode.
+         *      If mode = 0, blocking is enabled; 
+         *      If mode != 0, non-blocking mode is enabled.
+         */
         u_long mode = (long)enabled;
         if ((ret = ioctlsocket(osf, FIONBIO, &mode)) == -1 /*SOCKET_ERROR*/) {
             w32_sockerror();
