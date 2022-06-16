@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.66 2022/06/01 15:44:51 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.69 2022/06/16 09:03:07 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_win32.c,v 1.66 2022/06/01 15:44:51 cvsuser Exp $
+/* $Id: sys_win32.c,v 1.69 2022/06/16 09:03:07 cvsuser Exp $
  * WIN32 system support.
  *
  *
@@ -55,7 +55,7 @@ static DWORD                dwVersion, dwMajorVersion, dwMinorVersion, dwBuild;
 static DWORD                consoleMode = (DWORD)-1;
 
 static BOOL                 CtrlHandler(DWORD fdwCtrlType);
-static void CALLBACK        HandleWinEvent(HWINEVENTHOOK hook, DWORD event, HWND hwnd, 
+static void CALLBACK        HandleWinEvent(HWINEVENTHOOK hook, DWORD event, HWND hwnd,
                                 LONG idObject, LONG idChild,  DWORD dwEventThread, DWORD dwmsEventTime);
 
 static int                  Resize(int winch);
@@ -292,41 +292,52 @@ DiffTicks(DWORD stick)                          /* start tick */
 static int
 Resize(int winch)
 {
-    static int  orows, ocols;
-    static char ofont[80];
-    static RECT orect;
+    static int  orows = 0, ocols = 0;
+    static char ofont[80] = {0};
+    static RECT orect = {0};
 
     VIOMODEINFO mi = { sizeof(VIOMODEINFO) };
-    int nrows, ncols, nfont = -1;
-    char font[sizeof(ofont)];
-    RECT rect;
+    int nrows, ncols, resize = 0;
 
     VioGetMode(&mi, 0);
     ncols = (int)mi.col;
     nrows = (int)mi.row;
 
-    font[0] = 0;
     if (2 == winch) {                           /* possible font change */
-        VioGetFont(font, sizeof(font));
-        nfont = (ofont[0] && (0 != memcmp(font, ofont, sizeof(ofont))));
+        RECT rect;
+
+        if (ofont[0]) {
+            char nfont[sizeof(ofont)] = {0};
+            VioGetFont(nfont, sizeof(nfont));
+            resize = (0 != memcmp(nfont, ofont, sizeof(ofont)));
+            if (resize) {
+                trace_log("resize: font change <%s to %s>\n", ofont, nfont);
+                memcpy(ofont, (const char *)nfont, sizeof(ofont));
+            }
+        } else {
+            VioGetFont(ofont, sizeof(ofont));
+        }
+
         GetWindowRect(GetConsoleWindow(), &rect);
         if ((orect.right - orect.left) != (rect.right - rect.left) ||
                 (orect.bottom - orect.top) != (rect.bottom - rect.top)) {
-            if (orect.bottom) {
-                nfont = 1;
+            if (orect.bottom) {                 /* previous? */
+                trace_log("resize: frame change <%u by %u>\n",
+                    (unsigned)(rect.right - rect.left), (unsigned)(rect.bottom - rect.top));
+                resize = 1;
             }
         }
+        orect = rect;
     }
 
-    if (orows != nrows || ocols != ncols || 1 == nfont) {
+    if (orows != nrows || ocols != ncols) {
+        trace_log("resize: size change <%d/%d to %d/%d>\n", orows, ocols, nrows, ncols);
         orows = nrows;                          /* change; cache current */
         ocols = ncols;
-        if (-1 == nfont) {
-            VioGetFont(font, sizeof(font));
-            GetWindowRect(GetConsoleWindow(), &rect);
-        }
-        memcpy(ofont, font, sizeof(ofont));
-        orect = rect;
+        resize = 1;
+    }
+
+    if (resize) {
         if (winch) {
             ++tty_needresize;
         }
@@ -398,20 +409,20 @@ MouseEvent(const DWORD dwEventFlags, const DWORD dwButtonState)
 
 //  Alt+<key-code> event handler
 //
-//      Alt+KeyCode works and behaves well when character only input is required, by simply 
-//      reporting any down or up key events which populate the 'UnicodeChar' value. Whereas 
+//      Alt+KeyCode works and behaves well when character only input is required, by simply
+//      reporting any down or up key events which populate the 'UnicodeChar' value. Whereas
 //      when extended keystroke handling is required, for example arrow and numpad keys,
 //      additional effort is needed.
 //
 //      Alt+Keycodes are only reported within the 'UnicodeChar' value of up event on a "ALT" key
-//      post the valid entry of one-or-more hex characters. During KeyCode entry the API unfortunately 
-//      does not publiciy indicate this state plus continues to return the associated virtual keys, 
+//      post the valid entry of one-or-more hex characters. During KeyCode entry the API unfortunately
+//      does not publiciy indicate this state plus continues to return the associated virtual keys,
 //      including the leading 'keypad-plus' and any associated key-code elements, wherefore we need
-//      to filter.  Furthermore, if during the key-code entry an invalid non-hex key combination is 
+//      to filter.  Furthermore, if during the key-code entry an invalid non-hex key combination is
 //      given, the key-code is invalidated and UnicodeChar=0 is returned on the ALT release.
 //
-//      Notes: 
-//       o To enable requires the registry REG_SZ value "EnableHexNumpad" under 
+//      Notes:
+//       o To enable requires the registry REG_SZ value "EnableHexNumpad" under
 //          "HKEY_Current_User/Control Panel/Input Method" to be "1".
 //
 //       o Hex-value overflow goes unreported, limiting input to a 16-bit unicode result.
@@ -476,7 +487,7 @@ AltPlusEvent(const KEY_EVENT_RECORD *ke, struct IOEvent *evt)
                 evt->type = EVT_KEYDOWN;
                 evt->code = KEYPAD_PLUS;
                 evt->modifiers = MOD_ALT;
-                alt_code = 0;  
+                alt_code = 0;
                 return 0;
             }
 
@@ -623,7 +634,7 @@ sys_getevent(struct IOEvent *evt, int tmo)
                  *  font changes wont be reported, *unless* the window/buffer size is modified as a result,
                  *      as such force font checks for the number of input iterations.
                  */
-                checks = 10;                      
+                checks = 10;
                 break;
 
             default:
