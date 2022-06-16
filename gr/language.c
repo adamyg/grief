@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_language_c,"$Id: language.c,v 1.50 2022/05/31 16:18:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_language_c,"$Id: language.c,v 1.51 2022/06/16 10:19:31 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: language.c,v 1.50 2022/05/31 16:18:21 cvsuser Exp $
+/* $Id: language.c,v 1.51 2022/06/16 10:19:31 cvsuser Exp $
  * Module loader and inline compiler for lisp source.
  *
  *
@@ -1221,14 +1221,16 @@ parse_unget(void *p, int ch)
 static int
 gr_number(int ch)
 {
-    /*XXX: accint_t*/ long ivalue;
     int ret;
 
     parse_unget(NULL, ch);
-    if ((ret = str_numparsex(parse_get, parse_unget, NULL, &yyfloat, &ivalue, NULL)) > 0) {
+#if (CM_ATOMSIZE == SIZEOF_LONG_LONG && CM_ATOMSIZE != SIZEOF_LONG)
+    if ((ret = str_numparsexl(parse_get, parse_unget, NULL, &yyfloat, &yyint, NULL)) > 0) {
+#else
+    if ((ret = str_numparsex(parse_get, parse_unget, NULL, &yyfloat, &yyint, NULL)) > 0) {
+#endif
         switch (ret) {
         case NUMPARSE_INTEGER:
-            yyint = ivalue;
             return yytoken = TOKEN_INT;
         case NUMPARSE_FLOAT:
             return yytoken = TOKEN_FLOAT;

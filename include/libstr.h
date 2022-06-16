@@ -1,11 +1,11 @@
 #ifndef GR_LIBSTR_H_INCLUDED
 #define GR_LIBSTR_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_str_h,"$Id: libstr.h,v 1.23 2022/03/21 14:55:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_str_h,"$Id: libstr.h,v 1.24 2022/06/16 10:16:26 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: libstr.h,v 1.23 2022/03/21 14:55:28 cvsuser Exp $
+/* $Id: libstr.h,v 1.24 2022/06/16 10:16:26 cvsuser Exp $
  * libstr - String utility library.
  *
  *
@@ -79,8 +79,11 @@ extern int                  str_ntok(char *result, size_t retlen, char *buf, con
 
 extern const char *         str_numerror(int ret);
 extern int                  str_numparse(const char *str, double *dp, long *lp, int *len);
+extern int                  str_numparsel(const char *str, double *dp, long long *lp, int *len);
 extern int                  str_numparsex(int (*get)(void *), int (*unget)(void *, int ch), void *parm,
                                 double *dp, long *lp, int *len);
+extern int                  str_numparsexl(int (*get)(void *), int (*unget)(void *, int ch), void *parm,
+                                double *dp, long long *lp, int *len);
 
 __CEND_DECLS
 

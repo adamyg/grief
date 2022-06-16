@@ -1,11 +1,11 @@
 #ifndef CR_CONFIG_H_INCLUDED
 #define CR_CONFIG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(config_h, "$Id: config.hin,v 1.57 2021/08/02 16:10:31 cvsuser Exp $")
+__CIDENT_RCSID(config_h, "$Id: config.hin,v 1.58 2022/06/16 10:18:58 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; set-indent: 4; -*- */
-/* $Id: config.hin,v 1.57 2021/08/02 16:10:31 cvsuser Exp $
+/* $Id: config.hin,v 1.58 2022/06/16 10:18:58 cvsuser Exp $
  * Machine configuration.
  *
  *
@@ -256,7 +256,7 @@ __CPRAGMA_ONCE
 #undef SIZEOF_FLOAT
 #undef SIZEOF_DOUBLE 8
 #undef SIZEOF_LONG 4
-#undef SIZEOF_LONG_LONG 4
+#undef SIZEOF_LONG_LONG 8
 #undef SIZEOF_VOID_P 4
 #define SIZEOF_VOIDP SIZEOF_VOID_P
 #undef SIZEOF_WCHAR_T

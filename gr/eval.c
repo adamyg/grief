@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_eval_c,"$Id: eval.c,v 1.38 2020/06/05 13:06:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_eval_c,"$Id: eval.c,v 1.39 2022/06/16 10:19:32 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: eval.c,v 1.38 2020/06/05 13:06:21 cvsuser Exp $
+/* $Id: eval.c,v 1.39 2022/06/16 10:19:32 cvsuser Exp $
  * Evaluator.
  *
  *
@@ -546,7 +546,11 @@ do_cvt_to_object(void)          /* (string value, [string length]) */
         accint_t ival;
         int len;
 
+#if (CM_ATOMSIZE == SIZEOF_LONG_LONG && CM_ATOMSIZE != SIZEOF_LONG)
+        switch (str_numparsel(cursor, &dval, &ival, &len)) {
+#else
         switch (str_numparse(cursor, &dval, &ival, &len)) {
+#endif
         case NUMPARSE_INTEGER:
             acc_assign_int(ival);
             cursor += len;
