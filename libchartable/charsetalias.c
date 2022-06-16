@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetalias_c,"$Id: charsetalias.c,v 1.14 2022/03/21 14:59:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetalias_c,"$Id: charsetalias.c,v 1.15 2022/05/26 01:58:44 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* Locale/multibyte character information.
@@ -129,7 +129,7 @@ charset_alias_open(int mode, int paths, const char **dirs, const char *aliasset)
         char *path = NULL;
         int pathlen = 0, p;
 
-        for (p = 0; -1 == ret && (paths >= 0 && p < paths) || (paths < 0 && dirs[p]); ++p) {
+        for (p = 0; -1 == ret && ((paths >= 0 && p < paths) || (paths < 0 && dirs[p])); ++p) {
             const char *dir;
 
             if (NULL != (dir = dirs[p]) && ('/' == *dir || '\\' == *dir)) {
@@ -218,7 +218,7 @@ const char *
 charset_alias_lookup(const char *name, int namelen)
 {
     if (name) {
-        return charset_lookup(&x_charsetmap, name, (namelen > 0 ? namelen : strlen(name)));
+        return charset_lookup(&x_charsetmap, name, (namelen > 0 ? namelen : (int)strlen(name)));
     }
     return NULL;
 }
@@ -280,7 +280,6 @@ charset_load(struct charsetmap *map, int mode, const char *aliasset)
         case ':':   case '[':   /* section */
             if (CHARSET_MODE_INI == mode) {     /* :primary or [primary] */
                 const char delimiter = *cursor;
-                char name[201];
 
                 cs = NULL;
                 if (1 == sscanf(cursor + 1, "%64[^ \t\n\r]", name)) {

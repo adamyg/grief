@@ -1,9 +1,9 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(cppmain_c,"$Id: cppmain.c,v 1.4 2014/11/04 17:07:20 ayoung Exp $")
+__CIDENT_RCSID(cppmain_c,"$Id: cppmain.c,v 1.5 2022/05/31 16:18:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 8; -*- */
 /*
- * GRIEF grcpp 1.0.1, (c) A.Young 2010 - 2014
+ * GRIEF grcpp 1.0.1, (c) A.Young 2010 - 2022
  *
  * Original Code is the 'C and T preprocessor, and integrated lexer (ucpp 1.3)'
  *
@@ -68,7 +68,7 @@ static char *		system_assertions_def[] = { STD_ASSERT, 0 };
 /*
  *  print some help
  */
-static void 
+static void
 usage(char *command_name)
 {
 	fprintf(stderr,
@@ -116,63 +116,44 @@ usage(char *command_name)
 		"\n"
 		"misc options:\n"
 		"  -v                     print version number and settings\n"
-		"  -notice                display copyright/author informmation\n"
+		"  -notice/--license      display copyright/author informmation\n"
 		"  -h, --help             show this help\n"
 		"\n",
 		command_name);
 }
 
 
+#include "ucpp_license.h"
+
 static void
 print_copyright(void)
 {
 	static const char *copyright[] = {
 		"\n",
-                "  " GRCPP_LABEL " " GRCPP_VERSION ", (c) A Young 2010 - 2014\n"
-		"  All Rights Reserved\n",
-		"\n",
-		"  Original Code is the 'C and T preprocessor, and integrated lexer (ucpp 1.3)'\n",
-		"\n",
-		"  The initial Developer of the Original Code is Thomas Pornin\n",
-		"  Portions created by Thomas Pornin are Copyright (C) Thomas Pornin 1999 - 2002\n",
-		"  under the Revised BSD license.\n",
-		"\n",
-		"  Redistribution and use in source and binary forms, with or without\n",
-		"  modification, are permitted provided that the following conditions\n",
-		"  are met:\n",
-		"  1. Redistributions of source code must retain the above copyright\n",
-		"     notice, this list of conditions and the following disclaimer.\n",
-		"  2. Redistributions in binary form must reproduce the above copyright\n",
-		"     notice, this list of conditions and the following disclaimer in the\n",
-		"     documentation and/or other materials provided with the distribution.\n",
-		"  4. The name of the authors may not be used to endorse or promote\n",
-		"     products derived from this software without specific prior written\n",
-		"     permission.\n",
-		"\n",
-		"  THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR\n",
-		"  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\n",
-		"  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE\n",
-		"  ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE\n",
-		"  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR\n",
-		"  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT\n",
-		"  OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR\n",
-		"  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,\n",
-		"  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE\n",
-		"  OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,\n",
-		"  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n",
-		"\n",
+                "  " GRCPP_LABEL " " GRCPP_VERSION ", (c) A Young 2010 - 2022"
+		"  All Rights Reserved",
+		"",
+		"  Original Code is the 'C and T preprocessor, and integrated lexer (ucpp 1.3)'",
+		"  Developed by Thomas Pornin under the Revised BSD license, see below.",
+		"",
+		"                        ---------------"
+		"",
 		NULL };
 	unsigned i;
 
 	for (i = 0; copyright[i]; ++i) {
-		fputs(copyright[i], stderr);
+		fprintf(stderr, "%s\n", copyright[i]);
 	}
+	for (i = 0; i < (sizeof(ucpp_license)/sizeof(ucpp_license[0])); ++i) {
+		fprintf(stderr, "%s\n", ucpp_license[i]);
+	}
+	fprintf(stderr, "\n");
 }
 
 
 /*
  *  parse_opt() initializes many things according to the command-line options.
- * 
+ *
  *  Return values:
  *  0  on success
  *  1  on semantic error (redefinition of a special macro, for instance)
@@ -220,7 +201,7 @@ parse_opt(int argc, char *argv[], struct lexer_state *ls)
 			ls->flags |= HANDLE_ASSERTIONS;
 			ls->flags |= UTF8_SOURCE;
 			system_macros = 1;
-		
+
 		} else if (!strcmp(argv[i], "-c90")) {
 			ls->flags &= ~MACRO_VAARG;
 			ls->flags &= ~CPLUSPLUS_COMMENTS;
@@ -304,14 +285,14 @@ parse_opt(int argc, char *argv[], struct lexer_state *ls)
 		} else if (!strcmp(argv[i], "-v")) {
 			print_version = 1;
 
-		} else if (!strcmp(argv[i], "-notice")) {
+		} else if (!strcmp(argv[i], "-notice")  || !strcmp(argv[i], "--license")) {
 			print_version = 2;
 
 		} else if (argv[i][1] != 'I' && argv[i][1] != 'J'
 				&& argv[i][1] != 'D' && argv[i][1] != 'U'
 				&& argv[i][1] != 'A' && argv[i][1] != 'B') {
 			warning(-1, "unknown option '%s'", argv[i]);
-                }
+		}
 
 	} else {
 		if (filename != 0) {

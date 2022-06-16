@@ -39,6 +39,9 @@ WChar_t *   Wcspbrk(const WChar_t *s, const WChar_t *set);
 WChar_t *   Wcsrchr(const WChar_t *s, WChar_t c);
 WChar_t *   Wcstok(WChar_t * s, const WChar_t * delim, WChar_t ** last);
 
+WChar_t *   Wcsstr(const WChar_t *big, const WChar_t *little);
+WChar_t *   Wcswcs(const WChar_t *big, const WChar_t *little);
+
 int         Wcscasecmp(const WChar_t *s1, const WChar_t *s2);
 int         Wcsncasecmp(const WChar_t *s1, const WChar_t *s2, size_t n);
 
@@ -63,6 +66,8 @@ int         Wcstoutf8(const WChar_t *str, char *buf, int buflen);
 
 int         Wcwidth(WChar_t ucs);
 int         Wcswidth(const WChar_t *s, size_t n);
+            
+int         Wvasprintf(WChar_t **ret, const char *format, va_list ap);
 
 int         Wvsnprintf(WChar_t *str, size_t size, const char *format, va_list args);
 int         Wsnprintf(WChar_t *str, size_t size, const char *format, ...);

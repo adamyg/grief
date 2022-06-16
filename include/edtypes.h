@@ -1,11 +1,11 @@
 #ifndef GR_EDTYPES_H_INCLUDED
 #define GR_EDTYPES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edtypes_h,"$Id: edtypes.h,v 1.39 2022/03/21 14:55:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_edtypes_h,"$Id: edtypes.h,v 1.40 2022/05/31 16:18:22 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edtypes.h,v 1.39 2022/03/21 14:55:28 cvsuser Exp $
+/* $Id: edtypes.h,v 1.40 2022/05/31 16:18:22 cvsuser Exp $
  * Editor base types.
  *
  *
@@ -63,6 +63,8 @@ __CPRAGMA_ONCE
 #else
 #include <math.h>
 #endif
+
+#include <edatom.h>
 
 #if defined(_BSD_SOURCE)
 #if !defined(_BSDTYPES_DEFINED)
@@ -423,7 +425,9 @@ typedef unsigned char LINEATTR;                 /* line attribute management */
 /*
  *  accumulator base types
  */
-#define ACCINT_SIZEOF           SIZEOF_LONG
+#define ACCINT_SIZEOF           CM_ATOMSIZE
+
+#if (CM_ATOMSIZE == SIZEOF_LONG)
 #define ACCINT_FMT              "ld"
 #if defined(LONG_MIN)
 #define ACCINT_MIN              LONG_MIN
@@ -431,6 +435,13 @@ typedef unsigned char LINEATTR;                 /* line attribute management */
 #else                                           /* old school */
 #define ACCINT_MIN              MAXLONG
 #define ACCINT_MAX              MINLONG
+#endif
+#elif (SIZEOF_LONG_LONG == SIZEOF_VOID_P)
+#define ACCINT_FMT              "lld"
+#define ACCINT_MIN              LLONG_MIN
+#define ACCINT_MAX              LLONG_MAX
+#else
+#error unable to determine atom size format/range.
 #endif
 
 #define ACCFLOAT_SIZEOF         SIZEOF_DOUBLE
@@ -452,11 +463,7 @@ typedef unsigned char LINEATTR;                 /* line attribute management */
 #define ACCFLOAT_MIN            -HUGE
 #define ACCFLOAT_MAX            HUGE
 #endif
-
-typedef long accint_t;
-typedef long unsigned accuint_t;
-typedef double accfloat_t;
-
+      
 #define accstrtoi(_a, _b, _c)   strtol(_a, _b, _c)
 #define accstrtou(_a, _b, _c)   strtoul(_a, _b, _c)
 

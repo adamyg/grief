@@ -1,7 +1,7 @@
 #ifndef GR_GLOB_H_INCLUDED
 #define GR_GLOB_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_glob_h,"$Id: glob.h,v 1.4 2022/03/21 14:29:39 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_glob_h,"$Id: glob.h,v 1.5 2022/05/26 12:02:41 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -131,6 +131,8 @@ __BEGIN_DECLS
 
 LIBW32_API int glob (const char *pattern, int flags, int (*errfunc)(const char *, int), glob_t *pglob);
 LIBW32_API void globfree (glob_t *pglob);
+
+LIBW32_API int glob_pattern_p(const char *pattern, int quote);
 
 __END_DECLS
 

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_base_c,"$Id: vfs_base.c,v 1.25 2022/03/21 14:27:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_base_c,"$Id: vfs_base.c,v 1.26 2022/05/26 16:31:34 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_base.c,v 1.25 2022/03/21 14:27:22 cvsuser Exp $
+/* $Id: vfs_base.c,v 1.26 2022/05/26 16:31:34 cvsuser Exp $
  * Virtual file system interface - base implementation.
  *
  *
@@ -362,7 +362,7 @@ vfsbase_readdir(struct vfs_handle *vhandle)
     vfsbase_dir_t *dir = (vfsbase_dir_t *)(vhandle + 1);
     vfs_dirent_t *vdirent = NULL;
     struct dirent *dent = NULL;
-    unsigned ismountpoint = 0;                  /* mountpoint, 0=no, 1=real, 2=virtual*/
+//  unsigned ismountpoint = 0;                  /* mountpoint, 0=no, 1=real, 2=virtual*/
     const char *name = NULL;
     unsigned namlen = 0;
 
@@ -402,7 +402,7 @@ vfsbase_readdir(struct vfs_handle *vhandle)
             dir->d_cached = dent;               /* cache entry for next readdir() */
             name = vmount->mt_name;             /* mount point name */
             namlen = vmount->mt_namlen;
-            ismountpoint = 1;
+//          ismountpoint = 1;
         }
     }
     if (name) {

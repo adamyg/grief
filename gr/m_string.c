@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.45 2021/07/12 15:55:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.46 2022/05/26 16:36:46 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_string.c,v 1.45 2021/07/12 15:55:01 cvsuser Exp $
+/* $Id: m_string.c,v 1.46 2022/05/26 16:36:46 cvsuser Exp $
  * String primitives.
  *
  *
@@ -1900,6 +1900,7 @@ do_isgold(void)                 /* int (string str|int character) */
             }
         }
     }
+    acc_assign_int(ret);
 }
 
 

@@ -2,7 +2,6 @@
  *  win32 console key-test
  */
 
-#define _WIN32_WINNT 0x0601
 #include <windows.h>
 #include <wincon.h>
 #include <stdio.h>
@@ -11,10 +10,14 @@
 #define CTRL_PRESSED            (LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED)
 #define APP_PRESSED             0x0200      /* APPS enabled, extension */
 
-#if defined(__WATCOMC__)
+#if defined(__WATCOMC__) || defined(__MINGW32__)
 #if !defined(_countof)
-#define _countof(array) (sizeof(array) / sizeof(array[0]))
+#define _countof(array) (sizeof(array) / (unsigned)sizeof(array[0]))
 #endif
+#endif
+
+#if defined(__MINGW32__)
+#define swprintf _swprintf
 #endif
 
 #define CTRLSTATUSMASK          (LEFT_ALT_PRESSED|LEFT_CTRL_PRESSED|RIGHT_ALT_PRESSED|RIGHT_CTRL_PRESSED|SHIFT_PRESSED|APP_PRESSED)
@@ -61,7 +64,9 @@ static const struct w32key {
     { VK_DELETE,        VKMOD_ANY,          L"Delete"           },
 
     { VK_HELP,          VKMOD_ANY,          L"Help"             },
+#if defined(VK_ICO_HELP)
     { VK_ICO_HELP,      VKMOD_ANY,          L"Help"             },
+#endif
 
     { VK_PRIOR,         VKMOD_NOTENHANCED,  L"Keypad-PgUp"      },
     { VK_NEXT,          VKMOD_NOTENHANCED,  L"Keypad-PgDn"      },
@@ -629,13 +634,17 @@ virtual_description(WORD wVirtualKeyCode)
     case VK_NUMLOCK             :  /*0x90*/ return L"NUMLOCK";
     case VK_SCROLL              :  /*0x91*/ return L"SCROLL";
 
+#if defined(VK_OEM_NEC_EQUAL)
     case VK_OEM_NEC_EQUAL       :  /*0x92*/ return L"OEM_NEC_EQUAL";
+#endif
 
+#if defined(VK_OEM_FJ_MASSHOU)
 //  case VK_OEM_FJ_JISHO        :  /*0x92*/ return L"OEM_FJ_JISHO";
     case VK_OEM_FJ_MASSHOU      :  /*0x93*/ return L"OEM_FJ_MASSHOU";
     case VK_OEM_FJ_TOUROKU      :  /*0x94*/ return L"OEM_FJ_TOUROKU";
     case VK_OEM_FJ_LOYA         :  /*0x95*/ return L"OEM_FJ_LOYA";
     case VK_OEM_FJ_ROYA         :  /*0x96*/ return L"OEM_FJ_ROYA";
+#endif
 
     case VK_LSHIFT              :  /*0xA0*/ return L"LSHIFT";
     case VK_RSHIFT              :  /*0xA1*/ return L"RSHIFT";
@@ -664,6 +673,7 @@ virtual_description(WORD wVirtualKeyCode)
     case VK_LAUNCH_APP1         :  /*0xB6*/ return L"LAUNCH_APP1";
     case VK_LAUNCH_APP2         :  /*0xB7*/ return L"LAUNCH_APP2";
 
+#if defined(VK_OEM_1)
     case VK_OEM_1               :  /*0xBA*/ return L"OEM_1";
     case VK_OEM_PLUS            :  /*0xBB*/ return L"OEM_PLUS";
     case VK_OEM_COMMA           :  /*0xBC*/ return L"OEM_COMMA";
@@ -671,24 +681,32 @@ virtual_description(WORD wVirtualKeyCode)
     case VK_OEM_PERIOD          :  /*0xBE*/ return L"OEM_PERIOD";
     case VK_OEM_2               :  /*0xBF*/ return L"OEM_2";
     case VK_OEM_3               :  /*0xC0*/ return L"OEM_3";
+#endif
 
+#if defined(VK_OEM_4)
     case VK_OEM_4               :  /*0xDB*/ return L"OEM_4";
     case VK_OEM_5               :  /*0xDC*/ return L"OEM_5";
     case VK_OEM_6               :  /*0xDD*/ return L"OEM_6";
     case VK_OEM_7               :  /*0xDE*/ return L"OEM_7";
     case VK_OEM_8               :  /*0xDF*/ return L"OEM_8";
+#endif
 
+#if defined(VK_OEM_AX)
     case VK_OEM_AX              :  /*0xE1*/ return L"OEM_AX";
     case VK_OEM_102             :  /*0xE2*/ return L"OEM_102";
     case VK_ICO_HELP            :  /*0xE3*/ return L"ICO_HELP";
     case VK_ICO_00              :  /*0xE4*/ return L"ICO_00";
+#endif
 
     case VK_PROCESSKEY          :  /*0xE5*/ return L"PROCESSKEY";
 
+#if defined(VK_ICO_CLEAR)
     case VK_ICO_CLEAR           :  /*0xE6*/ return L"ICO_CLEAR";
+#endif
 
     case VK_PACKET              :  /*0xE7*/ return L"PACKET";
 
+#if defined(VK_OEM_RESET)
     case VK_OEM_RESET           :  /*0xE9*/ return L"OEM_RESET";
     case VK_OEM_JUMP            :  /*0xEA*/ return L"OEM_JUMP";
     case VK_OEM_PA1             :  /*0xEB*/ return L"OEM_PA1";
@@ -702,7 +720,8 @@ virtual_description(WORD wVirtualKeyCode)
     case VK_OEM_AUTO            :  /*0xF3*/ return L"OEM_AUTO";
     case VK_OEM_ENLW            :  /*0xF4*/ return L"OEM_ENLW";
     case VK_OEM_BACKTAB         :  /*0xF5*/ return L"OEM_BACKTAB";
-
+#endif
+    
     case VK_ATTN                :  /*0xF6*/ return L"ATTN";
     case VK_CRSEL               :  /*0xF7*/ return L"CRSEL";
     case VK_EXSEL               :  /*0xF8*/ return L"EXSEL";

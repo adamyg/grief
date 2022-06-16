@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_ftp_c,"$Id: m_ftp.c,v 1.16 2020/06/03 16:22:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_ftp_c,"$Id: m_ftp.c,v 1.17 2022/05/26 16:36:19 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_ftp.c,v 1.16 2020/06/03 16:22:15 cvsuser Exp $
+/* $Id: m_ftp.c,v 1.17 2022/05/26 16:36:19 cvsuser Exp $
  * FTP/HTTP connection primitives -- beta/undocumented.
  *
  *
@@ -628,7 +628,7 @@ do_ftp_directory(void)              /* int (int id, [string pattern], list &file
                     }
                 }
 
-                if (atoms >= 0) {
+                if (atoms > 0) {
                     const int llen =
                         (atoms * sizeof_atoms[F_RSTR]) + sizeof_atoms[F_HALT];
                     LIST *newlp;
@@ -884,7 +884,7 @@ do_ftp_remove(void)                 /* int (int id, string name) */
             }
         }
     }
-    acc_assign_int(-1);
+    acc_assign_int(ret);
 }
 
 
@@ -941,7 +941,7 @@ do_ftp_rename(void)                 /* int (int id, string oldname, string newna
             }
         }
     }
-    acc_assign_int(-1);
+    acc_assign_int(ret);
 }
 
 

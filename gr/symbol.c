@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_symbol_c,"$Id: symbol.c,v 1.42 2020/06/03 16:22:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_symbol_c,"$Id: symbol.c,v 1.43 2022/05/26 16:40:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: symbol.c,v 1.42 2020/06/03 16:22:15 cvsuser Exp $
+/* $Id: symbol.c,v 1.43 2022/05/26 16:40:02 cvsuser Exp $
  * Symbol management.
  *
  *
@@ -42,7 +42,7 @@ accint_t *              x_errno_ptr = NULL;     /* errno reference */
 SPTREE *                x_gsym_tbl = NULL;      /* global symbol table */
 SPTREE *                x_lsym_tbl[MAX_SYMSTACK+1] = {0}; /* local symbol tables */
 
-static void __CINLINE   sym_clear(SYMBOL *sp);
+static __CINLINE void   sym_clear(SYMBOL *sp);
 
 
 /*  Function:           sym_init

@@ -1,7 +1,7 @@
-#ifndef LIBW32_SYS_TCP_H_INCLUDED
-#define LIBW32_SYS_TCP_H_INCLUDED
+#ifndef LIBW32_NETINET_TCP_H_INCLUDED
+#define LIBW32_NETINET_TCP_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_netinet_tcp_h,"$Id: tcp.h,v 1.7 2022/03/21 14:29:42 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_netinet_tcp_h,"$Id: tcp.h,v 1.8 2022/05/26 12:18:19 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -26,4 +26,4 @@ __CPRAGMA_ONCE
 #include <sys/cdefs.h>
 #include <win32_include.h>                      /* winsock and windows.h guard */
 
-#endif /*LIBW32_SYS_TCP_H_INCLUDED*/
+#endif /*LIBW32_NETINET_TCP_H_INCLUDED*/

@@ -1,0 +1,59 @@
+/*
+ * hunspell library resource.
+ */
+
+#include <winver.h>
+
+#include "version.h"
+
+#ifdef GCC_WINDRES
+VS_VERSION_INFO		VERSIONINFO
+#else
+VS_VERSION_INFO		VERSIONINFO	MOVEABLE IMPURE LOADONCALL DISCARDABLE
+#endif
+	FILEVERSION	VERSION_MAJOR,VERSION_MINOR,VERSION_REVISION,0
+	PRODUCTVERSION	VERSION_MAJOR,VERSION_MINOR,VERSION_REVISION,0
+	FILEFLAGSMASK	VS_FFI_FILEFLAGSMASK
+#ifdef _DEBUG
+	FILEFLAGS	1
+#else
+	FILEFLAGS	0
+#endif
+	FILEOS		VOS__WINDOWS32
+	FILETYPE	VFT_DLL
+	FILESUBTYPE	0			// not used
+BEGIN
+	BLOCK "StringFileInfo"
+	BEGIN
+		BLOCK "040904E4"
+		//language ID = U.S. English, char set = Windows, Multilingual
+		BEGIN
+			VALUE "FileDescription",
+				"Hunspell spell checker and morphological analyzer library\0"
+
+			VALUE "FileVersion", VERSION "\0"
+
+			VALUE "InternalName", "libhunspell.dll\0"
+
+			VALUE "LegalCopyright",
+				"License under the GNU Lesser General Public License v2.1, "
+				"Author Laszlo Nemeth\0"
+
+			VALUE "OriginalFilename",
+				"Duktape." VERSION ".dll\0"
+
+			VALUE "ProductName",
+				"Duktape\0"
+
+			VALUE "ProductVersion",
+				VERSION "\0"
+
+			VALUE "Comments",
+				"For more information visit https://github.com/hunspell/hunspell\0"
+		END
+	END
+	BLOCK "VarFileInfo"
+	BEGIN
+		VALUE "Translation", 0x0409, 1252
+	END
+END

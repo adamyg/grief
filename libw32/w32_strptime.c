@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_strptime_c,"$Id: w32_strptime.c,v 1.4 2018/10/12 00:23:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_strptime_c,"$Id: w32_strptime.c,v 1.6 2022/06/15 04:37:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -37,12 +37,12 @@ __CIDENT_RCSID(gr_w32_strptime_c,"$Id: w32_strptime.c,v 1.4 2018/10/12 00:23:31 
 #include <sys/utypes.h>
 #include <unistd.h>
 
-//  #include <sys/localedef.h>
 #include <ctype.h>
 #include <locale.h>
 #include <string.h>
 #include <time.h>
 
+#include "win32_internal.h"
 #include "tzfile.h"
 
 /*
@@ -586,7 +586,7 @@ literal:
 			break;
 
 		case 'Z':
-			tzset();
+			WIN32_TZSET();
 			if (strncmp((const char *)bp, gmt, 3) == 0) {
 				tm->tm_isdst = 0;
 #ifdef TM_GMTOFF

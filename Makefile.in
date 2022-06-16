@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.52 2022/03/22 10:50:24 cvsuser Exp $
+# $Id: Makefile.in,v 1.59 2022/06/11 05:01:42 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2022, Adam Young.
@@ -112,7 +112,7 @@ XCLEAN=		$(D_BIN)/*.map
 
 # Configuration
 
-ifneq "" "$(filter win32,@build_os@)"
+ifeq ("win32","@build_os@")
 BUSYBOX=	@BUSYBOX@
 ifeq ($(BUSYBOX),busybox)
 BUSYBOX=	$(shell which busybox 2>/dev/null)
@@ -132,7 +132,8 @@ ifneq ("$(word 1,$(MAKECMDGOALS))","release")
 		|\n\
 		| make [release or debug] target \n\
 		|\n\
-		|	Build one or more of the following targets recursively within each sub-directory. \n\
+		|	Build one or more of the following targets recursively within each sub-directory\n\
+		|	for the toolchain @TOOLCHAIN@. \n\
 		|\n\
 		| Targets: \n\
 		|\n\
@@ -192,11 +193,13 @@ PACKAGEINFO=	include/edpackageinfo.h
 CC=		@CC@
 CXX=		@CXX@
 AR=		@AR@
+RANLIB=		@RANLIB@
 RM=		@RM@
 RMDIR=		@RMDIR@
 CP=		@CP@
 RC=		@RC@
 PERL=		@PERL@
+LIBTOOL=	@LIBTOOL@
 TAR=		@TAR@
 LEX=		@LEX@
 YACC=		@YACC@
@@ -206,7 +209,7 @@ INSTALL=	@INSTALL@
 INSTALL_PROGRAM=@INSTALL_PROGRAM@
 INSTALL_DATA=	@INSTALL_DATA@
 
-ifneq "" "$(filter mingw32 win32,@build_os@)"
+ifeq ("win32","@build_os@")
 INNO=		@INNO@
 ifeq ($(INNO),) # Inno5: allowing legacy XP installations
 INNO=		"C:/Program Files (x86)/Inno Setup 5/Compil32"
@@ -256,9 +259,18 @@ CLBRNAME=	clbr19
 MT7RNAME=	mt7r19
 PLBRNAME=	plbr19
 endif
+
+	# As path format is dependent on which variant,
+	# firstly resolve using WATCOM envvar, otherwise fallback to which.
+LIBCLBRPATH=	$(subst \,/,$(wildcard $(WATCOM)/binnt/$(CLBRNAME).dll))
+ifeq ("","$(LIBCLBRPATH)")
 LIBCLBRPATH=	$(shell which $(CLBRNAME).dll)
 LIBMT7RPATH=	$(shell which $(MT7RNAME).dll)
 LIBPLBRPATH=	$(shell which $(PLBRNAME).dll)
+else
+LIBMT7RPATH=	$(subst \,/,$(wildcard $(WATCOM)/binnt/$(MT7RNAME).dll))
+LIBPLBRPATH=	$(subst \,/,$(wildcard $(WATCOM)/binnt/$(PLBRNAME).dll))
+endif
 endif
 
 IMPORT=
@@ -268,6 +280,15 @@ IMPORT+=\
 	$(D_BIN)/$(MT7RNAME).dll	\
 	$(D_BIN)/$(PLBRNAME).dll
 endif
+     
+GRUPDATER=	no
+ifeq (vs,$(findstring vs,"@TOOLCHAIN@"))
+GRUPDATER=	yes
+else ifeq ("@TOOLCHAIN@","owc20")
+GRUPDATER=	yes
+else ifeq ("@TOOLCHAIN@","owc19")
+GRUPDATER=	yes
+endif
 
 BINS=\
 	$(D_BIN)/gr$(E)			\
@@ -275,12 +296,15 @@ BINS=\
 	$(D_BIN)/grcpp$(E)		\
 	$(D_BIN)/grmandoc$(E)		\
 	$(D_BIN)/grunch$(E)
-ifneq "" "$(filter mingw32 win32,@build_os@)"
+ifneq "" "$(filter win32,@build_os@)"
 BINS+=	$(D_BIN)/grwc$(E)
 endif
-        
+ifeq ("yes","$(GRUPDATER)")
+BINS+=	$(D_BIN)/grupdater$(E)
+endif
+
 LIBS=
-ifneq "" "$(filter mingw32 win32,@build_os@)"
+ifneq "" "$(filter win32,@build_os@)"
 LIBS+=	$(LW)win32
 endif
 LIBS+=\
@@ -321,7 +345,8 @@ help:
 		|\n\
 		| make [release or debug] target \n\
 		|\n\
-		|	Build one or more of the following targets recursively within each sub-directory. \n\
+		|	Build one or more of the following targets recursively within each sub-directory\n\
+		|	for the toolchain @TOOLCHAIN@. \n\
 		|\n\
 		| Targets: \n\
 		|\n\
@@ -330,7 +355,7 @@ help:
 		|	clean   - delete everything which can be remade. \n\
 		|	help    - command line usage. \n\
 		"
-                
+
 .PHONY:				release
 release:
 		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
@@ -340,7 +365,7 @@ debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
 .PHONY:
-ifneq "" "$(filter mingw32 win32,@build_os@)"
+ifneq "" "$(filter win32,@build_os@)"
 contrib:			directories buildinfo $(LW)win32 $(LW)misc
 		$(MAKE) -C contrib
 else
@@ -381,6 +406,7 @@ endif
 package:	import packageinfo
 	$(INNO) ./win32/gr-inno-setup.iss
 	-$(RM) $(PACKAGEINFO)
+
 
 #########################################################################################
 # Applications
@@ -451,9 +477,13 @@ $(D_BIN)/grmandoc$(E):	$(D_BIN)/.created libs
 
 $(D_BIN)/grunch$(E):	$(D_BIN)/.created libs
 		$(MAKE) -C $(D_GRUNCH)
-                
+
 $(D_BIN)/grwc$(E):	$(D_BIN)/.created libs
 		$(MAKE) -C util
+           
+$(D_BIN)/grupdater$(E):	$(D_BIN)/.created libs
+		$(MAKE) -C win32/AutoUpdater
+
 
 #########################################################################################
 # Rules
@@ -496,7 +526,7 @@ install:		build
 clean:
 		@echo $(BUILD_TYPE) clean
 		$(MAKE) -C libmisc clean
-ifneq "" "$(filter mingw32 win32,@build_os@)"
+ifneq "" "$(filter win32,@build_os@)"
 		$(MAKE) -C libw32
 endif
 		$(MAKE) -C libmalloc clean

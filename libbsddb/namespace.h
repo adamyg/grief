@@ -1,10 +1,10 @@
 #ifndef DBHASH_NAMESPACE_H_INCLUDED
 #define DBHASH_NAMESPACE_H_INCLUDED
-/* $Id: namespace.h,v 1.10 2020/06/18 12:54:27 cvsuser Exp $
+/* $Id: namespace.h,v 1.12 2022/05/28 12:11:30 cvsuser Exp $
  *
  * libbsdb <namespace.h>
  *
- * Copyright (c) 2012-2020 Adam Young.
+ * Copyright (c) 2012-2022 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@
 #endif
 #if defined(__linux__)  /* _BSD_SOURCE has been deprecated, glibc >= 2.2 */
 #if defined(_BSD_SOURCE)
-#define _DEFAULT_SOURCE
+#define _DEFAULT_SOURCE 1
 #endif
 #endif
 
@@ -103,7 +103,7 @@
 
 #ifndef __CONCAT
 #if defined(__STDC__) || defined(_MSC_VER) || defined(__WATCOMC__) || \
-            defined(__cplusplus)
+            defined(__MINGW32__) || defined(__cplusplus)
 #define __CONCAT(x,y)           x ## y
 #else
 #define __CONCAT(x,y)           x/**/y
@@ -135,7 +135,11 @@
 #endif /*WIN32*/
 
 #ifndef EFTYPE
+#if defined(EPROTONOSUPPORT)
 #define EFTYPE                  EPROTONOSUPPORT
+#else
+#define EFTYPE                  ENODEV
+#endif
 #endif
 
 #endif /*DBHASH_NAMESPACE_H_INCLUDED*/

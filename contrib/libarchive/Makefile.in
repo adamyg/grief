@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.15 2020/06/18 20:35:15 cvsuser Exp $
+# $Id: Makefile.in,v 1.17 2022/06/15 12:00:52 cvsuser Exp $
 # libarchive makefile
 #
 #
@@ -61,9 +61,6 @@ CEXTRA=		@DEFS@
 ifeq ("yes","@ISWIN32@")
 CEXTRA+=	-D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
 endif
-ifeq ("mingw32","@build_os@")
-CEXTRA+=	-D__USE_MINGW_ANSI_STDIO
-endif
 
 ifeq ("$(BUILD_TYPE)","release")
 CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
@@ -84,7 +81,11 @@ RMFLAGS=	-f
 ARCHIVELIB=	$(D_LIB)/$(LP)archive_static$(A)
 ARCHIVEDLL=	$(D_LIB)/$(LP)archive.la
 
+ifeq ("vs90","@TOOLCHAIN@")
 VERSION=	3.3.3
+else
+VERSION=	3.6.1
+endif
 VERSIONSPEC=	$(subst .,:,$(VERSION))
 PACKED=		libarchive-$(VERSION).gr.tgz
 ARCHIVESRC=	./libarchive-$(VERSION)/libarchive
@@ -210,6 +211,17 @@ LIBOBJS+=\
 	$(D_OBJ)/archive_write_set_format_warc$(O)		\
 	$(D_OBJ)/archive_write_set_passphrase$(O)		\
 	$(D_OBJ)/xxhash$(O)
+
+#3.6.1
+ifeq ("$(VERSION)","3.6.1")
+LIBOBJS+=\
+	$(D_OBJ)/archive_write_set_format_cpio_binary$(O)	\
+	$(D_OBJ)/archive_write_set_format_cpio_odc$(O)		\
+	$(D_OBJ)/archive_read_support_format_rar5$(O)		\
+	$(D_OBJ)/archive_blake2sp_ref$(O)			\
+	$(D_OBJ)/archive_blake2s_ref$(O)			\
+	$(D_OBJ)/archive_ppmd8$(O)
+endif
 
 ifeq ("yes","@ISWIN32@")
 LIBOBJS+=\

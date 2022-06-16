@@ -782,6 +782,10 @@ struct mallinfo {
   inlining are defined as macros, so these aren't used for them.
 */
 
+#if defined(__MINGW64_VERSION_MAJOR)
+#undef FORCEINLINE
+#endif
+
 #ifndef FORCEINLINE
   #if defined(__GNUC__)
 #define FORCEINLINE __inline __attribute__ ((always_inline))
@@ -997,7 +1001,7 @@ DLMALLOC_EXPORT size_t dlmalloc_max_footprint(void);
   guarantee that this number of bytes can actually be obtained from
   the system.
 */
-DLMALLOC_EXPORT size_t dlmalloc_footprint_limit();
+DLMALLOC_EXPORT size_t dlmalloc_footprint_limit(void);
 
 /*
   malloc_set_footprint_limit();

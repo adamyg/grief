@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crdebug_c,"$Id: crdebug.c,v 1.16 2020/04/23 12:35:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_crdebug_c,"$Id: crdebug.c,v 1.17 2022/05/31 16:18:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crdebug.c,v 1.16 2020/04/23 12:35:50 cvsuser Exp $
+/* $Id: crdebug.c,v 1.17 2022/05/31 16:18:22 cvsuser Exp $
  * Debug/diagnostics support.
  *
  *
@@ -237,7 +237,7 @@ ntp(const node_t *np, int size, FILE *out, int depth)
     switch (np->type) {
     case node_integer:
         if (! xf_struct) {
-            fprintf(out, " %ld", np->atom.ival);
+            fprintf(out, " %" ACCINT_FMT, np->atom.ival);
         }
         return size;
 
@@ -316,7 +316,7 @@ ntp(const node_t *np, int size, FILE *out, int depth)
                 }
             } else if (np->right->type == node_integer) {
                 if (! xf_struct) {
-                    fprintf(out, "[%ld]", np->right->atom.ival);
+                    fprintf(out, "[%" ACCINT_FMT "]", np->right->atom.ival);
                 }
                 return size * np->right->atom.ival;
             }

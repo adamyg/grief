@@ -1,5 +1,5 @@
-#ifndef GR_LIBW32_MSVC_INTTYPES_H_INCLUDED
-#define GR_LIBW32_MSVC_INTTYPES_H_INCLUDED
+#ifndef LIBW32_MSVC_INTTYPES_H_INCLUDED
+#define LIBW32_MSVC_INTTYPES_H_INCLUDED
 
 /* -*- mode: c; indent-width: 4; -*- */
 // ISO C9x  compliant inttypes.h for Microsoft Visual Studio
@@ -303,4 +303,4 @@ imaxdiv_t __cdecl imaxdiv(intmax_t numer, intmax_t denom)
 #define wcstoimax _wcstoi64
 #define wcstoumax _wcstoui64
 
-#endif /*GR_LIBW32_MSVC_INTTYPES_H_INCLUDED*/
+#endif /*LIBW32_MSVC_INTTYPES_H_INCLUDED*/

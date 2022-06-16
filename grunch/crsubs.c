@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crsubs_c,"$Id: crsubs.c,v 1.29 2021/08/14 17:09:30 cvsuser Exp $")
+__CIDENT_RCSID(gr_crsubs_c,"$Id: crsubs.c,v 1.30 2022/05/31 16:18:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crsubs.c,v 1.29 2021/08/14 17:09:30 cvsuser Exp $
+/* $Id: crsubs.c,v 1.30 2022/05/31 16:18:22 cvsuser Exp $
  * Parser ultities.
  *
  *
@@ -1148,7 +1148,7 @@ enum_ivalue(accint_t ivalue)
         x_enum_type = ENUM_INTEGER;
         x_enum_value = ivalue + 1;
     }
-    xprintf("enum ivalue(%ld) : %s\n", ivalue, (ret ? "TRUE" : "FALSE"));
+    xprintf("enum ivalue(%" ACCINT_FMT ") : %s\n", ivalue, (ret ? "TRUE" : "FALSE"));
     return ret;
 }
 
@@ -1179,7 +1179,7 @@ enum_implicited(accint_t *ivalue)
         x_enum_type = ENUM_INTEGER;
         *ivalue = x_enum_value++;
     }
-    xprintf("enum implicited(%ld) : %s\n", *ivalue, (ret ? "TRUE" : "FALSE"));
+    xprintf("enum implicited(%" ACCINT_FMT ") : %s\n", *ivalue, (ret ? "TRUE" : "FALSE"));
     return ret;
 }
 
@@ -1195,7 +1195,7 @@ enum_add(node_t *np)
     assert(right && (node_integer == right->type || node_string == right->type));
 
     if (node_integer == right->type) {
-        xprintf("enum name(%s) = %ld\n", name, right->atom.ival);
+        xprintf("enum name(%s) = %" ACCINT_FMT "\n", name, right->atom.ival);
 
     } else {
         xprintf("enum name(%s) = %s\n", name, right->atom.sval);

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_language_c,"$Id: language.c,v 1.48 2020/04/21 21:23:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_language_c,"$Id: language.c,v 1.51 2022/06/16 10:19:31 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: language.c,v 1.48 2020/04/21 21:23:03 cvsuser Exp $
+/* $Id: language.c,v 1.51 2022/06/16 10:19:31 cvsuser Exp $
  * Module loader and inline compiler for lisp source.
  *
  *
@@ -713,7 +713,7 @@ again:
         if ((_chars_[fppeek()] & _XXDIGIT) == 0) {
             goto alpha;
         }
-
+        /*FALLTHRU*/
     case '0':
     case '1':
     case '2':
@@ -1224,7 +1224,11 @@ gr_number(int ch)
     int ret;
 
     parse_unget(NULL, ch);
+#if (CM_ATOMSIZE == SIZEOF_LONG_LONG && CM_ATOMSIZE != SIZEOF_LONG)
+    if ((ret = str_numparsexl(parse_get, parse_unget, NULL, &yyfloat, &yyint, NULL)) > 0) {
+#else
     if ((ret = str_numparsex(parse_get, parse_unget, NULL, &yyfloat, &yyint, NULL)) > 0) {
+#endif
         switch (ret) {
         case NUMPARSE_INTEGER:
             return yytoken = TOKEN_INT;

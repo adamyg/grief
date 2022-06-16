@@ -1,9 +1,9 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.14 2020/06/18 20:35:15 cvsuser Exp $
+# $Id: Makefile.in,v 1.17 2022/06/01 14:21:18 cvsuser Exp $
 # External packages.
 #
 #
-# Copyright (c) 1998 - 2020, Adam Young.
+# Copyright (c) 1998 - 2022, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -79,7 +79,7 @@ define contrib-clean
 	$(MAKE) -C libarchive  clean
 	$(MAKE) -C hunspell    clean
 endef
-ifeq ("win32","@build_os@")
+ifneq "" "$(filter win32,@build_os@)"
 define contrib-cleanx
 	$(MAKE) -C libcitrus   clean
 	$(MAKE) -C libintl     clean

@@ -70,6 +70,7 @@ usage(void)
 	exit(1);
 }
 
+
 /*
  * qsort() helper function
  */
@@ -84,6 +85,9 @@ scmp(const void *v1, const void *v2)
 
 
 #if defined(WIN32)				/*DLL binding*/
+static const char * local_nl_langinfo(int elm);
+#define nl_langinfo(__a)        local_nl_langinfo(__a)
+
 #define __ICONV_ERRNO()		errno = iconv_errno();
 #else
 #define __ICONV_ERRNO()
@@ -226,6 +230,7 @@ main(int argc, char **argv)
 #if defined(WIN32)
 		case 'h':
 			help();
+                        break;
 #endif
 		default:
 			usage();
@@ -264,8 +269,8 @@ main(int argc, char **argv)
 
 
 #if defined(WIN32)
-const char *
-nl_langinfo(int elm) 
+static const char *
+local_nl_langinfo(int elm) 
 {
 	if (CODESET == elm)
 		return "UTF-8";		/*TODO*/

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crc32_c,"$Id: crc32.c,v 1.10 2017/01/29 04:33:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_crc32_c,"$Id: crc32.c,v 1.11 2022/05/25 15:44:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crc32.c,v 1.10 2017/01/29 04:33:31 cvsuser Exp $
+/* $Id: crc32.c,v 1.11 2022/05/25 15:44:02 cvsuser Exp $
  *
  *  The CRC32 employs the reverse-polynomial calculation method on the
  *  polynomial 0xEDB88320 used as the frame check sequence in ADCCP (ANSI
@@ -148,6 +148,10 @@ crc32_EDB88320(const void *data, size_t size, uint32_t crc32)
         size_t loop;
 
 #define HASH       crc = crc32_table[(*p++ ^ (unsigned char)crc)] ^ (crc >> 8)
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif
 
         loop = (size + 8 - 1) >> 3;
         switch (size & (8 - 1)) {

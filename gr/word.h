@@ -1,11 +1,11 @@
 #ifndef GR_WORD_H_INCLUDED
 #define GR_WORD_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_word_h,"$Id: word.h,v 1.19 2020/04/21 21:24:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_word_h,"$Id: word.h,v 1.20 2022/05/31 16:18:22 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: word.h,v 1.19 2020/04/21 21:24:37 cvsuser Exp $
+/* $Id: word.h,v 1.20 2022/05/31 16:18:22 cvsuser Exp $
  * External data representation.
  *
  *
@@ -22,15 +22,12 @@ __CPRAGMA_ONCE
  */
 
 #include <edsym.h>
+#include <edatom.h>
 
 __CBEGIN_DECLS
 
 struct CM;
 
-#define CM_ATOMSIZE         SIZEOF_LONG
-#if (CM_ATOMSIZE != SIZEOF_VOID_P)
-#error Unable to determine atom size.
-#endif
 #define CM_ATOM_LIST_SZ     (1+2)               /* OP + LEN16 */
 
 extern const unsigned       sizeof_atoms[];
@@ -74,14 +71,14 @@ extern double               LGET_FLOAT(const LIST *lp);
 #define                     LPUT_ID(lp, i)      LPUT16((lp), (i))
 #define                     LGET_ID(lp)         LGET16(lp)
 
-#if (SIZEOF_LONG == 8)
+#if (CM_ATOMSIZE == 8)
 #define                     LPUT_INT(lp, n)     LPUT64((lp), (int64_t)(n))
 #define                     LGET_INT(lp)        LGET64(lp)
-#elif (SIZEOF_LONG == 4)
+#elif (CM_ATOMSIZE == 4)
 #define                     LPUT_INT(lp, n)     LPUT32((lp), (int32_t)(n))
 #define                     LGET_INT(lp)        LGET32(lp)
 #else
-#error unsupported SIZEOF_LONG szie
+#error unsupported CM_ATOMSIZE szie
 #endif
 
 #define                     LGET_PTR2(type, lp) ((type *)LGET_PTR(lp))

@@ -10,6 +10,7 @@ bin.*/
 lib.*/
 objects*/
 macros/
+macros.x64
 help/
 Makefile
 GIT_Notes.txt

@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_socket2_c,"$Id: w32_socket2.c,v 1.9 2022/03/21 14:29:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_socket2_c,"$Id: w32_socket2.c,v 1.12 2022/06/15 04:43:20 cvsuser Exp $")
 
 /*
  * win32 socket () system calls
@@ -25,6 +25,13 @@ __CIDENT_RCSID(gr_w32_socket2_c,"$Id: w32_socket2.c,v 1.9 2022/03/21 14:29:41 cv
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * license for more details.
  * ==end==
+ *
+ * Notice: Portions of this text are reprinted and reproduced in electronic form. from
+ * IEEE Portable Operating System Interface (POSIX), for reference only. Copyright (C)
+ * 2001-2003 by the Institute of. Electrical and Electronics Engineers, Inc and The Open
+ * Group. Copyright remains with the authors and the original Standard can be obtained
+ * online at http://www.opengroup.org/unix/online.html.
+ * ==extra==
  */
 
 #ifndef _WIN32_WINNT
@@ -61,6 +68,7 @@ nativehandle(int fd)
 {
     if (fd >= 0)
         return (SOCKET)fd;
+    errno = EBADF;                              /* sockfd is not a valid open file descriptor */
     return INVALID_SOCKET;
 }
 
@@ -71,7 +79,7 @@ nativehandle(int fd)
 LIBW32_API int
 w32_socket_native(int af, int type, int protocol)
 {
-    int done = 0, ret;
+    int done = 0;
     SOCKET s;
 
 #undef socket
@@ -83,7 +91,6 @@ retry:;
             }
         }
         w32_sockerror();
-        ret = -1;
     } else {
         SetHandleInformation((HANDLE)s, HANDLE_FLAG_INHERIT, 0);
         assert((int)s < 0x7fffffff);
@@ -185,7 +192,7 @@ w32_listen_native(int fd, int num)
 #undef listen
     if ((osf = nativehandle(fd)) == (SOCKET)INVALID_SOCKET) {
         ret = -1;
-    } else if (listen((SOCKET)osf, num) != 0) {
+    } else if (listen((SOCKET)osf, (-1 == num ? SOMAXCONN : num)) != 0) {
         w32_sockerror();
         ret = -1;
     }
@@ -336,7 +343,7 @@ w32_sendmsg_native(int fd, const struct msghdr *message, int flags)
     int ret = -1;
 
     if (NULL == message || NULL == message->msg_iov ||
-            message->msg_iovlen < 0 || message->msg_iovlen > IOV_MAX) {
+            /*message->msg_iovlen < 0 ||*/ message->msg_iovlen > IOV_MAX) {
         errno = EINVAL;                         /* invalid argument */
 
     } else if (0 == message->msg_iovlen) {
@@ -417,22 +424,47 @@ w32_recvfrom_native(int fd, char *buf, int len, int flags,
 }
 
 
-
 /*
- *  sockblockingmode
+ *  socknonblockingio
  */
 LIBW32_API int
-w32_sockblockingmode_native(int fd, int enabled)
+w32_socknonblockingio_native(int fd, int enabled)
 {
     SOCKET osf;
-    int ret;
+    int ret = 0;
 
     if ((osf = nativehandle(fd)) == (SOCKET)INVALID_SOCKET) {
         ret = -1;
     } else {
+        /* FIONBIO ---
+         *  enables or disables the blocking mode for the socket based on the numerical value of iMode.
+         *      If mode = 0, blocking is enabled; 
+         *      If mode != 0, non-blocking mode is enabled.
+         */
         u_long mode = (long)enabled;
         if ((ret = ioctlsocket(osf, FIONBIO, &mode)) == -1 /*SOCKET_ERROR*/) {
             w32_sockerror();
+        }
+    }
+    return ret;
+}
+
+
+/*
+ *  sockinheritable
+ */
+LIBW32_API int
+w32_sockinheritable_native(int fd, int enabled)
+{
+    SOCKET osf;
+    int ret = 0;
+
+    if ((osf = nativehandle(fd)) == (SOCKET)INVALID_SOCKET) {
+        ret = -1;
+    } else {
+        if (! SetHandleInformation((HANDLE)osf, HANDLE_FLAG_INHERIT, enabled ? 1 : 0)) {
+            w32_sockerror();
+            ret = -1;
         }
     }
     return ret;
@@ -511,7 +543,7 @@ w32_shutdown_native(int fd, int how)
 #undef shutdown
     if ((osf = nativehandle(fd)) == (SOCKET)INVALID_SOCKET) {
         ret = -1;
-    } else if ((ret = shutdown((SOCKET)osf, how)) == -1) {
+    } else if ((ret = shutdown((SOCKET)osf, how)) == -1 /*SOCKET_ERROR*/) {
         w32_sockerror();
     }
     return ret;

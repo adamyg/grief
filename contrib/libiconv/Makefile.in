@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.11 2020/06/18 20:35:15 cvsuser Exp $
+# $Id: Makefile.in,v 1.12 2022/06/02 04:00:10 cvsuser Exp $
 # libiconv/iconv makefile
 #
 #
@@ -132,7 +132,7 @@ $(ICONVDLL):		CEXTRA += -D__LIBICONV_BUILD -D_WIN32 -D_WIN32_WINNT=0X601
 $(ICONVDLL):		MAPFILE=$(basename $@).map
 $(ICONVDLL):		$(DLLOBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $^ -version-number $(VERSIONSPEC) \
-			-rpath $(D_LIB) -bindir $(D_BIN) $(LDLIBS) libcitrus$(A) @LDMAPFILE@
+			-rpath $(D_LIB) -bindir $(D_BIN) libcitrus$(A) $(LDLIBS) @LDMAPFILE@
 
 .PHONY:		installinc installcfg
 installinc:		../include/.created

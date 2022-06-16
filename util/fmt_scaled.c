@@ -46,8 +46,10 @@
 
 #include "fmt_scaled.h"
 
-#if defined(WIN32) && !defined(snprintf)
-#define snprintf	_snprintf
+#if defined(WIN32) || defined(_WIN32)
+#if !defined(snprintf)
+#define snprintf _snprintf
+#endif
 #endif
 
 typedef enum {

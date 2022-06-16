@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_iconv_c,"$Id: w32_iconv.c,v 1.20 2022/03/21 14:29:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_iconv_c,"$Id: w32_iconv.c,v 1.21 2022/06/16 05:17:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -50,11 +50,8 @@ __CIDENT_RCSID(gr_w32_iconv_c,"$Id: w32_iconv.c,v 1.20 2022/03/21 14:29:41 cvsus
 #define DO_TRACE_LOG                            // trace_log()
 #endif
 
-#if defined(HAVE_LIBICONV_DLL)
 #define DLLLINKAGE      __cdecl
-#else
-#define DLLLINKAGE      /**/
-#endif
+
 typedef void *          (DLLLINKAGE * iconvopenfn_t)(const char *to, const char *from);
 typedef void            (DLLLINKAGE * iconvclosefn_t)(void *fd);
 typedef int             (DLLLINKAGE * iconvfn_t)(void *fd, const char **from, size_t *fromlen, char **to, size_t *tolen);

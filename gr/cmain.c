@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.41 2021/10/24 16:46:45 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.43 2022/05/31 16:18:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.41 2021/10/24 16:46:45 cvsuser Exp $
+/* $Id: cmain.c,v 1.43 2022/05/31 16:18:21 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -390,7 +390,6 @@ extern void                                     /* must be extern linkage; other
 cpp_linkage(const char *str);
 
 
-
 /*  Function:           cmain
  *      Entry point.
  *
@@ -470,7 +469,7 @@ cmain(int argc, char **argv)
     if (argc < 0) cpp_linkage("");
 
     x_umask = (mode_t)fileio_umask(0);          /* our umask */
-    if ((int)x_umask < 0) x_umask = 0;
+  //if ((int)x_umask < 0) x_umask = 0;
     fileio_umask(x_umask);
 
     x_progname = argv[0];
@@ -1041,6 +1040,7 @@ argv_process(int doerr, int argc, const char **argv)
                             break;
                         case 5: case 6:
                             nflags |= DB_MEMORY;
+                            /*FALLTHRU*/
                         case 7:             /*see cmain.cpp*/
                         case 8:             /*see cmain.cpp*/
                             ++vm_dflag;
@@ -1564,7 +1564,7 @@ env_define(const char *cp)
     if (F_STR == type) {
         trace_log("-D%s=%s (string)\n", name, svalue);
     } else {
-        trace_log("-D%s=%ld (integer)\n", name, ivalue);
+        trace_log("-D%s=%" ACCINT_FMT " (integer)\n", name, ivalue);
     }
     if (svalue) {
         svalue[-1] = '=';                       /* restore */

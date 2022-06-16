@@ -1,5 +1,5 @@
-#ifndef GR_LIBW32_MSVC_STDBOOL_H_INCLUDED
-#define GR_LIBW32_MSVC_STDBOOL_H_INCLUDED
+#ifndef LIBW32_MSVC_STDBOOL_H_INCLUDED
+#define LIBW32_MSVC_STDBOOL_H_INCLUDED
 
 /* -*- mode: c; indent-width: 4; -*- */
 // ISO C9x  compliant inttypes.h for Microsoft Visual Studio
@@ -32,4 +32,4 @@ typedef int _Bool;
 #define false 0
 #endif
 
-#endif /*GR_LIBW32_MSVC_STDBOOL_H_INCLUDED*/
+#endif /*LIBW32_MSVC_STDBOOL_H_INCLUDED*/

@@ -48,10 +48,10 @@ extern char *           libintl_strsep(char **stringp, const char *delim);
 #define strsep(__a,__b) libintl_strsep(__a,__b)
 #endif
 
-#if defined(_MSC_VER)
-#define LC_MESSAGES     (LC_MAX + 1)
+#if defined(_MSC_VER) || \
+        defined(__MINGW32__)
+#define LC_MESSAGES     (LC_MAX + 1) /*XXX*/
 #endif
 
 /*end*/
-
 

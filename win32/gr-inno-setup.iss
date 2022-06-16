@@ -90,6 +90,7 @@ Source: "..\{#BinDir}\grcpp.exe";     DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\grunch.exe";    DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\grmandoc.exe";  DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\grwc.exe";      DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\{#BinDir}\grupdater.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\*.dll";         DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\ctbl\*";        DestDir: "{app}\bin\ctbl"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\{#BinDir}\i18n\*";        DestDir: "{app}\bin\i81n"; Flags: ignoreversion recursesubdirs createallsubdirs

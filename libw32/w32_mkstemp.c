@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_mkstemp_c,"$Id: w32_mkstemp.c,v 1.17 2022/03/21 14:29:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_mkstemp_c,"$Id: w32_mkstemp.c,v 1.18 2022/05/26 13:28:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -387,7 +387,7 @@ gettempA_tmp(char *result, const char *path, int suffixlen, int *fildes, unsigne
                 // TMP, TEMP, USERPROFILE environment variables, default windows directory.
 
         if (pathlen && tmplen) {
-            if ((pathlen + tmplen) >= _countof(t_path)) {
+            if ((pathlen + tmplen) >= (int)_countof(t_path)) {
                 errno = ENAMETOOLONG;
 
             } else {
@@ -562,7 +562,7 @@ gettempW_tmp(wchar_t *result, const wchar_t *path, int suffixlen, int *fildes, u
                 // TMP, TEMP, USERPROFILE environment variables, default windows directory.
 
         if (pathlen && tmplen) {
-            if ((pathlen + tmplen) >= (_countof(t_path) + 1)) {
+            if ((pathlen + tmplen) >= (int)(_countof(t_path) + 1)) {
                 errno = ENAMETOOLONG;
 
             } else {

@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dllmain.c,v 1.1 2014/07/08 22:50:18 ayoung Exp $
+/* $Id: dllmain.c,v 1.2 2022/05/26 02:12:21 cvsuser Exp $
  *
  * libtre - dllmain
  *
@@ -36,6 +36,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD reason, LPVOID reserved);
 BOOL APIENTRY
 DllMain(HINSTANCE hInst, DWORD reason, LPVOID reserved)
 {

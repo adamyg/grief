@@ -1,7 +1,7 @@
 #ifndef LIBW32_ERR_H_INCLUDED
 #define LIBW32_ERR_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_err_h,"$Id: err.h,v 1.3 2022/03/21 14:29:39 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_err_h,"$Id: err.h,v 1.4 2022/05/26 12:09:03 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -53,4 +53,4 @@ LIBW32_API void         verrx(int eval, const char *fmt, va_list ap);
 
 __END_DECLS
 
-#endif /*WIN32_ERR_H_INCLUDED*/
+#endif /*LIBW32_ERR_H_INCLUDED*/

@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.28 2021/04/03 18:06:33 cvsuser Exp $
+# $Id: Makefile.in,v 1.29 2022/05/27 03:13:12 cvsuser Exp $
 # GRIEF macro compiler.
 #
 #
-# Copyright (c) 1998 - 2020, Adam Young.
+# Copyright (c) 1998 - 2022, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -108,7 +108,12 @@ endif
 
 XFLAGS=
 CFLAGS=		@CFLAGS@
+ifeq ("gcc","@CC@")
+CWARN=		$(filter-out -Wshadow -Wmissing-prototypes -Wsign-compare -Wimplicit-fallthrough, @CWARN@ $(CWALL))
+CWARN+=		-Wno-sign-compare -Wno-implicit-fallthrough
+else
 CWARN=		@CWARN@ $(CWALL)
+endif
 CDEBUG=		@CDEBUG@
 CRELEASE=	@CRELEASE@
 LDDEBUG=	@LDDEBUG@

@@ -1,52 +1,26 @@
-#ifndef CONFIG_H_INCLUDED
-#define CONFIG_H_INCLUDED
+#ifndef HUNSPELL_CONFIG_H_INCLUDED
+#define HUNSPELL_CONFIG_H_INCLUDED
 /*
  *  libhunspell <config.h>
  */
-
-#define VERSION "1.3.3"
-
-#include "../contrib_config.h"
-
+ 
 #if defined(_MSC_VER)
 #if !defined(_CRT_SECURE_NO_WARNINGS)
 #define _CRT_SECURE_NO_WARNINGS
 #endif
-#endif
+#endif //_MSC_VER
 
 #if defined(__WATCOMC__)
-/*
- *  patches required:
- *      src/hunvisapi.h:
- *
- *          -   #elif defined(_MSC_VER)
- *          +   #elif defined(_MSC_VER) || defined(__WATCOMC__)
- *
- *      src/relocatable.h:
- *
- *          -   #elif defined _MSC_VER && BUILDING_DLL
- *          +   #elif (defined(_MSC_VER) || defined(__WATCOMC__)) && BUILDING_DLL
- *
- *      src/csutil.hxx:
- *          
- *          +   #include <stdio.h>
- *              #include <string.h>
- *
- *      src/replist.hxx/.cxx:
- *
- *          -   int near(const char * word);
- *          +   int isnear(const char * word);
- *
- *      src/parsers/xmlparser.cxx
- *      src/parsers/odfparser.cxx
- *
- *          -   static const char * __PATTERN2__[][2] = {
- *          -   };
- *          -   #define __PATTERN_LEN2__ (sizeof(__PATTERN2__) / (sizeof(char *) * 2))
- *
- *          +   #define __PATTERN2__ NULL
- *          +   #define __PATTERN_LEN2__ 0
- */
-#endif  /*__WATCOMC__*/
+#pragma disable_message(391)                    // assignment found in boolean expression
+#include <ios>
+    namespace std {
+        namespace ios_base {
+            typedef ios::openmode openmode;
+        };
+    };
+#endif //__WATCOMC__
 
-#endif  /*CONFIG_H_INCLUDED*/
+#include "version.h"
+#include <unistd.h>
+
+#endif /*HUNSPELL_CONFIG_H_INCLUDED*/

@@ -1,13 +1,28 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_main_cpp,"$Id: main.cpp,v 1.15 2020/06/18 12:45:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_main_cpp,"$Id: main.cpp,v 1.17 2022/06/13 13:14:07 cvsuser Exp $")
 
 /* -*- mode: cpp; indent-width: 4; -*- */
-/* $Id: main.cpp,v 1.15 2020/06/18 12:45:13 cvsuser Exp $
+/* $Id: main.cpp,v 1.17 2022/06/13 13:14:07 cvsuser Exp $
  * main(), address c/c++ linkage for several environments.
  * Regardless of configuration force binding to the C++ runtime library.
  *
  *
  */
+
+#if defined(_CRT_NO_POSIX_ERROR_CODES)
+#if (_MSC_VER >= 1900) || defined(__MAKEDEPEND__)
+#undef _CRT_NO_POSIX_ERROR_CODES                /* <system_error> is incompatible with _CRT_NO_POSIX_ERROR_CODES */
+    // additional research required, yet there is limited information detailing _CRT_NO_POSIX_ERROR_CODES usage and how these interact with winsocks.
+#endif //_MSC_VER
+#endif //_CRT_NO_POSIX_ERROR_CODES
+
+#if defined(__MINGW32__) && !defined(__MINGW32_VERSION_MAJOR)
+#include <unistd.h>                             /* before C++ headers, ELOOP/EOVERFLOW redef */
+#endif
+
+#include <iostream>
+#include <exception>
+    // XXX: avoid std::string, open-watcom linker issues resulting in debug symbol issues, -hw mode.
 
 #if (defined(_WIN32) || defined(WIN32)) && \
 	!defined(WINDOWS_MEAN_AND_LEAN)
@@ -18,19 +33,8 @@ __CIDENT_RCSID(gr_main_cpp,"$Id: main.cpp,v 1.15 2020/06/18 12:45:13 cvsuser Exp
 #include <chkalloc.h>
 #include "signals.h"
 
-#if defined(_CRT_NO_POSIX_ERROR_CODES)
-#if (_MSC_VER >= 1900) || defined(__MAKEDEPEND__)
-#undef _CRT_NO_POSIX_ERROR_CODES                /* <system_error> is incompatible with _CRT_NO_POSIX_ERROR_CODES */
-    // additional research required, yet there is limited information detailing _CRT_NO_POSIX_ERROR_CODES usage and how these interact with winsocks.
-#endif //_MSC_VER
-#endif //_CRT_NO_POSIX_ERROR_CODES
-
-#include <iostream>
-#include <exception>
-    // XXX: avoid std::string, open-watcom linker issues resulting in debug symbol issues.
-
-
-extern "C" {
+extern "C"
+{
     int cmain(int argc, char **argv);           /* cmain.c */
     void cpp_linkage(const char *str);
 }

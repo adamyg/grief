@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mchar_guess_c,"$Id: mchar_guess.c,v 1.29 2021/07/05 15:01:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_mchar_guess_c,"$Id: mchar_guess.c,v 1.30 2022/05/26 16:38:47 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mchar_guess.c,v 1.29 2021/07/05 15:01:27 cvsuser Exp $
+/* $Id: mchar_guess.c,v 1.30 2022/05/26 16:38:47 cvsuser Exp $
  * Character-set conversion/file type guess logic.
  *
  *
@@ -223,6 +223,7 @@ static const struct guessdecoder {
 /*
  *  Encoding line terminator modifies
  */
+#if (0)
 #define X_LINESPEC      (sizeof(x_linespec)/sizeof(x_linespec[0]))
 
 static const struct linespec {
@@ -238,6 +239,7 @@ static const struct linespec {
     { NAME("nel"),      LTERM_NEL   },
     { NAME("ucsnl"),    LTERM_UCSNL },
     };
+#endif
 
 
 /*
@@ -334,6 +336,7 @@ x_charflags[256] =              /* Character attribute flags, as above */
     };
 
 
+#if (0)
 static const uint8_t
 x_ebcdic2ascii[256] =   /* CP037 - EBCDIC to ASCII mapping (see also Unicode Tech Reqport #16) */
     {
@@ -381,7 +384,7 @@ x_ebcdic2ascii[256] =   /* CP037 - EBCDIC to ASCII mapping (see also Unicode Tec
     0x5c,0xf7,0x53,0x54,0x55,0x56,0x57,0x58,0x59,0x5a,0xb2,0xd4,0xd6,0xd2,0xd3,0xd5, /* 0xeX */
     0x30,0x31,0x32,0x33,0x34,0x35,0x36,0x37,0x38,0x39,0xb3,0xdb,0xdc,0xd9,0xda,0x9f  /* 0xfX */
     };
-
+#endif
 
 #if defined(HAVE_MAGIC_H) && defined(HAVE_LIBMAGIC)
 static int              x_magicopen = 0;

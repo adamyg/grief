@@ -1,14 +1,14 @@
 #ifndef TERMEMU_VIO_H_INCLUDED
 #define TERMEMU_VIO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(termemu_vio_h,"$Id: termemu_vio.h,v 1.4 2021/06/10 06:13:02 cvsuser Exp $")
+__CIDENT_RCSID(termemu_vio_h,"$Id: termemu_vio.h,v 1.5 2022/05/26 16:41:38 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * libtermemu console driver
  *
- * Copyright (c) 2007, 2012 - 2020 Adam Young.
+ * Copyright (c) 2007, 2012 - 2022 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -123,6 +123,7 @@ LIBVIO_API int              vio_screenbuffersize(void);
 
 LIBVIO_API int              vio_open(int *rows, int *cols);
 LIBVIO_API void             vio_close(void);
+LIBVIO_API void             vio_config_truecolor(int truecolor);
 LIBVIO_API int              vio_winch(int *rows, int *cols);
 LIBVIO_API void             vio_get_size(int *rows, int *cols);
 LIBVIO_API int              vio_toggle_size(int *rows, int *cols);

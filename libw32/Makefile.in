@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.27 2022/03/21 14:29:39 cvsuser Exp $
+# $Id: Makefile.in,v 1.32 2022/06/11 03:58:36 cvsuser Exp $
 # libwin32 makefile.
 #
 #
@@ -92,11 +92,11 @@ CEXTRA=		-DUTF8FILENAMES=1 @DEFS@
 
 ifeq ("$(BUILD_TYPE)","release")
 CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-CXXFLAGS+=	$(CXXRELEASE) $(CWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
+CXXFLAGS+=	$(CXXRELEASE) $(CXXWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
 LDFLAGS=	$(LDRELEASE) @LDFLAGS@
 else
 CFLAGS+=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-CXXFLAGS+=	$(CXXDEBUG) $(CWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
+CXXFLAGS+=	$(CXXDEBUG) $(CXXWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
 LDFLAGS=	$(LDDEBUG) @LDFLAGS@
 endif
 
@@ -139,6 +139,7 @@ CSOURCES=\
 	w32_gethostname.c \
 	w32_getopt.c \
 	w32_getopt_long.c \
+	w32_getrlimit.c \
 	w32_getrusage.c \
 	w32_getsubopt.c \
 	w32_getlocale.c \
@@ -156,8 +157,10 @@ CSOURCES=\
 	w32_mkstemp.c \
 	w32_mmap.c \
 	w32_neterr.c \
+	w32_pipe.c \
 	w32_poll.c \
 	w32_popen.c \
+	w32_proctitle.c \
 	w32_progname.c \
 	w32_pwd.c \
 	w32_read.c \
@@ -166,6 +169,7 @@ CSOURCES=\
 	w32_rename.c \
 	w32_reparse.c \
 	w32_rwlock.c \
+	w32_setrlimit.c \
 	w32_select.c \
 	w32_shell.c \
 	w32_signal.c \
@@ -199,10 +203,13 @@ LIBOBJS=\
 
 DLLOBJS=\
 	$(subst $(O),.lo,$(LIBOBJS))
-ifeq ("mingw32","@build_os@")
+
+ifeq ("win32","@build_os@")
+ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
 DLLOBJS+=	$(D_OBJ)/libw32_res.o
-else ifeq ("win32","@build_os@")
+else
 DLLOBJS+=	$(D_OBJ)/libw32.res
+endif
 endif
 
 OBJS=		$(LIBOBJS) $(DLLOBJS)

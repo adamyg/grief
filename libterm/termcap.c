@@ -39,7 +39,7 @@
  *  #include <errno.h>
  */
 
-#if defined(__linux__) || defined(__CYGWIN32__)
+#if defined(__linux__) || defined(__CYGWIN32__) || defined(__MINGW32__)
 #define _GNU_SOURCE                      /* XXX: asprintf */
 #endif
 

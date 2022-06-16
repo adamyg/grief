@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_glob_c,"$Id: w32_glob.c,v 1.6 2022/03/21 14:29:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_glob_c,"$Id: w32_glob.c,v 1.7 2022/05/26 12:02:41 cvsuser Exp $")
 
 /*
  * win <glob.h>
@@ -1068,7 +1068,7 @@ globfree(glob_t *pglob)
 }
 
 #ifndef __LIBC12_SOURCE__
-int
+LIBW32_API int
 glob_pattern_p(const char *pattern, int quote)
 {
 	int range = 0;

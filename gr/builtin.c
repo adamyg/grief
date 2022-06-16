@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.63 2021/10/18 13:21:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.66 2022/06/16 10:19:31 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: builtin.c,v 1.63 2021/10/18 13:21:23 cvsuser Exp $
+/* $Id: builtin.c,v 1.66 2022/06/16 10:19:31 cvsuser Exp $
  * Builtin expresssion evaluation.
  *
  *
@@ -57,8 +57,8 @@ struct SAVED {                                  /* Save argument references */
 static void             execute_event(int event);
 static void             execute_builtin(const BUILTIN *bp, const LIST *lp);
 
-static void __CINLINE   arg_error(const BUILTIN *bp, enum ARGERRORS msg, struct SAVED *saved_str, struct SAVED *ssp, int arg);
-static void __CINLINE   arg_free(struct SAVED *saved_str, struct SAVED *ssp);
+static __CINLINE void   arg_error(const BUILTIN *bp, enum ARGERRORS msg, struct SAVED *saved_str, struct SAVED *ssp, int arg);
+static __CINLINE void   arg_free(struct SAVED *saved_str, struct SAVED *ssp);
 
 static int              arg_expand(const BUILTIN *bp, int varargs, int largc,
                             LISTV **largv, LISTV **lap, struct SAVED **lsaved, struct SAVED **ssp);
@@ -74,7 +74,6 @@ static unsigned         x_evtno = 0;
 static unsigned         x_evttail = 0;
 static unsigned         x_evthead = 0;
 static unsigned         x_evtactive = FALSE;
-static unsigned         x_evtctrlc = 0;         /* SIGINT count */
 static unsigned         x_evtqueue[REGEVTNUM];  /* Event queue */
 
 static LISTV            x_margv[MAX_ARGC];      /* Initial stack frame */
@@ -191,7 +190,11 @@ execute_str(const char *str)
             accint_t ival;
             int ret, len = 0;
 
+#if (CM_ATOMSIZE == SIZEOF_LONG_LONG && CM_ATOMSIZE != SIZEOF_LONG)
+            ret = str_numparsel((const char *)cp, &fval, &ival, &len);
+#else
             ret = str_numparse((const char *)cp, &fval, &ival, &len);
+#endif
             switch (ret) {
             case NUMPARSE_INTEGER:              /* integer-constant */
             case NUMPARSE_FLOAT:                /* float-constant */

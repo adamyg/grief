@@ -1,13 +1,13 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strparse_c,"$Id: strparse.c,v 1.13 2020/05/03 21:09:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_strparse_c,"$Id: strparse.c,v 1.16 2022/06/16 10:54:00 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strparse.c,v 1.13 2020/05/03 21:09:06 cvsuser Exp $
+/* $Id: strparse.c,v 1.16 2022/06/16 10:54:00 cvsuser Exp $
  * libstr - String to numeric (float/integer) parser.
  *
  *
  *
- * Copyright (c) 1998 - 2020, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -66,6 +66,7 @@ struct parse {
     int           (*p_get)(void *);
     int           (*p_unget)(void *, int ch);
     long *          p_long;
+    long long *     p_llong;
     double *        p_double;
     void *          p_parm;
     char *          p_cursor;
@@ -397,18 +398,51 @@ chparse(struct parse *p)
              *  An integer number, either decimal, hex, octal or binary.
              */
             char *ep;
-            long lret;
 
-            errno = 0; lret = strtol(num, &ep, base);
-            if (ERANGE == errno) {
-                DDEBUG((" OVER/UNDERFLOW\n"))
-                return (lret == LONG_MIN ? NUMPARSE_ERR_OVERFLOW : NUMPARSE_ERR_UNDERFLOW);
+#if (SIZEOF_LONG_LONG > SIZEOF_LONG) && \
+        (defined(HAVE_STRTOLL) || defined(_MSC_VER))
+#define LLSTRPARSE
+            if (p->p_llong) {
+                long long lret;
+
+                errno = 0;
+#if defined(HAVE_STRTOLL)
+                lret = strtoll(num, &ep, base);
+#else
+                lret = (long long)_strtoi64(num, &ep, base);
+#endif
+                if (ERANGE == errno) {
+                    DDEBUG((" OVER/UNDERFLOW\n"))
+                    return (lret == LLONG_MIN ? NUMPARSE_ERR_OVERFLOW : NUMPARSE_ERR_UNDERFLOW);
+                }
+                if (!*ep) {
+                    *p->p_llong = lret;
+                    DDEBUG((" INTEGER(%lld)\n", lret))
+                    return NUMPARSE_INTEGER;
+                }
+            } else {
+#endif
+                long lret;
+
+                errno = 0;
+                lret = strtol(num, &ep, base);
+                if (ERANGE == errno) {
+                    DDEBUG((" OVER/UNDERFLOW\n"))
+                    return (lret == LONG_MIN ? NUMPARSE_ERR_OVERFLOW : NUMPARSE_ERR_UNDERFLOW);
+                }
+
+                if (!*ep) {
+                    if (p->p_llong) {
+                        *p->p_llong = lret;
+                    } else {
+                        *p->p_long = lret;
+                    }
+                    DDEBUG((" INTEGER(%ld)\n", lret))
+                    return NUMPARSE_INTEGER;
+                }
+#if defined(LLSTRPARSE)
             }
-            if (!*ep) {
-                *p->p_long = lret;
-                DDEBUG((" INTEGER(%d)\n", lret))
-                return NUMPARSE_INTEGER;
-            }
+#endif
         }
     }
 
@@ -423,9 +457,13 @@ static void
 chinit(struct parse *p)
 {
     *p->p_double = 0;
-    *p->p_long   = 0;
-    p->p_cursor  = p->p_buffer;
-    p->p_end     = p->p_buffer + sizeof(p->p_buffer);
+    if (p->p_llong) {
+        *p->p_llong = 0;
+    } else {
+        *p->p_long = 0;
+    }
+    p->p_cursor = p->p_buffer;
+    p->p_end = p->p_buffer + sizeof(p->p_buffer);
 }
 
 
@@ -448,7 +486,7 @@ chxmatch(struct parse *p, const char *s)
             if (ch != match) {                  /* same case */
                 break;
             }
-            assert(count < sizeof(stack));
+            assert(count < (int)sizeof(stack));
             stack[count++] = ch;
             ch = -1;
         }
@@ -478,7 +516,7 @@ chmatch(struct parse *p, const char *s)
             if (tolower(ch) != tolower(match)) {/* case insensitive */
                 break;
             }
-            assert(count < sizeof(stack));
+            assert(count < (int)sizeof(stack));
             stack[count++] = ch;
             ch = -1;
         }
@@ -631,6 +669,31 @@ str_numparse(const char *str, double *dp, long *lp, int *len)
 }
 
 
+int
+str_numparsel(const char *str, double *dp, long long *lp, int *len)
+{
+    struct parse p = {0};
+    int ret;
+
+    p.p_double = dp;
+    p.p_llong  = lp;
+    p.p_get    = sget;
+    p.p_unget  = sunget;
+    p.p_parm   = (void *)&p;
+    p.p_data   = (unsigned char *)str;
+
+    if ((ret = chparse(&p)) > NUMPARSE_ERROR) {
+        if (len) {
+            *len = (p.p_cursor - p.p_buffer);
+        }
+        if (ret == NUMPARSE_FLOAT) {
+            *lp = (long) *dp;
+        }
+    }
+    return ret;
+}
+
+
 static int
 sget(void *parm)
 {
@@ -658,6 +721,30 @@ str_numparsex(int (*get)(void *), int (*unget)(void *, int ch), void *parm, doub
 
     p.p_double = dp;
     p.p_long   = lp;
+    p.p_get    = get;
+    p.p_unget  = unget;
+    p.p_parm   = parm;
+
+    if ((ret = chparse(&p)) > NUMPARSE_ERROR) {
+        if (len) {
+            *len = (p.p_cursor - p.p_buffer);
+        }
+        if (ret == NUMPARSE_FLOAT) {
+            *lp = (long) *dp;
+        }
+    }
+    return ret;
+}
+
+
+int
+str_numparsexl(int (*get)(void *), int (*unget)(void *, int ch), void *parm, double *dp, long long *lp, int *len)
+{
+    struct parse p = {0};
+    int ret;
+
+    p.p_double = dp;
+    p.p_llong  = lp;
     p.p_get    = get;
     p.p_unget  = unget;
     p.p_parm   = parm;

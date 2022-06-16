@@ -1,5 +1,5 @@
 //
-//  libbz2 resource
+// libbz2 resource
 //
 
 #include <windows.h>
@@ -7,8 +7,8 @@
 #define IDR_VERSION1  1
 IDR_VERSION1 VERSIONINFO
   //MOVEABLE IMPURE LOADONCALL DISCARDABLE
-  FILEVERSION	 	1,0,6,0
-  PRODUCTVERSION 	1,0,6,0
+  FILEVERSION	 	1,0,8,0
+  PRODUCTVERSION 	1,0,8,0
   FILEFLAGSMASK		VS_FFI_FILEFLAGSMASK
   FILEFLAGS		0
   FILEOS		VOS_DOS_WINDOWS32
@@ -21,12 +21,12 @@ BEGIN
 
     BEGIN
       VALUE "FileDescription",	"libbzip2: library for data compression\0"
-      VALUE "FileVersion",	"1.0.6\0"
+      VALUE "FileVersion",	"1.0.8\0"
       VALUE "InternalName",	"libbzip2\0"
       VALUE "OriginalFilename",	"libbz.dll\0"
       VALUE "ProductName",	"libbz.dll\0"
       VALUE "Comments",		"\0"
-      VALUE "LegalCopyright",	"(C) 1996-2010 Julian R Seward, BSD style license\0"
+      VALUE "LegalCopyright",	"(C) 1996-2019 Julian R Seward, BSD style license\0"
     END
   END
   BLOCK "VarFileInfo"

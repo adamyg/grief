@@ -1,11 +1,17 @@
 -*- encoding: utf-8; -*-
 
+Fri May 27 10:00:20 2022 adamy
+
+	* xz-5.2.3
+
+		* sysdefs.h - __USE_MINGW_ANSI_STDIO removed (defunct)
+
 Thu Jun  3 23:41:44 2020 adamy
 
 	* xz-5.2.3
 
 		- mytime.c, gettimeofday() local implementation under win32
-		
+
 /*
  * Local Variables: ***
  * mode: changelog ***

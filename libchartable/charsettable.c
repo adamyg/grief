@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsettable_c,"$Id: charsettable.c,v 1.16 2022/03/21 14:59:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsettable_c,"$Id: charsettable.c,v 1.17 2022/05/26 01:55:12 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* conversion tables.
@@ -138,7 +138,7 @@ charset_description(int32_t unicode, char *buffer, int buflen)
                     desc = utf8_decode(desc, &idx);
 
                     if ((idx -= 0x60) >= 0 &&
-                            idx < (sizeof(x_charsetdesc_words)/sizeof(x_charsetdesc_words[0]))) {
+                            idx < (int32_t)(sizeof(x_charsetdesc_words)/sizeof(x_charsetdesc_words[0]))) {
 
                         const char *word = x_charsetdesc_words[idx];
 

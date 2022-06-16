@@ -1,11 +1,11 @@
 #ifndef GR_GRUNCH_H_INCLUDED
 #define GR_GRUNCH_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_grunch_h,"$Id: grunch.h,v 1.35 2020/06/03 17:18:19 cvsuser Exp $")
+__CIDENT_RCSID(gr_grunch_h,"$Id: grunch.h,v 1.36 2022/05/27 03:13:33 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: grunch.h,v 1.35 2020/06/03 17:18:19 cvsuser Exp $
+/* $Id: grunch.h,v 1.36 2022/05/27 03:13:33 cvsuser Exp $
  * grunch language compiler, structures etc
  *
  *
@@ -520,7 +520,7 @@ extern void             list_free(Head_p *hd);
 
 extern const char *     yymap(int);
 
-extern int              compile_arglist(Head_p, int flag);
+extern int              compile_arglist(const char *function, Head_p, int flag);
 extern void             compile_func(symtype_t type, const char *function, Head_p arglist, node_t *np);
 extern void             compile_list(Head_p, int level, int flag, int sepstmt);
 extern void             compile_main(node_t *np);

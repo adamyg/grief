@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.27 2022/03/22 11:00:41 cvsuser Exp $
+# $Id: Makefile.in,v 1.31 2022/06/01 14:21:19 cvsuser Exp $
 # libbsdmdoc and grmanddoc
 #
 #
@@ -73,7 +73,12 @@ D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 XFLAGS=
 CFLAGS=		@CFLAGS@
-CWARN=		@CWARN@
+ifeq ("gcc","@CC@")
+CWARN=		$(filter-out -Wshadow -Wmissing-prototypes -Wsign-compare, @CWARN@ $(CWALL))
+CWARN+=		-Wno-sign-compare -Wno-unused-variable -Wno-implicit-fallthrough -Wno-implicit-function-declaration
+else
+CWARN=		@CWARN@ $(CWALL)
+endif
 CDEBUG=		@CDEBUG@
 CRELEASE=	@CRELEASE@
 LDDEBUG=	@LDDEBUG@
@@ -81,7 +86,7 @@ LDRELEASE=	@LDRELEASE@
 
 CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
 CEXTRA=		@DEFS@
-ifeq "win32" "@build_os@"
+ifeq ("win32","@build_os@")
 CEXTRA+=	-DWIN32
 endif
 
@@ -99,9 +104,6 @@ endif
 endif
 
 LDLIBS=		-L$(D_LIB) -lbsdmdoc -lmisc @LIBZ@ @LIBREGEX@ @LDLIBS@ @LIBS@ @LIBM@ @EXTRALIBS@
-##ifeq ("mingw32","@build_os@")
-##LDLIBS+=	-lw32 -lshlwapi -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
-##endif
 LDLIBS+=	@LIBMALLOC@ @LIBTHREAD@
 
 YFLAGS=		-d
@@ -113,8 +115,8 @@ RMDFLAGS=	-rf
 #########################################################################################
 # Targets
 
-VERSION=	1.14.5.gr
-RELDATE=	10 March 2019
+VERSION=	1.14.6.gr
+RELDATE=	23 Sept 2021
 
 PACKED=		mandoc-$(VERSION).tgz
 VPATH=		./mandoc-$(VERSION) ./sqlite3
@@ -127,6 +129,7 @@ COMPAT_OBJS=\
 	$(D_OBJ)/compat_getline$(O)	\
 	$(D_OBJ)/compat_getsubopt$(O)	\
 	$(D_OBJ)/compat_mkdtemp$(O)	\
+	$(D_OBJ)/compat_mkstemps$(O)	\
 	$(D_OBJ)/compat_ohash$(O)	\
 	$(D_OBJ)/compat_progname$(O)	\
 	$(D_OBJ)/compat_reallocarray$(O) \
@@ -205,6 +208,7 @@ MANDOC_TERM_OBJS=\
 	$(D_OBJ)/term_ascii$(O)		\
 	$(D_OBJ)/term_ps$(O)		\
 	$(D_OBJ)/term_tab$(O)		\
+	$(D_OBJ)/term_tag$(O)		\
 	$(D_OBJ)/tbl_term$(O)
 
 MANDOC_SEARCH_OBJS=\
@@ -242,6 +246,7 @@ CGI_OBJS=\
 	$(D_OBJ)/cgi$(O)		\
 	$(D_OBJ)/mansearch$(O)		\
 	$(D_OBJ)/out$(O)		\
+	$(D_OBJ)/tag$(O)		\
 	$(MANDOC_DB_OBJS)
 
 CGI=	$(D_BIN)/grman.cgi$(E)
@@ -249,7 +254,8 @@ CGI=	$(D_BIN)/grman.cgi$(E)
 	#---------------------------------------------------
 
 DEMANDOC_OBJS=\
-	$(D_OBJ)/demandoc$(O)
+	$(D_OBJ)/demandoc$(O)		\
+	$(D_OBJ)/tag$(O)
 
 DEMANDOC=	$(D_BIN)/grdemandoc$(E)
 

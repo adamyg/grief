@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.72 2021/08/01 14:34:04 cvsuser Exp $")
+__CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.74 2022/05/31 16:18:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: echo.c,v 1.72 2021/08/01 14:34:04 cvsuser Exp $
+/* $Id: echo.c,v 1.74 2022/05/31 16:18:21 cvsuser Exp $
  * Command/echo line implementation/interface.
  *
  *
@@ -608,7 +608,7 @@ elineedit(const char *prompt, const char *defstr, char *result, int bufsiz, int 
     KEY c = 0;
 
     assert(bufsiz >= 2 /*&& bufsiz <= EBUFSIZ*/);
-    if (bufsiz > _countof(buf)) bufsiz = _countof(buf);
+    if (bufsiz > (int)_countof(buf)) bufsiz = _countof(buf);
 
     memset(buf, 0, sizeof(buf));
     memset(ndefstr, 0, sizeof(ndefstr));
@@ -3080,7 +3080,7 @@ ef_percent(WChar_t *cp, const struct _estate *s)
     if (perc >= 100) {
         strcpy(t_buffer, "END");
     } else {
-        sprintf(t_buffer, "%2lu%%", perc);
+        sprintf(t_buffer, "%2u%%", (unsigned)perc);
     }
     return ef_buffer(cp, t_buffer, s);
 }

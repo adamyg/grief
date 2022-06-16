@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.22 2020/06/18 13:15:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.23 2022/05/25 15:44:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edbt_win32.c,v 1.22 2020/06/18 13:15:07 cvsuser Exp $
+/* $Id: edbt_win32.c,v 1.23 2022/05/25 15:44:58 cvsuser Exp $
  * win32 (include cygwin) backtrace implementation.
  *
  *
@@ -45,6 +45,10 @@ __CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.22 2020/06/18 13:15:07 cvs
 #endif
 #undef   u_char
 #include <windows.h>
+
+#if defined(__MINGW32__)                        /* Kernel32 */
+VOID NTAPI RtlCaptureContext(PCONTEXT ContextRecord);
+#endif
 
 #if defined(__WATCOMC__) || defined(__CYGWIN__) || defined(__MINGW32__)
 /* WATCOMC 1.9, 64bit issues */

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mchar_iconv_c,"$Id: mchar_iconv.c,v 1.24 2021/06/19 09:41:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_mchar_iconv_c,"$Id: mchar_iconv.c,v 1.25 2022/06/16 05:24:30 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mchar_iconv.c,v 1.24 2021/06/19 09:41:55 cvsuser Exp $
+/* $Id: mchar_iconv.c,v 1.25 2022/06/16 05:24:30 cvsuser Exp $
  * Character-set conversion/mapping interface and adapters.
  *
  *
@@ -942,14 +942,14 @@ static mchar_iconv_t *
 icnv_open(const char *encoding)
 {
     iconv_t ihandle = ICONV_NULL, ohandle = ICONV_NULL;
-    const size_t encodinglen = (encoding ? strlen(encoding) + 1 : 0);
+    const size_t encodinglen = (encoding ? strlen(encoding) : 0);
     char toencoding[128] = {0};
     mchar_iconv_t *ic;
 
     if (encoding) strxcpy(toencoding, encoding, sizeof(toencoding));
     strxcat(toencoding, "//TRANSLIT", sizeof(toencoding));
 
-    if (NULL == (ic = chk_alloc(sizeof(mchar_iconv_t) + encodinglen)) ||
+    if (NULL == (ic = chk_alloc(sizeof(mchar_iconv_t) + encodinglen + 1)) ||
             ICONV_NULL == (ihandle = my_iconv_open("utf-8//TRANSLIT", encoding)) || /*IGNORE or TRANSLIT?*/
             ICONV_NULL == (ohandle = my_iconv_open(toencoding, "utf-8"))) {
         if (ic) {
@@ -960,8 +960,9 @@ icnv_open(const char *encoding)
         }
         return NULL;
     }
+
     (void) memset(ic, 0, sizeof(mchar_iconv_t));
-    (void) memcpy((void *)(ic + 1), encoding, encodinglen);
+    memcpy((void *)(ic + 1), encodinglen ? encoding : "", encodinglen + 1);
     ic->ic_magic        = MCHAR_ICONV_MAGIC;
     ic->ic_encoding     = (const char *)(ic + 1);
     ic->ic_unit         = 1;

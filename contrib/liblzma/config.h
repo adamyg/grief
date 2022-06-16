@@ -1,5 +1,5 @@
-#ifndef CONFIG_H_INCLUDED
-#define CONFIG_H_INCLUDED
+#ifndef XZ_CONFIG_H_INCLUDED
+#define XZ_CONFIG_H_INCLUDED
 /*
  *  liblzma <config.h> ...
  */
@@ -15,37 +15,38 @@
 #include <../contrib_config.h>
 
 #if !defined(WINDOWS_MEAN_AND_LEAN)
-#define  WINDOWS_MEAN_AND_LEAN
+#define WINDOWS_MEAN_AND_LEAN
 #endif
 #include <windows.h>
 
-#undef  HAVE_UTIME_H
-#undef  HAVE_SYS_UTIME_H
+#undef HAVE_UTIME_H
+#undef HAVE_SYS_UTIME_H
 
 #if (defined(_WIN32) || defined(WIN32)) && defined(__MINGW32__)
-#undef  HAVE_GETOPT_H
+#undef HAVE_GETOPT_H
 #endif
 
 #if defined(_MSC_VER)
 #include <msvcversions.h>
 #include <stdint.h>
 #define inline __inline
-# if (_MSC_VER >= _MSC_VER_2013)
-#   define restrict __restrict
-# else
-#   define restrict
-# endif
+#   if (_MSC_VER >= _MSC_VER_2013)
+#       define restrict __restrict
+#   else
+#       define restrict
+#   endif
 #elif defined(__WATCOMC__)
-#define  restrict __restrict
-#endif
+#    define  restrict __restrict
 #endif
 
 #include <unistd.h>
 
 #ifndef SSIZE_MAX
 #define SSIZE_MAX ((ssize_t)(SIZE_MAX >> 1))
+#endif
 
-#define ASSUME_RAM 1000 //1GB
+/* How many MiB of RAM to assume if the real amount cannot be determined. */
+#define ASSUME_RAM 1000 /*1GB*/
 
 #define HAVE_ENCODERS
 #define HAVE_ENCODER_LZMA1
@@ -69,5 +70,4 @@
 #define HAVE_DECODER_SPARC
 #define HAVE_DECODER_DELTA
 
-#endif  /*CONFIG_H_INCLUDED*/
-
+#endif /*XZ_CONFIG_H_INCLUDED*/

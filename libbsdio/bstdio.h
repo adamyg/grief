@@ -271,8 +271,14 @@ int	 bsetvbuf(BFILE *, char *, int, size_t);
 int	 bsprintf(char *, const char *, ...)
 			__ATTRIBUTE_FORMAT__ ((printf, 2, 3))
 			__ATTRIBUTE_NONNULL__ ((2));
+int	 bvsprintf(char *, const char *, __va_list ap)
+			__ATTRIBUTE_FORMAT__ ((printf, 2, 0))
+			__ATTRIBUTE_NONNULL__ ((2));
 int	 bsscanf(const char *, const char *, ...)
 		__ATTRIBUTE_FORMAT__ ((scanf, 2, 3))
+		__ATTRIBUTE_NONNULL__ ((2));
+int	 bvsscanf(const char *, const char *, __va_list ap)
+		__ATTRIBUTE_FORMAT__ ((scanf, 2, 0))
 		__ATTRIBUTE_NONNULL__ ((2));
 BFILE	*btmpfile(void);
 int	 bungetc(int, BFILE *);

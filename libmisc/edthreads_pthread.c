@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_pthread_c,"$Id: edthreads_pthread.c,v 1.10 2017/01/29 04:33:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_edthreads_pthread_c,"$Id: edthreads_pthread.c,v 1.11 2022/05/25 15:45:19 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads_pthread.c,v 1.10 2017/01/29 04:33:31 cvsuser Exp $
+/* $Id: edthreads_pthread.c,v 1.11 2022/05/25 15:45:19 cvsuser Exp $
  * C11 threads implementation, for/using pthreads
  * based on ISO/IEC 9899:201x Committee Draft, April 12, 2011
  *
@@ -777,6 +777,7 @@ tss_set(tss_t key, void *val)
 
 #else
 
+extern void edthreads_pthreads_notimplemented(void);
 void
 edthreads_pthreads_notimplemented(void)
 {

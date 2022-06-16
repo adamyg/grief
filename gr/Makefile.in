@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.80 2021/07/05 15:01:26 cvsuser Exp $
+# $Id: Makefile.in,v 1.84 2022/06/01 16:08:15 cvsuser Exp $
 # GRIEF editor makefile.
 #
 #
-# Copyright (c) 1998 - 2021, Adam Young.
+# Copyright (c) 1998 - 2022, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -43,6 +43,7 @@ XCLEAN=
 CC=		@CC@
 CXX=		@CXX@
 RM=		@RM@
+RC=		@RC@
 PERL=		@PERL@
 LIBTOOL=	@LIBTOOL@
 
@@ -71,16 +72,19 @@ D_OBJDEP=	$(D_OBJ)/$(D_DEP)
 CCDEPEND=	@echo "\#no depend" > $(D_OBJDEP)/$<.Po
 
 ifeq ("win32","@build_os@")
+
+ifeq (vs,$(findstring vs,"@TOOLCHAIN@"))
 CCPROFILE=msvc.profile
-ifeq ("wcl386","@CC@")
+else ifeq ("@TOOLCHAIN@","owc20")
+CCPROFILE=wc20.profile
+else ifeq ("@TOOLCHAIN@","owc19")
 CCPROFILE=wc.profile
+#TODO
+#else ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
+#CCPROFILE=mingw.profile
 endif
-ifeq ("owcc","@CC@")
-CCPROFILE=wc.profile
-endif
-ifeq ("gcc","@CC@")
-CCPROFILE=mingw.profile
-endif
+
+ifdef CCPROFILE
 CCDEPEND=	@$(D_BIN)/makedepend \
 			-MM -MC $(ROOT)/win32/$(CCPROFILE) -MG -MP -D__MAKEDEPEND__ \
 				-f$(D_OBJDEP)/$(basename $(<F)).Po -MT$@ $(CDEPFLAGS) $<
@@ -88,7 +92,9 @@ CXXDEPEND=	@$(D_BIN)/makedepend \
 			-MM -MC $(ROOT)/win32/$(CCPROFILE) -MG -MP -D__MAKEDEPEND__ -D__cplusplus \
 				-f$(D_OBJDEP)/$(basename $(<F)).Po -MT$@ $(CDEPFLAGS) $<
 endif
+endif
 
+ifneq ("win32","@build_os@")
 ifndef CCDEPEND
 ifeq (gcc,$(findstring gcc,$(CC)))
 ifdef PURIFY
@@ -104,6 +110,7 @@ CCDEPEND=	@source='$<' object='$@' libtool=no \
 			DEPDIR=$(D_DEP) depmode=gcc3 $(depcomp) $(CC) $(CDEPFLAGS) $(COPT) $(CINCLUDE) -o $@ -c $< 2>&1 >/dev/null
 endif
 endif	#CCDEPEND
+endif	#!win32
 
 CXXDEPEND?=	$(CCDEPEND)
 
@@ -162,9 +169,6 @@ LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
 
 CINCLUDE=	-I$(D_INC) @CINCLUDE@
-##ifeq ("mingw32","@build_os@")
-##CINCLUDE+=	-I../libw32
-##endif
 
 CEXTRA=		@DEFS@ @LIBCURL_CPPFLAGS@ -DLIBTRE_DLL
 ifdef PURIFY
@@ -177,11 +181,11 @@ CDEPFLAGS=	$(CEXTRA) $(CINCLUDE)
 
 ifeq ("$(BUILD_TYPE)","release")
 CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-CXXFLAGS+=	$(CXXRELEASE) $(CWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
+CXXFLAGS+=	$(CXXRELEASE) $(CXXWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
 LDFLAGS=	$(LDRELEASE) @LDFLAGS@
 else
 CFLAGS+=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-CXXFLAGS+=	$(CXXDEBUG) $(CWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
+CXXFLAGS+=	$(CXXDEBUG) $(CXXWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
 LDFLAGS=	$(LDDEBUG) @LDFLAGS@
 endif
 ifeq (gcc,$(findstring gcc,$(CC)))
@@ -194,9 +198,7 @@ LDLIBS=		-L$(D_LIB) -lbsddb -lbsdfetch -lbsdio -lwidechar -lchartable -lvfs -lsp
 LDLIBS+=	@LDLIBS@ @LIBS@
 LDLIBS+=	@LIBENCA@ @LIBSPELL@ @LIBICU@ @LIBICONV@ @LIBCURL@ @LIBOPENSSL@ @LIBARCHIVE@ @LIBMAGIC@
 LDLIBS+=	@LIBM@ @EXTRALIBS@
-ifeq ("mingw32","@build_os@")
-LDLIBS+=	-lw32 -lshlwapi -lshell32 -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
-else ifneq ("win32","@build_os@")
+ifneq ("win32","@build_os@")
 LDLIBS+=	@TERMLIB@ @LIBX11@
 endif
 LDLIBS+=	@LIBMALLOC@ @LIBTHREAD@
@@ -361,8 +363,19 @@ CSRC=\
 	sys_vms.c		\
 	sys_win32.c
 
+RESOURCES=\
+	gr.rc
+
 OBJS=		$(addprefix $(D_OBJ)/,$(patsubst %.c,%$(O),$(CSRC)))
 OBJS+=		$(addprefix $(D_OBJ)/,$(patsubst %.cpp,%$(O),$(CPPSRC)))
+
+ifeq ("win32","@build_os@")
+ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
+OBJS+=		$(addprefix $(D_OBJ)/,$(subst .rc,_res.o,$(RESOURCES)))
+else
+OBJS+=		$(addprefix $(D_OBJ)/,$(subst .rc,.res,$(RESOURCES)))
+endif
+endif #build_os
 
 
 #########################################################################################
@@ -403,4 +416,11 @@ $(D_OBJ)/%$(O):		%.cpp
 		$(CXX) $(CXXFLAGS) -o $@ -c $<
 		$(CXXDEPEND)
 
+$(D_OBJ)/%.res:		%.rc
+		$(RC) -fo $@ $<
+
+$(D_OBJ)/%_res.o:	%.rc
+		$(RC) -o $@ $<
+
 #end
+

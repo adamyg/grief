@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_socket_c,"$Id: w32_socket.c,v 1.19 2022/03/21 14:29:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_socket_c,"$Id: w32_socket.c,v 1.22 2022/06/15 04:43:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -76,7 +76,7 @@ retry:;
         w32_sockerror();
         ret = -1;
     } else if ((ret = (int)s) < WIN32_FILDES_MAX &&
-                    (ret = _open_osfhandle((long)s, 0)) == -1) {
+                    (ret = _open_osfhandle((OSFHANDLE)s, 0)) == -1) {
         closesocket(s);
         errno = EMFILE;
     } else {
@@ -207,7 +207,7 @@ w32_accept_fd(int fd, struct sockaddr *addr, int *addrlen)
             w32_sockerror();
             ret = -1;
         } else if ((ret = (int)s) < WIN32_FILDES_MAX &&
-                         (ret = _open_osfhandle((long)s, 0)) == -1) {
+                         (ret = _open_osfhandle((OSFHANDLE)s, 0)) == -1) {
             (void) closesocket(s);
             errno = EMFILE;
         } else {
@@ -364,20 +364,46 @@ w32_recvfrom_fd(int fd, char *buf, int len, int flags,
 
 
 /*
- *  socksetblockingmode()
+ *  socknonblockingio()
  */
 LIBW32_API int
-w32_sockblockingmode_fd(int fd, int enabled)
+w32_socknonblockingio_fd(int fd, int enabled)
 {
     SOCKET osf;
-    int ret;
+    int ret = 0;
 
     if ((osf = w32_sockhandle(fd)) == (SOCKET)INVALID_SOCKET) {
         ret = -1;
     } else {
+        /* FIONBIO ---
+         *  enables or disables the blocking mode for the socket based on the numerical value of iMode.
+         *      If mode = 0, blocking is enabled; 
+         *      If mode != 0, non-blocking mode is enabled.
+         */
         u_long mode = (long)enabled;
         if ((ret = ioctlsocket(osf, FIONBIO, &mode)) == -1 /*SOCKET_ERROR*/) {
             w32_sockerror();
+        }
+    }
+    return ret;
+}
+
+
+/*
+ *  sockinheritable
+ */
+LIBW32_API int
+w32_sockinheritable_fd(int fd, int enabled)
+{
+    SOCKET osf;
+    int ret = 0;
+
+    if ((osf = w32_sockhandle(fd)) == (SOCKET)INVALID_SOCKET) {
+        ret = -1;
+    } else {
+        if (! SetHandleInformation((HANDLE)osf, HANDLE_FLAG_INHERIT, enabled ? 1 : 0)) {
+            w32_sockerror();
+            ret = -1;
         }
     }
     return ret;

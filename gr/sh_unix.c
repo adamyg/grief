@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sh_unix_c,"$Id: sh_unix.c,v 1.18 2014/10/22 02:33:19 ayoung Exp $")
+__CIDENT_RCSID(gr_sh_unix_c,"$Id: sh_unix.c,v 1.19 2022/05/31 16:18:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sh_unix.c,v 1.18 2014/10/22 02:33:19 ayoung Exp $
+/* $Id: sh_unix.c,v 1.19 2022/05/31 16:18:21 cvsuser Exp $
  *
  *      Linux
  *      Sun Solaris
@@ -382,6 +382,28 @@ sys_waitpid(int pid, int *statusp, int options)
         *statusp = status;
     }
     return ret;
+}
+
+
+/*
+ *  sys_popen ---
+ *      Pipe open implementation for Unix/Linux.
+ */
+FILE *
+sys_popen(const char *cmd, const char *mode)
+{
+    return popen(cmd, mode);
+}
+
+
+/*
+ *  sys_pclose ---
+ *      Pipe close implementation for Unix/Linux.
+ */
+int
+sys_pclose(FILE *file)
+{
+    return pclose(file);
 }
 
 #endif  /*unix*/

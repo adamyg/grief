@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.90 2021/10/18 13:19:59 cvsuser Exp $")
+__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.93 2022/06/15 12:16:32 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: file.c,v 1.90 2021/10/18 13:19:59 cvsuser Exp $
+/* $Id: file.c,v 1.93 2022/06/15 12:16:32 cvsuser Exp $
  * File-buffer primitives and support.
  *
  *
@@ -33,6 +33,9 @@ __CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.90 2021/10/18 13:19:59 cvsuser Exp $")
 
 #if defined(WIN32)
 #include <../libw32/win32_io.h>
+#if defined(_MSC_VER) && (_MSC_VER <= 1600 /*2010*/)
+#define snprintf _snprintf
+#endif
 #endif
 
 #include "accum.h"                              /* acc_...() */
@@ -3011,7 +3014,7 @@ percentage(
                 m = 'G';
             }
         }
-        sxprintf(iobuf, sizeof(iobuf), "[%s %%s%%s: %ld%%%%/%d%c done]", str, pc, (int)sz, m);
+        sxprintf(iobuf, sizeof(iobuf), "[%s %%s%%s: %" ACCINT_FMT "%%%%/%d%c done]", str, pc, (int)sz, m);
         infof_truncated(iobuf, str1);
         cache_pc = pc;
     }
@@ -3703,6 +3706,17 @@ file_modedesc(mode_t mode, const char *source, int format, char *buffer, int len
 
     __CUNUSED(source)
 
+#if !defined(S_IWGRP)                           /* MINGW32 etc */
+#define S_IRGRP         S_IRUSR
+#define S_IWGRP         S_IWUSR
+#define S_IXGRP         S_IXUSR
+#endif
+#if !defined(S_IROTH)
+#define S_IROTH         S_IRUSR
+#define S_IWOTH         S_IWUSR
+#define S_IXOTH         S_IXUSR
+#endif
+
     /* type */
     if (S_ISDIR(mode)) {
         t_buffer[0] = (format ? '/' : 'd');     /* directory */
@@ -3769,16 +3783,6 @@ file_modedesc(mode_t mode, const char *source, int format, char *buffer, int len
     }
 
     /* permissions */
-#if !defined(S_IWGRP)                           /* MINGW32 etc */
-#define S_IRGRP         S_IRUSR
-#define S_IWGRP         S_IWUSR
-#define S_IXGRP         S_IXUSR
-#endif
-#if !defined(S_IROTH)
-#define S_IROTH         S_IRUSR
-#define S_IWOTH         S_IWUSR
-#define S_IXOTH         S_IXUSR
-#endif
     t_buffer[1] = (mode & S_IRUSR ? 'r' : '-'); /* read permission: owner */
     t_buffer[2] = (mode & S_IWUSR ? 'w' : '-'); /* write permission: owner */
     t_buffer[3] = (mode & S_IXUSR ? 'x' : '-'); /* execute permission: owner */

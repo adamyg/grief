@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_stream_c,"$Id: vfs_stream.c,v 1.14 2022/03/21 14:27:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_stream_c,"$Id: vfs_stream.c,v 1.15 2022/05/26 16:31:34 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_stream.c,v 1.14 2022/03/21 14:27:23 cvsuser Exp $
+/* $Id: vfs_stream.c,v 1.15 2022/05/26 16:31:34 cvsuser Exp $
  * Virtual file system interface - streams.
  *
  *
@@ -137,7 +137,7 @@ vfs_fwrite(vfs_file_t *file, const void *buffer, unsigned size)
 
         /* flush cache */
         VFS_TRACE2((" flush"))
-        if ((ret = vfs_write(handle, file->f_buffer, bsize)) != bsize) {
+        if ((ret = vfs_write(handle, file->f_buffer, bsize)) != (int)bsize) {
             size = ret;
             goto done;
         }
@@ -147,7 +147,7 @@ vfs_fwrite(vfs_file_t *file, const void *buffer, unsigned size)
         /* write extra buffer(s) */
         while (t_size > bsize) {
             VFS_TRACE2((" write(%u/%u)", bsize, t_size))
-            if ((ret = vfs_write(handle, t_buffer, bsize)) != bsize) {
+            if ((ret = vfs_write(handle, t_buffer, bsize)) != (int)bsize) {
                 size = total;
                 goto done;
             }
@@ -205,7 +205,7 @@ vfs_fclose(vfs_file_t *file)
 
     if (final) {
         VFS_TRACE2((" flush"))
-        if (vfs_write(file->f_handle, file->f_buffer, final) != final) {
+        if (vfs_write(file->f_handle, file->f_buffer, final) != (int)final) {
             ret = -1;
         }
     }

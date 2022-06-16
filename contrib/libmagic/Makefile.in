@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.16 2020/06/18 20:35:16 cvsuser Exp $
+# $Id: Makefile.in,v 1.18 2022/06/01 14:21:18 cvsuser Exp $
 # libmagic makefile
 #
 #
@@ -59,12 +59,9 @@ LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
 
 CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
-##ifeq ("mingw32","@build_os@")
-##CINCLUDE+=	-I../include -I../../libw32
-##endif
 
 CEXTRA=		@DEFS@
-ifeq ("yes","@ISWIN32@")
+ifeq ("win32","@build_os@")
 CEXTRA+=	-DWIN32 -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
 endif
 
@@ -77,9 +74,6 @@ LDFLAGS=	$(LDDEBUG) @LDFLAGS@
 endif
 
 LDLIBS=		-L$(D_LIB) $(D_LIB)/$(LP)regex$(A) @LIBS@ @LIBM@ @EXTRALIBS@
-##ifeq ("mingw32","@build_os@")
-##LDLIBS+=	-lw32 -lshlwapi -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
-##endif
 
 ARFLAGS=	rcv
 RMFLAGS=	-f
@@ -179,7 +173,7 @@ $(MAGICDLL):		$(DLLOBJS)
 			-rpath $(D_LIB) -bindir $(D_BIN) $^ $(LDLIBS) @LDMAPFILE@
 
 $(MAGICUTIL):		$(UTILOBJS)
-		$(CC) $(LDFLAGS) $^ -o $@ $(D_LIB)/libmagic$(A) $(LDLIBS)
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ -o $@ $(D_LIB)/libmagic$(A) $(LDLIBS)
 
 $(MAGICDB):		magic.mgc
 		@echo publishing magicdb $(MAGICDB) ...

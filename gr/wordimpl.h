@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_wordimpl_inc,"$Id: wordimpl.h,v 1.2 2020/04/21 21:24:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_wordimpl_inc,"$Id: wordimpl.h,v 1.3 2022/05/31 16:18:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: wordimpl.h,v 1.2 2020/04/21 21:24:37 cvsuser Exp $
+/* $Id: wordimpl.h,v 1.3 2022/05/31 16:18:22 cvsuser Exp $
  * Portable mappings to and from internal word and byte order.
  *
  *
@@ -32,9 +32,9 @@ __CIDENT_RCSID(gr_wordimpl_inc,"$Id: wordimpl.h,v 1.2 2020/04/21 21:24:37 cvsuse
 #if (SIZEOF_VOID_P != 4 && SIZEOF_VOID_P != 8)
 #error unsupported sizeof(void *)
 #endif
-#if (SIZEOF_LONG != SIZEOF_VOID_P)
-#error unsupported sizeof(long)
-#endif
+    // #if (SIZEOF_LONG != SIZEOF_VOID_P)
+    // #error unsupported sizeof(long)
+    // #endif
 #if (SIZEOF_DOUBLE != 8)
 #error unsupported sizeof(double)
 #endif

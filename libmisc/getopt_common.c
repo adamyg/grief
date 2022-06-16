@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_getopt_common_c,"$Id: getopt_common.c,v 1.9 2020/06/18 13:16:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_getopt_common_c,"$Id: getopt_common.c,v 1.10 2022/05/25 15:44:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: getopt_common.c,v 1.9 2020/06/18 13:16:22 cvsuser Exp $
+/* $Id: getopt_common.c,v 1.10 2022/05/25 15:44:02 cvsuser Exp $
  * common globals getopt/bsd_getopt.
  *
  *
@@ -36,6 +36,7 @@ __CIDENT_RCSID(gr_getopt_common_c,"$Id: getopt_common.c,v 1.9 2020/06/18 13:16:2
 #include <getopt.h>
 
 #elif defined(__MINGW32__)
+#include <getopt.h>
 
 #elif defined(_WIN32) || defined(WIN32)
 
@@ -47,10 +48,10 @@ int   optreset = 0;                             /* reset getopt */
 
 #endif
 
-extern void __getopt_common(void);
-
+extern void __getopt_common_dummy(void);
 void
-__getopt_common_dummy() {
+__getopt_common_dummy() 
+{
 }
 
 /*end*/

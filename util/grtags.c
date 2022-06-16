@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(grtags_c,"$Id: grtags.c,v 1.6 2014/12/15 19:38:59 ayoung Exp $")
+__CIDENT_RCSID(grtags_c,"$Id: grtags.c,v 1.7 2022/05/27 03:33:16 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: grtags.c,v 1.6 2014/12/15 19:38:59 ayoung Exp $
+/* $Id: grtags.c,v 1.7 2022/05/27 03:33:16 cvsuser Exp $
  * tags command line util.
  *
  *
@@ -165,21 +165,21 @@ tag_find(const char *const name)
         exit(1);
 
     } else {
-        int options = 0;
+        int opts = 0;
 
         if (o_sort >= 0) {
             extagsSetSortType(file, o_sort);
         }
 
         if (o_partial) {
-            options |= TAG_FPARTIALMATCH;
+            opts |= TAG_FPARTIALMATCH;
         }
 
         if (o_icase) {
-            options |= TAG_FIGNORECASE;
+            opts |= TAG_FIGNORECASE;
         }
 
-        if (extagsFind(file, &entry, name, options) == TagSuccess) {
+        if (extagsFind(file, &entry, name, opts) == TagSuccess) {
             do {
                 exprint(&entry);
             } while (extagsFindNext(file, &entry) == TagSuccess);

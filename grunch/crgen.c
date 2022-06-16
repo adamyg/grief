@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crgen_c,"$Id: crgen.c,v 1.37 2020/04/23 12:35:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_crgen_c,"$Id: crgen.c,v 1.38 2022/05/27 03:13:33 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crgen.c,v 1.37 2020/04/23 12:35:50 cvsuser Exp $
+/* $Id: crgen.c,v 1.38 2022/05/27 03:13:33 cvsuser Exp $
  * generic code generator routines.
  *
  *
@@ -264,7 +264,7 @@ compile_func(symtype_t type, const char *function, Head_p arglist, node_t *stmts
     if (0 == strcmp(function, "_init")) {
         do_end = ((has_args = globals_compile(has_stmts)) && has_stmts);
     } else {
-        do_end = ((has_args = compile_arglist(arglist, has_stmts)) && has_stmts);
+        do_end = ((has_args = compile_arglist(function, arglist, has_stmts)) && has_stmts);
     }
 
     /*
@@ -576,7 +576,7 @@ globals_cleanup(void)
  *          actual argument can be accessed by calling the get_parm() primitive.
  */
 int
-compile_arglist(Head_p arglist, int flag)
+compile_arglist(const char *function, Head_p arglist, int flag)
 {                                               /* 17/08/08 */
     register List_p lp;
     register node_t *np;
@@ -591,6 +591,10 @@ compile_arglist(Head_p arglist, int flag)
         np = (node_t *) ll_elem(lp);
 
         if (NULL == np) {
+            if (dots_seen) {
+                crwarnx(RC_VARARG_MULTIPLE,     /* 27/05/22 */
+                    "multiple '...' operators for function '%s'", function);
+            }
             dots_seen = TRUE;                   /* ... */
 
         } else {

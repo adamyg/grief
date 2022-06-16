@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.9 2020/06/18 20:35:17 cvsuser Exp $
+# $Id: Makefile.in,v 1.11 2022/06/01 14:21:19 cvsuser Exp $
 # libtre - regular expression library makefile.
 #
 #
-# Copyright (c) 1998 - 2020, Adam Young.
+# Copyright (c) 1998 - 2022, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -71,7 +71,11 @@ D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 XFLAGS=
 CFLAGS=		@CFLAGS@
+ifeq ("gcc","@CC@")
+CWARN=		$(filter-out -Wshadow -Wmissing-prototypes -Wsign-compare -Wno-unused-value, @CWARN@ $(CWALL)) -Wno-sign-compare -Wno-unused-value
+else
 CWARN=		@CWARN@ $(CWALL)
+endif
 CDEBUG=		@CDEBUG@
 CRELEASE=	@CRELEASE@
 LDDEBUG=	@LDDEBUG@
@@ -131,14 +135,17 @@ LIBOBJS=\
 
 DLLOBJS=\
 	$(subst $(O),.lo,$(LIBOBJS))
-ifeq ("yes","@ISWIN32@")
+ifeq ("win32","@build_os@")
 DLLOBJS+=\
 	$(D_OBJ)/dllmain.lo
 endif
-ifeq ("mingw32","@build_os@")
+
+ifeq ("win32","@build_os@")
+ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
 DLLOBJS+=	$(D_OBJ)/tre_res.o
 else
 DLLOBJS+=	$(D_OBJ)/tre.res
+endif
 endif
 
 OBJS=		$(LIBOBJS) $(DLLOBJS)
@@ -221,14 +228,11 @@ $(D_OBJ)/%.lo:		%.c
 		$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -I$(RESRC) -o $@ -c $<
 
 ##
-ifeq ("mingw32","@build_os@")
 $(D_OBJ)/%_res.o:	%.rc
 		$(RC) -o $@ $<
-else
+
 $(D_OBJ)/%.res:		%.rc
 		$(RC) -fo $@ $<
-
-endif
 
 #end
 

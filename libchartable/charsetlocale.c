@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetlocale_c,"$Id: charsetlocale.c,v 1.11 2022/03/21 14:59:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetlocale_c,"$Id: charsetlocale.c,v 1.12 2022/05/26 01:56:12 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* libcharset locale map.
@@ -34,6 +34,10 @@ __CIDENT_RCSID(gr_charsetlocale_c,"$Id: charsetlocale.c,v 1.11 2022/03/21 14:59:
 
 #include "libchartable.h"
 #include "charsetlocales.h"
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wunused-const-variable"
+#endif
 
 static const char ISO8859_1[]   = "iso8859-1";
 static const char ISO8859_2[]   = "iso8859-2";

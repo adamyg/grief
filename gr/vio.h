@@ -1,11 +1,11 @@
 #ifndef GR_VIO_H_INCLUDED
 #define GR_VIO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vio_h,"$Id: vio.h,v 1.30 2020/06/18 12:48:04 cvsuser Exp $")
+__CIDENT_RCSID(gr_vio_h,"$Id: vio.h,v 1.31 2022/05/26 16:40:27 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vio.h,v 1.30 2020/06/18 12:48:04 cvsuser Exp $
+/* $Id: vio.h,v 1.31 2022/05/26 16:40:27 cvsuser Exp $
  * Video I/O interface header.
  *
  *
@@ -305,14 +305,22 @@ __CPRAGMA_ONCE
 typedef WCHAR_COLORINFO VIOHUE;
 typedef WCHAR_INFO VIOCELL;
 
-__inline WCHAR_COLORINFO
-VIO_FGBG(int fg, int bg) {
+#if defined(__MINGW32__)
+#define __VIO_INLINE static __inline
+#else
+#define __VIO_INLINE __inline
+#endif
+
+__VIO_INLINE WCHAR_COLORINFO
+VIO_FGBG(int fg, int bg)
+{
     WCHAR_COLORINFO info = {VIO_FNORMAL, 0, (short)fg, (short)bg, 0, 0};
     return info;
 }
 
-__inline WCHAR_INFO
-VIO_INIT(const WCHAR_COLORINFO i, unsigned c) {
+__VIO_INLINE WCHAR_INFO
+VIO_INIT(const WCHAR_COLORINFO i, unsigned c) 
+{
     WCHAR_INFO wchar = {0};
     wchar.Info = i;
     wchar.Char.UnicodeChar = c;

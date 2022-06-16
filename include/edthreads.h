@@ -1,11 +1,11 @@
 #ifndef GR_EDTHREADS_H_INCLUDED
 #define GR_EDTHREADS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_h,"$Id: edthreads.h,v 1.17 2022/03/21 14:55:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_edthreads_h,"$Id: edthreads.h,v 1.19 2022/06/13 12:47:14 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads.h,v 1.17 2022/03/21 14:55:27 cvsuser Exp $
+/* $Id: edthreads.h,v 1.19 2022/06/13 12:47:14 cvsuser Exp $
  * Threads interface
  * ISO/IEC 9899:201x Committee Draft
  * April 12, 2011 N1570
@@ -39,8 +39,8 @@ __CPRAGMA_ONCE
 #include <config.h>
 #endif
 
-#if (defined(__MINGW32__) || defined(__CYGWIN__)) && defined(HAVE_PTHREAD_H)
-#define __STDC_NO_THREADS__                     /*PTHREADS*/
+#if defined(__MINGW32__) || (defined(__CYGWIN__) && defined(HAVE_PTHREAD_H))
+#define __STDC_NO_THREADS__ /*PTHREADS or WIN32*/
 #endif
 
 #include <edsym.h>
@@ -113,11 +113,6 @@ extern int                  tss_create(tss_t *key, tss_dtor_t dtor);
 extern void                 tss_delete(tss_t key);
 extern void *               tss_get(tss_t key);
 extern int                  tss_set(tss_t key, void *val);
-
-#if defined(__MINGW32__)
-extern int                  usleep(/*usecond_t*/ const unsigned useconds);
-extern int                  nanosleep(const struct timespec *rqtp, struct timespec *rmtp /*notused*/);
-#endif
 
 __CEND_DECLS
 

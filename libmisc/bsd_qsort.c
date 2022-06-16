@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bsd_qsort_c,"$Id: bsd_qsort.c,v 1.7 2020/04/11 21:37:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_bsd_qsort_c,"$Id: bsd_qsort.c,v 1.8 2022/05/25 15:44:02 cvsuser Exp $")
 
 /*- -*- indent-width: 4; tabs: 8; -*-
  * Copyright (c) 1992, 1993
@@ -36,6 +36,10 @@ __CIDENT_RCSID(gr_bsd_qsort_c,"$Id: bsd_qsort.c,v 1.7 2020/04/11 21:37:12 cvsuse
 #include <libmisc.h>
 
 #include <stdlib.h>
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#endif
 
 #ifdef I_AM_QSORT_R
 #define cmp_t		sortcmpr_t

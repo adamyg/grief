@@ -1,0 +1,70 @@
+Tue May 31 19:15:55 2022 adamy
+
+	* MinGW-w64, include <ntdef.h>
+
+Fri May 27 20:51:20 2022 adamy
+
+	* libarchive 3.6,1
+
+		- additional
+
+				archive_write_set_format_cpio_binary.c
+				archive_write_set_format_cpio_odc.c
+				archive_read_support_format_rar5.c
+				archive_blake2sp_ref.c
+				archive_blake2s_ref.c
+				archive_ppmd8.c
+
+		- mingw
+
+			o libarchive/archive_read_disk_windows.c:
+
+				Optional _REPARSE_DATA_BUFFER definition, (_WIN32_WINNT < 0x0601)
+
+		- open-watcomc
+
+			o archive_platform.c(78)
+
+				#if defined(__WATCOMC__)
+				#define __LA_LIBC_CC __watcall
+				#else
+				#define __LA_LIBC_CC __cdecl
+				#endif
+
+			o libarchive/archive_read_disk_windows.c:
+
+				#if !defined(MAXIMUM_REPARSE_DATA_BUFFER_SIZE)
+				#define MAXIMUM_REPARSE_DATA_BUFFER_SIZE (16 * 1024)
+				#endif
+
+			o archive_read_support_format_7zip.c(812)
+			o archive_read_support_format_lha.c(1304)
+			o archive_read_support_format_rar.c(1990)
+			o archive_read_support_format_zip.c(1194)
+			o archive_write_add_filter_zstd.c(215)
+			o archive_write_set_format_warc.c(199)
+			o archive_read_support_format_rar5.c(1025, 1047, 1471)
+
+				relocated variable definition.
+
+			o archive_blake2.h(106), BLAKE2_PACKED
+
+				+ #elif defined(__WATCOMC__)
+					#define BLAKE2_PACKED(x) x
+					
+				+ #if defined(__WATCOMC__)
+				+ #pragma pack( __push, 1 )
+				+ #endif
+
+				+ #if defined(__WATCOMC__)
+				+ #pragma pack( __pop )
+				+ #endif
+
+/*
+ * Local Variables: ***
+ * mode: changelog ***
+ * End: ***
+ */
+
+
+

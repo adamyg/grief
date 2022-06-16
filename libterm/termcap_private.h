@@ -71,6 +71,9 @@ int                     cgetclose(void);
 int                     cgetstr(char *buf, const char *cap, char **str);
 int                     cgetustr(char *buf, const char *cap, char **str);
 int                     cgetnum(char *buf, const char *cap, long *num);
+
+int                     t_putws(struct tinfo *info, const wchar_t *cp, int affcnt, void (*outc)(wchar_t, void *), void *args);
+
 /*__END_DECLS*/
 
 #ifndef strlcpy         /*__APPLE__*/

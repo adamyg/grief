@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.11 2021/04/12 14:48:51 cvsuser Exp $
+# $Id: Makefile.in,v 1.13 2022/05/27 03:14:34 cvsuser Exp $
 # libonigrx - regular expression makefile.
 #
 #
-# Copyright (c) 1998 - 2021, Adam Young.
+# Copyright (c) 1998 - 2022, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -70,7 +70,12 @@ D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 XFLAGS=
 CFLAGS=		@CFLAGS@
+ifeq ("gcc","@CC@")
+CWARN=		$(filter-out -Wshadow -Wmissing-prototypes -Wsign-compare -Wimplicit-fallthrough, @CWARN@ $(CWALL))
+CWARN+=		-Wno-sign-compare -Wno-implicit-fallthrough
+else
 CWARN=		@CWARN@ $(CWALL)
+endif
 CDEBUG=		@CDEBUG@
 CRELEASE=	@CRELEASE@
 LDDEBUG=	@LDDEBUG@
@@ -97,9 +102,6 @@ endif
 endif
 
 LDLIBS=		-L$(D_LIB) @LIBS@ @LIBMALLOC@ @EXTRALIBS@
-##ifeq ("mingw32","@build_os@")
-##LDLIBS+=	-lw32 -lshlwapi -lpsapi -lole32 -luuid -lgdi32 -luserenv -lnetapi32 -ladvapi32 -lWs2_32
-##endif
 
 YFLAGS=		-d
 ARFLAGS=	rcv

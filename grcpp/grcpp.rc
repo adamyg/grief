@@ -1,0 +1,78 @@
+/*
+ *  Copyright (c) 2020 - 2022 Adam Young.
+ *  All rights reserved.
+ *
+ *  This file is part of oncrpc4-win32.
+ *
+ *  The applications are free software: you can redistribute it
+ *  and/or modify it under the terms of the oncrpc4-win32 License.
+ *
+ *  Redistributions of source code must retain the above copyright
+ *  notice, and must be distributed with the license document above.
+ *
+ *  Redistributions in binary form must reproduce the above copyright
+ *  notice, and must include the license document above in
+ *  the documentation and/or other materials provided with the
+ *  distribution.
+ *
+ *  This project is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the Licence for details.
+ *  ==end==
+ */
+
+#include <winver.h>
+#include "../include/edbuildinfo.h"
+
+#ifdef GCC_WINDRES
+VS_VERSION_INFO		VERSIONINFO
+#else
+VS_VERSION_INFO		VERSIONINFO	MOVEABLE IMPURE LOADONCALL DISCARDABLE
+#endif
+	FILEVERSION	GR_VERSION_1,GR_VERSION_2,GR_VERSION_3,GR_VERSION_4
+	PRODUCTVERSION	GR_VERSION_1,GR_VERSION_2,GR_VERSION_3,GR_VERSION_4
+	FILEFLAGSMASK	VS_FFI_FILEFLAGSMASK
+#ifdef _DEBUG
+	FILEFLAGS	1
+#else
+	FILEFLAGS	0
+#endif
+	FILEOS		VOS__WINDOWS32
+	FILETYPE	VFT_DLL
+	FILESUBTYPE	0			// not used
+BEGIN
+	BLOCK "StringFileInfo"
+	BEGIN
+		BLOCK "040904E4"
+		//language ID = U.S. English, char set = Windows, Multilingual
+		BEGIN
+			VALUE "FileDescription", "Grief grucpp utility, based on ucpp-1.3.2\0"
+
+			VALUE "FileVersion",	GR_VERSION "\0"
+
+			VALUE "InternalName",	"rpccpp.exe\0"
+
+			VALUE "LegalCopyright",
+				"Copyright (c) 2022 Adam Young, \n"
+				"Copyright (c) Thomas Pornin 1999 - 2002, \n"
+				"See --license for details. \n\0"
+
+			VALUE "OriginalFilename",
+				"grcpp.exe\0"
+
+			VALUE "ProductName",
+				"grcpp (ucpp-1.3.2)\0"
+
+			VALUE "ProductVersion",
+				GR_VERSION "\0"
+
+			VALUE "Comments",
+				"https://github/adamyg/grief\0"
+		END
+	END
+	BLOCK "VarFileInfo"
+	BEGIN
+		VALUE "Translation", 0x0409, 1252
+	END
+END

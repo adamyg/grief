@@ -1,13 +1,13 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(cr_env_c,"$Id: env.c,v 1.29 2020/06/18 13:13:01 cvsuser Exp $")
+__CIDENT_RCSID(cr_env_c,"$Id: env.c,v 1.30 2022/05/31 16:18:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: env.c,v 1.29 2020/06/18 13:13:01 cvsuser Exp $
+/* $Id: env.c,v 1.30 2022/05/31 16:18:23 cvsuser Exp $
  * Environment related functions.
  *
  *
  *
- * Copyright (c) 1998 - 2017, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -34,22 +34,40 @@ __CIDENT_RCSID(cr_env_c,"$Id: env.c,v 1.29 2020/06/18 13:13:01 cvsuser Exp $")
 #include <edenv.h>
 #include <libstr.h>
 
+#include <tailqueue.h>
+
+#ifndef MKMAGIC
+#define MKMAGIC(a,b,c,d)    (((unsigned long)(a))<<24|((unsigned long)(b))<<16|(c)<<8|(d))
+#endif
+
+#define MAGIC_ELEMENT       MKMAGIC('E','n','v','N')
+
 #if defined(_VMS) || !defined(HAVE_SETENV)
 #define NEED_SETENV_CACHE
 #endif
 
 #if defined(NEED_SETENV_CACHE)
-static Head_p               hd_env = NULL;
+typedef TAILQ_HEAD(_EnvList, EnvElement)
+                            ENVLIST_t;
 
-static List_p               glookup(const char *);
-static void                 greplace(char *arg);
+struct EnvElement {
+    unsigned long magic;
+    TAILQ_ENTRY(EnvElement) node;
+    const char *value;
+};
+
+static ENVLIST_t            x_envtq;
+
+static struct EnvElement *  gelement(const char *);
+static const char *         glookup(const char *);
+static void                 greplace(const char *arg);
 
 
 void
 env_init(void)
 {
-    if (NULL == hd_env) {
-        hd_env = ll_init();
+    if (NULL == x_envtq.tqh_last) {
+        TAILQ_INIT(&x_envtq);
     }
 }
 
@@ -57,30 +75,32 @@ env_init(void)
 void
 env_shutdown(void)
 {
-    if (hd_env) {
-        ll_clear2(hd_env, free);
-        ll_free(hd_env);
-        hd_env = NULL;
+    if (x_envtq.tqh_last) {
+        struct EnvElement *mp;
+        while (NULL != (mp = TAILQ_FIRST(&x_envtq))) {
+            assert(mp->magic == MAGIC_ELEMENT);
+            TAILQ_REMOVE(&x_envtq, mp, node);
+            free(mp);
+        }
     }
 }
 
 
-static List_p
-glookup(const char *name)
+static struct EnvElement *
+gelement(const char *name)
 {
-    int len;
-    List_p lp;
+    if (x_envtq.tqh_last) {
+        struct EnvElement *mp;
+        int len;
 
-    if (hd_env) {
         for (len = 0; name[len] != '=' && name[len];) {
             ++len;
         }
 
-        for (lp = ll_first(hd_env); lp; lp = ll_next(lp)) {
-            const char *lname = (const char *) ll_elem(lp);
-
-            if (0 == strncmp(name, lname, len) && '=' == lname[len]) {
-                return lp;
+        TAILQ_FOREACH(mp, &x_envtq, node) {
+            assert(mp->magic == MAGIC_ELEMENT);
+            if (0 == strncmp(name, mp->value, len) && '=' == mp->value[len]) {
+                return mp;
             }
         }
     }
@@ -88,31 +108,39 @@ glookup(const char *name)
 }
 
 
-static void
-greplace(char *arg)
+static const char *
+glookup(const char *name)
 {
-    if (NULL == hd_env) {
-        env_init();
+    struct EnvElement *mp = gelement(name);
+    if (mp) {
+        return mp->value;
     }
+    return NULL;
+}
 
-    if (arg && hd_env) {
-        List_p lp;
 
-        if (NULL != (lp = glookup(arg))) {
-            free(ll_elem(lp));
-            ll_delete(lp);
+static void
+greplace(const char *name)
+{
+    if (name && *name) {
+        struct EnvElement *mp;
+
+        env_init();
+        if (NULL != (mp = gelement(name))) {
+            mp->value = name;
+
+        } else {
+            if (NULL != (mp = (struct EnvElement *)calloc(1, sizeof(struct EnvElement)))) {
+                mp->magic = MAGIC_ELEMENT;
+                mp->value = name;
+                TAILQ_INSERT_TAIL(&x_envtq, mp, node);
+            }
         }
-
-        if (NULL == hd_env) {
-            env_init();
-        }
-
-        ll_append(hd_env, arg);
     }
 }
 
 
-#else   /*NEED_SETENV_CACHE*/
+#else /*NEED_SETENV_CACHE*/
 void
 env_init(void)
 {
@@ -188,18 +216,16 @@ ggetenv(const char * name)
 #if !defined(_VMS)
     return getenv(name);
 
-#else   /*_VMS*/
-    List_p lp = glookup(name);
-    const char *cp;
+#else /*_VMS*/
+    const char *cp = glookup(name);
 
-    if (NULL == lp) {
-        return getenv(name);
+    if (NULL != cp) {
+        while (*cp != '=' && *cp) {
+            ++cp;
+        }
+        return (*cp == '=' ? cp + 1 : cp);
     }
-
-    for (cp = (char *) ll_elem(lp); *cp != '=' && *cp;) {
-        ++cp;
-    }
-    return *cp == '=' ? cp + 1 : cp;
+    return getenv(name);
 #endif
 }
 

@@ -1,7 +1,7 @@
 #ifndef LIBW32_SYS_SELECT_H_INCLUDED
 #define LIBW32_SYS_SELECT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_select_h,"$Id: select.h,v 1.8 2022/03/21 14:29:43 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_select_h,"$Id: select.h,v 1.9 2022/06/11 04:00:16 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -21,6 +21,8 @@ __CPRAGMA_ONCE
  * ==end==
  */
 
-#include <win32_include.h>                      /* winsock etc */
+#if !defined(_WINSOCK2_H)                       /* MINGW32 guard */
+#include <win32_include.h>                      /* winsock and windows.h guard */
+#endif
 
 #endif /*LIBW32_SYS_SELECT_H_INCLUDED*/

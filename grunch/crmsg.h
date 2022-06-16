@@ -1,11 +1,11 @@
 #ifndef GR_CRMSG_H_INCLUDED
 #define GR_CRMSG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crmsg_h,"$Id: crmsg.h,v 1.8 2014/10/22 02:33:28 ayoung Exp $")
+__CIDENT_RCSID(gr_crmsg_h,"$Id: crmsg.h,v 1.9 2022/05/27 03:13:33 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crmsg.h,v 1.8 2014/10/22 02:33:28 ayoung Exp $
+/* $Id: crmsg.h,v 1.9 2022/05/27 03:13:33 cvsuser Exp $
  * Compiler messages.
  *
  *
@@ -67,6 +67,8 @@ enum {
 
     RC_REPLACING_BUILTIN,               // "implicit replacement of the builtin function '<function>'
     RC_REPLACING_MACRO,                 // "replacing non-builtin macro <function>"
+    
+    RC_VARARG_MULTIPLE,                 // "multiple '...' operators for function <function>"
 
     RC_UNSUPPORTED_POINTER,
     RC_UNSUPPORTED_REFGLOBOL,

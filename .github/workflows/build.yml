@@ -2,66 +2,104 @@ name: build
 on: [push]
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        config:
+        - {
+            name: "Windows Latest MSVC",
+            os: windows-latest,
+            toolchain: vc2022,
+            toolversion: vs170
+          }
+        - {
+           name: "Windows Latest MinGW",
+           os: windows-latest,
+           toolchain: mingw64,
+           toolversion: mingw64
+          }
+        - {
+           name: "Windows Latest OWC",
+           os: windows-latest,
+           toolchain: owc20,
+           toolversion: owc20
+          }
+        - {
+           name: "Ubuntu Latest GCC",
+           os: ubuntu-latest,
+           toolchain: gcc,
+           toolversion: gcc
+          }
+        
     steps:
-    - uses: actions/checkout@v2
 
-    - uses: ilammy/msvc-dev-cmd@v1
-      if: runner.os == 'Windows'
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Checkout submodules
+      run: |
+        git submodule update --init --recursive
+
+    - name: MSVC setup
+      uses: ilammy/msvc-dev-cmd@v1
+      if: startsWith(matrix.config.name, 'Windows Latest MSVC')
       with:
         arch: x86
 
-    - uses: msys2/setup-msys2@v2
-      if: runner.os == 'Windows'
+    - name: MinGW64 setup
+      if: startsWith(matrix.config.name, 'Windows Latest MinGW')
+      shell: cmd
+      run: |
+        c:\msys64\usr\bin\pacman --noconfirm -S base-devel
+        c:\msys64\usr\bin\pacman --noconfirm -S mingw-w64-x86_64-gcc
+        c:\msys64\usr\bin\pacman --noconfirm -S mingw-w64-i686-gcc
+
+    - name: OpenWatcom setup
+      uses: open-watcom/setup-watcom@v0
+      if: startsWith(matrix.config.name, 'Windows Latest OWC')
       with:
-        release: false      
-        update: true
-        install: >-
-          bison
+        version: "2.0"
+        location: "C:\\Watcom"
 
-    - name: Windows, generating Makefiles
-      if: runner.os == 'Windows'
+    - name: Windows, generate
+      if: startsWith(matrix.config.name, 'Windows Latest')
       shell: cmd
       run: |
+        @if "${{ matrix.config.toolchain }}"=="mingw32" set PATH=c:\msys64\mingw32\bin;%PATH%
+        @if "${{ matrix.config.toolchain }}"=="mingw64" set PATH=c:\msys64\mingw64\bin;%PATH%
+        @if "${{ matrix.config.toolchain }}"=="owc20"  call .\support\owc20setenv.bat C:\Watcom
+        @if NOT "${{ matrix.config.toolchain }}"=="mingw64" c:\msys64\usr\bin\pacman --noconfirm -S bison
         @set PERL=c:/Strawberry/perl/bin/perl
-        c:/Strawberry/perl/bin/perl makelib.pl --perlpath=c:/Strawberry/perl/bin --busybox=./win32/busybox --wget=./win32/wget --bison=c:/msys64/usr/bin/bison --flex=./bin/flex --verbose vc2022
-        @rem dir c:\tools
-        @rem dir c:\msys64
-        @rem dir c:\msys64\usr\bin
+        c:/Strawberry/perl/bin/perl makelib.pl --perlpath=c:/Strawberry/perl/bin --busybox=./win32/busybox --wget=./win32/wget --bison=c:/msys64/usr/bin/bison --flex=./bin/flex --verbose "${{ matrix.config.toolchain }}"
 
-    - name: Windows, compiling
-      if: runner.os == 'Windows'
+    - name: Windows, compile
+      if: startsWith(matrix.config.name, 'Windows Latest')
       shell: cmd
       run: |
+        @if "${{ matrix.config.toolchain }}"=="mingw32" set PATH=c:\msys64\mingw32\bin;%PATH%
+        @if "${{ matrix.config.toolchain }}"=="mingw64" set PATH=c:\msys64\mingw64\bin;%PATH%
+        @if "${{ matrix.config.toolchain }}"=="owc20"  call .\support\owc20setenv.bat C:\Watcom
         @set PERL=c:/Strawberry/perl/bin/perl
         .\win32\gmake-42 release contrib
         .\win32\gmake-42 release
 
-    - name: Windows, package
-      if: runner.os == 'Windows'
-      uses: actions/upload-artifact@v2
-      with:
-        name: package-win32
-        path: ./bin.vs170/debug/*
-
-    - name: Linux, generating Makefiles
-      if: runner.os == 'Linux'
+    - name: Ubuntu, generate
+      if: startsWith(matrix.config.name, 'Ubuntu Latest')
       shell: bash
       run: |
         ./support/config_withncurses
-    - name: Linux, compiling
-      if: runner.os == 'Linux'
+
+    - name: Ubuntu, compile
+      if: startsWith(matrix.config.name, 'Ubuntu Latest')
       shell: bash
       run: |
         make release
-    - name: Linux, package
-      if: runner.os == 'Linux'
+
+    - name: Package
       uses: actions/upload-artifact@v2
       with:
-        name: package-linux
-        path: ./bin.gcc/debug/*
+        name: package-${{ matrix.config.toolchain }}
+        path: ./bin.${{ matrix.config.toolversion }}/release/*
 

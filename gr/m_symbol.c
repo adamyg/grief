@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_symbol_c,"$Id: m_symbol.c,v 1.43 2020/06/18 14:40:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_symbol_c,"$Id: m_symbol.c,v 1.44 2022/05/26 16:37:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_symbol.c,v 1.43 2020/06/18 14:40:37 cvsuser Exp $
+/* $Id: m_symbol.c,v 1.44 2022/05/26 16:37:06 cvsuser Exp $
  * Symbol primitives.
  *
  *
@@ -207,7 +207,7 @@ static const struct {   /* integer constant's */
 #define S_IFLNK                 0
 #endif
 #if !defined(S_IFSOCK)
-#define S_ISOCK                 0
+#define S_IFSOCK                0
 #endif
 
         { "S_IFMT",             S_IFMT          },
@@ -219,6 +219,24 @@ static const struct {   /* integer constant's */
         { "S_IFSOCK",           S_IFSOCK        },
 
         /* permissions */
+#if !defined(S_IRGRP)
+#define S_IRGRP                 0
+#endif
+#if !defined(S_IWGRP)
+#define S_IWGRP                 0
+#endif
+#if !defined(S_IXGRP)
+#define S_IXGRP                 0
+#endif
+#if !defined(S_IROTH)
+#define S_IROTH                 0
+#endif
+#if !defined(S_IWOTH)
+#define S_IWOTH                 0
+#endif
+#if !defined(S_IXOTH)
+#define S_IXOTH                 0
+#endif
 #if !defined(S_ISUID)
 #define S_ISUID                 0
 #endif
@@ -1416,7 +1434,7 @@ do_static(void)                 /* (name ...) */
      *  Pull arguments, unless from command line then just exit
      */
     if (mac_sd <= 0) {
-        return; 
+        return;
     }
     function = mac_sp->name;
     mp = macro_symbols(mac_sp->module);
@@ -1467,14 +1485,14 @@ do_static(void)                 /* (name ...) */
         const <type> sym1, sym2 ...;
 
     Macro Description:
-        The 'const' qualifier explicitly declares a locally scoped data object as 
+        The 'const' qualifier explicitly declares a locally scoped data object as
         something that cannot be changed. Its an immutable variable can only be set
-        during initialization. 
-        
+        during initialization.
+
         You cannot use const data objects in expressions requiring a modifiable lvalue.
         If you try to give it a new value, it will return you an error.
-        
-        For example, a const data object cannot appear on the lefthand side 
+
+        For example, a const data object cannot appear on the lefthand side
         of an assignment statement.
 
     Macro Returns:
@@ -1550,7 +1568,7 @@ do_const(void)                  /* (name ...) */
 
     Macro Description:
         The 'register' qualifier explicitly declares a locally scoped data object
-        as something that should be cached against the given index. 
+        as something that should be cached against the given index.
 
         Registers are function scoped, being unique to each macro and
         are is visible only within the function.
@@ -1584,7 +1602,7 @@ do_register(void)               /* (index name ...) */
         if (! atom_xint(lp, &idx)) {
             continue;
         }
-        lp = nextlp; 
+        lp = nextlp;
         if ((nextlp = atom_next(lp)) == lp) {
             break;              /* eos */
         } else if (NULL == (symname = atom_xstr(lp))) {
@@ -2458,7 +2476,7 @@ do_arg_list(void)               /* ([int eval], [int start = 0], [int end = -1])
             if (doeval) {
                 /*
                  *  evaluate the parameter,
-                 *    must remove the local frame and reinitialise, 
+                 *    must remove the local frame and reinitialise,
                  *    this is required to setup the callers context to resolve any symbol/function references.
                  */
                 struct mac_stack lmacstack;
@@ -2581,7 +2599,7 @@ do_ref_parm(void)               /* (int argument, string local_symbol, [int opti
     assert(x_nest_level >= 2);
     assert(mac_sd > 1);
 
-    --x_nest_level; 
+    --x_nest_level;
     --mac_sd; --mac_sp;
     sp = sym_elookup(LGET_PTR2(const char, lp));
     ++mac_sd; ++mac_sp;
