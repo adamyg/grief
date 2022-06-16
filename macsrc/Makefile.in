@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.23 2022/05/29 06:11:35 cvsuser Exp $
+# $Id: Makefile.in,v 1.24 2022/06/16 08:43:59 cvsuser Exp $
 # GRIEF macro library makefile.
 #
 #
@@ -47,7 +47,11 @@ D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 GRUNCH=		$(D_BIN)/grunch
 
+ifeq ("@ISWIN64@","yes")
+MACROS=		$(ROOT)/macros.x64
+else
 MACROS=		$(ROOT)/macros
+endif
 MKBD=		$(MACROS)/kbd
 MTTY=		$(MACROS)/tty
 MDEMOS=		$(MACROS)/demos

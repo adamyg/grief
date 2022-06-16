@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.133 2022/06/15 12:00:23 cvsuser Exp $
+# $Id: makelib.pl,v 1.134 2022/06/16 08:46:20 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -150,6 +150,7 @@ my %x_environment   = (
             },
 
         'mingw64'       => {    # MingW64 (64-bit mode)
+            ISWIN64         => 'yes',
             TOOLCHAIN       => 'mingw64',
             TOOLCHAINEXT    => '.mingw64',
             CC              => 'gcc',
@@ -740,6 +741,7 @@ my %win_entries     = (
         RMDIR               => '@BINPATH@rmdir.exe',
 
         ISWIN32             => 'yes',
+        ISWIN64             => 'no',
         PATHSEP             => ';',
         DEFS                => '-DHAVE_CONFIG_H -DWIN32=0x501',
 
