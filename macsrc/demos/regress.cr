@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: regress.cr,v 1.38 2021/08/14 17:08:33 cvsuser Exp $
+/* $Id: regress.cr,v 1.39 2022/06/16 05:17:29 cvsuser Exp $
  *
  *  This set of macros are used when debugging and fixing CRISP to aid in regression testing and
  *  catching bugs introduced inadvertently. These tests dont attempt an exhaustive test, yet
@@ -1963,43 +1963,57 @@ test_sprintf(void)
     string s1;
     int i;
 
+    // numeric padding
+    TEST(484, format("%4d", 12)     == "  12");     // padded
+    TEST(485, format("%-4d", 12)    == "12  ");     // padded, left justify
+    TEST(486, format("%-4d", 12345) == "12345");    // untruncated
+
+    // string padding
+    TEST(487, format("%4s", "12")   == "  12");     // padded
+    TEST(488, format("%-4s", "12")  == "12  ");     // padded, left justify
+    TEST(489, format("%-4s", "12345")  == "12345"); // untruncated
+
+    // string truncation
+    TEST(490, format("%.4s", "12")  == "12");       // padded
+    TEST(491, format("%.4s", "12345")  == "1234");  // truncated
+
     // enhanced features
-    TEST(484, sprintf(s1, "Hello world") == 11);
-    TEST(485, sprintf(s1, "%*s", 20, "") == 20);
-    TEST(486, sprintf(s1, "%b", 0xf3) == 8 && s1 == "11110011");
-    TEST(487, sprintf(s1, "val=%B", 3, "\10\2BITTWO\1BITONE") == 20 &&
+    TEST(492, sprintf(s1, "Hello world") == 11);
+    TEST(493, sprintf(s1, "%*s", 20, "") == 20);
+    TEST(494, sprintf(s1, "%b", 0xf3) == 8 && s1 == "11110011");
+    TEST(495, sprintf(s1, "val=%B", 3, "\10\2BITTWO\1BITONE") == 20 &&
                 s1 == "val=3<BITTWO,BITONE>");
-    TEST(488, sprintf(s1, "12345%n6", "i") == 6 && i == 5);
+    TEST(496, sprintf(s1, "12345%n6", "i") == 6 && i == 5);
 
     // error cases
-    TEST(489, sprintf(s1, "%s", NULL)   && s1 == "<NULL>");
-    TEST(490, sprintf(s1, "%s")         && s1 == "<bad-string>");
-    TEST(491, sprintf(s1, "%d", NULL)   && s1 == "0");
-    TEST(492, sprintf(s1, "%c", NULL)   && s1 == " ");
-    TEST(493, sprintf(s1, "%.2f", NULL) && s1 == "0.00");
-    TEST(494, sprintf(s1, "%y")         && s1 == "y");
+    TEST(497, sprintf(s1, "%s", NULL)   && s1 == "<NULL>");
+    TEST(498, sprintf(s1, "%s")         && s1 == "<bad-string>");
+    TEST(499, sprintf(s1, "%d", NULL)   && s1 == "0");
+    TEST(500, sprintf(s1, "%c", NULL)   && s1 == " ");
+    TEST(501, sprintf(s1, "%.2f", NULL) && s1 == "0.00");
+    TEST(502, sprintf(s1, "%y")         && s1 == "y");
 
     // format
-    TEST(495, format("Hello World") == "Hello World");
-    TEST(496, format("%b", 0xf3) == "11110011");
+    TEST(503, format("Hello World") == "Hello World");
+    TEST(504, format("%b", 0xf3) == "11110011");
 
     // large argument list
-    TEST(497, format("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+    TEST(505, format("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
                         "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "11.", "12.", "13.", "14.", "15.", "16.")
                   == "1.2.3.4.5.6.7.8.9.10.11.12.13.14.15.16.");
 
-    TEST(498, format("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+    TEST(506, format("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
                         "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "11.", "12.", "13.", "14.", "15.", "16.",
                         "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "11.", "12.", "13.", "14.", "15.", "16.")
                   == "1.2.3.4.5.6.7.8.9.10.11.12.13.14.15.16.1.2.3.4.5.6.7.8.9.10.11.12.13.14.15.16.");
 
-    TEST(499, format("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+    TEST(507, format("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
                         "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "11.", "12.", "13.", "14.", "15.", "16.",
                         "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "11.", "12.", "13.", "14.", "15.", "16.",
                         "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "11.", "12.", "13.", "14.", "15.", "16.")
                   == "1.2.3.4.5.6.7.8.9.10.11.12.13.14.15.16.1.2.3.4.5.6.7.8.9.10.11.12.13.14.15.16.1.2.3.4.5.6.7.8.9.10.11.12.13.14.15.16.");
 
-    TEST(500, format("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+    TEST(508, format("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
 			"1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "11.", "12.", "13.", "14.", "15.", "16.",
 			"1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "11.", "12.", "13.", "14.", "15.", "16.",
 			"1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "11.", "12.", "13.", "14.", "15.", "16.",
@@ -2027,35 +2041,35 @@ __regress_replacement(int x,
         //  return original 2th parameter
         //
         ret = __regress_replacement(2, a, b, c, d);
-        TEST(501, ret == a);
+        TEST(509, ret == a);
         break;
 
     case 2:
         //  return original 2th parameter
         //
         ret = __regress_replacement(2, NULL, b, c, d);
-        TEST(502, ret == a);
+        TEST(510, ret == a);
         break;
 
     case 3:
         //  return override 2th parameter
         //
         ret = __regress_replacement(2, 999, b, c, d);
-        TEST(503, ret == 999);
+        TEST(511, ret == 999);
         break;
 
     case 4:
         //  return original 6th parameter
         //
         ret = __regress_replacement(6, a, b, c, d);
-        TEST(504, ret == e);
+        TEST(512, ret == e);
         break;
 
     case 5:
         //  return original 6th parameter
         //
         ret = __regress_replacement(6, a, b, c, d, NULL);
-        TEST(505, ret == e);
+        TEST(513, ret == e);
     }
     return 42;
 }
@@ -2073,7 +2087,7 @@ test_replacement(void)
     ret = __regress_replacement(3, 1, "2", l3, 4, 5, "6", l7, 8);
     ret = __regress_replacement(4, 1, "2", l3, 4, 5, "6", l7, 8);
     ret = __regress_replacement(5, 1, "2", l3, 4, 5, "6", l7, 8);
-    TEST(506, ret == 42);
+    TEST(514, ret == 42);
 }
 
 
@@ -2084,21 +2098,21 @@ test_replacement(void)
 static void
 test_isa(void)
 {
-    TEST(507, isalpha('A'));
-    TEST(508, isascii('A'));
-    TEST(509, iscntrl(0x01));
-    TEST(510, iscsym('_'));
-    TEST(511, isgraph('A'));
-    TEST(512, isprint('A'));
-    TEST(513, ispunct('!'));
+    TEST(515, isalpha('A'));
+    TEST(516, isascii('A'));
+    TEST(517, iscntrl(0x01));
+    TEST(518, iscsym('_'));
+    TEST(519, isgraph('A'));
+    TEST(520, isprint('A'));
+    TEST(521, ispunct('!'));
 
-    TEST(514, isdigit('1')   && isdigit(0x30)     && isdigit("a1a", 2));
-    TEST(515, isdigit("1a1") && isdigit("a1a", 2) && !isdigit("a1a", -1) && !isdigit("", 1));
-    TEST(516, islower('a')   && !islower('A'));
-    TEST(517, isupper('A')   && !isupper('a'));
-    TEST(518, isalnum('Z')   && !isalnum('*'));
-    TEST(519, isxdigit('f')  && isxdigit('F')     && isxdigit('1'));
-    TEST(520, isspace(' ')   && isspace('\t')     && isspace('\n')       && !isspace('a'));
+    TEST(522, isdigit('1')   && isdigit(0x30)     && isdigit("a1a", 2));
+    TEST(523, isdigit("1a1") && isdigit("a1a", 2) && !isdigit("a1a", -1) && !isdigit("", 1));
+    TEST(524, islower('a')   && !islower('A'));
+    TEST(525, isupper('A')   && !isupper('a'));
+    TEST(526, isalnum('Z')   && !isalnum('*'));
+    TEST(527, isxdigit('f')  && isxdigit('F')     && isxdigit('1'));
+    TEST(528, isspace(' ')   && isspace('\t')     && isspace('\n')       && !isspace('a'));
 }
 
 
@@ -2109,23 +2123,23 @@ test_isa(void)
 static void
 test_basedir(void)
 {
-    TEST(521, basename("dir/file") == "file");
-    TEST(522, basename("dir/file.c", ".c") == "file");
-    TEST(523, basename("", "") == "");
-    TEST(524, basename("//", "") == "/");
-    TEST(525, basename("dir/file/") == "file");
-    TEST(526, basename("dir\\file/") == "file");
-    TEST(527, basename("/x/") == "x");
-    TEST(528, basename("x/") == "x");
-    TEST(529, basename("/x") == "x");
+    TEST(529, basename("dir/file") == "file");
+    TEST(530, basename("dir/file.c", ".c") == "file");
+    TEST(531, basename("", "") == "");
+    TEST(532, basename("//", "") == "/");
+    TEST(533, basename("dir/file/") == "file");
+    TEST(534, basename("dir\\file/") == "file");
+    TEST(535, basename("/x/") == "x");
+    TEST(536, basename("x/") == "x");
+    TEST(537, basename("/x") == "x");
 
-    TEST(530, dirname(".") == ".");
-    TEST(531, dirname("/") == "/");
-    TEST(532, dirname("//") == "/");
-    TEST(533, dirname("/xx") == "/");
-    TEST(534, dirname("//xx") == "/");
-    TEST(535, dirname("aaa/bbb") == "aaa");
-    TEST(536, dirname("aaaa//bbb/cccc///") == "aaaa//bbb" );
+    TEST(538, dirname(".") == ".");
+    TEST(539, dirname("/") == "/");
+    TEST(540, dirname("//") == "/");
+    TEST(541, dirname("/xx") == "/");
+    TEST(542, dirname("//xx") == "/");
+    TEST(543, dirname("aaa/bbb") == "aaa");
+    TEST(544, dirname("aaaa//bbb/cccc///") == "aaaa//bbb" );
 }
 
 
@@ -2137,21 +2151,21 @@ static void
 test_env(void)
 {
     putenv("GRREGRESS", "home");
-    TEST(537, getenv("GRREGRESS") == "home");
-    TEST(538, expandpath("$$/filename", 0x3) == "$/filename");
-    TEST(539, expandpath("$GRREGRESS", 0x3) == "home");
-    TEST(540, expandpath("$GRREGRESS/", 0x3) == "home/");
-    TEST(541, expandpath("${GRREGRESS}xxx/", 0x3) == "homexxx/");
-    TEST(542, expandpath("$(GRREGRESS)xxx/", 0x3) == "homexxx/");
+    TEST(545, getenv("GRREGRESS") == "home");
+    TEST(546, expandpath("$$/filename", 0x3) == "$/filename");
+    TEST(547, expandpath("$GRREGRESS", 0x3) == "home");
+    TEST(548, expandpath("$GRREGRESS/", 0x3) == "home/");
+    TEST(549, expandpath("${GRREGRESS}xxx/", 0x3) == "homexxx/");
+    TEST(550, expandpath("$(GRREGRESS)xxx/", 0x3) == "homexxx/");
 
     /*invalid*/
-    TEST(543, expandpath("${GRREGRESSxxx/", 0x3) == "${GRREGRESSxxx/");
-    TEST(544, expandpath("$(GRREGRESSxxx/", 0x3) == "$(GRREGRESSxxx/");
-    TEST(545, expandpath("${GRREGRESSxxx", 0x3) == "${GRREGRESSxxx");
-    TEST(546, expandpath("$(GRREGRESSxxx", 0x3) == "$(GRREGRESSxxx");
-    TEST(547, expandpath("$UNKNOWN/", 0x3) == "/");
-    TEST(548, expandpath("$(UNKNOWN)xxx/", 0x3) == "xxx/");
-    TEST(549, expandpath("${UNKNOWN}xxx/", 0x3) == "xxx/");
+    TEST(551, expandpath("${GRREGRESSxxx/", 0x3) == "${GRREGRESSxxx/");
+    TEST(552, expandpath("$(GRREGRESSxxx/", 0x3) == "$(GRREGRESSxxx/");
+    TEST(553, expandpath("${GRREGRESSxxx", 0x3) == "${GRREGRESSxxx");
+    TEST(554, expandpath("$(GRREGRESSxxx", 0x3) == "$(GRREGRESSxxx");
+    TEST(555, expandpath("$UNKNOWN/", 0x3) == "/");
+    TEST(556, expandpath("$(UNKNOWN)xxx/", 0x3) == "xxx/");
+    TEST(557, expandpath("${UNKNOWN}xxx/", 0x3) == "xxx/");
 }
 
 
@@ -2166,22 +2180,22 @@ test_register(void)
 
     register_macro(REG_REGRESS, "__regress_event");
     call_registered_macro(REG_REGRESS);
-    TEST(550, 1 == event);
+    TEST(558, 1 == event);
 
     event = 0;
     register_macro(REG_REGRESS, "__regress_event");
     reregister_macro(REG_REGRESS, "__regress_event");
     call_registered_macro(REG_REGRESS);
-    TEST(551, 2 == event);
+    TEST(559, 2 == event);
 
     event = 0;
     unregister_macro(REG_REGRESS, "__regress_event");
     call_registered_macro(REG_REGRESS);
-    TEST(552, 1 == event);
+    TEST(560, 1 == event);
 
     event = 0;
     unregister_macro(REG_REGRESS, "__regress_event");
-    TEST(553, 0 == event);
+    TEST(561, 0 == event);
 }
 
 
@@ -2204,13 +2218,13 @@ test_buffer(void)
     if ((buf = create_buffer("-regress-buffer-", NULL, TRUE)) == -1) {
         return;
     }
-    TEST(554, curbuf == inq_buffer());
-    TEST(555, curbuf == set_buffer(buf));
-    TEST(556, buf == inq_buffer());
-    TEST(557, 0 != inq_system());
-    TEST(558, (inq_buffer_flags(buf) & BF_SYSBUF) == BF_SYSBUF);
-    TEST(559, 0 != inq_buffer_flags(NULL, "sysbuf"));
-    TEST(560, 0 == inq_modified());
+    TEST(562, curbuf == inq_buffer());
+    TEST(563, curbuf == set_buffer(buf));
+    TEST(564, buf == inq_buffer());
+    TEST(565, 0 != inq_system());
+    TEST(566, (inq_buffer_flags(buf) & BF_SYSBUF) == BF_SYSBUF);
+    TEST(567, 0 != inq_buffer_flags(NULL, "sysbuf"));
+    TEST(568, 0 == inq_modified());
     //TODO
     //  set_attribute()
     //  inq_attribute()
@@ -2226,40 +2240,40 @@ test_buffer(void)
 
         top_of_buffer();
         count = insert(sval);
-        TEST(561, slen == count);
-        TEST(562, slen == inq_line_length());
+        TEST(569, slen == count);
+        TEST(570, slen == inq_line_length());
 
         top_of_buffer();
         line = read(NULL, status);
-        TEST(563, status == 1);                 /* EOF */
-        TEST(564, line == sval);
+        TEST(571, status == 1);                 /* EOF */
+        TEST(572, line == sval);
 
         line = read(slen, status);
-        TEST(565, status == 1);                 /* EOF */
-        TEST(566, line == sval);
+        TEST(573, status == 1);                 /* EOF */
+        TEST(574, line == sval);
 
         line = read(1, status);
-        TEST(567, status == 0);                 /* partial */
-        TEST(568, line == "1");
+        TEST(575, status == 0);                 /* partial */
+        TEST(576, line == "1");
 
         line = read(9, status);
-        TEST(569, status == 0);                 /* partial */
-        TEST(570, line == "123456789");
+        TEST(577, status == 0);                 /* partial */
+        TEST(578, line == "123456789");
 
         top_of_buffer();
         count = insertf("%s\n", "abcdefg1234567890");
-        TEST(571, 18 == count);
-        TEST(572, slen == inq_line_length());
+        TEST(579, 18 == count);
+        TEST(580, slen == inq_line_length());
 
         top_of_buffer();
         line = read(NULL, status);
-        TEST(573, status == 1);                 /* EOF */
-        TEST(574, line == "abcdefg1234567890\n");
+        TEST(581, status == 1);                 /* EOF */
+        TEST(582, line == "abcdefg1234567890\n");
     }
 
     restore_position(2);
-    TEST(575, curbuf == inq_buffer());
-    TEST(576, curwin == inq_window());
+    TEST(583, curbuf == inq_buffer());
+    TEST(584, curwin == inq_window());
     delete_buffer(buf);
 }
 
@@ -2267,7 +2281,7 @@ test_buffer(void)
 static void
 test_key(void)
 {
-    TEST(577, int_to_key(key_to_int("<Up>")) == "<Up>");
+    TEST(585, int_to_key(key_to_int("<Up>")) == "<Up>");
 }
 
 
@@ -2277,11 +2291,11 @@ test_debug(void)
     list l1;
 
     l1 = debug_support(DBG_INQ_VARS, 0);
-    TEST(578, is_list(l1));
+    TEST(586, is_list(l1));
     l1 = debug_support(DBG_STACK_TRACE, NULL, "");
-    TEST(579, is_list(l1));
+    TEST(587, is_list(l1));
     l1 = debug_support(DBG_INQ_VAR_INFO, 0, "l1");
-    TEST(580, is_list(l1));
+    TEST(588, is_list(l1));
 }
 
 
@@ -2291,27 +2305,27 @@ test_strtol(void)
     int ret, endp;
 
     ret = strtol("xxx");                        /* basic */
-    TEST(581, ret == 0);
+    TEST(589, ret == 0);
 
     ret = strtol("1");                          /* dec */
-    TEST(582, ret == 1);
+    TEST(590, ret == 1);
 
     ret = strtol("01");                         /* oct */
-    TEST(583, ret == 1);
+    TEST(591, ret == 1);
 
     ret = strtol("0x1");                        /* hex */
-    TEST(584, ret == 1);
+    TEST(592, ret == 1);
 
     ret = strtol("g", NULL, 36);                /* base 36 (0123456789abc...) */
-    TEST(585, ret == 16);
+    TEST(593, ret == 16);
 
     ret = strtol("xxx", endp);                  /* invalid */
-    TEST(586, ret == 0);
-    TEST(587, endp == 0);
+    TEST(594, ret == 0);
+    TEST(595, endp == 0);
 
     ret = strtol("12", endp);
-    TEST(588, ret == 12);
-    TEST(589, endp == 3);
+    TEST(596, ret == 12);
+    TEST(597, endp == 3);
 }
 
 
@@ -2322,24 +2336,24 @@ test_strtof(void)
     int endp;
 
     ret = strtof("0.0");                        /* dec */
-    TEST(590, ret == 0.0);
+    TEST(598, ret == 0.0);
 
     ret = strtof("1.0");                        /* dec */
-    TEST(591, ret == 1.0);
+    TEST(599, ret == 1.0);
 
     ret = strtof("xxx", endp);                  /* invalid */
-    TEST(592, ret == 0);
-    TEST(593, endp == 0);
+    TEST(600, ret == 0);
+    TEST(601, endp == 0);
 
     ret = strtof("0.0");                        /* dec */
-    TEST(594, ret == 0.0);
+    TEST(602, ret == 0.0);
 
     ret = strtof("1.0");                        /* dec */
-    TEST(595, ret == 1.0);
+    TEST(603, ret == 1.0);
 
     ret = strtof("xxx", endp);                  /* invalid */
-    TEST(596, ret == 0);
-    TEST(597, endp == 0);
+    TEST(604, ret == 0);
+    TEST(605, endp == 0);
 }
 
 
@@ -2350,45 +2364,45 @@ test_strtod(void)
     int endp;
 
     ret = strtod("0.0");                        /* dec */
-    TEST(598, ret == 0.0);
+    TEST(606, ret == 0.0);
 
     ret = strtod("1.0");                        /* dec */
-    TEST(599, ret == 1.0);
+    TEST(607, ret == 1.0);
 
     ret = strtod("xxx", endp);                  /* invalid */
-    TEST(600, ret == 0);
-    TEST(601, endp == 0);
+    TEST(608, ret == 0);
+    TEST(609, endp == 0);
 
     ret = strtod("0.0");                        /* dec */
-    TEST(602, ret == 0.0);
+    TEST(610, ret == 0.0);
 
     ret = strtod("1.0");                        /* dec */
-    TEST(603, ret == 1.0);
+    TEST(611, ret == 1.0);
 
     ret = strtod("xxx", endp);                  /* invalid */
-    TEST(604, ret == 0);
-    TEST(605, endp == 0);
+    TEST(612, ret == 0);
+    TEST(613, endp == 0);
 }
 
 
 static void
 test_defaults1(int value = 666)
 {
-    TEST(606, value == 666);
+    TEST(614, value == 666);
 }
 
 
 static void
 test_defaults2(string value = "666")
 {
-    TEST(607, value == "666");
+    TEST(615, value == "666");
 }
 
 
 static void
 test_defaults3(string value = 1.1)
 {
-    TEST(608, value == 1.1);
+    TEST(616, value == 1.1);
 }
 
 
@@ -2430,11 +2444,11 @@ test_reference(void)
     float fvalue = 1;
 
     test_reference1(ivalue);
-    TEST(609, ivalue == 2);
+    TEST(617, ivalue == 2);
     test_reference2(svalue);
-    TEST(610, svalue == "two");
+    TEST(618, svalue == "two");
     test_reference3(fvalue);
-    TEST(611, fvalue == 2);
+    TEST(619, fvalue == 2);
 }
 
 
@@ -2454,7 +2468,7 @@ test_pushpop(void)
         sprintf(msg, "work%04d", i);
         push(l, msg);
     }
-    TEST(612, length_of_list(l) == 1000);
+    TEST(620, length_of_list(l) == 1000);
 
     for (i = i-1; i >= 0; --i) {
         sprintf(msg, "work%04d", i);
@@ -2463,13 +2477,13 @@ test_pushpop(void)
             break;
         }
     }
-    TEST(613, success);
+    TEST(621, success);
 
-    TEST(614, length_of_list(l) == 0);
+    TEST(622, length_of_list(l) == 0);
     pause_on_error(0, FALSE);
     r = pop(l);
     pause_on_error(1, FALSE);
-    TEST(615, is_null(r));                      /* FIXME/XXX - is_null(pop(l)) broken/limitation of LVAL's */
+    TEST(623, is_null(r));                      /* FIXME/XXX - is_null(pop(l)) broken/limitation of LVAL's */
 }
 
 
@@ -2478,12 +2492,12 @@ test_globals(void)
 {
     int line, col;
 
-    TEST(616, inq_window() == current_window);
-    TEST(617, inq_buffer() == current_buffer);
+    TEST(624, inq_window() == current_window);
+    TEST(625, inq_buffer() == current_buffer);
     inq_position(line, col);
-    TEST(618, line == current_line);
+    TEST(626, line == current_line);
     inq_position(line, col);
-    TEST(619, col == current_col);
+    TEST(627, col == current_col);
 }
 
 
@@ -2494,7 +2508,7 @@ test_globals(void)
 static void
 test_search(void)
 {
-    TEST(620, quote_regexp("<>") == "\\<\\>");
+    TEST(628, quote_regexp("<>") == "\\<\\>");
 //  search string
 //  search buffer
 }
@@ -2512,17 +2526,17 @@ test_search(void)
 static void
 test_called(void)
 {
-    TEST(621, "test_called" == caller());
+    TEST(629, "test_called" == caller());
     set_calling_name("");
-    TEST(622, "" == caller());
+    TEST(630, "" == caller());
     set_calling_name("test_called");
-    TEST(623, "test_called" == caller());
+    TEST(631, "test_called" == caller());
     set_calling_name("hello_world");
-    TEST(624, "hello_world" == caller());
+    TEST(632, "hello_world" == caller());
     set_calling_name(inq_called());
-    TEST(625, "regress" == caller());
+    TEST(633, "regress" == caller());
     set_calling_name(NULL);                     /* extension, reset/clear */
-    TEST(626, "test_called" == caller());
+    TEST(634, "test_called" == caller());
 }
 
 
@@ -2543,16 +2557,16 @@ test_macro(void)
     int ret;
 
     ret = inq_macro("regress");                 /* defined */
-    TEST(627, ret == 1);
+    TEST(635, ret == 1);
 
     ret = inq_macro("list_of_dictionaries");    /* builtin */
-    TEST(628, ret == 0);
+    TEST(636, ret == 0);
 
     ret = inq_macro("cut");                     /* replacement */
-    TEST(629, ret == 2);
+    TEST(637, ret == 2);
 
     ret = inq_macro("this_should_not_be_undefined");
-    TEST(630, ret == -1);                       /* undefined */
+    TEST(638, ret == -1);                       /* undefined */
 }
 
 
@@ -2568,12 +2582,12 @@ test_undef(void)
 //  //  control how 'undefines' are handled??
 //  try {
         if (1) {
-            TEST(631, inq_symbol("undefined_ival") == 0);
-            TEST(632, inq_symbol("undefined_fval") == 0);
-            TEST(633, inq_symbol("undefined_sval") == 0);
-            TEST(634, undefined_ival == 0);     /* wont be executed! */
-            TEST(635, undefined_fval == 0);     /* wont be executed! */
-            TEST(636, undefined_sval == "");    /* wont be executed! */
+            TEST(639, inq_symbol("undefined_ival") == 0);
+            TEST(640, inq_symbol("undefined_fval") == 0);
+            TEST(641, inq_symbol("undefined_sval") == 0);
+            TEST(642, undefined_ival == 0);     /* wont be executed! */
+            TEST(643, undefined_fval == 0);     /* wont be executed! */
+            TEST(644, undefined_sval == "");    /* wont be executed! */
         }
 //  } catch {
 //  } finally {
@@ -2592,12 +2606,12 @@ test_history(void)
     const string top = inq_macro_history(0);
 
                                                 /* <Alt-10> or from features */
-    TEST(637, top == "execute_macro" || top == "sel_list");
-    TEST(638, inq_command() == inq_macro_history());
+    TEST(645, top == "execute_macro" || top == "sel_list");
+    TEST(646, inq_command() == inq_macro_history());
     set_macro_history(0, "function1");
     set_macro_history(1, "function2");
-    TEST(639, "function1" == inq_macro_history());
-    TEST(640, "function2" == inq_macro_history(1));
+    TEST(647, "function1" == inq_macro_history());
+    TEST(648, "function2" == inq_macro_history(1));
 }
 
 
@@ -2609,24 +2623,24 @@ static void
 test_scope(void)
 {
     if (first_time()) {                         /* can only be run once */
-        TEST(641, 1 == scope_1());
-        TEST(642, 2 == scope_1());
-        TEST(643, 3 == scope_1());
+        TEST(649, 1 == scope_1());
+        TEST(650, 2 == scope_1());
+        TEST(651, 3 == scope_1());
 
-        TEST(644, 1 == scope_2());
-        TEST(645, 2 == scope_2());
-        TEST(646, 3 == scope_2());
+        TEST(652, 1 == scope_2());
+        TEST(653, 2 == scope_2());
+        TEST(654, 3 == scope_2());
 
-        TEST(647, 1 == scope_3());
-        TEST(648, 2 == scope_3());
-        TEST(649, 3 == scope_3());
+        TEST(655, 1 == scope_3());
+        TEST(656, 2 == scope_3());
+        TEST(657, 3 == scope_3());
     } else {                                    /* emulate */
         extern int num_passed;
         num_passed += 9;
     }
 
-    TESTASYNC(650, 0 == inq_symbol("x_extern_dontexist"));
-    TEST(651, 0 != inq_symbol("x_static"));
+    TESTASYNC(658, 0 == inq_symbol("x_extern_dontexist"));
+    TEST(659, 0 != inq_symbol("x_static"));
 }
 
 
@@ -2682,38 +2696,38 @@ test_dict(void)
 
     /* create dictionaries */
     dict = create_dictionary();
-    TEST(652, dict);
+    TEST(660, dict);
 
     dict2 = create_dictionary("namedict");
-    TEST(653, dict2);
+    TEST(661, dict2);
 
     /* basic set/get primitives */
     set_property(dict, "property", 1234);
     var = get_property(dict, "property");
-    TEST(654, 1234 == var);
+    TEST(662, 1234 == var);
 
     set_property(dict, "property", "hello world");
     var = get_property(dict, "property");
-    TEST(655, "hello world" == var);
+    TEST(663, "hello world" == var);
 
     /* indirection operators */
     dict.value = "value1";                      /* FIXME/XXX - compiler issues yet resolved */
-    TEST(656, "value1" == dict.value);
+    TEST(664, "value1" == dict.value);
 
     dict2.value = "value2";
     dict.indirect = dict2;                      /* FIXME/XXX - reference count issues */
-    TEST(657, "value2" == dict.indirect.value);
+    TEST(665, "value2" == dict.indirect.value);
     ret = dict_exists(dict, "property");
-    TEST(658, ret);
+    TEST(666, ret);
 
     l1 = dict_list(dict);
-    TEST(659, is_list(l1));
-    TEST(660, 3 == length_of_list(l1));
+    TEST(667, is_list(l1));
+    TEST(668, 3 == length_of_list(l1));
 
     set_property(dict, "property2", 1234);
     set_property(dict, "property3", 5678);
     l1 = dict_list(dict);
-    TEST(661, 5 == length_of_list(l1));
+    TEST(669, 5 == length_of_list(l1));
 
     // FIXME/XXX --
     //  compiler bug, allows declare when string expected.
@@ -2726,36 +2740,36 @@ test_dict(void)
     while ((idx = dict_each(dict, key, value)) >= 0) {
         switch(key) {
         case "property":
-            TESTASYNC(662, "hello world" == value);
+            TESTASYNC(670, "hello world" == value);
             ++count;
             break;
         case "property2":
-            TESTASYNC(663, 1234 == value);
+            TESTASYNC(671, 1234 == value);
             ++count;
             break;
         case "property3":
-            TESTASYNC(664, 5678 == value);
+            TESTASYNC(672, 5678 == value);
             ++count;
             break;
         }
     }
-    TESTASYNC(665, 3 == count);
+    TESTASYNC(673, 3 == count);
 
     ret = dict_delete(dict, "property");
-    TEST(666, 0 == ret);
+    TEST(674, 0 == ret);
 
     l1 = dict_list(dict);
-    TEST(667, is_list(l1));
-    TEST(668, 4 == length_of_list(l1));
+    TEST(675, is_list(l1));
+    TEST(676, 4 == length_of_list(l1));
 
     l1 = list_of_dictionaries();
-    TEST(669, is_list(l1));
-    TEST(670, length_of_list(l1) >= 2);         /* all dictionaries */
+    TEST(677, is_list(l1));
+    TEST(678, length_of_list(l1) >= 2);         /* all dictionaries */
 
     ret = delete_dictionary(dict);
-    TEST(671, 0 == ret);
+    TEST(679, 0 == ret);
     ret = delete_dictionary(dict2);
-    TEST(672, 0 == ret);
+    TEST(680, 0 == ret);
 }
 
 
@@ -2767,7 +2781,7 @@ test_dict(void)
 static int
 test_leaks(void)
 {
-    TEST(673, leak_1(1000) == 1000);            /* list are limited 2^16 atoms */
+    TEST(681, leak_1(1000) == 1000);            /* list are limited 2^16 atoms */
 }
 
 
@@ -2872,8 +2886,8 @@ regress_renumber(void)
         while (re_search(0, "TES[A-Z]+([0-9]+,") > 0) {
             /*
              *  examples:
-             *      TEST(674,
-             *      TESTASYNC(675,
+             *      TEST(682,
+             *      TESTASYNC(683,
              */
             line = read(18);
             delete_char(index(line, ","));
