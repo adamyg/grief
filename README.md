@@ -33,11 +33,11 @@ Facility, was a popular programmer's text editor in the 1980s and early 1990s.
         * Microsoft Windows (native/cygwin)
         * Mac OS/X
         
-   * Other operating systems; working may be required
+   * Other operating systems; work may be required
 
         * HP-UX
         * AIX
-        * Solaris (SPARC and x86)
+        * Solaris (SPARC and x86) 
 
 Examples
 --------------------
@@ -46,65 +46,51 @@ Examples
 
 ![Example2](https://github.com/adamyg/grief/blob/master/hlpdoc/examples/Example2.png?raw=true)
     
-       
+   
+Installation:
+--------------------
+
+Recent distributions are now bundled with an installer, the following shall prompt and then check for available upgrades.
+Note: Automatic checks wont occur at this time; functionality staged for a later release.
+
+```
+grupdater force
+```
+
 Distributions:
 --------------------
 
-   * Win32
+   * WIN32 binaries
 
-        * grwin32-build#.exe
-                WIN32 installer.
-        * _grinit.example
-                Example configuration, by default located within your windows
-                'USERPROFILE' directory (eg "C:\Documents and Settings\username"),
-                as "_grinit".
-        * dict-en.zip
-                English dictionaries; place under the installation directory within
-                the subdir 'dictionaries' (eg "C:\Program Files\Grief\dictionaries").
+        https://github.com/adamyg/grief/releases
+        and https://sourceforge.net/projects/grief
 
-   * Cygwin
+   * Source
 
-        * grcygwin32-build#.tgz
-                Cygwin 1.7, 32 bit binary distribution tarball.
-        * grcygwin64-build#.tgz
-                Cygwin 1.7, 64 bit binary distribution tarball.
-
-   * source
-
-        * grsrc-latest.tgz
-        * grsrc-latest.zip
-                Lastest source tarballs.
-        * macsrc-build#.zip
-                Macro source reference.
-
-Source:
---------------------
-
-The latest build and information can be found at the links below:
-
-    * https://sourceforge.net/projects/grief
-    * https://github.com/adamyg/grief
-    
-Externally reviewed information regarding the development of BRIEF,
-can be found at the following
-
-    * http://en.wikipedia.org/wiki/Brief_(text_editor)
-
+        https://github.com/adamyg/grief/releases
+        
+        To build from source, review the github workflows: https://github.com/adamyg/grief/blob/master/.github/workflows/build.yml
+              
+       
 Status:
 --------------------
 
 Please feel free to raise tickets on SourceForge when issues are encountered.
 
+
 Other Resources:
 --------------------------------
 
-Details about the commercially supported BRIEF clone CRisPEdit(tm),
-can be found at the following.
+Externally reviewed information regarding the development of BRIEF, can be found at the following
+
+    * http://en.wikipedia.org/wiki/Brief_(text_editor)
+
+Details about the commercially supported BRIEF clone CRisPEdit(tm), can be found at the following.
 
     * <http://www.crisp.demon.co.uk>
 
     * <http://www.crisp.com>
 
-last update: May/2022
+last update: June/2022
 
 -end-
