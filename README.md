@@ -27,17 +27,30 @@ family of programmers editors.
 Brief, BRIEF, or B.R.I.E.F., an acronym for Basic Reconfigurable Interactive Editing
 Facility, was a popular programmer's text editor in the 1980s and early 1990s.
 
-   * Supported operating systems
+The following environments and toolchains are supported.
 
-        * Linux
-        * Microsoft Windows (native/cygwin)
-        * Mac OS/X
-        
-   * Other operating systems; work may be required
+  * Actively tested operating systems
 
-        * HP-UX
-        * AIX
-        * Solaris (SPARC and x86) 
+      * Linux (gcc)
+      * Cygwin (gcc)
+      * Win32 (MSVC 2008-2022, Open-Watcom 1.9+, Mingw64/32 latest)
+
+  * Not recently tested, yet builds.
+
+      * OS/X 10.4+
+
+  * Not recently tested, yet *should* build; with minimal effort.
+
+      * HP/UX (gcc)
+      * Solaris (gcc)
+      * BSD Net/Free/Open
+      * AIX (gcc)
+
+  * Defunct yet previously supported; effort assumed
+
+      * OS/2
+      * DOS (djgpp)
+      * VMS
 
 Examples
 --------------------
