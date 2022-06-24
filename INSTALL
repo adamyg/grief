@@ -130,30 +130,30 @@
     On UNIX variations (including cygwin), build by following these steps:
 
       a. Optionally the following external packages can be in additional 
-      functionality; auto-detected during 'conf
+      functionality; auto-detected during 'configure'.
 
-			enchant-devel       Wrapper library for various s
-			hunspell-devel      Spell checker and morphologic
-			aspell-devel        GNU aspell.
+                        enchant-devel       Wrapper library for various s
+                        hunspell-devel      Spell checker and morphologic
+                        aspell-devel        GNU aspell.
 
-			enca-devel          Extremely Naive Charset Analy
-			libguess-devel      Speed character set detection
+                        enca-devel          Extremely Naive Charset Analyiser
+                        libguess-devel      Speed character set detection
 
-			libexplain-devel    System message add-value.
+                        libexplain-devel    System message add-value.
 
-			libarchive-devel    Archive access.
-			libicu-devel        Character conversion.
+                        libarchive-devel    Archive access.
+                        libicu-devel        Character conversion.
 
-			libbz2-devel        bzip compression.
-			libzstd-devel       gz compression.
-			xz-devel            liblzma.
-			snappy-devel        google fast/compressor/decomp
+                        libbz2-devel        bzip compression.
+                        libzstd-devel       gz compression.
+                        xz-devel            liblzma.
+                        snappy-devel        google fast/compressor/decomp
 
         plus the following, which are generally available.
 
-			ncurses-devel		Terminal interface library.
-			libcurl-devel       Network tools.
-			openssl-devel       OpenSSL.
+                        ncurses-devel       Terminal interface library.
+                        libcurl-devel       Network tools.
+                        openssl-devel       OpenSSL.
 
       b. If you're building with a non-standard compiler or one known, by something
       other than "cc" or "gcc" then you can set the environment variable "CC" to that.

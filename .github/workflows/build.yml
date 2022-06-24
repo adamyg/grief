@@ -62,6 +62,19 @@ jobs:
       with:
         version: "2.0"
         location: "C:\\Watcom"
+        
+    - name: Ubuntu, setup
+      if: startsWith(matrix.config.name, 'Ubuntu Latest')
+      shell: bash
+      run: |
+        sudo apt-get install -y libncurses-dev
+        sudo apt-get install -y libncursesw5-dev
+        sudo apt-get install -y libenchant-2-dev
+        sudo apt-get install -y libaspell-dev
+        sudo apt-get install -y libenca-dev
+        sudo apt-get install -y libguess-dev
+        sudo apt-get install -y libexplain-dev
+        sudo apt-get install -y libarchive-dev
 
     - name: Windows, generate
       if: startsWith(matrix.config.name, 'Windows Latest')
