@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.11 2022/06/01 14:21:19 cvsuser Exp $
+# $Id: Makefile.in,v 1.12 2022/06/27 16:17:41 cvsuser Exp $
 # libduktape makefile.
 #
 #
@@ -189,7 +189,7 @@ $(DUK):			Makefile $(DUKOBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(DUKOBJS) $(DUKTAPEDLL) $(LDLIBS) @LDMAPFILE@
 
 version.h:		Makefile
-		$(PERL) ./version.pl "$(VERSION)"
+		$(PERL) ./version.pl --version "$(VERSION)"
                 
 $(D_OBJ)/.created:
 		-@mkdir $(D_OBJ)
