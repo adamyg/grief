@@ -41,7 +41,8 @@ static list xlist =  {      // mode extension map
     "txt",                  ".txt.",
     "slang",                ".sl.",
     "fortran",              ".f.f77.f90.",
-    "vim",                  ".vim."
+    "vim",                  ".vim.",
+    "yaml",                 ".yaml."
     };
 
 
@@ -57,9 +58,11 @@ main(void)
     autoload("modes/c",             "_c_mode", "_c_modeattach", "_cplusplus_mode",
                                             "_c_hier_list", "_cpp_hier_list");
 
-    autoload("modes/cr",            "_cr_mode", "_cr_hier_list");
-
     autoload("modes/chlog",         "_chlog_mode", "_changelog_mode");
+
+    autoload("modes/cmake",         "_cmake_mode");
+
+    autoload("modes/cr",            "_cr_mode", "_cr_hier_list");
 
     autoload("modes/csharp",        "_csharp_mode", "_csharp_hier_list");
 
@@ -83,6 +86,8 @@ main(void)
 
     autoload("modes/perl",          "_perl_mode", "_perl_hier_list");
 
+    autoload("modes/protobuf",      "_protobuf_mode");
+
     autoload("modes/sh",            "_sh_mode");
 
     autoload("modes/slang",         "_slang_mode");
@@ -94,6 +99,8 @@ main(void)
     autoload("modes/txt",           "_txt_mode");
 
     autoload("modes/vim",           "_vim_mode");
+
+    autoload("modes/yaml",          "_yaml_mode");
 
     autoload("modes/doxygen",       "doxygen_keyword");
 }
@@ -187,4 +194,3 @@ _mode_package(string ext, string cmd)
 }
 
 /*end*/
-
