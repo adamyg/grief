@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_version_c,"$Id: version.c,v 1.28 2021/04/20 13:59:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_version_c,"$Id: version.c,v 1.29 2022/06/16 14:18:46 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: version.c,v 1.28 2021/04/20 13:59:56 cvsuser Exp $
+/* $Id: version.c,v 1.29 2022/06/16 14:18:46 cvsuser Exp $
  * Version strings.
  *
  *
@@ -26,6 +26,6 @@ const int               x_edit_version  = GR_VERSION_3;
 
 const char *            x_version       = GR_VERSION;
 const char *            x_compiled      = __DATE__ " " __TIME__;
-const char *            x_copyright     = "(C) 1998-2021 A. Young, 1991 P. Fox";
+const char *            x_copyright     = "(C) 1998-2022 A. Young, 1991 P. Fox";
 
 /*end*/
