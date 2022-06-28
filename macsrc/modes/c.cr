@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*-
- * $Id: c.cr,v 1.27 2014/11/15 21:07:17 ayoung Exp $
+ * $Id: c.cr,v 1.28 2022/06/19 12:53:21 cvsuser Exp $
  * C/C++ Language support mode.
  *
  *
@@ -503,13 +503,16 @@ keywords_gnu(void)
 
     define_keywords(SYNK_CONSTANT,
         "__GNUC__,__GNUC_MINOR__,__GNUC_PATCHLEVEL__,"+
+        "__clang__,__clang_major__,__clang_minor__,__clang_patchlevel__,__clang_version__,"+
         "WIN32,_WIN32,_WIN32_WINNT,WIN32_MEAN_AND_LEAN,"+
         "__MSDOS__,"+
         "__CYGWIN__,"+
-        "__MINGW32__,"+
+        "__MINGW32__,__MINGW32_VERSION_MAJOR,__MINGW32_VERSION_MINOR,"+
+        "__MINGW64__,__MINGW64_VERSION_MAJOR,__MINGW64_VERSION_MINOR,"+
         "__WATCOMC__,"+
         "_MSC_VER,"+
         "__BORLANDC__,"+
+        "__SUNPRO_C,__SUNPRO_CC,"+
         "unix,"+
         "hpux,"+
         "linux,__linux__,"+
