@@ -27,17 +27,34 @@ family of programmers editors.
 Brief, BRIEF, or B.R.I.E.F., an acronym for Basic Reconfigurable Interactive Editing
 Facility, was a popular programmer's text editor in the 1980s and early 1990s.
 
-   * Supported operating systems
+GRIEF 3.2.x build Tree:
+----------------------------
 
-        * Linux
-        * Microsoft Windows (native/cygwin)
-        * Mac OS/X
-        
-   * Other operating systems; work may be required
+The following environments and toolchains are supported.
 
-        * HP-UX
-        * AIX
-        * Solaris (SPARC and x86) 
+    * Actively tested operating systems
+
+        * Linux (gcc)
+        * Cygwin (gcc)
+        * Win32 (MSVC 2008-2022, Open-Watcom 1.9+, Mingw64/32 latest)
+
+    * Not recently tested, yet builds.
+
+        * OS/X 10.4+
+
+    * Not recently tested, yet *should* build; with minimal effort.
+
+        * HP/UX (gcc)
+        * Solaris (gcc)
+        * BSD Net/Free/Open
+        * AIX (gcc)
+
+    * Defunct yet previously supported; effort assumed
+
+        * OS/2
+        * DOS (djgpp)
+        * VMS
+
 
 Examples
 --------------------
@@ -45,8 +62,8 @@ Examples
 ![Example1](https://github.com/adamyg/grief/blob/master/hlpdoc/examples/Example1.png?raw=true)
 
 ![Example2](https://github.com/adamyg/grief/blob/master/hlpdoc/examples/Example2.png?raw=true)
-    
-   
+
+
 Installation:
 --------------------
 
@@ -68,10 +85,11 @@ Distributions:
    * Source
 
         https://github.com/adamyg/grief/releases
-        
-        To build from source, review the github workflows: https://github.com/adamyg/grief/blob/master/.github/workflows/build.yml
-              
-       
+
+        To build from source, review the github workflows:
+        https://github.com/adamyg/grief/blob/master/.github/workflows/build.yml
+
+
 Status:
 --------------------
 
@@ -94,3 +112,4 @@ Details about the commercially supported BRIEF clone CRisPEdit(tm), can be found
 last update: June/2022
 
 -end-
+
