@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_regdfa_c,"$Id: regdfa.c,v 1.33 2021/06/18 14:41:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_regdfa_c,"$Id: regdfa.c,v 1.34 2022/07/10 13:09:43 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: regdfa.c,v 1.33 2021/06/18 14:41:57 cvsuser Exp $
+/* $Id: regdfa.c,v 1.34 2022/07/10 13:09:43 cvsuser Exp $
  * DFA regular expression engine.
  * Streamlined engine for use by the syntax hiliting code.
  *
@@ -99,7 +99,7 @@ __CIDENT_RCSID(gr_regdfa_c,"$Id: regdfa.c,v 1.33 2021/06/18 14:41:57 cvsuser Exp
  *          xdigit -        A hexadecimal digit.
  *
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -162,10 +162,15 @@ typedef struct dfaheap {
 #define HEAP_MAGIC          MKMAGIC('D','f','a','H')
     MAGIC_t                 h_magic;
     unsigned                h_size;
+    unsigned                h_resize;
+    struct dfaheap *        h_current;          /* active arena */
+    struct dfaheap *        h_arenas[3];        /* additional arenas */
     dfaheapnode_t *         h_head;
     char *                  h_cursor;
     char *                  h_end;
+    alignment_t             h_alignment;        /* force alignment */
 } dfaheap_t;
+
 
 /*
  *  Character set management
@@ -188,7 +193,7 @@ typedef struct dfaheap {
 #else
 #error unknown SIZEOF_INT ...
 #endif
-
+ 
 #define CSET_MAX            (256)               /* assumes 2^x size */
 #define CSET_SIZE           (CSET_MAX/INT_BITS)
 
@@ -246,19 +251,19 @@ typedef uint16_t dfaindex_t;
 #error "LOOKUP_MAX range too large ..."
 #endif
 
-typedef RB_HEAD(dfatree, dfastate) dfatree_t;
+typedef RB_HEAD(dfatree, s_dfastate) dfatree_t;
 
-typedef struct dfastate {
-    RB_ENTRY(dfastate)      dfanode;            /* RB tree node */
+typedef struct s_dfastate {
+    RB_ENTRY(s_dfastate)    dfanode;            /* RB tree node */
     bitmap_t                bits;               /* NFA ... */
-    struct dfastate *       next;               /* construction queue */
+    struct s_dfastate *     next;               /* construction queue */
     int                     accept;             /* accept state */
     int                     anchor;
     dfaindex_t              index;              /* DFA index */
 #if defined(LOOKUP_INDEX)
     dfaindex_t              lookup[CSET_MAX];   /* state lookup */
 #else
-    struct dfastate *       lookup[CSET_MAX];   /* state lookup */
+    struct s_dfastate *     lookup[CSET_MAX];   /* state lookup */
 #endif
 } dfastate_t;
 
@@ -304,7 +309,7 @@ typedef struct {
     int                     upper;              /* repeat upper */
 } recompile_t;
 
-static dfaheap_t *          heap_create(unsigned size);
+static dfaheap_t *          heap_create(unsigned size, unsigned resize);
 static void                 heap_destroy(dfaheap_t *mp);
 static void *               heap_alloc(dfaheap_t *mp, unsigned size);
 
@@ -313,7 +318,7 @@ static dfastate_t *         dfa_new(recompile_t *re, const bitmap_t bm);
 static dfastate_t *         dfa_find(recompile_t *re, const bitmap_t bits);
 static int                  dfa_compare(const dfastate_t *a, const dfastate_t *b);
 
-RB_PROTOTYPE(dfatree, dfastate, dfanode, dfa_compare);
+RB_PROTOTYPE(dfatree, s_dfastate, dfanode, dfa_compare);
 
 static int                  charset_alias(recompile_t *re, int value, const char *alias, int length);
 static void                 charset_assign(recompile_t *re, unsigned chr, int value);
@@ -325,6 +330,8 @@ static renode_t *           parse_expression(recompile_t *re, const char *begin,
 
 static dfastate_t *         dfa_new(recompile_t *re, const bitmap_t bm);
 static dfastate_t *         dfa_find(recompile_t *re, const bitmap_t bits);
+
+static struct regdfa *      dfa_create(dfaheap_t *temp, const char *pattern, const char *end, unsigned flags);
 
 #if defined(__cplusplus)
 extern "C" {
@@ -361,7 +368,7 @@ extern "C" {
         { "alpha",  5,  is_alpha },             /* A letter. */
         { "blank",  5,  is_blank },
         { "cntrl",  5,  is_cntrl },             /* A control character. */
-        { "csym",   4,  is_csym },              /* Symbol character. */
+        { "csym",   4,  is_csym  },             /* Symbol character. */
         { "digit",  5,  is_digit },             /* A decimal digit. */
         { "graph",  5,  is_graph },             /* A character with a visible representation. */
         { "lower",  5,  is_lower },             /* A lower-case letter. */
@@ -369,7 +376,7 @@ extern "C" {
         { "punct",  5,  is_punct },             /* A punctuation character. */
         { "space",  5,  is_space },             /* A character producing white space in displayed text. */
         { "upper",  5,  is_upper },             /* An upper-case letter. */
-        { "word",   4,  is_word },              /* A "word" character (alphanumeric plus "_"). */
+        { "word",   4,  is_word  },             /* A "word" character (alphanumeric plus "_"). */
         { "xdigit", 6,  is_xdigit }             /* A hexadecimal digit. */
         };
 #if defined(__cplusplus)
@@ -385,28 +392,32 @@ extern "C" {
  *
  *  Parameters:
  *      size -              Heap size.
+ *      resize -            Additional arena size.
  *
  *  Returns:
  *      Address of the heap control object.
  */
 static dfaheap_t *
-heap_create(unsigned size)
+heap_create(unsigned size, unsigned resize)
 {
     dfaheap_t *heap;
 
+    if (0 == resize) resize = size/2;
+    if (resize) resize = HEAPALIGN(resize);
+    size = HEAPALIGN(size);
     if (NULL != (heap =
             (dfaheap_t *)chk_calloc(sizeof(dfaheap_t) + size, 1))) {
-        heap->h_magic = HEAP_MAGIC;
-        heap->h_size = size;
-        heap->h_head = NULL;
-        if (size) {
+        heap->h_magic   = HEAP_MAGIC;
+        heap->h_size    = size;
+        heap->h_resize  = resize;
+        if (size) {                             /* arena based */
             char *base = (char *)(heap + 1);
-
+            heap->h_current = heap;
             heap->h_cursor = base;
             heap->h_end = base + size;
         }
     }
-    DFA_DEBUG(("regdfa: heap_create(%u)\n", size))
+    DFA_DEBUG(("regdfa: heap_create(%u/%u)\n", size, resize))
     return heap;
 }
 
@@ -430,23 +441,31 @@ heap_shrink(dfaheap_t *heap)
     unsigned used, size;
 
     assert(heap);
-    if (NULL != heap->h_cursor) {
-        char *base = (char *)(heap + 1);
+    assert(HEAP_MAGIC == heap->h_magic);
 
+    if (NULL != heap->h_cursor) {               /* arena based */
+        dfaheap_t *current = heap->h_current;
+        char *base = (char *)(current + 1);
+
+        assert(NULL != current);
+        assert(heap->h_cursor <= heap->h_end);
         assert(NULL == heap->h_head);
+
         size = heap->h_size;
         used = heap->h_cursor - base;
+        if (used < size) {
+            heap->h_size = used;
+            heap->h_end  = base + used;
 #if !defined(USING_PURIFY)
-        chk_shrink((void *)heap, sizeof(dfaheap_t) + used);
+            chk_shrink((void *)current, sizeof(dfaheap_t) + used);
 #endif
-        heap->h_size = used;
-        heap->h_end = base + used;
+        }
 
-    } else {
+    } else {                                    /* chained blocks */
+        assert(NULL == heap->h_current);
         assert(NULL == heap->h_end);
         used = size = heap->h_size;
     }
-
     DFA_DEBUG(("regdfa: heap_shrink(%u of %u)\n", used, size))
     return 0;
 }
@@ -465,16 +484,32 @@ static void
 heap_destroy(dfaheap_t *heap)
 {
     if (heap) {
-        if (NULL != heap->h_cursor) {
-            assert(NULL == heap->h_head);
-            DFA_DEBUG(("regdfa: heap_destroy(%u of %u)\n", (heap->h_cursor - (char *)(heap + 1)), heap->h_size))
+        assert(HEAP_MAGIC == heap->h_magic);
+        if (NULL != heap->h_cursor) {           /* arena based */
+            unsigned a;
 
-        } else {                                /* release of chained allocation blocks */
+            assert(heap->h_cursor <= heap->h_end);
+            assert(NULL == heap->h_head);
+            for (a = 0; a < (sizeof(heap->h_arenas)/sizeof(heap->h_arenas[0])); ++a) {
+                dfaheap_t *t_heap = heap->h_arenas[a];
+                if (NULL == t_heap) {
+                    break;
+                }
+                assert(HEAP_MAGIC == t_heap->h_magic);
+                assert(NULL == t_heap->h_head);
+                assert(NULL == t_heap->h_cursor);
+                assert(NULL == t_heap->h_end);
+                chk_free(t_heap);
+            }
+            DFA_DEBUG(("regdfa: heap_destroy(%u of %u) wth %u arenas\n",
+                (heap->h_cursor - (char *)(heap + 1)), heap->h_size, a))
+
+        } else {                                /* chained blocks */
             dfaheapnode_t *node, *head = heap->h_head;
 
             DFA_DEBUG(("regdfa: heap_destroy(%u)\n", heap->h_size))
             assert(NULL == heap->h_end);
-            while (NULL != (node = head)) {
+            while (NULL != (node = head)) {     /* iterator */
                 head = node->next;
                 chk_free(node);
             }
@@ -503,14 +538,36 @@ heap_alloc(dfaheap_t *heap, unsigned size)
     assert(heap);
     assert(size);
     if (size) {
-        assert(heap->h_magic == HEAP_MAGIC);
+        assert(HEAP_MAGIC == heap->h_magic);
         if (NULL != heap->h_cursor) {
             assert(NULL == heap->h_head);
             if ((heap->h_cursor + alignedsize) >= heap->h_end) {
-                block = NULL;
+                if (alignedsize <= heap->h_resize) {
+                    unsigned a;                 /* build additional arena */
+
+                    for (a = 0; a < (sizeof(heap->h_arenas)/sizeof(heap->h_arenas[0])); ++a) {
+                        if (NULL == heap->h_arenas[a]) {
+                            const unsigned arena_size = heap->h_resize;
+                            dfaheap_t *t_heap;  /* build additional arena */
+                            if (NULL != (t_heap =
+                                    (dfaheap_t *)chk_calloc(sizeof(dfaheap_t) + arena_size, 1))) {
+                                char *base = (char *)(t_heap + 1);
+                                t_heap->h_magic = HEAP_MAGIC;
+                                heap->h_size    = arena_size;
+                                heap->h_current = t_heap;
+                                heap->h_cursor  = base + alignedsize;
+                                heap->h_end     = base + arena_size;
+                                heap->h_arenas[a] = t_heap;
+                                block = base;
+                                break;
+                            }
+                        }
+                    }
+                }
             } else {
                 block = heap->h_cursor;
                 heap->h_cursor += alignedsize;
+                assert(heap->h_cursor <= heap->h_end);
             }
         } else {
             dfaheapnode_t *node;
@@ -1404,13 +1461,11 @@ dfa_functions(recompile_t *re, renode_t *rx)
             break;
 
 #if defined(TODO)
-//      case NODE_RANGE: {
-//              if (n->upper <= 0) {
-//                  continue;
-//              }
-//              n->nullable = (n->lower <= 0 ? 1 : 0);
-//          }
-//          break;
+        case NODE_RANGE:
+            if (n->upper <= 0)
+                continue;
+            n->nullable = (n->lower <= 0 ? 1 : 0);
+            break;
 #endif
 
         case NODE_CHARSET:
@@ -1535,7 +1590,7 @@ dfa_compare(const dfastate_t *a, const dfastate_t *b)
     return -1;                                  /* right */
 }
 
-RB_GENERATE(dfatree, dfastate, dfanode, dfa_compare);
+RB_GENERATE(dfatree, s_dfastate, dfanode, dfa_compare);
 
 
 /*  Function:           dfa_states
@@ -1688,33 +1743,20 @@ regdfa_create(const char **patterns, int num_patterns, unsigned flags)
 #define TEMP_SIZE   (64 * 1024)
 #endif
 
-    recompile_t recomp;
-    dfaheap_t *heap, *temp = NULL;
-    struct regdfa *regex = NULL;
+    dfaheap_t *temp;
+    struct regdfa *regex;
     char *pattern, *end;
-    renode_t *rx;
     unsigned len;
     int i;
 
-    memset(&recomp, 0, sizeof(recomp));
-
-    /* allocation regdfa local storage */
-    if (NULL == (heap = heap_create(WORK_SIZE)) ||
-            NULL == (regex = (struct regdfa *)heap_alloc(heap, sizeof(struct regdfa)))) {
-        goto error;
-    }
-
-    regex->heap = heap;
-    regex->flags = flags;
-
-    /* allocate working area */
     for (len = 0, i = 0; i < num_patterns; ++i) {
         len += (int)(strlen(patterns[i]) + 16);
     }
 
-    if (NULL == (temp = heap_create(TEMP_SIZE)) ||
+    if (NULL == (temp = heap_create(TEMP_SIZE, 0)) ||
             NULL == (pattern = (char *)heap_alloc(temp, len + 1))) {
-        goto error;
+        heap_destroy(temp);
+        return NULL;
     }
 
     /* Join the expressions together, marking the acception state with CSET_ACCEPT[2]
@@ -1762,10 +1804,10 @@ regdfa_create(const char **patterns, int num_patterns, unsigned flags)
     for (i = 0; i < num_patterns; ++i) {
         const char c1 = patterns[i][0];
 
-        if (c1) {
-            if (pattern != end) {
+        if (c1) {                               /* (xxxx)ACCEPT<|....> */
+            if (pattern != end) 
                 *end++ = '|';
-            }
+
             if (0x01 == c1) {                   /* priority, accept2 */
                 end += sprintf(end, "(%s)%c", patterns[i] + 1, CSET_ACCEPT2);
             } else {                            /* normal */
@@ -1773,6 +1815,75 @@ regdfa_create(const char **patterns, int num_patterns, unsigned flags)
             }
         }
     }
+
+    /*  on-success -- warn of patterns which can not be reached
+     *      note no warnings does not mean all patterns shall be matched
+     *      due to the greedy nature of DFA based evaluations, only that all
+     *      patterns are paths within the DFA.
+     */
+    regex = dfa_create(temp, pattern, end, flags);
+
+    if (regex && regex->table) {
+        bitmap_t bm = bm_create(temp, num_patterns);
+        if (bm) {
+            unsigned c;
+
+            bm_fill(bm);
+            for (c = 1; c < regex->cursor; ++c) {
+                int accepted = regex->table[c]->accept;
+
+                if (accepted) {
+                    if (accepted < 0) {         /* special short-ciruit states */
+                        accepted *= -1;
+                    }
+                    if (--accepted < num_patterns) {
+                        bm_clr(bm, accepted);
+                    }
+                }
+            }
+
+            for (i = bm_first(bm); i >= 0; i = bm_next(bm, i)) {
+                ewprintf("regdfa: pattern '%s' not reached", patterns[i]);
+            }
+        }
+    }
+    heap_destroy(temp);
+    return regex;
+}
+
+
+struct regdfa *
+regdfa_patterns(const char *patterns, const char *end, unsigned flags)
+{
+    struct regdfa *regex = NULL;
+    dfaheap_t *temp;
+
+    if (NULL != (temp = heap_create(TEMP_SIZE, 0))) {
+        regex = dfa_create(temp, patterns, end, flags);
+        heap_destroy(temp);
+    }
+    return regex;
+}
+
+
+struct regdfa *
+dfa_create(dfaheap_t *temp, const char *pattern, const char *end, unsigned flags)
+{
+    struct regdfa *regex = NULL;
+    recompile_t recomp;
+    dfaheap_t *heap;
+    renode_t *rx;
+
+    memset(&recomp, 0, sizeof(recomp));
+
+    /* allocation regdfa local storage */
+    if (NULL == (heap = heap_create(WORK_SIZE, 0)) ||
+            NULL == (regex = (struct regdfa *)heap_alloc(heap, sizeof(struct regdfa)))) {
+        goto error;
+    }
+
+    regex->heap = heap;
+    regex->flags = flags;
 
     recomp.regex = regex;
     recomp.heap  = heap;
@@ -1783,55 +1894,17 @@ regdfa_create(const char **patterns, int num_patterns, unsigned flags)
     if (NULL != (rx = parse_expression(&recomp, pattern, end))) {
         int ret;
 
-        /* regdfa to DFA conversion */
         if (0 == (ret = dfa_functions(&recomp, rx))) {
-            ret = dfa_states(&recomp, rx);
-        }
-
-        if (0 == ret) {
-            /* success,
-             *    trim working storage
-             *    release temporary storage
-             *      warn of patterns which can not be reached
-             *          note no warnings does not mean all patterns shall be matched
-             *          due to the greedy nature of DFA based evaluations, only that all
-             *          patterns are paths within the DFA.
-             */
-            if (regex && regex->table) {
-                bitmap_t bm = bm_create(temp, num_patterns);
-
-                if (bm) {
-                    unsigned c;
-
-                    bm_fill(bm);
-                    for (c = 1; c < regex->cursor; ++c) {
-                        int accepted = regex->table[c]->accept;
-
-                        if (accepted) {
-                            if (accepted < 0) { /* special short-ciruit states */
-                                accepted *= -1;
-                            }
-                            if (--accepted < num_patterns) {
-                                bm_clr(bm, accepted);
-                            }
-                        }
-                    }
-
-                    for (i = bm_first(bm); i >= 0; i = bm_next(bm, i)) {
-                        ewprintf("regdfa: pattern '%s' not reached", patterns[i]);
-                    }
-                }
+            if (0 == (ret = dfa_states(&recomp, rx))) {
+                heap_shrink(heap);              /* regdfa to DFA conversion */
+                return regex;
             }
-            heap_destroy(temp);
-            heap_shrink(heap);
-            return regex;
         }
     }
 
     /* error release all resources */
 error:;
     DFA_DEBUG(("regdfa: ret=NULL\n"))
-    heap_destroy(temp);
     regdfa_destroy(regex);
     return NULL;
 }
@@ -1845,7 +1918,7 @@ regdfa_check(const char *pattern)
     int ret = -1;
 
     memset(&recomp, 0, sizeof(recomp));
-    if (NULL != (temp = heap_create(TEMP_SIZE/4))) {
+    if (NULL != (temp = heap_create(TEMP_SIZE/4, 0))) {
         recomp.temp = temp;
         if (NULL != parse_expression(&recomp, pattern, pattern + strlen(pattern))) {
             ret = 0;
@@ -1877,7 +1950,7 @@ regdfa_export(struct regdfa *regex, FILE *fd)
     fprintf(fd, "%u\n", regex->cursor);
     if (regex->table) {
         for (i = 1; i < regex->cursor; ++i) {
-            struct dfastate *dfa = regex->table[i];
+            const struct s_dfastate *dfa = regex->table[i];
 
             fprintf(fd, "%3u:", i);
             fprintf(fd, "%3d:", dfa->accept);
@@ -1962,8 +2035,8 @@ retry:;
             }
 
             if ((accepted = t_accept) < 0) {
-                ED_TRACE(("regdfa: =%d\n", accepted * -1))
-                return accepted * -1;           /* accept2 */
+                ED_TRACE(("regdfa: =%d\n", (accepted * -1) - 1))
+                return (accepted * -1) - 1;     /* accept2, index base 0 */
             }
 
         } else if (dfa->anchor) {
