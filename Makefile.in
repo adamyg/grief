@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.59 2022/06/11 05:01:42 cvsuser Exp $
+# $Id: Makefile.in,v 1.60 2022/07/06 15:30:54 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2022, Adam Young.
@@ -312,6 +312,7 @@ LIBS+=\
 	$(LW)malloc			\
 	$(LW)llist			\
 	$(LW)splay			\
+	$(LW)trie			\
 	$(LW)term			\
 	$(LW)teken			\
 	$(LW)onigrx			\
@@ -378,7 +379,7 @@ artifacts:			buildinfo
 
 %/.created:
 		-@$(PERL) ./win32/mkdir_p.pl $(@D)
-		@echo "++ do not delete, grief edit managed content ++" > $@
+		@echo "++ do not delete, managed content ++" > $@
 
 .PHONY:		import
 import:				$(IMPORT)
@@ -532,6 +533,7 @@ endif
 		$(MAKE) -C libmalloc clean
 		$(MAKE) -C libllist clean
 		$(MAKE) -C libsplay clean
+		$(MAKE) -C libtrie clean
 		$(MAKE) -C libterm clean
 		$(MAKE) -C libteken clean
 		$(MAKE) -C libonigrx clean
@@ -569,6 +571,7 @@ distclean:		clean
 			libmalloc/Makefile \
 			libllist/Makefile \
 			libsplay/Makefile \
+			libtrie/Makefile \
 			libterm/Makefile \
 			libteken/Makefile \
 			libonigrx/Makefile \

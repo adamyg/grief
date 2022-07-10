@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.in,v 1.14 2022/06/13 14:33:05 cvsuser Exp $
+# $Id: makelib.in,v 1.15 2022/07/06 15:30:54 cvsuser Exp $
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 # makelib configuration
 #
@@ -46,6 +46,7 @@ $PACKAGE_FILE   = 'edpackage.h';
             'duktape_static',
         'llist',
         'splay',
+        'trie',
         'onigrx',                               # Oniguruma - Regular expressions library.
         'tre',                                  # TRE - The free and portable approximate regex matching library.
         'misc',
@@ -109,6 +110,7 @@ $PACKAGE_FILE   = 'edpackage.h';
         'libonigrx',
         'libtre',
         'libmisc',
+        'libtrie',
         'libllist',
         'libsplay',
         'libterm',
