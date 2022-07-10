@@ -32,28 +32,28 @@ GRIEF 3.2.x build Tree:
 
 The following environments and toolchains are supported.
 
-    * Actively tested operating systems
+  * Actively tested operating systems.
 
-        * Linux (gcc)
-        * Cygwin (gcc)
-        * Win32 (MSVC 2008-2022, Open-Watcom 1.9+, Mingw64/32 latest)
+      * Linux (gcc)
+      * Cygwin (gcc)
+      * Win32 (MSVC 2008-2022, Open-Watcom 1.9+, Mingw64/32 latest)
 
-    * Not recently tested, yet builds.
+  * Not recently tested, yet builds.
 
-        * OS/X 10.4+
+      * OS/X 10.4+
 
-    * Not recently tested, yet *should* build; with minimal effort.
+  * Not recently tested, yet *should* build; with minimal effort.
 
-        * HP/UX (gcc)
-        * Solaris (gcc)
-        * BSD Net/Free/Open
-        * AIX (gcc)
+      * HP/UX (gcc)
+      * Solaris (gcc)
+      * BSD Net/Free/Open
+      * AIX (gcc)
 
-    * Defunct yet previously supported; effort assumed
+  * Defunct yet previously supported; effort assumed
 
-        * OS/2
-        * DOS (djgpp)
-        * VMS
+      * OS/2
+      * DOS (djgpp)
+      * VMS
 
 
 Examples
