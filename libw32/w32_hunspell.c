@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_hunspell_c,"$Id: w32_hunspell.c,v 1.19 2022/03/21 14:29:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_hunspell_c,"$Id: w32_hunspell.c,v 1.20 2022/07/08 14:01:00 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -100,7 +100,7 @@ w32_hunspell_connect(int verbose)
     }
 
     fullname[0] = 0;
-    GetModuleFileName(GetModuleHandle(NULL), fullname, sizeof(fullname));
+    GetModuleFileNameA(GetModuleHandle(NULL), fullname, sizeof(fullname));
     if (NULL != (end = (char *)strrchr(fullname, '\\'))) {
         *++end = 0;
     }

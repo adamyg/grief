@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_feature_c,"$Id: m_feature.c,v 1.26 2022/05/26 16:35:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_feature_c,"$Id: m_feature.c,v 1.27 2022/07/10 13:13:07 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_feature.c,v 1.26 2022/05/26 16:35:41 cvsuser Exp $
+/* $Id: m_feature.c,v 1.27 2022/07/10 13:13:07 cvsuser Exp $
  * Features.
  *
  *
@@ -449,6 +449,5 @@ inq_feature(void)               /* ([string pattern|int index], [string value]) 
     }
     acc_assign_null();
 }
+
 /*eof*/
-
-
