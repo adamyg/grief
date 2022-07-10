@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: zenburn.cr,v 1.5 2014/11/24 03:56:39 ayoung Exp $
+/* $Id: zenburn.cr,v 1.6 2022/07/10 13:08:02 cvsuser Exp $
  * zenburn coloriser, GRIEF port.
  *
  *  Original author Jani Numinen in 2002
@@ -10,76 +10,128 @@
 
 #include "../grief.h"
 
-static list                 /*vim style coloriser specification*/
-zenburn_256_cterm[] = {
-        "set background=dark",
-        "hi clear",
+static list
+zenburn_spec[] = {
 
-        "hi Boolean"        +" ctermfg=181",
-        "hi Character"      +" ctermfg=181"                                 +" cterm=bold",
-        "hi Comment"        +" ctermfg=108",
-        "hi Conditional"    +" ctermfg=223"                                 +" cterm=bold",
-        "hi Constant"       +" ctermfg=181"                                 +" cterm=bold",
-        "hi Cursor"         +" ctermfg=233"         +" ctermbg=109"         +" cterm=bold",
-        "hi Debug"          +" ctermfg=181"                                 +" cterm=bold",
-        "hi Define"         +" ctermfg=223"                                 +" cterm=bold",
-        "hi Delimiter"      +" ctermfg=245",
-        "hi DiffAdd"        +" ctermfg=66 "         +" ctermbg=237"         +" cterm=bold",
-        "hi DiffChange"     +" ctermbg=236",
-        "hi DiffDelete"     +" ctermfg=236"         +" ctermbg=238",
-        "hi DiffText"       +" ctermfg=217"         +" ctermbg=237"         +" cterm=bold",
-        "hi Directory"      +" ctermfg=109"                                 +" cterm=bold",
-        "hi ErrorMsg"       +" ctermfg=115"         +" ctermbg=236"         +" cterm=bold",
-        "hi Exception"      +" ctermfg=249"                                 +" cterm=bold",
-        "hi Float"          +" ctermfg=251",
-        "hi Function"       +" ctermfg=228",
-        "hi Identifier"     +" ctermfg=223",
-        "hi IncSearch"      +" ctermbg=228"         +" ctermfg=238",
-        "hi Keyword"        +" ctermfg=223"                                 +" cterm=bold",
-        "hi Label"          +" ctermfg=187"                                 +" cterm=underline",
-        "hi LineNr"         +" ctermfg=248"         +" ctermbg=233",
-        "hi Macro"          +" ctermfg=223"                                 +" cterm=bold",
-        "hi ModeMsg"        +" ctermfg=223"                                 +" cterm=none",
-        "hi MoreMsg"        +" ctermfg=15 "                                 +" cterm=bold",
-        "hi Number"         +" ctermfg=116",
-        "hi Operator"       +" ctermfg=230",
-        "hi PreCondit"      +" ctermfg=180"                                 +" cterm=bold",
-        "hi PreProc"        +" ctermfg=223"                                 +" cterm=bold",
-        "hi Question"       +" ctermfg=15 "                                 +" cterm=bold",
-        "hi Repeat"         +" ctermfg=223"                                 +" cterm=bold",
-        "hi Search"         +" ctermfg=230"         +" ctermbg=236",
-        "hi SpecialChar"    +" ctermfg=181"                                 +" cterm=bold",
-        "hi SpecialComment" +" ctermfg=181"                                 +" cterm=bold",
-        "hi Special"        +" ctermfg=181",
-        "hi SpecialKey"     +" ctermfg=151",
-        "hi Statement"      +" ctermfg=187"         +" ctermbg=234"         +" cterm=none",
-        "hi StatusLine"     +" ctermfg=236"         +" ctermbg=186",
-        "hi StatusLineNC"   +" ctermfg=235"         +" ctermbg=108",
-        "hi StorageClass"   +" ctermfg=249"                                 +" cterm=bold",
-        "hi String"         +" ctermfg=174",
-        "hi Structure"      +" ctermfg=229"                                 +" cterm=bold",
-        "hi Tag"            +" ctermfg=181"                                 +" cterm=bold",
-        "hi Title"          +" ctermfg=7  "         +" ctermbg=234"         +" cterm=bold",
-        "hi Todo"           +" ctermfg=108"         +" ctermbg=234"         +" cterm=bold",
-        "hi Typedef"        +" ctermfg=253"                                 +" cterm=bold",
-        "hi Type"           +" ctermfg=187"                                 +" cterm=bold",
-        "hi Underlined"     +" ctermfg=188"         +" ctermbg=234"         +" cterm=bold",
-        "hi VertSplit"      +" ctermfg=236"         +" ctermbg=65",
-        "hi VisualNOS"      +" ctermfg=236"         +" ctermbg=210"         +" cterm=bold",
-        "hi WarningMsg"     +" ctermfg=15 "         +" ctermbg=236"         +" cterm=bold",
-        "hi WildMenu"       +" ctermbg=236"         +" ctermfg=194"         +" cterm=bold",
-//      "hi SpellLocal"     +" ctermfg=14 "         +" ctermbg=237",
-//      "hi SpellBad"       +" ctermfg=9  "         +" ctermbg=237",
-//      "hi SpellCap"       +" ctermfg=12 "         +" ctermbg=237",
-//      "hi SpellRare"      +" ctermfg=13 "         +" ctermbg=237",
-        "hi Spell"          +" ctermfg=108"                                 +" cterm=underline",
-        "hi PMenu"          +" ctermfg=248"         +" ctermbg=0",
-        "hi PMenuSel"       +" ctermfg=223"         +" ctermbg=235",
+        //[0]                               |[1]    |[2]    |[3]              | || |[4]      |[5]       |[6]              |
+        //|Highlight group                  |  CTFG |  CTBG |    CTAttributes | || |   GUIFG |    GUIBG |   GUIAttributes |
+        //|---------------------------------|-------|-------|-----------------| || |---------|----------|-----------------|
+
+        { "Boolean",                        181,    NULL,   NULL                },
+        { "Character",                      181,    NULL,   "bold"              },
+        { "Comment",                        108,    NULL,   NULL                },
+        { "Conditional",                    223,    NULL,   "bold"              },
+        { "Constant",                       181,    NULL,   "bold"              },
+        { "Cursor",                         233,    109,    "bold"              },
+        { "Debug",                          181,    NULL,   "bold"              },
+        { "Define",                         223,    NULL,   "bold"              },
+        { "Delimiter",                      245,    NULL,   NULL                },
+        { "DiffAdd",                        66,     237,    "bold"              },
+        { "DiffChange",                     236,    NULL,   NULL                },
+        { "DiffDelete",                     236,    238,    NULL                },
+        { "DiffText",                       217,    237,    "bold"              },
+        { "Directory",                      109,    NULL,   "bold"              },
+        { "ErrorMsg",                       115,    236,    "bold"              },
+        { "Exception",                      249,    NULL,   "bold"              },
+        { "Float",                          251,    NULL,   NULL                },
+        { "Function",                       228,    NULL,   NULL                },
+        { "Identifier",                     223,    NULL,   NULL                },
+        { "IncSearch",                      228,    238,    NULL                },
+        { "Keyword",                        223,    NULL,   "bold"              },
+        { "Label",                          187,    NULL,   "underline"         },
+        { "LineNr",                         248,    233,    NULL                },
+        { "Macro",                          223,    NULL,   "bold"              },
+        { "ModeMsg",                        223,    NULL,   "none"              },
+        { "MoreMsg",                        15,     NULL,   "bold"              },
+        { "Number",                         116,    NULL,   NULL                },
+        { "Operator",                       230,    NULL,   NULL                },
+        { "PreCondit",                      180,    NULL,   "bold"              },
+        { "PreProc",                        223,    NULL,   "bold"              },
+        { "Question",                       15,     NULL,   "bold"              },
+        { "Repeat",                         223,    NULL,   "bold"              },
+        { "Search",                         230,    236,    NULL                },
+        { "SpecialChar",                    181,    NULL,   "bold"              },
+        { "SpecialComment",                 181,    NULL,   "bold"              },
+        { "Special",                        181,    NULL,   NULL                },
+        { "SpecialKey",                     151,    NULL,   NULL                },
+        { "Statement",                      187,    234,    "none"              },
+        { "StatusLine",                     236,    186,    NULL                },
+        { "StatusLineNC",                   235,    108,    NULL                },
+        { "StorageClass",                   249,    NULL,   "bold"              },
+        { "String",                         174,    NULL,   NULL                },
+        { "Structure",                      229,    NULL,   "bold"              },
+        { "Tag",                            181,    NULL,   "bold"              },
+        { "Title",                          7,      234,    "bold"              },
+        { "Todo",                           108,    234,    "bold"              },
+        { "Typedef",                        253,    NULL,   "bold"              },
+        { "Type",                           187,    NULL,   "bold"              },
+        { "Underlined",                     188,    234,    "bold"              },
+        { "VertSplit",                      236,    65,     NULL                },
+        { "VisualNOS",                      236,    210,    "bold"              },
+        { "WarningMsg",                     15,     236,    "bold"              },
+        { "WildMenu",                       236,    194,    "bold"              },
+//      { "SpellBad",                       9,      237,    NULL                },
+//      { "SpellCap",                       12,     237,    NULL                },
+//      { "SpellLocal",                     14,     237,    NULL                },
+//      { "SpellRare",                      13,     237,    NULL                },
+        { "Spell",                          108,    NULL,   "underline"         },
+
+        { "PMenu",                          248,    0,      NULL                },
+        { "PMenuSel",                       223,    235,    NULL                },
+
+//      { "TabLine",                        187,    235,    "none"              },
+//      { "TabLineSel",                     229,    236,    "bold"              },
+//      { "TabLineFill",                    188,    233,    "none"              },
+
+        { "Error",                          167,    236,    "bold"              },
+//      { "Include",
+//      { "Label",                                                              },
+//      { "Ignore",                                                             },
+
+        // Tag support
+//      { NULL,                             "Class", "Function",                NULL },
+//      { NULL,                             "Import", "PythonInclude",          NULL },
+//      { NULL,                             "Member", "Function",               NULL },
+//      { NULL,                             "GlobalVariable", "Normal",         NULL },
+//      { NULL,                             "GlobalConstant", "Constant",       NULL },
+//      { NULL,                             "EnumerationValue", "Float",        NULL },
+//      { NULL,                             "EnumerationName", "Identifier",    NULL },
+//      { NULL,                             "DefinedName", "WarningMsg",        NULL },
+//      { NULL,                             "LocalVariable", "WarningMsg",      NULL },
+//      { NULL,                             "Structure", "WarningMsg",          NULL },
+//      { NULL,                             "Union", "WarningMsg",              NULL }
         };
 
 void
 colorscheme_zenburn(void)
 {
-    vim_colorscheme("zenburn", 256, NULL, zenburn_256_cterm, FALSE);
+    list zenburn_colors = {
+        "set background=dark",
+        "hi clear"
+        };
+    list spec;
+
+    while (list_each(zenburn_spec, spec) >= 0) {
+        string val;
+
+        if (typeof(spec[1]) == "NULL") {
+            // links
+            val = "hi link " + spec[1] + " " + spec[2];
+
+        } else {
+            // colors
+            val = "hi " + spec[0];
+            if (typeof(spec[1]) != "NULL") val += format(" ctermfg=%d", spec[1]);
+            if (typeof(spec[2]) != "NULL") val += format(" ctermbg=%d", spec[2]);
+            if (typeof(spec[3]) != "NULL") val += format(  " cterm=%s", spec[3]);
+//          if (typeof(spec[4]) != "NULL") val += format( " guifg=#%s", spec[4]);
+//          if (typeof(spec[5]) != "NULL") val += format( " guibg=#%s", spec[5]);
+//          if (typeof(spec[6]) != "NULL") val += format(    " gui=%s", spec[6]);
+        }
+        zenburn_colors += val;
+    }
+
+    vim_colorscheme("zenburn", 256, NULL, zenburn_colors, -1);
 }
+
 /*end*/
