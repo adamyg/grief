@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntaxhl_c,"$Id: syntaxhl.c,v 1.33 2018/10/01 20:59:48 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntaxhl_c,"$Id: syntaxhl.c,v 1.34 2022/07/10 13:11:32 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntaxhl.c,v 1.33 2018/10/01 20:59:48 cvsuser Exp $
+/* $Id: syntaxhl.c,v 1.34 2022/07/10 13:11:32 cvsuser Exp $
  * Basic syntax highlighting.
  *
  *
@@ -240,8 +240,11 @@ hilite_write(
 
         if (SYNC_WORD & syntax) {               /* words */
             if (0 == (syntax & SYNC_NUMERIC)) {
-                cursor = hilite_word(st, cursor, end);
-                continue;
+                const LINECHAR *ncursor = hilite_word(st, cursor, end);
+                if (ncursor != cursor) {
+                    cursor = ncursor;
+                    continue;
+                }
             }
         }
 
@@ -387,7 +390,7 @@ hilite_word(
     length = (int) (t_cursor - cursor);
 
     if ((colour = syntax_keyword(st, cursor, length)) < 0) {
-        colour = ATTR_WORD;                     /* not keyword, default to WORD */
+         colour = ATTR_WORD;                     /* not keyword, default to WORD */
     }
 
     return syntax_write(st, cursor, t_cursor, colour);
