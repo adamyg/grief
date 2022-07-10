@@ -1244,6 +1244,21 @@ enum {
     SYNK_MAX
 };
 
+/*
+ *  Keywords flags.
+ *
+ *      Flag                        Description
+ *  ----------------------------------------------------------------------------
+ *      SYNF_IGNORECASE             Ignore case.
+ *      SYNK_NATCHCASE              Match case.
+ *      SYNF_PATTERN                Pattern match (glob style).
+ */
+enum {
+    SYNF_IGNORECASE         = 1,
+    SYNK_NATCHCASE          = 2,
+    SYNF_PATTERN            = 4
+};
+
 
 /*
  * Name mangling, compat for older macros

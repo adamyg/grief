@@ -1,11 +1,11 @@
 #ifndef GR_SYNTAX_H_INCLUDED
 #define GR_SYNTAX_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntax_h,"$Id: syntax.h,v 1.34 2020/03/27 14:39:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntax_h,"$Id: syntax.h,v 1.35 2022/07/10 13:12:24 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntax.h,v 1.34 2020/03/27 14:39:03 cvsuser Exp $
+/* $Id: syntax.h,v 1.35 2022/07/10 13:12:24 cvsuser Exp $
  * Syntax hiliting constructs.
  *
  *
@@ -23,6 +23,7 @@ __CPRAGMA_ONCE
 
 #include <limits.h>
 #include <tailqueue.h>
+#include <libtrie.h>
 #include <edsym.h>
 
 __CBEGIN_DECLS
@@ -167,6 +168,23 @@ enum {
 };
 /*--end--*/
 
+/*--export--defines--*/
+/*
+ *  Keywords flags.
+ *
+ *      Flag                        Description
+ *  ----------------------------------------------------------------------------
+ *      SYNF_IGNORECASE             Ignore case.
+ *      SYNK_NATCHCASE              Match case.
+ *      SYNF_PATTERN                Pattern match (glob style).
+ */
+enum {
+    SYNF_IGNORECASE         = 1,
+    SYNK_NATCHCASE          = 2,
+    SYNF_PATTERN            = 4
+};
+/*--end--*/
+
 typedef uint32_t SyntaxChar_t;
 
 typedef enum {
@@ -196,15 +214,20 @@ typedef struct SyntaxDriver {
     void              (*sd_destroy)(struct SyntaxTable *st, void *object);
 } SyntaxDriver_t;
 
+typedef struct {
+    unsigned            l_count;                /* element count */
+    unsigned            l_data_storage;         /* total allocated data storage, in bytes */
+    unsigned            l_data_used;            /* used storage, in bytes */
+    const char **       l_vector;               /* option vector; optional */
+    const char *        l_data;                 /* compat word list */
+} SyntaxWordList_t;
+
 typedef struct SyntaxWords {
     MAGIC_t             w_magic;                /* structure magic */
     unsigned            w_table;                /* table identifier */
-    vbyte_t             w_attr;                 /* associated attrbute */
+    vbyte_t             w_attr;                 /* associated attribute */
     unsigned            w_length;               /* word length */
-    unsigned            w_used;                 /* used storage, in bytes */
-    unsigned            w_storage;              /* total allocated storage, in bytes */
-    unsigned            w_count;                /* count */
-    const char *        w_list;                 /* compat word list */
+    SyntaxWordList_t    w_words;                /* standard words */
 } SyntaxWords_t;
 
 typedef struct {
@@ -301,6 +324,7 @@ typedef struct SyntaxTable {
 #define KEYWORD_LEN         64                  /* required for posix functions etc */
 #define KEYWORD_TABLES      SYNK_MAX
 
+    struct trie *       keyword_patterns;
     int                 keywords_sorted;
     int                 keywords_total[KEYWORD_TABLES];
     SyntaxKeywords_t *  keywords_tables[KEYWORD_TABLES];
@@ -319,7 +343,6 @@ extern void                 syntax_shutdown(void);
 
 extern SyntaxTable_t *      syntax_argument(int argi, int err);
 extern SyntaxTable_t *      syntax_lookup(const char *name, int err);
-extern int                  syntax_attr(const char *name);
 extern int                  syntax_keyword(const SyntaxTable_t *st, const LINECHAR *token, int length);
 extern int                  syntax_keywordx(const SyntaxTable_t *st, const LINECHAR *token, int length, int start, int end, int icase);
 extern int                  syntax_preprocessor(const SyntaxTable_t *st, const LINECHAR *token, int length);

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntax_c,"$Id: syntax.c,v 1.59 2021/06/10 06:13:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntax_c, "$Id: syntax.c,v 1.60 2022/07/10 13:12:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntax.c,v 1.59 2021/06/10 06:13:02 cvsuser Exp $
+/* $Id: syntax.c,v 1.60 2022/07/10 13:12:24 cvsuser Exp $
  * Syntax pre-processor.
  *
  *
@@ -35,16 +35,22 @@ __CIDENT_RCSID(gr_syntax_c,"$Id: syntax.c,v 1.59 2021/06/10 06:13:02 cvsuser Exp
 #include "syntax.h"
 #include "tags.h"                               /* tags_check() */
 
+static int                      syntax_table2attr(int table);
+
 static SyntaxTable_t *          syntax_new(const char *name);
 static void                     syntax_delete(SyntaxTable_t *st);
 static void                     syntax_default(SyntaxTable_t *st);
 static void                     syntax_clear(SyntaxTable_t *st);
 static SyntaxWords_t *          syntax_words(SyntaxTable_t *st, int table, int length, int create);
 
+
 static const LINECHAR *         leading_write(SyntaxTable_t *st, const LINECHAR *start, const LINECHAR *end);
 
 static int                      keyword_table(const char *tablename);
-static void                     keyword_push(SyntaxTable_t *st, int table, int length, int total, const char *keywords, int sep);
+static int                      keyword_push(SyntaxTable_t *st, int table, int length, int total, const char *keywords, int sep, int flags);
+static int                      keyword_push_list(SyntaxWordList_t *words, int length, int total, const char *keywords, int sep);
+static void                     keyword_free_list(SyntaxWordList_t *words);
+static int                      keyword_push_pat(SyntaxTable_t *st, int attr, int length, int total, const char *keywords, int sep);
 
 static int                      style_lookup(const char *name);
 static int                      style_getc(int n);
@@ -360,7 +366,7 @@ do_detach_syntax(void)          /* void () */
         [Flag                       [Description                        ]
       ! SYNF_CASEINSENSITIVE        Case insensitive language tokens.
       ! SYNF_FORTRAN                FORTRAN style language.
-      ! SYNF_STRING_ONELINE         String definitions don't continue 
+      ! SYNF_STRING_ONELINE         String definitions don't continue
                                     over line breaks.
       ! SYNF_LITERAL_NOQUOTES       xxx
       ! SYNF_COMMENTS_LEADINGWS     xxx
@@ -470,11 +476,9 @@ inq_syntax(void)                /* ([int &flags], [int|string syntable]) */
 
         flags - Optional control flags.
 
-            ICASE   - Ignore case.
-            CASE    - Case sensitive.
-            ABBR    - Allow abbreviations 
-                        (delimiter xxx[cccxx]) or (xxxx-xxxxx).
-            PATTERN - Pattern match.
+            SYNF_IGNORECASE  - Ignore case.
+            SYNK_NATCHCASE   - Match case.
+            SYNF_PATTERN     - Pattern match (glob style).
 
         syntable - Optional syntax-table name or identifier, if
             omitted the current syntax table shall be referenced.
@@ -527,7 +531,7 @@ do_define_keywords(void)        /* ([int|string] keywords, string words|list wor
     const LIST *keywordslp = get_xlist(2);
     const char *keywords = (NULL == keywordslp ? get_str(2) : NULL);
     int length = get_xinteger(3, 0);
-//  const int flags = get_xinteger(4, 0);       /*TODO*/
+    const int flags = get_xinteger(4, 0);
     SyntaxTable_t *st = syntax_argument(5, TRUE);
     int kwlen, table = -1, sep = 0;
 
@@ -537,12 +541,25 @@ do_define_keywords(void)        /* ([int|string] keywords, string words|list wor
     if (tablename) {
         if ((table = keyword_table(tablename)) < 0 || table >= KEYWORD_TABLES) {
             errorf("syntax: table name (%s) unknown.", tablename);
+            acc_assign_int(-1);
             return;
         }
 
     } else {
         if ((table = get_xinteger(1, -1)) < 0 || table >= KEYWORD_TABLES) {
             errorf("syntax: table number (%d) illegal.", table);
+            acc_assign_int(-1);
+            return;
+        }
+    }
+
+    /* flags */
+    if (flags) {
+//TODO  const int t_flags = (flags & ~(SYNF_IGNORECASE | SYNK_NATCHCASE | SYNF_PATTERN));
+        const int t_flags = (flags & ~(SYNF_PATTERN));
+        if (t_flags) {
+            errorf("syntax: invalid flags stated 0x%04x", t_flags);
+            acc_assign_int(-1);
             return;
         }
     }
@@ -551,6 +568,7 @@ do_define_keywords(void)        /* ([int|string] keywords, string words|list wor
     if (keywordslp) {
         const LIST *nextlp;
         const char *word;
+        int elements = 0;
                                                 /* foreach(word) */
         for (;(nextlp = atom_next(keywordslp)) != keywordslp; keywordslp = nextlp) {
             if (NULL != (word = atom_xstr(keywordslp))) {
@@ -558,14 +576,18 @@ do_define_keywords(void)        /* ([int|string] keywords, string words|list wor
 
                 word = str_trim(word, &wordlen);
                 if (wordlen) {
-                    keyword_push(st, table, (int)wordlen, (int)wordlen, word, 0);
+                    elements += keyword_push(st, table, (int)wordlen, (int)wordlen, word, 0, flags);
                 }
             }
         }
+        acc_assign_int(elements);
 
     } else {
+        int elements = 0;
+
         if (NULL == keywords || 0 == (kwlen = (int)strlen(keywords))) {
             errorf("syntax: keyword list (%d) empty.", table);
+            acc_assign_int(-1);
             return;
         }
 
@@ -576,6 +598,7 @@ do_define_keywords(void)        /* ([int|string] keywords, string words|list wor
             }
             if (length < 2 || length > KEYWORD_LEN) {
                 errorf("syntax: keyword length (%d) not supported.", length);
+                acc_assign_int(-1);
                 return;
             }
         }
@@ -590,7 +613,7 @@ do_define_keywords(void)        /* ([int|string] keywords, string words|list wor
 
                 if (newlength != length) {      /* length change */
                     if (length && total) {
-                        keyword_push(st, table, length, total, keywords, ',');
+                        elements += keyword_push(st, table, length, total, keywords, ',', flags);
                     }
                     length = newlength;
                     keywords = cursor;
@@ -614,6 +637,7 @@ do_define_keywords(void)        /* ([int|string] keywords, string words|list wor
 
             if ((kwlen + sep) % (length + sep)) {
                 errorf("syntax: keyword list (%d,%d) length incorrect.", length, table);
+                acc_assign_int(-1);
                 return;
             }
 
@@ -625,6 +649,7 @@ do_define_keywords(void)        /* ([int|string] keywords, string words|list wor
                 for (i = length; i < kwlen; i += length + 1) {
                     if (keywords[i] != sep) {
                         errorf("syntax: keyword list (%d,%d) missing separator '%c'.", length, table, sep);
+                        acc_assign_int(-1);
                         return;
                     }
                     total += length;
@@ -632,9 +657,10 @@ do_define_keywords(void)        /* ([int|string] keywords, string words|list wor
             }
 
             if (total) {
-                keyword_push(st, table, length, total, keywords, sep);
+                elements = keyword_push(st, table, length, total, keywords, sep, flags);
             }
         }
+        acc_assign_int(elements);
     }
 
     st->keywords_sorted = -1;
@@ -647,86 +673,163 @@ do_define_keywords(void)        /* ([int|string] keywords, string words|list wor
  *  Parameters:
  *      st - Syntax instance.
  *      table - Table index.
- *      length - Work length.
- *      total  - Additional storage length needed.
+ *      length - Word length.
+ *      total - Total length of keyword buffer; additional storage needed.
  *      keywords - Keyword list.
  *      sep - Optional separator.
+ *      flags - Optional flags (lower 8-bits).
  *
  *  Returns:
  *      nothing
  */
-static void
-keyword_push(SyntaxTable_t *st, int table, int length, int total, const char *keywords, int sep)
+static int
+keyword_push(SyntaxTable_t *st, int table, int length, int total, const char *keywords, int sep, int flags)
 {
-    SyntaxWords_t *words = syntax_words(st, table, length, TRUE);
+    if (0 == flags) {                           /* standard words */
+        SyntaxWords_t *words = syntax_words(st, table, length, TRUE);
+
+        trace_ilog("keyword_push(table:%d,length:%d,total:%d,sep:%d,keywords:\"%.*s\", flags:%04x)\n",
+            table, length, total, sep, total + (sep ? total/length : 0), keywords, (unsigned)flags);
+
+        assert(words->w_table == (unsigned)table);
+        assert(words->w_length == (unsigned)length);
+
+        return keyword_push_list(&words->w_words, length, total, keywords, sep);
+    }
+
+    return keyword_push_pat(st, syntax_table2attr(table), length, total, keywords, sep);
+}
+
+
+static int
+keyword_push_list(SyntaxWordList_t *words, int length, int total, const char *keywords, int sep)
+{
+    const int count = (total / length);         /* word count */
+    unsigned elements = 0;
     const char *okwlist;
     char *kwlist;
 
 #define WORDS_UNIT          128                 /* round alloc sizes to 128 bytes */
 #define WORDS_ROUND(v)      (((v) + WORDS_UNIT) &~ (WORDS_UNIT-1))
 
-    trace_ilog("keyword_push(table:%d,length:%d,total:%d,sep:%d,keywords:\"%.*s\")\n",
-        table, length, total, sep, total + (sep ? total/length : 0), keywords);
+    assert(count && 0 == (total % length));
 
-    assert(words->w_table   == (unsigned)table);
-    assert(words->w_length  == (unsigned)length);
-    assert((total % length) == 0);
+    if (NULL == (okwlist = words->l_data)) {    /* new table */
+        unsigned needed = total + /*nul*/1;
 
-    if (NULL == (okwlist = words->w_list)) {    /* new table */
-        unsigned needed = total + 1;
+        assert(0 == words->l_count);
+        assert(0 == words->l_data_storage);
+        assert(0 == words->l_data_used);
+        assert(NULL == words->l_vector);
 
         needed = WORDS_ROUND(needed);
         if (NULL != (kwlist = chk_alloc(needed))) {
-            assert(0 == words->w_storage);
-            words->w_storage = needed;
-            words->w_used = 0;
-            words->w_list = kwlist;
+            words->l_data_storage = needed;
+            words->l_data = kwlist;
         }
 
     } else {                                    /* existing table */
-        unsigned okwlen = words->w_used,
-            needed = okwlen + total + 1;
+        unsigned okwlen = words->l_data_used,
+            needed = okwlen + total + /*nul*/1;
 
-        assert(okwlist[okwlen] == '\0');
-        if (needed >= words->w_storage) {       /* reallocate buffer if required */
+        assert(0 == okwlist[okwlen]);
+        if (needed >= words->l_data_storage) {  /* reallocate buffer if required */
             needed = WORDS_ROUND(needed);
             if (NULL != (kwlist = chk_realloc((char *)okwlist, needed))) {
-                words->w_storage = needed;
-                words->w_list = kwlist;
-                kwlist += okwlen;
+                words->l_data_storage = needed;
+                words->l_data = kwlist;
             }
         } else {
-            kwlist = (char *)okwlist + okwlen;
+            kwlist = (char *)okwlist;
         }
     }
 
-#undef  WORDS_ROUND
-#undef  WORDS_UNIT
+#undef WORDS_ROUND
+#undef WORDS_UNIT
 
     if (kwlist) {                               /* append data */
-        if (sep) {
-            const int kwlen = total + (total/length);
-            int i, k;
+        /*
+         *  <flags><word> ...
+         */
+        char *cursor = kwlist + words->l_data_used;
 
-            for (i = k = 0; k < kwlen; k += length + 1) {
-                assert(0 == keywords[length] || sep == keywords[length]);
-                memcpy(kwlist + i, (const char *)keywords+k, length);
-                trace_ilog("\t%.*s\n", length, keywords+k);
-                i += length;
+        if (sep) {
+            const char *end = keywords + total + /*seps*/count;
+            while (keywords < end) {
+                assert(sep == keywords[length] || 0 == keywords[length]);
+                trace_ilog("\t%.*s\n", length, keywords);
+                memcpy(cursor, (const char *)keywords, length), cursor += length;
+                keywords += length + /*sep*/1;
+                ++elements;
             }
-            assert(total == i);
+
         } else {
-            memcpy(kwlist, (const char *)keywords, total);
+            const char *end = keywords + total;
+            while (keywords < end) {
+                trace_ilog("\t%.*s\n", length, keywords);
+                memcpy(cursor, (const char *)keywords, length), cursor += length;
+                keywords += length;
+                ++elements;
+            }
         }
 
-        assert(total && 0 == (total % length));
-        kwlist[total] = '\0';
-        words->w_used += total;
-        assert(words->w_used < words->w_storage);
-        assert(0 == (words->w_used % length));
+        words->l_data_used += total;
+        assert(words->l_data_used < words->l_data_storage);
+        assert(cursor == (kwlist + words->l_data_used));
+        *cursor = 0;
     }
 
-    acc_assign_int(words->w_used/length);
+    words->l_count += elements;                 /* total elements */
+    return elements;
+}
+
+
+static void
+keyword_freex(SyntaxWordList_t *words)
+{
+    chk_free((char *)words->l_vector);
+    chk_free((char *)words->l_data);
+    memset(words, 0, sizeof(*words));
+}
+
+
+static int
+keyword_push_pat(SyntaxTable_t *st, int attr, int length, int total, const char *keywords, int sep)
+{
+    const int count = (total / length);         /* word count */
+    unsigned elements = 0;
+    struct trie *t;
+
+    assert(attr >= ATTR_NORMAL);
+    if (attr < ATTR_NORMAL) {
+        return -1;
+    }
+
+    if (NULL == (t = st->keyword_patterns)) {
+        st->keyword_patterns = t = trie_create();
+    }
+
+    if (sep) {
+        const char *end = keywords + total + /*seps*/count;
+        while (keywords < end) {
+            assert(sep == keywords[length] || 0 == keywords[length]);
+            trace_ilog("\t%.*s\n", length, keywords);
+            trie_insert_nwild(t, (const char *)keywords, length, (void *)attr);
+            keywords += length + /*sep*/1;
+            ++elements;
+        }
+
+    } else {
+        const char *end = keywords + total;
+        while (keywords < end) {
+            trace_ilog("\t%.*s\n", length, keywords);
+            trie_insert_nwild(t, (const char *)keywords, length, (void *)attr);
+            keywords += length;
+            ++elements;
+        }
+    }
+
+    return elements;
 }
 
 
@@ -1328,7 +1431,7 @@ syntax_shutdown(void)
  *      Map a table identifier to its associated screen attribute.
  */
 static int
-table2attr(int table)
+syntax_table2attr(int table)
 {
     unsigned i;
 
@@ -1494,12 +1597,10 @@ newwords:;
         table, length, idx, keywords->kw_used, keywords->kw_total);
 
     words = keywords->kw_words + idx;
+    memset(words, 0, sizeof(*words));
     words->w_table   = (unsigned) table;
-    words->w_attr    = table2attr(table);       /* associated attribute */
+    words->w_attr    = syntax_table2attr(table); /* associated attribute */
     words->w_length  = (unsigned) length;
-    words->w_used    = 0;
-    words->w_storage = 0;
-    words->w_list    = 0;
     return words;
 }
 
@@ -1683,11 +1784,12 @@ syntax_clear(SyntaxTable_t *st)
 
         if (NULL != (keywords = st->keywords_tables[i])) {
             for (i2 = 0; i2 < keywords->kw_used; ++i2) {
-                chk_free((char *)keywords->kw_words[i2].w_list);
+                keyword_freex(&keywords->kw_words[i2].w_words);
             }
             chk_free(keywords);
         }
     }
+    trie_free(st->keyword_patterns);
 
     memset(st, 0, sizeof(SyntaxTable_t));
     st->st_name = name;
@@ -1786,8 +1888,7 @@ syntax_select(void)
         /*
          *  Sort the keywords/
          *      unless an redraw() is performed during keyword definitions,
-         *      this logic shall generally be executed only once or twice
-         *      an edit session.
+         *      this logic shall generally be executed only once or twice an edit session.
          */
         int icase, table, length;
         unsigned kwlen;
@@ -1809,10 +1910,9 @@ syntax_select(void)
 
                 assert(words->w_table == (unsigned)table);
                 assert(words->w_length == (unsigned)length);
-                assert(words->w_list);
-                assert(words->w_used);
+                assert(words->w_words.l_data_used && words->w_words.l_data);
 
-                if (NULL != (kwlist = (char *)words->w_list) && (kwlen = words->w_used) > 0) {
+                if (NULL != (kwlist = (char *)words->w_words.l_data) && (kwlen = words->w_words.l_data_used) > 0) {
                     unsigned i, n, count = kwlen / length;
 
                     keyword_cmplen = length;    /* sort list */
@@ -1838,10 +1938,10 @@ syntax_select(void)
                                 i += length;
                             }
                         }
-                        words->w_used = kwlen = count * length;
+                        words->w_words.l_data_used = kwlen = count * length;
                     }
 
-                    words->w_count = count;
+                    words->w_words.l_count = count;
                     st->keywords_total[table] += count;
                     ++st->keywords_sorted;      /* increase count */
 
@@ -1865,11 +1965,10 @@ syntax_select(void)
                     if (i && n != 0) {
                         trace_log("\n");
                     }
-
-                } /*defined*/
-            } /*length*/
-        } /*tables*/
-    } /* sorted */
+                }
+            }
+        }
+    }
 
     if (NULL == st->st_active) {
         /*
@@ -1907,32 +2006,43 @@ syntax_keywordx(const SyntaxTable_t *st, const LINECHAR *token, int length, int 
                     ((icase || (st->st_flags & SYNF_CASEINSENSITIVE)) ? keyword_stricmp : keyword_strcmp);
     int table;
 
-    if (length < 1 || length > KEYWORD_LEN) {
+    if (length < 1)
         return -1;
-    }
 
     assert(start >= 0);
     assert(end < KEYWORD_TABLES);
 
-    for (table = start; table <= end; ++table) {
-        const SyntaxWords_t *words = syntax_words(((SyntaxTable_t *)st), table, length, FALSE);
+    if (length <= KEYWORD_LEN) {
+        for (table = start; table <= end; ++table) {
+            const SyntaxWords_t *words =
+                    syntax_words(((SyntaxTable_t *)st), table, length, FALSE);
 
-        if (words) {
-            const char *keywords;
+            if (words) {
+                const char *keywords;
 
-            assert(words->w_table == (unsigned)table);
-            assert(words->w_length == (unsigned)length);
-            assert(words->w_list);
-            assert(words->w_used);
+                assert(words->w_table == (unsigned)table);
+                assert(words->w_length == (unsigned)length);
+                assert(words->w_words.l_data_used && words->w_words.l_data);
+
                                                 /* binary search sorted words list */
-            if (NULL != (keywords = words->w_list)) {
-                keyword_cmplen = length;
-                if (bsearch(token, keywords, words->w_count, length, compare)) {
-                    return words->w_attr;       /* associated attribute */
+                if (NULL != (keywords = words->w_words.l_data)) {
+                    keyword_cmplen = length;
+                    if (bsearch(token, keywords, words->w_words.l_count, length, compare)) {
+                        return words->w_attr;   /* associated attribute */
+                    }
                 }
             }
         }
     }
+
+    if (st->keyword_patterns) {
+        const void *attr =
+            trie_search_nwild(st->keyword_patterns, (const char *)token, length);
+        if (attr) {
+            return (int)attr;                   /* associated attribute */
+        }
+    }
+
     return -1;
 }
 
@@ -2565,4 +2675,5 @@ parse_line(SyntaxTable_t *st, LINE_t *line)
     }
     return 0;
 }
+
 /*end*/
