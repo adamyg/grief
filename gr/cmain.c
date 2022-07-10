@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.43 2022/05/31 16:18:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.44 2022/07/08 13:39:52 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.43 2022/05/31 16:18:21 cvsuser Exp $
+/* $Id: cmain.c,v 1.44 2022/07/08 13:39:52 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -1393,7 +1393,7 @@ env_setup(void)
     trace_log("BINPATH<%s>\n", binpath);
 
     /* PATHS */
-    if (NULL == ggetenv("GRPATH")) {
+    if (NULL == ggetenv("GRPATH") && !xf_restrict) {
         const char *grpath = path_cook(x_grpath);
 
         sprintf(buf, "GRPATH=");
@@ -1415,7 +1415,7 @@ env_setup(void)
         gputenv(file_slashes(buf));
     }
 
-    if (NULL == ggetenv("GRHELP")) {
+    if (NULL == ggetenv("GRHELP") && !xf_restrict) {
         const char *grhelp = path_cook(x_grhelp);
 
         sprintf(buf, "GRHELP=");
