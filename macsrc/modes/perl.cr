@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*-
- * $Id: perl.cr,v 1.16 2014/10/22 02:34:35 ayoung Exp $
+ * $Id: perl.cr,v 1.17 2022/07/10 13:08:02 cvsuser Exp $
  * Perl support mode.
  *
  *
@@ -58,16 +58,16 @@ main()
     /*
      *  Standard syntax engine
      */
-    syntax_token(SYNT_COMMENT,   "#");
-    syntax_token(SYNT_COMMENT,   "=pod", "=cut");
-    syntax_token(SYNT_QUOTE,     "\\");
-    syntax_token(SYNT_STRING,    "\"");
-    syntax_token(SYNT_LITERAL,   "\'");
-    syntax_token(SYNT_BRACKET,   "([{", ")]}");
-    syntax_token(SYNT_DELIMITER, ",;.?:");
-    syntax_token(SYNT_OPERATOR,  "-%+/&*=<>|!~^");
-    syntax_token(SYNT_WORD,      "$0-9A-Z_a-z", "0-9A-Z_a-z");
-    syntax_token(SYNT_NUMERIC,   "-+.0-9_xa-fA-F");
+    syntax_token(SYNT_COMMENT,      "#");
+    syntax_token(SYNT_COMMENT,      "=pod", "=cut");
+    syntax_token(SYNT_QUOTE,        "\\");
+    syntax_token(SYNT_STRING,       "\"");
+    syntax_token(SYNT_LITERAL,      "\'");
+    syntax_token(SYNT_BRACKET,      "([{", ")]}");
+    syntax_token(SYNT_DELIMITER,    ",;.?:");
+    syntax_token(SYNT_OPERATOR,     "-+/&*=<>|!~^%");
+    syntax_token(SYNT_WORD,         "$0-9A-Z_a-z", "0-9A-Z_a-z");
+    syntax_token(SYNT_NUMERIC,      "-+.0-9_xa-fA-F");
 
     /*
      *  Advanced syntax engine/

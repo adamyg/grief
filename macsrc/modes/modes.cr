@@ -26,21 +26,23 @@ static list xlist =  {      // mode extension map
       * Mode handlers       Extension list, note the leading/trailing dot as delimiter.
       */
     "awk",                  ".awk.",
-    "dosbatch",             ".bat.BAT.cmd.CMD.",
     "c",                    ".c.C.h.",
     "cplusplus",            ".cpp.cc.c++.cxx.hpp.h++.hxx.",
+    "cmake",                ".cmake.",
     "cr",                   ".cr.",
     "csharp",               ".cs.",
+    "dosbatch",             ".bat.BAT.cmd.CMD.",
+    "fortran",              ".f.f77.f90.",
     "gas",                  ".s.",
     "html",                 ".html.htm.docb.sgml.sgm.",
+    "json",                 ".json.",
     "mak",                  ".mk.mak.",
     "masm",                 ".asm.",
     "perl",                 ".pl.pm.",
     "python",               ".py.",
     "sh",                   ".sh.csh.tcsh.zsh.bash.ash.rsh.",
-    "txt",                  ".txt.",
     "slang",                ".sl.",
-    "fortran",              ".f.f77.f90.",
+    "txt",                  ".txt.",
     "vim",                  ".vim.",
     "yaml",                 ".yaml."
     };
@@ -71,6 +73,8 @@ main(void)
     autoload("modes/html",          "_html_mode");
 
     autoload("modes/java",          "_java_mode", "_java_hier_list");
+
+    autoload("modes/json",          "_json_mode");
 
     autoload("modes/lisp",          "_lisp_mode");
 
