@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.60 2022/07/06 15:30:54 cvsuser Exp $
+# $Id: Makefile.in,v 1.61 2022/07/11 14:23:14 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2022, Adam Young.
@@ -504,6 +504,13 @@ $(LW)%:			$(D_LIB)/.created $(D_OBJ)/.created
 #########################################################################################
 # Support rules
 
+#INSTALL_OPTIONS=-o bin -g bin
+#INSTALL_MODE=0750
+
+ifeq ("$(INSTALL_MODE)","")
+INSTALL_MODE=0755
+endif
+
 .PHONY: install
 install:		build
 		-mkdir -p $(BINDIR)
@@ -511,11 +518,11 @@ install:		build
 		for d in help macros macros/demos macros/kbd macros/tty src src/demos src/kbd src/tty; do \
 			mkdir -p $(DATADIR)/$${d}; \
 		done
-		$(INSTALL_PROGRAM) -m 0755 -c -o bin -g bin $(D_BIN)/gr$(E) $(BINDIR)
-		$(INSTALL_PROGRAM) -m 0755 -c -o bin -g bin $(D_BIN)/gm$(E) $(BINDIR)
-		$(INSTALL_PROGRAM) -m 0755 -c -o bin -g bin $(D_BIN)/grcpp$(E) $(BINDIR)
-		$(INSTALL_PROGRAM) -m 0755 -c -o bin -g bin $(D_BIN)/grmandoc$(E) $(BINDIR)
-		$(INSTALL_PROGRAM) -m 0755 -c -o bin -g bin $(D_BIN)/grunch$(E) $(BINDIR)
+		$(INSTALL_PROGRAM) -m $(INSTALL_MODE) $(INSTALL_OPTIONS) $(D_BIN)/gr$(E) $(BINDIR)
+		$(INSTALL_PROGRAM) -m $(INSTALL_MODE) $(INSTALL_OPTIONS) $(D_BIN)/gm$(E) $(BINDIR)
+		$(INSTALL_PROGRAM) -m $(INSTALL_MODE) $(INSTALL_OPTIONS) $(D_BIN)/grcpp$(E) $(BINDIR)
+		$(INSTALL_PROGRAM) -m $(INSTALL_MODE) $(INSTALL_OPTIONS) $(D_BIN)/grmandoc$(E) $(BINDIR)
+		$(INSTALL_PROGRAM) -m $(INSTALL_MODE) $(INSTALL_OPTIONS) $(D_BIN)/grunch$(E) $(BINDIR)
 		@echo Installing GRIEF help files...
 		-$(TAR) cf - -C $(D_HELP)   --mode=+rw --exclude CVS . | ($(TAR) xf - -C $(DATADIR)/help)
 		@echo Installing GRIEF compiled macros...

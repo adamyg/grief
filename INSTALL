@@ -2,7 +2,7 @@
     For installation notes relating to specific systems, please skip to the next
     section of this document.
 
-                                   -------
+                                 -------
 
     This is GRIEF 3.2.1, a derivative of the Crisp editor for various UNIX platforms
     written and released by Paul Fox some 22 years ago and made available on the
@@ -32,7 +32,7 @@
 
         Notes:
 
-         o gmake bundled with gnuwin32 is 3.81 wont function correctly as 
+         o gmake bundled with gnuwin32 is 3.81 wont function correctly as
            GNU make 4.0 or greater shall be required to build several contrib packages.
 
                Advise using 'win32/gmake-4.2.exe'.
@@ -48,7 +48,7 @@
 
             perl makelib.pl [--gnuwin32=<path-gnuwin32-bin>] vc
 
-         Note: If you dont have perl available, download and install the WIN32 
+         Note: If you dont have perl available, download and install the WIN32
          version of ActivePerl.
 
       c. Build the entire tree with:
@@ -56,7 +56,7 @@
                gmake
             or win32\gmake-42
 
-      d. Note that the default installation paths (compiled into GRIEF, but 
+      d. Note that the default installation paths (compiled into GRIEF, but
        may be overridden with environment variables or command line) are:
 
             executables         /Program Files/Grief/bin
@@ -64,23 +64,30 @@
             compiled macros     /Program Files/Grief/macros
             macro source        /Program Files/Grief/macsrc
 
-         These can be modified in the makefiles after configure has run and 
-         before 'make'. Makefiles using these paths are the main Makefile, 
+         These can be modified in the makefiles after configure has run and
+         before 'make'. Makefiles using these paths are the main Makefile,
          and the one within gr/Makefile.
 
       f. To install, type:
 
-            gmake install
+            gmake release install
+            
+         Options: 
+            INSTALL_MODE=mode           mode override (default=0755)
+            INSTALL_OPTIONS=options     additional installation options.
+            
+         Example:
+            gmake INSTALL_OPTIONS="-g users" release install
 
       e. To build the documentation in html and pdf forms
-      
+
             install https://wkhtmltopdf.org/downloads.html
 
             cd hlpdoc
             makehtml
             makepdf
 
-    On WIN32 using OpenWatcom 1.9 or 2.0 (beta at your caution), build by the following these steps:
+    On WIN32 using OpenWatcom 1.9 or 2.0, build by the following these steps:
 
       Follow the MSVC build notes, but execute 'makelib.lib' stating
       the use of the OpenWatcom tool chain.
@@ -95,65 +102,40 @@
 
       b. Build the entire tree with:
 
-            make
+            make release
 
       c. To install, type:
 
-            make install
-
-
-    On OS2 using gcc, build by the following these steps:
-
-      a. Install the entire set of makefiles:
-
-            cd OS
-            config.cmd
-            cd ..
-
-      b. Build the entire tree with:
-
-            sh
-            gmake
-            exit
-
-      c. To install, type:
-
-            sh
-            gmake install
-            exit
-
-      Note:
-         The OS2 build has not been tested for some time and will
-         most likely require work.
+            make release install
 
 
     On UNIX variations (including cygwin), build by following these steps:
 
-      a. Optionally the following external packages can be in additional 
+      a. Optionally the following external packages can be in additional
       functionality; auto-detected during 'configure'.
 
-                        enchant-devel       Wrapper library for various s
-                        hunspell-devel      Spell checker and morphologic
-                        aspell-devel        GNU aspell.
+            enchant-devel       Wrapper library for various s
+            hunspell-devel      Spell checker and morphologic
+            aspell-devel        GNU aspell.
 
-                        enca-devel          Extremely Naive Charset Analyiser
-                        libguess-devel      Speed character set detection
+            enca-devel          Extremely Naive Charset Analyiser
+            libguess-devel      Speed character set detection
 
-                        libexplain-devel    System message add-value.
+            libexplain-devel    System message add-value.
 
-                        libarchive-devel    Archive access.
-                        libicu-devel        Character conversion.
+            libarchive-devel    Archive access.
+            libicu-devel        Character conversion.
 
-                        libbz2-devel        bzip compression.
-                        libzstd-devel       gz compression.
-                        xz-devel            liblzma.
-                        snappy-devel        google fast/compressor/decomp
+            libbz2-devel        bzip compression.
+            libzstd-devel       gz compression.
+            xz-devel            liblzma.
+            snappy-devel        google fast/compressor/decomp
 
         plus the following, which are generally available.
 
-                        ncurses-devel       Terminal interface library.
-                        libcurl-devel       Network tools.
-                        openssl-devel       OpenSSL.
+            ncurses-devel       Terminal interface library.
+            libcurl-devel       Network tools.
+            openssl-devel       OpenSSL.
 
       b. If you're building with a non-standard compiler or one known, by something
       other than "cc" or "gcc" then you can set the environment variable "CC" to that.
@@ -182,7 +164,7 @@
 
       f. Build the entire tree with:
 
-            make 
+            make
          or make release
 
       g. Note that the default installation paths (compiled into GRIEF, but may be
@@ -200,9 +182,9 @@
 
       h. To install, type:
 
-            make install
+            make release install
 
-                                         -------
+                                 -------
 
 Notes compiling on specific operating systems and configuring for
 optimal performance and ease of use on the console:
@@ -271,7 +253,7 @@ optimal performance and ease of use on the console:
         then this library is linked in instead. Note that the routines used here are
         the malloc() etc. functions described in the standard c headers.
 
-                                         -------
+                                -------
 Terminals
 
     xterm
@@ -281,7 +263,7 @@ Terminals
         rather full keyboard mapping; for example, Shift/Ctrl function keys rarely work
         by default. Fortunately, X provides a solution via the ability to remap the
         keyboard to suit the application. To provide functionality equivalent to a
-        console/DOS/OS2 GRIEF, paste contents of the file
+        console GRIEF, paste contents of the file
 
              EXTRA/xterm.dot.Xresources
 
@@ -301,5 +283,5 @@ setting up terminal features.
 
 *Some* of this information may be obsolete, but most of it will be fine.
 
-$Id: INSTALL,v 1.16 2022/06/24 16:54:46 cvsuser Exp $
+$Id: INSTALL,v 1.17 2022/07/11 15:04:35 cvsuser Exp $
 
