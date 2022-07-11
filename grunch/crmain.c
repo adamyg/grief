@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.57 2022/05/31 16:18:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.58 2022/07/10 14:51:14 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crmain.c,v 1.57 2022/05/31 16:18:22 cvsuser Exp $
+/* $Id: crmain.c,v 1.58 2022/07/10 14:51:14 cvsuser Exp $
  * grunch command line.
  *
  *
@@ -1381,5 +1381,3 @@ expand_var(const char *xenv, char *buf, int buflen)
 }
 
 /*end*/
-
-

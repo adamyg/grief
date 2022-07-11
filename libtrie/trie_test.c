@@ -11,6 +11,12 @@
 #include <string.h>
 #include <assert.h>
 
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
+#ifndef snprintf
+#define snprintf    _snprintf
+#endif
+#endif /*_MSC_VER*/
+
 static void
 test(int val, const char *msg)
 {

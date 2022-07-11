@@ -1,5 +1,6 @@
 edbuildinfo.h
 edpackage.h
+libtrie.h
 oniggnu.h
 onigposix.h
 oniguruma.h

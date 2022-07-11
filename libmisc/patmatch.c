@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_patmatch_c,"$Id: patmatch.c,v 1.12 2020/04/11 21:33:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_patmatch_c,"$Id: patmatch.c,v 1.13 2022/07/10 14:52:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: patmatch.c,v 1.12 2020/04/11 21:33:54 cvsuser Exp $
+/* $Id: patmatch.c,v 1.13 2022/07/10 14:52:22 cvsuser Exp $
  * Basic pattern (not regexp, fnmatch style) matching support.
  *
  *
@@ -85,7 +85,7 @@ patmatchx(const char *pattern, const char *name, int flags, matcherrfn_t errfn)
 static int
 match(const unsigned char *pattern, const unsigned char *name, int flags, matcherrfn_t errfn)
 {
-#define __TOLOWER(c) \
+#define IGNORECASE(c) \
             ((flags & MATCH_NOCASE) && isupper(c) ? tolower(c) : c)
 
     const unsigned char *p = (const unsigned char *)pattern;
@@ -93,7 +93,7 @@ match(const unsigned char *pattern, const unsigned char *name, int flags, matche
     int ch;
 
     while (0 != (ch = *p++)) {
-        ch = __TOLOWER(ch);
+        ch = IGNORECASE(ch);
         switch (ch) {
         case '?':           /* Match next character */
             if (FILEIO_ISSEP(*n) && (flags & MATCH_PATHNAME)) {
@@ -128,10 +128,10 @@ match(const unsigned char *pattern, const unsigned char *name, int flags, matche
             --p;
 
             {
-                int c1 = __TOLOWER(ch);         /* next character to match */
+                int c1 = IGNORECASE(ch);         /* next character to match */
 
                 while (*n != '\0') {            /* recurse into next pattern(s) */
-                    if ((c1 == '[' || __TOLOWER(*n) == c1) &&
+                    if ((c1 == '[' || IGNORECASE(*n) == c1) &&
                             match(p, n, flags, errfn) == TRUE) {
                         return TRUE;
                     }
@@ -164,7 +164,7 @@ match(const unsigned char *pattern, const unsigned char *name, int flags, matche
             /*FALLTHRU*/
 
         default:            /* other characters */
-            if (ch != __TOLOWER(*n)) {
+            if (ch != IGNORECASE(*n)) {
                 return FALSE;
             }
             break;
@@ -322,7 +322,7 @@ more:;
         ch = (int)*p++;
     }
 
-    value = __TOLOWER(*n);                      /* test value */
+    value = IGNORECASE(*n);                      /* test value */
 
     while (']' != ch) {                         /* end-of-set */
         int c1;
@@ -335,13 +335,13 @@ more:;
         /*
          *  test current character 'c1' and load look-ahead into 'ch'.
          */
-        c1 = __TOLOWER(ch);
+        c1 = IGNORECASE(ch);
 
         ch = *p++;
         if (ch == '\\' && !(flags & MATCH_NOESCAPE)) {
             ch = *p++;
         }
-        ch = __TOLOWER(ch);
+        ch = IGNORECASE(ch);
 
 
         /*
@@ -369,7 +369,7 @@ more:;
                 goto return_nomatch;
             }
 
-            c2 = __TOLOWER(c2);
+            c2 = IGNORECASE(c2);
             ch = *p++;                          /* load next */
 
             if (c1 > c2) {                      /* invalid order, loses. */
