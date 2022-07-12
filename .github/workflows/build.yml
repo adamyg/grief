@@ -82,18 +82,12 @@ jobs:
         sudo apt-get install -y libguess-dev
         sudo apt-get install -y libexplain-dev
         sudo apt-get install -y libarchive-dev
-        
+
     - name: MacOS, setup
       if: startsWith(matrix.config.name, 'MacOS Latest')
       shell: bash
       run: |
         brew install wget
-        brew install bison
-        brew install ncurses
-        brew install enchant
-        brew install aspell
-        brew install hunspell
-        brew install libarchive
 
     - name: Windows, generate
       if: startsWith(matrix.config.name, 'Windows Latest')
@@ -146,4 +140,3 @@ jobs:
       with:
         name: package-${{ matrix.config.toolchain }}
         path: ./bin.${{ matrix.config.toolversion }}/release/*
-
