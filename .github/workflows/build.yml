@@ -88,6 +88,7 @@ jobs:
       shell: bash
       run: |
         brew install wget
+        brew install libarchive
 
     - name: Windows, generate
       if: startsWith(matrix.config.name, 'Windows Latest')
@@ -127,18 +128,18 @@ jobs:
       if: startsWith(matrix.config.name, 'MacOS Latest')
       shell: bash
       run: |
-        export CPATH=/usr/local/include:$CPATH
-        export LIBRARY_PATH=/usr/local/lib:$LIBRARY_PATH
-        export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+        export CPATH=$(brew --prefix libarchive)/include:/usr/local/include:$CPATH
+        export LIBRARY_PATH=$(brew --prefix libarchive)/lib:/usr/local/lib:$LIBRARY_PATH
+        export LD_LIBRARY_PATH=$(brew --prefix libarchive)/lib:/usr/local/lib:$LD_LIBRARY_PATH
         ./support/config_withncurses
 
     - name: MacOS, compile
       if: startsWith(matrix.config.name, 'MacOS Latest')
       shell: bash
       run: |
-        export CPATH=/usr/local/include:$CPATH
-        export LIBRARY_PATH=/usr/local/lib:$LIBRARY_PATH
-        export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+        export CPATH=$(brew --prefix libarchive)/include:/usr/local/include:$CPATH
+        export LIBRARY_PATH=$(brew --prefix libarchive)/lib:/usr/local/lib:$LIBRARY_PATH
+        export LD_LIBRARY_PATH=$(brew --prefix libarchive)/lib:/usr/local/lib:$LD_LIBRARY_PATH
         make release
 
     - name: Package
