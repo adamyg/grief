@@ -21201,10 +21201,29 @@ if test "x$ac_cv_header_enchant_enchant_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_ENCHANT_ENCHANT_H 1
 _ACEOF
+ libenchant_header=yes
+else
+  for ac_header in enchant.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "enchant.h" "ac_cv_header_enchant_h" "$ac_includes_default"
+if test "x$ac_cv_header_enchant_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_ENCHANT_H 1
+_ACEOF
+ libenchant_header=yes
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: enchant.h not found" >&5
+$as_echo "$as_me: WARNING: enchant.h not found" >&2;}
 
 fi
 
 done
+
+
+fi
+
+done
+
 
 		for ac_header in enchant/enchant++.h
 do :
@@ -21213,37 +21232,30 @@ if test "x$ac_cv_header_enchant_enchantpp_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_ENCHANT_ENCHANT___H 1
 _ACEOF
-
-fi
-
-done
-
-		if test "x$ac_cv_header_enchant_enchant_h" = "x"; then
-			for ac_header in enchant.h
-do :
-  ac_fn_c_check_header_mongrel "$LINENO" "enchant.h" "ac_cv_header_enchant_h" "$ac_includes_default"
-if test "x$ac_cv_header_enchant_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_ENCHANT_H 1
-_ACEOF
-
-fi
-
-done
-
-			for ac_header in enchant++.h
+ libenchantxx_header=yes
+else
+  for ac_header in enchant++.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "enchant++.h" "ac_cv_header_enchantpp_h" "$ac_includes_default"
 if test "x$ac_cv_header_enchantpp_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_ENCHANT___H 1
 _ACEOF
+ libenchantxx_header=yes
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: enchant++.h not found" >&5
+$as_echo "$as_me: WARNING: enchant++.h not found" >&2;}
 
 fi
 
 done
 
-		fi
+
+fi
+
+done
+
+
 
 $as_echo "#define HAVE_LIBENCHANT 1" >>confdefs.h
 
@@ -21257,10 +21269,29 @@ if test "x$ac_cv_header_hunspell_hunspell_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_HUNSPELL_HUNSPELL_H 1
 _ACEOF
+ libhunspell_header=yes
+else
+  for ac_header in hunspell.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "hunspell.h" "ac_cv_header_hunspell_h" "$ac_includes_default"
+if test "x$ac_cv_header_hunspell_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_HUNSPELL_H 1
+_ACEOF
+ libhunspell_header=yes
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: hunspell.h not found" >&5
+$as_echo "$as_me: WARNING: hunspell.h not found" >&2;}
 
 fi
 
 done
+
+
+fi
+
+done
+
 
 		for ac_header in hunspell/hunspell.hxx
 do :
@@ -21269,37 +21300,30 @@ if test "x$ac_cv_header_hunspell_hunspell_hxx" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_HUNSPELL_HUNSPELL_HXX 1
 _ACEOF
-
-fi
-
-done
-
-		if test "x$ac_cv_header_hunspell_hunspell_h" = "x"; then
-			for ac_header in hunspell.h
-do :
-  ac_fn_c_check_header_mongrel "$LINENO" "hunspell.h" "ac_cv_header_hunspell_h" "$ac_includes_default"
-if test "x$ac_cv_header_hunspell_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_HUNSPELL_H 1
-_ACEOF
-
-fi
-
-done
-
-			for ac_header in hunspell.hxx
+ libhunspellxx_header=yes
+else
+  for ac_header in hunspell.hxx
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "hunspell.hxx" "ac_cv_header_hunspell_hxx" "$ac_includes_default"
 if test "x$ac_cv_header_hunspell_hxx" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_HUNSPELL_HXX 1
 _ACEOF
+ libhunspellxx_header=yes
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: hunspell.hxx not found" >&5
+$as_echo "$as_me: WARNING: hunspell.hxx not found" >&2;}
 
 fi
 
 done
 
-		fi
+
+fi
+
+done
+
+
 
 $as_echo "#define HAVE_LIBHUSPELL 1" >>confdefs.h
 
@@ -21313,25 +21337,30 @@ if test "x$ac_cv_header_aspell_aspell_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_ASPELL_ASPELL_H 1
 _ACEOF
-
-fi
-
-done
-
-		if test "x$ac_cv_header_aspell_aspell_h" = "x"; then
-			for ac_header in aspell.h
+ libaspell_header=yes
+else
+  for ac_header in aspell.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "aspell.h" "ac_cv_header_aspell_h" "$ac_includes_default"
 if test "x$ac_cv_header_aspell_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_ASPELL_H 1
 _ACEOF
+ libaspell_header=yes
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: aspell.h not found" >&5
+$as_echo "$as_me: WARNING: aspell.h not found" >&2;}
 
 fi
 
 done
 
-		fi
+
+fi
+
+done
+
+
 
 $as_echo "#define HAVE_LIBASPELL 1" >>confdefs.h
 
