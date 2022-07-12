@@ -127,19 +127,14 @@ jobs:
       if: startsWith(matrix.config.name, 'MacOS Latest')
       shell: bash
       run: |
-        ls -l /usr/local/include
-        ls -l /opt/local/include
-        ls -l /usr/local/opt
-        ls -l /usr/local/opt/include
-        ls -l /usr/local/opt/lib
-        export C_INCLUDE_PATH=/usr/local/include:/opt/local/include:$C_INCLUDE_PATH
+        export C_INCLUDE_PATH=/usr/local/include:$C_INCLUDE_PATH
         ./support/config_withncurses
 
     - name: MacOS, compile
       if: startsWith(matrix.config.name, 'MacOS Latest')
       shell: bash
       run: |
-        export C_INCLUDE_PATH=/usr/local/include:/opt/usr/include:$C_INCLUDE_PATH
+        export C_INCLUDE_PATH=/usr/local/include:$C_INCLUDE_PATH
         make release
 
     - name: Package
