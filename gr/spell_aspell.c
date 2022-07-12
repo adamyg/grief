@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_spell_aspell_c,"$Id: spell_aspell.c,v 1.12 2018/10/01 09:55:43 cvsuser Exp $")
+__CIDENT_RCSID(gr_spell_aspell_c,"$Id: spell_aspell.c,v 1.13 2022/07/12 15:30:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: spell_aspell.c,v 1.12 2018/10/01 09:55:43 cvsuser Exp $
+/* $Id: spell_aspell.c,v 1.13 2022/07/12 15:30:56 cvsuser Exp $
  * Spell implementation - aspell driver.
  *
  *
@@ -20,6 +20,10 @@ __CIDENT_RCSID(gr_spell_aspell_c,"$Id: spell_aspell.c,v 1.12 2018/10/01 09:55:43
 
 #include <editor.h>
 #include <edenv.h>                              /* gputenvv(), ggetenv() */
+
+#include <libstr.h>
+#include "echo.h"
+
 
 /*  autoconf:
  *      #define HAVE_LIBASPELL
@@ -44,7 +48,6 @@ __CIDENT_RCSID(gr_spell_aspell_c,"$Id: spell_aspell.c,v 1.12 2018/10/01 09:55:43
 #elif defined(HAVE_ASPELL_H)
 #include <aspell.h>
 #else
-//  #include "/bbs/swtlib/aspell/include/aspell.h"
 #include "/usr/include/aspell.h"
 #endif
 #endif
