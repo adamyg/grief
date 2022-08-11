@@ -41,4 +41,3 @@ Wcscmp(const WChar_t *s1, const WChar_t *s2)
 			return (0);
 	return (*(const int *)s1 - *(const int *)--s2);
 }
-

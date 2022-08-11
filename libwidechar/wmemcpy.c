@@ -38,4 +38,3 @@ Wmemcpy(WChar_t *d, const WChar_t *s, size_t n)
 
 	return (WChar_t *)memcpy(d, s, n * sizeof(WChar_t));
 }
-

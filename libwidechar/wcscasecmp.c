@@ -32,7 +32,7 @@ Wcscasecmp(const WChar_t *s1, const WChar_t *s2)
 {
 	WChar_t l1, l2;
 
-	while ((l1 = towlower(*s1++)) == (l2 = towlower(*s2++))) { //FIXME
+	while ((l1 = towlower((wint_t)(*s1++))) == (l2 = towlower((wint_t)(*s2++)))) { //FIXME
 		if (l1 == 0)
 			return (0);
 	}
@@ -47,7 +47,7 @@ Wcsncasecmp(const WChar_t *s1, const WChar_t *s2, size_t n)
 	if (n == 0)
 		return (0);
 	do {
-		if (((l1 = towlower(*s1++))) != (l2 = towlower(*s2++))) { //FIXME
+		if (((l1 = towlower((wint_t)(*s1++)))) != (l2 = towlower((wint_t)(*s2++)))) { //FIXME
 			return ((int)l1 - (int)l2);
 		}
 		if (l1 == 0)
