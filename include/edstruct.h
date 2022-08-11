@@ -1,11 +1,11 @@
 #ifndef GR_EDSTRUCT_H_INCLUDED
 #define GR_EDSTRUCT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.71 2022/03/21 14:55:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.72 2022/08/10 15:44:58 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edstruct.h,v 1.71 2022/03/21 14:55:27 cvsuser Exp $
+/* $Id: edstruct.h,v 1.72 2022/08/10 15:44:58 cvsuser Exp $
  * Window, buffer, line and character-map definitions.
  *
  *
@@ -342,7 +342,7 @@ struct _window {
     int                 w_disp_rmargin;         /* Right hand margin */
     LINENO              w_disp_line;            /* Current line number */
     LINENO              w_disp_column;          /* Next column to be displayed */
-    LINENO              w_disp_vtbase;          /* Base vt columnt adjustment */
+    LINENO              w_disp_vtbase;          /* Base vt column adjustment */
     LINENO              w_disp_indent;          /* Indentation cursor */
     const cmap_t *      w_disp_cmap;            /* Active character map, buffer, window or base */
     void *              w_disp_anchor;          /* Associated anchor */
@@ -650,7 +650,7 @@ enum _bflags {
     BF_NEW_FILE         =0x00001000,            /* File is a new file, so write even if no changes */
     BF_CR_MODE          =0x00002000,            /* Append <CR> to end of each line on output */
     BF_SYNTAX           =0x00004000,            /* Enable syntax highlighting (unless ANSI) */
-    FB_STATUSLINE       =0x00008000,            /* Status line */
+    BF_SYNTAX_MATCH     =0x00008000,            /* Hilite matching brackets */
     BF_MAN              =0x00010000,            /* If TRUE, man style \b is done */
     BF_SPELL            =0x00020000,            /* Enable spell */
     BF_FOLDING          =0x00040000,            /* Test folding/hiding */
@@ -694,6 +694,7 @@ enum _bflags {
     BF2_HIWHITESPACE    =0x00200000,            /* Hilite whitespace */
     BF2_HIMODIFIED      =0x00400000,            /* Hilite modified lines */
     BF2_HIADDITIONAL    =0x00800000,            /* Hilite added lines */
+    BF2_HISTATUSLINE    =0x01000000,            /* Hilite status line */
 
     /*
      *  BF3_XXXX values ---
@@ -1018,6 +1019,7 @@ struct _buffer {
     int                 b_vwidth;               /* Character width (generally 1 or 2) */
     int                 b_vlength;              /* Length of character, in bytes */
     int32_t             b_vchar[4];             /* Character value under cursor + combined values */
+    int32_t             b_voffset;              /* Character offset */
 
     LINELIST_t          b_lineq;                /* Line queus/list */
     LINENO              b_cline;                /* Cached line number */

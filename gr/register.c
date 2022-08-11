@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_register_c,"$Id: register.c,v 1.30 2020/04/21 00:01:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_register_c,"$Id: register.c,v 1.31 2022/08/10 15:44:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: register.c,v 1.30 2020/04/21 00:01:57 cvsuser Exp $
+/* $Id: register.c,v 1.31 2022/08/10 15:44:57 cvsuser Exp $
  * Event handlers.
  *
  *
@@ -770,4 +770,5 @@ inq_idle_time(void)             /* int () */
         acc_assign_int((accint_t) (time(NULL) - x_time_last_key));
     }
 }
+
 /*end*/

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_tty_c,"$Id: tty.c,v 1.30 2021/06/22 15:52:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_tty_c,"$Id: tty.c,v 1.31 2022/08/10 15:44:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: tty.c,v 1.30 2021/06/22 15:52:54 cvsuser Exp $
+/* $Id: tty.c,v 1.31 2022/08/10 15:44:58 cvsuser Exp $
  * Common basic tty functionality.
  *
  *
@@ -889,4 +889,5 @@ ttstringcopy(char *dp, int dplen, const char *bp, int delim)
 
 #undef  XDIGIT
 }
+
 /*end*/

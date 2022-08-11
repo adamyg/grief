@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: zenburn.cr,v 1.6 2022/07/10 13:08:02 cvsuser Exp $
+/* $Id: zenburn.cr,v 1.7 2022/08/10 15:44:58 cvsuser Exp $
  * zenburn coloriser, GRIEF port.
  *
  *  Original author Jani Numinen in 2002
@@ -82,6 +82,8 @@ zenburn_spec[] = {
 //      { "TabLine",                        187,    235,    "none"              },
 //      { "TabLineSel",                     229,    236,    "bold"              },
 //      { "TabLineFill",                    188,    233,    "none"              },
+
+        { "HTMLLink",                       181,    NULL,   "underline"         },
 
         { "Error",                          167,    236,    "bold"              },
 //      { "Include",

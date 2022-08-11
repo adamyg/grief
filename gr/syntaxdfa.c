@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntaxdfa_c,"$Id: syntaxdfa.c,v 1.35 2022/07/10 13:11:59 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntaxdfa_c,"$Id: syntaxdfa.c,v 1.36 2022/08/10 15:44:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntaxdfa.c,v 1.35 2022/07/10 13:11:59 cvsuser Exp $
+/* $Id: syntaxdfa.c,v 1.36 2022/08/10 15:44:58 cvsuser Exp $
  * Deterministic Finite Automata (DFA) based syntax highlighting.
  *
  *
@@ -1324,4 +1324,5 @@ syndfa_load(
     fclose(fd);
     return state;
 }
+
 /*end*/

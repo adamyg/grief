@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: grief.cr,v 1.87 2020/05/04 18:45:47 cvsuser Exp $
+/* $Id: grief.cr,v 1.88 2022/08/10 15:44:58 cvsuser Exp $
  * GRIEF startup macro.
  *
  *
@@ -540,7 +540,7 @@ grief(void)
     assign_to_key("^Z",                         "zoom");
     assign_to_key("^]",                         "tag_function");
     assign_to_key("^_",                         "edit_previous_buffer");
-    assign_to_key("^^",                         "find_matching_brace");
+    assign_to_key("<Ctrl-^>",                   "find_matching_brace");
     assign_to_key("<Ctrl-6>",                   "find_matching_brace"); /*WIN32*/
     assign_to_key("<Ctrl-Return>",              "fullscreen");          /*WIN32*/
     assign_to_key("#127",                       "delete_character");
@@ -563,14 +563,14 @@ grief(void)
     assign_to_key("<Alt-F10>",                  "load");
     assign_to_key("<Alt-End>",                  "goto_right_edge");
     assign_to_key("<Alt-Home>",                 "goto_left_edge");
-    assign_to_key("<Alt-minus>",                "previous_alpha_buffer");
+    assign_to_key("<Alt-Minus>",                "previous_alpha_buffer");
     assign_to_key("<Alt-:>",                    "execute_macro");       /*alt F10*/
     assign_to_key("<Ctrl-F5>",                  "toggle_re_case");
     assign_to_key("<Ctrl-F6>",                  "toggle_re");
     assign_to_key("<Ctrl-F10>",                 "load");
     assign_to_key("<Ctrl-Left-Arrow>",          "objects word_left");
     assign_to_key("<Ctrl-Right-Arrow>",         "objects word_right");
-    assign_to_key("<Ctrl-minus>",               "delete_curr_buffer");
+    assign_to_key("<Ctrl-Minus>",               "delete_curr_buffer");
     assign_to_key("^_",                         "delete_curr_buffer");
     assign_to_key("<Del>",                      "delete_character");
     assign_to_key("<End>",                      "end");
@@ -602,12 +602,12 @@ grief(void)
     assign_to_key("<Ctrl-S>",                   "nothing");
 
     /* Append the data to the scrap */
-    assign_to_key("<Shift-Keypad-plus>",        "copy 1");
-    assign_to_key("<Shift-Keypad-minus>",       "cut 1");
+    assign_to_key("<Shift-Keypad-Plus>",        "copy 1");
+    assign_to_key("<Shift-Keypad-Minus>",       "cut 1");
 
     /* Named scrap buffers */
-    assign_to_key("<Ctrl-Keypad-plus>",         "copy_named_scrap");
-    assign_to_key("<Ctrl-Keypad-minus>",        "cut_named_scrap");
+    assign_to_key("<Ctrl-Keypad-Plus>",         "copy_named_scrap");
+    assign_to_key("<Ctrl-Keypad-Minus>",        "cut_named_scrap");
     assign_to_key("<Ctrl-Ins>",                 "paste_named_scrap");
 
     /* Help system */

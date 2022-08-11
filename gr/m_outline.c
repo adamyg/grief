@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_outline_c,"$Id: m_outline.c,v 1.5 2014/10/22 02:33:06 ayoung Exp $")
+__CIDENT_RCSID(gr_m_outline_c,"$Id: m_outline.c,v 1.6 2022/08/10 15:44:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_outline.c,v 1.5 2014/10/22 02:33:06 ayoung Exp $
+/* $Id: m_outline.c,v 1.6 2022/08/10 15:44:57 cvsuser Exp $
  * outline primitives.
  *      functionality which affects the outline mode of editing These functions are designed to be
  *      faster than the alternative of coding the operations manually using the other primitives.
@@ -27,8 +27,9 @@ do_hide_ctl(void)               /* (int cmd) */
 }
 
 void
-do_fold_ctrl(void)              /* (int cmd, [int start_line], [int end_line] */
+do_fold_ctrl(void)              /* (int cmd, [int start_line], [int end_line], [level] */
 {
     /*TODO*/
 }
+
 /*end*/

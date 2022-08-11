@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.44 2022/07/08 13:39:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.45 2022/08/10 15:44:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.44 2022/07/08 13:39:52 cvsuser Exp $
+/* $Id: cmain.c,v 1.45 2022/08/10 15:44:56 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -309,7 +309,7 @@ int                     xf_nokeypad = FALSE;    /* TRUE if no termcap keypad ini
 
 int                     xf_lazyvt = -1;         /* If >0 limit vt updates, 0 disables. */
 
-int                     xf_synhilite = TRUE;    /* TRUE/FALSE enable syntax hiliting. */
+int                     xf_syntax_flags = 0x3;  /* 0x1=Syntax,0x2=Matching */
 
 int                     xf_strictlock = FALSE;  /* TRUE if strict file-locking. */
 
@@ -900,7 +900,7 @@ argv_process(int doerr, int argc, const char **argv)
             break;
 
         case 7:             /* tty - disable syntax hiliting. */
-            xf_synhilite = FALSE;
+            xf_syntax_flags = 0;
             break;
 
         case 9:             /* disable termcap init/deinit strings. */

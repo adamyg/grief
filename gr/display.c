@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.81 2021/10/18 13:22:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.82 2022/08/10 15:44:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: display.c,v 1.81 2021/10/18 13:22:21 cvsuser Exp $
+/* $Id: display.c,v 1.82 2022/08/10 15:44:56 cvsuser Exp $
  * High level display interface.
  *
  *
@@ -827,6 +827,8 @@ vtupdate2(int force)
         }
         curwp->w_status |= WFTOP;
     }
+
+    line_vstatus_update();                      /* virtual character update and syntax hook */ 
 
     /*
      *  Walk windows and draw image.

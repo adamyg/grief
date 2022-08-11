@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*-
- * $Id: c.cr,v 1.29 2022/07/10 13:08:02 cvsuser Exp $
+ * $Id: c.cr,v 1.30 2022/08/10 16:11:47 cvsuser Exp $
  * C/C++ Language support mode.
  *
  *
@@ -197,7 +197,7 @@ main()
     syntax_rule("/\\*.*\\*/", "spell,todo,quick:comment");
     syntax_rule("//.*$", "spell,todo:comment");
 
-    syntax_rule("/[^*/].*$", "alert");          // invalid eol comment.
+  //syntax_rule("/[^*/].*$", "alert");          // invalid eol comment; div op's cause confusion.
     syntax_rule("\\*/", "quick:alert");         // unmatched block comment.
 
                                                 // keywords and preprocessor directives

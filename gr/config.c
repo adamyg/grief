@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_config_c,"$Id: config.c,v 1.34 2020/06/20 02:17:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_config_c,"$Id: config.c,v 1.35 2022/08/10 15:44:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: config.c,v 1.34 2020/06/20 02:17:09 cvsuser Exp $
+/* $Id: config.c,v 1.35 2022/08/10 15:44:56 cvsuser Exp $
  * Machine dependent configuration variables.
  *
  *
@@ -275,4 +275,5 @@ const struct k_tbl          x_key_table[] = {
 
     { 0,                        NULL }
     };
+
 /*end*/

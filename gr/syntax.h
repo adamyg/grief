@@ -1,11 +1,11 @@
 #ifndef GR_SYNTAX_H_INCLUDED
 #define GR_SYNTAX_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntax_h,"$Id: syntax.h,v 1.35 2022/07/10 13:12:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntax_h,"$Id: syntax.h,v 1.36 2022/08/10 15:44:58 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntax.h,v 1.35 2022/07/10 13:12:24 cvsuser Exp $
+/* $Id: syntax.h,v 1.36 2022/08/10 15:44:58 cvsuser Exp $
  * Syntax hiliting constructs.
  *
  *
@@ -318,6 +318,7 @@ typedef struct SyntaxTable {
     unsigned char       quote_char;
     unsigned char       preprocessor_char;
     unsigned char       linecont_char;
+    unsigned char       bracket_chars[4][2];    /* open/close, max 4 pairs */
 
     SyntaxChar_t        syntax_charmap[256];
 
@@ -341,6 +342,7 @@ typedef enum {
 extern void                 syntax_init(void);
 extern void                 syntax_shutdown(void);
 
+extern SyntaxTable_t *      syntax_current(void);
 extern SyntaxTable_t *      syntax_argument(int argi, int err);
 extern SyntaxTable_t *      syntax_lookup(const char *name, int err);
 extern int                  syntax_keyword(const SyntaxTable_t *st, const LINECHAR *token, int length);
@@ -357,6 +359,7 @@ extern CommentStatus_t      syntax_comment(SyntaxTable_t *st, const LINECHAR *cu
 
 extern int                  syntax_parse(int all);
 extern void                 syntax_highlight(const LINE_t *lp);
+extern void                 syntax_virtual_cursor(void);
 
 extern void                 syntax_hilite_init(SyntaxTable_t *st);
 
@@ -369,6 +372,7 @@ extern void                 do_syntax_build(void);
 extern void                 do_syntax_column_ruler(void);
 extern void                 do_syntax_rule(void);
 extern void                 do_syntax_token(void);
+extern void                 do_syntax_find(void);
 extern void                 inq_syntax(void);
 
 __CEND_DECLS

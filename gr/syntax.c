@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntax_c, "$Id: syntax.c,v 1.60 2022/07/10 13:12:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntax_c, "$Id: syntax.c,v 1.63 2022/08/10 16:22:34 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntax.c,v 1.60 2022/07/10 13:12:24 cvsuser Exp $
+/* $Id: syntax.c,v 1.63 2022/08/10 16:22:34 cvsuser Exp $
  * Syntax pre-processor.
  *
  *
@@ -23,8 +23,10 @@ __CIDENT_RCSID(gr_syntax_c, "$Id: syntax.c,v 1.60 2022/07/10 13:12:24 cvsuser Ex
 
 #include "accum.h"
 #include "color.h"                              /* attribute_value() */
+#include "builtin.h"
 #include "debug.h"
 #include "display.h"
+#include "hilite.h"
 #include "echo.h"                               /* errorf() */
 #include "eval.h"                               /* get_str() */
 #include "lisp.h"
@@ -34,6 +36,34 @@ __CIDENT_RCSID(gr_syntax_c, "$Id: syntax.c,v 1.60 2022/07/10 13:12:24 cvsuser Ex
 #include "symbol.h"                             /* argv_assign() */
 #include "syntax.h"
 #include "tags.h"                               /* tags_check() */
+#include "tty.h"                                /* ttrows() */
+
+struct match_element {
+    LINENO line;                    /* Current line */
+    LINENO col;                     /* Current col */
+    LINENO offset;                  /* Offset within line */
+};
+
+struct match_stack {
+    const LINECHAR **data;          /* Element stack */
+    size_t capacity;                /* Capacity, in elements */
+    size_t top;                     /* Stack top */
+};
+
+struct match_state {
+    SyntaxTable_t *st;              /* Current syntaxtable */
+    struct match_element start;     /* Start position */
+    struct match_element end;       /* End position */
+    const LINECHAR *text;           /* Current line start */
+    const LINECHAR *filter;         /* First line filter */
+    struct match_stack stack;       /* Line stack */
+    unsigned char open;             /* Characters being matched */
+    unsigned char close;
+    int backwards;                  /* backwards, otherwise forward */
+    int lines;                      /* Numbers of lines to scan */
+    int hilites;
+    int level;                      /* Matching level */
+};
 
 static int                      syntax_table2attr(int table);
 
@@ -43,7 +73,6 @@ static void                     syntax_default(SyntaxTable_t *st);
 static void                     syntax_clear(SyntaxTable_t *st);
 static SyntaxWords_t *          syntax_words(SyntaxTable_t *st, int table, int length, int create);
 
-
 static const LINECHAR *         leading_write(SyntaxTable_t *st, const LINECHAR *start, const LINECHAR *end);
 
 static int                      keyword_table(const char *tablename);
@@ -52,19 +81,24 @@ static int                      keyword_push_list(SyntaxWordList_t *words, int l
 static void                     keyword_free_list(SyntaxWordList_t *words);
 static int                      keyword_push_pat(SyntaxTable_t *st, int attr, int length, int total, const char *keywords, int sep);
 
+static int                      fndmatching(SyntaxTable_t *st);
+
 static int                      style_lookup(const char *name);
 static int                      style_getc(int n);
 static const char *             style_gets(int n);
 static int                      style_once(SyntaxTable_t *st, SyntaxChar_t style, const char *description);
 static const char *             style_charset(const char *fmt, unsigned char *tab);
 
+typedef void (*Parser_t)(const LINECHAR *cursor, void *udata);
+
+static void                     find_matching(struct match_state *ms);
 static int                      parse_lines(SyntaxTable_t *st, LINENO lineno, LINENO num);
-static lineflags_t              parse_line(SyntaxTable_t *st, LINE_t *l);
+static lineflags_t              parse_line(SyntaxTable_t *st, const LINE_t *l, Parser_t parser, void *udata);
 
 static const struct flag {
-    const char *    f_name;                     /* name/label */
-    int             f_length;
-    int             f_enum;
+    const char *f_name;                         /* name/label */
+    int f_length;
+    int f_enum;
 
 } stylenames[] = {
 #define STYLENAME(x,n)  { x, (sizeof(x)-1), n }
@@ -125,8 +159,8 @@ extern "C" {                                    /* MCHAR??? */
 
     static const struct {                       /* Character classes */
         const char *name;
-        unsigned    namelen;
-        int       (*isa)(int);
+        unsigned namelen;
+        int (*isa)(int);
     } character_classes[] = {
         { "ascii",  5,  is_ascii },             /* ASCII character. */
         { "alnum",  5,  is_alnum  },            /* An alphanumeric (letter or digit). */
@@ -297,8 +331,11 @@ do_attach_syntax(void)          /* int (int|string table) */
         }
     }
 
-    if (xf_synhilite) {
+    if (xf_syntax_flags) {
         BFSET(curbp, BF_SYNTAX);
+        if (xf_syntax_flags & 0x02) {
+            BFSET(curbp, BF_SYNTAX_MATCH);
+        }
     }
 
     curbp->b_syntax = st;
@@ -366,15 +403,15 @@ do_detach_syntax(void)          /* void () */
         [Flag                       [Description                        ]
       ! SYNF_CASEINSENSITIVE        Case insensitive language tokens.
       ! SYNF_FORTRAN                FORTRAN style language.
-      ! SYNF_STRING_ONELINE         String definitions don't continue
+      ! SYNF_STRING_ONELINE         String definitions dont continue
                                     over line breaks.
-      ! SYNF_LITERAL_NOQUOTES       xxx
-      ! SYNF_COMMENTS_LEADINGWS     xxx
-      ! SYNF_COMMENTS_TRAILINGWS    xxx
-      ! SYNF_COMMENTS_QUOTE         xxx
+      ! SYNF_LITERAL_NOQUOTES       Literals dont quote.
+      ! SYNF_COMMENTS_LEADINGWS     Dont hilite leading white-space.
+      ! SYNF_COMMENTS_TRAILINGWS    Dont hilite trailing white-space.
+      ! SYNF_COMMENTS_QUOTE         Allow comment charcter to be quoted.
       ! SYNF_COMMENTS_CSTYLE        C-style comments.
-      ! SYNF_PREPROCESSOR_WS        xxx
-      ! SYNF_LINECONT_WS            xxx
+      ! SYNF_PREPROCESSOR_WS        Dont hilite leading white-space.
+      ! SYNF_LINECONT_WS            Allow white-space after cont token.
       ! SYNF_HILITE_WS              Hilite white-space.
       ! SYNF_HILITE_LINECONT        Hilite line continuations.
       ! SYNF_HILITE_PREPROCESSOR    Hilite preprocessor directives.
@@ -555,7 +592,7 @@ do_define_keywords(void)        /* ([int|string] keywords, string words|list wor
 
     /* flags */
     if (flags) {
-//TODO  const int t_flags = (flags & ~(SYNF_IGNORECASE | SYNK_NATCHCASE | SYNF_PATTERN));
+//TODO  const int t_flags = (flags & ~(SYNF_IGNORECASE|SYNK_MATCHCASE|SYNF_PATTERN));
         const int t_flags = (flags & ~(SYNF_PATTERN));
         if (t_flags) {
             errorf("syntax: invalid flags stated 0x%04x", t_flags);
@@ -1038,9 +1075,17 @@ do_syntax_token(void)           /* int (int type|string type, [arg1], [arg2], [i
                 errorf("syntax: bracket set does not match.");
 
             } else {
+                unsigned idx = 0;
+
                 while (i-- > 0) {
                     charmap[(unsigned char) s1[i]] |= SYNC_BRACKET_OPEN;
                     charmap[(unsigned char) s2[i]] |= SYNC_BRACKET_CLOSE;
+
+                    if (idx < 3) {
+                        st->bracket_chars[idx][0] = s1[i];
+                        st->bracket_chars[idx][1] = s2[i];
+                        ++idx;
+                    }
                 }
                 st->styles |= (SYNC_BRACKET_OPEN | SYNC_BRACKET_CLOSE);
             }
@@ -1218,6 +1263,103 @@ do_syntax_token(void)           /* int (int type|string type, [arg1], [arg2], [i
 
 #undef ARG1
 #undef ARG2
+}
+
+
+void
+do_syntax_find()                /* int ([int mode = 0],  [int &line], [int &col], ... */
+{
+    SyntaxTable_t *st = syntax_current();
+    const int mode = get_xinteger(1, 1);        /* find mode */
+    int ret = -1;                               /* nothing to match */
+        // -2 = Unknown character.
+        // -1 = Nothing to match.
+        //  0 = Matched.
+        //  1 = Unmatched.
+
+    if (NULL == curbp || NULL == st) {
+        ret = -2;                               /* no syntax definition */
+
+    } else if (0 == mode) {
+        ret = fndmatching(st);
+    }
+
+    acc_assign_int(ret);
+}
+
+
+static int
+fndmatching(SyntaxTable_t *st)
+{
+    const SyntaxChar_t *charmap = st->syntax_charmap;
+    const char *ch = get_xstr(6);               /* element */
+    unsigned char match = (ch ? *((unsigned char *)ch) : 0);
+    struct match_state ms = {0};
+    int brackets = -1;
+    int ret = 1;
+    LINE_t *lp;
+
+    /* int (mode = 1, [int &line], [int &col], [int hilites = 1], [int lines = 75], [string element = ""]) */
+
+    ms.st = st;
+    ms.hilites = get_xinteger(4, 1);            /* auto hilite results */
+    ms.lines = get_xinteger(5, 75);             /* scan lines */
+    ms.start.line = *cur_line;
+    ms.start.col = *cur_col;
+    ms.start.offset = line_offset(ms.start.line, ms.start.col, LOFFSET_NORMAL);
+
+    if (match) {
+        ms.level = 1;
+
+    } else if (NULL != (lp = vm_lock_line2(ms.start.line))) {
+        if (NULL != (ms.text = ltext(lp))) {
+            if ((LINENO)llength(lp) > ms.start.offset) {
+                match = ms.text[ms.start.offset];
+            }
+        }
+    }
+
+    if (SYNC_BRACKET_OPEN & charmap[match]) {
+        unsigned b;
+        for (b = 0; b < (sizeof(st->bracket_chars)/2); ++b) {
+            if (st->bracket_chars[b][0] == match) {
+                ms.end.line = curbp->b_numlines;
+                brackets = b;
+                break;
+            }
+        }
+    } else if (SYNC_BRACKET_CLOSE & charmap[match]) {
+        unsigned b;
+        for (b = 0; b < (sizeof(st->bracket_chars)/2); ++b) {
+            if (st->bracket_chars[b][1] == match) {
+                ms.end.line = 1;
+                ms.backwards = 1;
+                brackets = b;
+                break;
+            }
+        }
+    } else {
+        ret = -2;
+    }
+
+    if (brackets >= 0) {                        /* open/close */
+        ms.open = st->bracket_chars[brackets][0];
+        ms.close = st->bracket_chars[brackets][1];
+        find_matching(&ms);
+        if (ms.end.line) {                      /* matched, return */
+            if (! isa_undef(2)) {
+                sym_assign_int(get_symbol(2), (accint_t) ms.end.line);
+            }
+            if (! isa_undef(3)) {
+                sym_assign_int(get_symbol(3), (accint_t) ms.end.col);
+            }
+            ret = 0;
+        }
+    }
+
+    chk_free((void *)ms.stack.data);
+
+    return ret;
 }
 
 
@@ -1405,6 +1547,13 @@ syntax_init(void)
     charmap[(unsigned char) '['] = SYNC_BRACKET_OPEN;  charmap[(unsigned char) ']'] = SYNC_BRACKET_CLOSE;
     charmap[(unsigned char) '('] = SYNC_BRACKET_OPEN;  charmap[(unsigned char) ')'] = SYNC_BRACKET_CLOSE;
     charmap[(unsigned char) '{'] = SYNC_BRACKET_OPEN;  charmap[(unsigned char) '}'] = SYNC_BRACKET_CLOSE;
+
+    x_default_table->bracket_chars[0][0] = '[';
+    x_default_table->bracket_chars[0][1] = ']';
+    x_default_table->bracket_chars[1][0] = '(';
+    x_default_table->bracket_chars[1][1] = ')';
+    x_default_table->bracket_chars[2][0] = '{';
+    x_default_table->bracket_chars[2][1] = '}';
 }
 
 
@@ -1462,6 +1611,18 @@ syntax_new(const char *name)
     strcpy((char *)(st + 1), name);
     st->st_name = (const char *)(st + 1);
     st->st_ident = x_syntaxident++;             /* unique identifier */
+    return st;
+}
+
+
+SyntaxTable_t *
+syntax_current(void)
+{
+    SyntaxTable_t *st;
+
+    if (NULL == (st = curbp->b_syntax)) {
+        st = x_default_table;
+    }
     return st;
 }
 
@@ -1875,13 +2036,8 @@ syntax_select(void)
 {
     register SyntaxTable_t *st;
 
-    if (NULL == (st = curbp->b_syntax)) {
-        /*
-         *  Default selection, if required
-         */
-        if (NULL == (st = x_default_table)) {
-            return NULL;
-        }
+    if (NULL == (st = syntax_current())) {
+        return NULL;
     }
 
     if (-1 == st->keywords_sorted) {
@@ -2144,6 +2300,68 @@ syntax_highlight(const LINE_t *lp)
 
 
 /*
+ *  syntax_virtual_cursor ---
+ *      Visual cursor update event.
+ */
+void
+syntax_virtual_cursor()
+{
+    SyntaxTable_t *st;
+
+    if (! BFTST(curbp, BF_SYNTAX_MATCH))
+        return;                                 /* disabled? */
+
+    if (NULL != (st = curbp->b_syntax) && st->st_active) {
+        const SyntaxChar_t *charmap = st->syntax_charmap;
+        const unsigned match = (unsigned) curbp->b_vchar[0];
+        struct match_state ms = {0};
+        int brackets = -1;
+
+        if (match > 0xff)
+            return;                             /* non-ascii */
+
+        // TODO/optional: if vchar is space, scan from start of line.
+
+        if (SYNC_BRACKET_OPEN & charmap[match]) {
+            unsigned b;
+            for (b = 0; b < (sizeof(st->bracket_chars)/2); ++b) {
+                if (st->bracket_chars[b][0] == match) {
+                    ms.end.line = curbp->b_numlines;
+                    brackets = b;
+                    break;
+                }
+            }
+
+        } else if (SYNC_BRACKET_CLOSE & charmap[match]) {
+            unsigned b;
+            for (b = 0; b < (sizeof(st->bracket_chars)/2); ++b) {
+                if (st->bracket_chars[b][1] == match) {
+                    ms.end.line = 1;
+                    ms.backwards = 1;
+                    brackets = b;
+                    break;
+                }
+            }
+        }
+
+        if (brackets < 0)                       /* non-open/close */
+            return;
+
+        ms.st = st;
+        ms.hilites = 1;                         /* auto hilite results */
+        ms.lines = ttrows() + 1;
+        ms.start.line = curbp->b_vline;
+        ms.start.col = curbp->b_vcol;
+        ms.start.offset = curbp->b_voffset;
+        ms.open = st->bracket_chars[brackets][0];
+        ms.close = st->bracket_chars[brackets][1];
+        find_matching(&ms);
+        chk_free((void *)ms.stack.data);
+    }
+}
+
+
+/*
  *  leading_write ---
  *      Common handling for leading line conditions.
  */
@@ -2326,6 +2544,7 @@ syntax_comment(
                         continue;               /* part of a larger word */
                     }
                 }
+
                 *endp = end;
                 return COMMENT_EOL;             /* EOL comment */
             }
@@ -2391,14 +2610,153 @@ syntax_string_end(
 
 
 /*
+ *  find_matching ---
+ *      Parse the specified line block, matching brackets.
+ */
+static void
+find_matching_callback(const LINECHAR *cursor, void *udata)
+{
+    struct match_state *ms = (struct match_state *)udata;
+    const unsigned char ch = *cursor;
+
+    if (ch != ms->open && ch != ms->close)
+        return;
+
+    if (ms->filter) {                           /* line filter */
+        if (ms->backwards) {
+            if (cursor > ms->filter)
+                return;
+        } else {
+            if (cursor < ms->filter)
+                return;
+        }
+    }
+
+    if (ms->stack.top == ms->stack.capacity) {  /* extend? */
+        const size_t capacity = (ms->stack.capacity + 64);
+        void *data = chk_realloc((void *)ms->stack.data, capacity * sizeof(LINECHAR *));
+        if (NULL == data)
+            return;
+
+        ms->stack.capacity = capacity;
+        ms->stack.data = data;
+    }
+
+    ms->stack.data[ms->stack.top++] = cursor;
+    assert(ms->stack.top <= ms->stack.capacity);
+}
+
+
+static void
+find_matching(struct match_state *ms)
+{
+    const int backwards = ms->backwards;
+    const LINENO end_line = ms->end.line;
+    SyntaxTable_t *st = ms->st;
+    LINENO lineno = ms->start.line;
+    LINE_t *lp;
+
+    ms->end.line = 0;
+    ms->end.offset = -1;
+    
+    if (NULL != (lp = vm_lock_line2(lineno))) {
+        if (NULL != (ms->text = ltext(lp))) {
+            if ((LINENO)llength(lp) > ms->start.offset) {
+                ms->filter = ms->text + ms->start.offset;
+            }
+        }
+    }
+
+    while (lp) {                                /* parse current line */
+        if (NULL != (ms->text = ltext(lp))) {
+            parse_line(st, lp, find_matching_callback, ms);
+            if (ms->stack.top) {
+                if (backwards) {
+                    size_t e;
+                    for (e = ms->stack.top; e;) {
+                        const LINECHAR *t_cursor = ms->stack.data[--e];
+                        if (*t_cursor == ms->close) {
+                            ++ms->level;
+                        } else {
+                            assert(*t_cursor == ms->open && ms->level);
+                            if (--ms->level <= 0) {
+                                liflagset(lp, LI_DIRTY);
+                                ms->end.offset = (t_cursor - ms->text);
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    const size_t top = ms->stack.top;
+                    size_t e;
+                    for (e = 0; e != top;) {
+                        const LINECHAR *t_cursor = ms->stack.data[e++];
+                        if (*t_cursor == ms->open) {
+                            ++ms->level;
+                        } else  {
+                            assert(*t_cursor == ms->close && ms->level);
+                            if (--ms->level <= 0) {
+                                liflagset(lp, LI_DIRTY);
+                                ms->end.offset = (t_cursor - ms->text);
+                                break;
+                            }
+                        }
+                    }
+                }
+                ms->stack.top = 0;
+            }
+        }
+
+        vm_unlock(lineno);
+        if (ms->end.offset >= 0) {              /* match */
+            ms->end.line = lineno;
+            ms->end.col = line_column(ms->end.line, ms->end.offset);
+            break;
+        } else if (ms->level <= 0) {
+            break;                              /* no match, inside comment etc */
+        }
+
+        ms->filter = NULL;
+        if (0 == ms->lines)
+            break;
+        --ms->lines;
+
+        if (backwards) {                        /* new line */
+            if (lineno-- <= end_line || NULL == (lp = lback(lp))) {
+                break;
+            }
+        } else {
+            if (lineno++ >= end_line || NULL == (lp = lforw(lp))) {
+                break;                          /* EOF */
+            }
+        }
+    }
+
+    if (ms->hilites) {                          /* optional, hilite results */
+        HILITE_t *open;
+
+        hilite_destroy(curbp, HILITE_SYNTAX_MATCH);
+        if (NULL != (open = hilite_create(curbp, HILITE_SYNTAX_MATCH, -1, ms->start.line, ms->start.col, ms->start.line, ms->start.col))) {
+            if (ms->end.line) {
+                HILITE_t *close = hilite_create(curbp, HILITE_SYNTAX_MATCH, -1, ms->end.line, ms->end.col, ms->end.line, ms->end.col);
+                if (close) {
+                    close->h_attr = ATTR_HILITE;
+                    open->h_attr = ATTR_HILITE;
+                }
+            }
+        }
+    }
+}
+
+
+/*
  *  parse_lines ---
- *      Parse the specified line block, determining the arena in which
- *      hilite is dirty due to content change.
+ *      Parse the specified line block, determining the arena in which hilite is dirty due to content change.
  */
 static int
 parse_lines(SyntaxTable_t *st, LINENO lineno, LINENO num)
 {
-    register LINE_t *lp;
+    LINE_t *lp;
 
     if (lineno > 1) {
         --lineno, ++num;
@@ -2409,7 +2767,7 @@ parse_lines(SyntaxTable_t *st, LINENO lineno, LINENO num)
 
     lp = vm_lock_line2(lineno);
     while (lp) {                                /* parse current line */
-        lineflags_t state = parse_line(st, lp);
+        lineflags_t state = parse_line(st, lp, NULL, NULL);
 
         liflagclr(lp, LI_DIRTY);
         lp->l_uflags &= ~L_HAS_EOL_COMMENT;
@@ -2418,7 +2776,6 @@ parse_lines(SyntaxTable_t *st, LINENO lineno, LINENO num)
         case L_IN_COMMENT:
         case L_IN_COMMENT2:
             break;
-
         case L_IN_STRING:
         case L_IN_LITERAL:
         case L_IN_CHARACTER:
@@ -2426,7 +2783,6 @@ parse_lines(SyntaxTable_t *st, LINENO lineno, LINENO num)
                 state = 0;                      /* fuse string at EOL */
             }
             break;
-
         case L_HAS_EOL_COMMENT:
             lp->l_uflags |= L_HAS_EOL_COMMENT;
             state = 0;
@@ -2444,7 +2800,7 @@ parse_lines(SyntaxTable_t *st, LINENO lineno, LINENO num)
         if (num > 0) {                          /* required rescan min */
             --num;
 
-        } else if (state == (lp->l_uflags & L_SYNTAX_MASK)) {
+        } else if (state == (L_SYNTAX_MASK & lp->l_uflags)) {
             break;                              /* state in-sync, no need to continue */
         }
 
@@ -2457,10 +2813,10 @@ parse_lines(SyntaxTable_t *st, LINENO lineno, LINENO num)
 
 
 static lineflags_t
-parse_line(SyntaxTable_t *st, LINE_t *line)
+parse_line(SyntaxTable_t *st, const LINE_t *line, Parser_t callback, void *udata)
 {
     const uint32_t flags = st->st_flags;
-    const lineflags_t lsyntax = (line->l_uflags & L_SYNTAX_MASK);
+    const lineflags_t lsyntax = (L_SYNTAX_MASK & line->l_uflags);
     const SyntaxChar_t *charmap = st->syntax_charmap;
     const LINECHAR *cursor, *begin, *end;
     unsigned char schar, ichar, cchar, quote;
@@ -2498,37 +2854,32 @@ parse_line(SyntaxTable_t *st, LINE_t *line)
         const lineflags_t lsyntaxin = (lsyntax & L_SYNTAX_IN);
 
         switch (lsyntaxin) {
-        case L_IN_COMMENT:
+        case L_IN_COMMENT:                      /* comment, type-1 */                                        
             if (NULL == (cursor = syntax_comment_end(st, 0, cursor, end))) {
                 return L_IN_COMMENT;
             }
             break;
-
-        case L_IN_COMMENT2:
+        case L_IN_COMMENT2:                     /* comment, type-2 */
             if (NULL == (cursor = syntax_comment_end(st, 1, cursor, end))) {
                 return L_IN_COMMENT2;
             }
             break;
-
         case L_IN_STRING:                       /* string */
             if (NULL == (cursor = syntax_string_end(st, cursor, end, quote, schar))) {
                 return L_IN_STRING;
             }
             break;
-
         case L_IN_LITERAL:                      /* literals, optional quoting */
             if (NULL == (cursor = syntax_string_end(st, cursor, end,
                             (char)(flags & SYNF_LITERAL_NOQUOTES ? 0 : quote), ichar))) {
                 return L_IN_LITERAL;
             }
             break;
-
         case L_IN_CHARACTER:
             if (NULL == (cursor = syntax_string_end(st, cursor, end, quote, cchar))) {
                 return L_IN_CHARACTER;
             }
             /*FALLTHRU*/
-
         case L_IN_CONTINUE:
         case L_IN_PREPROC:
             if (begin < end) {
@@ -2556,14 +2907,13 @@ parse_line(SyntaxTable_t *st, LINE_t *line)
                 }
             }
             break;
-
         default:
             assert(0 == lsyntaxin);
             break;
         }
     }
 
-    /* now we should be out of comments, strings, etc... */
+    /* outside string/comment */
     while (cursor < end) {                      /* MCHAR??? */
         const unsigned char ch = (unsigned char) *cursor;
 
@@ -2608,22 +2958,20 @@ parse_line(SyntaxTable_t *st, LINE_t *line)
             case COMMENT_NORMAL:
                 cursor = t_end;
                 break;
-
             case COMMENT_EOL:
                 return L_HAS_EOL_COMMENT;
-
             case COMMENT_OPEN:
                 return L_IN_COMMENT;
-
             case COMMENT_OPEN2:
                 return L_IN_COMMENT2;
-
             case COMMENT_NONE:
             default:
                 ++cursor;
             }
             continue;
         }
+
+        if (callback) callback(cursor, udata);
         ++cursor;
     }
 

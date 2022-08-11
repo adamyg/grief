@@ -44,7 +44,8 @@ static list xlist =  {      // mode extension map
     "slang",                ".sl.",
     "txt",                  ".txt.",
     "vim",                  ".vim.",
-    "yaml",                 ".yaml."
+    "xml",                  ".xml.",
+    "yaml",                 ".yaml.yml.",
     };
 
 
@@ -103,6 +104,8 @@ main(void)
     autoload("modes/txt",           "_txt_mode");
 
     autoload("modes/vim",           "_vim_mode");
+
+    autoload("modes/xml",           "_xml_mode");
 
     autoload("modes/yaml",          "_yaml_mode");
 

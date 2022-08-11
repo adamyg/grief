@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_spell_enchant_c,"$Id: spell_enchant.c,v 1.12 2014/10/22 02:33:19 ayoung Exp $")
+__CIDENT_RCSID(gr_spell_enchant_c,"$Id: spell_enchant.c,v 1.13 2022/08/10 15:44:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: spell_enchant.c,v 1.12 2014/10/22 02:33:19 ayoung Exp $
+/* $Id: spell_enchant.c,v 1.13 2022/08/10 15:44:58 cvsuser Exp $
  * Spell implementation - enchant driver.
  *
  *
@@ -402,5 +402,3 @@ spell_enchant_init(const char **langs)
 }
 
 #endif      /*HAVE_LIBENCHANT*/
-
-

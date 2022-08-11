@@ -1,6 +1,10 @@
-Wed Jan 25 17:23:27 2017 adamy
+Sun Jun 19 20:32:35 2022 adamy
+
+        * aspell-win32 support.
 
         * LUA support.
+
+Wed Jan 25 17:23:27 2017 adamy
 
         * setprofile, dynamic profiler loader.
 
@@ -281,7 +285,7 @@ Fri Mar 11 10:52:31 2005  developer
                 realpath (done)
                 basename (done)
 
-$Id: ToDo,v 1.16 2017/01/25 17:38:45 cvsuser Exp $
+$Id: ToDo,v 1.17 2022/08/10 15:44:56 cvsuser Exp $
 
 /*
  *  Local Variables: ***

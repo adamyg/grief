@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_playback_c,"$Id: playback.c,v 1.33 2021/10/17 12:12:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_playback_c,"$Id: playback.c,v 1.34 2022/08/10 15:44:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: playback.c,v 1.33 2021/10/17 12:12:06 cvsuser Exp $
+/* $Id: playback.c,v 1.34 2022/08/10 15:44:57 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -247,11 +247,11 @@ do_pause(void)                  /* void () */
 
         When the macro is played back, it will pause at the point
         *Shift+F7* was pressed to allow the user to perform the
-        variable portion of the sequence. Pressing Shift+F7 resumes
-        playback.
+        variable portion of the sequence. Pressing *Shift+F7* then
+        resumes playback.
 
     Macro Parameters:
-        overwrite - Optional string containing the whether or not the
+        overwrite - Optional string containing whether or not the
             current macro should be overwritten. If either a case
             insensitive string contained "y[es]" or a non-zero the
             macro shall be overwritten. If omitted the user shall
@@ -839,4 +839,5 @@ playback_macro(const char *cp)
     }
     set_curbp(ocurbp);
 }
+
 /*end*/

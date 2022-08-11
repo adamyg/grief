@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_buffer_c,"$Id: buffer.c,v 1.50 2021/10/18 13:16:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_buffer_c,"$Id: buffer.c,v 1.51 2022/08/10 15:44:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: buffer.c,v 1.50 2021/10/18 13:16:15 cvsuser Exp $
+/* $Id: buffer.c,v 1.51 2022/08/10 15:44:56 cvsuser Exp $
  * Buffer managment.
  *
  *
@@ -1094,4 +1094,5 @@ set_buffer_parms(BUFFER_t *bp, const WINDOW_t *wp)
     }
     bp->b_top = wp->w_top_line;
 }
+
 /*end*/

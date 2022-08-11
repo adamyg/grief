@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_tagse_c,"$Id: tagse.c,v 1.13 2014/10/26 22:13:14 ayoung Exp $")
+__CIDENT_RCSID(gr_tagse_c,"$Id: tagse.c,v 1.14 2022/08/10 15:44:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: tagse.c,v 1.13 2014/10/26 22:13:14 ayoung Exp $
+/* $Id: tagse.c,v 1.14 2022/08/10 15:44:58 cvsuser Exp $
  * tag (emac style) database access
  *
  *
@@ -527,4 +527,5 @@ etagsClose(void * const vfile)
     }
     return result;
 }
+
 /*end*/

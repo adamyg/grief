@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_spell_hunspell_c,"$Id: spell_hunspell.c,v 1.18 2021/06/10 06:13:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_spell_hunspell_c,"$Id: spell_hunspell.c,v 1.19 2022/08/10 15:44:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: spell_hunspell.c,v 1.18 2021/06/10 06:13:02 cvsuser Exp $
+/* $Id: spell_hunspell.c,v 1.19 2022/08/10 15:44:58 cvsuser Exp $
  * Spell implementation - hunspell driver.
  *
  *  http://sourceforge.net/hunspell/projects
@@ -565,9 +565,3 @@ spell_hunspell_init(const char **langs, const char **bdictionaries)
 }
 
 #endif
-
-
-
-
-
-

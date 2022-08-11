@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: colors.cr,v 1.16 2018/10/01 21:05:01 cvsuser Exp $
+/* $Id: colors.cr,v 1.17 2022/08/10 15:44:58 cvsuser Exp $
  * Enhanced colour/colorscheme support.
  *
  *
@@ -144,7 +144,24 @@ static list             scheme_colors = {
     "=SpecialComment=", "comment_standout",     //  special things inside a comment.
     "=Debug=",          "keyword_debug",        //  debugging statements.
 
-    "=Underlined=",     "link",                 // text that stands out, HTML links.
+    "=Underlined=",     "link",                 // text that stands out.
+
+        // Notes:
+        //  Some HTML tags are used to change the rendering of text within HTML (see: html.vim).
+        //
+        //      - htmlBold                      <b>..</b>
+        //      - htmlUnderline                 <u>..</u>
+        //      - htmlItalic                    <i>..</i>
+        //      - htmlBoldUnderline
+        //      - htmlBoldUnderlineItalic
+        //      - htmlUnderlineItalic
+        //      - htmlLink for links
+        //      - htmlTitle for titles
+        //      - htmlH1 ...htmlH6 for headings
+        //
+        //  To make theses definitions work you must redefine them all with the exception of the last
+        //  two (htmlTitle and htmlH[1-6], which are optional).
+        //
 
     "=Ignore=",         "",                     // left blank, hidden.
 

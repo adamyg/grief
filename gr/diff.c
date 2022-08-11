@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_diff_c,"$Id: diff.c,v 1.15 2014/11/16 17:28:38 ayoung Exp $")
+__CIDENT_RCSID(gr_diff_c,"$Id: diff.c,v 1.16 2022/08/10 15:44:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: diff.c,v 1.15 2014/11/16 17:28:38 ayoung Exp $
+/* $Id: diff.c,v 1.16 2022/08/10 15:44:56 cvsuser Exp $
  * Buffer differ.
  *
  *
@@ -71,7 +71,7 @@ static unsigned         diff_flags = 0;         // default flags
 (end)
 
         In order to see these marked lines you will need to enable the
-        display of the change-bar margin by setting the 'BF_STATUSLINE'
+        display of the change-bar margin by setting the 'BF2_HISTATUSLINE'
         in the buffer flags (see set_buffer_flags). Alternatively the
         window flag 'WF_HIMODIFIED', 'WF_HIADDITIONS' and 'WF_HICHANGED'
         to enable line hilited based upon status (see set_window_flags).

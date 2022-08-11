@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.52 2022/05/31 16:18:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.53 2022/08/10 15:44:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sysinfo.c,v 1.52 2022/05/31 16:18:21 cvsuser Exp $
+/* $Id: sysinfo.c,v 1.53 2022/08/10 15:44:58 cvsuser Exp $
  * System information services.
  *
  *
@@ -719,6 +719,5 @@ sysinfo_domainname(char *name, int len)
     }
     return domain && name ? strxcpy(name, domain, len) : domain;
 }
+
 /*end*/
-
-

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_wild_c,"$Id: wild.c,v 1.41 2022/07/10 12:09:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_wild_c,"$Id: wild.c,v 1.42 2022/08/10 15:44:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: wild.c,v 1.41 2022/07/10 12:09:23 cvsuser Exp $
+/* $Id: wild.c,v 1.42 2022/08/10 15:44:58 cvsuser Exp $
  * Wild card and basic pattern (not regexp) matching support.
  *
  *
@@ -659,4 +659,5 @@ main(int argc, char ** argv)
 }
 #endif  /*STANDALONE*/
 #endif  /*VMS*/
+
 /*end*/

@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntaxhl_c,"$Id: syntaxhl.c,v 1.34 2022/07/10 13:11:32 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntaxhl_c,"$Id: syntaxhl.c,v 1.35 2022/08/10 15:44:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntaxhl.c,v 1.34 2022/07/10 13:11:32 cvsuser Exp $
+/* $Id: syntaxhl.c,v 1.35 2022/08/10 15:44:58 cvsuser Exp $
  * Basic syntax highlighting.
  *
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -476,4 +476,5 @@ is_white(char c)
 {
     return (' ' == c || '\t' == c);
 }
+
 /*end*/

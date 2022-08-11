@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_search_c,"$Id: search.c,v 1.57 2021/10/17 12:09:17 cvsuser Exp $")
+__CIDENT_RCSID(gr_search_c,"$Id: search.c,v 1.58 2022/08/10 15:44:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: search.c,v 1.57 2021/10/17 12:09:17 cvsuser Exp $
+/* $Id: search.c,v 1.58 2022/08/10 15:44:57 cvsuser Exp $
  * Search interface.
  *
  *  TODO:
@@ -3025,14 +3025,15 @@ static void
 trans_hilite(int size)
 {
     const uint32_t buffer_flags = curbp->b_flag1;
+//  const LINENO start_col = *cur_col;
 
-  //hilite_create(curbp, HILITE_TRANSLATE, 0, *cur_line, *cur_col, *cur_line, *cur_col + (size - 1));
     BFSET(curbp, BF_NO_UNDO);
     anchor_drop(MK_NORMAL);
     if (size > 1) {
         move_next_char(size - 1, TRUE);
     }
     win_modify(WFEDIT);
+//  hilite_create(curbp, HILITE_TRANSLATE, 0, *cur_line, start_col, *cur_line, *cur_col);
     vtupdate();
     curbp->b_flag1 = buffer_flags;
 }
@@ -3079,4 +3080,5 @@ search_trace(const char *fmt, ...)
     va_end(ap);
 }
 #endif  /*SRCH_ENABLED*/
+
 /*end*/

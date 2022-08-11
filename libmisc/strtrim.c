@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strtrim_c,"$Id: strtrim.c,v 1.5 2017/01/29 04:33:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_strtrim_c,"$Id: strtrim.c,v 1.6 2022/08/10 14:25:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strtrim.c,v 1.5 2017/01/29 04:33:31 cvsuser Exp $
+/* $Id: strtrim.c,v 1.6 2022/08/10 14:25:21 cvsuser Exp $
  * libstr - String trim utilities.
  *
  *
- * Copyright (c) 1998 - 2017, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -37,8 +37,8 @@ __CIDENT_RCSID(gr_strtrim_c,"$Id: strtrim.c,v 1.5 2017/01/29 04:33:31 cvsuser Ex
 #include <libstr.h>
 #include <unistd.h>
 
-static __CINLINE int        is_white(const int ch);
-static __CINLINE int        is_quote(const int ch);
+static __CINLINE int    is_white(const int ch);
+static __CINLINE int    is_quote(const int ch);
 
 const char *
 str_trim(const char *name, int *length)
@@ -85,4 +85,5 @@ is_quote(const int ch)
 {
     return ('\'' == ch || '"' == ch);
 }
+
 /*end*/

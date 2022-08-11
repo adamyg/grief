@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_float_c,"$Id: m_float.c,v 1.27 2020/06/18 12:45:51 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_float_c,"$Id: m_float.c,v 1.28 2022/08/10 15:44:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_float.c,v 1.27 2020/06/18 12:45:51 cvsuser Exp $
+/* $Id: m_float.c,v 1.28 2022/08/10 15:44:57 cvsuser Exp $
  * Floating point primitives.
  *
  *
@@ -1327,5 +1327,5 @@ do_tanh(void)                   /* float (float val) */
     __FEXEC(tanh(arg_float1));
 #endif
 }
-/*end*/
 
+/*end*/

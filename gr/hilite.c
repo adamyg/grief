@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_hilite_c,"$Id: hilite.c,v 1.17 2014/10/26 22:13:11 ayoung Exp $")
+__CIDENT_RCSID(gr_hilite_c,"$Id: hilite.c,v 1.18 2022/08/10 15:44:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: hilite.c,v 1.17 2014/10/26 22:13:11 ayoung Exp $
+/* $Id: hilite.c,v 1.18 2022/08/10 15:44:56 cvsuser Exp $
  * Hilite management.
  *
  *
@@ -28,6 +28,8 @@ __CIDENT_RCSID(gr_hilite_c,"$Id: hilite.c,v 1.17 2014/10/26 22:13:11 ayoung Exp 
 #include "hilite.h"
 #include "main.h"                               /* curbp */
 #include "window.h"
+
+#define HILITE_MAGIC    MKMAGIC('H','i','L','t')
 
 static uint32_t         x_hilite_seqno;
 
@@ -69,7 +71,7 @@ hilite_detach(BUFFER_t *bp)
  *  Parameters:
  *      bp - Buffer object address.
  *      type - Associated line.
- *      timeout - Timeout in seconds.
+ *      timeout - Timeout in seconds; -1 on next buffer change.
  *      sline - Start line.
  *      scol - Start column.
  *      eline - End line.
@@ -92,10 +94,13 @@ hilite_create(BUFFER_t *bp, int type, int32_t timeout,
         const int first = (NULL == TAILQ_FIRST(hilites));
         register LINENO tmp;
 
+        hp->h_magic     = HILITE_MAGIC;
         hp->h_type      = type;
         hp->h_timeout   = timeout;
         if (hp->h_timeout > 0) {
-            hp->h_timeout += (time(NULL) - 1);
+            hp->h_timeout += (time(NULL) - 1); // expire time.
+        } else if (-1 == timeout) {
+            hp->h_ctime = bp->b_ctime; // expire on buffer change.
         }
         hp->h_seqno     = ++x_hilite_seqno;
 
@@ -122,6 +127,7 @@ hilite_create(BUFFER_t *bp, int type, int32_t timeout,
             HILITE_t *chp;
 
             TAILQ_FOREACH(chp, hilites, h_node) {
+                assert(HILITE_MAGIC == chp->h_magic);
                 if (hp->h_sline < chp->h_sline ||
                         (hp->h_sline == chp->h_sline && hp->h_scol <= chp->h_scol)) {
                     TAILQ_INSERT_BEFORE(chp, hp, h_node);
@@ -163,7 +169,9 @@ hilite_expire(BUFFER_t *bp)
     while (hp) {
         HILITE_t *next = TAILQ_NEXT(hp, h_node);
 
-        if (hp->h_timeout > 0 && hp->h_timeout < now) {
+        assert(HILITE_MAGIC == hp->h_magic);
+        if ((hp->h_timeout > 0 && hp->h_timeout < now) ||
+                (hp->h_ctime && hp->h_ctime != bp->b_ctime)) {
             TAILQ_REMOVE(hilites, hp, h_node);
             buf_mined(bp, hp->h_sline, hp->h_eline);
             chk_free((void *)hp);
@@ -200,6 +208,7 @@ hilite_find(BUFFER_t *bp, const HILITE_t *current, LINENO line, LINENO col, vbyt
     }
 
     while (cursor) {
+        assert(HILITE_MAGIC == cursor->h_magic);
         if (line < cursor->h_sline ||           /* next hilite (left side) */
                 (line == cursor->h_sline && col < cursor->h_scol)) {
             return cursor;
@@ -215,6 +224,7 @@ hilite_find(BUFFER_t *bp, const HILITE_t *current, LINENO line, LINENO col, vbyt
                                                 /* interleaving/overlapping regions? */
                 if (NULL != (next = TAILQ_NEXT(cursor, h_node))) {
                     do {
+                        assert(HILITE_MAGIC == next->h_magic);
                         if (line < next->h_sline ||
                                 (line == next->h_sline && col < next->h_scol)) {
                             break;
@@ -254,6 +264,7 @@ hilite_destroy(BUFFER_t *bp, int type)
         while (hp) {
             HILITE_t *next = TAILQ_NEXT(hp, h_node);
 
+            assert(HILITE_MAGIC == hp->h_magic);
             if (type == hp->h_type) {
                 TAILQ_REMOVE(hilites, hp, h_node);
                 buf_mined(bp, hp->h_sline, hp->h_eline);
@@ -310,6 +321,7 @@ hilite_clear(BUFFER_t *bp, LINENO line)
             do {
                 HILITE_t *hpnext = TAILQ_NEXT(hp, h_node);
 
+                assert(HILITE_MAGIC == hp->h_magic);
                 if (hp->h_sline >= line) {
                     buf_mined(bp, hp->h_sline, hp->h_eline);
                     TAILQ_REMOVE(hilites, hp, h_node);
@@ -335,6 +347,7 @@ hilite_zap(BUFFER_t *bp, int update)
         HILITE_t *hp;
 
         while (NULL != (hp = TAILQ_FIRST(hilites))) {
+            assert(HILITE_MAGIC == hp->h_magic);
             TAILQ_REMOVE(hilites, hp, h_node);
             if (update) {
                 buf_mined(bp, hp->h_sline, hp->h_eline);
@@ -346,4 +359,5 @@ hilite_zap(BUFFER_t *bp, int update)
     }
     return ret;
 }
+
 /*end*/

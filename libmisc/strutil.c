@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strutil_c,"$Id: strutil.c,v 1.8 2019/05/06 00:19:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_strutil_c,"$Id: strutil.c,v 1.9 2022/08/10 14:25:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strutil.c,v 1.8 2019/05/06 00:19:14 cvsuser Exp $
+/* $Id: strutil.c,v 1.9 2022/08/10 14:25:21 cvsuser Exp $
  * libstr - Misc string utilities.
  *
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -85,4 +85,5 @@ str_chrx(const char *p, int c, int *len)
     }
     /*NOTREACHED*/
 }
+
 /*end*/

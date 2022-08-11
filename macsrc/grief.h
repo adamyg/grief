@@ -402,7 +402,7 @@
 #define BF_NEW_FILE             0x00001000  /* File is a new file, so write even if no changes */
 #define BF_CR_MODE              0x00002000  /* Append <CR> to end of each line on output */
 #define BF_SYNTAX               0x00004000  /* Enable syntax highlighting (unless ANSI) */
-#define FB_STATUSLINE           0x00008000  /* Status line */
+#define BF_SYNTAX_MATCH         0x00008000  /* Hilite matching brackets */
 #define BF_MAN                  0x00010000  /* If TRUE, man style \b is done */
 #define BF_SPELL                0x00020000  /* Enable spell */
 #define BF_FOLDING              0x00040000  /* Test folding/hiding */

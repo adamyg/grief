@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_tags_c,"$Id: tags.c,v 1.22 2014/10/22 02:33:22 ayoung Exp $")
+__CIDENT_RCSID(gr_tags_c,"$Id: tags.c,v 1.23 2022/08/10 15:44:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: tags.c,v 1.22 2014/10/22 02:33:22 ayoung Exp $
+/* $Id: tags.c,v 1.23 2022/08/10 15:44:58 cvsuser Exp $
  * tag database access.
  *
  *
@@ -757,4 +757,5 @@ tagl_free(TagList_t *tagl)
         chk_free(t);
     }
 }
+
 /*end*/

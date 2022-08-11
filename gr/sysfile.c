@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sysfile_c,"$Id: sysfile.c,v 1.7 2014/10/22 02:33:21 ayoung Exp $")
+__CIDENT_RCSID(gr_sysfile_c,"$Id: sysfile.c,v 1.8 2022/08/10 15:44:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sysfile.c,v 1.7 2014/10/22 02:33:21 ayoung Exp $
+/* $Id: sysfile.c,v 1.8 2022/08/10 15:44:58 cvsuser Exp $
  * System level file support.
  *
  *
@@ -136,4 +136,5 @@ sys_pathseparator(void)
     static const char sep[2] = {FILEIO_PATHSEP, 0};
     return sep;
 }
+
 /*end*/

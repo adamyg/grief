@@ -1,11 +1,11 @@
 #ifndef GR_MAIN_H_INCLUDED
 #define GR_MAIN_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_main_h,"$Id: main.h,v 1.29 2021/10/17 12:12:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_main_h,"$Id: main.h,v 1.30 2022/08/10 15:44:57 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: main.h,v 1.29 2021/10/17 12:12:23 cvsuser Exp $
+/* $Id: main.h,v 1.30 2022/08/10 15:44:57 cvsuser Exp $
  * Globals and main process primitives.
  *
  *
@@ -71,7 +71,7 @@ extern int                  xf_profile;         /* TRUE if profiling on */
 
 extern int                  xf_lazyvt;          /* !zero if limits vt updates. */
 
-extern int                  xf_synhilite;       /* TRUE/FALSE, enable syntax hiliting. */
+extern int                  xf_syntax_flags;    /* 0x1=Syntax hiliting,0x02=Bracket matching. */
 
 extern int                  xf_strictlock;      /* TRUE/FALSE, if strict file-locking. */
 

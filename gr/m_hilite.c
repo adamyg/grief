@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_hilite_c,"$Id: m_hilite.c,v 1.17 2022/07/10 13:13:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_hilite_c,"$Id: m_hilite.c,v 1.18 2022/08/10 15:44:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_hilite.c,v 1.17 2022/07/10 13:13:07 cvsuser Exp $
+/* $Id: m_hilite.c,v 1.18 2022/08/10 15:44:57 cvsuser Exp $
  * Hilite primitives.
  *
  *
@@ -76,7 +76,7 @@ __CIDENT_RCSID(gr_m_hilite_c,"$Id: m_hilite.c,v 1.17 2022/07/10 13:13:07 cvsuser
 
         timeout - Specifies a timeout in seconds. If specified then the
             hilite shall be automatically deleted upon the timeout
-            expiring.
+            expiring. A timeout of -1 implies on next buffer change.
 
         sline, scol - Start of the hilite region.
 
