@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_search_c,"$Id: search.c,v 1.58 2022/08/10 15:44:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_search_c,"$Id: search.c,v 1.59 2022/08/14 12:38:51 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: search.c,v 1.58 2022/08/10 15:44:57 cvsuser Exp $
+/* $Id: search.c,v 1.59 2022/08/14 12:38:51 cvsuser Exp $
  * Search interface.
  *
  *  TODO:
@@ -2801,7 +2801,7 @@ translate_buf(int dir, int global, int flags, int pati, int repi)
                 break;
 
             case 'O':           /* One */
-                global = GLOBAL_ALL;
+                global = GLOBAL_ONCE;
                 break;
 
             case 'N':           /* No */
