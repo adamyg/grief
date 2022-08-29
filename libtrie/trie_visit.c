@@ -112,7 +112,9 @@ trie_visit(struct trie *self, const char *prefix, trie_visitor v, void *arg)
     struct trie *start = self;
     struct trieptr *ptr;
     unsigned char *uprefix = (unsigned char *)prefix;
-    int r, depth = trie_binary_search(self, &start, &ptr, uprefix);
+    int r, depth = 
+        (self->icase ? trie_binary_search_i(self, &start, &ptr, uprefix) :
+            trie_binary_search(self, &start, &ptr, uprefix));
     if (prefix[depth])
         return 0;
     r = visit(start, prefix, v, arg);

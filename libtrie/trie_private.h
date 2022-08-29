@@ -42,7 +42,7 @@ struct trieptr {
 
 struct trie {
     void *data;
-    short nchildren, size;
+    short nchildren, size, icase;
     struct trieptr children[];
 };
 
@@ -64,6 +64,7 @@ struct trie *trie_stack_pop(struct stack *s);
 struct stack_node *trie_stack_peek(struct stack *s);
 
 size_t trie_binary_search(struct trie *self, struct trie **child, struct trieptr **ptr, const unsigned char *key);
+size_t trie_binary_search_i(struct trie *self, struct trie **child, struct trieptr **ptr, const unsigned char *key);
 
 #if defined(_MSC_VER)
 #pragma warning(pop)

@@ -8,16 +8,16 @@
 
 /* Core search functions. */
 
-size_t
-trie_binary_search(struct trie *self, struct trie **child,
-        struct trieptr **ptr, const unsigned char *key)
+static size_t
+trie_binary_search_n(struct trie *self, struct trie **child,
+        struct trieptr **ptr, const unsigned char *key, size_t length)
 {
     size_t i = 0;
     unsigned found = 1;
     trie_char_t c;
 
     *ptr = 0;
-    while (found && 0 != (c = key[i])) {
+    while (found && i != length && 0 != (c = key[i])) {
         int first = 0;
         int last = self->nchildren - 1;
         int middle;
@@ -52,16 +52,16 @@ to_lower(unsigned char c)
 }
 
 
-size_t
-trie_binary_search_i(struct trie *self, struct trie **child,
-        struct trieptr **ptr, const unsigned char *key)
+static size_t
+trie_binary_search_ni(struct trie *self, struct trie **child,
+        struct trieptr **ptr, const unsigned char *key, size_t length)
 {
     size_t i = 0;
     unsigned found = 1;
-    trie_char_t c;
+    unsigned char c;
 
     *ptr = 0;
-    while (found && 0 != (c = key[i])) {
+    while (found && i != length && 0 != (c = key[i])) {
         int first = 0;
         int last = self->nchildren - 1;
         int middle;
@@ -91,15 +91,15 @@ trie_binary_search_i(struct trie *self, struct trie **child,
 
 
 void *
-trie_search(const struct trie *self, const char *key)
+trie_nsearch(const struct trie *self, const char *key, size_t length)
 {
     struct trie *child;
     struct trieptr *parent;
     unsigned char *ukey = (unsigned char *)key;
     const size_t depth =
-        (self->icase ? trie_binary_search_i((struct trie *)self, &child, &parent, ukey) :
-            trie_binary_search((struct trie *)self, &child, &parent, ukey));
-    return (0 == key[depth] ? child->data : NULL);
+        (self->icase ? trie_binary_search_ni((struct trie *)self, &child, &parent, ukey, length) :
+            trie_binary_search_n((struct trie *)self, &child, &parent, ukey, length));
+    return (depth == length ? child->data : NULL);
 }
 
 /*end*/

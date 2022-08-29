@@ -14,6 +14,7 @@
 #else
 #include <alloca.h>
 #endif
+#include <ctype.h>
 #include <assert.h>
 
 /* Insertion functions. */
@@ -72,12 +73,20 @@ create(void)
 }
 
 
+static unsigned char
+to_lower(unsigned char c)
+{
+    return (isupper(c) ? c - 'A' + 'a' : c);
+}
+
+
 static size_t
 binary_search_wild(struct trie *self, struct trie **child,
         struct trieptr **ptr, const unsigned char *key, trie_char_t *ch)
 {
-    size_t i = 0;
+    const int icase = self->icase;
     unsigned found = 1;
+    size_t i = 0;
     trie_char_t c;
 
     *ptr = 0;
@@ -86,10 +95,13 @@ binary_search_wild(struct trie *self, struct trie **child,
         int last = self->nchildren - 1;
         int middle;
 
-        if ('\\' == c) { // escape
-            if (key[i + 1]) c = key[++i];
-        } else if ('+' == c) {
+        if ('+' == c) { // wild
             c = WILD_MARKER;
+        } else {
+            if ('\\' == c) { // escape
+                if (key[i + 1]) c = key[++i];
+            }
+            if (icase) c = to_lower(c);
         }
 
         found = 0;
@@ -122,6 +134,7 @@ trie_replace_wild(struct trie *self, const char *key, trie_replacer f, void *arg
     struct trie *last;
     struct trieptr *parent;
     unsigned char *ukey = (unsigned char *)key;
+    const int icase = self->icase;
     trie_char_t ch = 0;
 
     size_t depth = binary_search_wild(self, &last, &parent, ukey, &ch);
@@ -145,12 +158,14 @@ trie_replace_wild(struct trie *self, const char *key, trie_replacer f, void *arg
             if (0 == (ch = ukey[++depth]))
                 break;
 
-            if ('\\' == ch) { //escape
-                if (ukey[depth + 1]) {
-                    ch = ukey[++depth];
-                }
-            } else if ('+' == ch) {
+            if ('+' == ch) { // wild
                 ch = WILD_MARKER;
+            } else {
+                if ('\\' == ch) { // escape
+                    if (key[depth + 1])
+                        ch = key[++depth];
+                }
+                if (icase) ch = to_lower(ch);
             }
         }
     }

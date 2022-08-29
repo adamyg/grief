@@ -15,7 +15,7 @@ struct backtrack {
 
 
 static size_t
-binary_search_wild(struct trie *self,
+binary_search_nwild(struct trie *self,
     struct trie **child, struct trieptr **ptr, const unsigned char *key, size_t length)
 {
 #define FOUND   0x01
@@ -123,7 +123,7 @@ trie_search_nwild(const struct trie *self, const char *key, size_t length)
     struct trie *child;
     struct trieptr *parent;
     const size_t depth =
-        binary_search_wild((struct trie *)self, &child, &parent, (const unsigned char *)key, length);
+        binary_search_nwild((struct trie *)self, &child, &parent, (const unsigned char *)key, length);
     return (depth == length) ? child->data : NULL;
 }
 

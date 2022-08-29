@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <assert.h>
 
 #if defined(_MSC_VER) && (_MSC_VER < 1900)
@@ -298,6 +299,106 @@ test2(void)
         for (i = 0; i < _countof(test2_words); ++i) {
                 void *ret = trie_search(t, test2_words[i]);
                 TEST(ret == test2_words[i]);
+
+                ret = trie_nsearch(t, test2_words[i], strlen(test2_words[i]));
+                TEST(ret == test2_words[i]);
+        }
+
+        {       const char *prefix = "CMAKE_EXE_LINKER_FLAGS";
+                size_t count = trie_count(t, prefix);
+                TEST(1 == count);
+        }
+
+        {       const char *prefix = "CMAKE_+_";
+                size_t count = trie_count(t, prefix);
+                TEST(32 == count);
+        }
+
+        /* replace then prune, implied deletion */
+        {
+                const size_t size = trie_size(t);
+                const int count = trie_count(t, "");
+                int ret  = trie_replace(t, "CMAKE_+_IMPLICIT_LINK_FRAMEWORK_DIRECTORIES", NULL, NULL);
+                TEST2(0 == ret, "trie_replace");
+                TEST(size == trie_size(t));             /* node count */
+                TEST((count - 1) == trie_count(t, "")); /* non-null element count */
+
+                ret = trie_prune(t);
+                TEST2(1 == ret, "trie_prune()");
+                TEST(size > trie_size(t));              /* node pruned */
+                TEST((count - 1) == trie_count(t, "")); /* no change in elements */
+        }
+
+        /* iterator */
+        {       struct trie_it *it = trie_it_create(t, "");
+                unsigned count = 0;
+
+                printf("\n=== iterator\n");
+                if (! trie_it_done(it)) {
+                        do {
+                                printf(" %s=%p\n",
+                                    (const char *)trie_it_key(it), (const char *)trie_it_data(it));
+                                ++count;
+                        } while (trie_it_next(it));
+                }
+                TEST(count == trie_count(t, ""));
+                trie_it_free(it);
+                printf("\n");
+        }
+
+        trie_free(t);
+}
+
+
+static void
+test3(void)
+{
+        struct trie *t = trie_icreate(); //icase
+        const char *word;
+        char *t_cursor, t_buffer[128];
+        unsigned i = 0;
+
+        for (i = 0; i < _countof(test2_words); ++i) {
+                const int ret = trie_insert(t, test2_words[i], (void *)test2_words[i]);
+                TEST2(0 == ret, "trie_insert");
+        }
+
+        trie_visit(t, "", test2_visitor, NULL);
+
+        for (i = 0; i < _countof(test2_words); ++i) {
+
+                // upper/orginal
+                void *ret = trie_search(t, test2_words[i]);
+                TEST(ret == test2_words[i]);
+                ret = trie_nsearch(t, test2_words[i], strlen(test2_words[i]));
+                TEST(ret == test2_words[i]);
+
+                // lower
+                for (word = test2_words[i], t_cursor = t_buffer; *word; ++word)
+                    *t_cursor++ = tolower(*word);
+                *t_cursor = 0;
+                ret = trie_search(t, t_buffer);
+                TEST(ret == test2_words[i]);
+                ret = trie_nsearch(t, t_buffer, strlen(t_buffer));
+                TEST(ret == test2_words[i]);
+
+                // mixed
+                for (word = test2_words[i], t_cursor = t_buffer; *word; ++word)
+                    *t_cursor++ = ((size_t)t_cursor & 1) ? tolower(*word) : *word;
+                *t_cursor = 0;
+                ret = trie_search(t, t_buffer);
+                TEST(ret == test2_words[i]);
+                ret = trie_nsearch(t, t_buffer, strlen(t_buffer));
+                TEST(ret == test2_words[i]);
+
+                // mixed
+                for (word = test2_words[i], t_cursor = t_buffer; *word; ++word)
+                    *t_cursor++ = ((size_t)t_cursor & 1) ? *word : tolower(*word);
+                *t_cursor = 0;
+                ret = trie_search(t, t_buffer);
+                TEST(ret == test2_words[i]);
+                ret = trie_nsearch(t, t_buffer, strlen(t_buffer));
+                TEST(ret == test2_words[i]);
         }
 
         {       const char *prefix = "CMAKE_EXE_LINKER_FLAGS";
@@ -351,7 +452,7 @@ test2(void)
 //
 
 static void
-test3(void)
+test4(void)
 {
         struct trie *t = trie_create();
         unsigned i;
@@ -445,6 +546,7 @@ main(void)
         test1();
         test2();
         test3();
+        test4();
 }
 
 /*end*/

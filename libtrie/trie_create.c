@@ -7,8 +7,8 @@
 
 /* Constructor and destructor. */
 
-struct trie *
-trie_create(void)
+static struct trie *
+trie_allocate(void)
 {
     /* Root never needs to be resized. */
     const size_t tail_size = sizeof(struct trieptr) * 255;
@@ -18,6 +18,24 @@ trie_create(void)
     root->size = 255;
     root->nchildren = 0;
     root->data = 0;
+    root->icase = 0;
+    return root;
+}
+
+
+struct trie *
+trie_create(void)
+{
+    return trie_allocate();
+}
+
+
+struct trie *
+trie_icreate(void)
+{
+    struct trie *root = trie_allocate();
+    if (root)
+        root->icase = 1;
     return root;
 }
 

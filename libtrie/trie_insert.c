@@ -3,6 +3,18 @@
  */
 
 #include "trie_private.h"
+
+#if defined(__GNUC__)
+#if !defined(alloca)
+#define alloca __builtin_alloca
+#endif
+#elif defined(_MSC_VER)
+#include <malloc.h>
+#define alloca _alloca
+#else
+#include <alloca.h>
+#endif
+#include <ctype.h>
 #include <assert.h>
 
 /* Insertion functions. */
@@ -61,18 +73,30 @@ create(void)
 }
 
 
+static unsigned char
+to_lower(unsigned char c)
+{
+    return (isupper(c) ? c - 'A' + 'a' : c);
+}
+
+
 int
 trie_replace(struct trie *self, const char *key, trie_replacer f, void *arg)
 {
     struct trie *last;
     struct trieptr *parent;
-    unsigned char *ukey = (unsigned char *)key;
-    size_t depth = trie_binary_search(self, &last, &parent, ukey);
-    while (ukey[depth]) {
+    unsigned char c, *ukey = (unsigned char *)key;
+    const int icase = self->icase;
+    size_t depth =
+        (icase ? trie_binary_search_i(self, &last, &parent, ukey) :
+            trie_binary_search(self, &last, &parent, ukey));
+
+    while (0 != (c = ukey[depth])) {
         struct trie *added, *subtrie = create();
         if (NULL == subtrie)
             return 1;
-        added = node_add(last, ukey[depth], subtrie);
+        if (icase) c = to_lower(c);
+        added = node_add(last, c, subtrie);
         if (NULL == added) {
             free(subtrie);
             return 1;
@@ -84,6 +108,7 @@ trie_replace(struct trie *self, const char *key, trie_replacer f, void *arg)
         last = subtrie;
         depth++;
     }
+
     last->data = (NULL != f ? f(key, last->data, arg) : arg);
     return 0;
 }
@@ -93,6 +118,20 @@ int
 trie_insert(struct trie *trie, const char *key, void *data)
 {
     return trie_replace(trie, key, NULL, data);
+}
+
+
+int
+trie_ninsert(struct trie *trie, const char *key, int length, void *data)
+{
+    char *t_key = (length ? alloca(length + /*nul*/ 1) : NULL);
+    if (NULL == t_key)
+        return -1;
+
+    memcpy(t_key, key, length);
+    t_key[length] = 0;
+
+    return trie_replace(trie, t_key, NULL, data);
 }
 
 /*end*/
