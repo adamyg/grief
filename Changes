@@ -2,6 +2,17 @@
 
 	* BUILD 24, version: 3.2.2
 
+Sun Aug 28 20:44:56 2022 adamy
+
+	* html/xml
+
+		o tag matching/hiliting syntax flags
+
+			- SYNF_HTMLTAG
+			- SYNF_XMLTAG
+
+		o void tags
+
 Wed Aug 10 22:52:02 2022 adamy
 
 	* syntax

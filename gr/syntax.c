@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntax_c, "$Id: syntax.c,v 1.63 2022/08/10 16:22:34 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntax_c, "$Id: syntax.c,v 1.67 2022/08/28 12:38:55 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntax.c,v 1.63 2022/08/10 16:22:34 cvsuser Exp $
+/* $Id: syntax.c,v 1.67 2022/08/28 12:38:55 cvsuser Exp $
  * Syntax pre-processor.
  *
  *
@@ -38,33 +38,6 @@ __CIDENT_RCSID(gr_syntax_c, "$Id: syntax.c,v 1.63 2022/08/10 16:22:34 cvsuser Ex
 #include "tags.h"                               /* tags_check() */
 #include "tty.h"                                /* ttrows() */
 
-struct match_element {
-    LINENO line;                    /* Current line */
-    LINENO col;                     /* Current col */
-    LINENO offset;                  /* Offset within line */
-};
-
-struct match_stack {
-    const LINECHAR **data;          /* Element stack */
-    size_t capacity;                /* Capacity, in elements */
-    size_t top;                     /* Stack top */
-};
-
-struct match_state {
-    SyntaxTable_t *st;              /* Current syntaxtable */
-    struct match_element start;     /* Start position */
-    struct match_element end;       /* End position */
-    const LINECHAR *text;           /* Current line start */
-    const LINECHAR *filter;         /* First line filter */
-    struct match_stack stack;       /* Line stack */
-    unsigned char open;             /* Characters being matched */
-    unsigned char close;
-    int backwards;                  /* backwards, otherwise forward */
-    int lines;                      /* Numbers of lines to scan */
-    int hilites;
-    int level;                      /* Matching level */
-};
-
 static int                      syntax_table2attr(int table);
 
 static SyntaxTable_t *          syntax_new(const char *name);
@@ -81,19 +54,11 @@ static int                      keyword_push_list(SyntaxWordList_t *words, int l
 static void                     keyword_free_list(SyntaxWordList_t *words);
 static int                      keyword_push_pat(SyntaxTable_t *st, int attr, int length, int total, const char *keywords, int sep);
 
-static int                      fndmatching(SyntaxTable_t *st);
-
 static int                      style_lookup(const char *name);
 static int                      style_getc(int n);
 static const char *             style_gets(int n);
 static int                      style_once(SyntaxTable_t *st, SyntaxChar_t style, const char *description);
 static const char *             style_charset(const char *fmt, unsigned char *tab);
-
-typedef void (*Parser_t)(const LINECHAR *cursor, void *udata);
-
-static void                     find_matching(struct match_state *ms);
-static int                      parse_lines(SyntaxTable_t *st, LINENO lineno, LINENO num);
-static lineflags_t              parse_line(SyntaxTable_t *st, const LINE_t *l, Parser_t parser, void *udata);
 
 static const struct flag {
     const char *f_name;                         /* name/label */
@@ -835,15 +800,15 @@ keyword_push_pat(SyntaxTable_t *st, int attr, int length, int total, const char 
 {
     const int count = (total / length);         /* word count */
     unsigned elements = 0;
-    struct trie *t;
+    struct trie *patterns;
 
     assert(attr >= ATTR_NORMAL);
     if (attr < ATTR_NORMAL) {
         return -1;
     }
 
-    if (NULL == (t = st->keyword_patterns)) {
-        st->keyword_patterns = t = trie_create();
+    if (NULL == (patterns = st->keyword_patterns)) {
+        st->keyword_patterns = patterns = trie_create();
     }
 
     if (sep) {
@@ -851,7 +816,7 @@ keyword_push_pat(SyntaxTable_t *st, int attr, int length, int total, const char 
         while (keywords < end) {
             assert(sep == keywords[length] || 0 == keywords[length]);
             trace_ilog("\t%.*s\n", length, keywords);
-            trie_insert_nwild(t, (const char *)keywords, length, (void *)attr);
+            trie_insert_nwild(patterns, (const char *)keywords, length, (void *)attr);
             keywords += length + /*sep*/1;
             ++elements;
         }
@@ -860,7 +825,7 @@ keyword_push_pat(SyntaxTable_t *st, int attr, int length, int total, const char 
         const char *end = keywords + total;
         while (keywords < end) {
             trace_ilog("\t%.*s\n", length, keywords);
-            trie_insert_nwild(t, (const char *)keywords, length, (void *)attr);
+            trie_insert_nwild(patterns, (const char *)keywords, length, (void *)attr);
             keywords += length;
             ++elements;
         }
@@ -923,6 +888,8 @@ keyword_push_pat(SyntaxTable_t *st, int attr, int length, int total, const char 
         SYNT_BRACKET -          <BRACKET>, <open> [, <close>]
 
         SYNT_HTML -             <HTML>, <open>, <close>
+
+        SYNT_TAG -              <TAG>, <type>, <word,word...>
 
         SYNT_WORD -             <WORD>, <character-set>
 
@@ -1042,7 +1009,6 @@ do_syntax_token(void)           /* int (int type|string type, [arg1], [arg2], [i
         }
         break;
 
-#if defined(SYNT_LINEJOIN)
     case SYNT_LINEJOIN:         /* <LINEJOIN>, <character> */
         if ((c = style_getc(ARG1)) > 0) {
             if (style_once(st, SYNC_LINEJOIN, "LINEJOIN")) {
@@ -1050,7 +1016,6 @@ do_syntax_token(void)           /* int (int type|string type, [arg1], [arg2], [i
             }
         }
         break;
-#endif
 
     case SYNT_QUOTE:            /* <QUOTE>, <character-set> */
         if ((c = style_getc(ARG1)) > 0)
@@ -1082,8 +1047,8 @@ do_syntax_token(void)           /* int (int type|string type, [arg1], [arg2], [i
                     charmap[(unsigned char) s2[i]] |= SYNC_BRACKET_CLOSE;
 
                     if (idx < 3) {
-                        st->bracket_chars[idx][0] = s1[i];
-                        st->bracket_chars[idx][1] = s2[i];
+                        st->bracket_chars[idx].open = s1[i];
+                        st->bracket_chars[idx].close = s2[i];
                         ++idx;
                     }
                 }
@@ -1252,6 +1217,32 @@ do_syntax_token(void)           /* int (int type|string type, [arg1], [arg2], [i
         }
         break;
 
+    case SYNT_TAG:              /* <TAG>, <type>, "<word,....>" */
+        if (NULL != (s1 = get_xstr(ARG1))) {
+            if ((0 == str_icmp(s1, "ivoid") || 0 == str_icmp(s1, "void")) &&
+                    NULL != (s2 = get_xstr(ARG2)) && *s2) {
+                struct trie *tags;
+
+                if (NULL == (tags = st->void_tags)) {
+                    st->void_tags = tags =
+                        (0 == str_icmp(s1, "ivoid") ? trie_icreate() :  trie_create());
+                }
+
+                while (s2 && *s2) {
+                    const char *end = strchr(s2, ',');
+                    if (end) {
+                        if (end != s2)
+                            trie_ninsert(tags, s2, end - s2, "");
+                        s2 = end + 1;
+                    } else {
+                        trie_insert(tags, s2, "");
+                        s2 = NULL;
+                    }
+                }
+            }
+        }
+        break;
+
     default:
         if (stylename) {
             errorf("syntax: unknown syntax style '%s'", stylename);
@@ -1263,103 +1254,6 @@ do_syntax_token(void)           /* int (int type|string type, [arg1], [arg2], [i
 
 #undef ARG1
 #undef ARG2
-}
-
-
-void
-do_syntax_find()                /* int ([int mode = 0],  [int &line], [int &col], ... */
-{
-    SyntaxTable_t *st = syntax_current();
-    const int mode = get_xinteger(1, 1);        /* find mode */
-    int ret = -1;                               /* nothing to match */
-        // -2 = Unknown character.
-        // -1 = Nothing to match.
-        //  0 = Matched.
-        //  1 = Unmatched.
-
-    if (NULL == curbp || NULL == st) {
-        ret = -2;                               /* no syntax definition */
-
-    } else if (0 == mode) {
-        ret = fndmatching(st);
-    }
-
-    acc_assign_int(ret);
-}
-
-
-static int
-fndmatching(SyntaxTable_t *st)
-{
-    const SyntaxChar_t *charmap = st->syntax_charmap;
-    const char *ch = get_xstr(6);               /* element */
-    unsigned char match = (ch ? *((unsigned char *)ch) : 0);
-    struct match_state ms = {0};
-    int brackets = -1;
-    int ret = 1;
-    LINE_t *lp;
-
-    /* int (mode = 1, [int &line], [int &col], [int hilites = 1], [int lines = 75], [string element = ""]) */
-
-    ms.st = st;
-    ms.hilites = get_xinteger(4, 1);            /* auto hilite results */
-    ms.lines = get_xinteger(5, 75);             /* scan lines */
-    ms.start.line = *cur_line;
-    ms.start.col = *cur_col;
-    ms.start.offset = line_offset(ms.start.line, ms.start.col, LOFFSET_NORMAL);
-
-    if (match) {
-        ms.level = 1;
-
-    } else if (NULL != (lp = vm_lock_line2(ms.start.line))) {
-        if (NULL != (ms.text = ltext(lp))) {
-            if ((LINENO)llength(lp) > ms.start.offset) {
-                match = ms.text[ms.start.offset];
-            }
-        }
-    }
-
-    if (SYNC_BRACKET_OPEN & charmap[match]) {
-        unsigned b;
-        for (b = 0; b < (sizeof(st->bracket_chars)/2); ++b) {
-            if (st->bracket_chars[b][0] == match) {
-                ms.end.line = curbp->b_numlines;
-                brackets = b;
-                break;
-            }
-        }
-    } else if (SYNC_BRACKET_CLOSE & charmap[match]) {
-        unsigned b;
-        for (b = 0; b < (sizeof(st->bracket_chars)/2); ++b) {
-            if (st->bracket_chars[b][1] == match) {
-                ms.end.line = 1;
-                ms.backwards = 1;
-                brackets = b;
-                break;
-            }
-        }
-    } else {
-        ret = -2;
-    }
-
-    if (brackets >= 0) {                        /* open/close */
-        ms.open = st->bracket_chars[brackets][0];
-        ms.close = st->bracket_chars[brackets][1];
-        find_matching(&ms);
-        if (ms.end.line) {                      /* matched, return */
-            if (! isa_undef(2)) {
-                sym_assign_int(get_symbol(2), (accint_t) ms.end.line);
-            }
-            if (! isa_undef(3)) {
-                sym_assign_int(get_symbol(3), (accint_t) ms.end.col);
-            }
-            ret = 0;
-        }
-    }
-
-    chk_free((void *)ms.stack.data);
-
-    return ret;
 }
 
 
@@ -1548,12 +1442,12 @@ syntax_init(void)
     charmap[(unsigned char) '('] = SYNC_BRACKET_OPEN;  charmap[(unsigned char) ')'] = SYNC_BRACKET_CLOSE;
     charmap[(unsigned char) '{'] = SYNC_BRACKET_OPEN;  charmap[(unsigned char) '}'] = SYNC_BRACKET_CLOSE;
 
-    x_default_table->bracket_chars[0][0] = '[';
-    x_default_table->bracket_chars[0][1] = ']';
-    x_default_table->bracket_chars[1][0] = '(';
-    x_default_table->bracket_chars[1][1] = ')';
-    x_default_table->bracket_chars[2][0] = '{';
-    x_default_table->bracket_chars[2][1] = '}';
+    x_default_table->bracket_chars[0].open  = '[';
+    x_default_table->bracket_chars[0].close = ']';
+    x_default_table->bracket_chars[1].open  = '(';
+    x_default_table->bracket_chars[1].close = ')';
+    x_default_table->bracket_chars[2].open  = '{';
+    x_default_table->bracket_chars[2].close = '}';
 }
 
 
@@ -1824,7 +1718,7 @@ writex_spell(SyntaxTable_t *st, const LINECHAR *word, int wordlen, int colour, i
         }
     }
 
-    if (SYNW_TAGS & flags) {                     /* tabdb */
+    if (SYNW_TAGS & flags) {                    /* tabdb */
         if (tags_check(/*TODO, scope by filename*/ (const char *)word, wordlen) > 0) {
             return ATTR_TAG;
         }
@@ -2031,7 +1925,7 @@ keyword_strcmp(const void * k1, const void * k2)
 }
 
 
-static SyntaxTable_t *
+SyntaxTable_t *
 syntax_select(void)
 {
     register SyntaxTable_t *st;
@@ -2235,39 +2129,6 @@ syntax_preprocessor(const SyntaxTable_t *st, const LINECHAR *token, int length)
 }
 
 
-/*
- *  syntax_parse ---
- *      Parse the current buffer, updating the syntax status of the requested line.
- */
-int
-syntax_parse(int all)
-{
-    SyntaxTable_t *st;
-    LINENO min_line, max_line;
-
-    if (NULL == (st = syntax_select())) {
-        return 0;
-    }
-
-    if (st != curbp->b_syntax) {
-        curbp->b_syntax = st;
-        all = 1;                                /* new assignment, reset */
-    }
-
-    if (all) {                                  /* all of the buffer */
-        min_line = 1;
-        max_line = curbp->b_numlines;
-    } else {                                    /* otherwise modified */
-        if ((min_line = curbp->b_syntax_min) <= 0) {
-            return (0);
-        }
-        max_line = curbp->b_syntax_max;
-    }
-
-    curbp->b_syntax_min = curbp->b_syntax_max = 0;
-    return parse_lines(st, min_line, max_line - min_line);
-}
-
 
 /*
  *  syntax_highlight ---
@@ -2295,68 +2156,6 @@ syntax_highlight(const LINE_t *lp)
                         t_cursor, (unsigned)(t_cursor - cursor), end);
             }
         }
-    }
-}
-
-
-/*
- *  syntax_virtual_cursor ---
- *      Visual cursor update event.
- */
-void
-syntax_virtual_cursor()
-{
-    SyntaxTable_t *st;
-
-    if (! BFTST(curbp, BF_SYNTAX_MATCH))
-        return;                                 /* disabled? */
-
-    if (NULL != (st = curbp->b_syntax) && st->st_active) {
-        const SyntaxChar_t *charmap = st->syntax_charmap;
-        const unsigned match = (unsigned) curbp->b_vchar[0];
-        struct match_state ms = {0};
-        int brackets = -1;
-
-        if (match > 0xff)
-            return;                             /* non-ascii */
-
-        // TODO/optional: if vchar is space, scan from start of line.
-
-        if (SYNC_BRACKET_OPEN & charmap[match]) {
-            unsigned b;
-            for (b = 0; b < (sizeof(st->bracket_chars)/2); ++b) {
-                if (st->bracket_chars[b][0] == match) {
-                    ms.end.line = curbp->b_numlines;
-                    brackets = b;
-                    break;
-                }
-            }
-
-        } else if (SYNC_BRACKET_CLOSE & charmap[match]) {
-            unsigned b;
-            for (b = 0; b < (sizeof(st->bracket_chars)/2); ++b) {
-                if (st->bracket_chars[b][1] == match) {
-                    ms.end.line = 1;
-                    ms.backwards = 1;
-                    brackets = b;
-                    break;
-                }
-            }
-        }
-
-        if (brackets < 0)                       /* non-open/close */
-            return;
-
-        ms.st = st;
-        ms.hilites = 1;                         /* auto hilite results */
-        ms.lines = ttrows() + 1;
-        ms.start.line = curbp->b_vline;
-        ms.start.col = curbp->b_vcol;
-        ms.start.offset = curbp->b_voffset;
-        ms.open = st->bracket_chars[brackets][0];
-        ms.close = st->bracket_chars[brackets][1];
-        find_matching(&ms);
-        chk_free((void *)ms.stack.data);
     }
 }
 
@@ -2606,422 +2405,6 @@ syntax_string_end(
         }
     }
     return NULL;
-}
-
-
-/*
- *  find_matching ---
- *      Parse the specified line block, matching brackets.
- */
-static void
-find_matching_callback(const LINECHAR *cursor, void *udata)
-{
-    struct match_state *ms = (struct match_state *)udata;
-    const unsigned char ch = *cursor;
-
-    if (ch != ms->open && ch != ms->close)
-        return;
-
-    if (ms->filter) {                           /* line filter */
-        if (ms->backwards) {
-            if (cursor > ms->filter)
-                return;
-        } else {
-            if (cursor < ms->filter)
-                return;
-        }
-    }
-
-    if (ms->stack.top == ms->stack.capacity) {  /* extend? */
-        const size_t capacity = (ms->stack.capacity + 64);
-        void *data = chk_realloc((void *)ms->stack.data, capacity * sizeof(LINECHAR *));
-        if (NULL == data)
-            return;
-
-        ms->stack.capacity = capacity;
-        ms->stack.data = data;
-    }
-
-    ms->stack.data[ms->stack.top++] = cursor;
-    assert(ms->stack.top <= ms->stack.capacity);
-}
-
-
-static void
-find_matching(struct match_state *ms)
-{
-    const int backwards = ms->backwards;
-    const LINENO end_line = ms->end.line;
-    SyntaxTable_t *st = ms->st;
-    LINENO lineno = ms->start.line;
-    LINE_t *lp;
-
-    ms->end.line = 0;
-    ms->end.offset = -1;
-    
-    if (NULL != (lp = vm_lock_line2(lineno))) {
-        if (NULL != (ms->text = ltext(lp))) {
-            if ((LINENO)llength(lp) > ms->start.offset) {
-                ms->filter = ms->text + ms->start.offset;
-            }
-        }
-    }
-
-    while (lp) {                                /* parse current line */
-        if (NULL != (ms->text = ltext(lp))) {
-            parse_line(st, lp, find_matching_callback, ms);
-            if (ms->stack.top) {
-                if (backwards) {
-                    size_t e;
-                    for (e = ms->stack.top; e;) {
-                        const LINECHAR *t_cursor = ms->stack.data[--e];
-                        if (*t_cursor == ms->close) {
-                            ++ms->level;
-                        } else {
-                            assert(*t_cursor == ms->open && ms->level);
-                            if (--ms->level <= 0) {
-                                liflagset(lp, LI_DIRTY);
-                                ms->end.offset = (t_cursor - ms->text);
-                                break;
-                            }
-                        }
-                    }
-                } else {
-                    const size_t top = ms->stack.top;
-                    size_t e;
-                    for (e = 0; e != top;) {
-                        const LINECHAR *t_cursor = ms->stack.data[e++];
-                        if (*t_cursor == ms->open) {
-                            ++ms->level;
-                        } else  {
-                            assert(*t_cursor == ms->close && ms->level);
-                            if (--ms->level <= 0) {
-                                liflagset(lp, LI_DIRTY);
-                                ms->end.offset = (t_cursor - ms->text);
-                                break;
-                            }
-                        }
-                    }
-                }
-                ms->stack.top = 0;
-            }
-        }
-
-        vm_unlock(lineno);
-        if (ms->end.offset >= 0) {              /* match */
-            ms->end.line = lineno;
-            ms->end.col = line_column(ms->end.line, ms->end.offset);
-            break;
-        } else if (ms->level <= 0) {
-            break;                              /* no match, inside comment etc */
-        }
-
-        ms->filter = NULL;
-        if (0 == ms->lines)
-            break;
-        --ms->lines;
-
-        if (backwards) {                        /* new line */
-            if (lineno-- <= end_line || NULL == (lp = lback(lp))) {
-                break;
-            }
-        } else {
-            if (lineno++ >= end_line || NULL == (lp = lforw(lp))) {
-                break;                          /* EOF */
-            }
-        }
-    }
-
-    if (ms->hilites) {                          /* optional, hilite results */
-        HILITE_t *open;
-
-        hilite_destroy(curbp, HILITE_SYNTAX_MATCH);
-        if (NULL != (open = hilite_create(curbp, HILITE_SYNTAX_MATCH, -1, ms->start.line, ms->start.col, ms->start.line, ms->start.col))) {
-            if (ms->end.line) {
-                HILITE_t *close = hilite_create(curbp, HILITE_SYNTAX_MATCH, -1, ms->end.line, ms->end.col, ms->end.line, ms->end.col);
-                if (close) {
-                    close->h_attr = ATTR_HILITE;
-                    open->h_attr = ATTR_HILITE;
-                }
-            }
-        }
-    }
-}
-
-
-/*
- *  parse_lines ---
- *      Parse the specified line block, determining the arena in which hilite is dirty due to content change.
- */
-static int
-parse_lines(SyntaxTable_t *st, LINENO lineno, LINENO num)
-{
-    LINE_t *lp;
-
-    if (lineno > 1) {
-        --lineno, ++num;
-    }
-
-    ED_TRACE(("syntax::parse_lines(flags:0x%04x, lineno:%d, num:%d, numline:%d)\n", \
-        st->st_flags, lineno, num, (int)curbp->b_numlines))
-
-    lp = vm_lock_line2(lineno);
-    while (lp) {                                /* parse current line */
-        lineflags_t state = parse_line(st, lp, NULL, NULL);
-
-        liflagclr(lp, LI_DIRTY);
-        lp->l_uflags &= ~L_HAS_EOL_COMMENT;
-
-        switch (state) {
-        case L_IN_COMMENT:
-        case L_IN_COMMENT2:
-            break;
-        case L_IN_STRING:
-        case L_IN_LITERAL:
-        case L_IN_CHARACTER:
-            if (st->st_flags & SYNF_STRING_ONELINE) {
-                state = 0;                      /* fuse string at EOL */
-            }
-            break;
-        case L_HAS_EOL_COMMENT:
-            lp->l_uflags |= L_HAS_EOL_COMMENT;
-            state = 0;
-            break;
-        }
-
-        /* retrieve next */
-        vm_unlock(lineno);
-        if (NULL == (lp = lforw(lp))) {         /* NEWLINE */
-            break;                              /* EOF */
-        }
-        ++lineno;                               /* new line */
-
-        /* check range or status */
-        if (num > 0) {                          /* required rescan min */
-            --num;
-
-        } else if (state == (L_SYNTAX_MASK & lp->l_uflags)) {
-            break;                              /* state in-sync, no need to continue */
-        }
-
-        /* update status */
-        lp->l_uflags &= ~L_SYNTAX_MASK;
-        lp->l_uflags |= state;
-    }
-    return lineno;
-}
-
-
-static lineflags_t
-parse_line(SyntaxTable_t *st, const LINE_t *line, Parser_t callback, void *udata)
-{
-    const uint32_t flags = st->st_flags;
-    const lineflags_t lsyntax = (L_SYNTAX_MASK & line->l_uflags);
-    const SyntaxChar_t *charmap = st->syntax_charmap;
-    const LINECHAR *cursor, *begin, *end;
-    unsigned char schar, ichar, cchar, quote;
-
-    /* Retrieve line buffer and length */
-    if (NULL == (cursor = begin = ltext(line))) {
-        return lsyntax;
-    }
-    end = begin + llength(line);
-    if (end == begin) {
-        return lsyntax;
-    }
-
-    ED_TRACE2(("\t<%.*s>\n", end - cursor, cursor))
-
-    /* fixed style comments (aka FORTRAN, plus also COBOL) */
-    if (SYNF_FORTRAN & flags) {
-        if (cursor + st->comment_fixed_pos < end) {
-            unsigned char ch = cursor[st->comment_fixed_pos];
-
-            if (st->comment_fixed_char[ch]) {
-                return L_HAS_EOL_COMMENT;
-            }
-        }
-    }
-
-    /* cache string/comment delimiters */
-    schar = st->string_char;
-    cchar = st->char_char;
-    ichar = st->literal_char;
-    quote = st->quote_char;
-
-    /* terminate current comment or string */
-    if (lsyntax) {
-        const lineflags_t lsyntaxin = (lsyntax & L_SYNTAX_IN);
-
-        switch (lsyntaxin) {
-        case L_IN_COMMENT:                      /* comment, type-1 */                                        
-            if (NULL == (cursor = syntax_comment_end(st, 0, cursor, end))) {
-                return L_IN_COMMENT;
-            }
-            break;
-        case L_IN_COMMENT2:                     /* comment, type-2 */
-            if (NULL == (cursor = syntax_comment_end(st, 1, cursor, end))) {
-                return L_IN_COMMENT2;
-            }
-            break;
-        case L_IN_STRING:                       /* string */
-            if (NULL == (cursor = syntax_string_end(st, cursor, end, quote, schar))) {
-                return L_IN_STRING;
-            }
-            break;
-        case L_IN_LITERAL:                      /* literals, optional quoting */
-            if (NULL == (cursor = syntax_string_end(st, cursor, end,
-                            (char)(flags & SYNF_LITERAL_NOQUOTES ? 0 : quote), ichar))) {
-                return L_IN_LITERAL;
-            }
-            break;
-        case L_IN_CHARACTER:
-            if (NULL == (cursor = syntax_string_end(st, cursor, end, quote, cchar))) {
-                return L_IN_CHARACTER;
-            }
-            /*FALLTHRU*/
-        case L_IN_CONTINUE:
-        case L_IN_PREPROC:
-            if (begin < end) {
-                unsigned char lchar;
-
-                if (0 != (lchar = st->linecont_char)) {
-                    if (lchar == end[-1]) {
-                        return lsyntax;         /* last character is continuation */
-
-                    } else if (SYNF_LINECONT_WS & flags) {
-                        const LINECHAR *back = end; /* scan backward consuming white-space */
-
-                        while (back > begin) {  /* MCHAR??? */
-                            const unsigned char ch = (unsigned char) *--back;
-
-                            if (lchar == ch) {
-                                return lsyntax; /* trailing continuation */
-                            }
-                            if (' ' == ch || '\t' == ch) {
-                                continue;
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-            break;
-        default:
-            assert(0 == lsyntaxin);
-            break;
-        }
-    }
-
-    /* outside string/comment */
-    while (cursor < end) {                      /* MCHAR??? */
-        const unsigned char ch = (unsigned char) *cursor;
-
-        if (0 == ch) {                          /* NULs, ignore */
-            ++cursor;
-            continue;
-        }
-
-        if (ch == quote) {                      /* quotes */
-            if ((cursor + 1) < end) {
-                cursor += 2;
-                continue;
-            }
-            break;
-        }
-
-        if (ch == schar || ch == cchar) {       /* string/character */
-            const LINECHAR *ocursor = cursor;
-            cursor = syntax_string_end(st, ocursor + 1, end, quote, ch);
-            if (NULL == cursor) {
-                if (0 == (st->st_flags & SYNF_STRING_MATCHED)) {
-                    return (ch == schar ? L_IN_STRING : L_IN_CHARACTER);
-                }
-                cursor = ocursor + 1;           /* normal */
-            }
-            continue;
-        }
-
-        if (ch == ichar) {                      /* literals, optional quoting */
-            const LINECHAR *ocursor = cursor;
-            cursor = syntax_string_end(st, ocursor + 1, end, (char)(SYNF_LITERAL_NOQUOTES & flags ? 0 : quote), ch);
-            if (NULL == cursor) {
-                return L_IN_LITERAL;
-            }
-            continue;
-        }
-
-        if (charmap[ch] & SYNC_COMMENT) {       /* comments */
-            const LINECHAR *t_end;
-
-            switch (syntax_comment(st, cursor, begin, end, &t_end)) {
-            case COMMENT_NORMAL:
-                cursor = t_end;
-                break;
-            case COMMENT_EOL:
-                return L_HAS_EOL_COMMENT;
-            case COMMENT_OPEN:
-                return L_IN_COMMENT;
-            case COMMENT_OPEN2:
-                return L_IN_COMMENT2;
-            case COMMENT_NONE:
-            default:
-                ++cursor;
-            }
-            continue;
-        }
-
-        if (callback) callback(cursor, udata);
-        ++cursor;
-    }
-
-    if (begin < end) {
-        unsigned char lchar;
-
-        if (0 != (lchar = st->linecont_char)) {
-            int iscont = FALSE;
-
-            if (lchar == end[-1]) {
-                iscont = TRUE;                  /* last character is continuation */
-
-            } else if (SYNF_LINECONT_WS & flags) {
-                cursor = end;                   /* scan backward consuming white-space */
-                while (cursor > begin) {        /* MCHAR??? */
-                    const unsigned char ch = (unsigned char) *--cursor;
-
-                    if (ch == lchar) {
-                        iscont = TRUE;          /* trailing continuation */
-                        break;
-                    }
-                    if (' ' == ch || '\t' == ch) {
-                        continue;
-                    }
-                    break;
-                }
-            }
-
-            if (iscont) {
-                unsigned char pchar;
-
-                if (0 != (pchar = st->preprocessor_char)) {
-                    cursor = begin;
-                    while (cursor < end) {      /* MCHAR??? */
-                        const unsigned char ch = (unsigned char) *cursor++;
-
-                        if (0 == charmap[ch]) {
-                            continue;           /* normal character */
-                        }
-                        if (ch == pchar) {
-                            return L_IN_PREPROC;
-                        }
-                        break;
-                    }
-                }
-                return L_IN_CONTINUE;           /* continuation */
-            }
-        }
-    }
-    return 0;
 }
 
 /*end*/

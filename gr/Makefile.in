@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.85 2022/07/10 13:12:24 cvsuser Exp $
+# $Id: Makefile.in,v 1.86 2022/08/22 15:40:47 cvsuser Exp $
 # GRIEF editor makefile.
 #
 #
@@ -335,6 +335,7 @@ CSRC=\
 	syntaxhl.c		\
 	syntaxdfa.c		\
 	syntaxcol.c		\
+	syntaxln.c		\
 	\
 	tags.c			\
 	tagsex.c		\

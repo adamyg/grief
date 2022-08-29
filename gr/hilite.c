@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_hilite_c,"$Id: hilite.c,v 1.18 2022/08/10 15:44:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_hilite_c,"$Id: hilite.c,v 1.19 2022/08/16 12:25:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: hilite.c,v 1.18 2022/08/10 15:44:56 cvsuser Exp $
+/* $Id: hilite.c,v 1.19 2022/08/16 12:25:22 cvsuser Exp $
  * Hilite management.
  *
  *
@@ -97,9 +97,9 @@ hilite_create(BUFFER_t *bp, int type, int32_t timeout,
         hp->h_magic     = HILITE_MAGIC;
         hp->h_type      = type;
         hp->h_timeout   = timeout;
-        if (hp->h_timeout > 0) {
-            hp->h_timeout += (time(NULL) - 1); // expire time.
-        } else if (-1 == timeout) {
+        if (timeout > 0) { //note: owc time_t is unsigned
+            hp->h_timeout += time(NULL) - 1; // relative expire time.
+        } else if (timeout < 0) {
             hp->h_ctime = bp->b_ctime; // expire on buffer change.
         }
         hp->h_seqno     = ++x_hilite_seqno;
@@ -361,3 +361,4 @@ hilite_zap(BUFFER_t *bp, int update)
 }
 
 /*end*/
+

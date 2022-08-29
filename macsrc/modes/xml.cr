@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*-
- * $Id: xml.cr,v 1.1 2022/08/10 13:06:32 cvsuser Exp $
+ * $Id: xml.cr,v 1.2 2022/08/28 12:27:01 cvsuser Exp $
  * xml mode.
  *
  *
@@ -14,9 +14,10 @@ main()
 {
     create_syntax(MODENAME);
 
-    //  Syntax lexer/
-    //      utilised during basic line preprocessing.
-    //
+    /*
+     *  Syntax lexer/
+     *      Utilised during basic line preprocessing.
+     */
     syntax_token(SYNT_COMMENT,      "<!--", "-->");     // open/close, attr=comment
     syntax_token(SYNT_STRING,       "\"");
     syntax_token(SYNT_LITERAL,      "\'");
@@ -24,16 +25,24 @@ main()
     syntax_token(SYNT_BRACKET,      "<", ">");          // attr=delimiter
     syntax_token(SYNT_WORD,         "&A-Za-z");
 
-    //  Special Characters in XML/
-    //
-    //      &lt;        <, less than
-    //      &gt;        >, greater than
-    //      &amp;       &, ampersand
-    //      &apos;      ', apostrophe
-    //      &quot;      ", quotation mark
-    //
-    //  Plus html specials.
-    //
+    /*
+     *  Options/
+     *      SYNF_XMLTAG
+     *          XML tag processing.
+     */
+    set_syntax_flags(SYNF_XMLTAG);
+
+    /*
+     *  Special Characters in XML/
+     *
+     *      &lt;        <, less than
+     *      &gt;        >, greater than
+     *      &amp;       &, ampersand
+     *      &apos;      ', apostrophe
+     *      &quot;      ", quotation mark
+     *
+     *  Plus html specials.
+     */
     define_keywords(SYNK_PRIMARY,
         "&gt,&lt");
 
@@ -50,12 +59,13 @@ main()
         "&Aacute,&Agrave,&Atilde,&Ccedil,&Eacute,&Egrave,&Iacute,&Igrave,&Ntilde,&Oacute,&Ograve,&Oslash,&Otilde,&Uacute,&Ugrave,&Yacute,"+
         "&aacute,&agrave,&atilde,&ccedil,&eacute,&egrave,&iacute,&igrave,&ntilde,&oacute,&ograve,&oslash,&otilde,&uacute,&ugrave,&yacute");
 
-    // TODO/DFA
-    //
-    //      <\?xml \?>  attr=constant 
-    //      <\? \?>     attr=code
-    //      < >         attr=tag
-    //
+    /*
+     *  TODO/DFA
+     *
+     *      <\?xml \?>  attr=constant
+     *      <\? \?>     attr=code
+     *      < >         attr=tag
+     */
 }
 
 
