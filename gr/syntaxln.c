@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntaxln_c, "$Id: syntaxln.c,v 1.2 2022/08/29 13:47:47 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntaxln_c, "$Id: syntaxln.c,v 1.3 2022/09/13 14:31:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntaxln.c,v 1.2 2022/08/29 13:47:47 cvsuser Exp $
+/* $Id: syntaxln.c,v 1.3 2022/09/13 14:31:24 cvsuser Exp $
  * Syntax support.
  *
  *
@@ -79,7 +79,7 @@ struct match_state {
     unsigned char open, close;      /* Characters being matched */
     unsigned char tagtype;          /* Matching tags logic: NUL,X=XML or H=HTML */
     unsigned backwards : 1;         /* backwards, otherwise forward */
-    unsigned hilites : 1;           /* Hilite results */
+    unsigned hilites : 2;           /* Hilite results */
     int nesting;                    /* Nesting level */
     int void_nesting;               /* Void nesting level */
     int lines;                      /* Numbers of lines to scan */
@@ -88,19 +88,22 @@ struct match_state {
 
 typedef void (*Parser_t)(const LINECHAR *cursor, void *udata);
 
-static int                      find_paired(SyntaxTable_t *st);
-static int                      find_elements(struct match_state *ms, unsigned matching, SyntaxChar_t flags);
-static void                     find_elements_pairs(const LINECHAR *cursor, void *udata);
-static void                     find_elements_tagged(const LINECHAR *cursor, void *udata);
-static int                      find_point(struct match_state *ms);
+static __CINLINE int        is_white(int32_t c);
 
-static void                     tag_get(struct match_state *ms, struct match_tag *tag, const LINECHAR *cursor);
-static int                      tag_empty(const struct match_tag *tag);
-static int                      tag_equal(struct match_state *ms, const struct match_tag *open, const struct match_tag *close);
-static int                      tag_isvoid(struct match_state *ms, const struct match_tag *tag);
+static int                  find_paired(SyntaxTable_t *st);
+static int                  find_nonwhite(struct match_state *ms, int32_t *ch);
+static int                  find_elements(struct match_state *ms, int32_t matching, SyntaxChar_t flags);
+static void                 find_elements_pairs(const LINECHAR *cursor, void *udata);
+static void                 find_elements_tagged(const LINECHAR *cursor, void *udata);
+static int                  find_point(struct match_state *ms);
 
-static int                      parse_lines(SyntaxTable_t *st, LINENO lineno, LINENO num);
-static lineflags_t              parse_line(SyntaxTable_t *st, const LINE_t *lp, const LINECHAR *text, const LINECHAR *end, Parser_t parser, void *udata);
+static void                 tag_get(struct match_state *ms, struct match_tag *tag, const LINECHAR *cursor);
+static int                  tag_empty(const struct match_tag *tag);
+static int                  tag_equal(struct match_state *ms, const struct match_tag *open, const struct match_tag *close);
+static int                  tag_isvoid(struct match_state *ms, const struct match_tag *tag);
+
+static int                  parse_lines(SyntaxTable_t *st, LINENO lineno, LINENO num);
+static lineflags_t          parse_line(SyntaxTable_t *st, const LINE_t *lp, const LINECHAR *text, const LINECHAR *end, Parser_t parser, void *udata);
 
 
 void
@@ -127,11 +130,18 @@ do_syntax_find()                /* int ([int mode = 0],  [int &line], [int &col]
 }
 
 
+static __CINLINE int
+is_white(int32_t c)
+{
+    return (' ' == c || '\t' == c);
+}
+
+
 static int
 find_paired(SyntaxTable_t *st)
 {
     const char *ch = get_xstr(6);               /* element */
-    unsigned match = (ch ? *((unsigned char *)ch) : 0);
+    int32_t match = (ch ? *((unsigned char *)ch) : 0);
     struct match_state ms = {0};
     int ret = 1;
 
@@ -194,7 +204,7 @@ syntax_parse(int all)
         max_line = curbp->b_numlines;
     } else {                                    /* otherwise modified */
         if ((min_line = curbp->b_syntax_min) <= 0) {
-            return (0);
+            return 0;
         }
         max_line = curbp->b_syntax_max;
     }
@@ -217,20 +227,62 @@ syntax_virtual_cursor()
         return;                                 /* disabled? */
 
     if (NULL != (st = curbp->b_syntax) && st->st_active) {
-        const unsigned match = (unsigned) curbp->b_vchar[0];
+        int32_t match = (int32_t) curbp->b_vchar[0];
         struct match_state ms = {0};
 
-        // TODO/optional: if vchar is space, scan from start of line.
-
         ms.st = st;
-        ms.hilites = 1;                         /* auto hilite results */
         ms.lines = ttrows() * 2;                /* ??? */
+
         ms.start.line = curbp->b_vline;
         ms.start.col = curbp->b_vcol;
-        ms.start.offset = curbp->b_voffset;
-        find_elements(&ms, match, SYNC_BRACKET_OPEN | SYNC_BRACKET_CLOSE);
+
+        if (is_white(match)) {
+            if (find_nonwhite(&ms, &match)) {
+                ms.hilites = 2;                 /* characters */
+                find_elements(&ms, match, SYNC_BRACKET_OPEN | SYNC_BRACKET_CLOSE);
+            }
+
+        } else {
+            ms.hilites = 1;                     /* elements */
+            ms.start.offset = curbp->b_voffset;
+            find_elements(&ms, match, SYNC_BRACKET_OPEN | SYNC_BRACKET_CLOSE);
+        }
+
         chk_free((void *)ms.stack.elements);
     }
+}
+
+
+static LINENO
+find_nonwhite(struct match_state *ms, int32_t *match)
+{
+    LINE_t *lp = NULL;
+
+    if (NULL != (lp = vm_lock_line2(ms->start.line))) {
+        const LINECHAR *cp, *text = ltext(lp), *end = text + llength(lp);
+        int pos = 1;
+
+        for (cp = text; cp < end;) {
+            int32_t t_ch = 0;
+            int t_length, t_width =
+                    character_decode(pos, cp, end, &t_length, &t_ch, NULL);
+
+            if (is_white(t_ch)) {
+                pos += t_width;
+                cp += t_length;
+                continue;
+            }
+
+            if (0 == t_ch || pos < ms->start.col)
+                break;
+
+            ms->start.col = pos;
+            ms->start.offset = cp - text;
+            *match = t_ch;
+            return 1;
+        }
+    }
+    return 0;
 }
 
 
@@ -278,7 +330,7 @@ unstack_pairs(struct match_state *ms)
                 if (*cursor == ms->close) {
                     ++ms->nesting;
                 } else {
-                    assert(*cursor == ms->open && ms->nesting);
+                    //assert(*cursor == ms->open && ms->nesting);
                     if (--ms->nesting <= 0)
                         return cursor;
                 }
@@ -298,7 +350,7 @@ unstack_pairs(struct match_state *ms)
                 if (*cursor == ms->open) {
                     ++ms->nesting;
                 } else {
-                    assert(*cursor == ms->close && ms->nesting);
+                    //assert(*cursor == ms->close && ms->nesting);
                     if (--ms->nesting <= 0)
                         return cursor;
                 }
@@ -309,7 +361,6 @@ unstack_pairs(struct match_state *ms)
     ms->stack.top = 0;
     return NULL;
 }
-
 
 
 static const LINECHAR *
@@ -323,7 +374,7 @@ unstack_tagged(struct match_state *ms)
             if (*cursor == ms->close) {
                 ++ms->nesting;
             } else {
-                assert(*cursor == ms->open && ms->nesting);
+                //assert(*cursor == ms->open && ms->nesting);
                 if (--ms->nesting <= 0)
                     return cursor;
             }
@@ -344,7 +395,6 @@ unstack_tagged(struct match_state *ms)
 
                 } else {
                     if (ms->void_nesting) {     /* void, ignore */
-                        //++ms->void_nesting;
                         continue;
                     } else if (tag_isvoid(ms, &elm->tag)) {
                         ms->void_nesting = 1;
@@ -390,8 +440,33 @@ unstack_tagged(struct match_state *ms)
 }
 
 
+static void
+element_swap(struct match_element *elm)
+{
+#define ELMSWAP(__a,__b)    { LINENO tmp=__a; __a=__b; __b=tmp; }
+    ELMSWAP(elm->line, elm->line2);
+    ELMSWAP(elm->col, elm->col2);
+    ELMSWAP(elm->offset, elm->offset2);
+}
+
+
+static void
+element_order(struct match_element *elm)
+{
+    if (elm->line2) {
+        if (0 == elm->col2)
+            elm->col2 = line_column(elm->line2, elm->offset2);
+        if (elm->line > elm->line2) {
+            element_swap(elm);
+        } else if (elm->line == elm->line2 && elm->col > elm->col2) {
+            element_swap(elm);
+        }
+    }
+}
+
+
 static int
-find_elements(struct match_state *ms, unsigned match, SyntaxChar_t mask)
+find_elements(struct match_state *ms, int32_t match, SyntaxChar_t mask)
 {
     SyntaxTable_t *st = ms->st;
     LINENO lineno = ms->start.line, eline = 0;
@@ -470,8 +545,6 @@ find_elements(struct match_state *ms, unsigned match, SyntaxChar_t mask)
                     ms->end.offset = (cursor - ms->text);
                     ms->end.line = lineno;
                     ms->end.col = line_column(lineno, ms->end.offset);
-                    if (lineno != ms->start.line)
-                        liflagset(lp, LI_DIRTY);
                     vm_unlock(lineno);
                     break;
                 }
@@ -503,9 +576,8 @@ find_elements(struct match_state *ms, unsigned match, SyntaxChar_t mask)
 
         hilite_destroy(curbp, HILITE_SYNTAX_MATCH);
 
-        if (ms->start.line2) {
-            if (0 == ms->start.col2)
-                ms->start.col2 = line_column(ms->start.line2, ms->start.offset2);
+        if (1 == ms->hilites && ms->start.line2) {
+            element_order(&ms->start);
             open = hilite_create(curbp, HILITE_SYNTAX_MATCH, -1, ms->start.line, ms->start.col, ms->start.line2, ms->start.col2);
         } else {
             open = hilite_create(curbp, HILITE_SYNTAX_MATCH, -1, ms->start.line, ms->start.col, ms->start.line, ms->start.col);
@@ -515,12 +587,17 @@ find_elements(struct match_state *ms, unsigned match, SyntaxChar_t mask)
             HILITE_t *close;
 
             if (ms->end.line2 && ms->end.matched) {
-                if (0 == ms->end.col2)
-                    ms->end.col2 = line_column(ms->end.line2, ms->end.offset2);
-                close = hilite_create(curbp, HILITE_SYNTAX_MATCH, -1, ms->end.line, ms->end.col, ms->end.line2, ms->end.col2);
+                element_order(&ms->end);
+                if (2 == ms->hilites) {
+                    close = hilite_create(curbp, HILITE_SYNTAX_MATCH, -1, ms->end.line2, ms->end.col2, ms->end.line2, ms->end.col2);
+                } else {
+                    close = hilite_create(curbp, HILITE_SYNTAX_MATCH, -1, ms->end.line, ms->end.col, ms->end.line2, ms->end.col2);
+                }
+
             } else {
                 close = hilite_create(curbp, HILITE_SYNTAX_MATCH, -1, ms->end.line, ms->end.col, ms->end.line, ms->end.col);
             }
+
             if (close) {
                 close->h_attr = ATTR_HILITE;
                 open->h_attr = ATTR_HILITE;
@@ -608,7 +685,7 @@ find_point(struct match_state *ms)
 
 #if defined(TODO)
 static int
-xml_start(unsigned ch)
+xml_start(int32_t ch)
 {
     // https://www.w3.org/TR/xml/#NT-NameStartChar
     if (isalpha(ch) || '_' == ch || ':' == ch)
@@ -773,7 +850,6 @@ parse_lines(SyntaxTable_t *st, LINENO lineno, LINENO num)
         const LINECHAR *text = ltext(lp), *end = text + llength(lp);
         lineflags_t state = parse_line(st, lp, text, end, NULL, NULL);
 
-        liflagclr(lp, LI_DIRTY);
         lp->l_uflags &= ~L_HAS_EOL_COMMENT;
 
         switch (state) {
@@ -905,6 +981,8 @@ parse_line(SyntaxTable_t *st, const LINE_t *line, const LINECHAR *begin, const L
 
     /* outside string/comment */
     while (cursor < end) {                      /* MCHAR??? */
+
+//TODO  if ((t_cursor = mchar_decode_safe(iconv, cursor, end, &t_ch)) > cursor)
         const unsigned char ch = (unsigned char) *cursor;
 
         if (0 == ch) {                          /* NULs, ignore */
