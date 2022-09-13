@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_window_c,"$Id: window.c,v 1.45 2021/10/17 03:54:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_window_c,"$Id: window.c,v 1.46 2022/09/13 14:31:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: window.c,v 1.45 2021/10/17 03:54:22 cvsuser Exp $
+/* $Id: window.c,v 1.46 2022/09/13 14:31:24 cvsuser Exp $
  * Window basics.
  *
  *
@@ -759,7 +759,6 @@ window_harden(void)
 }
 
 
-
 /*  Function:           window_corners
  *      Function to set flags for the display code for background windows so that
  *      abutting corners are drawn properly.
@@ -915,4 +914,5 @@ window_ctrl_test(const WINDOW_t *wp, uint32_t ctrl)
     }
     return ((w_ctrl_state & bit) != 0 ? 1 : 0);
 }
+
 /*end*/

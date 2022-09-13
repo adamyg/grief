@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: html.cr,v 1.12 2022/08/28 12:27:01 cvsuser Exp $
+/* $Id: html.cr,v 1.13 2022/09/02 17:40:47 cvsuser Exp $
  * HTML support and indenting mode.
  *
  *
@@ -28,8 +28,10 @@ main()
     syntax_token(SYNT_COMMENT,      "<!-", "-->");      // open/close, attr=comment
     syntax_token(SYNT_COMMENT,      "<![CDATA", "]]>");
     syntax_token(SYNT_PREPROCESSOR, "#");
-    syntax_token(SYNT_HTML,         "<", ">");
-    syntax_token(SYNT_BRACKET,      "<", ">");          // attr=delimiter
+    syntax_token(SYNT_CHARACTER,    "\'");
+    syntax_token(SYNT_STRING,       "\"");
+    syntax_token(SYNT_QUOTE,        "\\");
+    syntax_token(SYNT_BRACKET,      "<", ">");          // attr=delimiter, optional closure marker
     syntax_token(SYNT_WORD,         "A-Za-z&");
     syntax_token(SYNT_TAG,          "ivoid",            // void tag elements, HTML5 [case insensitive]
         "area,base,br,col,command,embed,hr,img,input,keygen,link,meta,param,source,track,wbr,!DOCTYPE");

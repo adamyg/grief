@@ -1,11 +1,11 @@
 #ifndef GR_BUFFER_H_INCLUDED
 #define GR_BUFFER_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_buffer_h,"$Id: buffer.h,v 1.21 2014/10/26 22:13:10 ayoung Exp $")
+__CIDENT_RCSID(gr_buffer_h,"$Id: buffer.h,v 1.22 2022/09/12 15:57:28 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: buffer.h,v 1.21 2014/10/26 22:13:10 ayoung Exp $
+/* $Id: buffer.h,v 1.22 2022/09/12 15:57:28 cvsuser Exp $
  * Buffer management.
  *
  *
@@ -58,6 +58,7 @@ extern int                  buf_line_length(const BUFFER_t *bp, int marked);
 extern void                 buf_change_window(WINDOW_t *wp);
 extern int                  buf_imode(const BUFFER_t *bp);
 extern void                 buf_mined(BUFFER_t *bp, LINENO start, LINENO end);
+extern void                 buf_dirty(BUFFER_t *bp, LINENO start, LINENO end);
 
 extern const char *         buf_type_desc(int type, const char *def);
 extern const char *         buf_type_encoding(int type);

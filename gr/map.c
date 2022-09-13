@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_map_c,"$Id: map.c,v 1.35 2022/08/10 15:44:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_map_c,"$Id: map.c,v 1.36 2022/09/13 14:31:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: map.c,v 1.35 2022/08/10 15:44:57 cvsuser Exp $
+/* $Id: map.c,v 1.36 2022/09/13 14:31:24 cvsuser Exp $
  * High-level character mapping functionality.
  *
  *
@@ -441,8 +441,7 @@ line_vstatus_update()
                     curbp->b_vline != *cur_line ||
                     curbp->b_vcol  != *cur_col) {
                 line_current_offset(LOFFSET_NORMAL);
-                if (curbp->b_syntax)
-                    syntax_virtual_cursor();
+                syntax_virtual_cursor();
             }
         }
     }

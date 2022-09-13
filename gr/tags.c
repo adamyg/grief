@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_tags_c,"$Id: tags.c,v 1.23 2022/08/10 15:44:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_tags_c,"$Id: tags.c,v 1.24 2022/09/13 14:31:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: tags.c,v 1.23 2022/08/10 15:44:58 cvsuser Exp $
+/* $Id: tags.c,v 1.24 2022/09/13 14:31:24 cvsuser Exp $
  * tag database access.
  *
  *
@@ -187,6 +187,7 @@ tags_shutdown(void)
         Grief relies on an external tag file generator. There are
         many versions of ctags; however, the recommended version is
         "Exuberant Ctags" available from
+
             http://ctags.sourceforge.net/.
 
         Grief is generally bundled with a recent version within the

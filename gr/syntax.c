@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntax_c, "$Id: syntax.c,v 1.67 2022/08/28 12:38:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntax_c, "$Id: syntax.c,v 1.68 2022/09/13 14:31:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntax.c,v 1.67 2022/08/28 12:38:55 cvsuser Exp $
+/* $Id: syntax.c,v 1.68 2022/09/13 14:31:24 cvsuser Exp $
  * Syntax pre-processor.
  *
  *
@@ -51,8 +51,8 @@ static const LINECHAR *         leading_write(SyntaxTable_t *st, const LINECHAR 
 static int                      keyword_table(const char *tablename);
 static int                      keyword_push(SyntaxTable_t *st, int table, int length, int total, const char *keywords, int sep, int flags);
 static int                      keyword_push_list(SyntaxWordList_t *words, int length, int total, const char *keywords, int sep);
-static void                     keyword_free_list(SyntaxWordList_t *words);
 static int                      keyword_push_pat(SyntaxTable_t *st, int attr, int length, int total, const char *keywords, int sep);
+static void                     keyword_free(SyntaxWordList_t *words);
 
 static int                      style_lookup(const char *name);
 static int                      style_getc(int n);
@@ -92,11 +92,11 @@ extern "C" {                                    /* MCHAR??? */
 #endif
     static int is_ascii(int ch) {
 #if defined(HAVE___ISASCII)
-    return __isascii(ch);
+        return __isascii(ch);
 #elif defined(HAVE_ISASCII)
-    return isascii(ch);
+        return isascii(ch);
 #else
-    return (ch > 0 && ch <= 0x7f);
+        return (ch > 0 && ch <= 0x7f);
 #endif
     }
     static int is_blank(int ch) {
@@ -786,15 +786,6 @@ keyword_push_list(SyntaxWordList_t *words, int length, int total, const char *ke
 }
 
 
-static void
-keyword_freex(SyntaxWordList_t *words)
-{
-    chk_free((char *)words->l_vector);
-    chk_free((char *)words->l_data);
-    memset(words, 0, sizeof(*words));
-}
-
-
 static int
 keyword_push_pat(SyntaxTable_t *st, int attr, int length, int total, const char *keywords, int sep)
 {
@@ -832,6 +823,15 @@ keyword_push_pat(SyntaxTable_t *st, int attr, int length, int total, const char 
     }
 
     return elements;
+}
+
+
+static void
+keyword_free(SyntaxWordList_t *words)
+{
+    chk_free((char *)words->l_vector);
+    chk_free((char *)words->l_data);
+    memset(words, 0, sizeof(*words));
 }
 
 
@@ -922,6 +922,7 @@ do_syntax_token(void)           /* int (int type|string type, [arg1], [arg2], [i
 {
 #define ARG1    2
 #define ARG2    3
+#define ARG3    4
 
     const char *stylename = get_xstr(1);
     const int style = (stylename ? style_lookup(stylename) : get_xinteger(1, -1));
@@ -1033,13 +1034,14 @@ do_syntax_token(void)           /* int (int type|string type, [arg1], [arg2], [i
             }
         break;
 
-    case SYNT_BRACKET:          /* <BRACKET>, <open> [, <close>] */
+    case SYNT_BRACKET:          /* <BRACKET>, <open> [, <close>], [<closure>] */
         if (NULL != (s1 = style_gets(ARG1)) && NULL != (s2 = style_gets(ARG2))) {
             i = (int)strlen(s1);
             if (i != (int)strlen(s2)) {
                 errorf("syntax: bracket set does not match.");
 
             } else {
+//              const char *s3 = NULL;
                 unsigned idx = 0;
 
                 while (i-- > 0) {
@@ -1053,6 +1055,12 @@ do_syntax_token(void)           /* int (int type|string type, [arg1], [arg2], [i
                     }
                 }
                 st->styles |= (SYNC_BRACKET_OPEN | SYNC_BRACKET_CLOSE);
+
+//              if (NULL == (s3 = get_xstr(ARG3)) && *s3) {
+//                  st->bracket_closure = *s3;
+//              } else {
+//                  st->bracket_closure = '/';
+//              }
             }
         }
         break;
@@ -1839,7 +1847,7 @@ syntax_clear(SyntaxTable_t *st)
 
         if (NULL != (keywords = st->keywords_tables[i])) {
             for (i2 = 0; i2 < keywords->kw_used; ++i2) {
-                keyword_freex(&keywords->kw_words[i2].w_words);
+                keyword_free(&keywords->kw_words[i2].w_words);
             }
             chk_free(keywords);
         }

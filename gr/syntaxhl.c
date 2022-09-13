@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntaxhl_c,"$Id: syntaxhl.c,v 1.35 2022/08/10 15:44:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntaxhl_c,"$Id: syntaxhl.c,v 1.36 2022/09/13 14:31:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntaxhl.c,v 1.35 2022/08/10 15:44:58 cvsuser Exp $
+/* $Id: syntaxhl.c,v 1.36 2022/09/13 14:31:24 cvsuser Exp $
  * Basic syntax highlighting.
  *
  *
@@ -179,14 +179,16 @@ hilite_write(
 
     /* process remaining characters */
     while (cursor < end) {
+
         unsigned char ch = (unsigned char) *cursor;
-/*TODO  iconv->ic_decode(iconv, cursor, end, &t_ch, &wraw); */
+//TODO  if ((t_cursor = mchar_decode_safe(iconv, cursor, end, &t_ch)) > cursor)
+
         SyntaxChar_t syntax = charmap[ch];
         size_t sz = 1;
 
         if ('_' == ch && (SYNF_MANDOC & flags)) {
             if ((cursor + 2) < end && '\b' == cursor[1]) {
-/*TODO		if (iconv->ic_decode(iconv, cursor, end, &t_ch, &wraw)) {*/
+//TODO          if ((t_cursor = mchar_decode_safe(iconv, cursor, end, &t_ch)) > cursor)
                 ch = cursor[2];                 /* _\bX, mandoc */
                 syntax = charmap[ch];
                 sz = 3;
@@ -279,16 +281,41 @@ hilite_write(
         }
 
         if (SYNC_HTML_OPEN & syntax) {          /* HTML */
-            t_cursor = cursor;
-            while (t_cursor < end) {
-                if (charmap[*((unsigned char *)t_cursor)] & SYNC_HTML_CLOSE) {
+            /*
+            //  The URI generic syntax consists of a hierarchical sequence of five components:
+            //
+            //      URI = scheme ":" ["//" authority] path ["?" query] ["#" fragment]
+            //
+            //      scheme's are either letters, digits, plus (+), period (.), or hyphen (-).
+            //
+            //  where the authority component divides into three subcomponents:
+            //
+            //      authority = [userinfo "@"] host [":" port]
+            */
+            const LINECHAR *t_end = NULL;
+
+            t_cursor = cursor + 1;
+            while (NULL == t_end && t_cursor < end) {
+                const unsigned char t_ch = *((unsigned char *)t_cursor);
+
+                if (':' == t_ch) {              /* end */
+                    while (++t_cursor < end) {
+                        if (charmap[*((unsigned char *)t_cursor)] & SYNC_HTML_CLOSE) {
+                            t_end = ++t_cursor;
+                            break;
+                        }
+                    }
+                } else if (isalnum(t_ch) || '+' == t_ch || '.' == t_ch || '-' == t_ch) {
                     ++t_cursor;
-                    break;
+                    continue;
                 }
-                ++t_cursor;
+                break;
             }
-            cursor = syntax_write(st, cursor, t_cursor, ATTR_LINK);
-            continue;
+
+            if (t_end) {                        /* <xxx:...> */
+                cursor = syntax_write(st, cursor, t_end, ATTR_LINK);
+                continue;
+            }
         }
 
         if (SYNC_HTML_CLOSE & syntax) {         /* unmatched close */
