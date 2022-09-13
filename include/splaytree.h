@@ -1,7 +1,7 @@
 #ifndef GR_SPLAYTREE_H_INCLUDED
 #define GR_SPLAYTREE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_splaytree_h,"$Id: splaytree.h,v 1.6 2014/10/19 23:45:15 ayoung Exp $")
+__CIDENT_RCSID(gr_splaytree_h,"$Id: splaytree.h,v 1.7 2022/09/13 14:15:35 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -63,7 +63,7 @@ __CPRAGMA_ONCE
         Library -   n/a
 
     Topic:          Usage
-        
+
         Standard usage
 
         In the macro definitions, *TYPE* is the name tag of a user
@@ -178,7 +178,7 @@ __CPRAGMA_ONCE
 
     Topic:          Example
 
-        Coding example. The following example is an interface to an event 
+        Coding example. The following example is an interface to an event
         structure maintained within 'ev_timeout' order splay tree;
 
 (start code)
@@ -210,8 +210,8 @@ SPLAY_PROTOTYPE(evtree, event, ev_node, compare);  // Generate interface prototy
 SPLAY_GENERATE(evtree, event, ev_node, compare);   // and definition
 
 
-//      Insert a new node into the tree, if the timer value is 
-//      non-unique scan the tree to find and locate the next 
+//      Insert a new node into the tree, if the timer value is
+//      non-unique scan the tree to find and locate the next
 //      incrementally unique timer value.
 //
 void
@@ -221,7 +221,7 @@ event_insert(struct event *ev)
 
         tmp = SPLAY_FIND(evtree, &rbtree, ev);     // Node already exists ?
 
-        if (tmp != NULL) {                      
+        if (tmp != NULL) {
                 do {                               // Find unique time
                         ev->ev_timeout++;
                         tmp = SPLAY_NEXT(evtree, &rbtree, tmp);

@@ -1,11 +1,11 @@
 #ifndef GR_EDTYPES_H_INCLUDED
 #define GR_EDTYPES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edtypes_h,"$Id: edtypes.h,v 1.40 2022/05/31 16:18:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_edtypes_h,"$Id: edtypes.h,v 1.41 2022/09/13 14:15:35 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edtypes.h,v 1.40 2022/05/31 16:18:22 cvsuser Exp $
+/* $Id: edtypes.h,v 1.41 2022/09/13 14:15:35 cvsuser Exp $
  * Editor base types.
  *
  *
@@ -463,7 +463,7 @@ typedef unsigned char LINEATTR;                 /* line attribute management */
 #define ACCFLOAT_MIN            -HUGE
 #define ACCFLOAT_MAX            HUGE
 #endif
-      
+
 #define accstrtoi(_a, _b, _c)   strtol(_a, _b, _c)
 #define accstrtou(_a, _b, _c)   strtoul(_a, _b, _c)
 

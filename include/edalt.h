@@ -1,11 +1,11 @@
 #ifndef GR_EDALT_H_INCLUDED
 #define GR_EDALT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edalt_h,"$Id: edalt.h,v 1.32 2022/03/21 14:55:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_edalt_h,"$Id: edalt.h,v 1.33 2022/09/13 14:15:35 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edalt.h,v 1.32 2022/03/21 14:55:27 cvsuser Exp $
+/* $Id: edalt.h,v 1.33 2022/09/13 14:15:35 cvsuser Exp $
  * Key definitions.
  * ==noguard==
  *
@@ -53,7 +53,7 @@ __CPRAGMA_ONCE
  *                          x   Shift                       - MOD_SHIFT
  *                        x     Ctrl/control                - MOD_CTRL
  *                      x       Meta                        - MOD_META
- *                    x         App                         - MOD_APP  
+ *                    x         App                         - MOD_APP
  *      s . r r r r .           Character ranges/namespaces - RANGE_MASK
  *
  *              RANGE_CHARACTER, RANGE_FUNCTION, RANGE_KEYPAD,
@@ -62,7 +62,7 @@ __CPRAGMA_ONCE
  *      s = sign/reserved.
  *      . = reserved/unused.
  *
- 
+
 typedef int32_t KEY;
 
  */
@@ -115,7 +115,7 @@ typedef int32_t KEY;
 #define KEY_NEWLINE             '\n'
 #define KEY_DELETE              0x7f
 
-/* 
+/*
  *  Namespaces and modifiers.
  */
 #define KEY_MASK                0x001fffff      // 0..10ffff
@@ -144,7 +144,7 @@ typedef int32_t KEY;
 /*
  *  Specials
  */
-#define KEY_VOID                0x001fffff      // null 
+#define KEY_VOID                0x001fffff      // null
 #define KEY_WINCH               0x001ffffe      // winch/resize event
 #define KEY_UNICODE             0x001ffff0      // keyboard special
 

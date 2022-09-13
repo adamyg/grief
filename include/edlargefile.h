@@ -1,14 +1,14 @@
 #ifndef GR_EDLARGEFILE_H_INCLUDED
 #define GR_EDLARGEFILE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edlargefile_h,"$Id: edlargefile.h,v 1.11 2022/03/21 14:55:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_edlargefile_h,"$Id: edlargefile.h,v 1.12 2022/09/13 14:15:35 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edlargefile.h,v 1.11 2022/03/21 14:55:27 cvsuser Exp $
+/* $Id: edlargefile.h,v 1.12 2022/09/13 14:15:35 cvsuser Exp $
  * Large file support interface.
  *
- * 
+ *
  *
  * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.

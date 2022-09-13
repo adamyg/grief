@@ -1,7 +1,7 @@
 #ifndef GR_BSD_DB_H_INCLUDED
 #define GR_BSD_DB_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bsd_db_h,"$Id: bsd_db.h,v 1.4 2014/10/19 23:45:09 ayoung Exp $")
+__CIDENT_RCSID(gr_bsd_db_h,"$Id: bsd_db.h,v 1.5 2022/09/13 14:15:35 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -153,7 +153,7 @@ typedef struct {
 	int		lorder;		/* byte order */
 	size_t		reclen;		/* record length (fixed-length records) */
 	uint8_t		bval;		/* delimiting byte (variable-length records */
-	char		*bfname;	/* btree file name */ 
+	char		*bfname;	/* btree file name */
 } RECNOINFO;
 
 #ifdef __DBINTERFACE_PRIVATE

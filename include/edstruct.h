@@ -1,11 +1,11 @@
 #ifndef GR_EDSTRUCT_H_INCLUDED
 #define GR_EDSTRUCT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.72 2022/08/10 15:44:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.73 2022/09/13 14:15:35 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edstruct.h,v 1.72 2022/08/10 15:44:58 cvsuser Exp $
+/* $Id: edstruct.h,v 1.73 2022/09/13 14:15:35 cvsuser Exp $
  * Window, buffer, line and character-map definitions.
  *
  *
@@ -311,7 +311,7 @@ struct _window {
     void *              w_dialogp;              /* Attached dialog */
     uint16_t            w_priority;             /* Window priority */
     uint16_t            w_type;                 /* Window type (W_TILED, W_MENU or W_POPUP */
-    uint16_t            w_tab;                  /* Assoicated tab */
+    uint16_t            w_tab;                  /* Associated tab */
     uint32_t            w_flags;                /* Flags (see above _wflags) */
     uint32_t            w_status;               /* Update status (se _wstatus) */
     LINENO              w_top_line;             /* Top line in window (>= 1) */
@@ -836,7 +836,7 @@ enum _liflags {
     LI_LOCKED           =0x04,                  /* Line has been locked */
     LI_MODIFIED         =0x08,                  /* Line has been modified, since last save. */
     LI_ATTRIBUTES       =0x10,                  /* Line has attributes. */
-    LI_DIRTY            =0x20,                  /* On screen line image is dirty, result of lazyvt. */
+    LI_DIRTY            =0x20,                  /* On screen line image is dirty, result of lazyvt/hilite. */
     LI_MBSWIDE          =0x40,                  /* Line contains multibyte/wide characters. */
 };
 
@@ -1085,6 +1085,8 @@ struct _buffer {
     struct SyntaxTable *b_syntax;               /* Syntax table */
     LINENO              b_syntax_min;           /* Syntax lower rescan region */
     LINENO              b_syntax_max;           /* Syntax upper rescan region */
+    LINENO              b_dirty_min;            /* Dirty section lower */
+    LINENO              b_dirty_max;            /* Dirty section upper */
     BUFFERCHUNKLIST_t   b_chunk_list;           /* Chunk list, memory managment */
     uint32_t            b_chunk_ident;          /* Plus allocation identifier */
     LINEATTR            b_attrcurrent;          /* Current attribute */
