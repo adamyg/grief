@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_patmatch_c,"$Id: patmatch.c,v 1.13 2022/07/10 14:52:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_patmatch_c,"$Id: patmatch.c,v 1.14 2022/09/20 15:19:11 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: patmatch.c,v 1.13 2022/07/10 14:52:22 cvsuser Exp $
+/* $Id: patmatch.c,v 1.14 2022/09/20 15:19:11 cvsuser Exp $
  * Basic pattern (not regexp, fnmatch style) matching support.
  *
  *
- * Copyright (c) 1998 - 2020, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edbt_linux_c,"$Id: edbt_linux.c,v 1.11 2019/05/06 00:19:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_edbt_linux_c,"$Id: edbt_linux.c,v 1.12 2022/09/20 15:19:11 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edbt_linux.c,v 1.11 2019/05/06 00:19:14 cvsuser Exp $
+/* $Id: edbt_linux.c,v 1.12 2022/09/20 15:19:11 cvsuser Exp $
  * linux backtrace implementation
  *
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
