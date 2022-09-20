@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.58 2022/07/10 14:51:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.59 2022/09/19 16:30:11 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crmain.c,v 1.58 2022/07/10 14:51:14 cvsuser Exp $
+/* $Id: crmain.c,v 1.59 2022/09/19 16:30:11 cvsuser Exp $
  * grunch command line.
  *
  *
@@ -342,7 +342,7 @@ main(int argc, char *argv[])
     len += arg_sizeof(cc_defines, CC_DEFINES);
     len += arg_sizeof(cc_includes, CC_INCLUDES);
 
-    cc_args = chk_alloc(len);
+    cc_args = chk_calloc(len + 1 /*nul*/, 1);
     len = 0;
     if (NULL != (sp = strchr(cc_prog, ' '))) {
         len = strlen(cc_prog) - (++sp - cc_prog);
@@ -358,6 +358,8 @@ main(int argc, char *argv[])
                      "using '%s'\n", x_progname, cc_prog, cc_path);
         exit(1);
     }
+
+
 
     arg_release(cc_defines, CC_DEFINES);
     arg_release(cc_includes, CC_INCLUDES);
