@@ -55,7 +55,6 @@ The following environments and toolchains are supported.
       * DOS (djgpp)
       * VMS
 
-
 Examples
 --------------------
 
@@ -112,4 +111,3 @@ Details about the commercially supported BRIEF clone CRisPEdit(tm), can be found
 last update: June/2022
 
 -end-
-
