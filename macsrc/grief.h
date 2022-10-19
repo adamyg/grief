@@ -402,7 +402,7 @@
 #define BF_NEW_FILE             0x00001000  /* File is a new file, so write even if no changes */
 #define BF_CR_MODE              0x00002000  /* Append <CR> to end of each line on output */
 #define BF_SYNTAX               0x00004000  /* Enable syntax highlighting (unless ANSI) */
-#define FB_STATUSLINE           0x00008000  /* Status line */
+#define BF_SYNTAX_MATCH         0x00008000  /* Hilite matching brackets */
 #define BF_MAN                  0x00010000  /* If TRUE, man style \b is done */
 #define BF_SPELL                0x00020000  /* Enable spell */
 #define BF_FOLDING              0x00040000  /* Test folding/hiding */
@@ -446,6 +446,7 @@
 #define BF2_HIWHITESPACE        0x00200000  /* Hilite whitespace */
 #define BF2_HIMODIFIED          0x00400000  /* Hilite modified lines */
 #define BF2_HIADDITIONAL        0x00800000  /* Hilite added lines */
+#define BF2_HISTATUSLINE        0x01000000  /* Hilite status line */
 
     /*
      *  BF3_XXXX values ---
@@ -1112,6 +1113,33 @@
 
 /*
  *  Syntax rules/types
+ *
+ *      Flag                        Description
+ *  ----------------------------------------------------------------------------
+ *      SYNT_COMMENT                <COMMENT>, <open-string> [, <close>-string>]
+ *      SYNT_CSTYLE                 <CSTYLE>, <character>|<character-set>
+ *      SYNT_PREPROCESSOR           <PREPROCESSOR>, <character-set>
+ *
+ *      SYNT_STRING                 <STRING>, <character-set>
+ *      SYNT_LITERAL                <LITERAL>, <character-set>
+ *
+ *      SYNT_LINECONT               <LINECONT>, <character>
+ *      SYNT_LINEJOIN               <LINEJOIN>, <character>
+ *
+ *      SYNT_QUOTE                  <QUOTE>, <character-set>
+ *      SYNT_CHARACTER              <CHARACTER>, <character-set>
+ *
+ *      SYNT_BRACKET                <BRACKET>, <open> [, <close>]
+ *      SYNT_HTML                   <HTML>, <open>, <close>
+ *      SYNT_TAG                    <TAG>, <type>, <word,word...>
+ *
+ *      SYNT_WORD                   <WORD>, <character-set>
+ *      SYNT_KEYWORD                <KEYWORD>, <character-set>
+ *
+ *      SYNT_NUMERIC                <NUMERIC>, <primary-set> [, <secondary-set>]
+ *      SYNT_OPERATOR               <OPERATOR>, <character>
+ *      SYNT_DELIMITER              <DELIMITER>, <character-set>
+ *      SYNT_FORTRAN                <FORTRAN>, <character-set>, <[left-margin], code [, comment-margin]>
  */
 #define SYNT_COMMENT            1
 #define SYNT_PREPROCESSOR       2
@@ -1123,6 +1151,7 @@
 
 #define SYNT_HTML               20
 #define SYNT_BRACKET            21
+#define SYNT_TAG                22
 
 #define SYNT_OPERATOR           30
 #define SYNT_DELIMITER          31
@@ -1146,14 +1175,15 @@
  *      SYNF_LITERAL_NOQUOTES       Literal strings don't translate quoted characters.
  *      SYNF_STRING_MATCHED         String open/close must be matched; otherwise ignored.
  *
- *      SYNF_COMMENTS_LEADINGWS     xxx
- *      SYNF_COMMENTS_TRAILINGWS    xxx
- *      SYNF_COMMENTS_QUOTE         xxx
+ *      SYNF_COMMENTS_LEADINGWS     Dont hilite leading white-space.
+ *      SYNF_COMMENTS_TRAILINGWS    Dont hilite trailing white-space.
+ *      SYNF_COMMENTS_QUOTE         Allow comment character to be quoted.
  *      SYNF_COMMENTS_CSTYLE        C-style comments.
  *
- *      SYNF_PREPROCESSOR_WS        xxx
- *      SYNF_LINECONT_WS            xxx
- *      SYNF_MANDOC                 xxx
+ *      SYNF_PREPROCESSOR_WS        Dont hilite leading white-space.
+ *      SYNF_LINECONT_WS            Allow white-space after cont token.
+ *
+ *      SYNF_MANDOC                 MANDOC hiliting.
  *
  *      SYNF_HILITE_WS              Hilite white-space.
  *      SYNF_HILITE_LINECONT        Hilite line continuations.
@@ -1162,28 +1192,34 @@
  *      SYNF_SPELL_WORD             Enable word spell check.
  *      SYNF_SPELL_COMMENT          Enable comment spell check.
  *
+ *      SYNF_HTMLTAGS               HTML tags.
+ *      SYNF_XMLTAGS                XML tags.
  */
-#define SYNF_CASEINSENSITIVE    0x0001
-#define SYNF_FORTRAN            0x0002
-#define SYNF_STRING_ONELINE     0x0004
-#define SYNF_LITERAL_NOQUOTES   0x0008
-#define SYNF_STRING_MATCHED     0x4000
+#define SYNF_CASEINSENSITIVE    0x000001
+#define SYNF_FORTRAN            0x000002
+#define SYNF_STRING_ONELINE     0x000004
+#define SYNF_LITERAL_NOQUOTES   0x000008
+#define SYNF_STRING_MATCHED     0x000800
 
-#define SYNF_COMMENTS_LEADINGWS 0x0010
-#define SYNF_COMMENTS_TRAILINGWS 0x0020
-#define SYNF_COMMENTS_QUOTE     0x0040
-#define SYNF_COMMENTS_CSTYLE    0x0080
+#define SYNF_COMMENTS_LEADINGWS 0x000010
+#define SYNF_COMMENTS_TRAILINGWS 0x000020
+#define SYNF_COMMENTS_QUOTE     0x000040
+#define SYNF_COMMENTS_CSTYLE    0x000080
 
-#define SYNF_PREPROCESSOR_WS    0x0100
-#define SYNF_LINECONT_WS        0x0200
-#define SYNF_MANDOC             0x0400
+#define SYNF_PREPROCESSOR_WS    0x000100
+#define SYNF_LINECONT_WS        0x000200
 
-#define SYNF_HILITE_WS          0x1000
-#define SYNF_HILITE_LINECONT    0x2000
-#define SYNF_HILITE_PREPROCESSOR 0x0400
+#define SYNF_MANDOC             0x000400
 
-#define SYNF_SPELL_WORD         0x1000
-#define SYNF_SPELL_COMMENT      0x2000
+#define SYNF_HILITE_WS          0x001000
+#define SYNF_HILITE_LINECONT    0x002000
+#define SYNF_HILITE_PREPROCESSOR 0x004000
+
+#define SYNF_SPELL_WORD         0x010000
+#define SYNF_SPELL_COMMENT      0x020000
+
+#define SYNF_HTMLTAG            0x040000
+#define SYNF_XMLTAG             0x080000
 
 /*
  *  Keywords, standard table usage
@@ -1242,6 +1278,21 @@ enum {
     SYNK_MARKUP,
 
     SYNK_MAX
+};
+
+/*
+ *  Keywords flags.
+ *
+ *      Flag                        Description
+ *  ----------------------------------------------------------------------------
+ *      SYNF_IGNORECASE             Ignore case.
+ *      SYNK_NATCHCASE              Match case.
+ *      SYNF_PATTERN                Pattern match (glob style).
+ */
+enum {
+    SYNF_IGNORECASE         = 1,
+    SYNK_NATCHCASE          = 2,
+    SYNF_PATTERN            = 4
 };
 
 

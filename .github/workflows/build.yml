@@ -32,7 +32,13 @@ jobs:
            toolchain: gcc,
            toolversion: gcc
           }
-        
+        - {
+           name: "MacOS Latest GCC",
+           os: macos-latest,
+           toolchain: gcc,
+           toolversion: gcc
+          }
+
     steps:
 
     - name: Checkout repository
@@ -63,6 +69,27 @@ jobs:
         version: "2.0"
         location: "C:\\Watcom"
 
+    - name: Ubuntu, setup
+      if: startsWith(matrix.config.name, 'Ubuntu Latest')
+      shell: bash
+      run: |
+        sudo apt-get install -y libncurses-dev
+        sudo apt-get install -y libncursesw5-dev
+        sudo apt-get install -y libenchant-2-dev
+        sudo apt-get install -y libaspell-dev
+        sudo apt-get install -y libhunspell-dev
+        sudo apt-get install -y libenca-dev
+        sudo apt-get install -y libguess-dev
+        sudo apt-get install -y libexplain-dev
+        sudo apt-get install -y libarchive-dev
+
+    - name: MacOS, setup
+      if: startsWith(matrix.config.name, 'MacOS Latest')
+      shell: bash
+      run: |
+        brew install wget
+        brew install libarchive
+
     - name: Windows, generate
       if: startsWith(matrix.config.name, 'Windows Latest')
       shell: cmd
@@ -72,7 +99,7 @@ jobs:
         @if "${{ matrix.config.toolchain }}"=="owc20"  call .\support\owc20setenv.bat C:\Watcom
         @if NOT "${{ matrix.config.toolchain }}"=="mingw64" c:\msys64\usr\bin\pacman --noconfirm -S bison
         @set PERL=c:/Strawberry/perl/bin/perl
-        c:/Strawberry/perl/bin/perl makelib.pl --perlpath=c:/Strawberry/perl/bin --busybox=./win32/busybox --wget=./win32/wget --bison=c:/msys64/usr/bin/bison --flex=./bin/flex --verbose "${{ matrix.config.toolchain }}"
+        c:/Strawberry/perl/bin/perl makelib.pl --perlpath=c:/Strawberry/perl/bin --busybox=./win32/busybox --wget=./win32/wget --bison=c:/msys64/usr/bin/bison --flex=./bin.${{ matrix.config.toolchain }}/flex "${{ matrix.config.toolchain }}"
 
     - name: Windows, compile
       if: startsWith(matrix.config.name, 'Windows Latest')
@@ -97,9 +124,28 @@ jobs:
       run: |
         make release
 
+    - name: MacOS, generate
+      if: startsWith(matrix.config.name, 'MacOS Latest')
+      shell: bash
+      run: |
+        export CPATH=$(brew --prefix libarchive)/include:/usr/local/include:$CPATH
+        export CPPPATH=$(brew --prefix libarchive)/include:/usr/local/include:$CPATH
+        export LIBRARY_PATH=$(brew --prefix libarchive)/lib:/usr/local/lib:$LIBRARY_PATH
+        export LD_LIBRARY_PATH=$(brew --prefix libarchive)/lib:/usr/local/lib:$LD_LIBRARY_PATH
+        ./support/config_withncurses
+
+    - name: MacOS, compile
+      if: startsWith(matrix.config.name, 'MacOS Latest')
+      shell: bash
+      run: |
+        export CPATH=$(brew --prefix libarchive)/include:/usr/local/include:$CPATH
+        export CPPPATH=$(brew --prefix libarchive)/include:/usr/local/include:$CPATH
+        export LIBRARY_PATH=$(brew --prefix libarchive)/lib:/usr/local/lib:$LIBRARY_PATH
+        export LD_LIBRARY_PATH=$(brew --prefix libarchive)/lib:/usr/local/lib:$LD_LIBRARY_PATH
+        make release
+
     - name: Package
       uses: actions/upload-artifact@v2
       with:
         name: package-${{ matrix.config.toolchain }}
         path: ./bin.${{ matrix.config.toolversion }}/release/*
-

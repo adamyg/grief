@@ -1,11 +1,11 @@
 #ifndef GR_EDOPCODE_H_INCLUDED
 #define GR_EDOPCODE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edopcode_h,"$Id: edopcode.h,v 1.22 2022/03/21 14:55:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_edopcode_h,"$Id: edopcode.h,v 1.23 2022/09/13 14:15:35 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edopcode.h,v 1.22 2022/03/21 14:55:27 cvsuser Exp $
+/* $Id: edopcode.h,v 1.23 2022/09/13 14:15:35 cvsuser Exp $
  * List types.
  *
  *
@@ -53,7 +53,7 @@ typedef enum opcodes {
     F_NULL      = 7,                    /* Used as destination of loops */
     F_RSTR      = 8,                    /* Reference string */
     F_RLIST     = 9,                    /* Reference list */
-    F_RARRAY    = 10,                   /* Reference array (experimental) */ 
+    F_RARRAY    = 10,                   /* Reference array (experimental) */
 
     F_ID        = 11,                   /* Keyword; 16-bit */
     F_SYM       = 12,                   /* Symbol */

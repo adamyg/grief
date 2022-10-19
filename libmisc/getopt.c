@@ -1,15 +1,15 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_getopt_c,"$Id: getopt.c,v 1.19 2017/01/29 04:33:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_getopt_c,"$Id: getopt.c,v 1.20 2022/09/20 15:19:11 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: getopt.c,v 1.19 2017/01/29 04:33:31 cvsuser Exp $
+/* $Id: getopt.c,v 1.20 2022/09/20 15:19:11 cvsuser Exp $
  * public domain getopt() implementation
  * original source: comp.sources.unix/volume3/att_getopt.
  * modified to support POSIX, BSD and GNU extensions.
  *
  *
  *
- * Copyright (c) 1998 - 2017, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -309,7 +309,7 @@ inline void DigitGen(const DiyFp& W, const DiyFp& Mp, uint64_t delta, char* buff
 			case  3: d = p1 /        100; p1 %=        100; break;
 			case  2: d = p1 /         10; p1 %=         10; break;
 			case  1: d = p1;              p1 =           0; break;
-			default: 
+			default:
 #if defined(_MSC_VER)
 				__assume(0);
 #elif __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5)
@@ -466,7 +466,7 @@ roll:;          if ('9' == *cursor) {           // roll
                             if (*cursor == '.') --cursor;
                             goto roll;
                     }
-                    memmove(base + 1, (const void *)base, end++ - base); 
+                    memmove(base + 1, (const void *)base, end++ - base);
                     *base = '1';
                     break;
                 }

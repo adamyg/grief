@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_macro_c,"$Id: m_macro.c,v 1.16 2020/04/21 00:01:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_macro_c,"$Id: m_macro.c,v 1.17 2022/07/10 13:13:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_macro.c,v 1.16 2020/04/21 00:01:56 cvsuser Exp $
+/* $Id: m_macro.c,v 1.17 2022/07/10 13:13:08 cvsuser Exp $
  * High-level macro support functionality.
  *
  *
@@ -289,4 +289,5 @@ do_macro_list(void)             /* list ([string pattern = NULL]) */
 
     acc_donate_list(newlp, llen);
 }
+
 /*end*/

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_map_c,"$Id: map.c,v 1.34 2021/07/05 15:01:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_map_c,"$Id: map.c,v 1.36 2022/09/13 14:31:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: map.c,v 1.34 2021/07/05 15:01:27 cvsuser Exp $
+/* $Id: map.c,v 1.36 2022/09/13 14:31:24 cvsuser Exp $
  * High-level character mapping functionality.
  *
  *
@@ -36,6 +36,7 @@ __CIDENT_RCSID(gr_map_c,"$Id: map.c,v 1.34 2021/07/05 15:01:27 cvsuser Exp $")
 #include "line.h"                               /* line_...() */
 #include "main.h"
 #include "map.h"
+#include "syntax.h"
 #include "mchar.h"                              /* mchar_...() */
 #include "ruler.h"                              /* next_..._stop() */
 #include "undo.h"                               /* u_...() */
@@ -395,15 +396,7 @@ line_current_status(int *values, int count)
          *  otherwise just return the current value.
          */
         if (curwp && curwp->w_bufp) {
-
-            if (curbp == curwp->w_bufp) {
-                set_hooked();                   /* setup cur_line/cur_col */
-                if (-1 == curbp->b_vstatus ||
-                        curbp->b_vline != *cur_line ||
-                        curbp->b_vcol  != *cur_col) {
-                    line_current_offset(LOFFSET_NORMAL);
-                }
-            }
+            line_vstatus_update();
 
             vstatus   = curwp->w_bufp->b_vstatus;
             vcombined = curwp->w_bufp->b_vcombined;
@@ -438,6 +431,23 @@ line_current_status(int *values, int count)
 }
 
 
+void
+line_vstatus_update()
+{
+    if (curwp && curwp->w_bufp) {
+        if (curbp == curwp->w_bufp) {
+            set_hooked();                       /* setup cur_line/cur_col */
+            if (-1 == curbp->b_vstatus ||   
+                    curbp->b_vline != *cur_line ||
+                    curbp->b_vcol  != *cur_col) {
+                line_current_offset(LOFFSET_NORMAL);
+                syntax_virtual_cursor();
+            }
+        }
+    }
+}
+
+
 int
 line_current_offset(int fill)
 {
@@ -460,6 +470,7 @@ line_offset(const int line, const int col, int fill)
             curbp->b_vcol       = col;
             curbp->b_vstatus    = BUFFERVSTATUS_EOF;
             curbp->b_vchar[0]   = 0;
+            curbp->b_voffset    = 0;
             curbp->b_vcombined  = 0;
             curbp->b_vwidth     = 0;
         }
@@ -617,6 +628,7 @@ line_offset_fill(LINE_t *lp, const int line, const int col, int fill)
     curbp->b_vline      = line;
     curbp->b_vcol       = col;
     curbp->b_vchar[0]   = (cp >= end ? 0 : ch);
+    curbp->b_voffset    = cp - start;
     curbp->b_vcombined  = 0;
     curbp->b_vwidth     = width;
     curbp->b_vlength    = length;

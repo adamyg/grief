@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_getopt_c,"$Id: m_getopt.c,v 1.24 2020/04/21 00:01:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_getopt_c,"$Id: m_getopt.c,v 1.25 2022/07/10 13:13:07 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_getopt.c,v 1.24 2020/04/21 00:01:56 cvsuser Exp $
+/* $Id: m_getopt.c,v 1.25 2022/07/10 13:13:07 cvsuser Exp $
  * Command line/argument option processing.
  *
  *
@@ -1145,4 +1145,5 @@ is_white(int ch)
 {
     return (' ' == ch || '\t' == ch);
 }
+
 /*end*/

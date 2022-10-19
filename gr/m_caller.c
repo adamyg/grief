@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_caller_c,"$Id: m_caller.c,v 1.14 2020/04/21 00:01:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_caller_c,"$Id: m_caller.c,v 1.15 2022/08/10 15:44:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_caller.c,v 1.14 2020/04/21 00:01:56 cvsuser Exp $
+/* $Id: m_caller.c,v 1.15 2022/08/10 15:44:57 cvsuser Exp $
  * Caller primitives.
  *
  *
@@ -213,4 +213,5 @@ caller_release(int level)
     }
     return 0;
 }
+
 /*end*/

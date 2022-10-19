@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntaxcol_c,"$Id: syntaxcol.c,v 1.21 2020/04/21 00:01:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntaxcol_c,"$Id: syntaxcol.c,v 1.22 2022/08/10 15:44:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntaxcol.c,v 1.21 2020/04/21 00:01:57 cvsuser Exp $
+/* $Id: syntaxcol.c,v 1.22 2022/08/10 15:44:58 cvsuser Exp $
  * Simple column based coloriser.
  *
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -257,4 +257,5 @@ syncol_find(int argi, int create)
 
     return (SyntaxCol_t *)st->st_drivers[SYNI_COLUMN]->sd_instance;
 }
+
 /*end*/

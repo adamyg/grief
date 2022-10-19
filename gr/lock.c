@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_lock_c,"$Id: lock.c,v 1.31 2021/06/02 13:25:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_lock_c,"$Id: lock.c,v 1.32 2022/08/10 15:44:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: lock.c,v 1.31 2021/06/02 13:25:28 cvsuser Exp $
+/* $Id: lock.c,v 1.32 2022/08/10 15:44:56 cvsuser Exp $
  * File locking support.
 
     When two users edit the same file at the same time, they are likely
@@ -780,4 +780,3 @@ flock_clear(const char *file)
     }
 }
 #endif  /*lock*/
-

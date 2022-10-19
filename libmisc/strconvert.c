@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strconvert_c,"$Id: strconvert.c,v 1.10 2020/04/13 21:04:47 cvsuser Exp $")
+__CIDENT_RCSID(gr_strconvert_c,"$Id: strconvert.c,v 1.11 2022/08/10 14:25:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strconvert.c,v 1.10 2020/04/13 21:04:47 cvsuser Exp $
+/* $Id: strconvert.c,v 1.11 2022/08/10 14:25:21 cvsuser Exp $
  * libstr - String convert utility functions.
  *
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

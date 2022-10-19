@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntaxdfa_c,"$Id: syntaxdfa.c,v 1.34 2020/04/21 00:01:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntaxdfa_c,"$Id: syntaxdfa.c,v 1.36 2022/08/10 15:44:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntaxdfa.c,v 1.34 2020/04/21 00:01:57 cvsuser Exp $
+/* $Id: syntaxdfa.c,v 1.36 2022/08/10 15:44:58 cvsuser Exp $
  * Deterministic Finite Automata (DFA) based syntax highlighting.
  *
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -717,19 +717,19 @@ syndfa_regex(SyntaxTable_t *st, const SyntaxDFA_t *dfa, const struct dfastate *s
     ED_TRACE(("dfa_parse: off:%u, normal:%3d, preproc:%d, state:%s/%d, text:<%.*s>\n", \
         offset, normal, ispreproc, state->name, state->regno, end - cursor, cursor))
 
-    while (cursor < end) {
+    while (cursor < end) {                      /* MCHAR??? */
         const char *t_start = (const char *)cursor, *t_end = NULL;
         int astate;
 
-        if ((astate = regdfa_match(             /* MCHAR??? */
-                state->regex, (const char *)cursor, (const char *)end, sol, &t_start, &t_end)) >= 0) {
+        if ((astate = regdfa_match(state->regex,
+                        (const char *)cursor, (const char *)end, sol, &t_start, &t_end)) >= 0) {
 
             const LINECHAR *tokenend = (const LINECHAR *)(t_end + 1);
             const struct dfarule *rule = state->regst[ astate ];
             const unsigned flags = rule->flags;
             int colour, t_colour = -1;
 
-            assert((unsigned)astate < state->regno);
+            assert(astate < (int)state->regno);
 
             /* anchored pattern, flush */
             if (t_start > (const char *)cursor) {
@@ -1324,4 +1324,5 @@ syndfa_load(
     fclose(fd);
     return state;
 }
+
 /*end*/

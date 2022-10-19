@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_backup_c,"$Id: m_backup.c,v 1.19 2021/06/02 13:40:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_backup_c,"$Id: m_backup.c,v 1.20 2022/08/10 15:44:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_backup.c,v 1.19 2021/06/02 13:40:03 cvsuser Exp $
+/* $Id: m_backup.c,v 1.20 2022/08/10 15:44:56 cvsuser Exp $
  * File backup option/configuration primitives.
  *
  *
@@ -764,4 +764,5 @@ inq_backup_option(void)         /* string|int (int what, [int bufnum]) */
         break;
     }
 }
+
 /*end*/

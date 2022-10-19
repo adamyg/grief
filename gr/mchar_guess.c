@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mchar_guess_c,"$Id: mchar_guess.c,v 1.30 2022/05/26 16:38:47 cvsuser Exp $")
+__CIDENT_RCSID(gr_mchar_guess_c,"$Id: mchar_guess.c,v 1.31 2022/08/10 15:44:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mchar_guess.c,v 1.30 2022/05/26 16:38:47 cvsuser Exp $
+/* $Id: mchar_guess.c,v 1.31 2022/08/10 15:44:57 cvsuser Exp $
  * Character-set conversion/file type guess logic.
  *
  *
- * Copyright (c) 1998 - 2021, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it

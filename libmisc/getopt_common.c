@@ -1,13 +1,13 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_getopt_common_c,"$Id: getopt_common.c,v 1.10 2022/05/25 15:44:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_getopt_common_c,"$Id: getopt_common.c,v 1.11 2022/09/20 15:19:11 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: getopt_common.c,v 1.10 2022/05/25 15:44:02 cvsuser Exp $
+/* $Id: getopt_common.c,v 1.11 2022/09/20 15:19:11 cvsuser Exp $
  * common globals getopt/bsd_getopt.
  *
  *
  *
- * Copyright (c) 1998 - 2020, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

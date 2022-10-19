@@ -1,11 +1,11 @@
 #ifndef GR_PATMATCH_H_INCLUDED
 #define GR_PATMATCH_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_patmatch_h,"$Id: patmatch.h,v 1.9 2022/03/21 14:55:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_patmatch_h,"$Id: patmatch.h,v 1.10 2022/09/13 14:15:35 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: patmatch.h,v 1.9 2022/03/21 14:55:28 cvsuser Exp $
+/* $Id: patmatch.h,v 1.10 2022/09/13 14:15:35 cvsuser Exp $
  * Simple pattern matching.
  *
  *
@@ -43,7 +43,7 @@ enum {
  *  file_match flags
  */
     MATCH_TRAILINGWHITE = 0x01,
-        /*  If set, ignores trailing whitespace 
+        /*  If set, ignores trailing whitespace
         **/
 
     MATCH_NOCASE        = 0x02,

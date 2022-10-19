@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_buffer_c,"$Id: buffer.c,v 1.50 2021/10/18 13:16:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_buffer_c,"$Id: buffer.c,v 1.52 2022/09/12 15:57:28 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: buffer.c,v 1.50 2021/10/18 13:16:15 cvsuser Exp $
+/* $Id: buffer.c,v 1.52 2022/09/12 15:57:28 cvsuser Exp $
  * Buffer managment.
  *
  *
@@ -699,17 +699,42 @@ buf_type_default(BUFFER_t *bp)
 void
 buf_mined(BUFFER_t *bp, LINENO start, LINENO end)
 {
-    if (bp) {
-        if (0 == bp->b_syntax_min) {
+    assert(bp);
+    assert(end >= start);
+
+    if (0 == bp->b_syntax_min) {
+        bp->b_syntax_min = start;
+        bp->b_syntax_max = end;
+    } else {
+        if (bp->b_syntax_min > start) {
             bp->b_syntax_min = start;
+        }
+        if (bp->b_syntax_max < end) {
             bp->b_syntax_max = end;
-        } else {
-            if (start < bp->b_syntax_min) {
-                bp->b_syntax_min = start;
-            }
-            if (end > bp->b_syntax_max) {
-                bp->b_syntax_max = end;
-            }
+        }
+    }
+}
+
+
+/*
+ *  Function: buf_dirty
+ *      Mark buffer lines as dirty.
+ */
+void
+buf_dirty(BUFFER_t *bp, LINENO start, LINENO end)
+{
+    assert(bp);
+    assert(end >= start);
+
+    if (0 == bp->b_dirty_min) {
+        bp->b_dirty_min = start;
+        bp->b_dirty_max = end;          
+    } else {
+        if (bp->b_dirty_min > start) {
+            bp->b_dirty_min = start;
+        }
+        if (bp->b_dirty_max < end) {
+            bp->b_dirty_max = end;
         }
     }
 }
@@ -1094,4 +1119,5 @@ set_buffer_parms(BUFFER_t *bp, const WINDOW_t *wp)
     }
     bp->b_top = wp->w_top_line;
 }
+
 /*end*/

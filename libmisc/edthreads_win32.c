@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_win32_c,"$Id: edthreads_win32.c,v 1.21 2022/06/13 12:47:44 cvsuser Exp $")
+__CIDENT_RCSID(gr_edthreads_win32_c,"$Id: edthreads_win32.c,v 1.22 2022/09/13 14:32:41 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads_win32.c,v 1.21 2022/06/13 12:47:44 cvsuser Exp $
+/* $Id: edthreads_win32.c,v 1.22 2022/09/13 14:32:41 cvsuser Exp $
  * C11 threads implementation, for windows
  * based on ISO/IEC 9899:201x Committee Draft, April 12, 2011 N1570
  *
@@ -874,6 +874,9 @@ timespec_get(struct timespec *ts, int __unused_based)
 static void WINAPI
 __tss_callback(void *image, DWORD reason, void *pv)
 {
+    (void) image;
+    (void) pv;
+
     if (DLL_THREAD_DETACH == reason) {
         unsigned i;
 
@@ -941,6 +944,7 @@ __tss_init(void)
  *      XTA/XTZ     C terminators
  */
 #if defined(_MSC_VER)
+#pragma warning(disable:4152)
 #pragma section(".CRT$XLC",long,read)
 __declspec(allocate(".CRT$XLC")) void *__edthr_xlc = __tss_callback;
 
@@ -966,5 +970,5 @@ void *__edthr_xiu = __tss_init;
 #endif /*!_MSC_VER*/
 
 #endif
-/*end*/
 
+/*end*/

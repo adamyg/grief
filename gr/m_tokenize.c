@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_tokenize_c,"$Id: m_tokenize.c,v 1.27 2021/04/18 16:49:49 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_tokenize_c,"$Id: m_tokenize.c,v 1.28 2022/07/10 13:13:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_tokenize.c,v 1.27 2021/04/18 16:49:49 cvsuser Exp $
+/* $Id: m_tokenize.c,v 1.28 2022/07/10 13:13:08 cvsuser Exp $
  * String primitives.
  *
  *
@@ -1688,4 +1688,5 @@ main(int argc, char *argv[]) {
     return 0;
 }
 #endif  /*LOCAL_MAIN*/
+
 /*eof*/

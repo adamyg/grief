@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: html.cr,v 1.11 2014/10/22 02:34:33 ayoung Exp $
+/* $Id: html.cr,v 1.13 2022/09/02 17:40:47 cvsuser Exp $
  * HTML support and indenting mode.
  *
  *
@@ -9,9 +9,9 @@
 
 #define MIN_ABBREV 1
 
-int         _html_min_abbrev,
-            _html_keyboard,
-            _sgml_keyboard;
+int _html_min_abbrev,
+    _html_keyboard,
+    _sgml_keyboard;
 
 #define MODENAME "html"
 
@@ -21,32 +21,67 @@ main()
 {
     create_syntax(MODENAME);
 
-    syntax_token(SYNT_COMMENT,      "<!-", "-->");
+    /*
+     *  Syntax lexer/
+     *      Utilised during basic line preprocessing.
+     */
+    syntax_token(SYNT_COMMENT,      "<!-", "-->");      // open/close, attr=comment
+    syntax_token(SYNT_COMMENT,      "<![CDATA", "]]>");
     syntax_token(SYNT_PREPROCESSOR, "#");
-    syntax_token(SYNT_HTML,         "<", ">");
-    syntax_token(SYNT_BRACKET,      "<", ">");
+    syntax_token(SYNT_CHARACTER,    "\'");
+    syntax_token(SYNT_STRING,       "\"");
+    syntax_token(SYNT_QUOTE,        "\\");
+    syntax_token(SYNT_BRACKET,      "<", ">");          // attr=delimiter, optional closure marker
     syntax_token(SYNT_WORD,         "A-Za-z&");
+    syntax_token(SYNT_TAG,          "ivoid",            // void tag elements, HTML5 [case insensitive]
+        "area,base,br,col,command,embed,hr,img,input,keygen,link,meta,param,source,track,wbr,!DOCTYPE");
 
-    /* keywords */
-    define_keywords(0,
-        "&gt&lt", 3);
+    /*
+     *  Options/
+     *      SYNF_HTMLTAG
+     *          HTML tag processing.
+     *
+     *  TAG rules, from the W3C specification for HTML:
+     *
+     *      o The following is a complete list of the void elements in HTML:
+     *
+     *          area, base, br, col, command, embed, hr, img, input, keygen, link, meta, param, source, track, wbr
+     *
+     *      o Void elements only have a start tag; end tags must not be specified for void elements.
+     *
+     *      o Start tags consist of the following parts, in exactly the following order:
+     *
+     *          - Opening '<' character.
+     *          - Elements tag name.
+     *          - Optionally, one or more attributes, each of which must be preceded by one or more space characters.
+     *          - Optionally, one or more space characters.
+     *          - Optionally, a / character, which may be present only if the element is a void element.
+     *          - Closing '>' character.
+     */
+    set_syntax_flags(SYNF_HTMLTAG);
 
-    define_keywords(0,
-        "&ETH&amp&eth", 4);
+    /*
+     *  Keywords
+     */
+    define_keywords(SYNK_PRIMARY,
+        "&gt,&lt", -3);
 
-    define_keywords(0,
-        "&Auml&Euml&Iuml&Ouml&Uuml&auml&euml&iuml&nbsp&ouml&quot"+
-        "&uuml&yuml", 5);
+    define_keywords(SYNK_PRIMARY,
+        "&ETH,&amp,&eth", -4);
 
-    define_keywords(0,
-        "&AElig&Acirc&Aring&Ecirc&Icirc&Ocirc&THORN&Ucirc&acirc"+
-        "&aelig&aring&ecirc&icirc&ocirc&szlig&thorn&ucirc", 6);
+    define_keywords(SYNK_PRIMARY,
+        "&Auml,&Euml,&Iuml,&Ouml,&Uuml,&auml,&euml,&iuml,&nbsp,&ouml,&quot,"+
+        "&uuml,&yuml", -5);
 
-    define_keywords(0,
-        "&Aacute&Agrave&Atilde&Ccedil&Eacute&Egrave&Iacute&Igrave"+
-        "&Ntilde&Oacute&Ograve&Oslash&Otilde&Uacute&Ugrave&Yacute"+
-        "&aacute&agrave&atilde&ccedil&eacute&egrave&iacute&igrave"+
-        "&ntilde&oacute&ograve&oslash&otilde&uacute&ugrave&yacute", 7);
+    define_keywords(SYNK_PRIMARY,
+        "&AElig,&Acirc,&Aring,&Ecirc,&Icirc,&Ocirc,&THORN,&Ucirc,&acirc,"+
+        "&aelig,&aring,&ecirc,&icirc,&ocirc,&szlig,&thorn,&ucirc", -6);
+
+    define_keywords(SYNK_PRIMARY,
+        "&Aacute,&Agrave,&Atilde,&Ccedil,&Eacute,&Egrave,&Iacute,&Igrave,"+
+        "&Ntilde,&Oacute,&Ograve,&Oslash,&Otilde,&Uacute,&Ugrave,&Yacute,"+
+        "&aacute,&agrave,&atilde,&ccedil,&eacute,&egrave,&iacute,&igrave,"+
+        "&ntilde,&oacute,&ograve,&oslash,&otilde,&uacute,&ugrave,&yacute", -7);
 
     /* Template editor keyboard */
     load_indent();
@@ -264,3 +299,4 @@ _html_abbrev()
 
     self_insert();
 }
+

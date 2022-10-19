@@ -27,9 +27,12 @@ family of programmers editors.
 Brief, BRIEF, or B.R.I.E.F., an acronym for Basic Reconfigurable Interactive Editing
 Facility, was a popular programmer's text editor in the 1980s and early 1990s.
 
+GRIEF 3.2.x build Tree:
+----------------------------
+
 The following environments and toolchains are supported.
 
-  * Actively tested operating systems
+  * Actively tested operating systems.
 
       * Linux (gcc)
       * Cygwin (gcc)
@@ -58,8 +61,8 @@ Examples
 ![Example1](https://github.com/adamyg/grief/blob/master/hlpdoc/examples/Example1.png?raw=true)
 
 ![Example2](https://github.com/adamyg/grief/blob/master/hlpdoc/examples/Example2.png?raw=true)
-    
-   
+
+
 Installation:
 --------------------
 
@@ -81,10 +84,11 @@ Distributions:
    * Source
 
         https://github.com/adamyg/grief/releases
-        
-        To build from source, review the github workflows: https://github.com/adamyg/grief/blob/master/.github/workflows/build.yml
-              
-       
+
+        To build from source, review the github workflows:
+        https://github.com/adamyg/grief/blob/master/.github/workflows/build.yml
+
+
 Status:
 --------------------
 

@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bsd_qsort_r_c,"$Id: bsd_qsort_r.c,v 1.7 2017/01/29 04:33:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_bsd_qsort_r_c,"$Id: bsd_qsort_r.c,v 1.8 2022/09/20 15:19:11 cvsuser Exp $")
 
 /*- -*- indent-width: 4; tabs: 8; -*-
- * $Id: bsd_qsort_r.c,v 1.7 2017/01/29 04:33:31 cvsuser Exp $
+ * $Id: bsd_qsort_r.c,v 1.8 2022/09/20 15:19:11 cvsuser Exp $
  * BSD qsort_r
  *
  *
- * Copyright (c) 1998 - 2017, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

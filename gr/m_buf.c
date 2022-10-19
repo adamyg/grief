@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_buf_c,"$Id: m_buf.c,v 1.56 2021/10/18 13:12:49 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_buf_c,"$Id: m_buf.c,v 1.57 2022/08/10 15:44:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_buf.c,v 1.56 2021/10/18 13:12:49 cvsuser Exp $
+/* $Id: m_buf.c,v 1.57 2022/08/10 15:44:56 cvsuser Exp $
  * Buffer primitives.
  *
  *
@@ -90,7 +90,8 @@ static const struct flag {
     { NFIELD("newfile"),            1,  BF_NEW_FILE             },      /* File is a new file, so write even if no changes */
     { NFIELD("lock"),               1,  BF_LOCK                 },      /* File lock */
     { NFIELD("ocvt_crmode"),        1,  BF_CR_MODE              },      /* Append <CR> to end of each line on output */
-    { NFIELD("syntax"),             1,  BF_SYNTAX               },      /* Enable syntax highlighting (unless ANSI) */
+    { NFIELD("syntax"),             1,  BF_SYNTAX               },      /* Syntax highlighting (unless ANSI) */
+    { NFIELD("syntax_match"),       1,  BF_SYNTAX_MATCH         },      /* Hilite matching elements */
     { NFIELD("ansi"),               1,  BF_ANSI                 },      /* If TRUE, ANSI-fication is done */
     { NFIELD("man"),                1,  BF_MAN                  },      /* If TRUE, man style \b is done */
     { NFIELD("ruler"),              1,  BF_RULER                },      /* Display ruler */
@@ -573,7 +574,7 @@ do_delete_buffer(void)          /* void (int bufnum) */
       ! BF_NEW_FILE             File is a new file, so write even if no changes.
       ! BF_CR_MODE              Append <CR> to end of each line on output.
       ! BF_SYNTAX               Enable syntax highlighting (unless ANSI).
-      ! BF_STATUSLINE           Status line.
+      ! BF_SYNTAX_MATCH         Hilite matching braces.
       ! BF_MAN                  If TRUE, man style \b is done.
       ! BF_SPELL                Enable spell.
       ! BF_FOLDING              Test folding/hiding.
@@ -623,6 +624,7 @@ do_delete_buffer(void)          /* void (int bufnum) */
       ! BF2_HIWHITESPACE        Hilite whitespace
       ! BF2_HIMODIFIED          Hilite modified lines
       ! BF2_HIADDITIONAL        Hilite added lines
+      ! BF2_HISTATUSLINE        Status line
 (end table)
 
       Third::
@@ -3259,4 +3261,5 @@ sortcompare_macro(void *callback, const void *l1, const void *l2)
     execute_nmacro(tmpl);                      /* execute callback */
     return (int)acc_get_ival();
 }
+
 /*eof*/

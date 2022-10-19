@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edbt_main_c,"$Id: edbt_main.c,v 1.5 2017/01/29 04:33:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_edbt_main_c,"$Id: edbt_main.c,v 1.6 2022/09/20 15:19:11 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edbt_main.c,v 1.5 2017/01/29 04:33:31 cvsuser Exp $
+/* $Id: edbt_main.c,v 1.6 2022/09/20 15:19:11 cvsuser Exp $
  * backtrace test application
  *
  *
- * Copyright (c) 1998 - 2017, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

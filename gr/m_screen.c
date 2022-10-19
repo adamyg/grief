@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_screen_c,"$Id: m_screen.c,v 1.8 2014/10/22 02:33:08 ayoung Exp $")
+__CIDENT_RCSID(gr_m_screen_c,"$Id: m_screen.c,v 1.9 2022/07/10 13:13:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_screen.c,v 1.8 2014/10/22 02:33:08 ayoung Exp $
+/* $Id: m_screen.c,v 1.9 2022/07/10 13:13:08 cvsuser Exp $
  * screen primitives -- not implemented
  *
  *
@@ -107,4 +107,5 @@ inq_screen_flags(void)          /* int ([int screen], [int mask], [int value]) *
 {
     /*TODO*/
 }
+
 /*end*/

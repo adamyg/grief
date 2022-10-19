@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sh_win32_c,"$Id: sh_win32.c,v 1.28 2022/05/31 16:18:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_sh_win32_c,"$Id: sh_win32.c,v 1.29 2022/08/10 15:44:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sh_win32.c,v 1.28 2022/05/31 16:18:21 cvsuser Exp $
+/* $Id: sh_win32.c,v 1.29 2022/08/10 15:44:57 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -455,4 +455,3 @@ sys_pclose(FILE *file)
 }
 
 #endif /*WIN32*/
-

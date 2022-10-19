@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dialog_c,"$Id: dialog.c,v 1.30 2021/07/18 23:03:18 cvsuser Exp $")
+__CIDENT_RCSID(gr_dialog_c,"$Id: dialog.c,v 1.31 2022/08/10 15:44:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dialog.c,v 1.30 2021/07/18 23:03:18 cvsuser Exp $
+/* $Id: dialog.c,v 1.31 2022/08/10 15:44:56 cvsuser Exp $
  * Dialog manager.
  *
  *
@@ -1953,4 +1953,5 @@ widgetdata_get(const WIDGETDATA_t *data, char *buf, int len)
     }
     return s;
 }
+
 /*end*/

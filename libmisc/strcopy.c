@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strcopy_c,"$Id: strcopy.c,v 1.7 2020/04/20 23:48:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_strcopy_c,"$Id: strcopy.c,v 1.8 2022/09/20 15:19:12 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strcopy.c,v 1.7 2020/04/20 23:48:40 cvsuser Exp $
+/* $Id: strcopy.c,v 1.8 2022/09/20 15:19:12 cvsuser Exp $
  * libstr - String copy utility functions.
  *
  *
- * Copyright (c) 1998 - 2020, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

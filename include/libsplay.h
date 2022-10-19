@@ -1,11 +1,11 @@
 #ifndef GR_LIBSPLAY_H_INCLUDED
 #define GR_LIBSPLAY_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libsplay_h,"$Id: libsplay.h,v 1.20 2022/03/21 14:55:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_libsplay_h,"$Id: libsplay.h,v 1.21 2022/09/13 14:15:35 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: libsplay.h,v 1.20 2022/03/21 14:55:28 cvsuser Exp $
+/* $Id: libsplay.h,v 1.21 2022/09/13 14:15:35 cvsuser Exp $
  *  A SPLAY tree is a self-adjusting binary search tree with the additional property that
  *  recently accessed elements are quick to access again. It performs basic operations such as
  *  insertion, look-up and removal in O(log n) amortized time. For many sequences of non-random
@@ -149,7 +149,7 @@ extern void             spenq(SPBLK * q, SPTREE * tree);
        /* Remove an item from the tree */
 extern void             spdeq(SPBLK *, SPTREE *);
 
-       /* Cause the tree to be resplayed with the designated node at the top of the tree 
+       /* Cause the tree to be resplayed with the designated node at the top of the tree
         */
 extern void             splay(SPBLK *, SPTREE *);
 
@@ -158,7 +158,7 @@ extern void             splay(SPBLK *, SPTREE *);
 extern SPBLK *          splookup(const void *, SPTREE *);
 
        /* Lookup a key in the tree, same as splookup(), but if we don't
-        * find entry tells us if we found a partial match (ie. an ambiguity) 
+        * find entry tells us if we found a partial match (ie. an ambiguity)
         *
         * Note, only functions correctly if the tree was created using the
         * default comparsion function (i.e. spinit()).
@@ -169,7 +169,7 @@ extern SPBLK *          sp_partial_lookup(const void *, SPTREE *, int *, SPBLK *
 extern SPBLK *          sphead(SPTREE *);
 
        /* Visit each node in tree and call user callback
-        * function, but not safe to manipulate tree using splay functions 
+        * function, but not safe to manipulate tree using splay functions
         */
 extern void             spwalk(SPTREE *, void (*)(SPBLK *, void *), void *);
 
@@ -177,12 +177,12 @@ extern void             spwalk(SPTREE *, void (*)(SPBLK *, void *), void *);
 extern int              spsize(SPTREE *);
 
        /* Flattens splay tree by returning array of pointers to all nodes
-        * in tree.  Last element is NULL. Array must be freed by caller 
+        * in tree.  Last element is NULL. Array must be freed by caller
         */
 extern SPBLK **         spflatten(SPTREE *);
 
        /* Returns a string containing statistics on splay tree
-        * operations of the passed tree 
+        * operations of the passed tree
         */
 extern const char *     spstats(const SPTREE *, char *buffer, unsigned length);
 

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_object_c,"$Id: object.c,v 1.14 2014/10/22 02:33:14 ayoung Exp $")
+__CIDENT_RCSID(gr_object_c,"$Id: object.c,v 1.15 2022/08/10 15:44:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: object.c,v 1.14 2014/10/22 02:33:14 ayoung Exp $
+/* $Id: object.c,v 1.15 2022/08/10 15:44:57 cvsuser Exp $
  * Functions for manipulating objects.
  *
  *
@@ -601,4 +601,3 @@ obj_trace(const object_t *obj)
 }
 
 /*end*/
-

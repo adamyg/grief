@@ -1,11 +1,11 @@
 #ifndef GR_SYNTAX_H_INCLUDED
 #define GR_SYNTAX_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntax_h,"$Id: syntax.h,v 1.34 2020/03/27 14:39:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntax_h,"$Id: syntax.h,v 1.39 2022/08/28 12:38:01 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntax.h,v 1.34 2020/03/27 14:39:03 cvsuser Exp $
+/* $Id: syntax.h,v 1.39 2022/08/28 12:38:01 cvsuser Exp $
  * Syntax hiliting constructs.
  *
  *
@@ -23,6 +23,7 @@ __CPRAGMA_ONCE
 
 #include <limits.h>
 #include <tailqueue.h>
+#include <libtrie.h>
 #include <edsym.h>
 
 __CBEGIN_DECLS
@@ -30,6 +31,33 @@ __CBEGIN_DECLS
 /*--export--defines--*/
 /*
  *  Syntax rules/types
+ *
+ *      Flag                        Description
+ *  ----------------------------------------------------------------------------
+ *      SYNT_COMMENT                <COMMENT>, <open-string> [, <close>-string>]
+ *      SYNT_CSTYLE                 <CSTYLE>, <character>|<character-set>
+ *      SYNT_PREPROCESSOR           <PREPROCESSOR>, <character-set>
+ *
+ *      SYNT_STRING                 <STRING>, <character-set>
+ *      SYNT_LITERAL                <LITERAL>, <character-set>
+ *
+ *      SYNT_LINECONT               <LINECONT>, <character>
+ *      SYNT_LINEJOIN               <LINEJOIN>, <character>
+ *
+ *      SYNT_QUOTE                  <QUOTE>, <character-set>
+ *      SYNT_CHARACTER              <CHARACTER>, <character-set>
+ *
+ *      SYNT_BRACKET                <BRACKET>, <open> [, <close>]
+ *      SYNT_HTML                   <HTML>, <open>, <close>
+ *      SYNT_TAG                    <TAG>, <type>, <word,word...>
+ *
+ *      SYNT_WORD                   <WORD>, <character-set>
+ *      SYNT_KEYWORD                <KEYWORD>, <character-set>
+ *
+ *      SYNT_NUMERIC                <NUMERIC>, <primary-set> [, <secondary-set>]
+ *      SYNT_OPERATOR               <OPERATOR>, <character>
+ *      SYNT_DELIMITER              <DELIMITER>, <character-set>
+ *      SYNT_FORTRAN                <FORTRAN>, <character-set>, <[left-margin], code [, comment-margin]>
  */
 #define SYNT_COMMENT                1
 #define SYNT_PREPROCESSOR           2
@@ -41,6 +69,7 @@ __CBEGIN_DECLS
 
 #define SYNT_HTML                   20
 #define SYNT_BRACKET                21
+#define SYNT_TAG                    22
 
 #define SYNT_OPERATOR               30
 #define SYNT_DELIMITER              31
@@ -66,14 +95,15 @@ __CBEGIN_DECLS
  *      SYNF_LITERAL_NOQUOTES       Literal strings don't translate quoted characters.
  *      SYNF_STRING_MATCHED         String open/close must be matched; otherwise ignored.
  *
- *      SYNF_COMMENTS_LEADINGWS     xxx
- *      SYNF_COMMENTS_TRAILINGWS    xxx
- *      SYNF_COMMENTS_QUOTE         xxx
+ *      SYNF_COMMENTS_LEADINGWS     Dont hilite leading white-space.
+ *      SYNF_COMMENTS_TRAILINGWS    Dont hilite trailing white-space.
+ *      SYNF_COMMENTS_QUOTE         Allow comment character to be quoted.
  *      SYNF_COMMENTS_CSTYLE        C-style comments.
  *
- *      SYNF_PREPROCESSOR_WS        xxx
- *      SYNF_LINECONT_WS            xxx
- *      SYNF_MANDOC                 xxx
+ *      SYNF_PREPROCESSOR_WS        Dont hilite leading white-space.
+ *      SYNF_LINECONT_WS            Allow white-space after cont token.
+ *
+ *      SYNF_MANDOC                 MANDOC hiliting.
  *
  *      SYNF_HILITE_WS              Hilite white-space.
  *      SYNF_HILITE_LINECONT        Hilite line continuations.
@@ -82,28 +112,34 @@ __CBEGIN_DECLS
  *      SYNF_SPELL_WORD             Enable word spell check.
  *      SYNF_SPELL_COMMENT          Enable comment spell check.
  *
+ *      SYNF_HTMLTAGS               HTML tags.
+ *      SYNF_XMLTAGS                XML tags.
  */
-#define SYNF_CASEINSENSITIVE        0x0001
-#define SYNF_FORTRAN                0x0002
-#define SYNF_STRING_ONELINE         0x0004
-#define SYNF_LITERAL_NOQUOTES       0x0008
-#define SYNF_STRING_MATCHED         0x4000
+#define SYNF_CASEINSENSITIVE        0x000001
+#define SYNF_FORTRAN                0x000002
+#define SYNF_STRING_ONELINE         0x000004
+#define SYNF_LITERAL_NOQUOTES       0x000008
+#define SYNF_STRING_MATCHED         0x000800
 
-#define SYNF_COMMENTS_LEADINGWS     0x0010
-#define SYNF_COMMENTS_TRAILINGWS    0x0020
-#define SYNF_COMMENTS_QUOTE         0x0040
-#define SYNF_COMMENTS_CSTYLE        0x0080
+#define SYNF_COMMENTS_LEADINGWS     0x000010
+#define SYNF_COMMENTS_TRAILINGWS    0x000020
+#define SYNF_COMMENTS_QUOTE         0x000040
+#define SYNF_COMMENTS_CSTYLE        0x000080
 
-#define SYNF_PREPROCESSOR_WS        0x0100
-#define SYNF_LINECONT_WS            0x0200
-#define SYNF_MANDOC                 0x0400
+#define SYNF_PREPROCESSOR_WS        0x000100
+#define SYNF_LINECONT_WS            0x000200
 
-#define SYNF_HILITE_WS              0x1000
-#define SYNF_HILITE_LINECONT        0x2000
-#define SYNF_HILITE_PREPROCESSOR    0x0400
+#define SYNF_MANDOC                 0x000400
 
-#define SYNF_SPELL_WORD             0x1000
-#define SYNF_SPELL_COMMENT          0x2000
+#define SYNF_HILITE_WS              0x001000
+#define SYNF_HILITE_LINECONT        0x002000
+#define SYNF_HILITE_PREPROCESSOR    0x004000
+
+#define SYNF_SPELL_WORD             0x010000
+#define SYNF_SPELL_COMMENT          0x020000
+
+#define SYNF_HTMLTAG                0x040000
+#define SYNF_XMLTAG                 0x080000
 /*--end--*/
 
 /*--export--defines--*/
@@ -167,6 +203,23 @@ enum {
 };
 /*--end--*/
 
+/*--export--defines--*/
+/*
+ *  Keywords flags.
+ *
+ *      Flag                        Description
+ *  ----------------------------------------------------------------------------
+ *      SYNF_IGNORECASE             Ignore case.
+ *      SYNK_NATCHCASE              Match case.
+ *      SYNF_PATTERN                Pattern match (glob style).
+ */
+enum {
+    SYNF_IGNORECASE         = 1,
+    SYNK_NATCHCASE          = 2,
+    SYNF_PATTERN            = 4
+};
+/*--end--*/
+
 typedef uint32_t SyntaxChar_t;
 
 typedef enum {
@@ -196,15 +249,20 @@ typedef struct SyntaxDriver {
     void              (*sd_destroy)(struct SyntaxTable *st, void *object);
 } SyntaxDriver_t;
 
+typedef struct {
+    unsigned            l_count;                /* element count */
+    unsigned            l_data_storage;         /* total allocated data storage, in bytes */
+    unsigned            l_data_used;            /* used storage, in bytes */
+    const char **       l_vector;               /* option vector; optional */
+    const char *        l_data;                 /* compat word list */
+} SyntaxWordList_t;
+
 typedef struct SyntaxWords {
     MAGIC_t             w_magic;                /* structure magic */
     unsigned            w_table;                /* table identifier */
-    vbyte_t             w_attr;                 /* associated attrbute */
+    vbyte_t             w_attr;                 /* associated attribute */
     unsigned            w_length;               /* word length */
-    unsigned            w_used;                 /* used storage, in bytes */
-    unsigned            w_storage;              /* total allocated storage, in bytes */
-    unsigned            w_count;                /* count */
-    const char *        w_list;                 /* compat word list */
+    SyntaxWordList_t    w_words;                /* standard words */
 } SyntaxWords_t;
 
 typedef struct {
@@ -213,6 +271,11 @@ typedef struct {
     unsigned            kw_used;                /* allocated slots */
     SyntaxWords_t       kw_words[1];            /* slots [0] ... */
 } SyntaxKeywords_t;
+
+typedef struct CharacterPair {
+    unsigned char       open;
+    unsigned char       close;
+} CharacterPair_t;
 
 typedef struct SyntaxTable {
     /*
@@ -295,12 +358,15 @@ typedef struct SyntaxTable {
     unsigned char       quote_char;
     unsigned char       preprocessor_char;
     unsigned char       linecont_char;
+    CharacterPair_t     bracket_chars[4];       /* open/close, max 4 pairs */
+    struct trie *       void_tags;
 
     SyntaxChar_t        syntax_charmap[256];
 
 #define KEYWORD_LEN         64                  /* required for posix functions etc */
 #define KEYWORD_TABLES      SYNK_MAX
 
+    struct trie *       keyword_patterns;
     int                 keywords_sorted;
     int                 keywords_total[KEYWORD_TABLES];
     SyntaxKeywords_t *  keywords_tables[KEYWORD_TABLES];
@@ -317,11 +383,12 @@ typedef enum {
 extern void                 syntax_init(void);
 extern void                 syntax_shutdown(void);
 
+extern SyntaxTable_t *      syntax_current(void);
 extern SyntaxTable_t *      syntax_argument(int argi, int err);
 extern SyntaxTable_t *      syntax_lookup(const char *name, int err);
-extern int                  syntax_attr(const char *name);
-extern int                  syntax_keyword(const SyntaxTable_t *st, const LINECHAR *token, int length);
+extern SyntaxTable_t *      syntax_select(void);
 extern int                  syntax_keywordx(const SyntaxTable_t *st, const LINECHAR *token, int length, int start, int end, int icase);
+extern int                  syntax_keyword(const SyntaxTable_t *st, const LINECHAR *token, int length);
 extern int                  syntax_preprocessor(const SyntaxTable_t *st, const LINECHAR *token, int length);
 
 extern const LINECHAR *     syntax_write(SyntaxTable_t *st, const LINECHAR *start, const LINECHAR *end, int colour);
@@ -334,6 +401,7 @@ extern CommentStatus_t      syntax_comment(SyntaxTable_t *st, const LINECHAR *cu
 
 extern int                  syntax_parse(int all);
 extern void                 syntax_highlight(const LINE_t *lp);
+extern void                 syntax_virtual_cursor(void);
 
 extern void                 syntax_hilite_init(SyntaxTable_t *st);
 
@@ -346,6 +414,7 @@ extern void                 do_syntax_build(void);
 extern void                 do_syntax_column_ruler(void);
 extern void                 do_syntax_rule(void);
 extern void                 do_syntax_token(void);
+extern void                 do_syntax_find(void);
 extern void                 inq_syntax(void);
 
 __CEND_DECLS

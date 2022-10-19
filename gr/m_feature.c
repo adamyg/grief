@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_feature_c,"$Id: m_feature.c,v 1.26 2022/05/26 16:35:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_feature_c,"$Id: m_feature.c,v 1.28 2022/08/10 15:44:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_feature.c,v 1.26 2022/05/26 16:35:41 cvsuser Exp $
+/* $Id: m_feature.c,v 1.28 2022/08/10 15:44:57 cvsuser Exp $
  * Features.
  *
  *
@@ -104,7 +104,7 @@ static struct ft_map    ft_features[] = {
     { "encodingdefault",    FT_MKSTR(x_encoding_default),   "" },
     { "encodingguess",      FT_MKSTR(x_encoding_guess),     "" },
     { "fsync",              FT_MKFLG(xf_fsync),             "" },
-    { "hilite",             FT_MKFLG(xf_synhilite),         "" },
+    { "hilite",             FT_MKFLG(xf_syntax_flags),      "" },
     { "history",            FT_MKINT(x_history_depth),      "command-line history depth" },
     { "lazyvt",             FT_MKFLG(xf_lazyvt),            "" },
     { "profile",            FT_MKFLG(xf_profile),           "" },
@@ -449,6 +449,5 @@ inq_feature(void)               /* ([string pattern|int index], [string value]) 
     }
     acc_assign_null();
 }
+
 /*eof*/
-
-

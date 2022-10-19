@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_file_c,"$Id: m_file.c,v 1.43 2021/06/19 09:42:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_file_c,"$Id: m_file.c,v 1.44 2022/07/10 10:22:35 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_file.c,v 1.43 2021/06/19 09:42:03 cvsuser Exp $
+/* $Id: m_file.c,v 1.44 2022/07/10 10:22:35 cvsuser Exp $
  * File primitives.
  *
  *
@@ -991,11 +991,10 @@ do_cd(void)                     /* int ([string dir]) */
     cp = get_str(1);
 
     if (strpbrk(cp, "~*?[$")) {
-        if ((files = shell_expand(cp)) != NULL) {
+        if (NULL != (files = shell_expand(cp))) {
             cp = NULL;
-
             for (j = 0; files[j]; j++) {
-                if (cp == NULL && files[j][0]) {
+                if (NULL == cp && files[j][0]) {
                     cp = mem = files[j];        /* take first match */
                 } else {
                     chk_free(files[j]);
@@ -1007,28 +1006,29 @@ do_cd(void)                     /* int ([string dir]) */
 
     if (cp && *cp) {                            /* change directory */
         ret = file_chdir(cp);
+#if defined(DOSISH)             /* / and \ */
+        if (-1 == ret) {
+            char buf[MAX_PATH], *p;
+            int trailing = 0;
+
+            strxcpy(buf, cp, sizeof(buf));
+            p = buf + strlen(buf) - 1;
+            while (p > buf + 1 && (*p == '/' || *p == '\\')) {
+                *p-- = '\0';                    /* remove trailing slashes */
+                ++trailing;
+            }
+            if (trailing) {
+                ret = file_chdir(buf);
+            }
+        }
+#endif
     } else {
         errno = EINVAL;
         ret = -1;
     }
 
-#if defined(DOSISH)             /* / and \ */
-    if (ret && *cp) {
-        char buf[MAX_PATH], *p;
-        int trailing = 0;
-
-        strxcpy(buf, cp, sizeof(buf));
-        p = buf + strlen(buf) - 1;
-        while (p > buf + 1 && (*p == '/' || *p == '\\')) {
-            *p-- = '\0';                        /* remove trailing slashes */
-            ++trailing;
-        }
-        if (trailing) ret = file_chdir(buf);
-    }
-#endif
-
     system_call(ret);
-    acc_assign_int(ret ? 0 : 1);                /* success(1) otherwise (0) */
+    acc_assign_int(-1 == ret ? 0 : 1);          /* success(1) otherwise (0) */
     if (mem) {
         chk_free(mem);
     }

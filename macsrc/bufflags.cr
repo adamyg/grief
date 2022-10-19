@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: bufflags.cr,v 1.5 2014/10/27 23:28:18 ayoung Exp $
+/* $Id: bufflags.cr,v 1.6 2022/08/10 15:44:58 cvsuser Exp $
  * Buffer flags, non UI interface.
  *
  *
@@ -32,6 +32,7 @@ static list             flag_fields = {
     "Buffer uses hard tabs ............ (rw) ", "tabs",
     "Buffer has no undo ............... (rw) ", "noundo",
     "Buffer has syntax hilighting ..... (rw) ", "syntax",
+    "Buffer hilites matching elements . (rw) ", "syntax_match",
     "ANSI hilighting enabled .......... (rw) ", "ansi",
     "MAN hilighting enabled ........... (rw) ", "man",
     "Buffer displays ruler ............ (rw) ", "ruler",

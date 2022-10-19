@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_widgets_tty_c,"$Id: widgets_tty.c,v 1.37 2021/08/01 14:42:51 cvsuser Exp $")
+__CIDENT_RCSID(gr_widgets_tty_c,"$Id: widgets_tty.c,v 1.38 2022/08/10 15:44:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: widgets_tty.c,v 1.37 2021/08/01 14:42:51 cvsuser Exp $
+/* $Id: widgets_tty.c,v 1.38 2022/08/10 15:44:58 cvsuser Exp $
  * Dialog widgets, tty interface.
  *
  *
@@ -5035,4 +5035,3 @@ combofield_callback(WCombofield_t *cf, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETAR
 }
 
 /*end*/
-

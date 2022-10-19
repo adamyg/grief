@@ -1,11 +1,11 @@
 #ifndef GR_HILITE_H_INCLUDED
 #define GR_HILITE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_hilite_h,"$Id: hilite.h,v 1.11 2014/10/22 02:32:57 ayoung Exp $")
+__CIDENT_RCSID(gr_hilite_h,"$Id: hilite.h,v 1.12 2022/08/10 15:44:56 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: hilite.h,v 1.11 2014/10/22 02:32:57 ayoung Exp $
+/* $Id: hilite.h,v 1.12 2022/08/10 15:44:56 cvsuser Exp $
  * Hilite management.
  *
  *
@@ -31,10 +31,12 @@ typedef struct _hilite {
                         h_node;                 /* List node, buffer specific */
 #define HILITE_SEARCH           -2
 #define HILITE_TRANSLATE        -3
+#define HILITE_SYNTAX_MATCH     -4
 
     accint_t            h_type;                 /* Assigned type */
     accint_t            h_ident;                /* User assigned identifier */
     time_t              h_timeout;              /* Absolute timeout, in seconds */
+    time_t              h_ctime;                /* Optional buffer last-change expiry */
     uint32_t            h_seqno;                /* Sequence number */
     uint32_t            h_attr;                 /* Attribute, otherwise 0 == HILITE */
     LINENO              h_sline;                /* Position */

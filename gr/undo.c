@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_undo_c,"$Id: undo.c,v 1.50 2021/06/10 06:13:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_undo_c,"$Id: undo.c,v 1.51 2022/08/10 15:44:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: undo.c,v 1.50 2021/06/10 06:13:02 cvsuser Exp $
+/* $Id: undo.c,v 1.51 2022/08/10 15:44:58 cvsuser Exp $
  * undo and redo facilities.
  *
  *
@@ -1113,4 +1113,5 @@ do_redo(void)                   /* () */
 {
     /*see macro implementation*/
 }   
+
 /*end*/

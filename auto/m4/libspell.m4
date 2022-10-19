@@ -1,4 +1,4 @@
-dnl $Id: libspell.m4,v 1.3 2013/03/23 00:07:31 cvsuser Exp $
+dnl $Id: libspell.m4,v 1.4 2022/07/12 15:05:13 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -63,30 +63,54 @@ AC_DEFUN([LIBSPELL_CHECK_CONFIG],[
 	dnl library specific resources
 	dnl
 	if test "x$spelllib_name" = "xenchant"; then
-		AC_CHECK_HEADERS(enchant/enchant.h)
-		AC_CHECK_HEADERS(enchant/enchant++.h)
-		if test "x$ac_cv_header_enchant_enchant_h" = "x"; then
-			AC_CHECK_HEADERS(enchant.h)
-			AC_CHECK_HEADERS(enchant++.h)
-		fi
+		AC_CHECK_HEADERS(enchant/enchant.h,
+			[libenchant_header=yes],
+			[AC_CHECK_HEADERS(enchant.h,
+				[libenchant_header=yes],
+				[AC_MSG_WARN([enchant.h not found])]
+				)]
+			)
+
+		AC_CHECK_HEADERS(enchant/enchant++.h,
+			[libenchantxx_header=yes],
+			[AC_CHECK_HEADERS(enchant++.h,
+				[libenchantxx_header=yes],
+				[AC_MSG_WARN([enchant++.h not found])]
+				)]
+			)
+
 		AC_DEFINE([HAVE_LIBENCHANT], 1, [Have libenchant -- spell library interface])
 		LIBSPELL="-lenchant"
 
 	else if test "x$spelllib_name" = "xhunspell"; then
-		AC_CHECK_HEADERS(hunspell/hunspell.h)
-		AC_CHECK_HEADERS(hunspell/hunspell.hxx)
-		if test "x$ac_cv_header_hunspell_hunspell_h" = "x"; then
-			AC_CHECK_HEADERS(hunspell.h)
-			AC_CHECK_HEADERS(hunspell.hxx)
-		fi
+		AC_CHECK_HEADERS(hunspell/hunspell.h,
+			[libhunspell_header=yes],
+			[AC_CHECK_HEADERS(hunspell.h,
+				[libhunspell_header=yes],
+				[AC_MSG_WARN([hunspell.h not found])]
+				)]
+			)
+
+		AC_CHECK_HEADERS(hunspell/hunspell.hxx,
+			[libhunspellxx_header=yes],
+			[AC_CHECK_HEADERS(hunspell.hxx,
+				[libhunspellxx_header=yes],
+				[AC_MSG_WARN([hunspell.hxx not found])]
+				)]
+			)
+
 		AC_DEFINE([HAVE_LIBHUSPELL], 1, [Have libhunspell])
 		LIBSPELL="-lhunspell"
 
 	else if test "x$spelllib_name" = "xaspell"; then
-		AC_CHECK_HEADERS(aspell/aspell.h)
-		if test "x$ac_cv_header_aspell_aspell_h" = "x"; then
-			AC_CHECK_HEADERS(aspell.h)
-		fi
+		AC_CHECK_HEADERS(aspell/aspell.h,
+			[libaspell_header=yes],
+			[AC_CHECK_HEADERS(aspell.h,
+				[libaspell_header=yes],
+				[AC_MSG_WARN([aspell.h not found])]
+				)]
+			)
+
 		AC_DEFINE([HAVE_LIBASPELL], 1, [Have libaspell])
 		LIBSPELL="-laspell"
 

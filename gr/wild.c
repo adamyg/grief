@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_wild_c,"$Id: wild.c,v 1.39 2015/02/11 23:25:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_wild_c,"$Id: wild.c,v 1.42 2022/08/10 15:44:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: wild.c,v 1.39 2015/02/11 23:25:14 cvsuser Exp $
+/* $Id: wild.c,v 1.42 2022/08/10 15:44:58 cvsuser Exp $
  * Wild card and basic pattern (not regexp) matching support.
  *
  *
@@ -60,8 +60,18 @@ __CIDENT_RCSID(gr_wild_c,"$Id: wild.c,v 1.39 2015/02/11 23:25:14 cvsuser Exp $")
 
 #if !defined(_VMS)
 
+typedef struct {
+    int wild_;                                  /* wild card match */
+    vfs_dir_t *dirp_;                           /* current open directory */
+    char name_[DIRSIZ + 1];                     /* MAGIC */
+} shell_dir_t;
+
 static char **              shell_wild(const char *file);
-static char *               shell_dir(char *prefix, char *suffix, int cnt);
+
+static shell_dir_t *        shell_dir_open(const char *dirname, int wild);
+static const char *         shell_dir_read(shell_dir_t *dir, const char *suffix);
+static void                 shell_dir_close(shell_dir_t *dir);
+
 static int                  shell_compare(const void *a1, const void *a2);
 static void                 shell_free(char **names, int name_cnt);
 static const char *         shell_namesplit(const char *file, char *buf);
@@ -74,7 +84,7 @@ static const char *         shell_namesplit(const char *file, char *buf);
  *      We return an array of pointers to strings containing the names
  *      of the files which match.
  *
- *      Both the strings and the array need to be freed by the caller, 
+ *      Both the strings and the array need to be freed by the caller,
  *      using chk_free(), alternatively using shell_release().
  */
 char **
@@ -195,7 +205,7 @@ wild_file(const char *file, const char *pattern)
 
     flags |= MATCH_PERIODA;                     /* leading star(*) wont match '.' */
 #if defined(NOCASE_FILENAMES)
-    flags |= MATCH_NOCASE;
+    flags |= MATCH_NOCASE;                      /* TODO: volume specific */
 #endif
     return patmatchx((const char *)pattern, (const char *)file, flags, errorf);
 }
@@ -276,7 +286,7 @@ shell_purge(char **files, int wild)
 static char **
 shell_wild(const char *file)
 {
-    char suffix[MAX_PATH], *cp;                 /* was 256 */
+    char suffix[MAX_PATH];                      /* was 256 */
     int i, j, k, ecnt;
     char **names;
     int found_wild = FALSE;
@@ -305,16 +315,19 @@ shell_wild(const char *file)
         file = shell_namesplit(file, suffix);   /* split spec (fred/... ==> 'fred' and '...' */
 
         if (suffix[0] == '$') {                 /* $env within file specs, expand */
-            cp = getenv(suffix + 1);
-            if (cp) {
-                strcpy(suffix, cp);
+            const char *env = getenv(suffix + 1);
+            if (env) {
+                strcpy(suffix, env);
             }
         }
 
         if (suffix[0] && strpbrk(suffix, "*?[")) {
             found_wild = TRUE;
             j = cnt;
+
             for (i = 0; i <= j; ++i) {
+                shell_dir_t *dir = NULL;
+
                 if (i == j) {
                     if (j == 0) {
                         prefix = NULL;
@@ -328,11 +341,18 @@ shell_wild(const char *file)
                     }
                 }
 
+                if (NULL == (dir = shell_dir_open(prefix, 1))) {
+                    return NULL;                /* source directory not accessible */
+                }
+
                 for (ecnt = 0;; ++ecnt) {
-                    if ((cp = shell_dir(prefix, suffix, ecnt)) == NULL) {
+                    const char *cp;
+
+                    if (NULL == (cp = shell_dir_read(dir, suffix))) {
                         if (j) {
                             names[i][0] = 0;
                         }
+                        shell_dir_close(dir);
                         break;
                     }
 
@@ -349,6 +369,7 @@ shell_wild(const char *file)
 
                     if (++cnt >= MAX_NAMES - 1) {
                         shell_free(names, cnt);
+                        shell_dir_close(dir);
                         return NULL;
                     }
                 }
@@ -475,47 +496,70 @@ shell_free(char **files, int cnt)
 }
 
 
-/*  Function:           shell_dir
- *      Expand the current directory
+/*  Function:           shell_dir_xxx
+ *      Directory iterator.
  *
  */
-static char *
-shell_dir(char *prefix, char *suffix, int cnt)
+static shell_dir_t *
+shell_dir_open(const char *dirname, int wild)
 {
-    static vfs_dir_t *dirp = NULL;              /* current open directory */
-    static char name[DIRSIZ + 1];		/* MAGIC/STATIC */
+    const char *t_dirname = (dirname && *dirname ? dirname : ".");
+    shell_dir_t *dir = NULL;
+    vfs_dir_t *dirp = NULL;                     /* current open directory */
+    struct stat sb;
+
+    if (vfs_stat(t_dirname, &sb) < 0 || (sb.st_mode & S_IFDIR) == 0) {
+        return NULL;                            /* not a directory */
+    }
+
+    if (NULL == (dirp = vfs_opendir(t_dirname)) ||
+            NULL == (dir = chk_calloc(sizeof(*dir), 1))) {
+        if (dirp) {                             /* access/memory */
+            vfs_closedir(dirp);
+        }
+        return NULL;
+    }
+    dir->wild_ = wild ? 0x1234 : 0;
+    dir->dirp_ = dirp;
+    return dir;
+}
+
+
+static const char *
+shell_dir_read(shell_dir_t *dir, const char *suffix)
+{
+    vfs_dir_t *dirp = NULL;                     /* current open directory */
     vfs_dirent_t *de;
 
-    cnt = cnt;
-    if (NULL == dirp) {
-        const char *cp = prefix ? prefix : ".";
-        struct stat sb;
+    if (dir && NULL != (dirp = dir->dirp_)) {
+        const int wild = dir->wild_;
+        char *name = dir->name_;
 
-        if (vfs_stat(cp, &sb) < 0 || (sb.st_mode & S_IFDIR) == 0) {
-            return NULL;                        /* not a directory */
-        }
+        while ((de = vfs_readdir(dirp)) != NULL) {
+            size_t len = strlen(de->d_name);
 
-        if ((dirp = vfs_opendir(cp)) == NULL) {
-            return NULL;
-        }
-    }
+            if (len > DIRSIZ) len = DIRSIZ - 1;
+            memcpy(name, de->d_name, len);
+            name[len] = 0;
 
-    while ((de = vfs_readdir(dirp)) != NULL) {
-        size_t len = strlen(de->d_name);
-
-        if (len > DIRSIZ) {
-            len = DIRSIZ - 1;
-        }
-        memcpy(name, de->d_name, len);
-        name[len] = 0;
-        if (wild_file(name, suffix)) {
-            return name;
+            if (0 == file_cmp(name, suffix) ||  /* abs or wild-match */
+                    (wild && wild_file(name, suffix))) {
+                return name;
+            }
         }
     }
-
-    vfs_closedir(dirp);
-    dirp = NULL;
     return NULL;
+}
+
+
+static void
+shell_dir_close(shell_dir_t *dir)
+{
+    if (dir) {
+        assert(0x1234 == dir->wild_ || 0 == dir->wild_);
+        vfs_closedir(dir->dirp_);
+        chk_free(dir);
+    }
 }
 
 
@@ -615,4 +659,5 @@ main(int argc, char ** argv)
 }
 #endif  /*STANDALONE*/
 #endif  /*VMS*/
+
 /*end*/

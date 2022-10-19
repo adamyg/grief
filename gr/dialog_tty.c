@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dialog_tty_c,"$Id: dialog_tty.c,v 1.27 2021/10/18 13:14:34 cvsuser Exp $")
+__CIDENT_RCSID(gr_dialog_tty_c,"$Id: dialog_tty.c,v 1.28 2022/08/10 15:44:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dialog_tty.c,v 1.27 2021/10/18 13:14:34 cvsuser Exp $
+/* $Id: dialog_tty.c,v 1.28 2022/08/10 15:44:56 cvsuser Exp $
  * Dialog manager, TTY interface.
  *
  *
@@ -1491,4 +1491,5 @@ pack_expandy(WIDGET_t *w, int cavityRows)
     }
     return (minExpand < 0) ? 0 : minExpand;
 }
+
 /*end*/

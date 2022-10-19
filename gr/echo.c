@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.74 2022/05/31 16:18:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.75 2022/07/10 13:13:07 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: echo.c,v 1.74 2022/05/31 16:18:21 cvsuser Exp $
+/* $Id: echo.c,v 1.75 2022/07/10 13:13:07 cvsuser Exp $
  * Command/echo line implementation/interface.
  *
  *
@@ -139,6 +139,7 @@ static int              echo_default;           /* length of default abs() +acti
 
 static int              echo_offset;            /* displayed offset within echo line when prompt > vtcols */
 
+static int              echo_cmddepth;          /* command depth */
 static const char *     echo_cmdline;           /* pointer to string just typed in by user (see inq_cmd_line) */
 
 static char             last_msg[MSG_SIZE];     /* last message printed. */
@@ -505,8 +506,12 @@ ereplyask(const char *prompt, const char *defstr,
          *  On completions, echo_cmdline is clear so that inq_cmd_line() only works
          *  partially, i.e. it can only get the bit on display, and not the full string
          */
-        assert(NULL == echo_cmdline);
+        const char *t_echo_cmdline = echo_cmdline; 
+         
+        assert((NULL == echo_cmdline && 0 == echo_cmddepth) || (NULL != echo_cmdline && echo_cmddepth > 0));
         echo_cmdline = buf;
+        ++echo_cmddepth;
+
         if (macro_lookup(_prompt_end)) {
             trace_flagsset(nflags);
             execute_str(_prompt_end);
@@ -514,7 +519,10 @@ ereplyask(const char *prompt, const char *defstr,
         } else {
             trace_log("ereplyask: _prompt_end not found\n");
         }
-        echo_cmdline = NULL;
+
+        echo_cmdline = t_echo_cmdline;
+        assert(echo_cmddepth >= 1);
+        --echo_cmddepth;
     }
 
     /* restore message level */

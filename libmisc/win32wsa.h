@@ -1,12 +1,12 @@
 #ifndef GR_WIN32WSA_H_INCLUDED
 #define GR_WIN32WSA_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: win32wsa.h,v 1.10 2022/05/25 15:45:31 cvsuser Exp $
+/* $Id: win32wsa.h,v 1.11 2022/09/20 15:19:12 cvsuser Exp $
  * WSA Error Codes
  * Reproduced from a number of sources.
  *
  *
- * Copyright (c) 1998 - 2017, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

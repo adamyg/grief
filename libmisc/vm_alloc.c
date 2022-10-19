@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vm_alloc_c,"$Id: vm_alloc.c,v 1.20 2020/04/20 23:10:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_vm_alloc_c,"$Id: vm_alloc.c,v 1.21 2022/09/20 15:19:12 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vm_alloc.c,v 1.20 2020/04/20 23:10:37 cvsuser Exp $
+/* $Id: vm_alloc.c,v 1.21 2022/09/20 15:19:12 cvsuser Exp $
  * Simple buffer pool.
  *
  *
- * Copyright (c) 1998 - 2017, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

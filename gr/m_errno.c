@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_errno_c,"$Id: m_errno.c,v 1.27 2021/07/05 15:01:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_errno_c,"$Id: m_errno.c,v 1.28 2022/08/10 15:44:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_errno.c,v 1.27 2021/07/05 15:01:27 cvsuser Exp $
+/* $Id: m_errno.c,v 1.28 2022/08/10 15:44:57 cvsuser Exp $
  * errno symbol primitives.
  *
  *
@@ -856,4 +856,5 @@ do_perror(void)                 /* ([int errno], string format, ...) */
     }
     errorf("%s", acc_get_sval());
 }
+
 /*end*/

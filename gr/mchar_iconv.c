@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mchar_iconv_c,"$Id: mchar_iconv.c,v 1.25 2022/06/16 05:24:30 cvsuser Exp $")
+__CIDENT_RCSID(gr_mchar_iconv_c,"$Id: mchar_iconv.c,v 1.26 2022/08/10 15:44:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mchar_iconv.c,v 1.25 2022/06/16 05:24:30 cvsuser Exp $
+/* $Id: mchar_iconv.c,v 1.26 2022/08/10 15:44:57 cvsuser Exp $
  * Character-set conversion/mapping interface and adapters.
  *
  *
- * Copyright (c) 1998 - 2021, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -1081,4 +1081,5 @@ my_iconv_open(const char *to, const char *from)
 }
 
 #endif  /*HAVE_APRICONV || HAVE_LIBICONV*/
+
 /*end*/

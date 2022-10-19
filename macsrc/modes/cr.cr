@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: cr.cr,v 1.15 2021/07/05 15:01:29 cvsuser Exp $
+/* $Id: cr.cr,v 1.16 2022/07/10 13:08:02 cvsuser Exp $
  * GRIEF/Crisp syntax definition mode.
  *
  *
@@ -9,7 +9,6 @@
 #include "../mode.h"
 
 #define MODENAME "grief"
-
 
 void
 main(void)
@@ -58,7 +57,9 @@ main(void)
     syntax_rule("/\\*.*$", "spell,todo:comment");
     syntax_rule("/\\*.*\\*/", "spell,todo,quick:comment");
     syntax_rule("//.*$", "spell,todo:comment");
-    syntax_rule("\\*/", "quick:error");         // unmatched block comment
+
+    syntax_rule("/[^*/].*$", "alert");          // invalid eol comment.
+    syntax_rule("\\*/", "quick:alert");         // unmatched block comment.
 
                                                 // keywords and preprocessor directives
     syntax_rule("[A-Za-z_][A-Za-z_0-9]*", "keyword,directive:normal");
@@ -229,3 +230,5 @@ _cr_smart_first(void)
 
     return _c_smart_first();
 }
+
+/*end*/

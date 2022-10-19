@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_pty_c,"$Id: m_pty.c,v 1.25 2021/10/18 13:12:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_pty_c,"$Id: m_pty.c,v 1.26 2022/08/10 15:44:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_pty.c,v 1.25 2021/10/18 13:12:13 cvsuser Exp $
+/* $Id: m_pty.c,v 1.26 2022/08/10 15:44:57 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -124,7 +124,6 @@ static int              x_ptyident = 12000;
                    \-----------------/     \-----------------/
   
 (end ditaa)
-
 
         All text inserted into the buffer is automatically forwarded
         to the underlying sub-process, insertion methods include

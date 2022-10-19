@@ -1,11 +1,11 @@
 #ifndef GR_EDSTRUCT_H_INCLUDED
 #define GR_EDSTRUCT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.71 2022/03/21 14:55:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.73 2022/09/13 14:15:35 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edstruct.h,v 1.71 2022/03/21 14:55:27 cvsuser Exp $
+/* $Id: edstruct.h,v 1.73 2022/09/13 14:15:35 cvsuser Exp $
  * Window, buffer, line and character-map definitions.
  *
  *
@@ -311,7 +311,7 @@ struct _window {
     void *              w_dialogp;              /* Attached dialog */
     uint16_t            w_priority;             /* Window priority */
     uint16_t            w_type;                 /* Window type (W_TILED, W_MENU or W_POPUP */
-    uint16_t            w_tab;                  /* Assoicated tab */
+    uint16_t            w_tab;                  /* Associated tab */
     uint32_t            w_flags;                /* Flags (see above _wflags) */
     uint32_t            w_status;               /* Update status (se _wstatus) */
     LINENO              w_top_line;             /* Top line in window (>= 1) */
@@ -342,7 +342,7 @@ struct _window {
     int                 w_disp_rmargin;         /* Right hand margin */
     LINENO              w_disp_line;            /* Current line number */
     LINENO              w_disp_column;          /* Next column to be displayed */
-    LINENO              w_disp_vtbase;          /* Base vt columnt adjustment */
+    LINENO              w_disp_vtbase;          /* Base vt column adjustment */
     LINENO              w_disp_indent;          /* Indentation cursor */
     const cmap_t *      w_disp_cmap;            /* Active character map, buffer, window or base */
     void *              w_disp_anchor;          /* Associated anchor */
@@ -650,7 +650,7 @@ enum _bflags {
     BF_NEW_FILE         =0x00001000,            /* File is a new file, so write even if no changes */
     BF_CR_MODE          =0x00002000,            /* Append <CR> to end of each line on output */
     BF_SYNTAX           =0x00004000,            /* Enable syntax highlighting (unless ANSI) */
-    FB_STATUSLINE       =0x00008000,            /* Status line */
+    BF_SYNTAX_MATCH     =0x00008000,            /* Hilite matching brackets */
     BF_MAN              =0x00010000,            /* If TRUE, man style \b is done */
     BF_SPELL            =0x00020000,            /* Enable spell */
     BF_FOLDING          =0x00040000,            /* Test folding/hiding */
@@ -694,6 +694,7 @@ enum _bflags {
     BF2_HIWHITESPACE    =0x00200000,            /* Hilite whitespace */
     BF2_HIMODIFIED      =0x00400000,            /* Hilite modified lines */
     BF2_HIADDITIONAL    =0x00800000,            /* Hilite added lines */
+    BF2_HISTATUSLINE    =0x01000000,            /* Hilite status line */
 
     /*
      *  BF3_XXXX values ---
@@ -835,7 +836,7 @@ enum _liflags {
     LI_LOCKED           =0x04,                  /* Line has been locked */
     LI_MODIFIED         =0x08,                  /* Line has been modified, since last save. */
     LI_ATTRIBUTES       =0x10,                  /* Line has attributes. */
-    LI_DIRTY            =0x20,                  /* On screen line image is dirty, result of lazyvt. */
+    LI_DIRTY            =0x20,                  /* On screen line image is dirty, result of lazyvt/hilite. */
     LI_MBSWIDE          =0x40,                  /* Line contains multibyte/wide characters. */
 };
 
@@ -1018,6 +1019,7 @@ struct _buffer {
     int                 b_vwidth;               /* Character width (generally 1 or 2) */
     int                 b_vlength;              /* Length of character, in bytes */
     int32_t             b_vchar[4];             /* Character value under cursor + combined values */
+    int32_t             b_voffset;              /* Character offset */
 
     LINELIST_t          b_lineq;                /* Line queus/list */
     LINENO              b_cline;                /* Cached line number */
@@ -1083,6 +1085,8 @@ struct _buffer {
     struct SyntaxTable *b_syntax;               /* Syntax table */
     LINENO              b_syntax_min;           /* Syntax lower rescan region */
     LINENO              b_syntax_max;           /* Syntax upper rescan region */
+    LINENO              b_dirty_min;            /* Dirty section lower */
+    LINENO              b_dirty_max;            /* Dirty section upper */
     BUFFERCHUNKLIST_t   b_chunk_list;           /* Chunk list, memory managment */
     uint32_t            b_chunk_ident;          /* Plus allocation identifier */
     LINEATTR            b_attrcurrent;          /* Current attribute */

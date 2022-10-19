@@ -1,4 +1,4 @@
-/* $Id: set.cr,v 1.21 2014/10/27 23:28:27 ayoung Exp $
+/* $Id: set.cr,v 1.22 2022/08/10 15:44:58 cvsuser Exp $
  * Command level environment variables.
  *
  *
@@ -55,6 +55,7 @@ static list             std_variables = {
     "block",                0,                  // not supported
     "bufhidden",            "::sf \"hidden\"",  // hidden from view
     "color",                BF_SYNTAX,          // buffer colorization
+    "colormatching",        BF_SYNTAX_MATCH,    // hilite matching brackets; "color" also required.
 //  "diff",                 BF_MOD_LINES,
     "eof",                  "",                 // <EOF> marker
     "justify",              "::set_justify",    // format, justify right margin
@@ -62,7 +63,7 @@ static list             std_variables = {
 //  "tabs",
     "howmatch",             0,
     "ignorecase",           0,
-//  "linecolor",            BF_SYNTAX,
+//  "linecolor",            BF_LINE_XXX,
 //  "linecolor2",           0,
     "lmargin",              "::set_lmargin",
     "magic",                0,
@@ -437,6 +438,7 @@ set_lmargin(string val)
 {
     set_margins(NULL, atoi(val));
 }
+
 
 //  Function:           set_rmargin
 //      Right margin.
@@ -844,3 +846,4 @@ _set_open(~int, ~int)
  *  tabs: 4 ***
  *  End: ***
  */
+

@@ -1,11 +1,11 @@
 #ifndef GR_REGDFA_H_INCLUDED
 #define GR_REGDFA_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_regdfa_h,"$Id: regdfa.h,v 1.10 2014/10/22 02:33:16 ayoung Exp $")
+__CIDENT_RCSID(gr_regdfa_h,"$Id: regdfa.h,v 1.11 2022/07/10 13:09:43 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: regdfa.h,v 1.10 2014/10/22 02:33:16 ayoung Exp $
+/* $Id: regdfa.h,v 1.11 2022/07/10 13:09:43 cvsuser Exp $
  * DFA based regular expression engine.
  *
  *
@@ -29,10 +29,10 @@ __CBEGIN_DECLS
 struct regdfa {             /* DFA construction */
     MAGIC_t                 magic;              /* Structure magic */
     struct SyntaxTable *    owner;              /* Owning table */
-    struct dfastate *       start;              /* Initial state */
+    struct s_dfastate *     start;              /* Initial state */
     unsigned                slots;              /* Total table slots */
     unsigned                cursor;             /* Cursor into table */
-    struct dfastate **      table;              /* Lookup indirection table */
+    struct s_dfastate **    table;              /* Lookup indirection table */
     void *                  heap;               /* working storage, for life of expression */
     unsigned                flags;
 #define REGDFA_ICASE            0x0001          /* ignore case */
@@ -41,6 +41,7 @@ struct regdfa {             /* DFA construction */
 extern int                  regdfa_check(const char *pattern);
 
 extern struct regdfa *      regdfa_create(const char **patterns, int num_patterns, unsigned flags);
+extern struct regdfa *      regdfa_patterns(const char *patterns, const char *end, unsigned flags);
 extern void                 regdfa_destroy(struct regdfa *re);
 
 extern void                 regdfa_export(struct regdfa *regex, FILE *fd);

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_brief_c,"$Id: m_brief.c,v 1.8 2014/11/16 17:28:38 ayoung Exp $")
+__CIDENT_RCSID(gr_m_brief_c,"$Id: m_brief.c,v 1.9 2022/07/10 13:13:07 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_brief.c,v 1.8 2014/11/16 17:28:38 ayoung Exp $
+/* $Id: m_brief.c,v 1.9 2022/07/10 13:13:07 cvsuser Exp $
  * BRIEF compatibility.
  *
  *
@@ -417,4 +417,5 @@ do_set_btn2_action(void)        /* int ([int action]) */
 //  {
 //      // see: brief.cr
 //  }
+
 /*end*/

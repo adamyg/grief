@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.73 2022/05/26 16:41:38 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.74 2022/09/13 14:31:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.73 2022/05/26 16:41:38 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.74 2022/09/13 14:31:24 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -935,8 +935,8 @@ term_putc(vbyte_t c)
 static void
 term_clear(void)
 {
-    assert(currRows == ttrows() || tty_needresize /*FIXME: very small window*/);
-    assert(currCols == ttcols() || tty_needresize /*FIXME: very small window*/);
+  //assert(currRows == ttrows() || tty_needresize /*FIXME: very small window*/);
+  //assert(currCols == ttcols() || tty_needresize /*FIXME: very small window*/);
     term_attribute(ATTR_NORMAL);
     {
         const VIOCELL blank = VIO_INIT(tt_hue, ' ');

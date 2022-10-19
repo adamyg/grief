@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_main_c,"$Id: m_main.c,v 1.12 2014/10/22 02:33:05 ayoung Exp $")
+__CIDENT_RCSID(gr_m_main_c,"$Id: m_main.c,v 1.13 2022/07/10 13:13:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_main.c,v 1.12 2014/10/22 02:33:05 ayoung Exp $
+/* $Id: m_main.c,v 1.13 2022/07/10 13:13:08 cvsuser Exp $
  * Initialisation and primary processing loop.
  *
  *
@@ -287,4 +287,5 @@ do_suspend(void)                /* int () */
 #endif
     acc_assign_int(ret);
 }
+
 /*end*/

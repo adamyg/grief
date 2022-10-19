@@ -1,11 +1,11 @@
 #ifndef GR_EDFEATURES_H_INCLUDED
 #define GR_EDFEATURES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edfeatures_h,"$Id: edfeatures.h,v 1.15 2022/03/21 14:55:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_edfeatures_h,"$Id: edfeatures.h,v 1.16 2022/09/13 14:15:35 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edfeatures.h,v 1.15 2022/03/21 14:55:27 cvsuser Exp $
+/* $Id: edfeatures.h,v 1.16 2022/09/13 14:15:35 cvsuser Exp $
  * Editor features.
  *
  *
@@ -182,7 +182,7 @@ struct _features {
     char        pt_winsetsize[PT_ESCMAX];       /* STRING,      Escape sequence, set window size (rows/cols). */
     char        pt_winsetpos[PT_ESCMAX];        /* STRING,      Escape sequence, set window position (row/col). */
 
-    char        pt_colorsetfgbg[PT_ESCMAX];     /* STRING,      Escape eequence, set foreground and background. */  
+    char        pt_colorsetfgbg[PT_ESCMAX];     /* STRING,      Escape eequence, set foreground and background. */
     char        pt_colorsetfg[PT_ESCMAX];       /* STRING,      Escape sequence, set foreground color. */
     char        pt_colorsetbg[PT_ESCMAX];       /* STRING,      Escape sequence, set background color. */
 

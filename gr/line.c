@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_line_c,"$Id: line.c,v 1.46 2021/07/05 15:01:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_line_c,"$Id: line.c,v 1.47 2022/08/10 15:44:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: line.c,v 1.46 2021/07/05 15:01:27 cvsuser Exp $
+/* $Id: line.c,v 1.47 2022/08/10 15:44:56 cvsuser Exp $
  * Line management.
  *
  *
@@ -156,7 +156,7 @@ lsize(LINE_t *lp, LINENO size)
     ED_TRACE(("lsize(length:%d,size:%d,more:%d)\n", length, size, more))
 
     if (FALSE != (ret = ledit(lp, more))) {
-        assert(size <= lalloced(lp));
+        assert(size <= (LINENO)lalloced(lp));
     }
     return ret;
 }
@@ -189,7 +189,7 @@ lexpand(LINE_t *lp, LINENO dot, LINENO size)
     ED_TRACE(("lexpand(length:%d,dot:%d,size:%d)\n", length, dot, size))
 
     if (FALSE != (ret = ledit(lp, size))) {
-        assert((length + size) <= lalloced(lp));
+        assert((length + size) <= (LINENO)lalloced(lp));
         line_move(lp, dot + size, dot, length - dot);
         lp->l_used += size;
     }
@@ -1108,7 +1108,7 @@ ldeletedot(LINENO cnt, int dot)
                 lp->l_size -= cnt;
                 lp = NULL;
 
-            } else if (dot + cnt == llength(lp)) {
+            } else if (dot + cnt == (LINENO)llength(lp)) {
                 if (0 == (lp->l_used -= cnt)) { /* trailing */
                     lp->l_text = NULL;
                 }
@@ -1132,7 +1132,7 @@ ldeletedot(LINENO cnt, int dot)
         LINE_t *nextlp = NULL;
 
         if (NULL == curbp->b_anchor &&
-                0 == dot && cnt == (llength(lp) + 1)) {
+                0 == dot && cnt == (LINENO)(llength(lp) + 1)) {
             lchange(WFDELL, 0);
         } else {
             lchange(WFHARD, 0);
@@ -1324,7 +1324,7 @@ line_size(LINE_t *lp, LINENO need)
     assert(lp != x_static_line);
     assert(lp->l_iflags & LI_INCORE);
     assert(need >= 0);
-    assert(llength(lp) <= size);
+    assert((LINENO)llength(lp) <= size);
 
     ED_TRACE(("\tline_size(need:%d,size:%d)\n", need, size))
     if (need > size) {
@@ -1409,8 +1409,8 @@ line_move(LINE_t *lp, LINENO dst, LINENO src, LINENO len)
     assert(0 == len || lp->l_text);
     assert(src >= 0);
     assert(dst >= 0);
-    assert(src + len <= llength(lp));
-    assert(dst + len <= lalloced(lp));
+    assert(src + len <= (LINENO)llength(lp));
+    assert(dst + len <= (LINENO)lalloced(lp));
 
     if (len) {
         memmove(lp->l_text + dst, (const void *)(lp->l_text + src), len);
@@ -1446,8 +1446,8 @@ line_copy(LINE_t *dlp, LINENO dst, const LINE_t *slp, LINENO src, LINENO len)
     assert((LI_ATTRIBUTES & slp->l_iflags) == (dlp->l_iflags & LI_ATTRIBUTES));
     assert(src >= 0);
     assert(dst >= 0);
-    assert(src + len <= llength(slp));
-    assert(dst + len <= lalloced(dlp));
+    assert(src + len <= (LINENO)llength(slp));
+    assert(dst + len <= (LINENO)lalloced(dlp));
 
     if (len) {
         memmove(dlp->l_text + dst, (const void *)(slp->l_text + src), len);
@@ -1479,7 +1479,7 @@ line_set(LINE_t *lp, LINENO dst, const char *src, LINENO len, LINEATTR attr, LIN
     assert(lp->l_iflags & LI_INCORE);
     assert(0 == len || NULL != lp->l_text);
     assert(dst >= 0);
-    assert(dst + (cnt * len) <= lalloced(lp));
+    assert(dst + (cnt * len) <= (LINENO)lalloced(lp));
     assert(cnt >= 0);
 
     if (len) {

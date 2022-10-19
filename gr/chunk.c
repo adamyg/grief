@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_chunk_c,"$Id: chunk.c,v 1.21 2020/06/03 15:56:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_chunk_c,"$Id: chunk.c,v 1.22 2022/08/10 15:44:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: chunk.c,v 1.21 2020/06/03 15:56:54 cvsuser Exp $
+/* $Id: chunk.c,v 1.22 2022/08/10 15:44:56 cvsuser Exp $
  * Buffer chunk implementation.
  *
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2022, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -394,4 +394,5 @@ chunkfree(BUFFERCHUNKLIST_t *chunklist, BUFFERCHUNK_t *chunk)
     chunk->c_magic2 = 0xDEADBEEF;
     chk_free(chunk);
 }
+
 /*end*/

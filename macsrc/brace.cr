@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: brace.cr,v 1.8 2014/10/27 23:28:18 ayoung Exp $
+/* $Id: brace.cr,v 1.9 2022/08/10 15:44:58 cvsuser Exp $
  * Brace matching.
  *
  *
@@ -28,8 +28,19 @@ find_matching_brace()
 #define C_BRACKETS  "[](){}"
 
     string bracket, mbracket, s, e, c;
-    int i, lvl, incr, fwd;
-    int ins, inq;                               /* in string or quote */
+    int lvl, incr, fwd;
+    int line, col;                              /* syntax_find() results */
+    int ins, inq;                               /* in-string or in-quote */
+    int i;
+
+    if ((i = syntax_find(0, line, col)) >= 0) {
+        if (0 == i) {
+            move_abs(line, col);
+        } else {
+            error("Matching bracket not found ...");
+        }
+        return;
+    }
 
     save_position();
     bracket = read(1);
@@ -43,13 +54,14 @@ find_matching_brace()
     }
 
     message("Locating matching bracket...");
+
     i = index(C_BRACKETS, bracket) - 1;
     fwd = i & 1;
     incr = -1;
-    if (fwd)
-        incr = 1;
+    if (fwd) incr = 1;
     i = 2 * i + 1;
     mbracket = substr("[][]()(){}{}", i, 2);
+
     s = "[" + quote_regexp(mbracket) + "\"\']"; /* match plus quote */
     e = substr(mbracket, 1, 1);                 /* end/closing */
 

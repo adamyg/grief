@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_position_c,"$Id: position.c,v 1.8 2021/10/17 12:10:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_position_c,"$Id: position.c,v 1.9 2022/08/10 15:44:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: position.c,v 1.8 2021/10/17 12:10:13 cvsuser Exp $
+/* $Id: position.c,v 1.9 2022/08/10 15:44:57 cvsuser Exp $
  * Buffer position/status.
  *
  *
@@ -199,4 +199,5 @@ position_shutdown(void)
         chk_free(pos);
     }
 }
+
 /*end*/

@@ -1,11 +1,11 @@
 #ifndef GR_MAP_H_INCLUDED
 #define GR_MAP_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_map_h,"$Id: map.h,v 1.15 2021/06/10 06:13:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_map_h,"$Id: map.h,v 1.16 2022/08/10 15:44:57 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: map.h,v 1.15 2021/06/10 06:13:02 cvsuser Exp $
+/* $Id: map.h,v 1.16 2022/08/10 15:44:57 cvsuser Exp $
  * Character/line mapping ulitlies.
  *
  *
@@ -58,6 +58,7 @@ extern void                 linep_flush(BUFFER_t *bp);
 extern int                  line_sizeregion(const LINE_t *lp, int col, int dot, int characters, LINENO *lengthp, LINENO *colp);
 
 extern int                  line_current_status(int *value, int count);
+extern void                 line_vstatus_update(void); 
 
 extern int                  line_current_offset(int fill);
 extern int                  line_offset(const int line, const int col, int fill);

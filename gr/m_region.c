@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_region_c,"$Id: m_region.c,v 1.11 2022/05/31 16:18:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_region_c,"$Id: m_region.c,v 1.12 2022/07/10 13:13:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_region.c,v 1.11 2022/05/31 16:18:21 cvsuser Exp $
+/* $Id: m_region.c,v 1.12 2022/07/10 13:13:08 cvsuser Exp $
  * Block primitives.
  *
  *
@@ -260,4 +260,5 @@ do_write_block(void)            /* int ([string fname], [int append = FALSE], [i
     acc_assign_int(1);
     chk_free(mem);
 }
+
 /*end*/
