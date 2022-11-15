@@ -82,9 +82,7 @@ jobs:
     #    three lines and modify them (or add more) to build your code if your
     #    project uses a compiled language
     
-    - name: Ubuntu, compile
-      shell: bash
-      run: |
+    - run: |
         make release
 
     - name: Perform CodeQL Analysis
