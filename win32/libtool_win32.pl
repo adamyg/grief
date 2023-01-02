@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: libtool_win32.pl,v 1.42 2022/06/11 04:02:17 cvsuser Exp $
+# $Id: libtool_win32.pl,v 1.43 2023/01/02 08:17:55 cvsuser Exp $
 # libtool emulation for WIN32 builds.
 #
 #   **Warning**
@@ -349,7 +349,7 @@ Link()
 {
     my $cc = shift @ARGV;
 
-    my ($output, $dlbase, $rpath, $bindir, $module, $mapfile);
+    my ($output, $dlbase, $rpath, $bindir, $module, $mapfile, $manifestinput);
     my $version_number = '';
     my $wc_fastcall = -1;                       # fastcall (Watcom) convention.
     my $wc_debugger = '';
@@ -378,7 +378,7 @@ Link()
             my $val = shift @ARGV;
             Error("link: missing output")
                 if (! $val);
-            Error("link: multiple outputs specified <$output> and <$val>")
+            Error("link: multiple outputs specified <${output}> and <${val}>")
                 if ($output);
             if ($val =~ /\.exe$/i) {
                 $linktype = 'exe';
@@ -391,13 +391,13 @@ Link()
 
         } elsif (/^[-\/]Fo[=]?(.*)/) {          # -Fo[=]<output>
             my $val = ($1 ? $1 : shift @ARGV);
-            Error("link: multiple outputs specified <$output> and <$val>")
+            Error("link: multiple outputs specified <${output}> and <${val}>")
                 if ($output);
             $output = $val;
 
         } elsif (/^[-\/]Fe[=]?(.*)/) {          # -Fe[=]<output>
             my $val = ($1 ? $1 : shift @ARGV);
-            Error("link: multiple outputs specified <$output> and <$val>")
+            Error("link: multiple outputs specified <${output}> and <${val}>")
                 if ($output);
             $linktype = 'exe';
             $output = $val;
@@ -405,18 +405,24 @@ Link()
         } elsif (('wcl386' eq $cc || 'owcc' eq $cc) and /^[-\/]Fm[=]?(.*)/i) {
                                                 # -Fm[=]<output>
             my $val = ($1 ? $1 : shift @ARGV);
-            Error("link: multiple mapfile specified <$mapfile> and <$val>")
+            Error("link: multiple mapfile options specified <${mapfile}> and <${val}>")
                 if ($mapfile);
             $mapfile = $val;
 
         } elsif (/^[-\/]Map[:=]?(.*)/i) {       # -Map[:=]<output>
             my $val = ($1 ? $1 : shift @ARGV);
-            Error("link: multiple mapfile specified <$mapfile> and <$val>")
+            Error("link: multiple mapfile options specified <${mapfile}> and <${val}>")
                 if ($mapfile);
             $mapfile = $val;
 
         } elsif (/^(.*)\.lo$/ || /^(.*)\.o$/ || /^(.*)\.obj$/i) {
             push @OBJECTS, $_;
+
+        } elsif (/^[-\/]ManifestInput[:=]?(.*)/i) { # -ManifestInput[:=]<input>
+            my $val = ($1 ? $1 : shift @ARGV);
+            Error("link: multiple manifestinput options specified <${manifestinput}> and <${val}>")
+                if ($manifestinput);
+            $manifestinput = $val;
 
         } elsif (/^(.*)\.res$/) {
             push @RESOURCES, $_;
@@ -834,6 +840,8 @@ print "*** non-libtool objects @BAD_OBJECTS is not portable!\n";
 
         }
         print CMD "/MANIFEST\n";
+        print CMD "/MANIFESTINPUT:${manifestinput}\n"
+            if ($manifestinput);
         print CMD "/NXCOMPAT\n";
         print CMD "/DYNAMICBASE\n";
         print CMD "/MAP:${mappath}\n";
