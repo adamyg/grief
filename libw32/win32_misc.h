@@ -1,7 +1,7 @@
 #ifndef LIBW32_WIN32_MISC_H_INCLUDED
 #define LIBW32_WIN32_MISC_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_misc_h,"$Id: win32_misc.h,v 1.15 2022/06/13 06:51:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_misc_h,"$Id: win32_misc.h,v 1.16 2023/01/01 11:28:46 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -37,6 +37,7 @@ __CPRAGMA_ONCE
 __BEGIN_DECLS
 
 enum w32ostype {            /* generalised machine types, ignoring server */
+    OSTYPE_WIN_11,
     OSTYPE_WIN_10,
     OSTYPE_WIN_8,
     OSTYPE_WIN_7,

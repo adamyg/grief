@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ringbuf_c,"$Id: ringbuf.c,v 1.8 2022/09/20 15:19:11 cvsuser Exp $")
+__CIDENT_RCSID(gr_ringbuf_c,"$Id: ringbuf.c,v 1.9 2022/12/03 16:33:05 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ringbuf.c,v 1.8 2022/09/20 15:19:11 cvsuser Exp $
+/* $Id: ringbuf.c,v 1.9 2022/12/03 16:33:05 cvsuser Exp $
  * Simple ringbuffer
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2023, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

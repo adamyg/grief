@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.69 2022/06/16 09:03:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.72 2023/01/02 08:18:59 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_win32.c,v 1.69 2022/06/16 09:03:07 cvsuser Exp $
+/* $Id: sys_win32.c,v 1.72 2023/01/02 08:18:59 cvsuser Exp $
  * WIN32 system support.
  *
  *
@@ -83,6 +83,10 @@ extern void                 EnterDebugger(void);
  *      The following table summarizes the most recent operating system version numbers.
  *
  *          Operating system            Version number (major.minor)
+ *          --------------------------------------------------------------
+ *          Windows 11                  10.0
+ *          Windows 10                  10.0
+ *          Windows 8                   6.2
  *          Windows 7                   6.1
  *          Windows Server 2008 R2      6.1
  *          Windows Server 2008         6.0
@@ -1067,18 +1071,54 @@ sys_unlink(const char *fname)
  *      Retrieve the current system time.
  *
  */
+typedef void (WINAPI *GetSystemTimePreciseAsFileTime_t)(LPFILETIME lpSystemTimeAsFileTime);
+
+static unsigned long long
+GetSystemTimeNS100(void)
+{
+    static GetSystemTimePreciseAsFileTime_t fGetSystemTimePreciseAsFileTime = NULL;
+    FILETIME ft = {0};
+    unsigned long long ns100;
+
+    /* 
+     *  GetSystemTime(Precise)AsFileTime returns the number of 100-nanosecond intervals since January 1, 1601 (UTC).
+     *
+     *  GetSystemTimeAsFileTime has a resolution of approximately the TimerResolution (~15.6ms) on Windows XP.
+     *  On Windows 7 it appears to have sub-millisecond resolution. GetSystemTimePreciseAsFileTime (available on
+     *  Windows 8) has sub-microsecond resolution.
+     */
+    if (NULL == fGetSystemTimePreciseAsFileTime) {
+        HINSTANCE hinst;
+
+        if (0 == (hinst = LoadLibraryA("Kernel32")) ||
+                NULL == (fGetSystemTimePreciseAsFileTime =
+                            (GetSystemTimePreciseAsFileTime_t)GetProcAddress(hinst, "GetSystemTimePreciseAsFileTime"))) {
+            fGetSystemTimePreciseAsFileTime =
+                (GetSystemTimePreciseAsFileTime_t)GetProcAddress(hinst, "GetSystemTimeAsFileTime"); /*fall-back*/
+        }
+    }
+     
+    fGetSystemTimePreciseAsFileTime(&ft);
+
+    ns100 = ft.dwHighDateTime;
+    ns100 <<= 32UL;
+    ns100 |= ft.dwLowDateTime;
+    ns100 -= 116444736000000000LL; /* 1601->1970 epoch */
+
+    return ns100;
+}
+
+
 time_t
 sys_time(int *msec)
 {
-    SYSTEMTIME stm;
-    time_t t;
+    const unsigned long long ns100 = GetSystemTimeNS100();
+    time_t secs;
 
-    t = time(NULL);
-    if (msec) {
-        GetSystemTime(&stm);
-        *msec = (int) stm.wMilliseconds;
-    }
-    return (t);
+    if (msec)
+        *msec = (int) ((ns100 % 10000000UL) / 10000UL);
+    secs = (time_t)(ns100 / 10000000UL);
+    return secs;
 }
 
 
@@ -1092,7 +1132,6 @@ sys_time(int *msec)
  *      Each of these functions returns a pointer to the modified pattern. The function returns
  *      NULL if pattern is badly formed or no more unique names can be created from the given
  *      pattern.
- *
  */
 int
 sys_mkstemp(char *pattern)

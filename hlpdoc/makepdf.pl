@@ -1,10 +1,10 @@
 #!/usr/bin/perl
-# $Id: makepdf.pl,v 1.3 2018/10/18 22:13:37 cvsuser Exp $
+# $Id: makepdf.pl,v 1.4 2022/12/09 15:56:48 cvsuser Exp $
 # -*- tabs: 8; indent-width: 4; -*-
 # pdf generation tool.
 #
 #
-# Copyright (c) 1998 - 2018, Adam Young.
+# Copyright (c) 1998 - 2023, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.

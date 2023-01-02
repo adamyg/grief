@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_sysinfo_c,"$Id: m_sysinfo.c,v 1.10 2022/06/16 10:11:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_sysinfo_c,"$Id: m_sysinfo.c,v 1.11 2022/12/03 16:40:17 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_sysinfo.c,v 1.10 2022/06/16 10:11:14 cvsuser Exp $
+/* $Id: m_sysinfo.c,v 1.11 2022/12/03 16:40:17 cvsuser Exp $
  * System information primitives.
  *
  *
@@ -277,4 +277,5 @@ do_uname(void)                  /* int ([string &sysname], [string &nodename], [
 #endif /*HAVE_UTSNAME*/
     acc_assign_int(-1);
 }
+
 /*end*/

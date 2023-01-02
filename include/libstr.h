@@ -1,16 +1,16 @@
 #ifndef GR_LIBSTR_H_INCLUDED
 #define GR_LIBSTR_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_str_h,"$Id: libstr.h,v 1.24 2022/06/16 10:16:26 cvsuser Exp $")
+__CIDENT_RCSID(gr_str_h,"$Id: libstr.h,v 1.25 2023/01/01 11:26:59 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: libstr.h,v 1.24 2022/06/16 10:16:26 cvsuser Exp $
+/* $Id: libstr.h,v 1.25 2023/01/01 11:26:59 cvsuser Exp $
  * libstr - String utility library.
  *
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2023, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

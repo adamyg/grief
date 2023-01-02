@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.45 2022/08/10 15:44:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.46 2023/01/02 10:58:11 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.45 2022/08/10 15:44:56 cvsuser Exp $
+/* $Id: cmain.c,v 1.46 2023/01/02 10:58:11 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -1737,8 +1737,9 @@ usage(int what)
     int width;
 
     fprintf(stderr, "\n"\
-        "%s %s compiled %s (cm version %u.%u)\n"\
-        "\n", x_appname, x_version, x_compiled, (unsigned) (cm_version / 10), (unsigned) (cm_version % 10));
+        "%s %s.%s compiled %s (cm version %u.%u)\n"\
+        "\n", x_appname, x_version, x_buildnumber, x_compiled,
+            (unsigned) (cm_version / 10), (unsigned) (cm_version % 10));
 
     if (3 == what) {
         /*

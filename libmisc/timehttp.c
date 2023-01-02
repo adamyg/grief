@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_timehttp_c,"$Id: timehttp.c,v 1.5 2022/09/20 15:19:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_timehttp_c,"$Id: timehttp.c,v 1.6 2022/12/03 16:33:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* HTTP time parser.
@@ -15,7 +15,7 @@ __CIDENT_RCSID(gr_timehttp_c,"$Id: timehttp.c,v 1.5 2022/09/20 15:19:12 cvsuser 
  *
  *
  *
- * Copyright (c) 2017 - 2022, Adam Young.
+ * Copyright (c) 2017 - 2023, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -270,4 +270,5 @@ main(void)
     }
 }
 #endif  /*LOCAL_MAIN*/
+
 /*end*/

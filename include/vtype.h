@@ -1,16 +1,16 @@
 #ifndef GR_VTYPE_H_INCLUDED
 #define GR_VTYPE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vtype_h,"$Id: vtype.h,v 1.11 2022/03/21 14:55:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_vtype_h,"$Id: vtype.h,v 1.12 2023/01/01 11:26:59 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vtype.h,v 1.11 2022/03/21 14:55:28 cvsuser Exp $
+/* $Id: vtype.h,v 1.12 2023/01/01 11:26:59 cvsuser Exp $
  * Self-organising integer vector data structure.
  *
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2023, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

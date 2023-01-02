@@ -1,9 +1,9 @@
 /* -*- mode: c; indent-width: 4; -*-
- * $Id: edpack1.h,v 1.6 2022/03/21 14:55:27 cvsuser Exp $
+ * $Id: edpack1.h,v 1.7 2023/01/01 11:26:59 cvsuser Exp $
  * Structure packing.
  * ==noguard==
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2023, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(cr_unhook_c,"$Id: llunhook.c,v 1.13 2022/03/21 15:13:04 cvsuser Exp $")
+__CIDENT_RCSID(cr_unhook_c,"$Id: llunhook.c,v 1.15 2022/12/04 15:23:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: llunhook.c,v 1.13 2022/03/21 15:13:04 cvsuser Exp $
+/* $Id: llunhook.c,v 1.15 2022/12/04 15:23:37 cvsuser Exp $
  * Linked list management module.
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2023, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -51,3 +51,4 @@ ll_unhook(List_p lp)
     return (lp);
 }
 
+/*end*/

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_anchor_c,"$Id: anchor.c,v 1.46 2021/06/10 06:13:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_anchor_c,"$Id: anchor.c,v 1.47 2022/12/03 16:40:16 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: anchor.c,v 1.46 2021/06/10 06:13:01 cvsuser Exp $
+/* $Id: anchor.c,v 1.47 2022/12/03 16:40:16 cvsuser Exp $
  * Anchor primitives.
  *
  *
@@ -875,4 +875,3 @@ do_swap_anchor(void)            /* int () */
 }
 
 /*end*/
-

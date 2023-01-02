@@ -1,16 +1,16 @@
 #ifndef GR_EDREFOBJ_H_INCLUDED
 #define GR_EDREFOBJ_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edrefobj_h,"$Id: edrefobj.h,v 1.22 2022/03/21 14:55:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_edrefobj_h,"$Id: edrefobj.h,v 1.23 2023/01/01 11:26:59 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edrefobj.h,v 1.22 2022/03/21 14:55:27 cvsuser Exp $
+/* $Id: edrefobj.h,v 1.23 2023/01/01 11:26:59 cvsuser Exp $
  * Reference strings
  *
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2023, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

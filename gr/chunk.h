@@ -1,15 +1,15 @@
 #ifndef GR_CHUNK_H_INCLUDED
 #define GR_CHUNK_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_chunk_h,"$Id: chunk.h,v 1.12 2018/10/01 20:59:48 cvsuser Exp $")
+__CIDENT_RCSID(gr_chunk_h,"$Id: chunk.h,v 1.13 2022/12/03 16:40:16 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: chunk.h,v 1.12 2018/10/01 20:59:48 cvsuser Exp $
+/* $Id: chunk.h,v 1.13 2022/12/03 16:40:16 cvsuser Exp $
  * File memory management.
  *
  *
- * Copyright (c) 1998 - 2018, Adam Young.
+ * Copyright (c) 1998 - 2023, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it

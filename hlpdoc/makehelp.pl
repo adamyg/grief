@@ -1,10 +1,10 @@
 #!/usr/bin/perl
-# $Id: makehelp.pl,v 1.21 2020/06/05 00:13:06 cvsuser Exp $
+# $Id: makehelp.pl,v 1.22 2022/12/09 15:56:48 cvsuser Exp $
 # -*- tabs: 8; indent-width: 4; -*-
 # Help collection tool.
 #
 #
-# Copyright (c) 1998 - 2020, Adam Young.
+# Copyright (c) 1998 - 2023, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.101 2022/08/10 15:44:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.102 2022/12/03 16:40:16 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keywd.c,v 1.101 2022/08/10 15:44:56 cvsuser Exp $
+/* $Id: keywd.c,v 1.102 2022/12/03 16:40:16 cvsuser Exp $
  * Keyword table.
  *
  *
@@ -120,7 +120,7 @@ const int cm_version = CM_VERSION;
 #define VERSION_204
 #define VERSION_205         /* 01/04/2020, register(), __lexicalblock(), isclose() and cast_xxx() */
 #define VERSION_206         /* 06/21, UTF8 */
-#define VERSION_207         /* 07/22, syntax_findg() */
+#define VERSION_207         /* 07/22, syntax_find() */
 
 //  #define VERSION_XX1     /* array's, staged/experimental */
 //  #define VERSION_XX2     /* not implemented/alpha */

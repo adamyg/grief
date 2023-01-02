@@ -1,11 +1,11 @@
 #ifndef GR_EDATOM_H_INCLUDED
 #define GR_EDATOM_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(edatom_h,"$Id: edatom.h,v 1.1 2022/05/31 16:18:22 cvsuser Exp $")
+__CIDENT_RCSID(edatom_h,"$Id: edatom.h,v 1.2 2023/01/01 11:26:58 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edatom.h,v 1.1 2022/05/31 16:18:22 cvsuser Exp $
+/* $Id: edatom.h,v 1.2 2023/01/01 11:26:58 cvsuser Exp $
  * Atom representation.
  *
  *
@@ -43,7 +43,3 @@ typedef long long unsigned accuint_t;
 typedef double accfloat_t;
 
 #endif /*GR_EDATOM_H_INCLUDED*/
-
-
-
-

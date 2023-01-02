@@ -51,7 +51,7 @@ VS_VERSION_INFO VERSIONINFO
 				VALUE "FileVersion",		GR_VERSION ", Build:" GR_BUILD_DATE "-" GR_BUILD_NUMBER
 				VALUE "InternalName",		"GRIEF"
 				VALUE "Copyright",
-					"Copyright (C) 2014-2022, Adam Young. All rights reserved. "
+					"Copyright (C) 1998-2023, Adam Young. All rights reserved. "
 					"Licensed under the GRIEF License. "
 					"This is free software; see the source for copying conditions. "
 					"There is NO warranty; not even for MERCHANTABILITY "

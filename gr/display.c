@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.83 2022/09/12 15:58:17 cvsuser Exp $")
+__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.84 2022/09/28 16:17:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: display.c,v 1.83 2022/09/12 15:58:17 cvsuser Exp $
+/* $Id: display.c,v 1.84 2022/09/28 16:17:06 cvsuser Exp $
  * High level display interface.
  *
  *
@@ -2735,7 +2735,7 @@ draw_window(WINDOW_t *wp, int top, LINENO line, int end, const int bottom, int a
         const LINE_t *lp = vm_lock_line2(line);
 
         if (VTDRAW_DIRTY & actions) {           /* skip clean/blank lines */
-            if (NULL == lp || 0 == isdirty(curbp, line)) {
+            if (NULL == lp || (0 == isdirty(curbp, line) && 0 == lisdirty(lp))) {
                 vm_unlock(line);
                 continue;
             }
@@ -3038,9 +3038,6 @@ draw_title(const WINDOW_t *wp, const int top, const int line)
         vtputb(ch);
         ((WINDOW_t *)wp)->w_disp_cmap = x_base_cmap;
 
-//      while (*title && titlelen-- > 0) {
-//          vtputb(*title++ | title_col);
-//      }
         while (*title && titlelen > 0) {        /* MCHAR */
             const unsigned char *cend;
             int cwidth;

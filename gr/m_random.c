@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_random_c,"$Id: m_random.c,v 1.8 2014/10/22 02:33:06 ayoung Exp $")
+__CIDENT_RCSID(gr_m_random_c,"$Id: m_random.c,v 1.9 2022/12/03 16:40:17 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_random.c,v 1.8 2014/10/22 02:33:06 ayoung Exp $
+/* $Id: m_random.c,v 1.9 2022/12/03 16:40:17 cvsuser Exp $
  * Random primitives.
  *
  *
@@ -547,6 +547,5 @@ bsd_random(void)
         }
         return((long)i);
 }
+
 /*end*/
-
-

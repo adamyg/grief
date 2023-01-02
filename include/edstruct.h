@@ -1,16 +1,16 @@
 #ifndef GR_EDSTRUCT_H_INCLUDED
 #define GR_EDSTRUCT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.73 2022/09/13 14:15:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.75 2023/01/02 09:12:14 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edstruct.h,v 1.73 2022/09/13 14:15:35 cvsuser Exp $
+/* $Id: edstruct.h,v 1.75 2023/01/02 09:12:14 cvsuser Exp $
  * Window, buffer, line and character-map definitions.
  *
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2023, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -1217,6 +1217,7 @@ extern const int        x_edit_version;
 
 extern const char *     x_appname;
 extern const char *     x_version;
+extern const char *     x_buildnumber;
 extern const char *     x_copyright;
 extern const char *     x_compiled;
 

@@ -1,8 +1,8 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.10 2021/04/15 15:19:21 cvsuser Exp $
+# $Id: Makefile.in,v 1.11 2022/12/09 15:56:47 cvsuser Exp $
 # Help documentation.
 #
-# Copyright (c) 1998 - 2021, Adam Young.
+# Copyright (c) 1998 - 2023, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
