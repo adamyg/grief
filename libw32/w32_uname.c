@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_uname_c,"$Id: w32_uname.c,v 1.19 2023/01/02 08:14:18 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_uname_c,"$Id: w32_uname.c,v 1.20 2023/01/02 14:57:18 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -525,6 +525,9 @@ RegCurrentVersion(struct CurrentVersion *cv)
     DWORD extra = 0;
     HKEY key = 0;
 
+#ifndef KEY_WOW64_64KEY
+#define KEY_WOW64_64KEY (0x0100)
+#endif
     if (IsWow64()) extra |= KEY_WOW64_64KEY; // enable 64-bit view; values can differ
     if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, root, 0, KEY_QUERY_VALUE|extra, &key) == ERROR_SUCCESS) {
         DWORD size, type = REG_NONE;
