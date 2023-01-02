@@ -104,7 +104,7 @@ Externally reviewed information regarding the development of BRIEF, can be found
 
 Details about the commercially supported BRIEF clone CRisPEdit(tm), can be found at the following.
 
-    * <http://www.crisp.demon.co.uk>
+    * <http://www.crispeditor.co.uk> previously <http://www.crisp.demon.co.uk>
 
     * <http://www.crisp.com>
 
