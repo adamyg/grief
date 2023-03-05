@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.62 2023/01/02 08:39:29 cvsuser Exp $
+# $Id: Makefile.in,v 1.63 2023/03/05 13:28:41 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2023, Adam Young.
@@ -26,7 +26,7 @@
 #
 
 @SET_MAKE@
-ROOT		= @abs_top_builddir@
+ROOT		= @top_builddir@
 
 PACKAGE		= @PACKAGE@
 PKG_BUGREPORT	= @PACKAGE_BUGREPORT@
@@ -101,11 +101,10 @@ top_srcdir	= @top_srcdir@
 
 # File extensions
 
-E=
 A=		.a
 O=		.o
 LP=		lib
-E=		.exe
+E=		
 
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
 XCLEAN=		$(D_BIN)/*.map
