@@ -1,11 +1,11 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.134 2022/06/16 08:46:20 cvsuser Exp $
+# $Id: makelib.pl,v 1.135 2023/03/05 13:28:14 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
 #
 #
-# Copyright (c) 1998 - 2022, Adam Young.
+# Copyright (c) 1998 - 2023, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -3045,6 +3045,11 @@ Makefile($$$)           # (type, dir, file)
         }
     }
 
+    my $relpath = (File::Spec->file_name_is_absolute($dir) ? $CWD :
+                    dos2unix(File::Spec->abs2rel($CWD, "${CWD}/${dir}")));
+    print "relpath=${relpath}\n"
+        if ($o_verbose);
+
     my $continuation = 0;
     while (<MAKEFILE>) {
         $_ =~ s/\s*(\n|$)//;                    # kill trailing whitespace & nl
@@ -3184,8 +3189,8 @@ Makefile($$$)           # (type, dir, file)
     }
 
     # replace tags
-    $x_tokens{top_builddir} = ($dir eq '.' ? '.' : '..');
-    $x_tokens{top_srcdir} = ($dir eq '.' ? '.' : '..');
+    $x_tokens{top_builddir} = $relpath;
+    $x_tokens{top_srcdir} = $relpath;
     if ($type eq 'owc') {                      # OpenWatcom
        if ('-i=' eq $x_tokens{ISWITCH}) {
             $x_tokens{CINCLUDE} =~ s/-I([^\s]+)/-i=\$(subst \/,\\,$1)/g;
@@ -3387,7 +3392,7 @@ Config($$$)             # (type, dir, file)
 
 
 sub
-cannon_path($)
+cannon_path($)          #(name)
 {
     my $path  = shift;
     my ($volume, $directories, $file) = File::Spec->splitpath(File::Spec->canonpath($path));
@@ -3404,6 +3409,24 @@ cannon_path($)
     $path = File::Spec->catpath($volume, File::Spec->catdir(@dar), $file);
     $path =~ s/\\/\//g;
     return $path;
+}
+
+
+sub
+unix2dos($)             #(name)
+{
+    my $name = shift;
+    $name =~ s/\//\\/g;
+    return $name;
+}
+
+
+sub
+dos2unix($)             #(name)
+{
+    my $name = shift;
+    $name =~ s/\\/\//g;
+    return $name;
 }
 
 

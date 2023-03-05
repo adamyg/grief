@@ -20,7 +20,7 @@
 
     On WIN32 using Visual C/C++, build by the following these steps:
 
-      Note: At present only tested against MSVC 2008 - 2015,
+      Note: At present only tested against MSVC 2008 - 2019,
         yet other versions should functiom with little effort.
 
       a. Install the gnuwin32 tool set or similar. (optional) set the
@@ -283,5 +283,5 @@ setting up terminal features.
 
 *Some* of this information may be obsolete, but most of it will be fine.
 
-$Id: INSTALL,v 1.17 2022/07/11 15:04:35 cvsuser Exp $
+$Id: INSTALL,v 1.18 2023/03/05 13:29:03 cvsuser Exp $
 
