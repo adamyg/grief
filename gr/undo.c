@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_undo_c,"$Id: undo.c,v 1.51 2022/08/10 15:44:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_undo_c,"$Id: undo.c,v 1.52 2023/03/05 10:17:45 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: undo.c,v 1.51 2022/08/10 15:44:58 cvsuser Exp $
+/* $Id: undo.c,v 1.52 2023/03/05 10:17:45 cvsuser Exp $
  * undo and redo facilities.
  *
  *
@@ -492,12 +492,10 @@ u_scrap(void)
 static void
 undo_debug(const undo_t *undo, const char *str)
 {
-//#if defined(ED_TRACE) & (ED_TRACE >= 1)
     ED_TRACEX(DB_UNDO, ("%s(op:%d/%s, line:%d, col:%d, len:%ld, last=%08lx, chain:%d)\n", \
         str, undo->u_opcode, opcodes[(int) undo->u_opcode], \
         undo->u_line, undo->u_col, (long)undo->u_length, (long)undo->u_last, \
         undo->u_chain))
-//#endif
     __CUNUSED(opcodes)
     __CUNUSED(undo)
     __CUNUSED(str)

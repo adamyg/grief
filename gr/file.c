@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.93 2022/06/15 12:16:32 cvsuser Exp $")
+__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.94 2023/03/05 10:17:45 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: file.c,v 1.93 2022/06/15 12:16:32 cvsuser Exp $
+/* $Id: file.c,v 1.94 2023/03/05 10:17:45 cvsuser Exp $
  * File-buffer primitives and support.
  *
  *
@@ -86,7 +86,7 @@ static int              buf_insert(BUFFER_t *bp, const char *fname, int insertin
 static int              buf_diskchanged(BUFFER_t *bp);
 static int              buf_backup(BUFFER_t *bp);
 static int              buf_readin(BUFFER_t *bp, int fd, const char *fname, FSIZE_t fsize, int flags, const char *encoding);
-static int              buf_writeout(BUFFER_t *bp, const char *fname, int undo_term, int append);
+static int              buf_writeout(BUFFER_t *bp, const char *fname, int undo, int append);
 static int              buf_trimline(BUFFER_t *bp, const LINECHAR *text, LINENO length);
 
 static int              file_copy(const char *src, const char *dst, mode_t perms, uid_t owner, gid_t group);
@@ -1831,8 +1831,6 @@ buf_writeout(BUFFER_t *bp, const char *fname, int undo, int append /*const char 
     vfs_file_t *fp = NULL;
     int handle = -1;
 
-    __CUNUSED(undo)
-
     oflags = OPEN_W_BINARY | O_WRONLY | O_CREAT;
     if (sys_stat(fname, &sb) >= 0) {
         bp->b_mode = sb.st_mode;                /* update permissions */
@@ -1932,6 +1930,12 @@ buf_writeout(BUFFER_t *bp, const char *fname, int undo, int append /*const char 
             errorf("Error closing file: File system may be full.");
         }
     }
+
+    if (undo) {
+        lrenumber(bp);
+        u_terminate();                      /* mark termination point */
+    }
+
     set_curbp(saved_bp);
     return TRUE;
 
