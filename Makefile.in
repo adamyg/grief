@@ -105,7 +105,11 @@ E=
 A=		.a
 O=		.o
 LP=		lib
+ifeq ("win32","@build_os@")
 E=		.exe
+else
+E=   
+endif
 
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
 XCLEAN=		$(D_BIN)/*.map
