@@ -164,8 +164,7 @@
 
       f. Build the entire tree with:
 
-            make
-         or make release
+            make release build
 
       g. Note that the default installation paths (compiled into GRIEF, but may be
        overridden with environment variables or command line) are:
@@ -182,7 +181,19 @@
 
       h. To install, type:
 
-            make release install
+            sudo make release install
+
+      i. You will need the following environment variables in order to use the system:
+      
+            export GRPATH=/usr/local/share/gr/macros
+            export GRHELP=/usr/local/share/gr/help
+	    
+         Also:
+	    
+            edit a file with:  gr  <file>
+	    get help with:     Alt-h
+	    exit editor with:  Alt-x
+	    
 
                                  -------
 
