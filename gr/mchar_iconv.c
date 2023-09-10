@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mchar_iconv_c,"$Id: mchar_iconv.c,v 1.27 2022/12/03 16:40:17 cvsuser Exp $")
+__CIDENT_RCSID(gr_mchar_iconv_c,"$Id: mchar_iconv.c,v 1.28 2023/03/06 15:24:46 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mchar_iconv.c,v 1.27 2022/12/03 16:40:17 cvsuser Exp $
+/* $Id: mchar_iconv.c,v 1.28 2023/03/06 15:24:46 cvsuser Exp $
  * Character-set conversion/mapping interface and adapters.
  *
  *
@@ -20,6 +20,7 @@ __CIDENT_RCSID(gr_mchar_iconv_c,"$Id: mchar_iconv.c,v 1.27 2022/12/03 16:40:17 c
  */
 
 #include <editor.h>
+#undef HAVE_LIBICU
 #include <eddebug.h>
 #include <libstr.h>                             /* str_...()/sxprintf() */
 

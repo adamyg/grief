@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mchar_info_c,"$Id: mchar_info.c,v 1.22 2022/12/03 16:40:17 cvsuser Exp $")
+__CIDENT_RCSID(gr_mchar_info_c,"$Id: mchar_info.c,v 1.23 2023/03/06 15:25:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mchar_info.c,v 1.22 2022/12/03 16:40:17 cvsuser Exp $
+/* $Id: mchar_info.c,v 1.23 2023/03/06 15:25:21 cvsuser Exp $
  * Locale/multibyte character information.
  *
  *
@@ -20,6 +20,7 @@ __CIDENT_RCSID(gr_mchar_info_c,"$Id: mchar_info.c,v 1.22 2022/12/03 16:40:17 cvs
  */
 
 #include <editor.h>
+#undef HAVE_LIBICU
 #if defined(HAVE_LIBICU)
 #include <unicode/uclean.h>                     /* u_init() */
 #include <unicode/ucnv.h>
