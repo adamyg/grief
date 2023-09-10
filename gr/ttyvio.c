@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.74 2022/09/13 14:31:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.75 2023/09/10 16:33:36 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.74 2022/09/13 14:31:24 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.75 2023/09/10 16:33:36 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -188,7 +188,7 @@ static unsigned         tt_defaultbg    = 0;
 static unsigned         tt_defaultfg    = 7;
 static VIOHUE           tt_hue;
 static uint16_t         tt_style;
-static char             tt_title[100];
+static WCHAR            tt_title[100];
 
 
 /*
@@ -555,6 +555,12 @@ vio_reference(void)
 static void
 vio_image_save(void)
 {
+#if defined(WIN32)
+    if (0 == origTitle[0])
+        GetConsoleTitleW(origTitle, _countof(origTitle));
+    vio_save();
+
+#else
     ULONG length = currRows * currCols * sizeof(VIOCELL);
     VIOCELL *screen;
     int rc;
@@ -580,6 +586,7 @@ vio_image_save(void)
         VioGetCurPos(&origRow, &origCol, 0);
         origScreen = screen;
     }
+#endif
 }
 
 
@@ -596,6 +603,12 @@ vio_image_save(void)
 static void
 vio_image_restore(void)
 {
+#if defined(WIN32)
+    if (origTitle[0]) 
+        SetConsoleTitleW(origTitle);
+    vio_restore();
+
+#else   //!WIN32
     if (origScreen) {
         const int rows = currRows, cols = currCols;
         const int cnt = (origCols <= cols ? origCols : cols);
@@ -630,6 +643,7 @@ vio_image_restore(void)
         VioSetCurPos(origRow, origCol, 0);      /* cursor */
         VioSetCurType(&origCursor, 0);
     }
+#endif  //WIN32
 }
 
 
