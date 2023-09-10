@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mouse_c,"$Id: mouse.c,v 1.40 2014/10/22 02:33:14 ayoung Exp $")
+__CIDENT_RCSID(gr_mouse_c,"$Id: mouse.c,v 1.41 2023/09/10 16:35:52 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mouse.c,v 1.40 2014/10/22 02:33:14 ayoung Exp $
+/* $Id: mouse.c,v 1.41 2023/09/10 16:35:52 cvsuser Exp $
  * Mouse support code.
  *
  *
@@ -389,7 +389,8 @@ do_get_mouse_pos(void)          /* int ([int x], [int y], [int win]. [int line],
             } else {
                 region = 2;                     /* inside. */
 
-                switch (a.type) {                case MK_NORMAL:
+                switch (a.type) {
+                case MK_NORMAL:
                     if (y == a.start_line && x < a.start_col) {
                         region = 4;             /* left of a column region. */
                     } else if (y == a.end_line && a.end_col) {
