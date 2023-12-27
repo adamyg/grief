@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_writev_c,"$Id: w32_writev.c,v 1.3 2022/03/21 14:29:42 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_writev_c,"$Id: w32_writev.c,v 1.4 2023/12/27 17:52:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 writev() system calls,
  *
- * Copyright (c) 2018 - 2022, Adam Young.
+ * Copyright (c) 2018 - 2023, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -26,13 +26,6 @@ __CIDENT_RCSID(gr_w32_writev_c,"$Id: w32_writev.c,v 1.3 2022/03/21 14:29:42 cvsu
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * license for more details.
  * ==end==
- *
- * Notice: Portions of this text are reprinted and reproduced in electronic form. from
- * IEEE Portable Operating System Interface (POSIX), for reference only. Copyright (C)
- * 2001-2003 by the Institute of. Electrical and Electronics Engineers, Inc and The Open
- * Group. Copyright remains with the authors and the original Standard can be obtained
- * online at http://www.opengroup.org/unix/online.html.
- * ==extra==
  */
 
 #ifndef _WIN32_WINNT

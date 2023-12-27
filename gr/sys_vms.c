@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_vms_c,"$Id: sys_vms.c,v 1.15 2014/10/22 02:33:20 ayoung Exp $")
+__CIDENT_RCSID(gr_sys_vms_c,"$Id: sys_vms.c,v 1.16 2023/09/10 16:35:52 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_vms.c,v 1.15 2014/10/22 02:33:20 ayoung Exp $
+/* $Id: sys_vms.c,v 1.16 2023/09/10 16:35:52 cvsuser Exp $
  * VMS system support
  *
  *
@@ -393,4 +393,3 @@ sys_noinherit(int fd)
 }
 
 #endif /*_VMS*/
-

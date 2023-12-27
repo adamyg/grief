@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_dir_c,"$Id: w32_dir.c,v 1.14 2022/03/21 14:29:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_dir_c,"$Id: w32_dir.c,v 1.15 2023/12/27 17:52:05 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -7,7 +7,7 @@ __CIDENT_RCSID(gr_w32_dir_c,"$Id: w32_dir.c,v 1.14 2022/03/21 14:29:40 cvsuser E
  *
  *      mkdir, rmdir, chdir
  *
- * Copyright (c) 2007, 2012 - 2022 Adam Young.
+ * Copyright (c) 2007, 2012 - 2023 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

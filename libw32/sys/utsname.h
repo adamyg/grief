@@ -1,7 +1,7 @@
 #ifndef LIBW32_SYS_UTSNAME_H_INCLUDED
 #define LIBW32_SYS_UTSNAME_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_utsname_h,"$Id: utsname.h,v 1.9 2022/03/21 14:29:43 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_utsname_h,"$Id: utsname.h,v 1.10 2023/12/27 17:52:09 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -38,4 +38,3 @@ LIBW32_API int          uname(struct utsname *buf);
 __END_DECLS
 
 #endif  /*LIBW32_SYS_UTSNAME_H_INCLUDED*/
-

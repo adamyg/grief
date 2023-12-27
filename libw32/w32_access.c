@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_access_c,"$Id: w32_access.c,v 1.2 2022/03/21 14:29:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_access_c,"$Id: w32_access.c,v 1.3 2023/12/27 17:52:05 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win2 access() system calls
  *
- * Copyright (c) 2022 Adam Young.
+ * Copyright (c) 2021 - 2023 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -26,13 +26,6 @@ __CIDENT_RCSID(gr_w32_access_c,"$Id: w32_access.c,v 1.2 2022/03/21 14:29:40 cvsu
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * license for more details.
  * ==end==
- *
- * Notice: Portions of this text are reprinted and reproduced in electronic form. from
- * IEEE Portable Operating System Interface (POSIX), for reference only. Copyright (C)
- * 2001-2003 by the Institute of. Electrical and Electronics Engineers, Inc and The Open
- * Group. Copyright remains with the authors and the original Standard can be obtained
- * online at http://www.opengroup.org/unix/online.html.
- * ==extra==
  */
 
 #include "win32_internal.h"

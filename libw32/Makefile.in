@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.32 2022/06/11 03:58:36 cvsuser Exp $
+# $Id: Makefile.in,v 1.33 2023/12/27 17:52:05 cvsuser Exp $
 # libwin32 makefile.
 #
 #
-# Copyright (c) 2007, 2012 - 2022 Adam Young.
+# Copyright (c) 2007, 2012 - 2023 Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -27,7 +27,7 @@
 #
 
 @SET_MAKE@
-ROOT=		@abs_top_builddir@
+ROOT?=		@abs_top_builddir@
 top_builddir=	@top_builddir@
 
 # File extensions
@@ -59,6 +59,15 @@ endif
 ifneq ("$(BUILD_TYPE)","release")
 # MSVC Run-time suffix
 RTSUFFIX=d
+endif
+
+QUIETOUT:=	>/dev/null 2>&1
+ifeq ($(VERBOSE),1)
+QUIETOUT:=
+else ifeq ($(VERBOSE),0)
+else ifeq ($(VERBOSE),)
+else
+$(error VERBOSE: unexpected value 0 or 1 required, $(VERBOSE) given]))
 endif
 
 # Directories
@@ -139,6 +148,7 @@ CSOURCES=\
 	w32_gethostname.c \
 	w32_getopt.c \
 	w32_getopt_long.c \
+	w32_getopt_vars.c \
 	w32_getrlimit.c \
 	w32_getrusage.c \
 	w32_getsubopt.c \
@@ -228,6 +238,9 @@ release:
 debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
+CEXTRA := $(CEXTRA:-DLIBW32_STATIC%=)
+CEXTRA := $(CEXTRA:-DLIBW32_DYNAMIC%=)
+
 $(W32LIB):		CEXTRA += -DLIBW32_STATIC -DLIBW32_LIBRARY
 $(W32LIB):		$(D_OBJ)/.created $(LIBOBJS)
 		$(RM) $(RMFLAGS) $@
@@ -247,9 +260,9 @@ $(D_OBJ)/.created:
 
 clean:
 		@echo $(BUILD_TYPE) clean
-		-@$(LIBTOOL) --mode=clean $(RM) $(W32DLL) $(DLLOBJS) >/dev/null 2>&1
-		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(INSTALLED) $(W32LIB) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
-		-@$(RM) $(RMFLAGS) $(LIBOBJS) >/dev/null 2>&1
+		-@$(LIBTOOL) --mode=clean $(RM) $(W32DLL) $(DLLOBJS) $(QUIETOUT)
+		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(INSTALLED) $(W32LIB) $(CLEAN) $(XCLEAN) $(QUIETOUT)
+		-@$(RM) $(RMFLAGS) $(LIBOBJS) $(QUIETOUT)
 
 $(D_OBJ)/%$(O):		%.c
 		$(CC) $(CFLAGS) -o $@ -c $<

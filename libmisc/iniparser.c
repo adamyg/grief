@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_iniparser_c,"$Id: iniparser.c,v 1.16 2022/12/03 16:33:05 cvsuser Exp $")
+__CIDENT_RCSID(gr_iniparser_c,"$Id: iniparser.c,v 1.17 2023/12/27 17:52:05 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: iniparser.c,v 1.16 2022/12/03 16:33:05 cvsuser Exp $
+/* $Id: iniparser.c,v 1.17 2023/12/27 17:52:05 cvsuser Exp $
  * INI parser.
  *
  *
@@ -1643,5 +1643,3 @@ main(void)
 }
 #endif  /*LOCAL_MAIN*/
 /*eof*/
-
-

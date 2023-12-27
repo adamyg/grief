@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_anchor_c,"$Id: anchor.c,v 1.47 2022/12/03 16:40:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_anchor_c,"$Id: anchor.c,v 1.48 2023/09/10 16:34:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: anchor.c,v 1.47 2022/12/03 16:40:16 cvsuser Exp $
+/* $Id: anchor.c,v 1.48 2023/09/10 16:34:27 cvsuser Exp $
  * Anchor primitives.
  *
  *
@@ -431,13 +431,13 @@ anchor_dump(void)
             buffer to be marked, highlighting the inclusive columns
             between the left and right boundaries.
 
+        MK_LINE - A line mark selects entire lines, and allows for easy
+            movement of text from one part of a buffer to another.
+
         MK_NONINC - A non-inclusive mark, like a normal, is a region
             which encompasses from the place where the anchor was
             dropped up to and but 'does not' include the current cursor
             position.
-
-        MK_LINE - A line mark selects entire lines, and allows for easy
-            movement of text from one part of a buffer to another.
 
         Regions are nestable, in that a 'drop_anchor' may be issued
         without an intervening 'raise_anchor'. Each mark is pushed into

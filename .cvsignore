@@ -3,6 +3,13 @@ defunct
 EXTRA
 doc
 /win32/Autoupdater/
+acdefines.h
+config.sub
+config.guess
+config.log
+install-sh
+libtool
+ltmain.sh
 objects.*
 lib.*
 bin.*

@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_wdirent_c,"$Id: w32_wdirent.c,v 1.2 2022/06/11 04:01:45 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_wdirent_c,"$Id: w32_wdirent.c,v 1.3 2023/12/27 17:52:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -7,7 +7,7 @@ __CIDENT_RCSID(gr_w32_wdirent_c,"$Id: w32_wdirent.c,v 1.2 2022/06/11 04:01:45 cv
  *
  *      _wopendir, _wclosedir, _wreaddir, _wseekdir, _wrewindir, _wtelldir
  *
- * Copyright (c) 2021 Adam Young.
+ * Copyright (c) 2021 - 2023 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -96,7 +96,8 @@ _wopendir(const wchar_t *dirname)
         *path = fullpath;
     LPVOID OldValue = NULL;
     _WDIR *dp;
-    int i, len;
+    size_t len;
+    int i;
 
     /* Copy to working buffer */
     if (NULL == dirname) {

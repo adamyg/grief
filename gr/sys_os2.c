@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_os2_c,"$Id: sys_os2.c,v 1.27 2018/10/04 15:39:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_os2_c,"$Id: sys_os2.c,v 1.28 2023/09/10 16:35:52 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_os2.c,v 1.27 2018/10/04 15:39:29 cvsuser Exp $
+/* $Id: sys_os2.c,v 1.28 2023/09/10 16:35:52 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -718,4 +718,3 @@ sys_mousepointer(int state)
 #endif  /*HAVE_MOUSE*/
 
 #endif  /*__OS2__*/
-

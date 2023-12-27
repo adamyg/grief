@@ -1,12 +1,12 @@
 #ifndef LIBW32_SYS_WAIT_H
 #define LIBW32_SYS_WAIT_H
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_wait_h,"$Id: wait.h,v 1.8 2022/03/21 14:29:43 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_wait_h,"$Id: wait.h,v 1.9 2023/12/27 17:52:09 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
- * Copyright (c) 2012 - 2022 Adam Young.
+ * Copyright (c) 2012 - 2023 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

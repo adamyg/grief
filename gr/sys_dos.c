@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_dos_c,"$Id: sys_dos.c,v 1.37 2014/10/22 02:33:20 ayoung Exp $")
+__CIDENT_RCSID(gr_sys_dos_c,"$Id: sys_dos.c,v 1.38 2023/09/10 16:35:52 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_dos.c,v 1.37 2014/10/22 02:33:20 ayoung Exp $
+/* $Id: sys_dos.c,v 1.38 2023/09/10 16:35:52 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -843,4 +843,3 @@ sys_realpath(const char *name, char *buf)
 }
 
 #endif  /*__MSDOS__*/
-

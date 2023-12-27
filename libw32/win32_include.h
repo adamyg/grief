@@ -1,7 +1,7 @@
 #ifndef LIBW32_WIN32_INCLUDE_H_INCLUDED
 #define LIBW32_WIN32_INCLUDE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_include_h,"$Id: win32_include.h,v 1.16 2022/06/13 06:51:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_include_h,"$Id: win32_include.h,v 1.17 2023/12/27 17:52:08 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -35,11 +35,12 @@ __CPRAGMA_ONCE
  *  WinSock/Windows definitions
  */
 
+/* compiler tweaks */
+
 #if defined(_MSC_VER)
 #if !defined(_CRT_SECURE_NO_DEPRECATE)
 #define _CRT_SECURE_NO_DEPRECATE                /* disable deprecate warnings */
 #endif
-
     //#if !defined(_CRT_NO_POSIX_ERROR_CODES)
     //#define _CRT_NO_POSIX_ERROR_CODES             /* disable POSIX error number, see <errno.h> */
     //#endif
@@ -50,6 +51,10 @@ __CPRAGMA_ONCE
     //#define NTDDI_VERSION 0x06000000              /* iphlpapi.h requirement, inet_ntop .. */
     //#endif
     //#endif
+
+#if defined(__GNUC__)   /*BOOST_GCC_VERSION equiv*/
+#define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+#endif
 
 /* winsock and friends */
 

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_macros_c,"$Id: macros.c,v 1.54 2020/04/21 00:01:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_macros_c,"$Id: macros.c,v 1.56 2023/09/10 17:06:53 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: macros.c,v 1.54 2020/04/21 00:01:57 cvsuser Exp $
+/* $Id: macros.c,v 1.56 2023/09/10 17:06:53 cvsuser Exp $
  * Manipulating macro definitions.
  *
  *

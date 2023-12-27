@@ -8,5 +8,8 @@ if not defined GNUWIN32 (
 if not defined PERL (
         set PERL=perl
 )
-%PERL% makelib.pl --gnuwin32=%GNUWIN32% owc20 %1 %2 %3 %4
+if not defined INNO (
+        set INNO="C:/Program Files (x86)/Inno Setup 5/iscc"
+)                                               
+%PERL% makelib.pl --busybox=./win32/busybox --inno=%INNO% owc20 %1 %2 %3 %4
 

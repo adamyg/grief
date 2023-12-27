@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.75 2023/09/10 16:33:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.76 2023/10/19 17:33:35 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.75 2023/09/10 16:33:36 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.76 2023/10/19 17:33:35 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -188,7 +188,7 @@ static unsigned         tt_defaultbg    = 0;
 static unsigned         tt_defaultfg    = 7;
 static VIOHUE           tt_hue;
 static uint16_t         tt_style;
-static WCHAR            tt_title[100];
+static char             tt_title[100];
 
 
 /*
@@ -202,7 +202,7 @@ static USHORT           origRow;
 static USHORT           origCol;
 static USHORT           origAttribute;
 static const VIOCELL *  origScreen;
-static char             origTitle[100];
+static WCHAR            origTitle[100];
 
 static int              currRows;
 static int              currCols;
@@ -573,11 +573,6 @@ vio_image_save(void)
     origCols = currCols;
 
     if (NULL != (screen = chk_calloc(length, 1))) {
-#if defined(WIN32) 
-        GetConsoleTitleA(origTitle, sizeof(origTitle));                     
-        VioGetCurAttribute(&origAttribute, 0);
-#endif
-
         rc = VioReadCellStr(screen, &length, 0, 0, 0);           
         assert(0 == rc);                        /* image */
 
@@ -629,12 +624,6 @@ vio_image_restore(void)
                 *cursor++ = blank;
             }
         }
-
-#if defined(WIN32)
-        if (origTitle[0]) SetConsoleTitleA(origTitle);
-        VioSetColors(16);                       /* color depth, implied by VioReadCellStr() */
-        VioSetCurAttribute(origAttribute, 0);   /* original write color */
-#endif
 
         VioShowBuf(0, currScreenCells, 0);      /* restore image */
         chk_free((void *)origScreen);

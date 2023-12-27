@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_iconv_c,"$Id: w32_iconv.c,v 1.21 2022/06/16 05:17:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_iconv_c,"$Id: w32_iconv.c,v 1.22 2023/12/27 17:52:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 iconv dynamic loader.
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2023, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -26,20 +26,13 @@ __CIDENT_RCSID(gr_w32_iconv_c,"$Id: w32_iconv.c,v 1.21 2022/06/16 05:17:58 cvsus
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * license for more details.
  * ==end==
- *
- * Notice: Portions of this text are reprinted and reproduced in electronic form. from
- * IEEE Portable Operating System Interface (POSIX), for reference only. Copyright (C)
- * 2001-2003 by the Institute of. Electrical and Electronics Engineers, Inc and The Open
- * Group. Copyright remains with the authors and the original Standard can be obtained
- * online at http://www.opengroup.org/unix/online.html.
- * ==extra==
  */
 
 #if defined(_WIN32) || defined(WIN32)
-#include <editor.h>
-#include <eddebug.h>
-#include <libstr.h>
+#include <w32config.h>
 
+#include <stdio.h>
+#include <errno.h>
 #include <assert.h>
 #include "win32_include.h"
 #include "win32_iconv.h"
@@ -47,11 +40,14 @@ __CIDENT_RCSID(gr_w32_iconv_c,"$Id: w32_iconv.c,v 1.21 2022/06/16 05:17:58 cvsus
 #define ICONV_NULL      ((void *)-1)
 
 #if defined(LIBW32_STATIC)
-#define DO_TRACE_LOG                            // trace_log()
+//#define DO_TRACE_LOG                          // trace_log()
 #endif
 
+#if defined(HAVE_LIBICONV_DLL)
 #define DLLLINKAGE      __cdecl
-
+#else
+#define DLLLINKAGE      /**/
+#endif
 typedef void *          (DLLLINKAGE * iconvopenfn_t)(const char *to, const char *from);
 typedef void            (DLLLINKAGE * iconvclosefn_t)(void *fd);
 typedef int             (DLLLINKAGE * iconvfn_t)(void *fd, const char **from, size_t *fromlen, char **to, size_t *tolen);
@@ -165,6 +161,10 @@ w32_iconv_connect(int verbose)
     }
 
     fullname[0] = 0;                            // resolve symbols, iconvctl() is optional
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
     GetModuleFileNameA(x_iconvdll, fullname, sizeof(fullname));
     if (NULL != (x_iconv = (iconvfn_t)GetProcAddress(x_iconvdll, "libiconv"))) {
         x_iconv_open = (iconvopenfn_t)GetProcAddress(x_iconvdll, "libiconv_open");
@@ -174,6 +174,9 @@ w32_iconv_connect(int verbose)
         x_iconv_open = (iconvopenfn_t)GetProcAddress(x_iconvdll, "iconv_open");
         x_iconv_close = (iconvclosefn_t)GetProcAddress(x_iconvdll, "iconv_close");
     }
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic pop
+#endif
 
 //  x_iconvctl = (void *)GetProcAddress(x_iconvdll, "libiconvctl");
 //  x_iconv_errno = (void *)GetProcAddress(x_iconvdll, "libiconv_errno");

@@ -1,10 +1,10 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_sockpair_c,"$Id: w32_sockpair.c,v 1.12 2022/06/13 06:51:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_sockpair_c,"$Id: w32_sockpair.c,v 1.13 2023/12/27 17:52:07 cvsuser Exp $")
 
 /*
  * win32 socket file-descriptor support
  *
- * Copyright (c) 2007, 2012 - 2022 Adam Young.
+ * Copyright (c) 2007, 2012 - 2023 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -240,7 +240,8 @@ w32_socketpair_native(int af, int type, int proto, int sock[2])
     if (listen(listen_sock, 1))
         goto error;
 
-    if ((sock[0] = socket(af, type, proto)) == (int)INVALID_SOCKET)
+    // note: safe to convert handles from 64 to 32; only lower 32-bits are used
+    if ((sock[0] = (int)socket(af, type, proto)) == (int)INVALID_SOCKET)
         goto error;
 
 #undef connect
@@ -248,7 +249,7 @@ w32_socketpair_native(int af, int type, int proto, int sock[2])
         goto error;
 
 #undef accept
-    if ((sock[1] = accept(listen_sock, 0, 0)) == (int)INVALID_SOCKET)
+    if ((sock[1] = (int)accept(listen_sock, 0, 0)) == (int)INVALID_SOCKET)
         goto error;
 
 #undef getpeername

@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_dirent_c,"$Id: w32_dirent.c,v 1.33 2022/06/11 04:01:44 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_dirent_c,"$Id: w32_dirent.c,v 1.34 2023/12/27 17:52:05 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -177,8 +177,9 @@ opendirA(const char *dirname)
     char fullpath[ MAX_PATH ], symlink[ MAX_PATH ], reparse[ MAX_PATH ],
         *path = fullpath;
     LPVOID OldValue = NULL;
-    DIR  *dp;
-    int  i, len;
+    DIR *dp;
+    size_t len;
+    int i;
 
     /* Copy to working buffer */
     if (NULL == dirname) {
@@ -319,8 +320,9 @@ opendirW(const wchar_t *dirname)
     wchar_t fullpath[ MAX_PATH ], symlink[ MAX_PATH ], reparse[ MAX_PATH ],
         *path = fullpath;
     LPVOID OldValue = NULL;
-    DIR  *dp;
-    int  i, len;
+    DIR *dp;
+    size_t len;
+    int i;
 
     /* Copy to working buffer */
     if (NULL == dirname) {

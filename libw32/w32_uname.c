@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_uname_c,"$Id: w32_uname.c,v 1.20 2023/01/02 14:57:18 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_uname_c,"$Id: w32_uname.c,v 1.21 2023/12/27 17:52:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -26,13 +26,6 @@ __CIDENT_RCSID(gr_w32_uname_c,"$Id: w32_uname.c,v 1.20 2023/01/02 14:57:18 cvsus
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * license for more details.
  * ==end==
- *
- * Notice: Portions of this text are reprinted and reproduced in electronic form. from
- * IEEE Portable Operating System Interface (POSIX), for reference only. Copyright (C)
- * 2001-2003 by the Institute of. Electrical and Electronics Engineers, Inc and The Open
- * Group. Copyright remains with the authors and the original Standard can be obtained
- * online at http://www.opengroup.org/unix/online.html.
- * ==extra==
  */
 
 #include "win32_internal.h"
@@ -199,10 +192,17 @@ uname(struct utsname *u)
                         oviex.dwMajorVersion = 0;
                     }
 
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
                     fnRtlGetVersion = (RtlGetVersion_t) GetProcAddress(GetModuleHandleA("ntdll"), "RtlGetVersion");
                     if (fnRtlGetVersion) {      // upgrade Version + BuildNumber
                         fnRtlGetVersion(&oviex);
                     }
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic pop
+#endif
 
                     if (oviex.dwMajorVersion >= 10) {
                         osmajor = (unsigned)oviex.dwMajorVersion;
@@ -509,10 +509,17 @@ IsWow64(void)
     IsWow64Process_t fnIsWow64Process = NULL;
     BOOL bIsWow64 = FALSE;
 
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
     fnIsWow64Process = (IsWow64Process_t) GetProcAddress(GetModuleHandleA("kernel32"),"IsWow64Process");
     if (fnIsWow64Process) {
         fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
     }
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic pop
+#endif
     return bIsWow64;
 }
 

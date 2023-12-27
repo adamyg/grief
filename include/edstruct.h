@@ -1,11 +1,11 @@
 #ifndef GR_EDSTRUCT_H_INCLUDED
 #define GR_EDSTRUCT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.75 2023/01/02 09:12:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.76 2023/12/27 17:52:05 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edstruct.h,v 1.75 2023/01/02 09:12:14 cvsuser Exp $
+/* $Id: edstruct.h,v 1.76 2023/12/27 17:52:05 cvsuser Exp $
  * Window, buffer, line and character-map definitions.
  *
  *
@@ -1224,5 +1224,3 @@ extern const char *     x_compiled;
 __CEND_DECLS
 
 #endif /*GR_EDSTRUCT_H_INCLUDED*/
-
-

@@ -104,6 +104,5 @@
 #define EX_PROTOCOL	76	/* remote error in protocol */
 #define EX_NOPERM	77	/* permission denied */
 #define EX_CONFIG	78	/* configuration error */
-#define EX__MAX	        78	/* maximum listed value */
-
+#define EX__MAX	78	/* maximum listed value */
 #endif /* sysexits.h */

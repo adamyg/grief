@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_realpath_c,"$Id: w32_realpath.c,v 1.6 2022/03/21 14:29:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_realpath_c,"$Id: w32_realpath.c,v 1.7 2023/12/27 17:52:07 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -7,7 +7,7 @@ __CIDENT_RCSID(gr_w32_realpath_c,"$Id: w32_realpath.c,v 1.6 2022/03/21 14:29:41 
  *
  *      realpath
  *
- * Copyright (c) 2018 - 2022 Adam Young.
+ * Copyright (c) 2018 - 2023 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -107,7 +107,7 @@ w32_realpath(const char *path, char *resolved_path /*[PATH_MAX]*/)
 
 
 LIBW32_API char *
-w32_realpath2(const char *path, char *resolved_path, int maxlen)
+w32_realpath2(const char *path, char *resolved_path, size_t maxlen)
 {
 #if defined(UTF8FILENAMES)
     if (w32_utf8filenames_state()) {
@@ -139,7 +139,7 @@ w32_realpath2(const char *path, char *resolved_path, int maxlen)
 
 
 LIBW32_API char *
-w32_realpathA(const char *path, char *resolved_path, int maxlen)
+w32_realpathA(const char *path, char *resolved_path, size_t maxlen)
 {
     char *result = NULL, symlink[WIN32_PATH_MAX];
 
@@ -182,7 +182,7 @@ w32_realpathA(const char *path, char *resolved_path, int maxlen)
 
         if (result) {
             const size_t size =                 // resolve, including .. and . components
-                GetFullPathNameA(path, maxlen, result, 0);
+                GetFullPathNameA(path, (DWORD)maxlen, result, 0);
 
             //
             //  GetFullPathNameA() returns a size larger than buffer if buffer is too small
@@ -196,7 +196,7 @@ w32_realpathA(const char *path, char *resolved_path, int maxlen)
 
                     if (result) {
                         const size_t new_size =
-                            GetFullPathNameA(path, maxlen, result, 0);
+                            GetFullPathNameA(path, (DWORD)maxlen, result, 0);
                         if (new_size >= (size_t)maxlen) {
                             free((void *)result);
                             errno = ENAMETOOLONG;
@@ -264,7 +264,7 @@ w32_realpathA(const char *path, char *resolved_path, int maxlen)
 
 
 LIBW32_API wchar_t *
-w32_realpathW(const wchar_t *path, wchar_t *resolved_path, int maxlen)
+w32_realpathW(const wchar_t *path, wchar_t *resolved_path, size_t maxlen)
 {
     wchar_t *result = NULL, symlink[WIN32_PATH_MAX];
 
@@ -307,7 +307,7 @@ w32_realpathW(const wchar_t *path, wchar_t *resolved_path, int maxlen)
 
         if (result) {
             const size_t size =                 // resolve, including .. and . components
-                GetFullPathNameW(path, maxlen, result, 0);
+                GetFullPathNameW(path, (DWORD)maxlen, result, 0);
 
             //
             //  GetFullPathNameA() returns a size larger than buffer if buffer is too small
@@ -321,7 +321,7 @@ w32_realpathW(const wchar_t *path, wchar_t *resolved_path, int maxlen)
 
                     if (result) {
                         const size_t new_size =
-                            GetFullPathNameW(path, maxlen, result, 0);
+                            GetFullPathNameW(path, (DWORD)maxlen, result, 0);
                         if (new_size >= (size_t)maxlen) {
                             free((void *)result);
                             errno = ENAMETOOLONG;

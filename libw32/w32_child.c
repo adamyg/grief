@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_child_c,"$Id: w32_child.c,v 1.19 2022/06/13 06:51:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_child_c,"$Id: w32_child.c,v 1.20 2023/12/27 17:52:05 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -26,6 +26,13 @@ __CIDENT_RCSID(gr_w32_child_c,"$Id: w32_child.c,v 1.19 2022/06/13 06:51:23 cvsus
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * license for more details.
  * ==end==
+ *
+ * Notice: Portions of this text are reprinted and reproduced in electronic form. from
+ * IEEE Portable Operating System Interface (POSIX), for reference only. Copyright (C)
+ * 2001-2003 by the Institute of. Electrical and Electronics Engineers, Inc and The Open
+ * Group. Copyright remains with the authors and the original Standard can be obtained
+ * online at http://www.opengroup.org/unix/online.html.
+ * ==extra==
  */
 
 #include "win32_internal.h"
@@ -1132,7 +1139,7 @@ BuildEnvA(const char **envv)
      *  strings with nulls between and two null bytes at the end
      */
     for (cursor = ret, vp = envp, len = 0; *vp; ++len, ++vp) {
-        const int slen = strlen(*vp) + 1 /*nul*/;
+        const size_t slen = strlen(*vp) + 1 /*nul*/;
         memcpy(cursor, *vp, slen * sizeof(char));
         cursor += slen;
     }
@@ -1275,7 +1282,7 @@ BuildEnvW(const wchar_t **envv)
      *  strings with nulls between and two null bytes at the end
      */
     for (cursor = ret, vp = envp, len = 0; *vp; ++len, ++vp) {
-        const int slen = wcslen(*vp) + 1 /*nul*/;
+        const size_t slen = wcslen(*vp) + 1 /*nul*/;
         memcpy(cursor, *vp, slen * sizeof(wchar_t));
         cursor += slen;
     }

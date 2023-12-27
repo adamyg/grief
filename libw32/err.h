@@ -1,14 +1,14 @@
 #ifndef LIBW32_ERR_H_INCLUDED
 #define LIBW32_ERR_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_err_h,"$Id: err.h,v 1.4 2022/05/26 12:09:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_err_h,"$Id: err.h,v 1.5 2023/12/27 17:52:05 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win <errt.h>
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2023, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

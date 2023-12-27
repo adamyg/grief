@@ -1,7 +1,7 @@
 #ifndef LIBW32_UNISTD_H_INCLUDED
 #define LIBW32_UNISTD_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_unistd_h,"$Id: unistd.h,v 1.68 2023/01/02 11:58:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_unistd_h,"$Id: unistd.h,v 1.69 2023/12/27 17:52:05 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -40,8 +40,8 @@ __CPRAGMA_ONCE
 #if (_MSC_VER != 1900)                          /* MSVC 19/2015 */
 #if (_MSC_VER <  1910 || _MSC_VER > 1916)       /* MSVC 2017: 19.10 .. 16 */
 #if (_MSC_VER > 1929)                           /* MSVC 2019: 19.20 .. 29 */
-#if (_MSC_VER > 1934)                           /* MSVC 2022: 19.30 .. 34 */
-#error unistd.h: untested MSVC Version (2005 -- 2019.34)
+#if (_MSC_VER > 1937)                           /* MSVC 2022: 19.30 .. 37*/
+#error unistd.h: untested MSVC Version (2005 -- 2019.37)
 	//see: https://en.wikipedia.org/wiki/Microsoft_Visual_C%2B%2B
 #endif //2022
 #endif //2019
@@ -606,13 +606,13 @@ LIBW32_API int          w32_rmdir (const char *path);
 LIBW32_API int          w32_rmdirA (const char *path);
 LIBW32_API int          w32_rmdirW (const wchar_t *path);
 
-LIBW32_API char *       w32_getcwd (char *path, int size);
-LIBW32_API char *       w32_getcwdA (char *path, int size);
-LIBW32_API wchar_t *    w32_getcwdW (wchar_t *path, int size);
+LIBW32_API char *       w32_getcwd (char *path, size_t size);
+LIBW32_API char *       w32_getcwdA (char *path, size_t size);
+LIBW32_API wchar_t *    w32_getcwdW (wchar_t *path, size_t size);
 
-LIBW32_API char *       w32_getcwdd (char drive, char *path, int size);
-LIBW32_API char *       w32_getcwddA (char drive, char *path, int size);
-LIBW32_API wchar_t *    w32_getcwddW (char drive, wchar_t *path, int size);
+LIBW32_API char *       w32_getcwdd (char drive, char *path, size_t size);
+LIBW32_API char *       w32_getcwddA (char drive, char *path, size_t size);
+LIBW32_API wchar_t *    w32_getcwddW (char drive, wchar_t *path, size_t size);
 
 #if defined(WIN32_UNISTD_MAP)
 #define mkdir(d,m)      w32_mkdir(d, m)
@@ -659,15 +659,15 @@ LIBW32_API int          truncate (const char *path, off_t length);
 LIBW32_API int          truncateA (const char *path, off_t length);
 LIBW32_API int          truncateW (const wchar_t *path, off_t length);
 
-LIBW32_API int          w32_readlink (const char *path, char *name, int sz);
-LIBW32_API int          w32_readlinkA (const char *path, char *name, int sz);
-LIBW32_API int          w32_readlinkW (const wchar_t *path, wchar_t *name, int sz);
+LIBW32_API int          w32_readlink (const char *path, char *name, size_t sz);
+LIBW32_API int          w32_readlinkA (const char *path, char *name, size_t sz);
+LIBW32_API int          w32_readlinkW (const wchar_t *path, wchar_t *name, size_t sz);
 LIBW32_API int          w32_symlink (const char *from, const char *to);
 
 LIBW32_API char *       w32_realpath (const char *path, char *resolved_path /*PATH_MAX*/);
-LIBW32_API char *       w32_realpath2 (const char *path, char *resolved_path, int maxlen);
-LIBW32_API char *       w32_realpathA (const char *path, char *resolved_path, int maxlen);
-LIBW32_API wchar_t *    w32_realpathW (const wchar_t *path, wchar_t *resolved_path, int maxlen);
+LIBW32_API char *       w32_realpath2 (const char *path, char *resolved_path, size_t maxlen);
+LIBW32_API char *       w32_realpathA (const char *path, char *resolved_path, size_t maxlen);
+LIBW32_API wchar_t *    w32_realpathW (const wchar_t *path, wchar_t *resolved_path, size_t maxlen);
 
 #if defined(WIN32_UNISTD_MAP)
 #define readlink(__path,__name, __sz) \

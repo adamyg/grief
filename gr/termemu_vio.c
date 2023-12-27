@@ -2801,6 +2801,7 @@ vio_save(void)
 {
     HANDLE console = (vio.inited ? vio.chandle : GetStdHandle(STD_OUTPUT_HANDLE));
     CONSOLE_SCREEN_BUFFER_INFO sbinfo;
+    COORD iHome = {0,0};
     int rows, cols;
 
     /*
@@ -2831,7 +2832,9 @@ vio_save(void)
     vio_state.cursorcoord.X = sbinfo.dwCursorPosition.X;
     vio_state.cursorcoord.Y = sbinfo.dwCursorPosition.Y;
 
-    ImageSave(console, 0, rows * cols);
+    SetConsoleCursorPosition(console, iHome);   // home cursor.
+
+    ImageSave(console, 0, rows * cols);         // read image.
 }
 
 
@@ -2960,7 +2963,7 @@ ImageRestore(HANDLE console, unsigned pos, unsigned cnt)
     rc = WriteConsoleOutputW(console, vio_state.image + pos, is, ic, &wr);
 
     if (0 == rc && ERROR_NOT_ENOUGH_MEMORY == GetLastError()) {
-        if (cnt > ((unsigned)cols * 2)) {      // sub-divide request.
+        if (cnt > ((unsigned)cols * 2)) {       // sub-divide request.
             const int cnt2 = (cnt / (cols * 2)) * cols;
 
             ImageRestore(console, pos, cnt2);

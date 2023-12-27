@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.63 2023/03/05 13:28:41 cvsuser Exp $
+# $Id: Makefile.in,v 1.64 2023/03/06 15:19:31 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2023, Adam Young.
@@ -593,12 +593,10 @@ distclean:		clean
 			include/config.h \
 			Makefile
 
-#TODO
-#	ifeq ("libtool", "@LIBTOOL@")
-#	LIBTOOL_DEPS = @LIBTOOL_DEPS@
-#	libtool:	$(LIBTOOL_DEPS)
-#		$(SHELL) ./config.status libtool
-#	endif
+ifneq "@LIBTOOL_DEPS@" ""
+libtool:		@LIBTOOL_DEPS@
+		$(SHELL) ./auto/config.status libtool
+endif
 
 #end
 

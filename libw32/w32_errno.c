@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_errno_c,"$Id: w32_errno.c,v 1.24 2022/05/31 16:18:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_errno_c,"$Id: w32_errno.c,v 1.25 2023/12/27 17:52:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -421,7 +421,7 @@ w32_errno_cnv(unsigned rc)
                 t_errno = EPIPE; break;
             case ERROR_PIPE_LISTENING:          /* 536          - Waiting for a process to open the other end of the pipe. */
                 t_errno = EPIPE; break;
-#if defined(__MINGW32__) || !defined(ERROR_CANT_WAIT)
+#if /*defined(__MINGW32__) ||*/ !defined(ERROR_CANT_WAIT)
 #define ERROR_CANT_WAIT 554
 #endif
             case ERROR_CANT_WAIT:               /* 554 (0x22A)  - Used to indicate that an operation cannot continue without blocking for I/O. */

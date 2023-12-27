@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_progname_c,"$Id: w32_progname.c,v 1.9 2022/03/21 14:29:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_progname_c,"$Id: w32_progname.c,v 1.10 2023/12/27 17:52:07 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 set/getprogname
  *
- * Copyright (c) 2016 - 2022, Adam Young.
+ * Copyright (c) 2016 - 2023, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

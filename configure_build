@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- mode: sh; -*-
-# $Id: configure_build,v 1.5 2012/03/08 22:53:32 cvsuser Exp $
+# $Id: configure_build,v 1.6 2023/03/06 15:19:31 cvsuser Exp $
 #
 
 if [ ! -f "install-sh" ]; then
@@ -13,11 +13,15 @@ if [ ! -f "config.sub" ]; then
 	cp auto/config.sub .
 fi
 if [ ! -f "missing" ]; then
-	cp auto/missing .
+	if [ -f "missing" ]; then
+		cp auto/missing .
+	fi
 fi
 if [ ! -f "ltmain.sh" ]; then
 	cp auto/ltmain.sh .
 fi
+touch libtoolT
 auto/config.status
+rm -f libtoolT
 
 #end

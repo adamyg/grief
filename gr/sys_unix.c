@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_unix_c,"$Id: sys_unix.c,v 1.63 2021/06/02 15:28:38 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_unix_c,"$Id: sys_unix.c,v 1.64 2023/09/10 16:35:52 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_unix.c,v 1.63 2021/06/02 15:28:38 cvsuser Exp $
+/* $Id: sys_unix.c,v 1.64 2023/09/10 16:35:52 cvsuser Exp $
  * System dependent functionality - UNIX.
  *
  *
@@ -1496,6 +1496,3 @@ sys_mousepointer(int on)
 #endif  /*HAVE_MOUSE*/
 
 #endif  /*!_VMS && !__OS2__ && !__MSDOS__*/
-
-
-

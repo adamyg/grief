@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.53 2022/05/26 16:41:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.54 2023/09/10 16:35:52 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttywin32.c,v 1.53 2022/05/26 16:41:12 cvsuser Exp $
+/* $Id: ttywin32.c,v 1.54 2023/09/10 16:35:52 cvsuser Exp $
  * WIN32 VIO driver.
  *  see: http://www.edm2.com/index.php/Category:Vio
  *
@@ -133,7 +133,7 @@ VioEncoding(void)
         cp = vio.codepage;
     }
 
-    if (cp <= 0 || 0 == GetCPInfoEx(cp, 0, &cpix)) {
+    if (cp <= 0 || 0 == GetCPInfoExA(cp, 0, &cpix)) {
         trace_log("vio: encoding, unable to resolve CP%03d\n", cp);
         return;
     }
