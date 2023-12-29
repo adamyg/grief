@@ -1,11 +1,11 @@
 #ifndef GR_EDGETOPT_H_INCLUDED
 #define GR_EDGETOPT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edgetopt_h,"$Id: edgetopt.h,v 1.19 2023/01/01 11:26:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_edgetopt_h,"$Id: edgetopt.h,v 1.20 2023/12/29 17:23:57 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edgetopt.h,v 1.19 2023/01/01 11:26:58 cvsuser Exp $
+/* $Id: edgetopt.h,v 1.20 2023/12/29 17:23:57 cvsuser Exp $
  * getopt() interface/implemenation.
  *
  *
@@ -45,15 +45,7 @@ __CPRAGMA_ONCE
 #include <unistd.h>
 
 #elif defined(__MINGW32__)
-
-__CBEGIN_DECLS
-extern int              optind;
-extern int              opterr;
-extern char *           optarg;
-extern int              optopt;
-extern int              optreset;
-__CEND_DECLS
-
+#include <getopt.h>
 
 #elif defined(NEEDS_GETOPT) || defined(_WIN32) || defined(WIN32)
 #if !defined(NEEDS_GETOPT)
@@ -93,10 +85,12 @@ __CBEGIN_DECLS
 struct bsd_option {
     const char *        name;
     int                 has_arg;
+#if !defined(__MINGW32__)       /* enum */
 #ifndef no_argument
 #define no_argument             0
 #define required_argument       1
 #define optional_argument       2
+#endif
 #endif
     int *               flag;
     int                 val;

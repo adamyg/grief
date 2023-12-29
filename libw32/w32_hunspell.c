@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_hunspell_c,"$Id: w32_hunspell.c,v 1.20 2022/07/08 14:01:00 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_hunspell_c,"$Id: w32_hunspell.c,v 1.21 2023/12/29 16:49:46 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 hunspell dynamic loader.
  *
- * Copyright (c) 1998 - 2019, Adam Young.
+ * Copyright (c) 1998 - 2023, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -148,6 +148,10 @@ w32_hunspell_connect(int verbose)
     fullname[0] = 0;                            // resolve symbols
     GetModuleFileNameA(x_hunspelldll, fullname, sizeof(fullname));
 
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
     x_initialise       = (initialisefn_t)       hunspell_resolve("initialize");
     x_initialise_key   = (initialise_keyfn_t)   hunspell_resolve("initialize_key");
     x_uninitialise     = (uninitialisefn_t)     hunspell_resolve("uninitialize");
@@ -157,6 +161,9 @@ w32_hunspell_connect(int verbose)
     x_free_list        = (free_listfn_t)        hunspell_resolve("free_list");
     x_add              = (addfn_t)              hunspell_resolve("add");
     x_add_with_affix   = (add_with_affixfn_t)   hunspell_resolve("add_with_affix");
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic pop
+#endif
 
 #if defined(DO_TRACE_LOG)
     trace_log("hunspell Functions (%p, %s)\n", x_hunspelldll, fullname);
