@@ -38,6 +38,7 @@ __RCSID("$NetBSD: citrus_ctype.c,v 1.6 2011/11/19 18:34:21 tnozaki Exp $");
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <stddef.h>
 #include <wchar.h>

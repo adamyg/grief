@@ -34,10 +34,10 @@
 #define PACKAGE_TARNAME     "file"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION     "545"
+#define PACKAGE_VERSION     "X.YY"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING      "file 545"
+#define PACKAGE_STRING      "file X.YY"
 
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT   "christos@astron.com"

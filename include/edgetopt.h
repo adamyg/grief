@@ -1,11 +1,11 @@
 #ifndef GR_EDGETOPT_H_INCLUDED
 #define GR_EDGETOPT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edgetopt_h,"$Id: edgetopt.h,v 1.20 2023/12/29 17:23:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_edgetopt_h,"$Id: edgetopt.h,v 1.21 2024/01/01 10:52:12 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edgetopt.h,v 1.20 2023/12/29 17:23:57 cvsuser Exp $
+/* $Id: edgetopt.h,v 1.21 2024/01/01 10:52:12 cvsuser Exp $
  * getopt() interface/implemenation.
  *
  *
@@ -36,21 +36,22 @@ __CPRAGMA_ONCE
 #include <config.h>
 #include <edtypes.h>
 
-#if defined(HAVE_GETOPT_H) && \
-            !defined(_WIN32) && !defined(WIN32) && !defined(NEEDS_GETOPT)
+#if !defined(NEEDS_GETOPT)
+#if defined(HAVE_GETOPT_H)
 #include <getopt.h>
 
-#elif defined(HAVE_UNISTD_H) && \
-            !defined(_WIN32) && !defined(WIN32) && !defined(NEEDS_GETOPT)
+#elif defined(HAVE_UNISTD_H)
 #include <unistd.h>
 
 #elif defined(__MINGW32__)
 #include <getopt.h>
 
-#elif defined(NEEDS_GETOPT) || defined(_WIN32) || defined(WIN32)
-#if !defined(NEEDS_GETOPT)
-#define NEEDS_GETOPT    /*getopt.c requirement*/
+#else
+#error getopt implementation
 #endif
+#endif /*!NEEDS_GETOPT*/
+
+#if defined(NEEDS_GETOPT)
 
 __CBEGIN_DECLS
 extern int              getopt(int argc, char *const *argv, const char *opts);

@@ -1,5 +1,93 @@
 -*- encoding: utf-8; -*-
 
+Mon Sep 18 22:06:17 2023 adamy
+
+	* imported libmagic 5.45 (fossies.org) - changed marked <PORT>
+
+		- magic.h.in <via magic_header.pl>
+
+			+ #if ((defined __WIN32__) || (defined _WIN32) || defined(__CYGWIN__)) && (!defined LIBMAGIC_STATIC)
+				:
+			+ #endif /*__MAGIC_DECL*/
+
+			__MAGIC_DECL, public symbols
+
+		- print.c
+
+			- if (strftime(buf, bsize, "%T", &tm) == 0)
+			+ if (strftime(buf, bsize, "%H:%M:%S", &tm) == 0)
+
+		- readcdf.c
+
+			- c = cdf_ctime(&ts.tv_sec, tbuf);
+			+ { const time_t tv_sec = (time_t)(ts.tv_sec); c = cdf_ctime(&tv_sec, tbuf); }
+
+		- file.h
+
+			  #ifndef HAVE_STRLCPY
+			+ #define strlcpy file545_strlcpy //PORT
+				...
+
+		- file.c
+
+			- if ((progname = strrchr(argv[0], '/')) != NULL)
+			+ if ((progname = strrchr(argv[0], '/')) != NULL ||
+			+        (progname = strrchr(argv[0], '\\')) != NULL)
+
+Fri Nov 12 23:48:20 2021 adamy
+
+	* imported libmagic 5.41 (fossies.org)
+
+		- config.h "5.41"
+
+		- magic_rename.pl; 5.41 default
+			global functions renamed file_xxx, magic_file_xxx
+
+		- magic.h
+
+			+ __MAGIC_DECL; see below.
+
+		- funcs.c
+
+			- setlocale HAVE_SETLOCALE checks.
+
+			+ #if !defined(_WIN32)
+			protected int
+			file541_pipe_closexec(int *fds)
+				:
+			+ #endif
+
+		- readcdf.c
+
+			- setlocale HAVE_SETLOCALE checks.
+
+			- c = file541_cdf_ctime(&tv_sec, tbuf);
+			+ { time_t tv_sec = ts.tv_sec; c = file541_cdf_ctime(&tv_sec, tbuf); }
+
+		- magic.c
+
+			__MAGIC_DECL, public symbols
+
+			+ #if defined(F_SETFD)
+				:
+			+ #endif
+
+		- file.h
+
+			  #ifndef HAVE_STRLCPY
+			+ #define strlcpy file541_strlcpy //PORT
+				and others
+
+		- file.c
+
+			  if ((progname = strrchr(argv[0], '/')) != NULL ||
+			+	(progname = strrchr(argv[0], '\\')) != NULL) //PORT
+
+		- softmagic.c
+
+			- fprintf(stderr, "indirect offs=%jd\n", off);
+			+ fprintf(stderr, "indirect offs=%u\n", (unsigned)off);
+
 Sun Mar 12 18:53:27 2017 adamy
 
 	* local strlcpy/strlcpy prefixed
@@ -14,25 +102,25 @@ Fri Jan 27 16:48:25 2017 adamy
 
 		- magic_rename.pl; new source modules.
 			global functions renamed file_xxx, magic_file_xxx
-			
+
 		- dll builds (__MAGIC_DECL definition), removed 'public' definition.
 			/*
-			 * On Windows, define LIBMAGIC_STATIC if you're building or using a .lib.  
-			 * The default here assumes you're building a DLL.  
+			 * On Windows, define LIBMAGIC_STATIC if you're building or using a .lib.
+			 * The default here assumes you're building a DLL.
 			 * Note: Only libmagic source should ever define __LIBMAGIC_BUILD.
 			 */
 			#if ((defined __WIN32__) || (defined _WIN32) || defined(__CYGWIN__)) && (!defined LIBMAGIC_STATIC)
 			# ifdef __LIBMAGIC_BUILD
 			#  ifdef __GNUC__
-			#   define __MAGIC_DECL	__attribute__((dllexport)) extern
+			#   define __MAGIC_DECL __attribute__((dllexport)) extern
 			#  else
-			#   define __MAGIC_DECL	__declspec(dllexport)
+			#   define __MAGIC_DECL __declspec(dllexport)
 			#  endif
 			# else
 			#  ifdef __GNUC__
 			#   define __MAGIC_DECL
 			#  else
-			#   define __MAGIC_DECL	__declspec(dllimport)
+			#   define __MAGIC_DECL __declspec(dllimport)
 			#  endif
 			# endif
 			#else
@@ -42,7 +130,7 @@ Fri Jan 27 16:48:25 2017 adamy
 			#else
 			# define __MAGIC_DECL
 			#endif
-			#endif	/*__MAGIC_DECL*/
+			#endif /*__MAGIC_DECL*/
 
 		- setlocale HAVE_SETLOCALE checks.
 

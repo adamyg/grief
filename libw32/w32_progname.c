@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_progname_c,"$Id: w32_progname.c,v 1.10 2023/12/27 17:52:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_progname_c,"$Id: w32_progname.c,v 1.11 2024/01/01 10:52:12 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -88,7 +88,7 @@ setprognameW(const wchar_t *name)
     }
 
     for (p = (wchar_t *)wprogname; *p; ++p) { //hide case issues.
-        if (*p < 0x7f) *p = tolower((char)*p);
+        if (*p < 0x7f) *p = (wchar_t)tolower((char)*p);
     }
 }
 

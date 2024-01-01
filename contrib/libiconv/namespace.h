@@ -1,4 +1,4 @@
-/* $Id: namespace.h,v 1.7 2022/06/02 11:11:25 cvsuser Exp $
+/* $Id: namespace.h,v 1.8 2024/01/01 12:37:09 cvsuser Exp $
  *
  * libiconv <namespace.h>
  *
@@ -39,6 +39,7 @@
 #include <sys/utypes.h>                         /* unix/bsd types */
 #include <sys/param.h>                          /* system parameters */
 #include <string.h>
+#include <stdint.h>
 #include <unistd.h>
 
 #ifndef u_int32_t

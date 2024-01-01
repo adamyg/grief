@@ -1,6 +1,6 @@
 #ifndef ERR_H_INCLUDED
 #define ERR_H_INCLUDED
-/* $Id: err.h,v 1.3 2015/03/01 02:58:51 cvsuser Exp $
+/* $Id: err.h,v 1.4 2024/01/01 12:37:09 cvsuser Exp $
  *
  * win32 <err.h> implementation
  *
@@ -33,8 +33,10 @@
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
+#if (0)
 void                    setprogname(const char *progname);
 const char *            getprogname(void);
+#endif /*libw32*/
 
 void                    err(int ret, const char *fmt, ...);
 void                    errx(int ret, const char *fmt, ...);

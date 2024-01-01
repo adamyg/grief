@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_getopt_common_c,"$Id: getopt_common.c,v 1.12 2022/12/03 16:33:05 cvsuser Exp $")
+__CIDENT_RCSID(gr_getopt_common_c,"$Id: getopt_common.c,v 1.13 2024/01/01 10:52:12 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: getopt_common.c,v 1.12 2022/12/03 16:33:05 cvsuser Exp $
+/* $Id: getopt_common.c,v 1.13 2024/01/01 10:52:12 cvsuser Exp $
  * common globals getopt/bsd_getopt.
  *
  *
@@ -32,13 +32,7 @@ __CIDENT_RCSID(gr_getopt_common_c,"$Id: getopt_common.c,v 1.12 2022/12/03 16:33:
 
 #include <stdio.h>
 
-#if defined(__CYGWIN__)
-#include <getopt.h>
-
-#elif defined(__MINGW32__)
-#include <getopt.h>
-
-#elif defined(_WIN32) || defined(WIN32)
+#if defined(NEEDS_GETOPT)
 
 int   opterr   = 1;                             /* if error message should be printed */
 int   optind   = 1;                             /* index into parent argv vector */
@@ -46,7 +40,7 @@ int   optopt   = '?';                           /* character checked for validit
 char *optarg   = NULL;                          /* argument associated with option */
 int   optreset = 0;                             /* reset getopt */
 
-#endif
+#endif /*NEEDS_GETOPT*/
 
 extern void __getopt_common_dummy(void);
 void

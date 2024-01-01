@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.72 2023/01/02 08:18:59 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.73 2024/01/01 12:03:51 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_win32.c,v 1.72 2023/01/02 08:18:59 cvsuser Exp $
+/* $Id: sys_win32.c,v 1.73 2024/01/01 12:03:51 cvsuser Exp $
  * WIN32 system support.
  *
  *
@@ -1090,12 +1090,19 @@ GetSystemTimeNS100(void)
     if (NULL == fGetSystemTimePreciseAsFileTime) {
         HINSTANCE hinst;
 
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
         if (0 == (hinst = LoadLibraryA("Kernel32")) ||
                 NULL == (fGetSystemTimePreciseAsFileTime =
                             (GetSystemTimePreciseAsFileTime_t)GetProcAddress(hinst, "GetSystemTimePreciseAsFileTime"))) {
             fGetSystemTimePreciseAsFileTime =
                 (GetSystemTimePreciseAsFileTime_t)GetProcAddress(hinst, "GetSystemTimeAsFileTime"); /*fall-back*/
         }
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic pop
+#endif
     }
      
     fGetSystemTimePreciseAsFileTime(&ft);

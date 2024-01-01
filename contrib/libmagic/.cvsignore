@@ -1,6 +1,9 @@
-Makefile
-*.err
+file-5.29.gr
+file-5.41
+file-5.45
 .unpacked.*
-magic
+Makefile
+config.h
 magic.mgc
-
+magic
+*.err

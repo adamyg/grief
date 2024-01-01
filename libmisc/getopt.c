@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_getopt_c,"$Id: getopt.c,v 1.21 2022/12/03 16:33:05 cvsuser Exp $")
+__CIDENT_RCSID(gr_getopt_c,"$Id: getopt.c,v 1.22 2024/01/01 10:52:12 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: getopt.c,v 1.21 2022/12/03 16:33:05 cvsuser Exp $
+/* $Id: getopt.c,v 1.22 2024/01/01 10:52:12 cvsuser Exp $
  * public domain getopt() implementation
  * original source: comp.sources.unix/volume3/att_getopt.
  * modified to support POSIX, BSD and GNU extensions.
@@ -34,7 +34,7 @@ __CIDENT_RCSID(gr_getopt_c,"$Id: getopt.c,v 1.21 2022/12/03 16:33:05 cvsuser Exp
 
 #include "edgetopt.h"
 
-#if defined(NEEDS_GETOPT) && !defined(__MINGW32__)
+#if defined(NEEDS_GETOPT)
 
 #include <stdio.h>
 #include <string.h>
@@ -181,5 +181,5 @@ getopt(int argc, char * const * argv, const char *opts)
     return c;
 }
 
-#endif  /*NEED_GETOPT*/
+#endif  /*NEEDS_GETOPT*/
 /*end*/

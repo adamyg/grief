@@ -1,10 +1,10 @@
 #ifndef WIN32_CONFIG_H_INCLUDED
 #define WIN32_CONFIG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.25 2023/12/27 17:52:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.26 2024/01/01 10:52:12 cvsuser Exp $")
 __CPRAGMA_ONCE
 /* -*- mode: c; set-indent: 4; -*- */
-/* $Id: w32config.hin,v 1.25 2023/12/27 17:52:08 cvsuser Exp $
+/* $Id: w32config.hin,v 1.26 2024/01/01 10:52:12 cvsuser Exp $
  * Machine configuration.
  *
  * System dependent <config.h> configuration template,
@@ -847,7 +847,9 @@ __CPRAGMA_ONCE
 #define USE_VIO_BUFFER 1                        /* Vio buffer method */
 #define NOCASE_FILENAMES 1                      /* ignore case in filenames */
 #define NO_UNLINK_OPEN  1                       /* can't unlink open files */
-#define NEEDS_GETOPT                            /* Local getopt() implementation required */
+#if !defined(_WIN32)
+#define NEEDS_GETOPT                            /* legacy libmisc */
+#endif
 #endif
 
 

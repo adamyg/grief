@@ -1,6 +1,6 @@
 #ifndef LOCAL_NAMESPACE_H_INCLUDED
 #define LOCAL_NAMESPACE_H_INCLUDED
-/* $Id: namespace.h,v 1.9 2020/06/18 19:52:15 cvsuser Exp $
+/* $Id: namespace.h,v 1.10 2024/01/01 12:37:09 cvsuser Exp $
  *
  * libcitrus <namespace.h>
  *
@@ -50,6 +50,7 @@
 #include <sys/endian.h>
 #include <sys/socket.h>
 #include <string.h>
+#include <stdint.h>
 #include <unistd.h>
 
 #define _I18N_DYNAMIC 1

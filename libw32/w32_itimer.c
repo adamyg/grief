@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_itimer_c,"$Id: w32_itimer.c,v 1.6 2023/12/27 17:52:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_itimer_c,"$Id: w32_itimer.c,v 1.7 2024/01/01 10:52:12 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -122,7 +122,7 @@ struct itimer {
 static struct itimer itimer = {INVALID_HANDLE_VALUE};
 
 LIBW32_API int
-getitimer(int which, struct itimerval *value)
+getitimer(int which, struct itimerval * value)
 {
     assert(value);
 

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.in,v 1.15 2022/07/06 15:30:54 cvsuser Exp $
+# $Id: makelib.in,v 1.16 2024/01/01 10:52:11 cvsuser Exp $
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 # makelib configuration
 #
@@ -190,6 +190,7 @@ Configure()
 
                 remove_define('WIN32');
                 add_define('HAVE_CONFIG_H');
+                add_define('LIBW32_DYNAMIC');
                 add_define('WIN32_WINNT=0x501');
                 add_define('_CRT_SECURE_NO_WARNINGS');
                 add_define('_CRT_SECURE_NO_DEPRECATE');
@@ -207,6 +208,7 @@ Configure()
 
                 remove_define('WIN32');
                 add_define('HAVE_CONFIG_H');
+                add_define('LIBW32_DYNAMIC');
                 add_define('WIN32_WINNT=0x501');
                 add_define('__STDC_WANT_LIB_EXT1__');
 
@@ -221,6 +223,7 @@ Configure()
 
                 remove_define('WIN32');
                 add_define('HAVE_CONFIG_H');
+                add_define('LIBW32_DYNAMIC');
                 add_define('_WIN32_WINNT=0x501');       # Windows SDK
                 add_define('_WIN32_VER=0x501');
 

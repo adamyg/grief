@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.25 2022/12/03 16:33:05 cvsuser Exp $")
+__CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.26 2024/01/01 12:03:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edbt_win32.c,v 1.25 2022/12/03 16:33:05 cvsuser Exp $
+/* $Id: edbt_win32.c,v 1.26 2024/01/01 12:03:27 cvsuser Exp $
  * win32 (include cygwin) backtrace implementation.
  *
  *
@@ -47,7 +47,10 @@ __CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.25 2022/12/03 16:33:05 cvs
 #include <windows.h>
 
 #if defined(__MINGW32__)                        /* Kernel32 */
-VOID NTAPI RtlCaptureContext(PCONTEXT ContextRecord);
+#if !defined(GCC_VERSION)
+#define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+#endif
+__attribute__((dllimport)) extern VOID NTAPI RtlCaptureContext(PCONTEXT ContextRecord);
 #endif
 
 #if defined(__WATCOMC__) || defined(__CYGWIN__) || defined(__MINGW32__)
@@ -988,6 +991,10 @@ edbt_init(const char *progname, int options, FILE *out)
             return;
         }
 
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
         fSymInitialize = (SymInitialize_t) GetProcAddress(hDbghelpDll, "SymInitialize");
         fSymSetOptions = (SymSetOptions_t) GetProcAddress(hDbghelpDll, "SymSetOptions");
         fSymLoadModule = (SymLoadModule_t) GetProcAddress(hDbghelpDll, "SymLoadModule");
@@ -1010,6 +1017,9 @@ edbt_init(const char *progname, int options, FILE *out)
         fSymGetModuleBase = (SymGetModuleBase_t) GetProcAddress(hDbghelpDll, "SymGetModuleBase");
         fSymGetSymFromAddr = (SymGetSymFromAddr_t) GetProcAddress(hDbghelpDll, "SymGetSymFromAddr");
         fSymGetLineFromAddr = (SymGetLineFromAddr_t) GetProcAddress(hDbghelpDll, "SymGetLineFromAddr");
+#endif
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic pop
 #endif
 
         if ((fSymInitialize == NULL) || 

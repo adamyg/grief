@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.12 2022/06/02 07:40:16 cvsuser Exp $
+# $Id: Makefile.in,v 1.14 2024/01/01 12:16:48 cvsuser Exp $
 # liblzma makefile and grxz
 #
 #
@@ -156,6 +156,7 @@ LIBOBJS=\
 	\
 	$(D_OBJ)/hardware_physmem$(O) \
 	$(D_OBJ)/tuklib_physmem$(O)
+
 ##	$(D_OBJ)/hardware_cputhreads$(O) \
 ##	$(D_OBJ)/stream_encoder_mt$(O) \
 
@@ -210,10 +211,8 @@ LIBOBJS+=\
 DLLOBJS=\
 	$(subst $(O),.lo,$(LIBOBJS))
 
-VPATH+=		$(LZMASRC)/xz $(LZMASRC)/common ./win32
-LIBINC+=	-I./win32
+VPATH+=		$(LZMASRC)/xz $(LZMASRC)/common
 UTILOBJS=\
-	$(D_OBJ)/getopt_long$(O) \
 	$(D_OBJ)/args$(O) \
 	$(D_OBJ)/coder$(O) \
 	$(D_OBJ)/file_io$(O) \
@@ -231,6 +230,11 @@ UTILOBJS=\
 	$(D_OBJ)/tuklib_exit$(O) \
 	$(D_OBJ)/tuklib_mbstr_width$(O) \
 	$(D_OBJ)/tuklib_mbstr_fw$(O)
+
+#VPATH+=	./win32
+#LIBINC+=	-I./win32
+#UTILOBJS+=\
+#	$(D_OBJ)/getopt_long$(O)
 
 OBJS=		$(LIBOBJS) $(DLLOBJS) $(UTILOBJS)
 LIBS=		$(LZMALIB) $(LZMADLL)

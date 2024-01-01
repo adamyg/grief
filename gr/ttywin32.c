@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.54 2023/09/10 16:35:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.55 2024/01/01 10:52:12 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttywin32.c,v 1.54 2023/09/10 16:35:52 cvsuser Exp $
+/* $Id: ttywin32.c,v 1.55 2024/01/01 10:52:12 cvsuser Exp $
  * WIN32 VIO driver.
  *  see: http://www.edm2.com/index.php/Category:Vio
  *
@@ -43,6 +43,8 @@ __CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.54 2023/09/10 16:35:52 cvsuser
 #include <wincon.h>
 #endif  //WINDOWS_MEAN_AND_LEAN
 
+#define TERMEMU_VIO_LOCAL                       /* private interface */
+
 #include "debug.h"
 #include "display.h"                            /* DISPTYPE_.. */
 #include "main.h"                               /* panic() */
@@ -51,7 +53,6 @@ __CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.54 2023/09/10 16:35:52 cvsuser
 #include "vio.h"                                /* VIO interface */
 #include "window.h"
 
-#define  TERMEMU_VIO_STATIC                     /* private interface */
 #include "termemu_vio.c"
 
 static void             VioInitialise(void);

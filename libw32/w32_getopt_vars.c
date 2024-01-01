@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_getopt_vars_c,"$Id: w32_getopt_vars.c,v 1.2 2023/12/29 16:49:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_getopt_vars_c,"$Id: w32_getopt_vars.c,v 1.3 2024/01/01 10:52:12 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -21,7 +21,7 @@ __CIDENT_RCSID(gr_w32_getopt_vars_c,"$Id: w32_getopt_vars.c,v 1.2 2023/12/29 16:
 
 #endif  /*!__MINGW32__*/
 
-extern __w32_getopt_globals(void);
+extern void __w32_getopt_globals(void);
 
 void
 __w32_getopt_globals(void)
@@ -29,4 +29,3 @@ __w32_getopt_globals(void)
 }
 
 /*end*/
-
