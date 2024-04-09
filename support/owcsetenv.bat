@@ -1,6 +1,8 @@
 @echo off
 echo Open Watcom 1.9 Build Environment
-SET  OWC19=d:\tools\WC19
+if not defined OWC19 (
+	SET OWC19=d:\tools\WC19
+)
 if NOT "%1" == "" SET OWC19=%1
 SET PATH=%OWC19%\BINW;%PATH%
 SET PATH=%OWC19%\BINNT;%PATH%
