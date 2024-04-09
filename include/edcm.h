@@ -1,16 +1,16 @@
 #ifndef GR_EDCM_H_INCLUDED
 #define GR_EDCM_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edcm_h,"$Id: edcm.h,v 1.23 2023/01/01 11:26:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_edcm_h,"$Id: edcm.h,v 1.24 2024/04/08 15:07:02 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edcm.h,v 1.23 2023/01/01 11:26:58 cvsuser Exp $
+/* $Id: edcm.h,v 1.24 2024/04/08 15:07:02 cvsuser Exp $
  * clisp macro constructs.
  *
  *
  *
- * Copyright (c) 1998 - 2023, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

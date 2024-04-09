@@ -1,16 +1,16 @@
 #ifndef GR_EDENV_H_INCLUDED
 #define GR_EDENV_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edenv_h,"$Id: edenv.h,v 1.18 2023/01/01 11:26:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_edenv_h,"$Id: edenv.h,v 1.19 2024/04/08 15:07:03 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edenv.h,v 1.18 2023/01/01 11:26:58 cvsuser Exp $
+/* $Id: edenv.h,v 1.19 2024/04/08 15:07:03 cvsuser Exp $
  * Environment interface.
  *
  *
  *
- * Copyright (c) 1998 - 2023, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

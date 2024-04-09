@@ -1,16 +1,16 @@
 #ifndef GR_EDGETOPT_H_INCLUDED
 #define GR_EDGETOPT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edgetopt_h,"$Id: edgetopt.h,v 1.21 2024/01/01 10:52:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_edgetopt_h,"$Id: edgetopt.h,v 1.22 2024/04/08 15:07:03 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edgetopt.h,v 1.21 2024/01/01 10:52:12 cvsuser Exp $
+/* $Id: edgetopt.h,v 1.22 2024/04/08 15:07:03 cvsuser Exp $
  * getopt() interface/implemenation.
  *
  *
  *
- * Copyright (c) 1998 - 2023, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -1,14 +1,14 @@
 #ifndef GR_MSVCVERSIONS_H_INCLUDED
 #define GR_MSVCVERSIONS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_msvcversions_h,"$Id: msvcversions.h,v 1.4 2023/01/01 11:26:59 cvsuser Exp $")
+__CIDENT_RCSID(gr_msvcversions_h,"$Id: msvcversions.h,v 1.5 2024/04/08 15:07:13 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: msvcversions.h,v 1.4 2023/01/01 11:26:59 cvsuser Exp $
+/* $Id: msvcversions.h,v 1.5 2024/04/08 15:07:13 cvsuser Exp $
  * _MSC_VER definitions
  *
- * Copyright (c) 2017 - 2023, Adam Young.
+ * Copyright (c) 2017 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

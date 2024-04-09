@@ -1,15 +1,15 @@
 #ifndef GR_VM_ALLOC_H_INCLUDED
 #define GR_VM_ALLOC_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vm_alloc_h,"$Id: vm_alloc.h,v 1.14 2023/01/01 11:26:59 cvsuser Exp $")
+__CIDENT_RCSID(gr_vm_alloc_h,"$Id: vm_alloc.h,v 1.15 2024/04/08 15:07:13 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vm_alloc.h,v 1.14 2023/01/01 11:26:59 cvsuser Exp $
+/* $Id: vm_alloc.h,v 1.15 2024/04/08 15:07:13 cvsuser Exp $
  *
  *
  *
- * Copyright (c) 1998 - 2023, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

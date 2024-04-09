@@ -1,16 +1,16 @@
 #ifndef GR_EDSYM_H_INCLUDED
 #define GR_EDSYM_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edsym_h,"$Id: edsym.h,v 1.25 2023/01/01 11:26:59 cvsuser Exp $")
+__CIDENT_RCSID(gr_edsym_h,"$Id: edsym.h,v 1.26 2024/04/08 15:07:03 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edsym.h,v 1.25 2023/01/01 11:26:59 cvsuser Exp $
+/* $Id: edsym.h,v 1.26 2024/04/08 15:07:03 cvsuser Exp $
  * Symbol management.
  *
  *
  *
- * Copyright (c) 1998 - 2023, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
