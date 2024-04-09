@@ -1,11 +1,11 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.136 2024/01/01 10:52:11 cvsuser Exp $
+# $Id: makelib.pl,v 1.139 2024/04/09 16:47:48 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
 #
 #
-# Copyright (c) 1998 - 2023, Adam Young.
+# Copyright (c) 1998 - 2024, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -587,7 +587,9 @@ my %x_environment   = (
                 #   (1) Use with caution, beta undocumented feature and not 100% stable.
                 #   (2) Avoid changing the call convention from #r/#s, otherwise runtime library issues.
                 #
-            CFLAGS          => '-q -6r -j -ei -db -zlf -bt=nt -bm -br -za99 -aa -sg',
+                # stdbool:  za99 mode causes crashes
+                #
+            CFLAGS          => '-q -6r -j -ei -db -zlf -bt=nt -bm -br -za99 -aa -sg -D_Bool=char',
             CXXFLAGS        => '-q -6r -j -ei -db -zlf -bt=nt -bm -br -cc++ -xs -xr',
             CDEBUG          => '-d2 -hd -of+ ',
             CXXDEBUG        => '-d2 -hd -od',   #d2/d3 under hw generates invalid symbols
@@ -1095,14 +1097,14 @@ my @x_functions     = (
         'index', 'rindex',                      # bsd
         'strcasecmp', '__strcasecmp', 'stricmp',
         'strncasecmp', '__strncasecmp', 'strnicmp',
-        'strtoul',
         'strnlen',
         'strerror',
         'strftime',
         'strchr', 'strrchr', 'strdup',
         'strlcpy', 'strlcat',                   # bsd/linux
             'strsep', 'strnstr', 'strcasestr', 'strcasestr_l', 'strtonum',
-        'strtof', 'strtold', 'strtoll',
+        'strtof', 'strtold',
+        'strtoll', 'strtoul', 'strtoull',
         'strtok_r',
         'sprintf_s', 'wsprintf_s',
         'strverscmp', '__strverscmp',
