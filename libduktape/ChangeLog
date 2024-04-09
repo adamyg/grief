@@ -1,5 +1,21 @@
 -*- encoding: utf-8; -*-
 
+Tue Apr  9 21:29:04 2024 adamy
+
+	* imported 2.7.0
+
+		o WATCOMC 1.9 (libcompat)
+
+			+	#if defined(__WATCOMC__) /*APY*/
+			+	#if (__WATCOMC__ < 1300)
+			+	double cbrt(double);
+			+	double trunc(double);
+			+	#endif
+			+	#define DUK_F_WATCOMC
+			+	#endif
+
+			TODO:	libcompat
+
 Sun Apr 11 23:00:25 2021 adamy
 
 	* imported 2.6.0
