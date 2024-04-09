@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_getlocale_c,"$Id: w32_getlocale.c,v 1.15 2023/12/27 17:52:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_getlocale_c,"$Id: w32_getlocale.c,v 1.16 2024/03/31 15:57:26 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 getlocale() system calls
  *
- * Copyright (c) 1998 - 2023, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

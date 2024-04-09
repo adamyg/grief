@@ -1,14 +1,14 @@
 #ifndef LIBW32_WIN32_TIME_H_INCLUDED
 #define LIBW32_WIN32_TIME_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_time_h,"$Id: win32_time.h,v 1.21 2023/12/27 17:52:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_time_h,"$Id: win32_time.h,v 1.22 2024/03/31 15:57:29 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 time functionality.
  *
- * Copyright (c) 1998 - 2023, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

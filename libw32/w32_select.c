@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_select_c,"$Id: w32_select.c,v 1.17 2023/12/27 17:52:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_select_c,"$Id: w32_select.c,v 1.18 2024/03/31 15:57:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  *  Windows 'select' compat interface
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

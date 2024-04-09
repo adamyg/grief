@@ -1,14 +1,14 @@
 #ifndef LIBW32_UNISTD_H_INCLUDED
 #define LIBW32_UNISTD_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_unistd_h,"$Id: unistd.h,v 1.70 2024/01/01 10:52:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_unistd_h,"$Id: unistd.h,v 1.72 2024/03/31 15:57:25 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 <unistd.h> header (_MSC_VER, __WATCOMC__ and __MINGW32__)
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -40,8 +40,8 @@ __CPRAGMA_ONCE
 #if (_MSC_VER != 1900)                          /* MSVC 19/2015 */
 #if (_MSC_VER <  1910 || _MSC_VER > 1916)       /* MSVC 2017: 19.10 .. 16 */
 #if (_MSC_VER > 1929)                           /* MSVC 2019: 19.20 .. 29 */
-#if (_MSC_VER > 1937)                           /* MSVC 2022: 19.30 .. 37*/
-#error unistd.h: untested MSVC Version (2005 -- 2019.37)
+#if (_MSC_VER > 1939)                           /* MSVC 2022: 19.30 .. 39 */
+#error unistd.h: untested MSVC Version (2005 -- 2022 19.39)
 	//see: https://en.wikipedia.org/wiki/Microsoft_Visual_C%2B%2B
 #endif //2022
 #endif //2019
@@ -631,9 +631,9 @@ LIBW32_API wchar_t *    w32_getcwddW (char drive, wchar_t *path, size_t size);
 LIBW32_API int          w32_mkstemp (char *path);
 LIBW32_API int          w32_mkstempA (char *path);
 LIBW32_API int          w32_mkstempW (wchar_t *path);
-#if defined(_MSC_VER)
-LIBW32_API int          mkstemp (char *path);
-#endif
+//#if defined(_MSC_VER)
+//LIBW32_API int          mkstemp (char *path);
+//#endif
 
 LIBW32_API int          w32_mkstemps (char *path, int suffixlen);
 LIBW32_API int          w32_mkstempsA (char *path, int suffixlen);
@@ -716,7 +716,7 @@ LIBW32_API size_t       strlcat (char *dst, const char *src, size_t siz);
 LIBW32_API size_t       strlcpy (char *dst, const char *src, size_t siz);
 //#endif //libcompat
 
-#if (_MSC_VER <= 1600)
+#if defined(_MSC_VER) && (_MSC_VER <= 1600)
 LIBW32_API unsigned long long strtoull (const char * nptr, char ** endptr, int base);
 LIBW32_API long long    strtoll (const char * nptr, char ** endptr, int base);
 #endif

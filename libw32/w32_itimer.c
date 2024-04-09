@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_itimer_c,"$Id: w32_itimer.c,v 1.7 2024/01/01 10:52:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_itimer_c,"$Id: w32_itimer.c,v 1.8 2024/03/31 15:57:26 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 itimer system calls -- INCOMPLETE, signal interface required.
  *
- * Copyright (c) 2018 - 2023, Adam Young.
+ * Copyright (c) 2018 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -122,7 +122,7 @@ struct itimer {
 static struct itimer itimer = {INVALID_HANDLE_VALUE};
 
 LIBW32_API int
-getitimer(int which, struct itimerval * value)
+getitimer(int which, struct itimerval *value)
 {
     assert(value);
 

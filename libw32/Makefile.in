@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.33 2023/12/27 17:52:05 cvsuser Exp $
+# $Id: Makefile.in,v 1.34 2024/03/31 15:57:24 cvsuser Exp $
 # libwin32 makefile.
 #
 #
-# Copyright (c) 2007, 2012 - 2023 Adam Young.
+# Copyright (c) 2007, 2012 - 2024 Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.

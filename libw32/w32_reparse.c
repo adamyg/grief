@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_reparse_c,"$Id: w32_reparse.c,v 1.10 2023/12/27 17:52:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_reparse_c,"$Id: w32_reparse.c,v 1.11 2024/03/31 15:57:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 directory support services
  *
- * Copyright (c) 2007, 2012 - 2023 Adam Young.
+ * Copyright (c) 2007, 2012 - 2024 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *

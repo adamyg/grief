@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_util_c,"$Id: w32_util.c,v 1.24 2023/12/27 17:52:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_util_c,"$Id: w32_util.c,v 1.25 2024/03/31 15:57:28 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 util unix functionality.
  *
- * Copyright (c) 2007, 2012 - 2023 Adam Young.
+ * Copyright (c) 2007, 2012 - 2024 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

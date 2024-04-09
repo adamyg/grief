@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_direntunc_c,"$Id: w32_direntunc.c,v 1.5 2023/12/27 17:52:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_direntunc_c,"$Id: w32_direntunc.c,v 1.6 2024/03/31 15:57:25 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 unc directory access services ...
  *
- * Copyright (c) 2007, 2012 - 2022 Adam Young.
+ * Copyright (c) 2007, 2012 - 2024 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -104,7 +104,7 @@ w32_unc_iterateW(const wchar_t *servername, unc_push_t push, void *data)
             // build directory ..
             for (e = 0, ent = buffer; e < entries; ++e, ++ent) {
                 if (STYPE_DISKTREE == ent->shi502_type) {
-                    const WCHAR *filename = ent->shi502_netname;
+                    const wchar_t *filename = ent->shi502_netname;
 
                     if ('p' == filename[0]) {   // prnproc$ or print$
                         if (0 == wcscmp(filename, L"prnproc$") ||

@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_getdomainname_c,"$Id: w32_domainname.c,v 1.7 2022/03/21 14:29:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_getdomainname_c,"$Id: w32_domainname.c,v 1.8 2024/03/31 15:57:25 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 getdomainname()
  *
- * Copyright (c) 2017 - 2022, Adam Young.
+ * Copyright (c) 2017 - 2024 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

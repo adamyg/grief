@@ -1,10 +1,10 @@
 /* -*- mode: c; indent-width: 4; -*-
- * $Id: pack0.h,v 1.8 2022/03/21 14:29:43 cvsuser Exp $
+ * $Id: pack0.h,v 1.9 2024/03/31 15:57:29 cvsuser Exp $
  * ==noguard==
  *
  * win32 declaration helpers
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
