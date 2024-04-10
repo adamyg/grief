@@ -30,6 +30,9 @@
 #define LIBARCHIVE_VERSION_STRING "3.6.1"
 #define LIBARCHIVE_VERSION_NUMBER "3006001"
 
+#if defined(_WIN32_WINNT) && (_WIN32_WINNT < 0x601)
+#undef  _WIN32_WINNT
+#endif
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0601                     // Windows 7; bcrypt requirement
 #endif

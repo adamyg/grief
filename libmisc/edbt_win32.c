@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.26 2024/01/01 12:03:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.27 2024/04/10 15:49:34 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edbt_win32.c,v 1.26 2024/01/01 12:03:27 cvsuser Exp $
+/* $Id: edbt_win32.c,v 1.27 2024/04/10 15:49:34 cvsuser Exp $
  * win32 (include cygwin) backtrace implementation.
  *
  *
@@ -42,7 +42,14 @@ __CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.26 2024/01/01 12:03:27 cvs
 #if defined(_WIN32) || defined(WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
 #ifndef  WIN32_LEAN_AND_MEAN
 #define  WIN32_LEAN_AND_MEAN
+#endif //WIN32
+#if defined(__WATCOMC__) && !defined(NTDDI_VERSION)
+#if defined(_WIN32_WINNT)
+#define NTDDI_VERSION (_WIN32_WINNT * 0x10000)
+#else
+#define NTDDI_VERSION 0x05010000
 #endif
+#endif //WATCOMC
 #undef   u_char
 #include <windows.h>
 
