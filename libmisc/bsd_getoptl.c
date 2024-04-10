@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bsd_getoptl_c,"$Id: bsd_getoptl.c,v 1.9 2024/04/10 15:18:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_bsd_getoptl_c,"$Id: bsd_getoptl.c,v 1.10 2024/04/10 16:27:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*	$OpenBSD: getopt_long.c,v 1.25 2011/03/05 22:10:11 guenther Exp $	*/
@@ -62,8 +62,12 @@ __CIDENT_RCSID(gr_bsd_getoptl_c,"$Id: bsd_getoptl.c,v 1.9 2024/04/10 15:18:53 cv
 #include <errno.h>
 #include <unistd.h>
 
+#if defined(_WIN32)
 #if !defined(__CYGWIN__)
 LIBW32_VAR int		optreset;		/* reset getopt */
+#endif
+#else
+extern int		optreset;		/* reset getopt */
 #endif
 
 static const char *optprog = NULL;		/* argv[0] */
