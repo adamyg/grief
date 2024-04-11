@@ -32,14 +32,22 @@
 __RCSID("$NetBSD: gettext.c,v 1.28 2012/07/30 23:04:42 yamt Exp $");
 
 #include "namespace.h"
+
 #if defined(_WIN32)
 #ifndef WINDOWS_MEAN_AND_LEAN
 #define WINDOWS_MEAN_AND_LEAN
 #endif
 #if defined(_MSC_VER) && (!defined(WINVER) || (WINVER < 0x500))
 #undef WINVER
+#if defined(_WIN32_WINNT)
+#define WINVER _WIN32_WINNT /* GetThreadLocale, SDK 10+ */
+#elif defined(WIN32_WINNT)
 #define WINVER WIN32_WINNT /* GetThreadLocale, SDK 10+ */
+#else
+#define WINVER 0x601
 #endif
+#endif
+
 #include <windows.h>
 #pragma comment(lib, "Kernel32.lib")
 #endif	//WIN32
