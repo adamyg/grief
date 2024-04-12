@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.139 2024/04/09 16:47:48 cvsuser Exp $
+# $Id: makelib.pl,v 1.140 2024/04/12 06:39:39 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -587,7 +587,7 @@ my %x_environment   = (
                 #   (1) Use with caution, beta undocumented feature and not 100% stable.
                 #   (2) Avoid changing the call convention from #r/#s, otherwise runtime library issues.
                 #
-                # stdbool:  za99 mode causes crashes
+                # stdbool:  za99 mode _Bool use within C modules causes crashes, remap
                 #
             CFLAGS          => '-q -6r -j -ei -db -zlf -bt=nt -bm -br -za99 -aa -sg -D_Bool=char',
             CXXFLAGS        => '-q -6r -j -ei -db -zlf -bt=nt -bm -br -cc++ -xs -xr',
@@ -1003,7 +1003,8 @@ my @x_predefines    = (
         '__GNUC__|__GNUC_MINOR__',
         '__MINGW32__|__MINGW64__|__MINGW64_VERSION_MAJOR|__MINGW64_VERSION_MINOR',
         '__STDC__|__STDC_VERSION__',
-        '_M_IX86|_M_IA64|_M_X64',
+        '_M_IX86|_M_IA64|_M_X64|_M_AMD64|_M_ARM',
+        '_WIN32_WINNT',
         'cpp=__cplusplus',
         'cpp=__STDC_HOSTED__',
         'cpp=__STDC_NO_ATOMICS__',
