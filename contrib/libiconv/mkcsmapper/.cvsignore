@@ -1,0 +1,6 @@
+Makefile
+*.err
+lex.c
+yacc.h
+yacc.c
+

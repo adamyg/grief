@@ -1,0 +1,5 @@
+Makefile
+*.err
+charset.*
+mapper.*
+.unpacked.*
