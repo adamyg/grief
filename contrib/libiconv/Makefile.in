@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.12 2022/06/02 04:00:10 cvsuser Exp $
+# $Id: Makefile.in,v 1.13 2024/04/14 06:29:23 cvsuser Exp $
 # libiconv/iconv makefile
 #
 #
@@ -60,7 +60,7 @@ LDRELEASE=	@LDRELEASE@
 
 CINCLUDE=	-I. -I../libcitrus/src -I$(D_INC) @CINCLUDE@
 
-CEXTRA=		@DEFS@
+CEXTRA=		$(filter-out -D_WIN32_WINNT%,@DEFS@)
 ifeq ("yes","@ISWIN32@")
 CEXTRA+=	-DWIN32 -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
 endif
