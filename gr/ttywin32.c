@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.55 2024/01/01 10:52:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.56 2024/04/14 15:31:10 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttywin32.c,v 1.55 2024/01/01 10:52:12 cvsuser Exp $
+/* $Id: ttywin32.c,v 1.56 2024/04/14 15:31:10 cvsuser Exp $
  * WIN32 VIO driver.
  *  see: http://www.edm2.com/index.php/Category:Vio
  *
@@ -123,7 +123,7 @@ VioEncoding(void)
         { 65001,    "UTF-8"        },
         };
     char encoding[32];
-    CPINFOEX cpix = {0};
+    CPINFOEXA cpix = {0};
     unsigned cpd;
     int cp;
 
