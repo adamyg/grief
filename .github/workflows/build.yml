@@ -119,7 +119,7 @@ jobs:
         @if "${{ matrix.config.toolchain }}"=="owc20"  call .\support\owc20setenv.bat C:\Watcom
         @if NOT "${{ matrix.config.toolchain }}"=="mingw64" c:\msys64\usr\bin\pacman --noconfirm -S bison
         @set PERL=c:/Strawberry/perl/bin/perl
-        c:/Strawberry/perl/bin/perl makelib.pl --perlpath=c:/Strawberry/perl/bin --busybox=./win32/busybox --wget=./win32/wget --bison=c:/msys64/usr/bin/bison --flex=./bin.${{ matrix.config.toollabel }}/flex "${{ matrix.config.toolchain }}"
+        c:/Strawberry/perl/bin/perl makelib.pl --perlpath=c:/Strawberry/perl/bin --busybox=./win32/busybox --wget=./win32/wget --bison=c:/msys64/usr/bin/bison --flex=./bin.${{ matrix.config.toollabel }}/release/flex "${{ matrix.config.toolchain }}"
 
     - name: Windows, compile
       if: startsWith(matrix.config.name, 'Windows Latest')
