@@ -1,11 +1,11 @@
 #ifndef GR_KEYBOARD_H_INCLUDED
 #define GR_KEYBOARD_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keyboard_h,"$Id: keyboard.h,v 1.23 2014/10/22 02:32:58 ayoung Exp $")
+__CIDENT_RCSID(gr_keyboard_h,"$Id: keyboard.h,v 1.24 2024/04/14 16:03:45 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keyboard.h,v 1.23 2014/10/22 02:32:58 ayoung Exp $
+/* $Id: keyboard.h,v 1.24 2024/04/14 16:03:45 cvsuser Exp $
  * Key maps and binding management.
  *
  *
@@ -52,7 +52,7 @@ extern int                  key_cache_pop(ref_t *pp, struct IOEvent *evt);
 
 extern void                 key_execute(int c);
 
-extern int                  key_check(const KEY *sbuf, int *multi_key, int no_ambig);
+extern int                  key_check(const KEY *sbuf, int *multi_key, int no_ambig);             
 extern int                  key_mapwin32(unsigned, unsigned, unsigned);
 
 extern void                 key_local_detach(BUFFER_t *bp);

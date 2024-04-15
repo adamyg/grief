@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.73 2024/01/01 12:03:51 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.74 2024/04/14 16:03:45 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_win32.c,v 1.73 2024/01/01 12:03:51 cvsuser Exp $
+/* $Id: sys_win32.c,v 1.74 2024/04/14 16:03:45 cvsuser Exp $
  * WIN32 system support.
  *
  *
@@ -527,6 +527,58 @@ AltPlusEvent(const KEY_EVENT_RECORD *ke, struct IOEvent *evt)
 }
 
 
+/*  Function:           key_normalizeAltGr
+ *      Filter AtrGr events from modifiers; attempt to allow:
+ *
+ *          Left-Alt + AltGr,
+ *          Right-Ctrl + AltGr,
+ *          Left-Alt + Right-Ctrl + AltGr.
+ */
+static DWORD
+key_normalizeAltGr(const KEY_EVENT_RECORD* key)
+{
+    DWORD state = key->dwControlKeyState;
+
+    // AltGr condition (LCtrl + RAlt)
+    if (0 == (state & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)))
+        return state;
+
+    if (0 == (state & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)))
+        return state;
+
+    if (0 == key->uChar.UnicodeChar)
+        return state;
+
+    if (state & RIGHT_ALT_PRESSED) {
+        // Remove Right-Alt.
+        state &= ~RIGHT_ALT_PRESSED;
+
+        // As a character was presented, Left-Ctrl is almost always set,
+        // except if the user presses Right-Ctrl, then AltGr (in that specific order) for whatever reason.
+        // At any rate, make sure the bit is not set.
+        state &= ~LEFT_CTRL_PRESSED;
+
+    } else if (state & LEFT_ALT_PRESSED) {
+        // Remove Left-Alt.
+        state &= ~LEFT_ALT_PRESSED;
+
+        // Whichever Ctrl key is down, remove it from the state.
+        // We only remove one key, to improve our chances of detecting the corner-case of Left-Ctrl + Left-Alt + Right-Ctrl.
+        if ((state & LEFT_CTRL_PRESSED) != 0) {
+            // Remove Left-Ctrl.
+            state &= ~LEFT_CTRL_PRESSED;
+
+        } else if ((state & RIGHT_CTRL_PRESSED) != 0) {
+            // Remove Right-Ctrl.
+            state &= ~RIGHT_CTRL_PRESSED;
+        }
+    }
+
+    trace_log("AltGr: 0x%04x = 0x%04x", key->dwControlKeyState, state);
+    return state;
+}
+
+
 /*  Function:           sys_getevent
  *      Retrieve the input event from the status keyboard stream, within
  *      the specified timeout 'tmo'.
@@ -575,9 +627,10 @@ sys_getevent(struct IOEvent *evt, int tmo)
                     }
 
                     if (k.Event.KeyEvent.bKeyDown) {
+                        const DWORD dwControlKeyState = key_normalizeAltGr(ke);
                         int code;
                                                 /* see kbd.c */
-                        if ((code = key_mapwin32((unsigned) ke->dwControlKeyState,
+                        if ((code = key_mapwin32((unsigned) dwControlKeyState,
                                         ke->wVirtualKeyCode, ke->uChar.UnicodeChar)) != -1) {
 
                             evt->type = EVT_KEYDOWN;
