@@ -48,8 +48,8 @@ jobs:
       if: startsWith(matrix.config.name, 'Ubuntu Latest')
       shell: bash
       run: |
-        tar --exclude="./win32" --exclude="./contrib" -zcvf snapshot.tar.gz
-        tar --include="./win32" --include="./contrib" -zcvf snapshot_extra.tar.gz
+        tar --exclude="./win32" --exclude="./contrib" -zcvf snapshot.tar.gz .
+        tar --include="./win32" --include="./contrib" -zcvf snapshot_extra.tar.gz .
 
     - name: Snapshot Publish
       if: startsWith(matrix.config.name, 'Ubuntu Latest')
