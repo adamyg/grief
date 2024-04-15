@@ -9,34 +9,39 @@ jobs:
       matrix:
         config:
         - {
-            name: "Windows Latest MSVC",
-            os: windows-latest,
-            toolchain: vc2022,
-            toolversion: vs170
+           name: "Windows Latest MSVC",
+           os: windows-latest,
+           toolchain: vc2022,
+           toollabel: vs170,
+           package: win32-vs22
           }
         - {
            name: "Windows Latest MinGW",
            os: windows-latest,
            toolchain: mingw64,
-           toolversion: mingw64
+           toollabel: mingw64,
+           package: win32-w64
           }
         - {
            name: "Windows Latest OWC",
            os: windows-latest,
            toolchain: owc20,
-           toolversion: owc20
+           toollabel: owc20,
+           package: win32-owc
           }
         - {
            name: "Ubuntu Latest GCC",
            os: ubuntu-latest,
            toolchain: gcc,
-           toolversion: gcc
+           toollabel: gcc,
+           package: ubuntu-gcc
           }
         - {
            name: "MacOS Latest GCC",
            os: macos-latest,
            toolchain: gcc,
-           toolversion: gcc
+           toollabel: gcc,
+           package: macos-gcc
           }
 
     steps:
@@ -114,7 +119,7 @@ jobs:
         @if "${{ matrix.config.toolchain }}"=="owc20"  call .\support\owc20setenv.bat C:\Watcom
         @if NOT "${{ matrix.config.toolchain }}"=="mingw64" c:\msys64\usr\bin\pacman --noconfirm -S bison
         @set PERL=c:/Strawberry/perl/bin/perl
-        c:/Strawberry/perl/bin/perl makelib.pl --perlpath=c:/Strawberry/perl/bin --busybox=./win32/busybox --wget=./win32/wget --bison=c:/msys64/usr/bin/bison --flex=./bin.${{ matrix.config.toolchain }}/flex "${{ matrix.config.toolchain }}"
+        c:/Strawberry/perl/bin/perl makelib.pl --perlpath=c:/Strawberry/perl/bin --busybox=./win32/busybox --wget=./win32/wget --bison=c:/msys64/usr/bin/bison --flex=./bin.${{ matrix.config.toollabel }}/flex "${{ matrix.config.toolchain }}"
 
     - name: Windows, compile
       if: startsWith(matrix.config.name, 'Windows Latest')
@@ -162,5 +167,5 @@ jobs:
     - name: Package
       uses: actions/upload-artifact@v4
       with:
-        name: package-${{ matrix.config.toolchain }}
-        path: ./bin.${{ matrix.config.toolversion }}/release/*
+        name: package-${{ matrix.config.package }}
+        path: ./bin.${{ matrix.config.toollabel }}/release/*
