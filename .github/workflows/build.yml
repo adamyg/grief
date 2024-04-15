@@ -49,8 +49,7 @@ jobs:
       shell: bash
       run: |
         mkdir .snapshot
-        tar --exclude="./.snapshot" --exclude="./win32" --exclude="./contrib" -zcvf .snapshot/snapshot.tar.gz .
-        tar --exclude="./.snapshot" --include="./win32" --include="./contrib" -zcvf .snapshot/snapshot_extra.tar.gz .
+        tar --exclude="./.snapshot" --exclude="./.git" --exclude="./win32" --exclude="./contrib" -zcvf .snapshot/snapshot.tar.gz .
 
     - name: Snapshot Publish
       if: startsWith(matrix.config.name, 'Ubuntu Latest')
