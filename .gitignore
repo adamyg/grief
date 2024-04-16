@@ -8,7 +8,7 @@ doc/
 bin
 bin.*/
 lib.*/
-objects*/
+obj.*/
 macros/
 macros.x64
 help/

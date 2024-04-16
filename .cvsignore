@@ -10,7 +10,7 @@ config.log
 install-sh
 libtool
 ltmain.sh
-objects.*
+obj.*
 lib.*
 bin.*
 macros

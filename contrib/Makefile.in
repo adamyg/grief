@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.18 2024/01/01 12:16:48 cvsuser Exp $
+# $Id: Makefile.in,v 1.19 2024/04/16 11:37:12 cvsuser Exp $
 # External packages.
 #
 #
@@ -40,7 +40,7 @@ endif
 
 # Directories
 
-D_OBJ=		../objects@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_OBJ=		../obj@TOOLCHAINEXT@/$(BUILD_TYPE)
 D_LIB=		../lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 D_BIN=		../bin@TOOLCHAINEXT@/$(BUILD_TYPE)
 
