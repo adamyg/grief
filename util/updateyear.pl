@@ -1,9 +1,9 @@
 #!/usr/bin/perl
-# $Id: updateyear.pl,v 1.1 2022/12/09 15:51:09 cvsuser Exp $
+# $Id: updateyear.pl,v 1.2 2024/04/16 10:37:41 cvsuser Exp $
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 # Update the copyright year within the specified files
 #
-# Copyright (c) 2012 - 2023, Adam Young.
+# Copyright (c) 2012 - 2024, Adam Young.
 # All Rights Reserved
 #
 
@@ -158,7 +158,8 @@ load($$)                # (file)
                     s/ - 2019/ - 2023/ or
                     s/ - 2020/ - 2023/ or
                     s/ - 2021/ - 2023/ or
-                    s/ - 2022/ - 2023/) {
+                    s/ - 2022/ - 2023/ or
+                    s/ - 2023/ - 2024/) {
                     print "dryrun: update\n- <$org>\n+ <$_>\n"
                         if ($o_dryrun);
                     $result = 1;

@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_signals_c,"$Id: signals.c,v 1.20 2022/12/03 16:40:17 cvsuser Exp $")
+__CIDENT_RCSID(gr_signals_c,"$Id: signals.c,v 1.21 2024/04/16 10:30:36 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: signals.c,v 1.20 2022/12/03 16:40:17 cvsuser Exp $
+/* $Id: signals.c,v 1.21 2024/04/16 10:30:36 cvsuser Exp $
  * Signal handling.
  *
  *
- * Copyright (c) 1998 - 2023, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
