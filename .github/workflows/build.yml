@@ -54,15 +54,15 @@ jobs:
       shell: bash
       run: |
         mkdir .snapshot
-        tar --exclude="./.snapshot" --exclude="./.git" --exclude="./win32" --exclude="./contrib" -zcvf .snapshot/snapshot.tgz .
+        tar --exclude="./.snapshot" --exclude="./.git" --exclude="./win32" --exclude="./contrib" --exclude="./support/*.bat" -cf .snapshot/snapshot.tar .
 
     - name: Snapshot Publish
       if: startsWith(matrix.config.name, 'Ubuntu Latest')
       uses: actions/upload-artifact@v4
       with:
         name: source-snapshot
-        path: .snapshot/snapshot.tgz
-        compression-level: 0
+        path: .snapshot/snapshot.tar
+        compression-level: 9
 
     - name: Checkout submodules
       run: |
