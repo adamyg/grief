@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_arg_c,"$Id: arg.c,v 1.20 2020/04/21 00:01:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_arg_c,"$Id: arg.c,v 1.21 2024/04/17 18:39:11 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: arg.c,v 1.20 2020/04/21 00:01:54 cvsuser Exp $
+/* $Id: arg.c,v 1.21 2024/04/17 18:39:11 cvsuser Exp $
  * Command line argument processing functionality.
  *
  *
@@ -377,7 +377,7 @@ print_option(const struct argoption *p, char *opttxt)
 {
     int len = 0;
 
-    if (p->val > 0 && p->val < 0x7f && isprint(p->val)) {
+    if (p->val > ' ' && p->val < 0x7f && isprint(p->val)) {
         len += sprintf(opttxt + len, "-%c", p->val);
     }
 
