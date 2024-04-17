@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetwidth_cjk_c,"$Id: charsetwidth_cjk.c,v 1.16 2022/03/22 11:29:04 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetwidth_cjk_c,"$Id: charsetwidth_cjk.c,v 1.18 2024/04/17 16:00:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -12,7 +12,7 @@ __CIDENT_RCSID(gr_charsetwidth_cjk_c,"$Id: charsetwidth_cjk.c,v 1.16 2022/03/22 
  * Latest version: http://www.cl.cam.ac.uk/~mgk25/ucs/wcwidth.c
  *
  *
- * Copyright (c) 2010 - 2018, Adam Young.
+ * Copyright (c) 2010 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

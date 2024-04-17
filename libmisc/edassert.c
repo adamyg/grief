@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edassert_c,"$Id: edassert.c,v 1.25 2024/04/14 06:15:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_edassert_c,"$Id: edassert.c,v 1.26 2024/04/17 15:57:13 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edassert.c,v 1.25 2024/04/14 06:15:29 cvsuser Exp $
+/* $Id: edassert.c,v 1.26 2024/04/17 15:57:13 cvsuser Exp $
  *
  *  This macro is useful for putting diagnostics into programs. When it is executed, if
  *  expression is false (zero), edAssert() prints:
@@ -18,7 +18,7 @@ __CIDENT_RCSID(gr_edassert_c,"$Id: edassert.c,v 1.25 2024/04/14 06:15:29 cvsuser
  *
  *
  *
- * Copyright (c) 1998 - 2023, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

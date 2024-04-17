@@ -1,6 +1,6 @@
 /*	$NetBSD: ftp.c,v 1.46 2014/06/11 13:12:12 joerg Exp $	*/
 /*-
- * Copyright (c) 2013 - 2023 Adam Young
+ * Copyright (c) 2013 - 2024 Adam Young
  * Copyright (c) 1998-2004 Dag-Erling Coïdan Smørgrav
  * Copyright (c) 2008, 2009, 2010 Joerg Sonnenberger <joerg@NetBSD.org>
  * All rights reserved.

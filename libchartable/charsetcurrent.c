@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetcurrent_c,"$Id: charsetcurrent.c,v 1.10 2022/03/21 14:59:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetcurrent_c,"$Id: charsetcurrent.c,v 1.12 2024/04/17 16:00:28 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* libcharset current.
  *
  *
- * Copyright (c) 2010 - 2022, Adam Young.
+ * Copyright (c) 2010 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

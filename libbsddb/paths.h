@@ -1,10 +1,10 @@
 #ifndef LIBDBHASH_PATHS_H_INCLUDED
 #define LIBDBHASH_PATHS_H_INCLUDED
-/* $Id: paths.h,v 1.4 2022/05/26 13:36:07 cvsuser Exp $
+/* $Id: paths.h,v 1.6 2024/04/17 16:08:54 cvsuser Exp $
  *
  * libbsddb <paths.h>
  *
- * Copyright (c) 2012-2015 Adam Young.
+ * Copyright (c) 2012 - 2024 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

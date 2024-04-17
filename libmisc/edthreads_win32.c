@@ -1,14 +1,14 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_win32_c,"$Id: edthreads_win32.c,v 1.23 2022/12/03 16:33:05 cvsuser Exp $")
+__CIDENT_RCSID(gr_edthreads_win32_c,"$Id: edthreads_win32.c,v 1.24 2024/04/17 15:57:13 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads_win32.c,v 1.23 2022/12/03 16:33:05 cvsuser Exp $
+/* $Id: edthreads_win32.c,v 1.24 2024/04/17 15:57:13 cvsuser Exp $
  * C11 threads implementation, for windows
  * based on ISO/IEC 9899:201x Committee Draft, April 12, 2011 N1570
  *
  *
  *
- * Copyright (c) 1998 - 2023, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

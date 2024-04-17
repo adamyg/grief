@@ -1,15 +1,15 @@
 #ifndef GR_VFS_LOOKUP_H_INCLUDED
 #define GR_VFS_LOOKUP_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_lookup_h,"$Id: vfs_lookup.h,v 1.11 2022/03/21 14:27:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_lookup_h,"$Id: vfs_lookup.h,v 1.12 2024/04/17 15:43:00 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_lookup.h,v 1.11 2022/03/21 14:27:23 cvsuser Exp $
+/* $Id: vfs_lookup.h,v 1.12 2024/04/17 15:43:00 cvsuser Exp $
  * Virtual File System Interface -- lookup service.
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

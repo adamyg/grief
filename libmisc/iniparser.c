@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_iniparser_c,"$Id: iniparser.c,v 1.17 2023/12/27 17:52:05 cvsuser Exp $")
+__CIDENT_RCSID(gr_iniparser_c,"$Id: iniparser.c,v 1.18 2024/04/17 15:57:13 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: iniparser.c,v 1.17 2023/12/27 17:52:05 cvsuser Exp $
+/* $Id: iniparser.c,v 1.18 2024/04/17 15:57:13 cvsuser Exp $
  * INI parser.
  *
  *
- * Copyright (c) 2012 - 2023, Adam Young.
+ * Copyright (c) 2012 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

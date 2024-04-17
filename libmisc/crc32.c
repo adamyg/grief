@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crc32_c,"$Id: crc32.c,v 1.13 2022/12/03 16:33:05 cvsuser Exp $")
+__CIDENT_RCSID(gr_crc32_c,"$Id: crc32.c,v 1.14 2024/04/17 15:57:13 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crc32.c,v 1.13 2022/12/03 16:33:05 cvsuser Exp $
+/* $Id: crc32.c,v 1.14 2024/04/17 15:57:13 cvsuser Exp $
  *
  *  The CRC32 employs the reverse-polynomial calculation method on the
  *  polynomial 0xEDB88320 used as the frame check sequence in ADCCP (ANSI
@@ -13,7 +13,7 @@ __CIDENT_RCSID(gr_crc32_c,"$Id: crc32.c,v 1.13 2022/12/03 16:33:05 cvsuser Exp $
  *  FCS.
  *
  *
- * Copyright (c) 1998 - 2023, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -1,15 +1,15 @@
 #ifndef GR_SPHEADERS_H_INCLUDED
 #define GR_SPHEADERS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(cr_spheaders_h,"$Id: spheaders.h,v 1.13 2022/12/04 15:23:27 cvsuser Exp $")
+__CIDENT_RCSID(cr_spheaders_h,"$Id: spheaders.h,v 1.14 2024/04/17 15:57:14 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: spheaders.h,v 1.13 2022/12/04 15:23:27 cvsuser Exp $
+/* $Id: spheaders.h,v 1.14 2024/04/17 15:57:14 cvsuser Exp $
  * splay library
  *
  *
- * Copyright (c) 1998 - 2023, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

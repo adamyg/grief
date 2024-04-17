@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_stable_c,"$Id: stable.c,v 1.16 2022/12/03 16:33:05 cvsuser Exp $")
+__CIDENT_RCSID(gr_stable_c,"$Id: stable.c,v 1.17 2024/04/17 15:57:13 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: stable.c,v 1.16 2022/12/03 16:33:05 cvsuser Exp $
+/* $Id: stable.c,v 1.17 2024/04/17 15:57:13 cvsuser Exp $
  * String tables ...
  *
  *   Linear Hashing is a dynamic hash table algorithm invented by Witold Litwin in 1980.
@@ -40,7 +40,7 @@ __CIDENT_RCSID(gr_stable_c,"$Id: stable.c,v 1.16 2022/12/03 16:33:05 cvsuser Exp
  *   Collsions within the hash are handling by the buckets, i.e., each slot holds a linked
  *   list of table entries, all with the same reduced hash value.
  *
- * Copyright (c) 1998 - 2023, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.13 2024/04/16 11:37:14 cvsuser Exp $
+# $Id: Makefile.in,v 1.15 2024/04/17 16:00:29 cvsuser Exp $
 # libcharudet makefile
 #
 #
-# Copyright (c) 1998 - 2022, Adam Young.
+# Copyright (c) 1998 - 2024, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.

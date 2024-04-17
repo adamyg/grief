@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_glob_c,"$Id: vfs_glob.c,v 1.12 2022/03/21 14:27:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_glob_c,"$Id: vfs_glob.c,v 1.14 2024/04/17 16:00:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_glob.c,v 1.12 2022/03/21 14:27:22 cvsuser Exp $
+/* $Id: vfs_glob.c,v 1.14 2024/04/17 16:00:29 cvsuser Exp $
  * Virtual file system interface - glob implementation.
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

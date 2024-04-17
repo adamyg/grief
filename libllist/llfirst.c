@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(cr_first_c,"$Id: llfirst.c,v 1.13 2022/12/04 15:23:36 cvsuser Exp $")
+__CIDENT_RCSID(cr_first_c,"$Id: llfirst.c,v 1.14 2024/04/17 15:57:12 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: llfirst.c,v 1.13 2022/12/04 15:23:36 cvsuser Exp $
+/* $Id: llfirst.c,v 1.14 2024/04/17 15:57:12 cvsuser Exp $
  * Linked list management module
  *
  *
- * Copyright (c) 1998 - 2023, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

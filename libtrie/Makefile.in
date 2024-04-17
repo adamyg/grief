@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.6 2024/04/16 11:37:14 cvsuser Exp $
+# $Id: Makefile.in,v 1.7 2024/04/17 15:57:15 cvsuser Exp $
 # libtrie - prefix tree
 #
 #
-# Copyright (c) 2022, Adam Young.
+# Copyright (c) 2022 - 2024, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.

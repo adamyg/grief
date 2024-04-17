@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.10 2024/04/16 11:37:14 cvsuser Exp $
+# $Id: Makefile.in,v 1.12 2024/04/17 16:08:54 cvsuser Exp $
 # libbsdio makefile.
 #
 #
-# Copyright (c) 1998 - 2020, Adam Young.
+# Copyright (c) 1998 - 2024, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
