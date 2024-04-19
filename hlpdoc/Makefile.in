@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.12 2024/04/16 10:37:31 cvsuser Exp $
+# $Id: Makefile.in,v 1.13 2024/04/19 13:57:28 cvsuser Exp $
 # Help documentation.
 #
 #
@@ -99,7 +99,7 @@ release:
 debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
-help:			outdirs $(OBJS) prog user cshelp features license
+help:			outdirs $(OBJS) prog user cshelp features quickstart license
 
 outdirs:		$(OUTDIR)/.created $(CSOUTDIR)/.created $(FEATOUTDIR)/.created
 
@@ -121,6 +121,11 @@ features:	$(FEATOBJS)
 
 license:	../COPYING
 	@cp ../COPYING $(OUTDIR)/license.txt
+
+quickstart:
+	@echo Building quickstart documentation
+	$(subst /,\,$(GRMANDOC)) -mdoc -Tascii doc/mandoc/quickstart-txt.mandoc > ../quickstart.txt
+	$(subst /,\,$(GRMANDOC)) -mdoc -Thtml -O style=hlpdoc/doc/mandoc.css doc/mandoc/quickstart-txt.mandoc > ../quickstart.html
 
 %/.created:
 	-@mkdir $(@D)

@@ -1,10 +1,10 @@
 #!/usr/bin/perl
-# $Id: makepdf.pl,v 1.4 2022/12/09 15:56:48 cvsuser Exp $
+# $Id: makepdf.pl,v 1.9 2024/04/19 13:57:28 cvsuser Exp $
 # -*- tabs: 8; indent-width: 4; -*-
 # pdf generation tool.
 #
 #
-# Copyright (c) 1998 - 2023, Adam Young.
+# Copyright (c) 1998 - 2024, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -53,6 +53,9 @@ exit &main();
 sub
 main()
 {
+    # Consider using: https://github.com/puppeteer/puppeteer/tree/v4.0.0
+    # See: https://wkhtmltopdf.org/
+
     if ($^O eq 'MSWin32') {                     # determine windows installation path
             if (-d 'C:/Program Files (x86)/wkhtmltopdf') {
                 $x_binary = 'C:/Program Files (x86)/wkhtmltopdf';
@@ -83,6 +86,7 @@ main()
     Usage() if (!$ret || $o_help);
 
 ##  ParseMenu();
+##  return;
 
     #   [page]       Replaced by the number of the pages currently being printed
     #   [frompage]   Replaced by the number of the first page to be printed
@@ -106,15 +110,17 @@ main()
         "--footer-center   \"[page]\" ".
         "--footer-left     \"Grief Edit\" ".
         "--footer-spacing  5 ".
+        "--allow doc/html/styles ".
+        "--allow doc/html/javascript ".
+        "--allow doc/html/files ".
+        "--allow src/cover ".
         "cover src/cover/CoverPage1.html ".
         "cover src/cover/CoverPage2.html ".
         "toc ".
-                                                # " --outline-depth 3 ".
         "--xsl-style-sheet src/cover/makpdftoc.xsl ".
         "doc/html/files/introduction-txt.html ".
         "doc/html/files/history-txt.html ".
         "doc/html/files/copyright-txt.html ".
-        "doc/html/files/contrib-txt.html ".
         "doc/html/files/quickstart-txt.html ".
         "doc/html/files/tutorial-txt.html ".
         "doc/html/files/language-txt.html ".
@@ -143,6 +149,7 @@ main()
         "doc/html/files/prim_syntax-txt.html ".
         "doc/html/files/prim_var-txt.html ".
         "doc/html/files/prim_window-txt.html ".
+        "doc/html/files/contrib-txt.html ".
         "doc/html/files/appendixa-txt.html ".
         "doc/html/files/appendixb-txt.html ".
         "doc/html/files/appendixc-txt.html ".
@@ -185,42 +192,42 @@ ParseMenu()             #()
         $line =~ s/^\s+//g;
 
         if ($line =~ /^Format: (.+)\s+$/) {
-print "Format:    $1\n";
+            print "Format:    $1\n";
 
         } elsif ($line =~ /^Title: (.+)\s+$/) {
-print "Title:     $1\n";
+            print "Title:     $1\n";
 
         } elsif ($line =~ /^Footer: (.+)\s+$/) {
-print "Footer:    $1\n";
+            print "Footer:    $1\n";
 
         } elsif ($line =~ /^Timestamp: (.+)\s+$/) {
-print "Timestamp: $1\n";
+            print "Timestamp: $1\n";
 
         } elsif ($line =~ /^PageFooter: (.+)\s+$/) {
-print "Footer:    $1\n";
+            print "Footer:    $1\n";
 
         } elsif ($line =~ /^File: (.+) \((.+)\)\s+$/) {
-print "File:      $1 ($2)\n";
-            my ($desc, $file) = ($1, $2);
+            print "File:      $1 ($2)\n";
+            my ($desc, $file) = (Trim($1), Trim($2));
             my $out = "${o_wkdir}/html/files/$file";
 
-            $out =~ s/\./-/;                    # convert dot
-            $out .= '.html';                    # implied extension
+            $out =~ s/\./-/;            # convert dot
+            $out .= '.html';            # implied extension
 
             (-f $out) or die "missing ${out}\n";
+            print "  ==> ${desc},${out}\n";
             push @files, $out;
 
         } elsif ($line =~ /^Group: (.+?)\s*\{\s*$/) {
-print "Group:     $1\n";
+            print "Group:     $1\n";
             $group = $1;
 
         } elsif ($group eq 'Index') {
-            if ($line =~ /^Index: (.+)\s+$/) {
-print "Index:     $1\n";
-            }
+            print "Index:     $1\n"
+                if ($line =~ /^Index: (.+)\s+$/);
 
         } elsif ($line =~ /^}\s+$/) {
-print "Group:     }\n";
+            print "Group:     }\n";
             $group = '';
         }
     }
@@ -260,7 +267,7 @@ Copyright               #(file)
 {
 #   Grief Programmer's Guide
 #
-#   Copyright © 1998 - 2018 Adam Young
+#   Copyright © 1998 - 2024 Adam Young
 #
 #   Permission is granted to make and distribute non-commercial
 #   verbatim copies of this documentation provided the copyright
@@ -280,11 +287,19 @@ Copyright               #(file)
 
 
 sub
-Debug
+Debug                   #(text)
 {
-    if ($o_debug) {
-        print "@_\n";
-    }
+    print "@_\n" if ($o_debug);
+}
+
+
+sub
+Trim                    #(text)
+{
+    my $text = shift;
+    $text =~ s/^\s+//;
+    $text =~ s/\s+$//;
+    return $text;
 }
 
 #end

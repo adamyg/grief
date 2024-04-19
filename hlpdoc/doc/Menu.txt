@@ -4,7 +4,7 @@ Format: Development Release 7-18-2013 (1.4 base)
 Title: Grief Edit
 SubTitle: Programmers Guide
 
-Footer: Copyright (c) 1998 - 2023
+Footer: Copyright (c) 1998 - 2024
 Timestamp: Generated on mon day, year
 #   m     - One or two digit month.  January is "1"
 #   mm    - Always two digit month.  January is "01"
@@ -75,6 +75,7 @@ Group: Primitives  {
    File: Callbacks  (prim_callback.txt)
    File: List Primitives  (prim_list.txt)
    File: Syntax Highlighting Primitives  (prim_syntax.txt)
+   File: General Primitives  (prim_general.txt)
    }  # Group: Primitives
 
 File: Third Party Packages  (contrib.txt)

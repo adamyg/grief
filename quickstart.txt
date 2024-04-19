@@ -1,0 +1,1096 @@
+Quick Start - Grief Edit(1)                            General Commands Manual
+
+NNAAMMEE
+     Quick Start
+
+   SSuummmmaarryy
+     Welcome to GGRRIIEEFF.
+
+     GRIEF is a full-featured file and textual editor offering a wealth of
+     facilities to programmers and non-programmers alike.  It edits plain text
+     files and has numerous options depending on the focus of your work.
+
+     Based on a long standing interface, GRIEF is an intuitive and easy editor
+     to both novice and seasoned developers, inheriting its clean user
+     interface from the BRIEF family of programmers editors.  BRIEF was a
+     programmer's editor for MS-DOS written by Underware, and later acquired
+     by Borland.  BRIEF was an acronym for _B_a_s_i_c _R_e_c_o_n_f_i_g_u_r_a_b_l_e _I_n_t_e_r_a_c_t_i_v_e
+     _E_d_i_t_i_n_g _F_a_c_i_l_i_t_y.
+
+     This introduction is an outline on how to use GRIEF, based on the default
+     keyboard layout made popular by BRIEF.  The fundamental GRIEF commands
+     you need to know are shown below.
+
+   QQuuiicckk SSttaarrtt
+     Setup GRIEF's local configuration may be viewed using the _-_-_c_o_n_f_i_g
+           option.
+
+     Basics
+           Editing any file is a simple as running GRIEF against the file
+           image.
+
+     Main Screen
+           The main features of the screen are the window arena, command line
+           and status area.
+
+     Movement
+           Buffer navigation is available using a rich set of the cursor
+           commands.
+
+     Help  Use of <Alt-H> or command _h_e_l_p invokes the GRIEF help interface.
+
+     Text Editing
+           Inserting text is simple, just start typing; see <self_insert>.
+
+     Cut and Paste
+           If we want to copy a block of text from one part of a buffer (think
+           of a buffer as a file) to another, or from one buffer to another,
+           we use the _s_c_r_a_p.
+
+     Search and Replace
+           Text are be manipulated by searching and/or translating selected
+           text by the use of Regular expression search patterns.
+
+     Undo and Redo
+           The <undo> command can be used to undo any commands in the current
+           buffer.
+
+     Command Prompt
+           Command line mode is entered by typing <F10>; see <execute_macro>.
+
+     File and Buffer Manipulation
+           Files are always accessed by loading them into a buffer.
+
+     Window Manipulation
+           GRIEF windows can be _t_i_l_e_d and used to look at more than one file
+           at the same time, or different parts of the same file at the same
+           time.
+     Record and Playback
+           GRIEF supports a facility to save keystroke sequences in a macro
+           file that can be used later to save time.
+
+     Features
+           There are numerous additional features available, many are directly
+           available via the _F_e_a_t_u_r_e _M_e_n_u_s <Alt-F> and/or general menu, these
+           include.
+
+
+
+           ______________________________
+
+TTooppiicc:: SSeettuupp
+     GRIEF's local configuration may be viewed using the _-_-_c_o_n_f_i_g option.
+
+         $gr --config
+
+     GRIEF 3.2.2.25 compiled Apr 10 2024 00:40:33 (cm version 3.1)
+     PROGNAME=C:/Program Files (x86)/Grief/bin/gr.exe
+     MACHTYPE=Win32
+     GRPATH=C:/Program Files (x86)/Grief/macros;C:/Program Files (x86)/Grief/src;
+     GRHELP=C:/Program Files (x86)/Grief/help;
+     GRPROFILE=
+     GRLEVEL=1
+     GRFILE=newfile
+     GRFLAGS=-i60
+     GRBACKUP=
+     GRVERSIONS=
+     GRDICTIONARIES=
+     GRDICTIONARY=
+     GRTERM=win32
+
+     The more significant configuration elements which are required for
+     correct operation are:
+
+       GRPATH    The _G_R_P_A_T_H global string is used to specify one or more
+                 directory names stating the search path which GRIEF shall
+                 utilise to locate macro objects during <autoload> and
+                 <require> operations.  The initial value of GRPATH is either
+                 imported from the environment or if not available is derived
+                 from the location of the running application.
+
+       GRHELP    The _G_R_H_E_L_P global string is used to specify the directory
+                 name stating the search path which GRIEF shall utilise to
+                 locate the help database.  The initial value of GRHELP is
+                 either imported from the environment or if not available is
+                 derived from the location of the running application.
+
+       GRPROFILE
+                 The _G_R_P_R_O_F_I_L_E global string is used to specify an override to
+                 the standard users home directory; it is utilised by several
+                 macros to source runtime configuration details.  GRPROFILE
+                 provides the user a means of stating an alternative location.
+
+           ______________________________
+
+TTooppiicc:: BBaassiiccss
+     Editing any file is a simple as running GRIEF against the file image.
+
+         gr m_ruler.c
+
+     starts the editor, loading the specified file.
+
+       +---------------------------- mm__rruulleerr..cc -----------------------------+
+       |                                                                    :
+       |    Macro See Also:                                                 :
+       |        inq_tabs, set_indent, distance_to_tab, distance_to_indent   :
+       | */                                                                 *
+       |void                                                                :
+       |do_tabs(void)                   /* int ([string tabs | list tabs | i:
+       |{                                                                   :
+       |    LINENO newtabs[BUFFER_NTABS + 1] = {0};                         :
+       |    int tabi = 0;                                                   :
+       |                                                                    :
+       |    tabi = ruler_import("tabs", 1, newtabs, BUFFER_NTABS);          :
+       |    if (tabi >= 0 && curbp) {                                       :
+       |        memcpy(curbp->b_tabs, (const void *)newtabs, sizeof(curbp->b:
+       |    }                                                               :
+       |    win_modify(WFHARD);                                             :
+       |    acc_assign_int((accint_t)tabi);                                 :
+       |}                                                                   :
+       |                                                                    :
+       +*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::+
+       Command:                               [ ]  Line: 251  Col: 1  11:39am
+
+
+     The file can be reviewed by navigating using <Movement> commands.
+
+     At any time during the file session online <Help> is available, plus the
+     <F10:key_map> macro shall present the current keyboard binding.
+
+     The file content may be directly manipulated using <Text Editing>
+     commands, components can be relocated using <Cut and Paste> or translated
+     <Search and Replace>.  Any unwanted edits maybe corrected using <Undo and
+     Redo> commands.
+
+     Once complete the edit session is complete a number of options are
+     available.
+
+     Key     Description
+     ====================================================================
+     Alt-W   Save file; see <write_buffer>.
+
+     Alt-X   Exit; see <exit>.
+
+     Alt-Z   Spawn a sub-shell; see <shell>
+
+     F10     Run additional commands against the file using the <Command
+             Prompt>.
+     ====================================================================
+
+     If you execute the Exit command after text has been entered in any of the
+     open files, you will be given a number of choices:
+
+         1 buffer has not been saved. Exit [ynw]?
+
+       w         Writes the file back to the file-system and exit to the
+                 operating system.
+
+       y         The buffer is not saved, and you return to the operating
+                 system; nnoottee your local changes shall be lost.
+
+       n/ESC     The command is cancelled and you return to the editor.
+
+           ______________________________
+
+TTooppiicc:: MMaaiinn SSccrreeeenn
+     The main features of the screen are the window arena, command line and
+     status area.
+
+
+           vv-- BBoorrddeerrss                     vv-- FFiillee NNaammee
+
+          +---------------------------- date.cr ---------------------------+
+          |                                                                :
+          |void                                                            :
+          |insert_date()                                                   :
+          |{                                            [[ WWiinnddooww AArreennaa ]]   :
+          |    string day, month, buf;                                     :
+          |    int month_num, day_num, year;                               :
+          |    int hr, min;                                                :
+          |    int type;                                                   :
+          |                                                                :
+          |    date(year, month_num, day_num, month, day);                 :
+          |    if (!get_parm(0, type)) {                                   :
+          |        type = 0;                                               * <<++
+          |    }                                                           :  ||
+          |                                                                :  ||
+          |    switch (type) {                                             :  ||
+          |    case 4:         /* MM/DD/YY */                              :  ||
+          |        sprintf(buf, "%02d/%02d/%02d", month_num, day_num, year :  ||
+          |        break;                                                  :  ||
+          |                                                                :  ||
+          |    case 3:         /* YY/DD/MM */                              :  ||
+          |        sprintf(buf, "%02d/%02d/%02d", year % 100, day_num, mon_:  ||
+          |        break;                                                  :  ||
+       ++>> +:*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::+  ||
+       ||  Command:                           [ ]  Line: 251  Col: 1  11:39am  ||
+       ||                                                                      ||
+       ||  ^^-- CCoommmmaanndd LLiinnee                    ^^-- SSttaattuuss AArreeaa                   ||
+       ||                                                                      ||
+       ++-- HHoorriizzoonnttaall SSccrroollll                                  VVeerrttiiccaall SSccrroollll --++
+
+
+   WWiinnddooww AArreennaa::
+     The window arena is the area bounded by single and double lines, or
+     borders, that displays the file content.  If the file is a new image,
+     this space shall be empty and the window is blank.
+
+     The top border of the window contains the file name associated with the
+     visible buffer, plus an optional modification indicator.  On right and
+     bottom borders scroll bars represent the vertical and horizontal cursor
+     position within the buffer when the buffer length or maximum line width
+     are larger then the window arena.
+
+   CCoommmmaanndd LLiinnee::
+     The command line, positioned below the window area, is dual purpose, used
+     to display both messages and to prompt for information.  The command line
+     is also referred to as the <Command Prompt> when acting to request user
+     input.
+
+   SSttaattuuss AArreeaa::
+     The status area, also referred to as the echo line, displays information
+     about the current active buffer and general editor status.
+
+     GRIEF allows the full customization of the text displayed in the status
+     area.  This is done through the <echo_line> and <set_echo_format>
+     primitives.
+
+     The following attributes are displayed by the echo line format.
+
+         [x] $ Line: ### Col: ### OV RE/PA hh:mm
+
+   AAccttiivvee CChhaarraacctteerr,,
+     The first elements identify the character under the cursor.  Normal
+     printable characters are enclosed within a set of square brackets, with
+     non-printable characters represented by their hexadecimal value.  When
+     the cursor is positioned past the end of the current line, _E_O_L is
+     displayed, and when past the end of file, _E_O_F is displayed.
+
+   VViirrttuuaall CChhaarraacctteerr,,
+     The character value is followed by the virtual character status from one
+     of the following otherwise blank if a normal character:
+
+       X         Virtual space, for example logical space created as the
+                 result of tab expansion.
+
+       $         End of line.
+
+       +         Position is past the end-of-line.
+
+       #         Is a Unicode encoded character.
+
+       !         Is an illegal Unicode character code.
+
+   BBuuffffeerr CCoooorrddiinnaatteess,,
+     The next two elements identify the line (row) and column where the cursor
+     is located.  Unless invoked with restore enabled, when GRIEF is started
+     the cursor is located at top of the current buffer, being line one(1) and
+     column one(1).
+
+   CCuurrssoorr MMooddee,,
+     On systems which have means of controlling the cursor, the current
+     insert/overstrike mode is represented by the cursor shape; when in
+     overstrike mode a large/block cursor is used and in insert mode a
+     small/underline cursor is utilised.
+
+     Otherwise on systems without cursor control a mode indicator shall be
+     displayed, _O_V when overstrike is active otherwise blank when in insert
+     mode.
+
+   RReemmeemmbbeerr SSttaattuuss,,
+     When macro recording is active or paused, _R_E and _P_A respectively are
+     displayed.
+
+   TTiimmee,,
+     Last element in the status area is the time, which is displayed in hours
+     and minutes, with a colon as a separator using a 12 hour format.
+
+           ______________________________
+
+TTooppiicc:: MMoovveemmeenntt
+     Buffer navigation is available using a rich set of the cursor commands.
+
+   CCuurrssoorr MMoovveemmeenntt::
+     Key              Description
+     ===========================================================================
+     Right,Space      Move cursor right one position; see <right>.
+
+     Left,Backspace   Move cursor left one position; see <left>.
+
+     Down             Move cursor down one line, maintaining same column
+                      position; see <down>.
+
+     Up               Move cursor up one line, maintaining same column
+                      position; see <up>.
+
+     PgUp,Wheel-Up    Move cursor up visible display page; see <page_up>.
+
+     PgDn,Wheel-Up    Move cursor down visible display page; see <page_down>.
+
+     Home             Move cursor to beginning of current line;
+                      see <beginning_of_line>.
+
+     Home+Home        Move cursor to top of current window; see <top_of_window>
+
+     Home+Home+Home   Move cursor to beginning of the buffer;
+                      see <top_of_buffer>.
+
+     End              Move cursor to last character of current line;
+                      see <end_of_line>.
+
+     End+End          Move cursor to end of current window; see <end_of_window>
+
+     End+End+End      Move cursor to end of the buffer; see <end_of_buffer>.
+
+     Ctrl-PgUp        Move cursor to top of the buffer; see <end_of_buffer>.
+
+     Ctrl-PgDn        Move cursor to end of the buffer; see <end_of_buffer>.
+
+     Ctrl-Up          Scroll lock window movement, moving the text view up one
+                      line retaining the cursor display within the window.
+
+     Ctrl-Down        Scroll lock window movement, moving the text view down
+                      one line retaining the cursor display within the window.
+
+     Ctrl-Left        Move cursor to start of previous word.
+
+     Ctrl-Right       Move cursor to start of next word.
+
+     Ctrl-Left        Move cursor to start of previous word.
+
+     Alt-G            Goto line; see <goto_line>.
+
+     Ctrl-G           For supported source types list the local function
+                      definitions.
+     ===========================================================================
+
+   SSccrroollll LLoocckkiinngg::
+     Scroll-locking is a facility for keeping the cursor in a fixed position
+     inside a window, accessed via the <ScrollLock> key toggling alternately
+     between enabled and disabled.
+
+     The behaviour of scroll-locking is dependent on the number of visible
+     windows.
+
+     When a single window is active, the cursor is locked into position.  Upon
+     movement the cursor shall retain the same screen location, instead the
+     buffer content is panned within the window where possible.
+
+     If multiple windows are active, scroll-locking allows two windows to be
+     scrolled together.  This feature permits two files to be compared with
+     one another, without the user needing to switch between windows in order
+     to check the two file views in sync.  When enabled the user shall be
+     prompted to select which other window the current window shall be synced
+     with.
+
+         Scroll-lock to other window [<^V>]
+
+           ______________________________
+
+TTooppiicc:: HHeellpp
+     Use of <Alt-H> or command _h_e_l_p invokes the GRIEF help interface.
+
+   HHeellpp SSyysstteemm::
+     Pressing <Alt-H> during a normal editing session the menu of help topics
+     appears.
+
+         +-----------------------+
+         | Help Menu             |
+         | Keyboard Summary      |
+         | Keyboard Mapping      |
+         | Macro Primitives  =>  |
+         | Explain           =>  |
+         | Features          =>  |
+         | Programmer Utils  =>  |
+         | User Guide        =>  |
+         | Programmers Guide =>  |
+         | About                 |
+         +-----------------------+
+
+     ++oo   Use the Up and Down arrows to move to the desired topic.
+
+     ++oo   Press _E_n_t_e_r to review sub-topics.
+
+     Repeat this process until the desired help screen appears.  _E_s_c or
+     _B_a_c_k_s_p_a_c_e returns to the previous item or exits the help system when
+     positioned at the top level menu.
+
+     Within the help text of the selected topic.
+
+     ++oo   The _U_p and _D_o_w_n cursor keys navigate the topic text.
+
+     ++oo   The _L_e_f_t and _R_i_g_h_t cursor keys plus _T_a_b move between the available
+         linked topics.
+
+     ++oo   _E_n_t_e_r follows the current selected link.
+
+     ++oo   _F_5 searches the content of the current topic.
+
+     A more specialised <explain> interface also exists, that attempts to
+     locate the help specific to the stated topic or function.
+
+         F10:explain
+
+   CCoommmmaanndd HHeellpp::
+     Using <Alt-H> whilst at the command prompt, context specific shall be
+     retrieved resulting in help for the current command being displayed.
+
+     For example, <Alt-G> executes the GoTo line command.  Whilst at the line
+     prompt:
+
+         Go to Line:
+
+     The use of <Alt-H> shall now display help specific to the GoTo line
+     command.  Once displayed the standard help keys can be used to navigate
+     the help content.
+
+           ______________________________
+
+TTooppiicc:: TTeexxtt EEddiittiinngg
+     Inserting text is simple, just start typing; see <self_insert>.
+
+     Pressing any character key inserts character into the current position.
+     If current position is in out-of-text area, empty area is filled with
+     space or tab characters depending on editor settings.
+
+     GRIEF is a _m_o_d_e_l_e_s_s editor, compared to vi, and it's successor Vim, which
+     are _m_o_d_a_l editors.  Modeless meaning that text is entered directly into
+     the buffer as typed and commands are generally not context specific,
+     behaving the same most of the time.  Modal editing, on the other hand,
+     means that the editor switches between the state of inserting text and
+     taking commands.
+
+   EEddiittiinngg MMooddeess,,
+     The normal editing environment is referred to as the editing mode, and
+     all of GRIEF's commands and editing capabilities are available from it.
+
+     There are two variations on the editing mode: insert mode and overstrike
+     mode.  In insert mode, typed text is inserted at the cursor.  In
+     overstrike, existing text is overwritten as you type.  The insert mode is
+     reflected in state of the cursor plus its status shall be visible within
+     the status area.
+
+     Deletion and relocation of text is possible using the scrap buffer, see
+     <Cut and Paste>.
+
+   EEddiitt CCoommmmaannddss::
+     Key             Description
+     ==========================================================================
+     Backspace       Delete the last character typed; see <backspace>.
+
+     Delete          Delete the character under the cursor; see <delete_char>.
+
+     Alt-D           Delete the current line; see <delete_line>.
+
+     Alt-K           Delete characters to right of cursor on current line;
+                     see <delete_to_eol>.
+
+     Alt-I           Toggle insert and overwrite modes; see <insert_mode>.
+
+     Ctrl-K          Delete word to left of the cursor
+
+     Ctrl-L          Delete word to right of the cursor
+
+     Ctrl-F          Format block.
+
+     F10:set spell   Enable spell checking.
+
+     F10:center      Center the current line.
+     ==========================================================================
+
+           ______________________________
+
+TTooppiicc:: CCuutt aanndd PPaassttee
+     If we want to copy a block of text from one part of a buffer (think of a
+     buffer as a file) to another, or from one buffer to another, we use the
+     _s_c_r_a_p.  The scrap is a temporary storage area for text which has been cut
+     or copied from a buffer and can then be inserted as many times as
+     necessary to some other buffer.  Cutting text is different from deleting
+     text.  Cutting text deletes the original text but saves it so it can be
+     inserted elsewhere.  The deleted text is gone.
+
+     In order for a piece of text to be cut/copied and then pasted it must
+     first be highlighted.  To highlight a region of text, the user first
+     drops an anchor.  As the cursor is moved away from the anchor, the text
+     between where the anchor was dropped and the current cursor position is
+     highlighted, showing the text which can be cut or copied.
+
+     There are three types of regions, block, column and line.  Block and line
+     type is used to cut/copy and paste whole lines.  A column type is used to
+     cut/copy and paste columns of text.
+
+   SSeeaarrcchh aanndd RReeppllaaccee CCoommmmaannddss::
+     Key        Description
+     ============================================================================
+     Alt-M      Drops a normal block.  Text falling within the current cursor
+                position and from where the original anchor was dropped shall
+                be highlighted; see <mark> mode 1 for details.
+
+     Alt-C      Drops a column marker.  Text falling within a rectangular region
+                from where the anchor was dropped to the current cursor will be
+                highlighted, see <mark> mode 2 for details.
+
+     Alt-L      Drop a line marker.  Text falling within a rectangular region
+                from where the anchor was dropped to the current cursor will be
+                highlighted; see <mark> mode 3 for details.
+
+     Alt-A      Drops an inclusive block, similar to a normal block; see <mark>
+                mode 4 for details.
+
+     KP-Plus    If no region is currently highlighted, then the current line is
+                coped to the scrap buffer.  If there is a highlighted region,
+                then that region is copied to the scrap without being deleted;
+                see <copy>.
+
+     KP-Minus   If no region is currently highlighted, then the current line is
+                cut to the scrap buffer.  If there is a highlighted region, then
+                that region is copied to the scrap and deleted; see <cut>.
+
+     Ins        Paste the contents of the scrap buffer into the current buffer
+                at the current cursor position.  For line-types regions, the
+                lines are inserted before the current line rather than
+                inserting where the cursor is; see <paste>.
+
+     Ctrl-O     Search options.
+     ============================================================================
+
+   SSeeaarrcchh AAttttrriibbuutteess::
+     Several options are available that control search behaviour, see
+     <search_options>.  Most options are both mapped to keys in addition to
+     being accessible on the <options> menus (Ctrl-O).
+
+   RReegguullaarr EExxpprreessssiioonn,,
+     Regular expression matching indicates whether certain characters have
+     special meaning when performing searches.  When regular expressions are
+     disabled search patterns are treated as string literals otherwise
+     patterns are interpreted against the current syntax mode.
+
+   CCaassee SSeennssiittiivviittyy,,
+     Case sensitivity controls whether alphabetic characters should be
+     compared as equivalent if they only differ in their case, for example
+     whether _A should match both _a and _A.
+
+   BBlloocckk SSeelleeccttiioonn,,
+     Block searching controls the action to be taken when a search is
+     requested and the current buffer has a highlighted section.
+
+     If this option is _o_f_f then the search is performed on the entire buffer,
+     ignored the marked region.
+
+     If this option is _o_n then the search begins at the start of the marked
+     region and continues until a match is found or the end of the region is
+     reached.
+
+   SSyynnttaaxx mmooddee,,
+     Regular expression syntax mode indicates which expression syntax patterns
+     are interpreted as.
+
+   NNaammiinngg SSccrraapp CCoommmmaannddss::
+     Similar to the scrap buffer primitives <copy>, <cut> and <paste>, exists
+     the ability to act upon a named scrape buffer.  A named scrap behaves the
+     same as the normal scrap, yet allows the user to keep separate copies of
+     data in these temporary buffers.
+
+     The named scrap commands shall prompt the user for the name of buffer to
+     be used.  Using <Tab> at these prompts shall present a popup showing the
+     currently defined scrap names, allowing for both buffer management and
+     selection operations.
+
+     Key             Description
+     ==========================================================================
+     Ctrl-KP-plus    If no region is currently highlighted, then the current
+                     line is coped to the _n_a_m_e_d scrap buffer.  If there is a
+                     highlighted region, then that region is copied to the
+                     _n_a_m_e_d scrap without being deleted; see <copy_named_scrap>
+                     and <copy>
+
+     Ctrl-KP-Minus   If no region is currently highlighted, then the current
+                     line is cut to the _n_a_m_e_d scrap buffer.  If there is a
+                     highlighted region, then that region is copied to the
+                     _n_a_m_e_d scrap and deleted; see <cut_named_scrap> and <cut>.
+
+     Ctrl-Ins        Paste the contents of the _n_a_m_e_d scrap buffer into the
+                     current buffer at the current cursor position;
+                     see <paste_named_scrap> and <paste>.
+     ==========================================================================
+
+           ______________________________
+
+TTooppiicc:: SSeeaarrcchh aanndd RReeppllaaccee
+     Text are be manipulated by searching and/or translating selected text by
+     the use of Regular expression search patterns.
+
+   SSeeaarrcchh aanndd RReeppllaaccee CCoommmmaannddss::
+     Key              Description
+     ============================================================================
+     F5, Alt-S        Search in a forward direction.  The user is prompted for
+                      the search item; see <search_fwd>.
+
+     Alt-F5, Alt-Y    Search in a backwards direction.  The user is prompted for
+                      the search item; see <search_back>.
+
+     KP-5, Shift-F5   Search for the next occurrence of an item in either the
+                      forward or backwards direction, depending on the last
+                      search.
+
+     F6, Alt-T        Performs a replace in the forwards direction.  Prompts the
+                      user for a item to search for (translate) and an item to
+                      replace it with.  For each matched occurrence of the item,
+                      the user is prompted for whether to change or not;
+                      see <translate>
+
+     Alt-F6           Performs a replace in the backwards direction.
+
+     Shift-F6         Repeats last replace in the same direction.
+
+     Ctrl-F5          Toggles the case sensitivity.  The default is for case
+                      sensitivity to be turned on.  When turned off, lower case
+                      characters match against upper case and vice versa;
+                      see <search_case>.
+
+     Alt-O            Options menu, permits access to the global word
+                      processing options.
+
+     F10:bufinfo      Buffer information dialog, configures the buffer options.
+     ============================================================================
+
+   SSeeaarrcchh EExxpprreessssiioonnss::
+     Search patterns are expressed in terms of a Regular expression.  Regular
+     expressions are special characters in search or translate strings that
+     let you specify character patterns to match, instead of just sequences of
+     literal characters.
+
+     Regular expression characters are similar to shell wild-cards, yet are
+     far more powerful.  There are several supported expression syntaxes, with
+     the original BRIEF syntax being the default; see <re_syntax>.
+
+     These are the BRIEF regular expressions.
+
+     Expression   Matches
+     ========================================================
+     ?            Any character except a newline.
+
+     *            Zero or more characters (except newlines).
+
+     \t           Tab character.
+
+     \n           Newline character.
+
+     \c           Position cursor after matching.
+
+     \\           Literal backslash.
+
+     < or %       Beginning of line.
+
+     > or $       End of line.
+
+     @            Zero or more of last expression.
+
+     +            One or more of last expression.
+
+     |            Either last or next expression.
+
+     {}           Define a group of expressions.
+
+     [ ]          Any one of the characters inside [ ].
+
+     [~ ]         Any character except those in [~ ].
+
+     [a-z]        Any character between a and z, inclusive.
+     ========================================================
+
+     Note: Under the BRIEF syntax mode the _*, _@, and _+ expressions will always
+     match as few of the expression in question as possible; also known as
+     non-greedy matching.  UNIX-style greedy matching modifiers are also
+     available for macro use.
+
+     Within replacement text the following are allowed.
+
+     Expression   Inserts
+     ==================================================================
+     \t           Tab character.
+
+     \n           Newline character.
+
+     \<n>         Substitute text matched by the associated nth group,
+                  where (0 <= n <= 9).
+     ==================================================================
+
+   RReegguullaarr EExxpprreessssiioonn EExxaammpplleess,,
+     Pattern              Result
+     ========================================================================
+     the                  Find the next occurrence of "the".
+
+     {him}|{her}          Find the next occurrence of "him" or
+                          "her".
+
+     <alone> or %alone$   Finds next occurrence where "alone" is
+                          alone on a line.
+
+     stuff*between        Find next occurrence of "stuff" followed
+                          by "between" on the same line.
+
+     th[eo]se             Find next occurrence of "these" or
+                          "those".
+
+     [A-Z][a-z]@;         Find next capitalized word delimited by a trailing
+                          semicolon.
+
+     [0-9]+               Find one or more consecutive digits.
+
+     [~ \t\n]             Find any character but a space, tab, or newline.
+     ========================================================================
+
+     The Regular Expression Toggle command turns expressions on or off.
+
+     Case sensitivity for searches and translates can be turned on and off
+     with the Case Sensitivity Toggle.  When case sensitivity is off, "grief"
+     will match "GRIEF", ; when case sensitivity is on, it will only match
+     "grief".
+
+           ______________________________
+
+TTooppiicc:: UUnnddoo aanndd RReeddoo
+     The <undo> command can be used to undo any commands in the current
+     buffer.
+
+     The undo facility can be compared to an edit audit trail, which tracks
+     all modifications to the buffer, including edits, marked regions and
+     cursor movement.  Each buffer records changes within the scope of the
+     current editor session independent of other buffers, with an infinite
+     level of undo information for each buffer.
+
+     The undo command reverses recent changes in the buffer's text, and the
+     undo command always applies to the current buffer.  Commands can be
+     undone sequentially all the way back to the point where the buffer was
+     opened or created.  If you undo too much you can use <redo> to cancel the
+     last undo.
+
+   UUnnddoo CCoommmmaannddss::
+     Key             Description
+     ================================================================
+     Alt-U,KP-star   Undoes previously executed command; see <undo>.
+
+     Ctrl-U          Redoes the previous undo; see <redo>.
+     ================================================================
+
+           ______________________________
+
+TTooppiicc:: CCoommmmaanndd PPrroommpptt
+     Command line mode is entered by typing <F10>; see <execute_macro>.  The
+     prompt allows access to commands which are not assigned to specific
+     keystrokes to be executed by typing <F10> and entering the full command
+     name for example <explain>.
+
+     Once typed the _e_c_h_o _l_i_n_e along the bottom of the console shows the
+     "Command:" prompt.  The command line is case-sensitive and all commands
+     generally need to be entered in lower case to be recognised.
+
+         Command:
+
+     The command prompt shall also become active when user input is required
+     by an interactive command, for example Goto Line.
+
+         Go to Line:
+
+     The command line has full editing features.  The _L_e_f_t and _R_i_g_h_t cursor
+     keys allows navigation within the prompt, permitting text to be inserted
+     and deleted.  Whilst at the prompt context specific help is available
+     using <Alt-H> display help related to the current command.
+
+   CCoommmmaanndd HHiissttoorryy::
+     Up to the last sixteen responses are saved for each prompt displayed;
+     single character responses are ignored and not saved.  Use the cursor _U_p
+     and _D_o_w_n keys to cycle through the list of remembered responses.  The
+     _E_s_c, which cancels the command is not stored.
+
+     You can also recall the last response entered at any prompt using <Alt-
+     L>.  This is useful when you find you entered the correct response to the
+     wrong prompt.  Press <Esc> to cancel the first command, issue the new
+     command, and press <Alt-L> to recall the last response.
+
+   CCoommmmaanndd CCoommpplleettiioonn::
+     Certain commands for example Edit File can take advantage of the file
+     name completion feature.  Type the first letters of the name and press
+     <Tab>.  If only one file in the directory matches, it is completed.  If
+     more than one file is found, a selection dialog is displayed allowing
+     selection of the desired file.
+
+   CCoommmmaanndd LLiinnee CCoommmmaannddss::
+     During any command line interaction the available key binding are the
+     following.
+
+     Key           Description
+     ===========================================================================
+     Enter         Execute the current command.
+
+     Esc           Cancel the input.
+
+     Home, End     Moves the cursor to the head or tail of the text.
+
+     Left, Right   Moves the cursor within the input text.
+
+     Del           Delete the current character.
+
+     Backspace     Delete previous character.
+
+     Ctrl-Left     Move left one word at a time.
+
+     Ctrl-Right    Move right one word at a time.
+
+     Up, Down      Navigate history; up/down scrolls through previous responses
+                   to the prompt.
+
+     Ins           Paste scape buffer.
+
+     Tab           File completion.
+
+     Alt-B         Current buffer name.
+
+     Alt-F         Current path and file name.
+
+     Alt-L         Recalls the last response that was typed by the user.
+
+     Alt-P         Paste text under cursor.
+
+     Alt-W         History buffer.
+
+     Alt-I         Toggle between insert and over-type mode.
+
+     Alt-Q         Quote next input character.  This allows user to type things
+                   like <Tab> and <Esc> as part of the input text.
+     ===========================================================================
+
+           ______________________________
+
+TTooppiicc:: FFiillee aanndd BBuuffffeerr MMaanniippuullaattiioonn
+     Files are always accessed by loading them into a buffer.  GRIEF is able
+     to keep multiple files in memory at once, which allows the user to move
+     among them easily.  Once a user is in GRIEF they can call up as many
+     files as they need to use by loading them into a buffer within GRIEF.
+     Pop-up menus are often used when moving among files.  How to choose
+     options on the pop-up menu is self-evident.  To exit a pop-up menu use
+     the <Esc> key
+
+   BBuuffffeerr MMaanniippuullaattiioonn CCoommmmaannddss::
+     Key           Description
+     ===========================================================================
+     Alt-E         File and Buffer Manipulation in GRIEF Call up a file to be
+                   edited.  The user is prompted for the name of the file.
+                   Hitting <Tab> pops up a menu of file-names the user can
+                   select from.
+
+     Alt-B         Pops up a window containing a list of the files currently in
+                   memory.
+
+     Alt-N         Next buffer.
+
+     Alt-P         Previous buffer.
+
+     Ctrl-AE       Reload the current buffer; This is useful if the file was
+                   changed by another application and you want to update it in
+                   the editor, or when you want to discard all changes done
+                   since last save.
+
+     Alt-1 ..  9   Drop a bookmark; see <drop_bookmark>
+
+     Alt-J         Goto a bookmark.
+     ===========================================================================
+
+           ______________________________
+
+TTooppiicc:: WWiinnddooww MMaanniippuullaattiioonn
+     GRIEF windows can be _t_i_l_e_d and used to look at more than one file at the
+     same time, or different parts of the same file at the same time.
+
+     By tiling, we mean the window can be split horizontally or vertically.
+     This can be done as many times as you like, i.e. you can split your
+     window into as many sections as you like.  Different buffers (files) can
+     be viewed in different sections of the tiled window, or even different
+     parts of the same buffer.
+
+     Each section of the tiled window can be treated as an individual GRIEF
+     session.  Any changes to a buffer made in one part of a tiled window are
+     displayed in the other parts of the tiled window displaying the same part
+     of the same buffer
+
+   WWiinnddooww MMaanniippuullaattiioonn CCoommmmaannddss::
+     Key           Description
+     ============================================================================
+     F1            Select a different section of a tiled window.  User is
+                   prompted to point to the section desired, using one of the
+                   four arrow keys; see <change_window>.
+
+     F2            Move the boundary between two windows on the screen.  User is
+                   prompted to point the boundary which is to be moved, and
+                   then use the arrow keys to move the boundary.  The screen is
+                   redrawn as the boundary is moved; see <move_edge>.
+
+     F3            Split the current window into two equal sizes, either
+                   horizontally or vertically; see <create_edge>.
+
+     F4            Delete a boundary between two windows and merge them
+                   together; see <delete_edge>.
+
+     Ctrl-Z        Subwindow zoom toggle: makes a forward zoom on the current
+                   subwindow.  This means that the current subwindow will occupy
+                   all possible place in the total window.  Use Ctrl-Z again to
+                   unzoom, i.e. to see again all sub-windows.
+
+     F10:wininfo   Window information dialog.
+     ============================================================================
+
+   TTiilleedd WWiinnddoowwss::
+     Tiled windows are created by splitting the current window in half either
+     horizontally or vertically, by default using <F3>, providing two views of
+     the current buffer.
+
+     On request the user is prompted and the current window is split based on
+     the direction of the selected arrow key.  On completion the newly created
+     window is made current, with the cursor located at the same coordinates
+     as the parent window.
+
+         Select new side [<^v>]
+
+     To create a new window, press one of these arrow keys.
+
+       Left      Splits the current window, creating a vertical window to the
+                 left.
+
+       Right     Splits the current window, creating a vertical window to the
+                 right.
+
+       +----------- builtin.c -----------+----------- bbuuiillttiinn..cc ------------+
+       |        {                        |        {                         :
+       |            accfloat_t fval;     |            accfloat_t fval;      *
+       |            accint_t ival;       |            accint_t ival;        :
+       |            int ret, len = 0;    |            int ret, len = 0;     :
+       |                                 |                                  :
+       |            ret = str_numparse(cp|            ret = str_numparse(cp,:
+       |            switch (ret) {       |            switch (ret) {        :
+       |            case NUMPARSE_INTEGER|            case NUMPARSE_INTEGER::
+       |            case NUMPARSE_FLOAT: |            case NUMPARSE_FLOAT:  :
+       |                cp += len;       |                cp += len;        :
+       |                if (0 == *cp || i|                if (0 == *cp || is:
+       |                    if (ret == NU|                    if (ret == NUM:
+       |                        lp = atom|                        lp = atom_:
+       |                    } else {     |                    } else {      :
+       |                        lp = atom|                        lp = atom_:
+       |                    }            |                    }             :
+       |                    break;       |                    break;        :
+       |                }                |                }                 :
+       +---------------------------------+*:::::::::::::::::::::::::::::::::+
+       Command:                               [ ]  Line: 251  Col: 1  11:39am
+
+
+
+       Up        Splits the current window, creating a horizontal window
+                 above.
+
+       Down      Splits the current window, creating a horizontal window below
+
+       +---------------------------- builtin.c -----------------------------+
+       |        {                                                           |
+       |            accfloat_t fval;                                        |
+       |            accint_t ival;                                          |
+       |            int ret, len = 0;                                       |
+       |                                                                    |
+       |            ret = str_numparse(cp, &fval, &ival, &len);             |
+       |            switch (ret) {                                          |
+       |            case NUMPARSE_INTEGER:              /* integer-constant |
+       |            case NUMPARSE_FLOAT:                /* float-constant */|
+       |                cp += len;                                          |
+       +---------------------------- bbuuiillttiinn..cc -----------------------------+
+       |        {                                                           *
+       |            accfloat_t fval;                                        :
+       |            accint_t ival;                                          :
+       |            int ret, len = 0;                                       :
+       |                                                                    :
+       |            ret = str_numparse(cp, &fval, &ival, &len);             :
+       |            switch (ret) {                                          :
+       |            case NUMPARSE_INTEGER:              /* integer-constant :
+       |            case NUMPARSE_FLOAT:                /* float-constant */:
+       +*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::+
+       Command:                               [ ]  Line: 251  Col: 1  11:39am
+
+
+     Once created tiled windows can be resized and/or deleted using similar
+     commands.
+
+     The minimum size of a window with borders on is two(2) lines deep by
+     fourteen(14) columns wide.  When a split or resize request would result
+     in the lower bounds being violated the follow shall be echoed and the
+     request ignored.
+
+         Window would be too small.
+
+           ______________________________
+
+TTooppiicc:: RReeccoorrdd aanndd PPllaayybbaacckk
+     GRIEF supports a facility to save keystroke sequences in a macro file
+     that can be used later to save time.  This ability allows repetitively
+     executed commands to be recorded and replayed as a single command;
+     referred to as a keyboard macro.
+
+     Keyboard macros are stored in memory, plus these may be saved to file and
+     reloaded, permitting a user to develop a private collection of simple
+     macros.  Keystroke macros are saved as normal ASCII text and can be
+     edited just like any other file.  You can create any number of remembered
+     sequences during an editing session.  However, only one sequence is saved
+     at a time.
+
+     The associated commands are summarised below.
+
+     Key          Description
+     =======================================================================
+     F7           Remember; see <remember>.
+
+     Shift-F7     Pause recording during a remember operation; see <pause>.
+
+     F8           Playback; see <playback>.
+
+     Alt-F7       Load a keystroke macro.
+
+     F10:keylib   Keyboard macro management.
+     =======================================================================
+
+           ______________________________
+
+TTooppiicc:: FFeeaattuurreess
+     There are numerous additional features available, many are directly
+     available via the _F_e_a_t_u_r_e _M_e_n_u_s <Alt-F> and/or general menu, these
+     include.
+
+     Key               Description
+     =========================================================================
+     Alt-F             Features menu.
+
+     Alt-G             Function list.
+
+     Alt-V             Display build information at the prompt; see <version>
+
+     Ctrl-O            Options menu.
+
+     Ctrl-A            Extra menu.
+
+     F10:coloriser     Load a new content coloriser.
+
+     F10:colorscheme   View coloriser definition.
+
+     F10:about         About dialog.
+
+     F12               Menu; enable the pull-down command menu.  Can also be
+                       access using the _m_e_n_u command and disabled running the
+                       _m_e_n_u_o_f_f command.
+     =========================================================================
+
+     $Id: quickstart.txt,v 1.2 2024/04/19 14:02:50 cvsuser Exp $
+
+           ______________________________
+
+GGeenneerraall::
+     _T_o _s_e_n_d _f_e_e_d_b_a_c_k _o_n _t_h_i_s _t_o_p_i_c eemmaaiill:: _g_r_i_e_f_e_d_i_t_@_g_m_a_i_l_._c_o_m
+
+     <Copyright> (C) _A_d_a_m _Y_o_u_n_g _A_l_l _R_i_g_h_t_s _R_e_s_e_r_v_e_d_.
+
+GRIEF Edit 3.2                   April 19 2024                  GRIEF Edit 3.2
