@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.13 2024/04/19 13:57:28 cvsuser Exp $
+# $Id: Makefile.in,v 1.15 2024/04/19 14:26:44 cvsuser Exp $
 # Help documentation.
 #
 #
@@ -122,10 +122,13 @@ features:	$(FEATOBJS)
 license:	../COPYING
 	@cp ../COPYING $(OUTDIR)/license.txt
 
-quickstart:
-	@echo Building quickstart documentation
-	$(subst /,\,$(GRMANDOC)) -mdoc -Tascii doc/mandoc/quickstart-txt.mandoc > ../quickstart.txt
-	$(subst /,\,$(GRMANDOC)) -mdoc -Thtml -O style=hlpdoc/doc/mandoc.css doc/mandoc/quickstart-txt.mandoc > ../quickstart.html
+quickstart:	../quickstart.txt ../quickstart.html
+
+../quickstart.txt:	Makefile
+	$(GRMANDOC) -mdoc -Tascii doc/mandoc/quickstart-txt.mandoc > ../quickstart.txt
+
+../quickstart.html:	Makefile
+	$(GRMANDOC) -mdoc -Thtml -O style=hlpdoc/doc/mandoc.css doc/mandoc/quickstart-txt.mandoc > ../quickstart.html
 
 %/.created:
 	-@mkdir $(@D)
