@@ -1,4 +1,5 @@
-# $Id: Makefile.in,v 1.16 2024/04/16 11:37:14 cvsuser Exp $
+# -*- mode: mak; -*-
+# $Id: Makefile.in,v 1.19 2024/05/03 14:35:16 cvsuser Exp $
 # libduktape makefile.
 #
 #
@@ -52,14 +53,6 @@ RC=		@RC@
 
 # Configuration
 
-ifeq ("$(BUILD_TYPE)","")	#default
-BUILD_TYPE=	debug
-MAKEFLAGS+=	BUILD_TYPE=debug
-endif
-ifneq ("$(BUILD_TYPE)","release")
-RTSUFFIX=d
-endif
-
 QUIETOUT:=	>/dev/null 2>&1
 ifeq ($(VERBOSE),1)
 QUIETOUT:=
@@ -67,6 +60,14 @@ else ifeq ($(VERBOSE),0)
 else ifeq ($(VERBOSE),)
 else
 $(error VERBOSE: unexpected value 0 or 1 required, $(VERBOSE) given]))
+endif
+
+ifeq ("$(BUILD_TYPE)","")	#default
+BUILD_TYPE=	debug
+MAKEFLAGS+=	BUILD_TYPE=debug
+endif
+ifneq ("$(BUILD_TYPE)","release")
+RTSUFFIX=d
 endif
 
 # Directories
@@ -188,6 +189,7 @@ $(DUKTAPELIB):		Makefile $(D_OBJ)/.created $(LIBOBJS)
 		$(AR) $(ARFLAGS) $@ $(LIBOBJS)
 		$(RANLIB) $@
 
+XCLEAN +=	$(basename $(DUKTAPEDLL)).map
 ifeq ("yes","@ISWIN32@")
 $(DUKTAPEDLL):		CEXTRA += -DDUKTAPE_DLL_BUILD
 $(DUKTAPEDLL):		DLLDEF = -export-symbols libduktape.def
@@ -197,6 +199,7 @@ $(DUKTAPEDLL):		Makefile $(D_OBJ)/.created $(DLLOBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ -version-number $(VERSIONSPEC) \
 			-rpath $(D_LIB) -bindir $(D_BIN) $(DLLDEF) $(DLLOBJS) $(LDLIBS) @LDMAPFILE@
 
+XCLEAN +=	$(basename $(DUK)).map
 $(DUK):		MAPFILE=$(basename $@).map
 $(DUK):			Makefile $(DUKOBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(DUKOBJS) $(DUKTAPEDLL) $(LDLIBS) @LDMAPFILE@
@@ -209,9 +212,11 @@ $(D_OBJ)/.created:
 		@echo "do not create" > $@
 
 clean:
+		@echo $(BUILD_TYPE) clean
+		-@$(LIBTOOL) --mode=clean $(RM) $(DUK)
 		-@$(LIBTOOL) --mode=clean $(RM) $(DUKTAPEDLL) $(DLLOBJS) $(QUIETOUT)
-		-@$(RM) $(RMFLAGS) $(BAK) $(DUKTAPELIB) $(CLEAN) $(XCLEAN) $(QUIETOUT)
-		-@$(RM) $(RMFLAGS) $(LIBOBJS) $(TSKOBJS) $(QUIETOUT)
+		-@$(RM) $(RMFLAGS) $(DUKTAPELIB) $(LIBOBJS) $(TSKOBJS) $(QUIETOUT)
+		-@$(RM) $(RMFLAGS) $(BAK) $(CLEAN) $(XCLEAN) $(QUIETOUT)
 
 # XXX: open-watcom debug breaks due to the module size, must filter out -hw
 

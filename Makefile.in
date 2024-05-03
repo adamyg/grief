@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.66 2024/04/16 11:37:12 cvsuser Exp $
+# $Id: Makefile.in,v 1.71 2024/05/03 05:58:11 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2024, Adam Young.
@@ -107,7 +107,7 @@ LP=		lib
 E=		
 
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
-XCLEAN=		$(D_BIN)/*.map
+XCLEAN=
 
 # Configuration
 
@@ -121,30 +121,75 @@ else
 ECHO=		echo
 endif
 
+QUIETOUT:=	>/dev/null 2>&1
+ifeq ($(VERBOSE),1)
+QUIETOUT:=
+else ifeq ($(VERBOSE),0)
+else ifeq ($(VERBOSE),)
+else
+$(error VERBOSE: unexpected value 0 or 1 required, $(VERBOSE) given]))
+endif
+
+# Usage
+
+define usage =
+	@$(ECHO) -n -e "\
+	|\n\
+	| make [release or debug] target \n\
+	|\n\
+	|	Build one or more of the following targets recursively within each sub-directory\n\
+	|	for the toolchain @TOOLCHAIN@. \n\
+	|\n\
+	| Targets: \n\
+	|\n\
+	|	build   - build everything. \n"
+endef
+
+ifneq ("", "@prefix@")
+usage+="|	install - install; see profile below. \n"
+else
+usage+="|	package - build package. \n"
+endif
+
+usage+="|	clean   - delete everything which can be remade. \n\
+	|	vclean  - delete all. \n\
+	|	help    - command line usage. \n\
+	|\n"
+
+ifneq ("", "@prefix@")
+usage+="| Install configuration: \n\
+	|\n\
+	|	BINDIR  - $(BINDIR) \n\
+	|	DATADIR - $(DATADIR) \n\
+	|\n\
+	| Default run-time configuration: \n\
+	|\n\
+	|	GRPATH  - $(DATADIR)/macros \n\
+	|	GRHELP  - $(DATADIR)/help \n\
+	|\n"
+endif
+
+# Build type
+
 ifeq ("$(BUILD_TYPE)","")	#default
 
-.PHONY:				help clean vclean build package
-help clean vclean build package:
-ifneq ("$(word 1,$(MAKECMDGOALS))","debug")
-ifneq ("$(word 1,$(MAKECMDGOALS))","release")
-	@$(ECHO) -n -e "\
-		|\n\
-		| make [release or debug] target \n\
-		|\n\
-		|	Build one or more of the following targets recursively within each sub-directory\n\
-		|	for the toolchain @TOOLCHAIN@. \n\
-		|\n\
-		| Targets: \n\
-		|\n\
-		|	build   - build everything. \n\
-		|	package - build package. \n\
-		|	clean   - delete everything which can be remade. \n\
-		|	vclean  - delete all. \n\
-		|	help    - command line usage. \n\
-		"
+BUILD_TYPES	=$(strip $(filter debug release,$(MAKECMDGOALS)))
+ifneq ("$(BUILD_TYPES)","")
+ifneq ("$(word 2,$(BUILD_TYPES))","")
+$(error multiple build types encountered; debug and release targets are mutually exclusive; see "make help" for details)
+endif
+ifneq ("$(word 1,$(MAKECMDGOALS))","$(BUILD_TYPES)")
+$(error build type expected as first target; see "make help" for details)
 endif
 endif
-	@echo .
+
+.PHONY:				help clean vclean distclean build package install
+help clean vclean distclean build package install:
+ifeq ("$(BUILD_TYPES)","")
+	$(usage)
+else
+	@echo $(BUILD_TYPES) done
+endif
 
 .PHONY:				release
 release:
@@ -278,7 +323,7 @@ IMPORT+=\
 	$(D_BIN)/$(MT7RNAME).dll	\
 	$(D_BIN)/$(PLBRNAME).dll
 endif
-     
+
 GRUPDATER=	no
 ifeq (vs,$(findstring vs,"@TOOLCHAIN@"))
 GRUPDATER=	yes
@@ -340,22 +385,9 @@ build:				directories artifacts libs bins import
 
 .PHONY:				help
 help:
-	@$(ECHO) -e "\
-		|\n\
-		| make [release or debug] target \n\
-		|\n\
-		|	Build one or more of the following targets recursively within each sub-directory\n\
-		|	for the toolchain @TOOLCHAIN@. \n\
-		|\n\
-		| Targets: \n\
-		|\n\
-		|	build   - build everything. \n\
-		|	package - build all packages. \n\
-		|	clean   - delete everything which can be remade. \n\
-		|	help    - command line usage. \n\
-		"
+	$(usage)
 
-.PHONY:				release
+PHONY:				release
 release:
 		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
 
@@ -479,7 +511,7 @@ $(D_BIN)/grunch$(E):	$(D_BIN)/.created libs
 
 $(D_BIN)/grwc$(E):	$(D_BIN)/.created libs
 		$(MAKE) -C util
-           
+
 $(D_BIN)/grupdater$(E):	$(D_BIN)/.created libs
 		$(MAKE) -C win32/AutoUpdater
 
@@ -560,11 +592,13 @@ endif
 		$(MAKE) -C $(D_HLPDOC) clean
 
 vclean:			clean
-		-@$(RM) $(RMDFLAGS) $(D_BIN)/* $(D_MACROS)/* $(D_HELP)/* $(D_LIB)/* $(D_OBJ)/*
-		-rmdir $(D_BIN) $(D_MACROS) $(D_HELP) $(D_LIB) $(D_OBJ)
+		-@$(RM) $(RMDFLAGS) $(D_BIN)/* $(D_MACROS)/* $(D_HELP)/* $(D_LIB)/* $(D_OBJ)/* $(QUIETOUT)
+		-@$(RM) $(RMDFLAGS) $(D_BIN)/.created $(D_MACROS)/.created $(D_HELP)/.created $(D_LIB)/.created $(D_OBJ)/.created $(QUIETOUT)
+		-rmdir $(D_BIN) $(D_MACROS) $(D_HELP) $(D_LIB) $(D_OBJ) $(QUIETOUT)
 
-distclean:		clean
-		$(RM) $(RMFLAGS) config.cache config.log config.status \
+distclean:		vclean
+		$(RM) $(RMFLAGS) auto/config.cache \
+				config.guess config.sub ltmain.sh libtool install-sh missing \
 			gr/Makefile \
 			gm/Makefile \
 			grcpp/Makefile \

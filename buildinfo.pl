@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: buildinfo.pl,v 1.7 2024/03/31 16:07:36 cvsuser Exp $
+# $Id: buildinfo.pl,v 1.8 2024/04/22 14:34:13 cvsuser Exp $
 # buildinfo generation
 #
 # Copyright Adam Young 2018 - 2024
@@ -165,6 +165,9 @@ EOT
 
 	print FILE "#define ${prefix}BUILD_LIBEXECDIR \"${libexecdir}\"\n"
 		if ($libexecdir);
+
+	print FILE "#define ${prefix}BUILD_DATADIR \"${datadir}\"\n"
+		if ($datadir);
 
 	close(FILE);
 }

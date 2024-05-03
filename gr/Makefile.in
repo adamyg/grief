@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.89 2024/04/16 11:37:13 cvsuser Exp $
+# $Id: Makefile.in,v 1.91 2024/05/03 05:56:46 cvsuser Exp $
 # GRIEF editor makefile.
 #
 #
@@ -48,6 +48,15 @@ PERL=		@PERL@
 LIBTOOL=	@LIBTOOL@
 
 # Configuration
+
+QUIETOUT:=	>/dev/null 2>&1
+ifeq ($(VERBOSE),1)
+QUIETOUT:=
+else ifeq ($(VERBOSE),0)
+else ifeq ($(VERBOSE),)
+else
+$(error VERBOSE: unexpected value 0 or 1 required, $(VERBOSE) given]))
+endif
 
 ifeq ("$(BUILD_TYPE)","")	#default
 BUILD_TYPE=	debug
@@ -390,14 +399,10 @@ release:
 debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
-clean:
-		@echo $(BUILD_TYPE) clean
-		-@$(RM) $(RMFLAGS) $(BAK) $(D_BIN)/$(TARGET) $(TARGET) $(OBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
-		-@$(RM) $(RMFLAGS) $(BAK) $(TARGET) $(D_OBJDEP)/*.Po >/dev/null 2>&1
-
 .PHONY:		directories
 directories:		$(D_OBJ)/.created $(D_OBJDEP)/.created $(OBJS)
 
+XCLEAN +=	$(basename $(D_BIN)/$(TARGET)).map
 $(D_BIN)/$(TARGET):	MAPFILE=$(basename $@).map
 $(D_BIN)/$(TARGET):	$(OBJS)
 		$(LIBTOOL) --mode=link $(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS) @LDMAPFILE@
@@ -408,8 +413,15 @@ $(D_BIN)/$(TARGET):	$(OBJS)
 
 gr.rc:		gr.manifest.xml
 
+XCLEAN +=	gr.manifest.xml
 gr.manifest.xml:	../win32/exe.manifest.in ../include/edbuildinfo.h
 		$(PERL) ../win32/mkmanifest.pl --defines ../include/edbuildinfo.h ../win32/exe.manifest.in gr.manifest.xml
+
+clean:
+		@echo $(BUILD_TYPE) clean
+		-$(LIBTOOL) --mode=clean $(RM) $(D_BIN)/$(TARGET)
+		-@$(RM) $(RMFLAGS) $(OBJS) $(D_OBJDEP)/*.Po $(CLEANFILES) $(QUIETOUT)
+		-@$(RM) $(RMFLAGS) $(BAK) $(CLEAN) $(XCLEAN) $(QUIETOUT)
 
 -include $(CSRC:%.c=$(D_OBJDEP)/%.Po)
 -include $(CPPSRC:%.cpp=$(D_OBJDEP)/%.Po)

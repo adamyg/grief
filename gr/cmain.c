@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.46 2023/01/02 10:58:11 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.49 2024/05/03 16:26:34 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.46 2023/01/02 10:58:11 cvsuser Exp $
+/* $Id: cmain.c,v 1.49 2024/05/03 16:26:34 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -359,11 +359,12 @@ static const char *     m_strings[MAX_M+1];     /* Array of pointer to -m string
 BUFFER_t *              curbp = NULL;           /* Current buffer. */
 WINDOW_t *              curwp = NULL;           /* Current window. */
 
-static int              path_cat(const char *path, const char *sub, char *buf);
+static int              path_cat(const char *path, const char *sub, char *buf, int length);
+static char *           path_cook2(const char *name, char *result, int length);
 static char *           path_cook(const char *name);
 
 static void             argv_init(int *argcp, char **argv);
-static int              argv_process(int doerr, int argc, const char **argv);
+static int              argv_process(const int doerr, int argc, const char **argv);
 
 static void             unicode_init(void);
 
@@ -536,8 +537,17 @@ cmain(int argc, char **argv)
         vtclose(TRUE);
         fprintf(stderr, "\n" \
             "*** " ApplicationName " has failed to locate the '" GRINIT_OBJECT "' startup macro.\n" \
+            "***\n" \
             "*** This is due to either your environment variable GRPATH not being\n" \
-            "*** setup correctly or macros require to be compiled/recompiled.\n\n");
+            "*** setup correctly or macros require to be compiled/recompiled.\n" \
+            "*** Use the option --config to display the configuration.\n" \
+            "***\n" \
+            "*** Installation defaults:\n" \
+            "***\n" \
+            "***   GRPATH=%s\n" \
+            "***   GRHELP=%s\n" \
+            "***\n\n",
+                path_cook(x_grpath), path_cook(x_grhelp));
         exit(1);
     }
 
@@ -648,27 +658,61 @@ panic(const char *fmt, ...)
 
 
 static int
-path_cat(const char *path, const char *sub, char *buf)
+path_cat(const char *opath, const char *subdir, char *buf, int length)
 {
-    char t_path[1024] = {0}, t_realpath[1024] = {0};
+    char t_path[MAX_PATH] = {0}, t_result[MAX_PATH] = {0};
+    const char *path;
+    int ret = 0;
 
-    if (sub) {                                  /* resolve abs path */
-        strcpy(t_path, path);
-        strcat(t_path, sub);
-        path = t_path;
-        if (0 == sys_realpath((const char *)path, t_realpath, sizeof(t_realpath))) {
-            path = t_realpath;
+    path = t_path;
+    strxcpy(t_path, opath, sizeof(t_path)-1);
+    if (subdir) {
+        strxcat(t_path, subdir, sizeof(t_path)-1);
+        if (0 == sys_realpath((const char *)t_path, t_result, sizeof(t_result)) && t_result[0]) {
+            path = t_result;
         }
     }
 
-    if (NULL == sub ||
-            0 == sys_access(path, 0)) {         /* push if it exists */
-        strcat(buf, path);
-        strcat(buf, sys_pathdelimiter());
-        return 1;
+    if (NULL == subdir ||
+            0 == sys_access(path, 0)) {         /* push if exists and unique */
+        const char *delimiter = sys_pathdelimiter();
+
+        if (buf) {
+            char *t_buf;
+
+            if (NULL != (t_buf = chk_salloc(buf))) {
+                char *cp;
+
+                if (NULL == (cp = strchr(t_buf, '=')) || strchr(t_buf, *delimiter) < ++cp)
+                    cp = t_buf;                 /* no XXX= prefix */
+
+                for (cp = strtok(cp, delimiter); cp != NULL; cp = strtok(NULL, delimiter)) {
+                    if (0 == file_cmp(path, cp)) {
+                        ret = 2;                /* non-unique; done */
+                        break;
+                    }
+                }
+                chk_free(t_buf);
+            }
+        }
+
+        if (0 == ret) {
+            if (buf) {
+                if (buf[0]) {
+                    const char end = buf[strlen(buf) - 1];
+
+                    if (end != '=' && end != *delimiter) {
+                        strxcat(buf, delimiter, length);
+                    }
+                }
+                strxcat(buf, path, length);
+            }
+            ret = 1;
+        }
     }
 
-    return 0;
+    trace_log("path_cat<%s> : %d <%s> [%s]\n", opath, ret, path, (buf ? buf : ""));
+    return ret;
 }
 
 
@@ -686,9 +730,9 @@ varend(const char *path, const char delim)
 
 
 static char *
-path_cook(const char *name)
+path_cook2(const char *name, char *buffer, int length)
 {
-    char buffer[MAX_PATH * 8], *dpend = buffer + (sizeof(buffer) - 16), *dp;
+    char tmp[MAX_PATH] = {0}, *dpend = buffer + (length - 16), *dp;
 
     for (dp = buffer; *name && dp < dpend;) {
         const char ch = *name++;
@@ -730,7 +774,23 @@ path_cook(const char *name)
     }
     *dp = '\0';
 
-    return chk_salloc(buffer);
+    if (file_tilder(buffer, tmp, sizeof(tmp)) && tmp[0]) {
+        buffer[0] = 0;
+        if (sys_realpath((const char *)tmp, buffer, length) || 0 == buffer[0]) {
+            strxcpy(buffer, tmp, length);
+            return buffer;
+        }
+    }
+
+    return buffer;
+}
+
+
+static char *
+path_cook(const char *name)
+{
+    char buffer[MAX_PATH] = {0};
+    return chk_salloc(path_cook2(name, buffer, sizeof(buffer)));
 }
 
 
@@ -777,11 +837,17 @@ argv_init(int *argcp, char **argv)
             const char *arg = argv[i];
             int cook = 0;
 
-            if (arg[1] == 'd' || 0 == strncmp(arg, "--log", 5))  {
+            if (arg[1] == 'd' || 0 == strncmp(arg, "--log", 5)) {
                 cook = 1;
 
             } else if (arg[1] == 'P' || 0 == strncmp(arg, "--dflags", 7)) {
                 cook = 2;
+
+            } else if (0 == strncmp(arg, "--restrict", 10)) {
+                cook = 1;
+
+            } else if (0 == strncmp(arg, "--nosig", 7)) {
+                xf_sigtrap = 0;
 
             } else if (0 == strcmp(arg, "--x11")) {
                 x_display_ctrl |= DC_WINDOW;
@@ -833,10 +899,11 @@ argv_init(int *argcp, char **argv)
  *      Process command line arguments.
  */
 static int
-argv_process(int doerr, int argc, const char **argv)
+argv_process(const int doerr, int argc, const char **argv)
 {
     struct argparms args = {0};
     int c, errflag = 0;
+    int doconfig = 0;
 
     arg_initl(&args, argc, argv, (const char *)-1, options, FALSE);
 
@@ -979,12 +1046,19 @@ argv_process(int doerr, int argc, const char **argv)
                     const char *from;
                     unsigned    fromlen;
                     const char *to;
-                } vm[] = {                      /* map BRIEF definitions */
-                    { "BPATH=",   6, "GRPATH"   },
-                    { "BHELP=",   6, "GRHELP"   },
-                    { "BBACKUP=", 8, "GRBACKUP" },
-                    { "BFLAGS=",  7, "GRFLAGS"  },
-                    { "BTMP=",    4, "GRTMP"    }
+                    int         ispath;
+                } vm[] = {
+                    /* GRIEF native */
+                    { "GRPATH=",   7, "GRPATH",   1 },
+                    { "GRHELP=",   7, "GRHELP",   1 },
+                    { "GRBACKUP=", 9, "GRBACKUP", 1 },
+                    { "GRTMP=",    6, "GRTMP",    1 },
+                    /* plus BRIEF definitions; remapped */
+                    { "BPATH=",    6, "GRPATH",   1 },
+                    { "BHELP=",    6, "GRHELP",   1 },
+                    { "BBACKUP=",  8, "GRBACKUP", 1 },
+                    { "BTMP=",     5, "GRTMP",    1 },
+                    { "BFLAGS=",   7, "GRFLAGS",  0 },
                     };
                 const char *val = args.val;
                 unsigned v;
@@ -992,8 +1066,14 @@ argv_process(int doerr, int argc, const char **argv)
                 trace_log("-D%s\n", val);
                 for (v = 0; v < (sizeof(vm)/sizeof(vm[0])); ++v) {
                     if (0 == strncmp(vm[v].from, val, vm[v].fromlen)) {
-                        gputenv2(vm[v].to, val + vm[v].fromlen);
-                        trace_log("==> %s=%s\n", vm[v].to, val + vm[v].fromlen);
+                        const char *path = val + vm[v].fromlen;
+                        char t_path[MAX_PATH] = {0};
+
+                        if (vm[v].ispath) {
+                            path = path_cook2(path, t_path, sizeof(t_path));
+                        }
+                        trace_log("==> %s=%s (%s)\n", vm[v].to, path, val + vm[v].fromlen);
+                        gputenv2(vm[v].to, path);
                         val = NULL;
                         break;
                     }
@@ -1175,7 +1255,7 @@ argv_process(int doerr, int argc, const char **argv)
             break;
 
         case 'V':           /* --config */
-            usage(2);
+            doconfig = 1;
             break;
 
         case 301:           /* --echofmt */
@@ -1353,6 +1433,8 @@ argv_process(int doerr, int argc, const char **argv)
     arg_close(&args);
     if (errflag && doerr) {
         usage(1);
+    } else if (doconfig) {
+        usage(2);
     }
     return args.ind;
 }
@@ -1371,12 +1453,19 @@ unicode_init(void)
 static void
 env_setup(void)
 {
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+    // Some platforms, notably those hosted on Windows such as Cygwin and MinGW, use a wrapper executable wrather than a wrapper
+    // script to ensure proper operation of uninstalled programs linked by libtool against uninstalled shared libraries; while
+    // the actual linked executable file is generated within the .libs directory.
+    int libtool = 0;
+#endif
     const char *execname, *env;
-    char binpath[1024] = {0};
-    char buf[1024*4] = {0};                     /* upto 4 paths */
+    char binpath[MAX_PATH];
+    char buf[MAX_PATH*4];                       /* upto 4 paths */
     char *cp;
 
     /* Terminal */
+    memset(buf, 0, sizeof(buf));
     if (NULL == ggetenv("TERM")) {
         gputenv(x_default_term);
     }
@@ -1390,49 +1479,89 @@ env_setup(void)
         strcpy(binpath, "./");
         fprintf(stderr, "\nWARNING: unable to resolve application directory, using '%s'\n", binpath);
     }
-    trace_log("BINPATH<%s>\n", binpath);
 
     /* PATHS */
-    if (NULL == ggetenv("GRPATH") && !xf_restrict) {
+    if (NULL == ggetenv("GRPATH")) {
         const char *grpath = path_cook(x_grpath);
+        int done = 0;
 
         sprintf(buf, "GRPATH=");
-        if (binpath[0]) {                       /* rel to binary image */
-            if (0 == path_cat(binpath, "../macros", buf)) {
-                path_cat(binpath, "../../macros", buf);
-            }
-#if defined(__MINGW32__)
-            path_cat(binpath, "../lib/grief/macros", buf);
+        trace_log("GRPATH<%s>\n", grpath);      /* standard installation */
+
+        if (!xf_restrict) {
+            const char *home;
+
+            if (binpath[0]) {                   /* relative to binary */
+                if (0 == (done = path_cat(binpath, "../macros", buf, sizeof(buf)))) {
+                    done = path_cat(binpath, "../../macros", buf, sizeof(buf));
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+                    if (!done) {
+#if defined(LT_OBJDIR)
+#define LT_SUBDIR "/" LT_OBJDIR
+#else
+#define LT_SUBDIR "/.libs/"
 #endif
+                        static const char lt_subdir[] = {LT_SUBDIR};
+                        const int binlen = strlen(binpath) - (sizeof(lt_subdir) - 1);
+
+                        if (binlen > 0 && 0 == strcmp(binpath + binlen, lt_subdir)) {
+                            libtool = done = path_cat(binpath, "../../../macros", buf, sizeof(buf));
+                        }
+                    }
+#endif //CYGWIN||MINGW
+                }
+            }
+
+            if (NULL != (home = sysinfo_homedir(NULL, -1))) {
+                /* home directory */
+                path_cat(home, "/bin/macros", buf, sizeof(buf));
+                path_cat(home, "/macros", buf, sizeof(buf));
+            }
         }
-        if (NULL != (env = sysinfo_homedir(NULL, -1))) {
-            /* home directory */
-            path_cat(env, "/bin/macros", buf);
-            path_cat(env, "/macros", buf);
+
+        if (!done) {                            /* default */
+            path_cat(grpath, NULL, buf, sizeof(buf));
         }
-        path_cat(grpath, NULL, buf);            /* default */
+
         chk_free((void *)grpath);
         gputenv(file_slashes(buf));
     }
 
-    if (NULL == ggetenv("GRHELP") && !xf_restrict) {
+    if (NULL == ggetenv("GRHELP")) {
         const char *grhelp = path_cook(x_grhelp);
+        int done = 0;
 
         sprintf(buf, "GRHELP=");
-        if (binpath[0]) {                      /* rel to binary image */
-            if (0 == path_cat(binpath, "../help", buf)) {
-                path_cat(binpath, "../../help", buf);
+        trace_log("GRHELP%s>\n", grhelp);       /* standard installation */
+
+        if (!xf_restrict) {
+            const char *home;
+
+            if (binpath[0]) {
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+                if (libtool) {                  /* libtool, relative to binary */
+                    done = path_cat(binpath, "../../../help", buf, sizeof(buf));
+                }
+#endif //CYGWIN|MINGW
+
+                if (!done) {                    /* relative to binary */
+                    if (0 == (done = path_cat(binpath, "../help", buf, sizeof(buf)))) {
+                        done = path_cat(binpath, "../../help", buf, sizeof(buf));
+                    }
+                }
             }
-#if defined(__MINGW32__)
-            path_cat(binpath, "../lib/grief/help", buf);
-#endif
+
+            if (NULL != (home = sysinfo_homedir(NULL, -1))) {
+                /* home directory */
+                path_cat(home, "/bin/help", buf, sizeof(buf));
+                path_cat(home, "/help", buf, sizeof(buf));
+            }
         }
-        if (NULL != (env = sysinfo_homedir(NULL, -1))) {
-            /* home directory */
-            path_cat(env, "/bin/help", buf);
-            path_cat(env, "/help", buf);
+
+        if (!done) {                            /* default */
+            path_cat(grhelp, NULL, buf, sizeof(buf));
         }
-        path_cat(grhelp, NULL, buf);            /* default */
+
         chk_free((void *)grhelp);
         gputenv(file_slashes(buf));
     }
@@ -1440,7 +1569,7 @@ env_setup(void)
     if (NULL == ggetenv("GRDICTIONARIES")) {
         sprintf(buf, "GRDICTIONARIES=");
         if (binpath[0]) {                       /* rel to binary image */
-            path_cat(binpath, "../dictionaries", buf);
+            path_cat(binpath, "../dictionaries", buf, sizeof(buf));
         }
         gputenv(file_slashes(buf));
     }
@@ -1764,6 +1893,7 @@ usage(int what)
 
         fprintf(stderr, "PROGNAME=%s\n", x_progname);
         fprintf(stderr, "MACHTYPE=%s\n", x_machtype);
+        fprintf(stderr, "MAXPATH=%u\n", MAX_PATH);
         fprintf(stderr, "GRPATH=%s\n",          (NULL != (env = ggetenv("GRPATH")) ? env : ""));
         fprintf(stderr, "GRHELP=%s\n",          (NULL != (env = ggetenv("GRHELP")) ? env : ""));
         fprintf(stderr, "GRPROFILE=%s\n",       (NULL != (env = ggetenv("GRPROFILE")) ? env : ""));
@@ -1809,3 +1939,5 @@ usage(int what)
 }
 
 /*end*/
+
+

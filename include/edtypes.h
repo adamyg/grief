@@ -1,11 +1,11 @@
 #ifndef GR_EDTYPES_H_INCLUDED
 #define GR_EDTYPES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edtypes_h,"$Id: edtypes.h,v 1.43 2024/04/17 16:00:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_edtypes_h,"$Id: edtypes.h,v 1.44 2024/05/02 17:20:29 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edtypes.h,v 1.43 2024/04/17 16:00:28 cvsuser Exp $
+/* $Id: edtypes.h,v 1.44 2024/05/02 17:20:29 cvsuser Exp $
  * Editor base types.
  *
  *
@@ -52,7 +52,11 @@ __CPRAGMA_ONCE
 #include <stdint.h>                             /* [u]int8_t, [u]int16_t, [u]int32_t optional [u]int64_t */
 #endif
 #if defined(HAVE_STDBOOL_H)
+#if defined(__WATCOMC__) && (__WATCOMC__ < 1300)
+#undef HAVE_STDBOOL_H /*owc19 issues*/
+#else
 #include <stdbool.h>                            /* bool, true, false */
+#endif
 #endif
 
 #if defined(STDC_HEADERS)

@@ -1308,6 +1308,7 @@ static int
 http_digest_auth(conn_t *conn, const char *hdr, http_auth_challenge_t *c,
 		 http_auth_params_t *parms, struct url *url)
 {
+	static unsigned char nulhash[HASHHEXLEN+1]= {0};
 	int r;
 	char noncecount[10];
 	char cnonce[40];
@@ -1341,7 +1342,7 @@ http_digest_auth(conn_t *conn, const char *hdr, http_auth_challenge_t *c,
 		    parms->password, c->nonce, cnonce, HA1);
 	ED_TRACE(("HA1: [%s]\n", HA1))
 	DigestCalcResponse(HA1, c->nonce, noncecount, cnonce, c->qop,
-			"GET", url->doc, (const unsigned char *)"", digest);
+			"GET", url->doc, (const unsigned char *)nulhash /*""*/, digest);
 
 	if (c->qop[0]) {
 		r = http_cmd(conn, "%s: Digest username=\"%s\",realm=\"%s\","

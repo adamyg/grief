@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_wcwidth_c,"$Id: ucswidth.c,v 1.2 2021/07/05 15:40:38 cvsuser Exp $")
+__CIDENT_RCSID(gr_wcwidth_c,"$Id: ucswidth.c,v 1.3 2024/05/02 17:19:23 cvsuser Exp $")
 
 /*
     ------------------------------------------------------------------------------
@@ -104,7 +104,7 @@ static int intable(const struct width_interval *table, int table_length, int c) 
         int top = table_length - 1;
 
         // First quick check for Latin1 etc. characters.
-        if (c < table[0].start) return false;
+        if (c < table[0].start) return 0; //false
 
         while (top >= bot) {
                 int mid = (bot + top) / 2;
@@ -113,10 +113,10 @@ static int intable(const struct width_interval *table, int table_length, int c) 
                 } else if (table[mid].start > c) {
                         top = mid - 1;
                 } else {
-                        return true;
+                        return 1; //true
                 }
         }
-        return false;
+        return 0; //false
 }
 
 

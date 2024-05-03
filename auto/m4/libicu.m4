@@ -1,4 +1,4 @@
-dnl $Id: libicu.m4,v 1.2 2012/02/02 23:18:27 cvsuser Exp $
+dnl $Id: libicu.m4,v 1.3 2024/05/02 14:34:31 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -114,6 +114,3 @@ dnl	fi
 	AC_SUBST(LIBICU_CXXFLAGS)
 	AC_SUBST(LIBICU)
 ])dnl
-
-
-

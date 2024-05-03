@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.16 2024/04/19 14:47:37 cvsuser Exp $
+# $Id: Makefile.in,v 1.18 2024/05/02 16:50:55 cvsuser Exp $
 # Help documentation.
 #
 #
@@ -52,6 +52,15 @@ export LANG	#RH 8 has a LANG=en_US.UTF-8
 RMFLAGS=	-f
 
 # Configuration
+
+QUIETOUT:=	>/dev/null 2>&1
+ifeq ($(VERBOSE),1)
+QUIETOUT:=
+else ifeq ($(VERBOSE),0)
+else ifeq ($(VERBOSE),)
+else
+$(error VERBOSE: unexpected value 0 or 1 required, $(VERBOSE) given]))
+endif
 
 ifeq ("$(BUILD_TYPE)","")	#default
 BUILD_TYPE=	debug
@@ -115,11 +124,11 @@ pdf:
 	@$(PERL) ./makehelp.pl --wget=@WGET@ --manbin=$(GRMANDOC) html
 	@$(PERL) ./makepdf.pl
 
-cshelp:		$(CSOBJS)
+cshelp:			$(CSOBJS)
 
-features:	$(FEATOBJS)
+features:		$(FEATOBJS)
 
-license:	../COPYING
+license:		../COPYING
 	@cp ../COPYING $(OUTDIR)/license.txt
 
 quickstart:	../quickstart.txt ../quickstart.html
@@ -128,7 +137,8 @@ quickstart:	../quickstart.txt ../quickstart.html
 	$(GRMANDOC) -mdoc -Tascii doc/mandoc/quickstart-txt.mandoc > ../quickstart.txt
 
 ../quickstart.html:	Makefile
-	$(GRMANDOC) -mdoc -Thtml -O style=hlpdoc/doc/mandoc.css doc/mandoc/quickstart-txt.mandoc > ../quickstart.html
+	$(GRMANDOC) -mdoc -Thtml -O style=doc/mandoc.css doc/mandoc/quickstart-txt.mandoc > ../quickstart.html
+	@$(PERL) ./cssimport.pl ../quickstart.html
 
 %/.created:
 	-@mkdir $(@D)
@@ -152,9 +162,11 @@ $(OUTDIR)/features/%.hlp:	mansrc/features/%.mandoc
 
 clean:
 	@echo $(BUILD_TYPE) clean
-	-$(RM) $(RMFLAGS) $(CSOUTDIR)/* $(FEATOUTDIR)/* >/dev/null 2>&1
-	-rmdir $(CSOUTDIR) $(FEATOUTDIR) >/dev/null 2>&1
-	-$(RM) $(RMFLAGS) $(OUTDIR)/* >/dev/null 2>&1
-	-rmdir $(OUTDIR) >/dev/null 2>&1
+	-@$(RM) $(RMFLAGS) $(CSOUTDIR)/* $(FEATOUTDIR)/* $(QUIETOUT)
+	-@$(RM) $(RMFLAGS) $(CSOUTDIR)/.created $(FEATOUTDIR)/.created $(QUIETOUT)
+	-rmdir $(CSOUTDIR) $(FEATOUTDIR) $(QUIETOUT)
+	-@$(RM) $(RMFLAGS) $(OUTDIR)/* $(QUIETOUT)
+	-@$(RM) $(RMFLAGS) $(OUTDIR)/.created $(QUIETOUT)
+	-rmdir $(OUTDIR) $(QUIETOUT)
 
 #end

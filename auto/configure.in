@@ -1,18 +1,18 @@
-dnl $Id: configure.in,v 1.76 2022/07/08 13:34:16 cvsuser Exp $
+dnl $Id: configure.in,v 1.78 2024/05/03 03:20:17 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl
 
-AC_REVISION($Revision: 1.76 $)
-##	AC_COPYRIGHT(Adam Young 1995-2022, Paul Fox 1989-1991)
+AC_REVISION($Revision: 1.78 $)
+## AC_COPYRIGHT(Adam Young 1995-2024, Paul Fox 1989-1991)
 AC_SUBST([PACKAGE])
-AC_INIT([GRIEF], [3.2.1], [griefedit@gmail.com])
-AC_PREREQ(2.68)
+AC_INIT([GRIEF],[3.2.1],[griefedit@gmail.com])
+AC_PREREQ([2.69])
 PACKAGE="gr"
 
 AC_CONFIG_SRCDIR([include/edheaders.h])
-AC_CONFIG_HEADER(include/config.h:include/config.hin)
+AC_CONFIG_HEADERS([include/config.h:include/config.hin])
 AC_CONFIG_MACRO_DIR([m4])
 
 AC_MSG_RESULT([-])
@@ -30,16 +30,16 @@ LT_INIT([dlopen win32-dll])
 
 AC_SUBST([LIBTOOL_DEPS])
 AC_SUBST([LT_OBJDIR])
-AC_PROG_LIBTOOL
+LT_INIT
 LT_OBJDIR="$lt_cv_objdir"
 LIBTOOL='/bin/bash $(top_builddir)/libtool'
 
 AC_SUBST(PROGS)
-##	Stop AC_PROG_CC() assigning defaults.
+## Stop AC_PROG_CC() assigning defaults.
 CFLAGS=""
 AC_PROG_CC(gcc cc clang c1 egcs)
 AC_PROG_CXX(g++ CC clang++)
-AC_PROG_GCC_TRADITIONAL
+## AC_PROG_GCC_TRADITIONAL
 
 #TODO
 #AX_COMPILER_VENDOR
@@ -77,9 +77,10 @@ AC_SUBST(CXXINCLUDE)
 AC_SUBST(LDLIBS)
 AC_SUBST(EXTRALIBS)
 
+AC_SUBST(TOOLCHAIN)
 AC_SUBST(TOOLCHAINEXT)
-TOOLCHAINBASENAME=`basename "${CC}"`
-TOOLCHAINEXT=".${TOOLCHAINBASENAME}"
+TOOLCHAIN=`basename "${CC}"`
+TOOLCHAINEXT=".${TOOLCHAIN}"
 
 EXTRA_CFLAGS=""
 EXTRA_CXXFLAGS=""
@@ -470,7 +471,9 @@ AC_PATH_PROG(AR,ar,ar)
 AC_PROG_MKDIR_P
 AC_PROG_LN_S
 AC_PROG_AWK
-AC_PROG_LEX
+m4_version_prereq([2.70],
+	[AC_PROG_LEX(noyywrap)],
+	[AC_PROG_LEX])
 if test "$LEX" != "flex"; then
 	AC_MSG_ERROR(couldn't locate flex; make sure it's installed and in your path)
 fi
@@ -521,12 +524,16 @@ dnl
 dnl Checks for header files.
 dnl
 AC_HEADER_STDC
+AC_CHECK_INCLUDES_DEFAULT
+AC_PROG_EGREP
+
 AC_HEADER_DIRENT
 AC_CHECK_HEADERS(direct.h)
 AC_HEADER_SYS_WAIT
 AC_HEADER_STAT
 AC_CHECK_HEADERS(time.h sys/time.h utime.h sys/utime.h)
 AC_HEADER_TIME
+
 AC_STRUCT_TM
 AC_STRUCT_TIMEZONE
 CF_ENVIRON
@@ -775,6 +782,11 @@ AC_CONFIG_FILES([\
 	contrib/extags/Makefile])
 fi
 
+AX_RECURSIVE_EVAL([\$prefix],  [var_prefix])
+AX_RECURSIVE_EVAL([\$datadir], [var_datadir])
+AX_RECURSIVE_EVAL([\$bindir],  [var_bindir])
+
+AC_MSG_RESULT([-])
 AC_MSG_RESULT([-  Configuration:])
 AC_MSG_RESULT([-])
 AC_MSG_RESULT([-         Compiler: $CC / $CXX])
@@ -798,6 +810,40 @@ AC_MSG_RESULT([-            Extra: $LIBCLANG $LIBM $EXTRALIBS])
 AC_MSG_RESULT([-        Allocator: $LIBMALLOC])
 AC_MSG_RESULT([-             Yacc: $LIBYACC])
 AC_MSG_RESULT([-])
+AC_MSG_RESULT([-  Installation:])
+AC_MSG_RESULT([-])
+dnl AC_MSG_RESULT([-           prefix: $prefix])
+dnl AC_MSG_RESULT([-   prefix_default: $ac_default_prefix])
+dnl AC_MSG_RESULT([-          datadir: $datadir])
+dnl AC_MSG_RESULT([-      datarootdir: $datarootdir])
+dnl AC_MSG_RESULT([-])
+AC_MSG_RESULT([-           prefix: $var_prefix])
+AC_MSG_RESULT([-          datadir: $var_datadir])
+AC_MSG_RESULT([-])
+AC_MSG_RESULT([-              BINPATH=$var_bindir])
+AC_MSG_RESULT([-              GRPATH=$var_datadir/$PACKAGE/macro])
+AC_MSG_RESULT([-              GRHELP=$var_datadir/$PACKAGE/help])
+AC_MSG_RESULT([-])
+
+echo ""
+echo " Review the options above for accuracy, to modify see --help for details."
+echo " For example, a user local installation can set using the --prefix option."
+echo ""
+echo "      '${0##*/} --prefix=${HOME}/grief'"
+echo ""
+echo " Once they look okay, execute to build:"
+echo ""
+echo "      'make release'              - build software."
+echo ""
+echo " Installation, one of the follow dependent on location:"
+echo ""
+echo "      'sudo make release install' - install for common/system usage; or"
+echo "   or 'make release install'      - local installation."
+echo ""
+echo " Optionally after installation:"
+echo ""
+echo "      'make release clean'        - remove build tree."
+echo ""
 
 dnl Keep copy of working definitions
 cp confdefs.h acdefines.h

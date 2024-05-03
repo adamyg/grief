@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- mode: sh; -*-
-# $Id: configure_new,v 1.5 2023/03/06 15:19:31 cvsuser Exp $
+# $Id: configure_new,v 1.6 2024/05/03 14:35:16 cvsuser Exp $
 #
 
 if [ ! -f "install-sh" ]; then
@@ -13,7 +13,7 @@ if [ ! -f "config.sub" ]; then
 	cp auto/config.sub .
 fi
 if [ ! -f "missing" ]; then
-	if [ -f "auto/missing" ]; then
+	if [ -f "auto/missing" ]; then # optional
 		cp auto/missing .
 	fi
 fi

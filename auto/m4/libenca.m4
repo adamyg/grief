@@ -1,4 +1,4 @@
-dnl $Id: libenca.m4,v 1.1 2012/02/02 23:18:27 cvsuser Exp $
+dnl $Id: libenca.m4,v 1.2 2024/05/02 14:34:31 cvsuser Exp $
 dnl libenca support autoconf
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -38,10 +38,9 @@ AC_DEFUN([CF_LIB_ENCA],[
 		cf_cv_libenca=no
 		cf_save_LIBS="$LIBS"
 		LIBS="$LIBS -lenca"
-		AC_TRY_LINK([
+		AC_RUN_IFELSE([AC_LANG_PROGRAM([[
 #include <stdlib.h>
-#include <enca.h>],
-		[
+#include <enca.h>]],[[
 	EncaAnalyser a;
 	EncaEncoding e; 
 	a = enca_analyser_alloc("utf-8");
@@ -52,7 +51,7 @@ AC_DEFUN([CF_LIB_ENCA],[
 	enca_set_termination_strictness(a, 0);
 	enca_set_threshold(a, 1);
 	e = enca_analyse_const(a, "helloworld", 10);
-	enca_analyser_free(a);],
+	enca_analyser_free(a);]])],
 			[cf_cv_libenca=yes],
 			[cf_cv_libenca=no])
 	])

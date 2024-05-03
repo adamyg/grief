@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; tabs: 8; -*-
- * $Id: xterm.cr,v 1.22 2021/07/11 08:26:12 cvsuser Exp $
+ * $Id: xterm.cr,v 1.23 2024/05/03 00:13:04 cvsuser Exp $
  * terminal description file for the xterm window under X11, an VT-100 like emulator.
  *
  *
@@ -273,7 +273,7 @@ main()
     /*
      *  Color suffix
      */
-    if (index(colorterm, "-256") > 0) {
+    if (index(colorterm, "-256") > 0 || colorterm == "truecolor") {
         xterm_256color();                       /* 256[color] */
 
     } else if (index(colorterm, "-88") > 0) {

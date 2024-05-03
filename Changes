@@ -2,6 +2,16 @@
 
 	* BUILD 24, version: 3.2.2
 
+Wed Apr 10 00:35:12 2024 adamy
+
+	* duktape 2.7.0 merge
+
+	* libw32 merge
+
+	* general maintance and bugfixes.
+
+	* AltGr
+
 Sun Aug 28 20:44:56 2022 adamy
 
 	* html/xml

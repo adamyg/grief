@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.7 2024/04/17 15:57:15 cvsuser Exp $
+# $Id: Makefile.in,v 1.8 2024/05/03 14:35:16 cvsuser Exp $
 # libtrie - prefix tree
 #
 #
@@ -51,6 +51,15 @@ RM=		@RM@
 LIBTOOL=	@LIBTOOL@
 
 # Configuration
+
+QUIETOUT:=	>/dev/null 2>&1
+ifeq ($(VERBOSE),1)
+QUIETOUT:=
+else ifeq ($(VERBOSE),0)
+else ifeq ($(VERBOSE),)
+else
+$(error VERBOSE: unexpected value 0 or 1 required, $(VERBOSE) given]))
+endif
 
 ifeq ("$(BUILD_TYPE)","")	#default
 BUILD_TYPE=	debug
@@ -146,6 +155,7 @@ release:
 debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
+XCLEAN +=	$(basename $(D_BIN)/$(TARGET)).map
 $(D_BIN)/$(TARGET):	MAPFILE=$(basename $@).map
 $(D_BIN)/$(TARGET):	LINKLIBS=-ltrie
 $(D_BIN)/$(TARGET):	$(OBJS)
@@ -166,7 +176,10 @@ $(D_OBJ)/.created:
 		@echo "do not create" > $@
 
 clean:
-		-@$(RM) $(RMFLAGS) $(BAK) $(LIBRARY) $(LIBOBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
+		@echo $(BUILD_TYPE) clean
+		-$(LIBTOOL) --mode=clean $(RM) $(D_BIN)/$(TARGET)
+		-@$(RM) $(RMFLAGS) $(LIBRARY) $(LIBOBJS) $(OBJS) $(QUIETOUT)
+		-@$(RM) $(RMFLAGS) $(BAK) $(CLEAN) $(XCLEAN) $(QUIETOUT)
 
 $(D_OBJ)/%$(O):		%$(C)
 		$(CC) $(CFLAGS) -o $@ -c $<

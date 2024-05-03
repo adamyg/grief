@@ -1,4 +1,4 @@
-dnl $Id: libspell.m4,v 1.4 2022/07/12 15:05:13 cvsuser Exp $
+dnl $Id: libspell.m4,v 1.5 2024/05/02 14:34:32 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -122,9 +122,3 @@ AC_DEFUN([LIBSPELL_CHECK_CONFIG],[
 
 	fi; fi; fi; fi
 ])dnl
-
-
-
-
-
-

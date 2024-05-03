@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_unix_c,"$Id: sys_unix.c,v 1.64 2023/09/10 16:35:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_unix_c,"$Id: sys_unix.c,v 1.65 2024/04/27 15:22:03 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_unix.c,v 1.64 2023/09/10 16:35:52 cvsuser Exp $
+/* $Id: sys_unix.c,v 1.65 2024/04/27 15:22:03 cvsuser Exp $
  * System dependent functionality - UNIX.
  *
  *
@@ -32,9 +32,7 @@ __CIDENT_RCSID(gr_sys_unix_c,"$Id: sys_unix.c,v 1.64 2023/09/10 16:35:52 cvsuser
 #if defined(HAVE_SYS_RESOURCE_H)
 #include <sys/resource.h>
 #endif
-#if defined(HAVE_TIME_H)
 #include <time.h>
-#endif
 #include <edenv.h>                              /* gputenvv(), ggetenv() */
 #include <edalt.h>                              /* MOUSE_KEY */
 #include <libstr.h>                             /* str_...()/sxprintf() */

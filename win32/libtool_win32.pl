@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: libtool_win32.pl,v 1.43 2023/01/02 08:17:55 cvsuser Exp $
+# $Id: libtool_win32.pl,v 1.44 2024/05/03 15:15:40 cvsuser Exp $
 # libtool emulation for WIN32 builds.
 #
 #   **Warning**
@@ -1295,6 +1295,7 @@ Clean()
 
     my @OBJECTS;
     my @LIBRARIES;
+    my @TSKS;
 
     while (scalar @ARGV) {
         $_ = shift @ARGV;
@@ -1309,6 +1310,9 @@ Clean()
 
         } elsif (/\.la$/ || /\.a$/ || /\.lib$/) {
             push @LIBRARIES, $_;
+
+        } elsif (/\.exe$/) {
+            push @TSKS, $_;
         }
     }
 
@@ -1348,9 +1352,14 @@ Clean()
         Verbose "rm: ${obj}";
         unlink($obj);
     }
-
     foreach(keys %dirs) {
         rmdir($_);
+    }
+
+    foreach(@TSKS) {
+        my $tsk = $_;
+        Verbose "rm: ${tsk}";
+        unlink($tsk);
     }
     return 0;
 }

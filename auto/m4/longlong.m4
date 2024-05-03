@@ -107,3 +107,5 @@ AC_DEFUN([_AC_TYPE_LONG_LONG_SNIPPET],
 	      | (ull << 63) | (ull >> 63) | (ull << i) | (ull >> i)
 	      | (ullmax / ull) | (ullmax % ull));]])
 ])
+
+dnl

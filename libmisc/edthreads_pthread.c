@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_pthread_c,"$Id: edthreads_pthread.c,v 1.14 2024/04/17 15:57:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_edthreads_pthread_c,"$Id: edthreads_pthread.c,v 1.15 2024/04/27 15:22:32 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads_pthread.c,v 1.14 2024/04/17 15:57:13 cvsuser Exp $
+/* $Id: edthreads_pthread.c,v 1.15 2024/04/27 15:22:32 cvsuser Exp $
  * C11 threads implementation, for/using pthreads
  * based on ISO/IEC 9899:201x Committee Draft, April 12, 2011
  *
@@ -44,9 +44,7 @@ edthreads_pthreads_native(void)
 #elif defined(HAVE_PTHREAD_H) || defined(__CYGWIN__)
 
 #include <stdlib.h>
-#if defined(HAVE_TIME_H)
 #include <time.h>
-#endif
 #include <assert.h>
 #include <errno.h>
 #if defined(sun) || defined(HAVE_SCHED_H)

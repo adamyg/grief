@@ -1,3 +1,4 @@
 Makefile
 gr.manifest.xml
+.grief.log
 *.err
