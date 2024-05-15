@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: setup.cr,v 1.7 2014/10/27 23:28:27 ayoung Exp $
+/* $Id: setup.cr,v 1.8 2024/05/11 17:44:46 cvsuser Exp $
  * System setup.
  *
  *
@@ -57,7 +57,7 @@ setup(~int inform)
     if (inform) {
         popup_message("Setup",
             "This is the either the first time you have run GRIEF\n" +
-            "or this specific release of CRisp has newer features\n" +
+            "or this specific release of GRIEF has newer features\n" +
             "to your previous version. \n" +
             "\n" +
             "The appropriate environment variables needed to run GRIEF\n" +

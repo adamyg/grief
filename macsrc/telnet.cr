@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: telnet.cr,v 1.9 2014/10/27 23:28:29 ayoung Exp $
+/* $Id: telnet.cr,v 1.10 2024/05/09 16:48:56 cvsuser Exp $
  *
  *
  *
@@ -67,7 +67,7 @@ netlogin(string prog, string host, int flags)
 {
     string cmd;
 
-#if defined(OS2)
+#if defined(MSDOS) || defined(OS2)
     create_shell(getenv("COMSPEC"), host + "-Buffer", flags, "\r");
     cmd = prog + " " + host + "\n";
 
@@ -95,14 +95,19 @@ get_host_entry(void)
     string host, hosts;
 
     message("Press <Enter> to select a host.");
+#if defined(MSDOS) || defined(OS2)
+//TODO
+#endif
     curbuf = inq_buffer();
     hosts = getenv("ETC");
     if (hosts == "")
         hosts = "/etc";
     hosts = hosts + "/hosts";
 
-    if ((buf = create_buffer("-Remote Hosts-", hosts, 1)) == -1)
+    if ((buf = create_buffer("-Remote Hosts-", hosts, 1)) == -1) {
+        error("Couldn't locate/open the hosts file.");
         return "";
+    }
     set_buffer(buf);
     set_buffer_flags(NULL, NULL, ~BF_READONLY);
 

@@ -1,5 +1,5 @@
 /* -*- indent-width: 4; -*- */
-/* $Id: license.cr,v 1.16 2024/04/17 15:57:15 cvsuser Exp $
+/* $Id: license.cr,v 1.18 2024/05/12 17:13:18 cvsuser Exp $
  * License information.
  *
  *
@@ -9,7 +9,6 @@
 
 #define LICENSE_FILE    "license.txt"
 
-    //#define LICENSE_SOURCE  "http://griefedit.sourceforge.net/license.txt"
 #define LICENSE_SOURCE  "https://github.com/adamyg/grief/blob/master/COPYING"
 #define LICENSE_TEXT    1001
 
@@ -110,8 +109,7 @@ license_import(void)
     if (0 == access(source, 0) &&
             edit_file(EDIT_SYSTEM, source) != -1) {
         while ((line = read()) != "") {         // while (!eof)
-            rtrim(line, "\r\n\t ");             // remove new-line
-            push(text, line);
+            push(text, rtrim(line, "\r\n\t "));
             down();
         }
         set_buffer(curbuf);

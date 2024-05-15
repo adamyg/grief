@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: objects.cr,v 1.8 2014/10/27 23:28:25 ayoung Exp $
+/* $Id: objects.cr,v 1.9 2024/05/15 08:22:44 cvsuser Exp $
  * Document object macros.
  *
  *
@@ -167,7 +167,7 @@ delete_word(~declare)
 {
     int i;
 
-    drop_anchor(4);
+    drop_anchor(MK_NONINC);
     get_parm(0, i);                             /* Get argument as a side effect only */
     delete_block();
 }

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_anchor_c,"$Id: anchor.c,v 1.48 2023/09/10 16:34:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_anchor_c,"$Id: anchor.c,v 1.49 2024/05/15 08:21:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: anchor.c,v 1.48 2023/09/10 16:34:27 cvsuser Exp $
+/* $Id: anchor.c,v 1.49 2024/05/15 08:21:20 cvsuser Exp $
  * Anchor primitives.
  *
  *
@@ -153,6 +153,7 @@ anchor_drop(int type)
 {
     assert(MK_NONE != type);
     if (curbp) {
+
         Anchor_t *ap = (Anchor_t *) chk_calloc(sizeof(Anchor_t),1);
 
         if (ap) {
@@ -266,6 +267,7 @@ anchor_adjust(int ins)
 int
 anchor_get(WINDOW_t *wp, BUFFER_t *bp, ANCHOR_t *a)
 {
+    const LINENO cline = *cur_line, ccol = *cur_col;
     const Anchor_t *ap;
     LINENO tmp;
 
@@ -282,7 +284,7 @@ anchor_get(WINDOW_t *wp, BUFFER_t *bp, ANCHOR_t *a)
          *      return the current position to the end-of-buffer.
          */
         a->type       = MK_NONE;
-        a->start_line = (curbp == bp ? *cur_line : bp->b_line);
+        a->start_line = (curbp == bp ? cline : bp->b_line);
         a->start_col  = 0;
         a->end_line   = (bp && bp->b_numlines ? bp->b_numlines : 1);
         a->end_col    = 0;
@@ -294,8 +296,8 @@ anchor_get(WINDOW_t *wp, BUFFER_t *bp, ANCHOR_t *a)
     a->type       = ap->a_type;
     a->start_line = ap->a_line;
     a->start_col  = ap->a_offset;
-    a->end_line   = ap->a_eline > 0 ?  ap->a_eline : (wp ? wp->w_line : *cur_line);
-    a->end_col    = ap->a_eoffset > 0 ? ap->a_eoffset : (wp ? wp->w_col : *cur_col);
+    a->end_line   = ap->a_eline > 0 ?  ap->a_eline : (wp ? wp->w_line : cline);
+    a->end_col    = ap->a_eoffset > 0 ? ap->a_eoffset : (wp ? wp->w_col : ccol);
 
     if (MK_COLUMN == a->type) {
         if (a->start_line > a->end_line) {
@@ -322,7 +324,20 @@ anchor_get(WINDOW_t *wp, BUFFER_t *bp, ANCHOR_t *a)
         a->end_col = CURSOR_HUGE_COL;
 
     } else if (MK_NONINC == a->type) {
-        --a->end_col;
+        // non-inclusive of cursor
+        if ((a->end_line == cline && a->end_col == ccol) || cline > a->end_line) {
+            if (--a->end_col <= 0) { // end-of-block
+                if (--a->end_line > 0) {
+                    a->end_col = CURSOR_HUGE_COL;
+                } else {
+                    a->end_line = 1;
+                    a->end_col = 1;
+                }
+            }
+
+        } else if ((a->start_line == cline && a->start_col == ccol) /*|| cline < a->start_line*/) {
+            ++a->start_col; // start-of-block
+        }
     }
     return TRUE;
 }
@@ -453,8 +468,8 @@ anchor_dump(void)
         numebr of the lower level functions, for example <delete_block>.
 
     Macro Parameters:
-        type - Optional anchor type to be dropped Otherwise if omitted a
-            *MK_NORMAL* anchor shall created.
+        type - Optional anchor type to be dropped, otherwise if omitted a
+            *MK_NORMAL* anchor shall be created.
 
     Macro Returns:
         The 'drop_anchor' returns 1 if successful, otherwise 0 on error.

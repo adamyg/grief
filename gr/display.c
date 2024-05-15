@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.84 2022/09/28 16:17:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.86 2024/05/11 16:40:53 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: display.c,v 1.84 2022/09/28 16:17:06 cvsuser Exp $
+/* $Id: display.c,v 1.86 2024/05/11 16:40:53 cvsuser Exp $
  * High level display interface.
  *
  *
@@ -829,7 +829,7 @@ vtupdate2(int force)
         curwp->w_status |= WFTOP;
     }
 
-    line_vstatus_update();                      /* virtual character update and syntax hook */ 
+    line_vstatus_update();                      /* virtual character update and syntax hook */
 
     /*
      *  Walk windows and draw image.
@@ -1574,6 +1574,11 @@ vtwindow(WINDOW_t *wp)
         const LINENO diff2 = top - top_line;
         LINENO mined = wp->w_mined, maxed = wp->w_maxed;
 
+        if (mined > maxed) {
+            mined = wp->w_maxed;
+            maxed = wp->w_mined;
+        }
+
         if (bp) {                               /* inherit buffer changes */
             if (bp->b_syntax_min) {
                 mined = lineno_min(mined, bp->b_syntax_min);
@@ -2230,7 +2235,6 @@ vthumb_position(WINDOW_t *wp)
                     if ((value += vmin) > vmax) {
                         value = vmax;
                     }
-                    assert(value < ttrows());
                 }
 
             } else {
@@ -2245,7 +2249,7 @@ vthumb_position(WINDOW_t *wp)
                         value = vmax;
                     }
                     assert(value > 0);
-                    assert(value < ttrows());
+                    if (value >= ttrows()) value = ttrows();
                 }
             }
         }
@@ -2636,7 +2640,7 @@ draw_window(WINDOW_t *wp, int top, LINENO line, int end, const int bottom, int a
     const uint32_t flags = wp->w_disp_flags;
     LINECHAR lbuffer[ LMARGIN*2 ];              /* left margin formatting buffer */
     vbyte_t space = nattr | ' ';
-    ANCHOR_t anchor;
+    ANCHOR_t anchor = {MK_NONE};
 
     assert(end <= bottom);
 
@@ -2652,11 +2656,11 @@ draw_window(WINDOW_t *wp, int top, LINENO line, int end, const int bottom, int a
                 wp->w_disp_anchor = &anchor;    /* active anchor */
             }
         }
-    }
                                                 /* find first hilite, if any */
-    if (NULL != (bp->b_hilite = hilite_find(bp, NULL, line, 1, NULL))) {
-        if (bp->b_hilite->h_sline > line + (end - top)) {
-            bp->b_hilite = NULL;
+        if (NULL != (bp->b_hilite = hilite_find(bp, NULL, line, 1, NULL))) {
+            if (bp->b_hilite->h_sline > line + (end - top)) {
+                bp->b_hilite = NULL;
+            }
         }
     }
 
