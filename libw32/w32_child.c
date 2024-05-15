@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_child_c,"$Id: w32_child.c,v 1.21 2024/03/31 15:57:25 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_child_c,"$Id: w32_child.c,v 1.22 2024/05/15 08:44:05 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -994,6 +994,9 @@ w32_child_wait(HANDLE hProc, int *status, int nowait)
                 case STATUS_ACCESS_VIOLATION:           // 0xC0000005L
                 case STATUS_IN_PAGE_ERROR:              // 0xC0000006L
                 case STATUS_INVALID_HANDLE:             // 0xC0000008L
+#if !defined(STATUS_INVALID_PARAMETER)
+#define STATUS_INVALID_PARAMETER 0xC000000DL
+#endif
                 case STATUS_INVALID_PARAMETER:          // 0xC000000DL
                 case STATUS_NO_MEMORY:                  // 0xC0000017L
                     *status = SIGSEGV;
@@ -1038,6 +1041,9 @@ w32_child_wait(HANDLE hProc, int *status, int nowait)
             //  case STATUS_HEAP_CORRUPTION:            // 0xC0000374L
             //  case STATUS_STACK_BUFFER_OVERRUN:       // 0xC0000409L
             //  case STATUS_INVALID_CRUNTIME_PARAMETER: // 0xC0000417L
+#if !defined(STATUS_ASSERTION_FAILURE)
+#define STATUS_ASSERTION_FAILURE 0xC0000420L
+#endif
                 case STATUS_ASSERTION_FAILURE:          // 0xC0000420L
                     *status = SIGABRT;
                     break;

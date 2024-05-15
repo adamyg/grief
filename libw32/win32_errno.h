@@ -1,7 +1,7 @@
 #ifndef LIBW32_WIN32_ERRNO_H_INCLUDED
 #define LIBW32_WIN32_ERRNO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_errno_h,"$Id: win32_errno.h,v 1.16 2024/03/31 15:57:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_errno_h,"$Id: win32_errno.h,v 1.17 2024/05/15 08:27:40 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -63,9 +63,14 @@ __CPRAGMA_ONCE
  *  import <errno.h>
  */
 #if !defined(_CRT_NO_POSIX_ERROR_CODES)
+#if defined(_MSC_VER) && (_MSC_VER >= 1600) && (_MSC_VER <= 1800)
+#include <errno.h>
+#include "msvc_errno.h"                         /* undef error codes */
+#else 
 #define  _CRT_NO_POSIX_ERROR_CODES              /* disable extended POSIX errno's */
 #include <errno.h>
 #undef   _CRT_NO_POSIX_ERROR_CODES
+#endif
 #else
 #include <errno.h>
 #endif
@@ -134,6 +139,9 @@ __CPRAGMA_ONCE
 #if !defined(EWOULDBLOCK)
 #define EWOULDBLOCK     WSAEWOULDBLOCK          /* 10035 "Operation would block" */
 #elif (EWOULDBLOCK != WSAEWOULDBLOCK)
+#define STRINGIZE(__x)  __STRINGIZE(__x)
+#define __STRINGIZE(__x) #__x
+#pragma message("errno: EWOULDBLOCK(" STRINGIZE(EWOULDBLOCK) ") != WSAEWOULDBLOCK(" STRINGIZE(WSAEWOULDBLOCK) ")" )
 #error Inconsistent EWOULDBLOCK definition ....
 #endif
 

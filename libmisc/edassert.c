@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edassert_c,"$Id: edassert.c,v 1.26 2024/04/17 15:57:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_edassert_c,"$Id: edassert.c,v 1.27 2024/05/15 08:46:01 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edassert.c,v 1.26 2024/04/17 15:57:13 cvsuser Exp $
+/* $Id: edassert.c,v 1.27 2024/05/15 08:46:01 cvsuser Exp $
  *
  *  This macro is useful for putting diagnostics into programs. When it is executed, if
  *  expression is false (zero), edAssert() prints:
@@ -48,7 +48,7 @@ __CIDENT_RCSID(gr_edassert_c,"$Id: edassert.c,v 1.26 2024/04/17 15:57:13 cvsuser
 #include <assert.h>
 
 #if defined(_MSC_VER)
-_ACRTIMP void __cdecl _assert(_In_z_ char const* _Message, _In_z_ char const* _File, _In_ unsigned _Line);
+_CRTIMP void __cdecl _assert(_In_z_ char const* _Message, _In_z_ char const* _File, _In_ unsigned _Line);
 #elif defined(__WATCOMC__)
 _WCRTLINK extern void _assert(char *, char *, int);
 #endif

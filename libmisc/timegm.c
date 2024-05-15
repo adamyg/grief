@@ -1,9 +1,9 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_timegm_c,"$Id: timegm.c,v 1.8 2022/12/09 15:41:18 cvsuser Exp $")
+__CIDENT_RCSID(gr_timegm_c,"$Id: timegm.c,v 1.9 2024/05/12 15:48:45 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
- * Copyright (c) 2015 - 2023, A.Young
+ * Copyright (c) 2015 - 2024, A.Young
  * Copyright (c) 1997 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.

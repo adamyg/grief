@@ -1,7 +1,7 @@
 #ifndef MANDOC_CONFIG_H_INCLUDED
 #define MANDOC_CONFIG_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: config.h,v 1.25 2024/04/17 15:57:11 cvsuser Exp $
+/* $Id: config.h,v 1.26 2024/05/15 08:47:18 cvsuser Exp $
  * mandoc config.h
  *
  * Copyright (c) 2014 - 2024, Adam Young.
@@ -68,7 +68,7 @@
 #define  lstat w32_lstat
 #endif
 
-#if !defined(__MINGW32__)
+#if !defined(__MINGW32__) && !defined(inline)
 #define inline _inline
 #endif
 
