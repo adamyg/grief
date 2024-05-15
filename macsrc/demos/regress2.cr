@@ -1,6 +1,6 @@
 /* -*- mode: cr; indent-width: 4; -*- */
 /* charset=utf8
- * $Id: regress2.cr,v 1.24 2021/07/05 15:01:29 cvsuser Exp $
+ * $Id: regress2.cr,v 1.25 2024/05/11 16:37:49 cvsuser Exp $
  * Regression tests ... part2.
  *
  *
@@ -898,7 +898,7 @@ test_file(void)
     //  remove
     //  stat
     int now = time()-1;
-    string base = format("%s/gr%d%dXXXXXX", inq_tmpdir(), getpid(), now);
+    string base = format("%s/gr%d-%d-B-XXXXXX", inq_tmpdir(), getpid(), now);
     string temp = mktemp(base),
        temp2 = temp + "2";
     int size = -1, mtime, ctime, atime, mode;

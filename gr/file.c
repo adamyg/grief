@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.94 2023/03/05 10:17:45 cvsuser Exp $")
+__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.95 2024/05/11 16:38:28 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: file.c,v 1.94 2023/03/05 10:17:45 cvsuser Exp $
+/* $Id: file.c,v 1.95 2024/05/11 16:38:28 cvsuser Exp $
  * File-buffer primitives and support.
  *
  *
@@ -1010,7 +1010,6 @@ file_write(const char *fname, const int32_t flags)
 
     Macro See Also:
         edit_file
-
  */
 void
 do_reload_buffer(void)          /* ([int bufnum], [string encoding]) */
@@ -1289,7 +1288,7 @@ buf_readin(BUFFER_t *bp, int fd, const char *fname, FSIZE_t fsize, int flags, co
     BUFFER_t *saved_bp = curbp;
     const LINENO cline = *cur_line, numlines = bp->b_numlines;
     LINENO previewlines = 0x7ffffff, newlines = 0, crs = 0;
-    LINE_t *clp, *lp;
+    LINE_t *clp = NULL, *lp = NULL;
 
     mcharguessinfo_t fileinfo = {0};
     int32_t eolchar = ASCIIDEF_LF;              /* EOL character */
@@ -1297,7 +1296,7 @@ buf_readin(BUFFER_t *bp, int fd, const char *fname, FSIZE_t fsize, int flags, co
     size_t termlen = 0;
     int is8bit = 0;
 
-    FSIZE_t fleft = fsize, fcursor = 0, bufsize = 0, bufcnt;
+    FSIZE_t fleft = fsize, fcursor = 0, bufsize = 0, bufcnt = 0;
     char *buffer = NULL, *cache = NULL;
 
     const unsigned chunksize = (x_chunksize > 0 ? x_chunksize : CHUNKSIZE_DEFAULT);
@@ -2015,7 +2014,7 @@ buf_trimline(BUFFER_t *bp, const LINECHAR *text, LINENO length)
         If more than one argument is specified; either directly or as
         the result of file expansion; then a separate edit action is
         performed on each file, with the current buffer being the
-        last stated file.
+        last processed file.
 
     File Expansion::
 
@@ -2039,6 +2038,9 @@ buf_trimline(BUFFER_t *bp, const LINECHAR *text, LINENO length)
                         match.
 
             \x -        Matches the character x.
+
+        When multiple files are matched, note that the return value
+        represents only the last file processed.
 
     File detection::
 
@@ -2121,7 +2123,7 @@ buf_trimline(BUFFER_t *bp, const LINECHAR *text, LINENO length)
         the result of file expansion; the return relates to the last
         loaded file.
 
-        Under *EDIT_RC* the return code are extended to
+        Under *EDIT_RC* the return code is extended to
         differentiation between success conditions as follows.
 
 (start table,format=nd)
@@ -2158,8 +2160,8 @@ buf_trimline(BUFFER_t *bp, const LINECHAR *text, LINENO length)
     Macro: edit_file2 - Extended file edit.
 
         int
-        edit_file2(
-            string encoding, string|list file)
+        edit_file2([int &files], [string encoding],
+            [int mode], string|list file)
 
     Macro Description:
         The 'edit_file2()' primitive extends the functionality
@@ -2167,6 +2169,9 @@ buf_trimline(BUFFER_t *bp, const LINECHAR *text, LINENO length)
         'encoding'.
 
     Macro Parameters:
+        files - Optional integer variable when supplied shall be
+            populated with the number of files loaded.
+
         encoding - String containing the character encoding of the
             source file.
 
@@ -2188,26 +2193,26 @@ buf_trimline(BUFFER_t *bp, const LINECHAR *text, LINENO length)
  */
 void
 do_edit_file(int version)       /* int ([int mode], [string | list file ...]) */
-                                /* int ([int mode], string encoding, string|list file) */
+                                /* int ([int &files], [string encoding], [int mode], string|list file) */
 {
-    const char *encoding = (2 == version ? get_xstr(1) : NULL);
-    const int fileidx = (2 == version ? 2 : 1);
-    acc_assign_int(1);
+    const char *encoding = (2 == version ? get_xstr(2) : NULL);
+    const int fileidx = (2 == version ? 3 : 1);
+    int files = 0;
 
+    acc_assign_int(1);
     if (isa_undef(fileidx)) {
         char path[MAX_PATH];
 
-        if (NULL == get_xarg(fileidx, "Edit file: ", path, sizeof(path)))  {
+        if (NULL == get_xarg(fileidx, "Edit file: ", path, sizeof(path))) {
             if (xf_readonly || -1 == sys_access(curbp->b_fname, W_OK)) {
                 BFSET(curbp, BF_RDONLY);
             } else {
                 BFCLR(curbp, BF_RDONLY);
             }
             acc_assign_int(0);                  /* edit aborted */
-            return;
+        } else {
+            files = file_edit(path, EDIT_NORMAL, NULL);
         }
-        file_edit(path, EDIT_NORMAL, NULL);
-        return;
 
     } else {
         const LIST *nextlp, *lp = get_list(fileidx);
@@ -2223,13 +2228,17 @@ do_edit_file(int version)       /* int ([int mode], [string | list file ...]) */
                 break;
             case F_STR:         /* file */
             case F_LIT:
-                file_edit(result.l_str, flags, encoding);
+                files += file_edit(result.l_str, flags, encoding);
                 break;
             case F_RSTR:
-                file_edit(r_ptr(result.l_ref), flags, encoding);
+                files += file_edit(r_ptr(result.l_ref), flags, encoding);
                 break;
             }
         }
+    }
+
+    if (2 == version && ! isa_undef(1)) {       /* edit_file2() */
+        sym_assign_int(get_symbol(1), files);   /* optional count */
     }
 }
 
@@ -2575,13 +2584,14 @@ inq_file_magic(void)            /* string ([int &isdefault], [int &cost]) */
  *      flags - Edit flags (EDIT_XXX).
  *
  *  Returns:
- *      nothing
+ *      count of files succesfully loaded.
  */
-void
+int
 file_edit(const char *fname, const int32_t flags, const char *encoding)
 {
     char **files = 0;
     char path[MAX_PATH];
+    int count = 0;
 
     strxcpy(path, fname, sizeof(path));         /* local working buffer */
 
@@ -2590,7 +2600,7 @@ file_edit(const char *fname, const int32_t flags, const char *encoding)
 
     if (NULL == (files = shell_expand(path))) {
         errorf("Name expansion error.");
-        acc_assign_int(0);                      /* edit aborted */
+        acc_assign_int(-1);                     /* error */
 
     } else {
         unsigned j;
@@ -2603,21 +2613,25 @@ file_edit(const char *fname, const int32_t flags, const char *encoding)
                 if ((ret = file_load(path, flags, encoding)) <= -1) {
                     acc_assign_int(-1);         /* error */
 
-                } else if (EDIT_RC & flags) {
-                    /*
-                     *  3 = Preexisting buffer, not reloaded.
-                     *  2 = New image, file created.
-                     *  1 = Success.
-                     */
-                    acc_assign_int(1 + ret);
-
                 } else {
-                    acc_assign_int(1);
+                    int xret = 1;
+
+                    if (EDIT_RC & flags) {      /* extended return */
+                        /*
+                         *  3 = Preexisting buffer, not reloaded.
+                         *  2 = New image, file created.
+                         *  1 = Success.
+                         */
+                        xret += ret;
+                    }
+                    acc_assign_int(xret);
+                    ++count;
                 }
             }
         }
         shell_release(files);
     }
+    return count;
 }
 
 
@@ -4266,7 +4280,7 @@ file_canonicalize2(const char *filename, char *path, int length)
             } else {                            /* <cwd/fn> */
                 len = snprintf(path, length, "%s%c%s", cwd, PATH_SEPERATOR, filename);
             }
-            if (len < 0 || len >= length) 
+            if (len < 0 || len >= length)
                 path[length - 1] = 0;           /* overflow/FIXME */
         }
     }

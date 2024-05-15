@@ -1,11 +1,11 @@
 #ifndef GR_FILE_H_INCLUDED
 #define GR_FILE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_file_h,"$Id: file.h,v 1.29 2014/10/22 02:32:57 ayoung Exp $")
+__CIDENT_RCSID(gr_file_h,"$Id: file.h,v 1.30 2024/05/11 16:38:28 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: file.h,v 1.29 2014/10/22 02:32:57 ayoung Exp $
+/* $Id: file.h,v 1.30 2024/05/11 16:38:28 cvsuser Exp $
  * File ulitities.
  *
  *
@@ -34,7 +34,7 @@ enum {
 extern int                  file_terminator_set(BUFFER_t *bp, const void *buffer, int length, int termtype);
 extern int                  file_terminator_get(BUFFER_t *bp, void *buffer, int length, int *termtype);
 
-extern void                 file_edit(const char *fname, const int32_t flags, const char *encoding);
+extern int                  file_edit(const char *fname, const int32_t flags, const char *encoding);
 extern int                  file_load(const char *fname, const int32_t flags, const char *encoding);
 extern int                  file_write(const char *fname, const int32_t flags);
 extern int                  file_readin(BUFFER_t *bp, const char *fname, const int32_t flags, const char *encoding);

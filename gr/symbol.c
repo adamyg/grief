@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_symbol_c,"$Id: symbol.c,v 1.43 2022/05/26 16:40:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_symbol_c,"$Id: symbol.c,v 1.44 2024/05/09 17:22:07 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: symbol.c,v 1.43 2022/05/26 16:40:02 cvsuser Exp $
+/* $Id: symbol.c,v 1.44 2024/05/09 17:22:07 cvsuser Exp $
  * Symbol management.
  *
  *
@@ -498,7 +498,7 @@ sym_lookup(const char *name)
     char fnbuf[SYM_FUNCNAME_LEN + 2]; 
     int loop;
     MACRO *mptr;
-    SPBLK *spb;
+    SPBLK *spb = NULL;
 
     fnbuf[0] = '$', strxcpy(fnbuf+1, function, sizeof(fnbuf)-1);
 

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.102 2022/12/03 16:40:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.103 2024/05/11 16:38:28 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keywd.c,v 1.102 2022/12/03 16:40:16 cvsuser Exp $
+/* $Id: keywd.c,v 1.103 2024/05/11 16:38:28 cvsuser Exp $
  * Keyword table.
  *
  *
@@ -640,7 +640,9 @@ BUILTIN builtin[] = {
     1,  {ARG_OPT | ARG_REST}},
 
     {"edit_file2", MACRO(do_edit_file), ARG_INT, 0, 2,      /* file */
-    1,  {ARG_OPT | ARG_REST}},
+    3,  {ARG_OPT | ARG_LVAL | ARG_INT,
+         ARG_OPT | ARG_STRING,
+         ARG_OPT | ARG_REST}},
 
     {"ega", MACRO(do_ega), ARG_INT, 0, 0,                   /* screen */
     1,  {ARG_OPT | ARG_INT}},
