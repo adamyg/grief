@@ -726,18 +726,14 @@ vio_profile(int rebuild)
     if (! vio.envtest) {                        // one-shot
         int depth = 0;
 
-        if (GetModuleHandleA("ConEmuHk.dll") ||
-                GetModuleHandleA("ConEmuHk64.dll")) {
-            printf("Running under ConEmu, disabling 256 support\n");
-            vio.maxcolors = 16;
-
-        } else if (IsVirtualConsole(&depth)) {
+        if (IsVirtualConsole(&depth)) {
 #if defined(WIN32_CONSOLEVIRTUAL)
             if (depth > 16) {
                 printf("Running under a virtual console, enabling 256/true-color support\n");
                 vio.isvirtualconsole = 1;
                 vio.maxcolors = 256;
-            } else {
+            }
+            else {
                 printf("Running under a prelim virtual console, disabling 256 support\n");
                 vio.maxcolors = 16;
             }
@@ -745,6 +741,11 @@ vio_profile(int rebuild)
             printf("Running under a virtual console, disabling 256 support\n");
             vio.maxcolors = 16;
 #endif  //WIN32_CONSOLEVIRTUAL
+
+        } else if (GetModuleHandleA("ConEmuHk.dll") ||
+                        GetModuleHandleA("ConEmuHk64.dll")) {
+            printf("Running under ConEmu, disabling 256 support\n");
+            vio.maxcolors = 16;
 
         } else if (IsConsole2()) {
             printf("Running under Console2, disabling 256 support\n");
