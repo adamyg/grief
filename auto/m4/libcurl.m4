@@ -210,6 +210,8 @@ if (x) {;}
 
            AC_DEFINE(HAVE_LIBCURL,1,
              [Define to 1 if you have a functional curl library.])
+           AC_DEFINE(HAVE_CURL_CURL_H, 1)
+           AC_SUBST(HAVE_CURL_CURL_H)
            AC_SUBST(LIBCURL_CPPFLAGS)
            AC_SUBST(LIBCURL)
 
