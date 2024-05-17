@@ -1,11 +1,11 @@
 #ifndef GR_MSVCVERSIONS_H_INCLUDED
 #define GR_MSVCVERSIONS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_msvcversions_h,"$Id: msvcversions.h,v 1.5 2024/04/08 15:07:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_msvcversions_h,"$Id: msvcversions.h,v 1.6 2024/05/15 13:34:07 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: msvcversions.h,v 1.5 2024/04/08 15:07:13 cvsuser Exp $
+/* $Id: msvcversions.h,v 1.6 2024/05/15 13:34:07 cvsuser Exp $
  * _MSC_VER definitions
  *
  * Copyright (c) 2017 - 2024, Adam Young.
@@ -31,30 +31,17 @@ __CPRAGMA_ONCE
  * ==end==
  */
 
+#define _MSC_VER_2022 1930                      /* (Visual Studio 2022 / MSVC++ 17.x) */
+#define _MSC_VER_2022_MIN 1930                  /* (Visual Studio 2022 / MSVC++ 17.0.1) */
+#define _MSC_VER_2022_MAX 1939                  /* (Visual Studio 2022 / MSVC++ 17.9.x) */
+
 #define _MSC_VER_2019 1920                      /* (Visual Studio 2019 / MSVC++ 16.x) */
 #define _MSC_VER_2019_MIN 1920                  /* (Visual Studio 2019 / MSVC++ 16.0) */
-#define _MSC_VER_2019_MAX 1925                  /* (Visual Studio 2019 / MSVC++ 16.5) */
-    /*
-    MSVC++ 14.2  _MSC_VER == 1920 (Visual Studio 2019 Version 16.0)
-    MSVC++ 14.21 _MSC_VER == 1921 (Visual Studio 2019 Version 16.1)
-    MSVC++ 14.22 _MSC_VER == 1922 (Visual Studio 2019 Version 16.2)
-    MSVC++ 14.23 _MSC_VER == 1923 (Visual Studio 2019 Version 16.3)
-    MSVC++ 14.24 _MSC_VER == 1924 (Visual Studio 2019 Version 16.4)
-    MSVC++ 14.25 _MSC_VER == 1925 (Visual Studio 2019 Version 16.5)
-    */
+#define _MSC_VER_2019_MAX 1929                  /* (Visual Studio 2019 / MSVC++ 16.11.35) */
 
 #define _MSC_VER_2017 1910                      /* (Visual Studio 2017 / MSVC++ 15.x) */
 #define _MSC_VER_2017_MIN 1910                  /* (Visual Studio 2017 / MSVC++ 15.0) */
 #define _MSC_VER_2017_MAX 1916                  /* (Visual Studio 2017 / MSVC++ 15.9) */
-    /*
-    MSVC++ 14.1  _MSC_VER == 1910 (Visual Studio 2017 version 15.0)
-    MSVC++ 14.11 _MSC_VER == 1911 (Visual Studio 2017 version 15.3)
-    MSVC++ 14.12 _MSC_VER == 1912 (Visual Studio 2017 version 15.5)
-    MSVC++ 14.13 _MSC_VER == 1913 (Visual Studio 2017 version 15.6)
-    MSVC++ 14.14 _MSC_VER == 1914 (Visual Studio 2017 version 15.7)
-    MSVC++ 14.15 _MSC_VER == 1915 (Visual Studio 2017 version 15.8)
-    MSVC++ 14.16 _MSC_VER == 1916 (Visual Studio 2017 version 15.9)
-    */
 
 #define _MSC_VER_2015 1900                      /* (Visual Studio 2015 / MSVC++ 14.0) */
 #define _MSC_VER_2013 1800                      /* (Visual Studio 2013 / MSVC++ 12.0) */
@@ -65,4 +52,6 @@ __CPRAGMA_ONCE
 #define _MSC_VER_2003 1310                      /* (Visual Studio 2003 / MSVC++ 7.1)  */
 
 #endif /*GR_MSVCVERSIONS_H_INCLUDED*/
+
+
 

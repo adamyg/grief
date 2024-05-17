@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.91 2024/05/03 05:56:46 cvsuser Exp $
+# $Id: Makefile.in,v 1.92 2024/05/15 14:58:50 cvsuser Exp $
 # GRIEF editor makefile.
 #
 #
@@ -83,7 +83,11 @@ CCDEPEND=	@echo "\#no depend" > $(D_OBJDEP)/$<.Po
 ifeq ("win32","@build_os@")
 
 ifeq (vs,$(findstring vs,"@TOOLCHAIN@"))
+ifneq ($(or $(call eq,"@TOOLCHAIN@","vs160"),$(call eq,"@TOOLCHAIN@","vs170")),"")
+CCPROFILE=msvc160.profile
+else
 CCPROFILE=msvc.profile
+endif
 else ifeq ("@TOOLCHAIN@","owc20")
 CCPROFILE=wc20.profile
 else ifeq ("@TOOLCHAIN@","owc19")
