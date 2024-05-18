@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_arg_c,"$Id: arg.c,v 1.21 2024/04/17 18:39:11 cvsuser Exp $")
+__CIDENT_RCSID(gr_arg_c,"$Id: arg.c,v 1.22 2024/05/17 16:42:32 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: arg.c,v 1.21 2024/04/17 18:39:11 cvsuser Exp $
+/* $Id: arg.c,v 1.22 2024/05/17 16:42:32 cvsuser Exp $
  * Command line argument processing functionality.
  *
  *
@@ -312,7 +312,7 @@ arg_close(struct argparms *p)
 
 
 int
-arg_print(int indent, const struct argoption *p)
+arg_print(int indent, const struct argoption *p, arg_helper_t description, void *udata)
 {
 #define ARG_PRINT_WIDTH     30
 #define ARG_PRINT_MARGIN    2
@@ -347,16 +347,19 @@ arg_print(int indent, const struct argoption *p)
 
         /* description */
         if (p[i].d1) {
-            const char *nl, *s = p[i].d1;
-            int slen = (int)strlen(s);
+            const char *d1 = p[i].d1, *nl, *s;
+            int slen;
 
-            while (*s) {
+            if (description) d1 = description(p + i, udata);
+            slen = (int)strlen(d1);
+
+            for (s = d1; *s;) {
                 if (NULL != (nl = strchr(s, '\n'))) {
                     len = (nl - s) + 1;
                 } else {
                     len = slen;
                 }
-                if (s != p[i].d1) {
+                if (s != d1) {
                     fprintf(stderr, "%*s", indent + width, "");
                 }
                 fprintf(stderr, "%.*s", len, s);

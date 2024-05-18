@@ -1,11 +1,11 @@
 #ifndef GR_M_USERPROFILE_H_INCLUDED
 #define GR_M_USERPROFILE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_userprofile_h,"$Id: m_userprofile.h,v 1.3 2014/10/22 02:33:11 ayoung Exp $")
+__CIDENT_RCSID(gr_m_userprofile_h,"$Id: m_userprofile.h,v 1.4 2024/05/17 14:19:59 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_userprofile.h,v 1.3 2014/10/22 02:33:11 ayoung Exp $
+/* $Id: m_userprofile.h,v 1.4 2024/05/17 14:19:59 cvsuser Exp $
  * User profile primitives.
  *
  *
@@ -25,6 +25,7 @@ __CPRAGMA_ONCE
 
 __CBEGIN_DECLS
 
+extern const char *         userprofile(void);
 extern void                 inq_profile(void);
 
 __CEND_DECLS

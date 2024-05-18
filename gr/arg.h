@@ -1,11 +1,11 @@
 #ifndef GR_ARG_H_INCLUDED
 #define GR_ARG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_arg_h,"$Id: arg.h,v 1.12 2014/11/24 22:04:09 ayoung Exp $")
+__CIDENT_RCSID(gr_arg_h,"$Id: arg.h,v 1.13 2024/05/17 16:42:32 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: arg.h,v 1.12 2014/11/24 22:04:09 ayoung Exp $
+/* $Id: arg.h,v 1.13 2024/05/17 16:42:32 cvsuser Exp $
  * Command line argument processing functionality.
  *
  *
@@ -57,6 +57,8 @@ struct argparms {
     int _longonly;
 };
 
+typedef const char * (* arg_helper_t)(const struct argoption *, void *);
+
 extern void                 arg_init(struct argparms *p, int nargc, const char *const *nargv, const char *ostr);
 extern void                 arg_initl(struct argparms *p, int nargc, const char *const *nargv, 
                                     const char *ostr, const struct argoption *lopt, int longonly);
@@ -66,7 +68,7 @@ extern int                  arg_getopt(struct argparms *p);
 #define                     arg_next(a) \
                                 (a)->ind++, (a)->_place = NULL
 extern void                 arg_close(struct argparms *p);
-extern int                  arg_print(int ident, const struct argoption *options);
+extern int                  arg_print(int ident, const struct argoption *options, arg_helper_t helper, void *udata);
 extern int                  arg_split(char *cmd, const char **argv, int cnt);
 extern int                  arg_subopt(char **optionp, const char * const *tokens, char **valuep);
 

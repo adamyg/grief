@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.49 2024/05/03 16:26:34 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.51 2024/05/17 17:22:14 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.49 2024/05/03 16:26:34 cvsuser Exp $
+/* $Id: cmain.c,v 1.51 2024/05/17 17:22:14 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -76,6 +76,7 @@ __CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.49 2024/05/03 16:26:34 cvsuser Exp $
 #include "window.h"
 
 #include "m_feature.h"                          /* x_features */
+#include "m_userprofile.h"
 
 #define MAX_M       32                          /* Number of -m switches, including -u switch. */
 
@@ -124,10 +125,6 @@ static struct argoption options[] = {
 
     { "dark",           arg_none,           NULL,       4,      "or dark color scheme" },
 
-//TODO
-//  { "scheme",         arg_required,       NULL,       xxx,    "Color scheme name",
-//                          "=<name>" },
-
     { "utf8",           arg_optional,       NULL,       303,    "UTF8 features",
                             "=[no|yes],[[no]combined,seperate],[subst|ncr|ucn|hex]" },
 
@@ -139,10 +136,10 @@ static struct argoption options[] = {
     { "guess",          arg_required,       NULL,       306,    "File encoding search specification",
                             "charset,chardet,mark,bom,magic,utf..." },
 
-    { "buftype",        arg_required,       NULL,       316,    "Default buffer-type",
+    { "buftype",        arg_required,       NULL,       316,    "Default buffer-type; default=\"" BFTYP_DEFNAME "\"",
                             "dos|unix|mac|ansi" },
 
-    { "encoding",       arg_required,       NULL,       317,    "Default file encoding",
+    { "encoding",       arg_required,       NULL,       317,    "Default file encoding; default determined by buffer-type",
                             "<encoding>" },
 
     { "ucsver",         arg_required,       NULL,       320,    "Unicode version; wcwidth support",
@@ -163,14 +160,20 @@ static struct argoption options[] = {
     { "term",           arg_required,       NULL,       308,    "Override the TERM setting",
                             "<termname>" },
 
-    { "grterm",         arg_required,       NULL,       309,    "Override the GRTERM setting",
+    { "grterm",         arg_required,       NULL,       309,    "Override the GRTERM setting; %GRTERM%",
                             "<termname>" },
 
-    { "grhelp",         arg_required,       NULL,       318,    "Override the GRHELP setting",
+    { "grpath",         arg_required,       NULL,       321,    "Override the GRPATH setting; %GRPATH%",
                             "<path>" },
 
-    { "grprofile",      arg_required,       NULL,       319,    "Override the GRPROFILE setting",
-                        "<user-profile>" },
+    { "grhelp",         arg_required,       NULL,       318,    "Override the GRHELP setting; %GRHELP%",
+                            "<path>" },
+
+    { "grprofile",      arg_required,       NULL,       319,    "Override the GRPROFILE setting; %GRPROFILE%",
+                            "<user-profile>"  },
+
+    { "grscheme",       arg_required,       NULL,       322,    "Color scheme, GRCOLORSCHEME setting",
+                            "<color-scheme>" },
 
     { "termcap",        arg_none,           NULL,       310,    "Use termcap if available, otherwise terminfo" },
 
@@ -734,6 +737,7 @@ path_cook2(const char *name, char *buffer, int length)
 {
     char tmp[MAX_PATH] = {0}, *dpend = buffer + (length - 16), *dp;
 
+    buffer[0] = 0;
     for (dp = buffer; *name && dp < dpend;) {
         const char ch = *name++;
 
@@ -901,6 +905,7 @@ argv_init(int *argcp, char **argv)
 static int
 argv_process(const int doerr, int argc, const char **argv)
 {
+    char t_path[MAX_PATH];
     struct argparms args = {0};
     int c, errflag = 0;
     int doconfig = 0;
@@ -1067,7 +1072,6 @@ argv_process(const int doerr, int argc, const char **argv)
                 for (v = 0; v < (sizeof(vm)/sizeof(vm[0])); ++v) {
                     if (0 == strncmp(vm[v].from, val, vm[v].fromlen)) {
                         const char *path = val + vm[v].fromlen;
-                        char t_path[MAX_PATH] = {0};
 
                         if (vm[v].ispath) {
                             path = path_cook2(path, t_path, sizeof(t_path));
@@ -1376,12 +1380,20 @@ argv_process(const int doerr, int argc, const char **argv)
             gputenv2("GRTERM", args.val);
             break;
 
+        case 321:           /* --grpath=<GRPATH-override> */
+            gputenv2("GRPATH", path_cook2(args.val, t_path, sizeof(t_path)));
+            break;
+
         case 318:           /* --grhelp=<GRHELP-override> */
-            gputenv2("GRHELP", args.val);
+            gputenv2("GRHELP", path_cook2(args.val, t_path, sizeof(t_path)));
             break;
 
         case 319:           /* --grprofile=<GRPROFILE-override> */
-            gputenv2("GRPROFILE", args.val);
+            gputenv2("GRPROFILE", path_cook2(args.val, t_path, sizeof(t_path)));
+            break;
+
+        case 322:           /* --grscheme=<GRCOLORSCHEME> */
+            gputenv2("GRCOLORSCHEME", args.val);
             break;
 
         case 310:           /* --termcap otherwise --terminfo */
@@ -1830,6 +1842,38 @@ editor_setup(void)
  *  usage ---
  *      Command line usage.
  */
+static const char *
+description(const struct argoption *arg, void *buffer)
+{
+#define DESCRIPTIONLEN 1024
+    const char *desc = arg->d1, *token;
+    
+    if (NULL != (token = strchr(desc, '%'))) {
+        const char *value = NULL;
+
+        if (0 == strcmp(token, "%GRTERM%")) {
+            if (NULL == (value = strchr(x_default_term, '='))) {
+                value = x_default_term;
+            } else {
+                ++value;
+            }
+        } else if (0 == strcmp(token, "%GRPATH%")) {
+            value = path_cook(x_grpath);
+        } else if (0 == strcmp(token, "%GRHELP%")) {
+            value = path_cook(x_grhelp);
+        } else if (0 == strcmp(token, "%GRPROFILE%")) {
+            value = path_cook(userprofile());
+        }
+
+        if (value) {
+            sxprintf(buffer, DESCRIPTIONLEN, "%.*s\n  default=\"%s\"", token - desc, desc, value);
+            return buffer;
+        }
+    }
+    return desc;
+}
+
+
 static void
 usage(int what)
 {
@@ -1897,6 +1941,7 @@ usage(int what)
         fprintf(stderr, "GRPATH=%s\n",          (NULL != (env = ggetenv("GRPATH")) ? env : ""));
         fprintf(stderr, "GRHELP=%s\n",          (NULL != (env = ggetenv("GRHELP")) ? env : ""));
         fprintf(stderr, "GRPROFILE=%s\n",       (NULL != (env = ggetenv("GRPROFILE")) ? env : ""));
+        fprintf(stderr, "GRCOLORSCHEME=%s\n",   (NULL != (env = ggetenv("GRCOLORSCHEME")) ? env : ""));
         fprintf(stderr, "GRLEVEL=%s\n",         (NULL != (env = ggetenv("GRLEVEL")) ? env : ""));
         fprintf(stderr, "%s\n", x_grfile);
         fprintf(stderr, "%s\n", x_grflags);
@@ -1919,12 +1964,14 @@ usage(int what)
         /*
          *  Detailed usage
          */
-        fprintf(stderr,
-            "Usage: cr [options] [+line-number] file ..\n"\
-            "\n"\
-            "Options:\n");
+        char buffer[DESCRIPTIONLEN];
 
-        width = arg_print(HINDENT, options);
+        fprintf(stderr,
+            "Usage: %s [options] [+line-number] file ..\n"\
+            "\n"\
+            "Options:\n", ApplicationBinary);
+
+        width = arg_print(HINDENT, options, description, buffer);
 
         fprintf(stderr, "%*s%s%*s%s\n\n",
             HINDENT, "", "+nn", width-3, "", "Goto line nn.");
@@ -1939,5 +1986,3 @@ usage(int what)
 }
 
 /*end*/
-
-

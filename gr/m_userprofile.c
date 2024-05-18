@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_userprofile_c,"$Id: m_userprofile.c,v 1.12 2014/10/27 23:27:55 ayoung Exp $")
+__CIDENT_RCSID(gr_m_userprofile_c,"$Id: m_userprofile.c,v 1.13 2024/05/17 14:19:59 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_userprofile.c,v 1.12 2014/10/27 23:27:55 ayoung Exp $
+/* $Id: m_userprofile.c,v 1.13 2024/05/17 14:19:59 cvsuser Exp $
  * User profile primitives.
  *
  *
@@ -101,15 +101,28 @@ static char *           unixpath(char *path);
 void
 inq_profile(void)               /* string () */
 {
-#if defined(WIN32)
-    char buffer[MAX_PATH];
-    const char *profile =
-            getprofilepath("Grief", GRPROFILE, buffer, sizeof(buffer));
+    acc_assign_str(userprofile(), -1);
+}
 
-    acc_assign_str(profile ? profile : "", -1);
-#else
-    acc_assign_str("~/" GRPROFILE, -1);
-#endif
+
+const char *
+userprofile(void)
+{
+    static const char *grprofile = NULL;
+
+    if (NULL == grprofile)
+    {
+    #if defined(WIN32)
+        char buffer[MAX_PATH];
+        const char *profile
+            = getprofilepath("Grief", GRPROFILE, buffer, sizeof(buffer));
+
+        grprofile = chk_salloc(profile ? profile : "~/" GRPROFILE);
+    #else
+        grprofile = "~/" GRPROFILE;
+    #endif
+    }
+    return grprofile;
 }
 
 

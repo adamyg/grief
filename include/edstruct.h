@@ -1,11 +1,11 @@
 #ifndef GR_EDSTRUCT_H_INCLUDED
 #define GR_EDSTRUCT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.77 2024/04/08 15:07:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.78 2024/05/17 16:46:09 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edstruct.h,v 1.77 2024/04/08 15:07:03 cvsuser Exp $
+/* $Id: edstruct.h,v 1.78 2024/05/17 16:46:09 cvsuser Exp $
  * Window, buffer, line and character-map definitions.
  *
  *
@@ -788,10 +788,13 @@ enum _lterms {
 
 
 #if defined(__APPLE__) || defined(MAC_OSX)
+#define BFTYP_DEFNAME   "mac"
 #define BFTYP_DEFAULT   BFTYP_MAC
 #elif defined(DOSISH)
+#define BFTYP_DEFNAME   "dos"
 #define BFTYP_DEFAULT   BFTYP_DOS
 #else
+#define BFTYP_DEFNAME   "unix"
 #define BFTYP_DEFAULT   BFTYP_UNIX
 #endif
 #define LTERM_DEFAULT   LTERM_UNDEFINED

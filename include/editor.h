@@ -1,11 +1,11 @@
 #ifndef GR_EDITOR_H_INCLUDED
 #define GR_EDITOR_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_editor_h,"$Id: editor.h,v 1.38 2024/04/08 15:07:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_editor_h,"$Id: editor.h,v 1.39 2024/05/15 13:34:21 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: editor.h,v 1.38 2024/04/08 15:07:03 cvsuser Exp $
+/* $Id: editor.h,v 1.39 2024/05/15 13:34:21 cvsuser Exp $
  * GRIEF Editor global definitions.
  *
  *
@@ -52,6 +52,7 @@ __CBEGIN_DECLS
 
     /*FIXME: edpackage.h.in*/
 
+#define ApplicationBinary       "gr"
 #define ApplicationName         "GRIEF"
 #define ApplicationEmail        "griefedit"/**/"@"/**/"gmail"/**/".com"
 
