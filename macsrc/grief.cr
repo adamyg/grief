@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: grief.cr,v 1.88 2022/08/10 15:44:58 cvsuser Exp $
+/* $Id: grief.cr,v 1.89 2024/05/15 15:49:48 cvsuser Exp $
  * GRIEF startup macro.
  *
  *
@@ -10,6 +10,7 @@
 
 #if defined(__PROTOTYPES__)
 static void             grinit_onload(void);
+static void             grinit_colorscheme(void);
 static void             grinit_onexit(void);
 
 string                  _griget_profile(void);
@@ -691,6 +692,7 @@ grief(void)
 
     /* Options */
     grinit_onload();
+    grinit_colorscheme();
     refresh();
 
     /* Localised keyboard description */
@@ -1008,6 +1010,18 @@ grinit_onload(void)
         }
 
         iniclose(ifd);
+    }
+}
+
+
+static void
+grinit_colorscheme(void)
+{
+    string arg;
+
+    arg = getenv("GRCOLORSCHEME");              // user override, use unconditionally.
+    if (arg) {
+        colorscheme(arg);
     }
 }
 
@@ -1596,4 +1610,5 @@ clear_buffer(void)
 }
 
 /*end*/
+
 

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.86 2024/05/11 16:40:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.87 2024/05/17 16:43:00 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: display.c,v 1.86 2024/05/11 16:40:53 cvsuser Exp $
+/* $Id: display.c,v 1.87 2024/05/17 16:43:00 cvsuser Exp $
  * High level display interface.
  *
  *
@@ -1569,8 +1569,11 @@ vtwindow(WINDOW_t *wp)
     if (WFHARD & status) {                      /* major change/garbled, redraw */
         trace_log("vtwindow:hard(top:%d, bottom:%d\n", top, bottom);
         draw_window(wp, top, top_line, bottom, bottom, VTDRAW_REPAINT);
-
-    } else if ((WFEDIT & status) || bp->b_dirty_min) { /* line edit or scrolled, update mined arena */
+        return;
+    }
+    
+    if ((WFEDIT & status) || (bp && bp->b_dirty_min)) {
+                                                /* line edit or scrolled, update mined arena */
         const LINENO diff2 = top - top_line;
         LINENO mined = wp->w_mined, maxed = wp->w_maxed;
 
@@ -1601,18 +1604,23 @@ vtwindow(WINDOW_t *wp)
             }
         }
 
-        mined = lineno_max(mined, top_line);
-        maxed = lineno_min(maxed, bottom_line);
-        assert(mined <= maxed);
+        if (mined <= bottom_line && maxed >= top_line) {
+            /*
+             *  visible region
+             */
+            mined = lineno_max(mined, top_line);
+            maxed = lineno_min(maxed, bottom_line);
+            assert(mined <= maxed);
 
-        trace_log("vtwindow:draw_window(scrolled:%d, top:%d, bottom:%d)\n", scrolled, mined + diff2, bottom);
-        draw_window(wp, mined + diff2, mined, maxed + diff2, bottom, VTDRAW_LAZY);
+            trace_log("vtwindow:draw_window(scrolled:%d, top:%d, bottom:%d)\n", scrolled, mined + diff2, bottom);
+            draw_window(wp, mined + diff2, mined, maxed + diff2, bottom, VTDRAW_LAZY);
+            return;
+        }
+    }
 
-    } else if (old_line != line) {              /* cursor line change, flush dirty/lazy lines */
-
+    if (old_line != line) {                     /* cursor line change, flush dirty/lazy lines */
         trace_log("vtwindow:draw_lines(top:%d, bottom:%d)\n", top, bottom);
         draw_window(wp, top, top_line, bottom, bottom, VTDRAW_DIRTY);
-
     }
 }
 
