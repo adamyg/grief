@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_anchor_c,"$Id: anchor.c,v 1.49 2024/05/15 08:21:20 cvsuser Exp $")
+__CIDENT_RCSID(gr_anchor_c,"$Id: anchor.c,v 1.50 2024/05/16 15:45:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: anchor.c,v 1.49 2024/05/15 08:21:20 cvsuser Exp $
+/* $Id: anchor.c,v 1.50 2024/05/16 15:45:56 cvsuser Exp $
  * Anchor primitives.
  *
  *
@@ -324,6 +324,17 @@ anchor_get(WINDOW_t *wp, BUFFER_t *bp, ANCHOR_t *a)
         a->end_col = CURSOR_HUGE_COL;
 
     } else if (MK_NONINC == a->type) {
+        if (--a->end_col <= 0) { // start-of-line
+            if (--a->end_line > 0) {
+                a->end_col = CURSOR_HUGE_COL;
+            } else {
+                a->end_line = 1;
+                a->end_col = 1;
+            }
+        }
+
+#if defined(MK_REGION)
+    } else if (MK_REGION == a->type) {
         // non-inclusive of cursor
         if ((a->end_line == cline && a->end_col == ccol) || cline > a->end_line) {
             if (--a->end_col <= 0) { // end-of-block
@@ -338,6 +349,7 @@ anchor_get(WINDOW_t *wp, BUFFER_t *bp, ANCHOR_t *a)
         } else if ((a->start_line == cline && a->start_col == ccol) /*|| cline < a->start_line*/) {
             ++a->start_col; // start-of-block
         }
+#endif
     }
     return TRUE;
 }
