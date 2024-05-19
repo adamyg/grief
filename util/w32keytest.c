@@ -16,9 +16,9 @@
 #endif
 #endif
 
-#if defined(__MINGW32__)
-#define swprintf _swprintf
-#endif
+//#if defined(__MINGW32__) /*older mingw*/
+//#define swprintf _swprintf
+//#endif
 
 #define CTRLSTATUSMASK          (LEFT_ALT_PRESSED|LEFT_CTRL_PRESSED|RIGHT_ALT_PRESSED|RIGHT_CTRL_PRESSED|SHIFT_PRESSED|APP_PRESSED)
 
@@ -133,7 +133,6 @@ static const struct w32key {
 #define ISHEX(_uc) \
     ((_uc >= '0' && _uc <= '9') || (_uc >= 'a' && _uc <= 'f') || (_uc >= 'A' && _uc <= 'F') ? 1 : 0)
 
-static void Usage(const struct argparms *args);
 static void Process(HANDLE in);
 static BOOL WINAPI CtrlHandler(DWORD fdwCtrlType);
 static int AltPlusEvent(const KEY_EVENT_RECORD *ke, int offset);

@@ -259,10 +259,10 @@ fetchListFile(struct url_list *ue, struct url *u, const char *pattern, const cha
 	}
 		
 	dir = opendir(path);
-	free(path);
 
 	if (dir == NULL) {
 		fetch_syserr();
+		free(path);
 		return -1;
 	}
 
@@ -292,6 +292,7 @@ fetchListFile(struct url_list *ue, struct url *u, const char *pattern, const cha
 	}
 
 	closedir(dir);
+	free(path);
 
 	return ret;
 }

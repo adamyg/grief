@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.74 2024/04/14 16:03:45 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.75 2024/05/19 09:08:31 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_win32.c,v 1.74 2024/04/14 16:03:45 cvsuser Exp $
+/* $Id: sys_win32.c,v 1.75 2024/05/19 09:08:31 cvsuser Exp $
  * WIN32 system support.
  *
  *
@@ -574,7 +574,7 @@ key_normalizeAltGr(const KEY_EVENT_RECORD* key)
         }
     }
 
-    trace_log("AltGr: 0x%04x = 0x%04x", key->dwControlKeyState, state);
+    trace_log("AltGr: 0x%04lx = 0x%04lx", (unsigned long)key->dwControlKeyState, (unsigned long)state);
     return state;
 }
 

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.76 2023/10/19 17:33:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.77 2024/05/19 09:15:01 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.76 2023/10/19 17:33:35 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.77 2024/05/19 09:15:01 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -194,13 +194,15 @@ static char             tt_title[100];
 /*
  *  Physical buffer, original and current
  */
+#if !defined(WIN32)
 static VIOCURSORINFO    origCursor;
-
 static int              origRows;
 static int              origCols;
+//static USHORT           origAttribute;
+#endif
+
 static USHORT           origRow;
 static USHORT           origCol;
-static USHORT           origAttribute;
 static const VIOCELL *  origScreen;
 static WCHAR            origTitle[100];
 
