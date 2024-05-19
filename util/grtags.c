@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(grtags_c,"$Id: grtags.c,v 1.7 2022/05/27 03:33:16 cvsuser Exp $")
+__CIDENT_RCSID(grtags_c,"$Id: grtags.c,v 1.8 2024/05/19 04:43:28 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: grtags.c,v 1.7 2022/05/27 03:33:16 cvsuser Exp $
+/* $Id: grtags.c,v 1.8 2024/05/19 04:43:28 cvsuser Exp $
  * tags command line util.
  *
  *
@@ -146,7 +146,7 @@ usage(void)
         "\n"
         "Options:\n", x_progname);
 
-    arg_print(5, options);
+    arg_print(5, options, NULL, NULL);
 
     exit(3);
 }
