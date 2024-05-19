@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_macrolib_c,"$Id: macrolib.c,v 1.19 2022/05/31 16:18:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_macrolib_c,"$Id: macrolib.c,v 1.20 2024/05/19 17:09:32 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: macrolib.c,v 1.19 2022/05/31 16:18:21 cvsuser Exp $
+/* $Id: macrolib.c,v 1.20 2024/05/19 17:09:32 cvsuser Exp $
  * Macro library support - experimental.
  *
  *
@@ -316,6 +316,10 @@ libarc_index(const char *lpath)
 #define ARCHIVE_DEFAULT_BYTES_PER_BLOCK         10240
 #endif
 
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
     if ((rcode = archive_read_open_file(
                     a, lpath, ARCHIVE_DEFAULT_BYTES_PER_BLOCK))) {
         err = archive_error_string(a);
@@ -386,6 +390,10 @@ libarc_index(const char *lpath)
 
         trace_log("..complete %d macros available (%s)\n", count, (err ? err : ""));
     }
+
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic pop
+#endif
 
     if (err) return -1;
     return 0;
