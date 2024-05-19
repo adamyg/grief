@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.in,v 1.17 2024/04/07 15:09:21 cvsuser Exp $
+# $Id: makelib.in,v 1.18 2024/05/19 06:56:53 cvsuser Exp $
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 # makelib configuration
 #
@@ -99,7 +99,6 @@ $PACKAGE_FILE   = 'edpackage.h';
         '^contrib/hunspell',
       # '^contrib/liblua',
       # '^contrib/libssh2',
-      # '^contrib/libglib',
         '!^contrib/icu',                        # optional local ICU installation
         'libduktape',
         'libvfs',
@@ -129,6 +128,9 @@ $PACKAGE_FILE   = 'edpackage.h';
         '^win32/AutoUpdater'
         );
 
+@CONTRIBEXTRA   = (    # additional packages
+        '^contrib/libopenssl'
+        );
 
 ## Toolchain
 

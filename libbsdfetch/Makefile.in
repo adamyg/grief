@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.19 2024/05/03 14:35:16 cvsuser Exp $
+# $Id: Makefile.in,v 1.20 2024/05/19 05:44:02 cvsuser Exp $
 # libbsdfetch makefile.
 #
 #
@@ -87,7 +87,7 @@ CRELEASE=	@CRELEASE@
 LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
 
-CINCLUDE=	-I$(D_INC) @CINCLUDE@
+CINCLUDE=	-I$(D_INC) @OPENSSL_INCLUDES@ @CINCLUDE@
 CEXTRA=		@DEFS@
 CEXTRA+=	-DFTP_COMBINE_CWDS -DWITH_SSL -DWIN32_SOCKET_MAP_NATIVE
 

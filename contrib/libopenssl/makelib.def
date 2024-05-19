@@ -1,0 +1,6 @@
+# $Id: makelib.def,v 1.2 2024/05/19 07:22:19 cvsuser Exp $
+# win32 makelib configuration
+#
+var=OPENSSL_INCLUDES
+var=OPENSSL_LIBS
+var=OPENSSL_LDFLAGS

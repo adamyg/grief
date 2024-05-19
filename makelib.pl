@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.140 2024/04/12 06:39:39 cvsuser Exp $
+# $Id: makelib.pl,v 1.141 2024/05/19 06:56:53 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -1870,6 +1870,19 @@ Configure($$$)          # (type, version, options)
                     }
                 }
             }
+
+            if (exists $config->{CONTRIBEXTRA}) {
+                foreach (@{$config->{CONTRIBEXTRA}}) {
+                    my $dir = MakefileDir($_);
+
+                    if (-f "${dir}/makelib.def") {
+                        my $name = basename($dir);
+                        if (LoadContrib($type, $version, $name, $dir, \@CONTRIBINCS)) {
+                            $contribs{$name} = 1;
+                        }
+                    }
+                }
+            }
         }
 
         #libarchive
@@ -2130,11 +2143,36 @@ LoadContrib($$$$$)      # (type, version, name, dir, refIncludes)
 
             } elsif ('def' eq $key) {
                 if ($val =~ /^(.+)=(.*)$/) {
-                    $CONFIG_H{$1} = ($2 ? $2 : '1');
+                    my ($tkn, $def) = ($1, $2 ? $2 : '1');
+                    if (exists $CONFIG_H{$tkn}) {
+                        print "warning: redefinition of \@$tkn\@ encountered\n"
+                            if ($CONFIG_H{$tkn} ne $def);
+                    }
+                    $CONFIG_H{$tkn} = $def;
                 } else {
+                    if (exists $CONFIG_H{$val}) {
+                        print "warning: redefinition of \@$val\@ encountered\n"
+                            if ($CONFIG_H{$val} ne '1');
+                    }
                     $CONFIG_H{$val} = '1';
                 }
                 print "\tdef: $val\n";
+
+            } elsif ('var' eq $key) {
+                if ($val =~ /^(.+)=(.*)$/) {
+                    my ($tkn, $def) = ($1, $2 ? $2 : '1');
+                    if (exists $x_tokens{$tkn}) {
+                        print "warning: redefinition of \@$tkn\@ encountered\n"
+                            if ($x_tokens{$tkn} ne $def);
+                    }
+                    $x_tokens{$tkn} = $def;
+
+                } else {
+                    print "warning: redefinition of \@$val\@ encountered\n"
+                        if (exists $x_tokens{$val});
+                    $x_tokens{$val} = '1';
+                }
+                print "\tvar: $val\n";
             }
         }
     }
