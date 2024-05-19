@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.51 2024/05/17 17:22:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.52 2024/05/19 16:01:48 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.51 2024/05/17 17:22:14 cvsuser Exp $
+/* $Id: cmain.c,v 1.52 2024/05/19 16:01:48 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -1866,7 +1866,7 @@ description(const struct argoption *arg, void *buffer)
         }
 
         if (value) {
-            sxprintf(buffer, DESCRIPTIONLEN, "%.*s\n  default=\"%s\"", token - desc, desc, value);
+            sxprintf(buffer, DESCRIPTIONLEN, "%.*s\n  default=\"%s\"", (int)(token - desc), desc, value);
             return buffer;
         }
     }

@@ -21,15 +21,17 @@ Title:          Quick Start
         fundamental GRIEF commands you need to know are shown below.
 
             -----------------------------------------------
-            
+
 Topic:          Setup
 
         GRIEF's local configuration may be viewed using the '--config' option.
 
 >$gr --config
 
->GRIEF 3.2.2.25 compiled Apr 10 2024 00:40:33 (cm version 3.1)
->
+   Examples:
+
+        o Windows profile.
+
 >PROGNAME=C:/Program Files (x86)/Grief/bin/gr.exe
 >MACHTYPE=Win32
 >GRPATH=C:/Program Files (x86)/Grief/macros;C:/Program Files (x86)/Grief/src;
@@ -44,6 +46,24 @@ Topic:          Setup
 >GRDICTIONARY=
 >GRTERM=win32
 
+        o Linux profile.
+
+>PROGNAME=/usr/local/bin/gr
+>MACHTYPE=UNIX
+>GRPATH=/usr/local/share/gr/macros:/usr/local/share/gr/src:
+>GRHELP=/usr/local/share/gr/help
+>GRPROFILE=
+>GRLEVEL=1
+>GRFILE=newfile
+>GRFLAGS=-i60
+>GRBACKUP=
+>GRVERSIONS=
+>GRDICTIONARIES=
+>GRDICTIONARY=
+>GRTERM=linux
+
+   Environment:
+
         The more significant configuration elements which are required for correct
         operation are:
 
@@ -53,13 +73,13 @@ Topic:          Setup
                         <require> operations. The initial value of GRPATH is either
                         imported from the environment or if not available is derived
                         from the location of the running application.
-        
+
         GRHELP -        The 'GRHELP' global string is used to specify the directory
                         name stating the search path which GRIEF shall utilise to
                         locate the help database. The initial value of GRHELP is
                         either imported from the environment or if not available is
                         derived from the location of the running application.
-           
+
         GRPROFILE -     The 'GRPROFILE' global string is used to specify an override
                         to the standard users home directory; it is utilised by
                         several macros to source runtime configuration details.
@@ -105,10 +125,11 @@ Topic:          Basics
 (end table)
 
         If you execute the Exit command after text has been entered
-        in any of the open files, you will be given a number of
-        choices:
+        in any of the open files, the prompt below is presented.
 
 >               1 buffer has not been saved. Exit [ynw]?
+
+        You will be given a number of choices.
 
         w -     Writes the file back to the file-system and exit to
                 the operating system.
@@ -1058,6 +1079,7 @@ Topic:          Features
                         disabled running the 'menuoff' command.
 (end table)
 
-        $Id: quickstart.txt,v 1.5 2024/04/18 15:48:45 cvsuser Exp $
+        $Id: quickstart.txt,v 1.6 2024/05/12 07:50:33 cvsuser Exp $
 -*- mode: txt; margin: 75; -*-
+
 

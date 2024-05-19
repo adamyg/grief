@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.8 2024/05/03 14:35:16 cvsuser Exp $
+# $Id: Makefile.in,v 1.9 2024/05/19 15:53:42 cvsuser Exp $
 # libtrie - prefix tree
 #
 #
@@ -94,6 +94,10 @@ CXXRELEASE=	$(CRELEASE)
 endif
 LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
+
+ifeq (gcc,$(findstring gcc,$(CC)))
+XFLAGS+= 	-Wno-deprecated-non-prototype
+endif	#gcc
 
 CINCLUDE=	-I$(D_INC) @CINCLUDE@
 
