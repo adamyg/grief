@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.93 2024/05/19 08:22:35 cvsuser Exp $
+# $Id: Makefile.in,v 1.94 2024/05/19 13:09:44 cvsuser Exp $
 # GRIEF editor makefile.
 #
 #
@@ -209,7 +209,7 @@ endif
 
 LDLIBS=		-L$(D_LIB) -lbsddb -lbsdfetch -lbsdio -lwidechar -lchartable -lvfs -ltrie -lsplay -lllist -lmisc -lonigrx -ltre
 LDLIBS+=	@LDLIBS@ @LIBS@
-LDLIBS+=	@LIBENCA@ @LIBSPELL@ @LIBICU@ @LIBICONV@ @LIBCURL@ @LIBOPENSSL@ @LIBARCHIVE@ @LIBMAGIC@
+LDLIBS+=	@LIBENCA@ @LIBSPELL@ @LIBICU@ @LIBICONV@ @LIBCURL@ @OPENSSL_LDFLAGS@ @LIBOPENSSL@ @LIBARCHIVE@ @LIBMAGIC@
 LDLIBS+=	@LIBM@ @EXTRALIBS@
 ifneq ("win32","@build_os@")
 LDLIBS+=	@TERMLIB@ @LIBX11@

@@ -1,10 +1,10 @@
-dnl $Id: configure.in,v 1.78 2024/05/03 03:20:17 cvsuser Exp $
+dnl $Id: configure.in,v 1.79 2024/05/19 12:54:20 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl
 
-AC_REVISION($Revision: 1.78 $)
+AC_REVISION($Revision: 1.79 $)
 ## AC_COPYRIGHT(Adam Young 1995-2024, Paul Fox 1989-1991)
 AC_SUBST([PACKAGE])
 AC_INIT([GRIEF],[3.2.1],[griefedit@gmail.com])
@@ -791,11 +791,11 @@ AC_MSG_RESULT([-  Configuration:])
 AC_MSG_RESULT([-])
 AC_MSG_RESULT([-         Compiler: $CC / $CXX])
 AC_MSG_RESULT([-           Depend: $CPPDEP])
-AC_MSG_RESULT([-           CFLAGS: $CFLAGS $EXTRA_CFLAGS $CWARN])
+AC_MSG_RESULT([-           CFLAGS: $CFLAGS $OPENSSL_INCLUDES $EXTRA_CFLAGS $CWARN])
 AC_MSG_RESULT([-                     Debug:$CDEBUG, Release:$CRELEASE])
 AC_MSG_RESULT([-         CXXFLAGS: $CXXFLAGS $EXTRA_CPPFLAGS $CXXWARN])
 AC_MSG_RESULT([-                     Debug:$CXXDEBUG, Release:$CXXRELEASE])
-AC_MSG_RESULT([-          LDFLAGS: $LDFLAGS])
+AC_MSG_RESULT([-          LDFLAGS: $OPENSSL_LDFLAGS $LDFLAGS])
 AC_MSG_RESULT([-     Preprocessor: $EXTRA_CPPFLAGS $LIBCURL_CPPFLAGS])
 AC_MSG_RESULT([-    Mouse support: ${mouse_lib}])
 AC_MSG_RESULT([-   Termap support: ${termlib_name}])

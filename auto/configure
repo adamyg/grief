@@ -31975,16 +31975,16 @@ printf "%s\n" "-" >&6; }
 printf "%s\n" "-         Compiler: $CC / $CXX" >&6; }
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: -           Depend: $CPPDEP" >&5
 printf "%s\n" "-           Depend: $CPPDEP" >&6; }
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: -           CFLAGS: $CFLAGS $EXTRA_CFLAGS $CWARN" >&5
-printf "%s\n" "-           CFLAGS: $CFLAGS $EXTRA_CFLAGS $CWARN" >&6; }
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: -           CFLAGS: $CFLAGS $OPENSSL_INCLUDES $EXTRA_CFLAGS $CWARN" >&5
+printf "%s\n" "-           CFLAGS: $CFLAGS $OPENSSL_INCLUDES $EXTRA_CFLAGS $CWARN" >&6; }
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: -                     Debug:$CDEBUG, Release:$CRELEASE" >&5
 printf "%s\n" "-                     Debug:$CDEBUG, Release:$CRELEASE" >&6; }
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: -         CXXFLAGS: $CXXFLAGS $EXTRA_CPPFLAGS $CXXWARN" >&5
 printf "%s\n" "-         CXXFLAGS: $CXXFLAGS $EXTRA_CPPFLAGS $CXXWARN" >&6; }
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: -                     Debug:$CXXDEBUG, Release:$CXXRELEASE" >&5
 printf "%s\n" "-                     Debug:$CXXDEBUG, Release:$CXXRELEASE" >&6; }
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: -          LDFLAGS: $LDFLAGS" >&5
-printf "%s\n" "-          LDFLAGS: $LDFLAGS" >&6; }
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: -          LDFLAGS: $OPENSSL_LDFLAGS $LDFLAGS" >&5
+printf "%s\n" "-          LDFLAGS: $OPENSSL_LDFLAGS $LDFLAGS" >&6; }
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: -     Preprocessor: $EXTRA_CPPFLAGS $LIBCURL_CPPFLAGS" >&5
 printf "%s\n" "-     Preprocessor: $EXTRA_CPPFLAGS $LIBCURL_CPPFLAGS" >&6; }
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: -    Mouse support: ${mouse_lib}" >&5
