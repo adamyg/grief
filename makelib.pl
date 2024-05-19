@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.141 2024/05/19 06:56:53 cvsuser Exp $
+# $Id: makelib.pl,v 1.142 2024/05/19 08:07:45 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -2141,7 +2141,7 @@ LoadContrib($$$$$)      # (type, version, name, dir, refIncludes)
                 $ext .= ExportPath($val);
                 print "\text: $val (\@$lbl\@)\n";
 
-            } elsif ('def' eq $key) {
+            } elsif ('def' eq $key) { # Makefile.in HAVE_xxx, default=1
                 if ($val =~ /^(.+)=(.*)$/) {
                     my ($tkn, $def) = ($1, $2 ? $2 : '1');
                     if (exists $CONFIG_H{$tkn}) {
@@ -2158,9 +2158,9 @@ LoadContrib($$$$$)      # (type, version, name, dir, refIncludes)
                 }
                 print "\tdef: $val\n";
 
-            } elsif ('var' eq $key) {
+            } elsif ('var' eq $key) { # Makefile.in variable, empty allowed
                 if ($val =~ /^(.+)=(.*)$/) {
-                    my ($tkn, $def) = ($1, $2 ? $2 : '1');
+                    my ($tkn, $def) = ($1, $2 ? $2 : '');
                     if (exists $x_tokens{$tkn}) {
                         print "warning: redefinition of \@$tkn\@ encountered\n"
                             if ($x_tokens{$tkn} ne $def);
@@ -2170,7 +2170,7 @@ LoadContrib($$$$$)      # (type, version, name, dir, refIncludes)
                 } else {
                     print "warning: redefinition of \@$val\@ encountered\n"
                         if (exists $x_tokens{$val});
-                    $x_tokens{$val} = '1';
+                    $x_tokens{$val} = '';
                 }
                 print "\tvar: $val\n";
             }
