@@ -14,7 +14,7 @@
 ## Introduction:
 --------------------
 
-GRIEF is a full-featured console based editor offering a wealth of facilities on multiple Unix, Windows and Mac platforms. 
+GRIEF is a full-featured console based editor offering a wealth of facilities on multiple Unix, Windows and Mac platforms.
 It edits plain text files and has numerous options depending on the type of work you are doing.
 
 Based on a long standing interface, Grief is an intuitive and easy editor to both novice and seasoned developers, inheriting its clean user interface from the BRIEF family of programmers editors.
@@ -53,16 +53,79 @@ The following environments and toolchains are supported.
       * DOS (djgpp)
       * VMS
 
+
 ## Installation:
 
-See INSTALL for details.
+The project can be built from source, the method dependent on the target host; see ``INSTALL`` for details.
+
+For example uder a standard Linux/Unix distrubution, using one the supplied ```configure``` profiles.
+
+```
+./support/config_withmost
+```
+
+the following build profile and options shall be available.
+
+```
+-
+-  Configuration:
+-
+-         Compiler: gcc / g++
+-           Depend: gcc -MM
+-           CFLAGS:   --param max-inline-insns-single=1200 -pthread
+-                     Debug:-g -Og, Release:-O1 -DNDEBUG
+-         CXXFLAGS: -g -O2 -pthread
+-                     Debug:-g -Og, Release:-O1 -DNDEBUG
+-          LDFLAGS:  -pthread
+-     Preprocessor:
+-    Mouse support: none
+-   Termap support: ncurses
+-    Spell Support: -lenchant
+-       Conversion:  -lpthread -lm   -L/usr/lib -licui18n -licuuc -licudata   -liconv
+-        Detection:    -lmagic
+-         Security: -lssl -lcrypto
+-      Compression: -lbz2 -llzma -lz
+-   Other Features: -lcurl -larchive
+-        Libraries: -lcharset  -lX11 -lXft -lXext -lpthread
+-            Extra: -lclang -lm -ldl -lltdl -liberty
+-        Allocator: -ldlmalloc
+-             Yacc: -ly
+-
+-  Installation:
+-
+-           prefix: /usr/local
+-          datadir: /usr/local/share
+-
+-              BINPATH=/usr/local/bin
+-              GRPATH=/usr/local/share/gr/macro
+-              GRHELP=/usr/local/share/gr/help
+-
+
+ Review the options above for accuracy, to modify see --help for details.
+ For example, a user local installation can set using the --prefix option.
+
+      'configure --prefix=/home/user/grief'
+
+ Once they look okay, execute to build:
+
+      'make release'              - build software.
+
+ Installation, one of the follow dependent on location:
+
+      'sudo make release install' - install for common/system usage; or
+   or 'make release install'      - local installation.
+
+ Optionally after installation:
+
+      'make release clean'        - remove build tree.
+```        
 
 ## Distributions:
 
-   * WIN32 binaries
+   * Binaries
 
         https://github.com/adamyg/grief/releases
-        and https://sourceforge.net/projects/grief
+        and https://sourceforge.net/projects/grief (MIRROR)
 
    * Source
 
@@ -82,7 +145,7 @@ Please feel free to raise tickets on Github when issues are encountered.
 
 This introduction is an outline on how to use GRIEF, based on the default keyboard layout made popular by BRIEF.  The fundamental GRIEF commands you need to know are shown below.
 
-GRIEF’s local configuration may be viewed using the *--config* option.    
+GRIEF’s local configuration may be viewed using the *--config* option.
 
 ````
 $gr --config
@@ -154,10 +217,10 @@ Any unwanted edits maybe corrected using ⟨Undo and Redo⟩ commands.
 
 Once complete the edit session is complete a number of options are available.
 
-| Key              | Description                                                  
+| Key              | Description
 |:-----------------|:-------------------------------------------------------------------------------
-| Alt-W            | Write buffer                                                 
-| Alt-X            | Exit.            
+| Alt-W            | Write buffer
+| Alt-X            | Exit.
 | Alt-H            | Help.
 | F10:key_map      | Display key binds.
 | F10:explain      | Feature explanation.
@@ -175,7 +238,7 @@ You will be given a number of choices.
   * *w* - Writes the file back to the file-system and exit to the operating system.
   * *y* - The buffer is not saved, and you return to the operating system; **note** your local changes shall be lost.
   * *n* - The command is cancelled and you return to the editor.
-   
+
 The main features of the screen are the window arena, command line and status area.
 
 ![griefscreen](https://github.com/adamyg/grief/blob/master/hlpdoc/src/images/griefscreen.png?raw=true)
@@ -220,7 +283,7 @@ Any changes to a buffer made in one part of a tiled window are displayed in the 
 | Key              | Description
 |:-----------------|:-------------------------------------------------------------------------------
 | F1               | Select a different section of a tiled window.  User is prompted to point to the section desired, using one of the four arrow keys
-| F2               | Move the boundary between two windows on the screen.  User is prompted to point the boundary which is to be moved, and then use the arrow keys to move the boundary.  The screen is redrawn as the boundary is moved  
+| F2               | Move the boundary between two windows on the screen.  User is prompted to point the boundary which is to be moved, and then use the arrow keys to move the boundary.  The screen is redrawn as the boundary is moved
 | F3               | Split the current window into two equal sizes, either horizontally or vertically
 | F4               | Delete a boundary between two windows and merge them together
 | Ctrl-Z           | Subwindow zoom toggle: makes a forward zoom on the current subwindow.  This means that the current subwindow will occupy all possible place in the total window.  Use Ctrl-Z again to unzoom, i.e. to see again all sub-windows.
@@ -237,8 +300,8 @@ Buffer navigation is available using a rich set of the cursor commands.
 
 | Key              | Description
 |:-----------------|:-------------------------------------------------------------------------------
-| Right,Space      | Move cursor right one position.              
-| Left,Backspace   | Move cursor left one position. 
+| Right,Space      | Move cursor right one position.
+| Left,Backspace   | Move cursor left one position.
 | Down             | Move cursor down one line, maintaining same column  position.
 | Up               | Move cursor up one line, maintaining same column position.
 | PgUp,Wheel-Up    | Move cursor up visible display page.
@@ -272,7 +335,7 @@ When enabled the user shall be prompted to select which other window the current
 
 ## Editing
 
-GRIEF is a *modeless* editor, compared to vi, and it’s successor Vim, which are *modal* editors.  
+GRIEF is a *modeless* editor, compared to vi, and it’s successor Vim, which are *modal* editors. 
 Modeless meaning that text is entered directly into the buffer as typed and commands are generally not context specific, behaving the same most of the time. 
 Modal editing, on the other hand, means that the editor switches between the state of inserting text and taking commands.
 
@@ -284,7 +347,7 @@ In overstrike, existing text is overwritten as you type.  The insert mode is re
 Deletion and relocation of text is possible using the scrap buffer, see
 ⟨Cut and Paste⟩.
 
-| Key              | Description                                                
+| Key              | Description
 |:-----------------|:-------------------------------------------------------------------------------
 | Backspace        | Delete the last character typed.
 | Delete           | Delete the character under the cursor.
@@ -353,7 +416,7 @@ During any command line interaction the available key binding are the following.
 
 Text are be manipulated by searching and/or translating selected text by the use of Regular expression search patterns.
 
-| Key              | Description                                                
+| Key              | Description
 |:-----------------|:-------------------------------------------------------------------------------
 | F5, Alt-S        | Search in a forward direction.  The user is prompted for the search item.
 | Alt-F5, Alt-Y    | Search in a backwards direction.  The user is prompted for the search item.
@@ -406,7 +469,7 @@ There are three types of regions, block, column and line.
 Block and line type is used to cut/copy and paste whole lines. 
 A column type isused to cut/copy and paste columns of text.
 
-| Key              | Description                                                      
+| Key              | Description
 |:-----------------|:-------------------------------------------------------------------------------
 | Alt-M            | Drops a normal block.  Text falling within the current cursor  position and from where the original anchor was dropped shall be highlighted
 | Alt-C            | Drops a column marker.  Text falling within a rectangular region from where the anchor was dropped to the current cursor will be highlighted
@@ -428,7 +491,7 @@ The undo command reverses recent changes in the buffer’s text, and the undo co
 Commands can be undone sequentially all the way back to the point where the buffer was pened or created. 
 If you undo too much you can use ⟨redo⟩ to cancel the last undo.
 
-| Key              | Description 
+| Key              | Description
 |:-----------------|:-------------------------------------------------------------------------------
 | Alt-U,KP-star    | Undoes previously executed command.
 | Ctrl-U           | Redoes the previous undo.
