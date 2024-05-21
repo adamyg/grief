@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.52 2024/05/19 16:01:48 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.53 2024/05/21 13:20:36 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.52 2024/05/19 16:01:48 cvsuser Exp $
+/* $Id: cmain.c,v 1.53 2024/05/21 13:20:36 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -837,7 +837,7 @@ argv_init(int *argcp, char **argv)
     }
 
     for (i = 1; i < *argcp; ++i)
-        if (argv[i][0] == '-') {
+        if (argv[i] && argv[i][0] == '-') {
             const char *arg = argv[i];
             int cook = 0;
 
@@ -1459,6 +1459,7 @@ unicode_init(void)
         x_unicode_version = ggetenv("UNICODE_VERSION");
     if (x_unicode_version)
         ucs_width_set(x_unicode_version);
+    trace_log("ucs_width_version=%s\n", ucs_width_version());
 }
 
 

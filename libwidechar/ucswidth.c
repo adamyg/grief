@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_wcwidth_c,"$Id: ucswidth.c,v 1.3 2024/05/02 17:19:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_wcwidth_c,"$Id: ucswidth.c,v 1.4 2024/05/21 13:40:39 cvsuser Exp $")
 
 /*
     ------------------------------------------------------------------------------
@@ -92,9 +92,13 @@ VERSIONS[] = {
         { "10.0.0",    100000,  zero_10_0_0,    _elementsof(zero_10_0_0),   width_10_0_0,   _elementsof(width_10_0_0) },
         { "11.0.0",    110000,  zero_11_0_0,    _elementsof(zero_11_0_0),   width_11_0_0,   _elementsof(width_11_0_0) },
         { "12.1.0",    120100,  zero_12_1_0,    _elementsof(zero_12_1_0),   width_12_1_0,   _elementsof(width_12_1_0) },
-        { "13.0.0",    130000,  zero_13_0_0,    _elementsof(zero_13_0_0),   width_13_0_0,   _elementsof(width_13_0_0) }
+        { "13.0.0",    130000,  zero_13_0_0,    _elementsof(zero_13_0_0),   width_13_0_0,   _elementsof(width_13_0_0) },
+        { "14.0.0",    140000,  zero_14_0_0,    _elementsof(zero_14_0_0),   width_14_0_0,   _elementsof(width_14_0_0) },
+        { "15.0.0",    150000,  zero_15_0_0,    _elementsof(zero_15_0_0),   width_15_0_0,   _elementsof(width_15_0_0) },
+        { "15.1.0",    150100,  zero_15_1_0,    _elementsof(zero_15_1_0),   width_15_1_0,   _elementsof(width_15_1_0) }
         };
 
+//https://ucs-detect.readthedocs.io/results.html: 15.1.0 as default.
 static const struct width_version *version = VERSIONS + (_elementsof(VERSIONS) - 1);
 
 

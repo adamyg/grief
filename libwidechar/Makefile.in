@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.6 2024/04/16 11:37:15 cvsuser Exp $
+# $Id: Makefile.in,v 1.7 2024/05/21 13:40:39 cvsuser Exp $
 # libwidechar makefile.
 #
 #
-# Copyright (c) 2022, Adam Young.
+# Copyright (c) 2022 - 2024, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -128,7 +128,6 @@ WIDECHAROBJS=\
 	$(D_OBJ)/wcsstr$(O)			\
 	$(D_OBJ)/wcstod$(O)			\
 	$(D_OBJ)/wcstok$(O)			\
-	$(D_OBJ)/wcswcs$(O)			\
 	$(D_OBJ)/wcswcs$(O)			\
 	$(D_OBJ)/wcswidth$(O)			\
 	$(D_OBJ)/wcwidth$(O)			\
