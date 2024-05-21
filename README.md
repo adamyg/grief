@@ -9,7 +9,6 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/8jk4qx55d4bql3l1?svg=true&passingText=MinGW32%20Passing&failingText=MinGW32%20Failing&pendingText=MinGW32%20Pending)](https://ci.appveyor.com/project/adamyg/grief-mingw)
 
 # GRIEF - BRIEF clone
-=======================================================
 
 ## Introduction:
 --------------------
@@ -25,16 +24,23 @@ Brief, BRIEF, or B.R.I.E.F., an acronym for Basic Reconfigurable Interactive Edi
 
 For a more in-depth look at the setup and running of GRIEF, see ![GRIEF Quick Start and Programmers Guide](https://github.com/adamyg/grief/blob/master/griefprogguide.pdf)
 
-## GRIEF 3.2.x build Tree:
-----------------------------
+## Distributions and Installation:
 
-The following environments and toolchains are supported.
+### Binaries and installers
+
+    https://github.com/adamyg/grief/releases and https://sourceforge.net/projects/grief (MIRROR)
+
+### Source
+
+    https://github.com/adamyg/grief/releases
+   
+The project can be built from source, the method dependent on the target host. The following environments and toolchains are supported.
 
   * Actively tested operating systems.
 
       * Linux (gcc)
       * Cygwin (gcc)
-      * Win32 (MSVC 2008-2022, Open-Watcom 1.9+, Mingw64/32 latest)
+      * Win32 (MSVC 2008-2022, Open-Watcom 1.9+, Mingw64/32 latest, beta)
 
   * Not recently tested, yet builds.
 
@@ -53,12 +59,11 @@ The following environments and toolchains are supported.
       * DOS (djgpp)
       * VMS
 
+See ``INSTALL`` for details, plus additional information is available within the github workflows
 
-## Installation:
+    https://github.com/adamyg/grief/blob/master/.github/workflows/build.yml
 
-The project can be built from source, the method dependent on the target host; see ``INSTALL`` for details.
-
-For example uder a standard Linux/Unix distrubution, using one the supplied ```configure``` profiles.
+For example on most Linux/Unix distributions a number of supplied ```configure``` profiles are available.
 
 ```
 ./support/config_withmost
@@ -119,21 +124,6 @@ the following build profile and options shall be available.
 
       'make release clean'        - remove build tree.
 ```        
-
-## Distributions:
-
-   * Binaries
-
-        https://github.com/adamyg/grief/releases
-        and https://sourceforge.net/projects/grief (MIRROR)
-
-   * Source
-
-        https://github.com/adamyg/grief/releases
-
-        To build from source, review the github workflows:
-        https://github.com/adamyg/grief/blob/master/.github/workflows/build.yml
-
 
 ## Status:
 
