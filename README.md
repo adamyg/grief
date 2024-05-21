@@ -20,7 +20,9 @@ Based on a long standing interface, Grief is an intuitive and easy editor to bot
 
 Brief, BRIEF, or B.R.I.E.F., an acronym for Basic Reconfigurable Interactive Editing Facility, was a popular programmer's text editor in the 1980s and early 1990s.
 
-![Example1](https://github.com/adamyg/grief/blob/master/hlpdoc/examples/Example1.png?raw=true)
+<p align="center">
+  <img src="https://github.com/adamyg/grief/blob/master/hlpdoc/examples/Example1.png?raw=true" alt="Example"/>
+</p>
 
 For a more in-depth look at the setup and running of GRIEF, see ![GRIEF Quick Start and Programmers Guide](https://github.com/adamyg/grief/blob/master/griefprogguide.pdf)
 
@@ -196,7 +198,9 @@ gr m_ruler.c
 
 Starts the editor, loading the specified file.
 
-![mainscreen](https://github.com/adamyg/grief/blob/master/hlpdoc/src/images/mainscreen.png?raw=true)
+<p align="center">
+  <img src="https://github.com/adamyg/grief/blob/master/hlpdoc/src/images/mainscreen.png?raw=true" alt="MainScreen"/>
+</p>
 
 The file can be reviewed by navigating using _Movement_ commands.
 
@@ -231,7 +235,9 @@ You will be given a number of choices.
 
 The main features of the screen are the window arena, command line and status area.
 
-![griefscreen](https://github.com/adamyg/grief/blob/master/hlpdoc/src/images/griefscreen.png?raw=true)
+<p align="center">
+  <img src="https://github.com/adamyg/grief/blob/master/hlpdoc/src/images/griefscreen.png?raw=true" alt="griefscreen"/>
+</p>
 
 The window arena is the area bounded by single and double lines, or borders, that displays the file content.  If the file is a new image, this space shall be empty and the window is blank.
 
@@ -503,7 +509,9 @@ There are numerous additional features available, many are directly available vi
 | F10:about        | About dialog.
 | F12              | Menu; enable the pull-down command menu.  Can also be access using the *menu* command and disabled running the *menuoff* command.
 
-![Example2](https://github.com/adamyg/grief/blob/master/hlpdoc/examples/Example2.png?raw=true)
+<p align="center">
+  <img src="https://github.com/adamyg/grief/blob/master/hlpdoc/examples/Example2.png" alt="bufinfo"/>
+</p>
 
 Other Resources:
 --------------------------------
