@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 8; -*- */
-/* $Id: brief.cr,v 1.7 2014/11/27 15:54:10 ayoung Exp $
+/* $Id: brief.cr,v 1.8 2024/05/20 17:21:07 cvsuser Exp $
  * Brief/Borland coloriser.
  *
  *
@@ -10,7 +10,7 @@
 static list
 brief16_colors = {              /*basic brief coloriser specification*/
         "scheme=default",
-        "background=blue",
+        "background=dark-blue",
         "normal=light-white",
         "select=light-cyan",
         "message=light-green",

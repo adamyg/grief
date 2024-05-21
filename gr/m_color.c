@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_color_c,"$Id: m_color.c,v 1.46 2024/04/16 10:30:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_color_c,"$Id: m_color.c,v 1.47 2024/05/20 16:32:42 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_color.c,v 1.46 2024/04/16 10:30:36 cvsuser Exp $
+/* $Id: m_color.c,v 1.47 2024/05/20 16:32:42 cvsuser Exp $
  * Color configuration.
  *
  *
@@ -1534,7 +1534,7 @@ color_setscheme(const char *scheme)
         int isdark = FALSE;
 
         trace_ilog("color_setscheme=%s\n", scheme);
-        if (0 == str_icmp(scheme, "l") || 0 == str_icmp(scheme, "light")) {
+        if (0 == str_icmp(scheme, "l") || 0 == str_icmp(scheme, "light") || 0 == str_icmp(scheme, "lite")) {
             colorspec = x_col_table_light;
 
         } else if (0 == str_icmp(scheme, "d") || 0 == str_icmp(scheme, "dark")) {

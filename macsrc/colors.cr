@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: colors.cr,v 1.17 2022/08/10 15:44:58 cvsuser Exp $
+/* $Id: colors.cr,v 1.18 2024/05/20 17:04:23 cvsuser Exp $
  * Enhanced colour/colorscheme support.
  *
  *
@@ -377,7 +377,7 @@ colorscheme(~ string scheme, ...)
     //  default schemes/
     //      dark, light or default
     //
-    if ("dark" == scheme || "light" == scheme || "default" == scheme) {
+    if ("dark" == scheme || "light" == scheme || "lite" == scheme || "default" == scheme) {
         set_color("scheme=" + scheme);
         message("colorscheme: '%s'", scheme);
         return TRUE;

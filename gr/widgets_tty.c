@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_widgets_tty_c,"$Id: widgets_tty.c,v 1.38 2022/08/10 15:44:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_widgets_tty_c,"$Id: widgets_tty.c,v 1.40 2024/05/20 17:16:39 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: widgets_tty.c,v 1.38 2022/08/10 15:44:58 cvsuser Exp $
+/* $Id: widgets_tty.c,v 1.40 2024/05/20 17:16:39 cvsuser Exp $
  * Dialog widgets, tty interface.
  *
  *
@@ -3428,9 +3428,10 @@ ef_key(Editfield_t *ef, WIDGET_t *w, int key, int (*validate)(Editfield_t *, WID
 {
     ECHAR previous_buffer[ MAX_CMDLINE ];
     ECHAR *buf = ef->ef_buffer;
-    int   oipos = ef->ef_cursor, ipos = oipos;
-    int   repaint = FALSE;
-    int   edit = FALSE;
+    double dval = 0;
+    int oipos = ef->ef_cursor, ipos = oipos;
+    int repaint = FALSE;
+    int edit = FALSE;
 
 #if defined(EWIDECHAR)
     Wcsncpy(previous_buffer, (const WChar_t *)buf, _countof(previous_buffer));
@@ -3495,27 +3496,26 @@ ef_key(Editfield_t *ef, WIDGET_t *w, int key, int (*validate)(Editfield_t *, WID
 
     case KEY_WLEFT:         /* <Left>       Cursor word left/decrement */
     case KEY_WLEFT2: {
-            double val = 0;
             if (EF_FISNUMERIC & ef->ef_flags) {
 decrement:;     if (*buf) {
 #if defined(EWIDECHAR)
-                    val = Wcstod(buf, NULL);
+                    dval = Wcstod(buf, NULL);
 #else
-                    val = atof(buf);
+                    dval = atof(buf);
 #endif
                 }
-                val -= ef->ef_increment;
+                dval -= ef->ef_increment;
 #if defined(EWIDECHAR)
                 if (ef->ef_digits <= 0) {
-                    ipos = Wsnprintf(buf, _countof(ef->ef_buffer), "%d", (int) val);
+                    ipos = Wsnprintf(buf, _countof(ef->ef_buffer), "%d", (int) dval);
                 } else {
-                    ipos = Wsnprintf(buf, _countof(ef->ef_buffer), "%*f", ef->ef_digits, val);
+                    ipos = Wsnprintf(buf, _countof(ef->ef_buffer), "%*f", ef->ef_digits, dval);
                 }
 #else
                 if (ef->ef_digits <= 0) {
-                    ipos = sprintf(buf, "%d", (int) val);
+                    ipos = sprintf(buf, "%d", (int) dval);
                 } else {
-                    ipos = sprintf(buf, "%*f", ef->ef_digits, val);
+                    ipos = sprintf(buf, "%*f", ef->ef_digits, dval);
                 }
 #endif
                 edit = TRUE;
@@ -3532,27 +3532,27 @@ decrement:;     if (*buf) {
 
     case KEY_WRIGHT:        /* <Right>      Cursor word right/increment */
     case KEY_WRIGHT2: {
-            double val = 0;
             if (EF_FISNUMERIC & ef->ef_flags) {
-increment:;     if (*buf) {
+increment:;     dval = 0;
+                if (*buf) {
 #if defined(EWIDECHAR)
-                    val = Wcstod(buf, NULL);
+                    dval = Wcstod(buf, NULL);
 #else
-                    val = atof(buf);
+                    dval = atof(buf);
 #endif
                 }
-                val += ef->ef_increment;
+                dval += ef->ef_increment;
 #if defined(EWIDECHAR)
                 if (ef->ef_digits <= 0) {
-                    ipos = Wsnprintf(buf, _countof(ef->ef_buffer), "%d", (int) val);
+                    ipos = Wsnprintf(buf, _countof(ef->ef_buffer), "%d", (int) dval);
                 } else {
-                    ipos = Wsnprintf(buf, _countof(ef->ef_buffer), "%*f", ef->ef_digits, val);
+                    ipos = Wsnprintf(buf, _countof(ef->ef_buffer), "%*f", ef->ef_digits, dval);
                 }
 #else
                 if (ef->ef_digits <= 0) {
-                    ipos = sprintf(buf, "%d", (int) val);
+                    ipos = sprintf(buf, "%d", (int) dval);
                 } else {
-                    ipos = sprintf(buf, "%*f", ef->ef_digits, val);
+                    ipos = sprintf(buf, "%*f", ef->ef_digits, dval);
                 }
 #endif
                 edit = TRUE;

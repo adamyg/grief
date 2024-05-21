@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.in,v 1.18 2024/05/19 06:56:53 cvsuser Exp $
+# $Id: makelib.in,v 1.19 2024/05/21 01:27:33 cvsuser Exp $
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 # makelib configuration
 #
@@ -228,6 +228,8 @@ Configure()
                 add_define('LIBW32_DYNAMIC');
                 add_define('_WIN32_WINNT=0x501');       # Windows SDK
                 add_define('_WIN32_VER=0x501');
+
+                add_define('__USE_MINGW_ANSI_STDIO=1'); # printf() ANSI C99 compatible implementation
 
                 add_xinclude('$(ROOT)/libw32');
                 add_application_library('libw32.a');

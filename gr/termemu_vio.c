@@ -256,6 +256,7 @@ typedef BOOL   (WINAPI *SetCurrentConsoleFontEx_t)(HANDLE, BOOL, CONSOLE_FONT_IN
 typedef BOOL   (WINAPI *GetConsoleScreenBufferInfoEx_t)(HANDLE, CONSOLE_SCREEN_BUFFER_INFOEX *);
 
 static struct {
+    WORD                attrs;
     CHAR_INFO *         image;
     CONSOLE_CURSOR_INFO cursorinfo;
     COORD               cursorcoord;
@@ -2835,6 +2836,7 @@ vio_save(void)
             return;
         }
         free(vio_state.image);                  // release previous; if any
+        vio_state.attrs = sbinfo.wAttributes;
         vio_state.image = nimage;
         vio_state.rows = rows;
         vio_state.cols = cols;
@@ -2945,9 +2947,10 @@ vio_restore(void)
 
     ImageRestore(console, 0, rows * cols);      // write out image.
 
-                                                // original cursor
+                                                // original cursor.
     SetConsoleCursorPosition(console, vio_state.cursorcoord);
     SetConsoleCursorInfo(console, &vio_state.cursorinfo);
+    SetConsoleTextAttribute(console, vio_state.attrs);
 }
 
 
