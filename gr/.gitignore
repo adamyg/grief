@@ -1,4 +1,6 @@
 Makefile
 gr.manifest.xml
+grlicense.h
 *.err
+
 

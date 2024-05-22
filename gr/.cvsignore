@@ -1,4 +1,5 @@
 Makefile
 gr.manifest.xml
+grlicense.h
 .grief.log
 *.err

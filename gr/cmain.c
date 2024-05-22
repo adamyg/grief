@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.53 2024/05/21 13:20:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.54 2024/05/22 16:49:11 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.53 2024/05/21 13:20:36 cvsuser Exp $
+/* $Id: cmain.c,v 1.54 2024/05/22 16:49:11 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -1874,13 +1874,14 @@ description(const struct argoption *arg, void *buffer)
     return desc;
 }
 
+#include "grlicense.h"
 
 static void
 usage(int what)
 {
     static const char *authors[] = {
         "\001Adam Young",
-            "\002Author of " ApplicationName " <" ApplicationEmail ">",
+            "\002Author of " ApplicationName " <" ApplicationEmail ">, https://github.com/adamyg/grief",
             "",
 
         /*
@@ -1915,72 +1916,86 @@ usage(int what)
         "\n", x_appname, x_version, x_buildnumber, x_compiled,
             (unsigned) (cm_version / 10), (unsigned) (cm_version % 10));
 
-    if (3 == what) {
-        /*
-         *  Authors
-         */
-        unsigned idx;
+    switch (what)
+    {
+    case 4: // License
+        {
+            unsigned idx;
 
-        for (idx = 0; idx < sizeof(authors)/sizeof(authors[0]); ++idx) {
-            const char *line = authors[idx];
-
-            if (*line >= 0x01 && *line <= 0x05) {
-                fprintf(stderr, "%*s", *line++ * HINDENT, "");
+            printf("See LICENSE details below.\n");
+            for (idx = 0; idx < sizeof(grlicense)/sizeof(grlicense[0]); ++idx) {
+                printf("%s\n", grlicense[idx]);
             }
-            fprintf(stderr, "%s\n", line);
         }
+        break;
 
-    } else if (2 == what) {
-        /*
-         *  Configuration
-         */
-        const char *env;
+    case 3: // Authors
+        {
+            unsigned idx;
 
-        fprintf(stderr, "PROGNAME=%s\n", x_progname);
-        fprintf(stderr, "MACHTYPE=%s\n", x_machtype);
-        fprintf(stderr, "MAXPATH=%u\n", MAX_PATH);
-        fprintf(stderr, "GRPATH=%s\n",          (NULL != (env = ggetenv("GRPATH")) ? env : ""));
-        fprintf(stderr, "GRHELP=%s\n",          (NULL != (env = ggetenv("GRHELP")) ? env : ""));
-        fprintf(stderr, "GRPROFILE=%s\n",       (NULL != (env = ggetenv("GRPROFILE")) ? env : ""));
-        fprintf(stderr, "GRCOLORSCHEME=%s\n",   (NULL != (env = ggetenv("GRCOLORSCHEME")) ? env : ""));
-        fprintf(stderr, "GRLEVEL=%s\n",         (NULL != (env = ggetenv("GRLEVEL")) ? env : ""));
-        fprintf(stderr, "%s\n", x_grfile);
-        fprintf(stderr, "%s\n", x_grflags);
-        fprintf(stderr, "GRBACKUP=%s\n",        (NULL != (env = ggetenv("GRBACKUP")) ? env : ""));
-        fprintf(stderr, "GRVERSIONS=%s\n",      (NULL != (env = ggetenv("GRVERSIONS")) ? env : ""));
-        fprintf(stderr, "GRDICTIONARIES=%s\n",  (NULL != (env = ggetenv("GRDICTIONARIES")) ? env : ""));
-        fprintf(stderr, "GRDICTIONARY=%s\n",    (NULL != (env = ggetenv("GRDICTIONARY")) ? env : ""));
-        fprintf(stderr, "GR%s\n", x_default_term);
-        if (x_features[0]) {
-            unsigned fidx;
+            for (idx = 0; idx < sizeof(authors)/sizeof(authors[0]); ++idx) {
+                const char *line = authors[idx];
 
-            fprintf(stderr, "\n");
-            for (fidx = 0; x_features[fidx]; ++fidx) {
-                fprintf(stderr, "%s\n", x_features[fidx]);
+                if (*line >= 0x01 && *line <= 0x05) {
+                    fprintf(stderr, "%*s", *line++ * HINDENT, "");
+                }
+                fprintf(stderr, "%s\n", line);
             }
-            fprintf(stderr, "\n");
         }
+        break;
 
-    } else if (1 == what) {
-        /*
-         *  Detailed usage
-         */
-        char buffer[DESCRIPTIONLEN];
+    case 2: // Configuration
+        {
+            const char *env;
 
-        fprintf(stderr,
-            "Usage: %s [options] [+line-number] file ..\n"\
-            "\n"\
-            "Options:\n", ApplicationBinary);
+            fprintf(stderr, "PROGNAME=%s\n", x_progname);
+            fprintf(stderr, "MACHTYPE=%s\n", x_machtype);
+            fprintf(stderr, "MAXPATH=%u\n", MAX_PATH);
+            fprintf(stderr, "GRPATH=%s\n",          (NULL != (env = ggetenv("GRPATH")) ? env : ""));
+            fprintf(stderr, "GRHELP=%s\n",          (NULL != (env = ggetenv("GRHELP")) ? env : ""));
+            fprintf(stderr, "GRPROFILE=%s\n",       (NULL != (env = ggetenv("GRPROFILE")) ? env : ""));
+            fprintf(stderr, "GRCOLORSCHEME=%s\n",   (NULL != (env = ggetenv("GRCOLORSCHEME")) ? env : ""));
+            fprintf(stderr, "GRLEVEL=%s\n",         (NULL != (env = ggetenv("GRLEVEL")) ? env : ""));
+            fprintf(stderr, "%s\n", x_grfile);
+            fprintf(stderr, "%s\n", x_grflags);
+            fprintf(stderr, "GRBACKUP=%s\n",        (NULL != (env = ggetenv("GRBACKUP")) ? env : ""));
+            fprintf(stderr, "GRVERSIONS=%s\n",      (NULL != (env = ggetenv("GRVERSIONS")) ? env : ""));
+            fprintf(stderr, "GRDICTIONARIES=%s\n",  (NULL != (env = ggetenv("GRDICTIONARIES")) ? env : ""));
+            fprintf(stderr, "GRDICTIONARY=%s\n",    (NULL != (env = ggetenv("GRDICTIONARY")) ? env : ""));
+            fprintf(stderr, "GR%s\n", x_default_term);
+            if (x_features[0]) {
+                unsigned fidx;
 
-        width = arg_print(HINDENT, options, description, buffer);
+                fprintf(stderr, "\n");
+                for (fidx = 0; x_features[fidx]; ++fidx) {
+                    fprintf(stderr, "%s\n", x_features[fidx]);
+                }
+                fprintf(stderr, "\n");
+            }
+        }
+        break;
 
-        fprintf(stderr, "%*s%s%*s%s\n\n",
-            HINDENT, "", "+nn", width-3, "", "Goto line nn.");
+    case 1: // Detailed usage
+        {
+            char buffer[DESCRIPTIONLEN];
 
-        fprintf(stderr, "Note:\n" \
-            "%*sOptions can be system/configuration dependant and shall be"\
-            " disregarded if not applicable.\n\n", HINDENT, "");
+            fprintf(stderr,
+                "Usage: %s [options] [+line-number] file ..\n"\
+                "\n"\
+                "Options:\n", ApplicationBinary);
+
+            width = arg_print(HINDENT, options, description, buffer);
+
+            fprintf(stderr, "%*s%s%*s%s\n\n",
+                HINDENT, "", "+nn", width-3, "", "Goto line nn.");
+
+            fprintf(stderr, "Note:\n" \
+                "%*sOptions can be system/configuration dependant and shall be"\
+                " disregarded if not applicable.\n\n", HINDENT, "");
+        }
+        break;
     }
+
     fflush(stderr);
     exit(EXIT_FAILURE);
 #undef      HINDENT

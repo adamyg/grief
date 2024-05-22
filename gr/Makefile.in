@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.94 2024/05/19 13:09:44 cvsuser Exp $
+# $Id: Makefile.in,v 1.95 2024/05/22 16:45:48 cvsuser Exp $
 # GRIEF editor makefile.
 #
 #
@@ -415,11 +415,15 @@ $(D_BIN)/$(TARGET):	$(OBJS)
 		-@mkdir $(@D)
 		@echo "++ do not delete, managed content ++" > $@
 
-gr.rc:		gr.manifest.xml
+gr.rc:		gr.manifest.xml grlicense.h
 
 XCLEAN +=	gr.manifest.xml
 gr.manifest.xml:	../win32/exe.manifest.in ../include/edbuildinfo.h
 		$(PERL) ../win32/mkmanifest.pl --defines ../include/edbuildinfo.h ../win32/exe.manifest.in gr.manifest.xml
+
+XCLEAN +=	grlicense.h
+grlicense.h:		../COPYING ../util/mklicense.pl
+		@$(PERL) ../util/mklicense.pl $< $@ grlicense
 
 clean:
 		@echo $(BUILD_TYPE) clean
