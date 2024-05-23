@@ -24,44 +24,20 @@ Brief, BRIEF, or B.R.I.E.F., an acronym for Basic Reconfigurable Interactive Edi
   <img src="https://github.com/adamyg/grief/blob/master/hlpdoc/examples/Example1.png?raw=true" alt="Example"/>
 </p>
 
-For a more in-depth look at the setup and running of GRIEF, see ![GRIEF Quick Start and Programmers Guide](https://github.com/adamyg/grief/blob/master/griefprogguide.pdf)
+For a more in-depth look at the setup and running of GRIEF, see ![GRIEF Quick Start and Programmers Guide](https://github.com/adamyg/grief/blob/master/doc/griefprogguide.pdf)
 
 ## Distributions and Installation:
 
 ### Binaries and installers
 
-    https://github.com/adamyg/grief/releases and https://sourceforge.net/projects/grief (MIRROR)
+    https://github.com/adamyg/grief/releases
+    https://sourceforge.net/projects/grief (MIRROR)
 
 ### Source
 
     https://github.com/adamyg/grief/releases
    
-The project can be built from source, the method dependent on the target host. The following environments and toolchains are supported.
-
-  * Actively tested operating systems.
-
-      * Linux (gcc)
-      * Cygwin (gcc)
-      * Win32 (MSVC 2008-2022, Open-Watcom 1.9+, Mingw64/32 latest, beta)
-
-  * Not recently tested, yet builds.
-
-      * OS/X 10.4+
-
-  * Not recently tested, yet *should* build; with minimal effort.
-
-      * HP/UX (gcc)
-      * Solaris (gcc)
-      * BSD Net/Free/Open
-      * AIX (gcc)
-
-  * Defunct yet previously supported; effort assumed
-
-      * OS/2
-      * DOS (djgpp)
-      * VMS
-
-See ``INSTALL`` for details, plus additional information is available within the github workflows
+The project can be built from source, the method dependent on the target host. See [INSTALL](INSTALL.md) for details, plus working examples are visible within the GitHub workflows.
 
     https://github.com/adamyg/grief/blob/master/.github/workflows/build.yml
 
@@ -129,7 +105,7 @@ the following build profile and options shall be available.
 
 ## Status:
 
-Please feel free to raise tickets on Github when issues are encountered.
+Please feel free to raise tickets on **GitHub** when issues are encountered.
 
 
 # QuickStart
@@ -180,13 +156,13 @@ GRTERM=linux
 The more significant configuration elements which are required for correct operation are:
 
   * The *GRPATH* global string is used to specify one or more directory names stating the search path which GRIEF shall utilise to locate macro objects during ⟨autoload⟩ and ⟨require⟩ operations.
-    The initial value of GRPATH is either imported from the environment or if not available is derived from the location of the running application.
+  The initial value of GRPATH is either imported from the environment or if not available is derived from the location of the running application.
 
   * The *GRHELP* global string is used to specify the directory name stating the search path which GRIEF shall utilise to locate the help database. 
-    The initial value of GRHELP is either imported from the environment or if not available is derived from the location of the running application.
+  The initial value of GRHELP is either imported from the environment or if not available is derived from the location of the running application.
 
   * The *GRPROFILE* global string is used to specify an override to the standard users home directory; it is utilised by several macros to source runtime configuration details.
-    GRPROFILE provides the user a means of stating an alternative location.
+  GRPROFILE provides the user a means of stating an alternative location.
 
 ## Editing and exiting
 
@@ -254,9 +230,9 @@ The status area, also referred to as the echo line, displays information about t
 Files are always accessed by loading them into a buffer.
 GRIEF is able to keep multiple files in memory at once, which allows the user to move among them easily.
 Once a user is in GRIEF they can call up as many files as they need to use by loading them into a buffer within GRIEF.
-Pop-up menus are often used when moving among files.
-How to chooseoptions on the pop-up menu is self-evident. 
-To exit a pop-up menu use the ``Esc`` key
+
+Pop-up menus are often used when moving among files, selection using standard cursor keys.
+To exit a pop-up menu use the ``Esc`` key.
 
 | Key              | Description
 |:-----------------|:-------------------------------------------------------------------------------
@@ -265,7 +241,7 @@ To exit a pop-up menu use the ``Esc`` key
 | Alt-N            | Next buffer.
 | Alt-P            | Previous buffer.
 | Alt-1 to Alt-9   | Drop a bookmark.
-| Alt-J            | Goto a bookmark.
+| Alt-J            | Go-to a bookmark.
 
 GRIEF windows can be *tiled* and used to look at more than one file at the same time, or different parts of the same file at the same time.
 
@@ -282,12 +258,13 @@ Any changes to a buffer made in one part of a tiled window are displayed in the 
 | F2               | Move the boundary between two windows on the screen.  User is prompted to point the boundary which is to be moved, and then use the arrow keys to move the boundary.  The screen is redrawn as the boundary is moved
 | F3               | Split the current window into two equal sizes, either horizontally or vertically
 | F4               | Delete a boundary between two windows and merge them together
-| Ctrl-Z           | Subwindow zoom toggle: makes a forward zoom on the current subwindow.  This means that the current subwindow will occupy all possible place in the total window.  Use Ctrl-Z again to unzoom, i.e. to see again all sub-windows.
+| Ctrl-Z           | Sub-window _zoom_ toggle: makes a forward zoom on the current sub-window.  This means that the current sub-window will occupy all possible place in the total window.  Use Ctrl-Z again to _unzoom_, i.e. to see again all sub-windows.
 | F10:wininfo      | Window information dialog.
 
-Tiled windows are created by splitting the current window in half either horizontally or vertically, by default using ⟨F3⟩, providing two views of the current buffer.
+Tiled windows are created by splitting the current window in half either horizontally or vertically, by default using ``F3``, providing two views of the current buffer.
 
 On request the user is prompted and the current window is split based on he direction of the selected arrow key.
+
 On completion the newly created window is made current, with the cursor located at the same coordinates as the parent window.
 
 ## Navigation
@@ -362,7 +339,7 @@ Deletion and relocation of text is possible using the scrap buffer, see
 Command:
 ```
 
-The command prompt shall also become active when user input is requiredby an interactive command, for example Goto Line.
+The command prompt shall also become active when user input is required by an interactive command, for example Goto Line.
 
 ```
 Go to Line:
@@ -377,7 +354,7 @@ Up to the last sixteen responses are saved for each prompt displayed; single cha
 The *Esc*, which cancels the command is not stored.
 
 You can also recall the last response entered at any prompt using ``Alt-L``. 
-This is useful when you find you entered the correct responseto the wrong prompt.
+This is useful when you find you entered the correct response to the wrong prompt.
 Press ⟨Esc⟩ to cancel the first command, issue the ew command, and press ⟨Alt-L⟩ to recall the last response.
 
 Certain commands for example Edit File can take advantage of the file name completion feature. 
@@ -463,7 +440,7 @@ As the cursor is moved away from the anchor, the text between where the anchor w
 
 There are three types of regions, block, column and line.
 Block and line type is used to cut/copy and paste whole lines. 
-A column type isused to cut/copy and paste columns of text.
+A column type is used to cut/copy and paste columns of text.
 
 | Key              | Description
 |:-----------------|:-------------------------------------------------------------------------------
@@ -484,7 +461,7 @@ The undo facility can be compared to an edit audit trail, which tracks all modif
 Each buffer records changes within the scope of the current editor session independent of other buffers, with an infinite level of undo information for each buffer.
 
 The undo command reverses recent changes in the buffer’s text, and the undo command always applies to the current buffer. 
-Commands can be undone sequentially all the way back to the point where the buffer was pened or created. 
+Commands can be undone sequentially all the way back to the point where the buffer was opened or created. 
 If you undo too much you can use ⟨redo⟩ to cancel the last undo.
 
 | Key              | Description
@@ -526,6 +503,6 @@ Details about the commercially supported BRIEF clone CRisPEdit(tm), can be found
 
     * <http://www.crisp.com>
 
+Last updated: _May/24_
 
-last update: May/24
 -end-
