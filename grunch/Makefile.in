@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.33 2024/05/03 14:35:16 cvsuser Exp $
+# $Id: Makefile.in,v 1.34 2024/05/24 17:58:11 cvsuser Exp $
 # GRIEF macro compiler.
 #
 #
@@ -48,7 +48,6 @@ CC=		purify @CC@
 else
 CC=		@CC@
 endif
-HAVE_BISON=	1
 YACC=		@YACC@
 GREP=		@GREP@
 RM=		@RM@
@@ -205,19 +204,30 @@ $(D_OBJ)/%$(O):		%$(C)
 
 $(D_OBJ)/%$(O):		$(D_GR)/%$(C)
 		$(CC) $(CFLAGS) -o $@ -c -DGRUNCH $<
-
-ifdef HAVE_BISON
+      
+ifeq (bison,$(findstring bison,$(YACC)))
+# bison
 crntypes$(H):		grunch$(H) $(YTAB)$(C) makentypes.pl
-		@perl makentypes.pl --bison
+		@perl makentypes.pl --yystype
 
 $(YTAB)$(C):		cry$(Y)
-		@echo "Expect 3 shift/reduce conflicts."
-		@echo "bison 2.2 (or greater) is assumed,"
+		@echo "Expect 3 shift/reduce conflicts, bison 2.2 (or greater) is assumed,"
 		@echo "  in the event of 'Broken Pipe' errors check the version and update as needed."
 		$(YACC) $(YFLAGS) --defines=yygen.h cry$(Y)
 		@$(RM) $(RMFLAGS) crntypes$(H)
 
+else ifeq (byacc,$(findstring byacc,$(YACC)))
+# byacc
+crntypes$(H):		grunch$(H) $(YTAB)$(C) makentypes.pl
+		@perl makentypes.pl --yystype
+
+$(YTAB)$(C):		cry$(Y)
+		@echo "Expect 3 shift/reduce conflicts; recent byacc assumed"
+		$(YACC) $(YFLAGS) -U yygen.h cry$(Y)
+		@$(RM) $(RMFLAGS) $(YTAB)$(H) crntypes$(H)
+
 else
+# yacc, older ??
 crntypes$(H):		grunch$(H) $(YTAB)$(C) makentypes.pl
 		@perl makentypes.pl
 
@@ -228,7 +238,6 @@ $(YTAB)$(C):		cry$(Y)
 		echo "/*" `date` " */" >>yygen$(H)
 		echo "" >>yygen$(H)
 		$(GREP) $(GRFLAGS) "^# *define  *[OKU]" $(YTAB)$H >>yygen$(H)
-		@$(RM) $(RMFLAGS) $(YTAB)$(H) crntypes$(H)
 endif
 
 #end
