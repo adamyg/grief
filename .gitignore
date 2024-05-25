@@ -4,7 +4,6 @@ defunct/
 contrib/include/
 win32/Autoupdater/
 EXTRA/
-doc/
 bin
 bin.*/
 lib.*/

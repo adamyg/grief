@@ -41,25 +41,25 @@ The build status of these packages is below.
 [![Build status](https://ci.appveyor.com/api/projects/status/3h8sweuo36r8q28t?svg=true&passingText=Cygwin32%20Passing&failingText=Cygwin32%20Failing&pendingText=Cygwin32%20Pending)](https://ci.appveyor.com/project/adamyg/grief-cygwin32)
 [![Build status](https://ci.appveyor.com/api/projects/status/8jk4qx55d4bql3l1?svg=true&passingText=MinGW32%20Passing&failingText=MinGW32%20Failing&pendingText=MinGW32%20Pending)](https://ci.appveyor.com/project/adamyg/grief-mingw)
 
-This document describes installation on all supported operating systems: the Unix/Linux family (including macOS), and Windows (Native and Cygwin).    
+This document describes installation on all supported operating systems: the Unix/Linux family (including macOS), and Windows (Native and Cygwin).
 
 ## Prerequisites
 
 To build and install GriefEdit, you shall need:
 
-  * A supported operating system
-  * Perl 5 with core modules (please read [INSTALL-PERL.md](doc\INSTALL-PERL.md))
+  * A supported operating system.
+  * Perl 5 with core modules, see [NOTES-PERL.md](doc\NOTES-PERL.md).
   * Binary tools, including `gmake` and `bison`.
   * An ANSI C/C++ compiler.
-  * A development environment in the form of development libraries and C header files
+  * A development environment in the form of development libraries and C header files.
 
 For additional platform specific requirements, solutions to specific issues and other details, please read one of these:
 
- * [Notes for UNIX-like platforms](doc\INSTALL-UNIX.md)
- * [Notes for Windows platforms](doc\INSTALL-WINDOWS.md) 
- * [Notes on Perl](doc\INSTALL-PERL.md)
-    
-Plus additional information is available within the Github workflows.   
+  * [Notes for UNIX-like platforms](doc\INSTALL-UNIX.md)
+  * [Notes for Windows platforms](doc\INSTALL-WINDOWS.md)
+  * [Notes on Perl](doc\NOTES-PERL.md)
+   
+Plus additional information is available within the _GitHub_ [workflows](.github/workflows/build.yml).   
 
 Quick Installation Guide
 ========================

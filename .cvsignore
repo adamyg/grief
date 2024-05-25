@@ -1,7 +1,6 @@
 contrib/include
 defunct
 EXTRA
-doc
 /win32/Autoupdater/
 acdefines.h
 config.sub
