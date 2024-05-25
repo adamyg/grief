@@ -1,6 +1,6 @@
 /* -*- mode: cr; indent-width: 4; -*- */
 /* charset=utf8
- * $Id: regress2.cr,v 1.25 2024/05/11 16:37:49 cvsuser Exp $
+ * $Id: regress2.cr,v 1.26 2024/05/24 17:57:08 cvsuser Exp $
  * Regression tests ... part2.
  *
  *
@@ -1331,7 +1331,7 @@ test_unicode_version(void)
     string uv = inq_unicode_version();
     TEST(1241, set_unicode_version("11.0.0") == 110000); //match
     TEST(1242, set_unicode_version("13.0.0") == 130000); //match
-    TEST(1243, set_unicode_version("19.0.0") == 130000); //closet
+    TEST(1243, set_unicode_version("19.0.0") == 150100); //closest (15.1.0, current upper)
     set_unicode_version(uv);
 }
 

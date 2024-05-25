@@ -2,4 +2,13 @@ doc/Data/
 doc/html/
 doc/mandoc/
 ndplus/
+ref/
+ndplus/
+Makefile
+*.err
+*.pdf
+
+
+
+
 

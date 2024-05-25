@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.95 2024/05/22 16:45:48 cvsuser Exp $
+# $Id: Makefile.in,v 1.97 2024/05/25 04:48:57 cvsuser Exp $
 # GRIEF editor makefile.
 #
 #
@@ -396,7 +396,7 @@ endif #build_os
 # Rules
 
 .PHONY:			build release debug
-build:		directories $(D_BIN)/$(TARGET)
+build:		directories artifacts $(D_BIN)/$(TARGET)
 
 release:
 		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
@@ -404,7 +404,7 @@ debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
 .PHONY:		directories
-directories:		$(D_OBJ)/.created $(D_OBJDEP)/.created $(OBJS)
+directories:		$(D_OBJ)/.created $(D_OBJDEP)/.created
 
 XCLEAN +=	$(basename $(D_BIN)/$(TARGET)).map
 $(D_BIN)/$(TARGET):	MAPFILE=$(basename $@).map
@@ -415,15 +415,17 @@ $(D_BIN)/$(TARGET):	$(OBJS)
 		-@mkdir $(@D)
 		@echo "++ do not delete, managed content ++" > $@
 
-gr.rc:		gr.manifest.xml grlicense.h
+artifacts:	grlicense.h gr.manifest.xml
 
 XCLEAN +=	gr.manifest.xml
 gr.manifest.xml:	../win32/exe.manifest.in ../include/edbuildinfo.h
 		$(PERL) ../win32/mkmanifest.pl --defines ../include/edbuildinfo.h ../win32/exe.manifest.in gr.manifest.xml
 
+gr.rc:		gr.manifest.xml
+
 XCLEAN +=	grlicense.h
-grlicense.h:		../COPYING ../util/mklicense.pl
-		@$(PERL) ../util/mklicense.pl $< $@ grlicense
+grlicense.h:		Makefile ../util/mklicense.pl ../COPYING 
+		@$(PERL) ../util/mklicense.pl ../COPYING $@ grlicense
 
 clean:
 		@echo $(BUILD_TYPE) clean
