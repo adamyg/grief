@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.20 2024/04/16 11:37:13 cvsuser Exp $
+# $Id: Makefile.in,v 1.22 2024/05/25 03:46:44 cvsuser Exp $
 # libmagic makefile
 #
 #
@@ -96,13 +96,11 @@ MAGICDLL=	$(D_LIB)/$(LP)magic.la
 MAGICUTIL=	$(D_BIN)/grfile$(E)
 MAGICDB=	$(D_BIN)/magic.mgc
 
-#VERSION=	5.1.1
-#MAGICPACKED=	file-511.tgz
-#MAGICSRC=	./file-511
-#MAGDIR=	./file-511/src/magic
-#VERSION=	5.29
-#VERSION=	5.41
+ifeq ("@TOOLCHAIN@","vs90")
+VERSION=	5.29
+else
 VERSION=	5.45
+endif
 MAGICPACKED=	file-$(VERSION).gr.tgz
 MAGICSRC=	./file-$(VERSION)/src
 MAGDIR=		./file-$(VERSION)/magic
@@ -230,8 +228,7 @@ $(MAGICSRC)/magic.h:	$(MAGICSRC)/magic.h.in
 		@$(PERL) magic_header.pl --type=magic --version=$(VERSION) --src=$(MAGICSRC) --output=$(MAGICSRC)
 
 else
-.PHONY:		generateinc
-generateinc:
+generateinc:		config.h
 
 endif
 

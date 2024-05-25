@@ -495,10 +495,17 @@ int file_pipe(int fildes[2]);
 int file_ioctl(int fd, unsigned long request, int *value);
 #define ioctl(__a,__b,__c) file_ioctl(__a,__b,__c)
 
+#if (defined(_MSC_VER) &&  _MSC_VER <= 1500)
+size_t file529_strlcpy(char *dst, const char *src, size_t siz);
+size_t file529_strlcat(char *dst, const char *src, size_t siz);
+#define strlcpy file529_strlcpy
+#define strlcat file529_strlcat
+#else
 size_t file_strlcpy(char *dst, const char *src, size_t siz);
 size_t file_strlcat(char *dst, const char *src, size_t siz);
 #define strlcpy file_strlcpy
 #define strlcat file_strlcat
+#endif
 
 #if defined(__MINGW32__)
 #if !defined(lstat)

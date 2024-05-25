@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.19 2024/04/16 11:37:12 cvsuser Exp $
+# $Id: Makefile.in,v 1.20 2024/05/24 16:03:17 cvsuser Exp $
 # External packages.
 #
 #
@@ -62,6 +62,7 @@ endef
 ifeq ("win32","@build_os@")
 define contrib-allx
 	$(MAKE) -C flex
+	$(MAKE) -C byacc
 	$(MAKE) -C libcitrus
 	$(MAKE) -C libintl
 	$(MAKE) -C libiconv
@@ -84,6 +85,7 @@ define contrib-cleanx
 	$(MAKE) -C libcitrus   clean
 	$(MAKE) -C libintl     clean
 	$(MAKE) -C libiconv    clean
+	$(MAKE) -C byacc       clean
 	$(MAKE) -C flex        clean
 endef
 endif
