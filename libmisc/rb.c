@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_rb_c,"$Id: rb.c,v 1.4 2014/10/22 02:33:47 ayoung Exp $")
+__CIDENT_RCSID(gr_rb_c,"$Id: rb.c,v 1.5 2024/05/25 03:47:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* $NetBSD: rb.c,v 1.11 2011/06/20 09:11:16 mrg Exp $ */
@@ -46,7 +46,8 @@ __CIDENT_RCSID(gr_rb_c,"$Id: rb.c,v 1.4 2014/10/22 02:33:47 ayoung Exp $")
 #endif
 #include <rb_tree.h>
 
-#if (__STDC_VERSION__ >= 199901L)	/* C99 or better */
+#if (__STDC_VERSION__ >= 199901L) && /* C99 or better */ \
+        (!defined(__WATCOMC__) || __WATCOMC__ >= 1300)
 #include <stdbool.h>
 #else
 #if !defined(bool)
