@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.34 2024/05/24 17:58:11 cvsuser Exp $
+# $Id: Makefile.in,v 1.35 2024/05/26 12:58:44 cvsuser Exp $
 # GRIEF macro compiler.
 #
 #
@@ -223,7 +223,7 @@ crntypes$(H):		grunch$(H) $(YTAB)$(C) makentypes.pl
 
 $(YTAB)$(C):		cry$(Y)
 		@echo "Expect 3 shift/reduce conflicts; recent byacc assumed"
-		$(YACC) $(YFLAGS) -U yygen.h cry$(Y)
+		$(YACC) $(YFLAGS) -H yygen.h cry$(Y)
 		@$(RM) $(RMFLAGS) $(YTAB)$(H) crntypes$(H)
 
 else

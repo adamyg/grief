@@ -8,6 +8,7 @@ bin
 bin.*/
 lib.*/
 obj.*/
+CoreUtils/
 macros/
 macros.x64
 help/

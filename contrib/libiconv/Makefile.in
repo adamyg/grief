@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.14 2024/04/16 11:37:12 cvsuser Exp $
+# $Id: Makefile.in,v 1.15 2024/05/26 12:12:12 cvsuser Exp $
 # libiconv/iconv makefile
 #
 #
@@ -141,7 +141,7 @@ installinc:		../include/.created
 
 installcfg:
 		@echo.exe publishing libraries ...
-		-cp.exe iconv.dir $(D_I18N_ICONV)
+		-cp iconv.dir $(D_I18N_ICONV)
 
 .PHONY:			clean cleancomponents
 

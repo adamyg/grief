@@ -2,14 +2,17 @@
 rem
 rem Open Watcom C/C++ 2.0
 rem
-if not defined GNUWIN32 (
-        set GNUWIN32=\devl\gnuwin32
-)
+echo Configure: Open Watcom C/C++ 2.0
+
+rem perl: assume within path
 if not defined PERL (
         set PERL=perl
 )
+
+rem iscc: command line interface
 if not defined INNO (
         set INNO="C:/Program Files (x86)/Inno Setup 5/iscc"
 )                                               
-%PERL% makelib.pl --busybox=./win32/busybox --inno=%INNO% owc20 %1 %2 %3 %4
+
+%PERL% ./support/config_windows.pl makelib.pl --inno=%INNO% %* owc20
 

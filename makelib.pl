@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.142 2024/05/19 08:07:45 cvsuser Exp $
+# $Id: makelib.pl,v 1.144 2024/05/26 15:27:28 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -1413,11 +1413,11 @@ Options:
 
     --libtool=<path>        Path to libtool_win32.pl.
 
-    --binpath=<path>        path of support binaries (gmake etc), otherwise these are assumed to be in the path.
+    --binpath=<path>        Path to coreutils, otherwise these are assumed to be in the path.
 
-    --perlpath=<path>       PERL binary path, otherwise assumed in the path.
+    --perlpath=<path>       Perl binary path, otherwise assumed in the path.
 
-    --gnuwin32=<path>       gnuwin32 g++ tool installation path.
+    --gnuwin32=<path>       gnuwin32 g++ tool installation path; see --gnulibs
 
     --contib                Enable local contrib libraries (default).
     or --gnulibs            Search and enable gnuwin32 libraries, using gnuwin32 path.
@@ -1428,7 +1428,6 @@ Options:
 
     --keep                  keep temporary file images.
 
-
 Configuration:
 
     --libarchive=<path>     libarchive installation path.
@@ -1436,7 +1435,7 @@ Configuration:
     --icu=<path>            ICU installation path.
 
     --busybox=<path>        busybox-w32 installation path.
-    --bison=<path>          bison installation path.
+    --bison=<path>          yacc/bison installation path.
     --flex=<path>           flex installation path.
     --inno=<path>           inno-setup installation path.
 
@@ -1495,15 +1494,20 @@ Configure($$$)          # (type, version, options)
 
     if ($INNO) {
         $INNO = ExeRealpath($INNO)
-            if ($INNO ne 'wget');
-        print "wget:     ${INNO}\n";
+            if ($INNO ne 'inno');
+        print "inno:     ${INNO}\n";
         $win_entries{INNO} = $INNO;
     }
 
     if ($BISON) {                               # override
         $BISON = ExeRealpath($BISON);
-        print "bison:    ${BISON}\n";
-        $win_entries{YACC} = "${BISON} -y";
+        if ($BISON =~ /bison$/i) {
+            print "bison:    ${BISON}\n";
+            $win_entries{YACC} = "${BISON} -y";
+        } else {
+            print "YACC:     ${BISON}\n";
+            $win_entries{YACC} = "${BISON}";
+        }
     }
 
     if ($FLEX) {                                # override
@@ -2071,7 +2075,8 @@ ExeRealpath($)
         $path =~ s/^\./\$(ROOT)/;
 
     } else {
-        print "warning: unable to resolve path <${path}>\n";
+        print "warning: unable to resolve path <${path}>\n"
+            if ($path !~ /\$/);             # variable; assume a generated artifact
     }
 
     $path = "\"${path}\""                   # quote; contains spaces

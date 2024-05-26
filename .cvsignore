@@ -1,7 +1,8 @@
 contrib/include
-defunct
-EXTRA
-/win32/Autoupdater/
+defunct/
+EXTRA/
+win32/Autoupdater/
+CoreUtils/
 acdefines.h
 config.sub
 config.guess
