@@ -47,9 +47,11 @@ This document describes installation on all supported operating systems: the Uni
 
 To build and install GriefEdit, you shall need:
 
+  * Clone of the source repository.
   * A supported operating system.
   * Perl 5 with core modules, see [NOTES-PERL.md](doc\NOTES-PERL.md).
-  * Binary tools, including `gmake` and `bison`.
+  * CoreUtils
+  * Make
   * An ANSI C/C++ compiler.
   * A development environment in the form of development libraries and C header files.
 
@@ -58,7 +60,7 @@ For additional platform specific requirements, solutions to specific issues and 
   * [Notes for UNIX-like platforms](doc\INSTALL-UNIX.md)
   * [Notes for Windows platforms](doc\INSTALL-WINDOWS.md)
   * [Notes on Perl](doc\NOTES-PERL.md)
-   
+  
 Plus additional information is available within the _GitHub_ [workflows](.github/workflows/build.yml).   
 
 Quick Installation Guide
@@ -77,7 +79,7 @@ To setup the build environment execute the bundled `configure_new` script, which
 
     $ ./configure_new
 
-On completion the resulting configuration shall be presented, including installation and details on basic options; for example.
+On completion the resulting configuration shall be presented, including installation and details on basic options; for example on the Linux host.
 
 ````
 -
@@ -140,12 +142,12 @@ Once reviewed execute the following:
 
 ### Windows
 
-If you are using Visual Studio, for example 2022, open a "Developer Command Prompt" and issue the following commands to build and package.
+If you are using Visual Studio, for example Visual Studio C/C++ 2022, open a "Developer Command Prompt" and issue the following commands to build and package.
 
     $ .\support\vc2022config
-    $ make release contrib
-    $ make release
-    $ make release package
+    $ .\win32\make-42 release contrib
+    $ .\win32\make-42 release
+    $ .\win32\make-42 release package
 
 
 Installing GriefEdit
