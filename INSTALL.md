@@ -49,7 +49,7 @@ To build and install GriefEdit, you shall need:
 
   * Clone of the source repository.
   * A supported operating system.
-  * Perl 5 with core modules, see [NOTES-PERL.md](doc\NOTES-PERL.md).
+  * Perl 5 with core modules, see [NOTES-PERL.md](doc/NOTES-PERL.md).
   * CoreUtils
   * Make
   * An ANSI C/C++ compiler.
@@ -57,9 +57,9 @@ To build and install GriefEdit, you shall need:
 
 For additional platform specific requirements, solutions to specific issues and other details, please read one of these:
 
-  * [Notes for UNIX-like platforms](doc\INSTALL-UNIX.md)
-  * [Notes for Windows platforms](doc\INSTALL-WINDOWS.md)
-  * [Notes on Perl](doc\NOTES-PERL.md)
+  * [Notes for UNIX-like platforms](doc/INSTALL-UNIX.md)
+  * [Notes for Windows platforms](doc/INSTALL-WINDOWS.md)
+  * [Notes on Perl](doc/NOTES-PERL.md)
   
 Plus additional information is available within the _GitHub_ [workflows](.github/workflows/build.yml).   
 
@@ -119,7 +119,7 @@ On completion the resulting configuration shall be presented, including installa
  Review the options above for accuracy, to modify see --help for details.
  For example, a user local installation can set using the --prefix option.
 
-      'configure --prefix=/home/adamy/grief'
+      'configure --prefix=/home/user/grief'
 
  Once they look okay, execute to build:
 

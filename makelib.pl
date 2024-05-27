@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.144 2024/05/26 15:27:28 cvsuser Exp $
+# $Id: makelib.pl,v 1.146 2024/05/27 15:19:56 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -1214,6 +1214,8 @@ my $o_libhunspell   = undef;
 my $o_libarchive    = undef;
 my $o_libmagic      = undef;
 
+my $o_help          = 0;
+
 
 #   Main ---
 #       Mainline
@@ -1247,8 +1249,7 @@ sub
 main()
 {
     my $o_version = undef;
-    my $o_clean  = 0;
-    my $o_help   = 0;
+    my $o_clean = 0;
 
     my $ret
         = GetOptions(
@@ -1273,7 +1274,8 @@ main()
                 'clean'         => \$o_clean,
                 'verbose'       => sub {++$o_verbose;},
                 'keep'          => \$o_keep,
-                'help'          => \$o_help
+                'help'          => \$o_help,
+                'help-options'  => sub {$o_help = 2;}
                 );
 
     Usage() if (!$ret || $o_help);
@@ -1402,12 +1404,17 @@ ProgramFiles
 sub
 Usage                   # (message)
 {
-    print "\nmakelib @_\n\n" if (@_);
-    print <<EOU;
+    if ($o_help != 2) {
+        print "\nmakelib @_\n\n" if (@_);
+        print <<EOU;
 
 Usage: perl makelib.pl [options] <command>
 
 Options:
+EOU
+    }
+
+    print <<EOU;
 
     --help                  Command line help.
 
@@ -1441,11 +1448,11 @@ Configuration:
 
 Toolchain / command:
 
-    vc[20xx]               Visual Studio C/C++ Makefiles.
-    wc                     Watcom C/C++, using 'cl' interface.
-    owc                    Open Watcom C/C++, using a direct interface.
-    dj                     DJGPP.
-    clean                  Clean.
+    vc[20xx]                Visual Studio C/C++ Makefiles.
+    wc                      Watcom C/C++, using 'cl' interface.
+    owc                     Open Watcom C/C++, using a direct interface.
+    dj                      DJGPP.
+    clean                   Clean.
 
 EOU
     exit(42);

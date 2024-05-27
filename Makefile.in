@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.72 2024/05/11 03:27:59 cvsuser Exp $
+# $Id: Makefile.in,v 1.73 2024/05/27 12:56:36 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2024, Adam Young.
@@ -142,6 +142,7 @@ define usage =
 	|\n\
 	| Targets: \n\
 	|\n\
+	|	contrib - build third-party components. \n\
 	|	build   - build everything. \n"
 endef
 

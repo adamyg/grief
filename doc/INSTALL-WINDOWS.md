@@ -2,15 +2,15 @@
 Windows platforms
 =================
 
-  - [Native builds using Open-Watcom](#native-builds-using-openwatcom)
-  - [Native builds using Visual C++](#native-builds-using-visual-c)
+  - [Native builds using Open-Watcom](#native-builds-using-openwatcom-c-c)
+  - [Native builds using Visual C++](#native-builds-using-visual-c-c)
   - [Native builds using MinGW](#native-builds-using-mingw)
   - [Hosted builds using Cygwin](#hosted-builds-using-cygwin)
 
-Native builds using Watcom C/C++
-================================
+Native builds using OpenWatcom C/C++
+====================================
 
-In addition to the requirements and instructions listed in `INSTALL.md`, these following third-party tools are required:
+In addition to the requirements and instructions listed in ``INSTALL.md``, these following third-party tools are required:
 
 ### Perl
 
@@ -34,11 +34,11 @@ In addition to Perl and the selected compiler tool-chain, several utilises are r
 
 Minimal tools required are:
 
-  * gmake - _GNU make utility_
+  * gmake - _GNU make utility_.
 
       make is a utility which can determine automatically which pieces of a large program need to be recompiled, and issue the commands to recompile them.
  
-  * bison/yacc - _General purpose parser generators_        
+  * bison/yacc - _General purpose parser generators_.        
 
   * busybox - _The Swiss Army Knife of Embedded Linux_
 
@@ -46,11 +46,22 @@ Minimal tools required are:
 
   * wget - _Command-line utility for retrieving files using HTTP, HTTPS and FTP protocols_.
 
-  * coreutils - Collection of file and text manipulation utilities; example ``rm`` and ``egrep``.
+  * coreutils - Collection of file and text manipulation utilities; including
+  
+      * cp - _copy files and directories_.
 
-      These tools are bundled with [__GIT for Windows__](https://gitforwindows.org/),
+      * mv - _move (rename) files_.
+      
+      * rm - _remove files or directories_.
 
-      Alternatively install [__MSYS2__](https://www.msys2.org/). To use build within a msys command shell or window command prompt and add ``--msys=<path>`` to the ``.\support\<toolchain>config`` script.
+      * egrep - _print lines that match patterns_.
+
+      * gzip, gunzip, zcat - _compress or expand files_.
+
+      * tar - _an archiving utility_.
+
+      Coreutils are bundled with [__GIT for Windows__](https://gitforwindows.org/),
+      alternatively install [__MSYS2__](https://www.msys2.org/). 
       
       Once installed the required commands should be visible within the path.
   
@@ -173,11 +184,15 @@ Note: Since these are proprietary and ever-changing we cannot test them all. Old
   
       * Configure and prime the build system.
 
-            $ .\support\vc####config        # where #### = toolchain, for example 1019.
+            $ .\support\vc####config
+
+        where #### representes the toolchain, for example 2019.                  
+
+            $ .\support\vc2019config
 
       * Build the ``contrib/`` packages.
 
-            $  .\win32\gmake-42 release contrib 
+            $ .\win32\gmake-42 release contrib 
 
       * Build the editor components.
 
@@ -188,29 +203,33 @@ Note: Since these are proprietary and ever-changing we cannot test them all. Old
             $ .\win32\gmake-42 release package
 
 
-Native builds using Mingw32/64
-===============================
+Native builds using Mingw
+=========================
 
 Mingw32/64 offers another alternative way to build native __GriefEdit__, similar to Open-Watcom C/C++ builds.
 
+MSYS2 provides GNU tools, a Unix-like command prompt, and a UNIX compatibility layer for applications. However, in this context it is only used for building GriefEdit. The resulting application does not rely on MSYS2 to run and is fully native.
 
-  * Install _Perl_
+  * _MSYS2_ shell, from https://www.msys2.org/
+  
+  * _Perl_, at least version 5.10.0, which usually comes pre-installed with MSYS2.
 
   * Install _Inno-Setup_
 
-  * Make sure _Perl_ is on your __\$PATH__.  
- 
-  * Create a mingw64 Developer Command Prompt.
+  * Create a MSYS/Mingw64 Command Prompt.
 
     To install the minimal tools required:
 
-        c:\msys64\usr\bin\pacman --noconfirm -S base-devel
-        c:\msys64\usr\bin\pacman --noconfirm -S bison
+        $ pacman --noconfirm -S base-devel
+        $ pacman --noconfirm -S bison
+        $ pacman --noconfirm -S
 
     plus one of the following
 
-        c:\msys64\usr\bin\pacman --noconfirm -S mingw-w64-x86_64-gcc
-        c:\msys64\usr\bin\pacman --noconfirm -S mingw-w64-i686-gcc          
+        $ pacman --noconfirm -S mingw-w64-x86_64-gcc
+        $ pacman --noconfirm -S mingw-w64-i686-gcc          
+
+    These compilers must be on your MSYS2 \$PATH, example below assuming the default installation path ``c:/msys64/``. A common error is to not have these on your \$PATH. The MSYS2 version of gcc will not work correctly here.
   
   * From the root of the source directory perform the following:
   
@@ -238,9 +257,44 @@ Mingw32/64 offers another alternative way to build native __GriefEdit__, similar
 
             $ .\win32\gmake-42 release package
 
+
+Native builds using Cygwin
+==========================           
+
+Cygwin implements a POSIX/Unix runtime system (`cygwin1.dll`) on top of the Windows subsystem and provides a Bash shell and GNU tools environment. Consequently, a build of GriefEdit with Cygwin is virtually identical to the Unix procedure.
+
+To build using Cygwin, you need to:
+
+ * Install Cygwin, see <https://cygwin.com/>. 
+ 
+   During this process, install the minimal tools required:
+
+    * Perl, at least version 5.10.0 and ensure it is in the \$PATH.
+
+    * coreutils - _GNU core utilities (includes fileutils, sh-utils and textutils)_
+    
+    * make - _GNU (gmake) version of the 'make' utility_.
+    
+    * gcc-core - _GNU Compiler Collection_.
+
+    * optionally, bison/flex and wget.
+
+ * Run the Cygwin Bash shell.
+
+Apart from this, follow the Unix / Linux instructions in [INSTALL-LINUX](INSTALL-UNIX.md). 
+
+Additional, optional, components can also be utilised.
+
+Cygwin packages are be installed by a number of means.
+
+  * [setup-x86_64](https://cygwin.com/install.html)
+
+  * [apt-cpt](https://github.com/transcode-open/apt-cyg)
+
+
 # Alternative tools
 
-As an alternative to the bundled ``win32//` tools, these can be sourced by a number of methods.
+As an alternative to the bundled ``win32//`` tools, these can be sourced by a number of methods.
 
   * gmake (4.2 or greater)
 

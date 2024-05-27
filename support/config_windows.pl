@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: config_windows.pl,v 1.3 2024/05/26 15:41:12 cvsuser Exp $
+# $Id: config_windows.pl,v 1.4 2024/05/27 15:19:49 cvsuser Exp $
 # Configure front-end for native windows targets.
 #
 
@@ -10,55 +10,70 @@ use warnings 'all';
 use Cwd;
 use File::Which qw(which where);
 
+sub
+ProgramFiles
+{
+	my $path = $ENV{ProgramFiles};
+	$path =~ s/\\/\//g
+		if ($path);
+	return $path if ($path);
+	return "C:/Program Files";
+}
+
 ##  resolve binutils
 
-my $localbinutil = 0;
-my $mingw = undef;
+my $PROGRAMFILES = ProgramFiles();
+my $olocalutils = 0;
+my $omingw = undef;
 
 foreach (@ARGV) {
-	if (/^--local-binutil$/) {
-		print "config_windows: utilising local binutils\n";
-		$localbinutil = 1;
-	} elsif (/^--msys=(.*)/) {
-		print "config_windows: using mingw=${mingw}\n";
-		$mingw = "$1/usr/bin";
+	if (/^--cfg-localutils$/) {
+		print "config_windows: utilising local utils\n";
+		$olocalutils = 1;
+
+	} elsif (/^--cfg-msys=(.*)/) {
+		$omingw = "$1/usr/bin";
+		die "config_windows: --cfg-msys=$1, invalid directory.\n"
+			if (! -d $omingw);
+		print "config_windows: using mingw=${omingw}\n";
 	}
 }
+
 
 sub
 Resolve 		# (default, apps ...)
 {
 	my $default = shift;
 	return $default
-		if ($localbinutil);
+		if ($olocalutils);
 
-	if (! defined $mingw) {
+	if (! defined $omingw) {
 		my $gcc = which("gcc");
 		if ($gcc) {
 			$gcc =~ s/\.exe$//i;
 			$gcc =~ s/\\/\//g;
 
-			$mingw = "";
+			$omingw = "";
 
 			if ($gcc =~ /^(.*)\/mingw64\/bin\/gcc$/i) {
-				$mingw = "$1/usr/bin"
+				$omingw = "$1/usr/bin"
 					if (-d "$1/usr/bin");
 
 			} elsif ($gcc =~ /^(.*)\/mingw64\/bin\/gcc$/i) {
-				$mingw = "$1/usr/bin"
+				$omingw = "$1/usr/bin"
 					if (-d "$1/usr/bin");
 			}
 
-			print "config_windows: detected mingw=${mingw}\n"
-				if ($mingw);
+			print "config_windows: detected mingw=${omingw}\n"
+				if ($omingw);
 		}
 	}
 
 	foreach my $app (@_) {
 
 		my $mingw_resolved = undef;
-		$mingw_resolved = "${mingw}/${app}"
-			if ($mingw && -f "${mingw}/${app}.exe");
+		$mingw_resolved = "${omingw}/${app}"
+			if ($omingw && -f "${omingw}/${app}.exe");
 
 		# PATH
 		my $resolved = which $app;
@@ -90,14 +105,13 @@ sub
 ResolveCoreUtils	# ()
 {
 	my @paths = (
-	    "",                                 # PATH
-	    "/devl/gnuwin32",                   # local gnuwin32
-	    "C:/Program Files/Git/usr",         # Git for Windows
-	    "c:/msys64/usr",                    # MSYS installation
-	    "c:/GnuWin32",                      # https://sourceforge.net/projects/getgnuwin32/files (legacy)
-	    "C:/Program Files (x86)/GnuWin32",  # choco install gnuwin32-coreutils.install (legacy)
-	    );
-	my @cmds = ("mkdir", "rmdir", "cp", "mv", "rm", "egrep");
+		"",                                 # PATH
+		"c:/msys64/usr",                    # MSYS installation
+		"${PROGRAMFILES}/Git/usr",          # Git for Windows
+		"c:/GnuWin32",                      # https://sourceforge.net/projects/getgnuwin32/files (legacy)
+		"C:/Program Files (x86)/GnuWin32",  # choco install gnuwin32-coreutils.install (legacy)
+		);
+	my @cmds = ("mkdir", "rmdir", "cp", "mv", "rm", "egrep", "gzip", "tar", "unzip", "zip");
 
 	foreach my $path (@paths) {
 		my $success = 1;
@@ -140,14 +154,13 @@ my $coreutils	= undef;
 ##  build command line
 
 my $cwd = getcwd;
-die "config_windows: spaces within work directory <$cwd>; rename before proceeding.\n" 
+die "config_windows: spaces within work directory <$cwd>; rename before proceeding.\n"
 	if ($cwd =~ / /);
 
-die "config_windows: gzip missing, please install within \$PATH before proceeding.\n" 
-	if (!which("gzip"));
-
 my @options;
-my $target = undef;
+my $core_symlink = 0;
+my $otarget = undef;
+my $ohelp = 0;
 
 my $script  = shift @ARGV;
 foreach (@ARGV) {
@@ -161,10 +174,14 @@ foreach (@ARGV) {
 		$bison = $1;
 	} elsif (/^--flex=(.*)$/) {
 		$flex = $1;
-	} elsif (/^--local-binutil$/) {
+	} elsif (/^--cfg-symlink$/) {
+		$core_symlink = 1;
+	} elsif (/^--cfg-localutils=/) {
 		# consume
-	} elsif (/^--msys=/) {
+	} elsif (/^--cfg-msys=/) {
 		# consume
+	} elsif (/^--help$/) {
+		$ohelp = 1;
 	} else {
 		if (/^--/) {
 			if (/^--(.*)=(.*)$/) {
@@ -174,30 +191,53 @@ foreach (@ARGV) {
 			}
 		} else {
 			die "config_windows: multiple targets, <$_> unexpected\n"
-				if ($target);
-			$target = $_;
+				if ($otarget);
+			$otarget = $_;
 		}
 	}
+}
+
+if ($ohelp) {
+    print <<EOU;
+
+Usage: perl config_windows [options] <command>
+
+Options:
+
+    --cfg-symlink           Symlink detected coreutils to ./CoreUtils.
+
+    --cfg-localutils        Override selection of bison, flex, wget and busybox to bundled versions.
+
+    --cfg-msys=<path>       Path to msys64 installation.
+EOU
+	system "$^X ${script} --help-options";
+	exit 3;
 }
 
 $coreutils = ResolveCoreUtils()
 	if (! $coreutils);
 if ($coreutils) {
-	if ($coreutils =~ / /) { # spaces, symlink
-		print "config_windows: CoreUtils: ./CoreUtils => ${coreutils} (symlink)\n";
-		system "mklink /J CoreUtils \"${coreutils}\""
-			if (! -d "CoreUtils/bin");
-		push @options, "--binpath=./CoreUtils/bin";
+	if ($core_symlink) {
+		if ($coreutils =~ / /) { # spaces, symlink
+			print "config_windows: CoreUtils: ./CoreUtils => ${coreutils} (symlink)\n";
+			system "mklink /J CoreUtils \"${coreutils}\""
+				if (! -d "CoreUtils/bin");
+			push @options, "--binpath=./CoreUtils/bin";
+
+		} else {
+			push @options, "--binpath=${coreutils}/bin";
+		}
 	} else {
-		push @options, "--binpath=${coreutils}/bin";
+		die "config_windows: coreutils detected yet not in PATH, add <$coreutils/bin> before proceeding.\n";
+		return;
 	}
 }
 
-die "config_windows: target missing\n" 
-	if (! $target);
+die "config_windows: target missing\n"
+	if (! $otarget);
 
-print "\n$^X ${script}\n => --busybox=\"${busybox}\" --wget=\"${wget}\" --flex=\"${flex}\" --bison=\"${bison}\" @options ${target}\n\n";
+print "\n$^X ${script}\n => --busybox=\"${busybox}\" --wget=\"${wget}\" --flex=\"${flex}\" --bison=\"${bison}\" @options ${otarget}\n\n";
 
-system "$^X ${script} --busybox=\"${busybox}\" --wget=\"${wget}\" --flex=\"${flex}\" --bison=\"${bison}\" @options ${target}";
+system "$^X ${script} --busybox=\"${busybox}\" --wget=\"${wget}\" --flex=\"${flex}\" --bison=\"${bison}\" @options ${otarget}";
 
 #end
