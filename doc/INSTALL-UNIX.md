@@ -97,7 +97,7 @@ Native builds using gcc/clang/cc
         -          LDFLAGS:   -pthread
         -     Preprocessor:
         -    Mouse support: none
-        -   Termap support: ncurses
+        -   Termap support: ncursesw
         -    Spell Support: -lenchant
         -       Conversion:
         -        Detection:    -lmagic
@@ -159,7 +159,17 @@ Native builds using gcc/clang/cc
 
     These can be modified, for example install within your home directory, installation base directory can set using the ``-prefix option``.
 
-        ./configure_new --prefix=/home/user/grief
+        ./configure --prefix=/home/user/grief
+
+    Fine tunning of the install process is available
+
+        INSTALL_MODE=mode           mode override (default=0755)
+
+        INSTALL_OPTIONS=options     additional installation options.
+
+    Example:
+
+        sudo make INSTALL_OPTIONS="-g users" release install
 
 
 Advanced configuration

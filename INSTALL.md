@@ -94,7 +94,7 @@ On completion the resulting configuration shall be presented, including installa
 -          LDFLAGS:   -pthread
 -     Preprocessor:
 -    Mouse support: none
--   Termap support: ncurses
+-   Termap support: ncursesw
 -    Spell Support: -lenchant
 -       Conversion:
 -        Detection:    -lmagic

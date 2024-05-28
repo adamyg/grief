@@ -150,6 +150,17 @@ Quick start
 
         Note: Alternatively zip and copy the ``bin``, ``macro`` and ``help`` trees to your desired install location.
 
+  * To build the documentation in html and pdf forms
+
+      - Install [wk\<html\>ToPdf](https://wkhtmltopdf.org/downloads.html)
+
+      - Build html and the derived pdf document.
+
+            $ cd hlpdoc
+            $ makehtml
+            $ makepdf
+
+
 Installation
 =============
 
