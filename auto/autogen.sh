@@ -13,8 +13,9 @@ fail() {
 
 # Refresh GNU autotools toolchain: libtool
 echo "Removing libtool cruft"
-rm -f ltmain.sh config.guess config.sub
-rm -f ../ltmain.sh ../config.guess ../config.sub
+rm -f ltmain.sh ../ltmain.sh
+rm -f ../config.guess ../config.sub
+
 echo "Running libtoolize"
 (glibtoolize --version) < /dev/null > /dev/null 2>&1 && LIBTOOLIZE=glibtoolize || LIBTOOLIZE=libtoolize
 $LIBTOOLIZE --copy --force --no-warn || fail
@@ -37,6 +38,7 @@ if [ "x$WGET" != "x" ]; then
 	echo "Autoupdate config.sub and config.guess (y/n)?"
 	read IN
 	if [ "$IN" = "y" ] || [ "$IN" = "Y" ]; then
+		rm -f config.guess config.sub
 		wget -O tmpfile http://savannah.gnu.org/cgi-bin/viewcvs/*checkout*/config/config/config.guess
 		mv tmpfile config.guess
 		wget -O tmpfile http://savannah.gnu.org/cgi-bin/viewcvs/*checkout*/config/config/config.sub

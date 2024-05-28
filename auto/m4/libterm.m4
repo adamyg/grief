@@ -1,4 +1,4 @@
-dnl $Id: libterm.m4,v 1.7 2024/05/02 14:34:32 cvsuser Exp $
+dnl $Id: libterm.m4,v 1.8 2024/05/28 10:33:29 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -7,7 +7,7 @@ dnl
 
 AC_DEFUN([LIBTERM_CHECK_CONFIG],[
 
-	AC_MSG_RESULT([determining term lib, --with-termlib options [ncurses, pdcurses, tinfo, curses, termcap, termlib]])
+	AC_MSG_RESULT([determining term lib, --with-termlib options [ncursesw, ncurses, pdcurses, tinfo, curses, termcap, termlib]])
 	AC_ARG_WITH(ncurses,
 	    [  --with-ncurses          use ncurses library], with_termlib=ncurses)
 
@@ -62,15 +62,15 @@ AC_DEFUN([LIBTERM_CHECK_CONFIG],[
 
 		dnl Selection rules/
 		dnl
-		dnl     o Newer versions of ncurses are preferred over anything,
+		dnl     o Newer versions of ncursesw/ncurses are preferred over anything,
 		dnl          note: older versions of ncurses have bugs hence we assume the latest (5.5 +).
 		dnl     o also allow the smaller ncurses tinfo library
 		dnl     o Digital Unix (OSF1) should use curses.
 		dnl     o SCO Openserver prefer termlib.
 		dnl
 		case "`uname -s 2>/dev/null`" in
-			OSF1|SCO_SV)	termlibs="ncurses tinfo curses termlib termcap";;
-			*)		termlibs="ncurses tinfo termlib termcap curses";;
+			OSF1|SCO_SV)	termlibs="ncursesw ncurses tinfo curses termlib termcap";;
+			*)		termlibs="ncursesw ncurses tinfo termlib termcap curses";;
 		esac
 
 		for libname in $termlibs; do
@@ -180,8 +180,8 @@ int res = tgetent(buffer, "terminalwontexist"); tgetstr("str", &area); tgetnum("
 
 	dnl library specific resources
 	dnl
-	dnl	ncurses / ncurses_g
 	dnl	ncursesw
+	dnl	ncurses / ncurses_g
 	dnl	pdcurses(*)
 	dnl	tinfo(*)
 	dnl	curses
@@ -197,18 +197,7 @@ int res = tgetent(buffer, "terminalwontexist"); tgetstr("str", &area); tgetnum("
 		AC_DEFINE([HAVE_TERMCAP], 1, [termcap interface.])
 	fi
 
-	if test "x$termlib_name" = "xncurses"; then
-		AC_DEFINE([HAVE_LIBNCURSES], 1, [enable libncurses support.])
-		AC_CHECK_HEADERS(nc_alloc.h ncurses/nc_alloc.h)
-		AC_CHECK_HEADERS(nomacros.h ncurses/nomacros.h)
-		AC_CHECK_HEADERS(ncurses.h  ncurses/ncurses.h)
-		AC_CHECK_HEADERS(curses.h   ncurses/curses.h)
-		AC_CHECK_HEADERS(termcap.h  ncurses/termcap.h)
-		AC_CHECK_HEADERS(term.h     ncurses/term.h)
-		AC_CHECK_LIB(ncurses, main)
-		AC_CHECK_LIB(ncurses_g, main)
-
-	else if test "x$termlib_name" = "xncursesw"; then
+	if test "x$termlib_name" = "xncursesw"; then
 		AC_DEFINE([HAVE_LIBNCURSESW], 1, [enable libncursesw support.])
 		AC_CHECK_HEADERS(nc_alloc.h ncursesw/nc_alloc.h)
 		AC_CHECK_HEADERS(nomacros.h ncursesw/nomacros.h)
@@ -218,6 +207,17 @@ int res = tgetent(buffer, "terminalwontexist"); tgetstr("str", &area); tgetnum("
 		AC_CHECK_HEADERS(term.h     ncursesw/term.h)
 		AC_CHECK_LIB(ncursesw, main)
 		AC_CHECK_LIB(ncursesw_g, main)
+
+	else if test "x$termlib_name" = "xncurses"; then
+		AC_DEFINE([HAVE_LIBNCURSES], 1, [enable libncurses support.])
+		AC_CHECK_HEADERS(nc_alloc.h ncurses/nc_alloc.h)
+		AC_CHECK_HEADERS(nomacros.h ncurses/nomacros.h)
+		AC_CHECK_HEADERS(ncurses.h  ncurses/ncurses.h)
+		AC_CHECK_HEADERS(curses.h   ncurses/curses.h)
+		AC_CHECK_HEADERS(termcap.h  ncurses/termcap.h)
+		AC_CHECK_HEADERS(term.h     ncurses/term.h)
+		AC_CHECK_LIB(ncurses, main)
+		AC_CHECK_LIB(ncurses_g, main)
 
 	else if test "x$termlib_name" = "xpdcurses"; then
 		AC_DEFINE([HAVE_LIBPDCURSES], 1, [enable libpdcurses support.])
