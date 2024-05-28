@@ -121,9 +121,10 @@ mktemp(char *path)
 {
 	return(_gettemp(path, (int *)NULL) ? path : (char *)NULL);
 }
-#endif  //HAVE_MKTEMP)
+#endif  //HAVE_MKTEMP
 
 
+#if defined(NEED_XMKTEMP)
 //
 //  xmktemp - extension
 //
@@ -171,7 +172,7 @@ xmktemp(char *path, char *result, size_t length)
 	assert(0);
 	return NULL;
 }
-
+#endif   //NEED_XMKTEMP
 
 static int
 _gettemp(char *path, register int *doopen)

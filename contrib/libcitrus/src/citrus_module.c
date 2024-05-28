@@ -252,7 +252,7 @@ _findshlib(char *name, int *majorp, int *minorp)
 					tmp[0] = major, tmp[1] = 0;
 				} else {
 					// major, with option minor
-					const versionlen = (dp->d_namlen - (len + 4));
+					const size_t versionlen = (dp->d_namlen - (len + 4));
 
 					if (versionlen >= sizeof(version))
 						continue;

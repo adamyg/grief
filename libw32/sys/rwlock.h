@@ -1,7 +1,7 @@
 #ifndef LIBW32_SYS_RWLOCK_H_INCLUDED
 #define LIBW32_SYS_RWLOCK_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_rwlock_h,"$Id: rwlock.h,v 1.14 2024/03/31 15:57:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_rwlock_h,"$Id: rwlock.h,v 1.15 2024/05/28 14:09:02 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -33,7 +33,7 @@ typedef struct rwlock {
 #endif
 } rwlock_t;
 
-#define RWLOCK_INITIALIZER      {0xffff}
+#define RWLOCK_INITIALIZER      {0xff}
 
 __BEGIN_DECLS
 

@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.11 2024/04/16 11:37:12 cvsuser Exp $
+# $Id: Makefile.in,v 1.12 2024/05/28 14:21:41 cvsuser Exp $
 # libcitrus and modules makefile
 #
 #
@@ -58,6 +58,14 @@ CDEBUG=		@CDEBUG@
 CRELEASE=	@CRELEASE@
 LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
+
+ifeq ("gcc","@CC@")
+XFLAGS+=\
+	-Wno-unused-variable \
+	-Wno-implicit-fallthrough \
+	-Wno-unused-but-set-variable \
+	-Wno-sign-compare
+endif
 
 CINCLUDE=	-I. -I./src -I$(D_INC) @CINCLUDE@
 

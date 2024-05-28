@@ -132,7 +132,7 @@ _citrus_NONE_ctype_mbrtowc(void * __restrict cl, WCHAR_T * __restrict pwc,
 	if (pwc != NULL)
 		*pwc = (WCHAR_T)(unsigned char) *s;
 
-	*nresult = *s == '\0' ? 0 : 1;
+	*nresult = (*s == '\0' ? 0 : 1);
 	return (0);
 }
 
@@ -443,7 +443,7 @@ _citrus_NONE_stdenc_mbtowc(struct _citrus_stdenc * __restrict ce,
 	if (pwc != NULL)
 		*pwc = (_wc_t)(unsigned char) **s;
 
-	*nresult = *s == '\0' ? 0 : 1;
+	*nresult = (*s == '\0' ? 0 : 1);
 	return (0);
 }
 

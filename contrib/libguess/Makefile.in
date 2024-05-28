@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.9 2024/05/28 08:35:27 cvsuser Exp $
+# $Id: Makefile.in,v 1.10 2024/05/28 15:22:44 cvsuser Exp $
 # libguess makefile
 #
 #
@@ -54,6 +54,19 @@ CDEBUG=		@CDEBUG@
 CRELEASE=	@CRELEASE@
 LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
+
+ifeq ("gcc","@CC@")
+XFLAGS+=\
+	-Wno-incompatible-pointer-types \
+	-Wno-unused-variable \
+	-Wno-unused-but-set-variable \
+	-Wno-unused-parameter \
+	-Wno-unused-value \
+	-Wno-implicit-fallthrough \
+	-Wno-old-style-declaration \
+	-Wno-missing-prototypes \
+	-Wno-sign-compare
+endif
 
 CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
 CEXTRA=		@DEFS@
