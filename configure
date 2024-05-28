@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- mode: sh; -*-
-# $Id: configure_new,v 1.6 2024/05/03 14:35:16 cvsuser Exp $
+# $Id: configure,v 1.6 2024/05/03 14:35:16 cvsuser Exp $
 #
 
 if [ ! -f "install-sh" ]; then
