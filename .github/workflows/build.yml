@@ -142,6 +142,7 @@ jobs:
       if: startsWith(matrix.config.name, 'Ubuntu Latest')
       shell: bash
       run: |
+        chmod +x configure
         ./support/config_withncurses
 
     - name: Ubuntu, compile
@@ -158,6 +159,7 @@ jobs:
         export CPPPATH=$(brew --prefix libarchive)/include:/usr/local/include:$CPATH
         export LIBRARY_PATH=$(brew --prefix libarchive)/lib:/usr/local/lib:$LIBRARY_PATH
         export LD_LIBRARY_PATH=$(brew --prefix libarchive)/lib:/usr/local/lib:$LD_LIBRARY_PATH
+        chmod +x configure
         ./support/config_withncurses
 
     - name: MacOS, compile
