@@ -107,8 +107,14 @@ jobs:
       if: startsWith(matrix.config.name, 'MacOS Latest')
       shell: bash
       run: |
-        brew install wget
+        brew install pkg-config
+        brew install ncurses
+        brew link ncurses
+        brew install enchant
+        brew install libspell
+        brew install hunspell
         brew install libarchive
+        brew install wget
 
     - name: Windows, generate
       if: startsWith(matrix.config.name, 'Windows Latest')
