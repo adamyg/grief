@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.20 2024/05/24 16:03:17 cvsuser Exp $
+# $Id: Makefile.in,v 1.22 2024/05/28 08:45:43 cvsuser Exp $
 # External packages.
 #
 #
@@ -48,19 +48,16 @@ D_BIN=		../bin@TOOLCHAINEXT@/$(BUILD_TYPE)
 #########################################################################################
 # Rules
 
-define contrib-all
+define contrib-all1
 	$(MAKE) -C makedepend
 	$(MAKE) -C libregex
 	$(MAKE) -C libz
 	$(MAKE) -C libbzip2
 	$(MAKE) -C liblzma
 	$(MAKE) -C libmagic
-	$(MAKE) -C libguess
-	$(MAKE) -C libarchive
-	$(MAKE) -C hunspell
 endef
 ifeq ("win32","@build_os@")
-define contrib-allx
+define contrib-all2
 	$(MAKE) -C flex
 	$(MAKE) -C byacc
 	$(MAKE) -C libcitrus
@@ -68,20 +65,22 @@ define contrib-allx
 	$(MAKE) -C libiconv
 endef
 endif
+define contrib-all3
+	$(MAKE) -C libguess
+	$(MAKE) -C libarchive
+	$(MAKE) -C hunspell
+endef
 
-define contrib-clean
+define contrib-clean1
 	$(MAKE) -C makedepend  clean
 	$(MAKE) -C libregex    clean
 	$(MAKE) -C libz        clean
 	$(MAKE) -C libbzip2    clean
 	$(MAKE) -C liblzma     clean
 	$(MAKE) -C libmagic    clean
-	$(MAKE) -C libguess    clean
-	$(MAKE) -C libarchive  clean
-	$(MAKE) -C hunspell    clean
 endef
 ifneq "" "$(filter win32,@build_os@)"
-define contrib-cleanx
+define contrib-clean2
 	$(MAKE) -C libcitrus   clean
 	$(MAKE) -C libintl     clean
 	$(MAKE) -C libiconv    clean
@@ -89,6 +88,11 @@ define contrib-cleanx
 	$(MAKE) -C flex        clean
 endef
 endif
+define contrib-clean3
+	$(MAKE) -C libguess    clean
+	$(MAKE) -C libarchive  clean
+	$(MAKE) -C hunspell    clean
+endef
 
 DIRECTORIES=\
 	./include/.created 	\
@@ -98,8 +102,9 @@ DIRECTORIES=\
 
 .PHONY: 	build release debug
 build:			directories
-		$(contrib-all)
-		$(contrib-allx)
+		$(contrib-all1)
+		$(contrib-all2)
+		$(contrib-all3)
 
 release:
 		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
@@ -108,8 +113,9 @@ debug:
 
 .PHONY:		clean
 clean:
-		$(contrib-clean)
-		$(contrib-cleanx)
+		$(contrib-clean3)
+		$(contrib-clean2)
+		$(contrib-clean1)
 
 directories:		$(DIRECTORIES)
 

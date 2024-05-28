@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.8 2024/04/16 11:37:12 cvsuser Exp $
+# $Id: Makefile.in,v 1.9 2024/05/28 08:35:27 cvsuser Exp $
 # libguess makefile
 #
 #
@@ -68,7 +68,7 @@ else
 CFLAGS+=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
 LDFLAGS=	$(LDDEBUG) @LDFLAGS@
 endif
-LDLIBS=		-L$(D_LIB) @LIBS@ @EXTRALIBS@
+LDLIBS=		-L$(D_LIB) @LIBICONV@ @LIBS@ @EXTRALIBS@
 
 YFLAGS=		-d
 ARFLAGS=	rcv
@@ -79,16 +79,28 @@ RMDFLAGS=	-rf
 #########################################################################################
 # Targets
 
+##VERSION=	1.1
+VERSION=	1.2
+PACKED=		libguess-$(VERSION).tgz
+VERSIONSPEC=	$(subst .,:,$(VERSION))
+
+ifeq ($(VERSION),1.2)
+GUESSCONV=	$(D_BIN)/guesscnv$(E)
+GUESSTEST=	$(D_BIN)/guesstest$(E)
+endif
+
 GUESSLIB=	$(D_LIB)/$(LP)guess_static$(A)
 GUESSDLL=	$(D_LIB)/$(LP)guess.la
 
-VERSION=	1.1
-VERSIONSPEC=	$(subst .,:,$(VERSION))
+ifeq ($(VERSION),1.2)
+VPATH=		. ./libguess-1.2/src/libguess
+else
 VPATH=		. ./libguess-1.1
+endif
 
 LIBOBJS=\
-	$(D_OBJ)/libguess$(O)			\
-	$(D_OBJ)/guess_impl$(O)			\
+	$(D_OBJ)/libguess$(O)		\
+	$(D_OBJ)/guess_impl$(O)		\
 	$(D_OBJ)/dfa$(O)
 
 DLLOBJS=\
@@ -98,36 +110,73 @@ DLLOBJS+=\
 	$(D_OBJ)/dllmain.lo
 endif
 
+ifeq ($(VERSION),1.2)
+VPATH+=		./libguess-1.2/src/examples/guessconv ./libguess-1.2/src/tests
+CONVOBJS=	$(D_OBJ)/guessconv$(O)
+TESTOBJS=	$(D_OBJ)/testharness$(O)
+
+TESTCASES:=	$(filter-out CVS, $(wildcard ./libguess-1.2/src/tests/testbench/*/*.test))
+endif
+
 OBJS=		$(LIBOBJS) $(DLLOBJS)
 LIBS=		$(GUESSLIB) $(GUESSDLL)
+TSKS=		$(GUESSCONV) $(GUESSTEST)
 
 
 #########################################################################################
 # Rules
 
 .PHONY:			build release debug
-build:			directories $(LIBS) installinc
+build:			source unpacked
+unpacked:		directories $(LIBS) $(TSKS) installinc
 
 release:
 		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
 debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
-.PHONY:		directories
-directories:		$(D_OBJ)/.created $(D_LIB)/.created
-
 $(GUESSLIB):		CEXTRA += -D__LIBGUESS_BUILD -DLIBGUESS_STATIC
 $(GUESSLIB):		$(LIBOBJS)
-		$(RM) $(RMFLAGS) $@ >/dev/null 2>&1
+		$(RM) $(RMFLAGS) $@ $(QUIETOUT)
 		$(AR) $(ARFLAGS) $@ $^
 		$(RANLIB) $@
 
+INSTALLED+=	$(D_BIN)/libguess.$(VERSION).dll
 $(GUESSDLL):		CEXTRA += -D__LIBGUESS_BUILD -DLIBGUESS_DYNAMIC
 $(GUESSDLL):		$(DLLOBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $^ -version-number $(VERSIONSPEC) \
 			-rpath $(D_LIB) -bindir $(D_BIN) $(LDLIBS)
 
+ifeq ($(VERSION),1.2)
+$(GUESSCONV):		$(CONVOBJS)
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ -o $@ $(D_LIB)/libguess$(A) $(LDLIBS)
+
+$(GUESSTEST):		$(TESTOBJS)
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ -o $@ $(D_LIB)/libguess$(A) $(LDLIBS)
+
+.PHONY: 	test_run test_gen
+test_run:
+		$(PERL) ./guesstest.pl --mode=run --task=$(D_BIN)/guesstest $(TESTCASES)
+endif
+
+.PHONY:		directories
+directories:		$(D_OBJ)/.created $(D_LIB)/.created
+
+ifeq ($(VERSION),1.2)
+source:			.unpacked.$(VERSION)
+		$(MAKE) unpacked
+
+.unpacked.$(VERSION):	$(PACKED)
+		@echo "do not delete, managed file" > $@
+		@echo "unpacking source $(PACKED)"
+		@gzip -c -d $(PACKED) | tar.exe -xvf -
+else
+source:			.unpacked.$(VERSION)
+		@echo "do not delete, managed file" > $@
+endif
+
 .PHONY:		installinc
+INSTALLED+=	../include/libguess.h
 installinc:		../include/.created
 		@echo publishing headers ...
 		-cp libguess.h ../include
@@ -135,9 +184,9 @@ installinc:		../include/.created
 .PHONY:		clean
 clean:
 		@echo $(BUILD_TYPE) clean
-		-@$(RM) $(RMFLAGS) $(LIBS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
-		-@$(LIBTOOL) --mode=clean $(RM) $(DLLOBJS) >/dev/null 2>&1
-		-@$(RM) $(LIBOBJS) >/dev/null 2>&1
+		-@$(LIBTOOL) --mode=clean $(RM) $(subst /,\,$(DLLOBJS)) $(QUIETOUT)
+		-@$(RM) $(subst /,\,$(RMFLAGS) $(BAK) $(TSKS) $(INSTALLED) $(LIBS) $(CLEAN) $(XCLEAN)) $(QUIETOUT)
+		-@$(RM) $(subst /,\,$(LIBOBJS) $(CONVOBJS) $(TESTOBJS)) $(QUIETOUT)
 
 %/.created:
 		-@mkdir $(@D)

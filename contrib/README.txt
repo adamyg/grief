@@ -368,7 +368,7 @@
 
   libguess/
 
-        o libguess-1.1
+        o libguess-1.2
 
             libguess - high-speed character set detection
 
@@ -382,8 +382,8 @@
             Right now, libguess passes a byte to each DFA on the same pass, meaning
             that the winning character set can be deduced as efficiently as possible.
 
-            Source: http://atheme.org/projects/libguess.html
-            Atheme GitHub.: https://github.com/kaniini/libguess
+            Old Home: http://atheme.org/projects/libguess.html
+            GitHub.: https://github.com/kaniini/libguess
 
                                 --------------------------
 
