@@ -1,12 +1,11 @@
 #!/bin/sh
 # -*- mode: sh; -*-
-# $Id: config_withcurses,v 1.2 2011/11/03 23:41:10 cvsuser Exp $
+# $Id: config_withcurses,v 1.3 2024/05/28 12:39:07 cvsuser Exp $
 #   Basic configuration enabled using curses
 #
 
-./configure_new \
+./configure \
 	--with-8bit \
 	--with-termlib=curses \
 	--with-dlmalloc \
 	$*
-

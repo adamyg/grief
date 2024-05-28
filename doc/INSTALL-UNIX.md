@@ -8,21 +8,21 @@ Notes for UNIX-like platforms
  To build and install GriefEdit, you shall need:
 
   * Clone of the source repository.
-  
+
   * A supported UNIX/Linux operating system.
-  
+
   * Perl 5 with core modules, see [NOTES-PERL.md](NOTES-PERL.md).
-  
+
   * coreutils - Collection of file and text manipulation utilities.
 
   * make - _GNU (gmake) version of the 'make' utility_.
 
-  * bison/flex - _General purpose parser generators_.         
-  
+  * bison/flex - _General purpose parser generators_.
+
   * wget - _Command-line utility for retrieving files using HTTP, HTTPS and FTP protocols_.
-  
+
   * An ANSI C/C++ compiler, ``gcc`` is recommended being installed from gcc-core - _GNU Compiler Collection_.
-  
+
   * A development environment in the form of development libraries and C header files.
 
 Optionally the following external packages can be installed adding additional run-time functionality; these shall be auto-detected during 'configure'.
@@ -48,13 +48,13 @@ Optionally the following external packages can be installed adding additional ru
   * libzstd-devel -     _gz compression_.
 
   * xz-devel -          _liblzma_.
-  
+
   * snappy-devel -      _Google fast/compressor/decomp_.
 
 plus the following, which are generally available.
 
    * ncurses-devel -    _Terminal interface library_.
-   
+
    * libcurl-devel -    _Network tools_.
 
    * openssl-devel -    _OpenSSL_.
@@ -67,7 +67,7 @@ Native builds using gcc/clang/cc
 
   * Run the `configure' script by typing:
 
-        $ ./configure_new
+        $ ./configure
 
     Alternatively select one the available preset configurations
 
@@ -83,7 +83,7 @@ Native builds using gcc/clang/cc
 
     This should built the entire set of makefiles and one include file ``include/config.h``. You may wish to examine this file since there are some settable options at the top (don't fool with what configure has done below that unless you know what you're doing).
 
-    On completion the resulting configuration shall be presented, including installation and details on basic options; for example on the Linux host.
+    On completion the resulting configuration shall be presented, including installation and fundamental configuration options.
 
         -
         - Configuration:
@@ -131,7 +131,7 @@ Native builds using gcc/clang/cc
         Installation, one of the follow dependent on location:
 
             'sudo make release install' - install for common/system usage; or
-        or 'make release install'      - local installation.
+        or  'make release install'      - local installation.
 
         Optionally after installation:
 
@@ -145,7 +145,11 @@ Native builds using gcc/clang/cc
 
         $ make release install
 
-    Note that the default installation paths, compiled into GriefEdit, are:
+    Dependent on the installation path root permissions may be required,
+
+        $ sudo make release install
+
+    The default installation paths, compiled into GriefEdit, are as follow which are generally only writeable as root/adminstrator:
 
         executables         /usr/local/bin
         prefix              /usr/local/share/grief
@@ -155,7 +159,7 @@ Native builds using gcc/clang/cc
 
     These can be modified, for example install within your home directory, installation base directory can set using the ``-prefix option``.
 
-        configure --prefix=/home/user/grief     
+        ./configure_new --prefix=/home/user/grief
 
 
 Advanced configuration
@@ -173,13 +177,13 @@ The ‘configure’ script supports numerous options that allow control of which
 
     Set the base directory in which to install. For example:
 
-        ./configure --prefix=/home/user/grief   
+        ./configure --prefix=/home/user/grief
 
-    will cause files to be installed into /home/user/grief.    
+    will cause files to be installed into /home/user/grief.
 
 Optional Packages can be explicitly enabled or disabled.
 
-    --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]   
+    --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
     --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
 
   * ``--with-regex`` -              use libregex
@@ -239,8 +243,8 @@ The following environment variables (not a definitive list) impact configure's b
 
   * ``PATH="?"``
 
-    ‘configure’ uses this to find programs.      
-  
+    ‘configure’ uses this to find programs.
+
 Last Update: May/2024
 
 =end=

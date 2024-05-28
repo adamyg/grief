@@ -36,7 +36,7 @@ For a more in-depth look at the setup and running of GRIEF, see ![GRIEF Quick St
 ### Source
 
     https://github.com/adamyg/grief/releases
-   
+
 The project can be built from source, the method dependent on the target host. See [INSTALL](INSTALL.md) for details, plus working examples are visible within the GitHub workflows.
 
     https://github.com/adamyg/grief/blob/master/.github/workflows/build.yml
@@ -101,7 +101,7 @@ the following build profile and options shall be available.
  Optionally after installation:
 
       'make release clean'        - remove build tree.
-```        
+```
 
 ## Status:
 

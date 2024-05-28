@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: config_windows.pl,v 1.4 2024/05/27 15:19:49 cvsuser Exp $
+# $Id: config_windows.pl,v 1.6 2024/05/28 11:18:48 cvsuser Exp $
 # Configure front-end for native windows targets.
 #
 
@@ -174,9 +174,10 @@ foreach (@ARGV) {
 		$bison = $1;
 	} elsif (/^--flex=(.*)$/) {
 		$flex = $1;
-	} elsif (/^--cfg-symlink$/) {
+	} elsif (/^--cfg-symlink$/) { # undocumented
+		# --cfg-symlink, Symlink detected coreutils to ./CoreUtils.
 		$core_symlink = 1;
-	} elsif (/^--cfg-localutils=/) {
+	} elsif (/^--cfg-localutils$/) {
 		# consume
 	} elsif (/^--cfg-msys=/) {
 		# consume
@@ -203,8 +204,6 @@ if ($ohelp) {
 Usage: perl config_windows [options] <command>
 
 Options:
-
-    --cfg-symlink           Symlink detected coreutils to ./CoreUtils.
 
     --cfg-localutils        Override selection of bison, flex, wget and busybox to bundled versions.
 

@@ -2,7 +2,13 @@
 
 	* BUILD 24, version: 3.2.3
 
-Wed Apr 10 00:35:12 2024 adamy
+Tue May 28 19:08:00 2024 adamy
+
+	* configure upgrades
+
+	* documentation/install
+
+	* libguess-1.2
 
 	* duktape 2.7.0 merge
 

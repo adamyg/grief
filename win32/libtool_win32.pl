@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: libtool_win32.pl,v 1.44 2024/05/03 15:15:40 cvsuser Exp $
+# $Id: libtool_win32.pl,v 1.45 2024/05/26 13:03:30 cvsuser Exp $
 # libtool emulation for WIN32 builds.
 #
 #   **Warning**
@@ -1316,8 +1316,9 @@ Clean()
         }
     }
 
+    my $rm_base = basename($rm);
     Error("clean: unsupported remove command <$rm>")
-        if (!('rm' eq $rm || 'rm.exe' eq $rm));
+        if (!('rm' eq $rm_base || 'rm.exe' eq $rm_base));
 
     foreach(@LIBRARIES) {
         my $lib = $_;

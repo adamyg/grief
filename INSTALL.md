@@ -75,9 +75,9 @@ Use the following commands to configure and build.
 
 ### Unix / Linux / macOS / Cygwin
 
-To setup the build environment execute the bundled `configure_new` script, which should select a suitable set of compiler and library options:
+To setup the build environment execute the bundled `configure` script, which should select a suitable set of compiler and library options:
 
-    $ ./configure_new
+    $ ./configure
 
 On completion the resulting configuration shall be presented, including installation and details on basic options; for example on the Linux host.
 
