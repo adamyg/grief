@@ -111,7 +111,7 @@ jobs:
         brew install ncurses
         brew link ncurses
         brew install enchant
-        brew install libspell
+        brew install libspelling
         brew install hunspell
         brew install libarchive
         brew install wget
