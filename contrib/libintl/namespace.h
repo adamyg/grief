@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <sys/utypes.h>
 #include <stdint.h>
+#include <stdarg.h>
 #include <limits.h>
 #include <unistd.h>
 

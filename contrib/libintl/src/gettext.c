@@ -384,6 +384,8 @@ flip(uint32_t v, uint32_t magic)
 		abort();
 		/*NOTREACHED*/
 	}
+	/*NOTREACHED*/
+	return v;
 }
 
 static int
