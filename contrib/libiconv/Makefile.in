@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.17 2024/06/04 15:35:47 cvsuser Exp $
+# $Id: Makefile.in,v 1.18 2024/06/04 16:05:16 cvsuser Exp $
 # libiconv/iconv makefile
 #
 #
@@ -122,7 +122,7 @@ components:
 .PHONY:		directories
 directories:		$(D_OBJ)/.created $(D_LIB)/.created $(D_I18N)/.created $(D_I18N_ICONV)/.created
 
-$(ICONVLIB):		CEXTRA += -D_WIN32 -D_WIN32_WINNT=0X601
+$(ICONVLIB):		CEXTRA += -DLIBICONV_STATIC -D_WIN32 -D_WIN32_WINNT=0X601
 $(ICONVLIB):		$(LIBOBJS)
 		$(RM) $(RMFLAGS) $@ >/dev/null 2>&1
 		$(AR) $(ARFLAGS) $@ $(subst /,\,$^)
