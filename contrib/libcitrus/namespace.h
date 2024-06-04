@@ -1,6 +1,6 @@
 #ifndef LOCAL_NAMESPACE_H_INCLUDED
 #define LOCAL_NAMESPACE_H_INCLUDED
-/* $Id: namespace.h,v 1.11 2024/06/04 13:28:58 cvsuser Exp $
+/* $Id: namespace.h,v 1.12 2024/06/04 15:35:54 cvsuser Exp $
  *
  * libcitrus <namespace.h>
  *
@@ -93,6 +93,9 @@
 #endif
 #if !defined(__used)
 #define __used          /**/
+#endif
+#ifndef __dead
+#define __dead          /*__attribute__((noreturn))*/
 #endif
 
 #ifndef u_int32_t
