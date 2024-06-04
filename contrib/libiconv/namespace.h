@@ -1,8 +1,8 @@
-/* $Id: namespace.h,v 1.8 2024/01/01 12:37:09 cvsuser Exp $
+/* $Id: namespace.h,v 1.9 2024/06/04 13:16:00 cvsuser Exp $
  *
  * libiconv <namespace.h>
  *
- * Copyright (c) 2012-2022 Adam Young.
+ * Copyright (c) 2012 - 2024 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,6 +51,9 @@
 #ifndef __dead
 #define __dead          /*__attribute__((noreturn))*/
 #endif
+
+#define YYMALLOC        malloc
+#define YYFREE          free
 
 #ifndef snprintf
 #if (_MSC_VER != 1500)  /* MSVC 2008 (v9.0) */

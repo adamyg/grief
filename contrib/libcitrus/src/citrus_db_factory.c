@@ -1,4 +1,4 @@
-/*	$NetBSD: citrus_db_factory.c,v 1.9 2008/02/09 14:56:20 junyoung Exp $	*/
+/*	$NetBSD: citrus_db_factory.c,v 1.11 2021/10/29 10:54:56 nia Exp $	*/
 
 /*-
  * Copyright (c)2003 Citrus Project,
@@ -32,10 +32,11 @@
 
 #include <sys/cdefs.h>
 #if defined(LIBC_SCCS) && !defined(lint)
-__RCSID("$NetBSD: citrus_db_factory.c,v 1.9 2008/02/09 14:56:20 junyoung Exp $");
+__RCSID("$NetBSD: citrus_db_factory.c,v 1.11 2021/10/29 10:54:56 nia Exp $");
 #endif /* LIBC_SCCS and not lint */
 
 #include "namespace.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -244,18 +245,6 @@ put8(struct _region *r, size_t *rofs, uint8_t val)
 }
 
 static __inline void
-put16(struct _region *r, size_t *rofs, uint16_t val)
-{
-#if defined(HTONS) && defined(WIN32)
-	val = HTONS(val);
-#else
-	val = htons(val);
-#endif
-	memcpy(_region_offset(r, *rofs), &val, 2);
-	*rofs += 2;
-}
-
-static __inline void
 put32(struct _region *r, size_t *rofs, uint32_t val)
 {
 #if defined(HTONL) && defined(WIN32)
@@ -263,7 +252,7 @@ put32(struct _region *r, size_t *rofs, uint32_t val)
 #else
 	val = htonl(val);
 #endif
-        memcpy(_region_offset(r, *rofs), &val, 4);
+	memcpy(_region_offset(r, *rofs), &val, 4);
 	*rofs += 4;
 }
 
@@ -299,11 +288,9 @@ _citrus_db_factory_serialize(struct _citrus_db_factory *df, const char *magic,
 		return 0;
 	}
 	/* allocate hash table */
-	depp = malloc(sizeof(*depp) * df->df_num_entries);
+	depp = calloc(df->df_num_entries, sizeof(*depp));
 	if (depp == NULL)
 		return -1;
-	for (i = 0; i < df->df_num_entries; i++)
-		depp[i] = NULL;
 
 	/* step1: store the entries which are not conflicting */
 	SIMPLEQ_FOREACH(de, &df->df_entries, de_entry) {

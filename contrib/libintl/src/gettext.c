@@ -1,4 +1,4 @@
-/*	$NetBSD: gettext.c,v 1.28 2012/07/30 23:04:42 yamt Exp $	*/
+/*	$NetBSD: gettext.c,v 1.32 2024/04/13 02:01:38 christos Exp $	*/
 
 /*-
  * Copyright (c) 2000, 2001 Citrus Project,
@@ -29,7 +29,7 @@
  */
 
 #include <sys/cdefs.h>
-__RCSID("$NetBSD: gettext.c,v 1.28 2012/07/30 23:04:42 yamt Exp $");
+__RCSID("$NetBSD: gettext.c,v 1.32 2024/04/13 02:01:38 christos Exp $");
 
 #include "namespace.h"
 
@@ -72,6 +72,16 @@ __RCSID("$NetBSD: gettext.c,v 1.28 2012/07/30 23:04:42 yamt Exp $");
 #include "plural_parser.h"
 #include "pathnames.h"
 
+/* GNU gettext added a hack to add some context to messages. If a message is
+ * used in multiple locations, it needs some amount of context to make the
+ * translation clear to translators. GNU gettext, rather than modifying the
+ * message format, concatenates the context, \004 and the message id.
+ */
+#define	MSGCTXT_ID_SEPARATOR	'\004'
+
+static const char *pgettext_impl(const char *, const char *, const char *,
+				const char *, unsigned long int, int);
+static char *concatenate_ctxt_id(const char *, const char *);
 static const char *lookup_category(int);
 static const char *split_locale(const char *);
 static const char *lookup_mofile(char *, size_t, const char *, const char *,
@@ -126,6 +136,76 @@ dngettext(const char *domainname, const char *msgid1, const char *msgid2,
 	return dcngettext(domainname, msgid1, msgid2, n, LC_MESSAGES);
 }
 
+LIBINTL_LINKAGE const char * LIBINTL_ENTRY 
+pgettext(const char *msgctxt, const char *msgid)
+{
+
+	return pgettext_impl(NULL, msgctxt, msgid, NULL, 1UL, LC_MESSAGES);
+}
+
+LIBINTL_LINKAGE const char * LIBINTL_ENTRY 
+dpgettext(const char *domainname, const char *msgctxt, const char *msgid)
+{
+
+	return pgettext_impl(domainname, msgctxt, msgid, NULL, 1UL, LC_MESSAGES);
+}
+
+LIBINTL_LINKAGE const char * LIBINTL_ENTRY 
+dcpgettext(const char *domainname, const char *msgctxt, const char *msgid,
+	int category)
+{
+
+	return pgettext_impl(domainname, msgctxt, msgid, NULL, 1UL, category);
+}
+
+LIBINTL_LINKAGE const char * LIBINTL_ENTRY 
+npgettext(const char *msgctxt, const char *msgid1, const char *msgid2,
+	unsigned long int n)
+{
+
+	return pgettext_impl(NULL, msgctxt, msgid1, msgid2, n, LC_MESSAGES);
+}
+
+LIBINTL_LINKAGE const char * LIBINTL_ENTRY 
+dnpgettext(const char *domainname, const char *msgctxt, const char *msgid1,
+	const char *msgid2, unsigned long int n)
+{
+
+	return pgettext_impl(domainname, msgctxt, msgid1, msgid2, n, LC_MESSAGES);
+}
+
+LIBINTL_LINKAGE const char * LIBINTL_ENTRY 
+dcnpgettext(const char *domainname, const char *msgctxt, const char *msgid1,
+	const char *msgid2, unsigned long int n, int category)
+{
+
+	return pgettext_impl(domainname, msgctxt, msgid1, msgid2, n, category);
+}
+
+static const char *
+pgettext_impl(const char *domainname, const char *msgctxt, const char *msgid1,
+	const char *msgid2, unsigned long int n, int category)
+{
+	char *msgctxt_id;
+	char *translation;
+	char *p;
+
+	if ((msgctxt_id = concatenate_ctxt_id(msgctxt, msgid1)) == NULL)
+		return msgid1;
+
+	translation = dcngettext(domainname, msgctxt_id,
+		msgid2, n, category);
+	free(msgctxt_id);
+
+	if (translation == msgctxt_id)
+		return msgid1;
+
+	p = strchr(translation, '\004');
+	if (p)
+		return p + 1;
+	return translation;
+}
+
 /*
  * dcngettext() -
  * lookup internationalized message on database locale/category/domainname
@@ -147,6 +227,17 @@ dngettext(const char *domainname, const char *msgid1, const char *msgid2,
  * /usr/share/locale! (or we should move those files into /usr/libdata)
  */
 
+static char *
+concatenate_ctxt_id(const char *msgctxt, const char *msgid)
+{
+	char *ret;
+
+	if (asprintf(&ret, "%s%c%s", msgctxt, MSGCTXT_ID_SEPARATOR, msgid) == -1)
+		return NULL;
+
+	return ret;
+}
+
 static const char *
 lookup_category(int category)
 {
@@ -162,6 +253,7 @@ lookup_category(int category)
 	return NULL;
 }
 
+#define MAXBUFLEN	1024
 /*
  * XPG syntax: language[_territory[.codeset]][@modifier]
  * XXX boundary check on "result" is lacking
@@ -169,9 +261,9 @@ lookup_category(int category)
 static const char *
 split_locale(const char *lname)
 {
-	char buf[BUFSIZ], tmp[BUFSIZ];
+	char buf[MAXBUFLEN], tmp[2 * MAXBUFLEN];
 	char *l, *t, *c, *m;
-	static char result[BUFSIZ];
+	static char result[4 * MAXBUFLEN];
 
 	memset(result, 0, sizeof(result));
 
@@ -262,8 +354,10 @@ lookup_mofile(char *buf, size_t len, const char *dir, const char *lpath,
 			continue;
 #endif
 
-		snprintf(buf, len, "%s/%s/%s/%s.mo", dir, p,
+		int rv = snprintf(buf, len, "%s/%s/%s/%s.mo", dir, p,
 		    category, domainname);
+		if (rv > (int)len)
+			return NULL;
 		if (stat(buf, &st) < 0)
 			continue;
 		if ((st.st_mode & S_IFMT) != S_IFREG)
@@ -686,6 +780,9 @@ free_sysdep_table(struct mosysdepstr_h **table, uint32_t nstring)
 {
 	uint32_t i;
 
+	if (! table)
+		return;
+
 	for (i=0; i<nstring; i++) {
 		if (table[i]) {
 			if (table[i]->expanded)
@@ -918,7 +1015,7 @@ dcngettext(const char *domainname, const char *msgid1, const char *msgid2,
 	   unsigned long int n, int category)
 {
 	const char *msgid;
-	char path[PATH_MAX];
+	char path[PATH_MAX+1];
 	const char *lpath;
 	static char olpath[PATH_MAX];
 	const char *cname = NULL;

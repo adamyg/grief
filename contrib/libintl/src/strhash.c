@@ -32,6 +32,7 @@ __RCSID("$NetBSD: strhash.c,v 1.3 2007/09/25 08:19:09 junyoung Exp $");
 #endif /* LIBC_SCCS and not lint */
 
 #include "namespace.h"
+
 #include <sys/param.h>
 #include <sys/types.h>
 

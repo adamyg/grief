@@ -1,9 +1,9 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dllmain.c,v 1.5 2022/06/02 03:59:51 cvsuser Exp $
+/* $Id: dllmain.c,v 1.6 2024/06/04 13:15:59 cvsuser Exp $
  *
  * win32 <libiconv.lib> - dllmain
  *
- * Copyright (c) 2012-2022 Adam Young.
+ * Copyright (c) 2012 - 2024 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

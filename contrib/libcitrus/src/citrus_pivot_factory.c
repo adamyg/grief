@@ -36,6 +36,7 @@ __RCSID("$NetBSD: citrus_pivot_factory.c,v 1.7 2009/04/12 14:20:19 lukem Exp $")
 #endif /* LIBC_SCCS and not lint */
 
 #include "namespace.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>

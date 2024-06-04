@@ -1,3 +1,5 @@
+/*	$NetBSD: iconv.c,v 1.20 2019/10/24 18:18:00 kamil Exp $ */
+
 /*-
  * Copyright (c)2003 Citrus Project,
  * All rights reserved.
@@ -22,16 +24,15 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *  $NetBSD: iconv.c,v 1.18 2011/10/31 13:27:51 yamt Exp $
  */
 
 #include <sys/cdefs.h>
 #if defined(LIBC_SCCS) && !defined(lint)
-__RCSID("$NetBSD: iconv.c,v 1.18 2011/10/31 13:27:51 yamt Exp $");
+__RCSID("$NetBSD: iconv.c,v 1.20 2019/10/24 18:18:00 kamil Exp $");
 #endif /* LIBC_SCCS and not lint */
 
-#include "namespace.h"
+#include "../namespace.h"
+
 #include <errno.h>
 #include <iconv.h>
 #include <langinfo.h>
@@ -47,7 +48,7 @@ __RCSID("$NetBSD: iconv.c,v 1.18 2011/10/31 13:27:51 yamt Exp $");
 #endif
 
 static void usage(void) __dead;
-static int  scmp(const void *, const void *);
+static int scmp(const void *, const void *);
 static void show_codesets(void);
 static void do_conv(const char *, FILE *, const char *, const char *, int, int);
 #if defined(WIN32)
@@ -84,11 +85,11 @@ scmp(const void *v1, const void *v2)
 }
 
 
-#if defined(WIN32)				/*DLL binding*/
+#if defined(WIN32) /*DLL binding*/
 static const char * local_nl_langinfo(int elm);
-#define nl_langinfo(__a)        local_nl_langinfo(__a)
+#define nl_langinfo(__a) local_nl_langinfo(__a)
 
-#define __ICONV_ERRNO()		errno = iconv_errno();
+#define __ICONV_ERRNO() errno = iconv_errno();
 #else
 #define __ICONV_ERRNO()
 #endif
@@ -112,8 +113,8 @@ show_codesets(void)
 	__iconv_free_list(list, sz);
 }
 
-#define INBUFSIZE		1024
-#define OUTBUFSIZE		(INBUFSIZE * 2)
+#define INBUFSIZE 1024
+#define OUTBUFSIZE (INBUFSIZE * 2)
 /*ARGSUSED*/
 static void
 do_conv(const char *fn, FILE *fp, const char *from, const char *to, int silent, int hide_invalid)
@@ -127,6 +128,9 @@ do_conv(const char *fn, FILE *fp, const char *from, const char *to, int silent, 
 #ifndef __ICONV_F_HIDE_INVALID
 #define __ICONV_F_HIDE_INVALID	0x0001	/*citrus_iconv.h*/
 #endif
+
+	(void)fn;
+	outbuf[0] = 0; /* quiet uninit warnings */
 
 	if (hide_invalid)
 		flags |= __ICONV_F_HIDE_INVALID;
@@ -144,7 +148,7 @@ do_conv(const char *fn, FILE *fp, const char *from, const char *to, int silent, 
 
 			out = outbuf;
 			outbytes = OUTBUFSIZE;
-			ret = __iconv(cd, &in, &inbytes, &out, &outbytes, flags, &inval);
+			ret = __iconv(cd, __UNCONST(&in), &inbytes, &out, &outbytes, flags, &inval);
 			invalids += inval;
 			if (outbytes < OUTBUFSIZE)
 				(void)fwrite(outbuf, 1, OUTBUFSIZE - outbytes, stdout);
@@ -230,7 +234,7 @@ main(int argc, char **argv)
 #if defined(WIN32)
 		case 'h':
 			help();
-                        break;
+			break;
 #endif
 		default:
 			usage();
@@ -257,10 +261,12 @@ main(int argc, char **argv)
 		else {
 			for (i = 0; i < argc; i++) {
 				fp = fopen(argv[i], "r");
-				if (fp == NULL)
+				if (fp == NULL) {
 					err(EXIT_FAILURE, "Cannot open `%s'", argv[i]);
-				do_conv(argv[i], fp, opt_f, opt_t, opt_s, opt_c);
-				(void)fclose(fp);
+				} else {
+					do_conv(argv[i], fp, opt_f, opt_t, opt_s, opt_c);
+					(void)fclose(fp);
+				}
 			}
 		}
 	}
@@ -338,6 +344,7 @@ help(void)
 		fprintf(stderr, "%s\n", text);
 	}
 	exit(1);
-}    
+}
 #endif
 
+//end

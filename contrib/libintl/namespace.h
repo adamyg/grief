@@ -49,10 +49,17 @@ extern char *           libintl_strsep(char **stringp, const char *delim);
 #define strsep(__a,__b) libintl_strsep(__a,__b)
 #endif
 
+#ifndef HAVE_ASPRINTF
+extern int              libintl_asprintf(char **str, const char *fmt, ...);
+extern int              libintl_vasprintf(char **str, const char *fmt, va_list ap);
+
+#define asprintf        libintl_asprintf
+#define vasprintf       libintl_vasprintf
+#endif
+
 #if defined(_MSC_VER) || \
-        defined(__MINGW32__)
+	defined(__MINGW32__)
 #define LC_MESSAGES     (LC_MAX + 1) /*XXX*/
 #endif
 
 /*end*/
-

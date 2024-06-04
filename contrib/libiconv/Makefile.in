@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.15 2024/05/26 12:12:12 cvsuser Exp $
+# $Id: Makefile.in,v 1.16 2024/06/04 13:15:59 cvsuser Exp $
 # libiconv/iconv makefile
 #
 #
@@ -86,7 +86,7 @@ RMDFLAGS=	-rf
 ICONVLIB=	$(D_LIB)/$(LP)iconv_static$(A)
 ICONVDLL=	$(D_LIB)/$(LP)iconv.la
 
-VERSION=	1.0.1
+VERSION=	1.0.3
 VERSIONSPEC=	$(subst .,:,$(VERSION))
 VPATH=		.
 
@@ -133,6 +133,10 @@ $(ICONVDLL):		MAPFILE=$(basename $@).map
 $(ICONVDLL):		$(DLLOBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $^ -version-number $(VERSIONSPEC) \
 			-rpath $(D_LIB) -bindir $(D_BIN) libcitrus$(A) $(LDLIBS) @LDMAPFILE@
+
+.PHONY:		test
+test:
+		$(PERL) ./iconvtest.pl --task=$(D_BIN)/iconv --data=./testdata
 
 .PHONY:		installinc installcfg
 installinc:		../include/.created

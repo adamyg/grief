@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.12 2024/05/28 14:21:41 cvsuser Exp $
+# $Id: Makefile.in,v 1.13 2024/06/04 13:28:57 cvsuser Exp $
 # libcitrus and modules makefile
 #
 #
@@ -39,6 +39,15 @@ ifneq ("$(BUILD_TYPE)","release")
 RTSUFFIX=d
 endif
 
+QUIETOUT:=	>/dev/null 2>&1
+ifeq ($(VERBOSE),1)
+QUIETOUT:=
+else ifeq ($(VERBOSE),0)
+else ifeq ($(VERBOSE),)
+else
+$(error VERBOSE: unexpected value 0 or 1 required, $(VERBOSE) given]))
+endif
+
 # Directories
 
 D_INC=		$(ROOT)/include
@@ -69,7 +78,7 @@ endif
 
 CINCLUDE=	-I. -I./src -I$(D_INC) @CINCLUDE@
 
-CEXTRA=		$(filter-out -D_WIN32_WINNT%,@DEFS@) -DI18NMODULE_MAJOR=$(major) -DI18NMODULE_MINOR=$(minor)
+CEXTRA=		$(filter-out -D_WIN32_WINNT%,@DEFS@)
 ifeq ("yes","@ISWIN32@")
 CEXTRA+=	-DWIN32
 endif
@@ -161,11 +170,11 @@ MODULELIBS=	$(addprefix $(D_LIB)/lib,$(addsuffix .la,$(MODULES)))
 OBJS=		$(LIBOBJS) $(MODULEOBJS)
 LIBS=		$(CITRUSLIB) $(MODULELIBS)
 TSKS=
+INSTALLED=
 
 include ./shlib_version
 
 CEXTRA+=	-DI18NMODULE_MAJOR=$(major) -DI18NMODULE_MINOR=$(minor)
-
 
 #########################################################################################
 # Rules
@@ -178,9 +187,9 @@ release:
 debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
-$(CITRUSLIB):		CEXTRA += -I$(CITRUSSRC) -DLIBCITRUS_STATIC -D_WIN32_WINNT=0X601
+$(CITRUSLIB):		CEXTRA += -I$(CITRUSSRC) -D_WIN32_WINNT=0X601
 $(CITRUSLIB):		$(LIBOBJS)
-		$(RM) $(RMFLAGS) $@ >/dev/null 2>&1
+		$(RM) $(RMFLAGS) $@ $(QUIETOUT)
 		$(AR) $(ARFLAGS) $@ $(subst /,\,$^)
 		$(RANLIB) $@
 
@@ -191,12 +200,25 @@ directories:		$(D_OBJ)/.created $(D_I18N)/.created $(D_I18N_MODULE)/.created
 		-@mkdir $(@D)
 		@echo "do not delete, managed directory" > $@
 
+define MODULE_clean
+		$(LIBTOOL) --mode=clean $(RM) $(D_LIB)/lib$(1).la $(D_OBJ)/citrus_$(1).lo $(QUIETOUT)
+		$(newline)
+endef
+
+define MODULE_depend
+INSTALLED+=		$$(D_I18N_MODULE)/lib$(1).$$(VERSION).dll
+$$(D_LIB)/lib$(1).la:	$$(D_LIB)/libcitrus$$(A)
+endef
+
+$(foreach module,$(MODULES),$(eval $(call MODULE_depend,$(module))))
+
 clean:
 		@echo $(BUILD_TYPE) clean
-		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
-		-@$(LIBTOOL) --mode=clean $(RM) $(MODULELIBS) >/dev/null 2>&1
-		-@$(RM) $(LIBOBJS) >/dev/null 2>&1
+		@$(foreach module,$(MODULES),$(call MODULE_clean,$(module)))
+		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(INSTALLED) $(LIBS) $(CLEAN) $(XCLEAN) $(QUIETOUT)
+		-@$(RM) $(LIBOBJS) $(QUIETOUT)
 
+#explicit rules, filename case
 $(D_LIB)/libBIG5.la:			$(D_OBJ)/citrus_big5.lo
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ -c $< \
 			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
@@ -257,39 +279,7 @@ $(D_LIB)/libZW.la:			$(D_OBJ)/citrus_zw.lo
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ -c $< \
 			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
 
-$(D_LIB)/libiconv_none.la:		$(D_OBJ)/citrus_iconv_none.lo
-		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ -c $< \
-			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
-
-$(D_LIB)/libiconv_std.la:		$(D_OBJ)/citrus_iconv_std.lo
-		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ -c $< \
-			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
-
-$(D_LIB)/libmapper_646.la:		$(D_OBJ)/citrus_mapper_646.lo
-		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ -c $< \
-			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
-
-$(D_LIB)/libmapper_none.la:		$(D_OBJ)/citrus_mapper_none.lo
-		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ -c $< \
-			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
-
-$(D_LIB)/libmapper_parallel.la:		$(D_OBJ)/citrus_mapper_serial.lo
-		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ -c $< \
-			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
-
-$(D_LIB)/libmapper_serial.la:		$(D_OBJ)/citrus_mapper_serial.lo
-		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ -c $< \
-			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
-
-$(D_LIB)/libmapper_std.la:		$(D_OBJ)/citrus_mapper_std.lo
-		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ -c $< \
-			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
-
-$(D_LIB)/libmapper_zone.la:		$(D_OBJ)/citrus_mapper_zone.lo
-		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ -c $< \
-			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
-
-$(D_LIB)/lib%.la:	$(D_OBJ)/citrus_%.lo $(D_LIB)/libcitrus.lib
+$(D_LIB)/lib%.la:	$(D_OBJ)/citrus_%.lo
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ -c $< \
 			-bindir $(D_I18N_MODULE) -version-number=$(major).$(minor) -L$(D_LIB) libcitrus$(A) $(LDLIBS)
 

@@ -1,4 +1,4 @@
-/* $NetBSD: citrus_hz.c,v 1.2 2008/06/14 16:01:07 tnozaki Exp $ */
+/* $NetBSD: citrus_hz.c,v 1.4 2014/06/24 22:24:18 spz Exp $ */
 
 /*-
  * Copyright (c)2004, 2006 Citrus Project,
@@ -29,7 +29,7 @@
 
 #include <sys/cdefs.h>
 #if defined(LIBC_SCCS) && !defined(lint)
-__RCSID("$NetBSD: citrus_hz.c,v 1.2 2008/06/14 16:01:07 tnozaki Exp $");
+__RCSID("$NetBSD: citrus_hz.c,v 1.4 2014/06/24 22:24:18 spz Exp $");
 #endif /* LIBC_SCCS and not lint */
 
 #include "namespace.h"
@@ -144,8 +144,10 @@ typedef struct {
 		_HZState	s_mbrtowc;
 		_HZState	s_mbtowc;
 		_HZState	s_mbsrtowcs;
+		_HZState	s_mbsnrtowcs;
 		_HZState	s_wcrtomb;
 		_HZState	s_wcsrtombs;
+		_HZState	s_wcsnrtombs;
 		_HZState	s_wctomb;
 	} states;
 } _HZCTypeInfo;
@@ -558,7 +560,7 @@ _citrus_HZ_encoding_module_uninit(_HZEncodingInfo *ei)
 }
 
 static int
-_citrus_HZ_parse_char(void **context, const char *name, const char *s)
+_citrus_HZ_parse_char(void *context, const char *name, const char *s)
 {
 	void **p;
 	escape_t *escape;
@@ -567,7 +569,7 @@ _citrus_HZ_parse_char(void **context, const char *name, const char *s)
 	_DIAGASSERT(name != NULL);
 	_DIAGASSERT(s != NULL);
 
-	p = (void **)*context;
+	p = (void **)context;
 	escape = (escape_t *)p[0];
 	if (escape->ch != '\0')
 		return EINVAL;
@@ -579,7 +581,7 @@ _citrus_HZ_parse_char(void **context, const char *name, const char *s)
 }
 
 static int
-_citrus_HZ_parse_graphic(void **context, const char *name, const char *s)
+_citrus_HZ_parse_graphic(void *context, const char *name, const char *s)
 {
 	void **p;
 	_HZEncodingInfo *ei;
@@ -590,7 +592,7 @@ _citrus_HZ_parse_graphic(void **context, const char *name, const char *s)
 	_DIAGASSERT(name != NULL);
 	_DIAGASSERT(s != NULL);
 
-	p = (void **)*context;
+	p = (void **)context;
 	escape = (escape_t *)p[0];
 	ei = (_HZEncodingInfo *)p[1];
 	graphic = malloc(sizeof(*graphic));
@@ -662,7 +664,7 @@ _CITRUS_PROP_HINT_END
 #endif
 
 static int
-_citrus_HZ_parse_escape(void **context, const char *name, const char *s)
+_citrus_HZ_parse_escape(void *context, const char *name, const char *s)
 {
 	_HZEncodingInfo *ei;
 	escape_t *escape;
@@ -672,7 +674,7 @@ _citrus_HZ_parse_escape(void **context, const char *name, const char *s)
 	_DIAGASSERT(name != NULL);
 	_DIAGASSERT(s != NULL);
 
-	ei = (_HZEncodingInfo *)*context;
+	ei = (_HZEncodingInfo *)context;
 	escape = malloc(sizeof(*escape));
 	if (escape == NULL)
 		return EINVAL;

@@ -1,8 +1,8 @@
-/* $Id: libpaths.c,v 1.10 2021/06/14 14:12:57 cvsuser Exp $
+/* $Id: libpaths.c,v 1.11 2024/06/04 13:28:58 cvsuser Exp $
  *
  * libcitrus <paths.h> implementation
  *
- * Copyright (c) 2012-2021 Adam Young.
+ * Copyright (c) 2012 - 2024 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,14 +47,15 @@
 #pragma comment(lib, "shfolder.lib")
 
 #include "../contrib_config.h"                  /* APPLICATIONDIR */
+
 #include "paths.h"
+#include "citrus_bcs.h"
 
-static const char *     x_application_dir = APPLICATIONDIR;
-
-static const char *     getpath(const char *application, const char *dir, char *buffer, const int buflen);
+static const char *     getpath(const char *dir, char *buffer, const int buflen);
 static int              getexedir(char *buf, int maxlen);
 static int              getdlldir(char *buf, int maxlen);
-static void             dospath(char *path);
+static size_t           strcatn(char *dst, const char* src, size_t siz);
+static void             unix2dos(char *path);
 
 
 /**
@@ -81,7 +82,7 @@ __citrus_PATH_ICONV(void)
     static char x_buffer[MAX_PATH];
 
     if (0 == x_buffer[0]) {
-        getpath(x_application_dir, "i18n/iconv", x_buffer, sizeof(x_buffer));
+        getpath("i18n/iconv", x_buffer, sizeof(x_buffer));
     }
     return x_buffer;
 }
@@ -112,15 +113,17 @@ __citrus_PATH_ESDB(const char *subdir)
     static int x_len = 0;
 
     if (0 == x_buffer[0]) {
-        getpath(x_application_dir, "i18n/esdb", x_buffer, sizeof(x_buffer));
+        getpath("i18n/esdb", x_buffer, sizeof(x_buffer));
         x_len = strlen(x_buffer);
     }
+
     if (subdir)  {
         _snprintf(x_buffer + x_len, sizeof(x_buffer) - x_len, subdir);
         x_buffer[sizeof(x_buffer)-1] = 0;
     } else {
         x_buffer[x_len] = 0;
     }
+
     return x_buffer;
 }
 
@@ -150,15 +153,17 @@ __citrus_PATH_CSMAPPER(const char *subdir)
     static int x_len = 0;
 
     if (0 == x_buffer[0]) {
-        getpath(x_application_dir, "i18n/csmapper", x_buffer, sizeof(x_buffer));
+        getpath("i18n/csmapper", x_buffer, sizeof(x_buffer));
         x_len = strlen(x_buffer);
     }
+
     if (subdir)  {
         _snprintf(x_buffer + x_len, sizeof(x_buffer) - x_len, subdir);
         x_buffer[sizeof(x_buffer)-1] = 0;
     } else {
         x_buffer[x_len] = 0;
     }
+
     return x_buffer;
 }
 
@@ -187,21 +192,40 @@ __citrus_PATH_I18NMODULE(void)
     static char x_buffer[MAX_PATH];
 
     if (0 == x_buffer[0]) {
-        getpath(x_application_dir, "i18n/module", x_buffer, sizeof(x_buffer));
+        getpath("i18n/module", x_buffer, sizeof(x_buffer));
     }
     return x_buffer;
 }
 
 
 static const char *
-getpath(const char *application, const char *dir, char *buffer, const int buflen)
+getpath(const char *subdir, char *buffer, const int buflen)
 {
+#define LIBCITRUS_PATH "LIBCITRUS_PATH"
+
+    char cwd[MAX_PATH];
     int len, done = FALSE;
 
-    // <DLLPATH>, generally same as INSTALLDIR
-    if ((len = getdlldir(buffer, buflen)) > 0) {
-        _snprintf(buffer + len, buflen - len, "/%s", dir);
+    // cached
+
+    len = (int)GetEnvironmentVariableA(LIBCITRUS_PATH, cwd, sizeof(cwd));
+    if (len > 0 && len < sizeof(cwd)) {
+
+        _snprintf(buffer, buflen, "%s/%s", cwd, subdir);
         buffer[buflen - 1] = 0;
+
+        unix2dos(buffer);
+        return buffer;
+    }
+
+    // otherwise resolve
+
+    // <DLLPATH>, generally same as INSTALLDIR
+    if ((len = getdlldir(cwd, sizeof(cwd))) > 0) {
+
+        _snprintf(buffer, buflen, "%s/%s", cwd, subdir);
+        buffer[buflen - 1] = 0;
+
         if (0 == _access(buffer, 0)) {
             done = TRUE;
         }
@@ -209,21 +233,28 @@ getpath(const char *application, const char *dir, char *buffer, const int buflen
 
     // <EXEPATH>, generally same as INSTALLDIR
     if (! done) {
-        if ((len = getexedir(buffer, buflen)) > 0) {
-            _snprintf(buffer + len, buflen - len, "/%s", dir);
+        if ((len = getexedir(cwd, sizeof(cwd))) > 0) {
+
+            _snprintf(buffer, buflen, "%s/%s", cwd, subdir);
             buffer[buflen - 1] = 0;
+
             if (0 == _access(buffer, 0)) {
                 done = TRUE;
             }
         }
     }
 
+    // fallbacks, should not be reached.
+
     // <INSTALLPATH>
     if (! done) {
-        if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_PROGRAM_FILES, NULL, 0, buffer))) {
-            len = strlen(buffer);
-            _snprintf(buffer + len, buflen - len, "/%s/%s", application, dir);
+        cwd[0] = 0;
+        if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_PROGRAM_FILES, NULL, 0, cwd))) {
+
+            strcatn(cwd, "/" APPLICATIONDIR, sizeof(cwd));
+            _snprintf(buffer, buflen, "%s/%s", cwd, subdir);
             buffer[buflen - 1] = 0;
+
             if (0 == _access(buffer, 0)) {
                 done = TRUE;
             }
@@ -232,10 +263,12 @@ getpath(const char *application, const char *dir, char *buffer, const int buflen
 
     // <APPDATA>
     if (! done)  {
-        if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_COMMON_APPDATA, NULL, 0, buffer))) {
-            len = strlen(buffer);
-            _snprintf(buffer + len, buflen - len, "/%s/%s", application, dir);
+        if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_COMMON_APPDATA, NULL, 0, cwd))) {
+
+            strcatn(cwd, "/" APPLICATIONDIR, sizeof(cwd));
+            _snprintf(buffer, buflen, "%s/%s", cwd, subdir);
             buffer[buflen - 1] = 0;
+
             if (0 == _access(buffer, 0)) {
                 done = TRUE;
             }
@@ -246,21 +279,23 @@ getpath(const char *application, const char *dir, char *buffer, const int buflen
     if (! done) {
         const char *env;
 
-        if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_PROGRAM_FILES, NULL, 0, buffer))) {
-            len = strlen(buffer);
-            _snprintf(buffer + len, buflen - len, "/%s/%s", application, dir);
+        if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_PROGRAM_FILES, NULL, 0, cwd))) {
+            strcatn(cwd, "/" APPLICATIONDIR, sizeof(cwd));
 
         } else if (NULL != (env = getenv("ProgramFiles"))) {
-            _snprintf(buffer, buflen, "%s/%s/%s/", env, application, dir);
+            _snprintf(cwd, sizeof(cwd), "%s/%s", env, APPLICATIONDIR);
 
         } else {
-            _snprintf(buffer, buflen, "c:/Program Files/%s/%s", application, dir);
+            _snprintf(cwd, sizeof(cwd), "c:/Program Files/%s", APPLICATIONDIR);
         }
+
+        _snprintf(buffer, buflen, "%s/%s", cwd, subdir);
         buffer[buflen - 1] = 0;
-        w32_mkdir(buffer, 0666);
     }
 
-    dospath(buffer);
+    SetEnvironmentVariableA(LIBCITRUS_PATH, cwd);
+    unix2dos(buffer);
+
     return buffer;
 }
 
@@ -284,6 +319,9 @@ getexedir(char *buf, int maxlen)
 }
 
 
+/*
+ *  getdlldir -- retrieve the path of the "base" dll.
+ */
 static int
 getdlldir(char *buf, int maxlen)
 {
@@ -303,6 +341,7 @@ getdlldir(char *buf, int maxlen)
 
         for (cp = buf + len; (cp > buf) && (*cp != '\\'); --cp)
             /*cont*/;
+
         if ('\\' == *cp) {
             cp[1] = '\0';                       // remove library
             return (cp - buf) + 1;
@@ -313,8 +352,37 @@ getdlldir(char *buf, int maxlen)
 }
 
 
+static size_t
+strcatn(char *dst, const char* src, size_t siz)
+{
+    char* d = dst;
+    const char* s = src;
+    size_t n = siz;
+    size_t dlen;
+
+    while (n-- != 0 && *d != '\0')
+        ++d;
+    dlen = d - dst;
+    n = siz - dlen;
+
+    if (n == 0)
+        return (dlen + strlen(s));
+
+    while (*s != '\0') {
+        if (n != 1) {
+            *d++ = *s;
+            n--;
+        }
+        s++;
+    }
+    *d = '\0';
+
+    return (dlen + (s - src));
+}
+
+
 static void
-dospath(char *path)
+unix2dos(char *path)
 {
     const char *in = path;
 
@@ -332,3 +400,4 @@ dospath(char *path)
     *path = 0;
 }
 
+//end

@@ -33,11 +33,11 @@
 typedef struct _citrus_module_rec *_citrus_module_t;
 
 __BEGIN_DECLS
-void *	_citrus_find_getops(_citrus_module_t /*__restrict*/,
-				const char * /*__restrict*/, const char * /*__restrict*/);
-int 	_citrus_load_module(_citrus_module_t * /*__restrict*/,
-				const char * /*__restrict*/);
-void 	_citrus_unload_module(_citrus_module_t);
+void *_citrus_find_getops(_citrus_module_t __restrict,
+			  const char * __restrict, const char * __restrict);
+int _citrus_load_module(_citrus_module_t * __restrict,
+			const char * __restrict);
+void _citrus_unload_module(_citrus_module_t);
 __END_DECLS
 
 #endif

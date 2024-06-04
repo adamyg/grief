@@ -32,6 +32,7 @@ __RCSID("$NetBSD: sysdep.c,v 1.2 2005/04/27 09:50:26 yamt Exp $");
 #endif /* LIBC_SCCS and not lint */
 
 #include "namespace.h"
+
 #include <sys/param.h>
 #include <sys/types.h>
 

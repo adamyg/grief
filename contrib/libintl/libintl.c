@@ -2,7 +2,7 @@
 /*
  * libintl dllmain implementation
  *
- * Copyright (c) 2012-2022 Adam Young.
+ * Copyright (c) 2012-2024 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

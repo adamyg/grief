@@ -1,4 +1,4 @@
-/*	$NetBSD: citrus_utf7.c,v 1.5 2006/08/23 12:57:24 tnozaki Exp $	*/
+/*	$NetBSD: citrus_utf7.c,v 1.7 2022/04/19 20:32:14 rillig Exp $	*/
 
 /*-
  * Copyright (c)2004, 2005 Citrus Project,
@@ -29,7 +29,7 @@
  
 #include <sys/cdefs.h>
 #if defined(LIB_SCCS) && !defined(lint)
-__RCSID("$NetBSD: citrus_utf7.c,v 1.5 2006/08/23 12:57:24 tnozaki Exp $");
+__RCSID("$NetBSD: citrus_utf7.c,v 1.7 2022/04/19 20:32:14 rillig Exp $");
 #endif /* LIB_SCCS and not lint */
 
 #include "namespace.h"
@@ -80,8 +80,10 @@ typedef struct {
 		_UTF7State	s_mbrtowc;
 		_UTF7State	s_mbtowc;
 		_UTF7State	s_mbsrtowcs;
+		_UTF7State	s_mbsnrtowcs;
 		_UTF7State	s_wcrtomb;
 		_UTF7State	s_wcsrtombs;
+		_UTF7State	s_wcsnrtombs;
 		_UTF7State	s_wctomb;
 	} states;
 } _UTF7CTypeInfo;
@@ -89,7 +91,7 @@ typedef struct {
 #define	_CEI_TO_EI(_cei_)		(&(_cei_)->ei)
 #define	_CEI_TO_STATE(_cei_, _func_)	(_cei_)->states.s_##_func_
 
-#define	_FUNCNAME(m)			_citrus_UTF7_##m
+#define _FUNCNAME(m)			_citrus_UTF7_##m
 #define	_ENCODING_INFO			_UTF7EncodingInfo
 #define	_CTYPE_INFO			_UTF7CTypeInfo
 #define	_ENCODING_STATE			_UTF7State

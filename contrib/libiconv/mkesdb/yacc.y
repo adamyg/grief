@@ -1,4 +1,4 @@
-/*	$NetBSD: yacc.y,v 1.6 2011/09/16 15:39:27 joerg Exp $	*/
+/*	$NetBSD: yacc.y,v 1.11 2016/06/28 09:24:46 wiz Exp $	*/
 
 %{
 /*-
@@ -33,7 +33,7 @@
 
 #include <sys/cdefs.h>
 #if !defined(lint)
-__RCSID("$NetBSD: yacc.y,v 1.6 2011/09/16 15:39:27 joerg Exp $");
+__RCSID("$NetBSD: yacc.y,v 1.11 2016/06/28 09:24:46 wiz Exp $");
 #endif /* not lint */
 
 #include "namespace.h"
@@ -277,7 +277,7 @@ do_mkdb(FILE *in)
 	else
 		out = stdout;
 
-	if (out==NULL)
+	if (out == NULL)
 		err(EXIT_FAILURE, "fopen");
 
 	ret = _lookup_factory_convert(out, in);

@@ -1,4 +1,4 @@
-/*	$NetBSD: citrus_module.c,v 1.9 2009/01/11 02:46:24 christos Exp $	*/
+/*	$NetBSD: citrus_module.c,v 1.13 2018/01/04 20:57:28 kamil Exp $	*/
 
 /*-
  * Copyright (c)1999, 2000, 2001, 2002 Citrus Project,
@@ -89,10 +89,11 @@
 
 #include <sys/cdefs.h>
 #if defined(LIBC_SCCS) && !defined(lint)
-__RCSID("$NetBSD: citrus_module.c,v 1.9 2009/01/11 02:46:24 christos Exp $");
+__RCSID("$NetBSD: citrus_module.c,v 1.13 2018/01/04 20:57:28 kamil Exp $");
 #endif /* LIBC_SCCS and not lint */
 
 #include "namespace.h"
+
 #include <assert.h>
 #include <errno.h>
 #include <limits.h>
@@ -113,14 +114,14 @@ __RCSID("$NetBSD: citrus_module.c,v 1.9 2009/01/11 02:46:24 christos Exp $");
 #error Neither DYNAMIC, STATIC or NONE ...
 #endif
 
-#if defined(_I18N_DYNAMIC)
-
 #include <sys/types.h>
 #include <dirent.h>
 #include <dlfcn.h>
 
-static int _getdewey(int [], char *);
-static int _cmpndewey(int [], int, int [], int);
+#ifdef _I18N_DYNAMIC
+
+static unsigned int _getdewey(int [], char *);
+static int _cmpndewey(int [], unsigned int, int [], unsigned int);
 static const char *_findshlib(char *, int *, int *);
 
 static const char *_pathI18nModule = NULL;
@@ -130,10 +131,10 @@ static const char *_pathI18nModule = NULL;
 #undef minor
 #define MAXDEWEY	3	/*ELF*/
 
-static int
+static unsigned int
 _getdewey(int dewey[], char *cp)
 {
-	int	i, n;
+	unsigned int	i, n;
 
 	_DIAGASSERT(dewey != NULL);
 	_DIAGASSERT(cp != NULL);
@@ -163,9 +164,9 @@ _getdewey(int dewey[], char *cp)
  * Return  0 if equal.
  */
 static int
-_cmpndewey(int d1[], int n1, int d2[], int n2)
+_cmpndewey(int d1[], unsigned int n1, int d2[], unsigned int n2)
 {
-	register int	i;
+	register unsigned int	i;
 
 	_DIAGASSERT(d1 != NULL);
 	_DIAGASSERT(d2 != NULL);
@@ -194,7 +195,7 @@ static const char *
 _findshlib(char *name, int *majorp, int *minorp)
 {
 	int		dewey[MAXDEWEY];
-	int		ndewey;
+	unsigned int	ndewey;
 	int		tmp[MAXDEWEY];
 	int		i;
 	int		len;
@@ -227,7 +228,7 @@ _findshlib(char *name, int *majorp, int *minorp)
 			continue;
 
 		while ((dp = readdir(dd)) != NULL) {
-			int n;
+			unsigned int	n;
 
 #if defined(WIN32)
 			/*
@@ -277,14 +278,16 @@ _findshlib(char *name, int *majorp, int *minorp)
 				continue;
 			if (strncmp(dp->d_name+len, ".so.", 4) != 0)
 				continue;
-			if ((n = _getdewey(tmp, dp->d_name + len + 4)) == 0)
+
+			if ((n = _getdewey(tmp, dp->d_name+len+4)) == 0)
 				continue;
-#endif
+#endif //WIN32
 
 			if (major != -1 && found_dot_a)
 				found_dot_a = 0;
 
 			/* XXX should verify the library is a.out/ELF? */
+
 			if (major == -1 && minor == -1) {
 				goto compare_version;
 			} else if (major != -1 && minor == -1) {
@@ -306,7 +309,8 @@ _findshlib(char *name, int *majorp, int *minorp)
 
 			/* We have a better version */
 			found_dot_so = 1;
-			snprintf(path, sizeof(path), "%s/%s", search_dirs[i], dp->d_name);
+			snprintf(path, sizeof(path), "%s/%s", search_dirs[i],
+			    dp->d_name);
 			found_dot_a = 0;
 			bcopy(tmp, dewey, sizeof(dewey));
 			ndewey = n;
@@ -326,7 +330,8 @@ _findshlib(char *name, int *majorp, int *minorp)
 }
 
 void *
-_citrus_find_getops(_citrus_module_t handle, const char *modname, const char *ifname)
+_citrus_find_getops(_citrus_module_t handle, const char *modname,
+		    const char *ifname)
 {
 	char name[PATH_MAX];
 	void *p;
@@ -344,13 +349,13 @@ _citrus_find_getops(_citrus_module_t handle, const char *modname, const char *if
 		    modname, ifname);
 		p = dlsym((void *)handle, name);
 	}
-#endif
+#endif //WIN32
 	return p;
 }
 
 int
 _citrus_load_module(_citrus_module_t *rhandle, const char *encname)
-{
+ {
 	const char *p;
 	char path[PATH_MAX];
 	int maj, min;
@@ -358,23 +363,35 @@ _citrus_load_module(_citrus_module_t *rhandle, const char *encname)
 
 	_DIAGASSERT(rhandle != NULL);
 
-#if defined(WIN32)
-	p = _pathI18nModule = _PATH_I18NMODULE;
-	if (NULL == p)
-		p = _DEF_PATH_I18NMODULE;
-	p = _pathI18nModule;
-#else
-	if (NULL == _pathI18nModule) {
+	if (_pathI18nModule == NULL) {
 		p = getenv("PATH_I18NMODULE");
-		if (p != NULL && !issetugid()) {
+#if defined(WIN32)
+		if (p == NULL) {
+			p = _PATH_I18NMODULE;
+			if (NULL == p)
+				p = _DEF_PATH_I18NMODULE;
+		}
+#else
+		if (p == NULL || issetugid()) {
+			_pathI18nModule = _PATH_I18NMODULE;
+#ifdef MLIBDIR
+			p = strrchr(_pathI18nModule, '/');
+			if (p != NULL) {
+				snprintf(path, sizeof(path), "%.*s/%s/%s",
+				    (int)(p - _pathI18nModule),
+				    _pathI18nModule, MLIBDIR, p + 1);
+				p = path;
+			} else
+				p = NULL;
+#endif
+		}
+#endif //WIN32
+		if (p != NULL) {
 			_pathI18nModule = strdup(p);
 			if (_pathI18nModule == NULL)
 				return ENOMEM;
-		} else {
-			_pathI18nModule = _PATH_I18NMODULE;
 		}
 	}
-#endif
 
 	(void)snprintf(path, sizeof(path), "lib%s", encname);
 	maj = I18NMODULE_MAJOR;
@@ -397,142 +414,8 @@ _citrus_unload_module(_citrus_module_t handle)
 	if (handle)
 		dlclose((void *)handle);
 }
-
-
-#elif defined(_I18N_STATIC)
-/*
- *  Compiled-in multibyte locale support for statically linked programs.
- *
- *      WIN32 - extension
- *
- *        ** work in progress, iconv/mapper support needed **
- */
-
-#include "citrus_types.h"
-#include "citrus_ctype.h"
-#include "citrus_stdenc.h"
-
-#ifdef _I18N_STATIC_BIG5
-#include "modules/citrus_big5.h"
-#endif
-#ifdef _I18N_STATIC_EUC
-#include "modules/citrus_euc.h"
-#endif
-#ifdef _I18N_STATIC_EUCTW
-#include "modules/citrus_euctw.h"
-#endif
-#ifdef _I18N_STATIC_ISO2022
-#include "modules/citrus_iso2022.h"
-#endif
-#ifdef _I18N_STATIC_MSKanji
-#include "modules/citrus_mskanji.h"
-#endif
-#ifdef _I18N_STATIC_UTF8
-#include "modules/citrus_utf8.h"
-#endif
-
-#define _CITRUS_GETOPS_FUNC(_m_, _if_)		_citrus_##_m_##_##_if_##_getops
-
-#define _CITRUS_LOCALE_TABLE_ENTRY(_n_)		\
-    { #_n_, \
-	_CITRUS_GETOPS_FUNC(_n_, ctype),	\
-	_CITRUS_GETOPS_FUNC(_n_, stdenc),	\
-    }
-
-/*
- * Table of compiled-in locales.
- */
-static const struct _citrus_locale_table_rec {
-	const char *name;
-	_CITRUS_CTYPE_GETOPS_FUNC_BASE((*ctype_fun));
-	_CITRUS_STDENC_GETOPS_FUNC_BASE((*stdenc_fun));
-//	_CITRUS_ICONV_GETOPS_FUNC_BASE((*iconv_fun));
-//	_CITRUS_MAPPER_GETOPS_FUNC_BASE((*mapper_fun));
-} _citrus_static_locale_table[] = {
-#ifdef _I18N_STATIC_BIG5
-	_CITRUS_LOCALE_TABLE_ENTRY(BIG5),
-#endif
-#ifdef _I18N_STATIC_EUC
-	_CITRUS_LOCALE_TABLE_ENTRY(EUC),
-#endif
-#ifdef _I18N_STATIC_EUCTW
-	_CITRUS_LOCALE_TABLE_ENTRY(EUCTW),
-#endif
-#ifdef _I18N_STATIC_ISO2022
-	_CITRUS_LOCALE_TABLE_ENTRY(ISO2022),
-#endif
-#ifdef _I18N_STATIC_MSKanji
-	_CITRUS_LOCALE_TABLE_ENTRY(MSKanji),
-#endif
-#ifdef _I18N_STATIC_UTF8
-	_CITRUS_LOCALE_TABLE_ENTRY(UTF8),
-#endif
-//	mapper_parallel
-//	mapper_serial
-//	mapper_std
-//	mapper_zone
-//	mapper_none
-//	mapper_range
-	{ 0, 0 }
-};
-
-/*ARGSUSED*/
-void *
-_citrus_find_getops(_citrus_module_t handle, const char *modname,
-		    const char *ifname)
-{
-	const struct _citrus_locale_table_rec *p;
-
-	_DIAGASSERT(handle != NULL);
-	_DIAGASSERT(modname != NULL);
-	_DIAGASSERT(ifname != NULL);
-
-	p = (const struct _citrus_locale_table_rec *)handle;
-
-	if (strcmp(p->name, modname))		/* Sanity check, should perhaps be a _DIAGASSERT */
-		return NULL;
-
-	if (0 == strcmp(ifname, "ctype"))
-		return (void *)p->ctype_fun;
-
-	else if (0 == strcmp(ifname, "stdenc"))
-		return (void *)p->stdenc_fun;
-
-//	else if (0 == strcmp(ifname, "mapper"))
-//		return (void *)p->mapper_fun;
-
-//	else if (0 == strcmp(ifname, "iconv"))
-//		return (void *)p->iconv_fun;
-
-        return NULL;
-}
-
-
-int
-_citrus_load_module(_citrus_module_t *rhandle, char const *encname)
-{
-	const struct _citrus_locale_table_rec *p;
-
-	_DIAGASSERT(rhandle != NULL);
-
-	for (p = _citrus_static_locale_table; p->name; ++p) {
-		if (0 == strcmp(p->name, encname)) {
-			*rhandle = (_citrus_module_t)p;
-			return 0;
-		}
-	}
-	return EINVAL;
-}
-
-void
-/*ARGSUSED*/
-_citrus_unload_module(_citrus_module_t handle)
-{
-}
-
-
 #else
-/* !_I18N_DYNAMIC && !_I18N_STATIC */
+/* !_I18N_DYNAMIC */
 
 void *
 /*ARGSUSED*/

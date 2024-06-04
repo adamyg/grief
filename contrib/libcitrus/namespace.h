@@ -1,10 +1,10 @@
 #ifndef LOCAL_NAMESPACE_H_INCLUDED
 #define LOCAL_NAMESPACE_H_INCLUDED
-/* $Id: namespace.h,v 1.10 2024/01/01 12:37:09 cvsuser Exp $
+/* $Id: namespace.h,v 1.11 2024/06/04 13:28:58 cvsuser Exp $
  *
  * libcitrus <namespace.h>
  *
- * Copyright (c) 2012-2015 Adam Young.
+ * Copyright (c) 2012 - 2024 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,7 +54,7 @@
 #include <unistd.h>
 
 #define _I18N_DYNAMIC 1
-/*#define _I18N_STATIC 1        * issues/incomplete */
+/*#define _I18N_STATIC 1*/ // issues/incomplete
 /*#define _I18N_NONE 1*/
 #if defined(_I18N_STATIC)
 #define _I18N_STATIC_BIG5
@@ -66,12 +66,15 @@
 #endif
 
 #if defined(MODULE_STATIC)
+#error MODULE_LINKAGE
 #   define MODULE_LINKAGE
 #   define MODULE_ENTRY
 #elif defined(_WIN32) || defined(WIN32)
-#   define MODULE_LINKAGE       __declspec(dllexport)
-#   define MODULE_ENTRY         __cdecl
+    // __declspec(dllexport) void __cdecl function(void);
+#   define MODULE_LINKAGE __declspec(dllexport)
+#   define MODULE_ENTRY __cdecl
 #else
+#error MODULE_LINKAGE
 #   define MODULE_LINKAGE
 #   define MODULE_ENTRY
 #endif
@@ -79,14 +82,17 @@
 #ifndef __CONCAT
 #if defined(__STDC__) || defined(_MSC_VER) || defined(__WATCOMC__) || \
             defined(__cplusplus)
-#define __CONCAT(x,y)           x ## y
+#define __CONCAT(x,y)   x ## y
 #else
-#define __CONCAT(x,y)           x/**/y
+#define __CONCAT(x,y)   x/**/y
 #endif
 #endif
 
 #if defined(_MSC_VER)
 #define __restrict      /**/
+#endif
+#if !defined(__used)
+#define __used          /**/
 #endif
 
 #ifndef u_int32_t
@@ -118,7 +124,7 @@
 
 #define bcopy(_s,_d,_l) memmove(_d,_s,_l)
 
-#ifdef  EPROTONOSUPPORT
+#ifdef EPROTONOSUPPORT
 #define EFTYPE          EPROTONOSUPPORT
 #else
 #define EFTYPE          WSAEPROTONOSUPPORT

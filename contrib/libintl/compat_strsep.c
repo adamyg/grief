@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_strsep_c,"$Id: compat_strsep.c,v 1.1 2018/10/15 14:34:00 cvsuser Exp $")
+__CIDENT_RCSID(gr_compat_strsep,"$Id: compat_strsep.c,v 1.2 2024/06/04 13:17:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*-
@@ -71,4 +71,5 @@ libintl_strsep(char **stringp, const char *delim)
 	}
 	/* NOTREACHED */
 }
+
 /*end*/

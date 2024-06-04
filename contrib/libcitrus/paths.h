@@ -1,11 +1,11 @@
 #ifndef _CITRUS_PATHS_H_INCLUDED_
 #define _CITRUS_PATHS_H_INCLUDED_
 
-/* $Id: paths.h,v 1.4 2015/03/01 02:56:37 cvsuser Exp $
+/* $Id: paths.h,v 1.5 2024/06/04 13:28:58 cvsuser Exp $
  *
  * libcitrus <paths.h>
  *
- * Copyright (c) 2012-2015 Adam Young.
+ * Copyright (c) 2012 - 2024 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
