@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.18 2014/10/26 22:13:14 ayoung Exp $")
+__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.19 2024/06/09 19:50:16 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyncurses.c,v 1.18 2014/10/26 22:13:14 ayoung Exp $
+/* $Id: ttyncurses.c,v 1.19 2024/06/09 19:50:16 cvsuser Exp $
  * [n]curses tty driver interface -- alt driver when running under ncurses.
  *
  *
@@ -97,6 +97,10 @@ ttcurses(void)
 #else  /*!HAVE_NCURSES_CURSES_H || HAVE_NCURSES_H*/
 #error "HAVE_LIBNCURSE defined yet missing headers, check config"
 #endif
+#endif
+
+#if defined(NCURSES_VERSION) && defined(HAVE_LIBNCURSESW)
+extern int _nc_unicode_locale(void);		/* XXX - private/exported */
 #endif
 
 #include "cmap.h"
