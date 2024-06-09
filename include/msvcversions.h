@@ -1,11 +1,11 @@
 #ifndef GR_MSVCVERSIONS_H_INCLUDED
 #define GR_MSVCVERSIONS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_msvcversions_h,"$Id: msvcversions.h,v 1.6 2024/05/15 13:34:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_msvcversions_h,"$Id: msvcversions.h,v 1.7 2024/06/09 14:05:15 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: msvcversions.h,v 1.6 2024/05/15 13:34:07 cvsuser Exp $
+/* $Id: msvcversions.h,v 1.7 2024/06/09 14:05:15 cvsuser Exp $
  * _MSC_VER definitions
  *
  * Copyright (c) 2017 - 2024, Adam Young.
@@ -33,7 +33,7 @@ __CPRAGMA_ONCE
 
 #define _MSC_VER_2022 1930                      /* (Visual Studio 2022 / MSVC++ 17.x) */
 #define _MSC_VER_2022_MIN 1930                  /* (Visual Studio 2022 / MSVC++ 17.0.1) */
-#define _MSC_VER_2022_MAX 1939                  /* (Visual Studio 2022 / MSVC++ 17.9.x) */
+#define _MSC_VER_2022_MAX 1940                  /* (Visual Studio 2022 / MSVC++ 17.10.x) */
 
 #define _MSC_VER_2019 1920                      /* (Visual Studio 2019 / MSVC++ 16.x) */
 #define _MSC_VER_2019_MIN 1920                  /* (Visual Studio 2019 / MSVC++ 16.0) */

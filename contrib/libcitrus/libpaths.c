@@ -1,4 +1,4 @@
-/* $Id: libpaths.c,v 1.11 2024/06/04 13:28:58 cvsuser Exp $
+/* $Id: libpaths.c,v 1.12 2024/06/09 12:50:26 cvsuser Exp $
  *
  * libcitrus <paths.h> implementation
  *
@@ -248,7 +248,6 @@ getpath(const char *subdir, char *buffer, const int buflen)
 
     // <INSTALLPATH>
     if (! done) {
-        cwd[0] = 0;
         if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_PROGRAM_FILES, NULL, 0, cwd))) {
 
             strcatn(cwd, "/" APPLICATIONDIR, sizeof(cwd));
@@ -279,8 +278,15 @@ getpath(const char *subdir, char *buffer, const int buflen)
     if (! done) {
         const char *env;
 
+#if defined(_WIN64)
+        // The Program Files folder on 64 - bit systems, typical path is "C:\Program Files(86)".
+        if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_PROGRAM_FILESX86, NULL, 0, cwd))) {
+            strcatn(cwd, "/" APPLICATIONDIR, sizeof(cwd));
+#else
+        // The Program Files folder. typical path is "C:\Program Files".
         if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_PROGRAM_FILES, NULL, 0, cwd))) {
             strcatn(cwd, "/" APPLICATIONDIR, sizeof(cwd));
+#endif
 
         } else if (NULL != (env = getenv("ProgramFiles"))) {
             _snprintf(cwd, sizeof(cwd), "%s/%s", env, APPLICATIONDIR);
