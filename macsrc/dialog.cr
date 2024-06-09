@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: dialog.cr,v 1.13 2014/10/27 23:28:20 ayoung Exp $
+/* $Id: dialog.cr,v 1.14 2024/05/15 08:22:44 cvsuser Exp $
  * Macros emulating BRIEF dialog primitives. This file contains
  * macros which emulate BRIEF functions based on the functions
  * available under GRIEF.
@@ -410,7 +410,7 @@ _dialog_menu_search(int nextflag, int sizeflag)
                 restore_position(0);
                 beginning_of_line();
                 raise_anchor();
-                drop_anchor(3);
+                drop_anchor(MK_LINE);
                 return;
             }
             down();                             /* Skip the last match */
@@ -442,7 +442,7 @@ _menu_highlight()
     if (execute_macro(_dialog_action_func,
             DIALOG_MOVE_MENU, line, _dialog_menutext())) {
         raise_anchor();
-        drop_anchor(3);
+        drop_anchor(MK_LINE);
         return (TRUE);
     }
     return (FALSE);
@@ -602,7 +602,7 @@ _dialog_typeables()
     while (!failed) {
         if (search_fwd(pattern, TRUE, FALSE) <= 0) {
             move_abs(start_line, start_col);
-            drop_anchor(3);
+            drop_anchor(MK_LINE);
             top_of_buffer();
             while (! failed) {
                 if (search_fwd(pattern, TRUE, FALSE, TRUE) <= 0)

@@ -1,4 +1,4 @@
-dnl $Id: libclang.m4,v 1.2 2013/01/12 00:50:50 cvsuser Exp $
+dnl $Id: libclang.m4,v 1.3 2024/05/02 14:34:31 cvsuser Exp $
 dnl libclang support
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -70,4 +70,3 @@ AC_DEFUN([CF_LIB_CLANG],[
 	fi
 	AC_SUBST(LIBCLANG)
 ])dnl
-    

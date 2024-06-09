@@ -2,7 +2,7 @@
 #define GR_EDIDENTIFIER_H_INCLUDED
 
 /* -*- mode: c; indent-width: 4; -*- */
-/*  $Id: edidentifier.h,v 1.18 2022/03/21 14:55:27 cvsuser Exp $
+/*  $Id: edidentifier.h,v 1.20 2024/04/08 15:07:03 cvsuser Exp $
  *  Compiler specific object identify functionality.
  *
  *      __CIDENT(description)
@@ -11,7 +11,7 @@
  *
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

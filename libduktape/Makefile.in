@@ -1,8 +1,9 @@
-# $Id: Makefile.in,v 1.12 2022/06/27 16:17:41 cvsuser Exp $
+# -*- mode: mak; -*-
+# $Id: Makefile.in,v 1.19 2024/05/03 14:35:16 cvsuser Exp $
 # libduktape makefile.
 #
 #
-# Copyright (c) 2018 - 2022, Adam Young.
+# Copyright (c) 2018 - 2024, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -52,6 +53,15 @@ RC=		@RC@
 
 # Configuration
 
+QUIETOUT:=	>/dev/null 2>&1
+ifeq ($(VERBOSE),1)
+QUIETOUT:=
+else ifeq ($(VERBOSE),0)
+else ifeq ($(VERBOSE),)
+else
+$(error VERBOSE: unexpected value 0 or 1 required, $(VERBOSE) given]))
+endif
+
 ifeq ("$(BUILD_TYPE)","")	#default
 BUILD_TYPE=	debug
 MAKEFLAGS+=	BUILD_TYPE=debug
@@ -64,7 +74,7 @@ endif
 
 D_INC=		$(ROOT)/include
 D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
-D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/libduktape
+D_OBJ=		$(ROOT)/obj@TOOLCHAINEXT@/$(BUILD_TYPE)/libduktape
 D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 # Common flags
@@ -116,11 +126,11 @@ RMDFLAGS=	-rf
 #########################################################################################
 # Targets
 
-DUKTAPELIB=		$(D_LIB)/$(LP)duktape_static$(A)
-DUKTAPEDLL=		$(D_LIB)/$(LP)duktape.la
-DUK=			$(D_BIN)/duk$(E)
+DUKTAPELIB=	$(D_LIB)/$(LP)duktape_static$(A)
+DUKTAPEDLL=	$(D_LIB)/$(LP)duktape.la
+DUK=		$(D_BIN)/duk$(E)
 
-VERSION=	2.6.0
+VERSION=	2.7.0
 VERSIONSPEC=	$(subst .,:,$(VERSION))
 VERSION_1	=$(word 1,$(subst ., ,$(VERSION)))
 VERSION_2	=$(word 2,$(subst ., ,$(VERSION)))
@@ -131,15 +141,21 @@ VPATH=		./cmdline
 LIBSOURCES=	\
 	duktape.c
 
+ifeq (owc19,$(findstring owc19,"@TOOLCHAIN@"))
+LIBSOURCES+=	\
+	compat_cbrt.c \
+	compat_trunc.c
+endif
+
 DUKSOURCES=	\
 	duk_cmdline.c \
 	duk_cmdline_lowmem.c
 
-LIBOBJS=\
-	$(addprefix $(D_OBJ)/,$(subst .c,$(O),$(LIBSOURCES)))
+LIBOBJS=	$(addprefix $(D_OBJ)/,$(subst .c,$(O),$(LIBSOURCES)))
+                                   
+TSKOBJS=	$(addprefix $(D_OBJ)/,$(subst .c,$(O),$(DUKSOURCES)))
 
-DLLOBJS=\
-	$(subst $(O),.lo,$(LIBOBJS))
+DLLOBJS=	$(subst $(O),.lo,$(LIBOBJS))
 
 ifeq ("win32","@build_os@")
 ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
@@ -149,11 +165,9 @@ DLLOBJS+=	$(D_OBJ)/libduktape.res
 endif
 endif
 
-DUKOBJS=\
-	$(addprefix $(D_OBJ)/,$(subst .c,$(O),$(DUKSOURCES)))
+DUKOBJS=	$(addprefix $(D_OBJ)/,$(subst .c,$(O),$(DUKSOURCES)))
 
-
-OBJS=		$(LIBOBJS) $(DLLOBJS)
+OBJS=		$(LIBOBJS) $(DLLOBJS) $(TSKOBJS)
 LIBS=		$(DUKTAPELIB) $(DUKTAPEDLL)
 TSKS=		$(DUK)
 
@@ -175,6 +189,7 @@ $(DUKTAPELIB):		Makefile $(D_OBJ)/.created $(LIBOBJS)
 		$(AR) $(ARFLAGS) $@ $(LIBOBJS)
 		$(RANLIB) $@
 
+XCLEAN +=	$(basename $(DUKTAPEDLL)).map
 ifeq ("yes","@ISWIN32@")
 $(DUKTAPEDLL):		CEXTRA += -DDUKTAPE_DLL_BUILD
 $(DUKTAPEDLL):		DLLDEF = -export-symbols libduktape.def
@@ -184,21 +199,24 @@ $(DUKTAPEDLL):		Makefile $(D_OBJ)/.created $(DLLOBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ -version-number $(VERSIONSPEC) \
 			-rpath $(D_LIB) -bindir $(D_BIN) $(DLLDEF) $(DLLOBJS) $(LDLIBS) @LDMAPFILE@
 
+XCLEAN +=	$(basename $(DUK)).map
 $(DUK):		MAPFILE=$(basename $@).map
 $(DUK):			Makefile $(DUKOBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(DUKOBJS) $(DUKTAPEDLL) $(LDLIBS) @LDMAPFILE@
 
 version.h:		Makefile
 		$(PERL) ./version.pl --version "$(VERSION)"
-                
+
 $(D_OBJ)/.created:
 		-@mkdir $(D_OBJ)
 		@echo "do not create" > $@
 
 clean:
-		-@$(LIBTOOL) --mode=clean $(RM) $(DUKTAPEDLL) $(DLLOBJS) >/dev/null 2>&1
-		-@$(RM) $(RMFLAGS) $(BAK) $(DUKTAPELIB) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
-		-@$(RM) $(RMFLAGS) $(LIBOBJS) >/dev/null 2>&1
+		@echo $(BUILD_TYPE) clean
+		-@$(LIBTOOL) --mode=clean $(RM) $(DUK)
+		-@$(LIBTOOL) --mode=clean $(RM) $(DUKTAPEDLL) $(DLLOBJS) $(QUIETOUT)
+		-@$(RM) $(RMFLAGS) $(DUKTAPELIB) $(LIBOBJS) $(TSKOBJS) $(QUIETOUT)
+		-@$(RM) $(RMFLAGS) $(BAK) $(CLEAN) $(XCLEAN) $(QUIETOUT)
 
 # XXX: open-watcom debug breaks due to the module size, must filter out -hw
 
@@ -206,6 +224,12 @@ $(D_OBJ)/%$(O):		%.c
 		$(CC) $(filter-out -hw -gw,$(CFLAGS)) -o $@ -c $<
 
 $(D_OBJ)/%.lo:		%.c
+		$(LIBTOOL) --mode=compile $(CC) $(filter-out -hw -gw,$(CFLAGS)) -o $@ -c $<
+
+$(D_OBJ)/compat_%$(O):	compat/%.c
+		$(CC) $(filter-out -hw -gw,$(CFLAGS)) -o $@ -c $<
+
+$(D_OBJ)/compat_%.lo:	compat/%.c
 		$(LIBTOOL) --mode=compile $(CC) $(filter-out -hw -gw,$(CFLAGS)) -o $@ -c $<
 
 $(D_OBJ)/%.res:		%.rc

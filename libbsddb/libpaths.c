@@ -1,9 +1,9 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: libpaths.c,v 1.9 2022/05/26 13:36:07 cvsuser Exp $
+/* $Id: libpaths.c,v 1.11 2024/04/17 16:08:54 cvsuser Exp $
  *
  * libbsddb <libpath.c>
  *
- * Copyright (c) 2012-2015 Adam Young.
+ * Copyright (c) 2012 - 2024 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

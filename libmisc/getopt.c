@@ -1,15 +1,15 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_getopt_c,"$Id: getopt.c,v 1.20 2022/09/20 15:19:11 cvsuser Exp $")
+__CIDENT_RCSID(gr_getopt_c,"$Id: getopt.c,v 1.23 2024/04/17 15:57:13 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: getopt.c,v 1.20 2022/09/20 15:19:11 cvsuser Exp $
+/* $Id: getopt.c,v 1.23 2024/04/17 15:57:13 cvsuser Exp $
  * public domain getopt() implementation
  * original source: comp.sources.unix/volume3/att_getopt.
  * modified to support POSIX, BSD and GNU extensions.
  *
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -34,7 +34,7 @@ __CIDENT_RCSID(gr_getopt_c,"$Id: getopt.c,v 1.20 2022/09/20 15:19:11 cvsuser Exp
 
 #include "edgetopt.h"
 
-#if defined(NEEDS_GETOPT) && !defined(__MINGW32__)
+#if defined(NEEDS_GETOPT)
 
 #include <stdio.h>
 #include <string.h>
@@ -181,5 +181,5 @@ getopt(int argc, char * const * argv, const char *opts)
     return c;
 }
 
-#endif  /*NEED_GETOPT*/
+#endif  /*NEEDS_GETOPT*/
 /*end*/

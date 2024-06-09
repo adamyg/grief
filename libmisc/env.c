@@ -1,13 +1,13 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(cr_env_c,"$Id: env.c,v 1.30 2022/05/31 16:18:23 cvsuser Exp $")
+__CIDENT_RCSID(cr_env_c,"$Id: env.c,v 1.33 2024/04/27 14:40:05 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: env.c,v 1.30 2022/05/31 16:18:23 cvsuser Exp $
+/* $Id: env.c,v 1.33 2024/04/27 14:40:05 cvsuser Exp $
  * Environment related functions.
  *
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -267,7 +267,7 @@ ggetnenv(const char * name, int length)
  *      The gputenv() function adds new environment variables or modifies the
  *      values of existing environment variables.
  *
- *      The envirnoment value described by 'arg' is copied by this function.
+ *      The environment value described by 'arg' is copied by this function.
  *
  *  Returns:
  *      Return 0 if successful, or -1 in the case of an error.

@@ -1,4 +1,4 @@
-dnl $Id: libx11.m4,v 1.3 2013/04/05 19:52:10 ayoung Exp $
+dnl $Id: libx11.m4,v 1.4 2024/05/02 14:34:32 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -111,12 +111,12 @@ AC_DEFUN([CF_CHECK_LIBX11],[
 		cf_save_LIBS=$LIBS
 		LIBS="$LIBS -lX11"
 			AC_CHECK_LIB([xkbfile], [XkbBell],[
-			AC_TRY_LINK([
+			AC_RUN_IFELSE([AC_LANG_PROGRAM([[
 #include <X11/Xlib.h>
-#include <X11/XKBlib.h>],
-			[Display *d;
+#include <X11/XKBlib.h>]],
+			[[Display *d;
 			Window w;
-			XkbBell(d, w, 0, 0);],
+			XkbBell(d, w, 0, 0);]])],
 				[cf_cv_xkbbell=yes
 				 AC_DEFINE([HAVE_XKBBELL], 1)
 				 LIBX11="$LIBX11 -lxkbfile"],
@@ -152,13 +152,13 @@ AC_DEFUN([CF_CHECK_LIBXSHAPE],[
 	if test x"$cf_with_libxext" = xyes; then
 		AC_CHECK_LIB([Xext], [XShapeCombineShape], [
 			AC_MSG_CHECKING([for X11/extensions/shape.h])
-			AC_TRY_LINK([
+			AC_RUN_IFELSE([AC_LANG_PROGRAM([[
 #if defined(HAVE_X11_XLIB_H)
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #endif
-#include <X11/extensions/shape.h>],
-			[long foo = ShapeSet;],
+#include <X11/extensions/shape.h>]],
+			[[long foo = ShapeSet;]])],
 				[cf_cv_libxext=yes
 				 AC_DEFINE([HAVE_X11_EXTENSIONS_SHAPE_H], 1)
 				 AC_DEFINE([HAVE_LIBXEXT], 1)

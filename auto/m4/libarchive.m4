@@ -99,7 +99,7 @@ if test "$cf_lib_archive_ENABLED" = "yes" ; then
 	cf_lib_archive_SAVECPPFLAGS="$CPPFLAGS"
 	cf_lib_archive_SAVELDFLAGS="$LDFLAGS"
 	AC_LANG_SAVE
-	AC_LANG_C
+	AC_LANG([C])
 
 	if test "x$cf_lib_archive_LOCATION" = "xdefined" ; then
 		CPPFLAGS="-I$cf_lib_archive_DIR/include $cf_lib_archive_SAVECPPFLAGS"

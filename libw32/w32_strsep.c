@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_strsep_c,"$Id: w32_strsep.c,v 1.4 2018/10/12 00:24:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_strsep_c,"$Id: w32_strsep.c,v 1.5 2023/12/27 17:52:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*-
@@ -29,6 +29,7 @@ __CIDENT_RCSID(gr_w32_strsep_c,"$Id: w32_strsep.c,v 1.4 2018/10/12 00:24:41 cvsu
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
+ * ==native-notice==
  */
 
 #include <sys/param.h>
@@ -71,4 +72,5 @@ strsep(char **stringp, const char *delim)
 	}
 	/* NOTREACHED */
 }
+
 /*end*/

@@ -1,6 +1,22 @@
 -*- encoding: utf-8; -*-
 
-	* BUILD 24, version: 3.2.2
+	* BUILD 24, version: 3.2.3
+
+Tue May 28 19:08:00 2024 adamy
+
+	* configure upgrades
+
+	* documentation/install
+
+	* libguess-1.2
+
+	* duktape 2.7.0 merge
+
+	* libw32 merge
+
+	* general maintance and bugfixes.
+
+	* AltGr/WIN32
 
 Sun Aug 28 20:44:56 2022 adamy
 

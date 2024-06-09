@@ -1,5 +1,5 @@
-#ifndef GR_LIBW32_MSVC_STDINT_H_INCLUDED
-#define GR_LIBW32_MSVC_STDINT_H_INCLUDED
+#ifndef LIBW32_MSVC_STDINT_H_INCLUDED
+#define LIBW32_MSVC_STDINT_H_INCLUDED
 
 /* -*- mode: c; indent-width: 4; -*- */
 // ISO C9x  compliant stdint.h for Microsoft Visual Studio
@@ -36,13 +36,10 @@
 #ifndef _MSC_VER
 #error "Use this header only with Microsoft Visual C++ compilers!"
 #endif
-#if _MSC_VER > 1000
+
+#if _MSC_VER > 1
 #pragma once
 #endif
-
-/*
- * ==end==
- */
 
 #include <limits.h>
 
@@ -76,6 +73,7 @@ extern "C" {
 // realize that, e.g. char has the same size as __int8
 // so we give up on __intX for them.
 #if !defined(_MSC_STDINT_H_TYPES)
+#define _MSC_STDINT_H_TYPES
 #if (_MSC_VER < 1300)
 typedef signed char         int8_t;
 typedef signed short        int16_t;
@@ -93,7 +91,6 @@ typedef unsigned __int32    uint32_t;
 #endif  /*1300*/
 typedef signed __int64      int64_t;
 typedef unsigned __int64    uint64_t;
-#define _MSC_STDINT_H_TYPES
 #endif  /*_MSC_STDINT_H_TYPES*/
 
 // 7.18.1.2 Minimum-width integer types
@@ -132,7 +129,8 @@ typedef uint64_t            uintmax_t;
 
 // 7.18.2 Limits of specified-width integer types
 
-#if !defined(__cplusplus) || defined(__STDC_LIMIT_MACROS) // [   See footnote 220 at page 257 and footnote 221 at page 259
+#if !defined(__cplusplus) || \
+        (_MSC_VER >= 1920) || defined(__STDC_LIMIT_MACROS) // [ C99, footnote 224 at page 260, removed C11
 
 // 7.18.2.1 Limits of exact-width integer types
 #define INT8_MIN            ((int8_t)_I8_MIN)
@@ -229,7 +227,8 @@ typedef uint64_t            uintmax_t;
 
 // 7.18.4 Limits of other integer types
 
-#if !defined(__cplusplus) || defined(__STDC_CONSTANT_MACROS) // [   See footnote 224 at page 260
+#if !defined(__cplusplus) || \
+        (_MSC_VER >= 1920) || defined(__STDC_CONSTANT_MACROS) // [ C99, footnote 224 at page 260, removed C11
 
 // 7.18.4.1 Macros for minimum-width integer constants
 
@@ -244,9 +243,13 @@ typedef uint64_t            uintmax_t;
 #define UINT64_C(val)       val##ui64
 
 // 7.18.4.2 Macros for greatest-width integer constants
+#ifndef INTMAX_C
 #define INTMAX_C            INT64_C
+#endif
+#ifndef UINTMAX_C
 #define UINTMAX_C           UINT64_C
+#endif
 
 #endif // __STDC_CONSTANT_MACROS ]
 
-#endif /*GR_LIBW32_MSVC_STDINT_H_INCLUDED*/
+#endif /*LIBW32_MSVC_STDINT_H_INCLUDED*/

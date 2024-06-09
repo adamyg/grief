@@ -36,6 +36,7 @@ int _n_(struct _citrus_iconv_ops *, size_t, uint32_t)
 #define _CITRUS_ICONV_GETOPS_FUNC(_n_)					\
 MODULE_LINKAGE int MODULE_ENTRY _citrus_##_n_##_iconv_getops(struct _citrus_iconv_ops *, size_t, uint32_t)
 #else
+#error MODULE_LINKAGE
 #define _CITRUS_ICONV_GETOPS_FUNC(_n_)					\
 _CITRUS_ICONV_GETOPS_FUNC_BASE(_citrus_##_n_##_iconv_getops)
 #endif

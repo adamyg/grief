@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.31 2022/06/01 14:21:19 cvsuser Exp $
+# $Id: Makefile.in,v 1.36 2024/05/03 05:41:17 cvsuser Exp $
 # libbsdmdoc and grmanddoc
 #
 #
-# Copyright (c) 2014 - 2022, Adam Young.
+# Copyright (c) 2014 - 2024, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -54,6 +54,15 @@ RM=		@RM@
 
 # Configuration
 
+QUIETOUT:=	>/dev/null 2>&1
+ifeq ($(VERBOSE),1)
+QUIETOUT:=
+else ifeq ($(VERBOSE),0)
+else ifeq ($(VERBOSE),)
+else
+$(error VERBOSE: unexpected value 0 or 1 required, $(VERBOSE) given]))
+endif
+
 ifeq ("$(BUILD_TYPE)","")	#default
 BUILD_TYPE=	debug
 MAKEFLAGS+=	BUILD_TYPE=debug
@@ -66,7 +75,7 @@ endif
 
 D_INC=		$(ROOT)/include
 D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
-D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/grmandoc
+D_OBJ=		$(ROOT)/obj@TOOLCHAINEXT@/$(BUILD_TYPE)/grmandoc
 D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 # Common flags
@@ -277,11 +286,12 @@ SOELIM=		$(D_BIN)/grsoelim$(E)
 OBJS=\
 	$(LIBMANDOC_OBJS)		\
 	$(MANDOC_OBJS)			\
+	$(CGI_OBJS)			\
 	$(DEMANDOC_OBJS)		\
 	$(SOELIM_OBJS)
 
 LIBRARIES=	$(LIBMANDOC)
-
+TSKS=		$(MANDOC) $(CGI) $(DEMANDOC) $(SOELIM)
 CLEANFILES=	mdocversion.h
 
 
@@ -311,18 +321,22 @@ regress-exec:		.unpacked.$(VERSION).regress
 regress-clean:
 	cd ./mandoc-$(VERSION)/regress && $(PERL) ./regress.pl . clean
 
+XCLEAN+=	$(basename $(MANDOC)).map
 $(MANDOC):		MAPFILE=$(basename $@).map
 $(MANDOC):		$(MANDOC_OBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(MANDOC_OBJS) $(LDLIBS) @LDMAPFILE@
 
+XCLEAN+=	$(basename $(CGI)).map
 $(CGI):			MAPFILE=$(basename $@).map
 $(CGI):			$(CGI_OBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(CGI_OBJS) $(LDLIBS) @LDMAPFILE@
 
+XCLEAN+=	$(basename $(DEMANDOC)).map
 $(DEMANDOC):		MAPFILE=$(basename $@).map
 $(DEMANDOC):		$(DEMANDOC_OBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(DEMANDOC_OBJS) $(LDLIBS) @LDMAPFILE@
 
+XCLEAN+=	$(basename $(SOELIM)).map
 $(SOELIM):		MAPFILE=$(basename $@).map
 $(SOELIM):		$(SOELIM_OBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(SOELIM_OBJS) $(LDLIBS) @LDMAPFILE@
@@ -355,8 +369,9 @@ $(D_OBJ)/.created:
 
 clean:
 		@echo $(BUILD_TYPE) clean
-		-@$(RM) $(RMFLAGS) $(BAK) $(LIBRARIES) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
-		-@$(RM) $(RMFLAGS) $(LIBOBJS) $(OBJS) $(CLEANFILES) >/dev/null 2>&1
+		-$(LIBTOOL) --mode=clean $(RM) $(TSKS) $(QUIETOUT)
+		-@$(RM) $(RMFLAGS) $(LIBRARIES) $(OBJS) $(CLEANFILES) $(QUIETOUT)
+		-@$(RM) $(RMFLAGS) $(BAK) $(CLEAN) $(XCLEAN) $(QUIETOUT)
 
 $(D_OBJ)/sqlite3$(O):	CFLAGS := $(filter-out -gw -hw,$(CFLAGS))
 	# open-watcom debug breaks due to the module size

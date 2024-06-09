@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.115 2021/10/15 10:32:48 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.117 2024/05/22 12:51:34 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.115 2021/10/15 10:32:48 cvsuser Exp $
+/* $Id: ttyterm.c,v 1.117 2024/05/22 12:51:34 cvsuser Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -2889,7 +2889,7 @@ term_identification(void)
          *      Xterm(256)  ==> 256
          */
         if (NULL != (vstring = ggetenv("XTERM_VERSION"))) {
-            char vname[32] = {0};
+            char vname[32+1] = {0};
             int vnumber = 0;
                                                 /* decode and return patch/version number */
             if (2 == sscanf(vstring, "%32[^(](%u)", vname, &vnumber))
@@ -4829,7 +4829,7 @@ complete:;
         /*
          *  Source: http://www.gnu.org/software/termutils/manual/
          */
-        if (tf_xn && (cols >= 80 || ttrow == rows)) {
+        if (tf_xn /*&& (cols >= 80 || ttrow == rows)*/) {
             /*
              *  undefined/strange eol cursor rules/NL ignore after 80th column
              */

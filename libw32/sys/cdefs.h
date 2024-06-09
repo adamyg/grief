@@ -1,14 +1,14 @@
 #ifndef LIBW32_SYS_CDEFS_H_INCLUDED
 #define LIBW32_SYS_CDEFS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_cdefs_h,"$Id: cdefs.h,v 1.19 2022/06/13 06:51:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_cdefs_h,"$Id: cdefs.h,v 1.20 2024/03/31 15:57:29 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*-
  *
  * win32 declaration helpers
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

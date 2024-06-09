@@ -1,4 +1,4 @@
-dnl $Id: libmalloc.m4,v 1.4 2013/04/05 19:52:09 ayoung Exp $
+dnl $Id: libmalloc.m4,v 1.5 2024/05/02 14:34:32 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -81,10 +81,10 @@ dnl             HAVE_STRUCT_MALLINFO_ALLOCATED
 dnl
 
 AC_DEFUN([CF_MALLOC_OPT],[
-        AC_CHECK_FUNCS(\
-	        malloc_stats \
-	        mallinfo \
-	        mallopt)
+	AC_CHECK_FUNCS(\
+		malloc_stats \
+		mallinfo \
+		mallopt)
 
 #       AC_SEARCH_LIBS(mallinfo,malloc,[
 #               AC_DEFINE([HAVE_MALLINFO],[1],[Define if mallinfo() is available on this platform.])])
@@ -96,7 +96,4 @@ AC_DEFUN([CF_MALLOC_OPT],[
 #       AC_CHECK_MEMBER([struct mallinfo.allocated])
 ])
 
-
-
-
-
+dnl end

@@ -1,7 +1,7 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: add_int.cr,v 1.2 2020/04/20 23:13:53 cvsuser Exp $
+/* $Id: add_int.cr,v 1.3 2023/03/06 15:28:18 cvsuser Exp $
  *
- * LUA/DukTape/Grunch comparision benchmark
+ * LUA/DukTape/Grunch comparison benchmark
  * See:
  *  https://github.com/svaarala/duktape/tree/master/tests/perf
  *  https://wiki.duktape.org

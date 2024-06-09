@@ -1,14 +1,14 @@
 #ifndef LIBW32_WIN32_MISC_H_INCLUDED
 #define LIBW32_WIN32_MISC_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_misc_h,"$Id: win32_misc.h,v 1.15 2022/06/13 06:51:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_misc_h,"$Id: win32_misc.h,v 1.18 2024/03/31 15:57:29 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
- * win32 public interface.
+ * win32 public interface
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -37,6 +37,7 @@ __CPRAGMA_ONCE
 __BEGIN_DECLS
 
 enum w32ostype {            /* generalised machine types, ignoring server */
+    OSTYPE_WIN_11,
     OSTYPE_WIN_10,
     OSTYPE_WIN_8,
     OSTYPE_WIN_7,
@@ -75,10 +76,10 @@ LIBW32_API const wchar_t *  w32_selectfolderW(const wchar_t *message, wchar_t *p
 LIBW32_API int              w32_IsElevated(void);
 LIBW32_API int              w32_IsAdministrator(void);
 
-LIBW32_API const char *     w32_syserrorA(DWORD dwError, char *buf, int bufien);
-LIBW32_API const char *     w32_vsyserrorA(DWORD dwError, char *buf, int bufien, ...);
-LIBW32_API const wchar_t *  w32_syserrorW(DWORD dwError, wchar_t *buf, int buflen);
-LIBW32_API const wchar_t *  w32_vsyserrorW(DWORD dwError, wchar_t *buf, int buflen, ...);
+LIBW32_API const char *     w32_syserrorA(DWORD dwError, char *buf, size_t bufien);
+LIBW32_API const char *     w32_vsyserrorA(DWORD dwError, char *buf, size_t bufien, ...);
+LIBW32_API const wchar_t *  w32_syserrorW(DWORD dwError, wchar_t *buf, size_t buflen);
+LIBW32_API const wchar_t *  w32_vsyserrorW(DWORD dwError, wchar_t *buf, size_t buflen, ...);
 
 __END_DECLS
 

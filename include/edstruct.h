@@ -1,16 +1,16 @@
 #ifndef GR_EDSTRUCT_H_INCLUDED
 #define GR_EDSTRUCT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.73 2022/09/13 14:15:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.78 2024/05/17 16:46:09 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edstruct.h,v 1.73 2022/09/13 14:15:35 cvsuser Exp $
+/* $Id: edstruct.h,v 1.78 2024/05/17 16:46:09 cvsuser Exp $
  * Window, buffer, line and character-map definitions.
  *
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -788,10 +788,13 @@ enum _lterms {
 
 
 #if defined(__APPLE__) || defined(MAC_OSX)
+#define BFTYP_DEFNAME   "mac"
 #define BFTYP_DEFAULT   BFTYP_MAC
 #elif defined(DOSISH)
+#define BFTYP_DEFNAME   "dos"
 #define BFTYP_DEFAULT   BFTYP_DOS
 #else
+#define BFTYP_DEFNAME   "unix"
 #define BFTYP_DEFAULT   BFTYP_UNIX
 #endif
 #define LTERM_DEFAULT   LTERM_UNDEFINED
@@ -1217,11 +1220,10 @@ extern const int        x_edit_version;
 
 extern const char *     x_appname;
 extern const char *     x_version;
+extern const char *     x_buildnumber;
 extern const char *     x_copyright;
 extern const char *     x_compiled;
 
 __CEND_DECLS
 
 #endif /*GR_EDSTRUCT_H_INCLUDED*/
-
-

@@ -1,4 +1,4 @@
-dnl $Id: libutf8.m4,v 1.2 2011/11/03 23:41:13 cvsuser Exp $
+dnl $Id: libutf8.m4,v 1.3 2024/05/02 14:34:32 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -59,12 +59,12 @@ AC_DEFUN([CF_LIB_UTF8],[
 		if test -n "$LIBUTF8_LIB_DIR"; then
 			LIBS="-L$LIBUTF8_LIB_DIR $LIBS"
 		fi
-		AC_TRY_LINK([
-	#include <utf8.h>],[
+		AC_RUN_IFELSE([AC_LANG_PROGRAM([[
+	#include <utf8.h>]],[[
 	struct utf8_encode_state dctx;
 	struct utf8_decode_state dctx;
 	utf8_encoder(&ectx);
-	utf8_decoder(&dctx);],utf8,
+	utf8_decoder(&dctx);]])],utf8,
 				[cf_cv_lib_utf8=yes],
 				[cf_cv_lib_utf8=no])
 		])
@@ -78,5 +78,3 @@ AC_DEFUN([CF_LIB_UTF8],[
 		AC_DEFINE([HAVE_UTF8_H], 1, [utf8.h, libutf8 interface header])
 	fi
 ])dnl
-
-

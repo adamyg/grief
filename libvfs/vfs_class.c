@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_class_c,"$Id: vfs_class.c,v 1.13 2022/03/21 14:27:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_class_c,"$Id: vfs_class.c,v 1.15 2024/04/17 16:00:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_class.c,v 1.13 2022/03/21 14:27:22 cvsuser Exp $
+/* $Id: vfs_class.c,v 1.15 2024/04/17 16:00:29 cvsuser Exp $
  * Virtual file system - utility functions.
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

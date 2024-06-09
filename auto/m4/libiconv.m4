@@ -1,4 +1,4 @@
-dnl $Id: libiconv.m4,v 1.4 2013/03/23 00:07:31 cvsuser Exp $
+dnl $Id: libiconv.m4,v 1.5 2024/05/02 14:34:31 cvsuser Exp $
 dnl iconv autoconf
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -45,24 +45,24 @@ dnl
 AC_DEFUN([CF_LIB_ICONV],[
 	AC_CACHE_CHECK(for libiconv, cf_cv_libiconv, [
 		cf_cv_libiconv=no
-		AC_TRY_LINK([
+		AC_RUN_IFELSE([AC_LANG_PROGRAM([[
 #include <stdlib.h>
-#include <iconv.h>],
-		[iconv_t x = iconv_open("", "");
+#include <iconv.h>]],
+		[[iconv_t x = iconv_open("", "");
 		iconv(x, NULL, NULL, NULL, NULL);
-		iconv_close(x);],
+		iconv_close(x);]])],
 			[cf_cv_libiconv=yes],
 			[cf_cv_libiconv=no])
 
 		if test "$cf_cv_libiconv" != yes ; then
 			cf_save_LIBS="$LIBS"
 			LIBS="$LIBS -liconv"
-			AC_TRY_LINK([
+			AC_RUN_IFELSE([AC_LANG_PROGRAM([[
 #include <stdlib.h>
-#include <iconv.h>],
-			[iconv_t x = iconv_open("", "");
+#include <iconv.h>]],
+			[[iconv_t x = iconv_open("", "");
 			iconv(x, NULL, NULL, NULL, NULL);
-			iconv_close(x);],
+			iconv_close(x);]])],
 				[cf_cv_libiconv="need libiconv"],
 				[cf_cv_libiconv=no])
 			LIBS="$cf_save_LIBS"

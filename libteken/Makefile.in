@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.11 2020/06/18 20:35:17 cvsuser Exp $
+# $Id: Makefile.in,v 1.15 2024/06/09 11:01:50 cvsuser Exp $
 # libteken makefile.
 #
 #
-# Copyright (c) 1998 - 2020, Adam Young.
+# Copyright (c) 1998 - 2024, Adam Young.
 # All rights reserved.
 # 
 # This file is part of the GRIEF Editor.
@@ -62,12 +62,12 @@ endif
 
 D_INC=		$(ROOT)/include
 D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
-D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/libteken
+D_OBJ=		$(ROOT)/obj@TOOLCHAINEXT@/$(BUILD_TYPE)/libteken
 D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 # Common flags
 
-XFLAGS=		
+XFLAGS=
 CFLAGS=		@CFLAGS@
 CWARN=		@CWARN@ $(CWALL)
 CDEBUG=		@CDEBUG@
@@ -102,6 +102,7 @@ LIBOBJS=	$(D_OBJ)/teken$(O)
 
 LIBRARY=	$(D_LIB)/$(LP)$(LIBROOT)$(A)
 DEMOTARGET=	teken_demo$(E)
+STRESSTARGET=	teken_stress$(E)
 
 
 #########################################################################################
@@ -116,6 +117,7 @@ debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
 demo:			$(DEMOTARGET)
+stress:			$(STRESSTARGET)
 
 $(LIBRARY):		$(D_OBJ)/.created teken_state.h $(LIBOBJS)
 		$(RM) $(RMFLAGS) $@
@@ -130,7 +132,10 @@ clean:
 		-@$(RM) $(RMFLAGS) $(BAK) $(LIBRARY) $(LIBOBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
 
 $(DEMOTARGET):			teken_demo$(C) $(LIBRARY)
-		$(CC) $(LDFLAGS) -o $@ teken_demo$(C) $(LIBOBJS) -lncurses -lutil
+		$(CC) $(LDFLAGS) -I. -o $@ teken_demo$(C) $(LIBOBJS) -lncurses -lutil
+
+$(STRESSTARGET):			teken_stress$(C) $(LIBRARY)
+		$(CC) $(LDFLAGS) -I. -o $@ teken_stress$(C) $(LIBOBJS) -lncurses -lutil
 
 teken_state.h:			gensequences.awk sequences
 		awk -f gensequences.awk sequences > teken_state.h

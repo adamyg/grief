@@ -37,6 +37,7 @@ int n(struct _citrus_stdenc_ops *, size_t, uint32_t)
 #define _CITRUS_STDENC_GETOPS_FUNC(_e_)					\
 MODULE_LINKAGE int MODULE_ENTRY _citrus_##_e_##_stdenc_getops(struct _citrus_stdenc_ops *, size_t, uint32_t)
 #else
+#error MODULE_LINKAGE
 #define _CITRUS_STDENC_GETOPS_FUNC(_e_)					\
 _CITRUS_STDENC_GETOPS_FUNC_BASE(_citrus_##_e_##_stdenc_getops)
 #endif

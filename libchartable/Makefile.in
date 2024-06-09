@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.31 2022/06/01 14:21:19 cvsuser Exp $
+# $Id: Makefile.in,v 1.34 2024/04/17 16:00:28 cvsuser Exp $
 # libchartable makefile.
 #
 #
-# Copyright (c) 2010 - 2022, Adam Young.
+# Copyright (c) 2010 - 2024, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -68,7 +68,7 @@ endif
 D_INC=		$(ROOT)/include
 D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
 D_BINCTBL=	$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)/ctbl
-D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/libchartable
+D_OBJ=		$(ROOT)/obj@TOOLCHAINEXT@/$(BUILD_TYPE)/libchartable
 D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 OBJMKDIR :=	$(shell test -d $(ROOT)/objects) || mkdir $(ROOT)/objects)

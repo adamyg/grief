@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.4 2022/05/31 17:16:01 cvsuser Exp $
+# $Id: Makefile.in,v 1.6 2024/05/28 15:00:29 cvsuser Exp $
 # flex 2.5.10 makefile.
 #
 #
-# Copyright (c) 2020 - 2022, Adam Young.
+# Copyright (c) 2020 - 2024, Adam Young.
 # All rights reserved.
 #
 # The applications are free software: you can redistribute it
@@ -68,7 +68,7 @@ endif
 
 D_INC=		$(ROOT)/include
 D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
-D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/flex
+D_OBJ=		$(ROOT)/obj@TOOLCHAINEXT@/$(BUILD_TYPE)/flex
 D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 # Common flags
@@ -80,6 +80,14 @@ CDEBUG=		@CDEBUG@
 CRELEASE=	@CRELEASE@
 LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
+
+ifeq ("gcc","@CC@")
+XFLAGS+=\
+	-Wno-unused-but-set-variable \
+	-Wno-misleading-indentation \
+	-Wno-shadow \
+	-Wno-format
+endif
 
 CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
 CEXTRA=		@DEFS@

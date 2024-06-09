@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strprint_c,"$Id: strprint.c,v 1.9 2022/08/10 14:25:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_strprint_c,"$Id: strprint.c,v 1.11 2024/04/17 15:57:14 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strprint.c,v 1.9 2022/08/10 14:25:21 cvsuser Exp $
+/* $Id: strprint.c,v 1.11 2024/04/17 15:57:14 cvsuser Exp $
  * libstr - String print utilities.
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -1,16 +1,16 @@
 #ifndef GR_EDGETOPT_H_INCLUDED
 #define GR_EDGETOPT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edgetopt_h,"$Id: edgetopt.h,v 1.18 2022/03/21 14:55:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_edgetopt_h,"$Id: edgetopt.h,v 1.22 2024/04/08 15:07:03 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edgetopt.h,v 1.18 2022/03/21 14:55:27 cvsuser Exp $
+/* $Id: edgetopt.h,v 1.22 2024/04/08 15:07:03 cvsuser Exp $
  * getopt() interface/implemenation.
  *
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -36,29 +36,22 @@ __CPRAGMA_ONCE
 #include <config.h>
 #include <edtypes.h>
 
-#if defined(HAVE_GETOPT_H) && \
-            !defined(_WIN32) && !defined(WIN32) && !defined(NEEDS_GETOPT)
+#if !defined(NEEDS_GETOPT)
+#if defined(HAVE_GETOPT_H)
 #include <getopt.h>
 
-#elif defined(HAVE_UNISTD_H) && \
-            !defined(_WIN32) && !defined(WIN32) && !defined(NEEDS_GETOPT)
+#elif defined(HAVE_UNISTD_H)
 #include <unistd.h>
 
 #elif defined(__MINGW32__)
+#include <getopt.h>
 
-__CBEGIN_DECLS
-extern int              optind;
-extern int              opterr;
-extern char *           optarg;
-extern int              optopt;
-extern int              optreset;
-__CEND_DECLS
-
-
-#elif defined(NEEDS_GETOPT) || defined(_WIN32) || defined(WIN32)
-#if !defined(NEEDS_GETOPT)
-#define NEEDS_GETOPT    /*getopt.c requirement*/
+#else
+#error getopt implementation
 #endif
+#endif /*!NEEDS_GETOPT*/
+
+#if defined(NEEDS_GETOPT)
 
 __CBEGIN_DECLS
 extern int              getopt(int argc, char *const *argv, const char *opts);
@@ -93,10 +86,12 @@ __CBEGIN_DECLS
 struct bsd_option {
     const char *        name;
     int                 has_arg;
+#if !defined(__MINGW32__)       /* enum */
 #ifndef no_argument
 #define no_argument             0
 #define required_argument       1
 #define optional_argument       2
+#endif
 #endif
     int *               flag;
     int                 val;

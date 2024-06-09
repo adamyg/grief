@@ -1,14 +1,14 @@
 #ifndef TERMEMU_VIO_H_INCLUDED
 #define TERMEMU_VIO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(termemu_vio_h,"$Id: termemu_vio.h,v 1.5 2022/05/26 16:41:38 cvsuser Exp $")
+__CIDENT_RCSID(termemu_vio_h,"$Id: termemu_vio.h,v 1.8 2024/04/16 10:30:36 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * libtermemu console driver
  *
- * Copyright (c) 2007, 2012 - 2022 Adam Young.
+ * Copyright (c) 2007, 2012 - 2024 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -111,8 +111,10 @@ typedef struct WCHAR_INFO {                     // extended CHAR_INFO
 
 __BEGIN_DECLS
 
-#if defined(TERMEMU_VIO_STATIC)
-#define LIBVIO_API static   /*private*/
+#if defined(TERMEMU_VIO_LOCAL)
+#define LIBVIO_API /*local*/
+#elif defined(TERMEMU_VIO_STATIC)
+#define LIBVIO_API static /*private*/
 #else
 #define LIBVIO_API LIBW32_API /*otherwise inherit libw32 */
 #endif
@@ -161,7 +163,11 @@ LIBVIO_API int              vio_atprintf(int row, int col, const char *fmt, ...)
 LIBVIO_API void             vio_putc(unsigned ch, unsigned cnt, int move);
 LIBVIO_API void             vio_flush(void);
 
+int vio_wcwidth(wchar_t ucs);
+
+#if !defined(TERMEMU_VIO_SOURCE)
 #undef LIBVIO_API
+#endif
 
 __END_DECLS
 

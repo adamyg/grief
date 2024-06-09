@@ -1,14 +1,14 @@
 #ifndef LIBW32_SYS_UTYPES_H_INCLUDED
 #define LIBW32_SYS_UTYPES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_utypes_h,"$Id: utypes.h,v 1.37 2022/06/13 06:51:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_utypes_h,"$Id: utypes.h,v 1.39 2024/03/31 15:57:30 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* 
  * win32 unix types
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -181,6 +181,20 @@ typedef int id_t;                               /* used as a general identifier;
 
 #endif /*_MSC_VER || __MINGW32__*/
 
+#if !defined(_FSBLKCNT_T_DEFINED)
+#define _FSBLKCNT_T_DEFINED
+#if !defined(fsblkcnt_t)
+typedef unsigned long fsblkcnt_t;
+#endif
+#endif
+
+#if !defined(_FSFILCNT_T_DEFINED)
+#define _FSFILCNT_T_DEFINED
+#if !defined(fsfilcnt_t)
+typedef unsigned long fsfilcnt_t;
+#endif
+#endif
+
 #if !defined(HAVE_NLINK_T)
 #if !defined(__WATCOMC__) || \
         (defined(__WATCOMC__) && (__WATCOMC__ < 1300 /*owc20*/))
@@ -201,4 +215,3 @@ typedef unsigned nlink_t;                       /* link count */
 #endif
 
 #endif /*LIBW32_SYS_UTYPES_H_INCLUDED*/
-

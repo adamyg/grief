@@ -1,3 +1,4 @@
+
 Title:          Quick Start
 
                           Welcome to *GRIEF*.
@@ -8,7 +9,7 @@ Title:          Quick Start
         depending on the focus of your work.
 
         Based on a long standing interface, GRIEF is an intuitive and
-        easy editor to both novice and seasoned developers, 
+        easy editor to both novice and seasoned developers,
         inheriting its clean user interface from the BRIEF family of
         programmers editors. BRIEF was a programmer's editor for
         MS-DOS written by Underware, and later acquired by Borland.
@@ -20,6 +21,70 @@ Title:          Quick Start
         fundamental GRIEF commands you need to know are shown below.
 
             -----------------------------------------------
+
+Topic:          Setup
+
+        GRIEF's local configuration may be viewed using the '--config' option.
+
+>$gr --config
+
+   Examples:
+
+        o Windows profile.
+
+>PROGNAME=C:/Program Files (x86)/Grief/bin/gr.exe
+>MACHTYPE=Win32
+>GRPATH=C:/Program Files (x86)/Grief/macros;C:/Program Files (x86)/Grief/src;
+>GRHELP=C:/Program Files (x86)/Grief/help;
+>GRPROFILE=
+>GRLEVEL=1
+>GRFILE=newfile
+>GRFLAGS=-i60
+>GRBACKUP=
+>GRVERSIONS=
+>GRDICTIONARIES=
+>GRDICTIONARY=
+>GRTERM=win32
+
+        o Linux profile.
+
+>PROGNAME=/usr/local/bin/gr
+>MACHTYPE=UNIX
+>GRPATH=/usr/local/share/gr/macros:/usr/local/share/gr/src:
+>GRHELP=/usr/local/share/gr/help
+>GRPROFILE=
+>GRLEVEL=1
+>GRFILE=newfile
+>GRFLAGS=-i60
+>GRBACKUP=
+>GRVERSIONS=
+>GRDICTIONARIES=
+>GRDICTIONARY=
+>GRTERM=linux
+
+   Environment:
+
+        The more significant configuration elements which are required for correct
+        operation are:
+
+        GRPATH -        The 'GRPATH' global string is used to specify one or more
+                        directory names stating the search path which GRIEF shall
+                        utilise to locate macro objects during <autoload> and
+                        <require> operations. The initial value of GRPATH is either
+                        imported from the environment or if not available is derived
+                        from the location of the running application.
+
+        GRHELP -        The 'GRHELP' global string is used to specify the directory
+                        name stating the search path which GRIEF shall utilise to
+                        locate the help database. The initial value of GRHELP is
+                        either imported from the environment or if not available is
+                        derived from the location of the running application.
+
+        GRPROFILE -     The 'GRPROFILE' global string is used to specify an override
+                        to the standard users home directory; it is utilised by
+                        several macros to source runtime configuration details.
+                        GRPROFILE provides the user a means of stating an alternative
+                        location.
 
 Topic:          Basics
 
@@ -60,10 +125,11 @@ Topic:          Basics
 (end table)
 
         If you execute the Exit command after text has been entered
-        in any of the open files, you will be given a number of
-        choices:
+        in any of the open files, the prompt below is presented.
 
 >               1 buffer has not been saved. Exit [ynw]?
+
+        You will be given a number of choices.
 
         w -     Writes the file back to the file-system and exit to
                 the operating system.
@@ -1013,6 +1079,7 @@ Topic:          Features
                         disabled running the 'menuoff' command.
 (end table)
 
-        $Id: quickstart.txt,v 1.4 2014/11/27 18:08:41 ayoung Exp $
+        $Id: quickstart.txt,v 1.6 2024/05/12 07:50:33 cvsuser Exp $
 -*- mode: txt; margin: 75; -*-
+
 

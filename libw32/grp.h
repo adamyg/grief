@@ -1,14 +1,14 @@
 #ifndef LIBW32_GRP_H_INCLUDED
 #define LIBW32_GRP_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_grp_h,"$Id: grp.h,v 1.11 2022/03/22 03:38:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_grp_h,"$Id: grp.h,v 1.12 2024/03/31 15:57:24 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 <grp.h> implementation
  *
- * Copyright (c) 2007, 2012 - 2022 Adam Young.
+ * Copyright (c) 2007, 2012 - 2024 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

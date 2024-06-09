@@ -48,7 +48,7 @@
  * templates for public functions
  */
 
-int
+MODULE_LINKAGE int MODULE_ENTRY
 _FUNCNAME(stdenc_getops)(struct _citrus_stdenc_ops *ops, size_t lenops,
 			 uint32_t expected_version)
 {

@@ -1,4 +1,4 @@
-/*	$NetBSD: gettext.c,v 1.28 2012/07/30 23:04:42 yamt Exp $	*/
+/*	$NetBSD: gettext.c,v 1.32 2024/04/13 02:01:38 christos Exp $	*/
 
 /*-
  * Copyright (c) 2000, 2001 Citrus Project,
@@ -29,13 +29,25 @@
  */
 
 #include <sys/cdefs.h>
-__RCSID("$NetBSD: gettext.c,v 1.28 2012/07/30 23:04:42 yamt Exp $");
+__RCSID("$NetBSD: gettext.c,v 1.32 2024/04/13 02:01:38 christos Exp $");
 
 #include "namespace.h"
-#if defined(WIN32)
+
+#if defined(_WIN32)
 #ifndef WINDOWS_MEAN_AND_LEAN
 #define WINDOWS_MEAN_AND_LEAN
 #endif
+#if defined(_MSC_VER) && (!defined(WINVER) || (WINVER < 0x500))
+#undef WINVER
+#if defined(_WIN32_WINNT)
+#define WINVER _WIN32_WINNT /* GetThreadLocale, SDK 10+ */
+#elif defined(WIN32_WINNT)
+#define WINVER WIN32_WINNT /* GetThreadLocale, SDK 10+ */
+#else
+#define WINVER 0x601
+#endif
+#endif
+
 #include <windows.h>
 #pragma comment(lib, "Kernel32.lib")
 #endif	//WIN32
@@ -60,6 +72,16 @@ __RCSID("$NetBSD: gettext.c,v 1.28 2012/07/30 23:04:42 yamt Exp $");
 #include "plural_parser.h"
 #include "pathnames.h"
 
+/* GNU gettext added a hack to add some context to messages. If a message is
+ * used in multiple locations, it needs some amount of context to make the
+ * translation clear to translators. GNU gettext, rather than modifying the
+ * message format, concatenates the context, \004 and the message id.
+ */
+#define	MSGCTXT_ID_SEPARATOR	'\004'
+
+static const char *pgettext_impl(const char *, const char *, const char *,
+				const char *, unsigned long int, int);
+static char *concatenate_ctxt_id(const char *, const char *);
 static const char *lookup_category(int);
 static const char *split_locale(const char *);
 static const char *lookup_mofile(char *, size_t, const char *, const char *,
@@ -114,6 +136,76 @@ dngettext(const char *domainname, const char *msgid1, const char *msgid2,
 	return dcngettext(domainname, msgid1, msgid2, n, LC_MESSAGES);
 }
 
+LIBINTL_LINKAGE const char * LIBINTL_ENTRY 
+pgettext(const char *msgctxt, const char *msgid)
+{
+
+	return pgettext_impl(NULL, msgctxt, msgid, NULL, 1UL, LC_MESSAGES);
+}
+
+LIBINTL_LINKAGE const char * LIBINTL_ENTRY 
+dpgettext(const char *domainname, const char *msgctxt, const char *msgid)
+{
+
+	return pgettext_impl(domainname, msgctxt, msgid, NULL, 1UL, LC_MESSAGES);
+}
+
+LIBINTL_LINKAGE const char * LIBINTL_ENTRY 
+dcpgettext(const char *domainname, const char *msgctxt, const char *msgid,
+	int category)
+{
+
+	return pgettext_impl(domainname, msgctxt, msgid, NULL, 1UL, category);
+}
+
+LIBINTL_LINKAGE const char * LIBINTL_ENTRY 
+npgettext(const char *msgctxt, const char *msgid1, const char *msgid2,
+	unsigned long int n)
+{
+
+	return pgettext_impl(NULL, msgctxt, msgid1, msgid2, n, LC_MESSAGES);
+}
+
+LIBINTL_LINKAGE const char * LIBINTL_ENTRY 
+dnpgettext(const char *domainname, const char *msgctxt, const char *msgid1,
+	const char *msgid2, unsigned long int n)
+{
+
+	return pgettext_impl(domainname, msgctxt, msgid1, msgid2, n, LC_MESSAGES);
+}
+
+LIBINTL_LINKAGE const char * LIBINTL_ENTRY 
+dcnpgettext(const char *domainname, const char *msgctxt, const char *msgid1,
+	const char *msgid2, unsigned long int n, int category)
+{
+
+	return pgettext_impl(domainname, msgctxt, msgid1, msgid2, n, category);
+}
+
+static const char *
+pgettext_impl(const char *domainname, const char *msgctxt, const char *msgid1,
+	const char *msgid2, unsigned long int n, int category)
+{
+	char *msgctxt_id;
+	char *translation;
+	char *p;
+
+	if ((msgctxt_id = concatenate_ctxt_id(msgctxt, msgid1)) == NULL)
+		return msgid1;
+
+	translation = dcngettext(domainname, msgctxt_id,
+		msgid2, n, category);
+	free(msgctxt_id);
+
+	if (translation == msgctxt_id)
+		return msgid1;
+
+	p = strchr(translation, '\004');
+	if (p)
+		return p + 1;
+	return translation;
+}
+
 /*
  * dcngettext() -
  * lookup internationalized message on database locale/category/domainname
@@ -135,6 +227,17 @@ dngettext(const char *domainname, const char *msgid1, const char *msgid2,
  * /usr/share/locale! (or we should move those files into /usr/libdata)
  */
 
+static char *
+concatenate_ctxt_id(const char *msgctxt, const char *msgid)
+{
+	char *ret;
+
+	if (asprintf(&ret, "%s%c%s", msgctxt, MSGCTXT_ID_SEPARATOR, msgid) == -1)
+		return NULL;
+
+	return ret;
+}
+
 static const char *
 lookup_category(int category)
 {
@@ -150,6 +253,7 @@ lookup_category(int category)
 	return NULL;
 }
 
+#define MAXBUFLEN	1024
 /*
  * XPG syntax: language[_territory[.codeset]][@modifier]
  * XXX boundary check on "result" is lacking
@@ -157,9 +261,9 @@ lookup_category(int category)
 static const char *
 split_locale(const char *lname)
 {
-	char buf[BUFSIZ], tmp[BUFSIZ];
+	char buf[MAXBUFLEN], tmp[2 * MAXBUFLEN];
 	char *l, *t, *c, *m;
-	static char result[BUFSIZ];
+	static char result[4 * MAXBUFLEN];
 
 	memset(result, 0, sizeof(result));
 
@@ -250,8 +354,10 @@ lookup_mofile(char *buf, size_t len, const char *dir, const char *lpath,
 			continue;
 #endif
 
-		snprintf(buf, len, "%s/%s/%s/%s.mo", dir, p,
+		int rv = snprintf(buf, len, "%s/%s/%s/%s.mo", dir, p,
 		    category, domainname);
+		if (rv > (int)len)
+			return NULL;
 		if (stat(buf, &st) < 0)
 			continue;
 		if ((st.st_mode & S_IFMT) != S_IFREG)
@@ -278,6 +384,8 @@ flip(uint32_t v, uint32_t magic)
 		abort();
 		/*NOTREACHED*/
 	}
+	/*NOTREACHED*/
+	return v;
 }
 
 static int
@@ -511,7 +619,7 @@ mapit(const char *path, struct domainbinding *db)
 		goto fail;
 	if ((st.st_mode & S_IFMT) != S_IFREG || st.st_size > GETTEXT_MMAP_MAX)
 		goto fail;
-#if defined(WIN32)
+#if defined(_WIN32)
 	fd = open(path, O_RDONLY | O_BINARY);
 #else
 	fd = open(path, O_RDONLY);
@@ -674,6 +782,9 @@ free_sysdep_table(struct mosysdepstr_h **table, uint32_t nstring)
 {
 	uint32_t i;
 
+	if (! table)
+		return;
+
 	for (i=0; i<nstring; i++) {
 		if (table[i]) {
 			if (table[i]->expanded)
@@ -823,6 +934,9 @@ lookup(const char *msgid, struct domainbinding *db, size_t *rlen)
 static const char *
 get_lang_env(const char *category_name)
 {
+#if defined(_WIN32)
+	char winlocale[64] = {0};
+#endif
 	const char *lang;
 
 	/*
@@ -846,14 +960,29 @@ get_lang_env(const char *category_name)
 	if (!lang)
 		lang = getenv("LANG");
 
-#if defined(WIN32)
+#if defined(_WIN32)
 	if (!lang)
-	{	static char ISO639_LanguageName[32]; //FIXME: tls
+	{
+		char iso639[16] = {0}, iso3166[16] = {0};
+		const char *isocs = NULL; // TODO (GetACP() to codeset)
+		const LCID lcid = GetThreadLocale(); // Active application locale.
 
-		ISO639_LanguageName[0] = 0;
-		if (GetLocaleInfoA(GetUserDefaultLCID(), LOCALE_SISO639LANGNAME,
-				ISO639_LanguageName, sizeof(ISO639_LanguageName)) && ISO639_LanguageName[0]) {
-			lang = ISO639_LanguageName;
+		if (GetLocaleInfoA(lcid, LOCALE_SISO639LANGNAME, iso639, sizeof(iso639))) {
+			if (GetLocaleInfoA(lcid, LOCALE_SISO3166CTRYNAME, iso3166, sizeof(iso3166)) && iso3166[0]) {
+				if (isocs) {
+					snprintf(winlocale, sizeof(winlocale), "%s_%s.%s", iso639, iso3166, isocs); // language_territory.codeset
+				} else {
+					snprintf(winlocale, sizeof(winlocale), "%s_%s", iso639, iso3166); // language_territory
+				}
+			} else {
+				if (isocs) {
+					snprintf(winlocale, sizeof(winlocale), "%s.%s", iso639, isocs); // language.codeset
+				} else {
+					snprintf(winlocale, sizeof(winlocale), "%s", iso639); // language
+				}
+			}
+			winlocale[sizeof(winlocale) - 1] = '\0';
+			lang = winlocale;
 		}
 	}
 #endif	//WIN32
@@ -888,7 +1017,7 @@ dcngettext(const char *domainname, const char *msgid1, const char *msgid2,
 	   unsigned long int n, int category)
 {
 	const char *msgid;
-	char path[PATH_MAX];
+	char path[PATH_MAX+1];
 	const char *lpath;
 	static char olpath[PATH_MAX];
 	const char *cname = NULL;
@@ -921,7 +1050,7 @@ dcngettext(const char *domainname, const char *msgid1, const char *msgid2,
 	/* resolve relative path */
 	/* XXX not necessary? */
 	if (db->path[0] != '/') {
-#if defined(WIN32)
+#if defined(_WIN32)
 		if (db->path[0] == 0 || db->path[1] != ':') {
 #endif
 			char buf[PATH_MAX];
@@ -933,7 +1062,7 @@ dcngettext(const char *domainname, const char *msgid1, const char *msgid2,
 			if (strlcat(buf, db->path, sizeof(buf)) >= sizeof(buf))
 				goto fail;
 			strlcpy(db->path, buf, sizeof(db->path));
-#if defined(WIN32)
+#if defined(_WIN32)
 		}
 #endif
 	}

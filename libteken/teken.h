@@ -25,7 +25,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD: head/sys/teken/teken.h 333669 2018-05-16 09:01:02Z dumbbell $
+ * $FreeBSD: head/sys/teken/teken.h 343778 2019-02-05 16:59:29Z bde $
  */
 
 #ifndef _TEKEN_H_
@@ -157,6 +157,7 @@ struct __teken {
 
 	unsigned int	 t_utf8_left;
 	teken_char_t	 t_utf8_partial;
+	teken_char_t	 t_last;
 
 	unsigned int	 t_curscs;
 	teken_scs_t	*t_saved_curscs;
@@ -211,6 +212,7 @@ const char *teken_get_sequence(const teken_t *, unsigned int);
 /* Legacy features. */
 void	teken_set_8bit(teken_t *);
 void	teken_set_cons25(teken_t *);
+void	teken_set_cons25keys(teken_t *);
 
 /* Color conversion. */
 teken_color_t teken_256to16(teken_color_t);

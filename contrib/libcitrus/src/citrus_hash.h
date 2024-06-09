@@ -1,4 +1,4 @@
-/*	$NetBSD: citrus_hash.h,v 1.3 2004/01/02 21:49:35 itojun Exp $	*/
+/*	$NetBSD: citrus_hash.h,v 1.4 2022/04/19 20:32:14 rillig Exp $	*/
 
 /*-
  * Copyright (c)2003 Citrus Project,

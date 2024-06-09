@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: select.cr,v 1.44 2021/07/05 15:01:29 cvsuser Exp $
+/* $Id: select.cr,v 1.45 2024/05/15 08:22:45 cvsuser Exp $
  * Selection macros implementing buffer based popup user interface.
  *
  *
@@ -1081,7 +1081,7 @@ select_buffer(int buf, int win, ~int flags, ~declare, ~list do_list,
             set_top_left(top);
         }
     }
-    drop_anchor(3);
+    drop_anchor(MK_LINE);
 
     /* Evaluate function setting up private key-bindings. If function
      * returns a list, save that in case user wants to see key-bindings.
@@ -1245,7 +1245,7 @@ sel_home(void)
 {
     raise_anchor();
     move_abs(1, 0);
-    drop_anchor(3);
+    drop_anchor(MK_LINE);
 }
 
 
@@ -1254,7 +1254,7 @@ sel_end(void)
 {
     raise_anchor();
     move_abs(inq_lines(), 0);
-    drop_anchor(3);
+    drop_anchor(MK_LINE);
     refresh();
     set_bottom_of_window();
 }
@@ -1265,7 +1265,7 @@ sel_up(void)
 {
     raise_anchor();
     up();
-    drop_anchor(3);
+    drop_anchor(MK_LINE);
 }
 
 
@@ -1279,7 +1279,7 @@ sel_down(void)
     if (current_item <= list_items) {
         raise_anchor();
         down();
-        drop_anchor(3);
+        drop_anchor(MK_LINE);
     }
 }
 
@@ -1329,7 +1329,7 @@ sel_pgup(void)
 {
     raise_anchor();
     page_up();
-    drop_anchor(3);
+    drop_anchor(MK_LINE);
 }
 
 
@@ -1344,7 +1344,7 @@ sel_pgdn(void)
     if (line > inq_lines()) {
         goto_line(inq_lines());
     }
-    drop_anchor(3);
+    drop_anchor(MK_LINE);
 }
 
 
@@ -1398,7 +1398,7 @@ sel_alpha(void)
     move_rel(0, 1);
     if (re_search(NULL, pat) || re_search(NULL, upper(pat))) {
         raise_anchor();
-        drop_anchor(3);
+        drop_anchor(MK_LINE);
         move_rel(0, -1);
         _sel_prefix += ch;
 
@@ -1406,7 +1406,7 @@ sel_alpha(void)
         top_of_buffer();
         if (re_search(NULL, pat) || re_search(NULL, upper(pat))) {
             raise_anchor();
-            drop_anchor(3);
+            drop_anchor(MK_LINE);
             move_rel(0, -1);
             _sel_prefix += ch;
 
@@ -1919,7 +1919,7 @@ field_display(list args, int line, int msg_flag)
     }
 
     restore_position();
-    drop_anchor(4);
+    drop_anchor(MK_NONINC);
     end_of_line();
     return TRUE;
 }

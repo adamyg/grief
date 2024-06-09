@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_setrlimit_c,"$Id: w32_setrlimit.c,v 1.2 2022/05/26 13:17:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_setrlimit_c,"$Id: w32_setrlimit.c,v 1.4 2024/03/31 15:57:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 setrlimit() system calls
  *
- * Copyright (c) 2020 - 2022, Adam Young.
+ * Copyright (c) 2020 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -56,12 +56,12 @@ setrlimit(int resource, const struct rlimit *rlp)
 #if defined(__WATCOMC__)
                     if (_grow_handles(rlp->rlim_max) < rlp->rlim_max) {
 #else
-                    if (-1 == (newmax = _setmaxstdio(rlp->rlim_max))) {
+                    if (-1 == (newmax = _setmaxstdio((int)rlp->rlim_max))) {
 #endif
                         errno = EINVAL;
                         ret = -1;
                     }
-                    w32_sockfd_limit(rlp->rlim_max);
+                    w32_sockfd_limit((int)rlp->rlim_max);
                 }
                 return ret;
             }

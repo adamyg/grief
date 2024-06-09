@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: grief.cr,v 1.88 2022/08/10 15:44:58 cvsuser Exp $
+/* $Id: grief.cr,v 1.90 2024/05/20 17:04:23 cvsuser Exp $
  * GRIEF startup macro.
  *
  *
@@ -112,6 +112,7 @@ static int              gri_mouse = FALSE;
 static int              gri_menubar = FALSE;
 static int              gri_changed = FALSE;
 
+static int              coloriserenv = FALSE;
 static string           gri_coloriser256 = "";
 static string           gri_coloriser88 = "";
 static string           gri_coloriser16 = "";
@@ -975,6 +976,14 @@ grinit_onload(void)
         return;
     }
 
+    string arg;
+    arg = getenv("GRCOLORSCHEME");              // user override, use unconditionally.
+    if (arg) {
+        if (colorscheme(arg) == TRUE) {
+            coloriserenv = TRUE;
+        }
+    }
+
     if ((ifd = iniopen(inifile, IFILE_STANDARD|IFILE_COLON)) >= 0) {
         string key, value, fn;
         int p, ret;
@@ -1447,12 +1456,14 @@ void
 _griset_colorscheme256(string arg)
 {
     if (strlen(arg)) {
-        int depth;
-
         gri_coloriser256 = arg;
-        inq_screen_size(NULL, NULL, depth);
-        if (depth >= 256) {
-            colorscheme(arg);
+        if (!coloriserenv) {
+            int depth;
+
+            inq_screen_size(NULL, NULL, depth);
+            if (depth >= 256) {
+                colorscheme(arg);
+            }
         }
     }
 }
@@ -1462,13 +1473,15 @@ void
 _griset_colorscheme88(string arg)
 {
     if (strlen(arg)) {
-        int depth;
-
         gri_coloriser88 = arg;
-        inq_screen_size(NULL, NULL, depth);
-        if (88 == depth ||
-                (depth > 88 && !gri_coloriser256)) {
-            colorscheme(arg);
+        if (!coloriserenv) {
+            int depth;
+
+            inq_screen_size(NULL, NULL, depth);
+            if (88 == depth ||
+                    (depth > 88 && !gri_coloriser256)) {
+                colorscheme(arg);
+            }
         }
     }
 }
@@ -1478,13 +1491,15 @@ void
 _griset_colorscheme16(string arg)
 {
     if (strlen(arg)) {
-        int depth;
-
         gri_coloriser16 = arg;
-        inq_screen_size(NULL, NULL, depth);
-        if (16 == depth ||
-                (depth > 16 && !gri_coloriser256 && !gri_coloriser88)) {
-            colorscheme(arg);
+        if (!coloriserenv) {
+            int depth;
+
+            inq_screen_size(NULL, NULL, depth);
+            if (16 == depth ||
+                    (depth > 16 && !gri_coloriser256 && !gri_coloriser88)) {
+                colorscheme(arg);
+            }
         }
     }
 }
@@ -1494,12 +1509,14 @@ void
 _griset_colorscheme(string arg)
 {
     if (strlen(arg)) {
-        int depth;
-
         gri_coloriser = arg;
-        inq_screen_size(NULL, NULL, depth);
-        if (!gri_coloriser256 && !gri_coloriser88 && !gri_coloriser16) {
-            colorscheme(arg);
+        if (!coloriserenv) {
+            int depth;
+
+            inq_screen_size(NULL, NULL, depth);
+            if (!gri_coloriser256 && !gri_coloriser88 && !gri_coloriser16) {
+                colorscheme(arg);
+            }
         }
     }
 }
@@ -1596,4 +1613,6 @@ clear_buffer(void)
 }
 
 /*end*/
+
+
 

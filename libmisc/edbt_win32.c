@@ -1,13 +1,13 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.24 2022/09/20 15:19:11 cvsuser Exp $")
+__CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.28 2024/04/17 15:57:13 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edbt_win32.c,v 1.24 2022/09/20 15:19:11 cvsuser Exp $
+/* $Id: edbt_win32.c,v 1.28 2024/04/17 15:57:13 cvsuser Exp $
  * win32 (include cygwin) backtrace implementation.
  *
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -42,12 +42,22 @@ __CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.24 2022/09/20 15:19:11 cvs
 #if defined(_WIN32) || defined(WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
 #ifndef  WIN32_LEAN_AND_MEAN
 #define  WIN32_LEAN_AND_MEAN
+#endif //WIN32
+#if defined(__WATCOMC__) && !defined(NTDDI_VERSION)
+#if defined(_WIN32_WINNT)
+#define NTDDI_VERSION (_WIN32_WINNT * 0x10000)
+#else
+#define NTDDI_VERSION 0x05010000
 #endif
+#endif //WATCOMC
 #undef   u_char
 #include <windows.h>
 
 #if defined(__MINGW32__)                        /* Kernel32 */
-VOID NTAPI RtlCaptureContext(PCONTEXT ContextRecord);
+#if !defined(GCC_VERSION)
+#define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+#endif
+__attribute__((dllimport)) extern VOID NTAPI RtlCaptureContext(PCONTEXT ContextRecord);
 #endif
 
 #if defined(__WATCOMC__) || defined(__CYGWIN__) || defined(__MINGW32__)
@@ -988,6 +998,10 @@ edbt_init(const char *progname, int options, FILE *out)
             return;
         }
 
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
         fSymInitialize = (SymInitialize_t) GetProcAddress(hDbghelpDll, "SymInitialize");
         fSymSetOptions = (SymSetOptions_t) GetProcAddress(hDbghelpDll, "SymSetOptions");
         fSymLoadModule = (SymLoadModule_t) GetProcAddress(hDbghelpDll, "SymLoadModule");
@@ -1010,6 +1024,9 @@ edbt_init(const char *progname, int options, FILE *out)
         fSymGetModuleBase = (SymGetModuleBase_t) GetProcAddress(hDbghelpDll, "SymGetModuleBase");
         fSymGetSymFromAddr = (SymGetSymFromAddr_t) GetProcAddress(hDbghelpDll, "SymGetSymFromAddr");
         fSymGetLineFromAddr = (SymGetLineFromAddr_t) GetProcAddress(hDbghelpDll, "SymGetLineFromAddr");
+#endif
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic pop
 #endif
 
         if ((fSymInitialize == NULL) || 

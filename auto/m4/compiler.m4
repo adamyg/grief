@@ -1,4 +1,4 @@
-dnl $Id: compiler.m4,v 1.2 2013/04/05 19:52:09 ayoung Exp $
+dnl $Id: compiler.m4,v 1.3 2024/05/02 14:34:31 cvsuser Exp $
 dnl misc compiler check
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -112,6 +112,3 @@ AC_DEFUN([CF_GCC_WARNINGS],[
 ])
 
 dnl
-
-
-

@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.20 2022/06/13 12:58:06 cvsuser Exp $
+# $Id: Makefile.in,v 1.22 2024/04/16 11:37:13 cvsuser Exp $
 # libz makefile
 #
 #
@@ -45,7 +45,7 @@ endif
 D_INC=		$(ROOT)/include
 D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
 D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
-D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/libz
+D_OBJ=		$(ROOT)/obj@TOOLCHAINEXT@/$(BUILD_TYPE)/libz
 
 # Common flags
 
@@ -100,7 +100,8 @@ ZDLL=		$(D_LIB)/$(LP)z.la
 
 #VERSION=	1.2.7
 #VERSION=	1.2.8
-VERSION=	1.2.11
+#VERSION=	1.2.11
+VERSION=	1.2.13
 VERSIONSPEC=	$(subst .,:,$(VERSION))
 VERPACKED=	zlib-$(VERSION).tgz
 

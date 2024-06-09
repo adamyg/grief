@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetlocale_c,"$Id: charsetlocale.c,v 1.12 2022/05/26 01:56:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetlocale_c,"$Id: charsetlocale.c,v 1.14 2024/04/17 16:00:28 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* libcharset locale map.
  *
  *
- * Copyright (c) 2010 - 2022, Adam Young.
+ * Copyright (c) 2010 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

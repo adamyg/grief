@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(cr_libchardet_cpp,"$Id: libcharudet.cpp,v 1.7 2022/03/21 15:12:12 cvsuser Exp $")
+__CIDENT_RCSID(cr_libchardet_cpp,"$Id: libcharudet.cpp,v 1.8 2024/06/01 17:40:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: libcharudet.cpp,v 1.7 2022/03/21 15:12:12 cvsuser Exp $
+/* $Id: libcharudet.cpp,v 1.8 2024/06/01 17:40:27 cvsuser Exp $
  *
  * libchardet interface.
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

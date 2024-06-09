@@ -1,4 +1,4 @@
-dnl $Id: libmagic.m4,v 1.5 2017/01/30 04:03:27 cvsuser Exp $
+dnl $Id: libmagic.m4,v 1.6 2024/05/02 14:34:32 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -42,7 +42,7 @@ dnl
 AC_DEFUN([CF_LIB_MAGIC],[
 	if test -n "$LIBMAGIC_H_DIR"; then
 		AC_MSG_NOTICE([Searching using explicit magic.h path $LIBMAGIC_H_DIR])
-		AC_CHECK_HEADERS($LIBMAGIC_H_DIR/magic,h,[
+		AC_CHECK_HEADERS("${LIBMAGIC_H_DIR}/magic.h",[
 			CFLAGS="$CFLAGS -I$LIBMAGIC_H_DIR"
 			libmagic_header=yes],
 			[AC_MSG_ERROR([magic.h not found at specified location])])
@@ -52,16 +52,16 @@ AC_DEFUN([CF_LIB_MAGIC],[
 
 	AC_CACHE_CHECK(for magic_open, cf_cv_libmagic,[
 		cf_save_LIBS="$LIBS"
-		AC_TRY_LINK([#include <magic.h>],
-			[magic_t x = magic_open(MAGIC_NONE); magic_close(x);],
+		AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <magic.h>]],
+			[[magic_t x = magic_open(MAGIC_NONE); magic_close(x);]])],
 			[cf_cv_libmagic=std],[
 			LIBS="$cf_save_LIBS -lmagic"
-			AC_TRY_LINK([#include <magic.h>],
-				[magic_t x = magic_open(MAGIC_NONE); magic_close(x);],
+			AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <magic.h>]],
+				[[magic_t x = magic_open(MAGIC_NONE); magic_close(x);]])],
 				[cf_cv_libmagic=yes],[
 				LIBS="$cf_save_LIBS -lmagic -lz"
-				AC_TRY_LINK([#include <magic.h>],
-					[magic_t x = magic_open(MAGIC_NONE); magic_close(x);],
+				AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <magic.h>]],
+					[[magic_t x = magic_open(MAGIC_NONE); magic_close(x);]])],
 					[cf_cv_libmagic="yes, libmagic with libz"],
 					[cf_cv_libmagic=no])
 			])
@@ -90,4 +90,3 @@ AC_DEFUN([CF_LIB_MAGIC],[
 ])
 
 dnl end
-

@@ -1,4 +1,4 @@
-/* $Id: savehist.cr,v 1.7 2018/10/01 21:05:01 cvsuser Exp $
+/* $Id: savehist.cr,v 1.8 2024/05/15 08:22:44 cvsuser Exp $
  * History save and restore.
  *
  * This macro saves the current history information to the state file on
@@ -58,7 +58,7 @@ _savehist_restore(void)
             search_fwd("<\\[grief-history\\]>")) {
 
         down();
-        drop_anchor(4);
+        drop_anchor(MK_NONINC);
         search_fwd("<\\[grief-history-end\\]>");
 
         if (inq_mark_size() > 0) {

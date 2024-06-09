@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.18 2022/06/01 14:21:18 cvsuser Exp $
+# $Id: Makefile.in,v 1.22 2024/05/25 03:46:44 cvsuser Exp $
 # libmagic makefile
 #
 #
@@ -40,31 +40,38 @@ ifneq ("$(BUILD_TYPE)","release")
 RTSUFFIX=d
 endif
 
+QUIETOUT:=	>/dev/null 2>&1
+ifeq ($(VERBOSE),1)
+QUIETOUT:=
+else ifeq ($(VERBOSE),0)
+else ifeq ($(VERBOSE),)
+else
+$(error VERBOSE: unexpected value 0 or 1 required, $(VERBOSE) given]))
+endif
+
 # Directories
 
 D_INC=		$(ROOT)/include
 D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
-D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/libmagic
 D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_OBJ=		$(ROOT)/obj@TOOLCHAINEXT@/$(BUILD_TYPE)/libmagic
 
 # Common flags
 
-XFLAGS=		
+XFLAGS=
 
 CFLAGS=		@CFLAGS@
 CWARN=		@CWARN@
+ifeq ("gcc","@CC@")
+CWARN+=		-Wno-unused-const-variable
+endif
 CDEBUG=		@CDEBUG@
 CRELEASE=	@CRELEASE@
 LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
 
 CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
-
-CEXTRA=		@DEFS@
-ifeq ("win32","@build_os@")
-CEXTRA+=	-DWIN32 -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
-endif
-
+CEXTRA=		@DEFS@ -DWIN32=1
 ifeq ("$(BUILD_TYPE)","release")
 CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
 LDFLAGS=	$(LDRELEASE) @LDFLAGS@
@@ -72,8 +79,9 @@ else
 CFLAGS+=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
 LDFLAGS=	$(LDDEBUG) @LDFLAGS@
 endif
-
 LDLIBS=		-L$(D_LIB) $(D_LIB)/$(LP)regex$(A) @LIBS@ @LIBM@ @EXTRALIBS@
+
+## 
 
 ARFLAGS=	rcv
 RMFLAGS=	-f
@@ -88,14 +96,14 @@ MAGICDLL=	$(D_LIB)/$(LP)magic.la
 MAGICUTIL=	$(D_BIN)/grfile$(E)
 MAGICDB=	$(D_BIN)/magic.mgc
 
-#VERSION=	5.1.1
-#MAGICPACKED=	file-511.tgz
-#MAGICSRC=	./file-511
-#MAGDIR=	./file-511/src/magic
+ifeq ("@TOOLCHAIN@","vs90")
 VERSION=	5.29
-MAGICPACKED=	file-5.29.gr.tgz
-MAGICSRC=	./file-5.29/src
-MAGDIR=		./file-5.29/magic
+else
+VERSION=	5.45
+endif
+MAGICPACKED=	file-$(VERSION).gr.tgz
+MAGICSRC=	./file-$(VERSION)/src
+MAGDIR=		./file-$(VERSION)/magic
 
 VERSIONSPEC=	$(subst .,:,$(VERSION))
 
@@ -123,12 +131,27 @@ ifneq ($(VERSION),5.11)
 CSOURCES+=\
 	fmtcheck.c \
 	der.c \
-	pread.c \
 	strcasestr.c \
 	ctime_r.c \
 	asctime_r.c \
 	localtime_r.c \
 	gmtime_r.c
+##	pread.c
+endif
+ifeq ($(VERSION),5.41)
+CSOURCES+=\
+	buffer.c \
+	is_csv.c \
+	is_json.c \
+	ioctl.c
+endif
+ifeq ($(VERSION),5.45)
+CSOURCES+=\
+	buffer.c \
+	is_csv.c \
+	is_json.c \
+	is_simh.c \
+	ioctl.c
 endif
 
 LIBOBJS=\
@@ -139,33 +162,35 @@ DLLOBJS=\
 
 UTILOBJS=\
 	$(D_OBJ)/file$(O)		\
-	$(D_OBJ)/getopt_long$(O)	\
 	$(D_OBJ)/getline$(O)
+##	$(D_OBJ)/getopt_long$(O)
 
 XCLEAN+=	$(MAGICDB) magic.mgc
 OBJS=		$(LIBOBJS) $(DLLOBJS) $(UTILOBJS)
 LIBS=		$(MAGICLIB) $(MAGICDLL)
 TSKS=		$(MAGICUTIL)
-
+INSTALLED=
 
 #########################################################################################
 # Rules
 
 .PHONY: 	build release debug
 build:			source unpacked
-unpacked:		$(LIBS) $(TSKS) $(MAGICDB) installinc
+unpacked:		generateinc $(LIBS) $(TSKS) $(MAGICDB) installinc
 
 release:
 		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
 debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
-$(MAGICLIB):		CEXTRA += -D__LIBMAGIC_BUILD -DLIBMAGIC_STATIC
+$(MAGICLIB):		CEXTRA := $(CEXTRA:-DLIBW32_DYNAMIC%=) -DLIBW32_STATIC
+$(MAGICLIB):		CEXTRA += -D__LIBMAGIC_BUILD -DLIBMAGIC_STATIC -DBUILD_AS_WINDOWS_STATIC_LIBARAY
 $(MAGICLIB):		$(D_OBJ)/.created $(LIBOBJS)
-		$(RM) $(RMFLAGS) $@ >/dev/null 2>&1
+		$(RM) $(RMFLAGS) $@ $(QUIETOUT)
 		$(AR) $(ARFLAGS) $@ $(LIBOBJS)
 		$(RANLIB) $@
 
+INSTALLED+=	$(D_BIN)/libmagic.$(VERSION).dll
 $(MAGICDLL):		CEXTRA += -D__LIBMAGIC_BUILD -DLIBMAGIC_DYNAMIC
 $(MAGICDLL):		MAPFILE=$(basename $@).map
 $(MAGICDLL):		$(DLLOBJS)
@@ -195,8 +220,24 @@ source:			.unpacked.$(VERSION)
 		@echo "unpacking source $(MAGICPACKED)"
 		@gzip -c -d $(MAGICPACKED) | tar -xvf -
 
+ifeq ($(VERSION),5.45)
+generateinc:		../include/.created config.h $(MAGICSRC)/magic.h
+
+$(MAGICSRC)/magic.h:	$(MAGICSRC)/magic.h.in
+		@echo generating header 'magic.h' ...
+		@$(PERL) magic_header.pl --type=magic --version=$(VERSION) --src=$(MAGICSRC) --output=$(MAGICSRC)
+
+else
+generateinc:		config.h
+
+endif
+
+config.h:		config.h.in
+		@echo generating header 'config.h' ...
+		@$(PERL) magic_header.pl --type=config --version=$(VERSION) --src=. --output=.
+
 installinc:		../include/.created
-		@echo publishing headers 'magic.h' ...
+		@echo publishing header 'magic.h' ...
 		@cp $(MAGICSRC)/magic.h ../include
 
 %/.created:
@@ -205,14 +246,14 @@ installinc:		../include/.created
 
 clean:
 		@echo $(BUILD_TYPE) clean
-		-@$(LIBTOOL) --mode=clean $(RM) $(MAGICDLL) $(DLLOBJS) >nul 2>&1
-		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(CLEAN) $(XCLEAN) >nul 2>&1
-		-@$(RM) $(LIBOBJS) $(UTILOBJS) >nul 2>&1
+		-@$(LIBTOOL) --mode=clean $(RM) $(MAGICDLL) $(OBJS) $(QUIETOUT)
+		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(INSTALLED) $(LIBS) $(CLEAN) $(XCLEAN) $(QUIETOUT)
+		-@$(RM) $(LIBOBJS) $(UTILOBJS) $(QUIETOUT)
 
 $(D_OBJ)/%$(O):		%$(C)
-		$(CC) $(CFLAGS) -o $@ -c $<
+		$(CC) $(CFLAGS) -D_CRT_SECURE_NO_DEPRECATE -o $@ -c $<
 
 $(D_OBJ)/%.lo:		%.c
-		$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -o $@ -c $<
+		$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -D_CRT_SECURE_NO_DEPRECATE -o $@ -c $<
 
 #end

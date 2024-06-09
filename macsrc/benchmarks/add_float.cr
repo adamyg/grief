@@ -1,7 +1,7 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: add_float.cr,v 1.2 2020/04/20 23:13:52 cvsuser Exp $
+/* $Id: add_float.cr,v 1.3 2023/03/06 15:28:18 cvsuser Exp $
  *
- * LUA/DukTape/Grunch comparision benchmark
+ * LUA/DukTape/Grunch comparison benchmark
  */
 
 #include "../grief.h"

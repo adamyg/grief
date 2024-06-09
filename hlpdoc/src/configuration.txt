@@ -1,7 +1,7 @@
 
     Getting Started:
 
-        Depending on the operating system, the name of the *GRIEF* executable 
+        Depending on the operating system, the name of the *GRIEF* executable
         is generally.
 
                 o gr (console)
@@ -9,7 +9,8 @@
 
         The following command line switch are available:
 
->       GRIEF 3.2.0 compiled Aug  9 2014 18:19:22 (cm version 3.0)
+>
+>       GRIEF 3.2.2.25 compiled Apr 10 2024 00:40:33 (cm version 3.1)
 >
 >       Usage: cr [options] [+line-number] file ..
 >
@@ -42,6 +43,7 @@
 >                                       File encoding search specification.
 >         --buftype dos|unix|mac|ansi   Default buffer-type.
 >         --encoding <encoding>         Default file encoding.
+>         --ucsver <x.y.z>              Unicode version; wcwidth support.
 >         --nograph                     Disable use of graphic characters.
 >         --nounicode                   Disable use of UNICODE graphic characters.
 >         --nounderline                 Disable use of underline mode.
@@ -62,7 +64,8 @@
 >         --jump [=lines]               Scroll jump, paging content not scolling; for slow links.
 >         --visible [=lines]            Visible lines above/below cursor.
 >         --escdelay value              ESC delay in milliseconds.
->         -m, --exec <macro-name>       Execute named macro.
+>         -U, --user <user-profile>     Execute user profile.
+>         -m, --macro <macro-name>      Execute named macro.
 >         -R, --readonly                Read-only mode.
 >         --lockstrict                  Enable strict file-locking.
 >         --spell                       Spell check.
@@ -70,12 +73,11 @@
 >         -t, --spaces                  Use spaces to fill out tabs.
 >         -d, --log                     Create `grief.log` diagnostics log.
 >         -f, --logflush                Flush log file as created.
->         -P, --dflags regexp,undo,prompt,memory,native,rtc,purify,terminal,vfs,refs
+>         -P, --dflags regexp,undo,prompt,memory,native,rtc,purify,terminal,vfs,refs,profile
 >                                       Debugging/profiling flags, comma separated.
 >         -W, --warnings                Enable warnings.
 >         -s, --logstats                Report statistics on exit.
->         -p, --profile                 Turn profiling on.
->         -r, --statsref                Dump macro reference statistics.
+>         -r, --statsref                Generate macro reference statistics on exit.
 >         -w, --readchar                Allow read_char to return -1.
 >         --test [value]                test mode.
 >         --restrict                    restrictive mode.
@@ -85,9 +87,10 @@
 >         --authors                     Developer details.
 >         --license                     License information.
 >         +nn                           Goto line nn.
+>
 
-        Note!:
-        Options can be system/configuration dependant and shall be
+        No te!:
+        Op tions can be system/configuration dependant and shall be
         disregarded if not applicable.
 
     X11:

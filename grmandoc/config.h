@@ -1,10 +1,10 @@
 #ifndef MANDOC_CONFIG_H_INCLUDED
 #define MANDOC_CONFIG_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: config.h,v 1.23 2022/05/31 16:44:23 cvsuser Exp $
+/* $Id: config.h,v 1.26 2024/05/15 08:47:18 cvsuser Exp $
  * mandoc config.h
  *
- * Copyright (c) 2014 - 2022, Adam Young.
+ * Copyright (c) 2014 - 2024, Adam Young.
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software for any
@@ -28,6 +28,13 @@
 #if defined(_WIN32) || defined(WIN32)
 
 #include "../libw32/config.h"
+
+#if !defined(HAVE_PROGNAME)
+#define HAVE_PROGNAME 1        /*libw32*/
+#endif
+#if !defined(HAVE_GETSUBOPT)
+#define HAVE_GETSUBOPT 1       /*libw32*/
+#endif
 
 #include <stddef.h>
 #include <malloc.h>
@@ -61,7 +68,7 @@
 #define  lstat w32_lstat
 #endif
 
-#if !defined(__MINGW32__)
+#if !defined(__MINGW32__) && !defined(inline)
 #define inline _inline
 #endif
 
@@ -99,7 +106,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#if !defined(HAVE_PROG)
+#if !defined(HAVE_PROGNAME)
 extern void                     setprogname(const char *);
 extern const char *             getprogname(void);
 #endif

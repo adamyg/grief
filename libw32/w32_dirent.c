@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_dirent_c,"$Id: w32_dirent.c,v 1.33 2022/06/11 04:01:44 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_dirent_c,"$Id: w32_dirent.c,v 1.35 2024/03/31 15:57:25 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -7,7 +7,7 @@ __CIDENT_RCSID(gr_w32_dirent_c,"$Id: w32_dirent.c,v 1.33 2022/06/11 04:01:44 cvs
  *
  *      opendir, closedir, readdir, seekdir, rewindir, telldir
  *
- * Copyright (c) 2007, 2012 - 2022 Adam Young.
+ * Copyright (c) 2007, 2012 - 2024 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -177,8 +177,9 @@ opendirA(const char *dirname)
     char fullpath[ MAX_PATH ], symlink[ MAX_PATH ], reparse[ MAX_PATH ],
         *path = fullpath;
     LPVOID OldValue = NULL;
-    DIR  *dp;
-    int  i, len;
+    DIR *dp;
+    size_t len;
+    int i;
 
     /* Copy to working buffer */
     if (NULL == dirname) {
@@ -319,8 +320,9 @@ opendirW(const wchar_t *dirname)
     wchar_t fullpath[ MAX_PATH ], symlink[ MAX_PATH ], reparse[ MAX_PATH ],
         *path = fullpath;
     LPVOID OldValue = NULL;
-    DIR  *dp;
-    int  i, len;
+    DIR *dp;
+    size_t len;
+    int i;
 
     /* Copy to working buffer */
     if (NULL == dirname) {

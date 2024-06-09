@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.17 2022/03/24 08:52:21 cvsuser Exp $
+# $Id: Makefile.in,v 1.20 2024/04/16 11:37:15 cvsuser Exp $
 # libautoupdater and utils makefile
 #
 #
@@ -44,7 +44,7 @@ endif
 
 D_INC=		$(ROOT)/include
 D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
-D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/libautoupdater
+D_OBJ=		$(ROOT)/obj@TOOLCHAINEXT@/$(BUILD_TYPE)/libautoupdater
 D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 # Common flags
@@ -52,6 +52,11 @@ D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 XFLAGS=
 CFLAGS=		@CFLAGS@
 CWARN=		@CWARN@ $(CWALL)
+CXXWARN=	@CXXWARN@
+ifeq ("gcc","@CC@")
+CWARN+=		-Wno-missing-field-initializers
+CXXWARN+=	-Wno-missing-field-initializers
+endif
 CDEBUG=		@CDEBUG@
 CRELEASE=	@CRELEASE@
 CXXFLAGS=	@CXXFLAGS@
@@ -78,11 +83,11 @@ CDEPFLAGS=	$(CEXTRA) $(CINCLUDE)
 
 ifeq ("$(BUILD_TYPE)","release")
 CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-CXXFLAGS+=	$(CXXRELEASE) $(CWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
+CXXFLAGS+=	$(CXXRELEASE) $(CXXWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
 LDFLAGS=	$(LDRELEASE) @LDFLAGS@
 else
 CFLAGS+=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
-CXXFLAGS+=	$(CXXDEBUG) $(CWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
+CXXFLAGS+=	$(CXXDEBUG) $(CXXWARN) $(CINCLUDE) @CXXINCLUDE@ $(CEXTRA) $(XFLAGS)
 LDFLAGS=	$(LDDEBUG) @LDFLAGS@
 endif
 LDLIBS=		-L$(D_LIB) @LIBS@ @EXTRALIBS@
@@ -99,6 +104,7 @@ RMDFLAGS=	-rf
 UPDATERDLL=	$(D_LIB)/$(LP)autoupdater.la
 UPDATERTSK=	$(D_BIN)/grupdater$(E)
 SIGNATURETSK=	$(D_BIN)/grsignature$(E)
+TESTLIBAPPTSK=	$(D_BIN)/testlibapp$(E)
 
 UPDATERSRC=		../libappupdater
 #ifeq ("wcl386","@CC@")
@@ -108,7 +114,7 @@ EXPATSRC=		../libappupdater/expat
 #endif
 SIGNSRC=		../libappupdater/sign
 
-VPATH=		$(UPDATERSRC) $(UPDATERSRC)/src $(UPDATERSRC)/localisation $(UPDATERSRC)/localisation/test $(EXPATSRC) $(SIGNSRC) ./sign
+VPATH=		$(UPDATERSRC) $(UPDATERSRC)/src $(UPDATERSRC)/test $(UPDATERSRC)/localisation $(UPDATERSRC)/localisation/test $(EXPATSRC) $(SIGNSRC) ./sign
 
 DLLOBJS=\
 	$(D_OBJ)/libautoupdater.lo	\
@@ -120,7 +126,6 @@ DLLOBJS=\
 	$(D_OBJ)/AutoLogger.lo		\
 	$(D_OBJ)/AutoManifest.lo	\
 	$(D_OBJ)/AutoUpdater.lo		\
-	$(D_OBJ)/AutoUpdater.res	\
 	$(D_OBJ)/AutoVersion.lo		\
 	\
 	$(D_OBJ)/CProgressDialog.lo	\
@@ -141,19 +146,33 @@ DLLOBJS=\
 	$(D_OBJ)/xmlrole.lo		\
 	$(D_OBJ)/xmltok.lo
 
+ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
+DLLOBJS+=	$(addprefix $(D_OBJ)/,$(subst .rc,_res.o,AutoUpdater.rc))
+else
+DLLOBJS+=	$(addprefix $(D_OBJ)/,$(subst .rc,.res,AutoUpdater.rc))
+endif
+
 UPDATEROBJS=\
 	$(D_OBJ)/grupdater$(O)		\
-	$(D_OBJ)/grupdater.res		\
 	$(D_OBJ)/upgetopt$(O)
+
+ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
+UPDATEROBJS+=	$(addprefix $(D_OBJ)/,$(subst .rc,_res.o,grupdater.rc))
+else
+UPDATEROBJS+=	$(addprefix $(D_OBJ)/,$(subst .rc,.res,grupdater.rc))
+endif
 
 SIGNATUREOBJS=\
 	$(D_OBJ)/grsignature$(O)	\
 	$(D_OBJ)/signature$(O)		\
 	$(D_OBJ)/upgetopt$(O)
 
+TESTLIBAPPOBJS=\
+	$(D_OBJ)/TLibappupdater$(O)
+
 OBJS=		$(DLLOBJS) $(UPDATEROBJS) $(SIGNATUREOBJS)
 LIBS=		$(UPDATERDLL)
-TSKS=		$(UPDATERTSK) $(SIGNATURETSK)
+TSKS=		$(UPDATERTSK) $(SIGNATURETSK) $(TESTLIBAPPTSK)
 
 
 #########################################################################################
@@ -175,17 +194,25 @@ ifdef USE_DEBUG
 $(UPDATERDLL):		CEXTRA += -D_DEBUG
 endif
 $(UPDATERDLL):		CEXTRA += -DBUILDING_LIBAUTOUPDATER
+$(UPDATERDLL):		MAPFILE=$(basename $@).map
 $(UPDATERDLL):		$(D_OBJ)/.created $(DLLOBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(DLLOBJS) -version-number 1.0.1 \
 			-rpath $(D_LIB) -bindir $(D_BIN) $(LDLIBS) version.lib wininet.lib advapi32.lib user32.lib
 
 $(UPDATERTSK):		CEXTRA += -I$(UPDATERSRC)
+$(UPDATERTSK):		MAPFILE=$(basename $@).map
 $(UPDATERTSK):		$(UPDATEROBJS)
 		$(LIBTOOL) --mode=link $(CXX) $(LDFLAGS) -o $@ $(UPDATEROBJS) $(D_LIB)/libautoupdater$(A) $(LDLIBS) @LDMAPFILE@
 
 $(SIGNATURETSK):	CEXTRA += -I$(UPDATERSRC) -I$(SIGNSRC)
+$(SIGNATURETSK):	MAPFILE=$(basename $@).map
 $(SIGNATURETSK):	$(SIGNATUREOBJS)
 		$(LIBTOOL) --mode=link $(CXX) $(LDFLAGS) -o $@ $(SIGNATUREOBJS) $(D_LIB)/libautoupdater$(A) $(LDLIBS) @LDMAPFILE@
+
+$(TESTLIBAPPTSK):	CEXTRA += -I$(UPDATERSRC)
+$(TESTLIBAPPTSK):	MAPFILE=$(basename $@).map
+$(TESTLIBAPPTSK):	$(TESTLIBAPPOBJS)
+		$(LIBTOOL) --mode=link $(CXX) $(LDFLAGS) -o $@ $(TESTLIBAPPOBJS) $(D_LIB)/libautoupdater$(A) $(LDLIBS) @LDMAPFILE@
 
 installinc:		include/.created
 		@echo publishing headers ...
@@ -213,6 +240,9 @@ $(D_OBJ)/%.lo:		%.c
 		$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -o $@ -c $<
 
 $(D_OBJ)/%.res:		%.rc
-		$(RC) -Fo$@ -I../libappupdater/src $(RCDEFS) $<
+		$(RC) -fo $@ -I../libappupdater/src $(RCDEFS) $<
+
+$(D_OBJ)/%_res.o:	%.rc
+		$(RC) -o $@ -I../libappupdater/src $(RCDEFS) $<
 
 #end

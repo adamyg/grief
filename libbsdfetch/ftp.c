@@ -1,6 +1,6 @@
 /*	$NetBSD: ftp.c,v 1.46 2014/06/11 13:12:12 joerg Exp $	*/
 /*-
- * Copyright (c) 2013-2015 Adam Young
+ * Copyright (c) 2013 - 2024 Adam Young
  * Copyright (c) 1998-2004 Dag-Erling Coïdan Smørgrav
  * Copyright (c) 2008, 2009, 2010 Joerg Sonnenberger <joerg@NetBSD.org>
  * All rights reserved.
@@ -483,6 +483,7 @@ ftp_mode_type(conn_t *conn, int mode, int type)
 		break;
 	case 'd':
 		type = 'D';
+		/*FALLTHRU*/
 	case 'D':
 		/* can't handle yet */
 	default:

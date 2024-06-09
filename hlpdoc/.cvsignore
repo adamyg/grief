@@ -1,9 +1,9 @@
 doc/Data/
 doc/html/
 doc/mandoc/
-ndplus
+ndplus/
+ref/
 Makefile
 *.err
 *.pdf
-ref
 

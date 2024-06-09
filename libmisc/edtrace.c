@@ -1,13 +1,13 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edtrace_c,"$Id: edtrace.c,v 1.45 2022/09/20 15:19:11 cvsuser Exp $")
+__CIDENT_RCSID(gr_edtrace_c,"$Id: edtrace.c,v 1.48 2024/04/27 15:22:32 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edtrace.c,v 1.45 2022/09/20 15:19:11 cvsuser Exp $
+/* $Id: edtrace.c,v 1.48 2024/04/27 15:22:32 cvsuser Exp $
  * Simple diagnostic trace.
  *
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -35,10 +35,8 @@ __CIDENT_RCSID(gr_edtrace_c,"$Id: edtrace.c,v 1.45 2022/09/20 15:19:11 cvsuser E
 #if defined(HAVE_SYS_TIME_H)
 #include <sys/time.h>
 #endif
-#if defined(HAVE_TIME_H)
 #if !defined(HAVE_SYS_TIME_H) || defined(TIME_WITH_SYS_TIME)
 #include <time.h>
-#endif
 #endif
 #include <stdarg.h>
 #include <assert.h>

@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: view.cr,v 1.13 2018/10/01 21:05:01 cvsuser Exp $
+/* $Id: view.cr,v 1.14 2024/05/18 16:11:20 cvsuser Exp $
  * Buffer view manipulation.
  *
  *
@@ -363,12 +363,14 @@ literal(void)
          *      0x21A6 -    RIGHTWARDS ARROW FROM BAR.              |->
          *      0x2505 -    BOX DRAWINGS TRIPLE DASH HORIZONTIAL    ---
          *      0x290F -    RIGHTWARDS TRIPLE DASH ARROW            -->
+         *      0x2640 -    FEMALE SIGN
          */
         literal_cmap = create_char_map(NULL, 0x00, literal_c0_view, NULL, "view::literal");
         create_char_map(literal_cmap, 0x80, literal_c1_view);
 
         if (DC_UNICODE == ((DC_UNICODE|DC_ASCIIONLY) & inq_display_mode())) {
             create_char_map(literal_cmap, 0, NULL, quote_list(0x09, CMAP_TAB));
+            create_char_map(literal_cmap, 0x0C, quote_list(0x2640)); // form-feed
             create_char_map(literal_cmap, CMAP_TABSTART, quote_list(0x21A6, 0x2505, 0x290F));
             create_char_map(literal_cmap, CMAP_EOL, quote_list(0x23CE));
 

@@ -1,10 +1,10 @@
 #ifndef ERR_H_INCLUDED
 #define ERR_H_INCLUDED
-/* $Id: err.h,v 1.3 2015/03/01 02:58:51 cvsuser Exp $
+/* $Id: err.h,v 1.5 2024/06/04 13:15:59 cvsuser Exp $
  *
  * win32 <err.h> implementation
  *
- * Copyright (c) 2012-2015 Adam Young.
+ * Copyright (c) 2012 - 2024 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,8 +33,10 @@
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
+#if (0)
 void                    setprogname(const char *progname);
 const char *            getprogname(void);
+#endif /*libw32*/
 
 void                    err(int ret, const char *fmt, ...);
 void                    errx(int ret, const char *fmt, ...);

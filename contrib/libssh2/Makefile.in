@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.3 2022/06/13 14:07:52 cvsuser Exp $
+# $Id: Makefile.in,v 1.5 2024/04/16 11:37:13 cvsuser Exp $
 # libssh2 makefile.
 #
 #
-# Copyright (c) 2015 - 2022, Adam Young.
+# Copyright (c) 2015 - 2024 Adam Young.
 # All rights reserved.
 #
 # ==end==
@@ -49,7 +49,7 @@ endif
 D_INC=		$(ROOT)/include
 D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
 D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
-D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/libssh2
+D_OBJ=		$(ROOT)/obj@TOOLCHAINEXT@/$(BUILD_TYPE)/libssh2
 
 # Common flags
 
@@ -171,7 +171,7 @@ $(SSH2LIB):		$(LIBOBJS)
 		$(RANLIB) $@
 
 INSTALLED+=	$(D_BIN)/libssh2.$(VERSION).dll
-$(SSH2DLL):		CEXTRA += -DLIBSSH2_DYANMIC -D_WINDLL
+$(SSH2DLL):		CEXTRA += -DLIBSSH2_DYNAMIC -D_WINDLL
 $(SSH2DLL):		$(DLLOBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ -version-number $(VERSIONSPEC) \
 			-rpath $(D_LIB) -bindir $(D_BIN) $(SSH2DEF) $^ $(LDLIBS)

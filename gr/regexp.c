@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_regexp_c,"$Id: regexp.c,v 1.48 2020/06/05 15:56:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_regexp_c,"$Id: regexp.c,v 1.49 2022/12/03 16:40:17 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: regexp.c,v 1.48 2020/06/05 15:56:50 cvsuser Exp $
+/* $Id: regexp.c,v 1.49 2022/12/03 16:40:17 cvsuser Exp $
  * Regular expression engine.
  *
  *  The orgin of this regular expression implementation has been lost with time,
@@ -173,7 +173,7 @@ static int                  re_expand(recomp_t *rx, size_t len);
 static void                 re_shiftup(recomp_t *rx, size_t idx);
 static int                  re_match(const rematch_t *match, const REGEXPATOM *re, const char *p, int size, loopstate_t *loopstate);
 static void                 re_print(const REGEXPATOM *re);
-static const char *         re_printbm(const REGEXPATOM *bm);
+static void                 re_printbm(const REGEXPATOM *bm, char *buf, size_t len);
 #if defined(DEBUG_REGEXP)
 static void                 re_printbuf(const char *start, const char *end);
 #endif
@@ -1528,14 +1528,14 @@ again:;
 static void
 re_print(const REGEXPATOM *re)
 {
-    char buf[1024], buf1[1024], buf2[1024];
+    char buf[1200], t_buf[1024];
     const REGEXPATOM *start = re;
     const char *p;
     int i;
 
     trace_log("\n");
     while (1) {
-        p = buf1;
+        p = t_buf;
         switch (*re) {
         case RE_FINISH:
         case RE_ZERO_OR_MORE:
@@ -1552,14 +1552,19 @@ re_print(const REGEXPATOM *re)
             break;
 
         case RE_CLASS:
-            sprintf(buf1, "CLASS %s", re_printbm(re + 3));
+            re_printbm(re + 3, t_buf, sizeof(t_buf));
             break;
 
         case RE_STRING: {
+                const unsigned maxlength = (sizeof(t_buf) - 42);
                 const unsigned slength = GET16(re + 3);
                 const char *sdata = (const char *)(re + 5);
 
-                sprintf(buf1, "STRING len=%u str='%.*s'", slength, (int)slength, sdata);
+                if (slength > maxlength) {
+                    sprintf(t_buf, "STRING len=%u str=<%.*s...>", slength, (int)maxlength, sdata);
+                } else {
+                    sprintf(t_buf, "STRING len=%u str=<%.*s>", slength, (int)slength, sdata);
+                }
             }
             break;
 
@@ -1573,8 +1578,7 @@ re_print(const REGEXPATOM *re)
         case RE_OPEN + 7:
         case RE_OPEN + 8:
         case RE_OPEN + 9:
-            sprintf(buf2, "OPEN-%d", *re - RE_OPEN);
-            p = buf2;
+            sprintf(t_buf, "OPEN-%d", *re - RE_OPEN);
             break;
 
         case RE_CLOSE + 0:
@@ -1587,12 +1591,11 @@ re_print(const REGEXPATOM *re)
         case RE_CLOSE + 7:
         case RE_CLOSE + 8:
         case RE_CLOSE + 9:
-            sprintf(buf2, "CLOSE-%d", *re - RE_CLOSE);
-            p = buf2;
+            sprintf(t_buf, "CLOSE-%d", *re - RE_CLOSE);
             break;
 
         default:
-            sprintf(buf1, "** DONT KNOW = 0x%02x", *re);
+            sprintf(t_buf, "** DONT KNOW = 0x%02x", *re);
             break;
         }
 
@@ -1621,21 +1624,21 @@ re_print(const REGEXPATOM *re)
 }
 
 
-static const char *
-re_printbm(const REGEXPATOM *bitmap)
+static void
+re_printbm(const REGEXPATOM *bitmap, char *buf, size_t len)
 {
-    static char buf[(256*2)+1];
-    char *cp = buf;
+    char *cp = buf, *end = buf + (len - 4);
     int run = 0, isnot = 0;
     int ch;
 
-    *cp++ = '[';
+    assert(len >= 512);
+    cp += sprintf(cp, "CLASS [");
     if (ISSET(bitmap, 0)) {
         *cp++ = '~';
         isnot = 1;
     }
 
-    for (ch = 0; ch < 256; ++ch) {
+    for (ch = 0; ch < 256 && cp < end; ++ch) {
         int set = ISSET(bitmap, ch);
 
         if (isnot) set = !set;
@@ -1681,8 +1684,7 @@ re_printbm(const REGEXPATOM *bitmap)
 
     *cp++ = ']';
     *cp = '\0';
-    assert(cp < buf + sizeof(buf));
-    return buf;
+    assert(cp < (buf + len));
 }
 
 

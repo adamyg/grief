@@ -1,19 +1,19 @@
 #ifndef WIN32_CONFIG_H_INCLUDED
 #define WIN32_CONFIG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.24 2022/06/16 05:18:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.28 2024/05/03 14:35:17 cvsuser Exp $")
 __CPRAGMA_ONCE
 /* -*- mode: c; set-indent: 4; -*- */
-/* $Id: w32config.hin,v 1.24 2022/06/16 05:18:13 cvsuser Exp $
+/* $Id: w32config.hin,v 1.28 2024/05/03 14:35:17 cvsuser Exp $
  * Machine configuration.
  *
  * System dependent <config.h> configuration template,
  * Windows targets (see makelib.pl for details).
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
- * This file is part of the Grief Editor.
+ * This file is part of the GRIEF Editor.
  *
  * The Grief Editor is free software: you can redistribute it
  * and/or modify it under the terms of the Grief Editor License.
@@ -125,7 +125,6 @@ __CPRAGMA_ONCE
 #undef HAVE_NDIR_H
 
 /* AC_HEADER_TIME */
-#undef HAVE_TIME_H
 #undef TIME_WITH_SYS_TIME
 #undef HAVE_SYS_TIME_H
 #undef HAVE_UTIME_H
@@ -305,7 +304,8 @@ __CPRAGMA_ONCE
 #undef SIZEOF_LONG_LONG 4
 #undef SIZEOF_VOID_P 4
 #define SIZEOF_VOIDP SIZEOF_VOID_P
-#undef SIZEOF_WCHAR_T
+#undef SIZEOF_WCHAR_T 2
+#undef SIZEOF_TIME_T 4
 
 #undef HAVE_INLINE
 #undef HAVE___INLINE
@@ -493,6 +493,7 @@ __CPRAGMA_ONCE
 #undef HAVE_STRDUP
 #undef HAVE_STRFTIME
 #undef HAVE_STRTOUL
+#undef HAVE_STRTOULL
 #undef HAVE_STRTOF
 #undef HAVE_STRTOLD
 #undef HAVE_STRTOLL
@@ -599,6 +600,21 @@ __CPRAGMA_ONCE
 
 #undef CLOSEDIR_VOID
 #undef GETPGRP_VOID
+
+#undef CCX_VA_ARGS
+#undef CC_VA_ARGS
+#undef HAVE_VA_ARGS
+#if !defined(HAVE_VA_ARGS)
+#if defined(__cplusplus)
+#if defined(CCX_VA_ARGS)
+#define HAVE_VA_ARGS 1
+#endif
+#else
+#if defined(CC_VA_ARGS)
+#define HAVE_VA_ARGS 1
+#endif
+#endif /*__cplusplus*/
+#endif /*!HAVE_VA_ARGS*/
 
 #undef HAVE_VA_COPY
 #undef HAVE___VA_COPY
@@ -831,7 +847,9 @@ __CPRAGMA_ONCE
 #define USE_VIO_BUFFER 1                        /* Vio buffer method */
 #define NOCASE_FILENAMES 1                      /* ignore case in filenames */
 #define NO_UNLINK_OPEN  1                       /* can't unlink open files */
-#define NEEDS_GETOPT                            /* Local getopt() implementation required */
+#if !defined(_WIN32)
+#define NEEDS_GETOPT                            /* legacy libmisc */
+#endif
 #endif
 
 

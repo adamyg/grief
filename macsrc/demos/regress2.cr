@@ -1,6 +1,6 @@
 /* -*- mode: cr; indent-width: 4; -*- */
 /* charset=utf8
- * $Id: regress2.cr,v 1.24 2021/07/05 15:01:29 cvsuser Exp $
+ * $Id: regress2.cr,v 1.26 2024/05/24 17:57:08 cvsuser Exp $
  * Regression tests ... part2.
  *
  *
@@ -898,7 +898,7 @@ test_file(void)
     //  remove
     //  stat
     int now = time()-1;
-    string base = format("%s/gr%d%dXXXXXX", inq_tmpdir(), getpid(), now);
+    string base = format("%s/gr%d-%d-B-XXXXXX", inq_tmpdir(), getpid(), now);
     string temp = mktemp(base),
        temp2 = temp + "2";
     int size = -1, mtime, ctime, atime, mode;
@@ -1331,7 +1331,7 @@ test_unicode_version(void)
     string uv = inq_unicode_version();
     TEST(1241, set_unicode_version("11.0.0") == 110000); //match
     TEST(1242, set_unicode_version("13.0.0") == 130000); //match
-    TEST(1243, set_unicode_version("19.0.0") == 130000); //closet
+    TEST(1243, set_unicode_version("19.0.0") == 150100); //closest (15.1.0, current upper)
     set_unicode_version(uv);
 }
 

@@ -1,4 +1,4 @@
-/*	$NetBSD: yacc.y,v 1.31 2010/06/13 04:14:57 tnozaki Exp $	*/
+/*	$NetBSD: yacc.y,v 1.36 2024/01/05 02:38:06 rin Exp $	*/
 
 %{
 /*-
@@ -43,7 +43,7 @@
 static char sccsid[] = "@(#)yacc.y	8.1 (Berkeley) 6/6/93";
 static char rcsid[] = "$FreeBSD$";
 #else
-__RCSID("$NetBSD: yacc.y,v 1.31 2010/06/13 04:14:57 tnozaki Exp $");
+__RCSID("$NetBSD: yacc.y,v 1.36 2024/01/05 02:38:06 rin Exp $");
 #endif
 #endif /* not lint */
 
@@ -81,22 +81,21 @@ __nbrune_t	charsetmask = (__nbrune_t)0x0000007f;
 #endif
 __nbrune_t	charsetmask = (__nbrune_t)0xffffffff;
 
-void set_map __P((rune_map *, rune_list *, u_int32_t));
-void set_digitmap __P((rune_map *, rune_list *));
-void add_map __P((rune_map *, rune_list *, u_int32_t));
+void set_map(rune_map *, rune_list *, u_int32_t);
+void set_digitmap(rune_map *, rune_list *);
+void add_map(rune_map *, rune_list *, u_int32_t);
 
-int		main __P((int, char *[]));
-void		usage __P((void));
-int		yyerror __P((const char *s));
-void		*xmalloc __P((unsigned int sz));
-u_int32_t	*xlalloc __P((unsigned int sz));
-u_int32_t	*xrelalloc __P((u_int32_t *old, unsigned int sz));
-void		dump_tables __P((void));
-int		yyparse __P((void));
-extern int	yylex __P((void));
+__dead void	usage(void);
+int		yyerror(const char *s);
+void		*xmalloc(unsigned int sz);
+u_int32_t	*xlalloc(unsigned int sz);
+u_int32_t	*xrelalloc(u_int32_t *old, unsigned int sz);
+void		dump_tables(void);
+int		yyparse(void);
+extern int	yylex(void);
 
 /* mklocaledb.c */
-extern void mklocaledb __P((const char *, FILE *, FILE *));
+extern void mklocaledb(const char *, FILE *, FILE *);
 
 %}
 
@@ -138,7 +137,7 @@ table	:	entry
 	;
 
 entry	:	ENCODING STRING
-		{ strncpy(new_locale.frl_encoding, $2, sizeof(new_locale.frl_encoding)); }
+		{ strlcpy(new_locale.frl_encoding, $2, sizeof(new_locale.frl_encoding)); }
 	|	VARIABLE
 		{ rl_variable_len = strlen($1) + 1;
 		  rl_variable = strdup($1);
@@ -261,9 +260,7 @@ int debug = 0;
 FILE *ofile;
 
 int
-main(ac, av)
-	int ac;
-	char *av[];
+main(int ac, char *av[])
 {
     int x;
     const char *locale_type;
@@ -323,7 +320,7 @@ main(ac, av)
 }
 
 void
-usage()
+usage(void)
 {
     fprintf(stderr,
 	"usage: mklocale [-d] [-o output] [-t type] [source]\n");
@@ -332,8 +329,7 @@ usage()
 }
 
 int
-yyerror(s)
-	const char *s;
+yyerror(const char *s)
 {
     fprintf(stderr, "%s\n", s);
 
@@ -341,8 +337,7 @@ yyerror(s)
 }
 
 void *
-xmalloc(sz)
-	unsigned int sz;
+xmalloc(unsigned int sz)
 {
     void *r = malloc(sz);
     if (!r) {
@@ -353,8 +348,7 @@ xmalloc(sz)
 }
 
 u_int32_t *
-xlalloc(sz)
-	unsigned int sz;
+xlalloc(unsigned int sz)
 {
     u_int32_t *r = (u_int32_t *)malloc(sz * sizeof(u_int32_t));
     if (!r) {
@@ -365,9 +359,7 @@ xlalloc(sz)
 }
 
 u_int32_t *
-xrelalloc(old, sz)
-	u_int32_t *old;
-	unsigned int sz;
+xrelalloc(u_int32_t *old, unsigned int sz)
 {
     u_int32_t *r = (u_int32_t *)realloc((char *)old,
 						sz * sizeof(u_int32_t));
@@ -379,10 +371,7 @@ xrelalloc(old, sz)
 }
 
 void
-set_map(map, list, flag)
-	rune_map *map;
-	rune_list *list;
-	u_int32_t flag;
+set_map(rune_map *map, rune_list *list, u_int32_t flag)
 {
     list->map &= charsetmask;
     list->map |= charsetbits;
@@ -394,20 +383,25 @@ set_map(map, list, flag)
 }
 
 void
-set_digitmap(map, list)
-	rune_map *map;
-	rune_list *list;
+set_digitmap(rune_map *map, rune_list *list)
 {
     __nbrune_t i;
 
     while (list) {
 	rune_list *nlist = list->next;
 	for (i = list->min; i <= list->max; ++i) {
-	    if (list->map + (i - list->min)) {
+	    /*
+	     * XXX PR lib/57798
+	     * Currently, we support mapping up to 255. Attempts to map
+	     * 256 (== _RUNETYPE_A) and above are silently ignored.
+	     */
+	    _RuneType digit = list->map + (i - list->min);
+	    if (digit > 0 && digit <= 0xff) {
 		rune_list *tmp = (rune_list *)xmalloc(sizeof(rune_list));
+		memset(tmp, 0, sizeof(*tmp));
 		tmp->min = i;
 		tmp->max = i;
-		add_map(map, tmp, list->map + (i - list->min));
+		add_map(map, tmp, digit);
 	    }
 	}
 	free(list);
@@ -416,10 +410,7 @@ set_digitmap(map, list)
 }
 
 void
-add_map(map, list, flag)
-	rune_map *map;
-	rune_list *list;
-	u_int32_t flag;
+add_map(rune_map *map, rune_list *list, u_int32_t flag)
 {
     __nbrune_t i;
     rune_list *lr = 0;
@@ -625,7 +616,7 @@ add_map(map, list, flag)
 }
 
 void
-dump_tables()
+dump_tables(void)
 {
     int x, n;
     rune_list *list;

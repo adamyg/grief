@@ -1,4 +1,4 @@
-dnl $Id: libterm.m4,v 1.6 2021/04/05 04:07:34 cvsuser Exp $
+dnl $Id: libterm.m4,v 1.8 2024/05/28 10:33:29 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -7,7 +7,7 @@ dnl
 
 AC_DEFUN([LIBTERM_CHECK_CONFIG],[
 
-	AC_MSG_RESULT([determining term lib, --with-termlib options [ncurses, pdcurses, tinfo, curses, termcap, termlib]])
+	AC_MSG_RESULT([determining term lib, --with-termlib options [ncursesw, ncurses, pdcurses, tinfo, curses, termcap, termlib]])
 	AC_ARG_WITH(ncurses,
 	    [  --with-ncurses          use ncurses library], with_termlib=ncurses)
 
@@ -22,11 +22,11 @@ AC_DEFUN([LIBTERM_CHECK_CONFIG],[
 
 	AC_ARG_WITH(curses,
 	    [  --with-curses           use curses library],  with_termlib=curses)
-	
-        AC_ARG_WITH(termcap,
+
+	AC_ARG_WITH(termcap,
 	    [  --with-termcap          use termcap library], with_termlib=termcap)
-	
-        AC_ARG_WITH(termlib,
+
+	AC_ARG_WITH(termlib,
 	    [  --with-termlib=library  use names library for terminal support],)
 
 	AC_SUBST(TERMLIB)
@@ -55,22 +55,22 @@ AC_DEFUN([LIBTERM_CHECK_CONFIG],[
 		AC_MSG_RESULT([termcap library ... $with_termlib])
 		termlib_name=$with_termlib
 		AC_MSG_CHECKING(for linking with $with_termlib library)
-		AC_TRY_LINK([], [], AC_MSG_RESULT(OK), AC_MSG_ERROR(FAILED))
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[]])], AC_MSG_RESULT(OK), AC_MSG_ERROR(FAILED))
 
 	else
 		AC_MSG_RESULT([no termlib options, checking for suitable terminal library])
 
 		dnl Selection rules/
 		dnl
-		dnl     o Newer versions of ncurses are preferred over anything,
+		dnl     o Newer versions of ncursesw/ncurses are preferred over anything,
 		dnl          note: older versions of ncurses have bugs hence we assume the latest (5.5 +).
 		dnl     o also allow the smaller ncurses tinfo library
 		dnl     o Digital Unix (OSF1) should use curses.
 		dnl     o SCO Openserver prefer termlib.
 		dnl
 		case "`uname -s 2>/dev/null`" in
-			OSF1|SCO_SV)	termlibs="ncurses tinfo curses termlib termcap";;
-			*)		termlibs="ncurses tinfo termlib termcap curses";;
+			OSF1|SCO_SV)	termlibs="ncursesw ncurses tinfo curses termlib termcap";;
+			*)		termlibs="ncursesw ncurses tinfo termlib termcap curses";;
 		esac
 
 		for libname in $termlibs; do
@@ -79,7 +79,7 @@ AC_DEFUN([LIBTERM_CHECK_CONFIG],[
 				dnl It's possible that a library is found but it doesn't work, for example
 				dnl shared library that cannot be found; compile and run a test program to be sure
 				dnl
-				AC_TRY_RUN([
+				AC_RUN_IFELSE([AC_LANG_PROGRAM([[
 #ifdef HAVE_TERMCAP_H
 # include <termcap.h>
 #endif
@@ -89,9 +89,10 @@ AC_DEFUN([LIBTERM_CHECK_CONFIG],[
 #if STDC_HEADERS
 # include <stdlib.h>
 # include <stddef.h>
-#endif
-int main() {char *s; s=(char *)tgoto("%p1%d", 0, 1); return 0; }],
-					res="OK", res="FAIL", res="FAIL")
+#endif]],[[
+	char *s; s=(char *)tgoto("%p1%d", 0, 1);
+	return 0;]])],
+					[res="OK"], [res="FAIL"], [res="FAIL"])
 				LIBS="$cf_save_LIBS"
 				if test "$res" = "OK"; then
 					termlib_name=$libname
@@ -118,27 +119,27 @@ int main() {char *s; s=(char *)tgoto("%p1%d", 0, 1); return 0; }],
 			LIBS="$LIBS $TERMLIB"
 
 			AC_MSG_CHECKING([for setupterm and tigetxxx()])
-			AC_TRY_LINK([
+			AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #ifdef HAVE_CURSES_H
 #include <curses.h>
 #endif
 #ifdef HAVE_TERM_H
 #include <term.h>
-#endif],
-				[setupterm("terminalwontexist",0,0); tigetstr("str"); tigetnum("num"); tigetflag("flag");],
+#endif]],
+				[[setupterm("terminalwontexist",0,0); tigetstr("str"); tigetnum("num"); tigetflag("flag");]])],
 				[termlib_cv_terminfo=yes; AC_MSG_RESULT(yes)],
 				AC_MSG_RESULT(no))
 
 			AC_MSG_CHECKING([for tgetent() and tgetxxx()])
-			AC_TRY_LINK([
+			AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #ifdef HAVE_CURSES_H
 #include <curses.h>
 #endif
 #ifdef HAVE_TERM_H
 #include <term.h>
-#endif],
-				[char buffer[10000]; char *area = (char *)0;
-int res = tgetent(buffer, "terminalwontexist"); tgetstr("str", &area); tgetnum("num"); tgetflag("flag");],
+#endif]],
+				[[char buffer[10000]; char *area = (char *)0;
+int res = tgetent(buffer, "terminalwontexist"); tgetstr("str", &area); tgetnum("num"); tgetflag("flag");]])],
 				[termlib_cv_termcap=yes; AC_MSG_RESULT(yes)],
 				AC_MSG_RESULT(no))
 
@@ -157,7 +158,7 @@ int res = tgetent(buffer, "terminalwontexist"); tgetstr("str", &area); tgetnum("
 	dnl
 	if test "$termlib_cv_terminfo" = "no"; then
 		AC_CACHE_CHECK([whether we talk terminfo], termlib_cv_terminfo, [
-			AC_RUN_IFELSE([AC_LANG_PROGRAM([
+			AC_RUN_IFELSE([AC_LANG_PROGRAM([[
 #ifdef HAVE_TERMCAP_H
 # include <termcap.h>
 #endif
@@ -167,13 +168,11 @@ int res = tgetent(buffer, "terminalwontexist"); tgetstr("str", &area); tgetnum("
 #if STDC_HEADERS
 # include <stdlib.h>
 # include <stddef.h>
-#endif
-int main()
-{
+#endif]],[[
     char *s; s=(char *)tgoto("%p1%d", 0, 1);
     exit(!strcmp(s==0 ? "" : s, "1"));
     return 0;
-}])],
+]])],
 		[termlib_cv_terminfo=no],
 		[termlib_cv_terminfo=yes],
 			[AC_MSG_ERROR(cross-compiling: please set 'termlib_cv_terminfo')])])
@@ -181,8 +180,8 @@ int main()
 
 	dnl library specific resources
 	dnl
-	dnl	ncurses / ncurses_g
 	dnl	ncursesw
+	dnl	ncurses / ncurses_g
 	dnl	pdcurses(*)
 	dnl	tinfo(*)
 	dnl	curses
@@ -198,18 +197,7 @@ int main()
 		AC_DEFINE([HAVE_TERMCAP], 1, [termcap interface.])
 	fi
 
-	if test "x$termlib_name" = "xncurses"; then
-		AC_DEFINE([HAVE_LIBNCURSES], 1, [enable libncurses support.])
-		AC_CHECK_HEADERS(nc_alloc.h ncurses/nc_alloc.h)
-		AC_CHECK_HEADERS(nomacros.h ncurses/nomacros.h)
-		AC_CHECK_HEADERS(ncurses.h  ncurses/ncurses.h)
-		AC_CHECK_HEADERS(curses.h   ncurses/curses.h)
-		AC_CHECK_HEADERS(termcap.h  ncurses/termcap.h)
-		AC_CHECK_HEADERS(term.h     ncurses/term.h)
-		AC_CHECK_LIB(ncurses, main)
-		AC_CHECK_LIB(ncurses_g, main)
-
-	else if test "x$termlib_name" = "xncursesw"; then
+	if test "x$termlib_name" = "xncursesw"; then
 		AC_DEFINE([HAVE_LIBNCURSESW], 1, [enable libncursesw support.])
 		AC_CHECK_HEADERS(nc_alloc.h ncursesw/nc_alloc.h)
 		AC_CHECK_HEADERS(nomacros.h ncursesw/nomacros.h)
@@ -219,6 +207,17 @@ int main()
 		AC_CHECK_HEADERS(term.h     ncursesw/term.h)
 		AC_CHECK_LIB(ncursesw, main)
 		AC_CHECK_LIB(ncursesw_g, main)
+
+	else if test "x$termlib_name" = "xncurses"; then
+		AC_DEFINE([HAVE_LIBNCURSES], 1, [enable libncurses support.])
+		AC_CHECK_HEADERS(nc_alloc.h ncurses/nc_alloc.h)
+		AC_CHECK_HEADERS(nomacros.h ncurses/nomacros.h)
+		AC_CHECK_HEADERS(ncurses.h  ncurses/ncurses.h)
+		AC_CHECK_HEADERS(curses.h   ncurses/curses.h)
+		AC_CHECK_HEADERS(termcap.h  ncurses/termcap.h)
+		AC_CHECK_HEADERS(term.h     ncurses/term.h)
+		AC_CHECK_LIB(ncurses, main)
+		AC_CHECK_LIB(ncurses_g, main)
 
 	else if test "x$termlib_name" = "xpdcurses"; then
 		AC_DEFINE([HAVE_LIBPDCURSES], 1, [enable libpdcurses support.])
@@ -248,20 +247,19 @@ int main()
 	if test "$termlib_cv_termcap" = "yes"; then
 		if test -n "$termlib_name"; then
 			AC_CACHE_CHECK([what tgetent() returns for an unknown terminal], termlib_cv_tgent, [
-				AC_RUN_IFELSE([AC_LANG_PROGRAM([
+				AC_RUN_IFELSE([AC_LANG_PROGRAM([[
 #ifdef HAVE_TERMCAP_H
 #include <termcap.h>
 #endif
 #if STDC_HEADERS
 #include <stdlib.h>
 #include <stddef.h>
-#endif
-main()
-{
+#endif]],[[
     char s[10000];
     int res = tgetent(s, "terminalwontexist");
     exit(res != 0);
-}])],
+    return 0;
+]])],
 			    [termlib_cv_tgent=zero],
 			    [termlib_cv_tgent=non-zero],
 				[AC_MSG_ERROR(failed to compile test program.)])
@@ -274,49 +272,44 @@ main()
 	fi
 
 	AC_MSG_CHECKING(whether termcap.h contains ospeed)
-	AC_TRY_LINK([
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #ifdef HAVE_TERMCAP_H
 #include <termcap.h>
-#endif
-			], [ospeed = 20000],
+#endif]], [[ospeed = 20000;]])],
 		AC_MSG_RESULT(yes); AC_DEFINE([HAVE_OSPEED], 1, [extern ospeed available.]),
 		[AC_MSG_RESULT(no)
 		AC_MSG_CHECKING(whether ospeed can be extern)
-		AC_TRY_LINK([
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #ifdef HAVE_TERMCAP_H
 #include <termcap.h>
 #endif
-extern short ospeed;
-			], [ospeed = 20000],
+extern short ospeed;]], [[ospeed = 20000;]])],
 			AC_MSG_RESULT(yes); AC_DEFINE([OSPEED_EXTERN], 1, [extern ospeed needed.]),
 			AC_MSG_RESULT(no))]
 		)
 
 	AC_MSG_CHECKING([whether termcap.h contains UP, BC and PC])
-	AC_TRY_LINK([
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #ifdef HAVE_TERMCAP_H
 #include <termcap.h>
-#endif
-		], [if (UP == 0 && BC == 0) PC = 1],
+#endif]], [[if (UP == 0 && BC == 0) PC = 1]])],
 		AC_MSG_RESULT(yes); AC_DEFINE([HAVE_UP_BC_PC], 1, [extern UP BC and PC available.]),
 		[AC_MSG_RESULT(no)
 			AC_MSG_CHECKING([whether UP, BC and PC can be extern])
-		AC_TRY_LINK([
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #ifdef HAVE_TERMCAP_H
 #include <termcap.h>
 #endif
-extern char *UP, *BC, PC;
-		], [if (UP == 0 && BC == 0) PC = 1],
+extern char *UP, *BC, PC;]], [[if (UP == 0 && BC == 0) PC = 1;]])],
 			AC_MSG_RESULT(yes); AC_DEFINE([UP_BC_PC_EXTERN], 1, [extern UP BC and PC needed.]),
 			AC_MSG_RESULT(no))]
 		)
 
 	AC_MSG_CHECKING(whether tputs() uses outfuntype)
-	AC_TRY_COMPILE([
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #ifdef HAVE_TERMCAP_H
 #include <termcap.h>
-#endif
-		], [extern int xx(); tputs("test", 1, (outfuntype)xx)],
+#endif]], [[extern int xx(); tputs("test", 1, (outfuntype)xx)]])],
 			[AC_MSG_RESULT(yes); AC_DEFINE([HAVE_OUTFUNTYPE], 1, [typedef outfuntype available.])],
 			[AC_MSG_RESULT(no); AC_MSG_CHECKING(determining tputs() function final argument type)
 			AC_EGREP_CPP([tputs.*[(][ \\\t]*char[ \\\t]*[)]],[
@@ -333,6 +326,3 @@ extern char *UP, *BC, PC;
 
 	LIBS=$cf_save_LIBS
 ])dnl
-
-
-

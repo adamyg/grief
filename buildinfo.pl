@@ -1,9 +1,9 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: buildinfo.pl,v 1.5 2022/03/22 08:07:53 cvsuser Exp $
+# $Id: buildinfo.pl,v 1.8 2024/04/22 14:34:13 cvsuser Exp $
 # buildinfo generation
 #
-# Copyright Adam Young 2018-2022
+# Copyright Adam Young 2018 - 2024
 # All rights reserved.
 #
 # The applications are free software: you can redistribute it
@@ -131,8 +131,13 @@ Generate	#()
 #define ${prefix}BUILD_NUMBER "${buildnumber}"
 EOT
 
-	print FILE "#define BUILD_TOOLCHAIN \"${buildtoolchain}\"\n"
-		if ($buildtoolchain);
+	if ($buildtoolchain) {
+		my $buildtoolname = $buildtoolchain;
+		$buildtoolname =~ s/^\.//;
+
+		print FILE "#define BUILD_TOOLCHAIN \"${buildtoolchain}\"\n";
+		print FILE "#define BUILD_TOOLNAME \"${buildtoolname}\"\n";
+	}
 
 	if ($buildtype) {
 		print FILE "#define BUILD_TYPE \"${buildtype}\"\n";
@@ -160,6 +165,9 @@ EOT
 
 	print FILE "#define ${prefix}BUILD_LIBEXECDIR \"${libexecdir}\"\n"
 		if ($libexecdir);
+
+	print FILE "#define ${prefix}BUILD_DATADIR \"${datadir}\"\n"
+		if ($datadir);
 
 	close(FILE);
 }

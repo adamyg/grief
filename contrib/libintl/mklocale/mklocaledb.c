@@ -1,4 +1,4 @@
-/* $NetBSD: mklocaledb.c,v 1.2 2009/01/05 02:55:34 dogcow Exp $ */
+/* $NetBSD: mklocaledb.c,v 1.4 2015/06/16 22:54:10 christos Exp $ */
 
 /*-
  * Copyright (c)2008 Citrus Project,
@@ -37,7 +37,7 @@
 
 #include <sys/cdefs.h>
 #if !defined(lint)
-__RCSID("$NetBSD: mklocaledb.c,v 1.2 2009/01/05 02:55:34 dogcow Exp $");
+__RCSID("$NetBSD: mklocaledb.c,v 1.4 2015/06/16 22:54:10 christos Exp $");
 #endif /* not lint */
 
 #include <assert.h>
@@ -136,8 +136,8 @@ static const category_t lc_monetary = {
 	{ _CITRUS_LC_MONETARY_SYM_P_SIGN_POSN,        &save_as_uint8    },
 	{ _CITRUS_LC_MONETARY_SYM_N_SIGN_POSN,        &save_as_uint8    },
 	{ _CITRUS_LC_MONETARY_SYM_INT_P_CS_PRECEDES,  &save_as_uint8    },
-	{ _CITRUS_LC_MONETARY_SYM_INT_N_CS_PRECEDES,  &save_as_uint8    },
 	{ _CITRUS_LC_MONETARY_SYM_INT_P_SEP_BY_SPACE, &save_as_uint8    },
+	{ _CITRUS_LC_MONETARY_SYM_INT_N_CS_PRECEDES,  &save_as_uint8    },
 	{ _CITRUS_LC_MONETARY_SYM_INT_N_SEP_BY_SPACE, &save_as_uint8    },
 	{ _CITRUS_LC_MONETARY_SYM_INT_P_SIGN_POSN,    &save_as_uint8    },
 	{ _CITRUS_LC_MONETARY_SYM_INT_N_SIGN_POSN,    &save_as_uint8    },
@@ -252,17 +252,17 @@ mklocaledb(const char *type, FILE *reader, FILE *writer)
 		/*NOTREACHED*/
 	}
 	if (_db_factory_create(&df, &_db_hash_std, NULL))
-		errx(1, "can't create db factory.\n");
+		errx(EXIT_FAILURE, "can't create db factory");
 	if (_db_factory_add32_by_s(df, category->vers_sym, category->version))
-		errx(1, "can't store db.\n");
+		errx(EXIT_FAILURE, "can't store db");
 	token = &category->tokens[0];
 	while (token->key != NULL) {
 		line = fparseln(reader, NULL,
 		    NULL, delim, FPARSELN_UNESCALL);
 		if (line == NULL)
-			errx(1, "can't read line.\n");
+			errx(EXIT_FAILURE, "can't read line");
 		if ((*token->save)(df, token->key, (const char *)line))
-			errx(1, "can't store db.\n");
+			errx(EXIT_FAILURE, "can't store db");
 		free(line);
 		++token;
 	}
@@ -270,11 +270,11 @@ mklocaledb(const char *type, FILE *reader, FILE *writer)
 	_DIAGASSERT(size > 0);
 	serialized = malloc(size);
 	if (serialized == NULL)
-		errx(1, "can't malloc.\n");
+		errx(EXIT_FAILURE, "can't malloc");
 	_DIAGASSERT(serialized != NULL);
 	_region_init(&r, serialized, size);
 	if (_db_factory_serialize(df, category->magic, &r))
-		errx(1, "can't serialize db.\n");
+		errx(EXIT_FAILURE, "can't serialize db");
 	fwrite(serialized, size, 1, writer);
 	_db_factory_free(df);
 }

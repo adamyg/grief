@@ -36,6 +36,7 @@ int _n_(struct _citrus_mapper_ops *, size_t, uint32_t)
 #define _CITRUS_MAPPER_GETOPS_FUNC(_n_)					\
 MODULE_LINKAGE int MODULE_ENTRY _citrus_##_n_##_mapper_getops(struct _citrus_mapper_ops *, size_t, uint32_t)
 #else
+#error MODULE_LINKAGE
 #define _CITRUS_MAPPER_GETOPS_FUNC(_n_)					\
 _CITRUS_MAPPER_GETOPS_FUNC_BASE(_citrus_##_n_##_mapper_getops)
 #endif

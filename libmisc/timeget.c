@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_timeget_c,"$Id: timeget.c,v 1.4 2022/09/20 15:19:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_timeget_c,"$Id: timeget.c,v 1.6 2024/04/17 15:57:14 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -55,6 +55,5 @@ timespec_current(struct timespec *ts)
     ts->tv_nsec = 0;
 #endif
 }
+
 /*end*/
-
-

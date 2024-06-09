@@ -1,16 +1,16 @@
 #ifndef GR_LIBTIME_H_INCLUDED
 #define GR_LIBTIME_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libtime_h,"$Id: libtime.h,v 1.6 2022/03/21 14:55:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_libtime_h,"$Id: libtime.h,v 1.8 2024/04/08 15:07:13 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: libtime.h,v 1.6 2022/03/21 14:55:28 cvsuser Exp $
+/* $Id: libtime.h,v 1.8 2024/04/08 15:07:13 cvsuser Exp $
  * libtime - Miscellaneous time library functions.
  *
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -1,11 +1,11 @@
 #ifndef GR_VIO_H_INCLUDED
 #define GR_VIO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vio_h,"$Id: vio.h,v 1.31 2022/05/26 16:40:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_vio_h,"$Id: vio.h,v 1.32 2024/01/01 10:52:12 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vio.h,v 1.31 2022/05/26 16:40:27 cvsuser Exp $
+/* $Id: vio.h,v 1.32 2024/01/01 10:52:12 cvsuser Exp $
  * Video I/O interface header.
  *
  *
@@ -299,7 +299,8 @@ __CPRAGMA_ONCE
 /*
  *  Extended console support ...
  */
-#define TERMEMU_VIO_SOURCE
+#define TERMEMU_VIO_LOCAL                       /* private interface */
+#define TERMEMU_VIO_SOURCE                      /* internal definitions */
 #include "termemu_vio.h"
 
 typedef WCHAR_COLORINFO VIOHUE;

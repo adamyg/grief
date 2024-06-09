@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntaxhl_c,"$Id: syntaxhl.c,v 1.36 2022/09/13 14:31:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntaxhl_c,"$Id: syntaxhl.c,v 1.38 2024/04/16 10:30:36 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntaxhl.c,v 1.36 2022/09/13 14:31:24 cvsuser Exp $
+/* $Id: syntaxhl.c,v 1.38 2024/04/16 10:30:36 cvsuser Exp $
  * Basic syntax highlighting.
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it

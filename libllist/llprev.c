@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(cr_prev_c,"$Id: llprev.c,v 1.13 2022/03/21 15:13:04 cvsuser Exp $")
+__CIDENT_RCSID(cr_prev_c,"$Id: llprev.c,v 1.16 2024/04/17 15:57:12 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: llprev.c,v 1.13 2022/03/21 15:13:04 cvsuser Exp $
+/* $Id: llprev.c,v 1.16 2024/04/17 15:57:12 cvsuser Exp $
  * Linked list management module.
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -39,3 +39,4 @@ ll_prev(List_p lp)
     return TAILQ_PREV(lp, lqueue, ll_node);
 }
 
+/*end*/

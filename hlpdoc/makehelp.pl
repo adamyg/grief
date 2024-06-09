@@ -1,10 +1,10 @@
 #!/usr/bin/perl
-# $Id: makehelp.pl,v 1.21 2020/06/05 00:13:06 cvsuser Exp $
+# $Id: makehelp.pl,v 1.24 2024/04/19 13:57:28 cvsuser Exp $
 # -*- tabs: 8; indent-width: 4; -*-
 # Help collection tool.
 #
 #
-# Copyright (c) 1998 - 2020, Adam Young.
+# Copyright (c) 1998 - 2024, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -54,26 +54,26 @@ my $o_manbin    = '../bin/grmandoc';
 my $x_manopt    = '';                           # -O indent=3,width=80'
     #
     # ASCII Output
-    #	    Use -T ascii to force text output in 7-bit ASCII character encoding documented in the ascii(7) manual page,
-    #	    ignoring the locale(1) set in the environment. Font styles are applied by using back-spaced encoding such that an
-    #	    underlined character ‘c’ is rendered as ‘_\[bs]c’, where ‘\[bs]’ is the back-space character number 8. Emboldened
-    #	    characters are rendered as ‘c\[bs]c’. The special characters documented in mandoc_char(7) are rendered
-    #	    best-effort in an ASCII equivalent. The following -O arguments are accepted:
+    #    Use -T ascii to force text output in 7-bit ASCII character encoding documented in the ascii(7) manual page,
+    #    ignoring the locale(1) set in the environment. Font styles are applied by using back-spaced encoding such that an
+    #    underlined character ‘c’ is rendered as ‘_\[bs]c’, where ‘\[bs]’ is the back-space character number 8. Emboldened
+    #    characters are rendered as ‘c\[bs]c’. The special characters documented in mandoc_char(7) are rendered
+    #    best-effort in an ASCII equivalent. The following -O arguments are accepted:
     #
     # indent=indent
-    #	    The left margin for normal text is set to indent blank characters instead of the default of five for mdoc(7) and
-    #	    seven for man(7). Increasing this is not recommended; it may result in degraded formatting, for example overfull
-    #	    lines or ugly line breaks. When output is to a pager on a terminal that is less than 66 columns wide, the default
-    #	    is reduced to three columns.
+    #    The left margin for normal text is set to indent blank characters instead of the default of five for mdoc(7) and
+    #    seven for man(7). Increasing this is not recommended; it may result in degraded formatting, for example overfull
+    #    lines or ugly line breaks. When output is to a pager on a terminal that is less than 66 columns wide, the default
+    #    is reduced to three columns.
     #
     # mdoc  Format man(7) input files in mdoc(7) output style. Specifically, this suppresses the two additional blank lines
-    #	    near the top and the bottom of each page, and it implies -O indent=5. One useful application is for checking that
-    #	    -T man output formats in the same way as the mdoc(7) source it was generated from.
+    #    near the top and the bottom of each page, and it implies -O indent=5. One useful application is for checking that
+    #    -T man output formats in the same way as the mdoc(7) source it was generated from.
     #
     # width=width
-    #	    The output width is set to width instead of the default of 78. When output is to a pager on a terminal that is
-    #	    less than 79 columns wide, the default is reduced to one less than the terminal width. In any case, lines that
-    #	    are output in literal mode are never wrapped and may exceed the output width.
+    #    The output width is set to width instead of the default of 78. When output is to a pager on a terminal that is
+    #    less than 79 columns wide, the default is reduced to one less than the terminal width. In any case, lines that
+    #    are output in literal mode are never wrapped and may exceed the output width.
     #
 my $o_hlpdir    = '../help';
 my $o_index     = undef;
@@ -261,7 +261,7 @@ Options:
 Commands:
     hlp                     Build help.
     prim                    Primitive generation help.
-    mandoc                  MANDOC.
+    mdoc                    MANDOC.
     html
 
 EOT

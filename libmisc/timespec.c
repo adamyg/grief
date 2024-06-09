@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_timespec_c,"$Id: timespec.c,v 1.9 2022/09/20 15:19:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_timespec_c,"$Id: timespec.c,v 1.11 2024/04/17 15:57:14 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: timespec.c,v 1.9 2022/09/20 15:19:12 cvsuser Exp $
+/* $Id: timespec.c,v 1.11 2024/04/17 15:57:14 cvsuser Exp $
  * timespec util functions.
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -106,4 +106,5 @@ timespec_seconds(struct timespec ts1, struct timespec ts2)
     ret += (double)diff.tv_nsec/(double)1E9;
     return ret;
 }
+
 /*end*/

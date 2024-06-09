@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mchar_info_c,"$Id: mchar_info.c,v 1.21 2022/08/10 15:44:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_mchar_info_c,"$Id: mchar_info.c,v 1.24 2024/04/16 10:30:36 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mchar_info.c,v 1.21 2022/08/10 15:44:57 cvsuser Exp $
+/* $Id: mchar_info.c,v 1.24 2024/04/16 10:30:36 cvsuser Exp $
  * Locale/multibyte character information.
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -20,6 +20,7 @@ __CIDENT_RCSID(gr_mchar_info_c,"$Id: mchar_info.c,v 1.21 2022/08/10 15:44:57 cvs
  */
 
 #include <editor.h>
+#undef HAVE_LIBICU
 #if defined(HAVE_LIBICU)
 #include <unicode/uclean.h>                     /* u_init() */
 #include <unicode/ucnv.h>

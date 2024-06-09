@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_ftp_c,"$Id: m_ftp.c,v 1.17 2022/05/26 16:36:19 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_ftp_c,"$Id: m_ftp.c,v 1.20 2024/04/16 10:30:36 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_ftp.c,v 1.17 2022/05/26 16:36:19 cvsuser Exp $
+/* $Id: m_ftp.c,v 1.20 2024/04/16 10:30:36 cvsuser Exp $
  * FTP/HTTP connection primitives -- beta/undocumented.
  *
  *
- * Copyright 2012-2017 (c) A.Young
+ * Copyright (c) 1998 - 2024, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -35,6 +35,13 @@ __CIDENT_RCSID(gr_m_ftp_c,"$Id: m_ftp.c,v 1.17 2022/05/26 16:36:19 cvsuser Exp $
 #include "lisp.h"                               /* atom_...() */
 #include "symbol.h"                             /* argv_assign_...() */
 
+#if defined(HAVE_LIBSSH2)
+static const char *keyfile1 = "~/.ssh/id_rsa.pub";
+static const char *keyfile2 = "~/.ssh/id_rsa";
+
+static int                  sftp_init(void);
+#endif /*HAVE_LIBSSH2*/
+
 #include "../libbsdfetch/fetch.h"               /* libfetch */
 
 typedef struct {
@@ -45,6 +52,13 @@ typedef struct {
     const char *    cwd;
     const char *    sitename;
     struct url *    url;
+#if defined(HAVE_LIBSSH2)
+    struct ssh {
+        LIBSSH2_SESSION *session;
+        LIBSSH2_SFTP *sftp_session;
+        LIBSSH2_SFTP_HANDLE *sftp_handle;
+    } ssh;
+#endif
 } IFTP;
 
 static IDENTIFIER_t         x_ftpseq;           /* identifier sequence */
@@ -85,8 +99,10 @@ schememap(const char *scheme)
         ret = PROTOCOL_HTTPS;
     } else if (0 == str_icmp(scheme, SCHEME_FILE)) {
         ret = PROTOCOL_FILE;
-//  } else if (0 == str_icmp(scheme, SCHEME_SFTP)) {
-//      ret = PROTOCOL_SFTP;
+#if defined(HAVE_LIBSSH2)
+    } else if (0 == str_icmp(scheme, SCHEME_SFTP)) {
+        ret = PROTOCOL_SFTP;
+#endif
 //  } else if (0 == str_icmp(scheme, SCHEME_FTPS)) {
 //      ret = PROTOCOL_FTPS;
     }
@@ -105,7 +121,9 @@ schemename(int proto)
     case PROTOCOL_HTTPS: name = SCHEME_HTTPS; break;
     case PROTOCOL_FILE:  name = SCHEME_FILE; break;
     case PROTOCOL_FTP:
-//  case PROTOCOL_SFTP:
+#if defined(HAVE_LIBSSH2)
+    case PROTOCOL_SFTP:
+#endif
 //  case PROTOCOL_FTPS:
     default:
         break;
@@ -763,16 +781,22 @@ do_ftp_mkdir(void)                  /* int (int id, string dir) */
         ED_TRACE(("ftp_mkdir(cwd:%s,new:%s)\n", (iftp->cwd ? iftp->cwd : ""), dir))
         if (NULL != iftp->url) {
             switch (iftp->proto) {
-            case PROTOCOL_FTP:
-            case PROTOCOL_SFTP: {
+            case PROTOCOL_FTP: {
                     struct url *url = makeURL(iftp, dir);
-
                     if (url) {
                         ret = fetchMkdirFTP(url, "v");
                         fetchFreeURL(url);
                     }
                 }
                 break;
+#if defined(HAVE_LIBSSH2)
+            case PROTOCOL_SFTP:
+                if (iftp->sftp_session) {
+                    ret = libssh2_sftp_mkdir(sftp_session, dir,
+                                LIBSSH2_SFTP_S_IRWXU|LIBSSH2_SFTP_S_IRGRP|LIBSSH2_SFTP_S_IXGRP|LIBSSH2_SFTP_S_IROTH|LIBSSH2_SFTP_S_IXOTH);
+                }
+                break;     
+#endif //HAVE_LIBSSH2
             default:
                 break;
             }
@@ -780,6 +804,7 @@ do_ftp_mkdir(void)                  /* int (int id, string dir) */
     }
     acc_assign_int(ret);
 }
+
 
 /*<<GRIEF-BETA>>
     Macro: ftp_stat - Reserved
@@ -869,16 +894,17 @@ do_ftp_remove(void)                 /* int (int id, string name) */
         ED_TRACE(("ftp_remove(cwd:%s,name:%s)\n", (iftp->cwd ? iftp->cwd : ""), name))
         if (NULL != iftp->url) {
             switch (iftp->proto) {
-            case PROTOCOL_FTP:
-            case PROTOCOL_SFTP: {
+            case PROTOCOL_FTP: {
                     struct url *url = makeURL(iftp, name);
-
                     if (url) {
                         ret = fetchRemoveFTP(url, "v");
                         fetchFreeURL(url);
                     }
                 }
                 break;
+#if defined(HAVE_LIBSSH2)
+            case PROTOCOL_SFTP:
+#endif
             default:
                 break;
             }
@@ -924,8 +950,7 @@ do_ftp_rename(void)                 /* int (int id, string oldname, string newna
         ED_TRACE(("ftp_rename(cwd:%s,old:%s,new:%s)\n", (iftp->cwd ? iftp->cwd : ""), oldname, newname))
         if (NULL != iftp->url) {
             switch (iftp->proto) {
-            case PROTOCOL_FTP:
-            case PROTOCOL_SFTP: {
+            case PROTOCOL_FTP: {
                     struct url *url = makeURL(iftp, oldname),
                         *url2 = makeURL(iftp, newname);
 
@@ -936,6 +961,9 @@ do_ftp_rename(void)                 /* int (int id, string oldname, string newna
                     }
                 }
                 break;
+#if defined(HAVE_LIBSSH2)
+            case PROTOCOL_SFTP:
+#endif
             default:
                 break;
             }
@@ -1122,4 +1150,20 @@ do_ftp_sitename(void)               /* int (int id, [string name]) */
     }
     acc_assign_str(sitename ? sitename : "", -1);
 }
+
+
+#if defined(HAVE_LIBSSH2)
+static int
+sftp_init(void)
+{
+    static int init;
+    if (0 == init) {
+        if (libssh2_init(0))
+            return -1;
+        ++init;
+    }
+    return 0;
+}
+#endif
+
 /*end*/

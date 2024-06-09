@@ -1,4 +1,4 @@
-dnl $Id: libapriconv.m4,v 1.1 2010/10/07 16:45:34 cvsuser Exp $
+dnl $Id: libapriconv.m4,v 1.2 2024/05/02 14:34:31 cvsuser Exp $
 dnl apriconv autoconf support
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -59,12 +59,12 @@ AC_DEFUN([CF_LIB_APRICONV],[
 			LIBS="-L$LIBAPRICONV_LIB_DIR $LIBS"
 		fi
 		LIBS="$LIBS -lapriconv"
-		AC_TRY_LINK([
+		AC_RUN_IFELSE([AC_LANG_PROGRAM([[
 #include <stdlib.h>
-#include <apr_iconv.h>],
-		[apri_conv_t x = apr_iconv_open("", "");
+#include <apr_iconv.h>]],
+		[[apri_conv_t x = apr_iconv_open("", "");
 		apriconv(x, NULL, NULL, NULL, NULL);
-		apriconv_close(x);],
+		apriconv_close(x);]])],
 			[cf_cv_libapriconv=yes],
 			[cf_cv_libapriconv=no])
 		])

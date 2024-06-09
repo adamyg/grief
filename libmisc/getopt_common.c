@@ -1,13 +1,13 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_getopt_common_c,"$Id: getopt_common.c,v 1.11 2022/09/20 15:19:11 cvsuser Exp $")
+__CIDENT_RCSID(gr_getopt_common_c,"$Id: getopt_common.c,v 1.14 2024/04/17 15:57:13 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: getopt_common.c,v 1.11 2022/09/20 15:19:11 cvsuser Exp $
+/* $Id: getopt_common.c,v 1.14 2024/04/17 15:57:13 cvsuser Exp $
  * common globals getopt/bsd_getopt.
  *
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -32,13 +32,7 @@ __CIDENT_RCSID(gr_getopt_common_c,"$Id: getopt_common.c,v 1.11 2022/09/20 15:19:
 
 #include <stdio.h>
 
-#if defined(__CYGWIN__)
-#include <getopt.h>
-
-#elif defined(__MINGW32__)
-#include <getopt.h>
-
-#elif defined(_WIN32) || defined(WIN32)
+#if defined(NEEDS_GETOPT)
 
 int   opterr   = 1;                             /* if error message should be printed */
 int   optind   = 1;                             /* index into parent argv vector */
@@ -46,7 +40,7 @@ int   optopt   = '?';                           /* character checked for validit
 char *optarg   = NULL;                          /* argument associated with option */
 int   optreset = 0;                             /* reset getopt */
 
-#endif
+#endif /*NEEDS_GETOPT*/
 
 extern void __getopt_common_dummy(void);
 void

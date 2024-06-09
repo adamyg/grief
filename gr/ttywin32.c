@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.53 2022/05/26 16:41:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.56 2024/04/14 15:31:10 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttywin32.c,v 1.53 2022/05/26 16:41:12 cvsuser Exp $
+/* $Id: ttywin32.c,v 1.56 2024/04/14 15:31:10 cvsuser Exp $
  * WIN32 VIO driver.
  *  see: http://www.edm2.com/index.php/Category:Vio
  *
@@ -43,6 +43,8 @@ __CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.53 2022/05/26 16:41:12 cvsuser
 #include <wincon.h>
 #endif  //WINDOWS_MEAN_AND_LEAN
 
+#define TERMEMU_VIO_LOCAL                       /* private interface */
+
 #include "debug.h"
 #include "display.h"                            /* DISPTYPE_.. */
 #include "main.h"                               /* panic() */
@@ -51,7 +53,6 @@ __CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.53 2022/05/26 16:41:12 cvsuser
 #include "vio.h"                                /* VIO interface */
 #include "window.h"
 
-#define  TERMEMU_VIO_STATIC                     /* private interface */
 #include "termemu_vio.c"
 
 static void             VioInitialise(void);
@@ -122,7 +123,7 @@ VioEncoding(void)
         { 65001,    "UTF-8"        },
         };
     char encoding[32];
-    CPINFOEX cpix = {0};
+    CPINFOEXA cpix = {0};
     unsigned cpd;
     int cp;
 
@@ -133,7 +134,7 @@ VioEncoding(void)
         cp = vio.codepage;
     }
 
-    if (cp <= 0 || 0 == GetCPInfoEx(cp, 0, &cpix)) {
+    if (cp <= 0 || 0 == GetCPInfoExA(cp, 0, &cpix)) {
         trace_log("vio: encoding, unable to resolve CP%03d\n", cp);
         return;
     }

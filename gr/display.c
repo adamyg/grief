@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.83 2022/09/12 15:58:17 cvsuser Exp $")
+__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.87 2024/05/17 16:43:00 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: display.c,v 1.83 2022/09/12 15:58:17 cvsuser Exp $
+/* $Id: display.c,v 1.87 2024/05/17 16:43:00 cvsuser Exp $
  * High level display interface.
  *
  *
@@ -829,7 +829,7 @@ vtupdate2(int force)
         curwp->w_status |= WFTOP;
     }
 
-    line_vstatus_update();                      /* virtual character update and syntax hook */ 
+    line_vstatus_update();                      /* virtual character update and syntax hook */
 
     /*
      *  Walk windows and draw image.
@@ -1569,10 +1569,18 @@ vtwindow(WINDOW_t *wp)
     if (WFHARD & status) {                      /* major change/garbled, redraw */
         trace_log("vtwindow:hard(top:%d, bottom:%d\n", top, bottom);
         draw_window(wp, top, top_line, bottom, bottom, VTDRAW_REPAINT);
-
-    } else if ((WFEDIT & status) || bp->b_dirty_min) { /* line edit or scrolled, update mined arena */
+        return;
+    }
+    
+    if ((WFEDIT & status) || (bp && bp->b_dirty_min)) {
+                                                /* line edit or scrolled, update mined arena */
         const LINENO diff2 = top - top_line;
         LINENO mined = wp->w_mined, maxed = wp->w_maxed;
+
+        if (mined > maxed) {
+            mined = wp->w_maxed;
+            maxed = wp->w_mined;
+        }
 
         if (bp) {                               /* inherit buffer changes */
             if (bp->b_syntax_min) {
@@ -1596,18 +1604,23 @@ vtwindow(WINDOW_t *wp)
             }
         }
 
-        mined = lineno_max(mined, top_line);
-        maxed = lineno_min(maxed, bottom_line);
-        assert(mined <= maxed);
+        if (mined <= bottom_line && maxed >= top_line) {
+            /*
+             *  visible region
+             */
+            mined = lineno_max(mined, top_line);
+            maxed = lineno_min(maxed, bottom_line);
+            assert(mined <= maxed);
 
-        trace_log("vtwindow:draw_window(scrolled:%d, top:%d, bottom:%d)\n", scrolled, mined + diff2, bottom);
-        draw_window(wp, mined + diff2, mined, maxed + diff2, bottom, VTDRAW_LAZY);
+            trace_log("vtwindow:draw_window(scrolled:%d, top:%d, bottom:%d)\n", scrolled, mined + diff2, bottom);
+            draw_window(wp, mined + diff2, mined, maxed + diff2, bottom, VTDRAW_LAZY);
+            return;
+        }
+    }
 
-    } else if (old_line != line) {              /* cursor line change, flush dirty/lazy lines */
-
+    if (old_line != line) {                     /* cursor line change, flush dirty/lazy lines */
         trace_log("vtwindow:draw_lines(top:%d, bottom:%d)\n", top, bottom);
         draw_window(wp, top, top_line, bottom, bottom, VTDRAW_DIRTY);
-
     }
 }
 
@@ -2230,7 +2243,6 @@ vthumb_position(WINDOW_t *wp)
                     if ((value += vmin) > vmax) {
                         value = vmax;
                     }
-                    assert(value < ttrows());
                 }
 
             } else {
@@ -2245,7 +2257,7 @@ vthumb_position(WINDOW_t *wp)
                         value = vmax;
                     }
                     assert(value > 0);
-                    assert(value < ttrows());
+                    if (value >= ttrows()) value = ttrows();
                 }
             }
         }
@@ -2636,7 +2648,7 @@ draw_window(WINDOW_t *wp, int top, LINENO line, int end, const int bottom, int a
     const uint32_t flags = wp->w_disp_flags;
     LINECHAR lbuffer[ LMARGIN*2 ];              /* left margin formatting buffer */
     vbyte_t space = nattr | ' ';
-    ANCHOR_t anchor;
+    ANCHOR_t anchor = {MK_NONE};
 
     assert(end <= bottom);
 
@@ -2652,11 +2664,11 @@ draw_window(WINDOW_t *wp, int top, LINENO line, int end, const int bottom, int a
                 wp->w_disp_anchor = &anchor;    /* active anchor */
             }
         }
-    }
                                                 /* find first hilite, if any */
-    if (NULL != (bp->b_hilite = hilite_find(bp, NULL, line, 1, NULL))) {
-        if (bp->b_hilite->h_sline > line + (end - top)) {
-            bp->b_hilite = NULL;
+        if (NULL != (bp->b_hilite = hilite_find(bp, NULL, line, 1, NULL))) {
+            if (bp->b_hilite->h_sline > line + (end - top)) {
+                bp->b_hilite = NULL;
+            }
         }
     }
 
@@ -2735,7 +2747,7 @@ draw_window(WINDOW_t *wp, int top, LINENO line, int end, const int bottom, int a
         const LINE_t *lp = vm_lock_line2(line);
 
         if (VTDRAW_DIRTY & actions) {           /* skip clean/blank lines */
-            if (NULL == lp || 0 == isdirty(curbp, line)) {
+            if (NULL == lp || (0 == isdirty(curbp, line) && 0 == lisdirty(lp))) {
                 vm_unlock(line);
                 continue;
             }
@@ -3038,9 +3050,6 @@ draw_title(const WINDOW_t *wp, const int top, const int line)
         vtputb(ch);
         ((WINDOW_t *)wp)->w_disp_cmap = x_base_cmap;
 
-//      while (*title && titlelen-- > 0) {
-//          vtputb(*title++ | title_col);
-//      }
         while (*title && titlelen > 0) {        /* MCHAR */
             const unsigned char *cend;
             int cwidth;

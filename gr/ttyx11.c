@@ -1,10 +1,10 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyx11_c,"$Id: ttyx11.c,v 1.14 2020/06/03 16:31:33 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyx11_c,"$Id: ttyx11.c,v 1.16 2024/04/16 10:30:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyx11.c,v 1.14 2020/06/03 16:31:33 cvsuser Exp $ */
+/* $Id: ttyx11.c,v 1.16 2024/04/16 10:30:37 cvsuser Exp $ */
 /*
- * Copyright (c) 2012-2018 Adam Young.
+ * Copyright (c) 2012 - 2024 Adam Young.
  * Copyright (c) 2009 Jeremy Cooper.
  *
  * Redistribution and use in source and binary forms, with or without

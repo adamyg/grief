@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: cr.cr,v 1.16 2022/07/10 13:08:02 cvsuser Exp $
+/* $Id: cr.cr,v 1.17 2024/06/09 04:10:46 cvsuser Exp $
  * GRIEF/Crisp syntax definition mode.
  *
  *
@@ -58,7 +58,7 @@ main(void)
     syntax_rule("/\\*.*\\*/", "spell,todo,quick:comment");
     syntax_rule("//.*$", "spell,todo:comment");
 
-    syntax_rule("/[^*/].*$", "alert");          // invalid eol comment.
+  //syntax_rule("/[^*/].*$", "alert");          // invalid eol comment.
     syntax_rule("\\*/", "quick:alert");         // unmatched block comment.
 
                                                 // keywords and preprocessor directives

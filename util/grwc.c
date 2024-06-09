@@ -64,6 +64,8 @@ const char *__progname		= "grwc";
 
 void	print_counts(int64_t, int64_t, int64_t, char *);
 void	cnt(char *);
+void    format_and_print(long long v);
+
 
 int
 main(int argc, char *argv[])

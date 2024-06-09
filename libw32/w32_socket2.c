@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_socket2_c,"$Id: w32_socket2.c,v 1.12 2022/06/15 04:43:20 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_socket2_c,"$Id: w32_socket2.c,v 1.14 2024/03/31 15:57:27 cvsuser Exp $")
 
 /*
  * win32 socket () system calls
  * Light weight replacement functions, which maintain the global errno.
  *
- * Copyright (c) 2007, 2012 - 2022 Adam Young.
+ * Copyright (c) 2007, 2012 - 2024 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *

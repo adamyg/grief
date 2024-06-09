@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bsd_heapsort_r_c,"$Id: bsd_heapsort_r.c,v 1.7 2022/09/20 15:19:11 cvsuser Exp $")
+__CIDENT_RCSID(gr_bsd_heapsort_r_c,"$Id: bsd_heapsort_r.c,v 1.9 2024/04/17 15:57:12 cvsuser Exp $")
 
 /*- -*- indent-width: 4; tabs: 8; -*-
- * $Id: bsd_heapsort_r.c,v 1.7 2022/09/20 15:19:11 cvsuser Exp $
+ * $Id: bsd_heapsort_r.c,v 1.9 2024/04/17 15:57:12 cvsuser Exp $
  * BSD heapsort_r
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -105,7 +105,9 @@ my_eval_variable (IfParser *ip, const char *var, int len)
     } while (s);
 
     var = ParseIfExpression(ip, var, &val);
-    if (var && *var) debug(4, ("extraneous: '%s'\n", var));
+    if (var && *var) {
+        debug(4, ("extraneous: '%s'\n", var));
+    }
     return val;
 }
 

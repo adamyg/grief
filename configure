@@ -1,0 +1,37 @@
+#!/bin/sh
+# -*- mode: sh; -*-
+# $Id: configure,v 1.7 2024/05/28 15:41:05 cvsuser Exp $
+#
+
+if [ ! -f "install-sh" ]; then
+	cp auto/install-sh .
+fi
+
+if [ ! -f "config.guess" ]; then
+	cp auto/config.guess .
+fi
+
+if [ ! -f "config.sub" ]; then
+	cp auto/config.sub .
+fi
+
+if [ ! -f "missing" ]; then
+	if [ -f "auto/missing" ]; then # optional
+		cp auto/missing .
+	fi
+fi
+
+if [ ! -f "ltmain.sh" ]; then
+	cp auto/ltmain.sh .
+fi
+
+if [ -f "auto/config.cache" ]; then
+	rm -f auto/config.cache
+fi
+
+touch libtoolT
+CONFIG_STATUS=auto/config.status \
+	auto/configure "$@" --srcdir="${srcdir:-.}" --cache-file=auto/config.cache
+rm -f libtoolT
+
+#end

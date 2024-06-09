@@ -1,4 +1,4 @@
-dnl $Id: libthread.m4,v 1.3 2013/03/23 00:33:04 cvsuser Exp $
+dnl $Id: libthread.m4,v 1.4 2024/05/02 14:34:32 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -9,7 +9,7 @@ AC_DEFUN([CF_WITH_THREADS],[
 	AC_SUBST([LIBTHREAD])
 
 	ACX_NANOSLEEP
-	ACX_PTHREAD([
+	AX_PTHREAD([
 		AC_CHECK_HEADERS(pthread.h)
 
 		AC_MSG_RESULT([-  Threading:])
@@ -28,6 +28,4 @@ AC_DEFUN([CF_WITH_THREADS],[
 		LIBTHREAD="$NANOSLEEP_LIB"
 	])
 ])
-
-
-
+dnl

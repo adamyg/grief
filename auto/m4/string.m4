@@ -1,4 +1,4 @@
-dnl $Id: string.m4,v 1.1 2015/03/09 22:15:39 ayoung Exp $
+dnl $Id: string.m4,v 1.2 2024/05/02 14:34:32 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -8,12 +8,12 @@ dnl
 AC_DEFUN(CF_CHECK_STRLCPY,[
 	AC_MSG_CHECKING(for strlcpy)
 	AC_CACHE_VAL(cf_cv_have_strlcpy,[
-		AC_TRY_LINK([
+		AC_RUN_IFELSE([AC_LANG_PROGRAM([[
 #include <string.h>
-],[
+]],[[
 char buf[32]={0};
 strlcpy(buf, "test", sizeof(buf));
-],
+]])],
 		[cf_cv_have_strlcpy=yes],
 		[cf_cv_have_strlcpy=no])
 	])dnl
@@ -25,12 +25,12 @@ strlcpy(buf, "test", sizeof(buf));
 AC_DEFUN(CF_CHECK_STRLCAT,[
 	AC_MSG_CHECKING(for strlcat)
 	AC_CACHE_VAL(cf_cv_have_strlcat,[
-		AC_TRY_LINK([
+		AC_RUN_IFELSE([AC_LANG_PROGRAM([[
 #include <string.h>
-],[
+]],[[
 char buf[32]={0};
 strlcat(buf, "test", sizeof(buf));
-],
+]])],
 		[cf_cv_have_strlcat=yes],
 		[cf_cv_have_strlcat=no])
 	])dnl
@@ -40,6 +40,3 @@ strlcat(buf, "test", sizeof(buf));
 ])dnl
 
 dnl
-
-
-

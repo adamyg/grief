@@ -1,10 +1,11 @@
-// $Id: grupdater.cpp,v 1.9 2021/08/17 06:02:21 cvsuser Exp $
+// $Id: grupdater.cpp,v 1.11 2023/10/24 13:57:08 cvsuser Exp $
 //
-//  GRIEF AutoUpdater command line.
+//  AutoUpdater command line.
 //
 
 #include <cstdlib>
 #include <string>
+#include <cstring>
 #include <iostream>
 
 #include <edbuildinfo.h>
@@ -150,6 +151,7 @@ Usage()
         "   -V <version>        Version label.\n"\
         "   -H <host>           Host URL.\n"\
         "   -L <logpath>        Diagnostics log path.\n"\
+        "   -c                  Console mode, otherwise GUI.\n"\
         "   -i                  Interactive ('auto' only).\n"\
         "   -v                  Verbose diagnostice.\n"\
         "\n" << std::endl;

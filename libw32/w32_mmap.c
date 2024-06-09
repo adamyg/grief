@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_mmap_c,"$Id: w32_mmap.c,v 1.12 2022/03/21 14:29:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_mmap_c,"$Id: w32_mmap.c,v 1.14 2024/03/31 15:57:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
- * win2 mmap() system calls
+ * win32 mmap() system calls.
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -1,4 +1,4 @@
-dnl $Id: clang.m4,v 1.1 2012/12/31 01:33:03 cvsuser Exp $
+dnl $Id: clang.m4,v 1.2 2024/05/02 14:34:31 cvsuser Exp $
 dnl clang compiler check
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -21,10 +21,8 @@ AC_DEFUN([AX_QUNUSED_ARGUMENTS_FLAG],[
 	CXXFLAGS="$CXXFLAGS -Qunused-arguments"
 	export CXXFLAGS
 
-	AC_LANG_PUSH(C++)
-	AC_TRY_COMPILE(
-		[],
-		[1;],
+	AC_OALANG_PUSH(C++)
+	AC_COMPILE_IFELSE([],
 		[ax_cv_qunused_arguments_flag="yes"],
 		[ax_cv_qunused_arguments_flag="no"])
 	AC_LANG_POP
@@ -42,6 +40,3 @@ AX_QUNUSED_ARGUMENTS_FLAG
 AX_COMPILER_IS_CLANG
 
 dnl
-
-
-

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_feature_c,"$Id: m_feature.c,v 1.28 2022/08/10 15:44:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_feature_c,"$Id: m_feature.c,v 1.29 2024/05/17 17:23:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_feature.c,v 1.28 2022/08/10 15:44:57 cvsuser Exp $
+/* $Id: m_feature.c,v 1.29 2024/05/17 17:23:57 cvsuser Exp $
  * Features.
  *
  *
@@ -65,6 +65,14 @@ __CIDENT_RCSID(gr_m_feature_c,"$Id: m_feature.c,v 1.28 2022/08/10 15:44:57 cvsus
 
 #if defined(HAVE_LIBICU)
 #include <unicode/uversion.h>
+#endif
+
+#if defined(HAVE_CURL_CURL_H) && defined(HAVE_LIBCURL)
+#include <curl/curl.h>
+#endif
+
+#if defined(HAVE_OPENSSL)
+#include <openssl/opensslv.h>
 #endif
 
 #include <edbuildinfo.h>
@@ -275,10 +283,19 @@ const char * const      x_features[] = {
 #endif
 
 #if defined(HAVE_CURL_CURL_H) && defined(HAVE_LIBCURL)
+#if defined(LIBCURL_VERSION_NUM)
+        "+libcurl (" STRINGIZE(LIBCURL_VERSION_NUM) ")",
+#else
         "+libcurl",
 #endif
+#endif
+
 #if defined(HAVE_OPENSSL)
+#if defined(OPENSSL_VERSION_MAJOR)
+        "+libopenssl (" STRINGIZE(OPENSSL_VERSION_MAJOR) "." STRINGIZE(OPENSSL_VERSION_MINOR) "." STRINGIZE(OPENSSL_VERSION_PATCH) ")",
+#else
         "+libopenssl",
+#endif
 #endif
 
         /* regular expressions */

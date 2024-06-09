@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_color_c,"$Id: m_color.c,v 1.44 2022/07/10 13:13:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_color_c,"$Id: m_color.c,v 1.47 2024/05/20 16:32:42 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_color.c,v 1.44 2022/07/10 13:13:07 cvsuser Exp $
+/* $Id: m_color.c,v 1.47 2024/05/20 16:32:42 cvsuser Exp $
  * Color configuration.
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -1534,7 +1534,7 @@ color_setscheme(const char *scheme)
         int isdark = FALSE;
 
         trace_ilog("color_setscheme=%s\n", scheme);
-        if (0 == str_icmp(scheme, "l") || 0 == str_icmp(scheme, "light")) {
+        if (0 == str_icmp(scheme, "l") || 0 == str_icmp(scheme, "light") || 0 == str_icmp(scheme, "lite")) {
             colorspec = x_col_table_light;
 
         } else if (0 == str_icmp(scheme, "d") || 0 == str_icmp(scheme, "dark")) {

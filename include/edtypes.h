@@ -1,16 +1,16 @@
 #ifndef GR_EDTYPES_H_INCLUDED
 #define GR_EDTYPES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edtypes_h,"$Id: edtypes.h,v 1.41 2022/09/13 14:15:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_edtypes_h,"$Id: edtypes.h,v 1.44 2024/05/02 17:20:29 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edtypes.h,v 1.41 2022/09/13 14:15:35 cvsuser Exp $
+/* $Id: edtypes.h,v 1.44 2024/05/02 17:20:29 cvsuser Exp $
  * Editor base types.
  *
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -52,7 +52,11 @@ __CPRAGMA_ONCE
 #include <stdint.h>                             /* [u]int8_t, [u]int16_t, [u]int32_t optional [u]int64_t */
 #endif
 #if defined(HAVE_STDBOOL_H)
+#if defined(__WATCOMC__) && (__WATCOMC__ < 1300)
+#undef HAVE_STDBOOL_H /*owc19 issues*/
+#else
 #include <stdbool.h>                            /* bool, true, false */
+#endif
 #endif
 
 #if defined(STDC_HEADERS)

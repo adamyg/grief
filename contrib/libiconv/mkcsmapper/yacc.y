@@ -1,4 +1,4 @@
-/*	$NetBSD: yacc.y,v 1.9 2011/09/16 15:39:27 joerg Exp $	*/
+/*	$NetBSD: yacc.y,v 1.11 2016/06/28 09:22:16 wiz Exp $	*/
 
 %{
 /*-
@@ -33,7 +33,7 @@
 
 #include <sys/cdefs.h>
 #if !defined(lint)
-__RCSID("$NetBSD: yacc.y,v 1.9 2011/09/16 15:39:27 joerg Exp $");
+__RCSID("$NetBSD: yacc.y,v 1.11 2016/06/28 09:22:16 wiz Exp $");
 #endif /* not lint */
 
 #include "namespace.h"
@@ -665,7 +665,7 @@ do_mkpv(FILE *in)
 	else
 		out = stdout;
 
-	if (out==NULL)
+	if (out == NULL)
 		err(EXIT_FAILURE, "fopen");
 
 	ret = _pivot_factory_convert(out, in);
@@ -684,7 +684,7 @@ usage(void)
 	      "\t%s -m [-d] [-o outfile] [infile]\n"
 	      "\t%s -p [-d] [-o outfile] [infile]\n",
 	      getprogname(), getprogname(), getprogname());
-	exit(1);
+	exit(EXIT_FAILURE);
 }
 
 int

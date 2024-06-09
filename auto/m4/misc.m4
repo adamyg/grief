@@ -1,4 +1,4 @@
-dnl $Id: misc.m4,v 1.9 2020/06/03 17:26:06 cvsuser Exp $
+dnl $Id: misc.m4,v 1.10 2024/05/02 14:34:32 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -59,16 +59,15 @@ AC_DEFUN([CF_LARGEFILE],[
 			test "$ac_cv_sys_file_offset_bits" != no && CPPFLAGS="$CPPFLAGS -D_FILE_OFFSET_BITS=$ac_cv_sys_file_offset_bits "
 
 			AC_CACHE_CHECK(whether to use struct dirent64, cf_cv_struct_dirent64,[
-				AC_TRY_COMPILE([
-				#include <sys/types.h>
-				#include <dirent.h>
-				],[
-				/* if transitional largefile support is setup, this is true */
-				extern struct dirent64 * readdir(DIR *);
-				struct dirent64 *x = readdir((DIR *)0);
-				struct dirent *y = readdir((DIR *)0);
-				int z = x - y;
-				],
+				AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <sys/types.h>
+#include <dirent.h>]],[[
+	/* if transitional largefile support is setup, this is true */
+	extern struct dirent64 * readdir(DIR *);
+	struct dirent64 *x = readdir((DIR *)0);
+	struct dirent *y = readdir((DIR *)0);
+	int z = x - y;
+]])],
 				[cf_cv_struct_dirent64=yes],
 				[cf_cv_struct_dirent64=no])
 			])
@@ -86,39 +85,38 @@ dnl successfully created and distinct (AmigaOS apparently fails on the last).
 AC_DEFUN([CF_FUNC_MKSTEMP],[
 	AC_CACHE_CHECK(for working mkstemp, cf_cv_func_mkstemp,[
 	rm -f conftest*
-	AC_TRY_RUN([
-	#include <sys/types.h>
-	#include <stdlib.h>
-	#include <stdio.h>
-	#include <string.h>
-	#include <sys/stat.h>
-	int main()
-	{
-		char *tmpl = "conftestXXXXXX";
-		char name[2][80];
-		int n;
-		int result = 0;
-		int fd;
-		struct stat sb;
+	AC_RUN_IFELSE([AC_LANG_PROGRAM([[
+#include <sys/types.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/stat.h>]],[[
+	char *tmpl = "conftestXXXXXX";
+	char name[2][80];
+	int n;
+	int result = 0;
+	int fd;
+	struct stat sb;
 
-		umask(077);
-		for (n = 0; n < 2; ++n) {
-			strcpy(name[n], tmpl);
-			if ((fd = mkstemp(name[n])) >= 0) {
-				if (!strcmp(name[n], tmpl)
-				|| stat(name[n], &sb) != 0
-				|| (sb.st_mode & S_IFMT) != S_IFREG
-				|| (sb.st_mode & 077) != 0) {
-					result = 1;
-				}
-				close(fd);
+	umask(077);
+	for (n = 0; n < 2; ++n) {
+		strcpy(name[n], tmpl);
+		if ((fd = mkstemp(name[n])) >= 0) {
+			if (!strcmp(name[n], tmpl)
+			|| stat(name[n], &sb) != 0
+			|| (sb.st_mode & S_IFMT) != S_IFREG
+			|| (sb.st_mode & 077) != 0) {
+				result = 1;
 			}
+			close(fd);
 		}
-		if (result == 0
-		&& !strcmp(name[0], name[1]))
-			result = 1;
-		exit(result);
-	}],[cf_cv_func_mkstemp=yes],[cf_cv_func_mkstemp=no],
+	}
+	if (result == 0	&& !strcmp(name[0], name[1]))
+		result = 1;
+	exit(result);]])],
+			[cf_cv_func_mkstemp=yes],
+			[cf_cv_func_mkstemp=no],
+			[cf_cv_func_mkstemp=no]
 		[AC_CHECK_FUNC(mkstemp)])
 	])
 	if test "$cf_cv_func_mkstemp" = yes ; then
@@ -132,12 +130,11 @@ dnl nl_langinfo and CODESET
 dnl
 
 AC_DEFUN([CF_LANGINFO_CODESET],[
-	AC_CACHE_CHECK([for nl_langinfo and CODESET], cf_cv_langinfo_codeset,
-		[AC_TRY_LINK([#include <langinfo.h>],
-		[char* cs = nl_langinfo(CODESET);],
-		cf_cv_langinfo_codeset=yes,
-		cf_cv_langinfo_codeset=no)
-	])
+	AC_CACHE_CHECK([for nl_langinfo and CODESET], cf_cv_langinfo_codeset,[
+		AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <langinfo.h>]],[[char* cs = nl_langinfo(CODESET);]])],
+			[cf_cv_langinfo_codeset=yes],
+			[cf_cv_langinfo_codeset=no])
+		])
 	if test $cf_cv_langinfo_codeset = yes; then
 		AC_DEFINE(HAVE_LANGINFO_CODESET, 1,
 			[Define if you have <langinfo.h> and nl_langinfo(CODESET).])
@@ -155,10 +152,10 @@ dnl
 AC_DEFUN([CF_FUNC_ISASCII],[
 	AC_MSG_CHECKING(for isascii)
 	AC_CACHE_VAL(cf_cv_have_isascii,[
-		AC_TRY_LINK([#include <ctype.h>],[int x = isascii(' ')],
-		[cf_cv_have_isascii=yes],
-		[cf_cv_have_isascii=no])
-	])dnl
+		AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <ctype.h>]],[[int x = isascii(' ')]])],
+			[cf_cv_have_isascii=yes],
+			[cf_cv_have_isascii=no])
+		])dnl
 	AC_MSG_RESULT($cf_cv_have_isascii)
 	test "$cf_cv_have_isascii" = yes && \
 		AC_DEFINE([HAVE_ISASCII], 1, [isascii() available.])
@@ -167,10 +164,10 @@ AC_DEFUN([CF_FUNC_ISASCII],[
 AC_DEFUN([CF_FUNC_ISBLANK],[
 	AC_MSG_CHECKING(for isblank)
 	AC_CACHE_VAL(cf_cv_have_isblank,[
-		AC_TRY_LINK([#include <ctype.h>],[int x = isblank(' ')],
-		[cf_cv_have_isblank=yes],
-		[cf_cv_have_isblank=no])
-	])dnl
+		AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <ctype.h>]],[[int x = isblank(' ')]])],
+			[cf_cv_have_isblank=yes],
+			[cf_cv_have_isblank=no])
+		])dnl
 	AC_MSG_RESULT($cf_cv_have_isblank)
 	test "$cf_cv_have_isblank" = yes && \
 		AC_DEFINE([HAVE_ISBLANK], 1, [isblank() available.])
@@ -179,10 +176,10 @@ AC_DEFUN([CF_FUNC_ISBLANK],[
 AC_DEFUN([CF_FUNC_ISCSYM],[
 	AC_MSG_CHECKING(for iscsym)
 	AC_CACHE_VAL(cf_cv_have_iscsym,[
-		AC_TRY_LINK([#include <ctype.h>],[int x = iscsym(' ')],
-		[cf_cv_have_iscsym=yes],
-		[cf_cv_have_iscsym=no])
-	])dnl
+		AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <ctype.h>]],[[int x = iscsym(' ')]])],
+			[cf_cv_have_iscsym=yes],
+			[cf_cv_have_iscsym=no])
+		])dnl
 	AC_MSG_RESULT($cf_cv_have_iscsym)
 	test "$cf_cv_have_iscsym" = yes && \
 		AC_DEFINE([HAVE_ISCSYM], 1, [iscsym() available.])
@@ -207,8 +204,8 @@ AC_DEFUN([CF_C_INLINE],[
 			AC_CACHE_CHECK(if gcc supports options to tune inlining,cf_cv_gcc_inline,[
 			cf_save_CFLAGS=$CFLAGS
 			CFLAGS="$CFLAGS --param max-inline-insns-single=$2"
-			AC_TRY_COMPILE([inline int foo(void) { return 1; }],
-				[${cf_cv_main_return:-return} foo()],
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+inline int foo(void) { return 1; }]],[[${cf_cv_main_return:-return} foo()]])],
 				[cf_cv_gcc_inline=yes],
 				[cf_cv_gcc_inline=no])
 			CFLAGS=$cf_save_CFLAGS
@@ -224,8 +221,8 @@ AC_DEFUN([CF_C_INLINE],[
 			AC_DEFINE(HAVE_INLINE, 1, [Have inline keyword])
 			AC_SUBST(HAVE_INLINE)
 		else
-			AC_TRY_COMPILE([__inline int foo(void) { return 1; }],
-				[${cf_cv_main_return:-return} foo()],
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+__inline int foo(void) { return 1; }]],[[${cf_cv_main_return:-return} foo()]])],
 				[cf_cv_c_inline=yes],
 				[cf_cv_c_inline=no])
 			if test "$ac_cv_c_inline" != no ; then
@@ -245,22 +242,19 @@ dnl
 
 AC_DEFUN([CF_FUNC_MEMMOVE],[
 	AC_CHECK_FUNC(memmove,,[
-	AC_CHECK_FUNC(bcopy,[
-		AC_CACHE_CHECK(if bcopy does overlapping moves,cf_cv_good_bcopy,[
-			AC_TRY_RUN([
-	int main() {
-		static char data[] = "abcdefghijklmnopqrstuwwxyz";
-		char temp[40];
-		bcopy(data, temp, sizeof(data));
-		bcopy(temp+10, temp, 15);
-		bcopy(temp+5, temp+15, 10);
-		${cf_cv_main_return:-return} (strcmp(temp, "klmnopqrstuwwxypqrstuwwxyz"));
-	}
-			],
-			[cf_cv_good_bcopy=yes],
-			[cf_cv_good_bcopy=no],
-			[cf_cv_good_bcopy=unknown])
-			])
+		AC_CHECK_FUNC(bcopy,[
+			AC_CACHE_CHECK(if bcopy does overlapping moves,cf_cv_good_bcopy,[
+				AC_RUN_IFELSE([AC_LANG_PROGRAM([],[[
+	static char data[] = "abcdefghijklmnopqrstuwwxyz";
+	char temp[40];
+	bcopy(data, temp, sizeof(data));
+	bcopy(temp+10, temp, 15);
+	bcopy(temp+5, temp+15, 10);
+	${cf_cv_main_return:-return} (strcmp(temp, "klmnopqrstuwwxypqrstuwwxyz"));
+]])],
+				[cf_cv_good_bcopy=yes],
+				[cf_cv_good_bcopy=no],
+				[cf_cv_good_bcopy=unknown])])
 		],[cf_cv_good_bcopy=no])
 		if test "$cf_cv_good_bcopy" != yes ; then
 			AC_DEFINE([NEED_MEMMOVE], 1, [need external memmove().])
@@ -276,27 +270,24 @@ dnl
 
 AC_DEFUN([CF_FUNC_NANOSLEEP],[
 	AC_CACHE_CHECK(if nanosleep really works,cf_cv_func_nanosleep,[
-	AC_TRY_RUN([
-	#include <stdio.h>
-	#include <errno.h>
-	#include <time.h>
+		AC_RUN_IFELSE([AC_LANG_PROGRAM([[
+#include <stdio.h>
+#include <errno.h>
+#include <time.h>
 
-	#ifdef HAVE_SYS_TIME_H
-	#include <sys/time.h>
-	#endif
-
-	int main() {
-		struct timespec ts1, ts2;
-		int code;
-		ts1.tv_sec  = 0;
-		ts1.tv_nsec = 750000000;
-		ts2.tv_sec  = 0;
-		ts2.tv_nsec = 0;
-		errno = 0;
-		code = nanosleep(&ts1, &ts2); /* on failure errno is ENOSYS. */
-		${cf_cv_main_return:-return}(code != 0);
-	}
-	],
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif]],[[
+	struct timespec ts1, ts2;
+	int code;
+	ts1.tv_sec  = 0;
+	ts1.tv_nsec = 750000000;
+	ts2.tv_sec  = 0;
+	ts2.tv_nsec = 0;
+	errno = 0;
+	code = nanosleep(&ts1, &ts2); /* on failure errno is ENOSYS. */
+	${cf_cv_main_return:-return}(code != 0);
+]])],
 		[cf_cv_func_nanosleep=yes],
 		[cf_cv_func_nanosleep=no],
 		[cf_cv_func_nanosleep=unknown])])
@@ -483,7 +474,7 @@ AC_DEFUN([CF_GCC_ATTRIBUTES],[
 EOF
 
 		if test "$GCC" = yes; then
-			AC_CHECKING([for $CC __attribute__ directives])
+			AC_MSG_NOTICE([for $CC __attribute__ directives])
 			cat > conftest.$ac_ext <<EOF
 #line __oline__ "${as_me:-configure}"
 #include "confdefs.h"
@@ -511,7 +502,7 @@ EOF
 			for cf_attribute in scanf printf unused noreturn; do
 				CF_UPPER(cf_ATTRIBUTE,$cf_attribute)
 				cf_directive="__attribute__(($cf_attribute))"
-				echo "checking for $CC $cf_directive" 1>&AC_FD_CC
+				echo "checking for $CC $cf_directive" 1>&AS_MESSAGE_LOG_FD
 
 				case $cf_attribute in #(vi
 				printf) #(vi
@@ -527,7 +518,7 @@ EOF
 EOF
 					;;
 				*) #(vi
-	    				cat >conftest.h <<EOF
+					cat >conftest.h <<EOF
 #define GCC_$cf_ATTRIBUTE $cf_directive
 EOF
 					;;
@@ -568,5 +559,3 @@ EOF
 		rm -rf conftest*
 	fi
 ])dnl
-
-

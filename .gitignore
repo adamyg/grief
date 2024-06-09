@@ -4,11 +4,11 @@ defunct/
 contrib/include/
 win32/Autoupdater/
 EXTRA/
-doc/
 bin
 bin.*/
 lib.*/
-objects*/
+obj.*/
+CoreUtils/
 macros/
 macros.x64
 help/

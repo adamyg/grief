@@ -24,7 +24,7 @@
 #include "../include/edbuildinfo.h"
 #else
 #include "../include/edpackageinfo.h"
-#endif 
+#endif
 
 #if defined(BUILD_TOOLCHAIN)
 #if defined(BUILD_TYPE)
@@ -44,7 +44,7 @@
 AppId={{1BDBED1A-1B0E-4D87-BD04-31E9E3DA5ADC}}
 AppName=GRIEF
 AppVersion={#GR_VERSION} (build: {#GR_BUILD_DATE}-{#GR_BUILD_NUMBER})
-AppCopyright=Copyright (C) 1998-2022.
+AppCopyright=Copyright (C) 1998-2024.
 AppPublisherURL=http://sourceforge.net/projects/grief/
 AppSupportURL=https://github.com/adamyg/grief
 AppUpdatesURL=https://github.com/adamyg/grief
@@ -94,10 +94,11 @@ Source: "..\{#BinDir}\grupdater.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\*.dll";         DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\ctbl\*";        DestDir: "{app}\bin\ctbl"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\{#BinDir}\i18n\*";        DestDir: "{app}\bin\i81n"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\macsrc\*";                DestDir: "{app}\macsrc"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "CVS,.*,*.exe,*.obj,*.bat,tests,ref,sav,*.txt,*.pl,*.in*"
 Source: "..\macros\*";                DestDir: "{app}\macros"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\help\*";                  DestDir: "{app}\help"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\COPYING";                 DestDir: "{app}"; Flags: ignoreversion
-Source: "..\Changes";                 DestDir: "{app}"; Flags: ignoreversion
+Source: "..\Changes";                 DestDir: "{app}"; Flags: ignoreversion isreadme
 ; NOTE: Dont use "Flags: ignoreversion" on any shared system files
 
 [Icons]

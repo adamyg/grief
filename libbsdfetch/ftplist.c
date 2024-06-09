@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ftplist.c,v 1.6 2020/06/05 23:45:01 cvsuser Exp $
+/* $Id: ftplist.c,v 1.7 2024/05/19 15:01:32 cvsuser Exp $
  * FTP LIST command reply parser.
  *
  *
@@ -515,7 +515,7 @@ fetch_mnet_entry(struct url_list *ue, struct url *base, struct url_stat *us, con
 			colon = name;
 			break;
 		} else if (strchr("$.-_~[]", ch) ||
-			     (isalnum(ch) && ch == toupper(ch))) {
+			     (isalnum(ch) && ch == (unsigned)toupper(ch))) {
 			continue;
 		}
 		return -1;
@@ -873,7 +873,7 @@ getmonth(const char *buf, int len)
 	unsigned m;
 
 	for (m = 0; m < 12; ++m) {
-		if ((len == mnames[m].len && 0 == strcasecmp(buf, mnames[m].val)) ||
+		if (((unsigned)len == mnames[m].len && 0 == strcasecmp(buf, mnames[m].val)) ||
 		    (3 == len && 0 == strncasecmp(buf, mnames[m].val, 3))) {
 			return m + 1;
 		}

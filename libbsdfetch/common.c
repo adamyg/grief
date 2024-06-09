@@ -1,6 +1,6 @@
 /* $NetBSD: common.c,v 1.29 2014/01/08 20:25:34 joerg Exp $ */
 /*-
- * Copyright (c) 2013-2015 Adam Young
+ * Copyright (c) 2013 - 2024 Adam Young
  * Copyright (c) 1998-2004 Dag-Erling Coïdan Smørgrav
  * Copyright (c) 2008, 2010 Joerg Sonnenberger <joerg@NetBSD.org>
  * All rights reserved.

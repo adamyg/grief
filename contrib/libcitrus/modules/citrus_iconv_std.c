@@ -583,7 +583,7 @@ next:
 err:
 	restore_encoding_state(&sc->sc_src_encoding);
 	restore_encoding_state(&sc->sc_dst_encoding);
-err_norestore:
+/*err_norestore:*/
 	*invalids = inval;
 
 	return ret;

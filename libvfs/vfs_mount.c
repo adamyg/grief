@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_mount_c,"$Id: vfs_mount.c,v 1.17 2022/03/21 14:27:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_mount_c,"$Id: vfs_mount.c,v 1.19 2024/04/17 16:00:30 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_mount.c,v 1.17 2022/03/21 14:27:23 cvsuser Exp $
+/* $Id: vfs_mount.c,v 1.19 2024/04/17 16:00:30 cvsuser Exp $
  * Virtual file system interface --- mount table management.
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

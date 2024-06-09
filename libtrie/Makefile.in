@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.5 2022/08/25 16:22:58 cvsuser Exp $
+# $Id: Makefile.in,v 1.9 2024/05/19 15:53:42 cvsuser Exp $
 # libtrie - prefix tree
 #
 #
-# Copyright (c) 2022, Adam Young.
+# Copyright (c) 2022 - 2024, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -52,6 +52,15 @@ LIBTOOL=	@LIBTOOL@
 
 # Configuration
 
+QUIETOUT:=	>/dev/null 2>&1
+ifeq ($(VERBOSE),1)
+QUIETOUT:=
+else ifeq ($(VERBOSE),0)
+else ifeq ($(VERBOSE),)
+else
+$(error VERBOSE: unexpected value 0 or 1 required, $(VERBOSE) given]))
+endif
+
 ifeq ("$(BUILD_TYPE)","")	#default
 BUILD_TYPE=	debug
 MAKEFLAGS+=	BUILD_TYPE=debug
@@ -64,7 +73,7 @@ endif
 
 D_INC=		$(ROOT)/include
 D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
-D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/libmisc
+D_OBJ=		$(ROOT)/obj@TOOLCHAINEXT@/$(BUILD_TYPE)/libmisc
 D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 # Common flags
@@ -85,6 +94,10 @@ CXXRELEASE=	$(CRELEASE)
 endif
 LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
+
+ifeq (gcc,$(findstring gcc,$(CC)))
+XFLAGS+= 	-Wno-deprecated-non-prototype
+endif	#gcc
 
 CINCLUDE=	-I$(D_INC) @CINCLUDE@
 
@@ -146,6 +159,7 @@ release:
 debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
+XCLEAN +=	$(basename $(D_BIN)/$(TARGET)).map
 $(D_BIN)/$(TARGET):	MAPFILE=$(basename $@).map
 $(D_BIN)/$(TARGET):	LINKLIBS=-ltrie
 $(D_BIN)/$(TARGET):	$(OBJS)
@@ -166,7 +180,10 @@ $(D_OBJ)/.created:
 		@echo "do not create" > $@
 
 clean:
-		-@$(RM) $(RMFLAGS) $(BAK) $(LIBRARY) $(LIBOBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
+		@echo $(BUILD_TYPE) clean
+		-$(LIBTOOL) --mode=clean $(RM) $(D_BIN)/$(TARGET)
+		-@$(RM) $(RMFLAGS) $(LIBRARY) $(LIBOBJS) $(OBJS) $(QUIETOUT)
+		-@$(RM) $(RMFLAGS) $(BAK) $(CLEAN) $(XCLEAN) $(QUIETOUT)
 
 $(D_OBJ)/%$(O):		%$(C)
 		$(CC) $(CFLAGS) -o $@ -c $<

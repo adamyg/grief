@@ -9,40 +9,69 @@ jobs:
       matrix:
         config:
         - {
-            name: "Windows Latest MSVC",
-            os: windows-latest,
-            toolchain: vc2022,
-            toolversion: vs170
+           name: "Windows Latest MSVC",
+           os: windows-latest,
+           toolchain: vc2022,
+           toollabel: vs170,
+           package: win32-vs22
           }
         - {
            name: "Windows Latest MinGW",
            os: windows-latest,
            toolchain: mingw64,
-           toolversion: mingw64
+           toollabel: mingw64,
+           package: win32-w64
           }
         - {
            name: "Windows Latest OWC",
            os: windows-latest,
            toolchain: owc20,
-           toolversion: owc20
+           toollabel: owc20,
+           package: win32-owc
           }
         - {
            name: "Ubuntu Latest GCC",
            os: ubuntu-latest,
            toolchain: gcc,
-           toolversion: gcc
+           toollabel: gcc,
+           package: ubuntu-gcc
           }
         - {
            name: "MacOS Latest GCC",
            os: macos-latest,
            toolchain: gcc,
-           toolversion: gcc
+           toollabel: gcc,
+           package: macos-gcc
           }
 
     steps:
 
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
+
+    - name: Snapshot Source
+      if: startsWith(matrix.config.name, 'Ubuntu Latest')
+      shell: bash
+      run: |
+        mkdir .snapshot
+        tar  --exclude-vcs --exclude='./.snapshot' --exclude='./win32' --exclude='./contrib' --exclude='./support/*.bat' --exclude='./defunct' -cf .snapshot/source-snapshot.tar .
+        tar  --exclude-vcs -cf .snapshot/contrib-snapshot.tar ./contrib
+
+    - name: Source Snapshot Publish
+      if: startsWith(matrix.config.name, 'Ubuntu Latest')
+      uses: actions/upload-artifact@v4
+      with:
+        name: source-snapshot
+        path: .snapshot/source-snapshot.tar
+        compression-level: 9
+
+    - name: Contrib Snapshot Publish
+      if: startsWith(matrix.config.name, 'Ubuntu Latest')
+      uses: actions/upload-artifact@v4
+      with:
+        name: contrib-snapshot
+        path: .snapshot/contrib-snapshot.tar
+        compression-level: 9
 
     - name: Checkout submodules
       run: |
@@ -87,8 +116,14 @@ jobs:
       if: startsWith(matrix.config.name, 'MacOS Latest')
       shell: bash
       run: |
-        brew install wget
+        brew install pkg-config
+        brew install ncurses
+        brew link ncurses
+        brew install enchant
+        brew install libspelling
+        brew install hunspell
         brew install libarchive
+        brew install wget
 
     - name: Windows, generate
       if: startsWith(matrix.config.name, 'Windows Latest')
@@ -99,7 +134,7 @@ jobs:
         @if "${{ matrix.config.toolchain }}"=="owc20"  call .\support\owc20setenv.bat C:\Watcom
         @if NOT "${{ matrix.config.toolchain }}"=="mingw64" c:\msys64\usr\bin\pacman --noconfirm -S bison
         @set PERL=c:/Strawberry/perl/bin/perl
-        c:/Strawberry/perl/bin/perl makelib.pl --perlpath=c:/Strawberry/perl/bin --busybox=./win32/busybox --wget=./win32/wget --bison=c:/msys64/usr/bin/bison --flex=./bin.${{ matrix.config.toolchain }}/flex "${{ matrix.config.toolchain }}"
+        c:/Strawberry/perl/bin/perl makelib.pl --perlpath=c:/Strawberry/perl/bin --busybox=./win32/busybox --wget=./win32/wget --bison=c:/msys64/usr/bin/bison --flex=./bin.${{ matrix.config.toollabel }}/release/flex "${{ matrix.config.toolchain }}"
 
     - name: Windows, compile
       if: startsWith(matrix.config.name, 'Windows Latest')
@@ -116,6 +151,7 @@ jobs:
       if: startsWith(matrix.config.name, 'Ubuntu Latest')
       shell: bash
       run: |
+        chmod +x configure
         ./support/config_withncurses
 
     - name: Ubuntu, compile
@@ -132,6 +168,7 @@ jobs:
         export CPPPATH=$(brew --prefix libarchive)/include:/usr/local/include:$CPATH
         export LIBRARY_PATH=$(brew --prefix libarchive)/lib:/usr/local/lib:$LIBRARY_PATH
         export LD_LIBRARY_PATH=$(brew --prefix libarchive)/lib:/usr/local/lib:$LD_LIBRARY_PATH
+        chmod +x configure
         ./support/config_withncurses
 
     - name: MacOS, compile
@@ -145,7 +182,7 @@ jobs:
         make release
 
     - name: Package
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
-        name: package-${{ matrix.config.toolchain }}
-        path: ./bin.${{ matrix.config.toolversion }}/release/*
+        name: package-${{ matrix.config.package }}
+        path: ./bin.${{ matrix.config.toollabel }}/release/*

@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_select_c,"$Id: w32_select.c,v 1.16 2022/05/26 13:28:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_select_c,"$Id: w32_select.c,v 1.18 2024/03/31 15:57:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  *  Windows 'select' compat interface
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -26,13 +26,6 @@ __CIDENT_RCSID(gr_w32_select_c,"$Id: w32_select.c,v 1.16 2022/05/26 13:28:37 cvs
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * license for more details.
  * ==end==
- *
- * Notice: Portions of this text are reprinted and reproduced in electronic form. from
- * IEEE Portable Operating System Interface (POSIX), for reference only. Copyright (C)
- * 2001-2003 by the Institute of. Electrical and Electronics Engineers, Inc and The Open
- * Group. Copyright remains with the authors and the original Standard can be obtained
- * online at http://www.opengroup.org/unix/online.html.
- * ==extra==
  */
 
 #include "win32_internal.h"
@@ -125,7 +118,7 @@ sel_build(
     int type, fd_set *fds, u_int *selcnt, Select_t *selfds )
 {
     u_int invalid = 0, idx, fd;
-    long osf;
+    SOCKET osf = 0;
 
     if (fds == NULL) {
         return 0;
@@ -145,19 +138,23 @@ sel_build(
 
             selfds[fd].s_fd = (int)fds->fd_array[idx];
 
-            if ((osf = w32_sockhandle((int)fds->fd_array[idx])) == -1) {
+            if ((osf = w32_sockhandle((int)fds->fd_array[idx])) == INVALID_SOCKET) {
                 selfds[fd].s_handle = (HANDLE)0;
                 selfds[fd].s_type = FD_UNKNOWN;
                 invalid++;
 
             } else {
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
+#endif
                 selfds[fd].s_handle = (HANDLE)osf;
 
                 switch (GetFileType((HANDLE)osf)) {
                 case FILE_TYPE_CHAR: {          // char file
                         DWORD mode;
 
-                        if (GetConsoleMode( (HANDLE)osf, &mode ) == 0) {
+                        if (GetConsoleMode((HANDLE)osf, &mode ) == 0) {
                             selfds[fd].s_type = FD_CONSOLE;
                             selfds[fd].s_poll = sel_console;
                         } else {
@@ -166,6 +163,9 @@ sel_build(
                         }
                     }
                     break;
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic pop
+#endif
 
                 case FILE_TYPE_DISK:            // disk file
                     selfds[fd].s_type = FD_BLOCK;

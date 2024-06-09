@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strlen_c,"$Id: strlen.c,v 1.7 2022/09/20 15:19:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_strlen_c,"$Id: strlen.c,v 1.9 2024/04/17 15:57:14 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strlen.c,v 1.7 2022/09/20 15:19:12 cvsuser Exp $
+/* $Id: strlen.c,v 1.9 2024/04/17 15:57:14 cvsuser Exp $
  * libstr - String length.
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -1,20 +1,19 @@
 #ifndef GR_EDPATHS_H_INCLUDED
 #define GR_EDPATHS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edpaths_h,"$Id: edpaths.h,v 1.20 2022/03/21 14:55:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_edpaths_h,"$Id: edpaths.h,v 1.23 2024/05/02 16:33:27 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edpaths.h,v 1.20 2022/03/21 14:55:27 cvsuser Exp $
+/* $Id: edpaths.h,v 1.23 2024/05/02 16:33:27 cvsuser Exp $
  * Default system paths ...
  *
  *  Example:
  *
- *      o Unix,  ROOT=/usr/local/lib/grief
+ *      o Unix, ROOT=/usr/local/share/gr
+ *      o WIN32, ROOT=C:/Program Files/Grief
  *
- *      o Win32, ROOT=C:/Program Files/Grief
- *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -48,8 +47,11 @@ __CPRAGMA_ONCE
 #define _PATH_GRIEF_NAME    "Grief"
 #define _PATH_GRIEF_ROOT    "$(ProgramFiles)/Grief"
 #else
-#define _PATH_GRIEF_NAME    "grief"
-#if defined(GR_BUILD_LIBDIR)
+#define _PATH_GRIEF_NAME    "Grief"
+
+#if defined(GR_BUILD_DATADIR)
+#define _PATH_GRIEF_ROOT    GR_BUILD_DATADIR
+#elif defined(GR_BUILD_LIBDIR)
 #define _PATH_GRIEF_ROOT    GR_BUILD_LIBDIR
 #else
 #define _PATH_GRIEF_ROOT    GRIEF_LIBDIR

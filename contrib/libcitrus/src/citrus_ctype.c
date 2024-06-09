@@ -1,4 +1,4 @@
-/*	$NetBSD: citrus_ctype.c,v 1.6 2011/11/19 18:34:21 tnozaki Exp $	*/
+/*	$NetBSD: citrus_ctype.c,v 1.7 2013/05/28 16:57:56 joerg Exp $	*/
 
 /*-
  * Copyright (c)1999, 2000, 2001, 2002 Citrus Project,
@@ -28,9 +28,10 @@
 
 #include <sys/cdefs.h>
 #if defined(LIBC_SCCS) && !defined(lint)
-__RCSID("$NetBSD: citrus_ctype.c,v 1.6 2011/11/19 18:34:21 tnozaki Exp $");
+__RCSID("$NetBSD: citrus_ctype.c,v 1.7 2013/05/28 16:57:56 joerg Exp $");
 #endif /* LIBC_SCCS and not lint */
 
+#include "namespace.h"
 #include <sys/types.h>
 #include <assert.h>
 #include <errno.h>
@@ -38,6 +39,7 @@ __RCSID("$NetBSD: citrus_ctype.c,v 1.6 2011/11/19 18:34:21 tnozaki Exp $");
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <stddef.h>
 #include <wchar.h>
@@ -53,8 +55,7 @@ _citrus_ctype_rec_t _citrus_ctype_default = {
 	NULL				/* cc_module */
 };
 
-
-#if defined(_I18N_DYNAMIC) || defined(_I18N_STATIC)
+#ifdef _I18N_DYNAMIC
 
 static int _initctypemodule(_citrus_ctype_t, char const *, _citrus_module_t,
 			    void *, size_t, size_t);
@@ -93,6 +94,8 @@ _initctypemodule(_citrus_ctype_t cc, char const *modname,
 		cc->cc_ops->co_wctob = &_citrus_ctype_wctob_fallback;
 		/* FALLTHROUGH */
 	case 0x00000002:
+		cc->cc_ops->co_mbsnrtowcs = &_citrus_ctype_mbsnrtowcs_fallback;
+		cc->cc_ops->co_wcsnrtombs = &_citrus_ctype_wcsnrtombs_fallback;
 		/* FALLTHROUGH */
 	default:
 		break;
@@ -107,10 +110,12 @@ _initctypemodule(_citrus_ctype_t cc, char const *modname,
 	    cc->cc_ops->co_mbrtowc == NULL ||
 	    cc->cc_ops->co_mbsinit == NULL ||
 	    cc->cc_ops->co_mbsrtowcs == NULL ||
+	    cc->cc_ops->co_mbsnrtowcs == NULL ||
 	    cc->cc_ops->co_mbstowcs == NULL ||
 	    cc->cc_ops->co_mbtowc == NULL ||
 	    cc->cc_ops->co_wcrtomb == NULL ||
 	    cc->cc_ops->co_wcsrtombs == NULL ||
+	    cc->cc_ops->co_wcsnrtombs == NULL ||
 	    cc->cc_ops->co_wcstombs == NULL ||
 	    cc->cc_ops->co_wctomb == NULL ||
 	    cc->cc_ops->co_btowc == NULL ||
@@ -193,9 +198,9 @@ _citrus_ctype_close(_citrus_ctype_t cc)
 
 int
 /*ARGSUSED*/
-_citrus_ctype_open(_citrus_ctype_t * __restrict rcc,
-		   char const * __restrict encname, void * __restrict variable, 
-		   size_t lenvar, size_t szpriv)
+_citrus_ctype_open(_citrus_ctype_t *rcc,
+		   char const *encname, void *variable, size_t lenvar,
+		   size_t szpriv)
 {
 	if (!strcmp(encname, _CITRUS_DEFAULT_CTYPE_NAME)) {
 		*rcc = &_citrus_ctype_default;

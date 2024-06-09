@@ -1,7 +1,7 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: assign_const_int.cr,v 1.2 2020/04/20 23:13:53 cvsuser Exp $
+/* $Id: assign_const_int.cr,v 1.3 2023/03/06 15:28:19 cvsuser Exp $
  *
- * LUA/DukTape/Grunch comparision benchmark
+ * LUA/DukTape/Grunch comparison benchmark
  */
 
 #include "../grief.h"

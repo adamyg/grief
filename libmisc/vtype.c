@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vtype_c,"$Id: vtype.c,v 1.10 2022/09/20 15:19:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_vtype_c,"$Id: vtype.c,v 1.12 2024/04/17 15:57:14 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vtype.c,v 1.10 2022/09/20 15:19:12 cvsuser Exp $
+/* $Id: vtype.c,v 1.12 2024/04/17 15:57:14 cvsuser Exp $
  * Self-organising integer vector data structure.
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

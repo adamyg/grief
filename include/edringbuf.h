@@ -1,16 +1,16 @@
 #ifndef GR_EDRINGBUF_H_INCLUDED
 #define GR_EDRINGBUF_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edringbuf_h,"$Id: edringbuf.h,v 1.8 2022/03/21 14:55:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_edringbuf_h,"$Id: edringbuf.h,v 1.10 2024/04/08 15:07:03 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edringbuf.h,v 1.8 2022/03/21 14:55:27 cvsuser Exp $
+/* $Id: edringbuf.h,v 1.10 2024/04/08 15:07:03 cvsuser Exp $
  * Basic binary ringbuffer ...
  *
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makentypes.pl,v 1.12 2021/04/10 15:10:12 cvsuser Exp $
+# $Id: makentypes.pl,v 1.13 2024/05/24 17:58:11 cvsuser Exp $
 # Generate crntypes.h from the gen and grunch symbols.
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 #
@@ -36,10 +36,10 @@ BEGIN {
 use strict;
 use warnings 'all';
 
-my $o_output = 'crntypes.h';
-my $o_debug  = 0;
-my $o_bison  = 0;
-my $o_value  = 0;
+my $o_output  = 'crntypes.h';
+my $o_debug   = 0;
+my $o_yystype = 0;
+my $o_value   = 0;
 
 my @source = (
         'grunch.h',
@@ -77,7 +77,7 @@ Main()
 
         /^--value$/ && ($o_value = 1, next);
 
-        /^--bison$/ && ($o_bison = 1, next);
+        /^--yystype$/ && ($o_yystype = 1, next);
 
         Usage("unknown option '$_'\n");
     }
@@ -261,7 +261,7 @@ Export()
                     #..
                     my $line = $_;              # original line
 
-                    if ($o_bison && 3 == $export) {
+                    if ($o_yystype && 3 == $export) {
                         if (/^\#if.*def.*YYSTYPE_IS_DECLARED/) {
                             push @yystype, $line, "\n";
                             $export = 4;
@@ -277,6 +277,8 @@ Export()
                         }
                         next;
                     }
+
+                    next if (/define\sYYSTYPE_IS_DECLARED/);
 
                     s/^\#define\s+([A-Z0-9_]+)
                         \s*([-0-9a-fx]+)
@@ -345,7 +347,7 @@ EOT
 };
 EOT
 
-    #   YYSTYPE (bison only)
+    #   YYSTYPE (bison/byacc)
     #
     if (scalar @yystype) {
         print OUT "\n";

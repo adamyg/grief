@@ -1,16 +1,16 @@
 #ifndef GR_EDOPCODE_H_INCLUDED
 #define GR_EDOPCODE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edopcode_h,"$Id: edopcode.h,v 1.23 2022/09/13 14:15:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_edopcode_h,"$Id: edopcode.h,v 1.25 2024/04/08 15:07:03 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edopcode.h,v 1.23 2022/09/13 14:15:35 cvsuser Exp $
+/* $Id: edopcode.h,v 1.25 2024/04/08 15:07:03 cvsuser Exp $
  * List types.
  *
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

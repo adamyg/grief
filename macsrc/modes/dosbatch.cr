@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*-
- * $Id: dosbatch.cr,v 1.5 2014/10/22 02:34:33 ayoung Exp $
+ * $Id: dosbatch.cr,v 1.6 2023/01/02 12:53:20 cvsuser Exp $
  * DOS/CMD batch syntax mode.
  *
  *
@@ -127,7 +127,7 @@ main()
 
    define_keywords(SYNK_OPERATOR,
 	 "IN,DO,"+				// FOR %var IN (set) DO command
-	 "NOT,EXISTS,"+				// IF [NOT] EXISTS var command
+	 "NOT,EXIST,"+				// IF [NOT] EXIST var command
 	 "DEFINED,"+				// IF [NOT] DEFINED var command
 						// IF /I string op string command
 	 "EQU,"+				//	 equal

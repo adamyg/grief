@@ -1,8 +1,8 @@
-/* $Id: namespace.h,v 1.7 2022/06/02 11:11:25 cvsuser Exp $
+/* $Id: namespace.h,v 1.10 2024/06/04 15:35:47 cvsuser Exp $
  *
  * libiconv <namespace.h>
  *
- * Copyright (c) 2012-2022 Adam Young.
+ * Copyright (c) 2012 - 2024 Adam Young.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,52 +28,10 @@
  * ==end==
  */
 
-#ifdef  _MSC_VER
-#ifndef _CRT_SECURE_NO_DEPRECATE
-#define _CRT_SECURE_NO_DEPRECATE
-#endif
-#pragma warning(disable:4996)                   /* 'xxx' was declared deprecated */
-#endif
+#include "../libcitrus/namespace.h"
 
-#include <sys/types.h>                          /* system types */
-#include <sys/utypes.h>                         /* unix/bsd types */
-#include <sys/param.h>                          /* system parameters */
-#include <string.h>
-#include <unistd.h>
-
-#ifndef u_int32_t
-#define u_int32_t       uint32_t
-#define u_int16_t       uint16_t
-#define u_int8_t        uint8_t
-#endif
-
-#ifndef __dead
-#define __dead          /*__attribute__((noreturn))*/
-#endif
-
-#ifndef snprintf
-#if (_MSC_VER != 1500)  /* MSVC 2008 (v9.0) */
-#define vsnprintf       _vsnprintf
-#endif /*1500*/
-#define snprintf        _snprintf
-#endif /*snprintf*/
-
-#ifndef open
-#if (_MSC_VER != 1500)  /* MSVC 2008 (v9.0) */
-#define open            _open
-#define read            _read
-#define write           _write
-#endif /*1500*/
-#endif /*open*/
-
-#ifndef strdup
-#define strdup          _strdup
-#endif
-
-#if defined(_MSC_VER) || \
-        defined(__MINGW32__)
-#define LC_MESSAGES     (LC_MAX + 1) /*XXX*/
-#endif
+#define YYMALLOC        malloc
+#define YYFREE          free
 
 /*end*/
 

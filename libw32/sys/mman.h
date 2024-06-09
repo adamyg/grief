@@ -1,13 +1,13 @@
 #ifndef LIBW32_SYS_MMAN_H_INCLUDED
 #define LIBW32_SYS_MMAN_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_mman_h,"$Id: mman.h,v 1.11 2022/03/21 14:29:42 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_mman_h,"$Id: mman.h,v 1.13 2024/03/31 15:57:29 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 mmap implementation
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 2012 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -78,4 +78,3 @@ LIBW32_API int          munlock __P((const void *, size_t));
 __END_DECLS
 
 #endif /*LIBW32_SYS_MMAN_H_INCLUDED*/
-

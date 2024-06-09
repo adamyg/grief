@@ -1,12 +1,17 @@
 @echo off
 rem
-rem Microsoft Visual Studio C/C++ 2019+
+rem Microsoft Visual Studio C/C++ 2019
 rem
-if not defined GNUWIN32 (
-        set GNUWIN32=\devl\gnuwin32
-)
+echo Configure: Microsoft Visual Studio C/C++ 2019
+
+rem perl: assume within path
 if not defined PERL (
         set PERL=perl
 )
-%PERL% makelib.pl --gnuwin32=%GNUWIN32% --icu=auto vc2019 %1 %2 %3 %4
 
+rem iscc: command line interface
+if not defined INNO (
+        set INNO="C:/Program Files (x86)/Inno Setup 5/iscc"
+)
+
+%PERL% ./support/config_windows.pl makelib.pl --inno=%INNO% %* vc2019

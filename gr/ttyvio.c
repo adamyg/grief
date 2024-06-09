@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.74 2022/09/13 14:31:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.78 2024/05/20 17:06:25 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.74 2022/09/13 14:31:24 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.78 2024/05/20 17:06:25 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -50,6 +50,7 @@ __CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.74 2022/09/13 14:31:24 cvsuser Exp
 #include "accum.h"
 #include "builtin.h"
 #include "color.h"
+#include "debug.h"                              /* trace ... */
 #include "cmap.h"
 #include "display.h"
 #include "echo.h"
@@ -83,6 +84,7 @@ typedef uint32_t videoset_t[VSET_SIZE];
 
 static void             term_open(scrprofile_t *profile);
 static void             term_ready(int repaint, scrprofile_t *profile);
+static void             term_colors(void);
 static void             term_close(void);
 static void             term_feature(int ident, scrprofile_t *profile);
 static void             term_display(void);
@@ -139,45 +141,45 @@ enum WIN32Color {
     WIN32_Yellow        = FOREGROUND_RED   | FOREGROUND_GREEN | FOREGROUND_INTENSITY,
     };
 
-static const struct colormap {                  /* BRIEF -> NCURSES palette */
-    unsigned    ident;
+static const struct colormap {                  /* BRIEF -> VIO palette */
 #if defined(WIN32)
-    int         c16pc;
-    int         c16;
+#define C16(a,b)        b
 #else
-    int         c16;
-    int         c16win;
+#define C16(a,b)        a
 #endif
-} tt_colormap[] = {
-    /*  Ident   16/PC       16/WIN */
-    { BLACK,        0,      WIN32_Black        },
-    { BLUE,         1,      WIN32_Blue         },
-    { GREEN,        2,      WIN32_Green        },
-    { CYAN,         3,      WIN32_Cyan         },
-    { RED,          4,      WIN32_Red          },
-    { MAGENTA,      5,      WIN32_Magenta      },
-    { BROWN,        6,      WIN32_Orange       },
-    { WHITE,        7,      WIN32_LightGrey    },
+    int     c16;
+    int     c256_compat;                        /* 8/16 color compat */
+    int     c256;
+} color_map[] = {
+    /*Ident           16- PC/WIN                    56/C    256     */
+    /*BLACK     */  { C16(0,  WIN32_Black),         0,      0       },
+    /*BLUE      */  { C16(1,  WIN32_Blue),          4,      12      },
+    /*GREEN     */  { C16(2,  WIN32_Green),         2,      10      },
+    /*CYAN      */  { C16(3,  WIN32_Cyan),          6,      14      },
+    /*RED       */  { C16(4,  WIN32_Red),           1,      9       },
+    /*MAGENTA   */  { C16(5,  WIN32_Magenta),       5,      13      },
+    /*BROWN     */  { C16(6,  WIN32_Orange),        130,    130     },
+    /*WHITE     */  { C16(7,  WIN32_LightGrey),     7,      248     },
 
-    { GREY,         8,      WIN32_Grey         },
-    { LTBLUE,       9,      WIN32_LightBlue    },
-    { LTGREEN,      10,     WIN32_LightGreen   },
-    { LTCYAN,       11,     WIN32_LightCyan    },
-    { LTRED ,       12,     WIN32_LightRed     },
-    { LTMAGENTA,    13,     WIN32_LightMagenta },
-    { YELLOW ,      14,     WIN32_Yellow       },
-    { LTWHITE,      15,     WIN32_White        },
+    /*GREY      */  { C16(8,  WIN32_Grey),          8,      7       },
+    /*LTBLUE    */  { C16(9,  WIN32_LightBlue),     12,     81      },
+    /*LTGREEN   */  { C16(10, WIN32_LightGreen),    10,     121     },
+    /*LTCYAN    */  { C16(11, WIN32_LightCyan),     14,     159     },
+    /*LTRED     */  { C16(12, WIN32_LightRed),      9,      224     },
+    /*LTMAGENTA */  { C16(13, WIN32_LightMagenta),  13,     225     },
+    /*YELLOW    */  { C16(14, WIN32_Yellow),        11,     11      },
+    /*LTWHITE   */  { C16(15, WIN32_White),         15,     15      },
 
-    { DKGREY,       0,      WIN32_Grey         },
-    { DKBLUE,       1,      WIN32_Blue         },
-    { DKGREEN,      2,      WIN32_Green        },
-    { DKCYAN,       3,      WIN32_Cyan         },
-    { DKRED,        4,      WIN32_Red          },
-    { DKMAGENTA,    5,      WIN32_Magenta      },
-    { DKYELLOW,     6,      WIN32_Orange       },
-    { LTYELLOW,     14,     WIN32_Yellow       },
+    /*DKGREY    */  { C16(0,  WIN32_Grey),          0,      242     },
+    /*DKBLUE    */  { C16(1,  WIN32_Blue),          4,      4       },
+    /*DKGREEN   */  { C16(2,  WIN32_Green),         2,      2       },
+    /*DKCYAN    */  { C16(3,  WIN32_Cyan),          6,      6       },
+    /*DKRED     */  { C16(4,  WIN32_Red),           1,      1       },
+    /*DKMAGENTA */  { C16(5,  WIN32_Magenta),       5,      5       },
+    /*DKYELLOW  */  { C16(6,  WIN32_Orange),        130,    130     },
+    /*LTYELLOW  */  { C16(14, WIN32_Yellow),        11,     229     },
 
-    { COLOR_NONE,   -1,     -1  }
+    /*COLOR_NONE*/  { -1, -1, -1 }
     };
 
 static int              tt_open         = FALSE;
@@ -189,20 +191,22 @@ static unsigned         tt_defaultfg    = 7;
 static VIOHUE           tt_hue;
 static uint16_t         tt_style;
 static char             tt_title[100];
-
+static int              tt_colormap[COLOR_NONE + 1];
 
 /*
  *  Physical buffer, original and current
  */
+#if !defined(WIN32)
+static USHORT           origAttribute;
 static VIOCURSORINFO    origCursor;
-
 static int              origRows;
 static int              origCols;
+#endif
+
 static USHORT           origRow;
 static USHORT           origCol;
-static USHORT           origAttribute;
 static const VIOCELL *  origScreen;
-static char             origTitle[100];
+static WCHAR            origTitle[100];
 
 static int              currRows;
 static int              currCols;
@@ -326,6 +330,7 @@ term_ready(int repaint, scrprofile_t *profile)
         profile->sp_colors = tt_colors;
         profile->sp_lastsafe = TRUE;
     }
+    term_colors();
     term_attr(WHITE, BLACK);
     x_pt.pt_colordepth = tt_colors;             /* derived depth */
     if (tt_colors > 2) {
@@ -333,6 +338,39 @@ term_ready(int repaint, scrprofile_t *profile)
     }
     tt_active = 1;
     term_flush();
+}
+
+
+static void
+term_colors(void)
+{
+    int col;
+
+    trace_ilog("ttcolormap:\n");
+    for (col = 0; col <= COLOR_NONE; ++col) {
+        int color = -1;
+
+        if (-2 == x_pt.pt_xtpalette) {          /* user defined palette */
+            if ((color = tt_colormap[col]) <= 0) {
+                color = -1;
+            }
+        }
+
+        if (color < 0) {
+            if (tt_colors >= 256) {
+                if (0 == x_pt.pt_xtpalette) {   /* compat-16 mode */
+                    color = color_map[col].c256_compat;
+                } else {
+                    color = color_map[col].c256;
+                }
+            } else {
+                color = color_map[col].c16;
+            }
+        }
+
+        tt_colormap[col] = color;
+        trace_ilog("\t%16s [%2d] = %d\n", color_name(col, "unknown"), col, tt_colormap[col]);
+    }
 }
 
 
@@ -508,7 +546,7 @@ term_tidy(void)
 
 
 /*  Function:           vio_reference
-//      Reference the current video buffer, which result in a console resize.
+//      Reference the current video buffer.
 //
 //  Parameters:
 //      none
@@ -555,6 +593,12 @@ vio_reference(void)
 static void
 vio_image_save(void)
 {
+#if defined(WIN32)
+    if (0 == origTitle[0])
+        GetConsoleTitleW(origTitle, _countof(origTitle));
+    vio_save();
+
+#else
     ULONG length = currRows * currCols * sizeof(VIOCELL);
     VIOCELL *screen;
     int rc;
@@ -567,11 +611,6 @@ vio_image_save(void)
     origCols = currCols;
 
     if (NULL != (screen = chk_calloc(length, 1))) {
-#if defined(WIN32) 
-        GetConsoleTitleA(origTitle, sizeof(origTitle));                     
-        VioGetCurAttribute(&origAttribute, 0);
-#endif
-
         rc = VioReadCellStr(screen, &length, 0, 0, 0);           
         assert(0 == rc);                        /* image */
 
@@ -580,6 +619,7 @@ vio_image_save(void)
         VioGetCurPos(&origRow, &origCol, 0);
         origScreen = screen;
     }
+#endif
 }
 
 
@@ -596,6 +636,12 @@ vio_image_save(void)
 static void
 vio_image_restore(void)
 {
+#if defined(WIN32)
+    if (origTitle[0]) 
+        SetConsoleTitleW(origTitle);
+    vio_restore();
+
+#else   //!WIN32
     if (origScreen) {
         const int rows = currRows, cols = currCols;
         const int cnt = (origCols <= cols ? origCols : cols);
@@ -617,12 +663,6 @@ vio_image_restore(void)
             }
         }
 
-#if defined(WIN32)
-        if (origTitle[0]) SetConsoleTitleA(origTitle);
-        VioSetColors(16);                       /* color depth, implied by VioReadCellStr() */
-        VioSetCurAttribute(origAttribute, 0);   /* original write color */
-#endif
-
         VioShowBuf(0, currScreenCells, 0);      /* restore image */
         chk_free((void *)origScreen);
         origScreen = NULL;
@@ -630,6 +670,7 @@ vio_image_restore(void)
         VioSetCurPos(origRow, origCol, 0);      /* cursor */
         VioSetCurType(&origCursor, 0);
     }
+#endif  //WIN32
 }
 
 
@@ -1246,7 +1287,7 @@ term_colvalue(const colvalue_t ca, unsigned def)
 
     if (COLORSOURCE_SYMBOLIC == ca.source) {
         if ((color = ca.color) < 0 || color >= COLOR_NONE ||
-                (color = tt_colormap[color].c16) < 0 || color >= tt_colors) {
+                (color = tt_colormap[color]) < 0 || color >= tt_colors) {
             color = def;
         }
     } else {
@@ -1262,10 +1303,10 @@ term_colvalue(const colvalue_t ca, unsigned def)
 static void
 term_attr(int fg, int bg)
 {
-    if ((fg <= COLOR_NONE && (fg = tt_colormap[fg].c16) < 0) || fg >= tt_colors) {
+    if ((fg <= COLOR_NONE && (fg = tt_colormap[fg]) < 0) || fg >= tt_colors) {
         fg = tt_defaultfg;
     }
-    if ((fg <= COLOR_NONE && (bg = tt_colormap[bg].c16) < 0) || bg >= tt_colors) {
+    if ((fg <= COLOR_NONE && (bg = tt_colormap[bg]) < 0) || bg >= tt_colors) {
         bg = tt_defaultbg;
     }
     term_hue(fg, bg);
@@ -1277,11 +1318,11 @@ static void
 term_hue(int fg, int bg)
 {
     if (fg == bg) {
-        fg = tt_colormap[tt_defaultfg].c16;
-        bg = tt_colormap[tt_defaultbg].c16;
+        fg = tt_colormap[tt_defaultfg];
+        bg = tt_colormap[tt_defaultbg];
         if (fg == bg) {
-            fg = tt_colormap[WHITE].c16;
-            bg = tt_colormap[BLACK].c16;
+            fg = tt_colormap[WHITE];
+            bg = tt_colormap[BLACK];
         }
     }
     tt_hue = VIO_FGBG(fg, bg);

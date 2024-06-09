@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_itimer_c,"$Id: w32_itimer.c,v 1.5 2022/06/11 04:01:45 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_itimer_c,"$Id: w32_itimer.c,v 1.8 2024/03/31 15:57:26 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 itimer system calls -- INCOMPLETE, signal interface required.
  *
- * Copyright (c) 2018 - 2022, Adam Young.
+ * Copyright (c) 2018 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

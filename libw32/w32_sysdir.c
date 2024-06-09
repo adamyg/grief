@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_sysdir_c,"$Id: w32_sysdir.c,v 1.14 2022/03/21 14:29:42 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_sysdir_c,"$Id: w32_sysdir.c,v 1.16 2024/03/31 15:57:28 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 interface support
  *
- * Copyright (c) 2007, 2012 - 2022 Adam Young.
+ * Copyright (c) 2007, 2012 - 2024 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -26,13 +26,6 @@ __CIDENT_RCSID(gr_w32_sysdir_c,"$Id: w32_sysdir.c,v 1.14 2022/03/21 14:29:42 cvs
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * license for more details.
  * ==end==
- *
- * Notice: Portions of this text are reprinted and reproduced in electronic form. from
- * IEEE Portable Operating System Interface (POSIX), for reference only. Copyright (C)
- * 2001-2003 by the Institute of. Electrical and Electronics Engineers, Inc and The Open
- * Group. Copyright remains with the authors and the original Standard can be obtained
- * online at http://www.opengroup.org/unix/online.html.
- * ==extra==
  */
 
 #include "win32_internal.h"

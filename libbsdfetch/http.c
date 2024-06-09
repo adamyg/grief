@@ -1308,6 +1308,7 @@ static int
 http_digest_auth(conn_t *conn, const char *hdr, http_auth_challenge_t *c,
 		 http_auth_params_t *parms, struct url *url)
 {
+	static unsigned char nulhash[HASHHEXLEN+1]= {0};
 	int r;
 	char noncecount[10];
 	char cnonce[40];
@@ -1341,7 +1342,7 @@ http_digest_auth(conn_t *conn, const char *hdr, http_auth_challenge_t *c,
 		    parms->password, c->nonce, cnonce, HA1);
 	ED_TRACE(("HA1: [%s]\n", HA1))
 	DigestCalcResponse(HA1, c->nonce, noncecount, cnonce, c->qop,
-			"GET", url->doc, (const unsigned char *)"", digest);
+			"GET", url->doc, (const unsigned char *)nulhash /*""*/, digest);
 
 	if (c->qop[0]) {
 		r = http_cmd(conn, "%s: Digest username=\"%s\",realm=\"%s\","
@@ -1389,7 +1390,7 @@ static int
 http_authorize(conn_t *conn, const char *hdr, http_auth_challenges_t *cs,
 	       http_auth_params_t *parms, struct url *url)
 {
-	http_auth_challenge_t *basic = NULL;
+//	http_auth_challenge_t *basic = NULL;
 	http_auth_challenge_t *digest = NULL;
 	int i;
 
@@ -1401,8 +1402,8 @@ http_authorize(conn_t *conn, const char *hdr, http_auth_challenges_t *cs,
 
 	/* Look for a Digest and a Basic challenge */
 	for (i = 0; i < cs->count; i++) {
-		if (cs->challenges[i]->scheme == HTTPAS_BASIC)
-			basic = cs->challenges[i];
+//		if (cs->challenges[i]->scheme == HTTPAS_BASIC)
+//			basic = cs->challenges[i];
 		if (cs->challenges[i]->scheme == HTTPAS_DIGEST)
 			digest = cs->challenges[i];
 	}
@@ -1616,7 +1617,10 @@ set_if_modified_since(conn_t *conn, time_t last_modified, int verbose)
 {
 	static const char weekdays[] = "SunMonTueWedThuFriSat";
 	static const char months[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
-	struct tm tm = {0}, *ltm;
+#if defined(HAVE_GMTIME_R)
+	struct tm tm = {0};
+#endif
+	struct tm *ltm;
 	char buf[80];
 
 #if defined(HAVE_GMTIME_R)

@@ -1,16 +1,16 @@
 #ifndef GR_EDDEBUG_H_INCLUDED
 #define GR_EDDEBUG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_eddebug_h,"$Id: eddebug.h,v 1.28 2022/03/21 14:55:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_eddebug_h,"$Id: eddebug.h,v 1.30 2024/04/08 15:07:02 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: eddebug.h,v 1.28 2022/03/21 14:55:27 cvsuser Exp $
+/* $Id: eddebug.h,v 1.30 2024/04/08 15:07:02 cvsuser Exp $
  * Debug functions.
  *
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

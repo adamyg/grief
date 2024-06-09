@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: config_mingw.sh,v 1.4 2014/11/03 00:06:01 ayoung Exp $
+# $Id: config_mingw.sh,v 1.5 2024/05/28 12:39:07 cvsuser Exp $
 # MingW32 configuration .. example
 #
 #   o Build requirements
@@ -56,7 +56,7 @@ while test $# -ne 0; do
 	shift
 done
 
-./configure_new \
+./configure \
 	--prefix=$x_base/grief \
 	--datarootdir=$x_base/grief \
 	--sysconfdir=$x_base/grief \

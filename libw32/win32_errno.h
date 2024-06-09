@@ -1,14 +1,14 @@
 #ifndef LIBW32_WIN32_ERRNO_H_INCLUDED
 #define LIBW32_WIN32_ERRNO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_errno_h,"$Id: win32_errno.h,v 1.14 2022/06/13 06:51:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_errno_h,"$Id: win32_errno.h,v 1.17 2024/05/15 08:27:40 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * <errno.h>
  *
- * Copyright (c) 2007, 2012 - 2022 Adam Young.
+ * Copyright (c) 2007, 2012 - 2024 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -41,7 +41,7 @@ __CPRAGMA_ONCE
         (defined(__MINGW32__) && defined(__MINGW64_VERSION_MAJOR))
 #if (EADDRINUSE == 100)
 #if defined(_CRT_NO_POSIX_ERROR_CODES)
-#pragma message <system_error> is incompatible with _CRT_NO_POSIX_ERROR_CODES.
+#pragma message("<system_error.h> is incompatible with _CRT_NO_POSIX_ERROR_CODES.")
 #endif
     /*
      *  RETHINK, as the following are assumed by the MinGW pthread package:
@@ -63,9 +63,14 @@ __CPRAGMA_ONCE
  *  import <errno.h>
  */
 #if !defined(_CRT_NO_POSIX_ERROR_CODES)
+#if defined(_MSC_VER) && (_MSC_VER >= 1600) && (_MSC_VER <= 1800)
+#include <errno.h>
+#include "msvc_errno.h"                         /* undef error codes */
+#else 
 #define  _CRT_NO_POSIX_ERROR_CODES              /* disable extended POSIX errno's */
 #include <errno.h>
 #undef   _CRT_NO_POSIX_ERROR_CODES
+#endif
 #else
 #include <errno.h>
 #endif
@@ -134,6 +139,9 @@ __CPRAGMA_ONCE
 #if !defined(EWOULDBLOCK)
 #define EWOULDBLOCK     WSAEWOULDBLOCK          /* 10035 "Operation would block" */
 #elif (EWOULDBLOCK != WSAEWOULDBLOCK)
+#define STRINGIZE(__x)  __STRINGIZE(__x)
+#define __STRINGIZE(__x) #__x
+#pragma message("errno: EWOULDBLOCK(" STRINGIZE(EWOULDBLOCK) ") != WSAEWOULDBLOCK(" STRINGIZE(WSAEWOULDBLOCK) ")" )
 #error Inconsistent EWOULDBLOCK definition ....
 #endif
 

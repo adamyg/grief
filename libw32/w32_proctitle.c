@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_proctitle_c,"$Id: w32_proctitle.c,v 1.2 2022/05/26 13:28:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_proctitle_c,"$Id: w32_proctitle.c,v 1.4 2024/03/31 15:57:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 setproctitle
  *
- * Copyright (c) 2020 - 2022, Adam Young.
+ * Copyright (c) 2020 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -179,7 +179,7 @@ setproctitle_impl(const char *fmt, va_list ap)
                     if (0 != (ret = GetWindowTextLength(hWnd))) {
                         const size_t sz = (ret + 1) * sizeof(WCHAR);
                         if (NULL != (saved_window_title = (WCHAR *)calloc(sz, 1))) {
-                            if (! GetWindowTextW(hWnd, saved_window_title, sz)) {
+                            if (! GetWindowTextW(hWnd, saved_window_title, (int)sz)) {
                                 free(saved_window_title);
                                 saved_window_title = NULL;
                             }

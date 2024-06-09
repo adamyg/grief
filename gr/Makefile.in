@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.86 2022/08/22 15:40:47 cvsuser Exp $
+# $Id: Makefile.in,v 1.97 2024/05/25 04:48:57 cvsuser Exp $
 # GRIEF editor makefile.
 #
 #
-# Copyright (c) 1998 - 2022, Adam Young.
+# Copyright (c) 1998 - 2024, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -49,6 +49,15 @@ LIBTOOL=	@LIBTOOL@
 
 # Configuration
 
+QUIETOUT:=	>/dev/null 2>&1
+ifeq ($(VERBOSE),1)
+QUIETOUT:=
+else ifeq ($(VERBOSE),0)
+else ifeq ($(VERBOSE),)
+else
+$(error VERBOSE: unexpected value 0 or 1 required, $(VERBOSE) given]))
+endif
+
 ifeq ("$(BUILD_TYPE)","")	#default
 BUILD_TYPE=	debug
 MAKEFLAGS+=	BUILD_TYPE=debug
@@ -61,7 +70,7 @@ endif
 
 D_INC=		$(ROOT)/include
 D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
-D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/gr
+D_OBJ=		$(ROOT)/obj@TOOLCHAINEXT@/$(BUILD_TYPE)/gr
 D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 D_DEP=		.deps
@@ -74,7 +83,11 @@ CCDEPEND=	@echo "\#no depend" > $(D_OBJDEP)/$<.Po
 ifeq ("win32","@build_os@")
 
 ifeq (vs,$(findstring vs,"@TOOLCHAIN@"))
+ifneq ($(or $(call eq,"@TOOLCHAIN@","vs160"),$(call eq,"@TOOLCHAIN@","vs170")),"")
+CCPROFILE=msvc160.profile
+else
 CCPROFILE=msvc.profile
+endif
 else ifeq ("@TOOLCHAIN@","owc20")
 CCPROFILE=wc20.profile
 else ifeq ("@TOOLCHAIN@","owc19")
@@ -168,7 +181,7 @@ endif
 LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
 
-CINCLUDE=	-I$(D_INC) @CINCLUDE@
+CINCLUDE=	-I$(D_INC) @OPENSSL_INCLUDES@ @CINCLUDE@
 
 CEXTRA=		@DEFS@ @LIBCURL_CPPFLAGS@ -DLIBTRE_DLL
 ifdef PURIFY
@@ -196,7 +209,7 @@ endif
 
 LDLIBS=		-L$(D_LIB) -lbsddb -lbsdfetch -lbsdio -lwidechar -lchartable -lvfs -ltrie -lsplay -lllist -lmisc -lonigrx -ltre
 LDLIBS+=	@LDLIBS@ @LIBS@
-LDLIBS+=	@LIBENCA@ @LIBSPELL@ @LIBICU@ @LIBICONV@ @LIBCURL@ @LIBOPENSSL@ @LIBARCHIVE@ @LIBMAGIC@
+LDLIBS+=	@LIBENCA@ @LIBSPELL@ @LIBICU@ @LIBICONV@ @LIBCURL@ @OPENSSL_LDFLAGS@ @LIBOPENSSL@ @LIBARCHIVE@ @LIBMAGIC@
 LDLIBS+=	@LIBM@ @EXTRALIBS@
 ifneq ("win32","@build_os@")
 LDLIBS+=	@TERMLIB@ @LIBX11@
@@ -383,21 +396,17 @@ endif #build_os
 # Rules
 
 .PHONY:			build release debug
-build:		directories $(D_BIN)/$(TARGET)
+build:		directories artifacts $(D_BIN)/$(TARGET)
 
 release:
 		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
 debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
-clean:
-		@echo $(BUILD_TYPE) clean
-		-@$(RM) $(RMFLAGS) $(BAK) $(D_BIN)/$(TARGET) $(TARGET) $(OBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
-		-@$(RM) $(RMFLAGS) $(BAK) $(TARGET) $(D_OBJDEP)/*.Po >/dev/null 2>&1
-
 .PHONY:		directories
-directories:		$(D_OBJ)/.created $(D_OBJDEP)/.created $(OBJS)
+directories:		$(D_OBJ)/.created $(D_OBJDEP)/.created
 
+XCLEAN +=	$(basename $(D_BIN)/$(TARGET)).map
 $(D_BIN)/$(TARGET):	MAPFILE=$(basename $@).map
 $(D_BIN)/$(TARGET):	$(OBJS)
 		$(LIBTOOL) --mode=link $(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS) @LDMAPFILE@
@@ -405,6 +414,24 @@ $(D_BIN)/$(TARGET):	$(OBJS)
 %/.created:
 		-@mkdir $(@D)
 		@echo "++ do not delete, managed content ++" > $@
+
+artifacts:	grlicense.h gr.manifest.xml
+
+XCLEAN +=	gr.manifest.xml
+gr.manifest.xml:	../win32/exe.manifest.in ../include/edbuildinfo.h
+		$(PERL) ../win32/mkmanifest.pl --defines ../include/edbuildinfo.h ../win32/exe.manifest.in gr.manifest.xml
+
+gr.rc:		gr.manifest.xml
+
+XCLEAN +=	grlicense.h
+grlicense.h:		Makefile ../util/mklicense.pl ../COPYING 
+		@$(PERL) ../util/mklicense.pl ../COPYING $@ grlicense
+
+clean:
+		@echo $(BUILD_TYPE) clean
+		-$(LIBTOOL) --mode=clean $(RM) $(D_BIN)/$(TARGET)
+		-@$(RM) $(RMFLAGS) $(OBJS) $(D_OBJDEP)/*.Po $(CLEANFILES) $(QUIETOUT)
+		-@$(RM) $(RMFLAGS) $(BAK) $(CLEAN) $(XCLEAN) $(QUIETOUT)
 
 -include $(CSRC:%.c=$(D_OBJDEP)/%.Po)
 -include $(CPPSRC:%.cpp=$(D_OBJDEP)/%.Po)

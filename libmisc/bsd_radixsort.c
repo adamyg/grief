@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bsd_radixsort_c,"$Id: bsd_radixsort.c,v 1.10 2022/05/25 15:44:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_bsd_radixsort_c,"$Id: bsd_radixsort.c,v 1.11 2024/05/28 00:28:08 cvsuser Exp $")
 
 /*- -*- indent-width: 8; tabs: 8; -*-
  * Copyright (c) 1990, 1993
@@ -134,11 +134,11 @@ bsd_sradixsort(const u_char **a, int n, const u_char *tab, u_int endch)
 
 /* Unstable, in-place sort. */
 static void
-r_sort_a(a, n, i, tr, endch)
-	const u_char **a;
-	int n, i;
-	const u_char *tr;
-	u_int endch;
+r_sort_a(const u_char **a, int n, int i, const u_char *tr, u_int endch)
+//	const u_char **a;
+//	int n, i;
+//	const u_char *tr;
+//	u_int endch;
 {
 	static int count[256], nc, bmin;
 	int c;
@@ -236,11 +236,11 @@ r_sort_a(a, n, i, tr, endch)
 
 /* Stable sort, requiring additional memory. */
 static void
-r_sort_b(a, ta, n, i, tr, endch)
-	const u_char **a, **ta;
-	int n, i;
-	const u_char *tr;
-	u_int endch;
+r_sort_b(const u_char **a, const u_char **ta, int n, int i, const u_char *tr, u_int endch)
+//	const u_char **a, **ta;
+//	int n, i;
+//	const u_char *tr;
+//	u_int endch;
 {
 	static int count[256], nc, bmin;
 	int c;
@@ -308,11 +308,11 @@ r_sort_b(a, ta, n, i, tr, endch)
 }
 
 static __CINLINE void
-simplesort(a, n, b, tr, endch)			/* insertion sort */
-	const u_char **a;
-	int n, b;
-	const u_char *tr;
-	u_int endch;
+simplesort(const u_char **a, int n, int b, const u_char *tr, u_int endch) /* insertion sort */
+//	const u_char **a;
+//	int n, b;
+//	const u_char *tr;
+//	u_int endch;
 {
 	u_char ch;
 	const u_char  **ak, **ai, *s, *t;

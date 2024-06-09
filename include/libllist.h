@@ -1,16 +1,16 @@
 #ifndef GR_LIBLLIST_H_INCLUDED
 #define GR_LIBLLIST_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_llist_h,"$Id: libllist.h,v 1.18 2022/03/21 14:55:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_llist_h,"$Id: libllist.h,v 1.20 2024/04/08 15:07:12 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: libllist.h,v 1.18 2022/03/21 14:55:28 cvsuser Exp $
+/* $Id: libllist.h,v 1.20 2024/04/08 15:07:12 cvsuser Exp $
  * Linked list management system
  *
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

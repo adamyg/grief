@@ -1,12 +1,12 @@
 #ifndef LIBW32_SYS_UTSNAME_H_INCLUDED
 #define LIBW32_SYS_UTSNAME_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_utsname_h,"$Id: utsname.h,v 1.9 2022/03/21 14:29:43 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_utsname_h,"$Id: utsname.h,v 1.11 2024/03/31 15:57:30 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -38,4 +38,3 @@ LIBW32_API int          uname(struct utsname *buf);
 __END_DECLS
 
 #endif  /*LIBW32_SYS_UTSNAME_H_INCLUDED*/
-

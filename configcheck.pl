@@ -1,10 +1,10 @@
 #!/usr/bin/perl
-# $Id: configcheck.pl,v 1.1 2021/04/19 14:57:27 cvsuser Exp $
+# $Id: configcheck.pl,v 1.2 2024/05/01 14:31:56 cvsuser Exp $
 # -*- tabs: 8; indent-width: 4; -*-
 # Check config.hin against acdefines.h
 #
 #
-# Copyright (c) 1920 - 2021, Adam Young.
+# Copyright (c) 1920 - 2024, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -55,9 +55,9 @@ sub check()
     }
     while (<ACDEFINES>) {
         $_ =~ s/\s*(\n|$)//;                    # kill trailing whitespace & nl
-	if (/^#define ([A-Z0-9_]+) /) {
-	    $CONFIG_H{$1} = 1;
-	}
+        if (/^#define ([A-Z0-9_]+) /) {
+            $CONFIG_H{$1} = 1;
+        }
     }
     close ACDEFINES;
 

@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.29 2022/05/27 03:13:12 cvsuser Exp $
+# $Id: Makefile.in,v 1.35 2024/05/26 12:58:44 cvsuser Exp $
 # GRIEF macro compiler.
 #
 #
-# Copyright (c) 1998 - 2022, Adam Young.
+# Copyright (c) 1998 - 2024, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -48,7 +48,6 @@ CC=		purify @CC@
 else
 CC=		@CC@
 endif
-HAVE_BISON=	1
 YACC=		@YACC@
 GREP=		@GREP@
 RM=		@RM@
@@ -58,6 +57,15 @@ LANG=C
 export LANG	#RH 8 has a LANG=en_US.UTF-8
 
 # Configuration
+
+QUIETOUT:=	>/dev/null 2>&1
+ifeq ($(VERBOSE),1)
+QUIETOUT:=
+else ifeq ($(VERBOSE),0)
+else ifeq ($(VERBOSE),)
+else
+$(error VERBOSE: unexpected value 0 or 1 required, $(VERBOSE) given]))
+endif
 
 ifeq ("$(BUILD_TYPE)","")	#default
 BUILD_TYPE=	debug
@@ -71,7 +79,7 @@ endif
 
 D_INC=		$(ROOT)/include
 D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
-D_OBJ=		$(ROOT)/objects@TOOLCHAINEXT@/$(BUILD_TYPE)/grunch
+D_OBJ=		$(ROOT)/obj@TOOLCHAINEXT@/$(BUILD_TYPE)/grunch
 D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 D_GR=		$(ROOT)/gr
@@ -176,6 +184,7 @@ release:
 debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
+XCLEAN +=	$(basename $(D_BIN)/$(TARGET)).map
 $(D_BIN)/$(TARGET):	MAPFILE=$(basename $@).map
 $(D_BIN)/$(TARGET):	$(D_OBJ)/.created crntypes$(H) $(OBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS) @LDMAPFILE@
@@ -186,26 +195,39 @@ $(D_OBJ)/.created:
 
 clean:
 		@echo $(BUILD_TYPE) clean
-		-@$(RM) $(RMFLAGS) $(BAK) $(D_BIN)/$(TARGET) $(TARGET) $(OBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
+		-$(LIBTOOL) --mode=clean $(RM) $(D_BIN)/$(TARGET)
+		-@$(RM) $(RMFLAGS) $(OBJS) $(QUIETOUT)
+		-@$(RM) $(RMFLAGS) $(BAK) $(CLEAN) $(XCLEAN) $(QUIETOUT)
 
 $(D_OBJ)/%$(O):		%$(C)
 		$(CC) $(CFLAGS) -o $@ -c $<
 
 $(D_OBJ)/%$(O):		$(D_GR)/%$(C)
 		$(CC) $(CFLAGS) -o $@ -c -DGRUNCH $<
-
-ifdef HAVE_BISON
+      
+ifeq (bison,$(findstring bison,$(YACC)))
+# bison
 crntypes$(H):		grunch$(H) $(YTAB)$(C) makentypes.pl
-		@perl makentypes.pl --bison
+		@perl makentypes.pl --yystype
 
 $(YTAB)$(C):		cry$(Y)
-		@echo "Expect 3 shift/reduce conflicts."
-		@echo "bison 2.2 (or greater) is assumed,"
+		@echo "Expect 3 shift/reduce conflicts, bison 2.2 (or greater) is assumed,"
 		@echo "  in the event of 'Broken Pipe' errors check the version and update as needed."
 		$(YACC) $(YFLAGS) --defines=yygen.h cry$(Y)
 		@$(RM) $(RMFLAGS) crntypes$(H)
 
+else ifeq (byacc,$(findstring byacc,$(YACC)))
+# byacc
+crntypes$(H):		grunch$(H) $(YTAB)$(C) makentypes.pl
+		@perl makentypes.pl --yystype
+
+$(YTAB)$(C):		cry$(Y)
+		@echo "Expect 3 shift/reduce conflicts; recent byacc assumed"
+		$(YACC) $(YFLAGS) -H yygen.h cry$(Y)
+		@$(RM) $(RMFLAGS) $(YTAB)$(H) crntypes$(H)
+
 else
+# yacc, older ??
 crntypes$(H):		grunch$(H) $(YTAB)$(C) makentypes.pl
 		@perl makentypes.pl
 
@@ -216,7 +238,6 @@ $(YTAB)$(C):		cry$(Y)
 		echo "/*" `date` " */" >>yygen$(H)
 		echo "" >>yygen$(H)
 		$(GREP) $(GRFLAGS) "^# *define  *[OKU]" $(YTAB)$H >>yygen$(H)
-		@$(RM) $(RMFLAGS) $(YTAB)$(H) crntypes$(H)
 endif
 
 #end

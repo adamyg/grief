@@ -2,12 +2,16 @@
 rem
 rem Microsoft Visual Studio C/C++ 2015
 rem
-if not defined GNUWIN32 (
-        set GNUWIN32=\devl\gnuwin32
-)
+echo Configure: Microsoft Visual Studio C/C++ 2015
+
+rem perl: assume within path
 if not defined PERL (
         set PERL=perl
 )
-%PERL% makelib.pl --gnuwin32=%GNUWIN32% --busybox=./win32/busybox --wget=./win32/wget --bison=d:\Cygwin\bin\bison --flex=./bin/flex --icu=auto %1 %2 %3 %4 vc2015
 
+rem iscc: command line interface
+if not defined INNO (
+        set INNO="C:/Program Files (x86)/Inno Setup 5/iscc"
+)
 
+%PERL% ./support/config_windows.pl makelib.pl --inno=%INNO% %* vc2015

@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $FreeBSD: head/sys/teken/gensequences 333925 2018-05-20 14:21:20Z dumbbell $
+# $FreeBSD: head/sys/teken/gensequences 339529 2018-10-21 08:29:36Z phk $
 
 function die(msg) {
 	print msg;
@@ -158,6 +158,7 @@ for (p in l_prefix_name) {
 
 	if (l_prefix_name[p] != "teken_state_init") {
 		print "";
+		print "\tt->t_last = 0;";
 		print "\tteken_state_switch(t, teken_state_init);";
 	}
 	print "}";

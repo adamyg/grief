@@ -1,5 +1,5 @@
 /* -*- mode: cr; tabs: 4; -*- */
-/* $Id: mouse.cr,v 1.8 2014/10/27 23:28:24 ayoung Exp $
+/* $Id: mouse.cr,v 1.9 2024/05/15 08:22:44 cvsuser Exp $
  * Mouse driver macros
  *
  * This file contains code to support the mouse.
@@ -439,7 +439,7 @@ but1_s_down(void)
         if (inq_marked()) {
             num_motion = -1;
         } else {
-            drop_anchor(1);
+            drop_anchor(MK_NORMAL);
         }
     }
     last_line = -1;

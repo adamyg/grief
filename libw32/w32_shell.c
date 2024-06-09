@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_shell_c,"$Id: w32_shell.c,v 1.16 2022/06/13 06:51:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_shell_c,"$Id: w32_shell.c,v 1.17 2024/03/31 15:57:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 shell and sub-process support
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -70,6 +70,9 @@ static int              ShellW(const wchar_t *shell, const wchar_t *cmd, const w
 static const char *     OutDirectA(const char *path, int *append);
 static const wchar_t *  OutDirectW(const wchar_t *path, int *append);
 static void             ShellCleanup(void *p);
+
+static int              IsAbsPathA(const char *path);
+static int              IsAbsPathW(const wchar_t *path);
 
 static const wchar_t *  ImportArgv(const char **argv);
 static const wchar_t ** ImportEnvv(const char **envv);
@@ -240,6 +243,9 @@ ShellA(const char *shell, const char *cmd,
     // command or interactive
     (void)memset(&args, 0, sizeof(args));
 
+    if (IsAbsPathA(shname))                     // abs-path
+        args.arg0 = shname;
+
     if (w32_iscommandA(shname)) {
         slash = shname - 1;
         while ((slash = strchr(slash + 1, XSLASHCHAR)) != NULL) {
@@ -298,7 +304,7 @@ ShellW(const wchar_t *shell, const wchar_t  *cmd,
     HANDLE hInFile, hOutFile, hErrFile;
     struct procdata pd = {0};
     win32_spawnw_t args = {0};
-    const wchar_t *argv[4] = {0};
+    const wchar_t *argv[4] = {NULL};
     HANDLE hProc = 0;
     int status = 0;
 
@@ -382,6 +388,9 @@ ShellW(const wchar_t *shell, const wchar_t  *cmd,
     // command or interactive
     (void)memset(&args, 0, sizeof(args));
 
+     if (IsAbsPathW(shname))                     // abs-path
+        args.arg0 = shname;
+
     if (w32_iscommandW(shname)) {
         slash = shname - 1;
         while ((slash =  wcschr(slash + 1, XSLASHCHAR)) != NULL) {
@@ -407,7 +416,7 @@ ShellW(const wchar_t *shell, const wchar_t  *cmd,
         argv[2] = NULL;
     }
 
-    // create child process
+    // create child process   
     args.argv = argv;
     args._dwFlags = 0;
 
@@ -852,6 +861,26 @@ w32_exec(win32_exec_t *args)
 #endif  //UTF8FILENAMES
 
     return w32_execA(args);
+}
+
+
+static int
+IsAbsPathA(const char *path)
+{
+    if (path && *path) {
+        return (ISSLASH(path[0]) || path[1] == ':');
+    }
+    return 0;
+}
+
+
+static int
+IsAbsPathW(const wchar_t *path)
+{
+    if (path && *path) {
+        return (ISSLASH(path[0]) || path[1] == ':');
+    }
+    return 0;
 }
 
 

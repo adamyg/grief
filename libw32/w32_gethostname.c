@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_gethostname_c,"$Id: w32_gethostname.c,v 1.19 2022/06/13 06:59:04 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_gethostname_c,"$Id: w32_gethostname.c,v 1.22 2024/04/09 16:23:35 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 gethostname
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -47,7 +47,7 @@ __CIDENT_RCSID(gr_w32_gethostname_c,"$Id: w32_gethostname.c,v 1.19 2022/06/13 06
 #endif
 #include <windows.h>
 
-#if defined(__WATCOMC__) && (__WATCOMC__ <= 1300 /*OWC2*/)
+#if defined(__WATCOMC__) && (__WATCOMC__ <= 1300 /*OWC2*/) && (0)
 typedef enum _COMPUTER_NAME_FORMAT {
     ComputerNameNetBIOS,
     ComputerNameDnsHostname,
@@ -105,10 +105,10 @@ w32_gethostname(char *name, size_t namelen)
 
 #undef gethostname
 retry:;
-    if (0 == (ret = gethostname(name, namelen))) {
+    if (0 == (ret = (int)gethostname(name, (int)namelen))) {
         return 0;
     } else {
-        DWORD dwSize = namelen;
+        DWORD dwSize = (DWORD)namelen;
 
         if (0 == done++) {                      /* WSAStartup call must occur before using this function. */
             if ((SOCKET_ERROR == ret && WSANOTINITIALISED == WSAGetLastError()) &&

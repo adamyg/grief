@@ -1,6 +1,6 @@
 /*	$NetBSD: file.c,v 1.15 2009/10/15 12:36:57 joerg Exp $	*/
 /*-
- * Copyright (c) 2013-2015 Adam Young
+ * Copyright (c) 2013 - 2024 Adam Young
  * Copyright (c) 1998-2004 Dag-Erling Coïdan Smørgrav
  * Copyright (c) 2008, 2009 Joerg Sonnenberger <joerg@NetBSD.org>
  * All rights reserved.
@@ -259,10 +259,10 @@ fetchListFile(struct url_list *ue, struct url *u, const char *pattern, const cha
 	}
 		
 	dir = opendir(path);
-	free(path);
 
 	if (dir == NULL) {
 		fetch_syserr();
+		free(path);
 		return -1;
 	}
 
@@ -292,6 +292,7 @@ fetchListFile(struct url_list *ue, struct url *u, const char *pattern, const cha
 	}
 
 	closedir(dir);
+	free(path);
 
 	return ret;
 }

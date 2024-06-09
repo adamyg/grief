@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_rename_c,"$Id: w32_rename.c,v 1.2 2022/03/21 14:29:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_rename_c,"$Id: w32_rename.c,v 1.4 2024/03/31 15:57:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 rename() system calls.
  *
- * Copyright (c) 2020 - 2022 Adam Young.
+ * Copyright (c) 2020 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

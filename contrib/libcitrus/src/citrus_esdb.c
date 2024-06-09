@@ -53,8 +53,8 @@ __RCSID("$NetBSD: citrus_esdb.c,v 1.5 2008/02/09 14:56:20 junyoung Exp $");
 #include "citrus_esdb.h"
 #include "citrus_esdb_file.h"
 
-#define ESDB_DIR	    "esdb.dir"
-#define ESDB_ALIAS	    "esdb.alias"
+#define ESDB_DIR	"esdb.dir"
+#define ESDB_ALIAS	"esdb.alias"
 
 #if defined(WIN32)
 #define _PATH_ESDB_DIR	    __citrus_PATH_ESDB("/" ESDB_DIR)
@@ -187,7 +187,11 @@ err2:
 err1:
 	_db_close(db);
 	if (ret == ENOENT)
+#if defined(EFTYPE)
+		ret = EFTYPE;
+#else
 		ret = EPROTONOSUPPORT;
+#endif
 err0:
 	return ret;
 }

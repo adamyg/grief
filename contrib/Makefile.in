@@ -1,9 +1,9 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.17 2022/06/01 14:21:18 cvsuser Exp $
+# $Id: Makefile.in,v 1.22 2024/05/28 08:45:43 cvsuser Exp $
 # External packages.
 #
 #
-# Copyright (c) 1998 - 2022, Adam Young.
+# Copyright (c) 1998 - 2024, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -40,7 +40,7 @@ endif
 
 # Directories
 
-D_OBJ=		../objects@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_OBJ=		../obj@TOOLCHAINEXT@/$(BUILD_TYPE)
 D_LIB=		../lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 D_BIN=		../bin@TOOLCHAINEXT@/$(BUILD_TYPE)
 
@@ -48,45 +48,51 @@ D_BIN=		../bin@TOOLCHAINEXT@/$(BUILD_TYPE)
 #########################################################################################
 # Rules
 
-define contrib-all
+define contrib-all1
 	$(MAKE) -C makedepend
 	$(MAKE) -C libregex
 	$(MAKE) -C libz
 	$(MAKE) -C libbzip2
 	$(MAKE) -C liblzma
 	$(MAKE) -C libmagic
-	$(MAKE) -C libguess
-	$(MAKE) -C libarchive
-	$(MAKE) -C hunspell
 endef
 ifeq ("win32","@build_os@")
-define contrib-allx
+define contrib-all2
 	$(MAKE) -C flex
+	$(MAKE) -C byacc
 	$(MAKE) -C libcitrus
 	$(MAKE) -C libintl
 	$(MAKE) -C libiconv
 endef
 endif
+define contrib-all3
+	$(MAKE) -C libguess
+	$(MAKE) -C libarchive
+	$(MAKE) -C hunspell
+endef
 
-define contrib-clean
+define contrib-clean1
 	$(MAKE) -C makedepend  clean
 	$(MAKE) -C libregex    clean
 	$(MAKE) -C libz        clean
 	$(MAKE) -C libbzip2    clean
 	$(MAKE) -C liblzma     clean
 	$(MAKE) -C libmagic    clean
+endef
+ifneq "" "$(filter win32,@build_os@)"
+define contrib-clean2
+	$(MAKE) -C libcitrus   clean
+	$(MAKE) -C libintl     clean
+	$(MAKE) -C libiconv    clean
+	$(MAKE) -C byacc       clean
+	$(MAKE) -C flex        clean
+endef
+endif
+define contrib-clean3
 	$(MAKE) -C libguess    clean
 	$(MAKE) -C libarchive  clean
 	$(MAKE) -C hunspell    clean
 endef
-ifneq "" "$(filter win32,@build_os@)"
-define contrib-cleanx
-	$(MAKE) -C libcitrus   clean
-	$(MAKE) -C libintl     clean
-	$(MAKE) -C libiconv    clean
-	$(MAKE) -C flex        clean
-endef
-endif
 
 DIRECTORIES=\
 	./include/.created 	\
@@ -96,8 +102,9 @@ DIRECTORIES=\
 
 .PHONY: 	build release debug
 build:			directories
-		$(contrib-all)
-		$(contrib-allx)
+		$(contrib-all1)
+		$(contrib-all2)
+		$(contrib-all3)
 
 release:
 		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
@@ -106,8 +113,9 @@ debug:
 
 .PHONY:		clean
 clean:
-		$(contrib-clean)
-		$(contrib-cleanx)
+		$(contrib-clean3)
+		$(contrib-clean2)
+		$(contrib-clean1)
 
 directories:		$(DIRECTORIES)
 

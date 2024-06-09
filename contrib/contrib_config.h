@@ -1,10 +1,10 @@
 #ifndef CONTRIB_CONFIG_H_INCLUDED
 #define CONTRIB_CONFIG_H_INCLUDED
-/* $Id: contrib_config.h,v 1.16 2022/05/27 02:33:05 cvsuser Exp $
+/* $Id: contrib_config.h,v 1.17 2024/05/25 03:51:42 cvsuser Exp $
  * contrib <config.h> ...
  *
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

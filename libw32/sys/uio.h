@@ -1,14 +1,14 @@
 #ifndef LIBW32_SYS_UIO_H_INCLUDED
 #define LIBW32_SYS_UIO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_uio_h,"$Id: uio.h,v 1.13 2022/05/31 16:18:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_uio_h,"$Id: uio.h,v 1.14 2024/03/31 15:57:30 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 <sys/uio.h>
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2024, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

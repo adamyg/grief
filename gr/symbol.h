@@ -1,11 +1,11 @@
 #ifndef GR_SYMBOL_H_INCLUDED
 #define GR_SYMBOL_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_symbol_h,"$Id: symbol.h,v 1.24 2020/04/21 00:01:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_symbol_h,"$Id: symbol.h,v 1.25 2024/04/07 15:49:17 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: symbol.h,v 1.24 2020/04/21 00:01:57 cvsuser Exp $
+/* $Id: symbol.h,v 1.25 2024/04/07 15:49:17 cvsuser Exp $
  * Symbol management.
  *
  *
@@ -75,9 +75,9 @@ extern void                 argv_assign_float(int argi, accfloat_t val);
 extern int                  system_call(int ret);
 extern void                 system_errno(int ret);
 
+extern int __CCACHEALIGN    x_nest_level;
 extern ref_t *              x_halt_list;
 extern accint_t *           x_errno_ptr;
-extern int                  x_nest_level;
 
 extern SPTREE *             x_gsym_tbl;
 extern SPTREE *             x_lsym_tbl[];

@@ -1,3 +1,6 @@
 libarchive-3.*/
 sdk/
+Makefile.in.3.1.2
+Makefile.in.3.3.3
+*.tgz
 

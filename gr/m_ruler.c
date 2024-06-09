@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_ruler_c,"$Id: m_ruler.c,v 1.16 2020/04/11 00:32:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_ruler_c,"$Id: m_ruler.c,v 1.17 2022/12/03 16:40:17 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_ruler.c,v 1.16 2020/04/11 00:32:55 cvsuser Exp $
+/* $Id: m_ruler.c,v 1.17 2022/12/03 16:40:17 cvsuser Exp $
  * Ruler primitives.
  *
  *
@@ -1186,4 +1186,5 @@ ruler_export(const LINENO *ruler, int maxtabs, int mincnt, int aslist)
         chk_free((void *)buf);
     }
 }
+
 /*end*/

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_wordimpl_inc,"$Id: wordimpl.h,v 1.3 2022/05/31 16:18:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_wordimpl_inc,"$Id: wordimpl.h,v 1.4 2022/09/28 16:12:50 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: wordimpl.h,v 1.3 2022/05/31 16:18:22 cvsuser Exp $
+/* $Id: wordimpl.h,v 1.4 2022/09/28 16:12:50 cvsuser Exp $
  * Portable mappings to and from internal word and byte order.
  *
  *
@@ -236,4 +236,3 @@ LPUT_FLOAT(LIST *lp, const double val)
 }
 
 /*end*/
-
