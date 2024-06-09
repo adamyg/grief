@@ -1,11 +1,11 @@
 #ifndef GR_EDHEADERS_H_INCLUDED
 #define GR_EDHEADERS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edheaders_h,"$Id: edheaders.h,v 1.19 2024/04/08 15:07:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_edheaders_h,"$Id: edheaders.h,v 1.20 2024/06/09 20:09:36 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edheaders.h,v 1.19 2024/04/08 15:07:03 cvsuser Exp $
+/* $Id: edheaders.h,v 1.20 2024/06/09 20:09:36 cvsuser Exp $
  * System headers.
  *
  *
@@ -61,11 +61,7 @@ __CPRAGMA_ONCE
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
-#ifdef HAVE_TIME_H
-#if !defined(HAVE_SYS_TIME_H) || defined(TIME_WITH_SYS_TIME)
 #include <time.h>
-#endif
-#endif
 
 #ifdef HAVE_MEMORY_H
 #include <memory.h>
