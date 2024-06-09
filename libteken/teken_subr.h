@@ -25,7 +25,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD: head/sys/teken/teken_subr.h 333995 2018-05-21 20:35:16Z dumbbell $
+ * $FreeBSD: head/sys/teken/teken_subr.h 344331 2019-02-20 02:14:41Z bde $
  */
 
 static void teken_subr_cursor_up(teken_t *, unsigned int);
@@ -372,7 +372,7 @@ teken_subr_cursor_up(teken_t *t, unsigned int nrows)
 }
 
 static void
-teken_subr_set_cursor_style(teken_t *t, unsigned int style)
+teken_subr_set_cursor_style(teken_t *t __unused, unsigned int style __unused)
 {
 
 	/* TODO */
@@ -796,10 +796,11 @@ teken_subr_primary_device_attributes(const teken_t *t, unsigned int request)
 }
 
 static void
-teken_subr_do_putchar(const teken_t *t, const teken_pos_t *tp, teken_char_t c,
+teken_subr_do_putchar(teken_t *t, const teken_pos_t *tp, teken_char_t c,
     int width)
 {
 
+	t->t_last = c;
 	if (t->t_stateflags & TS_INSERT &&
 	    tp->tp_col < t->t_winsize.tp_col - width) {
 		teken_rect_t ctr;
@@ -999,7 +1000,7 @@ teken_subr_do_reset(teken_t *t)
 	t->t_scrollreg.ts_begin = 0;
 	t->t_scrollreg.ts_end = t->t_winsize.tp_row;
 	t->t_originreg = t->t_scrollreg;
-	t->t_stateflags &= TS_8BIT|TS_CONS25;
+	t->t_stateflags &= TS_8BIT | TS_CONS25 | TS_CONS25KEYS;
 	t->t_stateflags |= TS_AUTOWRAP;
 
 	t->t_scs[0] = teken_scs_us_ascii;
@@ -1331,4 +1332,16 @@ teken_subr_vertical_position_absolute(teken_t *t, unsigned int row)
 
 	t->t_stateflags &= ~TS_WRAPPED;
 	teken_funcs_cursor(t);
+}
+
+static void
+teken_subr_repeat_last_graphic_char(teken_t *t, unsigned int rpts)
+{
+	unsigned int max_repetitions;
+
+	max_repetitions = t->t_winsize.tp_row * t->t_winsize.tp_col;
+	if (rpts > max_repetitions)
+		rpts = max_repetitions;
+	for (; t->t_last != 0 && rpts > 0; rpts--)
+		teken_subr_regular_character(t, t->t_last);
 }

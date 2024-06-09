@@ -41,7 +41,7 @@
 #include <ncurses.h>
 #if defined(__FreeBSD__)
 #include <libutil.h>
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__CYGWIN__)
 #include <pty.h>
 #else
 #include <util.h>

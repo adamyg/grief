@@ -42,6 +42,7 @@ teken_state_6(teken_t *t, teken_char_t c)
 		break;
 	}
 
+	t->t_last = 0;
 	teken_state_switch(t, teken_state_init);
 }
 
@@ -65,6 +66,9 @@ teken_state_2(teken_t *t, teken_char_t c)
 		break;
 	case 'a': /* CUF: Cursor Forward */
 		teken_subr_cursor_forward(t, (t->t_curnum < 1 || t->t_nums[0] == 0) ? 1 : t->t_nums[0]);
+		break;
+	case 'b': /* REP: Repeat last graphic char */
+		teken_subr_repeat_last_graphic_char(t, (t->t_curnum < 1 || t->t_nums[0] == 0) ? 1 : t->t_nums[0]);
 		break;
 	case 'c': /* DA1: Primary Device Attributes */
 		teken_subr_primary_device_attributes(t, t->t_curnum < 1 ? 0 : t->t_nums[0]);
@@ -176,6 +180,7 @@ teken_state_2(teken_t *t, teken_char_t c)
 		break;
 	}
 
+	t->t_last = 0;
 	teken_state_switch(t, teken_state_init);
 }
 
@@ -205,6 +210,7 @@ teken_state_7(teken_t *t, teken_char_t c)
 		break;
 	}
 
+	t->t_last = 0;
 	teken_state_switch(t, teken_state_init);
 }
 
@@ -267,6 +273,7 @@ teken_state_1(teken_t *t, teken_char_t c)
 		break;
 	}
 
+	t->t_last = 0;
 	teken_state_switch(t, teken_state_init);
 }
 
@@ -296,6 +303,7 @@ teken_state_8(teken_t *t, teken_char_t c)
 		break;
 	}
 
+	t->t_last = 0;
 	teken_state_switch(t, teken_state_init);
 }
 
@@ -334,6 +342,7 @@ teken_state_9(teken_t *t, teken_char_t c)
 		break;
 	}
 
+	t->t_last = 0;
 	teken_state_switch(t, teken_state_init);
 }
 
@@ -354,6 +363,7 @@ teken_state_3(teken_t *t, teken_char_t c)
 		break;
 	}
 
+	t->t_last = 0;
 	teken_state_switch(t, teken_state_init);
 }
 
@@ -380,6 +390,7 @@ teken_state_5(teken_t *t, teken_char_t c)
 		break;
 	}
 
+	t->t_last = 0;
 	teken_state_switch(t, teken_state_init);
 }
 
@@ -409,5 +420,6 @@ teken_state_4(teken_t *t, teken_char_t c)
 		break;
 	}
 
+	t->t_last = 0;
 	teken_state_switch(t, teken_state_init);
 }
