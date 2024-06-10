@@ -59,6 +59,9 @@ __RCSID("$NetBSD: bt_open.c,v 1.26 2012/03/13 21:13:32 christos Exp $");
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#if defined(HAVE_ISSETUGID) && defined(HAVE_GETAUXVAL)
+#include <sys/auxv.h>
+#endif
 #include <paths.h>
 
 #include <db.h>
@@ -353,6 +356,32 @@ err:	if (t) {
 	return (NULL);
 }
 
+
+#if !(defined(_WIN32) || defined(WIN32))
+static int
+is_getenv_unsafe(void) //XXX: libmisc
+{
+#if defined(HAVE_ISSETUGID)
+	return (issetugid());
+
+#elif defined(HAVE_GETAUXVAL)
+	return (int) getauxval(AT_SECURE);
+
+#else /*fallbacks*/
+#if defined(HAVE_GETUID) && defined(HAVE_GETEUID)
+	if (getuid() != geteuid())
+		return 1;
+#endif
+#if defined(HAVE_GETGID) && defined(HAVE_GETEGID)
+	if (getgid() != getegid())
+		return 2;
+#endif
+	return (int) 0;
+#endif
+}
+#endif /*WIN32*/
+
+
 /*
  * NROOT -- Create the root of a new tree.
  *
@@ -414,7 +443,7 @@ tmp(void)
 	char *envtmp = NULL;
 	int fd;
 
-	if (issetugid())
+	if (is_getenv_unsafe()) /*issetugid*/
 		envtmp = NULL;
 	else
 		envtmp = getenv("TMPDIR");
