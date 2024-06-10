@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_procspawn_c,"$Id: procspawn.c,v 1.24 2020/05/03 21:43:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_procspawn_c,"$Id: procspawn.c,v 1.25 2024/06/10 06:00:44 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: procspawn.c,v 1.24 2020/05/03 21:43:37 cvsuser Exp $
+/* $Id: procspawn.c,v 1.25 2024/06/10 06:00:44 cvsuser Exp $
  * Process spawn primitive and management.
  *
  *
@@ -331,9 +331,16 @@ proc_add(int pid, const char *macro,
 #if defined(SIGPIPE)
         sys_signal(SIGPIPE, sigxxx_child);
 #endif
-#if defined(HAVE_SIGINTERRUPT)
 #if defined(SIGCHILD)
-        siginterrupt(SIGCHILD, TRUE);
+#if defined(HAVE_SIGACTION)
+        {
+            struct sigaction act;
+            (void)sigaction(SIGCHILD, NULL, &act);
+            act.sa_flags &= ~SA_RESTART; /*flag=1*/
+            sigaction(SIGCHILD, &act, NULL);
+        }
+#elif defined(HAVE_SIGINTERRUPT)
+        siginterrupt(SIGCHILD, 1);
 #endif
 #endif
         TAILQ_INIT(pl);
@@ -442,8 +449,15 @@ proc_wait(int pid)
     errno = 0;
     while (1) {
         while (1) {
-#if defined(HAVE_SIGINTERRUPT)
-            siginterrupt(SIGINT, TRUE);
+#if defined(HAVE_SIGACTION)
+            {
+                struct sigaction act;
+                (void)sigaction(SIGINT, NULL, &act);
+                act.sa_flags &= ~SA_RESTART; /* flag=1 */
+                sigaction(SIGINT, &act, NULL);
+            }
+#elif defined(HAVE_SIGINTERRUPT)
+            siginterrupt(SIGINT, 1);
 #endif
             ret = sys_waitpid(pid, &status, pid < 0 ? WNOHANG : 0);
 #if defined(SIGCHILD)

@@ -1,4 +1,4 @@
-dnl $Id: misc.m4,v 1.10 2024/05/02 14:34:32 cvsuser Exp $
+dnl $Id: misc.m4,v 1.13 2024/06/10 06:07:15 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -262,10 +262,104 @@ AC_DEFUN([CF_FUNC_MEMMOVE],[
 	])
 ])dnl
 
+dnl ---------------------------------------------------------------------------
+dnl Checl for existence of sigaction_t
+dnl
+AC_DEFUN([CF_TYPE_SIGACTION],
+[
+	AC_MSG_CHECKING([for type sigaction_t])
+	AC_CACHE_VAL(cf_cv_type_sigaction,[
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <signal.h>]], [[sigaction_t x]])],[cf_cv_type_sigaction=yes],[cf_cv_type_sigaction=no])])
+		AC_MSG_RESULT($cf_cv_type_sigaction)
+		test "$cf_cv_type_sigaction" = yes && AC_DEFINE(HAVE_TYPE_SIGACTION,1,[Define to 1 if we have the sigaction_t type])
+])dnl
 
 dnl ---------------------------------------------------------------------------
-dnl Check for existence of workable nanosleep() function.  Some systems, e.g.,
-dnl AIX 4.x, provide a non-working version.
+dnl source: ncurses/aclocal.m4
+dnl CF_VA_COPY version: 6 updated: 2018/12/04 18:14:25
+dnl ----------
+dnl check for va_copy, part of stdarg.h starting with ISO C 1999.
+dnl ---------------------------------------------------------------------------
+dnl CF_VA_COPY version: 6 updated: 2018/12/04 18:14:25
+dnl ----------
+dnl check for va_copy, part of stdarg.h starting with ISO C 1999.
+dnl Also, workaround for glibc's __va_copy, by checking for both.
+dnl Finally, try to accommodate pre-ISO C 1999 headers.
+AC_DEFUN([CF_VA_COPY],[
+AC_CACHE_CHECK(for va_copy, cf_cv_have_va_copy,[
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <stdarg.h>
+]], [[
+	static va_list dst;
+	static va_list src;
+	va_copy(dst, src)]])],[cf_cv_have_va_copy=yes],[cf_cv_have_va_copy=no])])
+
+if test "$cf_cv_have_va_copy" = yes;
+then
+	AC_DEFINE(HAVE_VA_COPY,1,[Define to 1 if we have va_copy])
+else # !cf_cv_have_va_copy
+
+AC_CACHE_CHECK(for __va_copy, cf_cv_have___va_copy,[
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <stdarg.h>
+]], [[
+	static va_list dst;
+	static va_list src;
+	__va_copy(dst, src)]])],[cf_cv_have___va_copy=yes],[cf_cv_have___va_copy=no])])
+
+if test "$cf_cv_have___va_copy" = yes
+then
+	AC_DEFINE(HAVE___VA_COPY,1,[Define to 1 if we have __va_copy])
+else # !cf_cv_have___va_copy
+
+AC_CACHE_CHECK(for __builtin_va_copy, cf_cv_have___builtin_va_copy,[
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <stdarg.h>
+]], [[
+	static va_list dst;
+	static va_list src;
+	__builtin_va_copy(dst, src)]])],[cf_cv_have___builtin_va_copy=yes],[cf_cv_have___builtin_va_copy=no])])
+
+test "$cf_cv_have___builtin_va_copy" = yes &&
+	AC_DEFINE(HAVE___BUILTIN_VA_COPY,1,[Define to 1 if we have __builtin_va_copy])
+
+fi # cf_cv_have___va_copy
+
+fi # cf_cv_have_va_copy
+
+case "${cf_cv_have_va_copy}${cf_cv_have___va_copy}${cf_cv_have___builtin_va_copy}" in
+(*yes*)
+	;;
+
+(*)
+	AC_CACHE_CHECK(if we can simply copy va_list, cf_cv_pointer_va_list,[
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <stdarg.h>
+]], [[
+	va_list dst;
+	va_list src;
+	dst = src]])],[cf_cv_pointer_va_list=yes],[cf_cv_pointer_va_list=no])])
+
+	if test "$cf_cv_pointer_va_list" = no
+	then
+	AC_CACHE_CHECK(if we can copy va_list indirectly, cf_cv_array_va_list,[
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <stdarg.h>
+]], [[
+	va_list dst;
+	va_list src;
+	*dst = *src]])],[cf_cv_array_va_list=yes],[cf_cv_array_va_list=no])])
+	test "$cf_cv_array_va_list" = yes && AC_DEFINE(ARRAY_VA_LIST,1,[Define to 1 if we can copy va_list indirectly])
+	fi
+	;;
+esac
+])
+
+
+dnl ---------------------------------------------------------------------------
+dnl Check for existence of workable nanosleep() function.
+dnl Some systems, e.g. AIX 4.x, provide a non-working version.
 dnl
 
 AC_DEFUN([CF_FUNC_NANOSLEEP],[
