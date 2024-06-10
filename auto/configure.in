@@ -1,10 +1,10 @@
-dnl $Id: configure.in,v 1.81 2024/05/28 13:02:56 cvsuser Exp $
+dnl $Id: configure.in,v 1.84 2024/06/10 08:53:28 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl
 
-AC_REVISION($Revision: 1.81 $)
+AC_REVISION($Revision: 1.84 $)
 ## AC_COPYRIGHT(Adam Young 1995-2024, Paul Fox 1989-1991)
 AC_SUBST([PACKAGE])
 AC_INIT([GriefEdit],[3.2.3],[griefedit@gmail.com])
@@ -175,7 +175,6 @@ AC_CHECK_SIZEOF(void *)
 AC_CHECK_SIZEOF(long)
 AC_CHECK_SIZEOF(double)
 AC_CHECK_SIZEOF(long long)
-
 
 dnl If stdint.h or inttypes.h does not define the given type, then define a
 dnl suitable unsigned type of the correct size.
@@ -532,18 +531,20 @@ AC_CHECK_HEADERS(direct.h)
 AC_HEADER_SYS_WAIT
 AC_HEADER_STAT
 AC_CHECK_HEADERS(time.h sys/time.h utime.h sys/utime.h)
-AC_HEADER_TIME
 
 AC_STRUCT_TM
 AC_STRUCT_TIMEZONE
 CF_ENVIRON
+
+AC_CHECK_HEADERS(stdarg.h)
+CF_VA_COPY
 
 AC_CHECK_HEADERS( \
 	sys/types.h sys/cdefs.h sys/param.h sys/bsdtypes.h \
 	sys/ioctl.h sys/ioctl_compat.h sys/kd.h \
 	sys/select.h sys/socket.h \
 	sys/stat.h sys/statfs.h sys/statvfs.h sys/vfs.h \
-	stdarg.h stdlib.h stdio.h limits.h \
+	stdlib.h stdio.h limits.h \
 	stddef.h float.h \
 	sys/utsname.h \
 	sys/resource.h \
@@ -589,6 +590,7 @@ AC_CHECK_HEADERS( \
 	termios.h)
 
 dnl Signal support
+CF_TYPE_SIGACTION
 AC_CHECK_HEADERS( \
 	signal.h )
 AC_CHECK_FUNCS(\
@@ -694,11 +696,12 @@ AC_CHECK_FUNCS(\
 CF_CHECK_STRLCPY
 CF_CHECK_STRLCAT
 
+AC_CHECK_DECL([issetugid], \
+	AC_CHECK_FUNC([issetugid], [AC_DEFINE([HAVE_ISSETUGID], [1], [issetugid is available])]))
 AC_CHECK_FUNCS(\
-	setsid \
-	issetugid \
-	setpgrp \
-	setpgid)
+	getuid geteuid getgid getegid)
+AC_CHECK_FUNCS(\
+	setsid setpgrp setpgid)
 
 AC_CHECK_FUNCS(\
 	strtok_r strerror_l strerror_r \

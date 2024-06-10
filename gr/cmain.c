@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.54 2024/05/22 16:49:11 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.55 2024/06/10 06:00:44 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.54 2024/05/22 16:49:11 cvsuser Exp $
+/* $Id: cmain.c,v 1.55 2024/06/10 06:00:44 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -445,7 +445,14 @@ cmain(int argc, char **argv)
 {
     int arg_index, i;
 
-#if defined(HAVE_SIGINTERRUPT)
+#if defined(HAVE_SIGACTION)
+    { // XXX - review. move to sys_unix
+        struct sigaction act;
+        (void)sigaction(SIGALRM, NULL, &act);
+        act.sa_flags &= ~SA_RESTART; /*flag=1*/
+        sigaction(SIGALRM, &act, NULL);
+    }
+#elif defined(HAVE_SIGINTERRUPT)
     siginterrupt(SIGALRM, 1);
 #endif
 

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_macrolib_c,"$Id: macrolib.c,v 1.20 2024/05/19 17:09:32 cvsuser Exp $")
+__CIDENT_RCSID(gr_macrolib_c,"$Id: macrolib.c,v 1.21 2024/06/10 05:29:05 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: macrolib.c,v 1.20 2024/05/19 17:09:32 cvsuser Exp $
+/* $Id: macrolib.c,v 1.21 2024/06/10 05:29:05 cvsuser Exp $
  * Macro library support - experimental.
  *
  *
@@ -305,7 +305,7 @@ libarc_index(const char *lpath)
     size_t rcode;
 
     if (NULL == (a = archive_read_new())) {
-        return -1;                              /* bad */
+        return -1; /* bad */
     }
 
     archive_read_support_format_ar(a);
@@ -313,14 +313,14 @@ libarc_index(const char *lpath)
     archive_read_support_format_gnutar(a);
 
 #ifndef ARCHIVE_DEFAULT_BYTES_PER_BLOCK
-#define ARCHIVE_DEFAULT_BYTES_PER_BLOCK         10240
+#define ARCHIVE_DEFAULT_BYTES_PER_BLOCK 10240
 #endif
 
 #if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
-    if ((rcode = archive_read_open_file(
+    if ((rcode = archive_read_open_filename(
                     a, lpath, ARCHIVE_DEFAULT_BYTES_PER_BLOCK))) {
         err = archive_error_string(a);
         trace_log("opening macrolib(%s): %s\n", lpath, err);
@@ -386,7 +386,7 @@ libarc_index(const char *lpath)
             }
         }
         archive_read_close(a);
-        archive_read_finish(a);
+        archive_read_free(a);
 
         trace_log("..complete %d macros available (%s)\n", count, (err ? err : ""));
     }
