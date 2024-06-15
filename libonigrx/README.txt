@@ -11,7 +11,9 @@
 
         Oniguruma is Japanese for "Devil's Chariot".
 
-        Source, http://www.geocities.jp/kosako3/oniguruma
+        Source:
+        https://github.com/kkos/oniguruma
+        http://www.geocities.jp/kosako3/oniguruma (old)
 
     Releases:
     
