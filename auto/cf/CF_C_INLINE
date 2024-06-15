@@ -1,0 +1,32 @@
+dnl CF_C_INLINE version: 6 updated: 2019/09/07 13:38:36
+dnl -----------
+dnl Check if the C compiler supports "inline".
+dnl $1 is the name of a shell variable to set if inline is supported
+dnl $2 is the threshold for gcc 4.x's option controlling maximum inline size
+AC_DEFUN([CF_C_INLINE],[
+AC_REQUIRE([CF_GCC_VERSION])
+AC_C_INLINE
+$1=
+if test "$ac_cv_c_inline" != no ; then
+	$1=inline
+	if test "$INTEL_COMPILER" = yes
+	then
+		:
+	elif test "$CLANG_COMPILER" = yes
+	then
+		:
+	elif test "$GCC" = yes
+	then
+		AC_CACHE_CHECK(if $CC supports options to tune inlining,cf_cv_gcc_inline,[
+		cf_save_CFLAGS=$CFLAGS
+		CFLAGS="$CFLAGS --param max-inline-insns-single=$2"
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[inline int foo(void) { return 1; }]], [[${cf_cv_main_return:-return} foo()]])],[cf_cv_gcc_inline=yes],[cf_cv_gcc_inline=no])
+		CFLAGS=$cf_save_CFLAGS
+		])
+		if test "$cf_cv_gcc_inline" = yes ; then
+			CF_ADD_CFLAGS([--param max-inline-insns-single=$2])
+		fi
+	fi
+fi
+AC_SUBST($1)
+])dnl

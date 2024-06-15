@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.13 2024/04/17 15:57:15 cvsuser Exp $
+# $Id: Makefile.in,v 1.14 2024/06/13 08:14:17 cvsuser Exp $
 # libtre - regular expression library makefile.
 #
 #
@@ -72,7 +72,8 @@ D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 XFLAGS=
 CFLAGS=		@CFLAGS@
 ifeq ("gcc","@CC@")
-CWARN=		$(filter-out -Wshadow -Wmissing-prototypes -Wsign-compare -Wno-unused-value, @CWARN@ $(CWALL)) -Wno-sign-compare -Wno-unused-value
+CWARN=		$(filter-out -Wshadow -Wmissing-prototypes -Wsign-compare -Wunused-value, @CWARN@ $(CWALL)) -Wno-sign-compare -Wno-unused-value
+CWARN+=		-Wno-free-nonheap-object
 else
 CWARN=		@CWARN@ $(CWALL)
 endif

@@ -1,4 +1,4 @@
-dnl $Id: libmalloc.m4,v 1.5 2024/05/02 14:34:32 cvsuser Exp $
+dnl $Id: libmalloc.m4,v 1.6 2024/06/14 16:41:42 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -85,15 +85,15 @@ AC_DEFUN([CF_MALLOC_OPT],[
 		malloc_stats \
 		mallinfo \
 		mallopt)
+])dnl
 
-#       AC_SEARCH_LIBS(mallinfo,malloc,[
-#               AC_DEFINE([HAVE_MALLINFO],[1],[Define if mallinfo() is available on this platform.])])
-#       AC_CHECK_TYPES([struct mallinfo],,, [#include <malloc.h>])
-#       AC_CHECK_MEMBER([struct mallinfo.hblks])
-#       AC_CHECK_MEMBER([struct mallinfo.keepcost])
-#       AC_CHECK_MEMBER([struct mallinfo.treeoverhead])
-#       AC_CHECK_MEMBER([struct mallinfo.grain])
-#       AC_CHECK_MEMBER([struct mallinfo.allocated])
-])
+dnl    AC_SEARCH_LIBS(mallinfo,malloc,[
+dnl    AC_DEFINE([HAVE_MALLINFO],[1],[Define if mallinfo() is available on this platform.])])
+dnl    AC_CHECK_TYPES([struct mallinfo],,, [#include <malloc.h>])
+dnl    AC_CHECK_MEMBER([struct mallinfo.hblks])
+dnl    AC_CHECK_MEMBER([struct mallinfo.keepcost])
+dnl    AC_CHECK_MEMBER([struct mallinfo.treeoverhead])
+dnl    AC_CHECK_MEMBER([struct mallinfo.grain])
+dnl    AC_CHECK_MEMBER([struct mallinfo.allocated])
 
 dnl end

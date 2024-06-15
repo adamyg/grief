@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.146 2024/05/27 15:19:56 cvsuser Exp $
+# $Id: makelib.pl,v 1.147 2024/06/15 06:39:20 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -750,6 +750,7 @@ my %win_entries     = (
         CP                  => '@BINPATH@cp.exe',
         TAR                 => '@BINPATH@tar.exe',
         MKDIR               => '@BINPATH@mkdir.exe',
+        MKDIR_P             => '@PERLPATH@perl '."${CWD}/win32/mkdir_p.pl",
         RMDIR               => '@BINPATH@rmdir.exe',
 
         ISWIN32             => 'yes',
@@ -842,6 +843,7 @@ my %x_tokens        = (
         MV                  => 'mv',
         TAR                 => 'tar',
         MKDIR               => 'mkdir',
+        MKDIR_P             => 'mkdir -p',
         RMDIR               => 'rmdir',
 
         INSTALL             => 'install.pl',

@@ -1,13 +1,12 @@
-dnl $Id: configure.in,v 1.84 2024/06/10 08:53:28 cvsuser Exp $
+dnl $Id: configure.in,v 1.87 2024/06/15 06:32:27 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
-dnl
+dnl Adam Young (c) 1995-2024
 
-AC_REVISION($Revision: 1.84 $)
-## AC_COPYRIGHT(Adam Young 1995-2024, Paul Fox 1989-1991)
+AC_REVISION($Revision: 1.87 $)
 AC_SUBST([PACKAGE])
-AC_INIT([GriefEdit],[3.2.3],[griefedit@gmail.com])
+AC_INIT([GriefEdit],[3.2.3],[https://github.com/adamyg/grief])
 AC_PREREQ([2.69])
 PACKAGE="gr"
 
@@ -35,19 +34,17 @@ LT_OBJDIR="$lt_cv_objdir"
 LIBTOOL='/bin/bash $(top_builddir)/libtool'
 
 AC_SUBST(PROGS)
-## Stop AC_PROG_CC() assigning defaults.
-CFLAGS=""
-AC_PROG_CC(gcc cc clang c1 egcs)
-AC_PROG_CXX(g++ CC clang++)
-## AC_PROG_GCC_TRADITIONAL
 
-#TODO
-#AX_COMPILER_VENDOR
-#AX_COMPILER_VERSION
-#AX_CHECK_COMPILE_FLAG([-std=c11],
-#	[AX_APPEND_FLAG([-std=c11])],
-#	[AC_MSG_WARN([-std=c11 not supported, you may have to set CFLAGS to enable C11 support.])
-#	])
+# Restore CFLAGS/CXXFLAGS.
+# We MUST set the flags before we call autoconf compiler configuration macros,
+# because if we don't, they set CFLAGS to no optimization and -g, which isn't what we want.
+
+AC_PROG_CC([gcc cc clang])
+AC_PROG_CXX([g++ CC c++ clang++])
+AX_COMPILER_VENDOR
+AX_COMPILER_VERSION
+CFLAGS=${ac_env_CFLAGS_value}
+CXXFLAGS=${ac_env_CXXFLAGS_value}
 
 AC_PROG_CPP
 AC_SUBST(CPPDEP)
@@ -56,7 +53,12 @@ CPPDEP=${CPPDEP-"gcc -MM"}
 AC_SUBST([ABS_ROOT])
 ABS_ROOT="`pwd`/"
 
-AC_PATH_PROG(RM,rm,rm)
+AC_CHECK_PROG(CP,cp,cp)
+AC_CHECK_PROG(MV,mv,mv)
+AC_CHECK_PROG(RM,rm,rm)
+AC_CHECK_PROG(RMDIR,rmdir,rmdir)
+AC_PROG_MKDIR_P
+
 AC_PATH_PROG(SED,sed,sed)
 AC_PATH_PROG(TAR,tar,tar)
 AC_PATH_PROG(PERL,perl,perl)
@@ -163,6 +165,9 @@ dnl
 AC_TYPE_LONG_LONG_INT
 AC_TYPE_UNSIGNED_LONG_LONG_INT
 
+AC_CHECK_HEADERS([unistd.h], [],
+	[AC_MSG_ERROR(system headers not found; unable to continue)])
+
 AC_CHECK_HEADERS(endian.h machine/endian.h arpa/nameser_compat.h)
 AC_C_BIGENDIAN(
 	[AC_DEFINE(IS_BIG_ENDIAN, 1, [big endian])],
@@ -263,15 +268,11 @@ dnl     libcharudet     (Mozilla universal character detector)
 dnl     libenca
 dnl     libmagic and optional libz
 dnl     libguess        (www.atheme.org)
-dnl     libintl
+dnl     lib[15~ICONVintl
 dnl     libcurl
 dnl     libltdl
 dnl     liberty
 dnl     libbfd
-dnl
-dnl TODO:
-dnl     libpcre
-dnl     libtre
 dnl
 LIBMALLOC_CHECK_CONFIG()
 LIBSPELL_CHECK_CONFIG()
@@ -282,7 +283,6 @@ AC_CHECK_LIB(aprutil,main)
 CF_WITH_LIBICONV
 dnl CF_WITH_LIBUTF8
 
-dnl CF_LIB_CHARUDET
 CF_WITH_LIBENCA
 CF_WITH_LIBMAGIC
 AC_CHECK_LIB(guess,libguess_determine_encoding, [LIBGUESS=['-lguess']])
@@ -306,19 +306,14 @@ AC_CHECK_LIB(ltdl, lt_dlinit, [
 
 AC_CHECK_LIB(iberty, cplus_demangle, [
 	AC_DEFINE(HAVE_LIBIBERTY, 1,
-		[Define to enable libiberty support])
+		[Define to enable liberty support])
 	AC_DEFINE(HAVE_CPLUS_DEMANGLE, 1,
 		[Whether or not we have to demangle names])
 	AC_CHECK_HEADERS(libiberty.h demangle.h)
 	CF_ADD_EXTRALIBS("-liberty")
 	])
 
-AC_CHECK_LIB(bfd, bfd_openr, [
-	AC_DEFINE(HAVE_LIBBFD, 1,
-		[Define to enable libbfd support])
-	AC_CHECK_HEADERS(bfd.h)
-	CF_ADD_EXTRALIBS("-lbfd")
-	])
+CF_CHECK_LIBBFD
 
 AX_CHECK_OPENSSL([
 	AC_DEFINE(HAVE_OPENSSL, 1,
@@ -437,48 +432,48 @@ if test "$with_assert" = no ; then
 	fi
 fi
 
-
-dnl TODO
-dnl	AC_MSG_CHECKING([For a working C99 __func__])
-dnl	   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],
-dnl	   	[[const char *foo = __func__;]])],
-dnl	   	[ac_cv_cpp_func=yes],
-dnl	   	[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],
-dnl	   		[[const char *foo = __FUNCTION__;]])],
-dnl	   		[ac_cv_cpp_func=__FUNCTION__],
-dnl	   		[ac_cv_cpp_func="\"no\""])]
-dnl	   )
-dnl
-dnl	   if test "X$ac_cv_cpp_func" = "X__FUNCTION__"; then
-dnl	   	AC_MSG_RESULT([__FUNCTION__])
-dnl	   elif test "x$ac_cv_cpp_func" = "xyes" ; then
-dnl	   	AC_MSG_RESULT([__func__])
-dnl	   else
-dnl	   	AC_MSG_RESULT([no])
-dnl	   fi
-dnl	   if test "X$ac_cv_cpp_func" != "Xyes" ; then
-dnl	   	AC_DEFINE_UNQUOTED([__func__], [$ac_cv_cpp_func], [Define to be a __func__ replacement])
-dnl	   fi
-
 dnl
 dnl Checks for programs.
-dnl	   @AR@, @AWK@, @MKDIR_P@
-dnl	   @LEX@, @YACC@ and @BISON@
+dnl     @AR@, @LN@, @AWK@
+dnl     @LEX@, @YACC@ and @BISON@
 dnl
 AC_PROG_INSTALL
-AC_PATH_PROG(AR,ar,ar)
-AC_PROG_MKDIR_P
+AC_PATH_PROG([AR],[ar],[ar])
 AC_PROG_LN_S
 AC_PROG_AWK
+
+AC_CHECK_PROG(PERL_CHECK,perl,yes)
+if test x"$PERL_CHECK" != x"yes" ; then
+	AC_MSG_ERROR([couldn't locate perl; make sure it's installed and in your path])
+fi
 m4_version_prereq([2.70],
 	[AC_PROG_LEX(noyywrap)],
 	[AC_PROG_LEX])
 if test "$LEX" != "flex"; then
-	AC_MSG_ERROR(couldn't locate flex; make sure it's installed and in your path)
+	AC_MSG_WARN([couldn't locate flex; make sure it's installed and in your path])
+	AS_ECHO("")
+	AS_ECHO("You should only need it if you modified a '.l' file.")
+	AS_ECHO("You may want to install the Fast Lexical Analyzer package:")
+	AS_ECHO("")
+	AS_ECHO("  <https://github.com/westes/flex>")
+	AS_ECHO("")
+	AC_MSG_ERROR([flex missing])
 fi
 AC_PROG_YACC
 if test "$YACC" != "bison -y"; then
-	AC_MSG_ERROR(couldn't locate bison; make sure it's installed and in your path)
+	if test "$YACC" != "byacc"; then
+		if test "$YACC" != "yacc"; then
+			AC_MSG_WARN([couldn't locate bison/byacc; make sure it's installed and in your path])
+			AS_ECHO("")
+			AS_ECHO("You should only need it if you modified a '.y' file."])
+			AS_ECHO("You may want to install the either byacc or the bison package:"])
+			AS_ECHO("")
+			AS_ECHO("     <https://invisible-island.net/byacc>")
+			AS_ECHO("  or <https://www.gnu.org/software/bison/>")
+			AS_ECHO("")
+			AC_MSG_ERROR([bison/byacc missing])
+		fi
+	fi
 fi
 AC_PATH_PROG(BISON,bison,bison)
 
@@ -628,9 +623,10 @@ CF_FUNC_ISASCII
 CF_FUNC_ISBLANK
 CF_FUNC_ISCSYM
 
-CF_FUNC_MKSTEMP
 CF_LANGINFO_CODESET
+CF_FUNC_MKSTEMP
 CF_FUNC_MEMMOVE
+CF_FUNC_VASPRINTF
 
 AC_CHECK_HEADERS(wait.h sys/wait.h)
 AC_FUNC_FORK

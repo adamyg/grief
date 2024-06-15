@@ -1,0 +1,27 @@
+-- $Id: README,v 1.1 2024/06/14 16:41:42 cvsuser Exp $
+
+The organization of this archive is determined by the tools which I
+use for updating scripts and macros in configure-scripts.
+
+The scripts in the top-level directory are stable- or improved versions of
+scripts needed for autoconf.
+
+The COPYING file applies to the contents of the AcSplit directory.
+
+The files in AcSplit are the autoconf macros which I use for maintaining
+several programs, including ncurses, xterm, lynx, vile.  They are
+maintained in a split form, one macro per file.  I wrote utilities to
+split/join these (acsplit/acmerge) in August 1997, and much later (April
+2003) wrote a checkin-script which provides the version numbers in each
+file.
+
+The files are named according to the macro they contain.  A few are
+customized or improved versions from other packages.  All of the ones
+which I wrote are named using a "CF_" prefix.  A few macros are useful
+only for specific programs; most are useful building blocks for the
+configure scripts which I maintain.
+
+As an aside, one may note CF_CHECK_DECL, etc., from 1997.  Those were
+plagiarized by one of the autoconf maintainers in 1999.
+
+-- Thomas E. Dickey

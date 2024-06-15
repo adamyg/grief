@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.36 2024/05/03 05:41:17 cvsuser Exp $
+# $Id: Makefile.in,v 1.37 2024/06/13 06:44:03 cvsuser Exp $
 # libbsdmdoc and grmanddoc
 #
 #
@@ -85,6 +85,7 @@ CFLAGS=		@CFLAGS@
 ifeq ("gcc","@CC@")
 CWARN=		$(filter-out -Wshadow -Wmissing-prototypes -Wsign-compare, @CWARN@ $(CWALL))
 CWARN+=		-Wno-sign-compare -Wno-unused-variable -Wno-implicit-fallthrough -Wno-implicit-function-declaration
+CWARN+=		-Wno-deprecated-declarations
 else
 CWARN=		@CWARN@ $(CWALL)
 endif
@@ -299,7 +300,9 @@ CLEANFILES=	mdocversion.h
 # Rules
 
 ifeq ("cygwin","@build_os@")
-LDLIBS:=	$(filter-out -liberty, $(LDLIBS))
+# libiberty has a local implementation of getopt; an invalid optarg binding results, conflicting local/dllexport usage.
+# filter and explicity link again libcygwin, as libtool *may* also include.
+LDLIBS:=	$(patsubst -lmisc,-lmisc -lcygwin, $(filter-out -liberty, $(LDLIBS)))
 endif
 
 .PHONY:			build release debug
