@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.15 2024/06/15 08:39:34 cvsuser Exp $
+# $Id: Makefile.in,v 1.16 2024/06/15 18:53:09 cvsuser Exp $
 # libtre - regular expression library makefile.
 #
 #
@@ -51,6 +51,15 @@ LIBTOOL=	@LIBTOOL@
 RC=		@RC@
 
 # Configuration
+
+QUIETOUT:=	>/dev/null 2>&1
+ifeq ($(VERBOSE),1)
+QUIETOUT:=
+else ifeq ($(VERBOSE),0)
+else ifeq ($(VERBOSE),)
+else
+$(error VERBOSE: unexpected value 0 or 1 required, $(VERBOSE) given]))
+endif
 
 ifeq ("$(BUILD_TYPE)","")	#default
 BUILD_TYPE=	debug
@@ -171,17 +180,19 @@ debug:
 
 $(RELIB):		CEXTRA += -D__LIBTRE_BUILD -DLIBTRE_STATIC
 $(RELIB):		$(D_OBJ)/.created $(LIBOBJS)
-		$(RM) $(RMFLAGS) $@ >/dev/null 2>&1
+		$(RM) $(RMFLAGS) $@ $(QUIETOUT)
 		$(AR) $(ARFLAGS) $@ $(LIBOBJS)
 		$(RANLIB) $@
 
 ifeq ("yes","@ISWIN32@")
 $(REDLL):	DLLDEF = -export-symbols tre.def
 endif
+XCLEAN +=	$(basename $(REDLL)).map
 $(REDLL):		CEXTRA += -D__LIBTRE_BUILD -DLIBTRE_DLL
+$(REDLL):		MAPFILE=$(basename $@).map
 $(REDLL):		$(D_OBJ)/.created $(DLLOBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(DLLOBJS) -version-number $(VERSIONSPEC) \
-			-rpath $(D_LIB) -bindir $(D_BIN) $(DLLDEF) $(LDLIBS)
+			-rpath $(D_LIB) -bindir $(D_BIN) $(DLLDEF) $(LDLIBS) @LDMAPFILE@
 
 source:			$(UNPACKEDLABEL)
 		@$(MAKE) unpacked
@@ -211,8 +222,14 @@ installinc:
 		-@mkdir $(@D)
 		@echo "do not delete, managed directory" > $@
 
+ifeq ("yes","@ISWIN32@")
 clean:
-		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(OBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
+		-@$(LIBTOOL) --mode=clean $(RM) $(REDLL) $(DLLOBJS) $(QUIETOUT)
+		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(OBJS) $(CLEAN) $(XCLEAN) $(QUIETOUT)
+else
+clean:
+		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(OBJS) $(CLEAN) $(XCLEAN) $(QUIETOUT)
+endif
 
 ##
 $(D_OBJ)/%$(O):		$(RESRC)/%.c

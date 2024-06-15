@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.16 2024/05/19 17:04:25 cvsuser Exp $
+# $Id: Makefile.in,v 1.17 2024/06/15 18:41:57 cvsuser Exp $
 # libonigrx - regular expression makefile.
 #
 #
@@ -50,6 +50,15 @@ PERL=		@PERL@
 LIBTOOL=	@LIBTOOL@
 
 # Configuration
+
+QUIETOUT:=	>/dev/null 2>&1
+ifeq ($(VERBOSE),1)
+QUIETOUT:=
+else ifeq ($(VERBOSE),0)
+else ifeq ($(VERBOSE),)
+else
+$(error VERBOSE: unexpected value 0 or 1 required, $(VERBOSE) given]))
+endif
 
 ifeq ("$(BUILD_TYPE)","")	#default
 BUILD_TYPE=	debug
@@ -121,7 +130,7 @@ else
 RELIB=		$(D_LIB)/$(LP)onigrx$(A)
 endif
 
-VERSION=	6.9.6
+VERSION=	6.9.9
 VERSIONSPEC=	$(subst .,:,$(VERSION))
 REPACKED=	onig-$(VERSION).tgz
 
@@ -187,14 +196,16 @@ debug:
 
 $(RELIB):		CEXTRA+=-DONIG_EXTERN=extern
 $(RELIB):		$(D_OBJ)/.created $(D_OBJ)/enc/.created $(LIBOBJS)
-		$(RM) $(RMFLAGS) $@ >/dev/null 2>&1
+		$(RM) $(RMFLAGS) $@ $(QUIETOUT)
 		$(AR) $(ARFLAGS) $@ $(LIBOBJS)
 		$(RANLIB) $@
 
 ifeq ("yes","@ISWIN32@")
+XCLEAN +=	$(basename $(REDLL)).map
+$(REDLL):		MAPFILE=$(basename $@).map
 $(REDLL):		$(D_OBJ)/.created $(D_OBJ)/enc/.created $(DLLOBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(DLLOBJS) -version-number $(VERSIONSPEC) \
-			-rpath $(D_LIB) -bindir $(D_BIN) $(LDLIBS)
+			-rpath $(D_LIB) -bindir $(D_BIN) $(LDLIBS) @LDMAPFILE@
 endif
 
 source:			.unpacked.$(VERSION)
@@ -215,8 +226,14 @@ installinc:
 		-@mkdir $(@D)
 		@echo "do not delete, managed directory" > $@
 
+ifeq ("yes","@ISWIN32@")
 clean:
-		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(OBJS) $(CLEAN) $(XCLEAN) >/dev/null 2>&1
+		-@$(LIBTOOL) --mode=clean $(RM) $(REDLL) $(DLLOBJS) $(QUIETOUT)
+		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(OBJS) $(CLEAN) $(XCLEAN) $(QUIETOUT)
+else
+clean:
+		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(OBJS) $(CLEAN) $(XCLEAN) $(QUIETOUT)
+endif
 
 ##
 $(D_OBJ)/%$(O):		$(RESRC)/%.c
