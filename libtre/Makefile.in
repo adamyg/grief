@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.14 2024/06/13 08:14:17 cvsuser Exp $
+# $Id: Makefile.in,v 1.15 2024/06/15 08:39:34 cvsuser Exp $
 # libtre - regular expression library makefile.
 #
 #
@@ -110,13 +110,13 @@ else
 RELIB=		$(D_LIB)/$(LP)tre$(A)
 endif
 
-VERSION=	0.8.0
+VERSION=	0.8.1
 VERSIONSPEC=	$(subst .,:,$(VERSION))
-REPACKED=	tre-master.zip
+REPACKED=	tre-master-202406.zip
 UNPACKEDLABEL=	.unpacked.tre-master
-#UNPACKEDLABEL=	.unpacked.$(VERSION)
 
 RESRC=		./tre-master/lib
+REINC=		./tre-master/local_includes
 XCLEAN+=	./tre.h
 
 LIBOBJS=\
@@ -186,9 +186,9 @@ $(REDLL):		$(D_OBJ)/.created $(DLLOBJS)
 source:			$(UNPACKEDLABEL)
 		@$(MAKE) unpacked
 
-./tre.h:		$(RESRC)/tre.h tredecl.pl Makefile
+./tre.h:		$(REINC)/tre.h tredecl.pl Makefile
 		@echo importing tre.h ...
-		@$(PERL) tredecl.pl
+		@$(PERL) tredecl.pl --in=$(REINC)/tre.h
 
 ifeq (zip,$(findstring zip,$(REPACKED)))
 $(UNPACKEDLABEL):	$(REPACKED)
