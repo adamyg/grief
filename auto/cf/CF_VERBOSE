@@ -1,0 +1,7 @@
+dnl CF_VERBOSE version: 3 updated: 2007/07/29 09:55:12
+dnl ----------
+dnl Use AC_MSG_RESULT w/o the warnings
+AC_DEFUN([CF_VERBOSE],
+[test -n "$verbose" && echo "	$1" 1>&AS_MESSAGE_FD
+CF_MSG_LOG([$1])
+])dnl

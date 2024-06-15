@@ -1,0 +1,74 @@
+dnl CF_VA_COPY version: 6 updated: 2018/12/04 18:14:25
+dnl ----------
+dnl check for va_copy, part of stdarg.h starting with ISO C 1999.
+dnl Also, workaround for glibc's __va_copy, by checking for both.
+dnl Finally, try to accommodate pre-ISO C 1999 headers.
+AC_DEFUN([CF_VA_COPY],[
+AC_CACHE_CHECK(for va_copy, cf_cv_have_va_copy,[
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <stdarg.h>
+]], [[
+	static va_list dst;
+	static va_list src;
+	va_copy(dst, src)]])],[cf_cv_have_va_copy=yes],[cf_cv_have_va_copy=no])])
+
+if test "$cf_cv_have_va_copy" = yes;
+then
+	AC_DEFINE(HAVE_VA_COPY,1,[Define to 1 if we have va_copy])
+else # !cf_cv_have_va_copy
+
+AC_CACHE_CHECK(for __va_copy, cf_cv_have___va_copy,[
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <stdarg.h>
+]], [[
+	static va_list dst;
+	static va_list src;
+	__va_copy(dst, src)]])],[cf_cv_have___va_copy=yes],[cf_cv_have___va_copy=no])])
+
+if test "$cf_cv_have___va_copy" = yes
+then
+	AC_DEFINE(HAVE___VA_COPY,1,[Define to 1 if we have __va_copy])
+else # !cf_cv_have___va_copy
+
+AC_CACHE_CHECK(for __builtin_va_copy, cf_cv_have___builtin_va_copy,[
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <stdarg.h>
+]], [[
+	static va_list dst;
+	static va_list src;
+	__builtin_va_copy(dst, src)]])],[cf_cv_have___builtin_va_copy=yes],[cf_cv_have___builtin_va_copy=no])])
+
+test "$cf_cv_have___builtin_va_copy" = yes &&
+	AC_DEFINE(HAVE___BUILTIN_VA_COPY,1,[Define to 1 if we have __builtin_va_copy])
+
+fi # cf_cv_have___va_copy
+
+fi # cf_cv_have_va_copy
+
+case "${cf_cv_have_va_copy}${cf_cv_have___va_copy}${cf_cv_have___builtin_va_copy}" in
+(*yes*)
+	;;
+
+(*)
+	AC_CACHE_CHECK(if we can simply copy va_list, cf_cv_pointer_va_list,[
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <stdarg.h>
+]], [[
+	va_list dst;
+	va_list src;
+	dst = src]])],[cf_cv_pointer_va_list=yes],[cf_cv_pointer_va_list=no])])
+
+	if test "$cf_cv_pointer_va_list" = no
+	then
+		AC_CACHE_CHECK(if we can copy va_list indirectly, cf_cv_array_va_list,[
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <stdarg.h>
+]], [[
+	va_list dst;
+	va_list src;
+	*dst = *src]])],[cf_cv_array_va_list=yes],[cf_cv_array_va_list=no])])
+		test "$cf_cv_array_va_list" = yes && AC_DEFINE(ARRAY_VA_LIST,1,[Define to 1 if we can copy va_list indirectly])
+	fi
+	;;
+esac
+])

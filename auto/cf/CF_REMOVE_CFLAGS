@@ -1,0 +1,17 @@
+dnl CF_REMOVE_CFLAGS version: 3 updated: 2021/09/05 17:25:40
+dnl ----------------
+dnl Remove a given option from CFLAGS/CPPFLAGS
+dnl $1 = option to remove
+dnl $2 = variable to update
+dnl $3 = nonempty to allow verbose message
+define([CF_REMOVE_CFLAGS],
+[
+cf_tmp_cflag=`echo "x$1" | sed -e 's/^.//' -e 's/=.*//'`
+while true
+do
+	cf_old_cflag=`echo "x[$]$2" | sed -e 's/^.//' -e 's/[[ 	]][[ 	]]*-/ -/g' -e "s%$cf_tmp_cflag\\(=[[^ 	]][[^ 	]]*\\)\?%%" -e 's/^[[ 	]]*//' -e 's%[[ ]][[ ]]*-D% -D%g' -e 's%[[ ]][[ ]]*-I% -I%g'`
+	test "[$]$2" != "$cf_old_cflag" || break
+	ifelse([$3],,,[CF_VERBOSE(removing old option $1 from $2)])
+	$2="$cf_old_cflag"
+done
+])dnl

@@ -1,0 +1,23 @@
+dnl CF_ARG_WITH version: 4 updated: 2008/03/23 14:48:54
+dnl -----------
+dnl Restricted form of AC_ARG_WITH that requires user to specify a value
+dnl $1 = option name
+dnl $2 = help message
+dnl $3 = variable to set with the --with value
+dnl $4 = default value, if any, must be constant.
+dnl $5 = default value shown for --help if $4 is empty.
+AC_DEFUN([CF_ARG_WITH],
+[AC_ARG_WITH($1,[$2 ](default: ifelse($4,,ifelse($5,,empty,$5),$4)),,
+ifelse($4,,[withval="${$3}"],[withval="${$3-$4}"]))dnl
+ifelse($4,,[test -n "$withval" && \
+],[test -z "$withval" && withval=no
+])dnl
+case "$withval" in #(vi
+yes)
+  AC_MSG_ERROR(expected a value for --with-$1)
+  ;; #(vi
+no) withval=""
+  ;;
+esac
+$3="$withval"
+])dnl

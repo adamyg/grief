@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.26 2024/04/16 10:37:31 cvsuser Exp $
+# $Id: Makefile.in,v 1.27 2024/06/14 16:41:18 cvsuser Exp $
 # GRIEF macro library makefile.
 #
 #
@@ -64,6 +64,7 @@ MACRODIRS=	$(MACROS) $(MKBD) $(MTTY) $(MDEMOS) $(MBENCHMARKS) $(MMODES) $(MPROFI
 # Compilers, programs
 
 RM=		@RM@
+MKDIR_P=	@MKDIR_P@
 RMDIR=		@RMDIR@
 PERL=		@PERL@
 
@@ -111,7 +112,7 @@ $(MPROFILES):		$(MPROFILES)/.created
 $(MCOLORS):		$(MCOLORS)/.created
 
 %/.created:
-		-@$(PERL) ../win32/mkdir_p.pl $(@D)
+		-@$(MKDIR_P) $(@D)
 		@echo "++ do not delete, grief edit managed content ++" > $@
 
 reverse = $(if $(1),$(call reverse,$(wordlist 2,$(words $(1)),$(1)))) $(firstword $(1))
