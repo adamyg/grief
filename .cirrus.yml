@@ -1,0 +1,22 @@
+# See: https://cirrus-ci.org/guide/quick-start/
+# 
+env:
+  CIRRUS_CLONE_DEPTH: 3
+  WITH_FEATURES:
+
+freebsd_task:
+  name: FreeBSD
+  matrix:
+    - name: FreeBSD 14.1
+      freebsd_instance:
+        image_family: freebsd-14-1
+  timeout_in: 20m
+  install_script:
+    - pkg install -y gettext
+  build_script:
+    - NPROC=$(getconf _NPROCESSORS_ONLN)
+    - ./configure ${WITH_FEATURES}
+    - make -j${NPROC} release
+  clean_script:
+    - make release clean
+
