@@ -25,8 +25,16 @@ Notes for UNIX-like platforms
 
   * A development environment in the form of development libraries and C header files.
 
-Optionally the following external packages can be installed adding additional run-time functionality; these shall be auto-detected during 'configure'.
+Additionally the following system development packages can be installed adding further run-time functionality; these shall be auto-detected during 'configure'.
 
+  * binutils-dev -      _GNU binary utilities (BFD development files)_.
+
+  * libx11-dev -        _X11 development libraries_.  
+
+  * xorg-dev -          _X.Org X Window System development libraries_.
+
+Finally, the following external packages can be installed adding additional run-time functionality; these shall be auto-detected during 'configure'.
+ 
   * enchant-devel -     _Wrapper library for various spell checker engines_.
 
   * hunspell-devel -    _Spell checker and morphologic_.
@@ -59,6 +67,10 @@ plus the following, which are generally available.
 
    * openssl-devel -    _OpenSSL_.
 
+To enable backtrace support, you need to install one of the following packages:
+
+   * binutils-dev -     _Binary File Descriptor_. 
+ 
 
 Native builds using gcc/clang/cc
 ================================

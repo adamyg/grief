@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.73 2024/05/27 12:56:36 cvsuser Exp $
+# $Id: Makefile.in,v 1.74 2024/06/14 16:40:51 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2024, Adam Young.
@@ -239,6 +239,7 @@ CXX=		@CXX@
 AR=		@AR@
 RANLIB=		@RANLIB@
 RM=		@RM@
+MKDIR_P=	@MKDIR_P@
 RMDIR=		@RMDIR@
 CP=		@CP@
 RC=		@RC@
@@ -409,7 +410,7 @@ directories:			$(DIRECTORIES)
 artifacts:			buildinfo
 
 %/.created:
-		-@$(PERL) ./win32/mkdir_p.pl $(@D)
+		-@$(MKDIR_P) $(@D)
 		@echo "++ do not delete, managed content ++" > $@
 
 .PHONY:		import
@@ -418,12 +419,12 @@ import:				$(IMPORT)
 BUSYBOXEXE=	$(addsuffix .exe, $(basename $(BUSYBOX)))
 $(D_BIN)/grbusybox.exe:		$(BUSYBOXEXE)
 		@echo importing $(BUSYBOXEXE)
-		@$(CP) -f $^ $@
+		@$(CP) $^ $@
 
 ifeq ("wcl386","$(CC)")
 $(D_BIN)/$(CLBRNAME).dll:	$(LIBCLBRPATH)
 		@echo importing $(LIBCLBRPATH)
-		@$(CP) -f $(subst /,\,$^) $@
+		@$(CP) $(subst /,\,$^) $@
 
 $(D_BIN)/$(MT7RNAME).dll:	$(LIBMT7RPATH)
 		@echo importing $(LIBMT7RPATH)

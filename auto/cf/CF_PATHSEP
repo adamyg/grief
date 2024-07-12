@@ -1,0 +1,15 @@
+dnl CF_PATHSEP version: 8 updated: 2021/01/01 13:31:04
+dnl ----------
+dnl Provide a value for the $PATH and similar separator (or amend the value
+dnl as provided in autoconf 2.5x).
+AC_DEFUN([CF_PATHSEP],
+[
+	AC_MSG_CHECKING(for PATH separator)
+	case "$cf_cv_system_name" in
+	(os2*)	PATH_SEPARATOR=';'  ;;
+	(*)	${PATH_SEPARATOR:=':'}  ;;
+	esac
+ifelse([$1],,,[$1=$PATH_SEPARATOR])
+	AC_SUBST(PATH_SEPARATOR)
+	AC_MSG_RESULT($PATH_SEPARATOR)
+])dnl

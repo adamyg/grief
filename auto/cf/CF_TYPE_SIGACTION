@@ -1,0 +1,12 @@
+dnl CF_TYPE_SIGACTION version: 4 updated: 2012/10/06 17:56:13
+dnl -----------------
+dnl
+AC_DEFUN([CF_TYPE_SIGACTION],
+[
+AC_MSG_CHECKING([for type sigaction_t])
+AC_CACHE_VAL(cf_cv_type_sigaction,[
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <signal.h>]], [[sigaction_t x]])],[cf_cv_type_sigaction=yes],[cf_cv_type_sigaction=no])])
+AC_MSG_RESULT($cf_cv_type_sigaction)
+test "$cf_cv_type_sigaction" = yes && AC_DEFINE(HAVE_TYPE_SIGACTION,1,[Define to 1 if we have the sigaction_t type])
+])dnl

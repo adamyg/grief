@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makehelp.pl,v 1.24 2024/04/19 13:57:28 cvsuser Exp $
+# $Id: makehelp.pl,v 1.25 2024/06/14 07:25:51 cvsuser Exp $
 # -*- tabs: 8; indent-width: 4; -*-
 # Help collection tool.
 #
@@ -139,7 +139,7 @@ my %x_primitives = (    # Predefined primitives
     '_prompt_end'       => 1,
     'main'              => 1,
 
-    #crunch only
+    #grunch only
     'foreach'           => 2,
     'case'              => 2,
     'else'              => 2,

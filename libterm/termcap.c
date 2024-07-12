@@ -39,8 +39,10 @@
  *  #include <errno.h>
  */
 
-#if defined(__linux__) || defined(__CYGWIN32__) || defined(__MINGW32__)
-#define _GNU_SOURCE                      /* XXX: asprintf */
+#if defined(__linux__) || defined(__CYGWIN__) || defined(__MINGW32__)
+#if !defined(_GNU_SOURCE)
+#define _GNU_SOURCE                     /* XXX: asprintf */
+#endif
 #endif
 
 #include <editor.h>
@@ -270,6 +272,49 @@ out:
         *bp = NULL;
         return error;
 }
+
+
+#if !defined(_GNU_SOURCE)
+#if defined(_MSC_VER) || defined(__WATCOMC__)
+static int /*XXX - libcompat*/
+asprintf(char **strp, const char *format, ...)
+{
+        char *str = NULL;
+        va_list ap;
+        int ret;
+
+        /* size */
+        va_start(ap, format);
+#if defined(_MSC_VER)
+        ret = _vscprintf(format, ap);
+#else
+        ret = sprintf(NULL, format, ap);
+#endif
+        if (ret == -1)
+                goto error;
+        ++ret; /*nul*/
+        str = (char *)malloc((size_t) ret);
+        if (str == NULL)
+                goto error;
+        va_end(ap);
+
+        /* populate */
+        va_start(ap, format);
+        ret = _vsnprintf(str, ret, format, ap);
+        if (ret == -1)
+                goto error;
+        va_end(ap);
+        *strp = str;
+        return ret;
+
+error:;
+        if (str) free(str);
+        va_end(ap);
+        return -1;
+}
+#endif /*_MSC_VER || __WATCOMC__*/
+#endif /*_GNU_SOURCE*/
+
 
 /*
  * Get an entry for terminal name in buffer bp from the termcap file.

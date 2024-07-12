@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: keylib.mandoc,v 1.1 2014/11/27 18:19:40 ayoung Exp $
+.\" | $Id: keylib.mandoc,v 1.2 2024/06/14 07:26:19 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -59,7 +59,7 @@ save them to a file, or reload a keystroke macro from a file.
 Saving and reloading keystroke macros allows the user to build up
 a personal collection of macros for performing simple and non-conditional
 editing tasks. Tasks which require a degree of decision making need
-to be written in the crunch language.
+to be written in the grunch language.
 .Pp
 When this option is selected, a popup window is displayed showing the
 currently defined keystroke macros.

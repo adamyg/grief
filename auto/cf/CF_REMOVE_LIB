@@ -1,0 +1,12 @@
+dnl CF_REMOVE_LIB version: 1 updated: 2007/02/17 14:11:52
+dnl -------------
+dnl Remove the given library from the symbol
+dnl
+dnl $1 = target (which could be the same as the source variable)
+dnl $2 = source (including '$')
+dnl $3 = library to remove
+define([CF_REMOVE_LIB],
+[
+# remove $3 library from $2
+$1=`echo "$2" | sed -e 's/-l$3[[ 	]]//g' -e 's/-l$3[$]//'`
+])dnl
