@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntax_c, "$Id: syntax.c,v 1.68 2022/09/13 14:31:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntax_c, "$Id: syntax.c,v 1.69 2024/07/13 08:30:34 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntax.c,v 1.68 2022/09/13 14:31:24 cvsuser Exp $
+/* $Id: syntax.c,v 1.69 2024/07/13 08:30:34 cvsuser Exp $
  * Syntax pre-processor.
  *
  *
@@ -802,11 +802,16 @@ keyword_push_pat(SyntaxTable_t *st, int attr, int length, int total, const char 
         st->keyword_patterns = patterns = trie_create();
     }
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wint-to-pointer-cast" /*XXX*/
+#endif
     if (sep) {
         const char *end = keywords + total + /*seps*/count;
         while (keywords < end) {
             assert(sep == keywords[length] || 0 == keywords[length]);
             trace_ilog("\t%.*s\n", length, keywords);
+
             trie_insert_nwild(patterns, (const char *)keywords, length, (void *)attr);
             keywords += length + /*sep*/1;
             ++elements;
@@ -821,6 +826,9 @@ keyword_push_pat(SyntaxTable_t *st, int attr, int length, int total, const char 
             ++elements;
         }
     }
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
     return elements;
 }
@@ -2097,7 +2105,14 @@ syntax_keywordx(const SyntaxTable_t *st, const LINECHAR *token, int length, int 
         const void *attr =
             trie_search_nwild(st->keyword_patterns, (const char *)token, length);
         if (attr) {
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-to-int-cast" /*XXX*/
+#endif
             return (int)attr;                   /* associated attribute */
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
         }
     }
 
