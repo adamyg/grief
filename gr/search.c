@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_search_c,"$Id: search.c,v 1.59 2022/08/14 12:38:51 cvsuser Exp $")
+__CIDENT_RCSID(gr_search_c,"$Id: search.c,v 1.61 2024/07/13 10:24:01 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: search.c,v 1.59 2022/08/14 12:38:51 cvsuser Exp $
+/* $Id: search.c,v 1.61 2024/07/13 10:24:01 cvsuser Exp $
  * Search interface.
  *
  *  TODO:
@@ -122,7 +122,7 @@ static const char *     search_capture(const struct regprog *prog, int group, co
 static __CINLINE void   search_end(struct re_state *rs);
 static __CINLINE void   search_free(struct re_state *rs);
 
-static int              re_exec(struct regprog *prog, const char *buf, int buflen, int offset);
+static int              re_execute(struct regprog *prog, const char *buf, int buflen, int offset);
 static const char *     re_capture(const struct regprog *prog, int group, const char **end);
 static void             re_destroy(struct regprog *prog);
 
@@ -131,7 +131,7 @@ static const char *     on_capture(const struct regprog *prog, int group, const 
 static void             on_destroy(struct regprog *prog);
 
 #if defined(HAVE_LIBTRE)
-static int              tre_exec(struct regprog *prog, const char *buf, int buflen, int offset);
+static int              tre_execute(struct regprog *prog, const char *buf, int buflen, int offset);
 static const char *     tre_capture(const struct regprog *prog, int group, const char **end);
 static void             tre_destroy(struct regprog *prog);
 #endif
@@ -563,7 +563,7 @@ do_search_string(void)          /* (string pattern, string text, [int &length], 
         on 'case'.
 
         Note!:
-        The 'search_string' primitive is provided primary for Crisp
+        The 'search_list' primitive is provided primary for Crisp
         compatibility. Since 're' and 'case' can reference the current
         global search states, inconsistent and/or unexpected results
         may result between usage; as such it is advised that the
@@ -2007,7 +2007,7 @@ search_comp(struct re_state *rs, const char *pattern, int patlen)
 
         prog->engine  = REGPROG_TRE;
         prog->hasgrps = TRUE;                   /* TODO */
-        prog->exec    = tre_exec;
+        prog->exec    = tre_execute;
         prog->capture = tre_capture;
         prog->destroy = tre_destroy;
 
@@ -2069,7 +2069,7 @@ search_comp(struct re_state *rs, const char *pattern, int patlen)
 
         prog->engine  = REGPROG_REGEXP;
         prog->hasgrps = TRUE;                   /* TODO */
-        prog->exec    = re_exec;
+        prog->exec    = re_execute;
         prog->capture = re_capture;
         prog->destroy = re_destroy;
     }
@@ -2141,7 +2141,7 @@ search_free(struct re_state *rs)
  */
 
 static int
-re_exec(struct regprog *prog, const char *buf, int buflen, int offset)
+re_execute(struct regprog *prog, const char *buf, int buflen, int offset)
 {
     REGEXP *regexp = &prog->rx.regexp;
 
@@ -2290,7 +2290,7 @@ on_destroy(struct regprog *prog)
  */
 
 static int
-tre_exec(struct regprog *prog, const char *buf, int buflen, int offset)
+tre_execute(struct regprog *prog, const char *buf, int buflen, int offset)
 {
     regex_t *regexp = &prog->rx.tre.regex;
     regmatch_t *regions = prog->rx.tre.regions;
