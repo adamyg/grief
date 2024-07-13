@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_regexp_c,"$Id: regexp.c,v 1.49 2022/12/03 16:40:17 cvsuser Exp $")
+__CIDENT_RCSID(gr_regexp_c,"$Id: regexp.c,v 1.50 2024/07/13 09:56:42 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: regexp.c,v 1.49 2022/12/03 16:40:17 cvsuser Exp $
+/* $Id: regexp.c,v 1.50 2024/07/13 09:56:42 cvsuser Exp $
  * Regular expression engine.
  *
  *  The orgin of this regular expression implementation has been lost with time,
@@ -165,7 +165,7 @@ typedef struct {
 
 typedef int loopstate_t;
 
-static int                  re_comp(recomp_t *rx);
+static int                  re_compile(recomp_t *rx);
 static const char *         re_atom(recomp_t *rx, const char *pattern);
 static const REGEXPATOM *   re_nextblock(const REGEXPATOM *re);
 static int                  re_escape(const char **patternp, int *result);
@@ -300,7 +300,7 @@ regexp_comp2(REGEXP *regexp, const struct regopts *options, const char *pattern)
         goto error;
     }
 
-    if (re_comp(&rx) < 0) {
+    if (re_compile(&rx) < 0) {
         goto error;
     }
 
@@ -394,7 +394,7 @@ error:;
 
 
 static int
-re_comp(recomp_t *rx)
+re_compile(recomp_t *rx)
 {
     const size_t lastend_on_entry = rx->opend;
     const char *pattern = rx->pattern;
@@ -468,7 +468,7 @@ open_bracket:
             LPUT16((LIST *)(rx->atoms + rx->opidx), 3);
             rx->opidx += 3;
             rx->pattern = ++pattern;
-            if (re_comp(rx) < 0) {
+            if (re_compile(rx) < 0) {
                 --rx->level;
                 return -1;
             }
