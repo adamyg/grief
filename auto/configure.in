@@ -1,10 +1,10 @@
-dnl $Id: configure.in,v 1.89 2024/07/13 08:13:31 cvsuser Exp $
+dnl $Id: configure.in,v 1.90 2024/07/13 13:09:03 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl Adam Young (c) 1995-2024
 
-AC_REVISION($Revision: 1.89 $)
+AC_REVISION($Revision: 1.90 $)
 AC_SUBST([PACKAGE])
 AC_INIT([GriefEdit],[3.2.3],[https://github.com/adamyg/grief])
 AC_PREREQ([2.69])
@@ -164,7 +164,6 @@ AC_MSG_RESULT($with_contrib)
 
 dnl libfltk
 BUILD_LIBFLTK=0
-LIBFLTK
 AC_SUBST(BUILD_LIBFLTK)
 AC_MSG_CHECKING(whether to enable libfltk support)
 AC_ARG_WITH(libfltk,

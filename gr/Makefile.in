@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.97 2024/05/25 04:48:57 cvsuser Exp $
+# $Id: Makefile.in,v 1.98 2024/07/13 13:10:25 cvsuser Exp $
 # GRIEF editor makefile.
 #
 #
@@ -183,7 +183,7 @@ LDRELEASE=	@LDRELEASE@
 
 CINCLUDE=	-I$(D_INC) @OPENSSL_INCLUDES@ @CINCLUDE@
 
-CEXTRA=		@DEFS@ @LIBCURL_CPPFLAGS@ -DLIBTRE_DLL
+CEXTRA=		@DEFS@ @CURSES_CFLAGS@ @LIBCURL_CPPFLAGS@ -DLIBTRE_DLL
 ifdef PURIFY
 CEXTRA+=	-DUSING_PURIFY
 endif

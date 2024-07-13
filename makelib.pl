@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.147 2024/06/15 06:39:20 cvsuser Exp $
+# $Id: makelib.pl,v 1.148 2024/07/13 13:11:12 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -888,6 +888,8 @@ my %x_tokens        = (
     #   EXTRA_CXXFLAGS      => '',
 
         LIBCURL_CPPFLAGS    => '',
+
+        CURSES_CFLAGS       => '',
 
         LIBICU_CFLAGS       => '',
         LIBICU_CXXFLAGS     => '',
