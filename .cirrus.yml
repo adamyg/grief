@@ -16,11 +16,12 @@ freebsd_task:
     - pkg install -y bash gmake perl5 autoconf automake libtool pkgconf
     - pkg install -y flex bison wget asciidoc
     - pkg install -y gettext libiconv libarchive curl expat liblz4 lzo2 zstd
-    - /usr/local/bin/curl-config --configure
-    - /usr/local/bin/curl-config --cflags
+#   - /usr/local/bin/curl-config --configure
+#   - /usr/local/bin/curl-config --cflags
   build_script:
-    - NPROC=$(getconf _NPROCESSORS_ONLN) 
+    - NPROC=$(getconf _NPROCESSORS_ONLN)
     - ./configure ${WITH_FEATURES}
+    - more acdefines.h
     - gmake release
   clean_script:
     - gmake release clean
