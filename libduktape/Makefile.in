@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.19 2024/05/03 14:35:16 cvsuser Exp $
+# $Id: Makefile.in,v 1.20 2024/06/16 17:06:26 cvsuser Exp $
 # libduktape makefile.
 #
 #
@@ -95,6 +95,10 @@ CXXRELEASE=	$(CRELEASE)
 endif
 LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
+
+ifeq (gcc,$(findstring gcc,$(CC)))
+XFLAGS+= 	-Wno-deprecated-non-prototype -Wno-unused-parameter -Wno-unused-function
+endif	#gcc
 
 CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
 
