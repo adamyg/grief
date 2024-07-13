@@ -4,6 +4,7 @@ defunct/
 contrib/include/
 win32/Autoupdater/
 EXTRA/
+libfltk/
 bin
 bin.*/
 lib.*/

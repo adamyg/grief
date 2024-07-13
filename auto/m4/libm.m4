@@ -1,4 +1,4 @@
-dnl $Id: libm.m4,v 1.2 2024/05/02 14:34:31 cvsuser Exp $
+dnl $Id: libm.m4,v 1.3 2024/07/13 08:12:36 cvsuser Exp $
 dnl libm autoconf
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -8,7 +8,7 @@ AC_DEFUN([CF_NEED_LIBM],[
 		AC_RUN_IFELSE([AC_LANG_PROGRAM([[
 #include <stdio.h>
 #include <math.h>]],
-		[[double x = log10(1.0); printf("result = %g/%g\n", sin(x), tan(x));]])],
+		[[double x = log10(1.0); char buf[256]; sprintf(buf, "result = %g/%g\n", sin(x), tan(x));]])],
 			[cf_cv_need_libm=no],
 			[cf_cv_need_libm=yes])
 
@@ -18,7 +18,7 @@ AC_DEFUN([CF_NEED_LIBM],[
 			AC_RUN_IFELSE([AC_LANG_PROGRAM([[
 #include <stdio.h>
 #include <math.h>]],
-		[[double x = log10(1.0); printf("result = %g/%g\n", sin(x), tan(x));]])],
+		[[double x = log10(1.0); char buf[256]; sprintf(buf, "result = %g/%g\n", sin(x), tan(x));]])],
 				[cf_cv_need_libm=yes],
 				[cf_cv_need_libm=missing])
 			LIBS="$cf_save_LIBS"

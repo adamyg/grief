@@ -1,10 +1,10 @@
-dnl $Id: configure.in,v 1.87 2024/06/15 06:32:27 cvsuser Exp $
+dnl $Id: configure.in,v 1.89 2024/07/13 08:13:31 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl Adam Young (c) 1995-2024
 
-AC_REVISION($Revision: 1.87 $)
+AC_REVISION($Revision: 1.89 $)
 AC_SUBST([PACKAGE])
 AC_INIT([GriefEdit],[3.2.3],[https://github.com/adamyg/grief])
 AC_PREREQ([2.69])
@@ -22,6 +22,8 @@ AC_MSG_RESULT([-])
 AC_CANONICAL_TARGET
 AC_CANONICAL_BUILD
 CF_CANONICAL_HOST
+CF_ISWIN32
+
 AC_PROG_MAKE_SET
 AC_EXEEXT
 
@@ -31,7 +33,7 @@ AC_SUBST([LIBTOOL_DEPS])
 AC_SUBST([LT_OBJDIR])
 LT_INIT
 LT_OBJDIR="$lt_cv_objdir"
-LIBTOOL='/bin/bash $(top_builddir)/libtool'
+LIBTOOL='/bin/sh $(top_builddir)/libtool'
 
 AC_SUBST(PROGS)
 
@@ -140,6 +142,7 @@ if test "x$with_floating" = "xno"; then
 			[Define to disable float maths functions])
 fi
 
+dnl contrib
 BUILD_CONTRIB=0
 AC_SUBST(BUILD_CONTRIB)
 AC_MSG_CHECKING(whether to enable contrib components)
@@ -157,7 +160,19 @@ AC_ARG_WITH(contrib,
 	esac],[
 	AC_DEFINE(BUILD_CONTRIB,1)
 	with_contrib=$with_contribdefault])
-AC_MSG_RESULT($with_floating)
+AC_MSG_RESULT($with_contrib)
+
+dnl libfltk
+BUILD_LIBFLTK=0
+LIBFLTK
+AC_SUBST(BUILD_LIBFLTK)
+AC_MSG_CHECKING(whether to enable libfltk support)
+AC_ARG_WITH(libfltk,
+	[  --with-libfltk          enable libfltk support (default=no)],
+	[with_libfltk=$withval],
+	[with_libfltk=no])
+AC_MSG_RESULT($with_libfltk)
+
 
 dnl
 dnl Types
@@ -644,7 +659,7 @@ AC_CHECK_HEADERS(pty.h grp.h stropts.h)
 AC_CHECK_HEADERS(sys/stream.h sys/termios)
 AC_CHECK_HEADERS(sys/ptem.h, [], [], [
 #ifdef HAVE_SYS_STREAM_H
-#include <sys/stream.h>     /* Solaris 8, sys/stream.h is a prerequisite. */
+#include <sys/stream.h> /* Solaris 8, sys/stream.h is a prerequisite. */
 #endif
 ])
 AC_CHECK_FUNCS(posix_openpt, , [AC_CHECK_FUNCS(getpt)])
@@ -760,6 +775,10 @@ AC_CONFIG_FILES([\
 	macsrc/Makefile \
 	util/Makefile])
 
+if test "x$with_libfltk" = "xyes"; then
+	AC_CONFIG_FILES([libfltk/Makefile])
+fi
+
 case $host_os in
 mingw*)
 	AC_CONFIG_FILES([libw32/Makefile])
@@ -787,6 +806,8 @@ AX_RECURSIVE_EVAL([\$prefix],  [var_prefix])
 AX_RECURSIVE_EVAL([\$datadir], [var_datadir])
 AX_RECURSIVE_EVAL([\$bindir],  [var_bindir])
 
+dnl AC_CONFIG_HEADERS, replaces DEFS with -DHAVE_CONFIG_H
+
 AC_MSG_RESULT([-])
 AC_MSG_RESULT([-  Configuration:])
 AC_MSG_RESULT([-])
@@ -794,10 +815,10 @@ AC_MSG_RESULT([-         Compiler: $CC / $CXX])
 AC_MSG_RESULT([-           Depend: $CPPDEP])
 AC_MSG_RESULT([-           CFLAGS: $CFLAGS $OPENSSL_INCLUDES $EXTRA_CFLAGS $CWARN])
 AC_MSG_RESULT([-                     Debug:$CDEBUG, Release:$CRELEASE])
-AC_MSG_RESULT([-         CXXFLAGS: $CXXFLAGS $EXTRA_CPPFLAGS $CXXWARN])
+AC_MSG_RESULT([-         CXXFLAGS: $CXXFLAGS $EXTRA_CXXFLAGS $CXXWARN])
 AC_MSG_RESULT([-                     Debug:$CXXDEBUG, Release:$CXXRELEASE])
 AC_MSG_RESULT([-          LDFLAGS: $OPENSSL_LDFLAGS $LDFLAGS])
-AC_MSG_RESULT([-     Preprocessor: $EXTRA_CPPFLAGS $LIBCURL_CPPFLAGS])
+AC_MSG_RESULT([-     Preprocessor: -DHAVE_CONFIG_H $EXTRA_CPPFLAGS $LIBCURL_CPPFLAGS])
 AC_MSG_RESULT([-    Mouse support: ${mouse_lib}])
 AC_MSG_RESULT([-   Termap support: ${termlib_name}])
 AC_MSG_RESULT([-    Spell Support: $LIBSPELL])

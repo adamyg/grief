@@ -1,4 +1,4 @@
-# $Id: aclocal.m4,v 1.20 2024/06/14 16:41:41 cvsuser Exp $
+# $Id: aclocal.m4,v 1.21 2024/07/12 18:22:36 cvsuser Exp $
 # -*- mode: Autoconf; tabs: 8; -*-
 # local packages
 #
@@ -84,5 +84,6 @@ m4_include([m4/longlong.m4])
 m4_include([m4/ssize_t.m4])
 m4_include([m4/string.m4])
 m4_include([m4/misc.m4])
+m4_include([m4/iswin32.m4])
 
 #
