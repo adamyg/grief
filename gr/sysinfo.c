@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.53 2022/08/10 15:44:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.54 2024/07/13 17:49:19 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sysinfo.c,v 1.53 2022/08/10 15:44:58 cvsuser Exp $
+/* $Id: sysinfo.c,v 1.54 2024/07/13 17:49:19 cvsuser Exp $
  * System information services.
  *
  *
@@ -31,6 +31,7 @@ __CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.53 2022/08/10 15:44:58 cvsuser E
 #if defined(unix) || defined(__APPLE__) || defined(HAVE_NETDB_H)
 #include <netdb.h>
 #endif
+
 #if defined(linux)
 #ifndef  _GNU_SOURCE
 #define  _GNU_SOURCE
@@ -48,6 +49,11 @@ __CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.53 2022/08/10 15:44:58 cvsuser E
 
 #if defined(__APPLE__)
 #include <libproc.h>                            /* proc_pidpath */
+#endif
+
+#if defined(BSD)
+#include <sys/types.h>
+#include <sys/sysctl.h>
 #endif
 
 #if defined(WIN32) || defined(__CYGWIN__)
@@ -438,7 +444,7 @@ resolve_execname(const char *name)
 
         } else {
             int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
-            size cb = sizeof(t_name);
+            size_t cb = sizeof(t_name);
 
             if (-1 != sysctl(mib, 4, t_name, &cb, NULL, 0)) {
                 name = t_name;                  /* alt method */
