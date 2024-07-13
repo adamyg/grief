@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_unix_c,"$Id: sys_unix.c,v 1.65 2024/04/27 15:22:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_unix_c,"$Id: sys_unix.c,v 1.66 2024/06/23 15:41:55 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_unix.c,v 1.65 2024/04/27 15:22:03 cvsuser Exp $
+/* $Id: sys_unix.c,v 1.66 2024/06/23 15:41:55 cvsuser Exp $
  * System dependent functionality - UNIX.
  *
  *
@@ -502,7 +502,7 @@ sys_getshell(void)
     if (NULL == shname) {
         shname = ggetenv("SHELL");
     }
-#if defined(__CYGWIN__)
+#if defined(__CYGWIN__) || defined(linux)
     if (NULL == shname && 0 == access("/bin/bash", F_OK)) {
         shname = "/bin/bash";
     }
@@ -688,6 +688,72 @@ sys_read(int fd, void *buf, int size)
 
 
 /*
+ *  sys_read_timed ---
+ *      Read from a file descriptor, against a trigger timeout in millseconds.
+ */
+int
+sys_read_timed(int fd, void *buf, int size, unsigned timeoutms, unsigned *remainingms)
+{
+    const int osize = size,
+        interval = (timeoutms ? (timeoutms > 500 ? 100 : 50) : 0);
+    unsigned duration = timeoutms;
+    char *data = (char *)buf;
+
+    while (size > 0) {
+        struct pollfd fds = {0};
+        int ready, n;
+
+        fds.fd = fd;
+        fds.events = POLLIN;
+        ready = poll(&fds, 1, interval);
+
+        if (0 == ready) {                       /* timeout */
+            if (0 == interval) break;
+            if (duration <= interval) {
+                duration = 0;
+                break;
+            }
+            duration -= interval;
+            if (osize != size)
+                break;
+            continue;
+
+        } else if (-1 == ready) {               /* error */
+            if (errno == EINTR || errno == EAGAIN)
+                continue;
+            break;
+        }
+
+        if (fds.revents & (POLLERR|POLLHUP)) {
+            if (osize == size) {
+                return -1;
+            }
+            break;
+        }
+
+        if (0 == (fds.revents & POLLIN))
+            break;
+
+        if ((n = read(fd, data, size)) <= 0) {
+            if (n < 0 && osize == size) {
+                return -1;
+            }
+            break;
+        }
+
+        size -= n;
+        data += n;
+    }
+
+    if (remainingms) {
+        *remainingms = (timeoutms > duration ? timeoutms - duration : 0);
+    }
+
+    return (osize - size);
+}
+
+
+/*
  *  sys_write ---
  *      Write to a file descriptor.
  */
@@ -701,13 +767,13 @@ sys_write(int fd, const void *buf, int size)
     do {                                        /* EINTR safe */
         if ((n = write(fd, data, size)) >= 0) {
             data += n, cnt += n;
-       if ((size -= n) <= 0) {
+            if ((size -= n) <= 0) {
                 if (nblock) {
                     nonblocking(fd);
                 }
                 return cnt;                     /* success */
-       }
-   }
+            }
+        }
     } while (n >= 0 || (n < 0 && errno == EINTR));
     if (nblock) {
         nonblocking(fd);
@@ -1494,3 +1560,15 @@ sys_mousepointer(int on)
 #endif  /*HAVE_MOUSE*/
 
 #endif  /*!_VMS && !__OS2__ && !__MSDOS__*/
+
+
+
+
+
+
+
+
+
+
+
+

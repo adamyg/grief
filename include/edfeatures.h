@@ -1,11 +1,11 @@
 #ifndef GR_EDFEATURES_H_INCLUDED
 #define GR_EDFEATURES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edfeatures_h,"$Id: edfeatures.h,v 1.18 2024/04/08 15:07:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_edfeatures_h,"$Id: edfeatures.h,v 1.20 2024/07/12 16:44:04 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edfeatures.h,v 1.18 2024/04/08 15:07:03 cvsuser Exp $
+/* $Id: edfeatures.h,v 1.20 2024/07/12 16:44:04 cvsuser Exp $
  * Editor features.
  *
  *
@@ -64,12 +64,14 @@ __CBEGIN_DECLS
 #define TF_DEFAULT_FG           32              /* default foreground color */
 #define TF_DEFAULT_BG           33              /* default background color */
 #define TF_SCHEMEDARK           34              /* *true* if the default color is "dark" */
-#define TF_COLORSETFGBG         35
-#define TF_COLORSET_FG          36              /* color set foreground control sequence */
-#define TF_COLORSET_BG          37              /* color set background control sequence */
+#define TF_COLORRGB             35              /* *true* if RGB colors are supported */
+#define TF_COLORSET_FG          36              /* color set foreground control sequence (ANSI colors) */
+#define TF_COLORSET_BG          37              /* color set background control sequence (ANSI colors) */
 #define TF_COLORMAP             38              /* color map (terminal) */
 #define TF_COLORPALETTE         39              /* color palette (driver) */
-#define TF_COLORSCHEME          40              /* current scheme dark or light */
+#define TF_COLORSCHEME          40              /* current color-scheme */
+#define TF_COLORSETRGB_FG       41              /* color set foreground control sequence (RGB colors) */
+#define TF_COLORSETRGB_BG       42              /* color set background control sequence (RGB colors) */
 
 #define TF_CLEAR_IS_BLACK       50              /* clear is black */
 #define TF_DISABLE_INSDEL       51              /* disable ins/del scrolling method */
@@ -96,8 +98,8 @@ __CBEGIN_DECLS
 #define TF_XTERM_COMPAT         82              /* XTERM compatible termuinal */
 #define TF_XTERM_PALETTE        83              /* XTERM palette control */
 
-#define TF_VT_DATYPE            90              /* VT/XTERM Devive Attribute Type */
-#define TF_VT_DAVERSION         91              /* VT/XTERM Devive Attribute Version */
+#define TF_VT_DATYPE            90              /* VT/XTERM Device Attribute Type */
+#define TF_VT_DAVERSION         91              /* VT/XTERM Device Attribute Version */
 
 #define TF_ENCODING             100             /* terminal character encoding */
 #define TF_ENCODING_GUESS       101             /* text encoding guess specification */
@@ -133,6 +135,8 @@ __CBEGIN_DECLS
 #define TF_AUTF8ENCODING        0x0000010       /* UTF8 character encoding, Unicode implied */
 #define TF_AUNICODEENCODING     0x0000020       /* Unicode character encoding */
 #define TF_AMETAKEY             0x0000100       /* Meta keys */
+#define TF_AXTERMKEYS           0x0000200       /* XTerm modifyOtherKeys */
+#define TF_AKITTYKEYS           0x0000400       /* Kitty extended keycodes */
 /*--end--*/
 
 
@@ -182,9 +186,10 @@ struct _features {
     char        pt_winsetsize[PT_ESCMAX];       /* STRING,      Escape sequence, set window size (rows/cols). */
     char        pt_winsetpos[PT_ESCMAX];        /* STRING,      Escape sequence, set window position (row/col). */
 
-    char        pt_colorsetfgbg[PT_ESCMAX];     /* STRING,      Escape eequence, set foreground and background. */
-    char        pt_colorsetfg[PT_ESCMAX];       /* STRING,      Escape sequence, set foreground color. */
-    char        pt_colorsetbg[PT_ESCMAX];       /* STRING,      Escape sequence, set background color. */
+    char        pt_colorsetfg[PT_ESCMAX];       /* STRING,      Escape sequence, set foreground color (ANSI). */
+    char        pt_colorsetbg[PT_ESCMAX];       /* STRING,      Escape sequence, set background color (ANSI). */
+    char        pt_colorsetrgbfg[PT_ESCMAX];    /* STRING,      Escape sequence, set background color (RGB). */
+    char        pt_colorsetrgbbg[PT_ESCMAX];    /* STRING,      Escape sequence, set background color (RGB). */
 
     char        pt_graphics_mode[PT_ESCMAX];    /* STRING,      Escape sequence, go into graphics mode. */
     char        pt_text_mode[PT_ESCMAX];        /* STRING,      Escape sequence, go into text mode. */
@@ -201,6 +206,7 @@ struct _features {
     int         pt_0m;                          /* BOOL,        "\033[0m" resets color as well as character attributes. */
     int         pt_color;                       /* BOOL,INT     TRUE if terminal supports color (> 1 states default depth). */
     int         pt_colordepth;                  /* INT,         Color depth (active). */
+    int         pt_colorrgb;                    /* INT,         RGB color support (truecolor/24bit). */
     int         pt_clrisblack;                  /* BOOL,        Erasing line clears to a black space. */
     int         pt_scroll_disable;              /* BOOL,        Disable scroll regions. */
     int         pt_scroll_max;                  /* INT,         Max scroll region size. */
@@ -238,7 +244,7 @@ struct _features {
 
     char        pt_colormap[512];               /* STRING,      XTERM color map. */
     char        pt_colorpalette[512];           /* STRING,      Driver color palette <index>=<color>. */
-    char        pt_colorscheme[32];             /* STRING,      Current color scheme (dark or light). */
+    char        pt_colorscheme[128];            /* STRING,      Current color scheme name. */
 
     uint32_t    pt_magic2;                      /* Structure magic. */
 };
@@ -249,3 +255,8 @@ __CEND_DECLS
 
 #endif /*GR_EDFEATURES_H_INCLUDED*/
 /*end*/
+
+
+
+
+
