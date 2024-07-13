@@ -1,10 +1,10 @@
-dnl $Id: configure.in,v 1.90 2024/07/13 13:09:03 cvsuser Exp $
+dnl $Id: configure.in,v 1.91 2024/07/13 18:28:49 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl Adam Young (c) 1995-2024
 
-AC_REVISION($Revision: 1.90 $)
+AC_REVISION($Revision: 1.91 $)
 AC_SUBST([PACKAGE])
 AC_INIT([GriefEdit],[3.2.3],[https://github.com/adamyg/grief])
 AC_PREREQ([2.69])
@@ -587,8 +587,7 @@ AC_CHECK_HEADERS( \
 dnl C1X headers
 AC_CHECK_HEADERS( \
 	stdalign.h \
-	stdatomic.h \
-	threads.h )
+	stdatomic.h )
 
 dnl Terminal specific headers
 AC_CHECK_HEADERS( \
