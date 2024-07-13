@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.59 2022/09/19 16:30:11 cvsuser Exp $")
+__CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.60 2024/07/13 18:41:48 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crmain.c,v 1.59 2022/09/19 16:30:11 cvsuser Exp $
+/* $Id: crmain.c,v 1.60 2024/07/13 18:41:48 cvsuser Exp $
  * grunch command line.
  *
  *
@@ -30,9 +30,15 @@ __CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.59 2022/09/19 16:30:11 cvsuser Exp
 #undef   u_char
 #include <windows.h>
 #endif
+
 #if defined(__APPLE__)
 #include <libproc.h>                            /* proc_..() */
 #include <mach-o/dyld.h>                        /* _NSGetExecutablePath() */
+#endif
+
+#if defined(BSD)
+#include <sys/types.h>
+#include <sys/sysctl.h>
 #endif
 
 /*
@@ -1152,7 +1158,7 @@ resolve_self(const char *name)
                 name = t_name;                  /* procfs */
             } else {
                 int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
-                size cb = sizeof(t_name);
+                size_t cb = sizeof(t_name);
                 if (-1 != sysctl(mib, 4, t_name, &cb, NULL, 0)) {
                   name = t_name;                /* alt method */
                 }
