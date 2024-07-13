@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.117 2024/05/22 12:51:34 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.122 2024/07/13 17:14:09 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.117 2024/05/22 12:51:34 cvsuser Exp $
+/* $Id: ttyterm.c,v 1.122 2024/07/13 17:14:09 cvsuser Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -32,7 +32,6 @@ __CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.117 2024/05/22 12:51:34 cvsuser 
 #include <edtermio.h>
 #include <edenv.h>                              /* gputenvv(), ggetenv() */
 
-
 #if defined(_VMS)
 #include <unixlib.h>
 #include <unixio.h>
@@ -43,43 +42,47 @@ __CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.117 2024/05/22 12:51:34 cvsuser 
 #endif
 
 #if defined(HAVE_LIBNCURSESW)
-#if defined(HAVE_NCURSESW_CURSESW_H)
-#include <ncursesw/ncursesw.h>
-#include <ncursesw/termcap.h>
-#include <ncursesw/term.h>
-#elif defined(HAVE_NCURSESW_CURSES_H)
-#include <ncursesw/curses.h>
-#include <ncursesw/termcap.h>
-#include <ncursesw/term.h>
+#if defined(HAVE_NCURSESW_CURSES_H)
+#   include <ncursesw/curses.h>
+#   include <ncursesw/termcap.h>
+#   include <ncursesw/term.h>
 #elif defined(HAVE_NCURSESW_H)
-#include <ncursesw.h>
-#if defined(HAVE_TERMCAP_H)
-#include <termcap.h>
-#endif
-#if defined(HAVE_TERM_H)
-#include <term.h>
-#endif
+#   include <ncursesw.h>
+#   if defined(HAVE_TERMCAP_H)
+#       include <termcap.h>
+#   endif
+#   if defined(HAVE_TERM_H)
+#       include <term.h>
+#   endif
+#elif defined(HAVE_NCURSES_CURSES_H)
+#   include <ncurses/curses.h>
+#   include <ncurses/termcap.h>
+#   include <ncurses/term.h>
+#elif defined(HAVE_NCURSES_H)
+#   include <ncurses.h>
+#   if defined(HAVE_TERMCAP_H)
+#       include <termcap.h>
+#   endif
+#   if defined(HAVE_TERM_H)
+#       include <term.h>
+#   endif
 #else  /*!HAVE_NCURSESW_CURSES_H || HAVE_NCURSESW_H*/
 #error "HAVE_LIBNCURSEW defined yet missing headers, check config"
 #endif
 
 #elif defined(HAVE_LIBNCURSES)
-#if defined(HAVE_NCURSES_NCURSES_H)
-#include <ncurses/ncurses.h>
-#include <ncurses/termcap.h>
-#include <ncurses/term.h>
-#elif defined(HAVE_NCURSES_CURSES_H)
-#include <ncurses/curses.h>
-#include <ncurses/termcap.h>
-#include <ncurses/term.h>
+#if defined(HAVE_NCURSES_CURSES_H)
+#   include <ncurses/curses.h>
+#   include <ncurses/termcap.h>
+#   include <ncurses/term.h>
 #elif defined(HAVE_NCURSES_H)
-#include <ncurses.h>
-#if defined(HAVE_TERMCAP_H)
-#include <termcap.h>
-#endif
-#if defined(HAVE_TERM_H)
-#include <term.h>
-#endif
+#   include <ncurses.h>
+#   if defined(HAVE_TERMCAP_H)
+#       include <termcap.h>
+#   endif
+#   if defined(HAVE_TERM_H)
+#       include <term.h>
+#   endif
 #else  /*!HAVE_NCURSES_CURSES_H || HAVE_NCURSES_H*/
 #error "HAVE_LIBNCURSE defined yet missing headers, check config"
 #endif
@@ -177,9 +180,14 @@ extern int ospeed;
 #define NOCOLOR                 0x7fff
 
 typedef struct {
+    const char *        termfname;              /* function name */
+    unsigned            userdef;                /* is userdef attribute */
     const char *        termcapname;            /* termcap name */
     const char *        terminfoname;           /* terminfo name */
     const char *        comment;                /* comment string */
+#define TC_FNAME(__fname)       #__fname, 0
+#define TC_UNAME(__uname)       "userdef_" #__uname, 1
+#define TC_KNAME(__kname)       "keydef_" #__kname, 1
 #define TC_DESC(__desc)         __desc
 } Term_t;
 
@@ -204,12 +212,16 @@ typedef struct {
     int                 ivalue;                 /* runtime value*/
 } TermNumeric_t;
 
+typedef uint32_t TAttributes_t;
+
 static void             term_open(scrprofile_t *profile);
 static void             term_ready(int repaint, scrprofile_t *profile);
 static void             term_feature(int ident, scrprofile_t *profile);
 static void             term_display(void);
 static int              term_control(int action, int param, ...);
 static void             term_close(void);
+
+static int              isterm(const char *term, const char *what);
 static int              hasfeature(const char *term, const char *what);
 
 static const char *     ttisetup(void);
@@ -218,7 +230,7 @@ static const char *     ttigetstr(const Term_t *ti);
 static int              ttigetnum(const Term_t *ti);
 static int              ttigetflag(const Term_t *ti);
 
-static int              term_xtermlike(const char *term);
+static TAttributes_t    term_xtermlike(const char *term);
 
 static void             acs_dump(const char *bp);
 static const char *     acs_box_characters(const char *bp);
@@ -230,6 +242,7 @@ static int              term_cursor(int visible, int imode, int virtual_space);
 static int              term_names(const char *title, const char *icon);
 static void             term_beep(int freq, int duration);
 
+static void             term_config(void);
 static void             term_colors(void);
 static void             term_fgbg(void);
 static const char *     fgbg_value(const char *src, int *result);
@@ -240,7 +253,9 @@ static int              xterm_colors_get(char *buffer, int length);
 static int              xterm_colors_set(const char *value);
 
 static int              term_isutf8(void);
+static int              term_attributes(void);
 static int              term_identification(void);
+static int              term_ocs_color(int code);
 static int              term_read(char *buf, int blen, accint_t tmo);
 
 static __CINLINE void   term_graphic_enter(void);
@@ -300,21 +315,29 @@ static char             tcapstrings[TC_SLEN];   /* termcap local storage */
 /*
  *  Terminate attributes
  */
-#define TA_XTERM                0x0001
-#define TA_VT100LIKE            0x0002
-#define TA_XTERMLIKE            0x0004
+#define TA_XTERM                0x00000001
+#define TA_VT100LIKE            0x00000002
+#define TA_XTERMLIKE            0x00000004
+#define TA_LINUX                0x00010000
+#define TA_CYGWIN               0x00020000
+#define TA_KONSOLE              0x00040000
+#define TA_SCREEN               0x00080000
+#define TA_MINTTY               0x00100000
+#define TA_PUTTY                0x00200000
+#define TA_MSTERMINAL           0x00400000
+#define TA_GNOME                0x01000000
+#define TA_KITTY                0x02000000
+#define TA_ALACRITTY            0x04000000
+#define TA_ITERM                0x08000000
+#define TA_HTERM                0x10000000
+#define TA_WEZTERM              0x20000000
+#define TA_DARK                 0x00000010      /* generally dark background */
+#define TA_LIGHT                0x00000020      /* generally light */
+#define TA_MONO                 0x00000040      /* mono terminal */
+#define TA_LUMINACE_DARK        0x00000100
+#define TA_LUMINACE_LIGHT       0x00000200
 
-#define TA_LINUX                0x0010
-#define TA_CYGWIN               0x0020
-#define TA_KONSOLE              0x0040
-#define TA_SCREEN               0x0080
-#define TA_MINTTY               0x0100
-
-#define TA_DARK                 0x1000          /* generally dark background */
-#define TA_LIGHT                0x2000          /* light */
-#define TA_MONO                 0x4000          /* mono terminal */
-
-static unsigned         t_attributes;           /* attributes */
+static TAttributes_t    t_attributes;           /* attributes */
 static int              t_charout;              /* number of characters output. */
 static unsigned         t_insdel;               /* do we have both insert & delete line? */
 static int              t_padchar = -1;         /* pad character (if any) */
@@ -333,7 +356,6 @@ static unsigned         t_specials;             /* special bits */
 static char             t_colorsorg[XTERM_COLORS * 32];
 static char             t_colorsuser[XTERM_COLORS * 32];
 
-
 /*
  *  Cached termap controls
  *
@@ -342,11 +364,7 @@ static char             t_colorsuser[XTERM_COLORS * 32];
  *          X/Open System Interface Definitions, Issue 4, Version 2.
  *
  *          http://www.xfree86.org/current/ctlseqs.html
- *
- *          http://dickey.his.com/xterm/xterm.faq.html
- *
- *          http://frexx.de/xterm-256-notes
- *
+ *          http://invisible-island.net/ncurses/#download_database
  *          http://en.wikipedia.org/wiki/ANSI_escape_code
  */
 static int
@@ -366,7 +384,8 @@ static int
     tf_ut,                                      /* screen erased with background color. */
     tf_be,                                      /* back color erase (xterm). */
     tf_xs, tf_xt,                               /* attribute clear mode */
-    tf_ms;                                      /* save to move cursor whilst standout/underlined */
+    tf_ms,                                      /* save to move cursor whilst standout/underlined */
+    tf_XT;                                      /* supports xterm OCS and mouse */
 
 static int
     tn_sg,                                      /* number of glitches, 0 for invisable, -1 for none */
@@ -392,7 +411,7 @@ static const char
     *tc_pDO,                                    /* Cursor down - parameterised. */
     *tc_le,                                     /* Cursor left (new style). */
     *tc_bc,                                     /* Cursor left (old style). */
-    *tc_pBC,                                    /* Cursor left - parameterised. */
+    *tc_pLE,                                    /* Cursor left - parameterised. */
     *tc_nd,                                     /* Cursor right. */
     *tc_pRI,                                    /* Cursor right - parameterised. */
     *tc_cv,                                     /* Cursor vertical movement. */
@@ -437,7 +456,9 @@ static const char
     *tc_md,                                     /* Make bold. */
     *tc_ZH, *tc_ZR,                             /* Italic (on/off). */
     *tc_mr, *tc_ZX,                             /* Reverse (on/off). */
-    *tc_sa;                                     /* Attribute set. */
+    *tc_sa,                                     /* Attribute set. */
+
+    *tc_RV;                                     /* XTerm version */
 
 static const char
     *tc_acs_start,                              /* as */
@@ -537,585 +558,720 @@ static GraphicChars_t term_characters[] =  {    /* graphic characters */
     };
 
 static TermString_t term_strings[] = {          /* strings - termcap/terminfo elements */
-    { "ac", "acsc",         TC_DESC("acs characters"), TC_STRING(&tc_graphic_pairs) },
-    { "bt", "cbt",          TC_DESC("back tab")},
-    { "bl", "bel",          TC_DESC("audible signal (bell)"), TC_STRING(&tc_bl) },
-    { "cr", "cr",           TC_DESC("carriage return"), TC_STRING(&tc_cr) },
-    { "ZA", "cpi",          TC_DESC("change number of characters per inch") },
-    { "ZB", "lpi",          TC_DESC("change number of lines per inch") },
-    { "ZC", "chr",          TC_DESC("change horizontal resolution") },
-    { "ZD", "cvr",          TC_DESC("change vertical resolution") },
-    { "cs", "csr",          TC_DESC("change region to line #1 to line #2"), &tc_cs },
-    { "rP", "rmp",          TC_DESC("like ip but when in insert mode") },
-    { "ct", "tbc",          TC_DESC("clear all tab stops") },
-    { "MC", "mgc",          TC_DESC("clear right and left soft margins") },
-    { "cl", "clear",        TC_DESC("clear screen and home cursor"), &tc_cl },
-    { "cb", "el1",          TC_DESC("clear to beginning of line"), &tc_cb },
-    { "ce", "el",           TC_DESC("clr eol"), &tc_ce },
-    { "cd", "ed",           TC_DESC("clear to end of screen"), &tc_cd },
-    { "ch", "hpa",          TC_DESC("horizontal position #1, absolute"), &tc_ch },
-    { "CC", "cmdch",        TC_DESC("terminal settable cmd character in prototype !?") },
-    { "CW", "cwin",         TC_DESC("define a window #1 from #2, #3 to #4, #5") },
-    { "cm", "cup",          TC_DESC("move to row #1 columns #2"), &tc_cm },
-    { "do", "cud1",         TC_DESC("down one line"), &tc_do },
-    { "ho", "home",         TC_DESC("home cursor (if no cup)"), &tc_ho },
-    { "vi", "civis",        TC_DESC("make cursor invisible"), &tc_vi },
-    { "le", "cub1",         TC_DESC("move left one space"), &tc_le },
-    { "CM", "mrcup",        TC_DESC("memory relative cursor addressing") },
-    { "ve", "cnorm",        TC_DESC("make cursor appear normal (undo civis/cvvis)"), &tc_ve },
-    { "nd", "cuf1",         TC_DESC("move right one space"), &tc_nd },
-    { "ll", "ll",           TC_DESC("last line, first column (if no cup)"), &tc_ll },
-    { "up", "cuu1",         TC_DESC("up one line"), &tc_up },
-    { "vs", "cvvis",        TC_DESC("make cursor very visible"), &tc_vs },
-    { "ZE", "defc",         TC_DESC("define a character") },
-    { "dc", "dch1",         TC_DESC("delete character"), &tc_dc },
-    { "dl", "dl1",          TC_DESC("delete line"), &tc_dl },
-    { "DI", "dial",         TC_DESC("dial number #1") },
-    { "ds", "dsl",          TC_DESC("disable status line") },
-    { "DK", "dclk",         TC_DESC("display clock at (#1,#2)") },
-    { "hd", "hd",           TC_DESC("half a line down") },
-    { "eA", "enacs",        TC_DESC("enable alternate char set"), &tc_acs_enable },
-    { "as", "smacs",        TC_DESC("enter alt charset mode"), &tc_acs_start },
-    { "SA", "smam",         TC_DESC("turn on automatic margins"), &tc_am_on },
-    { "mb", "blink",        TC_DESC("turn on blinking"), &tc_mb },
-    { "md", "bold",         TC_DESC("turn on bold (extra bright) mode"), &tc_md },
-    { "ti", "smcup",        TC_DESC("string to start programs using cup"), &tc_ti },
-    { "dm", "smdc",         TC_DESC("enter delete mode") },
-    { "mh", "dim",          TC_DESC("turn on half-bright mode") },
-    { "ZF", "swidm",        TC_DESC("enter double-wide mode") },
-    { "ZG", "sdrfq",        TC_DESC("enter draft-quality mode") },
-    { "im", "smir",         TC_DESC("enter insert mode"), &tc_im },
-    { "ZH", "sitm",         TC_DESC("enter italic mode"), &tc_ZH },
-    { "ZI", "slm",          TC_DESC("start leftward carriage motion") },
-    { "ZJ", "smicm",        TC_DESC("start micro-motion mode") },
-    { "ZK", "snlq",         TC_DESC("enter NLQ mode") },
-    { "ZL", "snrmq",        TC_DESC("enter normal-quality mode") },
-    { "mp", "prot",         TC_DESC("turn on protected mode") },
-    { "mr", "rev",          TC_DESC("turn on reverse video mode"), &tc_mr },
-    { "mk", "invis",        TC_DESC("turn on blank mode (characters invisible)") },
-    { "ZM", "sshm",         TC_DESC("enter shadow-print mode") },
-    { "so", "smso",         TC_DESC("begin standout mode"), &tc_so },
-    { "ZN", "ssubm",        TC_DESC("enter subscript mode") },
-    { "ZO", "ssupm",        TC_DESC("enter superscript mode") },
-    { "us", "smul",         TC_DESC("begin underline mode"), &tc_us },
-    { "ZP", "sum",          TC_DESC("start upward carriage motion") },
-    { "SX", "smxon",        TC_DESC("turn on xon/xoff handshaking") },
-    { "ec", "ech",          TC_DESC("erase #1 characters"), &tc_ech },
-    { "ae", "rmacs",        TC_DESC("exit alt charset mode"), &tc_acs_end },
-    { "RA", "rmam",         TC_DESC("turn off automatic margins") },
-    { "me", "sgr0",         TC_DESC("turn off all attributes"), &tc_me },
-    { "te", "rmcup",        TC_DESC("strings to end programs using cup"), &tc_te },
-    { "ed", "rmdc",         TC_DESC("end delete mode") },
-    { "ZQ", "rwidm",        TC_DESC("end double-wide mode") },
-    { "ei", "rmir",         TC_DESC("exit insert mode"), &tc_ei },
-    { "ZR", "ritm",         TC_DESC("end italic mode"), &tc_ZR },
-    { "ZS", "rlm",          TC_DESC("end left-motion mode") },
-    { "ZU", "rmicm",        TC_DESC("end shadow-print mode") },
-    { "ZT", "rshm",         TC_DESC("end micro-motion mode") },
-    { "se", "rmso",         TC_DESC("exit standout mode"), &tc_se },
-    { "ZV", "rsubm",        TC_DESC("exit_subscript_mode") },
-    { "ZW", "rsupm",        TC_DESC("end superscript mode") },
-    { "ue", "rmul",         TC_DESC("exit underline mode"), &tc_ue },
-    { "ZX", "rum",          TC_DESC("end reverse character motion"), &tc_ZX },
-    { "RX", "rmxon",        TC_DESC("turn off xon/xoff handshaking") },
-    { "PA", "pause",        TC_DESC("pause for 2-3 seconds") },
-    { "fh", "hook",         TC_DESC("flash switch hook") },
-    { "vb", "flash",        TC_DESC("visible bell (may not move cursor)"), &tc_vb },
-    { "ff", "ff",           TC_DESC("hardcopy terminal page eject") },
-    { "fs", "fsl",          TC_DESC("return from status line") },
-    { "WG", "wingo",        TC_DESC("go to window #1") },
-    { "HU", "hup",          TC_DESC("hang-up phone") },
-    { "i1", "is1",          TC_DESC("initialization string") },
-    { "is", "is2",          TC_DESC("initialization string") },
-    { "i2", NULL,           TC_DESC("secondary initialization string") },
-    { "i3", "is3",          TC_DESC("initialization string") },
-    { "if", "if",           TC_DESC("name of initialization file") },
-    { "iP", "iprog",        TC_DESC("path name of program for initialization") },
-    { "Ic", "initc",        TC_DESC("initialize color #1 to (#2,#3,#4)") },
-    { "Ip", "initp",        TC_DESC("initialize color pair #1 to fg=(#2,#3,#4), bg=(#5,#6,#7)") },
-    { "ic", "ich1",         TC_DESC("insert character"), &tc_ic },
-    { "al", "il1",          TC_DESC("insert line"), &tc_al },
-    { "ip", "ip",           TC_DESC("insert padding after inserted character") },
-    { "ke", "rmkx",         TC_DESC("leave 'keyboard_transmit' mode"), &tc_ke },
-    { "ks", "smkx",         TC_DESC("enter 'keyboard_transmit' mode"), &tc_ks },
-    { "l0", "lf0",          TC_DESC("label on function key f0 if not f0") },
-    { "l1", "lf1",          TC_DESC("label on function key f1 if not f1") },
-    { "l2", "lf10",         TC_DESC("label on function key f2 if not f2") },
-    { "l3", "lf2",          TC_DESC("label on function key f3 if not f3") },
-    { "l4", "lf3",          TC_DESC("label on function key f4 if not f4") },
-    { "l5", "lf4",          TC_DESC("label on function key f5 if not f5") },
-    { "l6", "lf5",          TC_DESC("label on function key f6 if not f6") },
-    { "l7", "lf6",          TC_DESC("label on function key f7 if not f7") },
-    { "l8", "lf7",          TC_DESC("label on function key f8 if not f8") },
-    { "l9", "lf8",          TC_DESC("label on function key f9 if not f9") },
-    { "la", "lf9",          TC_DESC("label on function key f10 if not f10") },
-    { "Lf", "fln",          TC_DESC("label format") },
-    { "LF", "rmln",         TC_DESC("turn off soft labels") },
-    { "LO", "smln",         TC_DESC("turn on soft labels") },
-    { "mo", "rmm",          TC_DESC("turn off meta mode"), &tc_mo },
-    { "mm", "smm",          TC_DESC("turn on meta mode (8th-bit on)"), &tc_mm },
-    { "ZY", "mhpa",         TC_DESC("like column_address in micro mode") },
-    { "ZZ", "mcud1",        TC_DESC("like cursor_down in micro mode") },
-    { "Za", "mcub1",        TC_DESC("like cursor_left in micro mode") },
-    { "Zb", "mcuf1",        TC_DESC("like cursor_right in micro mode") },
-    { "Zc", "mvpa",         TC_DESC("like row_address in micro mode") },
-    { "Zd", "mcuu1",        TC_DESC("like cursor_up in micro mode") },
-    { "nw", "nel",          TC_DESC("newline (behave like cr followed by lf)") },
-    { "Ze", "porder",       TC_DESC("match software bits to print-head pins") },
-    { "oc", "oc",           TC_DESC("set all color pairs to the original ones"), &tc_oc },
-    { "op", "op",           TC_DESC("set default pair to its original value"), &tc_op },
-    { "pc", "pad",          TC_DESC("padding char (instead of null)"), &tc_pc },
-    { "DC", "dch",          TC_DESC("delete #1 chars"), &tc_pDC },
-    { "DL", "dl",           TC_DESC("parm_delete_line"), &tc_pDL },
-    { "DO", "cud",          TC_DESC("down #1 lines"), &tc_pDO },
-    { "Zf", "mcud",         TC_DESC("like parm down cursor in micro mode") },
-    { "IC", "ich",          TC_DESC("insert #1 chars") },
-    { "SF", "indn",         TC_DESC("scroll forward #1 lines"), &tc_pSF },
-    { "AL", "il",           TC_DESC("parm insert line"), &tc_pAL },
-    { "LE", "cub",          TC_DESC("move #1 chars to the left"), &tc_pBC },
-    { "Zg", "mcub",         TC_DESC("Like parm left cursor in micro mode") },
-    { "RI", "cuf",          TC_DESC("parm right cursor"), &tc_pRI },
-    { "Zh", "mcuf",         TC_DESC("Like parm right cursor in micro mode") },
-    { "SR", "rin",          TC_DESC("scroll back #1 lines"), &tc_pSR },
-    { "UP", "cuu",          TC_DESC("up #1 lines"), &tc_pUP },
-    { "Zi", "mcuu",         TC_DESC("Like parm_up_cursor in micro mode") },
-    { "pk", "pfkey",        TC_DESC("program function key #1 to type string #2") },
-    { "pl", "pfloc",        TC_DESC("program function key #1 to execute string #2") },
-    { "px", "pfx",          TC_DESC("program function key #1 to transmit string #2") },
-    { "pn", "pln",          TC_DESC("program label #1 to show string #2") },
-    { "ps", "mc0",          TC_DESC("print contents of screen") },
-    { "pO", "mc5p",         TC_DESC("turn on printer for #1 bytes") },
-    { "pf", "mc4",          TC_DESC("turn off printer") },
-    { "po", "mc5",          TC_DESC("turn on printer") },
-    { "PU", "pulse",        TC_DESC("select pulse dialling") },
-    { "QD", "qdial",        TC_DESC("dial number #1 without checking") },
-    { "RC", "rmclk",        TC_DESC("remove clock") },
-    { "rp", "rep",          TC_DESC("repeat char #1 #2 times"), &tc_rp },
-    { "RF", "rfi",          TC_DESC("send next input char (for ptys)") },
-    { "rs", NULL,           TC_DESC("terminal reset string"), &tc_rs },
-    { "r1", "rs1",          TC_DESC("reset string") },
-    { "r2", "rs2",          TC_DESC("reset string") },
-    { "r3", "rs3",          TC_DESC("reset string") },
-    { "rf", "rf",           TC_DESC("name of reset file") },
-    { "rc", "rc",           TC_DESC("restore cursor to last position of sc") },
-    { "cv", "vpa",          TC_DESC("vertical position #1 absolute"), &tc_cv },
-    { "sc", "sc",           TC_DESC("save current cursor position") },
-    { "sf", "ind",          TC_DESC("scroll text up"), &tc_sf },
-    { "sr", "ri",           TC_DESC("scroll text down"), &tc_sr },
-    { "Zj", "scs",          TC_DESC("select character set") },
-    { "sa", "sgr",          TC_DESC("define video attributes #1-#9 (PG9)"), &tc_sa },
-    { "Sb", "setb",         TC_DESC("set background (color)"), &tc_Color_Bg },
-    { "Zk", "smgb",         TC_DESC("set bottom margin at current line") },
-    { "Zl", "smgbp",        TC_DESC("set bottom margin at line #1 or #2 lines from bottom") },
-    { "SC", "sclk",         TC_DESC("set clock, #1 hrs #2 mins #3 secs") },
-    { "sp", "scp",          TC_DESC("set current color pair to #1") },
-    { "Sf", "setf",         TC_DESC("set foreground (color)"), &tc_Color_Fg },
-    { "ML", "smgl",         TC_DESC("set left soft margin") },
-    { "Zm", "smglp",        TC_DESC("set left (right) margin at column #1 (#2)") },
-    { "MR", "smgr",         TC_DESC("set right soft margin") },
-    { "Zn", "smgrp",        TC_DESC("set right margin at column #1") },
-    { "st", "hts",          TC_DESC("set a tab in every row, current columns") },
-    { "Zo", "smgt",         TC_DESC("set top margin at current line") },
-    { "Zq", "smgtp",        TC_DESC("start printing bit image braphics") },
-    { "wi", "wind",         TC_DESC("current window is lines #1-#2 cols #3-#4") },
-    { "Zq", "sbim",         TC_DESC("start bit image") },
-    { "Zr", "scsd",         TC_DESC("start character set definition") },
-    { "Zs", "rbim",         TC_DESC("stop printing bit image graphics") },
-    { "Zt", "rcsd",         TC_DESC("end definition of character aet") },
-    { "Zu", "subcs",        TC_DESC("list of subscriptable characters") },
-    { "Zv", "supcs",        TC_DESC("list of superscriptable characters") },
-    { "ta", "ht",           TC_DESC("tab to next 8-space hardware tab stop") },
-    { "Zw", "docr",         TC_DESC("printing any of these chars causes CR") },
-    { "ts", "tsl",          TC_DESC("move to status line") },
-    { "TO", "tone",         TC_DESC("select touch tone dialing") },
-    { "uc", "uc",           TC_DESC("underline char and move past it") },
-    { "hu", "hu",           TC_DESC("half a line up") },
-    { "u0", "u0",           TC_DESC("user string #0") },
-    { "u1", "u1",           TC_DESC("user string #1") },
-    { "u2", "u2",           TC_DESC("user string #2") },
-    { "u3", "u3",           TC_DESC("user string #3") },
-    { "u4", "u4",           TC_DESC("user string #4") },
-    { "u5", "u5",           TC_DESC("user string #5") },
-    { "u6", "u6",           TC_DESC("user string #6") },
-    { "u7", "u7",           TC_DESC("user string #7") },
-    { "u8", "u8",           TC_DESC("user string #8") },
-    { "u9", "u9",           TC_DESC("user string #9") },
-    { "WA", "wait",         TC_DESC("wait for dial-tone") },
-    { "XF", "xoffc",        TC_DESC("XOFF character") },
-    { "XN", "xonc",         TC_DESC("XON character") },
-    { "Zx", "zerom",        TC_DESC("no motion for subsequent character") },
-
     /*
-     *  The following string capabilities are present in the SVr4.0 term
-     *  structure, but were originally not documented in the man page.
+     *  Source: https://invisible-island.net/ncurses/man/terminfo.5.html
      */
-    { "S8", "scesa",        TC_DESC("alternate escape for scancode emulation") },
-    { "Yv", "bicr",         TC_DESC("move to beginning of same row") },
-    { "Zz", "binel",        TC_DESC("move to next row of the bit image") },
-    { "Xy", "birep",        TC_DESC("repeat bit image cell #1 #2 times") },
-    { "Zy", "csnm",         TC_DESC("list of character set names") },
-    { "ci", "csin",         TC_DESC("init sequence for multiple codesets") },
-    { "Yw", "colornm",      TC_DESC("give name for color #1") },
-    { "Yx", "defbi",        TC_DESC("define rectangualar bit image region") },
-    { "dv", "devt",         TC_DESC("indicate language/codeset support") },
-    { "S1", "dispc",        TC_DESC("display PC character") },
-    { "Yy", "endbi",        TC_DESC("end a bit-image region") },
-    { "S2", "smpch",        TC_DESC("enter PC character display mode") },
-    { "S4", "smsc",         TC_DESC("enter PC scancode mode") },
-    { "S3", "rmpch",        TC_DESC("exit PC character display mode") },
-    { "S5", "rmsc",         TC_DESC("exit PC scancode mode") },
-    { "Gm", "getm",         TC_DESC("curses should get button events") },
-    { "Km", "kmous",        TC_DESC("mouse event has occurred") },
-    { "Mi", "minfo",        TC_DESC("mouse status information") },
-    { "S6", "pctrm",        TC_DESC("PC terminal options") },
-    { "xl", "pfxl",         TC_DESC("program function key #1 to type string #2 and show string #3") },
-    { "RQ", "reqmp",        TC_DESC("request mouse position") },
-    { "S7", "scesc",        TC_DESC("escape for scancode emulation") },
-    { "s0", "s0ds",         TC_DESC("shift to code set 0 (EUC set 0, ASCII)") },
-    { "s1", "s1ds",         TC_DESC("shift to code set 1") },
-    { "s2", "s2ds",         TC_DESC("shift to code set 2") },
-    { "s3", "s3ds",         TC_DESC("shift to code set 3") },
-    { "AB", "setab",        TC_DESC("set ANSI color background"), &tc_ANSI_Color_Bg },
-    { "AF", "setaf",        TC_DESC("set ANSI color foreground"), &tc_ANSI_Color_Fg },
-    { "Yz", "setcolor",     TC_DESC("change to ribbon color #1") },
-    { "ML", "smglr",        TC_DESC("set both left and right margins to #1, #2") },
-    { "YZ", "slines",       TC_DESC("set page length to #1 lines") },
-    { "MT", "smgtb",        TC_DESC("sets both top and bottom margins to #1, #2") },
+    { TC_FNAME(back_tab),                   "bt", "cbt",        TC_DESC("back tab") },
+    { TC_FNAME(bell),                       "bl", "bel",        TC_DESC("audible signal (bell)"), TC_STRING(&tc_bl) },
+    { TC_FNAME(carriage_return),            "cr", "cr",         TC_DESC("carriage return"), TC_STRING(&tc_cr) },
+    { TC_FNAME(change_scroll_region),       "cs", "csr",        TC_DESC("change region to line #1 to line #2"), &tc_cs },
+    { TC_FNAME(na),                         "cS", NULL,         TC_DESC("change region to line #1 to line #2, alt form"), &tc_cS },
+    { TC_FNAME(clear_all_tabs),             "ct", "tbc",        TC_DESC("clear all tab stops") },
+    { TC_FNAME(clear_screen),               "cl", "clear",      TC_DESC("clear screen and home cursor"), &tc_cl },
+    { TC_FNAME(clr_eol),                    "ce", "el",         TC_DESC("clr eol"), &tc_ce },
+    { TC_FNAME(clr_eos),                    "cd", "ed",         TC_DESC("clear to end of screen"), &tc_cd },
+    { TC_FNAME(column_address),             "ch", "hpa",        TC_DESC("horizontal position #1, absolute"), &tc_ch },
+    { TC_FNAME(command_character),          "CC", "cmdch",      TC_DESC("terminal settable cmd character in prototype !?") },
+    { TC_FNAME(cursor_address),             "cm", "cup",        TC_DESC("move to row #1 columns #2"), &tc_cm },
+    { TC_FNAME(cursor_down),                "do", "cud1",       TC_DESC("down one line"), &tc_do },
+    { TC_FNAME(cursor_home),                "ho", "home",       TC_DESC("home cursor (if no cup)"), &tc_ho },
+    { TC_FNAME(cursor_invisible),           "vi", "civis",      TC_DESC("make cursor invisible"), &tc_vi },
+    { TC_FNAME(cursor_left),                "le", "cub1",       TC_DESC("move left one space"), &tc_le },
+    { TC_FNAME(cursor_mem_address),         "CM", "mrcup",      TC_DESC("memory relative cursor addressing") },
+    { TC_FNAME(cursor_normal),              "ve", "cnorm",      TC_DESC("make cursor appear normal (undo civis/cvvis)"), &tc_ve },
+    { TC_FNAME(cursor_right),               "nd", "cuf1",       TC_DESC("move right one space"), &tc_nd },
+    { TC_FNAME(cursor_to_ll),               "ll", "ll",         TC_DESC("last line, first column (if no cup)"), &tc_ll },
+    { TC_FNAME(cursor_up),                  "up", "cuu1",       TC_DESC("up one line"), &tc_up },
+    { TC_FNAME(cursor_visible),             "vs", "cvvis",      TC_DESC("make cursor very visible"), &tc_vs },
+    { TC_FNAME(delete_character),           "dc", "dch1",       TC_DESC("delete character"), &tc_dc },
+    { TC_FNAME(delete_line),                "dl", "dl1",        TC_DESC("delete line"), &tc_dl },
+    { TC_FNAME(dis_status_line),            "ds", "dsl",        TC_DESC("disable status line") },
+    { TC_FNAME(down_half_line),             "hd", "hd",         TC_DESC("half a line down") },
+    { TC_FNAME(enter_alt_charset_mode),     "as", "smacs",      TC_DESC("enter alt charset mode"), &tc_acs_start },
+    { TC_FNAME(enter_blink_mode),           "mb", "blink",      TC_DESC("turn on blinking"), &tc_mb },
+    { TC_FNAME(enter_bold_mode),            "md", "bold",       TC_DESC("turn on bold (extra bright) mode"), &tc_md },
+    { TC_FNAME(enter_ca_mode),              "ti", "smcup",      TC_DESC("string to start programs using cup"), &tc_ti },
+    { TC_FNAME(enter_delete_mode),          "dm", "smdc",       TC_DESC("enter delete mode") },
+    { TC_FNAME(enter_dim_mode),             "mh", "dim",        TC_DESC("turn on half-bright mode") },
+    { TC_FNAME(enter_insert_mode),          "im", "smir",       TC_DESC("enter insert mode"), &tc_im },
+    { TC_FNAME(enter_secure_mode),          "mk", "invis",      TC_DESC("turn on blank mode (characters invisible)") },
+    { TC_FNAME(enter_protected_mode),       "mp", "prot",       TC_DESC("turn on protected mode") },
+    { TC_FNAME(enter_reverse_mode),         "mr", "rev",        TC_DESC("turn on reverse video mode"), &tc_mr },
+    { TC_FNAME(enter_standout_mode),        "so", "smso",       TC_DESC("begin standout mode"), &tc_so },
+    { TC_FNAME(enter_underline_mode),       "us", "smul",       TC_DESC("begin underline mode"), &tc_us },
+    { TC_FNAME(erase_chars),                "ec", "ech",        TC_DESC("erase #1 characters"), &tc_ech },
+    { TC_FNAME(exit_alt_charset_mode),      "ae", "rmacs",      TC_DESC("exit alt charset mode"), &tc_acs_end },
+    { TC_FNAME(exit_attribute_mode),        "me", "sgr0",       TC_DESC("turn off all attributes"), &tc_me },
+    { TC_FNAME(exit_ca_mode),               "te", "rmcup",      TC_DESC("strings to end programs using cup"), &tc_te },
+    { TC_FNAME(exit_delete_mode),           "ed", "rmdc",       TC_DESC("end delete mode") },
+    { TC_FNAME(exit_insert_mode),           "ei", "rmir",       TC_DESC("exit insert mode"), &tc_ei },
+    { TC_FNAME(exit_standout_mode),         "se", "rmso",       TC_DESC("exit standout mode"), &tc_se },
+    { TC_FNAME(exit_underline_mode),        "ue", "rmul",       TC_DESC("exit underline mode"), &tc_ue },
+    { TC_FNAME(flash_screen),               "vb", "flash",      TC_DESC("visible bell (may not move cursor)"), &tc_vb },
+    { TC_FNAME(form_feed),                  "ff", "ff",         TC_DESC("hardcopy terminal page eject") },
+    { TC_FNAME(from_status_line),           "fs", "fsl",        TC_DESC("return from status line") },
+    { TC_FNAME(init_1string),               "i1", "is1",        TC_DESC("initialization string #1") },
+    { TC_FNAME(init_2string),               "is", "is2",        TC_DESC("initialization string #2") },
+    { TC_FNAME(init_3string),               "i3", "is3",        TC_DESC("initialization string #3") },
+    { TC_FNAME(init_file),                  "if", "if",         TC_DESC("name of initialization file") },
+    { TC_FNAME(insert_character),           "ic", "ich1",       TC_DESC("insert character"), &tc_ic },
+    { TC_FNAME(insert_line),                "al", "il1",        TC_DESC("insert line"), &tc_al },
+    { TC_FNAME(insert_padding),             "ip", "ip",         TC_DESC("insert padding after inserted character") },
+    { TC_FNAME(keypad_local),               "ke", "rmkx",       TC_DESC("leave 'keyboard_transmit' mode"), &tc_ke },
+    { TC_FNAME(keypad_xmit),                "ks", "smkx",       TC_DESC("enter 'keyboard_transmit' mode"), &tc_ks },
+    { TC_FNAME(lab_f0),                     "l0", "lf0",        TC_DESC("label on function key f0 if not f0") },
+    { TC_FNAME(lab_f1),                     "l1", "lf1",        TC_DESC("label on function key f1 if not f1") },
+    { TC_FNAME(lab_f2),                     "l2", "lf2",        TC_DESC("label on function key f2 if not f2") },
+    { TC_FNAME(lab_f3),                     "l3", "lf3",        TC_DESC("label on function key f3 if not f3") },
+    { TC_FNAME(lab_f4),                     "l4", "lf4",        TC_DESC("label on function key f4 if not f4") },
+    { TC_FNAME(lab_f5),                     "l5", "lf5",        TC_DESC("label on function key f5 if not f5") },
+    { TC_FNAME(lab_f6),                     "l6", "lf6",        TC_DESC("label on function key f6 if not f6") },
+    { TC_FNAME(lab_f7),                     "l7", "lf7",        TC_DESC("label on function key f7 if not f7") },
+    { TC_FNAME(lab_f8),                     "l8", "lf8",        TC_DESC("label on function key f8 if not f8") },
+    { TC_FNAME(lab_f9),                     "l9", "lf9",        TC_DESC("label on function key f9 if not f9") },
+    { TC_FNAME(lab_f10),                    "la", "lf10",       TC_DESC("label on function key f10 if not f10") },
+    { TC_FNAME(meta_off),                   "mo", "rmm",        TC_DESC("turn off meta mode"), &tc_mo },
+    { TC_FNAME(meta_on),                    "mm", "smm",        TC_DESC("turn on meta mode (8th-bit on)"), &tc_mm },
+    { TC_FNAME(newline),                    "nw", "nel",        TC_DESC("newline (behave like cr followed by lf)") },
+    { TC_FNAME(pad_char),                   "pc", "pad",        TC_DESC("padding char (instead of null)"), &tc_pc },
+    { TC_FNAME(parm_dch),                   "DC", "dch",        TC_DESC("delete #1 chars"), &tc_pDC },
+    { TC_FNAME(parm_delete_line),           "DL", "dl",         TC_DESC("parm_delete_line"), &tc_pDL },
+    { TC_FNAME(parm_down_cursor),           "DO", "cud",        TC_DESC("down #1 lines"), &tc_pDO },
+    { TC_FNAME(parm_ich),                   "IC", "ich",        TC_DESC("insert #1 chars") },
+    { TC_FNAME(parm_index),                 "SF", "indn",       TC_DESC("scroll forward #1 lines"), &tc_pSF },
+    { TC_FNAME(parm_insert_line),           "AL", "il",         TC_DESC("parm insert line"), &tc_pAL },
+    { TC_FNAME(parm_left_cursor),           "LE", "cub",        TC_DESC("move #1 chars to the left"), &tc_pLE },
+    { TC_FNAME(parm_right_cursor),          "RI", "cuf",        TC_DESC("parm right cursor"), &tc_pRI },
+    { TC_FNAME(parm_rindex),                "SR", "rin",        TC_DESC("scroll back #1 lines"), &tc_pSR },
+    { TC_FNAME(parm_up_cursor),             "UP", "cuu",        TC_DESC("up #1 lines"), &tc_pUP },
+    { TC_FNAME(pkey_key),                   "pk", "pfkey",      TC_DESC("program function key #1 to type string #2") },
+    { TC_FNAME(pkey_local),                 "pl", "pfloc",      TC_DESC("program function key #1 to execute string #2") },
+    { TC_FNAME(pkey_xmit),                  "px", "pfx",        TC_DESC("program function key #1 to transmit string #2") },
+    { TC_FNAME(print_screen),               "ps", "mc0",        TC_DESC("print contents of screen") },
+    { TC_FNAME(prtr_off),                   "pf", "mc4",        TC_DESC("turn off printer") },
+    { TC_FNAME(prtr_on),                    "po", "mc5",        TC_DESC("turn on printer") },
+    { TC_FNAME(repeat_char),                "rp", "rep",        TC_DESC("repeat char #1 #2 times"), &tc_rp },
+    { TC_FNAME(reset_1string),              "r1", "rs1",        TC_DESC("reset string #1") },
+    { TC_FNAME(reset_2string),              "r2", "rs2",        TC_DESC("reset string #2") },
+    { TC_FNAME(reset_3string),              "r3", "rs3",        TC_DESC("reset string #2") },
+    { TC_FNAME(reset_file),                 "rf", "rf",         TC_DESC("name of reset file") },
+    { TC_FNAME(restore_cursor),             "rc", "rc",         TC_DESC("restore cursor to last position of sc") },
+    { TC_FNAME(row_address),                "cv", "vpa",        TC_DESC("vertical position #1 absolute"), &tc_cv },
+    { TC_FNAME(save_cursor),                "sc", "sc",         TC_DESC("save current cursor position") },
+    { TC_FNAME(scroll_forward),             "sf", "ind",        TC_DESC("scroll text up"), &tc_sf },
+    { TC_FNAME(scroll_reverse),             "sr", "ri",         TC_DESC("scroll text down"), &tc_sr },
+    { TC_FNAME(set_attributes),             "sa", "sgr",        TC_DESC("define video attributes #1-#9 (PG9)"), &tc_sa },
+    { TC_FNAME(set_tab),                    "st", "hts",        TC_DESC("set a tab in every row, current columns") },
+    { TC_FNAME(set_window),                 "wi", "wind",       TC_DESC("current window is lines #1-#2 cols #3-#4") },
+    { TC_FNAME(tab),                        "ta", "ht",         TC_DESC("tab to next 8-space hardware tab stop") },
+    { TC_FNAME(to_status_line),             "ts", "tsl",        TC_DESC("move to status line") },
+    { TC_FNAME(underline_char),             "uc", "uc",         TC_DESC("underline char and move past it") },
+    { TC_FNAME(up_half_line),               "hu", "hu",         TC_DESC("half a line up") },
+    { TC_FNAME(init_prog),                  "iP", "iprog",      TC_DESC("path name of program for initialization") },
+    { TC_FNAME(prtr_non),                   "pO", "mc5p",       TC_DESC("turn on printer for #1 bytes") },
+    { TC_FNAME(char_padding),               "rP", "rmp",        TC_DESC("like ip but when in insert mode") },
+    { TC_FNAME(acs_chars),                  "ac", "acsc",       TC_DESC("acs characters"), TC_STRING(&tc_graphic_pairs) },
+    { TC_FNAME(plab_norm),                  "pn", "pln",        TC_DESC("program label #1 to show string #2") },
+    { TC_FNAME(enter_xon_mode),             "SX", "smxon",      TC_DESC("turn on xon/xoff handshaking") },
+    { TC_FNAME(exit_xon_mode),              "RX", "rmxon",      TC_DESC("turn off xon/xoff handshaking") },
+    { TC_FNAME(enter_am_mode),              "SA", "smam",       TC_DESC("turn on automatic margins"), &tc_am_on },
+    { TC_FNAME(exit_am_mode),               "RA", "rmam",       TC_DESC("turn off automatic margins") },
+    { TC_FNAME(xon_character),              "XN", "xonc",       TC_DESC("XON character") },
+    { TC_FNAME(xoff_character),             "XF", "xoffc",      TC_DESC("XOFF character") },
+    { TC_FNAME(ena_acs),                    "eA", "enacs",      TC_DESC("enable alternate char set"), &tc_acs_enable },
+    { TC_FNAME(label_on),                   "LO", "smln",       TC_DESC("turn on soft labels") },
+    { TC_FNAME(label_off),                  "LF", "rmln",       TC_DESC("turn off soft labels") },
+    { TC_FNAME(req_for_input),              "RF", "rfi",        TC_DESC("send next input char (for ptys)") },
+    { TC_FNAME(clr_bol),                    "cb", "el1",        TC_DESC("clear to beginning of line"), &tc_cb },
+    { TC_FNAME(clear_margins),              "MC", "mgc",        TC_DESC("clear right and left soft margins") },
+    { TC_FNAME(set_left_margin),            "ML", "smgl",       TC_DESC("set left soft margin") },
+    { TC_FNAME(set_right_margin),           "MR", "smgr",       TC_DESC("set right soft margin") },
+    { TC_FNAME(label_format),               "Lf", "fln",        TC_DESC("label format") },
+    { TC_FNAME(set_clock),                  "SC", "sclk",       TC_DESC("set clock, #1 hrs #2 mins #3 secs") },
+    { TC_FNAME(display_clock),              "DK", "dclk",       TC_DESC("display clock at (#1,#2)") },
+    { TC_FNAME(remove_clock),               "RC", "rmclk",      TC_DESC("remove clock") },
+    { TC_FNAME(create_window),              "CW", "cwin",       TC_DESC("define a window #1 from #2, #3 to #4, #5") },
+    { TC_FNAME(goto_window),                "WG", "wingo",      TC_DESC("go to window #1") },
+    { TC_FNAME(hangup ),                    "HU", "hup",        TC_DESC("hang-up phone") },
+    { TC_FNAME(dial_phone),                 "DI", "dial",       TC_DESC("dial number #1") },
+    { TC_FNAME(quick_dial),                 "QD", "qdial",      TC_DESC("dial number #1 without checking") },
+    { TC_FNAME(tone),                       "TO", "tone",       TC_DESC("select touch tone dialing") },
+    { TC_FNAME(pulse),                      "PU", "pulse",      TC_DESC("select pulse dialling") },
+    { TC_FNAME(flash_hook),                 "fh", "hook",       TC_DESC("flash switch hook") },
+    { TC_FNAME(fixed_pause),                "PA", "pause",      TC_DESC("pause for 2-3 seconds") },
+    { TC_FNAME(wait_tone),                  "WA", "wait",       TC_DESC("wait for dial-tone") },
+    { TC_FNAME(user0),                      "u0", "u0",         TC_DESC("user string #0") },
+    { TC_FNAME(user1),                      "u1", "u1",         TC_DESC("user string #1") },
+    { TC_FNAME(user2),                      "u2", "u2",         TC_DESC("user string #2") },
+    { TC_FNAME(user3),                      "u3", "u3",         TC_DESC("user string #3") },
+    { TC_FNAME(user4),                      "u4", "u4",         TC_DESC("user string #4") },
+    { TC_FNAME(user5),                      "u5", "u5",         TC_DESC("user string #5") },
+    { TC_FNAME(user6),                      "u6", "u6",         TC_DESC("user string #6") },
+    { TC_FNAME(user7),                      "u7", "u7",         TC_DESC("user string #7") },
+    { TC_FNAME(user8),                      "u8", "u8",         TC_DESC("user string #8") },
+    { TC_FNAME(user9),                      "u9", "u9",         TC_DESC("user string #9") },
+    { TC_FNAME(orig_pair),                  "op", "op",         TC_DESC("set default pair to its original value"), &tc_op },
+    { TC_FNAME(orig_colors),                "oc", "oc",         TC_DESC("set all color pairs to the original ones"), &tc_oc },
+    { TC_FNAME(initialize_color),           "Ic", "initc",      TC_DESC("initialize color #1 to (#2,#3,#4)") },
+    { TC_FNAME(initialize_pair),            "Ip", "initp",      TC_DESC("initialize color pair #1 to fg=(#2,#3,#4), bg=(#5,#6,#7)") },
+    { TC_FNAME(set_color_pair),             "sp", "scp",        TC_DESC("set current color pair to #1") },
+    { TC_FNAME(set_foreground),             "Sf", "setf",       TC_DESC("set foreground (color)"), &tc_Color_Fg },
+    { TC_FNAME(set_background),             "Sb", "setb",       TC_DESC("set background (color)"), &tc_Color_Bg },
+    { TC_FNAME(change_char_pitch),          "ZA", "cpi",        TC_DESC("change number of characters per inch") },
+    { TC_FNAME(change_line_pitch),          "ZB", "lpi",        TC_DESC("change number of lines per inch") },
+    { TC_FNAME(change_res_horz),            "ZC", "chr",        TC_DESC("change horizontal resolution") },
+    { TC_FNAME(change_res_vert),            "ZD", "cvr",        TC_DESC("change vertical resolution") },
+    { TC_FNAME(define_char),                "ZE", "defc",       TC_DESC("define a character") },
+    { TC_FNAME(enter_doublewide_mode),      "ZF", "swidm",      TC_DESC("enter double-wide mode") },
+    { TC_FNAME(enter_draft_quality),        "ZG", "sdrfq",      TC_DESC("enter draft-quality mode") },
+    { TC_FNAME(enter_italics_mode),         "ZH", "sitm",       TC_DESC("enter italic mode"), &tc_ZH },
+    { TC_FNAME(enter_leftward_mode),        "ZI", "slm",        TC_DESC("start leftward carriage motion") },
+    { TC_FNAME(enter_micro_mode),           "ZJ", "smicm",      TC_DESC("start micro-motion mode") },
+    { TC_FNAME(enter_near_letter_quality),  "ZK", "snlq",       TC_DESC("enter NLQ mode") },
+    { TC_FNAME(enter_normal_quality),       "ZL", "snrmq",      TC_DESC("enter normal-quality mode") },
+    { TC_FNAME(enter_shadow_mode),          "ZM", "sshm",       TC_DESC("enter shadow-print mode") },
+    { TC_FNAME(enter_subscript_mode),       "ZN", "ssubm",      TC_DESC("enter subscript mode") },
+    { TC_FNAME(enter_superscript_mode),     "ZO", "ssupm",      TC_DESC("enter superscript mode") },
+    { TC_FNAME(enter_upward_mode),          "ZP", "sum",        TC_DESC("start upward carriage motion") },
+    { TC_FNAME(exit_doublewide_mode),       "ZQ", "rwidm",      TC_DESC("end double-wide mode") },
+    { TC_FNAME(exit_italics_mode),          "ZR", "ritm",       TC_DESC("end italic mode"), &tc_ZR },
+    { TC_FNAME(exit_leftward_mode),         "ZS", "rlm",        TC_DESC("end left-motion mode") },
+    { TC_FNAME(exit_micro_mode),            "ZT", "rmicm",      TC_DESC("end micro-motion mode") },
+    { TC_FNAME(exit_shadow_mode),           "ZU", "rshm",       TC_DESC("end shadow-print mode") },
+    { TC_FNAME(exit_subscript_mode),        "ZV", "rsubm",      TC_DESC("exit_subscript_mode") },
+    { TC_FNAME(exit_superscript_mode),      "ZW", "rsupm",      TC_DESC("end superscript mode") },
+    { TC_FNAME(exit_upward_mode),           "ZX", "rum",        TC_DESC("end reverse character motion"), &tc_ZX },
+    { TC_FNAME(micro_column_address),       "ZY", "mhpa",       TC_DESC("like column_address in micro mode") },
+    { TC_FNAME(micro_down),                 "ZZ", "mcud1",      TC_DESC("like cursor_down in micro mode") },
+    { TC_FNAME(micro_left),                 "Za", "mcub1",      TC_DESC("like cursor_left in micro mode") },
+    { TC_FNAME(micro_right),                "Zb", "mcuf1",      TC_DESC("like cursor_right in micro mode") },
+    { TC_FNAME(micro_row_address),          "Zc", "mvpa",       TC_DESC("like row_address in micro mode") },
+    { TC_FNAME(micro_up),                   "Zd", "mcuu1",      TC_DESC("like cursor_up in micro mode") },
+    { TC_FNAME(order_of_pins),              "Ze", "porder",     TC_DESC("match software bits to print-head pins") },
+    { TC_FNAME(parm_down_micro),            "Zf", "mcud",       TC_DESC("like parm down cursor in micro mode") },
+    { TC_FNAME(parm_left_micro),            "Zg", "mcub",       TC_DESC("Like parm left cursor in micro mode") },
+    { TC_FNAME(parm_right_micro),           "Zh", "mcuf",       TC_DESC("Like parm right cursor in micro mode") },
+    { TC_FNAME(parm_up_micro),              "Zi", "mcuu",       TC_DESC("Like parm_up_cursor in micro mode") },
+    { TC_FNAME(select_char_set),            "Zj", "scs",        TC_DESC("select character set") },
+    { TC_FNAME(set_bottom_margin),          "Zk", "smgb",       TC_DESC("set bottom margin at current line") },
+    { TC_FNAME(set_bottom_margin_parm),     "Zl", "smgbp",      TC_DESC("set bottom margin at line #1 or #2 lines from bottom") },
+    { TC_FNAME(set_left_margin_parm),       "Zm", "smglp",      TC_DESC("set left (right) margin at column #1 (#2)") },
+    { TC_FNAME(set_right_margin_parm),      "Zn", "smgrp",      TC_DESC("set right margin at column #1") },
+    { TC_FNAME(set_top_margin),             "Zo", "smgt",       TC_DESC("set top margin at current line") },
+    { TC_FNAME(set_top_margin_parm),        "Zp", "smgtp",      TC_DESC("start printing bit image braphics") },
+    { TC_FNAME(start_bit_image),            "Zq", "sbim",       TC_DESC("start bit image") },
+    { TC_FNAME(start_char_set_def),         "Zr", "scsd",       TC_DESC("start character set definition") },
+    { TC_FNAME(stop_bit_image),             "Zs", "rbim",       TC_DESC("stop printing bit image graphics") },
+    { TC_FNAME(stop_char_set_def),          "Zt", "rcsd",       TC_DESC("end definition of character aet") },
+    { TC_FNAME(subscript_characters),       "Zu", "subcs",      TC_DESC("list of subscriptable characters") },
+    { TC_FNAME(superscript_characters),     "Zv", "supcs",      TC_DESC("list of superscriptable characters") },
+    { TC_FNAME(these_cause_cr),             "Zw", "docr",       TC_DESC("printing any of these chars causes CR") },
+    { TC_FNAME(zero_motion),                "Zx", "zerom",      TC_DESC("no motion for subsequent character") },
 
-    /*
-     *  The XSI Curses standard added these.  They are some post-4.1 versions
-     *  of System V curses, e.g., Solaris 2.5 and IRIX 6.x.  The ncurses term-
-     *  cap names for them are invented; according to the XSI Curses standard,
-     *  they have no termcap names.  If your compiled terminfo  entries  use
-     *  these,  they may not be binary-compatible with System V terminfo
-     *  entries after SVr4.1; beware!
-     */
-    { "Xh", "ehhlm",        TC_DESC("enter horizontal highlight mode") },
-    { "Xl", "elhlm",        TC_DESC("enter left highlight mode") },
-    { "Xo", "elohlm",       TC_DESC("enter low highlight mode") },
-    { "Xr", "erhlm",        TC_DESC("enter right highlight mode") },
-    { "Xt", "ethlm",        TC_DESC("enter top highlight mode") },
-    { "Xv", "evhlm",        TC_DESC("enter vertical highlight mode") },
+       /*
+        *  The following string  capabilities  are  present  in  the  SVr4.0  term
+        *  structure, but were originally not documented in the man page.
+        */
+    { TC_FNAME(char_set_names),             "Zy", "csnm",       TC_DESC("list of character set names") },
+    { TC_FNAME(mouse_info),                 "Mi", "minfo",      TC_DESC("mouse status information") },
+    { TC_FNAME(req_mouse_pos),              "RQ", "reqmp",      TC_DESC("request mouse position") },
+    { TC_FNAME(get_mouse),                  "Gm", "getm",       TC_DESC("curses should get button events") },
+    { TC_FNAME(set_a_foreground),           "AF", "setaf",      TC_DESC("set ANSI color foreground"), &tc_ANSI_Color_Fg },
+    { TC_FNAME(set_a_background),           "AB", "setab",      TC_DESC("set ANSI color background"), &tc_ANSI_Color_Bg },
+    { TC_FNAME(pkey_plab),                  "xl", "pfxl",       TC_DESC("program function key #1 to type string #2 and show string #3") },
+    { TC_FNAME(device_type),                "dv", "devt",       TC_DESC("indicate language/codeset support") },
+    { TC_FNAME(code_set_init),              "ci", "csin",       TC_DESC("init sequence for multiple codesets") },
+    { TC_FNAME(set0_des_seq),               "s0", "s0ds",       TC_DESC("shift to code set 0 (EUC set 0, ASCII)") },
+    { TC_FNAME(set1_des_seq),               "s1", "s1ds",       TC_DESC("shift to code set 1") },
+    { TC_FNAME(set2_des_seq),               "s2", "s2ds",       TC_DESC("shift to code set 2") },
+    { TC_FNAME(set3_des_seq),               "s3", "s3ds",       TC_DESC("shift to code set 3") },
+    { TC_FNAME(set_lr_margin),              "ML", "smglr",      TC_DESC("set both left and right margins to #1, #2") },
+    { TC_FNAME(set_tb_margin),              "MT", "smgtb",      TC_DESC("sets both top and bottom margins to #1, #2") },
+    { TC_FNAME(bit_image_repeat),           "Xy", "birep",      TC_DESC("repeat bit image cell #1 #2 times") },
+    { TC_FNAME(bit_image_newline),          "Zz", "binel",      TC_DESC("move to next row of the bit image") },
+    { TC_FNAME(bit_image_carriage_return),  "Yv", "bicr",       TC_DESC("move to beginning of same row") },
+    { TC_FNAME(color_names),                "Yw", "colornm",    TC_DESC("give name for color #1") },
+    { TC_FNAME(define_bit_image_region),    "Yx", "defbi",      TC_DESC("define rectangualar bit image region") },
+    { TC_FNAME(end_bit_image_region),       "Yy", "endbi",      TC_DESC("end a bit-image region") },
+    { TC_FNAME(set_color_band),             "Yz", "setcolor",   TC_DESC("change to ribbon color #1") },
+    { TC_FNAME(set_page_length),            "YZ", "slines",     TC_DESC("set page length to #1 lines") },
+    { TC_FNAME(display_pc_char),            "S1", "dispc",      TC_DESC("display PC character") },
+    { TC_FNAME(enter_pc_charset_mode),      "S2", "smpch",      TC_DESC("enter PC character display mode") },
+    { TC_FNAME(exit_pc_charset_mode),       "S3", "rmpch",      TC_DESC("exit PC character display mode") },
+    { TC_FNAME(enter_scancode_mode),        "S4", "smsc",       TC_DESC("enter PC scancode mode") },
+    { TC_FNAME(exit_scancode_mode),         "S5", "rmsc",       TC_DESC("exit PC scancode mode") },
+    { TC_FNAME(pc_term_options),            "S6", "pctrm",      TC_DESC("PC terminal options") },
+    { TC_FNAME(scancode_escape),            "S7", "scesc",      TC_DESC("escape for scancode emulation") },
+    { TC_FNAME(alt_scancode_esc),           "S8", "scesa",      TC_DESC("alternate escape for scancode emulation") },
 
-    /*
-     *  Characters, Note: have only seen 'bx' under AIX, which must be ordered
-     *  after "ac" for correct selection.
-     */
-    { "G1", NULL,           TC_DESC("single upper right") },
-    { "G2", NULL,           TC_DESC("single upper left") },
-    { "G3", NULL,           TC_DESC("single lower left") },
-    { "G4", NULL,           TC_DESC("single lower right") },
-    { "GC", NULL,           TC_DESC("single intersection") },
-    { "GD", NULL,           TC_DESC("tee pointing down") },
-    { "GH", NULL,           TC_DESC("single horizontal line") },
-    { "GL", NULL,           TC_DESC("tee pointing left") },
-    { "GR", NULL,           TC_DESC("tee pointing right") },
-    { "GU", NULL,           TC_DESC("tee pointing up") },
-    { "GV", NULL,           TC_DESC("single vertical line") },
-    { "bx", NULL,           TC_DESC("box chars primary set"), &tc_box_characters },
+        /*
+         *  The XSI Curses standard added these.
+         *
+         *  They are some post-4.1 versions of System V curses, e.g., Solaris 2.5 and IRIX 6.x.
+         *  The ncurses termcap names for them are invented; according to the XSI Curses standard, they have no termcap names.
+         *  If your compiled terminfo entries use these, they may not be binary-compatible with System V terminfo entries after SVr4.1; beware!
+         */
+    { TC_FNAME(enter_horizontal_hl_mode),   "Xh", "ehhlm",      TC_DESC("enter horizontal highlight mode") },
+    { TC_FNAME(enter_left_hl_mode),         "Xl", "elhlm",      TC_DESC("enter left highlight mode") },
+    { TC_FNAME(enter_low_hl_mode),          "Xo", "elohlm",     TC_DESC("enter low highlight mode") },
+    { TC_FNAME(enter_right_hl_mode),        "Xr", "erhlm",      TC_DESC("enter right highlight mode") },
+    { TC_FNAME(enter_top_hl_mode),          "Xt", "ethlm",      TC_DESC("enter top highlight mode") },
+    { TC_FNAME(enter_vertical_hl_mode),     "Xv", "evhlm",      TC_DESC("enter vertical highlight mode") },
+    { TC_FNAME(set_a_attributes),           "sA", "sgr1",       TC_DESC("Define second set of video attributes #1-#6") },
+    { TC_FNAME(set_pglen_inch),             "YI", "slength",    TC_DESC("Set page length to #1 hundredth of an inch") },
+    { TC_FNAME(termcap_init2),              "i2", "OTi2",       TC_DESC("secondary initialization string") },
+    { TC_FNAME(termcap_reset),              "rs", "OTrs",       TC_DESC("terminal reset string"), &tc_rs },
+    { TC_FNAME(linefeed_if_not_lf),         "nl", "OTnl",       TC_DESC("use to move down") },
+    { TC_FNAME(backspace_if_not_bs),        "bc", "OTbc",       TC_DESC("move left, if not ^H (old-style)"), &tc_bc },
+    { TC_FNAME(other_non_function_keys),    "ko", "OTko",       TC_DESC("list of self-mapped keycaps") },
+    { TC_FNAME(arrow_key_map),              "ma", "OTma",       TC_DESC("map arrow keys rogue(1) motion keys") },
 
-    /*
-     *  Others
-     */
-    { "cS", NULL,           TC_DESC("change region to line #1 to line #2, alt form"), &tc_cS },
-    { "bc", NULL,           TC_DESC("move left, if not ^H (old-style)"), &tc_bc },
-    { "nl", NULL,           TC_DESC("use to move down") },
- /* { "ko", NULL,           TC_DESC("list of self-mapped keycaps") }, */
- /* { "ma", NULL,           TC_DESC("map arrow keys rogue(1) motion keys") }, */
-    { "ml", NULL,           TC_DESC("memory lock above") },
-    { "mu", NULL,           TC_DESC("memory unlock") }
-    };
+        /*
+         *  Speical characters
+         *
+         *  Note: 'bx' only under AIX, which must be ordered after "ac" for correct selection.
+         */
+    { TC_FNAME(acs_ulcorner),               "G2", "OTG2",       TC_DESC("single upper left") },
+    { TC_FNAME(acs_llcorner),               "G3", "OTG3",       TC_DESC("single lower left") },
+    { TC_FNAME(acs_urcorner),               "G1", "OTG1",       TC_DESC("single upper right") },
+    { TC_FNAME(acs_lrcorner),               "G4", "OTG4",       TC_DESC("single lower right") },
+    { TC_FNAME(acs_ltee),                   "GR", "OTGR",       TC_DESC("tee pointing left") },
+    { TC_FNAME(acs_rtee),                   "GL", "OTGL",       TC_DESC("tee pointing left") },
+    { TC_FNAME(acs_btee),                   "GU", "OTGU",       TC_DESC("tee pointing up") },
+    { TC_FNAME(acs_ttee),                   "GD", "OTGD",       TC_DESC("tee pointing down") },
+    { TC_FNAME(acs_hline),                  "GH", "OTGH",       TC_DESC("single horizontal line") },
+    { TC_FNAME(acs_vline),                  "GV", "OTGV",       TC_DESC("single vertical line") },
+    { TC_FNAME(acs_plus),                   "GC", "OTGC",       TC_DESC("single intersection") },
+    { TC_FNAME(memory_lock),                "ml", "meml",       TC_DESC("memory lock above") },
+    { TC_FNAME(memory_unlock),              "mu", "memu",       TC_DESC("memory unlock") },
+    { TC_FNAME(box_chars_1),                "bx", "box1",       TC_DESC("box chars primary set"), &tc_box_characters }, // aix-only
 
-#if (XXX_KO)
-/*
-        ko capability, consists of a comma-separated capability list.
-        For each capability, it should be assumed there is a keycap
-        that sends the string which is the value of that capability.
+        /*
+         *  User-Defined Capabilities
+         *
+         *  https://invisible-island.net/ncurses/man/user_caps.5.html
+         *  See: ncurses/include/Caps-ncurses
+         */
+    { TC_UNAME(nc),                         NULL, "C0",         TC_DESC("number of indexed colors overlaying RGB space") },
+    { TC_UNAME(nc),                         NULL, "E3",         TC_DESC("clears the terminal's scrollback buffer") },
+    { TC_UNAME(nc),                         NULL, "RGB",        TC_DESC("use direct colors with given bit-layout") },
+    { TC_UNAME(nc),                         NULL, "TS",         TC_DESC("parameterless tsl") },
+    { TC_UNAME(nc),                         NULL, "XM",         TC_DESC("initialize alternate xterm mouse mode") },
 
-        String listing the other function keys the terminal has.
+        /* mintty specials */
+    { TC_UNAME(mintty),                     NULL, "Rmol",       TC_DESC("remove overline-mode") },
+    { TC_UNAME(mintty),                     NULL, "Smol",       TC_DESC("set overline-mode") },
+    { TC_UNAME(mintty),                     NULL, "blink2",     TC_DESC("turn on rapid blinking") },
+    { TC_UNAME(mintty),                     NULL, "norm",       TC_DESC("turn off bold and half-bright mode") },
+    { TC_UNAME(mintty),                     NULL, "opaq",       TC_DESC("turn off blank mode") },
+    { TC_UNAME(mintty),                     NULL, "setal",      TC_DESC("set underline-color") },
+    { TC_UNAME(mintty),                     NULL, "smul2",      TC_DESC("begin double underline mode") },
 
-        This is a very obsolete way of describing the same
-        information found in the `kH' ... `kT' keys.
+        /* screen specials */
+    { TC_UNAME(screen),                     NULL, "C0",         TC_DESC("use the string as a conversion table for font '0', like acsc") },
+    { TC_UNAME(screen),                     NULL, "CE",         TC_DESC("switch cursor-keys back to normal mode") },
+    { TC_UNAME(screen),                     NULL, "CS",         TC_DESC("switch cursor-keys to application mode") },
+    { TC_UNAME(screen),                     NULL, "E0",         TC_DESC("switch charset 'G0' back to standard charset") },
+    { TC_UNAME(screen),                     NULL, "KJ",         TC_DESC("set the encoding of the terminal") },
+    { TC_UNAME(screen),                     NULL, "S0",         TC_DESC("switch charset 'G0' to the specified charset") },
+    { TC_UNAME(screen),                     NULL, "WS",         TC_DESC("resize display") },
+    { TC_UNAME(screen),                     NULL, "XC",         TC_DESC("character translation") },
+    { TC_UNAME(screen),                     NULL, "Z0",         TC_DESC("change width to 132 columns") },
+    { TC_UNAME(screen),                     NULL, "Z1",         TC_DESC("change width to 80 columns") },
 
-        The string contains a list of two-character termcap
-        capability names, separated by commas. The meaning is that
-        for each capability name listed, the terminal has a key which
-        sends the string which is the value of that capability.
+        /* tmux specials */
+    { TC_UNAME(tmux),                       NULL, "Cr",         TC_DESC("restore the default cursor color") },
+    { TC_UNAME(tmux),                       NULL, "Cs",         TC_DESC("set the cursor color") },
+    { TC_UNAME(tmux),                       NULL, "Csr",        TC_DESC("change the cursor style, overriding Ss") },
+    { TC_UNAME(tmux),                       NULL, "Ms",         TC_DESC("store buffer in the host clipboard") },
+    { TC_UNAME(tmux),                       NULL, "Se",         TC_DESC("reset the cursor style") },
+    { TC_UNAME(tmux),                       NULL, "Smulx",      TC_DESC("modify the appearance of underlines in VTE") },
+                                                                        //
+                                                                        // 0 for no underscore,
+                                                                        // 1 for normal underscore,
+                                                                        // 2 for double underscore,
+                                                                        // 3 for curly underscore,
+                                                                        // 4 for dotted underscore and;
+                                                                        // 5 for dashed underscore.
+                                                                        //
+    { TC_UNAME(tmux),                       NULL, "Ss",         TC_DESC("change the cursor style") },
+                                                                        //
+                                                                        // 0, 1 or none - blinking block cursor
+                                                                        // 2 - block cursor
+                                                                        // 3 - blinking underline cursor
+                                                                        // 4 - underline cursor
+                                                                        // 5 - blinking vertical bar cursor
+                                                                        // 6 - vertical bar cursor
+                                                                        //
+    { TC_UNAME(tmux),                       NULL, "rmxx",       TC_DESC("reset ECMA-48 strikeout/crossed-out attributes") },
+    { TC_UNAME(tmux),                       NULL, "smxx",       TC_DESC("set ECMA-48 strikeout/crossed-out attributes") },
 
-        For example, the value `:ko=cl, ll, sf, sr:' says that the
-        terminal has four function keys which mean "clear screen",
-        "home down", "scroll forward" and "scroll reverse
- */
-static const struct {
-    const char *from;
-    const char *to;
-} ko_xlate[] = {
-    { "al", "kil1"  },      /* insert line key  */
-    { "bt", "kcbt"  },      /* back tab         */
-    { "cd", "ked"   },      /* clear-to-eos key */
-    { "ce", "kel"   },      /* clear-to-eol key */
-    { "cl", "kclr"  },      /* clear key        */
-    { "ct", "tbc"   },      /* clear all tabs   */
-    { "dc", "kdch1" },      /* delete char      */
-    { "dl", "kdl1"  },      /* delete line      */
-    { "do", "kcud1" },      /* down key         */
-    { "ei", "krmir" },      /* exit insert key  */
-    { "ho", "khome" },      /* home key         */
-    { "ic", "kich1" },      /* insert char key  */
-    { "im", "kIC"   },      /* insert-mode key  */
-    { "le", "kcub1" },      /* le key           */
-    { "nd", "kcuf1" },      /* nd key           */
-    { "nl", "kent"  },      /* new line key     */
-    { "st", "khts"  },      /* set-tab key      */
-    { "ta", "kcan"  },      /* cancel           */
-    { "up", "kcuu1" },      /* up-arrow key     */
-    };
-#endif  /*XXX_KO*/
+        /* VIM specials */
+    { TC_UNAME(vim),                        NULL, "BD",         TC_DESC("disables bracketed paste") },
+    { TC_UNAME(vim),                        NULL, "BE",         TC_DESC("enables bracketed paste") },
+    { TC_UNAME(vim),                        NULL, "PE",         TC_DESC("is sent after pasted text") },
+    { TC_UNAME(vim),                        NULL, "PS",         TC_DESC("is sent before pasted text") },
+    { TC_UNAME(vim),                        NULL, "RV",         TC_DESC("report terminal secondary device attributes"), &tc_RV },
+    { TC_UNAME(vim),                        NULL, "XR",         TC_DESC("report terminal version as a free-format string.") },
+    { TC_UNAME(vim),                        NULL, "fd",         TC_DESC("disable xterm focus-events") },
+    { TC_UNAME(vim),                        NULL, "fe",         TC_DESC("enable xterm focus-events") },
+    { TC_UNAME(vim),                        NULL, "rv",         TC_DESC("response to RV, regular expression") },
+    { TC_UNAME(vim),                        NULL, "xr",         TC_DESC("response to XR, regular expression") },
+    { TC_UNAME(vim),                        NULL, "SH",         TC_DESC("cursor shape") } //XXX
+                                                                        //
+                                                                        // 0, 1 or none - blinking block cursor
+                                                                        // 2 - block cursor
+                                                                        // 3 - blinking underline cursor
+                                                                        // 4 - underline cursor
+                                                                        // 5 - blinking vertical bar cursor
+                                                                        // 6 - vertical bar cursor
+                                                                        //
+};
 
 
 static TermNumeric_t term_numbers[] = {         /* numeric - termcap/terminfo elements */
     /*
-     *  standard
+     *  Standard
      */
-    { "MW",  "wnum",        TC_DESC("max number of defineable windows") },
-    { "co",  "cols",        TC_DESC("number of columns"), &tn_co },
-    { "it",  "it",          TC_DESC("tabs initially every # spaces") },
-    { "Nl",  "nlab",        TC_DESC("number of labels") },
-    { "lh",  "lh",          TC_DESC("rows in each label") },
-    { "li",  "lines",       TC_DESC("number of lines on screen or page"), &tn_li },
-    { "lm",  "lm",          TC_DESC("lines of memory if > line, 0 means varies") },
-    { "lw",  "lw",          TC_DESC("columns in each label") },
-    { "ma",  "ma",          TC_DESC("max combined attributes") },
-    { "pb",  "pb",          TC_DESC("lowest baud rate needing padding") },
-    { "sg",  "xmc",         TC_DESC("number of blank chars left by smso or rmso"), &tn_sg },
-    { "vt",  "vt",          TC_DESC("virtual terminal number") },
-    { "ws",  "wsl",         TC_DESC("number of columns within status line") },
+    { TC_FNAME(columns),                    "co", "cols",       TC_DESC("number of columns"), &tn_co },
+    { TC_FNAME(init_tabs),                  "it", "it",         TC_DESC("tabs initially every # spaces") },
+    { TC_FNAME(lines),                      "li", "lines",      TC_DESC("number of lines on screen or page"), &tn_li },
+    { TC_FNAME(lines_of_memory),            "lm", "lm",         TC_DESC("lines of memory if > line, 0 means varies") },
+    { TC_FNAME(magic_cookie_glitch),        "sg", "xmc",        TC_DESC("number of blank chars left by smso or rmso"), &tn_sg },
+    { TC_FNAME(padding_baud_rate),          "pb", "pb",         TC_DESC("lowest baud rate needing padding") },
+    { TC_FNAME(virtual_terminal),           "vt", "vt",         TC_DESC("virtual terminal number") },
+    { TC_FNAME(width_status_line),          "ws", "wsl",        TC_DESC("number of columns within status line") },
+    { TC_FNAME(num_labels),                 "Nl", "nlab",       TC_DESC("number of labels") },
+    { TC_FNAME(label_height),               "lh", "lh",         TC_DESC("rows in each label") },
+    { TC_FNAME(label_width),                "lw", "lw",         TC_DESC("columns in each label") },
+    { TC_FNAME(max_attributes),             "ma", "ma",         TC_DESC("max combined attributes") },
+    { TC_FNAME(maximum_windows),            "MW", "wnum",       TC_DESC("max number of defineable windows") },
 
-    /*
-     *  SRV 4.0 color
-     */
-    { "Co",  "colors",      TC_DESC("max color"), &tf_Colors },
-    { "pa",  "pairs",       TC_DESC("max of color-pairs"), &tf_Pairs },
-    { "NC",  "ncv",         TC_DESC("video attributes that cannot be used with colors"), &tn_NC },
+    { TC_FNAME(max_colors),                 "Co", "colors",     TC_DESC("max color"), &tf_Colors },
+    { TC_FNAME(max_pairs),                  "pa", "pairs",      TC_DESC("max of color-pairs"), &tf_Pairs },
+    { TC_FNAME(no_color_video),             "NC", "ncv",        TC_DESC("video attributes that cannot be used with colors"), &tn_NC },
 
-    /*
-     *  The following numeric capabilities are present in the SVr4.0 term structure,
-     *  but are not yet documented in the man page.  They came in with SVr4's printer support.
-     */
-    { "BT",  NULL,          TC_DESC("number of buttons on the mouse") },
+    { TC_FNAME(buffer_capacity),            "Ya", "bufsz",      TC_DESC("numbers of bytes buffered before printing") },
+    { TC_FNAME(dot_vert_spacing),           "Yb", "spinv",      TC_DESC("spacing of pins vertically in pins per inch") },
+    { TC_FNAME(dot_horz_spacing),           "Yc", "spinh",      TC_DESC("spacing of dots horizontally in dots per inch") },
+    { TC_FNAME(max_micro_address),          "Yd", "maddr",      TC_DESC("maximum value in micro_..._address") },
+    { TC_FNAME(max_micro_jump),             "Ye", "mjump",      TC_DESC("maximum value in parm_..._micro") },
+    { TC_FNAME(micro_col_size),             "Yf", "mcs",        TC_DESC("character step size when in micro mode") },
+    { TC_FNAME(micro_line_size),            "Yg", "mls",        TC_DESC("line step size when in micro mode") },
+    { TC_FNAME(number_of_pins),             "Yh", "npins",      TC_DESC("numbers of pins in print-head") },
+    { TC_FNAME(output_res_char),            "Yi", "orc",        TC_DESC("horizontal resolution in units per line") },
+    { TC_FNAME(output_res_line),            "Yj", "orl",        TC_DESC("vertical resolution in units per line") },
+    { TC_FNAME(output_res_horz_inch),       "Yk", "orhi",       TC_DESC("horizontal resolution in units per inch") },
+    { TC_FNAME(output_res_vert_inch),       "Yl", "orvi",       TC_DESC("vertical resolution in units per inch") },
+    { TC_FNAME(print_rate),                 "Ym", "cps",        TC_DESC("print rate in characters per second") },
+    { TC_FNAME(wide_char_size),             "Yn", "widcs",      TC_DESC("character step size when in double wide mode") },
+    { TC_FNAME(buttons),                    "BT", "btns",       TC_DESC("number of buttons on mouse") },
+    { TC_FNAME(bit_image_entwining),        "Yo", "bitwin",     TC_DESC("number of passes for each bit-image row") },
+    { TC_FNAME(bit_image_type),             "Yp", "bitype",     TC_DESC("type of bit-image device") },
+    { TC_FNAME(magic_cookie_glitch_ul),     "ug", "OTug",       TC_DESC("number of blanks left by ul") },
 
-    /*
-     *  Padding times
-     */
-    { "dC",  NULL,          TC_DESC("msec of padding for carriage-return character") },
-    { "dN",  NULL,          TC_DESC("msec of padding for newline (linefeed) character") },
-    { "dB",  NULL,          TC_DESC("msec of padding for backspace character") },
-    { "dF",  NULL,          TC_DESC("msec of padding for formfeed character") },
-    { "dT",  NULL,          TC_DESC("msec of padding for tab character") }
+    { TC_FNAME(carriage_return_delay),      "dC", "OTdC",       TC_DESC("msec of padding for carriage-return character") },
+    { TC_FNAME(new_line_delay),             "dN", "OTdN",       TC_DESC("msec of padding for newline (linefeed) character") },
+    { TC_FNAME(backspace_delay),            "dB", "OTdB",       TC_DESC("msec of padding for backspace character") },
+    { TC_FNAME(horizontal_tab_delay),       "dT", "OTdT",       TC_DESC("msec of padding for tab character") },
+    { TC_FNAME(number_of_function_keys),    "kn", "OTkn",       TC_DESC("msec of padding for formfeed character") },
+
+        /*
+         *  User-Defined Capabilities
+         *
+         *  https://invisible-island.net/ncurses/man/user_caps.5.html
+         *  See: ncurses/include/Caps-ncurses
+         */
+    { TC_UNAME(nc),                         NULL, "RGB",        TC_DESC("use direct colors with given number of bits") },
+    { TC_UNAME(nc),                         NULL, "U8",         TC_DESC("terminal VT100 SI/SO processing UTF-8 encoding") },
+
+        /* screen */
+    { TC_UNAME(screen),                     NULL, "OL",         TC_DESC("set the screen program's output buffer limit.") },
     };
 
 
 static TermKey_t term_keys[] = {                /* keys - termcap/terminfo elements */
-    { "!1",  "kSAV",        TC_DESC("shifted save key") },
-    { "!2",  "kSPD",        TC_DESC("shifted suspend key") },
-    { "!3",  "kUND",        TC_DESC("shifted undo key"), TC_TOKEN(KEY_REDO) },
-    { "#1",  "kHLP",        TC_DESC("shifted help key") },      /* KEY_HELP */
-    { "#2",  "kHOM",        TC_DESC("shifted home key"), TC_TOKEN(MOD_SHIFT|KEY_HOME) },
-    { "#3",  "kIC",         TC_DESC("shifted insert-character key") },
-    { "#4",  "kLFT",        TC_DESC("shifted left-arrow key") },
-    { "%0",  "krdo",        TC_DESC("redo key"), TC_TOKEN(KEY_REDO) },
-    { "%1",  "khlp",        TC_DESC("help key"), TC_TOKEN(KEY_HELP) },
-    { "%2",  "kmrk",        TC_DESC("mark key") },               /* KEY_MARK */
-    { "%3",  "kmsg",        TC_DESC("message key") },
-    { "%4",  "kmov",        TC_DESC("move key") },
-    { "%5",  "knxt",        TC_DESC("next key"), TC_TOKEN(KEY_NEXT) },
-    { "%6",  "kopn",        TC_DESC("open key"), TC_TOKEN(KEY_OPEN) },
-    { "%7",  "kopt",        TC_DESC("options key"), TC_TOKEN(KEY_MENU) },
-    { "%8",  "kprv",        TC_DESC("previous key"), TC_TOKEN(KEY_PREV) },
-    { "%9",  "kprt",        TC_DESC("print key") },              /* KEY_PRINT */
-    { "%a",  "kMSG",        TC_DESC("shifted message key") },
-    { "%b",  "kMOV",        TC_DESC("shifted move key") },
-    { "%c",  "kNXT",        TC_DESC("shifted next key") },
-    { "%d",  "kOPT",        TC_DESC("shifted options key") },
-    { "%e",  "kPRV",        TC_DESC("shifted previous key") },
-    { "%f",  "kPRT",        TC_DESC("shifted print key") },
-    { "%g",  "kRDO",        TC_DESC("shifted redo key") },
-    { "%h",  "kRPL",        TC_DESC("shifted replace key") },
-    { "%i",  "kRIT",        TC_DESC("shifted right-arrow key") },
-    { "%j",  "kRES",        TC_DESC("shifted resume key") },
-    { "&0",  "kCAN",        TC_DESC("shifted cancel key") },
-    { "&1",  "kref",        TC_DESC("reference key") },
-    { "&2",  "krfr",        TC_DESC("refresh key") },           /* KEY_REFRESH */
-    { "&3",  "krpl",        TC_DESC("replace key"), TC_TOKEN(KEY_REPLACE) },
-    { "&4",  "krst",        TC_DESC("restart key") },
-    { "&5",  "kres",        TC_DESC("resume key") },
-    { "&6",  "ksav",        TC_DESC("save key"), TC_TOKEN(KEY_SAVE) },
-    { "&7",  "kspd",        TC_DESC("suspend key") },
-    { "&8",  "kund",        TC_DESC("undo key"), TC_TOKEN(KEY_UNDO_CMD) },
-    { "&9",  "kBEG",        TC_DESC("shifted begin key") },
-    { "*0",  "kFND",        TC_DESC("shifted find key") },
-    { "*1",  "kCMD",        TC_DESC("shifted command key") },
-    { "*2",  "kCPY",        TC_DESC("shifted copy key") },
-    { "*3",  "kCRT",        TC_DESC("shifted create key") },
-    { "*4",  "kDC",         TC_DESC("shifted delete-char") },
-    { "*5",  "kDL",         TC_DESC("shifted delete-line key") },
-    { "*6",  "kslt",        TC_DESC("select key") },
-    { "*7",  "kEND",        TC_DESC("shifted end key"), TC_TOKEN(MOD_SHIFT|KEY_END) },
-    { "*8",  "kEOL",        TC_DESC("shifted clear-to-end-of-line key") },
-    { "*9",  "kEXT",        TC_DESC("shifted exit key") },
-    { "@0",  "kfnd",        TC_DESC("find key"), TC_TOKEN(KEY_SEARCH) },
-    { "@1",  "kbeg",        TC_DESC("begin key") },
-    { "@2",  "kcan",        TC_DESC("cancel key"), TC_TOKEN(KEY_CANCEL) },
-    { "@3",  "kclo",        TC_DESC("close key") },
-    { "@4",  "kcmd",        TC_DESC("command key"), TC_TOKEN(KEY_COMMAND) },
-    { "@5",  "kcpy",        TC_DESC("copy key"), TC_TOKEN(KEY_COPY_CMD) },
-    { "@6",  "kcrt",        TC_DESC("create key") },
-    { "@7",  "kend",        TC_DESC("end key"), TC_TOKEN(KEY_END) },
-    { "@8",  "kent",        TC_DESC("enter/send key") },
-    { "@9",  "kext",        TC_DESC("exit key"), TC_TOKEN(KEY_EXIT) },
-    { "F1",  "kf11",        TC_DESC("F11 function key"), TC_TOKEN(F(11)) },
-    { "F2",  "kf12",        TC_DESC("F12 function key"), TC_TOKEN(F(12)) },
-    { "F3",  "kf13",        TC_DESC("F13 function key") /*, TC_TOKEN(F(13))*/ },
-    { "F4",  "kf14",        TC_DESC("F14 function key") /*, TC_TOKEN(F(14))*/ },
-    { "F5",  "kf15",        TC_DESC("F15 function key") /*, TC_TOKEN(F(15))*/ },
-    { "F6",  "kf16",        TC_DESC("F16 function key") /*, TC_TOKEN(F(16))*/ },
-    { "F7",  "kf17",        TC_DESC("F17 function key") /*, TC_TOKEN(F(17))*/ },
-    { "F8",  "kf18",        TC_DESC("F18 function key") /*, TC_TOKEN(F(18))*/ },
-    { "F9",  "kf19",        TC_DESC("F19 function key") /*, TC_TOKEN(F(19))*/ },
-    { "FA",  "kf20",        TC_DESC("F20 function key") /*, TC_TOKEN(F(20))*/ },
-    { "FB",  "kf21",        TC_DESC("F21 function key") },
-    { "FC",  "kf22",        TC_DESC("F22 function key") },
-    { "FD",  "kf23",        TC_DESC("F23 function key") },
-    { "FE",  "kf24",        TC_DESC("F24 function key") },
-    { "FF",  "kf25",        TC_DESC("F25 function key") },
-    { "FG",  "kf26",        TC_DESC("F26 function key") },
-    { "FH",  "kf27",        TC_DESC("F27 function key") },
-    { "FI",  "kf28",        TC_DESC("F28 function key") },
-    { "FJ",  "kf29",        TC_DESC("F29 function key") },
-    { "FK",  "kf30",        TC_DESC("F30 function key") },
-    { "FL",  "kf31",        TC_DESC("F31 function key") },
-    { "FM",  "kf32",        TC_DESC("F32 function key") },
-    { "FN",  "kf33",        TC_DESC("F33 function key") },
-    { "FO",  "kf34",        TC_DESC("F34 function key") },
-    { "FP",  "kf35",        TC_DESC("F35 function key") },
-    { "FQ",  "kf36",        TC_DESC("F36 function key") },
-    { "FR",  "kf37",        TC_DESC("F37 function key") },
-    { "FS",  "kf38",        TC_DESC("F38 function key") },
-    { "FT",  "kf39",        TC_DESC("F39 function key") },
-    { "FU",  "kf40",        TC_DESC("F40 function key") },
-    { "FV",  "kf41",        TC_DESC("F41 function key") },
-    { "FW",  "kf42",        TC_DESC("F42 function key") },
-    { "FX",  "kf43",        TC_DESC("F43 function key") },
-    { "FY",  "kf44",        TC_DESC("F44 function key") },
-    { "FZ",  "kf45",        TC_DESC("F45 function key") },
-    { "Fa",  "kf46",        TC_DESC("F46 function key") },
-    { "Fb",  "kf47",        TC_DESC("F47 function key") },
-    { "Fc",  "kf48",        TC_DESC("F48 function key") },
-    { "Fd",  "kf49",        TC_DESC("F49 function key") },
-    { "Fe",  "kf50",        TC_DESC("F50 function key") },
-    { "Ff",  "kf51",        TC_DESC("F51 function key") },
-    { "Fg",  "kf52",        TC_DESC("F52 function key") },
-    { "Fh",  "kf53",        TC_DESC("F53 function key") },
-    { "Fi",  "kf54",        TC_DESC("F54 function key") },
-    { "Fj",  "kf55",        TC_DESC("F55 function key") },
-    { "Fk",  "kf56",        TC_DESC("F56 function key") },
-    { "Fl",  "kf57",        TC_DESC("F57 function key") },
-    { "Fm",  "kf58",        TC_DESC("F58 function key") },
-    { "Fn",  "kf59",        TC_DESC("F59 function key") },
-    { "Fo",  "kf60",        TC_DESC("F60 function key") },
-    { "Fp",  "kf61",        TC_DESC("F61 function key") },
-    { "Fq",  "kf62",        TC_DESC("F62 function key") },
-    { "Fr",  "kf63",        TC_DESC("F63 function key") },
-    { "K1",  "ka1",         TC_DESC("upper left of keypad"), TC_TOKEN(KEYPAD_7) },
-    { "K2",  "kb2",         TC_DESC("center of keypad"), TC_TOKEN(KEYPAD_9) },
-    { "K3",  "ka3",         TC_DESC("upper right of key-pad"), TC_TOKEN(KEYPAD_5) },
-    { "K4",  "kc1",         TC_DESC("lower left of keypad"), TC_TOKEN(KEYPAD_1) },
-    { "K5",  "kc3",         TC_DESC("lower right of key-pad"), TC_TOKEN(KEYPAD_3) },
-    { "k0",  "kf0",         TC_DESC("F0 function key"), TC_TOKEN(F(10)) },
-    { "k1",  "kf1",         TC_DESC("F1 function key"), TC_TOKEN(F(1)) },
-    { "k2",  "kf2",         TC_DESC("F2 function key"), TC_TOKEN(F(2)) },
-    { "k3",  "kf3",         TC_DESC("F3 function key"), TC_TOKEN(F(3)) },
-    { "k4",  "kf4",         TC_DESC("F4 function key"), TC_TOKEN(F(4)) },
-    { "k5",  "kf5",         TC_DESC("F5 function key"), TC_TOKEN(F(5)) },
-    { "k6",  "kf6",         TC_DESC("F6 function key"), TC_TOKEN(F(6)) },
-    { "k7",  "kf7",         TC_DESC("F7 function key"), TC_TOKEN(F(7)) },
-    { "k8",  "kf8",         TC_DESC("F8 function key"), TC_TOKEN(F(8)) },
-    { "k9",  "kf9",         TC_DESC("F9 function key"), TC_TOKEN(F(9)) },
-    { "k;",  "kf10",        TC_DESC("F10 function key"), TC_TOKEN(F(10)) },
-    { "kA",  "kil1",        TC_DESC("insert-line key") },
-    { "kB",  "kcbt",        TC_DESC("back-tab key"), TC_TOKEN(BACK_TAB) },
-    { "kC",  "kclr",        TC_DESC("clear-screen or erase key") },
-    { "kD",  "kdch1",       TC_DESC("delete-character key"), TC_TOKEN(KEY_DEL) },
-    { "kE",  "kel",         TC_DESC("clear-to-end-of-line key") },
-    { "kF",  "kind",        TC_DESC("scroll-forward key") },
-    { "kH",  "kll",         TC_DESC("lower-left key (home down)"), TC_TOKEN(KEY_END) },
-    { "kI",  "kich1",       TC_DESC("insert-character key"), TC_TOKEN(KEY_INS) },
-    { "kL",  "kdl1",        TC_DESC("delete-line key") },
-    { "kM",  "krmir",       TC_DESC("sent by rmir or smi rin insert mode") },
-    { "kN",  "knp",         TC_DESC("next-page key"), TC_TOKEN(KEY_PAGEDOWN) },
-    { "kP",  "kpp",         TC_DESC("previous-page key"), TC_TOKEN(KEY_PAGEUP) },
-    { "kR",  "kri",         TC_DESC("scroll-backward key") },
-    { "kS",  "ked",         TC_DESC("clear-to-end-of-screen key") },
-    { "kT",  "khts",        TC_DESC("set-tab key") },
-    { "ka",  "ktbc",        TC_DESC("clear-all-tabs key") },
-    { "kb",  "kbs",         TC_DESC("backspace key"), TC_TOKEN(CTRL_H) },
-    { "kd",  "kcud1",       TC_DESC("down-arrow key"), TC_TOKEN(KEY_DOWN) },
-    { "kh",  "khome",       TC_DESC("home key"), TC_TOKEN(KEY_HOME) },
-    { "kl",  "kcub1",       TC_DESC("left-arrow key"), TC_TOKEN(KEY_LEFT) },
-    { "kr",  "kcuf1",       TC_DESC("right-arrow key"), TC_TOKEN(KEY_RIGHT) },
-    { "kt",  "kctab",       TC_DESC("clear-tab key") },
-    { "ku",  "kcuu1",       TC_DESC("up-arrow key"), TC_TOKEN(KEY_UP) },
+    /*
+     *  Standard
+     */
+    { TC_FNAME(key_backspace),              "kb", "kbs",        TC_DESC("backspace key"), TC_TOKEN(CTRL_H) },
+    { TC_FNAME(key_catab),                  "ka", "ktbc",       TC_DESC("clear-all-tabs key") },
+    { TC_FNAME(key_clear),                  "kC", "kclr",       TC_DESC("clear-screen or erase key") },
+    { TC_FNAME(key_ctab),                   "kt", "kctab",      TC_DESC("clear-tab key") },
+    { TC_FNAME(key_dc),                     "kD", "kdch1",      TC_DESC("delete-character key"), TC_TOKEN(KEY_DEL) },
+    { TC_FNAME(key_dl),                     "kL", "kdl1",       TC_DESC("delete-line key") },
+    { TC_FNAME(key_down),                   "kd", "kcud1",      TC_DESC("down-arrow key"), TC_TOKEN(KEY_DOWN) },
+    { TC_FNAME(key_eic),                    "kM", "krmir",      TC_DESC("sent by rmir or smi rin insert mode") },
+    { TC_FNAME(key_eol),                    "kE", "kel",        TC_DESC("clear-to-end-of-line key") },
+    { TC_FNAME(key_eos),                    "kS", "ked",        TC_DESC("clear-to-end-of-screen key") },
+    { TC_FNAME(key_f0),                     "k0", "kf0",        TC_DESC("F0 function key"), TC_TOKEN(F(10)) },
+    { TC_FNAME(key_f1),                     "k1", "kf1",        TC_DESC("F1 function key"), TC_TOKEN(F(1)) },
+    { TC_FNAME(key_f10),                    "k;", "kf10",       TC_DESC("F10 function key"), TC_TOKEN(F(10)) },
+    { TC_FNAME(key_f2),                     "k2", "kf2",        TC_DESC("F2 function key"), TC_TOKEN(F(2)) },
+    { TC_FNAME(key_f3),                     "k3", "kf3",        TC_DESC("F3 function key"), TC_TOKEN(F(3)) },
+    { TC_FNAME(key_f4),                     "k4", "kf4",        TC_DESC("F4 function key"), TC_TOKEN(F(4)) },
+    { TC_FNAME(key_f5),                     "k5", "kf5",        TC_DESC("F5 function key"), TC_TOKEN(F(5)) },
+    { TC_FNAME(key_f6),                     "k6", "kf6",        TC_DESC("F6 function key"), TC_TOKEN(F(6)) },
+    { TC_FNAME(key_f7),                     "k7", "kf7",        TC_DESC("F7 function key"), TC_TOKEN(F(7)) },
+    { TC_FNAME(key_f8),                     "k8", "kf8",        TC_DESC("F8 function key"), TC_TOKEN(F(8)) },
+    { TC_FNAME(key_f9),                     "k9", "kf9",        TC_DESC("F9 function key"), TC_TOKEN(F(9)) },
+    { TC_FNAME(key_home),                   "kh", "khome",      TC_DESC("home key"), TC_TOKEN(KEY_HOME) },
+    { TC_FNAME(key_ic),                     "kI", "kich1",      TC_DESC("insert-character key"), TC_TOKEN(KEY_INS) },
+    { TC_FNAME(key_il),                     "kA", "kil1",       TC_DESC("insert-line key") },
+    { TC_FNAME(key_left),                   "kl", "kcub1",      TC_DESC("left-arrow key"), TC_TOKEN(KEY_LEFT) },
+    { TC_FNAME(key_ll),                     "kH", "kll",        TC_DESC("lower-left key (home down)"), TC_TOKEN(KEY_END) },
+    { TC_FNAME(key_npage),                  "kN", "knp",        TC_DESC("next-page key"), TC_TOKEN(KEY_PAGEDOWN) },
+    { TC_FNAME(key_ppage),                  "kP", "kpp",        TC_DESC("previous-page key"), TC_TOKEN(KEY_PAGEUP) },
+    { TC_FNAME(key_right),                  "kr", "kcuf1",      TC_DESC("right-arrow key"), TC_TOKEN(KEY_RIGHT) },
+    { TC_FNAME(key_sf),                     "kF", "kind",       TC_DESC("scroll-forward key") },
+    { TC_FNAME(key_sr),                     "kR", "kri",        TC_DESC("scroll-backward key") },
+    { TC_FNAME(key_stab),                   "kT", "khts",       TC_DESC("set-tab key") },
+    { TC_FNAME(key_up),                     "ku", "kcuu1",      TC_DESC("up-arrow key"), TC_TOKEN(KEY_UP) },
+    { TC_FNAME(key_a1),                     "K1", "ka1",        TC_DESC("upper left of keypad"), TC_TOKEN(KEYPAD_7) },
+    { TC_FNAME(key_a3),                     "K3", "ka3",        TC_DESC("center of keypad"), TC_TOKEN(KEYPAD_9) },
+    { TC_FNAME(key_b2),                     "K2", "kb2",        TC_DESC("upper right of key-pad"), TC_TOKEN(KEYPAD_5) },
+    { TC_FNAME(key_c1),                     "K4", "kc1",        TC_DESC("lower left of keypad"), TC_TOKEN(KEYPAD_1) },
+    { TC_FNAME(key_c3),                     "K5", "kc3",        TC_DESC("lower right of key-pad"), TC_TOKEN(KEYPAD_3) },
+    { TC_FNAME(key_btab),                   "kB", "kcbt",       TC_DESC("back-tab key"), TC_TOKEN(BACK_TAB) },
+    { TC_FNAME(key_beg),                    "@1", "kbeg",       TC_DESC("reference key") },
+    { TC_FNAME(key_cancel),                 "@2", "kcan",       TC_DESC("refresh key") },
+    { TC_FNAME(key_close),                  "@3", "kclo",       TC_DESC("replace key"), TC_TOKEN(KEY_REPLACE) },
+    { TC_FNAME(key_command),                "@4", "kcmd",       TC_DESC("restart key") },
+    { TC_FNAME(key_copy),                   "@5", "kcpy",       TC_DESC("resume key") },
+    { TC_FNAME(key_create),                 "@6", "kcrt",       TC_DESC("save key"), TC_TOKEN(KEY_SAVE) },
+    { TC_FNAME(key_end),                    "@7", "kend",       TC_DESC("suspend key") },
+    { TC_FNAME(key_enter),                  "@8", "kent",       TC_DESC("undo key"), TC_TOKEN(KEY_UNDO_CMD) },
+    { TC_FNAME(key_exit),                   "@9", "kext",       TC_DESC("shifted begin key") },
+    { TC_FNAME(key_find),                   "@0", "kfnd",       TC_DESC("shifted cancel key") },
+    { TC_FNAME(key_help),                   "%1", "khlp",       TC_DESC("help key"), TC_TOKEN(KEY_HELP) },
+    { TC_FNAME(key_mark),                   "%2", "kmrk",       TC_DESC("mark key") },                  /* KEY_MARK */
+    { TC_FNAME(key_message),                "%3", "kmsg",       TC_DESC("message key") },
+    { TC_FNAME(key_move),                   "%4", "kmov",       TC_DESC("move key") },
+    { TC_FNAME(key_next),                   "%5", "knxt",       TC_DESC("next key"), TC_TOKEN(KEY_NEXT) },
+    { TC_FNAME(key_open),                   "%6", "kopn",       TC_DESC("open key"), TC_TOKEN(KEY_OPEN) },
+    { TC_FNAME(key_options),                "%7", "kopt",       TC_DESC("options key"), TC_TOKEN(KEY_MENU) },
+    { TC_FNAME(key_previous),               "%8", "kprv",       TC_DESC("previous key"), TC_TOKEN(KEY_PREV) },
+    { TC_FNAME(key_print),                  "%9", "kprt",       TC_DESC("print key") },                 /* KEY_PRINT */
+    { TC_FNAME(key_redo),                   "%0", "krdo",       TC_DESC("redo key"), TC_TOKEN(KEY_REDO) },
+    { TC_FNAME(key_reference),              "&1", "kref",       TC_DESC("reference key") },
+    { TC_FNAME(key_refresh),                "&2", "krfr",       TC_DESC("refresh key") },               /* KEY_REFRESH */
+    { TC_FNAME(key_replace),                "&3", "krpl",       TC_DESC("replace key"), TC_TOKEN(KEY_REPLACE) },
+    { TC_FNAME(key_restart),                "&4", "krst",       TC_DESC("restart key") },
+    { TC_FNAME(key_resume),                 "&5", "kres",       TC_DESC("resume key") },
+    { TC_FNAME(key_save),                   "&6", "ksav",       TC_DESC("save key"), TC_TOKEN(KEY_SAVE) },
+    { TC_FNAME(key_suspend),                "&7", "kspd",       TC_DESC("suspend key") },
+    { TC_FNAME(key_undo),                   "&8", "kund",       TC_DESC("undo key"), TC_TOKEN(KEY_UNDO_CMD) },
+    { TC_FNAME(key_sbeg),                   "&9", "kBEG",       TC_DESC("shifted begin key") },
+    { TC_FNAME(key_scancel),                "&0", "kCAN",       TC_DESC("shifted cancel key") },
+    { TC_FNAME(key_scommand),               "*1", "kCMD",       TC_DESC("shifted command key") },
+    { TC_FNAME(key_scopy),                  "*2", "kCPY",       TC_DESC("shifted copy key") },
+    { TC_FNAME(key_screate),                "*3", "kCRT",       TC_DESC("shifted create key") },
+    { TC_FNAME(key_sdc),                    "*4", "kDC",        TC_DESC("shifted delete-char") },
+    { TC_FNAME(key_sdl),                    "*5", "kDL",        TC_DESC("shifted delete-line key") },
+    { TC_FNAME(key_select),                 "*6", "kslt",       TC_DESC("select key") },
+    { TC_FNAME(key_send),                   "*7", "kEND",       TC_DESC("shifted end key"), TC_TOKEN(MOD_SHIFT|KEY_END) },
+    { TC_FNAME(key_seol),                   "*8", "kEOL",       TC_DESC("shifted clear-to-end-of-line key") },
+    { TC_FNAME(key_sexit),                  "*9", "kEXT",       TC_DESC("shifted exit key") },
+    { TC_FNAME(key_sfind),                  "*0", "kFND",       TC_DESC("shifted find key") },
+    { TC_FNAME(key_shelp),                  "#1", "kHLP",       TC_DESC("shifted help key") },          /* KEY_HELP */
+    { TC_FNAME(key_shome),                  "#2", "kHOM",       TC_DESC("shifted home key"), TC_TOKEN(MOD_SHIFT|KEY_HOME) },
+    { TC_FNAME(key_sic),                    "#3", "kIC",        TC_DESC("shifted insert-character key") },
+    { TC_FNAME(key_sleft),                  "#4", "kLFT",       TC_DESC("shifted left-arrow key") },
+    { TC_FNAME(key_smessage),               "%a", "kMSG",       TC_DESC("shifted message key") },
+    { TC_FNAME(key_smove),                  "%b", "kMOV",       TC_DESC("shifted move key") },
+    { TC_FNAME(key_snext),                  "%c", "kNXT",       TC_DESC("shifted next key") },
+    { TC_FNAME(key_soptions),               "%d", "kOPT",       TC_DESC("shifted options key") },
+    { TC_FNAME(key_sprevious),              "%e", "kPRV",       TC_DESC("shifted previous key") },
+    { TC_FNAME(key_sprint),                 "%f", "kPRT",       TC_DESC("shifted print key") },
+    { TC_FNAME(key_sredo),                  "%g", "kRDO",       TC_DESC("shifted redo key") },
+    { TC_FNAME(key_sreplace),               "%h", "kRPL",       TC_DESC("shifted replace key") },
+    { TC_FNAME(key_sright),                 "%i", "kRIT",       TC_DESC("shifted right-arrow key") },
+    { TC_FNAME(key_srsume),                 "%j", "kRES",       TC_DESC("shifted resume key") },
+    { TC_FNAME(key_ssave),                  "!1", "kSAV",       TC_DESC("shifted save key") },
+    { TC_FNAME(key_ssuspend),               "!2", "kSPD",       TC_DESC("shifted suspend key") },
+    { TC_FNAME(key_sundo),                  "!3", "kUND",       TC_DESC("shifted undo key"), TC_TOKEN(KEY_REDO) },
+    { TC_FNAME(key_f11),                    "F1", "kf11",       TC_DESC("F11 function key"), TC_TOKEN(F(11)) },
+    { TC_FNAME(key_f12),                    "F2", "kf12",       TC_DESC("F12 function key"), TC_TOKEN(F(12)) },
+    { TC_FNAME(key_f13),                    "F3", "kf13",       TC_DESC("F13 function key") /*, TC_TOKEN(F(13))*/ },
+    { TC_FNAME(key_f14),                    "F4", "kf14",       TC_DESC("F14 function key") /*, TC_TOKEN(F(14))*/ },
+    { TC_FNAME(key_f15),                    "F5", "kf15",       TC_DESC("F15 function key") /*, TC_TOKEN(F(15))*/ },
+    { TC_FNAME(key_f16),                    "F6", "kf16",       TC_DESC("F16 function key") /*, TC_TOKEN(F(16))*/ },
+    { TC_FNAME(key_f17),                    "F7", "kf17",       TC_DESC("F17 function key") /*, TC_TOKEN(F(17))*/ },
+    { TC_FNAME(key_f18),                    "F8", "kf18",       TC_DESC("F18 function key") /*, TC_TOKEN(F(18))*/ },
+    { TC_FNAME(key_f19),                    "F9", "kf19",       TC_DESC("F19 function key") /*, TC_TOKEN(F(19))*/ },
+    { TC_FNAME(key_f20),                    "FA", "kf20",       TC_DESC("F20 function key") /*, TC_TOKEN(F(20))*/ },
+    { TC_FNAME(key_f21),                    "FB", "kf21",       TC_DESC("F21 function key") },
+    { TC_FNAME(key_f22),                    "FC", "kf22",       TC_DESC("F22 function key") },
+    { TC_FNAME(key_f23),                    "FD", "kf23",       TC_DESC("F23 function key") },
+    { TC_FNAME(key_f24),                    "FE", "kf24",       TC_DESC("F24 function key") },
+    { TC_FNAME(key_f25),                    "FF", "kf25",       TC_DESC("F25 function key") },
+    { TC_FNAME(key_f26),                    "FG", "kf26",       TC_DESC("F26 function key") },
+    { TC_FNAME(key_f27),                    "FH", "kf27",       TC_DESC("F27 function key") },
+    { TC_FNAME(key_f28),                    "FI", "kf28",       TC_DESC("F28 function key") },
+    { TC_FNAME(key_f29),                    "FJ", "kf29",       TC_DESC("F29 function key") },
+    { TC_FNAME(key_f30),                    "FK", "kf30",       TC_DESC("F30 function key") },
+    { TC_FNAME(key_f31),                    "FL", "kf31",       TC_DESC("F31 function key") },
+    { TC_FNAME(key_f32),                    "FM", "kf32",       TC_DESC("F32 function key") },
+    { TC_FNAME(key_f33),                    "FN", "kf33",       TC_DESC("F33 function key") },
+    { TC_FNAME(key_f34),                    "FO", "kf34",       TC_DESC("F34 function key") },
+    { TC_FNAME(key_f35),                    "FP", "kf35",       TC_DESC("F35 function key") },
+    { TC_FNAME(key_f36),                    "FQ", "kf36",       TC_DESC("F36 function key") },
+    { TC_FNAME(key_f37),                    "FR", "kf37",       TC_DESC("F37 function key") },
+    { TC_FNAME(key_f38),                    "FS", "kf38",       TC_DESC("F38 function key") },
+    { TC_FNAME(key_f39),                    "FT", "kf39",       TC_DESC("F39 function key") },
+    { TC_FNAME(key_f40),                    "FU", "kf40",       TC_DESC("F40 function key") },
+    { TC_FNAME(key_f41),                    "FV", "kf41",       TC_DESC("F41 function key") },
+    { TC_FNAME(key_f42),                    "FW", "kf42",       TC_DESC("F42 function key") },
+    { TC_FNAME(key_f43),                    "FX", "kf43",       TC_DESC("F43 function key") },
+    { TC_FNAME(key_f44),                    "FY", "kf44",       TC_DESC("F44 function key") },
+    { TC_FNAME(key_f45),                    "FZ", "kf45",       TC_DESC("F45 function key") },
+    { TC_FNAME(key_f46),                    "Fa", "kf46",       TC_DESC("F46 function key") },
+    { TC_FNAME(key_f47),                    "Fb", "kf47",       TC_DESC("F47 function key") },
+    { TC_FNAME(key_f48),                    "Fc", "kf48",       TC_DESC("F48 function key") },
+    { TC_FNAME(key_f49),                    "Fd", "kf49",       TC_DESC("F49 function key") },
+    { TC_FNAME(key_f50),                    "Fe", "kf50",       TC_DESC("F50 function key") },
+    { TC_FNAME(key_f51),                    "Ff", "kf51",       TC_DESC("F51 function key") },
+    { TC_FNAME(key_f52),                    "Fg", "kf52",       TC_DESC("F52 function key") },
+    { TC_FNAME(key_f53),                    "Fh", "kf53",       TC_DESC("F53 function key") },
+    { TC_FNAME(key_f54),                    "Fi", "kf54",       TC_DESC("F54 function key") },
+    { TC_FNAME(key_f55),                    "Fj", "kf55",       TC_DESC("F55 function key") },
+    { TC_FNAME(key_f56),                    "Fk", "kf56",       TC_DESC("F56 function key") },
+    { TC_FNAME(key_f57),                    "Fl", "kf57",       TC_DESC("F57 function key") },
+    { TC_FNAME(key_f58),                    "Fm", "kf58",       TC_DESC("F58 function key") },
+    { TC_FNAME(key_f59),                    "Fn", "kf59",       TC_DESC("F59 function key") },
+    { TC_FNAME(key_f60),                    "Fo", "kf60",       TC_DESC("F60 function key") },
+    { TC_FNAME(key_f61),                    "Fp", "kf61",       TC_DESC("F61 function key") },
+    { TC_FNAME(key_f62),                    "Fq", "kf62",       TC_DESC("F62 function key") },
+    { TC_FNAME(key_f63),                    "Fr", "kf63",       TC_DESC("F63 function key") },
+    { TC_FNAME(key_mouse),                  "Km", "kmous",      TC_DESC("mouse event has occurred") },
+
+    /*xterm keys */
+    { TC_KNAME(xt),                         NULL, "kDC3",       TC_DESC("alt delete-character") },
+    { TC_KNAME(xt),                         NULL, "kDC4",       TC_DESC("shift+alt delete-character") },
+    { TC_KNAME(xt),                         NULL, "kDC5",       TC_DESC("control delete-character") },
+    { TC_KNAME(xt),                         NULL, "kDC6",       TC_DESC("shift+control delete-character") },
+    { TC_KNAME(xt),                         NULL, "kDC7",       TC_DESC("alt+control delete-character") },
+    { TC_KNAME(xt),                         NULL, "kDN",        TC_DESC("shift down-cursor") },
+    { TC_KNAME(xt),                         NULL, "kDN3",       TC_DESC("alt down-cursor") },
+    { TC_KNAME(xt),                         NULL, "kDN4",       TC_DESC("shift+alt down-cursor") },
+    { TC_KNAME(xt),                         NULL, "kDN5",       TC_DESC("control down-cursor") },
+    { TC_KNAME(xt),                         NULL, "kDN6",       TC_DESC("shift+control down-cursor") },
+    { TC_KNAME(xt),                         NULL, "kDN7",       TC_DESC("alt+control down-cursor") },
+    { TC_KNAME(xt),                         NULL, "kEND3",      TC_DESC("alt end") },
+    { TC_KNAME(xt),                         NULL, "kEND4",      TC_DESC("shift+alt end") },
+    { TC_KNAME(xt),                         NULL, "kEND5",      TC_DESC("control end") },
+    { TC_KNAME(xt),                         NULL, "kEND6",      TC_DESC("shift+control end") },
+    { TC_KNAME(xt),                         NULL, "kEND7",      TC_DESC("alt+control end") },
+    { TC_KNAME(xt),                         NULL, "kHOM3",      TC_DESC("alt home") },
+    { TC_KNAME(xt),                         NULL, "kHOM4",      TC_DESC("shift+alt home") },
+    { TC_KNAME(xt),                         NULL, "kHOM5",      TC_DESC("control home") },
+    { TC_KNAME(xt),                         NULL, "kHOM6",      TC_DESC("shift+control home") },
+    { TC_KNAME(xt),                         NULL, "kHOM7",      TC_DESC("alt+control home") },
+    { TC_KNAME(xt),                         NULL, "kIC3",       TC_DESC("alt insert-character") },
+    { TC_KNAME(xt),                         NULL, "kIC4",       TC_DESC("shift+alt insert-character") },
+    { TC_KNAME(xt),                         NULL, "kIC5",       TC_DESC("control insert-character") },
+    { TC_KNAME(xt),                         NULL, "kIC6",       TC_DESC("shift+control insert-character") },
+    { TC_KNAME(xt),                         NULL, "kIC7",       TC_DESC("alt+control insert-character") },
+    { TC_KNAME(xt),                         NULL, "kLFT3",      TC_DESC("alt left-cursor") },
+    { TC_KNAME(xt),                         NULL, "kLFT4",      TC_DESC("shift+alt left-cursor") },
+    { TC_KNAME(xt),                         NULL, "kLFT5",      TC_DESC("control left-cursor") },
+    { TC_KNAME(xt),                         NULL, "kLFT6",      TC_DESC("shift+control left-cursor") },
+    { TC_KNAME(xt),                         NULL, "kLFT7",      TC_DESC("alt+control left-cursor") },
+    { TC_KNAME(xt),                         NULL, "kNXT3",      TC_DESC("alt next") },
+    { TC_KNAME(xt),                         NULL, "kNXT4",      TC_DESC("shift+alt next") },
+    { TC_KNAME(xt),                         NULL, "kNXT5",      TC_DESC("control next") },
+    { TC_KNAME(xt),                         NULL, "kNXT6",      TC_DESC("shift+control next") },
+    { TC_KNAME(xt),                         NULL, "kNXT7",      TC_DESC("alt+control next") },
+    { TC_KNAME(xt),                         NULL, "kPRV3",      TC_DESC("alt previous") },
+    { TC_KNAME(xt),                         NULL, "kPRV4",      TC_DESC("shift+alt previous") },
+    { TC_KNAME(xt),                         NULL, "kPRV5",      TC_DESC("control previous") },
+    { TC_KNAME(xt),                         NULL, "kPRV6",      TC_DESC("shift+control previous") },
+    { TC_KNAME(xt),                         NULL, "kPRV7",      TC_DESC("alt+control previous") },
+    { TC_KNAME(xt),                         NULL, "kRIT3",      TC_DESC("alt right-cursor") },
+    { TC_KNAME(xt),                         NULL, "kRIT4",      TC_DESC("shift+alt right-cursor") },
+    { TC_KNAME(xt),                         NULL, "kRIT5",      TC_DESC("control right-cursor") },
+    { TC_KNAME(xt),                         NULL, "kRIT6",      TC_DESC("shift+control right-cursor") },
+    { TC_KNAME(xt),                         NULL, "kRIT7",      TC_DESC("alt+control right-cursor") },
+    { TC_KNAME(xt),                         NULL, "kUP",        TC_DESC("shift up-cursor") },
+    { TC_KNAME(xt),                         NULL, "kUP3",       TC_DESC("alt up-cursor") },
+    { TC_KNAME(xt),                         NULL, "kUP4",       TC_DESC("shift+alt up-cursor") },
+    { TC_KNAME(xt),                         NULL, "kUP5",       TC_DESC("control up-cursor") },
+    { TC_KNAME(xt),                         NULL, "kUP6",       TC_DESC("shift+control up-cursor") },
+    { TC_KNAME(xt),                         NULL, "kUP7",       TC_DESC("alt+control up-cursor") },
+    { TC_KNAME(xt),                         NULL, "ka2",        TC_DESC("vt220-keypad extensions") },
+    { TC_KNAME(xt),                         NULL, "kb1",        TC_DESC("vt220-keypad extensions") },
+    { TC_KNAME(xt),                         NULL, "kb3",        TC_DESC("vt220-keypad extensions") },
+    { TC_KNAME(xt),                         NULL, "kc2",        TC_DESC("vt220-keypad extensions") },
+    { TC_KNAME(xt),                         NULL, "kxIN",       TC_DESC("mouse response on focus-in") },
+    { TC_KNAME(xt),                         NULL, "kxOU",       TC_DESC("mouse response on focus-out") },
     };
 
 static TermNumeric_t term_flags[] = {           /* boolean - termcap/terminfo elements */
-    { "5i",  "mc5i",        TC_DESC("printer won't echo on screen") },
-    { "HC",  "chts",        TC_DESC("cursor is hard to see") },
-    { "LP",  NULL,          TC_DESC("last column of last line will not scroll"), TC_FLAG(&tf_LP) },
-    { "MT",  NULL,          TC_DESC("has meta key") },          /* TODO */
-    { "ND",  "ndscr",       TC_DESC("scrolling region is non-destructive") },
-    { "NL",  NULL,          TC_DESC("move down with \\n"), TC_FLAG(&tf_NL) },
-    { "NP",  "npc",         TC_DESC("pad character does not exist"), TC_FLAG(&tf_npc) },
-    { "NR",  "nrrmc",       TC_DESC("smcup does not reverse rmcup") },
-    { "YA",  "xhpa",        TC_DESC("only positive motion for hpa/mhpa caps") },
-    { "YB",  "crxm",        TC_DESC("using cr turns off micro mode") },
-    { "YC",  "daisy",       TC_DESC("printer needs operator to change character set") },
-    { "YD",  "xvpa",        TC_DESC("only positive motion for vpa/mvpa caps") },
-    { "YE",  "sam",         TC_DESC("printing in last column causes cr") },
-    { "YF",  "cpix",        TC_DESC("changing character pitch changes resolution") },
-    { "YG",  "lpix",        TC_DESC("changing line pitch changes resolution") },
-    { "am",  "am",          TC_DESC("terminal has automatic margins"), TC_FLAG(&tf_am) },
-    { "be",  NULL,          TC_DESC("back color erase"), TC_FLAG(&tf_be) },
-    { "bs",  NULL,          TC_DESC("uses ^H to move left"), TC_FLAG(&tf_bs) },
-    { "bw",  "bw",          TC_DESC("cub1 wraps from column 0 to last column") },
-    { "cc",  "ccc",         TC_DESC("terminal can re-define existing colors") },
-    { "da",  "da",          TC_DESC("display may be retained above the screen") },
-    { "db",  "db",          TC_DESC("display may be retained below the screen") },
-    { "eo",  "eo",          TC_DESC("can erase overstrikes with a blank") },
-    { "es",  "eslok",       TC_DESC("escape can be used on the status line") },
-    { "gn",  "gn",          TC_DESC("generic line type"), TC_FLAG(&tf_gn) },
-    { "hc",  "hc",          TC_DESC("hardcopy terminal"), TC_FLAG(&tf_hc) },
-    { "hl",  "hls",         TC_DESC("terminal uses only HLS color notation (tektronix)") },
-    { "hs",  "hs",          TC_DESC("has extra status line") },
-    { "hz",  "hz",          TC_DESC("can't print ~'s (hazeltine)"), TC_FLAG(&tf_hz) },
-    { "in",  "in",          TC_DESC("insert mode distinguishes nulls") },
-    { "km",  "km",          TC_DESC("Has a meta key, sets msb high"), TC_FLAG(&tf_km) },
-    { "mi",  "mir",         TC_DESC("safe to move while in insert mode") },
-    { "ms",  "msgr",        TC_DESC("safe to move while in standout/underline mode"), TC_FLAG(&tf_ms) },
-    { "nc",  NULL,          TC_DESC("no way to go to start of line") },
-    { "ns",  NULL,          TC_DESC("crt cannot scroll") },
-    { "nx",  "nxon",        TC_DESC("padding won't work, xon/xoff required"), TC_FLAG(&tf_xonoff) },
-    { "os",  "os",          TC_DESC("terminal can overstrike") },
-    { "pt",  NULL,          TC_DESC("has 8-char tabs invoked with ^I") },
-    { "ul",  "ul",          TC_DESC("underline character overstrikes") },
-    { "ut",  "bce",         TC_DESC("screen erased with background color"), TC_FLAG(&tf_ut) },
-    { "xb",  "xsb",         TC_DESC("beehive (f1=escape, f2=ctrl C)") },
-    { "xn",  "xenl",        TC_DESC("newline ignored after 80 cols (concept)"), TC_FLAG(&tf_xn) },
-    { "xo",  NULL,          TC_DESC("terminal uses xon/xoff handshaking"), TC_FLAG(&tf_xonoff) },
-    { "xr",  "xon",         TC_DESC("return clears the line") },
-    { "xs",  "xhp",         TC_DESC("standout not erased by overwriting (hp)"), TC_FLAG(&tf_xs) },
-    { "xt",  "xt",          TC_DESC("tabs destructive, magic so char (Telray 1061)"), TC_FLAG(&tf_xt) }
-    };
+    { TC_FNAME(auto_left_margin),           "bw", "bw",         TC_DESC("cub1 wraps from column 0 to last column") },
+    { TC_FNAME(auto_right_margin),          "am", "am",         TC_DESC("terminal has automatic margins"), TC_FLAG(&tf_am) },
+    { TC_FNAME(no_esc_ctlc),                "xb", "xsb",        TC_DESC("beehive (f1=escape, f2=ctrl C)") },
+    { TC_FNAME(ceol_standout_glitch),       "xs", "xhp",        TC_DESC("standout not erased by overwriting (hp)"), TC_FLAG(&tf_xs) },
+    { TC_FNAME(eat_newline_glitch),         "xn", "xenl",       TC_DESC("newline ignored after 80 cols (concept)"), TC_FLAG(&tf_xn) },
+    { TC_FNAME(erase_overstrike),           "eo", "eo",         TC_DESC("can erase overstrikes with a blank") },
+    { TC_FNAME(generic_type),               "gn", "gn",         TC_DESC("generic line type"), TC_FLAG(&tf_gn) },
+    { TC_FNAME(hard_copy),                  "hc", "hc",         TC_DESC("hardcopy terminal"), TC_FLAG(&tf_hc) },
+    { TC_FNAME(has_meta_key),               "km", "km",         TC_DESC("has a meta key, sets msb high"), TC_FLAG(&tf_km) },
+    { TC_FNAME(has_status_line),            "hs", "hs",         TC_DESC("has extra status line") },
+    { TC_FNAME(insert_null_glitch),         "in", "in",         TC_DESC("insert mode distinguishes nulls") },
+    { TC_FNAME(memory_above),               "da", "da",         TC_DESC("display may be retained above the screen") },
+    { TC_FNAME(memory_below),               "db", "db",         TC_DESC("display may be retained below the screen") },
+    { TC_FNAME(move_insert_mode),           "mi", "mir",        TC_DESC("safe to move while in insert mode") },
+    { TC_FNAME(move_standout_mode),         "ms", "msgr",       TC_DESC("safe to move while in standout/underline mode"), TC_FLAG(&tf_ms) },
+    { TC_FNAME(over_strike),                "os", "os",         TC_DESC("terminal can overstrike") },
+    { TC_FNAME(status_line_esc_ok),         "es", "eslok",      TC_DESC("escape can be used on the status line") },
+    { TC_FNAME(dest_tabs_magic_smso),       "xt", "xt",         TC_DESC("tabs destructive, magic so char (Telray 1061)"), TC_FLAG(&tf_xt) },
+    { TC_FNAME(tilde_glitch),               "hz", "hz",         TC_DESC("can't print ~'s (hazeltine)"), TC_FLAG(&tf_hz) },
+    { TC_FNAME(transparent_underline),      "ul", "ul",         TC_DESC("underline character overstrikes") },
+    { TC_FNAME(xon_xoff),                   "xo", "xon",        TC_DESC("terminal uses xon/xoff handshaking"), TC_FLAG(&tf_xonoff) },
+    { TC_FNAME(needs_xon_xoff),             "nx", "nxon",       TC_DESC("padding won't work, xon/xoff required"), TC_FLAG(&tf_xonoff) },
+    { TC_FNAME(prtr_silent),                "5i", "mc5i",       TC_DESC("printer wont echo on screen") },
+    { TC_FNAME(hard_cursor),                "HC", "chts",       TC_DESC("cursor is hard to see") },
+    { TC_FNAME(non_rev_rmcup),              "NR", "nrrmc",      TC_DESC("smcup does not reverse rmcup") },
+    { TC_FNAME(no_pad_char),                "NP", "npc",        TC_DESC("pad character does not exist"), TC_FLAG(&tf_npc) },
+    { TC_FNAME(non_dest_scroll_region),     "ND", "ndscr",      TC_DESC("scrolling region is non-destructive") },
+    { TC_FNAME(can_change),                 "cc", "ccc",        TC_DESC("terminal can re-define existing colors") },
+    { TC_FNAME(back_color_erase),           "ut", "bce",        TC_DESC("screen erased with background color"), TC_FLAG(&tf_ut) },
+    { TC_FNAME(hue_lightness_saturation),   "hl", "hls",        TC_DESC("terminal uses only HLS color notation (tektronix)") },
+    { TC_FNAME(col_addr_glitch),            "YA", "xhpa",       TC_DESC("only positive motion for hpa/mhpa caps") },
+    { TC_FNAME(cr_cancels_micro_mode),      "YB", "crxm",       TC_DESC("using cr turns off micro mode") },
+    { TC_FNAME(has_print_wheel),            "YC", "daisy",      TC_DESC("printer needs operator to change character set") },
+    { TC_FNAME(row_addr_glitch),            "YD", "xvpa",       TC_DESC("only positive motion for vpa/mvpa caps") },
+    { TC_FNAME(semi_auto_right_margin),     "YE", "sam",        TC_DESC("printing in last column causes cr") },
+    { TC_FNAME(cpi_changes_res),            "YF", "cpix",       TC_DESC("changing character pitch changes resolution") },
+    { TC_FNAME(lpi_changes_res),            "YG", "lpix",       TC_DESC("changing line pitch changes resolution") },
+    { TC_FNAME(backspaces_with_bs),         "bs", "OTbs",       TC_DESC("uses ^H to move left"), TC_FLAG(&tf_bs) },
+    { TC_FNAME(crt_no_scrolling),           "ns", "OTns",       TC_DESC("crt cannot scroll") },
+    { TC_FNAME(no_correctly_working_cr),    "nc", "OTnc",       TC_DESC("no way to go to start of line") },
+    { TC_FNAME(gnu_has_meta_key),           "MT", "OTMT",       TC_DESC("has meta key") },          /* TODO */
+    { TC_FNAME(linefeed_is_newline),        "NL", "OTNL",       TC_DESC("move down with \\n"), TC_FLAG(&tf_NL) },
+    { TC_FNAME(has_hardware_tabs),          "pt", "OTpt",       TC_DESC("has 8-char tabs invoked with ^I") },
+    { TC_FNAME(return_does_clr_eol),        "xr", "OTxr",       TC_DESC("return clears the line") },
 
+        /*
+         *  User-Defined Capabilities
+         *
+         *  https://invisible-island.net/ncurses/man/user_caps.5.html
+         *  See: ncurses/include/Caps-ncurses
+         */
+    { TC_UNAME(xt),                         NULL, "NQ",         TC_DESC("terminal does not support query/response") },
+    { TC_UNAME(xt),                         NULL, "RGB",        TC_DESC("RGB color support") },
+
+        /* screen */
+    { TC_UNAME(xt),                         NULL, "AN",         TC_DESC("turn on autonuke") },
+    { TC_UNAME(xt),                         NULL, "AX",         TC_DESC("understands ANSI set default fg/bg color") },
+    { TC_UNAME(xt),                         NULL, "C8",         TC_DESC("terminal shows bold as high-intensity colors") },
+    { TC_UNAME(xt),                         NULL, "G0",         TC_DESC("can deal with ISO 2022 font selection") },
+    { TC_UNAME(xt),                         NULL, "TF",         TC_DESC("add missing capabilities to screen") },
+    { TC_UNAME(xt),                         NULL, "XT",         TC_DESC("Supports xterm OCS and mouse"), TC_FLAG(&tf_XT) },
+
+        /* vim */
+    { TC_UNAME(xt),                         NULL, "XF",         TC_DESC("terminal supports xterm focus in/out") },
+    };
 
 static const unsigned  ansicolor_map[] = {      /* BRIEF -> ANSI color map */
 /*  BLACK,  BLUE,   GREEN,  CYAN,   RED,    MAGENTA,    BROWN,  WHITE   */
@@ -1242,6 +1398,8 @@ static int              tt_colormap[COLOR_NONE + 1];
  *              Assume BCE capabilities.
  *          o COLORTERM -
  *              slang style color terminal configuration, if set color assumed.
+ *          o OSC 11
+ *              Default background; rgb luminance.
  *          o NCURSES_NO_UTF8_ACS -
  *              When running in a UTF-8 locale several terminals (including Linux console and GNU screen)
  *              ignore alternative character selection. If set use unicode box drawing characters in all
@@ -1293,17 +1451,16 @@ ttinit(void)
     term = ttisetup();
 
     /*
-     *  build attributes
+     *  build attributes, non-xterm
      */
-    if (0 == strncmp(term, "linux", 5)) {       /* linux console */
+    if (isterm(term, "linux")) {                /* linux console */
         t_attributes = TA_LINUX | TA_DARK;
 
-    } else if (0 == strncmp(term, "cygwin", 5)) {
+    } else if (isterm(term, "cygwin")) {
         const char *cygwin = ggetenv("CYGWIN");
 
         if (cygwin) {
             trace_log("\tCYGWIN:%s\n", cygwin);
-
             if (strstr(cygwin, "codepage:oem")) {
                 if (xf_disptype < 0) {          /* 8bit terminal */
                     xf_disptype = DISPTYPE_8BIT;
@@ -1319,34 +1476,34 @@ ttinit(void)
         t_attributes = TA_CYGWIN|TA_XTERMLIKE|TA_DARK;
 
 #if defined(linux)
-    } else if (0 == strncmp(term, "con", 3)) {  /* console, con80x25 etc */
+    } else if (isterm(term, "console") ||       /* console, con80x25 etc */
+            (0 == strncmp(term, "con", 3) && term[3] && isdigit(term[3]))) {
         t_attributes = TA_LINUX|TA_DARK;
 #endif
 
-    } else if (0 == strncmp(term, "konsole", 7) ||
+    } else if (isterm(term, "konsole") ||
                 getenv("KONSOLE_DCOP") || getenv("KONSOLE_DBUS_SESSION")) {
-        t_attributes = TA_KONSOLE | TA_XTERMLIKE;
+        t_attributes = TA_KONSOLE|TA_XTERMLIKE;
 
-    } else if (0 == strncmp(term, "screen", 6)) {
-        t_attributes = TA_SCREEN;
-        if (0 == strcmp(term, "screen.linux")) {
+    } else if (isterm(term, "screen")) {
+        t_attributes = TA_SCREEN;               /* screen[.linux] */
+        if (0 == isterm(term, "screen.linux")) {
             t_attributes |= TA_DARK;
         }
-
-    } else if (0 == strcmp(term, "putty")) {
-        t_attributes |= TA_DARK;
 
     } else if (strcmp(term, "vt52") != 0 &&     /* vt100+ */
             term[0] == 'v' && term[1] == 't' && term[2] >= '1' && term[2] <= '9') {
         t_attributes = TA_VT100LIKE;
 
-    } else if (term_xtermlike(term)) {          /* eg. xterm-color */
-        t_attributes = TA_XTERM | TA_XTERMLIKE;
+    } else {
+        t_attributes = term_xtermlike(term);
 #if defined(__CYGWIN__)
-        if (ggetenv("COMSPEC")) {
-            t_attributes |= TA_DARK;            /* assume cmd/mintty */
+        if (ggetenv("WT_SESSION")) {
+            t_attributes |= TA_DARK;            /* ms-terminal */
+        } else if (ggetenv("COMSPEC")) {
+            t_attributes |= TA_DARK;            /* cmd/mintty */
         }
-#endif  /*__CYGWIN__*/
+#endif /*__CYGWIN__*/
     }
 
     if (hasfeature(term, "rv")) {
@@ -1356,143 +1513,35 @@ ttinit(void)
         t_attributes |= TA_MONO;                /* m  = monochrome, suppress color support */
     }
 
-    trace_log("terminal: %s (%s%s%s%s%s%s%s%s)\n", term,
-        (t_attributes & TA_LINUX     ? "linux," : ""),
-        (t_attributes & TA_CYGWIN    ? "cygwin," : ""),
+    trace_log("terminal: %s (0x%08x=%s%s%s%s%s%s)\n", term, t_attributes,
         (t_attributes & TA_VT100LIKE ? "vt100like," : ""),
-        (t_attributes & TA_XTERM     ? "xterm," : ""),
+        (t_attributes & TA_XTERM ? "xterm," : ""),
             (t_attributes & TA_XTERMLIKE ? "xtermlike," : ""),
-        (t_attributes & TA_LIGHT     ? "light," : ""),
-        (t_attributes & TA_DARK      ? "dark," : ""),
-        (t_attributes & TA_MONO      ? "mono," : ""));
+        (t_attributes & TA_LIGHT ? "light," : ""),
+        (t_attributes & TA_DARK ? "dark," : ""),
+        (t_attributes & TA_MONO ? "mono," : ""));
 
     /*
-     *  Load termcap values.
+     *  Load terminal values.
      */
-    {
-        unsigned i, fkeys = 0;
-        const char *cp;
-
-        trace_log("termcap:\n");
-
-        trace_log("  General:\n");
-        for (i = 0; i < (sizeof(term_strings)/sizeof(term_strings[0])); i++) {
-            /*
-             *  string values
-             */
-            TermString_t *ti = term_strings + i;
-            const Term_t *term = &ti->term;
-            const char *name = ttiname(term);
-
-            if (name && NULL != (cp = ttigetstr(term))) {
-                const char **token = ti->stoken;
-
-                ti->svalue = cp;
-                if (token) {
-                    *token = ti->svalue;
-                }
-                trace_log("\t%-50s%c %-5s : %s\n", term->comment,
-                    (token ? '*' : ' '), name, c_string(cp));
-
-                if (token == &tc_graphic_pairs) {
-                    acs_dump(cp);
-                    x_pt.pt_attributes |= TF_AGRAPHICCHARACTERS;
-
-                } else if (token == &tc_box_characters) {
-                    const char *t_acs;
-
-                    if (NULL == tc_graphic_pairs &&
-                                (NULL != (t_acs = acs_box_characters(cp)))) {
-                        acs_dump(t_acs);
-                        tc_graphic_pairs = t_acs;
-                        x_pt.pt_attributes |= TF_AGRAPHICCHARACTERS;
-                    }
-                }
-            }
-        }
-
-        fkeys = 0;
-        trace_log("  Keys:\n");
-        for (i = 0; i < (sizeof(term_keys)/sizeof(term_keys[0])); ++i) {
-            /*
-             *  keys
-             */
-            TermKey_t *ti = term_keys + i;
-            const Term_t *term = &ti->term;
-            const char *name = ttiname(term);
-
-            if (name && NULL != (cp = ttigetstr(term))) {
-                const size_t kcode = (size_t)ti->key;
-
-                ti->svalue = cp;                /* loaded later by ttkeys() */
-
-                trace_log("\t%-50s%c %-5s : %s\n", term->comment,
-                    (kcode ? '*' : ' '), name, c_string(cp));
-
-                if (kcode >= F(1) && kcode <= F(10)) {
-                    ++fkeys;
-                }
-            }
-        }
-
-        if (fkeys >= 10) {                      /* have all 10 function keys */
-            x_pt.pt_attributes |= TF_AFUNCTIONKEYS;
-        }
-
-        trace_log("  Numeric:\n");
-        for (i = 0; i < (sizeof(term_numbers)/sizeof(term_numbers[0])); ++i) {
-            /*
-             *  numbers
-             */
-            TermNumeric_t *ti = term_numbers + i;
-            const Term_t *term = &ti->term;
-            const char *name = ttiname(term);
-
-            if (name) {
-                ti->ivalue = ttigetnum(term);
-                if (ti->itoken) {
-                    *ti->itoken = ti->ivalue;
-                }
-                trace_log("\t%-50s%c %-5s : %d\n", term->comment,
-                    (ti->itoken ? '*' : ' '), name, ti->ivalue);
-            }
-        }
-
-        trace_log("  Boolean/Flags:\n");
-        for (i = 0; i < (sizeof(term_flags)/sizeof(term_flags[0])); ++i) {
-            /*
-             *  flags
-             */
-            TermNumeric_t *ti = term_flags + i;
-            const Term_t *term = &ti->term;
-            const char *name = ttiname(term);
-
-            if (name) {
-                ti->ivalue = ttigetflag(term);
-                if (ti->itoken) {
-                    *ti->itoken = ti->ivalue;
-                }
-                trace_log("\t%-50s%c %-5s : %d\n", term->comment,
-                    (ti->itoken ? '*' : ' '), name, ti->ivalue);
-            }
-        }
-    }
-
-    /* color */
+    term_config();
     term_fgbg();
 
+    /*
+     *  Fixup defective termcap/terminfo databases
+     */
     if (NULL != ggetenv("COLORTERM_BCE")) {
         tf_be = 1;                              /* slang compat override */
     }
 
-    if (NULL == tc_Color_Fg || NULL == tc_Color_Fg) {
-        if (tc_ANSI_Color_Fg && tc_ANSI_Color_Bg) {
-            tc_Color_Fg = tc_ANSI_Color_Fg;
-            tc_Color_Bg = tc_ANSI_Color_Bg;
-        }
+    if (NULL == tc_Color_Fg || NULL == tc_Color_Bg) {
+        tc_Color_Fg = tc_Color_Bg = NULL;
     }
 
-    /* fixup defective termcap/terminfo databases */
+    if (NULL == tc_ANSI_Color_Fg || NULL == tc_ANSI_Color_Bg) {
+        tc_ANSI_Color_Fg = tc_ANSI_Color_Bg = NULL;
+    }
+
     if (NULL == tc_graphic_pairs &&
             (t_attributes & TA_VT100LIKE)) {    /* VT1xx */
         tc_acs_start  = "\016";
@@ -1501,7 +1550,7 @@ ttinit(void)
     }
 
     if (NULL == tc_graphic_pairs &&
-            strncmp(term, "aixterm", 7) == 0) { /* aixterm (VT102) */
+            isterm(term, "aixterm")) {          /* aixterm (VT102) */
         tc_acs_start  = "\016";
         tc_acs_end    = "\017";
         tc_acs_enable = "\033(B\033)0";
@@ -1608,20 +1657,148 @@ ttinit(void)
 
 
 static int
-hasfeature(const char *term, const char *what)
+isterm(const char *term, const char *name)
 {
-    const char *p = strstr(term, what);
+    const size_t tlen = (size_t)strlen(term);
+    const size_t nlen = (size_t)strlen(name);
 
-    if (p > term) {                             /* -rv[-] */
-        const unsigned len = strlen(what);
-
-        if ('-' == p[-1] && ('-' == p[len] || 0 == p[len])) {
-            return 1;
+    if (tlen >= nlen) {                         /* xxxx[\0.-] */
+        if (0 == memcmp(term, name, nlen)) {    /* dot, allow <screen.xterm> */
+            return (term[nlen] == '\0' || term[nlen] == '-' || term[nlen] == '.');
         }
     }
     return 0;
 }
 
+
+static int
+hasfeature(const char *term, const char *what)
+{
+    const size_t wlen = (size_t)strlen(what);
+    const char *elm;
+
+    for (elm = strchr(term, '-'); elm; elm = strchr(elm, '-')) {
+        ++elm;
+        if (0 == strncmp(elm, what, wlen)) {    /* -xxxx[\0-] */
+            if (elm[wlen] == '\0' || elm[wlen] == '-') {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+
+static void
+term_config(void)
+{
+    unsigned i, fkeys = 0;
+    const char *cp;
+
+    trace_log("termcap:\n");
+
+    trace_log("  String:\n");
+    for (i = 0; i < (sizeof(term_strings)/sizeof(term_strings[0])); i++) {
+        /*
+         *  string values
+         */
+        TermString_t *ti = term_strings + i;
+        const Term_t *term = &ti->term;
+        const char *name = ttiname(term);
+
+        if (name && NULL != (cp = ttigetstr(term))) {
+            const char **token = ti->stoken;
+
+            ti->svalue = cp;
+            if (token) {
+                *token = ti->svalue;
+            }
+            trace_log("\t%-24s %-50s%c %-6s : %s\n",
+                term->termfname, term->comment, (token ? '*' : ' '), name, c_string(cp));
+
+            if (token == &tc_graphic_pairs) {
+                acs_dump(cp);
+                x_pt.pt_attributes |= TF_AGRAPHICCHARACTERS;
+
+            } else if (token == &tc_box_characters) {
+                const char *t_acs;
+
+                if (NULL == tc_graphic_pairs &&
+                            (NULL != (t_acs = acs_box_characters(cp)))) {
+                    acs_dump(t_acs);
+                    tc_graphic_pairs = t_acs;
+                    x_pt.pt_attributes |= TF_AGRAPHICCHARACTERS;
+                }
+            }
+        }
+    }
+
+    fkeys = 0;
+    trace_log("  Keys:\n");
+    for (i = 0; i < (sizeof(term_keys)/sizeof(term_keys[0])); ++i) {
+        /*
+         *  keys
+         */
+        TermKey_t *ti = term_keys + i;
+        const Term_t *term = &ti->term;
+        const char *name = ttiname(term);
+
+        if (name && NULL != (cp = ttigetstr(term))) {
+            const size_t kcode = (size_t)ti->key;
+
+            ti->svalue = cp;                /* loaded later by ttkeys() */
+
+            trace_log("\t%-24s %-50s%c %-6s : %s\n",
+                term->termfname, term->comment, (kcode ? '*' : ' '), name, c_string(cp));
+
+            if (kcode >= F(1) && kcode <= F(10)) {
+                ++fkeys;
+            }
+        }
+    }
+
+    if (fkeys >= 10) {                      /* have all 10 function keys */
+        x_pt.pt_attributes |= TF_AFUNCTIONKEYS;
+    }
+
+    trace_log("  Numeric:\n");
+    for (i = 0; i < (sizeof(term_numbers)/sizeof(term_numbers[0])); ++i) {
+        /*
+         *  numbers
+         */
+        TermNumeric_t *ti = term_numbers + i;
+        const Term_t *term = &ti->term;
+        const char *name = ttiname(term);
+
+        if (name) {
+            ti->ivalue = ttigetnum(term);
+            if (ti->itoken) {
+                *ti->itoken = ti->ivalue;
+            }
+            trace_log("\t%-24s %-50s%c %-6s : %d\n",
+                term->termfname, term->comment, (ti->itoken ? '*' : ' '), name, ti->ivalue);
+        }
+    }
+
+    trace_log("  Boolean/Flags:\n");
+    for (i = 0; i < (sizeof(term_flags)/sizeof(term_flags[0])); ++i) {
+        /*
+         *  flags
+         */
+        TermNumeric_t *ti = term_flags + i;
+        const Term_t *term = &ti->term;
+        const char *name = ttiname(term);
+
+        if (name) {
+            ti->ivalue = ttigetflag(term);
+            if (ti->itoken) {
+                *ti->itoken = ti->ivalue;
+            }
+            trace_log("\t%-24s %-50s%c %-6s : %d\n",
+                term->termfname, term->comment, (ti->itoken ? '*' : ' '), name, ti->ivalue);
+        }
+    }
+}
 
 /*  Function:           ttdefaultscheme
  *      Retrieve the derived/guessed default background color based on the either
@@ -1641,11 +1818,22 @@ ttdefaultscheme(void)
     if (x_pt.pt_schemedark >= 0) {              /* explicit configuration */
         isdark = x_pt.pt_schemedark;
 
-    } else if (0 == (TA_LIGHT & t_attributes)) {
-        if (tt_defaultbg != NOCOLOR) {          /* 0-6 or 8 */
+    } else if ((TA_LUMINACE_DARK|TA_LUMINACE_LIGHT) & t_attributes) {
+        if (TA_LUMINACE_DARK & t_attributes) {  /* luminace calc */
+            isdark = 1;
+        }
+
+    } else if ((TA_DARK|TA_LIGHT) & t_attributes) {
+        if (TA_DARK & t_attributes) {           /* assumed */
+            isdark = 1;
+        }
+
+    } else {
+        if (tt_defaultbg != NOCOLOR) {          /* dark=0-6 or 8 */
             if (tt_defaultbg <= 6 || 8 == tt_defaultbg) {
                 isdark = 1;
             }
+
         } else {                                /* generally dark */
             if (TA_DARK & t_attributes) {
                 isdark = 1;
@@ -1673,7 +1861,9 @@ term_open(scrprofile_t *profile)
 {
     io_device_add(TTY_INFD);                    /* stream registration */
     sys_initialise();
+    term_attributes();
     term_identification();                      /* terminal identification */
+    term_ocs_color(11);
     term_sizeget(&profile->sp_rows, &profile->sp_cols);
     profile->sp_colors = tt_colors;
 }
@@ -2105,7 +2295,8 @@ ttigetstr(const Term_t *ti)
 
         s = tigetstr((char *) name);
         if ((char *)-1 == s) {                  /* 'name' is not a string capability */
-            trace_log("\ttgetstr(%s) = unknown\n", name);
+            if (0 == ti->userdef)
+                trace_log("\ttgetstr(%s) = unknown\n", name);
             s = NULL;
         }
     }
@@ -2175,7 +2366,7 @@ ttigetnum(const Term_t *ti)
         num  = tgetnum((char *) name);
     }
 #endif
-    if (num < -1) {
+    if (num < -1 && 0 == ti->userdef) {
         trace_log("\ttgetnum(%s) = error (%d)\n", name, num);
     }
     return (num >= -1 ? num : -1);              /* -1 or greater */
@@ -2209,7 +2400,7 @@ ttigetflag(const Term_t *ti)
         flag = tgetflag((char *) name);
     }
 #endif
-    if (flag < 0) {
+    if (flag < 0 && 0 == ti->userdef) {
         trace_log("\ttgetflag(%s) = error (%d)\n", name, flag);
     }
     return (flag >= 0 ? flag : 0);              /* 0 or 1 */
@@ -2360,48 +2551,48 @@ acs_locale_breaks(void)
  *      term - Terminate name.
  *
  *  Returns:
- *      nothing.
+ *      Associated flags, if any.
  */
-static int
+static TAttributes_t
 term_xtermlike(const char *term)
 {
     static const struct {
-        const char *desc;
-        unsigned len;
+        const char *name;
+        TAttributes_t flags;
     } xtermlike[] = {
-#define XTERMLIKE(x)        { x, sizeof(x)-1 }
-        XTERMLIKE("xterm"),                     /* generic */
-        XTERMLIKE("aixterm"),                   /* AIX */
-        XTERMLIKE("mintty"),                    /* non-standard. normally "xterm-256color" */
-        XTERMLIKE("rxvt"),
-        XTERMLIKE("urxvt"),                     /* Unicode rxvt */
-        XTERMLIKE("Eterm"),
-        XTERMLIKE("gnome"),                     /* gnome-terminal */
-        XTERMLIKE("dtterm"),                    /* CDE terminal */
-        XTERMLIKE("cygwin")                     /* Cygwin console */
+        { "xterm", TA_XTERM },                  /* Generic */
+        { "mintty", TA_MINTTY },                /* Non-standard. normally "xterm-256color" */
+        { "putty", TA_PUTTY | TA_DARK },
+        { "ms-terminal", TA_MSTERMINAL | TA_DARK },
+        { "gnome", TA_GNOME },
+        { "vte", TA_GNOME },
+        { "xterm-kitty", TA_KITTY },
+        { "alacritty", TA_ALACRITTY },
+        { "iterm", TA_ITERM },
+        { "iterm2", TA_ITERM },
+        { "iTerm.app", TA_ITERM },
+        { "iTerm2.app", TA_ITERM },
+        { "hterm", TA_HTERM },
+        { "wezterm", TA_WEZTERM },
+        { "aixterm" },                          /* AIX */
+        { "rxvt" },                             /* [ou]r xvt */
+        { "urxvt" },                            /* Unicode rxvt */
+        { "Eterm" },                            /* Color vt102 terminal emulator */
+        { "dtterm" }                            /* CDE terminal */
         };
-#undef XTERMLIKE
-    int ret = 0;
+    TAttributes_t ret = 0;
 
     if (term) {
         unsigned i;
 
-        if (x_pt.pt_xtcompat >= 0) {
-            ret = x_pt.pt_xtcompat;             /* feature override */
-        } else {
-            for (i = 0; i < (unsigned)(sizeof(xtermlike)/sizeof(xtermlike[0])); ++i)
-                if (0 == strncmp(term, xtermlike[i].desc, xtermlike[i].len) &&
-                        ('\0' == term[xtermlike[i].len] || '-' == term[xtermlike[i].len])) {
-                    /*
-                     *  for example,
-                     *      xterm-color
-                     */
-                    ret = 1;
-                    break;
-                }
-        }
+        for (i = 0; i < (unsigned)(sizeof(xtermlike)/sizeof(xtermlike[0])); ++i)
+            if (isterm(term, xtermlike[i].name)) {
+                ret = xtermlike[i].flags | TA_XTERMLIKE;
+                break;
+            }
     }
-    trace_log("\txtermlike(%s) : %d\n", (term ? term : ""), ret);
+
+    trace_log("\txtermlike(%s) : 0x%lx\n", (term ? term : ""), (unsigned long)ret);
     x_pt.pt_xtcompat = ret;
     return ret;
 }
@@ -2522,11 +2713,11 @@ term_colors(void)
 
     } else if (x_pt.pt_color /*-1 or 1*/) {
         if (t_attributes & TA_XTERMLIKE) {
-            tt_colors = ANSI_COLORS;
+            tt_colors = XTERM_COLORS;
 
         } else if (0 == (tt_colors = tf_Colors)) {
             if (tc_ANSI_Color_Fg && tc_ANSI_Color_Bg) {
-                tt_colors = 16;
+                tt_colors = ANSI_COLORS;
             } else if (tc_Color_Fg && tc_Color_Bg) {
                 tt_colors = 8;
             } else {
@@ -2771,7 +2962,7 @@ xterm_colors_get(char *buffer, int length)
          */
         int cnt = sprintf((char *)t_buffer, "\033]4;%d;?\007", color);
 
-        if (cnt != sys_write(1, t_buffer, cnt) ||
+        if (cnt != sys_write(TTY_OUTFD, t_buffer, cnt) ||
                 (cnt = term_read((char *)t_buffer, sizeof(t_buffer), 5 * 1000)) <= 0 ||
                 sscanf((char *)t_buffer, "%*[^;];%*[^;];%s", buffer + len + (len ? 1 : 0)) != 1) {
             /*
@@ -2836,14 +3027,133 @@ xterm_colors_set(const char *value)
     }
 
     cnt += sprintf((char *)(t_buffer + cnt), "\007");
-    sys_write(1, t_buffer, cnt);                /* terminator */
+    sys_write(TTY_OUTFD, t_buffer, cnt);        /* terminator */
     return 0;
 }
 
 
+/*  Function:           term_attributes
+ *      Request the terminal (VT100 and xterm style) to echo the "DA1 - Primary Device Attributes"
+ *      report containing terminal terminal's architectural class and basic attributes.
+ *
+ *      Send an extended query, test to see if it supports Kitty's keyboard protocol.
+ *
+ *      DA1 - Primary Device Attributes
+ *          In this DA exchange, the host asks for the terminal's architectural class and basic attributes.
+ *
+ *          Host Request:
+ *              The host uses the following sequence to send this request:
+ *
+ *              CSI     c       or      CSI     0       c
+ *              9/11    6/3             9/11    0       6/3
+ *
+ *          Terminal Response:
+ *              The terminal responds by sending its architectural class and basic attributes to the host. This response depends on the terminal's current operating VT level.
+ *
+ *              CSI     ?       6       4       ;       Ps1     ...
+ *              9/11    3/15    3/6     3/4     3/11    3/n     ..
+ *
+ *  Parameters:
+ *      none.
+ *
+ *  Returns:
+ *      Length of the buffer retrieved.
+ */
+static int
+term_attributes(void)
+{
+    int ret = -1;
+
+    if ((TA_KITTY|TA_ALACRITTY|TA_WEZTERM) & t_attributes) {
+#define XTERM_DA1X          (sizeof(xterm_da1x_cmd)-1)
+        static char xterm_da1x_cmd[] = "\033[?u\033[c";
+                //
+                // Extended DA1 request.
+                //
+                // An application can query the terminal for support of this protocol by sending the escape code
+                // querying for the current progressive enhancement status followed by request for the primary
+                // device attributes <https://vt100.net/docs/vt510-rm/DA1.html>.
+                //
+                // If an answer for the device attributes is received without getting back an answer for the
+                // progressive enhancement the terminal does not support this protocol.
+                //
+                // Terminals: kitty, foot, WezTerm, alacritty, rio, crossterm
+                //
+        char buffer[64] = {0};
+        int len = 0;
+
+        term_flush();
+        if (XTERM_DA1X == sys_write(TTY_OUTFD, xterm_da1x_cmd, XTERM_DA1X) &&
+                (len = term_read(buffer, sizeof(buffer), -2)) > 1) {
+            char *cursor = buffer;
+
+            trace_ilog("term_da1x(%d, %s)\n", len, buffer);
+            if ('\033' == cursor[0] && '[' == cursor[1]) {
+                if (cursor[3] == 'u' && cursor[4] == '?') {
+                    x_pt.pt_attributes |= TF_AKITTYKEYS;
+                    trace_ilog("\t==> kitty-keys\n");
+                    cursor += 4;
+                }
+            }
+
+        //  if ('\033' == cursor[0] && '[' == cursor[1]) {
+        //      if (cursor[2] == '?' && cursor[3]) {
+        //          trace_ilog("\t==> da1 response\n");
+        //      }
+        //  }
+        }
+    }
+
+    if (0 == (t_attributes & TA_KITTY)) {
+        const char *vte_version_env = ggetenv("VTE_VERSION");
+        int vte_version = vte_version_env ? (int)strtol(vte_version_env, NULL, 10) : 0;
+
+        trace_ilog("term_vte_version=%d\n", vte_version);
+        if (vte_version == 0 || vte_version >= 5400) {
+            x_pt.pt_attributes |= TF_AXTERMKEYS;/* xterm modifyOtherKeys */
+        }
+    }
+
+    return ret;
+}
+
+
 /*  Function:           term_identification
- *      Request the terminal (VT100 and xterm style) to echo the "Device Attributes"
+ *      Request the terminal (VT100 and xterm style) to echo the "DA2 - Secondary Device Attributes"
  *      report containing terminal type and version.
+ *
+ *      DA2 - Secondary Device Attributes
+ *          In this DA exchange, the host requests the terminal's identification code, firmware version level, and hardware options.
+ *
+ *          Host Request:
+ *              The host uses the following sequence to send this request.
+ *
+ *              CSI     >       c       or      CSI     >       0       c
+ *              9/11    3/14    6/3             9/11    3/14    3/0     6/3
+ *
+ *          Terminal Response:
+ *              The terminal with a VT keyboard uses the following sequence to respond.
+ *
+ *              CSI     >       6       1       ;       Pv      ;       0       c
+ *              9/11    3/14    3/6     3/1     3/11    3/n     3/11    3/0     6/3     DA2R for terminal with STD keyboard.
+ *
+ *              CSI     >       6       1       ;       Pv      ;       1       c
+ *              9/11    3/14    3/6     3/1     3/11    3/n     3/11    3/1     6/3     DA2R for terminal with PC keyboard.
+ *
+ *      Example:
+ *          \033[>82;20710;0c
+ *                ^type
+ *                   ^version
+ *
+ *          Terminal                    Type        Version         Example
+ *          ------------------------------------------------------------------
+ *          Gnome-terminal (legacy)     1           >= 1115         1;3801;0
+ *          PuTTY                       0           136             0;136;0
+ *          MinTTY                      77(=M)                      77;20005;0c
+ *          rxvt                        82(=R)
+ *          screen                      83(=S)                      83;40500;0
+ *          urxvt                       85(=U)
+ *          xterm                       -2(a)
  *
  *  Parameters:
  *      none.
@@ -2854,8 +3164,8 @@ xterm_colors_set(const char *value)
 static int
 term_identification(void)
 {
-#define XTERM_DEVICE_ATTR                       (sizeof(xterm_device_attr)-1)
-    static char xterm_device_attr[] = "\033[>c";
+#define XTERM_DA2_LEN       (sizeof(xterm_da2_cmd)-1)
+    static char xterm_da2_cmd[] = "\033[>c";
     int ret = -1;
 
 #if defined(__CYGWIN__)
@@ -2878,60 +3188,49 @@ term_identification(void)
     }
 #endif  /*__CYGWIN__*/
 
-    if ((TA_VT100LIKE|TA_XTERM|TA_XTERMLIKE) & t_attributes) {
+    if (((TA_VT100LIKE|TA_XTERM|TA_XTERMLIKE) & t_attributes) || tc_RV) {
         /*
          *  xterm and compatible terminals
          */
-        const char *vstring;
+        const char *rvcmd = (tc_RV ? tc_RV : xterm_da2_cmd);
+        const int rvlen = (tc_RV ? strlen(tc_RV) : XTERM_DA2_LEN);
+        const char *vstr;
 
         /*
          *  XTERM_VERSION/
-         *      Xterm(256)  ==> 256
+         *      Xterm(256) ==> 256
          */
-        if (NULL != (vstring = ggetenv("XTERM_VERSION"))) {
+        if (NULL != (vstr = ggetenv("XTERM_VERSION"))) {
             char vname[32+1] = {0};
             int vnumber = 0;
                                                 /* decode and return patch/version number */
-            if (2 == sscanf(vstring, "%32[^(](%u)", vname, &vnumber))
+            if (2 == sscanf(vstr, "%32[^(](%u)", vname, &vnumber))
                 if (vnumber > 0) {
                     x_pt.pt_vtdatype = -2;      /* source: xterm_version */
                     x_pt.pt_vtdaversion = vnumber;
                     ret = 0;
                 }
-            trace_ilog("XTERM_VERSION(%s) = %d (%s)\n", vstring, vnumber, vname);
+            trace_ilog("XTERM_VERSION(%s) = %d (%s)\n", vstr, vnumber, vname);
         }
 
         /*
-         *  device attribute
+         *  Device attribute
          */
         if (-1 == ret) {
             char buffer[32] = {0};
             int len = 0;
 
             term_flush();
-            if (XTERM_DEVICE_ATTR == sys_write(1, xterm_device_attr, XTERM_DEVICE_ATTR) &&
-                        (len = term_read(buffer, sizeof(buffer), -2)) > 1) {
-                /*
-                 *  Example/
-                 *      \033[>82;20710;0c
-                 *            ^type
-                 *               ^version
-                 *
-                 *  Known terminal types/
-                 *      xterm (0)               0;256;0c
-                 *      mintty (77)             77;10003;0c
-                 *      screen (83)
-                 *      old rxvt (82)
-                 *      rxvt unicode (85)
-                 */
-                trace_ilog("device_attr(%d, %s)\n", len, buffer);
+            if (rvlen == sys_write(TTY_OUTFD, rvcmd, rvlen) &&
+                    (len = term_read(buffer, sizeof(buffer), -2)) > 1) {
+                trace_ilog("term_da2(%d, %s)\n", len, buffer);
 
                 if ('\033' == buffer[0] && '[' == buffer[1] &&
                         ('>' == buffer[2] || '?' == buffer[2])) {
                     int datype, daversion;
 
                     if (2 == sscanf(buffer + 3, "%d;%d", &datype, &daversion)) {
-                        trace_ilog("==> type:%d, version:%d\n", datype, daversion);
+                        trace_ilog("\t==> type:%d, version:%d\n", datype, daversion);
                         x_pt.pt_vtdatype = datype;
                         x_pt.pt_vtdaversion = daversion;
                         if (77 == datype) {
@@ -2946,6 +3245,107 @@ term_identification(void)
     }
 
     return ret;
+}
+
+
+/*  Function:           term_ocs_color
+ *      Request the terminals foreground or background RGB color.
+ *
+ *  Parameters:
+ *      code - 10=foregroud or 11=background.
+ *
+ *  Returns:
+ *      0 on success, otherwise non-zero on error.
+ */
+static int
+term_ocs_color(int code)
+{
+#define XTERM_OCS10_LEN     (sizeof(xterm_ocs10) - 1)
+#define XTERM_OCS11_LEN     (sizeof(xterm_ocs11) - 1)
+
+    static char xterm_ocs10[] = "\x1b]10;?\007";
+    static char xterm_ocs11[] = "\x1b]11;?\007";
+
+    const unsigned timeoutms = io_escdelay();
+    unsigned rgb[3] = {0,0,0}, rgbmax = 0;
+    char *cp, buffer[32] = {0};
+    int len = 0;
+
+    assert(10 == code || 11 == code);
+    if (!tf_XT && 0 == ((TA_XTERM|TA_XTERMLIKE) & t_attributes)) {
+        trace_ilog("term_ocs%d : not supported\n", code);
+        return -1;                              /* supported? */
+    }
+
+    /*
+     *  Format:
+     *
+     *          <ESC>]rgb:xx/xx/xx<ESC|DEL>
+     *      or  <ESC>]rgb:xxxx/xxxx/xxxx<ESC|DEL>
+     *
+     *  Example:
+     *
+     *      echo -ne '\e]11;?\a'; cat
+     *
+     *      ESC]11;rgb:0000/0000/0000
+     */
+    term_flush();
+    if ((10 == code && XTERM_OCS10_LEN != sys_write(TTY_OUTFD, xterm_ocs10, XTERM_OCS10_LEN)) ||
+        (11 == code && XTERM_OCS11_LEN != sys_write(TTY_OUTFD, xterm_ocs11, XTERM_OCS11_LEN)) ||
+            (len = sys_read_timed(TTY_INFD, buffer, sizeof(buffer), timeoutms, NULL)) < 1) {
+        trace_ilog("term_ocs%d : io (tm=%d, len=%d)\n", code, timeoutms, len);
+        return -1;
+    }
+
+    cp = buffer;
+    if (cp[0] == '\033' && cp[1] == ']') {        /* ESC] */
+        cp += 2;
+    } else if (cp[0] == 0x9d) {                   /* OSC */
+        cp += 1;
+    } else {
+        cp = NULL;
+    }
+
+    if (cp && cp[0] == '1' && (cp[1] == '0' || cp[1] == '1') && cp[2] == ';') {
+        /*
+         *  parse RGB values
+         */
+        if (cp[11] == '/') {
+            if (sscanf(cp + 3, "rgb:%4x/%4x/%4x\033", rgb+0, rgb+1, rgb+2) == 3 ||
+                    sscanf(cp + 3, "rgb:%4x/%4x/%4x\007", rgb+0, rgb+1, rgb+2) == 3) {
+                rgbmax = 0xffff;
+            }
+
+        } else if (cp[9] == '/') {
+            if (sscanf(cp + 3, "rgb:%2x/%2x/%2x\033", rgb+0, rgb+1, rgb+2) == 3 ||
+                    sscanf(cp + 3, "rgb:%2x/%2x/%2x\007", rgb+0, rgb+1, rgb+2) == 3) {
+                rgbmax = 0xff;
+            }
+        }
+    }
+
+    if (0 == rgbmax)
+        trace_ilog("term_ocs%d(%d, %s) : n/a", code, len, buffer);
+
+    if (rgbmax && code == 11) {
+        /*
+         *  Luminance (perceived)
+         *  Reference: https://www.w3.org/TR/AERT/#color-contrast
+         */
+        const double r = (double)rgb[0] / (double)rgbmax;
+        const double g = (double)rgb[1] / (double)rgbmax;
+        const double b = (double)rgb[2] / (double)rgbmax;
+        const double l = (0.299 * r) + (0.587 * g) + (0.114 * b);
+
+        trace_ilog("term_ocs%d(%d, %s) : %04x/%04x/%04x\n", code, len, buffer, rgb[0], rgb[1], rgb[2]);
+        trace_ilog("\t==> luminance (%g) [%s]\n", l, l < 0.5 ? "dark" : "light");
+
+        if (l < 0.5) {
+            t_attributes |= TA_LUMINACE_DARK;
+        } else {
+            t_attributes |= TA_LUMINACE_LIGHT;
+        }
+    }
 }
 
 
@@ -3005,7 +3405,7 @@ term_isutf8(void)
 
         ret = -5;
         term_flush();
-        if (XTERM_UTF8_TEST1 == sys_write(1, (void *)xterm_utf8_test1, XTERM_UTF8_TEST1)) {
+        if (XTERM_UTF8_TEST1 == sys_write(TTY_OUTFD, (void *)xterm_utf8_test1, XTERM_UTF8_TEST1)) {
             int row = -1, col = -1;
             char buffer[32] = {0};
             int len;
@@ -3017,7 +3417,7 @@ term_isutf8(void)
                 }
             }
             trace_ilog("\tisutf8A(%d) = col:%d\n", len, col);
-            sys_write(1, (void *)xterm_utf8_clean1, XTERM_UTF8_CLEAN1);
+            sys_write(TTY_OUTFD, (void *)xterm_utf8_clean1, XTERM_UTF8_CLEAN1);
         }
 
     }
@@ -3027,14 +3427,14 @@ term_isutf8(void)
 }
 
 
-#if (XXX_MCHAR_DETECT)
+#if (TODO_MCHAR_DETECT)                         /* TODO: terminal ambiguous width */
 static void
 term_utf8_features(void)
 {
 #define XTERM_UTF8_TEST2        (sizeof(xterm_utf8_test2)-1)
 
     static unsigned char xterm_utf8_test2[] = {
-            '\r',                               /* UTF* features */
+            '\r',                               /* UTF features */
             0xa5,
             0xc3, 0x84, 0xd9,
             0xa7,
@@ -3049,7 +3449,7 @@ term_utf8_features(void)
 
     term_flush();
 
-    if (XTERM_UTF8_TEST2 == sys_write(1, xterm_utf8_test2, XTERM_UTF8_TEST2)) {
+    if (XTERM_UTF8_TEST2 == sys_write(TTY_OUTFD, xterm_utf8_test2, XTERM_UTF8_TEST2)) {
         int row = -1, col = -1;
         char buffer[32] = {0};
         int len;
@@ -3080,36 +3480,52 @@ term_utf8_features(void)
 
 
 /*  Function:           term_read
- *      Determine if the terminal supports UTF8 character encoding.
+ *      Block read from the terminal.
  *
  *  Parameters:
- *      buf - Buffer.
- *      len - Length of the buffer, in bytes.
- *      tmo - Timeout is milliseconds.
+ *      buffer - Buffer.
+ *      length - Length of the buffer, in bytes.
+ *      timeoutms - Timeout is milliseconds.
  *
  *  Returns:
  *      Number of bytes read.
  */
 static int
-term_read(char *buf, int len, accint_t tmo)
+term_read(char *buffer, int length, accint_t timeoutms)
 {
-    int ch, cnt = 0;
+    int cnt = 0;
 
-    if (-2 == tmo) {
-        tmo = io_escdelay();
+    if (timeoutms <= -2) {
+        timeoutms = io_escdelay();
     }
 
-    assert(buf);
-    assert(len);
-    assert(tmo >= -1);
+    assert(buffer && length);
+    assert(timeoutms >= -1);
+    if (NULL == buffer || 0 == length)
+        return 0;
 
-    --len;
-    if ((ch = io_get_raw(tmo)) > 0) {
-        do {                                    /* secondary characters */
-            buf[cnt++] = (char) ch;
-        } while ((ch = io_get_raw(50)) > 0 && cnt < len);
+    if (length > 1) {
+        int ret;
+
+        --length;                               /* null terminator */
+
+        if (timeoutms < 0) {                    /* blocking */
+            if ((ret = sys_read(TTY_INFD, buffer + cnt, length - cnt)) > 0) {
+                cnt = ret;
+                while (cnt < length &&
+                        (ret = sys_read_timed(TTY_INFD, buffer + cnt, length - cnt, 50, NULL)) > 0) {
+                    cnt += ret;                 /* secondary characters */
+                }
+            }
+
+        } else {                                /* timed */
+            if ((ret = sys_read_timed(TTY_INFD, buffer, length, timeoutms, NULL)) > 0) {
+                cnt = ret;
+            }
+        }
     }
-    buf[cnt] = '\0';
+
+    buffer[cnt] = '\0';
     return cnt;
 }
 
@@ -3136,9 +3552,9 @@ term_tidy(void)
             ttpush("\033[?2000l");              /* disable RAW mode */
         }
     } else if (t_attributes & TA_MINTTY) {
-	if (xf_mouse) { 			/* mouse enabled? */
-	    ttpush("\033[?7786l");              /* disable mouse-wheel reports */
-	}
+        if (xf_mouse) {                         /* mouse enabled? */
+            ttpush("\033[?7786l");              /* disable mouse-wheel reports */
+        }
     }
 
     term_graphic_exit();                        /* graphic mode */
@@ -3372,11 +3788,11 @@ term_move(int row, int col)
                     while (p1-- > 0) ttputpad(tc_bc);
 
                 /* cursor left - parameterised */
-                } else if (tc_pBC && col < (ttcol - 2)) {
+                } else if (tc_pLE && col < (ttcol - 2)) {
                     const int p1 = (int)(ttcol - col);
 
-                    ED_TERM(("->putctl(pBC,%d)\n", p1))
-                    ttputctl(tc_pBC, p1);
+                    ED_TERM(("->putctl(pLE,%d)\n", p1))
+                    ttputctl(tc_pLE, p1);
 
                 /* cursor right - one column */
                 } else if (tc_nd && col == ttcol + 1) {
@@ -3888,6 +4304,7 @@ term_insl(int row, int bot, int nlines, vbyte_t fillcolor)
     if (tc_cs && tc_sr && !x_pt.pt_scroll_disable) {
         term_scrollset(row, bot);
         ttmove(row, 0);
+        term_attr(VBYTE_ATTR(ATTR_NORMAL));
         if (nlines > 1 && tc_pSR) {
             ttputctl(tc_pSR, nlines);
         } else {
@@ -3902,6 +4319,7 @@ term_insl(int row, int bot, int nlines, vbyte_t fillcolor)
 
     if (t_insdel && !x_pt.pt_noinsdel) {        /* line ins/del */
         ttmove(1 + bot - nlines, 0);
+        term_attr(VBYTE_ATTR(ATTR_NORMAL));
         if (nlines > 1 && tc_pDL) {
             ttputctl(tc_pDL, nlines);
         } else {
@@ -3977,6 +4395,7 @@ term_dell(int row, int bot, int nlines, vbyte_t fillcolor)
     if (tc_cs && !x_pt.pt_scroll_disable &&     /* scrolling region and within limits */
             (x_pt.pt_scroll_max <= 2 || (bot - row) <= x_pt.pt_scroll_max)) {
         term_scrollset(row, bot);
+        term_attr(VBYTE_ATTR(ATTR_NORMAL));
         ttmove(bot, 0);
         if (nlines > 1 && tc_pSF) {
             ttputctl(tc_pSF, nlines);           /* 24/11/08 */
@@ -3992,6 +4411,7 @@ term_dell(int row, int bot, int nlines, vbyte_t fillcolor)
                                                 /* ins/del, unless disabled or fast */
     if (t_insdel && !x_pt.pt_noinsdel && x_pt.pt_tty_fast <= 0) {
         ttmove(row, 0);
+        term_attr(VBYTE_ATTR(ATTR_NORMAL));
         if (nlines > 1 && tc_pDL) {
             ttputctl(tc_pDL, nlines);
         } else {
@@ -4122,6 +4542,7 @@ term_attr(vbyte_t color)
         }
 
     } else {
+        const char *reset = (tc_me ? tc_me : "\033[0m");
         colattr_t ca = {0};
         int fg, bg, sf;
 
@@ -4136,15 +4557,23 @@ term_attr(vbyte_t color)
             /* 256 color mode
              *
              *      \033[0m         Set normal (foreground, background and styles)
-             *      \033[39m        Normal foreground color.
-             *      \033[49m        Normal background color.
+             *      \033[39m        Default foreground color (Implementation defined)
+             *      \033[49m        Default background color (Implementation defined)
+             *
+             *  SGR 38 and 48/
+             *
              *      \033[38;5;#m    Set the foreground color to index #
              *      \033[48;5;#m    Set the background color to index #
+             *
+             *          0-7:     Standard colors (as in "ESC [ 30-37 m")
+             *          8-15:    High intensity colors (as in "ESC [ 90-97 m")
+             *          16-231:  6x6x6 cube (216 colors)
+             *          232-255: Grayscale from dark to light in 24 steps.
              */
             if (COLORSOURCE_SYMBOLIC == ca.fg.source) fg = tt_colormap[fg];
             if (COLORSOURCE_SYMBOLIC == ca.bg.source) bg = tt_colormap[bg];
 
-            ED_TERM(("->map(fg:%d, bg:%d)", fg, bg))
+            ED_TERM(("->map256(fg:%d, bg:%d)", fg, bg))
 
             if (fg != tt_fg || bg != tt_bg || sf != tt_style) {
                 char ebuf[64];
@@ -4191,17 +4620,19 @@ term_attr(vbyte_t color)
                     ttputpad(ebuf);
 
                 } else {                        /* normal */
-                    sxprintf(ebuf, sizeof(ebuf), "\033[0m");
-                    ttputpad(tc_me ? tc_me : "\033[0m");
+                    ttputpad(reset);
                 }
 
                 if (sf) term_styleon(sf);
             }
 
-        } else if (tt_colors > 8 || NULL == tc_Color_Bg || NULL == tc_Color_Fg) {
+        } else if ((tt_colors >= 16 && tc_ANSI_Color_Fg) ||
+                        (NULL == tc_Color_Fg && NULL == tc_ANSI_Color_Fg)) {
             /* 16 color mode (standard - ANSI)
              *
              *      \033[0m         Set normal (foreground and background)
+             *      \033[39m        Default foreground color (Implementation defined)
+             *      \033[49m        Default background color (Implementation defined)
              *
              *      \033[30m        Set foreground color to Black
              *      \033[31m        Set foreground color to Red
@@ -4211,7 +4642,7 @@ term_attr(vbyte_t color)
              *      \033[35m        Set foreground color to Magenta
              *      \033[36m        Set foreground color to Cyan
              *      \033[37m        Set foreground color to White
-             *      \033[1;%dm      Set foreground color (bright, 30 .. 37)
+             *      \033[38;5;%dm   Set foreground color (0 .. 15)
              *
              *      \033[40m        Set background color to Black
              *      \033[41m        Set background color to Red
@@ -4221,12 +4652,8 @@ term_attr(vbyte_t color)
              *      \033[45m        Set background color to Magenta
              *      \033[46m        Set background color to Cyan
              *      \033[47m        Set background color to White
-             *      \033[5;%dm      Set background color (bright, 40 -- 47)
-             *
+             *      \033[48;5;%dm   Set background color (0 .. 15)
              */
-            char ebuf[48] = "\033[";            /* leading */
-            int l = 2;
-
             if (COLORSOURCE_SYMBOLIC == ca.fg.source) fg = tt_colormap[fg];
             if (COLORSOURCE_SYMBOLIC == ca.bg.source) bg = tt_colormap[bg];
             if (fg == bg && bg >= 0) {
@@ -4239,54 +4666,55 @@ term_attr(vbyte_t color)
                 }
             }
 
-            /* do we need/can reset to normal */
-            if (fg < 0 || bg < 0) {
-                strcpy(ebuf+l, "0;");           /* normal */
-                tt_fg = (fg < 0 ? fg : NOCOLOR);
-                tt_bg = (bg < 0 ? bg : NOCOLOR);
-                tt_style = 0;
-                l += 2;
+            ED_TERM(("->map16(fg:%d, bg:%d)", fg, bg))
 
-            } else {
-                if ((NOCOLOR == tt_fg) ||
-                        (!(bg & 0x8) && (tt_bg & 0x8)) || (!(fg & 0x8) && (tt_fg & 0x8)) ||
-                        (tt_defaultfg == fg && fg != tt_fg) || (tt_defaultbg == bg && bg != tt_bg)) {
-                    strcpy(ebuf+l, "0;");       /* normal */
-                    tt_fg = (tt_defaultfg == fg ? fg : NOCOLOR);
-                    tt_bg = (tt_defaultbg == bg ? bg : NOCOLOR);
-                    tt_style = 0;
-                    l += 2;
+            if (fg != tt_fg || bg != tt_bg || sf != tt_style) {
+                char ebuf[64];
+                int l = 0;
+
+                if (tt_style) {
+                    if (tc_me) reset = "";
+                    term_styleoff();
                 }
-            }
 
-            if (tt_style != sf && tt_style) {
-                term_styleoff();
-            }
+                if (fg > 0 && bg > 0) {         /* foreground (30-37,38+), background (40-47,48+) */
+                    if (fg > 7) {
+                        l = sprintf(ebuf, "\033[38;5;%u;", fg & 0xff);
+                    } else {
+                        l = sprintf(ebuf, "\033[%u;", 30 + (fg & 7));
+                    }
+                    if (bg > 7) {
+                        l += sprintf(ebuf+l, "48;5;%um", bg & 0xff);
+                    } else {
+                        l += sprintf(ebuf+l, "%um", 40 + (bg & 7));
+                    }
+                    ttputpad(ebuf);
 
-            /* color selection */
-            if (fg != tt_fg)  {                 /* foreground 30 - 37 */
-                l += sprintf(ebuf+l, (fg & 8) ? "1;%u" : "%u", 30 + (fg & 7));
-            }
+                } else if (fg > 0) {            /* normal + foreground (30-37,38+) */
+                    if (fg > 7) {
+                        l = sprintf(ebuf, "%s\033[38;5;%um", reset, fg & 0xff);
+                    } else {
+                        l = sprintf(ebuf, "%s\033[%um", reset, 30 + (fg & 7));
+                    }
+                    ttputpad(ebuf);
 
-            if (bg != tt_bg) {                  /* background 40 - 47 */
-                if (l > 2) {
-                    ebuf[l++] = ';';
+                } else if (bg > 0) {            /* normal + background (40-47,48+) */
+                    if (bg > 7) {
+                        l = sprintf(ebuf, "%s\033[48;5;%um", reset, bg & 0xff);
+                    } else {
+                        l = sprintf(ebuf, "%s\033[%um", reset, 40 + (bg & 7));
+                    }
+                    ttputpad(ebuf);
+
+                } else if (*reset) {            /* normal */
+                    ttputpad(reset);
                 }
-                l += sprintf(ebuf+l, (bg & 8) ? "5;%u" : "%u", 40 + (bg & 7));
+                assert(l < sizeof(ebuf));
+
+                if (sf) term_styleon(sf);
             }
 
-            if (l > 2) {                        /* flush result */
-                ebuf[l++] = 'm';
-                ebuf[l++] = 0;
-                assert(l < (int)sizeof(ebuf));
-                ttputpad(ebuf);
-            }
-
-            if (tt_style != sf) {
-                term_styleon(sf);               /* style changes */
-            }
-
-        } else if (tc_Color_Fg == tc_ANSI_Color_Fg) {
+        } else if (tc_ANSI_Color_Fg) {
             /*
              *  ANSI - 16+8 color mode
              */
@@ -4302,33 +4730,34 @@ term_attr(vbyte_t color)
                 }
             }
 
-            if (fg < 0 || bg < 0) {
-                ttputpad(tc_me ? tc_me : "\033[0m");
-                tt_fg = (fg < 0 ? fg : NOCOLOR);
-                tt_bg = (bg < 0 ? bg : NOCOLOR);
-                tt_style = 0;
-            }
+            ED_TERM(("->mapansi(fg:%d, bg:%d)", fg, bg))
 
-            if (tt_style != sf && tt_style) {
-                term_styleoff();
-            }
+            if (fg != tt_fg || bg != tt_bg || sf != tt_style) {
+                if (tt_style) {
+                    if (tc_me) reset = NULL;
+                    term_styleoff();
+                }
 
-            if (fg != tt_fg) {
-                ttputpad((fg & 0x8) ? tc_md : tc_se);
-                ttputctl(tc_Color_Fg, (fg & 7));
-            }
+                if (reset && (fg <= 0 || bg <= 0)) {
+                    ttputpad(reset);            /* normal */
+                }
 
-            if (bg != tt_bg) {
-                ttputctl(tc_Color_Bg, (bg & 7));
-            }
+                if (fg > 0) {                   /* foreground */
+                    if (tt_colors == 8) ttputpad((fg & 0x8) ? tc_md : tc_se);
+                    ttputctl(tc_ANSI_Color_Fg, fg);
+                }
 
-            if (tt_style != sf) {
-                term_styleon(sf);               /* style changes */
+                if (bg > 0) {                   /* background */
+                    ttputctl(tc_ANSI_Color_Bg, bg & 7);
+                }
+
+                if (sf) term_styleon(sf);
             }
 
         } else {
             /*
              *  PC - 16+8 color mode
+             *  Note: assumes alternative color mapping.
              */
             if (COLORSOURCE_SYMBOLIC == ca.fg.source) fg = color_map[fg].c16_pc;
             if (COLORSOURCE_SYMBOLIC == ca.bg.source) bg = color_map[bg].c16_pc;
@@ -4342,28 +4771,28 @@ term_attr(vbyte_t color)
                 }
             }
 
-            if (fg < 0 || bg < 0) {
-                ttputpad(tc_me ? tc_me : "\033[0m");
-                tt_fg = (fg < 0 ? fg : NOCOLOR);
-                tt_bg = (bg < 0 ? bg : NOCOLOR);
-                tt_style = 0;
-            }
+            ED_TERM(("->mappc(fg:%d, bg:%d)", fg, bg))
 
-            if (tt_style != sf && tt_style) {
-                term_styleoff();
-            }
+            if (fg != tt_fg || bg != tt_bg || sf != tt_style) {
+                if (tt_style) {
+                    if (tc_me) reset = NULL;
+                    term_styleoff();
+                }
 
-            if (fg != tt_fg) {
-                ttputpad((fg & 0x8) ? tc_md : tc_se);
-                ttputctl(tc_Color_Fg, fg & 7);
-            }
+                if (reset && (fg <= 0 || bg <= 0)) {
+                    ttputpad(reset);            /* normal */
+                }
 
-            if (bg != tt_bg) {
-                ttputctl(tc_Color_Bg, bg & 7);
-            }
+                if (fg > 0) {                   /* foreground */
+                    if (tt_colors == 8) ttputpad((fg & 0x8) ? tc_md : tc_se);
+                    ttputctl(tc_Color_Fg, fg);
+                }
 
-            if (tt_style != sf) {
-                term_styleon(sf);               /* style changes */
+                if (bg > 0) {                   /* background */
+                    ttputctl(tc_Color_Bg, bg & 7);
+                }
+
+                if (sf) term_styleon(sf);
             }
         }
 
@@ -5236,4 +5665,24 @@ do_copy_screen(void)            /* void () */
 {
 }
 
+#if (TODO_TESTS)
+    assert(isterm("screen", "screen"));
+    assert(isterm("screen-xxx", "screen"));
+    assert(isterm("screen.linux", "screen"));
+    assert(isterm("screen.linux", "screen.linux"));
+    assert(! isterm("screen1", "screen"));
+    assert(! isterm("screen2", "screen"));
+    assert(hasfeature("screen-rv", "rv"));
+    assert(hasfeature("screen-rv-xxx", "rv"));
+    assert(hasfeature("screen-xxx-rv", "rv"));
+#endif
+
 #endif  /*!USE_VIO_BUFFER && !DJGPP */
+
+
+
+
+
+
+
+

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.19 2024/06/09 19:50:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.21 2024/07/13 17:14:09 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyncurses.c,v 1.19 2024/06/09 19:50:16 cvsuser Exp $
+/* $Id: ttyncurses.c,v 1.21 2024/07/13 17:14:09 cvsuser Exp $
  * [n]curses tty driver interface -- alt driver when running under ncurses.
  *
  *
@@ -50,57 +50,54 @@ ttcurses(void)
 #ifndef _XOPEN_SOURCE_EXTENDED
 #define _XOPEN_SOURCE_EXTENDED                  /* cchar_t */
 #endif
-#if defined(HAVE_NCURSESW_CURSESW_H)
-#include <ncursesw/curses.h>
-#include <ncursesw/termcap.h>
-#include <ncursesw/term.h>
-
-#elif defined(HAVE_NCURSESW_CURSES_H)
-#include <ncursesw/curses.h>
-#include <ncursesw/termcap.h>
-#include <ncursesw/term.h>
-
+#if defined(HAVE_NCURSESW_CURSES_H)
+#   include <ncursesw/curses.h>
+#   include <ncursesw/termcap.h>
+#   include <ncursesw/term.h>
 #elif defined(HAVE_NCURSESW_H)
-#include <ncursesw.h>
-#if defined(HAVE_TERMCAP_H)
-#include <termcap.h>
-#endif
-#if defined(HAVE_TERM_H)
-#include <term.h>
-#endif
-
+#   include <ncursesw.h>
+#   if defined(HAVE_TERMCAP_H)
+#       include <termcap.h>
+#   endif
+#   if defined(HAVE_TERM_H)
+#       include <term.h>
+#   endif
+#elif defined(HAVE_NCURSES_CURSES_H)
+#   include <ncurses/curses.h>
+#   include <ncurses/termcap.h>
+#   include <ncurses/term.h>
+#elif defined(HAVE_NCURSES_H)
+#   include <ncurses.h>
+#   if defined(HAVE_TERMCAP_H)
+#       include <termcap.h>
+#   endif
+#   if defined(HAVE_TERM_H)
+#       include <term.h>
+#   endif
 #else  /*!HAVE_NCURSESW_CURSES_H || HAVE_NCURSESW_H*/
 #error "HAVE_LIBNCURSEW defined yet missing headers, check config"
 #endif
 
 #elif defined(HAVE_LIBNCURSES)
-#if defined(HAVE_NCURSES_NCURSES_H)
-#include <ncurses/curses.h>
-#include <ncurses/termcap.h>
-#include <ncurses/term.h>
-
-#elif defined(HAVE_NCURSES_CURSES_H)
-#include <ncurses/curses.h>
-#include <ncurses/termcap.h>
-#include <ncurses/term.h>
-
+#if defined(HAVE_NCURSES_CURSES_H)
+#   include <ncurses/curses.h>
+#   include <ncurses/termcap.h>
+#   include <ncurses/term.h>
 #elif defined(HAVE_NCURSES_H)
-#include <ncurses.h>
-
-#if defined(HAVE_TERMCAP_H)
-#include <termcap.h>
-#endif
-#if defined(HAVE_TERM_H)
-#include <term.h>
-#endif
-
+#   include <ncurses.h>
+#   if defined(HAVE_TERMCAP_H)
+#       include <termcap.h>
+#   endif
+#   if defined(HAVE_TERM_H)
+#       include <term.h>
+#   endif
 #else  /*!HAVE_NCURSES_CURSES_H || HAVE_NCURSES_H*/
 #error "HAVE_LIBNCURSE defined yet missing headers, check config"
 #endif
 #endif
 
 #if defined(NCURSES_VERSION) && defined(HAVE_LIBNCURSESW)
-extern int _nc_unicode_locale(void);		/* XXX - private/exported */
+extern int _nc_unicode_locale(void);            /* XXX - private/exported */
 #endif
 
 #include "cmap.h"
@@ -135,9 +132,16 @@ static void             nc_flush(void);
 static int              nc_names(const char *title, const char *icon);
 static void             nc_beep(int freq, int duration);
 
+static void             term_identification(void);
+static void             term_defaultscheme(void);
+static int              term_luminance(void);
+static int              term_read(char *buffer, int length, accint_t timeoutms);
+static void             term_dump(void);
+static void             acs_dump(const char *bp);
+
 static void             term_colors(void);
 static nccolor_t        term_color(const colvalue_t ca, int def, int fg, int *attr);
-static int              term_attr(int sf);
+static int              term_attribute(int sf);
 static void             term_start(void);
 static void             term_tidy(void);
 
@@ -237,7 +241,7 @@ ttcurses(void)
  *              General terminal identification.
  *          o LINES/COLUMNS
  *              Default terminal size.
- *                      
+ *
  *      Terminal capabilities (ncurses).
  *
  *          o NCURSES_NO_UTF8_ACS -
@@ -305,6 +309,8 @@ nc_open(scrprofile_t *profile)
 
     term_start();
     term_colors();
+    term_defaultscheme();
+    term_identification();
 
     profile->sp_rows = LINES;
     profile->sp_cols = COLS;
@@ -376,6 +382,8 @@ nc_ready(int repaint, scrprofile_t *profile)
 static void
 nc_display(void)
 {
+    const int colors = tigetnum("colors");
+
     strxcpy(x_pt.pt_name, longname(), sizeof(x_pt.pt_name));
 
 #if defined(NCURSES_VERSION)
@@ -388,7 +396,7 @@ nc_display(void)
 
     trace_log("ttync:\n");
     trace_log(" disptype: %d\n", xf_disptype);
-    trace_log(" colors  : %d (%d)\n", tt_colors, COLORS);
+    trace_log(" colors  : %d (%d,%d)\n", tt_colors, COLORS, colors);
     trace_log(" pairs   : %d\n", COLOR_PAIRS);
 
     x_pt.pt_colordepth = tt_colors;
@@ -588,9 +596,9 @@ nc_putc(const struct _VCELL *cell)
 
     if (tt_colors <= 2) {
 #if defined(A_ITALIC)                           /* TODO - runtime attribute checks */
-        attrset(term_attr(ttbandw(attr, 1, 1, 0)));
+        attrset(term_attribute(ttbandw(attr, 1, 1, 0)));
 #else
-        attrset(term_attr(ttbandw(attr, 1, 0, 0)));
+        attrset(term_attribute(ttbandw(attr, 1, 0, 0)));
 #endif
 
     } else {
@@ -626,7 +634,7 @@ nc_putc(const struct _VCELL *cell)
                 a = COLOR_PAIR(id) | t_attr;
                 color_valueset(attr, a);
             }
-            attrset(a | term_attr(ca.sf));
+            attrset(a | term_attribute(ca.sf));
         }
     }
 
@@ -766,6 +774,392 @@ nc_names(const char *title, const char *icon)
 }
 
 
+/*
+ *  term_identification ---
+ *      Request the terminal version/DA2 details.
+ */
+static void
+term_identification(void)
+{
+    const char *t_RV, *xterm_version;
+
+    /*
+     *  XTERM_VERSION/
+     *      Xterm(256) ==> 256
+     */
+    if (NULL != (xterm_version = ggetenv("XTERM_VERSION"))) {
+        char vname[32+1] = {0};
+        int vnumber = 0;
+                                                /* decode and return patch/version number */
+        if (2 == sscanf(xterm_version, "%32[^(](%u)", vname, &vnumber))
+            if (vnumber > 0) {
+                x_pt.pt_vtdatype = -2;          /* source: xterm_version */
+                x_pt.pt_vtdaversion = vnumber;
+            }
+        trace_ilog("XTERM_VERSION(%s) = %d (%s)\n", xterm_version, vnumber, vname);
+    }
+
+    /*
+     *  DA2/Request version.
+     */
+    if (NULL == (t_RV = tigetstr("RV")) || *t_RV == '\0') {
+        const char *term = ggetenv("TERM");
+        if (term) {
+            if (strstr(term, "kitty")) {
+                t_RV = "\033[>c";               /* missing, source: vim */
+            }
+        }
+    }
+
+    if (t_RV && *t_RV) {
+        const int rvlen = strlen(t_RV);
+        char buffer[32] = {0};
+        int len = 0;
+
+        if (rvlen == sys_write(TTY_OUTFD, t_RV, rvlen) &&
+                (len = term_read(buffer, sizeof(buffer), -2)) > 1) {
+            trace_ilog("term_da2(%d, %s)\n", len, buffer);
+
+            if ('\033' == buffer[0] && '[' == buffer[1] &&
+                    ('>' == buffer[2] || '?' == buffer[2])) {
+                int datype, daversion;
+
+                if (2 == sscanf(buffer + 3, "%d;%d", &datype, &daversion)) {
+                    trace_ilog("\t==> type:%d, version:%d\n", datype, daversion);
+                    x_pt.pt_vtdatype = datype;
+                    x_pt.pt_vtdaversion = daversion;
+                }
+            }
+        }
+    }
+}
+
+
+/*
+ *  term_luminance ---
+ *      Request the terminal background color and determine the default scheme (light/dark)
+ */
+static int
+term_luminance(void)
+{
+#define XTERM_OCS11_LEN (sizeof(xterm_ocs11) - 1)
+    static char xterm_ocs11[] = "\x1b]11;?\007";
+    const unsigned timeoutms = ESCDELAY;
+    unsigned rgb[3] = {0,0,0}, rgbmax = 0;
+    char *cp, buffer[32] = {0};
+    int len;
+
+    /*
+     *  OSC 11, current background color.
+     */
+    if (tigetflag("XT") <= 0) {                 /* supported? */
+        return -1;
+    }
+
+    if (XTERM_OCS11_LEN != sys_write(TTY_OUTFD, xterm_ocs11, XTERM_OCS11_LEN) ||
+            (len = sys_read_timed(TTY_INFD, buffer, sizeof(buffer), timeoutms, NULL)) < 1) {
+        return -1;
+    }
+
+    /*
+     *  Format:
+     *
+     *          <ESC>]rgb:xx/xx/xx<ESC|DEL>
+     *      or  <ESC>]rgb:xxxx/xxxx/xxxx<ESC|DEL>
+     *
+     *  Example:
+     *
+     *      echo -ne '\e]11;?\a'; cat
+     *
+     *      ESC]11;rgb:0000/0000/0000
+     */
+    cp = buffer;
+    if (cp[0] == '\033' && cp[1] == ']') {      /* ESC] */
+        cp += 2;
+    } else if (cp[0] == 0x9d) {                 /* OSC */
+        cp += 1;
+    } else {
+        cp = NULL;
+    }
+
+    if (cp && cp[0] == '1' && (cp[1] == '0' || cp[1] == '1') && cp[2] == ';') {
+        /*
+         *  parse RGB values
+         */
+        if (cp[11] == '/') {
+            if (sscanf(cp + 3, "rgb:%4x/%4x/%4x\033", rgb+0, rgb+1, rgb+2) == 3 ||
+                    sscanf(cp + 3, "rgb:%4x/%4x/%4x\007", rgb+0, rgb+1, rgb+2) == 3) {
+                rgbmax = 0xffff;
+            }
+
+        } else if (cp[9] == '/') {
+            if (sscanf(cp + 3, "rgb:%2x/%2x/%2x\033", rgb+0, rgb+1, rgb+2) == 3 ||
+                    sscanf(cp + 3, "rgb:%2x/%2x/%2x\007", rgb+0, rgb+1, rgb+2) == 3) {
+                rgbmax = 0xff;
+            }
+        }
+    }
+
+    if (rgbmax) {
+        /*
+         *  Luminance (perceived)
+         *  Reference: https://www.w3.org/TR/AERT/#color-contrast
+         */
+        const double r = (double)rgb[0] / (double)rgbmax;
+        const double g = (double)rgb[1] / (double)rgbmax;
+        const double b = (double)rgb[2] / (double)rgbmax;
+        const double l = (0.299 * r) + (0.587 * g) + (0.114 * b);
+
+        trace_ilog("terminal_ocs(%d, %s) : %04x/%04x/%04x\n", len, buffer, rgb[0], rgb[1], rgb[2]);
+        trace_ilog("\t==> luminance (%g) [%s]\n", l, l < 0.5 ? "dark" : "light");
+
+        if (l < 0.5) return 1;
+        return 0;
+    }
+    return -1;
+}
+
+
+static void
+term_defaultscheme(void)
+{
+    if (x_pt.pt_schemedark < 0) {
+        int isdark;
+
+        if ((isdark = term_luminance()) == -1) {
+            /*
+             *  Legacy
+             */
+            const char *fgbg, *term = ggetenv("TERM");
+
+            isdark = 0;
+            if (term) {
+                if (strcmp(term, "linux") == 0
+                    || strcmp(term, "screen.linux") == 0
+                    || strcmp(term, "cygwin") == 0
+                    || strcmp(term, "putty") == 0
+                    || strcmp(term, "ms-terminal") == 0
+                        || ggetenv("WT_SESSION")
+                    || (x_pt.pt_vtdatype == 'M') // mintty
+                    || ((fgbg = ggetenv("COLORFGBG")) != NULL && // rxvt, COLORFGBG='0;default;15'
+                            (fgbg = strrchr(fgbg, ';')) != NULL && ((fgbg[1] >= '0' && fgbg[1] <= '6') || fgbg[1] == '8') && fgbg[2] == '\0')) {
+                    isdark = 1;
+                }
+            }
+        }
+        x_pt.pt_schemedark = isdark;
+    }
+    trace_log("ttdefaultscheme=%s\n", (x_pt.pt_schemedark ? "dark" : "light"));
+}
+
+
+/*
+ *  term_read ---
+ *      Terminal low-level read.
+ */
+static int
+term_read(char *buffer, int length, accint_t timeoutms)
+{
+    int cnt = 0;
+
+    if (timeoutms <= -2) timeoutms = ESCDELAY;  /* ms escape character wait */
+
+    assert(buffer && length);
+    assert(timeoutms >= -1);
+    if (NULL == buffer || 0 == length)
+        return 0;
+
+    if (length > 1) {
+        int ret;
+
+        --length;                               /* null terminator */
+
+        if (timeoutms < 0) {                    /* blocking */
+            if ((ret = sys_read(TTY_INFD, buffer + cnt, length - cnt)) > 0) {
+                cnt = ret;
+                while (cnt < length &&
+                        (ret = sys_read_timed(TTY_INFD, buffer + cnt, length - cnt, 50, NULL)) > 0) {
+                    cnt += ret;                 /* secondary characters */
+                }
+            }
+
+        } else {                                /* timed */
+            if ((ret = sys_read_timed(TTY_INFD, buffer, length, timeoutms, NULL)) > 0) {
+                cnt = ret;
+            }
+        }
+    }
+
+    buffer[cnt] = '\0';
+    return cnt;
+}
+
+
+static void
+term_dump(void)
+{
+    // https://invisible-island.net/ncurses/man/user_caps.5.html
+    // https://www.gnu.org/software/screen/manual/screen.html#Termcap-Syntax
+    //      screen - special terminal capabilities
+    //          XT = terminal understands special xterm sequences (OSC, mouse tracking).
+    //
+    static const struct {
+        const char *name, *fname;
+    } extrastr[] = {
+        { "E3",     "userdef_clear_scrollback" },
+        { "RGB",    "userdef_rgb_number" },
+        { "XM",     "userdef_mouse_enable_disable" },
+        { NULL, NULL }
+        };
+
+    static const struct {
+        const char *name, *fname;
+    } extranum[] = {
+        { "RGB",    "userdef_rgb_num" },
+        { "U8",     "userdef_unicode_line" },
+        { NULL, NULL }
+        };
+
+    static const struct {
+        const char *name, *fname;
+    } extrabool[] = {
+        { "AX",     "userdef_sgr_default" },
+        { "RGB",    "userdef_rgb_bool" },
+        { "XT",     "userdef_xterm_osc" },
+        { NULL, NULL }
+        };
+    const char *fname;
+    int i;
+
+    if (0 == trace_flags()) return;
+
+    trace_log("termcap:\n");
+    trace_log("  Strings:\n");
+    for (i = 0; (fname = strfnames[i]) != NULL; ++i) {
+        if (0 != memcmp(fname, "key_", 4)) {    // key_xxx
+            const char *name = strnames[i];
+            const char *val = tigetstr(name);
+            trace_log("\t%-24.24s %-4s %-8s : %s\n",
+                fname, strcodes[i], name, (val == NULL ? "" : (val == (void *)-1 ? "NA" : c_string(val))));
+            if (0 == strcmp(fname, "acs_chars")) {
+                acs_dump(val);
+            }
+        }
+    }
+    for (i = 0; (fname = extrastr[i].fname) != NULL; ++i) {
+        const char *name = extrastr[i].name;
+        const char *val = tigetstr(name);
+        trace_log("\t%-24.24s %-4s %-8s : %s\n",
+            fname, "", name, (val == NULL ? "" : (val == (void *)-1 ? "NA" : c_string(val))));
+    }
+
+    trace_log("  Keys:\n");
+    for (i = 0; (fname = strfnames[i]) != NULL; ++i) {
+        if (0 == memcmp(fname, "key_", 4)) {    // key_xxx
+            const char *name = strnames[i];
+            const char *val = tigetstr(name);
+            trace_log("\t%-24.24s %-4s %-8s : %s\n",
+                fname, strcodes[i], name, (val == NULL ? "" : (val == (void *)-1 ? "NA" : c_string(val))));
+        }
+    }
+
+    trace_log("  Numeric:\n");
+    for (i = 0; (fname = numfnames[i]) != NULL; ++i) {
+        const char *name = numnames[i];
+        const int val = tigetnum(name);
+        trace_log("\t%-24.24s %-4s %-8s : %d\n",
+            fname, numcodes[i], name, val);
+    }
+    for (i = 0; (fname = extranum[i].fname) != NULL; ++i) {
+        const char *name = extranum[i].name;
+        const int val = tigetnum(name);
+        trace_log("\t%-24.24s %-4s %-8s : %d\n",
+            fname, "", name, val);
+    }
+
+    trace_log("  Boolean/Flags:\n");
+    for (i = 0; (fname = boolfnames[i]) != NULL; ++i) {
+        const char *name = boolnames[i];
+        const int val = tigetflag(name);
+        trace_log("\t%-24.24s %-4s %-8s : %d\n",
+            fname, boolcodes[i], name, val);
+    }
+    for (i = 0; (fname = extrabool[i].fname) != NULL; ++i) {
+        const char *name = extrabool[i].name;
+        const int val = tigetflag(name);
+        trace_log("\t%-24.24s %-4s %-8s : %d\n",
+            fname, "", name, val);
+    }
+}
+
+
+static void
+acs_dump(const char *bp)
+{
+    const static struct {
+        unsigned char ident;
+        const char *desc;
+    } term_characters[] = {                     /* graphic characters */
+        { '}', "UK pound sign" },
+        { '.', "arrow pointing down" },
+        { ',', "arrow pointing left" },
+        { '+', "arrow pointing right" },
+        { '-', "arrow pointing up" },
+        { 'h', "board of squares" },
+        { '~', "bullet" },
+        { 'a', "checker board (stipple)" },
+        { 'f', "degree symbol" },
+        { '`', "diamond" },
+        { 'z', "greater-than-or-equal-to" },
+        { '{', "greek pi" },
+        { 'q', "horizontal line" },
+        { 'i', "lantern symbol" },
+        { 'n', "large plus or crossover" },
+        { 'y', "less-than-or-equal-to" },
+        { 'm', "lower left corner" },
+        { 'j', "lower right corner" },
+        { '|', "not-equal" },
+        { 'g', "plus/minus" },
+        { 'o', "scan line 1" },
+        { 'p', "scan line 3" },
+        { 'r', "scan line 7" },
+        { 's', "scan line 9" },
+        { '0', "solid square block" },
+        { 'w', "tee pointing down" },
+        { 'u', "tee pointing left" },
+        { 't', "tee pointing right" },
+        { 'v', "tee pointing up" },
+        { 'l', "upper left corner" },
+        { 'k', "upper right corner" },
+        { 'x', "vertical line" }
+        };
+
+    const unsigned char *p = (unsigned char *)bp;
+    unsigned char ident, ch;
+    unsigned i;
+
+    while (*p) {
+        const char *desc = "unknown";
+
+        ident = *p++;
+        if (! isprint(ident)) continue;
+        ch = *p++;
+
+        for (i = 0; i < (sizeof(term_characters)/sizeof(term_characters[0])); ++i)
+            if (term_characters[i].ident == ident) {
+                desc = term_characters[i].desc;
+                break;
+            }
+
+        trace_log("\t\t%-30s %c/0x%x : %u/0x%x\n", desc, ident, ident, ch, ch);
+    }
+}
+
+
+/*
+ *  term_colors ---
+ *      Determine the terminal color depth.
+ */
 static void
 term_colors(void)
 {
@@ -806,6 +1200,10 @@ term_colors(void)
 }
 
 
+/*
+ *  term_color ---
+ *      Map color-attribute to a terminal color.
+ */
 static nccolor_t
 term_color(const colvalue_t ca, int def, int fg, int *attrs)
 {
@@ -853,8 +1251,12 @@ term_color(const colvalue_t ca, int def, int fg, int *attrs)
 }
 
 
+/*
+ *  term_attribute ---
+ *      Map color-style to a terminal attribute.
+ */
 static int
-term_attr(int sf)
+term_attribute(int sf)
 {
     int attr = 0;
 
@@ -872,11 +1274,16 @@ term_attr(int sf)
 }
 
 
+/*
+ *  term_start ---
+ *      Terminal start session operation.
+ */
 static void
 term_start(void)
 {
     if (NULL == tt_win) {
         tt_win = initscr();
+        term_dump();
     }
     nonl();
     noecho();
@@ -887,6 +1294,10 @@ term_start(void)
 }
 
 
+/*
+ *  term_tidy ---
+ *      Terminal end session operation.
+ */
 static void
 term_tidy(void)
 {
@@ -902,5 +1313,6 @@ term_tidy(void)
 }
 
 #endif  /*HAVE_LIBNCURSES*/
+
 /*end*/
 
