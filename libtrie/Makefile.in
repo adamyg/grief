@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.9 2024/05/19 15:53:42 cvsuser Exp $
+# $Id: Makefile.in,v 1.10 2024/06/16 17:01:42 cvsuser Exp $
 # libtrie - prefix tree
 #
 #
@@ -73,7 +73,7 @@ endif
 
 D_INC=		$(ROOT)/include
 D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
-D_OBJ=		$(ROOT)/obj@TOOLCHAINEXT@/$(BUILD_TYPE)/libmisc
+D_OBJ=		$(ROOT)/obj@TOOLCHAINEXT@/$(BUILD_TYPE)/libtrie
 D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 # Common flags
@@ -96,7 +96,7 @@ LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
 
 ifeq (gcc,$(findstring gcc,$(CC)))
-XFLAGS+= 	-Wno-deprecated-non-prototype
+XFLAGS+= 	-Wno-deprecated-non-prototype -Wno-unused-parameter
 endif	#gcc
 
 CINCLUDE=	-I$(D_INC) @CINCLUDE@
