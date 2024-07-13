@@ -1,4 +1,4 @@
-dnl $Id: libterm.m4,v 1.9 2024/07/13 13:09:03 cvsuser Exp $
+dnl $Id: libterm.m4,v 1.10 2024/07/13 14:41:20 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -33,6 +33,7 @@ AC_DEFUN([LIBTERM_CHECK_CONFIG],[
 	AC_SUBST(CURSES_CFLAGS)
 	cf_save_CFLAGS="$CFLAGS"
 	if test -n "$CURSES_CFLAGS"; then
+		dnl TODO: pkg-check
 		CFLAGS="$cf_saved_CFLAGS $CURSES_CFLAGS"
 	fi
 
@@ -205,49 +206,84 @@ int res = tgetent(buffer, "terminalwontexist"); tgetstr("str", &area); tgetnum("
 	fi
 
 	if test "x$termlib_name" = "xncursesw"; then
-		dnl TODO: pkg-check
 		AC_DEFINE([HAVE_LIBNCURSESW], 1, [enable libncursesw support.])
-		AC_CHECK_HEADERS(ncursesw.h ncursesw/ncursesw.h, [have_ncursesw_h=yes], [have_ncursesw_h=no])
+
+		AC_CHECK_HEADERS(ncursesw/ncursesw.h ncursesw.h, [have_ncursesw_h=yes], [have_ncursesw_h=no])
 		if test x$have_ncursesw_h = xno ; then
 			if test "x$CURSES_CFLAGS" = "x" ; then
 				CFLAGS="$cf_saved_CFLAGS -I/usr/local/include"
-				AC_CHECK_HEADERS(ncursesw.h ncursesw/ncursesw.h, [have_ncursesw_h=yes], [have_ncursesw_h=no])
+				$as_unset ac_cv_header_ncursesw_ncursesw_h
+				$as_unset ac_cv_header_ncursesw_h
+				AC_MSG_NOTICE([using /usr/local/include])
+				AC_CHECK_HEADERS(ncursesw/ncursesw.h ncursesw.h, [have_ncursesw_h=yes], [have_ncursesw_h=no])
 				if test x$have_ncursesw_h = xyes ; then
-					AC_MSG_NOTICE([using CURSES_CFLAGS=-I/usr/local/include])
 					CURSES_CFLAGS="-I/usr/local/include"
 				else
 					CFLAGS="$cf_saved_CFLAGS"
 				fi
 			fi
 		fi
-		AC_CHECK_HEADERS(curses.h   ncursesw/curses.h, [have_cursesw_h=yes], [have_cursesw_h=no])
-		if test x$have_cursesw_h = xno ; then
+
+		AC_CHECK_HEADERS(ncursesw/curses.h, [have_ncursesw_h=yes], [have_ncursesw_h=no])
+		if test x$have_ncursesw_h = xno ; then
 			if test "x$CURSES_CFLAGS" = "x" ; then
 				CFLAGS="$cf_saved_CFLAGS -I/usr/local/include"
-				AC_CHECK_HEADERS(curses.h ncursesw/curses.h, [have_cursesw_h=yes], [have_cursesw_h=no])
-				if test x$have_cursesw_h = xyes ; then
-					AC_MSG_NOTICE([using CURSES_CFLAGS=-I/usr/local/include])
+				$as_unset ac_cv_header_ncursesw_curses_h
+				AC_MSG_NOTICE([using /usr/local/include])
+				AC_CHECK_HEADERS(ncursesw/curses.h, [have_ncursesw_h=yes], [have_ncursesw_h=no])
+				if test x$have_ncursesw_h = xyes ; then
 					CURSES_CFLAGS="-I/usr/local/include"
 				else
 					CFLAGS="$cf_saved_CFLAGS"
 				fi
 			fi
 		fi
-		AC_CHECK_HEADERS(nc_alloc.h ncursesw/nc_alloc.h)
-		AC_CHECK_HEADERS(nomacros.h ncursesw/nomacros.h)
-		AC_CHECK_HEADERS(termcap.h  ncursesw/termcap.h)
-		AC_CHECK_HEADERS(term.h     ncursesw/term.h)
+
+		AC_CHECK_HEADERS(ncursesw/nc_alloc.h nc_alloc.h)
+		AC_CHECK_HEADERS(ncursesw/nomacros.h nomacros.h)
+		AC_CHECK_HEADERS(ncursesw/termcap.h)
+		AC_CHECK_HEADERS(ncursesw/term.h)
 		AC_CHECK_LIB(ncursesw, main)
 		AC_CHECK_LIB(ncursesw_g, main)
 
 	else if test "x$termlib_name" = "xncurses"; then
 		AC_DEFINE([HAVE_LIBNCURSES], 1, [enable libncurses support.])
-		AC_CHECK_HEADERS(ncurses.h  ncurses/ncurses.h)
-		AC_CHECK_HEADERS(curses.h   ncurses/curses.h)
-		AC_CHECK_HEADERS(nc_alloc.h ncurses/nc_alloc.h)
-		AC_CHECK_HEADERS(nomacros.h ncurses/nomacros.h)
-		AC_CHECK_HEADERS(termcap.h  ncurses/termcap.h)
-		AC_CHECK_HEADERS(term.h     ncurses/term.h)
+
+		AC_CHECK_HEADERS(ncurses/ncurses.h ncurses.h, [have_ncurses_h=yes], [have_ncurses_h=no])
+		if test x$have_ncurses_h = xno ; then
+			if test "x$CURSES_CFLAGS" = "x" ; then
+				CFLAGS="$cf_saved_CFLAGS -I/usr/local/include"
+				$as_unset ac_cv_header_ncurses_h
+				$as_unset ac_cv_header_ncurses_ncurses_h
+				AC_MSG_NOTICE([using /usr/local/include])
+				AC_CHECK_HEADERS(ncurses/ncurses.h ncurses.h, [have_ncurses_h=yes], [have_ncurses_h=no])
+				if test x$have_ncurses_h = xyes ; then
+					CURSES_CFLAGS="-I/usr/local/include"
+				else
+					CFLAGS="$cf_saved_CFLAGS"
+				fi
+			fi
+		fi
+
+		AC_CHECK_HEADERS(ncurses/curses.h, [have_ncurses_h=yes], [have_ncurses_h=no])
+		if test x$have_ncurses_h = xno ; then
+			if test "x$CURSES_CFLAGS" = "x" ; then
+				CFLAGS="$cf_saved_CFLAGS -I/usr/local/include"
+				$as_unset ac_cv_header_ncurses_curses_h
+				AC_MSG_NOTICE([using /usr/local/include])
+				AC_CHECK_HEADERS(ncurses/curses.h, [have_ncurses_h=yes], [have_ncurses_h=no])
+				if test x$have_ncurses_h = xyes ; then
+					CURSES_CFLAGS="-I/usr/local/include"
+				else
+					CFLAGS="$cf_saved_CFLAGS"
+				fi
+			fi
+		fi
+
+		AC_CHECK_HEADERS(ncurses/nc_alloc.h nc_alloc.h)
+		AC_CHECK_HEADERS(ncurses/nomacros.h nomacros.h)
+		AC_CHECK_HEADERS(ncurses/termcap.h)
+		AC_CHECK_HEADERS(ncurses/term.h)
 		AC_CHECK_LIB(ncurses, main)
 		AC_CHECK_LIB(ncurses_g, main)
 
