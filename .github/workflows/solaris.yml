@@ -36,8 +36,8 @@ jobs:
             developer/build/pkg-config \
             developer/lexer/flex \
             developer/parser/bison \
-            library/ncurses           
-                      
+            library/ncurses
+
         run: |
           export LC_ALL=C
           export LANG=C
@@ -45,9 +45,7 @@ jobs:
           whoami
           pwd
           cat /etc/release
-          grep siginfo_t /usr/include/* /usr/include/sys/*
-          more /usr/include/sys/siginfo.h
           PATH=/opt/csw/bin:$PATH:/usr/sfw/bin
           export PATH
           ./configure --prefix=/usr
-          gmake release build  
+          gmake release build

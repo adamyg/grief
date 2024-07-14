@@ -1,11 +1,11 @@
 #ifndef GR_EDHEADERS_H_INCLUDED
 #define GR_EDHEADERS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edheaders_h,"$Id: edheaders.h,v 1.22 2024/07/14 05:29:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_edheaders_h,"$Id: edheaders.h,v 1.23 2024/07/14 08:36:22 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edheaders.h,v 1.22 2024/07/14 05:29:23 cvsuser Exp $
+/* $Id: edheaders.h,v 1.23 2024/07/14 08:36:22 cvsuser Exp $
  * System headers.
  *
  *
@@ -140,8 +140,13 @@ __CPRAGMA_ONCE
 
 #ifdef HAVE_WAIT_H
 #if defined(sun)
+#if defined(HAVE_SYS_SIGINFO_H)
+#include <sys/siginfo.h>
+#endif
+#if defined(HAVE_SIGINFO_H)
 #include <siginfo.h>
 #endif
+#endif /*sun*/
 #include <wait.h>
 #endif
 

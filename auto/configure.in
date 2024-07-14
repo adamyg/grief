@@ -1,10 +1,10 @@
-dnl $Id: configure.in,v 1.92 2024/07/14 05:30:49 cvsuser Exp $
+dnl $Id: configure.in,v 1.93 2024/07/14 08:35:48 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl Adam Young (c) 1995-2024
 
-AC_REVISION($Revision: 1.92 $)
+AC_REVISION($Revision: 1.93 $)
 AC_SUBST([PACKAGE])
 AC_INIT([GriefEdit],[3.2.3],[https://github.com/adamyg/grief])
 AC_PREREQ([2.69])
@@ -600,7 +600,8 @@ AC_CHECK_HEADERS( \
 dnl Signal support
 CF_TYPE_SIGACTION
 AC_CHECK_HEADERS( \
-	signal.h )
+	signal.h \
+	siginfo.h sys/siginfo )
 AC_CHECK_FUNCS(\
 	sigsetmask \
 	siginterrupt \
