@@ -27,7 +27,7 @@ jobs:
           echo ===== Packages requirements
           pkg install -v system/locale system/header
           pkg install -v --accept \
-            developer/gcc-11 \
+            developer/gcc-10 \
             developer/build/gnu-make \
             developer/build/make \
             developer/build/autoconf \
