@@ -17,7 +17,14 @@ jobs:
           pkg info entire
           pkg list -af entire
           pkg list -af gcc
-          pkgutil -y -i gmake autoconf automake libtool
+          pkg install -v developer/gcc-11
+          pkg install -v developer/build/gnu-make
+          pkg install -v developer/build/libtool
+          pkg install -v developer/build/pkg-config
+          pkg install -v developer/lexer/flex
+          pkg install -v developer/parser/bison
+          pkg install -v library/libarchive 
+          pkg install -v library/ncurses
         mem: 6144
         run: |
           uname -a
