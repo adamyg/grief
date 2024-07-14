@@ -45,7 +45,7 @@ jobs:
           whoami
           pwd
           cat /etc/release
-          PATH=/opt/csw/bin:$PATH:/usr/sfw/bin
-          export PATH
+          export PATH=/opt/csw/bin:$PATH:/usr/sfw/bin
+          expert CFLAGS=-std=gnu11
           ./configure --prefix=/usr
           gmake release build
