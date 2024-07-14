@@ -17,8 +17,8 @@ jobs:
           pkg list -af entire
           pkg list -af gcc-7
           pkg install -v --accept developer/gcc-7@7.3.0-11.4.0.0.1.14.0
-          pkgutil -y bash gmake autoconf automake libtool pkgconf perl flex bison wget
-          pkgutil -y libarchive_devl libcurl_dev libncurses_dev
+          pkgutil -y -i bash gmake autoconf automake libtool pkgconf perl flex bison wget
+          pkgutil -y -i libarchive_devl libcurl_dev libncurses_dev
         mem: 6144
         run: |
           uname -a
