@@ -36,7 +36,7 @@ jobs:
             developer/build/pkg-config \
             developer/lexer/flex \
             developer/parser/bison \
-            library/ncurses            
+            library/ncurses           
                       
         run: |
           export LC_ALL=C
@@ -45,6 +45,7 @@ jobs:
           whoami
           pwd
           cat /etc/release
+          grep siginfo_t /usr/include/* /usr/include/sys/*
           PATH=/opt/csw/bin:$PATH:/usr/sfw/bin
           export PATH
           ./configure --prefix=/usr
