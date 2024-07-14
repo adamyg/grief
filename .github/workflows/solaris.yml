@@ -43,8 +43,11 @@ jobs:
           export LANG=C
           uname -a
           whoami
-          pwd
+          pwd          
           cat /etc/release
+          cat /usr/include/sys/siginfo.h
+          cat /usr/include/siginfo.h
+          cat /usr/include/wait.h
           export PATH=/opt/csw/bin:$PATH:/usr/sfw/bin
           expert CFLAGS=-std=gnu11
           ./configure --prefix=/usr
