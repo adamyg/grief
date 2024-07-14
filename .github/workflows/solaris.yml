@@ -45,10 +45,7 @@ jobs:
           whoami
           pwd          
           cat /etc/release
-          cat /usr/include/sys/siginfo.h
-          cat /usr/include/siginfo.h
-          cat /usr/include/wait.h
           export PATH=/opt/csw/bin:$PATH:/usr/sfw/bin
-          expert CFLAGS=-std=gnu11
+          export CFLAGS=-std=gnu11 -D_XOPEN_SOURCE=500 -D__EXTENSIONS__=1
           ./configure --prefix=/usr
           gmake release build
