@@ -27,7 +27,7 @@ jobs:
           echo ===== Packages requirements
           pkg install -v system/locale system/header
           pkg install -v --accept \
-            developer/gcc-5@5.5.0-11.4.0.0.1.14.0:20180814T162259Z \
+            developer/gcc-7@7.3.0-11.4.0.0.1.14.0 \
             developer/build/gnu-make \
             developer/build/make \
             developer/build/autoconf \
@@ -35,7 +35,8 @@ jobs:
             developer/build/libtool \
             developer/build/pkg-config \
             developer/lexer/flex \
-            developer/parser/bison
+            developer/parser/bison \
+            library/ncurses            
                       
         run: |
           export LC_ALL=C
