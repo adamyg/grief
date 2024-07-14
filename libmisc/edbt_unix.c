@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edbt_unix_c,"$Id: edbt_unix.c,v 1.14 2024/07/14 08:36:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_edbt_unix_c,"$Id: edbt_unix.c,v 1.15 2024/07/14 09:17:39 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edbt_unix.c,v 1.14 2024/07/14 08:36:40 cvsuser Exp $
+/* $Id: edbt_unix.c,v 1.15 2024/07/14 09:17:39 cvsuser Exp $
  * unix backtrace implementation
  *
  *
@@ -57,12 +57,13 @@ __CIDENT_RCSID(gr_edbt_unix_c,"$Id: edbt_unix.c,v 1.14 2024/07/14 08:36:40 cvsus
 
 #if defined(HAVE_PSTACK) || defined(HAVE_PROCSTACK)
 #if defined(sun)
-#if defined(HAVE_SYS_SIGINFO_H)
-#include <sys/siginfo.h>
-#endif
-#if defined(HAVE_SIGINFO_H)
-#include <siginfo.h>
-#endif
+//#if defined(HAVE_SYS_SIGINFO_H)
+//#include <sys/siginfo.h>
+//#endif
+//#if defined(HAVE_SIGINFO_H)
+//#include <siginfo.h>
+//#endif
+#include <sys/types.h>
 #endif /*sun*/
 #include <sys/wait.h>
 #include <stdlib.h>
