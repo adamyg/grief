@@ -8,8 +8,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Test on Solaris 11.4
-      uses: vmactions/solaris-vm@v1
+      uses: vmactions/solaris-vm@v1.0.2
       with:
+        release: "11.4-gcc"
         usesh: true
         mem: 6144
         prepare: |
@@ -27,7 +28,6 @@ jobs:
           echo ===== Packages requirements
           pkg install -v system/locale system/header
           pkg install -v --accept \
-            developer/gcc \
             developer/build/gnu-make \
             developer/build/make \
             developer/build/autoconf \
@@ -36,7 +36,6 @@ jobs:
             developer/build/pkg-config \
             developer/lexer/flex \
             developer/parser/bison
-          pkg update -nv gcc@latest
           
         run: |
           export LC_ALL=C
