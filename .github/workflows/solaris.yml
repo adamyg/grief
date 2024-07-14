@@ -46,6 +46,7 @@ jobs:
           pwd
           cat /etc/release
           grep siginfo_t /usr/include/* /usr/include/sys/*
+          more /usr/include/sys/siginfo.h
           PATH=/opt/csw/bin:$PATH:/usr/sfw/bin
           export PATH
           ./configure --prefix=/usr
