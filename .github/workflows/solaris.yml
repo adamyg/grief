@@ -9,21 +9,21 @@ jobs:
     - uses: actions/checkout@v4
     - name: Test on Solaris 11.4
       uses: vmactions/solaris-vm@v1
-      continue-on-error: true
       with:
+        usesh: true
+        mem: 6144
         prepare: |
           pkg publisher solaris
-          beadm list       
+          beadm list
           pkg info entire
           pkg list -af entire
           pkg list -a 'developer/*'
           pkg list -a 'library/*'
           pkg install -v system/locale
-          pkg install -v developer/base-developer-utilities developer/gcc-11
-          pkg install -v developer/build/gnu-make developer/build/libtool developer/build/pkg-config
-          pkg install -v developer/lexer/flex developer/parser/bison
-          pkg install -v library/libarchive library/ncurses
-        mem: 6144
+          pkg install -v --accept developer/base-developer-utilities developer/gcc-11
+          pkg install -v --accept developer/build/gnu-make developer/build/libtool developer/build/pkg-config
+          pkg install -v --accept developer/lexer/flex developer/parser/bison
+          pkg install -v --accept library/libarchive library/ncurses        
         run: |
           uname -a
           whoami
@@ -33,3 +33,4 @@ jobs:
           export PATH
           ./configure --prefix=/usr
           gmake release build
+          
