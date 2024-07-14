@@ -23,7 +23,8 @@ jobs:
           pkg install -v --accept developer/base-developer-utilities developer/gcc-11
           pkg install -v --accept developer/build/gnu-make developer/build/libtool developer/build/pkg-config
           pkg install -v --accept developer/lexer/flex developer/parser/bison
-          pkg install -v --accept library/libarchive library/ncurses        
+          pkg install -v --accept library/libarchive library/ncurses
+          
         run: |
           uname -a
           whoami
@@ -32,5 +33,4 @@ jobs:
           PATH=/opt/csw/bin:$PATH
           export PATH
           ./configure --prefix=/usr
-          gmake release build
-          
+          gmake release build         
