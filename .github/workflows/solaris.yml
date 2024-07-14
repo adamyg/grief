@@ -27,7 +27,7 @@ jobs:
           echo ===== Packages requirements
           pkg install -v system/locale system/header
           pkg install -v --accept \
-            developer/gcc-10 \
+            developer/gcc \
             developer/build/gnu-make \
             developer/build/make \
             developer/build/autoconf \
@@ -36,6 +36,7 @@ jobs:
             developer/build/pkg-config \
             developer/lexer/flex \
             developer/parser/bison
+          pkg update -nv gcc@latest
           
         run: |
           export LC_ALL=C
