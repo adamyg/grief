@@ -37,8 +37,7 @@
  *	@(#)stdio.h	5.17 (Berkeley) 6/3/91
  */
 
-
-#include <sys/cdefs.h>
+#include <edcdefs.h>
 #include <sys/types.h>
 
 #include <edtypes.h>

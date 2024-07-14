@@ -28,15 +28,15 @@
  */
 
 /*
- *  #include <sys/cdefs.h>
- *  #include <sys/types.h>
- *  #include <sys/param.h>
- *  #include <assert.h>
- *  #include <ctype.h>
- *  #include <stdio.h>
- *  #include <stdlib.h>
- *  #include <string.h>
- *  #include <errno.h>
+ * #include <sys/cdefs.h>
+ * #include <sys/types.h>
+ * #include <sys/param.h>
+ * #include <assert.h>
+ * #include <ctype.h>
+ * #include <stdio.h>
+ * #include <stdlib.h>
+ * #include <string.h>
+ * #include <errno.h>
  */
 
 #if defined(__linux__) || defined(__CYGWIN__) || defined(__MINGW32__)
