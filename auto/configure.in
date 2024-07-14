@@ -1,10 +1,10 @@
-dnl $Id: configure.in,v 1.91 2024/07/13 18:28:49 cvsuser Exp $
+dnl $Id: configure.in,v 1.92 2024/07/14 05:30:49 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl Adam Young (c) 1995-2024
 
-AC_REVISION($Revision: 1.91 $)
+AC_REVISION($Revision: 1.92 $)
 AC_SUBST([PACKAGE])
 AC_INIT([GriefEdit],[3.2.3],[https://github.com/adamyg/grief])
 AC_PREREQ([2.69])
@@ -641,7 +641,7 @@ CF_FUNC_MKSTEMP
 CF_FUNC_MEMMOVE
 CF_FUNC_VASPRINTF
 
-AC_CHECK_HEADERS(wait.h sys/wait.h)
+AC_CHECK_HEADERS(wait.h sys/wait.h sysinfo.h sys/sysinfo.h)
 AC_FUNC_FORK
 AC_CHECK_HEADERS(spawn.h)
 AC_CHECK_FUNCS(\
