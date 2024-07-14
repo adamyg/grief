@@ -12,19 +12,16 @@ jobs:
       with:
         prepare: |
           pkg publisher solaris
-          beadm list
-          pkg list -a '*'
+          beadm list       
           pkg info entire
           pkg list -af entire
-          pkg list -af gcc
+          pkg list -a 'developer/*'
+          pkg list -a 'library/*'
+          okg install -v system/locale
           pkg install -v developer/gcc-11
-          pkg install -v developer/build/gnu-make
-          pkg install -v developer/build/libtool
-          pkg install -v developer/build/pkg-config
-          pkg install -v developer/lexer/flex
-          pkg install -v developer/parser/bison
-          pkg install -v library/libarchive 
-          pkg install -v library/ncurses
+          pkg install -v developer/build/gnu-make developer/build/libtool developer/build/pkg-config
+          pkg install -v developer/lexer/flex developer/parser/bison
+          pkg install -v library/libarchive library/ncurses
         mem: 6144
         run: |
           uname -a
