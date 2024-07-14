@@ -1,21 +1,12 @@
 name: "Solaris build"
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  schedule:
-    - cron: '0 7 * * 2'
+on: [push]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Repository checkout
-      uses: actions/checkout@v4
-
+    - uses: actions/checkout@v4
     - name: Test on Solaris 11.4
       uses: vmactions/solaris-vm@v1
       with:
@@ -37,5 +28,4 @@ jobs:
           PATH=/opt/csw/bin:$PATH
           export PATH
           ./configure --prefix=/usr
-#         gmake -j$(nproc) release build
           gmake release build
