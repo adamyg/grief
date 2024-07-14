@@ -1,0 +1,43 @@
+name: "Solaris build"
+
+#https://github.com/vmactions/solaris-vm
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 7 * * 2'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Repository checkout
+      uses: actions/checkout@v4
+
+    - name: Test on Solaris 11.4
+      uses: vmactions/solaris-vm@v1
+      with:
+        prepare: |
+          pkg publisher solaris
+          beadm list
+          pkg info entire
+          pkg list -af entire
+          pkg list -af gcc-7
+          pkg install -v --accept developer/gcc-7@7.3.0-11.4.0.0.1.14.0
+          pkg install -y bash gmake autoconf automake libtool pkgconf perl flex bison wget
+          pkg install -y libarchive_devl libcurl_dev libncurses_dev expat liblz4 lzo2 zstd
+        mem: 6144
+        run: |
+          uname -a
+          whoami
+          pwd
+          cat /etc/release
+          PATH=/opt/csw/bin:$PATH
+          export PATH
+          ./configure --prefix=/usr
+#         gmake -j$(nproc) release build
+          gmake release build
+         
