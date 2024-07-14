@@ -25,7 +25,6 @@ jobs:
           pkg install -v --accept developer/base-developer-utilities developer/gcc-11
           pkg install -v --accept developer/build/gnu-make developer/build/libtool developer/build/pkg-config
           pkg install -v --accept developer/lexer/flex developer/parser/bison
-          pkg install -v --accept library/libarchive library/ncurses
           
         run: |
           export LC_ALL=C
