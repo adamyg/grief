@@ -1,6 +1,5 @@
 name: "Solaris build"
 
-#https://github.com/vmactions/solaris-vm
 on:
   push:
     branches: [ main ]
@@ -28,7 +27,7 @@ jobs:
           pkg list -af gcc-7
           pkg install -v --accept developer/gcc-7@7.3.0-11.4.0.0.1.14.0
           pkg install -y bash gmake autoconf automake libtool pkgconf perl flex bison wget
-          pkg install -y libarchive_devl libcurl_dev libncurses_dev expat liblz4 lzo2 zstd
+          pkg install -y libarchive_devl libcurl_dev libncurses_dev
         mem: 6144
         run: |
           uname -a
@@ -40,4 +39,3 @@ jobs:
           ./configure --prefix=/usr
 #         gmake -j$(nproc) release build
           gmake release build
-         
