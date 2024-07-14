@@ -13,6 +13,8 @@ jobs:
         usesh: true
         mem: 6144
         prepare: |
+          export LC_ALL=C
+          export LANG=C
           pkg publisher solaris
           beadm list
           pkg info entire
@@ -26,6 +28,8 @@ jobs:
           pkg install -v --accept library/libarchive library/ncurses
           
         run: |
+          export LC_ALL=C
+          export LANG=C
           uname -a
           whoami
           pwd
