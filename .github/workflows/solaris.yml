@@ -19,12 +19,21 @@ jobs:
           beadm list
           pkg info entire
           pkg list -af entire
+          pkg list '*'
           pkg list -a 'developer/*'
           pkg list -a 'library/*'
-          pkg install -v system/locale
-          pkg install -v --accept developer/base-developer-utilities developer/gcc-11
-          pkg install -v --accept developer/build/gnu-make developer/build/libtool developer/build/pkg-config
-          pkg install -v --accept developer/lexer/flex developer/parser/bison
+          pkg install -v system/locale system/heade
+          pkg install -v --accept \
+            developer/base-developer-utilities \
+            developer/gcc \
+            developer/build/gnu-make \
+            developer/build/make \
+            developer/build/autoconf \
+            developer/build/autoconf \
+            developer/build/libtool \
+            developer/build/pkg-config \
+            developer/lexer/flex \
+            developer/parser/bison           
           
         run: |
           export LC_ALL=C
