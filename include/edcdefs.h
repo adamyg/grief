@@ -4,7 +4,7 @@
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edcdefs.h,v 1.2 2024/07/14 15:16:14 cvsuser Exp $
+/* $Id: edcdefs.h,v 1.3 2024/07/14 15:30:51 cvsuser Exp $
  * <sys/cdefs.h> interface
  *
  * __BEGIN_DECLS
@@ -25,7 +25,7 @@ __CPRAGMA_ONCE
 #else
 
 #if defined(__sun)
-#define <stdio.h>
+#include <stdio.h>
 #endif
 
 #ifndef __BEGIN_DECLS
