@@ -17,8 +17,8 @@ jobs:
           pkg list -af entire
           pkg list -a 'developer/*'
           pkg list -a 'library/*'
-          okg install -v system/locale
-          pkg install -v developer/gcc-11
+          pkg install -v system/locale
+          pkg install -v developer/base-developer-utilities developer/gcc-11
           pkg install -v developer/build/gnu-make developer/build/libtool developer/build/pkg-config
           pkg install -v developer/lexer/flex developer/parser/bison
           pkg install -v library/libarchive library/ncurses
