@@ -19,13 +19,15 @@ jobs:
           beadm list
           pkg info entire
           pkg list -af entire
+          echo ===== Installed packages 
           pkg list '*'
+          echo ===== Available developer/library packages 
           pkg list -a 'developer/*'
           pkg list -a 'library/*'
+          echo ===== Packages requirements
           pkg install -v system/locale system/header
           pkg install -v --accept \
-            developer/base-developer-utilities \
-            developer/gcc \
+            developer/gcc-11 \
             developer/build/gnu-make \
             developer/build/make \
             developer/build/autoconf \
@@ -33,7 +35,7 @@ jobs:
             developer/build/libtool \
             developer/build/pkg-config \
             developer/lexer/flex \
-            developer/parser/bison           
+            developer/parser/bison
           
         run: |
           export LC_ALL=C
@@ -42,7 +44,7 @@ jobs:
           whoami
           pwd
           cat /etc/release
-          PATH=/opt/csw/bin:$PATH
+          PATH=/opt/csw/bin:$PATH:/usr/sfw/bin
           export PATH
           ./configure --prefix=/usr
-          gmake release build         
+          gmake release build  
