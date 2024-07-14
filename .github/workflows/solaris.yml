@@ -7,10 +7,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Test on Solaris 11.4
+    - name: Solaris 11.4
       uses: vmactions/solaris-vm@v1.0.2
       with:
-        release: "11.4-gcc"
         usesh: true
         mem: 6144
         prepare: |
@@ -28,6 +27,7 @@ jobs:
           echo ===== Packages requirements
           pkg install -v system/locale system/header
           pkg install -v --accept \
+            developer/gcc@11.2.0-11.4.42.0.0.111.0:20211203T193127Z \
             developer/build/gnu-make \
             developer/build/make \
             developer/build/autoconf \
@@ -36,7 +36,7 @@ jobs:
             developer/build/pkg-config \
             developer/lexer/flex \
             developer/parser/bison
-          
+                      
         run: |
           export LC_ALL=C
           export LANG=C
