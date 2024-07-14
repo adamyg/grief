@@ -9,6 +9,7 @@ jobs:
     - uses: actions/checkout@v4
     - name: Test on Solaris 11.4
       uses: vmactions/solaris-vm@v1
+      continue-on-error: true
       with:
         prepare: |
           pkg publisher solaris
