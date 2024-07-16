@@ -1,10 +1,10 @@
-dnl $Id: configure.in,v 1.94 2024/07/14 08:52:19 cvsuser Exp $
+dnl $Id: configure.in,v 1.95 2024/07/16 13:00:10 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl Adam Young (c) 1995-2024
 
-AC_REVISION($Revision: 1.94 $)
+AC_REVISION($Revision: 1.95 $)
 AC_SUBST([PACKAGE])
 AC_INIT([GriefEdit],[3.2.3],[https://github.com/adamyg/grief])
 AC_PREREQ([2.69])
@@ -19,6 +19,8 @@ AC_MSG_RESULT([- You may set the CC/CXX and CFLAGS/CXXFLAGS environment variable
 AC_MSG_RESULT([- to predetermine the C and C++ compilers and associated options used.])
 AC_MSG_RESULT([-])
 
+AC_USE_SYSTEM_EXTENSIONS
+
 AC_CANONICAL_TARGET
 AC_CANONICAL_BUILD
 CF_CANONICAL_HOST
@@ -28,7 +30,6 @@ AC_PROG_MAKE_SET
 AC_EXEEXT
 
 LT_INIT([dlopen win32-dll])
-
 AC_SUBST([LIBTOOL_DEPS])
 AC_SUBST([LT_OBJDIR])
 LT_INIT
@@ -37,9 +38,9 @@ LIBTOOL='/bin/sh $(top_builddir)/libtool'
 
 AC_SUBST(PROGS)
 
-# Restore CFLAGS/CXXFLAGS.
-# We MUST set the flags before we call autoconf compiler configuration macros,
-# because if we don't, they set CFLAGS to no optimization and -g, which isn't what we want.
+dnl Restore CFLAGS/CXXFLAGS.
+dnl We MUST set the flags before we call autoconf compiler configuration macros,
+dnl because if we don't, they set CFLAGS to no optimization and -g, which isn't what we want.
 
 AC_PROG_CC([gcc cc clang])
 AC_PROG_CXX([g++ CC c++ clang++])
@@ -819,7 +820,7 @@ AC_MSG_RESULT([-                     Debug:$CXXDEBUG, Release:$CXXRELEASE])
 AC_MSG_RESULT([-          LDFLAGS: $OPENSSL_LDFLAGS $LDFLAGS])
 AC_MSG_RESULT([-     Preprocessor: -DHAVE_CONFIG_H $EXTRA_CPPFLAGS $LIBCURL_CPPFLAGS])
 AC_MSG_RESULT([-    Mouse support: ${mouse_lib}])
-AC_MSG_RESULT([-   Termap support: ${termlib_name}])
+AC_MSG_RESULT([-  Tercmap support: $CURSES_CFLAGS $TERMLIB])
 AC_MSG_RESULT([-    Spell Support: $LIBSPELL])
 AC_MSG_RESULT([-       Conversion: $LIBICU $LIBAPRICONV $LIBICONV])
 AC_MSG_RESULT([-        Detection: $LIBENCA $LIBCHARUDET $LIBGUESS $LIBMAGIC])
