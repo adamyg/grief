@@ -1,4 +1,4 @@
-dnl $Id: libterm.m4,v 1.18 2024/07/16 16:27:23 cvsuser Exp $
+dnl $Id: libterm.m4,v 1.19 2024/07/17 17:35:56 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -340,29 +340,35 @@ extern int tgetent(char *, const char *);
 	dnl additional search directories
 	dnl main plus base, without trailing ncurses/w package name
 
-	cf_libterm_includes_main=""
-	cf_libterm_includes_base=""
+	cf_libterm_includes="/usr/local/include"
 	if test -z "$CURSES_CFLAGS" && test -n "$PKG_CONFIG"; then
 		AC_MSG_CHECKING([whether pkg-config information available])
-		cf_result=`$PKG_CONFIG $cf_libterm_name --cflags-only-I 2>/dev/null`
-		if test $? = 0; then
-			AC_MSG_RESULT([$cf_result])
-			cf_libterm_includes_main=$cf_result
-			cf_libterm_includes_base=$cf_result
-			if test "x$cf_libterm_name" = "xncursesw"; then
-				cf_result=`echo $cf_result|sed 's/\/ncursesw$//'`
-				cf_libterm_include_base=$cf_result
+		cf_pkg_config=`$PKG_CONFIG $cf_libterm_name --cflags-only-I 2>/dev/null`
+		if test $? = 0 && test -n "$cf_pkg_config"; then
+			AC_MSG_RESULT([$cf_pkg_config])
+			cf_libterm_includes=""
+			for cf_config in $cf_pkg_config; do
 
-			elif test "x$cf_libterm_name" = "xncurses"; then
-				cf_result=`echo $cf_result|sed 's/\/ncurses$//'`
-				cf_libterm_includes_base=$cf_result
-			fi
+				cf_include=${cf_config#-I}
+				if test "$cf_include" = "$cf_config"; then
+					continue
+				fi
+
+				cf_result=yes
+				for cf_config in $cf_libterm_includes; do
+					if test $cf_config = $cf_include; then
+						cf_result=no
+						break
+					fi
+				done
+				if test $cf_result = yes; then
+					CF_APPEND_TEXT(cf_libterm_includes,$cf_include)
+				fi
+			done
 		else
 			AC_MSG_RESULT([none])
 		fi
 	fi
-	cf_libterm_includes_main="$cf_libterm_includes_main -I/usr/local/include"
-	cf_libterm_includes_base="$cf_libterm_includes_base -I/usr/local/include"
 
 	dnl package headers
 	if test -n "$cf_libterm_ncurses_headers"; then
@@ -385,20 +391,23 @@ extern int tgetent(char *, const char *);
 			AC_CHECK_HEADERS(ncursesw/curses.h, [cf_have_ncurses_h=yesa], [cf_have_ncurses_h=no])
 
 			if test "x$cf_have_ncurses_h" = "xno" && test -z "$CURSES_CFLAGS" ; then
-				AC_MSG_NOTICE([checking secondary directories])
-				for libterm_include in $cf_libterm_include_base; do
-					CFLAGS="$cf_saved_CFLAGS $libterm_include"
-					AS_UNSET([$ac_cv_header_ncursesw_curses_h])
+				AC_MSG_NOTICE([checking secondary ncurses directories])
+				for cf_include in $cf_libterm_includes; do
+					if test "$cf_include" != "${cf_include%/ncurses*}"; then
+						continue
+					fi
+					CFLAGS="$cf_saved_CFLAGS -I$cf_include"
+					AS_UNSET(ac_cv_header_ncursesw_curses_h)
 					AC_CHECK_HEADER(ncursesw/curses.h, [cf_have_ncurses_h=yesa], [cf_have_ncurses_h=no])
-					if test x$have_ncursesw_h = xyesa ; then
-						CURSES_CFLAGS="-I/usr/local/include"
+					if test "x$cf_have_ncurses_h" = "xyesa"; then
+						CURSES_CFLAGS="-I$cf_include"
 						break
 					fi
 					CFLAGS="$cf_saved_CFLAGS"
 				done
 			fi
 
-			if test "x$cf_have_ncurses_h" = "xyesa" ; then
+			if test "x$cf_have_ncurses_h" = "xyesa"; then
 				AC_CHECK_HEADERS(ncursesw/nc_alloc.h, [have_nc_alloc_h])
 				AC_CHECK_HEADERS(ncursesw/nomacros.h, [have_nomacros_h])
 				AC_CHECK_HEADERS(ncursesw/termcap.h)
@@ -408,16 +417,16 @@ extern int tgetent(char *, const char *);
 			dnl
 			dnl ncursesw.h
 			dnl
-			if test "x$cf_have_ncurses_h" = "xno" ; then
+			if test "x$cf_have_ncurses_h" = "xno"; then
 				AC_CHECK_HEADERS(ncursesw.h, [cf_have_ncurses_h=yesb], [cf_have_ncurses_h=no])
 				if test "x$cf_have_ncurses_h" = "xno" && test -z "$CURSES_CFLAGS" ; then
-					AC_MSG_NOTICE([checking secondary directories])
-					for libterm_include in $cf_libterm_include_main; do
-						CFLAGS="$cf_saved_CFLAGS $libterm_include"
-						AS_UNSET([$ac_cv_header_ncursesw_h])
+					AC_MSG_NOTICE([checking secondary ncurses directories])
+					for cf_include in $cf_libterm_includes; do
+						CFLAGS="$cf_saved_CFLAGS -I$cf_include"
+						AS_UNSET(ac_cv_header_ncursesw_h)
 						AC_CHECK_HEADERS(ncursesw.h, [cf_have_ncurses_h=yesb], [cf_have_ncurses_h=no])
-						if test x$have_ncursesw_h = xyesb ; then
-							CURSES_CFLAGS="-I/usr/local/include"
+						if test "x$cf_have_ncurses_h" = "xyesb"; then
+							CURSES_CFLAGS="-I$cf_include"
 							break
 						fi
 						CFLAGS="$cf_saved_CFLAGS"
@@ -425,7 +434,8 @@ extern int tgetent(char *, const char *);
 				fi
 			fi
 
-			if test "x$cf_have_ncurses_h" = "xno" ; then
+			if test "x$cf_have_ncurses_h" = "xno"; then
+				AC_MSG_RESULT([checking for common ncurses header])
 				cf_libterm_ncurses_headers=ncurses
 			fi
 		fi
@@ -438,14 +448,16 @@ extern int tgetent(char *, const char *);
 			AC_CHECK_HEADERS(ncurses/curses.h, [cf_have_ncurses_h=yesc], [cf_have_ncurses_h=no])
 
 			if test "x$cf_have_ncurses_h" = "xno" && test -z "$CURSES_CFLAGS" ; then
-				AC_MSG_NOTICE([checking secondary directories])
-				for libterm_include in $cf_libterm_include_base; do
-					CFLAGS="$cf_saved_CFLAGS $libterm_include"
-					AS_UNSET([$ac_cv_header_ncurses_curses_h])
-					AC_MSG_NOTICE([using /usr/local/include])
+				AC_MSG_RESULT([checking secondary ncurses directories])
+				for cf_include in $cf_libterm_includes; do
+					if test "$cf_include" != "${cf_include%/ncurses*}"; then
+						continue
+					fi
+					CFLAGS="$cf_saved_CFLAGS -I$cf_include"
+					AS_UNSET(ac_cv_header_ncurses_curses_h)
 					AC_CHECK_HEADERS(ncurses/curses.h, [cf_have_ncurses_h=yesc], [cf_have_ncurses_h=no])
-					if test x$cf_have_ncurses_h = xyesc ; then
-						CURSES_CFLAGS="-I/usr/local/include"
+					if test "x$cf_have_ncurses_h" = "xyesc"; then
+						CURSES_CFLAGS="-I$cf_include"
 						break
 					fi
 					CFLAGS="$cf_saved_CFLAGS"
@@ -465,18 +477,16 @@ extern int tgetent(char *, const char *);
 			AC_CHECK_HEADERS(ncurses.h, [cf_have_ncurses_h=yesd], [cf_have_ncurses_h=no])
 
 			if test "x$cf_have_ncurses_h" = "xno" && test -z "$CURSES_CFLAGS" ; then
-				AC_MSG_NOTICE([checking secondary directories])
-				for libterm_include in $cf_libterm_include_main; do
-					CFLAGS="$cf_saved_CFLAGS $libterm_include"
-					AS_UNSET([$ac_cv_header_ncurses_h])
-					AC_MSG_NOTICE([using /usr/local/include])
+				AC_MSG_NOTICE([checking secondary ncurse directories])
+				for cf_include in $cf_libterm_includes; do
+					CFLAGS="$cf_saved_CFLAGS -I$cf_include"
+					AS_UNSET(ac_cv_header_ncurses_h)
 					AC_CHECK_HEADERS(ncurses.h, [cf_have_ncurses_h=yesd], [cf_have_ncurses_h=no])
-					if test x$cf_have_ncurses_h = xyesd ; then
-						CURSES_CFLAGS="-I/usr/local/include"
+					if test "x$cf_have_ncurses_h" = "xyesd"; then
+						CURSES_CFLAGS="-I$cf_include"
 						break
-					else
-						CFLAGS="$cf_saved_CFLAGS"
 					fi
+					CFLAGS="$cf_saved_CFLAGS"
 				done
 			fi
 		fi
