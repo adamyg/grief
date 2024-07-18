@@ -1,4 +1,4 @@
-dnl $Id: libterm.m4,v 1.19 2024/07/17 17:35:56 cvsuser Exp $
+dnl $Id: libterm.m4,v 1.20 2024/07/18 17:56:40 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -162,13 +162,25 @@ AC_DEFUN([LIBTERM_CHECK_CONFIG],[
 			*)		termlibs="ncursesw ncurses tinfo termlib curses termcap";;
 		esac
 
-		cf_libterm_extra=""
+		TERMLIB=""
 		for libname in $termlibs; do
 			if test "$libname" = "ncursesw" || test "$libname" = "ncurses"; then
 				dnl
 				dnl libncurses[w]
 				dnl
 				AC_CHECK_LIB($libname, setupterm)
+				if test "x$cf_save_LIBS" = "x$LIBS" && test -n "$PKG_CONFIG"; then
+					cf_pkg_config=`$PKG_CONFIG $libterm --libs 2>/dev/null`
+					if test $? = 0 && test -n "$cf_pkg_config"; then
+						LIBS="$cf_pk_config"
+						AC_MSG_RESULT([checking using pkg-config link options])
+						AC_CHECK_LIB($libname, setupterm, [], [LIBS="$cf_save_LIBS"])
+						if test "x$cf_save_LIBS" != "x$LIBS"; then
+							TERMLIB="$cf_pk_config"
+						fi
+					fi
+				fi
+
 				if test "x$cf_save_LIBS" != "x$LIBS"; then
 					CF_LIBTERM_CHECK_TERMINFO
 					if test "$cf_result" = "yes"; then
@@ -225,9 +237,9 @@ extern int tgetent(char *, const char *);
 	char buffer[1024 * 2];
 	tgetent(buffer, "nonexistentterminal");
 ]])],
-						[cf_result=yes; cf_libterm_extra=" -ltermcap"; AC_MSG_RESULT(yes)],
+						[cf_result=yes; TERMLIB="-lcurses -ltermcap"; AC_MSG_RESULT(yes)],
 						[cf_result=no; LIBS="$cf_save_LIBS"; AC_MSG_RESULT(no)])
-					AC_MSG_RESULT([LIBS = ${LIBS}])
+					AC_MSG_RESULT([yes])
 				fi
 				if test "x$cf_save_LIBS" != "x$LIBS"; then
 					CF_LIBTERM_CHECK_TERMCAP
@@ -245,7 +257,9 @@ extern int tgetent(char *, const char *);
 		done
 
 		if test -n "$cf_libterm_name"; then
-			TERMLIB="-l${cf_libterm_name}${cf_libterm_extra}"
+			if test -z "$TERMLIB"; then
+				TERMLIB="-l${cf_libterm_name}"
+			fi
 			LIBS="$LIBS $TERMLIB"
 		else
 			AC_MSG_RESULT(no terminal library found)

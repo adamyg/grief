@@ -23652,7 +23652,6 @@ printf "%s\n" "no termlib options, checking for suitable terminal library" >&6; 
 		esac
 
 		TERMLIB=""
-		cf_libterm_extra=""
 		for libname in $termlibs; do
 			if test "$libname" = "ncursesw" || test "$libname" = "ncurses"; then
 																as_ac_Lib=`printf "%s\n" "ac_cv_lib_$libname""_setupterm" | sed "$as_sed_sh"`
@@ -23710,14 +23709,13 @@ _ACEOF
 
 fi
 
-				if test "x$cf_save_LIBS" == "x$LIBS"; then
-					if test -n "$PKG_CONFIG"; then
-						cf_pkg_config=`$PKG_CONFIG $libterm --libs 2>/dev/null`
-						if test $? = 0 && test -n "$cf_pkg_config"; then
-							LIBS="$cf_pk_config"
-							{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: checking using pkg-config link options" >&5
+				if test "x$cf_save_LIBS" = "x$LIBS" && test -n "$PKG_CONFIG"; then
+					cf_pkg_config=`$PKG_CONFIG $libterm --libs 2>/dev/null`
+					if test $? = 0 && test -n "$cf_pkg_config"; then
+						LIBS="$cf_pk_config"
+						{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: checking using pkg-config link options" >&5
 printf "%s\n" "checking using pkg-config link options" >&6; }
-							as_ac_Lib=`printf "%s\n" "ac_cv_lib_$libname""_setupterm" | sed "$as_sed_sh"`
+						as_ac_Lib=`printf "%s\n" "ac_cv_lib_$libname""_setupterm" | sed "$as_sed_sh"`
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for setupterm in -l$libname" >&5
 printf %s "checking for setupterm in -l$libname... " >&6; }
 if eval test \${$as_ac_Lib+y}
@@ -23775,9 +23773,8 @@ else case e in #(
 esac
 fi
 
-							if test "x$cf_save_LIBS" != "x$LIBS"; then
-								TERMLIBS="$cf_pk_config"
-							fi
+						if test "x$cf_save_LIBS" != "x$LIBS"; then
+							TERMLIB="$cf_pk_config"
 						fi
 					fi
 				fi
@@ -24066,8 +24063,8 @@ esac
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.beam \
     conftest$ac_exeext conftest.$ac_ext
-					{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: LIBS = ${LIBS}" >&5
-printf "%s\n" "LIBS = ${LIBS}" >&6; }
+					{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
 				fi
 				if test "x$cf_save_LIBS" != "x$LIBS"; then
 
@@ -24138,7 +24135,7 @@ printf "%s\n" "$libname library is not usable" >&6; }
 		done
 
 		if test -n "$cf_libterm_name"; then
-			if test -z $TERMLIB; then
+			if test -z "$TERMLIB"; then
 				TERMLIB="-l${cf_libterm_name}"
 			fi
 			LIBS="$LIBS $TERMLIB"

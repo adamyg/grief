@@ -37,7 +37,7 @@
 
 #if !defined(HAVE_SYS_ENDIAN_H)
 #error <sys/endian.h> assumed ...
-#elif |defined(ntohl) || !defined(ntohs) || !defined(htonl) || !defined(htons)
+#elif !defined(ntohl) || !defined(ntohs) || !defined(htonl) || !defined(htons)
 #error Unknown BSD endian configuration ...
 #endif
 
