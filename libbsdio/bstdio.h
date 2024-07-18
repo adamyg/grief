@@ -41,9 +41,11 @@
 #ifndef __BSD_VISIBLE
 #define __BSD_VISIBLE 1
 #endif
-
+#ifndef _BSD_SOURCE
+#define _BSD_SOURCE 1
+#endif
 #ifndef __POSIX_VISIBLE
-#define __POSIX_VISIBLE 1
+#define __POSIX_VISIBLE 199506
 #endif
 #endif /*__BSTDIO_INTERNAL || _BSD_SOURCE*/
 
