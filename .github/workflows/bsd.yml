@@ -7,22 +7,37 @@
 #
 
 on: [push, pull_request]
-name: bsd-tests
+name: FreeOpenNetBSD
 concurrency:
   group: ${{ github.ref }}-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && github.sha || '' }}
   cancel-in-progress: true
 jobs:
-  freebsd:
+# freebsd:
+#    runs-on: ubuntu-22.04
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: FreeBSD
+#        uses: vmactions/freebsd-vm@v1
+#        with:
+#          usesh: true
+#          prepare: |
+#            pkg install -y bash gmake perl5 autoconf automake libtool pkgconf flex bison wget
+#            pkg install -y gettext libiconv libarchive curl ncurses expat liblz4 lzo2 zstd
+#          run: |
+#            ./configure
+#            cat acdefines.h
+#            gmake release
+  openbsd:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: Run tests
-        uses: vmactions/freebsd-vm@v1
+      - name: OpenBSD
+        uses: vmactions/openbsd-vm@v1
         with:
           usesh: true
           prepare: |
-            pkg install -y bash gmake perl5 autoconf automake libtool pkgconf flex bison wget
-            pkg install -y gettext libiconv libarchive curl ncurses expat liblz4 lzo2 zstd
+            pkg_add bash gmake perl5 autoconf automake libtool pkgconf flex bison wget
+            pkg_add gettext libiconv libarchive curl ncurses expat liblz4 lzo2 zstd
           run: |
             ./configure
             cat acdefines.h
