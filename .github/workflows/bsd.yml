@@ -11,7 +11,7 @@ name: FreeOpenNetBSD
 concurrency:
   group: ${{ github.ref }}-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && github.sha || '' }}
   cancel-in-progress: true
-  
+
 jobs:
 # freebsd:
 #    runs-on: ubuntu-22.04
@@ -30,21 +30,39 @@ jobs:
 #            gmake release
 
 # Packages: see: https://cdn.openbsd.org/pub/OpenBSD/7.5/packages/amd64/
-  openbsd:
+#  openbsd:
+#    runs-on: ubuntu-22.04
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: OpenBSD
+#        uses: vmactions/openbsd-vm@v1
+#        with:
+#          usesh: true
+#          prepare: |
+#            pkg_add bash gmake libtool pkgconf bison wget curl unzip-6.0p17
+#            pkg_add libiconv libarchive lz4 lzo2 zstd
+#          run: |
+#            ./configure
+#            cat acdefines.h
+#            gmake release
+
+  netbsd:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: OpenBSD
-        uses: vmactions/openbsd-vm@v1
+      - name: NetBSD
+        uses: vmactions/netbsd-vm@v1
         with:
           usesh: true
           prepare: |
-            pkg_add bash gmake libtool pkgconf bison wget curl unzip-6.0p17
-            pkg_add libiconv libarchive lz4 lzo2 zstd
+            /usr/sbin/pkg_add -v pkgin
+            pkgin update
+            pkgin -y install gcc12-*
+            pkgin -y bash gmake libtool pkgconf bison wget curl unzip
+            pkgin -y libiconv libarchive lz4 lzo2 zstd
           run: |
             ./configure
             cat acdefines.h
-            cat /usr/include/sys/types.h
             gmake release
 
 #end
