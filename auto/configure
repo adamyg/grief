@@ -715,6 +715,7 @@ LIBSPELL
 LIBMALLOC
 PKG_CONFIG
 TERMLIB
+CURSES_LDFLAGS
 CURSES_CFLAGS
 LIBBZ2
 LIBLZMA
@@ -940,6 +941,7 @@ CXXCPP
 CPP
 CWARN
 CURSES_CFLAGS
+CURSES_LDFLAGS
 YACC
 YFLAGS'
 
@@ -1670,6 +1672,8 @@ Some influential environment variables:
   CWARN       define to compilation flags for generating extra warnings
   CURSES_CFLAGS
               preprocessor flags for Curses, e.g. -I/usr/include/ncursesw
+  CURSES_LDFLAGS
+              linker flags for Curses, e.g. -L/usr/pkg/lib
   YACC        The 'Yet Another Compiler Compiler' implementation to use.
               Defaults to the first program found out of: 'bison -y', 'byacc',
               'yacc'.
@@ -21067,7 +21071,7 @@ printf "%s\n" "$cf_clang_optok" >&6; }
 		if test "$cf_clang_optok" = yes; then
 			test -n "$verbose" && echo "	adding option $cf_clang_opt" 1>&6
 
-echo "${as_me:-configure}:21070: testing adding option $cf_clang_opt ..." 1>&5
+echo "${as_me:-configure}:21074: testing adding option $cf_clang_opt ..." 1>&5
 
 
 
@@ -21177,7 +21181,7 @@ then
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $CC __attribute__ directives..." >&5
 printf "%s\n" "$as_me: checking for $CC __attribute__ directives..." >&6;}
 cat > "conftest.$ac_ext" <<EOF
-#line 21180 "${as_me:-configure}"
+#line 21184 "${as_me:-configure}"
 #include <stdio.h>
 #include "confdefs.h"
 #include "conftest.h"
@@ -23418,6 +23422,7 @@ printf "%s\n" "$ac_cv_path_EGREP_TRADITIONAL" >&6; }
 printf "%s\n" "determining term lib, --with-termlib options ncursesw, ncurses, tinfo, curses, termcap, termlib" >&6; }
 
 
+
 # Check whether --with-ncurses was given.
 if test ${with_ncurses+y}
 then :
@@ -23653,6 +23658,8 @@ printf "%s\n" "no termlib options, checking for suitable terminal library" >&6; 
 
 		TERMLIB=""
 		for libname in $termlibs; do
+			LIBS="$cf_save_LIBS $CURSES_LDFLAGS"
+
 			if test "$libname" = "ncursesw" || test "$libname" = "ncurses"; then
 																as_ac_Lib=`printf "%s\n" "ac_cv_lib_$libname""_setupterm" | sed "$as_sed_sh"`
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for setupterm in -l$libname" >&5
@@ -23709,15 +23716,16 @@ _ACEOF
 
 fi
 
-				if test "x$cf_save_LIBS" = "x$LIBS" && test -n "$PKG_CONFIG"; then
-					{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether pkg-config information available" >&5
+				if test "x$cf_save_LIBS" = "x$LIBS"; then
+					if test -z "$CURSES_LDFLAGS" && test -n "$PKG_CONFIG"; then
+						{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether pkg-config information available" >&5
 printf %s "checking whether pkg-config information available... " >&6; }
-					cf_pkg_config=`$PKG_CONFIG $libterm --libs 2>/dev/null`
-					if test $? = 0 && test -n "$cf_pkg_config"; then
-						LIBS="$cf_pk_config"
-						{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $cf_pkg_config" >&5
+						cf_pkg_config=`$PKG_CONFIG $libname --libs 2>/dev/null`
+						if test $? = 0 && test -n "$cf_pkg_config"; then
+							LIBS="$cf_pk_config"
+							{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $cf_pkg_config" >&5
 printf "%s\n" "$cf_pkg_config" >&6; }
-						as_ac_Lib=`printf "%s\n" "ac_cv_lib_$libname""_setupterm" | sed "$as_sed_sh"`
+							as_ac_Lib=`printf "%s\n" "ac_cv_lib_$libname""_setupterm" | sed "$as_sed_sh"`
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for setupterm in -l$libname" >&5
 printf %s "checking for setupterm in -l$libname... " >&6; }
 if eval test \${$as_ac_Lib+y}
@@ -23775,12 +23783,13 @@ else case e in #(
 esac
 fi
 
-						if test "x$cf_save_LIBS" != "x$LIBS"; then
-							TERMLIB="$cf_pk_config"
-						fi
-					else
-						{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: none" >&5
+							if test "x$cf_save_LIBS" != "x$LIBS"; then
+								TERMLIB="$cf_pk_config"
+							fi
+						else
+							{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: none" >&5
 printf "%s\n" "none" >&6; }
+						fi
 					fi
 				fi
 
@@ -24056,7 +24065,7 @@ main (void)
 _ACEOF
 if ac_fn_c_try_link "$LINENO"
 then :
-  cf_result=yes; TERMLIB="-lcurses -ltermcap"; { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+  cf_result=yes; TERMLIB="$CURSES_LDFLAGS -lcurses -ltermcap"; { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
 else case e in #(
   e) cf_result=no; LIBS="$cf_save_LIBS"; { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
@@ -24138,7 +24147,7 @@ printf "%s\n" "$libname library is not usable" >&6; }
 
 		if test -n "$cf_libterm_name"; then
 			if test -z "$TERMLIB"; then
-				TERMLIB="-l${cf_libterm_name}"
+				TERMLIB="$CURSES_LDFLAGS -l${cf_libterm_name}"
 			fi
 			LIBS="$LIBS $TERMLIB"
 		else

@@ -1,4 +1,4 @@
-dnl $Id: libterm.m4,v 1.21 2024/07/18 18:13:27 cvsuser Exp $
+dnl $Id: libterm.m4,v 1.22 2024/07/18 18:31:27 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -38,6 +38,10 @@ dnl     #  endif
 dnl     #else
 dnl     #  error "missing ncurses" ..
 dnl     #endif
+dnl
+dnl	CURSES_CFLAGS
+dnl	CURSES_LDFLAGS
+dnl	TERMLIB
 dnl
 
 AC_DEFUN([CF_LIBTERM_CHECK_TERMINFO],[
@@ -89,6 +93,7 @@ AC_DEFUN([LIBTERM_CHECK_CONFIG],[
 
 	AC_MSG_RESULT([determining term lib, --with-termlib options [ncursesw, ncurses, tinfo, curses, termcap, termlib]])
 	AC_ARG_VAR([CURSES_CFLAGS], [preprocessor flags for Curses, e.g. -I/usr/include/ncursesw])
+	AC_ARG_VAR([CURSES_LDFLAGS], [linker flags for Curses, e.g. -L/usr/pkg/lib])
 	AC_ARG_WITH(ncurses,
 	    [  --with-ncurses          use ncurses library], with_termlib=ncurses)
 
@@ -164,23 +169,27 @@ AC_DEFUN([LIBTERM_CHECK_CONFIG],[
 
 		TERMLIB=""
 		for libname in $termlibs; do
+			LIBS="$cf_save_LIBS $CURSES_LDFLAGS"
+
 			if test "$libname" = "ncursesw" || test "$libname" = "ncurses"; then
 				dnl
 				dnl libncurses[w]
 				dnl
 				AC_CHECK_LIB($libname, setupterm)
-				if test "x$cf_save_LIBS" = "x$LIBS" && test -n "$PKG_CONFIG"; then
-					AC_MSG_CHECKING([whether pkg-config information available])
-					cf_pkg_config=`$PKG_CONFIG $libterm --libs 2>/dev/null`
-					if test $? = 0 && test -n "$cf_pkg_config"; then
-						LIBS="$cf_pk_config"
-						AC_MSG_RESULT([$cf_pkg_config])
-						AC_CHECK_LIB($libname, setupterm, [], [LIBS="$cf_save_LIBS"])
-						if test "x$cf_save_LIBS" != "x$LIBS"; then
-							TERMLIB="$cf_pk_config"
+				if test "x$cf_save_LIBS" = "x$LIBS"; then
+					if test -z "$CURSES_LDFLAGS" && test -n "$PKG_CONFIG"; then
+						AC_MSG_CHECKING([whether pkg-config information available])
+						cf_pkg_config=`$PKG_CONFIG $libname --libs 2>/dev/null`
+						if test $? = 0 && test -n "$cf_pkg_config"; then
+							LIBS="$cf_pk_config"
+							AC_MSG_RESULT([$cf_pkg_config])
+							AC_CHECK_LIB($libname, setupterm, [], [LIBS="$cf_save_LIBS"])
+							if test "x$cf_save_LIBS" != "x$LIBS"; then
+								TERMLIB="$cf_pk_config"
+							fi
+						else
+							AC_MSG_RESULT([none])
 						fi
-					else
-						AC_MSG_RESULT([none])
 					fi
 				fi
 
@@ -238,7 +247,7 @@ extern int tgetent(char *, const char *);
 	char buffer[1024 * 2];
 	tgetent(buffer, "nonexistentterminal");
 ]])],
-						[cf_result=yes; TERMLIB="-lcurses -ltermcap"; AC_MSG_RESULT(yes)],
+						[cf_result=yes; TERMLIB="$CURSES_LDFLAGS -lcurses -ltermcap"; AC_MSG_RESULT(yes)],
 						[cf_result=no; LIBS="$cf_save_LIBS"; AC_MSG_RESULT(no)])
 					AC_MSG_RESULT([yes])
 				fi
@@ -259,7 +268,7 @@ extern int tgetent(char *, const char *);
 
 		if test -n "$cf_libterm_name"; then
 			if test -z "$TERMLIB"; then
-				TERMLIB="-l${cf_libterm_name}"
+				TERMLIB="$CURSES_LDFLAGS -l${cf_libterm_name}"
 			fi
 			LIBS="$LIBS $TERMLIB"
 		else
