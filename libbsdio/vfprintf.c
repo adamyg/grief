@@ -46,6 +46,8 @@
 // USE_MMAP
 // USE_DTOA
 
+#include <bstdio.h>
+
 #ifdef HAVE_STDARG_H
 #include <stdarg.h>
 #endif
@@ -69,8 +71,6 @@
 #if defined(USE_MMAP)
 #include <sys/mman.h>
 #endif
-
-#include <bstdio.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
