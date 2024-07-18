@@ -23710,11 +23710,13 @@ _ACEOF
 fi
 
 				if test "x$cf_save_LIBS" = "x$LIBS" && test -n "$PKG_CONFIG"; then
+					{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether pkg-config information available" >&5
+printf %s "checking whether pkg-config information available... " >&6; }
 					cf_pkg_config=`$PKG_CONFIG $libterm --libs 2>/dev/null`
 					if test $? = 0 && test -n "$cf_pkg_config"; then
 						LIBS="$cf_pk_config"
-						{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: checking using pkg-config link options" >&5
-printf "%s\n" "checking using pkg-config link options" >&6; }
+						{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $cf_pkg_config" >&5
+printf "%s\n" "$cf_pkg_config" >&6; }
 						as_ac_Lib=`printf "%s\n" "ac_cv_lib_$libname""_setupterm" | sed "$as_sed_sh"`
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for setupterm in -l$libname" >&5
 printf %s "checking for setupterm in -l$libname... " >&6; }
@@ -23776,6 +23778,9 @@ fi
 						if test "x$cf_save_LIBS" != "x$LIBS"; then
 							TERMLIB="$cf_pk_config"
 						fi
+					else
+						{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: none" >&5
+printf "%s\n" "none" >&6; }
 					fi
 				fi
 
@@ -24026,9 +24031,6 @@ _ACEOF
   LIBS="-l$libname $LIBS"
 
 fi
-
-				{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: LIBS = ${LIBS}" >&5
-printf "%s\n" "LIBS = ${LIBS}" >&6; }
 
 				if test "x$cf_save_LIBS" = "x$LIBS" && test "$libname" = "curses"; then
 					{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking if we need both curses and termcap libraries" >&5

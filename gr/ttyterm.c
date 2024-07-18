@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.124 2024/07/18 16:26:59 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.125 2024/07/18 18:04:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.124 2024/07/18 16:26:59 cvsuser Exp $
+/* $Id: ttyterm.c,v 1.125 2024/07/18 18:04:24 cvsuser Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -2533,13 +2533,15 @@ acs_locale_breaks(void)
 #define IS_CTRLN(s)         ((s) != 0 && strstr(s, "\016") != 0)
 #define IS_CTRLO(s)         ((s) != 0 && strstr(s, "\017") != 0)
 
-            if (IS_CTRLN(tc_acs_start) || IS_CTRLO(tc_acs_start) ||
+            if (IS_CTRLN(tc_acs_start) || IS_CTRLO(tc_acs_start)) {
+                return TRUE;
+	    }
+
 #if defined(HAVE_LIBNCURSESW) || defined(HAVE_LIBNCURSES)
-                    IS_CTRLN(set_attributes) || IS_CTRLO(set_attributes))
-#endif
-            {
+	    if (IS_CTRLN(set_attributes) || IS_CTRLO(set_attributes)) {
                 return TRUE;
             }
+#endif
 
 #undef  IS_CTRLN
 #undef  IS_CTRLO

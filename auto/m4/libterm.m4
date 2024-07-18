@@ -1,4 +1,4 @@
-dnl $Id: libterm.m4,v 1.20 2024/07/18 17:56:40 cvsuser Exp $
+dnl $Id: libterm.m4,v 1.21 2024/07/18 18:13:27 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -170,14 +170,17 @@ AC_DEFUN([LIBTERM_CHECK_CONFIG],[
 				dnl
 				AC_CHECK_LIB($libname, setupterm)
 				if test "x$cf_save_LIBS" = "x$LIBS" && test -n "$PKG_CONFIG"; then
+					AC_MSG_CHECKING([whether pkg-config information available])
 					cf_pkg_config=`$PKG_CONFIG $libterm --libs 2>/dev/null`
 					if test $? = 0 && test -n "$cf_pkg_config"; then
 						LIBS="$cf_pk_config"
-						AC_MSG_RESULT([checking using pkg-config link options])
+						AC_MSG_RESULT([$cf_pkg_config])
 						AC_CHECK_LIB($libname, setupterm, [], [LIBS="$cf_save_LIBS"])
 						if test "x$cf_save_LIBS" != "x$LIBS"; then
 							TERMLIB="$cf_pk_config"
 						fi
+					else
+						AC_MSG_RESULT([none])
 					fi
 				fi
 
@@ -225,8 +228,6 @@ extern const char *curses_version(void);
 				dnl curses/termcap/termlib
 				dnl
 				AC_CHECK_LIB($libname, tgetent)
-				AC_MSG_RESULT([LIBS = ${LIBS}])
-
 				if test "x$cf_save_LIBS" = "x$LIBS" && test "$libname" = "curses"; then
 					AC_MSG_CHECKING(if we need both curses and termcap libraries)
 					LIBS="$cf_save_LIBS -lcurses -ltermcap"
