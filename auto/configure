@@ -23734,6 +23734,7 @@ printf %s "checking whether pkg-config information available... " >&6; }
 							LIBS="$cf_pk_config"
 							{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $cf_pkg_config" >&5
 printf "%s\n" "$cf_pkg_config" >&6; }
+							{ eval ac_cv_lib_${libname}_setupterm=; unset ac_cv_lib_${libname}_setupterm;}
 							as_ac_Lib=`printf "%s\n" "ac_cv_lib_$libname""_setupterm" | sed "$as_sed_sh"`
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for setupterm in -l$libname" >&5
 printf %s "checking for setupterm in -l$libname... " >&6; }

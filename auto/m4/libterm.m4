@@ -1,4 +1,4 @@
-dnl $Id: libterm.m4,v 1.23 2024/07/18 18:45:52 cvsuser Exp $
+dnl $Id: libterm.m4,v 1.24 2024/07/18 18:54:58 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -189,6 +189,7 @@ AC_DEFUN([LIBTERM_CHECK_CONFIG],[
 						if test $? = 0 && test -n "$cf_pkg_config"; then
 							LIBS="$cf_pk_config"
 							AC_MSG_RESULT([$cf_pkg_config])
+							AS_UNSET(ac_cv_lib_${libname}_setupterm)
 							AC_CHECK_LIB($libname, setupterm, [], [LIBS="$cf_check_LIBS"])
 							if test "x$cf_check_LIBS" != "x$LIBS"; then
 								TERMLIB="$cf_pk_config"
