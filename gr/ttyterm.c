@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.122 2024/07/13 17:14:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.123 2024/07/18 15:17:59 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.122 2024/07/13 17:14:09 cvsuser Exp $
+/* $Id: ttyterm.c,v 1.123 2024/07/18 15:17:59 cvsuser Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -3268,7 +3268,7 @@ term_ocs_color(int code)
 
     const unsigned timeoutms = io_escdelay();
     unsigned rgb[3] = {0,0,0}, rgbmax = 0;
-    char *cp, buffer[32] = {0};
+    unsigned char *cp, buffer[32] = {0};
     int len = 0;
 
     assert(10 == code || 11 == code);
@@ -3310,15 +3310,16 @@ term_ocs_color(int code)
         /*
          *  parse RGB values
          */
+        const char *spec = (const char *)(cp + 3);
         if (cp[11] == '/') {
-            if (sscanf(cp + 3, "rgb:%4x/%4x/%4x\033", rgb+0, rgb+1, rgb+2) == 3 ||
-                    sscanf(cp + 3, "rgb:%4x/%4x/%4x\007", rgb+0, rgb+1, rgb+2) == 3) {
+            if (sscanf(spec, "rgb:%4x/%4x/%4x\033", rgb+0, rgb+1, rgb+2) == 3 ||
+                    sscanf(spec, "rgb:%4x/%4x/%4x\007", rgb+0, rgb+1, rgb+2) == 3) {
                 rgbmax = 0xffff;
             }
 
         } else if (cp[9] == '/') {
-            if (sscanf(cp + 3, "rgb:%2x/%2x/%2x\033", rgb+0, rgb+1, rgb+2) == 3 ||
-                    sscanf(cp + 3, "rgb:%2x/%2x/%2x\007", rgb+0, rgb+1, rgb+2) == 3) {
+            if (sscanf(spec, "rgb:%2x/%2x/%2x\033", rgb+0, rgb+1, rgb+2) == 3 ||
+                    sscanf(spec, "rgb:%2x/%2x/%2x\007", rgb+0, rgb+1, rgb+2) == 3) {
                 rgbmax = 0xff;
             }
         }

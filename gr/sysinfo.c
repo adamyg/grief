@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.55 2024/07/18 14:27:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.56 2024/07/18 15:17:59 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sysinfo.c,v 1.55 2024/07/18 14:27:28 cvsuser Exp $
+/* $Id: sysinfo.c,v 1.56 2024/07/18 15:17:59 cvsuser Exp $
  * System information services.
  *
  *
@@ -469,17 +469,17 @@ resolve_execname(const char *name)
             size_t size;
 
             if (sysctl(mib, 4, NULL, &size, NULL, 0) == 0) {
-                char *argv;
+                char **argv;
 
-                if (size && (argv = calloc(1, size)) != NULL) {
+                if (size && (argv = (char **)calloc(1, size)) != NULL) {
                     if (sysctl(mib, 4, argv, &size, NULL, 0) == 0) {
                         if (strchr(argv[0], '/') == NULL || realpath(argv[0], t_name) == NULL) {
-                            strxcpy(t_name, argv, sizeof(t_name));
+                            strxcpy(t_name, argv[0], sizeof(t_name));
                         }
                         name = t_name;          /* alt method */
                         source = 7;
                     }
-                    free(argv);
+                    free((void *)argv);
                 }
             }
 #else

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.61 2024/07/18 15:02:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.62 2024/07/18 15:19:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crmain.c,v 1.61 2024/07/18 15:02:07 cvsuser Exp $
+/* $Id: crmain.c,v 1.62 2024/07/18 15:19:27 cvsuser Exp $
  * grunch command line.
  *
  *
@@ -1179,16 +1179,16 @@ resolve_self(const char *name)
                 size_t size;
 
                 if (sysctl(mib, 4, NULL, &size, NULL, 0) == 0) {
-                    char *argv;
+                    char **argv;
 
-                    if (size && (argv = calloc(1, size)) != NULL) {
+                    if (size && (argv = (char **)calloc(1, size)) != NULL) {
                         if (sysctl(mib, 4, argv, &size, NULL, 0) == 0) {
                             if (strchr(argv[0], '/') == NULL || realpath(argv[0], t_name) == NULL) {
-                                strxcpy(t_name, argv, sizeof(t_name));
+                                strxcpy(t_name, argv[0], sizeof(t_name));
                             }
                             name = t_name;      /* alt method */
                         }
-                        free(argv);
+                        free((void *)argv);
                     }
                 }
 #else
