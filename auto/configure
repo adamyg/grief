@@ -23729,11 +23729,14 @@ fi
 					if test -z "$CURSES_LDFLAGS" && test -n "$PKG_CONFIG"; then
 						{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether pkg-config information available" >&5
 printf %s "checking whether pkg-config information available... " >&6; }
-						cf_pkg_config=`$PKG_CONFIG $libname --libs 2>/dev/null`
+						cf_pkg_config=`$PKG_CONFIG $libname --libs-only-L --libs-only-other 2>/dev/null`
 						if test $? = 0 && test -n "$cf_pkg_config"; then
-							LIBS="$cf_pk_config"
 							{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $cf_pkg_config" >&5
 printf "%s\n" "$cf_pkg_config" >&6; }
+
+	test -n "$LIBS" && LIBS="$LIBS "
+	LIBS="${LIBS}$cf_pkg_config"
+
 							{ eval ac_cv_lib_${libname}_setupterm=; unset ac_cv_lib_${libname}_setupterm;}
 							as_ac_Lib=`printf "%s\n" "ac_cv_lib_$libname""_setupterm" | sed "$as_sed_sh"`
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for setupterm in -l$libname" >&5

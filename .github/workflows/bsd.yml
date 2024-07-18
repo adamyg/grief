@@ -64,6 +64,10 @@ jobs:
           run: |
             ./configure
             cat acdefines.h
+            pkg-config ncursesw --cflags --lib
+            pkg-config ncurses --cflags --lib
+            ls -l /usr/pkg/lib/ncurse*
             gmake release
 
 #end
+
