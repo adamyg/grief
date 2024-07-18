@@ -44,6 +44,7 @@ jobs:
           run: |
             ./configure
             cat acdefines.h
+            cat /usr/include/sys/types.h
             gmake release
 
 #end

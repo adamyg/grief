@@ -94,9 +94,9 @@
 #if !defined(u_char)
 #define u_char unsigned char
 #endif
-#if !defined(u_long)
-#define u_long unsigned long
-#endif
+//#if !defined(u_long)
+//#define u_long unsigned long
+//#endif
 #endif
 
 static u_char *__sccl(char *, u_char *);

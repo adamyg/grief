@@ -94,11 +94,11 @@
 #include "local.h"
 #include "fvwrite.h"
 
-#if defined(_WIN32) || defined(WIN32)
-#if !defined(u_long)
-#define u_long unsigned long
-#endif
-#endif
+//#if defined(_WIN32) || defined(WIN32)
+//#if !defined(u_long)
+//#define u_long unsigned long
+//#endif
+//#endif
 
 static void __find_arguments(const char *fmt0, va_list ap, va_list **argtable, size_t *argtablesiz);
 static int __grow_type_table(unsigned char **typetable, int *tablesize);
@@ -665,7 +665,7 @@ reswitch:	switch (ch) {
 			 *	-- ANSI X3J11
 			 */
 			/* NOSTRICT */
-			_umax = (u_long)GETARG(void *);
+			_umax = (unsigned long)GETARG(void *);
 			base = HEX;
 			xdigs = "0123456789abcdef";
 			flags |= HEXPREFIX;
