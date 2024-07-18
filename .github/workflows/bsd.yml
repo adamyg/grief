@@ -27,6 +27,8 @@ jobs:
 #            ./configure
 #            cat acdefines.h
 #            gmake release
+
+# Packages: see: https://cdn.openbsd.org/pub/OpenBSD/7.5/packages/amd64/
   openbsd:
     runs-on: ubuntu-22.04
     steps:
@@ -36,8 +38,8 @@ jobs:
         with:
           usesh: true
           prepare: |
-            pkg_add bash gmake libtool pkgconf bison wget unzip curl
-            pkg_add gettext libiconv libarchive libcurl libexpat lz4 lzo2 zstd
+            pkg_add bash gmake libtool pkgconf bison wget curl unzip-6.0p17
+            pkg_add libiconv libarchive lz4 lzo2 zstd
           run: |
             ./configure
             cat acdefines.h
