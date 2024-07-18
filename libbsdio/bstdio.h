@@ -37,6 +37,16 @@
  *	@(#)stdio.h	5.17 (Berkeley) 6/3/91
  */
 
+#if defined(__BSTDIO_INTERNAL) || defined(_BSD_SOURCE) 
+#ifndef __BSD_VISIBLE
+#define __BSD_VISIBLE 1
+#endif
+
+#ifndef __POSIX_VISIBLE
+#define __POSIX_VISIBLE 1
+#endif
+#endif /*__BSTDIO_INTERNAL || _BSD_SOURCE*/
+
 #include <edcdefs.h>
 #include <sys/types.h>
 
@@ -47,16 +57,6 @@
 #include <stddef.h>
 #if !defined(__va_list)
 #define __va_list va_list
-#endif
-
-#if defined(__BSTDIO_INTERNAL) || defined(_BSD_SOURCE) 
-#ifndef __BSD_VISIBLE
-#define __BSD_VISIBLE 1
-#endif
-
-#ifndef __POSIX_VISIBLE
-#define __POSIX_VISIBLE 1
-#endif
 #endif
 
 #if defined(__BSTDIO_INLINE) || defined(__BSTDIO_INTERNAL)
