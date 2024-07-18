@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.54 2024/07/13 17:49:19 cvsuser Exp $")
+__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.55 2024/07/18 14:27:28 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sysinfo.c,v 1.54 2024/07/13 17:49:19 cvsuser Exp $
+/* $Id: sysinfo.c,v 1.55 2024/07/18 14:27:28 cvsuser Exp $
  * System information services.
  *
  *
@@ -395,7 +395,7 @@ resolve_execname(const char *name)
     }
 #endif  /*CYGWIN*/
 
-#else   /*unix and friends */
+#else /*unix and friends */
     char t_path[MAX_PATH+1] = {0}, t_self[64];
     struct stat sb = {0};
     int source = -1;
@@ -412,15 +412,17 @@ resolve_execname(const char *name)
     if (name != t_name) {
 #if defined(linux) || defined(__linux__)
         sxprintf(t_self, sizeof(t_self), "/proc/%d/exe", getpid());
-        if ((namelen = readlink("/proc/self/exe", t_name, sizeof(t_name))) > 0 ||
-                (namelen = readlink(t_self, t_name, sizeof(t_name))) > 0) {
+        if ((namelen = readlink("/proc/self/exe", t_name, sizeof(t_name)-1)) > 0 ||
+                (namelen = readlink(t_self, t_name, sizeof(t_name)-1)) > 0) {
+            // Note:
+            // if /proc/self/exe points to a deleted/updated image then linux adds a " (deleted)" suffix.
             t_name[namelen] = 0;
             name = t_name;
             source = 1;
         }
 
 #elif defined(__sun__) || defined(sun)
-        if ((namelen = readlink("/proc/self/paths/a.out", t_name, sizeof(t_name))) > 0) {
+        if ((namelen = readlink("/proc/self/paths/a.out", t_name, sizeof(t_name)-1)) > 0) {
             t_name[namelen] = 0;
             name = t_name;
             source = 2;
@@ -437,12 +439,14 @@ resolve_execname(const char *name)
         }
 
 #elif defined(BSD)
-        if ((namelen = readlink("/proc/curproc/file", t_name, sizeof(t_name))) > 0) {
+        if ((namelen = readlink("/proc/curproc/file", t_name, sizeof(t_name)-1)) > 0 || // Free and DragonFly
+                (namelen = readlink("/proc/curproc/exe", t_name, sizeof(t_name)-1)) > 0) { // Net
             t_name[namelen] = 0;
             name = t_name;                      /* procfs */
             source = 5;
 
         } else {
+#if defined(__FreeBSD__) || defined(__DragonFly__)
             int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
             size_t cb = sizeof(t_name);
 
@@ -450,7 +454,39 @@ resolve_execname(const char *name)
                 name = t_name;                  /* alt method */
                 source = 6;
             }
+
+#elif defined(__NetBSD__)
+            int mib[4] = { CTL_KERN, KERN_PROC_ARGS, -1, KERN_PROC_PATHNAME };
+            size_t cb = sizeof(t_name);
+
+            if (-1 != sysctl(mib, 4, t_name, &cb, NULL, 0)) {
+                name = t_name;                  /* alt method */
+                source = 6;
+            }
+
+#elif defined(__OpenBSD__)
+            int mib[4] = {CTL_KERN, KERN_PROC, getpid(), KERN_PROC_ARGV};
+            size_t size;
+
+            if (sysctl(mib, 4, NULL, &size, NULL, 0) == 0) {
+                char *argv;
+
+                if (size && (argv = calloc(1, size)) != NULL) {
+                    if (sysctl(mib, 4, argv, &size, NULL, 0) == 0) {
+                        if (strchr(argv[0], '/') == NULL || realpath(argv[0], t_name) == NULL) {
+                            strxcpy(t_name, argv, sizeof(t_name));
+                        }
+                        name = t_name;          /* alt method */
+                        source = 7;
+                    }
+                    free(argv);
+                }
+            }
+#else
+#error Unsupported BSD target
+#endif
         }
+
 #endif  /*unix||linux*/
     }
 
