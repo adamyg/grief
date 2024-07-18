@@ -60,7 +60,7 @@ jobs:
             pkgin update
             pkgin -y install gcc12-*
             pkgin -y install bash gmake libtool pkgconf bison byacc flex wget curl unzip
-            pkgin -y install libiconv libarchive libcurl libenchant lzma lz4 lzo2 zstd
+            pkgin -y install libiconv libarchive lzma lz4 lzo2 zstd
           run: |
             ./configure
             cat acdefines.h
