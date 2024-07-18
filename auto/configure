@@ -23651,6 +23651,7 @@ printf "%s\n" "no termlib options, checking for suitable terminal library" >&6; 
 			*)		termlibs="ncursesw ncurses tinfo termlib curses termcap";;
 		esac
 
+		TERMLIB=""
 		cf_libterm_extra=""
 		for libname in $termlibs; do
 			if test "$libname" = "ncursesw" || test "$libname" = "ncurses"; then
@@ -23708,6 +23709,78 @@ _ACEOF
   LIBS="-l$libname $LIBS"
 
 fi
+
+				if test "x$cf_save_LIBS" == "x$LIBS"; then
+					if test -n "$PKG_CONFIG"; then
+						cf_pkg_config=`$PKG_CONFIG $libterm --libs 2>/dev/null`
+						if test $? = 0 && test -n "$cf_pkg_config"; then
+							LIBS="$cf_pk_config"
+							{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: checking using pkg-config link options" >&5
+printf "%s\n" "checking using pkg-config link options" >&6; }
+							as_ac_Lib=`printf "%s\n" "ac_cv_lib_$libname""_setupterm" | sed "$as_sed_sh"`
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for setupterm in -l$libname" >&5
+printf %s "checking for setupterm in -l$libname... " >&6; }
+if eval test \${$as_ac_Lib+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) ac_check_lib_save_LIBS=$LIBS
+LIBS="-l$libname  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.
+   The 'extern "C"' is for builds by C++ compilers;
+   although this is not generally supported in C code supporting it here
+   has little cost and some practical benefit (sr 110532).  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char setupterm (void);
+int
+main (void)
+{
+return setupterm ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  eval "$as_ac_Lib=yes"
+else case e in #(
+  e) eval "$as_ac_Lib=no" ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS ;;
+esac
+fi
+eval ac_res=\$$as_ac_Lib
+	       { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+printf "%s\n" "$ac_res" >&6; }
+if eval test \"x\$"$as_ac_Lib"\" = x"yes"
+then :
+  cat >>confdefs.h <<_ACEOF
+#define `printf "%s\n" "HAVE_LIB$libname" | sed "$as_sed_cpp"` 1
+_ACEOF
+
+  LIBS="-l$libname $LIBS"
+
+else case e in #(
+  e) LIBS="$cf_save_LIBS" ;;
+esac
+fi
+
+							if test "x$cf_save_LIBS" != "x$LIBS"; then
+								TERMLIBS="$cf_pk_config"
+							fi
+						fi
+					fi
+				fi
 
 				if test "x$cf_save_LIBS" != "x$LIBS"; then
 
@@ -23984,7 +24057,7 @@ main (void)
 _ACEOF
 if ac_fn_c_try_link "$LINENO"
 then :
-  cf_result=yes; cf_libterm_extra=" -ltermcap"; { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+  cf_result=yes; TERMLIB="-lcurses -ltermcap"; { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
 else case e in #(
   e) cf_result=no; LIBS="$cf_save_LIBS"; { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
@@ -24065,7 +24138,9 @@ printf "%s\n" "$libname library is not usable" >&6; }
 		done
 
 		if test -n "$cf_libterm_name"; then
-			TERMLIB="-l${cf_libterm_name}${cf_libterm_extra}"
+			if test -z $TERMLIB; then
+				TERMLIB="-l${cf_libterm_name}"
+			fi
 			LIBS="$LIBS $TERMLIB"
 		else
 			{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no terminal library found" >&5
