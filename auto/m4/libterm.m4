@@ -1,4 +1,4 @@
-dnl $Id: libterm.m4,v 1.22 2024/07/18 18:31:27 cvsuser Exp $
+dnl $Id: libterm.m4,v 1.23 2024/07/18 18:45:52 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -168,23 +168,29 @@ AC_DEFUN([LIBTERM_CHECK_CONFIG],[
 		esac
 
 		TERMLIB=""
+		cf_check_LIBS="$cf_save_LIBS"
+		if test -n "$CURSES_LDFLAGS"; then
+			CF_APPEND_TEXT(cf_check_LIBS,$CURSES_LDFLAGS)
+		fi
+
 		for libname in $termlibs; do
-			LIBS="$cf_save_LIBS $CURSES_LDFLAGS"
+
+			LIBS="$cf_check_LIBS"
 
 			if test "$libname" = "ncursesw" || test "$libname" = "ncurses"; then
 				dnl
 				dnl libncurses[w]
 				dnl
 				AC_CHECK_LIB($libname, setupterm)
-				if test "x$cf_save_LIBS" = "x$LIBS"; then
+				if test "x$cf_check_LIBS" = "x$LIBS"; then
 					if test -z "$CURSES_LDFLAGS" && test -n "$PKG_CONFIG"; then
 						AC_MSG_CHECKING([whether pkg-config information available])
 						cf_pkg_config=`$PKG_CONFIG $libname --libs 2>/dev/null`
 						if test $? = 0 && test -n "$cf_pkg_config"; then
 							LIBS="$cf_pk_config"
 							AC_MSG_RESULT([$cf_pkg_config])
-							AC_CHECK_LIB($libname, setupterm, [], [LIBS="$cf_save_LIBS"])
-							if test "x$cf_save_LIBS" != "x$LIBS"; then
+							AC_CHECK_LIB($libname, setupterm, [], [LIBS="$cf_check_LIBS"])
+							if test "x$cf_check_LIBS" != "x$LIBS"; then
 								TERMLIB="$cf_pk_config"
 							fi
 						else
@@ -193,7 +199,7 @@ AC_DEFUN([LIBTERM_CHECK_CONFIG],[
 					fi
 				fi
 
-				if test "x$cf_save_LIBS" != "x$LIBS"; then
+				if test "x$cf_check_LIBS" != "x$LIBS"; then
 					CF_LIBTERM_CHECK_TERMINFO
 					if test "$cf_result" = "yes"; then
 						AC_RUN_IFELSE([AC_LANG_PROGRAM([[
@@ -221,7 +227,7 @@ extern const char *curses_version(void);
 				dnl libtinfo
 				dnl
 				AC_CHECK_LIB($libname, setupterm)
-				if test "x$cf_save_OCLIBS" != "x$LIBS"; then
+				if test "x$cf_check_LIBS" != "x$LIBS"; then
 					CF_LIBTERM_CHECK_TERMINFO
 					AC_MSG_RESULT($cf_result)
 				fi
@@ -237,10 +243,9 @@ extern const char *curses_version(void);
 				dnl curses/termcap/termlib
 				dnl
 				AC_CHECK_LIB($libname, tgetent)
-				if test "x$cf_save_LIBS" = "x$LIBS" && test "$libname" = "curses"; then
+				if test "x$cf_check_LIBS" = "x$LIBS" && test "$libname" = "curses"; then
 					AC_MSG_CHECKING(if we need both curses and termcap libraries)
-					LIBS="$cf_save_LIBS -lcurses -ltermcap"
-					AC_MSG_RESULT([LIBS = ${LIBS}])
+					LIBS="$cf_check_LIBS -lcurses -ltermcap"
 					AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 extern int tgetent(char *, const char *);
 ]],[[
@@ -248,10 +253,10 @@ extern int tgetent(char *, const char *);
 	tgetent(buffer, "nonexistentterminal");
 ]])],
 						[cf_result=yes; TERMLIB="$CURSES_LDFLAGS -lcurses -ltermcap"; AC_MSG_RESULT(yes)],
-						[cf_result=no; LIBS="$cf_save_LIBS"; AC_MSG_RESULT(no)])
+						[cf_result=no; LIBS="$cf_check_LIBS"; AC_MSG_RESULT(no)])
 					AC_MSG_RESULT([yes])
 				fi
-				if test "x$cf_save_LIBS" != "x$LIBS"; then
+				if test "x$cf_check_LIBS" != "x$LIBS"; then
 					CF_LIBTERM_CHECK_TERMCAP
 					AC_MSG_RESULT($cf_result)
 				fi
@@ -268,7 +273,8 @@ extern int tgetent(char *, const char *);
 
 		if test -n "$cf_libterm_name"; then
 			if test -z "$TERMLIB"; then
-				TERMLIB="$CURSES_LDFLAGS -l${cf_libterm_name}"
+				TERMLIB="$CURSES_LDFLAGS"
+				CF_APPEND_TEXT(TERMLIB,"-l${cf_libterm_name}")
 			fi
 			LIBS="$LIBS $TERMLIB"
 		else

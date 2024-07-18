@@ -23657,8 +23657,17 @@ printf "%s\n" "no termlib options, checking for suitable terminal library" >&6; 
 		esac
 
 		TERMLIB=""
+		cf_check_LIBS="$cf_save_LIBS"
+		if test -n "$CURSES_LDFLAGS"; then
+
+	test -n "$cf_check_LIBS" && cf_check_LIBS="$cf_check_LIBS "
+	cf_check_LIBS="${cf_check_LIBS}$CURSES_LDFLAGS"
+
+		fi
+
 		for libname in $termlibs; do
-			LIBS="$cf_save_LIBS $CURSES_LDFLAGS"
+
+			LIBS="$cf_check_LIBS"
 
 			if test "$libname" = "ncursesw" || test "$libname" = "ncurses"; then
 																as_ac_Lib=`printf "%s\n" "ac_cv_lib_$libname""_setupterm" | sed "$as_sed_sh"`
@@ -23716,7 +23725,7 @@ _ACEOF
 
 fi
 
-				if test "x$cf_save_LIBS" = "x$LIBS"; then
+				if test "x$cf_check_LIBS" = "x$LIBS"; then
 					if test -z "$CURSES_LDFLAGS" && test -n "$PKG_CONFIG"; then
 						{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether pkg-config information available" >&5
 printf %s "checking whether pkg-config information available... " >&6; }
@@ -23779,11 +23788,11 @@ _ACEOF
   LIBS="-l$libname $LIBS"
 
 else case e in #(
-  e) LIBS="$cf_save_LIBS" ;;
+  e) LIBS="$cf_check_LIBS" ;;
 esac
 fi
 
-							if test "x$cf_save_LIBS" != "x$LIBS"; then
+							if test "x$cf_check_LIBS" != "x$LIBS"; then
 								TERMLIB="$cf_pk_config"
 							fi
 						else
@@ -23793,7 +23802,7 @@ printf "%s\n" "none" >&6; }
 					fi
 				fi
 
-				if test "x$cf_save_LIBS" != "x$LIBS"; then
+				if test "x$cf_check_LIBS" != "x$LIBS"; then
 
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for terminfo setupterm(), tigetxxx() and tparm()" >&5
 printf %s "checking for terminfo setupterm(), tigetxxx() and tparm()... " >&6; }
@@ -23937,7 +23946,7 @@ _ACEOF
 
 fi
 
-				if test "x$cf_save_OCLIBS" != "x$LIBS"; then
+				if test "x$cf_check_LIBS" != "x$LIBS"; then
 
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for terminfo setupterm(), tigetxxx() and tparm()" >&5
 printf %s "checking for terminfo setupterm(), tigetxxx() and tparm()... " >&6; }
@@ -24041,12 +24050,10 @@ _ACEOF
 
 fi
 
-				if test "x$cf_save_LIBS" = "x$LIBS" && test "$libname" = "curses"; then
+				if test "x$cf_check_LIBS" = "x$LIBS" && test "$libname" = "curses"; then
 					{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking if we need both curses and termcap libraries" >&5
 printf %s "checking if we need both curses and termcap libraries... " >&6; }
-					LIBS="$cf_save_LIBS -lcurses -ltermcap"
-					{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: LIBS = ${LIBS}" >&5
-printf "%s\n" "LIBS = ${LIBS}" >&6; }
+					LIBS="$cf_check_LIBS -lcurses -ltermcap"
 					cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -24068,7 +24075,7 @@ then :
   cf_result=yes; TERMLIB="$CURSES_LDFLAGS -lcurses -ltermcap"; { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
 else case e in #(
-  e) cf_result=no; LIBS="$cf_save_LIBS"; { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+  e) cf_result=no; LIBS="$cf_check_LIBS"; { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; } ;;
 esac
 fi
@@ -24077,7 +24084,7 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
 					{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
 				fi
-				if test "x$cf_save_LIBS" != "x$LIBS"; then
+				if test "x$cf_check_LIBS" != "x$LIBS"; then
 
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for termcap tgetxxx() and tgoto()" >&5
 printf %s "checking for termcap tgetxxx() and tgoto()... " >&6; }
@@ -24147,7 +24154,11 @@ printf "%s\n" "$libname library is not usable" >&6; }
 
 		if test -n "$cf_libterm_name"; then
 			if test -z "$TERMLIB"; then
-				TERMLIB="$CURSES_LDFLAGS -l${cf_libterm_name}"
+				TERMLIB="$CURSES_LDFLAGS"
+
+	test -n "$TERMLIB" && TERMLIB="$TERMLIB "
+	TERMLIB="${TERMLIB}"-l${cf_libterm_name}""
+
 			fi
 			LIBS="$LIBS $TERMLIB"
 		else
