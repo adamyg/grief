@@ -64,6 +64,8 @@ jobs:
           run: |
             ./configure
             cat acdefines.h
+            cat /usr/include/sys/bswap.h
+            cat /usr/include/sys/endian.h
             gmake release
 
 #end
