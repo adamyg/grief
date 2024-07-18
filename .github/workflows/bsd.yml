@@ -36,8 +36,8 @@ jobs:
         with:
           usesh: true
           prepare: |
-            pkg_add bash gmake perl5 autoconf automake libtool pkgconf flex bison wget
-            pkg_add gettext libiconv libarchive curl ncurses expat liblz4 lzo2 zstd
+            pkg_add bash gmake libtool pkgconf bison wget unzip curl
+            pkg_add gettext libiconv libarchive libcurl libexpat lz4 lzo2 zstd
           run: |
             ./configure
             cat acdefines.h
