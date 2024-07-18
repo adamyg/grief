@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.123 2024/07/18 15:17:59 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.124 2024/07/18 16:26:59 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.123 2024/07/18 15:17:59 cvsuser Exp $
+/* $Id: ttyterm.c,v 1.124 2024/07/18 16:26:59 cvsuser Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -116,7 +116,9 @@ extern char *           tparm(const char *, ...);
 
 #elif defined(HAVE_LIBTERMLIB)
 #include <edtermcap.h>
-#define HAVE_TERMCAP
+#if !defined(HAVE_TERMCAP)
+#define HAVE_TERMCAP 1
+#endif
 
 #else
 #include "edtermcap.h"                          /* use local implementation -- BAD */
@@ -2532,7 +2534,10 @@ acs_locale_breaks(void)
 #define IS_CTRLO(s)         ((s) != 0 && strstr(s, "\017") != 0)
 
             if (IS_CTRLN(tc_acs_start) || IS_CTRLO(tc_acs_start) ||
-                    IS_CTRLN(set_attributes) || IS_CTRLO(set_attributes)) {
+#if defined(HAVE_LIBNCURSESW) || defined(HAVE_LIBNCURSES)
+                    IS_CTRLN(set_attributes) || IS_CTRLO(set_attributes))
+#endif
+            {
                 return TRUE;
             }
 
@@ -5679,6 +5684,8 @@ do_copy_screen(void)            /* void () */
 #endif
 
 #endif  /*!USE_VIO_BUFFER && !DJGPP */
+
+
 
 
 
