@@ -1,4 +1,4 @@
-dnl $Id: libterm.m4,v 1.26 2024/07/19 05:09:42 cvsuser Exp $
+dnl $Id: libterm.m4,v 1.28 2024/07/19 14:22:00 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -41,7 +41,9 @@ dnl     #endif
 dnl
 dnl     import/export: CURSES_CFLAGS
 dnl     import: CURSES_LDFLAGS
-dnl     exort: TERMLIB
+dnl     export: HAVE_CURSES_ENHANCED
+dnl     export: HAVE_CURSES_COLOR
+dnl     export: TERMLIB
 dnl
 
 AC_DEFUN([CF_LIBTERM_CHECK_TERMINFO],[
@@ -118,8 +120,10 @@ AC_DEFUN([LIBTERM_CHECK_CONFIG],[
 	AC_SUBST(TERMLIB)
 	cf_save_LIBS="$LIBS"
 	cf_libterm_name=""
+	cf_libterm_cv_headers=""
 	cf_libterm_cv_terminfo=no
 	cf_libterm_cv_termcap=no
+	cf_libterm_cv_features=no
 	cf_result=""
 
 	dnl
@@ -188,11 +192,11 @@ AC_DEFUN([LIBTERM_CHECK_CONFIG],[
 						cf_pkg_config=`$PKG_CONFIG $libname --libs-only-L --libs-only-other 2>/dev/null`
 						if test $? = 0 && test -n "$cf_pkg_config"; then
 							AC_MSG_RESULT([$cf_pkg_config])
-							CF_APPEND_TEXT(LIBS,$cf_pkg_config)
+							LIBS="${cf_check_LIBS} ${cf_pkg_config}"
 							AS_UNSET(ac_cv_lib_${libname}_setupterm)
 							AC_CHECK_LIB($libname, setupterm, [], [LIBS="$cf_check_LIBS"])
 							if test "x$cf_check_LIBS" != "x$LIBS"; then
-								TERMLIB="$cf_pk_config -l${libname}"
+								TERMLIB="${cf_pkg_config} -l${libname}"
 							fi
 						else
 							AC_MSG_RESULT([none])
@@ -354,18 +358,17 @@ extern int tgetent(char *, const char *);
 		AC_DEFINE([HAVE_TERMCAP], 1, [termcap interface.])
 	fi
 
-	cf_libterm_ncurses_headers=
 	if test "x$cf_libterm_name" = "xncursesw"; then
 		AC_DEFINE([HAVE_LIBNCURSESW], 1, [enable libncursesw support.])
 		AC_CHECK_LIB(ncursesw, main)
 		AC_CHECK_LIB(ncursesw_g, main)
-		cf_libterm_ncurses_headers=ncursesw
+		cf_libterm_cv_headers=ncursesw
 
 	elif test "x$cf_libterm_name" = "xncurses"; then
 		AC_DEFINE([HAVE_LIBNCURSES], 1, [enable libncurses support.])
 		AC_CHECK_LIB(ncurses, main)
 		AC_CHECK_LIB(ncurses_g, main)
-		cf_libterm_ncurses_headers=ncurses
+		cf_libterm_cv_headers=ncurses
 	fi
 
 	dnl additional search directories
@@ -405,7 +408,7 @@ extern int tgetent(char *, const char *);
 	fi
 
 	dnl package headers
-	if test -n "$cf_libterm_ncurses_headers"; then
+	if test -n "$cf_libterm_cv_headers"; then
 
 		dnl Newer versions of ncurses only publish ncurses.h supporting both char and wchar_t interfaces,
 		dnl yet dependent on packaging/host the following may exist.
@@ -417,7 +420,7 @@ extern int tgetent(char *, const char *);
 		dnl
 
 		cf_have_ncurses_h=no
-		if test "x$cf_libterm_ncurses_headers" = "xncursesw"; then
+		if test "x$cf_libterm_cv_headers" = "xncursesw"; then
 			dnl
 			dnl ncursesw/curses.h
 			dnl
@@ -469,11 +472,11 @@ extern int tgetent(char *, const char *);
 
 			if test "x$cf_have_ncurses_h" = "xno"; then
 				AC_MSG_RESULT([checking for common ncurses header])
-				cf_libterm_ncurses_headers=ncurses
+				cf_libterm_cv_headers=ncurses
 			fi
 		fi
 
-		if test "x$cf_libterm_ncurses_headers" = "xncurses"; then
+		if test "x$cf_libterm_cv_headers" = "xncurses"; then
 
 			dnl
 			dnl ncurses/curses.h
@@ -561,6 +564,138 @@ extern int tgetent(char *, const char *);
 
 	fi; fi; fi; fi; fi
 
+	dnl
+	dnl features
+	dnl
+	AC_MSG_CHECKING([for curses features])
+	if test "x$cf_libterm_cv_features" = "xno" ; then
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#if defined HAVE_NCURSESW_CURSES_H
+#  include <ncursesw/curses.h>
+#  include <ncursesw/termcap.h>
+#  include <ncursesw/term.h>
+#elif defined HAVE_NCURSESW_H
+#  include <ncursesw.h>
+#  if defined(HAVE_TERMCAP_H)
+#      include <termcap.h>
+#  endif
+#  if defined(HAVE_TERM_H)
+#      include <term.h>
+#  endif
+#elif defined HAVE_NCURSES_CURSES_H
+#  include <ncurses/curses.h>
+#  include <ncurses/termcap.h>
+#  include <ncurses/term.h>
+#elif defined HAVE_NCURSES_H
+#  include <ncurses.h>
+#  if defined(HAVE_TERMCAP_H)
+#      include <termcap.h>
+#  endif
+#  if defined(HAVE_TERM_H)
+#      include <term.h>
+#  endif
+#endif
+]], [[
+	chtype a = A_BOLD;
+	int b = KEY_LEFT;
+	chtype c = COLOR_PAIR(1) & A_COLOR;
+	attr_t d = WA_NORMAL;
+	cchar_t e;
+	wint_t f;
+	int g = getattrs(stdscr);
+	int h = getcurx(stdscr) + getmaxx(stdscr);
+	initscr();
+	init_pair(1, COLOR_WHITE, COLOR_RED);
+	wattr_set(stdscr, d, 0, NULL);
+	wget_wch(stdscr, &f);]])],
+			[cf_libterm_cv_features=enhanced],[])
+	fi
+
+	if test "x$cf_libterm_cv_features" = "xno" ; then
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#if defined HAVE_NCURSESW_CURSES_H
+#  include <ncursesw/curses.h>
+#  include <ncursesw/termcap.h>
+#  include <ncursesw/term.h>
+#elif defined HAVE_NCURSESW_H
+#  include <ncursesw.h>
+#  if defined(HAVE_TERMCAP_H)
+#      include <termcap.h>
+#  endif
+#  if defined(HAVE_TERM_H)
+#      include <term.h>
+#  endif
+#elif defined HAVE_NCURSES_CURSES_H
+#  include <ncurses/curses.h>
+#  include <ncurses/termcap.h>
+#  include <ncurses/term.h>
+#elif defined HAVE_NCURSES_H
+#  include <ncurses.h>
+#  if defined(HAVE_TERMCAP_H)
+#      include <termcap.h>
+#  endif
+#  if defined(HAVE_TERM_H)
+#      include <term.h>
+#  endif
+#endif
+]], [[
+	chtype a = A_BOLD;
+	int b = KEY_LEFT;
+	chtype c = COLOR_PAIR(1) & A_COLOR;
+	int g = getattrs(stdscr);
+	int h = getcurx(stdscr) + getmaxx(stdscr);
+	initscr();
+	init_pair(1, COLOR_WHITE, COLOR_RED);]])],
+			[cf_libterm_cv_features=color],[])
+	fi
+
+	if test "x$cf_libterm_cv_features" = "xno" ; then
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#if defined HAVE_NCURSESW_CURSES_H
+#  include <ncursesw/curses.h>
+#  include <ncursesw/termcap.h>
+#  include <ncursesw/term.h>
+#elif defined HAVE_NCURSESW_H
+#  include <ncursesw.h>
+#  if defined(HAVE_TERMCAP_H)
+#      include <termcap.h>
+#  endif
+#  if defined(HAVE_TERM_H)
+#      include <term.h>
+#  endif
+#elif defined HAVE_NCURSES_CURSES_H
+#  include <ncurses/curses.h>
+#  include <ncurses/termcap.h>
+#  include <ncurses/term.h>
+#elif defined HAVE_NCURSES_H
+#  include <ncurses.h>
+#  if defined(HAVE_TERMCAP_H)
+#      include <termcap.h>
+#  endif
+#  if defined(HAVE_TERM_H)
+#      include <term.h>
+#  endif
+#endif
+]], [[
+	chtype a = A_BOLD;
+	int b = KEY_LEFT;
+	initscr();
+]])],
+			[cf_libterm_cv_features=basic],[])
+	fi
+
+	if test "x$cf_libterm_cv_features" = "xenhanced" ; then
+		AC_DEFINE([HAVE_CURSES_ENHANCED], [1],
+			[Define to 1 if library supports enhanced functions])
+		AC_DEFINE([HAVE_CURSES_COLOR], [1],
+			[Define to 1 if library supports color functions])
+	elif test "x$cf_libterm_cv_features" = "xcolor" ; then
+		AC_DEFINE([HAVE_CURSES_COLOR], [1],
+			[Define to 1 if library supports color functions])
+	fi
+	AC_MSG_RESULT($cf_libterm_cv_features)
+
+	dnl compatibility
 	if test "$cf_libterm_cv_termcap" = "yes"; then
 		if test -n "$cf_libterm_name"; then
 			AC_CACHE_CHECK([what tgetent() returns for an unknown terminal], cf_libterm_cv_tgent, [

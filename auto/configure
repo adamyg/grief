@@ -23476,8 +23476,10 @@ fi
 
 	cf_save_LIBS="$LIBS"
 	cf_libterm_name=""
+	cf_libterm_cv_headers=""
 	cf_libterm_cv_terminfo=no
 	cf_libterm_cv_termcap=no
+	cf_libterm_cv_features=no
 	cf_result=""
 
 				if test -n "$ac_tool_prefix"; then
@@ -23733,10 +23735,7 @@ printf %s "checking whether pkg-config information available... " >&6; }
 						if test $? = 0 && test -n "$cf_pkg_config"; then
 							{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $cf_pkg_config" >&5
 printf "%s\n" "$cf_pkg_config" >&6; }
-
-	test -n "$LIBS" && LIBS="$LIBS "
-	LIBS="${LIBS}$cf_pkg_config"
-
+							LIBS="${cf_check_LIBS} ${cf_pkg_config}"
 							{ eval ac_cv_lib_${libname}_setupterm=; unset ac_cv_lib_${libname}_setupterm;}
 							as_ac_Lib=`printf "%s\n" "ac_cv_lib_$libname""_setupterm" | sed "$as_sed_sh"`
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for setupterm in -l$libname" >&5
@@ -23797,7 +23796,7 @@ esac
 fi
 
 							if test "x$cf_check_LIBS" != "x$LIBS"; then
-								TERMLIB="$cf_pk_config -l${libname}"
+								TERMLIB="${cf_pkg_config} -l${libname}"
 							fi
 						else
 							{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: none" >&5
@@ -24355,7 +24354,6 @@ printf "%s\n" "#define HAVE_TERMCAP 1" >>confdefs.h
 
 	fi
 
-	cf_libterm_ncurses_headers=
 	if test "x$cf_libterm_name" = "xncursesw"; then
 
 printf "%s\n" "#define HAVE_LIBNCURSESW 1" >>confdefs.h
@@ -24444,7 +24442,7 @@ then :
 
 fi
 
-		cf_libterm_ncurses_headers=ncursesw
+		cf_libterm_cv_headers=ncursesw
 
 	elif test "x$cf_libterm_name" = "xncurses"; then
 
@@ -24534,7 +24532,7 @@ then :
 
 fi
 
-		cf_libterm_ncurses_headers=ncurses
+		cf_libterm_cv_headers=ncurses
 	fi
 
 							cf_libterm_includes="/usr/local/include"
@@ -24573,11 +24571,11 @@ printf "%s\n" "none" >&6; }
 		fi
 	fi
 
-		if test -n "$cf_libterm_ncurses_headers"; then
+		if test -n "$cf_libterm_cv_headers"; then
 
 
 		cf_have_ncurses_h=no
-		if test "x$cf_libterm_ncurses_headers" = "xncursesw"; then
+		if test "x$cf_libterm_cv_headers" = "xncursesw"; then
 												       for ac_header in ncursesw/curses.h
 do :
   ac_fn_c_check_header_compile "$LINENO" "ncursesw/curses.h" "ac_cv_header_ncursesw_curses_h" "$ac_includes_default"
@@ -24688,11 +24686,11 @@ done
 			if test "x$cf_have_ncurses_h" = "xno"; then
 				{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: checking for common ncurses header" >&5
 printf "%s\n" "checking for common ncurses header" >&6; }
-				cf_libterm_ncurses_headers=ncurses
+				cf_libterm_cv_headers=ncurses
 			fi
 		fi
 
-		if test "x$cf_libterm_ncurses_headers" = "xncurses"; then
+		if test "x$cf_libterm_cv_headers" = "xncurses"; then
 
 												       for ac_header in ncurses/curses.h
 do :
@@ -24982,7 +24980,185 @@ fi
 
 	fi; fi; fi; fi; fi
 
-	if test "$cf_libterm_cv_termcap" = "yes"; then
+				{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for curses features" >&5
+printf %s "checking for curses features... " >&6; }
+	if test "x$cf_libterm_cv_features" = "xno" ; then
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#if defined HAVE_NCURSESW_CURSES_H
+#  include <ncursesw/curses.h>
+#  include <ncursesw/termcap.h>
+#  include <ncursesw/term.h>
+#elif defined HAVE_NCURSESW_H
+#  include <ncursesw.h>
+#  if defined(HAVE_TERMCAP_H)
+#      include <termcap.h>
+#  endif
+#  if defined(HAVE_TERM_H)
+#      include <term.h>
+#  endif
+#elif defined HAVE_NCURSES_CURSES_H
+#  include <ncurses/curses.h>
+#  include <ncurses/termcap.h>
+#  include <ncurses/term.h>
+#elif defined HAVE_NCURSES_H
+#  include <ncurses.h>
+#  if defined(HAVE_TERMCAP_H)
+#      include <termcap.h>
+#  endif
+#  if defined(HAVE_TERM_H)
+#      include <term.h>
+#  endif
+#endif
+
+int
+main (void)
+{
+
+	chtype a = A_BOLD;
+	int b = KEY_LEFT;
+	chtype c = COLOR_PAIR(1) & A_COLOR;
+	attr_t d = WA_NORMAL;
+	cchar_t e;
+	wint_t f;
+	int g = getattrs(stdscr);
+	int h = getcurx(stdscr) + getmaxx(stdscr);
+	initscr();
+	init_pair(1, COLOR_WHITE, COLOR_RED);
+	wattr_set(stdscr, d, 0, NULL);
+	wget_wch(stdscr, &f);
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  cf_libterm_cv_features=enhanced
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+	fi
+
+	if test "x$cf_libterm_cv_features" = "xno" ; then
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#if defined HAVE_NCURSESW_CURSES_H
+#  include <ncursesw/curses.h>
+#  include <ncursesw/termcap.h>
+#  include <ncursesw/term.h>
+#elif defined HAVE_NCURSESW_H
+#  include <ncursesw.h>
+#  if defined(HAVE_TERMCAP_H)
+#      include <termcap.h>
+#  endif
+#  if defined(HAVE_TERM_H)
+#      include <term.h>
+#  endif
+#elif defined HAVE_NCURSES_CURSES_H
+#  include <ncurses/curses.h>
+#  include <ncurses/termcap.h>
+#  include <ncurses/term.h>
+#elif defined HAVE_NCURSES_H
+#  include <ncurses.h>
+#  if defined(HAVE_TERMCAP_H)
+#      include <termcap.h>
+#  endif
+#  if defined(HAVE_TERM_H)
+#      include <term.h>
+#  endif
+#endif
+
+int
+main (void)
+{
+
+	chtype a = A_BOLD;
+	int b = KEY_LEFT;
+	chtype c = COLOR_PAIR(1) & A_COLOR;
+	int g = getattrs(stdscr);
+	int h = getcurx(stdscr) + getmaxx(stdscr);
+	initscr();
+	init_pair(1, COLOR_WHITE, COLOR_RED);
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  cf_libterm_cv_features=color
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+	fi
+
+	if test "x$cf_libterm_cv_features" = "xno" ; then
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#if defined HAVE_NCURSESW_CURSES_H
+#  include <ncursesw/curses.h>
+#  include <ncursesw/termcap.h>
+#  include <ncursesw/term.h>
+#elif defined HAVE_NCURSESW_H
+#  include <ncursesw.h>
+#  if defined(HAVE_TERMCAP_H)
+#      include <termcap.h>
+#  endif
+#  if defined(HAVE_TERM_H)
+#      include <term.h>
+#  endif
+#elif defined HAVE_NCURSES_CURSES_H
+#  include <ncurses/curses.h>
+#  include <ncurses/termcap.h>
+#  include <ncurses/term.h>
+#elif defined HAVE_NCURSES_H
+#  include <ncurses.h>
+#  if defined(HAVE_TERMCAP_H)
+#      include <termcap.h>
+#  endif
+#  if defined(HAVE_TERM_H)
+#      include <term.h>
+#  endif
+#endif
+
+int
+main (void)
+{
+
+	chtype a = A_BOLD;
+	int b = KEY_LEFT;
+	initscr();
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  cf_libterm_cv_features=basic
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+	fi
+
+	if test "x$cf_libterm_cv_features" = "xenhanced" ; then
+
+printf "%s\n" "#define HAVE_CURSES_ENHANCED 1" >>confdefs.h
+
+
+printf "%s\n" "#define HAVE_CURSES_COLOR 1" >>confdefs.h
+
+	elif test "x$cf_libterm_cv_features" = "xcolor" ; then
+
+printf "%s\n" "#define HAVE_CURSES_COLOR 1" >>confdefs.h
+
+	fi
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $cf_libterm_cv_features" >&5
+printf "%s\n" "$cf_libterm_cv_features" >&6; }
+
+		if test "$cf_libterm_cv_termcap" = "yes"; then
 		if test -n "$cf_libterm_name"; then
 			{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking what tgetent() returns for an unknown terminal" >&5
 printf %s "checking what tgetent() returns for an unknown terminal... " >&6; }
