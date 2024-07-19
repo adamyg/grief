@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sh_unix_c,"$Id: sh_unix.c,v 1.19 2022/05/31 16:18:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_sh_unix_c,"$Id: sh_unix.c,v 1.20 2024/07/19 05:04:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sh_unix.c,v 1.19 2022/05/31 16:18:21 cvsuser Exp $
+/* $Id: sh_unix.c,v 1.20 2024/07/19 05:04:22 cvsuser Exp $
  *
  *      Linux
  *      Sun Solaris
@@ -30,7 +30,7 @@ __CIDENT_RCSID(gr_sh_unix_c,"$Id: sh_unix.c,v 1.19 2022/05/31 16:18:21 cvsuser E
 
 #include <editor.h>
 
-#if defined(unix) || defined(__APPLE__)
+#if defined(unix) || defined(__unix__) || defined(__APPLE__)
 
 #if defined(HAVE_SPAWN_H)
 #include <spawn.h>                              /* posix spawn interface */

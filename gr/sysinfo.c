@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.56 2024/07/18 15:17:59 cvsuser Exp $")
+__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.57 2024/07/19 05:04:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sysinfo.c,v 1.56 2024/07/18 15:17:59 cvsuser Exp $
+/* $Id: sysinfo.c,v 1.57 2024/07/19 05:04:22 cvsuser Exp $
  * System information services.
  *
  *
@@ -28,7 +28,7 @@ __CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.56 2024/07/18 15:17:59 cvsuser E
 #if defined(HAVE_PWD_H)
 #include <pwd.h>
 #endif
-#if defined(unix) || defined(__APPLE__) || defined(HAVE_NETDB_H)
+#if defined(unix) || defined(__unix__) || defined(__APPLE__) || defined(HAVE_NETDB_H)
 #include <netdb.h>
 #endif
 
@@ -39,7 +39,7 @@ __CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.56 2024/07/18 15:17:59 cvsuser E
 #include <sys/types.h>
 #endif
 
-#if defined(unix) || defined(_AIX) || defined(linux) || defined(__APPLE__)
+#if defined(unix) || defined(__unix__) || defined(__APPLE__) || defined(_AIX) || defined(linux)
 #include <sys/utsname.h>
 #endif
 
@@ -292,7 +292,7 @@ sysinfo_tmpdir(void)
 #else
             static const char *tmpdirs[] = {
                 "/tmp",
-#if defined(unix) || defined(__APPLE__)
+#if defined(unix) || defined(__unix__) || defined(__APPLE__)
                 "/var/tmp",
 #endif
 #if defined(__MSDOS__)
@@ -587,17 +587,17 @@ sysinfo_hostname(char *buf, int len)
 #if !defined(MAXHOSTNAMELEN)
 #define MAXHOSTNAMELEN          256
 #endif
-#if defined(unix) || defined(__APPLE__)
+#if defined(unix) || defined(__unix__) || defined(__APPLE__)
         char host_buf[MAXHOSTNAMELEN];
 #endif
         char domain_buf[MAXHOSTNAMELEN];
-#if defined(unix) || defined(__APPLE__) || defined(HAVE_NETDB_H)
+#if defined(unix) || defined(__unix__) || defined(__APPLE__) || defined(HAVE_NETDB_H)
         struct hostent *hent = NULL;
 #endif
         const char * p = NULL;
 
         /* default gethostname(), then env */
-#if defined(unix) || defined(__APPLE__)
+#if defined(unix) || defined(__unix__) || defined(__APPLE__)
         if (0 == gethostname(host_buf, sizeof(host_buf)) && host_buf[0]) {
             p = host_buf;
         }
@@ -612,7 +612,7 @@ sysinfo_hostname(char *buf, int len)
         host = (char *)p;
 
         /* gethostbyname seems a better option */
-#if defined(unix) || defined(__APPLE__) || defined(HAVE_NETDB_H)
+#if defined(unix) || defined(__unix__) || defined(__APPLE__) || defined(HAVE_NETDB_H)
         if (NULL != (hent = gethostbyname (host)) &&
                     NULL != hent->h_name && hent->h_name[0] != 0) {
 

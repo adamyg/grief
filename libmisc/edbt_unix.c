@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edbt_unix_c,"$Id: edbt_unix.c,v 1.16 2024/07/14 15:10:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_edbt_unix_c,"$Id: edbt_unix.c,v 1.17 2024/07/19 05:05:03 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edbt_unix.c,v 1.16 2024/07/14 15:10:54 cvsuser Exp $
+/* $Id: edbt_unix.c,v 1.17 2024/07/19 05:05:03 cvsuser Exp $
  * unix backtrace implementation
  *
  *
@@ -41,7 +41,7 @@ __CIDENT_RCSID(gr_edbt_unix_c,"$Id: edbt_unix.c,v 1.16 2024/07/14 15:10:54 cvsus
 //  #define HAVE_PSTACK
 //  #define HAVE_PROCSTACK
 
-#if defined(unix)
+#if defined(unix) || defined(__unix__)
 #if !defined(__CYGWIN__) && !defined(linux)
 
 #if defined(HAVE_BACKTRACE)

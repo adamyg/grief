@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_pty_unix_c,"$Id: pty_unix.c,v 1.26 2024/07/13 10:49:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_pty_unix_c,"$Id: pty_unix.c,v 1.27 2024/07/19 05:04:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: pty_unix.c,v 1.26 2024/07/13 10:49:55 cvsuser Exp $
+/* $Id: pty_unix.c,v 1.27 2024/07/19 05:04:22 cvsuser Exp $
  * PTY interface for Unix and Unix-like environments.
  *
  *      Linux
@@ -38,7 +38,7 @@ __CIDENT_RCSID(gr_pty_unix_c,"$Id: pty_unix.c,v 1.26 2024/07/13 10:49:55 cvsuser
 #include <editor.h>
 #include <edenv.h>                              /* gputenvv(), ggetenv() */
 
-#if defined(unix) || defined(__APPLE__)
+#if defined(unix) || defined(__unix__) || defined(__APPLE__)
 
 #if !defined(ED_LEVEL)
 #define ED_LEVEL            1                   /* debug/trace level */

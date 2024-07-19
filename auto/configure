@@ -23797,7 +23797,7 @@ esac
 fi
 
 							if test "x$cf_check_LIBS" != "x$LIBS"; then
-								TERMLIB="$cf_pk_config"
+								TERMLIB="$cf_pk_config -l${libname}"
 							fi
 						else
 							{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: none" >&5
@@ -24537,8 +24537,7 @@ fi
 		cf_libterm_ncurses_headers=ncurses
 	fi
 
-
-	cf_libterm_includes="/usr/local/include"
+							cf_libterm_includes="/usr/local/include"
 	if test -z "$CURSES_CFLAGS" && test -n "$PKG_CONFIG"; then
 		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether pkg-config information available" >&5
 printf %s "checking whether pkg-config information available... " >&6; }
@@ -24561,12 +24560,12 @@ printf "%s\n" "$cf_pkg_config" >&6; }
 						break
 					fi
 				done
-				if test $cf_result = yes; then
+			if test $cf_result = yes; then
 
 	test -n "$cf_libterm_includes" && cf_libterm_includes="$cf_libterm_includes "
 	cf_libterm_includes="${cf_libterm_includes}$cf_include"
 
-				fi
+			fi
 			done
 		else
 			{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: none" >&5
@@ -24586,9 +24585,6 @@ if test "x$ac_cv_header_ncursesw_curses_h" = xyes
 then :
   printf "%s\n" "#define HAVE_NCURSESW_CURSES_H 1" >>confdefs.h
  cf_have_ncurses_h=yesa
-else case e in #(
-  e) cf_have_ncurses_h=no ;;
-esac
 fi
 
 done
@@ -24606,9 +24602,6 @@ printf "%s\n" "$as_me: checking secondary ncurses directories" >&6;}
 if test "x$ac_cv_header_ncursesw_curses_h" = xyes
 then :
   cf_have_ncurses_h=yesa
-else case e in #(
-  e) cf_have_ncurses_h=no ;;
-esac
 fi
 
 					if test "x$cf_have_ncurses_h" = "xyesa"; then
@@ -24664,9 +24657,6 @@ if test "x$ac_cv_header_ncursesw_h" = xyes
 then :
   printf "%s\n" "#define HAVE_NCURSESW_H 1" >>confdefs.h
  cf_have_ncurses_h=yesb
-else case e in #(
-  e) cf_have_ncurses_h=no ;;
-esac
 fi
 
 done
@@ -24683,9 +24673,6 @@ if test "x$ac_cv_header_ncursesw_h" = xyes
 then :
   printf "%s\n" "#define HAVE_NCURSESW_H 1" >>confdefs.h
  cf_have_ncurses_h=yesb
-else case e in #(
-  e) cf_have_ncurses_h=no ;;
-esac
 fi
 
 done
@@ -24714,9 +24701,6 @@ if test "x$ac_cv_header_ncurses_curses_h" = xyes
 then :
   printf "%s\n" "#define HAVE_NCURSES_CURSES_H 1" >>confdefs.h
  cf_have_ncurses_h=yesc
-else case e in #(
-  e) cf_have_ncurses_h=no ;;
-esac
 fi
 
 done
@@ -24737,9 +24721,6 @@ if test "x$ac_cv_header_ncurses_curses_h" = xyes
 then :
   printf "%s\n" "#define HAVE_NCURSES_CURSES_H 1" >>confdefs.h
  cf_have_ncurses_h=yesc
-else case e in #(
-  e) cf_have_ncurses_h=no ;;
-esac
 fi
 
 done
@@ -24788,50 +24769,46 @@ fi
 
 			fi
 
-												       for ac_header in ncurses.h
+												if test "x$cf_have_ncurses_h" = "xno" ; then
+				       for ac_header in ncurses.h
 do :
   ac_fn_c_check_header_compile "$LINENO" "ncurses.h" "ac_cv_header_ncurses_h" "$ac_includes_default"
 if test "x$ac_cv_header_ncurses_h" = xyes
 then :
   printf "%s\n" "#define HAVE_NCURSES_H 1" >>confdefs.h
  cf_have_ncurses_h=yesd
-else case e in #(
-  e) cf_have_ncurses_h=no ;;
-esac
 fi
 
 done
 
-			if test "x$cf_have_ncurses_h" = "xno" && test -z "$CURSES_CFLAGS" ; then
-				{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking secondary ncurse directories" >&5
+				if test "x$cf_have_ncurses_h" = "xno" && test -z "$CURSES_CFLAGS" ; then
+					{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking secondary ncurse directories" >&5
 printf "%s\n" "$as_me: checking secondary ncurse directories" >&6;}
-				for cf_include in $cf_libterm_includes; do
-					CFLAGS="$cf_saved_CFLAGS -I$cf_include"
-					{ ac_cv_header_ncurses_h=; unset ac_cv_header_ncurses_h;}
-					       for ac_header in ncurses.h
+					for cf_include in $cf_libterm_includes; do
+						CFLAGS="$cf_saved_CFLAGS -I$cf_include"
+						{ ac_cv_header_ncurses_h=; unset ac_cv_header_ncurses_h;}
+						       for ac_header in ncurses.h
 do :
   ac_fn_c_check_header_compile "$LINENO" "ncurses.h" "ac_cv_header_ncurses_h" "$ac_includes_default"
 if test "x$ac_cv_header_ncurses_h" = xyes
 then :
   printf "%s\n" "#define HAVE_NCURSES_H 1" >>confdefs.h
  cf_have_ncurses_h=yesd
-else case e in #(
-  e) cf_have_ncurses_h=no ;;
-esac
 fi
 
 done
-					if test "x$cf_have_ncurses_h" = "xyesd"; then
-						CURSES_CFLAGS="-I$cf_include"
-						break
-					fi
-					CFLAGS="$cf_saved_CFLAGS"
-				done
+						if test "x$cf_have_ncurses_h" = "xyesd"; then
+							CURSES_CFLAGS="-I$cf_include"
+							break
+						fi
+						CFLAGS="$cf_saved_CFLAGS"
+					done
+				fi
 			fi
 		fi
 
 		if test "x$cf_have_ncurses_h" = "xno" ; then
-			if test "x$cf_libterm_name" = "xncursesw"; then
+			if test "x$cf_libterm_name" = "xncursesw" ; then
 				{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: could not find ncursesw/curses.h, ncursesw.h nor ncurses/curses.h or ncurses.h" >&5
 printf "%s\n" "$as_me: WARNING: could not find ncursesw/curses.h, ncursesw.h nor ncurses/curses.h or ncurses.h" >&2;}
 			else
@@ -24839,7 +24816,7 @@ printf "%s\n" "$as_me: WARNING: could not find ncursesw/curses.h, ncursesw.h nor
 printf "%s\n" "$as_me: WARNING: could not find ncurses/curses.h or ncurses.h" >&2;}
 			fi
 		else
-			if test "x$have_nc_alloc_h" = "x"; then
+			if test "x$have_nc_alloc_h" = "x" ; then
 				ac_fn_c_check_header_compile "$LINENO" "nc_alloc.h" "ac_cv_header_nc_alloc_h" "$ac_includes_default"
 if test "x$ac_cv_header_nc_alloc_h" = xyes
 then :
@@ -24848,7 +24825,7 @@ then :
 fi
 
 			fi
-			if test "x$have_nomacros_h" = "x"; then
+			if test "x$have_nomacros_h" = "x" ; then
 				ac_fn_c_check_header_compile "$LINENO" "nomacros.h" "ac_cv_header_nomacros_h" "$ac_includes_default"
 if test "x$ac_cv_header_nomacros_h" = xyes
 then :

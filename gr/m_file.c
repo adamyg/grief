@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_file_c,"$Id: m_file.c,v 1.44 2022/07/10 10:22:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_file_c,"$Id: m_file.c,v 1.45 2024/07/19 05:04:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_file.c,v 1.44 2022/07/10 10:22:35 cvsuser Exp $
+/* $Id: m_file.c,v 1.45 2024/07/19 05:04:22 cvsuser Exp $
  * File primitives.
  *
  *
@@ -1799,14 +1799,14 @@ do_ftest(void)                  /* int (string condition, string path) */
 
     /* ownership */
     case 'O':
-#if defined(unix) || defined(__APPLE__)
+#if defined(unix) || defined(__unix__) || defined(__APPLE__)
         ret = (x_stat(path, &sb) == 0 &&
                 geteuid() == (uid_t) sb.st_uid);
 #endif
         break;
 
     case 'G':
-#if defined(unix) || defined(__APPLE__)
+#if defined(unix) || defined(__unix__) || defined(__APPLE__)
         ret = (x_stat(path, &sb) == 0 &&
                 getegid() == (gid_t) sb.st_gid);
 #endif

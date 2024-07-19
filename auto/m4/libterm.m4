@@ -1,4 +1,4 @@
-dnl $Id: libterm.m4,v 1.25 2024/07/18 19:11:04 cvsuser Exp $
+dnl $Id: libterm.m4,v 1.26 2024/07/19 05:09:42 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -39,9 +39,9 @@ dnl     #else
 dnl     #  error "missing ncurses" ..
 dnl     #endif
 dnl
-dnl	CURSES_CFLAGS
-dnl	CURSES_LDFLAGS
-dnl	TERMLIB
+dnl     import/export: CURSES_CFLAGS
+dnl     import: CURSES_LDFLAGS
+dnl     exort: TERMLIB
 dnl
 
 AC_DEFUN([CF_LIBTERM_CHECK_TERMINFO],[
@@ -192,7 +192,7 @@ AC_DEFUN([LIBTERM_CHECK_CONFIG],[
 							AS_UNSET(ac_cv_lib_${libname}_setupterm)
 							AC_CHECK_LIB($libname, setupterm, [], [LIBS="$cf_check_LIBS"])
 							if test "x$cf_check_LIBS" != "x$LIBS"; then
-								TERMLIB="$cf_pk_config"
+								TERMLIB="$cf_pk_config -l${libname}"
 							fi
 						else
 							AC_MSG_RESULT([none])
@@ -370,7 +370,10 @@ extern int tgetent(char *, const char *);
 
 	dnl additional search directories
 	dnl main plus base, without trailing ncurses/w package name
-
+	dnl
+	dnl Note:
+	dnl Allow alternative installation under "/usr/local/include", unless pkg-config advices otherwise.
+	dnl
 	cf_libterm_includes="/usr/local/include"
 	if test -z "$CURSES_CFLAGS" && test -n "$PKG_CONFIG"; then
 		AC_MSG_CHECKING([whether pkg-config information available])
@@ -392,9 +395,9 @@ extern int tgetent(char *, const char *);
 						break
 					fi
 				done
-				if test $cf_result = yes; then
-					CF_APPEND_TEXT(cf_libterm_includes,$cf_include)
-				fi
+			if test $cf_result = yes; then
+				CF_APPEND_TEXT(cf_libterm_includes, $cf_include)
+			fi
 			done
 		else
 			AC_MSG_RESULT([none])
@@ -412,14 +415,13 @@ extern int tgetent(char *, const char *);
 		dnl    ncurses/curses.h
 		dnl    ncurses.h
 		dnl
-		dnl Note: Allow alternative installation under "/usr/local/include"
 
 		cf_have_ncurses_h=no
 		if test "x$cf_libterm_ncurses_headers" = "xncursesw"; then
 			dnl
 			dnl ncursesw/curses.h
 			dnl
-			AC_CHECK_HEADERS(ncursesw/curses.h, [cf_have_ncurses_h=yesa], [cf_have_ncurses_h=no])
+			AC_CHECK_HEADERS(ncursesw/curses.h, [cf_have_ncurses_h=yesa], [])
 
 			if test "x$cf_have_ncurses_h" = "xno" && test -z "$CURSES_CFLAGS" ; then
 				AC_MSG_NOTICE([checking secondary ncurses directories])
@@ -429,7 +431,7 @@ extern int tgetent(char *, const char *);
 					fi
 					CFLAGS="$cf_saved_CFLAGS -I$cf_include"
 					AS_UNSET(ac_cv_header_ncursesw_curses_h)
-					AC_CHECK_HEADER(ncursesw/curses.h, [cf_have_ncurses_h=yesa], [cf_have_ncurses_h=no])
+					AC_CHECK_HEADER(ncursesw/curses.h, [cf_have_ncurses_h=yesa], [])
 					if test "x$cf_have_ncurses_h" = "xyesa"; then
 						CURSES_CFLAGS="-I$cf_include"
 						break
@@ -449,13 +451,13 @@ extern int tgetent(char *, const char *);
 			dnl ncursesw.h
 			dnl
 			if test "x$cf_have_ncurses_h" = "xno"; then
-				AC_CHECK_HEADERS(ncursesw.h, [cf_have_ncurses_h=yesb], [cf_have_ncurses_h=no])
+				AC_CHECK_HEADERS(ncursesw.h, [cf_have_ncurses_h=yesb], [])
 				if test "x$cf_have_ncurses_h" = "xno" && test -z "$CURSES_CFLAGS" ; then
 					AC_MSG_NOTICE([checking secondary ncurses directories])
 					for cf_include in $cf_libterm_includes; do
 						CFLAGS="$cf_saved_CFLAGS -I$cf_include"
 						AS_UNSET(ac_cv_header_ncursesw_h)
-						AC_CHECK_HEADERS(ncursesw.h, [cf_have_ncurses_h=yesb], [cf_have_ncurses_h=no])
+						AC_CHECK_HEADERS(ncursesw.h, [cf_have_ncurses_h=yesb], [])
 						if test "x$cf_have_ncurses_h" = "xyesb"; then
 							CURSES_CFLAGS="-I$cf_include"
 							break
@@ -476,7 +478,7 @@ extern int tgetent(char *, const char *);
 			dnl
 			dnl ncurses/curses.h
 			dnl
-			AC_CHECK_HEADERS(ncurses/curses.h, [cf_have_ncurses_h=yesc], [cf_have_ncurses_h=no])
+			AC_CHECK_HEADERS(ncurses/curses.h, [cf_have_ncurses_h=yesc], [])
 
 			if test "x$cf_have_ncurses_h" = "xno" && test -z "$CURSES_CFLAGS" ; then
 				AC_MSG_RESULT([checking secondary ncurses directories])
@@ -486,7 +488,7 @@ extern int tgetent(char *, const char *);
 					fi
 					CFLAGS="$cf_saved_CFLAGS -I$cf_include"
 					AS_UNSET(ac_cv_header_ncurses_curses_h)
-					AC_CHECK_HEADERS(ncurses/curses.h, [cf_have_ncurses_h=yesc], [cf_have_ncurses_h=no])
+					AC_CHECK_HEADERS(ncurses/curses.h, [cf_have_ncurses_h=yesc], [])
 					if test "x$cf_have_ncurses_h" = "xyesc"; then
 						CURSES_CFLAGS="-I$cf_include"
 						break
@@ -505,34 +507,36 @@ extern int tgetent(char *, const char *);
 			dnl
 			dnl ncurses.h
 			dnl
-			AC_CHECK_HEADERS(ncurses.h, [cf_have_ncurses_h=yesd], [cf_have_ncurses_h=no])
+			if test "x$cf_have_ncurses_h" = "xno" ; then
+				AC_CHECK_HEADERS(ncurses.h, [cf_have_ncurses_h=yesd], [])
 
-			if test "x$cf_have_ncurses_h" = "xno" && test -z "$CURSES_CFLAGS" ; then
-				AC_MSG_NOTICE([checking secondary ncurse directories])
-				for cf_include in $cf_libterm_includes; do
-					CFLAGS="$cf_saved_CFLAGS -I$cf_include"
-					AS_UNSET(ac_cv_header_ncurses_h)
-					AC_CHECK_HEADERS(ncurses.h, [cf_have_ncurses_h=yesd], [cf_have_ncurses_h=no])
-					if test "x$cf_have_ncurses_h" = "xyesd"; then
-						CURSES_CFLAGS="-I$cf_include"
-						break
-					fi
-					CFLAGS="$cf_saved_CFLAGS"
-				done
+				if test "x$cf_have_ncurses_h" = "xno" && test -z "$CURSES_CFLAGS" ; then
+					AC_MSG_NOTICE([checking secondary ncurse directories])
+					for cf_include in $cf_libterm_includes; do
+						CFLAGS="$cf_saved_CFLAGS -I$cf_include"
+						AS_UNSET(ac_cv_header_ncurses_h)
+						AC_CHECK_HEADERS(ncurses.h, [cf_have_ncurses_h=yesd], [])
+						if test "x$cf_have_ncurses_h" = "xyesd"; then
+							CURSES_CFLAGS="-I$cf_include"
+							break
+						fi
+						CFLAGS="$cf_saved_CFLAGS"
+					done
+				fi
 			fi
 		fi
 
 		if test "x$cf_have_ncurses_h" = "xno" ; then
-			if test "x$cf_libterm_name" = "xncursesw"; then
+			if test "x$cf_libterm_name" = "xncursesw" ; then
 				AC_MSG_WARN([could not find ncursesw/curses.h, ncursesw.h nor ncurses/curses.h or ncurses.h])
 			else
 				AC_MSG_WARN([could not find ncurses/curses.h or ncurses.h])
 			fi
 		else
-			if test "x$have_nc_alloc_h" = "x"; then
+			if test "x$have_nc_alloc_h" = "x" ; then
 				AC_CHECK_HEADERS(nc_alloc.h)
 			fi
-			if test "x$have_nomacros_h" = "x"; then
+			if test "x$have_nomacros_h" = "x" ; then
 				AC_CHECK_HEADERS(nomacros.h)
 			fi
 		fi

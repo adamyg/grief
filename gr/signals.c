@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_signals_c,"$Id: signals.c,v 1.21 2024/04/16 10:30:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_signals_c,"$Id: signals.c,v 1.22 2024/07/19 05:04:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: signals.c,v 1.21 2024/04/16 10:30:36 cvsuser Exp $
+/* $Id: signals.c,v 1.22 2024/07/19 05:04:22 cvsuser Exp $
  * Signal handling.
  *
  *
@@ -81,7 +81,7 @@ signal_mode0(void)
 {
     signal(SIGINT, sighandler_int);
 
-#if defined(linux) || defined(unix) || defined(_AIX) || defined(__APPLE__)
+#if defined(linux) || defined(unix) || defined(__unix__) || defined(_AIX) || defined(__APPLE__)
     if (xf_sigtrap) {
 #if defined(SIGBUS)
         signal(SIGBUS,  sighandler_sys1);       /* bus error */
@@ -117,7 +117,7 @@ signal_mode1(void)
      *  Signal handlers.
      */
     if (xf_sigtrap) {
-#if defined(linux) || defined(unix) || defined(_AIX) || defined(__APPLE__)
+#if defined(linux) || defined(unix) || defined(__unix__) || defined(_AIX) || defined(__APPLE__)
 #if defined(SIGBUS)
         signal(SIGBUS, sighandler_sys2);        /* bus error */
 #endif
@@ -329,7 +329,7 @@ sighandler_sys1(int sig)
 }
 
 
-#if defined(linux) || defined(unix) || defined(_AIX) || defined(__APPLE__)
+#if defined(linux) || defined(unix) || defined(__unix__) || defined(_AIX) || defined(__APPLE__)
 /*
  *  sighandler_sys2 ---
  *      SIGBUS/SIGSEGV/SIGIOT fatal handler, single level handler.

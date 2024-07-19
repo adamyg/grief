@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyx11if_c,"$Id: ttyx11if.c,v 1.5 2014/10/22 02:33:24 ayoung Exp $")
+__CIDENT_RCSID(gr_ttyx11if_c,"$Id: ttyx11if.c,v 1.6 2024/07/19 05:04:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyx11if.c,v 1.5 2014/10/22 02:33:24 ayoung Exp $
+/* $Id: ttyx11if.c,v 1.6 2024/07/19 05:04:22 cvsuser Exp $
  * X11 dynamic interface.
  *
  *
@@ -347,7 +347,7 @@ void            XrmInitialize(void)
 void
 XLibInitialise(void)
 {
-#if defined(linux) || defined(unix) || defined(_AIX) || defined(__APPLE__) ||\
+#if defined(linux) || defined(unix) || defined(__unix__) || defined(_AIX) || defined(__APPLE__) ||\
         defined(HAVE_DLFCN_H)
 
     const char *libX11 = "/usr/lib/libX11.so";
