@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_scan_c,"$Id: m_scan.c,v 1.25 2022/05/26 16:42:10 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_scan_c,"$Id: m_scan.c,v 1.26 2024/07/07 15:43:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_scan.c,v 1.25 2022/05/26 16:42:10 cvsuser Exp $
+/* $Id: m_scan.c,v 1.26 2024/07/07 15:43:02 cvsuser Exp $
  * scanf implementation.
  *
  *
@@ -38,7 +38,7 @@ typedef struct iostream {
     unsigned            s_total;
     unsigned            s_count;
     unsigned char  *    s_cursor;
-    unsigned            s_ungetb[4];    /* min of 3 required */
+    unsigned            s_ungetb[4];            /* min of 3 required */
     unsigned            s_ungetc;
 } IOSTREAM_t;
 
@@ -320,7 +320,7 @@ literal:;   if ((c = ioget(io)) < 0) {
             goto ioerror;
         }
 
-        if (0 == (F_WANTWHITE & flags)) {         /* consume leading white space */
+        if (0 == (F_WANTWHITE & flags)) {       /* consume leading white space */
             while (isspace(c)) {
                 if ((c = ioget(io)) < 0) {
                     goto ioerror;
@@ -362,7 +362,8 @@ literal:;   if ((c = ioget(io)) < 0) {
                                 0 == (flags & (F_HAVEZERO|F_HAVEDIGITS))) {
                         flags &= ~F_PREFIX;
                         flags |= F_MAYBEPREFIX;
-                        base = 8;               /* oct until unless 0b or 0x */
+                        if (0 == (flags & (F_BIN|F_HEX)))
+                            base = 8;           /* oct until unless 0b or 0x */
                     }
                     flags |= F_HAVEZERO;
                     break;
@@ -737,7 +738,7 @@ is_ascii(int c)
 static int is_alnum(int ch)     { return isalnum((unsigned char)ch);  }
 static int is_alpha(int ch)     { return isalpha((unsigned char)ch);  }
 
-static int is_blank(int c)      
+static int is_blank(int c)
 {
 #if defined(HAVE___ISBLANK)
     return __isblank((unsigned char)c));
@@ -748,15 +749,15 @@ static int is_blank(int c)
 #endif
 }
 
-static int is_cntrl(int ch)     { return iscntrl((unsigned char)ch);  } 
+static int is_cntrl(int ch)     { return iscntrl((unsigned char)ch);  }
 static int is_csym(int ch)      { return ('_' == ch || isalnum((unsigned char)ch)); }
-static int is_digit(int ch)     { return isdigit((unsigned char)ch);  } 
-static int is_graph(int ch)     { return isgraph((unsigned char)ch);  } 
-static int is_lower(int ch)     { return islower((unsigned char)ch);  } 
-static int is_print(int ch)     { return isprint((unsigned char)ch);  } 
-static int is_punct(int ch)     { return ispunct((unsigned char)ch);  } 
-static int is_space(int ch)     { return isspace((unsigned char)ch);  } 
-static int is_upper(int ch)     { return isupper((unsigned char)ch);  } 
+static int is_digit(int ch)     { return isdigit((unsigned char)ch);  }
+static int is_graph(int ch)     { return isgraph((unsigned char)ch);  }
+static int is_lower(int ch)     { return islower((unsigned char)ch);  }
+static int is_print(int ch)     { return isprint((unsigned char)ch);  }
+static int is_punct(int ch)     { return ispunct((unsigned char)ch);  }
+static int is_space(int ch)     { return isspace((unsigned char)ch);  }
+static int is_upper(int ch)     { return isupper((unsigned char)ch);  }
 static int is_word(int ch)      { return ('_' == ch || '-' == ch || isalnum((unsigned char)ch)); }
 static int is_xdigit(int ch)    { return isxdigit((unsigned char)ch); }
 
@@ -937,11 +938,11 @@ setcook(const unsigned char *fmt, unsigned char *tab)
  *
  *  Returns:
  *      none
- *  
+ *
  *<<GRIEF>>
     Macro: sscanf - Read formatted data from string.
 
-        int 
+        int
         sscanf(string str, string format, ...)
 
     Description:
@@ -971,7 +972,7 @@ setcook(const unsigned char *fmt, unsigned char *tab)
         that were successfully converted. An EOF (-1) is returned if
         an error is encountered.
 
-    Macro Portability: 
+    Macro Portability:
         A Grief extension.
 
     Format Specification:
@@ -985,20 +986,20 @@ setcook(const unsigned char *fmt, unsigned char *tab)
         input stream conflicts with the format string, scanf terminates.
         Any conflicting characters remain in the input stream.
 
-        o whitespace characters - 
+        o whitespace characters -
             blank (' '), tab ('\t'), or newline ('\n'), cause scanf to
             skip whitespace characters in the input stream. A single
             whitespace character in the format string matches 0 or more
             whitespace characters in the input stream.
 
-        o non whitespace characters - 
+        o non whitespace characters -
             with the exception of the percent sign ('%'), cause scanf to
             read but not store a matching character from the input
             stream. The scanf function terminates if the next character
             in the input stream does not match the specified
             non-whitespace character.
 
-        o format specifications - 
+        o format specifications -
             begin with a percent sign ('%') and cause scanf to read and
             convert characters from the input stream to the specified
             type values. The converted value is stored to an argument
@@ -1019,7 +1020,7 @@ setcook(const unsigned char *fmt, unsigned char *tab)
         arguments for the format specifications.
 
         Values in the input stream are called input fields and are
-        delimited by whitespace characters. When converting input fields, 
+        delimited by whitespace characters. When converting input fields,
         scanf ends a conversion for an argument when a whitespace
         character or another unrecognized character is encountered.
 
@@ -1077,12 +1078,12 @@ setcook(const unsigned char *fmt, unsigned char *tab)
     Character Set:
 
         '[' indicates a string not to be delimited by space characters.
-        
+
         The conversion specification includes all subsequent characters
         in the format string up to and including the matching right
         square bracket (]).
 
-        The characters between the square brackets comprise the scanset, 
+        The characters between the square brackets comprise the scanset,
         unless the character after the left square bracket is a
         circumflex (^), in which case the scanset contains all
         characters that do not appear in the scanlist between the
@@ -1098,7 +1099,7 @@ setcook(const unsigned char *fmt, unsigned char *tab)
         first character, nor the second where the first character is a
         circumflex (^), nor the last character, it indicates a range of
         characters to be matched. To include a hyphen, make it the last
-        character before the final close bracket. For instance, 
+        character before the final close bracket. For instance,
         `[^]0-9-]' means the set `everything except close bracket, zero
         through nine, and hyphen'.
 
@@ -1142,3 +1143,5 @@ do_sscanf(void)                 /* (string buf, string format, ...) */
     acc_assign_int((accint_t) ret);
 }
 /*end*/
+
+
