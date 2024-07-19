@@ -58,13 +58,14 @@ jobs:
           prepare: |
             /usr/sbin/pkg_add -v pkgin
             pkgin update
-            pkgin -y install perl gcc12-*
+            pkgin -y install perl gcc11-*
             pkgin -y install bash gmake libtool pkgconf bison byacc flex wget curl unzip
             pkgin -y install ncurses libiconv libarchive lzma lz4 zstd
           run: |
             ./configure
             cat acdefines.h
             echo | gcc -dM -E - < /dev/null
+            cat /usr/include/sys/param.h
             gmake release
 
 #end
