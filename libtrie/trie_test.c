@@ -321,12 +321,12 @@ test2(void)
                 int ret  = trie_replace(t, "CMAKE_+_IMPLICIT_LINK_FRAMEWORK_DIRECTORIES", NULL, NULL);
                 TEST2(0 == ret, "trie_replace");
                 TEST(size == trie_size(t));             /* node count */
-                TEST((count - 1) == trie_count(t, "")); /* non-null element count */
+                TEST((size_t)(count - 1) == trie_count(t, "")); /* non-null element count */
 
                 ret = trie_prune(t);
                 TEST2(1 == ret, "trie_prune()");
                 TEST(size > trie_size(t));              /* node pruned */
-                TEST((count - 1) == trie_count(t, "")); /* no change in elements */
+                TEST((size_t)(count - 1) == trie_count(t, "")); /* no change in elements */
         }
 
         /* iterator */
@@ -383,8 +383,10 @@ test3(void)
                 TEST(ret == test2_words[i]);
 
                 // mixed
-                for (word = test2_words[i], t_cursor = t_buffer; *word; ++word)
-                    *t_cursor++ = ((size_t)t_cursor & 1) ? tolower(*word) : *word;
+                for (word = test2_words[i], t_cursor = t_buffer; *word; ++word) {
+                    *t_cursor = ((size_t)t_cursor & 1) ? tolower(*word) : *word;
+                    ++t_cursor;
+                }
                 *t_cursor = 0;
                 ret = trie_search(t, t_buffer);
                 TEST(ret == test2_words[i]);
@@ -392,8 +394,10 @@ test3(void)
                 TEST(ret == test2_words[i]);
 
                 // mixed
-                for (word = test2_words[i], t_cursor = t_buffer; *word; ++word)
-                    *t_cursor++ = ((size_t)t_cursor & 1) ? *word : tolower(*word);
+                for (word = test2_words[i], t_cursor = t_buffer; *word; ++word) {
+                    *t_cursor = ((size_t)t_cursor & 1) ? *word : tolower(*word);
+                    ++t_cursor;
+                }
                 *t_cursor = 0;
                 ret = trie_search(t, t_buffer);
                 TEST(ret == test2_words[i]);
@@ -418,12 +422,12 @@ test3(void)
                 int ret  = trie_replace(t, "CMAKE_+_IMPLICIT_LINK_FRAMEWORK_DIRECTORIES", NULL, NULL);
                 TEST2(0 == ret, "trie_replace");
                 TEST(size == trie_size(t));             /* node count */
-                TEST((count - 1) == trie_count(t, "")); /* non-null element count */
+                TEST((size_t)(count - 1) == trie_count(t, "")); /* non-null element count */
 
                 ret = trie_prune(t);
                 TEST2(1 == ret, "trie_prune()");
                 TEST(size > trie_size(t));              /* node pruned */
-                TEST((count - 1) == trie_count(t, "")); /* no change in elements */
+                TEST((size_t)(count - 1) == trie_count(t, "")); /* no change in elements */
         }
 
         /* iterator */
