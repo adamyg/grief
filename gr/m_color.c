@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_color_c,"$Id: m_color.c,v 1.47 2024/05/20 16:32:42 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_color_c,"$Id: m_color.c,v 1.50 2024/07/11 10:20:05 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_color.c,v 1.47 2024/05/20 16:32:42 cvsuser Exp $
+/* $Id: m_color.c,v 1.50 2024/07/11 10:20:05 cvsuser Exp $
  * Color configuration.
  *
  *
@@ -80,7 +80,7 @@ typedef struct {
 } colors_t;
 
 
-static int                      set_color(colors_t *colors, const char *spec, int create, int ident);
+static int                      set_color(colors_t *colors, const char *spec, int create, accint_t *ident);
 
 static colors_t *               col_working(void);
 static colors_t *               col_reworked(void);
@@ -240,6 +240,7 @@ static const struct attribute   attributes_default[] = {
     { _A1("hilite"),                    COL_HILITE_BACKGROUND,  CA_BG|CA_FULL,  ATTR_HILITE,                    0 },
     { _A1("hilite_fg"),                 COL_HILITE_FOREGROUND,  CA_FG,          -1,                             0 },
     { _A1("frame"),                     COL_BORDERS,            CA_FG,          ATTR_FRAME,                     0 },
+//  { _A1("vframe"),                    COL_VFRAME,             CA_FG,          ATTR_FRAME,                     0 },
 
     { _A1("cursor_insert"),             COL_INSERT_CURSOR,      CA_FG,          ATTR_CURSOR_INSERT,             0 },
     { _A1("cursor_overtype"),           COL_OVERTYPE_CURSOR,    CA_FG,          ATTR_CURSOR_OVERTYPE,           0 },
@@ -342,6 +343,7 @@ static const struct attribute   attributes_default[] = {
         // TODO - ansi mode, 'underlined' text
 
     { _A1("spell"),                     -1,                     CA_ATTR,        ATTR_SPELL,                     ATTR_STANDOUT },
+//  { _A1("spell_caps"),                -1,                     CA_ATTR,        ATTR_SPELL_CAPS,                ATTR_SPELL },
 //  { _A1("spell_local"),               -1,                     CA_ATTR,        ATTR_SPELL_LOCAL,               ATTR_SPELL },
 //  { _A1("spell_special"),             -1,                     CA_ATTR,        ATTR_SPELL_SPECIAL,             ATTR_SPELL },
         // TODO - additional special attritbutes
@@ -1298,11 +1300,8 @@ do_set_color(void)              /* ([list|string], [int create = TRUE]) */
             }
 
             if (listv_str(&result, &spec)) {    /* color specification */
-                if (ident < COL_MAX) {
-                    if (set_color(colors, spec, create, ident)) {
-                        ++count;
-                    }
-                    ++ident;
+                if (set_color(colors, spec, create, &ident)) {
+                    ++count;
                 }
 
             } else {                            /* index specification */
@@ -1326,7 +1325,7 @@ do_set_color(void)              /* ([list|string], [int create = TRUE]) */
                 if (len > 0 && len < (int)sizeof(buf)) {
                     memcpy(buf, spec, len);
                     buf[len] = 0;
-                    if (set_color(colors, buf, create, -1)) {
+                    if (set_color(colors, buf, create, NULL)) {
                         ++count;
                     }
                 }
@@ -1335,13 +1334,13 @@ do_set_color(void)              /* ([list|string], [int create = TRUE]) */
             } while (NULL != (nl = strchr(spec, '\n')));
 
             if (*spec) {                        /* .. last */
-                if (set_color(colors, spec, create, -1)) {
+                if (set_color(colors, spec, create, NULL)) {
                     ++count;
                 }
             }
 
         } else {                                /* single */
-            if (set_color(colors, spec, create, -1)) {
+            if (set_color(colors, spec, create, NULL)) {
                 ++count;
             }
         }
@@ -1534,7 +1533,7 @@ color_setscheme(const char *scheme)
         int isdark = FALSE;
 
         trace_ilog("color_setscheme=%s\n", scheme);
-        if (0 == str_icmp(scheme, "l") || 0 == str_icmp(scheme, "light") || 0 == str_icmp(scheme, "lite")) {
+        if (0 == str_icmp(scheme, "l") || 0 == str_icmp(scheme, "light")) {
             colorspec = x_col_table_light;
 
         } else if (0 == str_icmp(scheme, "d") || 0 == str_icmp(scheme, "dark")) {
@@ -1547,11 +1546,11 @@ color_setscheme(const char *scheme)
             unsigned i;
 
             for (i = 0; colorspec[i]; ++i) {
-                set_color(colors, colorspec[i], FALSE, -1);
+                set_color(colors, colorspec[i], FALSE, NULL);
             }
 
             for (i = 0; x_col_windows[i]; ++i) {
-                set_color(colors, x_col_windows[i], FALSE, -1);
+                set_color(colors, x_col_windows[i], FALSE, NULL);
             }
 
             col_apply(colors);
@@ -1604,7 +1603,7 @@ color_setscheme(const char *scheme)
  *      *true* otherwise *false*.
  */
 static int
-set_color(colors_t *colors, const char *spec, int create, int ident)
+set_color(colors_t *colors, const char *spec, int create, accint_t *ident)
 {
     static const char who[] = "set_color";
     struct attribute *ap = NULL;
@@ -1612,7 +1611,8 @@ set_color(colors_t *colors, const char *spec, int create, int ident)
     colattr_t ca = COLATTR_INIT;
     int ret = -1;
 
-    trace_ilog("set_color<spec:%s,create:%d,ident:%d>\n", spec, create, ident);
+    trace_ilog("set_color<spec:%s,create:%d,ident:%d>\n",
+        spec, create, (int)(ident ? *ident : -1));
 
     if (NULL == (eq = strchr(spec, '='))) {
         /*
@@ -1620,11 +1620,15 @@ set_color(colors_t *colors, const char *spec, int create, int ident)
          *
          *      foreground [,background] [:style]
          */
-        if (ident < 0) {
+        if (NULL == ident) {
             errorf("%s: attribute missing", who);
         } else {
-            if (NULL == (ap = attr_byenum(colors, ident))) {
-                errorf("%s: unknown attribute ident '%d'", who, ident);
+            const int nident = *ident++;        // next identifier
+
+            if (nident >= COL_MAX) {
+                errorf("%s: attribute ident unexpected '%d'", who, nident);
+            } else if (NULL == (ap = attr_byenum(colors, nident))) {
+                errorf("%s: unknown attribute ident '%d'", who, nident);
             } else {
                 ret = col_import(colors, who, ap, spec, &ca, NULL);
             }
@@ -1792,8 +1796,8 @@ col_encode(const colors_t *colors, const struct attribute *ap, const colattr_t *
     }
 
     col_export(colors, ap, &ret, buf, sizeof(buf));
-    trace_ilog("\tcol_encode(%s, fg:%d/%d, bg:%d/%d, sf:%d) = %s\n",
-        ap->ca_name, ca->fg.color, ca->fg.source, ca->bg.color, ca->bg.source, ca->sf, buf);
+    trace_ilog("\tcol_encode(%s, fg:0x%x-%d/%d, bg:0x%x-%d/%d, sf:%d) = %s\n",
+        ap->ca_name, ca->fg.color, ca->fg.color, ca->fg.source, ca->bg.color, ca->bg.color, ca->bg.source, ca->sf, buf);
     return ret;
 }
 
@@ -2031,9 +2035,9 @@ col_apply(colors_t *colors)
                         ca.fg.color, ca.fg.source, ca.bg.color, ca.bg.source, ca.sf, buf);
 
                 assert(ca.fg.source >= COLORSOURCE_NONE);   //>= SYMBOLIC
-                assert(ca.fg.color  >= -1);		    //>= 0
+                assert(ca.fg.color  >= -1);                 //>= 0
                 assert(ca.bg.source >= COLORSOURCE_NONE);   //>= SYMBOLIC
-                assert(ca.bg.color  >= -1);		    //>= 0
+                assert(ca.bg.color  >= -1);                 //>= 0
                 assert(ca.sf >= 0);
 
                 x_attrs[ attr ].fg = ca.fg;
