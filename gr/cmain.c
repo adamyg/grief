@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.55 2024/06/10 06:00:44 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.57 2024/07/12 12:56:25 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.55 2024/06/10 06:00:44 cvsuser Exp $
+/* $Id: cmain.c,v 1.57 2024/07/12 12:56:25 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -517,10 +517,10 @@ cmain(int argc, char **argv)
     else if ('x' == xf_ttydrv) ttx11();
 #endif
     vtinit(&argc, argv);
-    color_setscheme(NULL);
     ttopen();
 
     /* high-level */
+    color_setscheme(NULL);
     cmap_init();                                /* character map */
     syntax_init();                              /* syntax hilite engine */
     key_init();
@@ -1075,7 +1075,6 @@ argv_process(const int doerr, int argc, const char **argv)
                 const char *val = args.val;
                 unsigned v;
 
-                trace_log("-D%s\n", val);
                 for (v = 0; v < (sizeof(vm)/sizeof(vm[0])); ++v) {
                     if (0 == strncmp(vm[v].from, val, vm[v].fromlen)) {
                         const char *path = val + vm[v].fromlen;
@@ -1083,13 +1082,16 @@ argv_process(const int doerr, int argc, const char **argv)
                         if (vm[v].ispath) {
                             path = path_cook2(path, t_path, sizeof(t_path));
                         }
-                        trace_log("==> %s=%s (%s)\n", vm[v].to, path, val + vm[v].fromlen);
+                        trace_log("\t==> %s=%s (%s)\n", vm[v].to, path, val + vm[v].fromlen);
                         gputenv2(vm[v].to, path);
                         val = NULL;
                         break;
                     }
                 }
-                gputenv(val);
+                if (val) {
+                    trace_log("\t==>%s", val);
+                    gputenv(val);
+                }
             }
             break;
 
@@ -1855,7 +1857,7 @@ description(const struct argoption *arg, void *buffer)
 {
 #define DESCRIPTIONLEN 1024
     const char *desc = arg->d1, *token;
-    
+
     if (NULL != (token = strchr(desc, '%'))) {
         const char *value = NULL;
 
@@ -2009,3 +2011,4 @@ usage(int what)
 }
 
 /*end*/
+
