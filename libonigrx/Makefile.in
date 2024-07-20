@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.17 2024/06/15 18:41:57 cvsuser Exp $
+# $Id: Makefile.in,v 1.18 2024/07/20 18:12:39 cvsuser Exp $
 # libonigrx - regular expression makefile.
 #
 #
@@ -90,7 +90,7 @@ CRELEASE=	@CRELEASE@
 LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
 
-CINCLUDE=	-I$(D_INC) @CINCLUDE@
+CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
 CEXTRA=		@DEFS@
 CEXTRA+=	-DUSE_POSIX_API -DUSE_BINARY_COMPATIBLE_POSIX_API
 ifeq ("wcl386","@CC@")

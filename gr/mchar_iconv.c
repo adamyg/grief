@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mchar_iconv_c,"$Id: mchar_iconv.c,v 1.29 2024/04/16 10:30:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_mchar_iconv_c,"$Id: mchar_iconv.c,v 1.32 2024/07/20 18:18:52 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mchar_iconv.c,v 1.29 2024/04/16 10:30:36 cvsuser Exp $
+/* $Id: mchar_iconv.c,v 1.32 2024/07/20 18:18:52 cvsuser Exp $
  * Character-set conversion/mapping interface and adapters.
  *
  *
@@ -1047,29 +1047,28 @@ my_iconv_open(const char *to, const char *from)
     static int iconv_ok = -1;                   /* one-shot test */
     iconv_t fd = ICONV_NULL;
 
-    if (0 == iconv_ok) {
-        return (void *) -1;                     /* detected a broken iconv() previously */
+    if (FALSE == iconv_ok) {
+        return ICONV_NULL;                      /* detected a broken iconv() previously */
     }
 
     if (ICONV_NULL != (fd = iconv_open(to, from))) {
         if (-1 == iconv_ok) {
            /*
             *   Test for broken iconv() versions, thru a dummy iconv() call.
-            *   The symptoms are that after outputting the initial shift state the
-            *   "to" pointer is NULL and conversion stops for no apparent reason
-            *   after about 8160 characters.
+            *   The symptoms are that after outputting the initial shift state the "to" pointer is NULL
+            *   and conversion stops for no apparent reason after about 8160 characters.
             */
 #if !defined(ICONV_TESTLEN)
-#define ICONV_TESTLEN           (1024)
+#define ICONV_TESTLEN (1024)
 #endif
-            char tobuf[ICONV_TESTLEN];
+            char tobuf[ICONV_TESTLEN] = {0};
             size_t tolen;
             char *p;
 
             p = (char *)tobuf;
             tolen = sizeof(tobuf);
             (void) iconv(fd, NULL, NULL, &p, &tolen);
-            if (NULL == p) {
+            if (NULL == p) { /*unexpected*/
                 iconv_ok = FALSE;
                 iconv_close(fd);
                 fd = ICONV_NULL;
