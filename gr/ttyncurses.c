@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.21 2024/07/13 17:14:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.22 2024/07/20 09:23:13 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyncurses.c,v 1.21 2024/07/13 17:14:09 cvsuser Exp $
+/* $Id: ttyncurses.c,v 1.22 2024/07/20 09:23:13 cvsuser Exp $
  * [n]curses tty driver interface -- alt driver when running under ncurses.
  *
  *
@@ -837,7 +837,7 @@ term_identification(void)
 
 /*
  *  term_luminance ---
- *      Request the terminal background color and determine the default scheme (light/dark)
+ *	Request the terminal background color and determine the default scheme (light/dark)
  */
 static int
 term_luminance(void)
@@ -846,7 +846,7 @@ term_luminance(void)
     static char xterm_ocs11[] = "\x1b]11;?\007";
     const unsigned timeoutms = ESCDELAY;
     unsigned rgb[3] = {0,0,0}, rgbmax = 0;
-    char *cp, buffer[32] = {0};
+    unsigned char *cp, buffer[32] = {0};
     int len;
 
     /*
@@ -886,15 +886,16 @@ term_luminance(void)
         /*
          *  parse RGB values
          */
+        const char *spec = (const char *)(cp + 3);
         if (cp[11] == '/') {
-            if (sscanf(cp + 3, "rgb:%4x/%4x/%4x\033", rgb+0, rgb+1, rgb+2) == 3 ||
-                    sscanf(cp + 3, "rgb:%4x/%4x/%4x\007", rgb+0, rgb+1, rgb+2) == 3) {
+            if (sscanf(spec, "rgb:%4x/%4x/%4x\033", rgb+0, rgb+1, rgb+2) == 3 ||
+                    sscanf(spec, "rgb:%4x/%4x/%4x\007", rgb+0, rgb+1, rgb+2) == 3) {
                 rgbmax = 0xffff;
             }
 
         } else if (cp[9] == '/') {
-            if (sscanf(cp + 3, "rgb:%2x/%2x/%2x\033", rgb+0, rgb+1, rgb+2) == 3 ||
-                    sscanf(cp + 3, "rgb:%2x/%2x/%2x\007", rgb+0, rgb+1, rgb+2) == 3) {
+            if (sscanf(spec, "rgb:%2x/%2x/%2x\033", rgb+0, rgb+1, rgb+2) == 3 ||
+                    sscanf(spec, "rgb:%2x/%2x/%2x\007", rgb+0, rgb+1, rgb+2) == 3) {
                 rgbmax = 0xff;
             }
         }

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.125 2024/07/18 18:04:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.126 2024/07/20 09:23:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.125 2024/07/18 18:04:24 cvsuser Exp $
+/* $Id: ttyterm.c,v 1.126 2024/07/20 09:23:27 cvsuser Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -3354,6 +3354,7 @@ term_ocs_color(int code)
             t_attributes |= TA_LUMINACE_LIGHT;
         }
     }
+    return 0;
 }
 
 

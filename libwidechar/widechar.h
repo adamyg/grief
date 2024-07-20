@@ -66,7 +66,7 @@ int         Wcstoutf8(const WChar_t *str, char *buf, int buflen);
 
 int         Wcwidth(WChar_t ucs);
 int         Wcswidth(const WChar_t *s, size_t n);
-            
+
 int         Wvasprintf(WChar_t **ret, const char *format, va_list ap);
 
 int         Wvsnprintf(WChar_t *str, size_t size, const char *format, va_list args);

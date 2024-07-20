@@ -1,4 +1,4 @@
-dnl $Id: libterm.m4,v 1.28 2024/07/19 14:22:00 cvsuser Exp $
+dnl $Id: libterm.m4,v 1.29 2024/07/20 17:30:37 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -18,10 +18,10 @@ dnl     #  include <ncursesw/term.h>
 dnl     #elif defined HAVE_NCURSESW_H
 dnl     #  include <ncursesw.h>
 dnl     #  if defined(HAVE_TERMCAP_H)
-dnl     #      include <termcap.h>
+dnl     #     include <termcap.h>
 dnl     #  endif
 dnl     #  if defined(HAVE_TERM_H)
-dnl     #      include <term.h>
+dnl     #     include <term.h>
 dnl     #  endif
 dnl     #elif defined HAVE_NCURSES_CURSES_H
 dnl     #  include <ncurses/curses.h>
@@ -30,20 +30,47 @@ dnl     #  include <ncurses/term.h>
 dnl     #elif defined HAVE_NCURSES_H
 dnl     #  include <ncurses.h>
 dnl     #  if defined(HAVE_TERMCAP_H)
-dnl     #      include <termcap.h>
+dnl     #     include <termcap.h>
 dnl     #  endif
 dnl     #  if defined(HAVE_TERM_H)
-dnl     #      include <term.h>
+dnl     #     include <term.h>
 dnl     #  endif
 dnl     #else
 dnl     #  error "missing ncurses" ..
 dnl     #endif
 dnl
-dnl     import/export: CURSES_CFLAGS
-dnl     import: CURSES_LDFLAGS
-dnl     export: HAVE_CURSES_ENHANCED
-dnl     export: HAVE_CURSES_COLOR
-dnl     export: TERMLIB
+dnl  Import:
+dnl     CURSES_CFLAGS
+dnl     CURSES_LDFLAGS
+dnl
+dnl  Export:
+dnl     CURSES_CFLAGS
+dnl     CURSES_LDFLAGS (within TERMLIB)
+dnl
+dnl     HAVE_LIBNCURSESW
+dnl     HAVE_LIBNCURSESW_G
+dnl     HAVE_LIBNCURSES
+dnl     HAVE_LIBNCURSES_G
+dnl     HAVE_LIBTINFO
+dnl     HAVE_LIBCURSES
+dnl     TERMLIB
+dnl
+dnl     HAVE_NCURSESW_CURSES_H
+dnl     HAVE_NCURSESW_TERMCAP_H
+dnl     HAVE_NCURSESW_TERM_H
+dnl     HAVE_NCURSES_CURSES_H
+dnl     HAVE_NCURSES_TERMCAP_H
+dnl     HAVE_NCURSES_TERM_H
+dnl     HAVE_NCURSESW_H
+dnl     HAVE_NCURSES_H
+dnl     HAVE_TERMCAP_H
+dnl     HAVE_TERM_H
+dnl
+dnl     HAVE_CURSES_ENHANCED
+dnl     HAVE_CURSES_COLOR
+dnl
+dnl     HAVE_OUTFUNTYPE
+dnl     TPUTS_TAKES_CHAR
 dnl
 
 AC_DEFUN([CF_LIBTERM_CHECK_TERMINFO],[
@@ -368,7 +395,11 @@ extern int tgetent(char *, const char *);
 		AC_DEFINE([HAVE_LIBNCURSES], 1, [enable libncurses support.])
 		AC_CHECK_LIB(ncurses, main)
 		AC_CHECK_LIB(ncurses_g, main)
-		cf_libterm_cv_headers=ncurses
+		if test -z "$with_termlib"; then
+			cf_libterm_cv_headers=ncursesw
+		else
+			cf_libterm_cv_headers=ncurses
+		fi
 	fi
 
 	dnl additional search directories
@@ -570,29 +601,27 @@ extern int tgetent(char *, const char *);
 	AC_MSG_CHECKING([for curses features])
 	if test "x$cf_libterm_cv_features" = "xno" ; then
 		AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#if defined HAVE_NCURSESW_CURSES_H
+#if defined(HAVE_NCURSESW_CURSES_H)
 #  include <ncursesw/curses.h>
 #  include <ncursesw/termcap.h>
 #  include <ncursesw/term.h>
-#elif defined HAVE_NCURSESW_H
-#  include <ncursesw.h>
-#  if defined(HAVE_TERMCAP_H)
-#      include <termcap.h>
-#  endif
-#  if defined(HAVE_TERM_H)
-#      include <term.h>
-#  endif
-#elif defined HAVE_NCURSES_CURSES_H
+#elif defined(HAVE_NCURSES_CURSES_H)
 #  include <ncurses/curses.h>
 #  include <ncurses/termcap.h>
 #  include <ncurses/term.h>
-#elif defined HAVE_NCURSES_H
-#  include <ncurses.h>
+#else
+#  if defined(HAVE_NCURSESW_H)
+#     include <ncursesw.h>
+#  elif defined(HAVE_NCURSES_H)
+#     include <ncurses.h>
+#  elif defined(HAVE_CURSES_H)
+#     include <curses.h>
+#  endif
 #  if defined(HAVE_TERMCAP_H)
-#      include <termcap.h>
+#     include <termcap.h>
 #  endif
 #  if defined(HAVE_TERM_H)
-#      include <term.h>
+#     include <term.h>
 #  endif
 #endif
 ]], [[
@@ -613,29 +642,27 @@ extern int tgetent(char *, const char *);
 
 	if test "x$cf_libterm_cv_features" = "xno" ; then
 		AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#if defined HAVE_NCURSESW_CURSES_H
+#if defined(HAVE_NCURSESW_CURSES_H)
 #  include <ncursesw/curses.h>
 #  include <ncursesw/termcap.h>
 #  include <ncursesw/term.h>
-#elif defined HAVE_NCURSESW_H
-#  include <ncursesw.h>
-#  if defined(HAVE_TERMCAP_H)
-#      include <termcap.h>
-#  endif
-#  if defined(HAVE_TERM_H)
-#      include <term.h>
-#  endif
-#elif defined HAVE_NCURSES_CURSES_H
+#elif defined(HAVE_NCURSES_CURSES_H)
 #  include <ncurses/curses.h>
 #  include <ncurses/termcap.h>
 #  include <ncurses/term.h>
-#elif defined HAVE_NCURSES_H
-#  include <ncurses.h>
+#else
+#  if defined(HAVE_NCURSESW_H)
+#     include <ncursesw.h>
+#  elif defined(HAVE_NCURSES_H)
+#     include <ncurses.h>
+#  elif defined(HAVE_CURSES_H)
+#     include <curses.h>
+#  endif
 #  if defined(HAVE_TERMCAP_H)
-#      include <termcap.h>
+#     include <termcap.h>
 #  endif
 #  if defined(HAVE_TERM_H)
-#      include <term.h>
+#     include <term.h>
 #  endif
 #endif
 ]], [[
@@ -651,29 +678,27 @@ extern int tgetent(char *, const char *);
 
 	if test "x$cf_libterm_cv_features" = "xno" ; then
 		AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#if defined HAVE_NCURSESW_CURSES_H
+#if defined(HAVE_NCURSESW_CURSES_H)
 #  include <ncursesw/curses.h>
 #  include <ncursesw/termcap.h>
 #  include <ncursesw/term.h>
-#elif defined HAVE_NCURSESW_H
-#  include <ncursesw.h>
-#  if defined(HAVE_TERMCAP_H)
-#      include <termcap.h>
-#  endif
-#  if defined(HAVE_TERM_H)
-#      include <term.h>
-#  endif
-#elif defined HAVE_NCURSES_CURSES_H
+#elif defined(HAVE_NCURSES_CURSES_H)
 #  include <ncurses/curses.h>
 #  include <ncurses/termcap.h>
 #  include <ncurses/term.h>
-#elif defined HAVE_NCURSES_H
-#  include <ncurses.h>
+#else
+#  if defined(HAVE_NCURSESW_H)
+#     include <ncursesw.h>
+#  elif defined(HAVE_NCURSES_H)
+#     include <ncurses.h>
+#  elif defined(HAVE_CURSES_H)
+#     include <curses.h>
+#  endif
 #  if defined(HAVE_TERMCAP_H)
-#      include <termcap.h>
+#     include <termcap.h>
 #  endif
 #  if defined(HAVE_TERM_H)
-#      include <term.h>
+#     include <term.h>
 #  endif
 #endif
 ]], [[
@@ -695,7 +720,40 @@ extern int tgetent(char *, const char *);
 	fi
 	AC_MSG_RESULT($cf_libterm_cv_features)
 
+	dnl
 	dnl compatibility
+	dnl
+	dnl -- const
+	AC_MSG_CHECKING(whether curses interface utilities const strings)
+	AC_EGREP_CPP([[define\\\s+NCURSES_CONST\\\s+const]],[[
+#if defined(HAVE_NCURSESW_CURSES_H)
+#  include <ncursesw/curses.h>
+#  include <ncursesw/termcap.h>
+#  include <ncursesw/term.h>
+#elif defined(HAVE_NCURSES_CURSES_H)
+#  include <ncurses/curses.h>
+#  include <ncurses/termcap.h>
+OR#  include <ncurses/term.h>
+#else
+#  if defined(HAVE_NCURSESW_H)
+#     include <ncursesw.h>
+#  elif defined(HAVE_NCURSES_H)
+#     include <ncurses.h>
+#  elif defined(HAVE_CURSES_H)
+#     include <curses.h>
+#  endif
+#  if defined(HAVE_TERMCAP_H)
+#     include <termcap.h>
+#  endif
+#  if defined(HAVE_TERM_H)
+#     include <term.h>
+#  endif
+#endif
+]],
+		[AC_MSG_RESULT(yes); AC_DEFINE([HAVE_CURSES_CONST], [1], [const strings])],
+		[AC_MSG_RESULT(no)])
+
+	dnl -- zero
 	if test "$cf_libterm_cv_termcap" = "yes"; then
 		if test -n "$cf_libterm_name"; then
 			AC_CACHE_CHECK([what tgetent() returns for an unknown terminal], cf_libterm_cv_tgent, [
@@ -723,11 +781,13 @@ extern int tgetent(char *, const char *);
 		fi
 	fi
 
+	dnl -- ospeed
 	AC_MSG_CHECKING(whether termcap.h contains ospeed)
 	AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #ifdef HAVE_TERMCAP_H
 #include <termcap.h>
-#endif]], [[ospeed = 20000;]])],
+#endif
+]], [[ospeed = 20000;]])],
 		AC_MSG_RESULT(yes); AC_DEFINE([HAVE_OSPEED], 1, [extern ospeed available.]),
 		[AC_MSG_RESULT(no)
 		AC_MSG_CHECKING(whether ospeed can be extern)
@@ -735,16 +795,19 @@ extern int tgetent(char *, const char *);
 #ifdef HAVE_TERMCAP_H
 #include <termcap.h>
 #endif
-extern short ospeed;]], [[ospeed = 20000;]])],
+extern short ospeed;
+]], [[ospeed = 20000;]])],
 			AC_MSG_RESULT(yes); AC_DEFINE([OSPEED_EXTERN], 1, [extern ospeed needed.]),
 			AC_MSG_RESULT(no))]
 		)
 
+	dnl -- UP, BC and RC
 	AC_MSG_CHECKING([whether termcap.h contains UP, BC and PC])
 	AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #ifdef HAVE_TERMCAP_H
 #include <termcap.h>
-#endif]], [[if (UP == 0 && BC == 0) PC = 1]])],
+#endif
+]], [[if (UP == 0 && BC == 0) PC = 1]])],
 		AC_MSG_RESULT(yes); AC_DEFINE([HAVE_UP_BC_PC], 1, [extern UP BC and PC available.]),
 		[AC_MSG_RESULT(no)
 			AC_MSG_CHECKING([whether UP, BC and PC can be extern])
@@ -752,16 +815,19 @@ extern short ospeed;]], [[ospeed = 20000;]])],
 #ifdef HAVE_TERMCAP_H
 #include <termcap.h>
 #endif
-extern char *UP, *BC, PC;]], [[if (UP == 0 && BC == 0) PC = 1;]])],
+extern char *UP, *BC, PC;
+]], [[if (UP == 0 && BC == 0) PC = 1;]])],
 			AC_MSG_RESULT(yes); AC_DEFINE([UP_BC_PC_EXTERN], 1, [extern UP BC and PC needed.]),
 			AC_MSG_RESULT(no))]
 		)
 
+	dnl -- tputs
 	AC_MSG_CHECKING(whether tputs() uses outfuntype)
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #ifdef HAVE_TERMCAP_H
 #include <termcap.h>
-#endif]], [[extern int xx(); tputs("test", 1, (outfuntype)xx)]])],
+#endif
+]], [[extern int xx(); tputs("test", 1, (outfuntype)xx)]])],
 			[AC_MSG_RESULT(yes); AC_DEFINE([HAVE_OUTFUNTYPE], 1, [typedef outfuntype available.])],
 			[AC_MSG_RESULT(no); AC_MSG_CHECKING(determining tputs() function final argument type)
 			AC_EGREP_CPP([tputs.*[(][ \\\t]*char[ \\\t]*[)]],[
@@ -771,9 +837,9 @@ extern char *UP, *BC, PC;]], [[if (UP == 0 && BC == 0) PC = 1;]])],
 #ifdef HAVE_CURSES_H
 #include <curses.h>
 #endif
-			], [AC_MSG_RESULT(char); AC_DEFINE([TPUTS_TAKES_CHAR], 1, [tputs character interface.])],
-				[AC_MSG_RESULT(not char, int assumed);
-				])
+				], [AC_MSG_RESULT(char); AC_DEFINE([TPUTS_TAKES_CHAR], 1, [tputs character interface.])],
+					[AC_MSG_RESULT(not char, int assumed);
+					])
 		])
 
 	CFLAGS=$cf_save_CFLAGS

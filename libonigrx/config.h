@@ -1,7 +1,7 @@
 #ifndef LIBONIGRX_CONFIG_H_INCLUDED
 #define LIBONIGRX_CONFIG_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: config.h,v 1.1 2024/06/15 18:41:57 cvsuser Exp $
+/* $Id: config.h,v 1.2 2024/07/20 17:02:49 cvsuser Exp $
  * libonigrx config.h
  *
  *
@@ -23,9 +23,15 @@
 
 #else
 #include "../include/config.h"
+
+#if defined(__sun)
+#if defined(HAVE_ALLOCA_H)
+#include <alloc.h>
 #endif
+#endif /*__sun*/
+
+#endif /*!WIN32*/
 
 #endif /*LIBONIGRX_CONFIG_H_INCLUDED*/
 
 /*end*/
-

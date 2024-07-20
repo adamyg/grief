@@ -1,7 +1,7 @@
 #ifndef LIBTRE_CONFIG_H_INCLUDED
 #define LIBTRE_CONFIG_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: config.h,v 1.5 2022/05/26 02:13:06 cvsuser Exp $
+/* $Id: config.h,v 1.6 2024/07/20 17:02:33 cvsuser Exp $
  * libtre config.h
  *
  *
@@ -21,12 +21,19 @@
 #if (_MSC_VER < 1900)
 #define snprintf _snprintf
 #endif
-#endif //_MSC_VER
+#endif /*_MSC_VER*/
 
 #else
 #include "../include/config.h"
+
+#if defined(__sun)
+#if defined(HAVE_ALLOCA_H)
+#include <alloc.h>
 #endif
+#endif /*__sun*/
 
-#endif  /*LIBTRE_CONFIG_H_INCLUDED*/
+#endif /*!WIN32*/
+
+#endif /*LIBTRE_CONFIG_H_INCLUDED*/
+
 /*end*/
-
