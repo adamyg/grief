@@ -713,6 +713,7 @@ LIBICU_VERSION
 ICU_CONFIG
 LIBSPELL
 LIBMALLOC
+ALLOCA
 PKG_CONFIG
 TERMLIB
 CURSES_LDFLAGS
@@ -21071,7 +21072,7 @@ printf "%s\n" "$cf_clang_optok" >&6; }
 		if test "$cf_clang_optok" = yes; then
 			test -n "$verbose" && echo "	adding option $cf_clang_opt" 1>&6
 
-echo "${as_me:-configure}:21074: testing adding option $cf_clang_opt ..." 1>&5
+echo "${as_me:-configure}:21075: testing adding option $cf_clang_opt ..." 1>&5
 
 
 
@@ -21181,7 +21182,7 @@ then
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $CC __attribute__ directives..." >&5
 printf "%s\n" "$as_me: checking for $CC __attribute__ directives..." >&6;}
 cat > "conftest.$ac_ext" <<EOF
-#line 21184 "${as_me:-configure}"
+#line 21185 "${as_me:-configure}"
 #include <stdio.h>
 #include "confdefs.h"
 #include "conftest.h"
@@ -25402,6 +25403,170 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
 	CFLAGS=$cf_save_CFLAGS
 	LIBS=$cf_save_LIBS
 
+
+ac_fn_c_check_type "$LINENO" "size_t" "ac_cv_type_size_t" "$ac_includes_default"
+if test "x$ac_cv_type_size_t" = xyes
+then :
+
+else case e in #(
+  e)
+printf "%s\n" "#define size_t unsigned int" >>confdefs.h
+ ;;
+esac
+fi
+
+# The Ultrix 4.2 mips builtin alloca declared by alloca.h only works
+# for constant arguments.  Useless!
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for working alloca.h" >&5
+printf %s "checking for working alloca.h... " >&6; }
+if test ${ac_cv_working_alloca_h+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <alloca.h>
+int
+main (void)
+{
+char *p = (char *) alloca (2 * sizeof (int));
+			  if (p) return 0;
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_working_alloca_h=yes
+else case e in #(
+  e) ac_cv_working_alloca_h=no ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext ;;
+esac
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_working_alloca_h" >&5
+printf "%s\n" "$ac_cv_working_alloca_h" >&6; }
+if test $ac_cv_working_alloca_h = yes; then
+
+printf "%s\n" "#define HAVE_ALLOCA_H 1" >>confdefs.h
+
+fi
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for alloca" >&5
+printf %s "checking for alloca... " >&6; }
+if test ${ac_cv_func_alloca_works+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) ac_cv_func_alloca_works=$ac_cv_working_alloca_h
+if test "$ac_cv_func_alloca_works" != yes
+then :
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <stdlib.h>
+#include <stddef.h>
+#ifndef alloca
+# ifdef __GNUC__
+#  define alloca __builtin_alloca
+# elif defined _MSC_VER
+#  include <malloc.h>
+#  define alloca _alloca
+# else
+#  ifdef  __cplusplus
+extern "C"
+#  endif
+void *alloca (size_t);
+# endif
+#endif
+
+int
+main (void)
+{
+char *p = (char *) alloca (1);
+				    if (p) return 0;
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_func_alloca_works=yes
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+fi ;;
+esac
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_func_alloca_works" >&5
+printf "%s\n" "$ac_cv_func_alloca_works" >&6; }
+
+if test $ac_cv_func_alloca_works = yes; then
+
+printf "%s\n" "#define HAVE_ALLOCA 1" >>confdefs.h
+
+else
+  # The SVR3 libPW and SVR4 libucb both contain incompatible functions
+# that cause trouble.  Some versions do not even contain alloca or
+# contain a buggy version.  If you still want to use their alloca,
+# use ar to extract alloca.o from them instead of compiling alloca.c.
+
+ALLOCA=\${LIBOBJDIR}alloca.$ac_objext
+
+printf "%s\n" "#define C_ALLOCA 1" >>confdefs.h
+
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking stack direction for C alloca" >&5
+printf %s "checking stack direction for C alloca... " >&6; }
+if test ${ac_cv_c_stack_direction+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) if test "$cross_compiling" = yes
+then :
+  ac_cv_c_stack_direction=0
+else case e in #(
+  e) cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+$ac_includes_default
+int
+find_stack_direction (int *addr, int depth)
+{
+  int dir, dummy = 0;
+  if (! addr)
+    addr = &dummy;
+  *addr = addr < &dummy ? 1 : addr == &dummy ? 0 : -1;
+  dir = depth ? find_stack_direction (addr, depth - 1) : 0;
+  return dir + dummy;
+}
+
+int
+main (int argc, char **argv)
+{
+  return find_stack_direction (0, argc + !argv + 20) < 0;
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"
+then :
+  ac_cv_c_stack_direction=1
+else case e in #(
+  e) ac_cv_c_stack_direction=-1 ;;
+esac
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext ;;
+esac
+fi
+ ;;
+esac
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_c_stack_direction" >&5
+printf "%s\n" "$ac_cv_c_stack_direction" >&6; }
+printf "%s\n" "#define STACK_DIRECTION $ac_cv_c_stack_direction" >>confdefs.h
+
+
+fi
 
 
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: determining memory allocation support" >&5
