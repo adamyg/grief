@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_hunspell_c,"$Id: w32_hunspell.c,v 1.21 2023/12/29 16:49:46 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_hunspell_c,"$Id: w32_hunspell.c,v 1.22 2024/07/19 18:50:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -75,22 +75,33 @@ static free_listfn_t    x_free_list;
 static addfn_t          x_add;
 static add_with_affixfn_t x_add_with_affix;
 
+static const char *     x_hunspellnames[] = {
+        NULL,                                   // place-holder/runtime configuration
+#if defined(HAVE_LIBHUNSPELL_DLL)
+        HAVE_LIBHUNSPELL_DLL,                   // see: config.h
+#elif defined(HUNSPELLDLL_NAME)
+        HUNSPELLDLL_NAME,
+#else
+        "libhunspell.dll",
+        "hunspell.dll",
+#endif
+        };
+
 static void             strxcopy(char *dest, const char *src, int len);
 static FARPROC          hunspell_resolve(const char *name);
+
+LIBW32_API void
+w32_hunspell_dllname(const char *dllname)
+{
+    if (x_hunspellnames[0])
+        free((void *)x_hunspellnames[0]);
+    x_hunspellnames[0] = (dllname && *dllname ? strdup(dllname) : NULL);
+}
 
 
 LIBW32_API int
 w32_hunspell_connect(int verbose)
 {
-   static const char *hunspellnames[] = {
-#if defined(HAVE_LIBHUNSPELL_DLL)
-        HAVE_LIBHUNSPELL_DLL,                   // see: config.h
-#else
-        "libhunspell.dll",
-        "hunspell.dll",
-#endif
-        NULL
-        };
     char fullname[1024], *end;
     const char *name;
     unsigned i;
@@ -105,7 +116,12 @@ w32_hunspell_connect(int verbose)
         *++end = 0;
     }
 
-    for (i = 0; NULL != (name = hunspellnames[i]); ++i) {
+    for (i = 0; i < sizeof(x_hunspellnames)/sizeof(x_hunspellnames[0]); ++i) {
+
+        if (NULL == (name = x_hunspellnames[i])) {
+            continue;                           // empty slot
+        }
+
 #if defined(DO_TRACE_LOG)
         trace_log("hunspell_dll(%s)\n", name);
 #endif
