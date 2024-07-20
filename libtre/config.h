@@ -1,7 +1,7 @@
 #ifndef LIBTRE_CONFIG_H_INCLUDED
 #define LIBTRE_CONFIG_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: config.h,v 1.6 2024/07/20 17:02:33 cvsuser Exp $
+/* $Id: config.h,v 1.7 2024/07/20 17:41:35 cvsuser Exp $
  * libtre config.h
  *
  *
@@ -28,7 +28,7 @@
 
 #if defined(__sun)
 #if defined(HAVE_ALLOCA_H)
-#include <alloc.h>
+#include <alloca.h>
 #endif
 #endif /*__sun*/
 
