@@ -26,7 +26,10 @@ main(int argc, char **argv)
 static void
 t1(void)
 {
-	static const char s1[] =
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Winvalid-source-encoding"
+#endif
+	static const unsigned char s1[] =
 		"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZéáúõûóüöíÉÁÕÚÖÜÓÛÍ";
 	char b1[512] = {0};
 	BFILE *f1;

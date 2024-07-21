@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_accum_c,"$Id: accum.c,v 1.37 2022/05/26 16:33:10 cvsuser Exp $")
+__CIDENT_RCSID(gr_accum_c,"$Id: accum.c,v 1.38 2024/07/21 07:34:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: accum.c,v 1.37 2022/05/26 16:33:10 cvsuser Exp $
+/* $Id: accum.c,v 1.38 2024/07/21 07:34:57 cvsuser Exp $
  * Accumulator manipulating.
  *
  *
@@ -150,7 +150,10 @@ acc_zap(void)
         r_dec(accum.ac_rval);
         accum.ac_rval = NULL;
         break;
-#if !defined(NDEBUG)
+#if defined(NDEBUG)
+    default:
+        break;
+#else
     case F_INT:
     case F_FLOAT:
     case F_LIT:

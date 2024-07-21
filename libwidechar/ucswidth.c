@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_wcwidth_c,"$Id: ucswidth.c,v 1.4 2024/05/21 13:40:39 cvsuser Exp $")
+__CIDENT_RCSID(gr_wcwidth_c,"$Id: ucswidth.c,v 1.5 2024/07/21 07:41:35 cvsuser Exp $")
 
 /*
     ------------------------------------------------------------------------------
@@ -42,10 +42,17 @@ __CIDENT_RCSID(gr_wcwidth_c,"$Id: ucswidth.c,v 1.4 2024/05/21 13:40:39 cvsuser E
 
 #if defined(HAVE_WCHAR_H)
 #if defined(HAVE_WCWIDTH)
+#if !defined(_GNU_SOURCE)
 #define _GNU_SOURCE
+#endif
+#if !defined(_XOPEN_SOURCE)
+#define _XOPEN_SOURCE 500
+#endif
+#if !defined(_POSIX_C_SOURCE)
 #define _POSIX_C_SOURCE 1
 #endif
 #endif
+#endif /*HAVE_WCHAR_H && HAVE_WCWIDTH*/
 
 #include <editor.h>
 #include "widechar.h"

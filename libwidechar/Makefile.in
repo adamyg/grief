@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.7 2024/05/21 13:40:39 cvsuser Exp $
+# $Id: Makefile.in,v 1.8 2024/07/21 07:41:35 cvsuser Exp $
 # libwidechar makefile.
 #
 #
@@ -178,4 +178,3 @@ $(D_OBJ)/%$(O):		%.c
 		$(CC) $(CFLAGS) -o $@ -c $<
 
 #end
-
