@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.20 2024/07/12 16:33:10 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.21 2024/07/20 18:16:50 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_terminal.c,v 1.20 2024/07/12 16:33:10 cvsuser Exp $
+/* $Id: m_terminal.c,v 1.21 2024/07/20 18:16:50 cvsuser Exp $
  * Terminal screen and keyboard primitives.
  *
  *
@@ -138,7 +138,7 @@ static struct pt_map    pt_features[] = {
     { TF_DEFAULT_FG,            PT_MKINT(x_pt.pt_defaultfg),              "default_fg_color" },
     { TF_DEFAULT_BG,            PT_MKINT(x_pt.pt_defaultbg),              "default_bg_color" },
     { TF_SCHEMEDARK,            PT_MKFLG(x_pt.pt_schemedark),             "scheme_dark" },
-//  { TF_COLORRGB,              PT_MKSTR(x_pt.pt_colorrgb),               "color_rgb" },
+    { TF_COLORRGB,              PT_MKFLG(x_pt.pt_colorrgb),               "color_rgb" },
     { TF_COLORMAP,              PT_MKSTR(x_pt.pt_colormap),               "color_map" },
     { TF_COLORPALETTE,          PT_MKSTR(x_pt.pt_colorpalette),           "color_palette" },
     { TF_COLORSCHEME,           PT_MKSTR(x_pt.pt_colorscheme),            "color_scheme" },

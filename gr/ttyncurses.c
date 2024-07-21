@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.22 2024/07/20 09:23:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.23 2024/07/21 07:01:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyncurses.c,v 1.22 2024/07/20 09:23:13 cvsuser Exp $
+/* $Id: ttyncurses.c,v 1.23 2024/07/21 07:01:27 cvsuser Exp $
  * [n]curses tty driver interface -- alt driver when running under ncurses.
  *
  *
@@ -109,6 +109,12 @@ extern int _nc_unicode_locale(void);            /* XXX - private/exported */
 #include "system.h"                             /* sys_...() */
 #include "tty.h"
 #include "window.h"
+
+#if defined(NCURSES_CONST)
+#define CURSES_CAST(__x) (NCURSES_CONST char *)(__x)
+#else
+#define CURSES_CAST(__x) (char *)(__x)
+#endif
 
 typedef int16_t nccolor_t;
 
@@ -1039,7 +1045,7 @@ term_dump(void)
     for (i = 0; (fname = strfnames[i]) != NULL; ++i) {
         if (0 != memcmp(fname, "key_", 4)) {    // key_xxx
             const char *name = strnames[i];
-            const char *val = tigetstr(name);
+            const char *val = tigetstr(CURSES_CAST(name));
             trace_log("\t%-24.24s %-4s %-8s : %s\n",
                 fname, strcodes[i], name, (val == NULL ? "" : (val == (void *)-1 ? "NA" : c_string(val))));
             if (0 == strcmp(fname, "acs_chars")) {
@@ -1049,7 +1055,7 @@ term_dump(void)
     }
     for (i = 0; (fname = extrastr[i].fname) != NULL; ++i) {
         const char *name = extrastr[i].name;
-        const char *val = tigetstr(name);
+        const char *val = tigetstr(CURSES_CAST(name));
         trace_log("\t%-24.24s %-4s %-8s : %s\n",
             fname, "", name, (val == NULL ? "" : (val == (void *)-1 ? "NA" : c_string(val))));
     }
@@ -1058,7 +1064,7 @@ term_dump(void)
     for (i = 0; (fname = strfnames[i]) != NULL; ++i) {
         if (0 == memcmp(fname, "key_", 4)) {    // key_xxx
             const char *name = strnames[i];
-            const char *val = tigetstr(name);
+            const char *val = tigetstr(CURSES_CAST(name));
             trace_log("\t%-24.24s %-4s %-8s : %s\n",
                 fname, strcodes[i], name, (val == NULL ? "" : (val == (void *)-1 ? "NA" : c_string(val))));
         }
@@ -1067,13 +1073,13 @@ term_dump(void)
     trace_log("  Numeric:\n");
     for (i = 0; (fname = numfnames[i]) != NULL; ++i) {
         const char *name = numnames[i];
-        const int val = tigetnum(name);
+        const int val = tigetnum(CURSES_CAST(name));
         trace_log("\t%-24.24s %-4s %-8s : %d\n",
             fname, numcodes[i], name, val);
     }
     for (i = 0; (fname = extranum[i].fname) != NULL; ++i) {
         const char *name = extranum[i].name;
-        const int val = tigetnum(name);
+        const int val = tigetnum(CURSES_CAST(name));
         trace_log("\t%-24.24s %-4s %-8s : %d\n",
             fname, "", name, val);
     }
@@ -1081,13 +1087,13 @@ term_dump(void)
     trace_log("  Boolean/Flags:\n");
     for (i = 0; (fname = boolfnames[i]) != NULL; ++i) {
         const char *name = boolnames[i];
-        const int val = tigetflag(name);
+        const int val = tigetflag(CURSES_CAST(name));
         trace_log("\t%-24.24s %-4s %-8s : %d\n",
             fname, boolcodes[i], name, val);
     }
     for (i = 0; (fname = extrabool[i].fname) != NULL; ++i) {
         const char *name = extrabool[i].name;
-        const int val = tigetflag(name);
+        const int val = tigetflag(CURSES_CAST(name));
         trace_log("\t%-24.24s %-4s %-8s : %d\n",
             fname, "", name, val);
     }

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.126 2024/07/20 09:23:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.128 2024/07/21 07:01:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.126 2024/07/20 09:23:27 cvsuser Exp $
+/* $Id: ttyterm.c,v 1.128 2024/07/21 07:01:27 cvsuser Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -46,20 +46,18 @@ __CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.126 2024/07/20 09:23:27 cvsuser 
 #   include <ncursesw/curses.h>
 #   include <ncursesw/termcap.h>
 #   include <ncursesw/term.h>
-#elif defined(HAVE_NCURSESW_H)
-#   include <ncursesw.h>
-#   if defined(HAVE_TERMCAP_H)
-#       include <termcap.h>
-#   endif
-#   if defined(HAVE_TERM_H)
-#       include <term.h>
-#   endif
 #elif defined(HAVE_NCURSES_CURSES_H)
 #   include <ncurses/curses.h>
 #   include <ncurses/termcap.h>
 #   include <ncurses/term.h>
-#elif defined(HAVE_NCURSES_H)
-#   include <ncurses.h>
+#elif defined(HAVE_NCURSESW_H) || defined(HAVE_NCURSES_H) || defined(HAVE_CURSES_H)
+#   if defined(HAVE_NCURSESW_H)
+#       include <ncursesw.h>
+#   elif defined(HAVE_NCURSES_H)
+#       include <ncurses.h>
+#   else
+#       include <curses.h>
+#   endif
 #   if defined(HAVE_TERMCAP_H)
 #       include <termcap.h>
 #   endif
@@ -75,8 +73,12 @@ __CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.126 2024/07/20 09:23:27 cvsuser 
 #   include <ncurses/curses.h>
 #   include <ncurses/termcap.h>
 #   include <ncurses/term.h>
-#elif defined(HAVE_NCURSES_H)
-#   include <ncurses.h>
+#elif defined(HAVE_NCURSES_H) || defined(HAVE_CURSES_H)
+#   if defined(HAVE_NCURSES_H)
+#       include <ncurses.h>
+#   else
+#       include <curses.h>
+#   endif
 #   if defined(HAVE_TERMCAP_H)
 #       include <termcap.h>
 #   endif
@@ -180,6 +182,12 @@ extern int ospeed;
 #define ANSI_COLORS             16
 #define XTERM_COLORS            16
 #define NOCOLOR                 0x7fff
+
+#if defined(NCURSES_CONST)
+#define CURSES_CAST(__x) (NCURSES_CONST char *)(__x)
+#else
+#define CURSES_CAST(__x) (char *)(__x)
+#endif
 
 typedef struct {
     const char *        termfname;              /* function name */
@@ -392,7 +400,8 @@ static int
 static int
     tn_sg,                                      /* number of glitches, 0 for invisable, -1 for none */
     tn_li, tn_co,                               /* lines/columns */
-    tn_NC;                                      /* attributes which dont mix with colors */
+    tn_NC,                                      /* attributes which dont mix with colors */
+    tn_RGB;                                     /* RGB bits */
 
 static const char
     *tc_ti,                                     /* Term init -- start using cursor motion. */
@@ -984,7 +993,7 @@ static TermNumeric_t term_numbers[] = {         /* numeric - termcap/terminfo el
          *  https://invisible-island.net/ncurses/man/user_caps.5.html
          *  See: ncurses/include/Caps-ncurses
          */
-    { TC_UNAME(nc),                         NULL, "RGB",        TC_DESC("use direct colors with given number of bits") },
+    { TC_UNAME(nc),                         NULL, "RGB",        TC_DESC("use direct colors with given number of bits"), &tn_RGB },
     { TC_UNAME(nc),                         NULL, "U8",         TC_DESC("terminal VT100 SI/SO processing UTF-8 encoding") },
 
         /* screen */
@@ -2295,7 +2304,7 @@ ttigetstr(const Term_t *ti)
     XF_TERMINFO {
         const char *name = ti->terminfoname;
 
-        s = tigetstr((char *) name);
+        s = tigetstr(CURSES_CAST(name));
         if ((char *)-1 == s) {                  /* 'name' is not a string capability */
             if (0 == ti->userdef)
                 trace_log("\ttgetstr(%s) = unknown\n", name);
@@ -2359,7 +2368,7 @@ ttigetnum(const Term_t *ti)
 #if defined(HAVE_TERMINFO)
     XF_TERMINFO {
         name = ti->terminfoname;
-        num  = tigetnum((char *) name);
+        num  = tigetnum(CURSES_CAST(name));
     }
 #endif
 #if defined(HAVE_TERMCAP)
@@ -2393,7 +2402,7 @@ ttigetflag(const Term_t *ti)
 #if defined(HAVE_TERMINFO)
     XF_TERMINFO {
         name = ti->terminfoname;
-        flag = tigetflag((char *) name);
+        flag = tigetflag(CURSES_CAST(name));
     }
 #endif
 #if defined(HAVE_TERMCAP)
@@ -2535,10 +2544,10 @@ acs_locale_breaks(void)
 
             if (IS_CTRLN(tc_acs_start) || IS_CTRLO(tc_acs_start)) {
                 return TRUE;
-	    }
+            }
 
 #if defined(HAVE_LIBNCURSESW) || defined(HAVE_LIBNCURSES)
-	    if (IS_CTRLN(set_attributes) || IS_CTRLO(set_attributes)) {
+            if (IS_CTRLN(set_attributes) || IS_CTRLO(set_attributes)) {
                 return TRUE;
             }
 #endif
@@ -2732,6 +2741,7 @@ term_colors(void)
             }
         }
     }
+    x_pt.pt_colorrgb = (tt_colors >= 256 && tn_RGB > 0 ? 1 : 0);
 
     /* configure colors */
     assert((COLOR_NONE + 1) == (sizeof(tt_colormap)/sizeof(tt_colormap[0])));
@@ -5687,6 +5697,7 @@ do_copy_screen(void)            /* void () */
 #endif
 
 #endif  /*!USE_VIO_BUFFER && !DJGPP */
+
 
 
 

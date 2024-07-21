@@ -25169,7 +25169,7 @@ printf %s "checking whether curses interface utilities const strings... " >&6; }
 #elif defined(HAVE_NCURSES_CURSES_H)
 #  include <ncurses/curses.h>
 #  include <ncurses/termcap.h>
-OR#  include <ncurses/term.h>
+#  include <ncurses/term.h>
 #else
 #  if defined(HAVE_NCURSESW_H)
 #     include <ncursesw.h>
@@ -25395,8 +25395,28 @@ printf %s "checking whether tputs() uses outfuntype... " >&6; }
 	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
-#ifdef HAVE_TERMCAP_H
-#include <termcap.h>
+#if defined(HAVE_NCURSESW_CURSES_H)
+#  include <ncursesw/curses.h>
+#  include <ncursesw/termcap.h>
+#  include <ncursesw/term.h>
+#elif defined(HAVE_NCURSES_CURSES_H)
+#  include <ncurses/curses.h>
+#  include <ncurses/termcap.h>
+#  include <ncurses/term.h>
+#else
+#  if defined(HAVE_NCURSESW_H)
+#     include <ncursesw.h>
+#  elif defined(HAVE_NCURSES_H)
+#     include <ncurses.h>
+#  elif defined(HAVE_CURSES_H)
+#     include <curses.h>
+#  endif
+#  if defined(HAVE_TERMCAP_H)
+#     include <termcap.h>
+#  endif
+#  if defined(HAVE_TERM_H)
+#     include <term.h>
+#  endif
 #endif
 
 int
@@ -25419,14 +25439,31 @@ printf "%s\n" "no" >&6; }; { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checkin
 printf %s "checking determining tputs() function final argument type... " >&6; }
 			cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-
-#ifdef HAVE_TERM_H
-#include <term.h>
+[
+#if defined(HAVE_NCURSESW_CURSES_H)
+#  include <ncursesw/curses.h>
+#  include <ncursesw/termcap.h>
+#  include <ncursesw/term.h>
+#elif defined(HAVE_NCURSES_CURSES_H)
+#  include <ncurses/curses.h>
+#  include <ncurses/termcap.h>
+#  include <ncurses/term.h>
+#else
+#  if defined(HAVE_NCURSESW_H)
+#     include <ncursesw.h>
+#  elif defined(HAVE_NCURSES_H)
+#     include <ncurses.h>
+#  elif defined(HAVE_CURSES_H)
+#     include <curses.h>
+#  endif
+#  if defined(HAVE_TERMCAP_H)
+#     include <termcap.h>
+#  endif
+#  if defined(HAVE_TERM_H)
+#     include <term.h>
+#  endif
 #endif
-#ifdef HAVE_CURSES_H
-#include <curses.h>
-#endif
-
+]
 _ACEOF
 if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
   $EGREP_TRADITIONAL "tputs.*[(][ \\\t]*char[ \\\t]*[)]" >/dev/null 2>&1

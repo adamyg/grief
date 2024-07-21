@@ -1,4 +1,4 @@
-dnl $Id: libterm.m4,v 1.29 2024/07/20 17:30:37 cvsuser Exp $
+dnl $Id: libterm.m4,v 1.30 2024/07/21 07:02:23 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -68,6 +68,12 @@ dnl     HAVE_TERM_H
 dnl
 dnl     HAVE_CURSES_ENHANCED
 dnl     HAVE_CURSES_COLOR
+dnl
+dnl     HAVE_OSPEED
+dnl     or OSPEED_EXTERN
+dnl
+dnl     HAVE_UP_BC_PC
+dnl     or UP_BC_PC_EXTERN
 dnl
 dnl     HAVE_OUTFUNTYPE
 dnl     TPUTS_TAKES_CHAR
@@ -733,7 +739,7 @@ extern int tgetent(char *, const char *);
 #elif defined(HAVE_NCURSES_CURSES_H)
 #  include <ncurses/curses.h>
 #  include <ncurses/termcap.h>
-OR#  include <ncurses/term.h>
+#  include <ncurses/term.h>
 #else
 #  if defined(HAVE_NCURSESW_H)
 #     include <ncursesw.h>
@@ -824,20 +830,57 @@ extern char *UP, *BC, PC;
 	dnl -- tputs
 	AC_MSG_CHECKING(whether tputs() uses outfuntype)
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#ifdef HAVE_TERMCAP_H
-#include <termcap.h>
+#if defined(HAVE_NCURSESW_CURSES_H)
+#  include <ncursesw/curses.h>
+#  include <ncursesw/termcap.h>
+#  include <ncursesw/term.h>
+#elif defined(HAVE_NCURSES_CURSES_H)
+#  include <ncurses/curses.h>
+#  include <ncurses/termcap.h>
+#  include <ncurses/term.h>
+#else
+#  if defined(HAVE_NCURSESW_H)
+#     include <ncursesw.h>
+#  elif defined(HAVE_NCURSES_H)
+#     include <ncurses.h>
+#  elif defined(HAVE_CURSES_H)
+#     include <curses.h>
+#  endif
+#  if defined(HAVE_TERMCAP_H)
+#     include <termcap.h>
+#  endif
+#  if defined(HAVE_TERM_H)
+#     include <term.h>
+#  endif
 #endif
 ]], [[extern int xx(); tputs("test", 1, (outfuntype)xx)]])],
 			[AC_MSG_RESULT(yes); AC_DEFINE([HAVE_OUTFUNTYPE], 1, [typedef outfuntype available.])],
 			[AC_MSG_RESULT(no); AC_MSG_CHECKING(determining tputs() function final argument type)
-			AC_EGREP_CPP([tputs.*[(][ \\\t]*char[ \\\t]*[)]],[
-#ifdef HAVE_TERM_H
-#include <term.h>
+			AC_EGREP_CPP([tputs.*[(][ \\\t]*char[ \\\t]*[)]],[[
+#if defined(HAVE_NCURSESW_CURSES_H)
+#  include <ncursesw/curses.h>
+#  include <ncursesw/termcap.h>
+#  include <ncursesw/term.h>
+#elif defined(HAVE_NCURSES_CURSES_H)
+#  include <ncurses/curses.h>
+#  include <ncurses/termcap.h>
+#  include <ncurses/term.h>
+#else
+#  if defined(HAVE_NCURSESW_H)
+#     include <ncursesw.h>
+#  elif defined(HAVE_NCURSES_H)
+#     include <ncurses.h>
+#  elif defined(HAVE_CURSES_H)
+#     include <curses.h>
+#  endif
+#  if defined(HAVE_TERMCAP_H)
+#     include <termcap.h>
+#  endif
+#  if defined(HAVE_TERM_H)
+#     include <term.h>
+#  endif
 #endif
-#ifdef HAVE_CURSES_H
-#include <curses.h>
-#endif
-				], [AC_MSG_RESULT(char); AC_DEFINE([TPUTS_TAKES_CHAR], 1, [tputs character interface.])],
+]], [AC_MSG_RESULT(char); AC_DEFINE([TPUTS_TAKES_CHAR], 1, [tputs character interface.])],
 					[AC_MSG_RESULT(not char, int assumed);
 					])
 		])
