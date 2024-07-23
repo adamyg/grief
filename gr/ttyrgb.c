@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyrgb_c,"$Id: ttyrgb.c,v 1.18 2024/07/07 17:26:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyrgb_c,"$Id: ttyrgb.c,v 1.19 2024/07/23 12:00:35 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyrgb.c,v 1.18 2024/07/07 17:26:23 cvsuser Exp $
+/* $Id: ttyrgb.c,v 1.19 2024/07/23 12:00:35 cvsuser Exp $
  * Color RGB support.
  *
  *
@@ -1083,9 +1083,4 @@ main(int argc, char *argv[])
     return 0;
 }
 #endif  /*LOCAL_MAIN*/
-
-
-
-
-
 

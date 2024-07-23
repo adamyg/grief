@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.21 2024/07/20 18:16:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.22 2024/07/23 12:52:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_terminal.c,v 1.21 2024/07/20 18:16:50 cvsuser Exp $
+/* $Id: m_terminal.c,v 1.22 2024/07/23 12:52:20 cvsuser Exp $
  * Terminal screen and keyboard primitives.
  *
  *
@@ -173,6 +173,7 @@ static struct pt_map    pt_features[] = {
 
     { TF_VT_DATYPE,             PT_MKINT(x_pt.pt_vtdatype),               "vt_datype" },
     { TF_VT_DAVERSION,          PT_MKINT(x_pt.pt_vtdaversion),            "vt_daversion" },
+    { TF_VT_DAOPTIONS,          PT_MKINT(x_pt.pt_vtdaoptions),            "vt_daoptions" },
 
     { TF_ENCODING,              PT_MKSTR(x_pt.pt_encoding),               "encoding" },
     { TF_UNICODE_VERSION,       PT_MKSTR(x_pt.pt_unicode_version),        "unicode_version" },
@@ -536,6 +537,8 @@ do_set_term_characters(void)    /* int ([int ident string desc], [string|int] va
                                                                     85 - rxvt unicode.
 
   ! TF_VT_DAVERSION         vt_daversion            Integer     Terminal version.
+
+  ! TF_VT_DAOPTIONS         vt_daoptions            Integer     Terminal options.
 
   ! TF_ENCODING             encoding                String      Terminal character encoding.
 
@@ -1384,4 +1387,5 @@ do_get_term_keyboard(void)      /* list () */
 }
 
 /*end*/
+
 

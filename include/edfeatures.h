@@ -1,11 +1,11 @@
 #ifndef GR_EDFEATURES_H_INCLUDED
 #define GR_EDFEATURES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edfeatures_h,"$Id: edfeatures.h,v 1.20 2024/07/12 16:44:04 cvsuser Exp $")
+__CIDENT_RCSID(gr_edfeatures_h,"$Id: edfeatures.h,v 1.21 2024/07/23 12:52:29 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edfeatures.h,v 1.20 2024/07/12 16:44:04 cvsuser Exp $
+/* $Id: edfeatures.h,v 1.21 2024/07/23 12:52:29 cvsuser Exp $
  * Editor features.
  *
  *
@@ -100,6 +100,7 @@ __CBEGIN_DECLS
 
 #define TF_VT_DATYPE            90              /* VT/XTERM Device Attribute Type */
 #define TF_VT_DAVERSION         91              /* VT/XTERM Device Attribute Version */
+#define TF_VT_DAOPTIONS         92              /* VT/XTERM Device Attribute Options */
 
 #define TF_ENCODING             100             /* terminal character encoding */
 #define TF_ENCODING_GUESS       101             /* text encoding guess specification */
@@ -228,6 +229,7 @@ struct _features {
 
     int         pt_vtdatype;                    /* INT,         Device attribute type. */
     int         pt_vtdaversion;                 /* INT,         Device attribute version. */
+    int         pt_vtdaoptions;                 /* INT,         Device attribute options */
 
     int         pt_tty_fast;                    /* INT,         TTY fast screen optimisations. */
     int         pt_tty_graphicsbox;             /* INT,         TTY box characters require graphics mode. */
@@ -255,6 +257,8 @@ __CEND_DECLS
 
 #endif /*GR_EDFEATURES_H_INCLUDED*/
 /*end*/
+
+
 
 
 

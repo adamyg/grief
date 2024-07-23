@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.128 2024/07/21 07:01:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.130 2024/07/23 12:00:35 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.128 2024/07/21 07:01:27 cvsuser Exp $
+/* $Id: ttyterm.c,v 1.130 2024/07/23 12:00:35 cvsuser Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -176,6 +176,7 @@ extern int ospeed;
 #include "procspawn.h"
 #include "system.h"
 #include "tty.h"
+#include "ttyutil.h"
 #include "undo.h"
 #include "window.h"
 
@@ -263,10 +264,9 @@ static int              xterm_colors_get(char *buffer, int length);
 static int              xterm_colors_set(const char *value);
 
 static int              term_isutf8(void);
-static int              term_attributes(void);
-static int              term_identification(void);
-static int              term_ocs_color(int code);
-static int              term_read(char *buf, int blen, accint_t tmo);
+static void             term_attributes(void);
+static void             term_identification(void);
+static int              term_luminance(void);
 
 static __CINLINE void   term_graphic_enter(void);
 static __CINLINE void   term_graphic_exit(void);
@@ -344,8 +344,8 @@ static char             tcapstrings[TC_SLEN];   /* termcap local storage */
 #define TA_DARK                 0x00000010      /* generally dark background */
 #define TA_LIGHT                0x00000020      /* generally light */
 #define TA_MONO                 0x00000040      /* mono terminal */
-#define TA_LUMINACE_DARK        0x00000100
-#define TA_LUMINACE_LIGHT       0x00000200
+#define TA_LUMINANCE_DARK       0x00000100
+#define TA_LUMINANCE_LIGHT      0x00000200
 
 static TAttributes_t    t_attributes;           /* attributes */
 static int              t_charout;              /* number of characters output. */
@@ -1757,7 +1757,7 @@ term_config(void)
         if (name && NULL != (cp = ttigetstr(term))) {
             const size_t kcode = (size_t)ti->key;
 
-            ti->svalue = cp;                /* loaded later by ttkeys() */
+            ti->svalue = cp;                    /* loaded later by ttkeys() */
 
             trace_log("\t%-24s %-50s%c %-6s : %s\n",
                 term->termfname, term->comment, (kcode ? '*' : ' '), name, c_string(cp));
@@ -1768,7 +1768,7 @@ term_config(void)
         }
     }
 
-    if (fkeys >= 10) {                      /* have all 10 function keys */
+    if (fkeys >= 10) {                          /* have all 10 function keys */
         x_pt.pt_attributes |= TF_AFUNCTIONKEYS;
     }
 
@@ -1829,8 +1829,8 @@ ttdefaultscheme(void)
     if (x_pt.pt_schemedark >= 0) {              /* explicit configuration */
         isdark = x_pt.pt_schemedark;
 
-    } else if ((TA_LUMINACE_DARK|TA_LUMINACE_LIGHT) & t_attributes) {
-        if (TA_LUMINACE_DARK & t_attributes) {  /* luminace calc */
+    } else if ((TA_LUMINANCE_DARK|TA_LUMINANCE_LIGHT) & t_attributes) {
+        if (TA_LUMINANCE_DARK & t_attributes) { /* luminance calc */
             isdark = 1;
         }
 
@@ -1874,7 +1874,7 @@ term_open(scrprofile_t *profile)
     sys_initialise();
     term_attributes();
     term_identification();                      /* terminal identification */
-    term_ocs_color(11);
+    term_luminance();
     term_sizeget(&profile->sp_rows, &profile->sp_cols);
     profile->sp_colors = tt_colors;
 }
@@ -2484,6 +2484,7 @@ acs_dump(const char *bp)
  *  Parameters:
  *      bx - Box character spec.
  *
+
  *  Returns:
  *      Converted box characters into an acs specification.
  */
@@ -2530,14 +2531,14 @@ acs_locale_breaks(void)
     if ((env = ggetenv("NCURSES_NO_UTF8_ACS")) != 0) {
         return atoi(env);                       /* ncurses compatibility */
 
-    } else if ((env = ggetenv("TERM")) != 0) {
-        if (strstr(env, "linux")) {
+    } else if ((env = ggetenv("TERM")) != NULL) {
+        if (isterm(env, "linux")) {
             return TRUE;
         }
 
-        if (strstr(env, "screen") &&
+        if (isterm(env, "screen") &&
                 ((env = ggetenv("TERMCAP")) != 0 && strstr(env, "screen") != 0) &&
-                strstr(env, "hhII00") != 0) {
+                    strstr(env, "hhII00") != 0) {
 
 #define IS_CTRLN(s)         ((s) != 0 && strstr(s, "\016") != 0)
 #define IS_CTRLO(s)         ((s) != 0 && strstr(s, "\017") != 0)
@@ -2979,8 +2980,8 @@ xterm_colors_get(char *buffer, int length)
          */
         int cnt = sprintf((char *)t_buffer, "\033]4;%d;?\007", color);
 
-        if (cnt != sys_write(TTY_OUTFD, t_buffer, cnt) ||
-                (cnt = term_read((char *)t_buffer, sizeof(t_buffer), 5 * 1000)) <= 0 ||
+        if (cnt != tty_write(t_buffer, cnt) ||
+                    (cnt = tty_read((char *)t_buffer, sizeof(t_buffer), 5 * 1000)) <= 0 ||
                 sscanf((char *)t_buffer, "%*[^;];%*[^;];%s", buffer + len + (len ? 1 : 0)) != 1) {
             /*
              *  Note, 'rxvt' and the 'linux console' only support set.
@@ -3074,50 +3075,52 @@ xterm_colors_set(const char *value)
  *      none.
  *
  *  Returns:
- *      Length of the buffer retrieved.
+ *      x_pt.pt_attributes update if suitable.
  */
-static int
+static void
 term_attributes(void)
 {
-    int ret = -1;
-
     if ((TA_KITTY|TA_ALACRITTY|TA_WEZTERM) & t_attributes) {
-#define XTERM_DA1X          (sizeof(xterm_da1x_cmd)-1)
         static char xterm_da1x_cmd[] = "\033[?u\033[c";
-                //
-                // Extended DA1 request.
-                //
-                // An application can query the terminal for support of this protocol by sending the escape code
-                // querying for the current progressive enhancement status followed by request for the primary
-                // device attributes <https://vt100.net/docs/vt510-rm/DA1.html>.
-                //
-                // If an answer for the device attributes is received without getting back an answer for the
-                // progressive enhancement the terminal does not support this protocol.
-                //
-                // Terminals: kitty, foot, WezTerm, alacritty, rio, crossterm
-                //
+#define XTERM_DA1X  (sizeof(xterm_da1x_cmd)-1)
+            //
+            // Extended DA1 request.
+            //
+            // Progressive enhancement key events:
+            //
+            // An application can query the terminal for support of this protocol by sending the escape code
+            // querying for the current progressive enhancement status followed by request for the primary
+            // device attributes <https://vt100.net/docs/vt510-rm/DA1.html>.
+            //
+            //      CSI ? flags u
+            //
+            //  Reply with:
+            //
+            //      CSI ? flags u
+            //
+            // If an answer for the device attributes is received without getting back an answer for the
+            // progressive enhancement the terminal does not support this protocol.
+            //
+            // Terminals: kitty, foot, WezTerm, alacritty, rio, crossterm
+            //
         char buffer[64] = {0};
         int len = 0;
 
         term_flush();
-        if (XTERM_DA1X == sys_write(TTY_OUTFD, xterm_da1x_cmd, XTERM_DA1X) &&
-                (len = term_read(buffer, sizeof(buffer), -2)) > 1) {
+        if (XTERM_DA1X == tty_write(xterm_da1x_cmd, XTERM_DA1X) &&
+                (len = tty_read(buffer, sizeof(buffer), -2)) > 1) {
             char *cursor = buffer;
 
             trace_ilog("term_da1x(%d, %s)\n", len, buffer);
-            if ('\033' == cursor[0] && '[' == cursor[1]) {
-                if (cursor[3] == 'u' && cursor[4] == '?') {
+            if ('\033' == cursor[0] && '[' == cursor[1] && cursor[2] == '?' && cursor[3]) {
+                if (cursor[4] == 'u') {
                     x_pt.pt_attributes |= TF_AKITTYKEYS;
                     trace_ilog("\t==> kitty-keys\n");
-                    cursor += 4;
+
+                } else {
+                    trace_ilog("\t==> da1 response\n");
                 }
             }
-
-        //  if ('\033' == cursor[0] && '[' == cursor[1]) {
-        //      if (cursor[2] == '?' && cursor[3]) {
-        //          trace_ilog("\t==> da1 response\n");
-        //      }
-        //  }
         }
     }
 
@@ -3130,8 +3133,6 @@ term_attributes(void)
             x_pt.pt_attributes |= TF_AXTERMKEYS;/* xterm modifyOtherKeys */
         }
     }
-
-    return ret;
 }
 
 
@@ -3139,230 +3140,72 @@ term_attributes(void)
  *      Request the terminal (VT100 and xterm style) to echo the "DA2 - Secondary Device Attributes"
  *      report containing terminal type and version.
  *
- *      DA2 - Secondary Device Attributes
- *          In this DA exchange, the host requests the terminal's identification code, firmware version level, and hardware options.
- *
- *          Host Request:
- *              The host uses the following sequence to send this request.
- *
- *              CSI     >       c       or      CSI     >       0       c
- *              9/11    3/14    6/3             9/11    3/14    3/0     6/3
- *
- *          Terminal Response:
- *              The terminal with a VT keyboard uses the following sequence to respond.
- *
- *              CSI     >       6       1       ;       Pv      ;       0       c
- *              9/11    3/14    3/6     3/1     3/11    3/n     3/11    3/0     6/3     DA2R for terminal with STD keyboard.
- *
- *              CSI     >       6       1       ;       Pv      ;       1       c
- *              9/11    3/14    3/6     3/1     3/11    3/n     3/11    3/1     6/3     DA2R for terminal with PC keyboard.
- *
- *      Example:
- *          \033[>82;20710;0c
- *                ^type
- *                   ^version
- *
- *          Terminal                    Type        Version         Example
- *          ------------------------------------------------------------------
- *          Gnome-terminal (legacy)     1           >= 1115         1;3801;0
- *          PuTTY                       0           136             0;136;0
- *          MinTTY                      77(=M)                      77;20005;0c
- *          rxvt                        82(=R)
- *          screen                      83(=S)                      83;40500;0
- *          urxvt                       85(=U)
- *          xterm                       -2(a)
- *
  *  Parameters:
  *      none.
  *
  *  Returns:
- *      Length of the buffer retrieved.
+ *      x_pt.pt_vtdatype and vtdaversion upon details being available.
  */
-static int
+static void
 term_identification(void)
 {
-#define XTERM_DA2_LEN       (sizeof(xterm_da2_cmd)-1)
-    static char xterm_da2_cmd[] = "\033[>c";
-    int ret = -1;
-
 #if defined(__CYGWIN__)
+    /*
+     *  CYGWIN version
+     */
     if (TA_CYGWIN & t_attributes) {
-        /*
-         *  CYGWIN
-         */
         struct utsname u = {0};
         int r1 = 0, r2 = 0;
 
-        ret = -3;
         if (uname(&u) >= 0) {
             if (2 == sscanf(u.release, "%d.%d", &r1, &r2)) {
-                x_pt.pt_vtdatype = -3;            /* source: xterm_cygwin */
+                x_pt.pt_vtdatype = -3;          /* source: xterm_cygwin */
                 x_pt.pt_vtdaversion = (r1 * 100) + (r2 > 99 ? 99 : r2);
             }
             trace_ilog("\tcygwin_uname(%s) = %d.%d\n", u.release, r1, r2);
         }
-        return ret;
     }
-#endif  /*__CYGWIN__*/
+#endif
 
-    if (((TA_VT100LIKE|TA_XTERM|TA_XTERMLIKE) & t_attributes) || tc_RV) {
-        /*
-         *  xterm and compatible terminals
-         */
-        const char *rvcmd = (tc_RV ? tc_RV : xterm_da2_cmd);
-        const int rvlen = (tc_RV ? strlen(tc_RV) : XTERM_DA2_LEN);
-        const char *vstr;
-
-        /*
-         *  XTERM_VERSION/
-         *      Xterm(256) ==> 256
-         */
-        if (NULL != (vstr = ggetenv("XTERM_VERSION"))) {
-            char vname[32+1] = {0};
-            int vnumber = 0;
-                                                /* decode and return patch/version number */
-            if (2 == sscanf(vstr, "%32[^(](%u)", vname, &vnumber))
-                if (vnumber > 0) {
-                    x_pt.pt_vtdatype = -2;      /* source: xterm_version */
-                    x_pt.pt_vtdaversion = vnumber;
-                    ret = 0;
-                }
-            trace_ilog("XTERM_VERSION(%s) = %d (%s)\n", vstr, vnumber, vname);
-        }
-
-        /*
-         *  Device attribute
-         */
-        if (-1 == ret) {
-            char buffer[32] = {0};
-            int len = 0;
-
-            term_flush();
-            if (rvlen == sys_write(TTY_OUTFD, rvcmd, rvlen) &&
-                    (len = term_read(buffer, sizeof(buffer), -2)) > 1) {
-                trace_ilog("term_da2(%d, %s)\n", len, buffer);
-
-                if ('\033' == buffer[0] && '[' == buffer[1] &&
-                        ('>' == buffer[2] || '?' == buffer[2])) {
-                    int datype, daversion;
-
-                    if (2 == sscanf(buffer + 3, "%d;%d", &datype, &daversion)) {
-                        trace_ilog("\t==> type:%d, version:%d\n", datype, daversion);
-                        x_pt.pt_vtdatype = datype;
-                        x_pt.pt_vtdaversion = daversion;
-                        if (77 == datype) {
-                            t_attributes |= TA_MINTTY;
-                            ++tf_xn;
-                        }
-                        ret = 0;
-                    }
-                }
-            }
-        }
+    /*
+     *  xterm and compatible terminals
+     */
+    if (tc_RV || ((TA_VT100LIKE|TA_XTERM|TA_XTERMLIKE) & t_attributes)) {
+        tty_identification(tc_RV, io_escdelay());
     }
-
-    return ret;
 }
 
 
-/*  Function:           term_ocs_color
+/*  Function:           term_luminance
  *      Request the terminals foreground or background RGB color.
  *
  *  Parameters:
- *      code - 10=foregroud or 11=background.
+ *      none
  *
  *  Returns:
- *      0 on success, otherwise non-zero on error.
+ *      0 on success, otherwise -1 if not available.
  */
 static int
-term_ocs_color(int code)
+term_luminance(void)
 {
-#define XTERM_OCS10_LEN     (sizeof(xterm_ocs10) - 1)
-#define XTERM_OCS11_LEN     (sizeof(xterm_ocs11) - 1)
-
-    static char xterm_ocs10[] = "\x1b]10;?\007";
-    static char xterm_ocs11[] = "\x1b]11;?\007";
-
     const unsigned timeoutms = io_escdelay();
-    unsigned rgb[3] = {0,0,0}, rgbmax = 0;
-    unsigned char *cp, buffer[32] = {0};
-    int len = 0;
+    int ret;
 
-    assert(10 == code || 11 == code);
     if (!tf_XT && 0 == ((TA_XTERM|TA_XTERMLIKE) & t_attributes)) {
-        trace_ilog("term_ocs%d : not supported\n", code);
+        trace_ilog("ttluminance : not supported\n");
         return -1;                              /* supported? */
     }
 
-    /*
-     *  Format:
-     *
-     *          <ESC>]rgb:xx/xx/xx<ESC|DEL>
-     *      or  <ESC>]rgb:xxxx/xxxx/xxxx<ESC|DEL>
-     *
-     *  Example:
-     *
-     *      echo -ne '\e]11;?\a'; cat
-     *
-     *      ESC]11;rgb:0000/0000/0000
-     */
     term_flush();
-    if ((10 == code && XTERM_OCS10_LEN != sys_write(TTY_OUTFD, xterm_ocs10, XTERM_OCS10_LEN)) ||
-        (11 == code && XTERM_OCS11_LEN != sys_write(TTY_OUTFD, xterm_ocs11, XTERM_OCS11_LEN)) ||
-            (len = sys_read_timed(TTY_INFD, buffer, sizeof(buffer), timeoutms, NULL)) < 1) {
-        trace_ilog("term_ocs%d : io (tm=%d, len=%d)\n", code, timeoutms, len);
+    if ((ret = tty_luminance(io_escdelay())) < 0) {
         return -1;
     }
 
-    cp = buffer;
-    if (cp[0] == '\033' && cp[1] == ']') {        /* ESC] */
-        cp += 2;
-    } else if (cp[0] == 0x9d) {                   /* OSC */
-        cp += 1;
+    t_attributes &= ~(TA_LUMINANCE_DARK|TA_LUMINANCE_LIGHT);
+    if (ret) {
+        t_attributes |= TA_LUMINANCE_DARK;
     } else {
-        cp = NULL;
-    }
-
-    if (cp && cp[0] == '1' && (cp[1] == '0' || cp[1] == '1') && cp[2] == ';') {
-        /*
-         *  parse RGB values
-         */
-        const char *spec = (const char *)(cp + 3);
-        if (cp[11] == '/') {
-            if (sscanf(spec, "rgb:%4x/%4x/%4x\033", rgb+0, rgb+1, rgb+2) == 3 ||
-                    sscanf(spec, "rgb:%4x/%4x/%4x\007", rgb+0, rgb+1, rgb+2) == 3) {
-                rgbmax = 0xffff;
-            }
-
-        } else if (cp[9] == '/') {
-            if (sscanf(spec, "rgb:%2x/%2x/%2x\033", rgb+0, rgb+1, rgb+2) == 3 ||
-                    sscanf(spec, "rgb:%2x/%2x/%2x\007", rgb+0, rgb+1, rgb+2) == 3) {
-                rgbmax = 0xff;
-            }
-        }
-    }
-
-    if (0 == rgbmax)
-        trace_ilog("term_ocs%d(%d, %s) : n/a", code, len, buffer);
-
-    if (rgbmax && code == 11) {
-        /*
-         *  Luminance (perceived)
-         *  Reference: https://www.w3.org/TR/AERT/#color-contrast
-         */
-        const double r = (double)rgb[0] / (double)rgbmax;
-        const double g = (double)rgb[1] / (double)rgbmax;
-        const double b = (double)rgb[2] / (double)rgbmax;
-        const double l = (0.299 * r) + (0.587 * g) + (0.114 * b);
-
-        trace_ilog("term_ocs%d(%d, %s) : %04x/%04x/%04x\n", code, len, buffer, rgb[0], rgb[1], rgb[2]);
-        trace_ilog("\t==> luminance (%g) [%s]\n", l, l < 0.5 ? "dark" : "light");
-
-        if (l < 0.5) {
-            t_attributes |= TA_LUMINACE_DARK;
-        } else {
-            t_attributes |= TA_LUMINACE_LIGHT;
-        }
+        t_attributes |= TA_LUMINANCE_LIGHT;
     }
     return 0;
 }
@@ -3424,12 +3267,12 @@ term_isutf8(void)
 
         ret = -5;
         term_flush();
-        if (XTERM_UTF8_TEST1 == sys_write(TTY_OUTFD, (void *)xterm_utf8_test1, XTERM_UTF8_TEST1)) {
+        if (XTERM_UTF8_TEST1 == tty_write((void *)xterm_utf8_test1, XTERM_UTF8_TEST1)) {
             int row = -1, col = -1;
             char buffer[32] = {0};
             int len;
 
-            if ((len = term_read(buffer, sizeof(buffer), -2)) >= 4 &&
+            if ((len = tty_read(buffer, sizeof(buffer), -2)) >= 4 &&
                     2 == sscanf(buffer, "\033[%d;%dR", &row, &col)) {
                 if (2 == col) {
                     ret = 5;                    /* cursor in second column */
@@ -3443,109 +3286,6 @@ term_isutf8(void)
 
     trace_ilog("UTF8 support=%d\n", ret);
     return (ret >= 1 ? 1 : 0);
-}
-
-
-#if (TODO_MCHAR_DETECT)                         /* TODO: terminal ambiguous width */
-static void
-term_utf8_features(void)
-{
-#define XTERM_UTF8_TEST2        (sizeof(xterm_utf8_test2)-1)
-
-    static unsigned char xterm_utf8_test2[] = {
-            '\r',                               /* UTF features */
-            0xa5,
-            0xc3, 0x84, 0xd9,
-            0xa7,
-            0xd8, 0xb8, 0xe0, 0xe0,
-            0xa9,
-            0xa9,
-            0xb8, 0x88, 0xe5, 0xe5, 0x88,
-            0xa2, 0xa2,
-            0x1b, '[',  '6',  'n',              /* cursor position */
-            0x00                                /* NUL */
-            };
-
-    term_flush();
-
-    if (XTERM_UTF8_TEST2 == sys_write(TTY_OUTFD, xterm_utf8_test2, XTERM_UTF8_TEST2)) {
-        int row = -1, col = -1;
-        char buffer[32] = {0};
-        int len;
-
-        /*
-         *  check cursor column after test string, determine screen mode
-         *
-         *      6       -> UTF-8, no double-width, with LAM/ALEF ligature joining
-         *      7       -> UTF-8, no double-width, no LAM/ALEF ligature joining
-         *      8       -> UTF-8, double-width, with LAM/ALEF ligature joining
-         *      9       -> UTF-8, double-width, no LAM/ALEF ligature joining
-         *      11,16   -> CJK terminal (with luit)
-         *      10,15   -> 8 bit terminal or CJK terminal
-         *      13      -> Poderosa terminal emulator, UTF-8, or TIS620 terminal
-         *      14,17   -> CJK terminal
-         *      16      -> Poderosa, ISO Latin-1
-         *      (17)    -> Poderosa, (JIS)
-         *      18      -> CJK terminal (or 8 bit terminal, e.g. Linux console)
-         */
-        if ((len = term_read(buffer, sizeof(buffer), -2)) >= 4) {
-            sscanf(buffer, "\033[%d;%dR", &row, &col);
-        }
-
-        trace_ilog("\tisutf8B(%d) = col:%d\n", len, col);
-    }
-}
-#endif  /*XXX_MCHAR_DETECT*/
-
-
-/*  Function:           term_read
- *      Block read from the terminal.
- *
- *  Parameters:
- *      buffer - Buffer.
- *      length - Length of the buffer, in bytes.
- *      timeoutms - Timeout is milliseconds.
- *
- *  Returns:
- *      Number of bytes read.
- */
-static int
-term_read(char *buffer, int length, accint_t timeoutms)
-{
-    int cnt = 0;
-
-    if (timeoutms <= -2) {
-        timeoutms = io_escdelay();
-    }
-
-    assert(buffer && length);
-    assert(timeoutms >= -1);
-    if (NULL == buffer || 0 == length)
-        return 0;
-
-    if (length > 1) {
-        int ret;
-
-        --length;                               /* null terminator */
-
-        if (timeoutms < 0) {                    /* blocking */
-            if ((ret = sys_read(TTY_INFD, buffer + cnt, length - cnt)) > 0) {
-                cnt = ret;
-                while (cnt < length &&
-                        (ret = sys_read_timed(TTY_INFD, buffer + cnt, length - cnt, 50, NULL)) > 0) {
-                    cnt += ret;                 /* secondary characters */
-                }
-            }
-
-        } else {                                /* timed */
-            if ((ret = sys_read_timed(TTY_INFD, buffer, length, timeoutms, NULL)) > 0) {
-                cnt = ret;
-            }
-        }
-    }
-
-    buffer[cnt] = '\0';
-    return cnt;
 }
 
 
@@ -4072,6 +3812,7 @@ term_eeol(void)
         if (term_ce() && clearbg()) {
             ED_TERM(("->putpad(CE)\n"))
             ttputpad(tc_ce);
+
 
         /*
          *  Character based
@@ -5697,14 +5438,3 @@ do_copy_screen(void)            /* void () */
 #endif
 
 #endif  /*!USE_VIO_BUFFER && !DJGPP */
-
-
-
-
-
-
-
-
-
-
-

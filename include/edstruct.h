@@ -1,11 +1,11 @@
 #ifndef GR_EDSTRUCT_H_INCLUDED
 #define GR_EDSTRUCT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.78 2024/05/17 16:46:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.79 2024/07/21 16:16:12 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edstruct.h,v 1.78 2024/05/17 16:46:09 cvsuser Exp $
+/* $Id: edstruct.h,v 1.79 2024/07/21 16:16:12 cvsuser Exp $
  * Window, buffer, line and character-map definitions.
  *
  *
@@ -611,7 +611,7 @@ struct _display {
 #endif
     char                d_buf[PTY_BUFSIZ];      /* Buffer for reading into */
 #endif
-#if defined(unix) || defined(__APPLE__)
+#if defined(unix) || defined(__unix__) || defined(__APPLE__)
     pid_t               d_pgrp;                 /* Process group of child */
 #endif
 };

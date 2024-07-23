@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.23 2024/07/21 07:01:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.25 2024/07/23 12:00:35 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyncurses.c,v 1.23 2024/07/21 07:01:27 cvsuser Exp $
+/* $Id: ttyncurses.c,v 1.25 2024/07/23 12:00:35 cvsuser Exp $
  * [n]curses tty driver interface -- alt driver when running under ncurses.
  *
  *
@@ -108,6 +108,7 @@ extern int _nc_unicode_locale(void);            /* XXX - private/exported */
 #include "main.h"
 #include "system.h"                             /* sys_...() */
 #include "tty.h"
+#include "ttyutil.h"
 #include "window.h"
 
 #if defined(NCURSES_CONST)
@@ -140,8 +141,6 @@ static void             nc_beep(int freq, int duration);
 
 static void             term_identification(void);
 static void             term_defaultscheme(void);
-static int              term_luminance(void);
-static int              term_read(char *buffer, int length, accint_t timeoutms);
 static void             term_dump(void);
 static void             acs_dump(const char *bp);
 
@@ -787,221 +786,46 @@ nc_names(const char *title, const char *icon)
 static void
 term_identification(void)
 {
-    const char *t_RV, *xterm_version;
+    const char *RV = tigetstr("RV");
 
-    /*
-     *  XTERM_VERSION/
-     *      Xterm(256) ==> 256
-     */
-    if (NULL != (xterm_version = ggetenv("XTERM_VERSION"))) {
-        char vname[32+1] = {0};
-        int vnumber = 0;
-                                                /* decode and return patch/version number */
-        if (2 == sscanf(xterm_version, "%32[^(](%u)", vname, &vnumber))
-            if (vnumber > 0) {
-                x_pt.pt_vtdatype = -2;          /* source: xterm_version */
-                x_pt.pt_vtdaversion = vnumber;
-            }
-        trace_ilog("XTERM_VERSION(%s) = %d (%s)\n", xterm_version, vnumber, vname);
-    }
-
-    /*
-     *  DA2/Request version.
-     */
-    if (NULL == (t_RV = tigetstr("RV")) || *t_RV == '\0') {
+    if (NULL == (RV = tigetstr("RV")) || *RV == '\0') {
         const char *term = ggetenv("TERM");
-        if (term) {
-            if (strstr(term, "kitty")) {
-                t_RV = "\033[>c";               /* missing, source: vim */
-            }
-        }
+        if (NULL == term)                       /* missing, source: vim */
+            return;
+        if (NULL == strstr(term, "xterm") && NULL == strstr(term, "kitty"))
+            return;
     }
-
-    if (t_RV && *t_RV) {
-        const int rvlen = strlen(t_RV);
-        char buffer[32] = {0};
-        int len = 0;
-
-        if (rvlen == sys_write(TTY_OUTFD, t_RV, rvlen) &&
-                (len = term_read(buffer, sizeof(buffer), -2)) > 1) {
-            trace_ilog("term_da2(%d, %s)\n", len, buffer);
-
-            if ('\033' == buffer[0] && '[' == buffer[1] &&
-                    ('>' == buffer[2] || '?' == buffer[2])) {
-                int datype, daversion;
-
-                if (2 == sscanf(buffer + 3, "%d;%d", &datype, &daversion)) {
-                    trace_ilog("\t==> type:%d, version:%d\n", datype, daversion);
-                    x_pt.pt_vtdatype = datype;
-                    x_pt.pt_vtdaversion = daversion;
-                }
-            }
-        }
-    }
+    tty_identification(RV, ESCDELAY);
 }
 
 
 /*
- *  term_luminance ---
- *	Request the terminal background color and determine the default scheme (light/dark)
+ *  term_defaultscheme ---
+ *      Determine the terminal deault color-scheme.
  */
-static int
-term_luminance(void)
-{
-#define XTERM_OCS11_LEN (sizeof(xterm_ocs11) - 1)
-    static char xterm_ocs11[] = "\x1b]11;?\007";
-    const unsigned timeoutms = ESCDELAY;
-    unsigned rgb[3] = {0,0,0}, rgbmax = 0;
-    unsigned char *cp, buffer[32] = {0};
-    int len;
-
-    /*
-     *  OSC 11, current background color.
-     */
-    if (tigetflag("XT") <= 0) {                 /* supported? */
-        return -1;
-    }
-
-    if (XTERM_OCS11_LEN != sys_write(TTY_OUTFD, xterm_ocs11, XTERM_OCS11_LEN) ||
-            (len = sys_read_timed(TTY_INFD, buffer, sizeof(buffer), timeoutms, NULL)) < 1) {
-        return -1;
-    }
-
-    /*
-     *  Format:
-     *
-     *          <ESC>]rgb:xx/xx/xx<ESC|DEL>
-     *      or  <ESC>]rgb:xxxx/xxxx/xxxx<ESC|DEL>
-     *
-     *  Example:
-     *
-     *      echo -ne '\e]11;?\a'; cat
-     *
-     *      ESC]11;rgb:0000/0000/0000
-     */
-    cp = buffer;
-    if (cp[0] == '\033' && cp[1] == ']') {      /* ESC] */
-        cp += 2;
-    } else if (cp[0] == 0x9d) {                 /* OSC */
-        cp += 1;
-    } else {
-        cp = NULL;
-    }
-
-    if (cp && cp[0] == '1' && (cp[1] == '0' || cp[1] == '1') && cp[2] == ';') {
-        /*
-         *  parse RGB values
-         */
-        const char *spec = (const char *)(cp + 3);
-        if (cp[11] == '/') {
-            if (sscanf(spec, "rgb:%4x/%4x/%4x\033", rgb+0, rgb+1, rgb+2) == 3 ||
-                    sscanf(spec, "rgb:%4x/%4x/%4x\007", rgb+0, rgb+1, rgb+2) == 3) {
-                rgbmax = 0xffff;
-            }
-
-        } else if (cp[9] == '/') {
-            if (sscanf(spec, "rgb:%2x/%2x/%2x\033", rgb+0, rgb+1, rgb+2) == 3 ||
-                    sscanf(spec, "rgb:%2x/%2x/%2x\007", rgb+0, rgb+1, rgb+2) == 3) {
-                rgbmax = 0xff;
-            }
-        }
-    }
-
-    if (rgbmax) {
-        /*
-         *  Luminance (perceived)
-         *  Reference: https://www.w3.org/TR/AERT/#color-contrast
-         */
-        const double r = (double)rgb[0] / (double)rgbmax;
-        const double g = (double)rgb[1] / (double)rgbmax;
-        const double b = (double)rgb[2] / (double)rgbmax;
-        const double l = (0.299 * r) + (0.587 * g) + (0.114 * b);
-
-        trace_ilog("terminal_ocs(%d, %s) : %04x/%04x/%04x\n", len, buffer, rgb[0], rgb[1], rgb[2]);
-        trace_ilog("\t==> luminance (%g) [%s]\n", l, l < 0.5 ? "dark" : "light");
-
-        if (l < 0.5) return 1;
-        return 0;
-    }
-    return -1;
-}
-
-
 static void
 term_defaultscheme(void)
 {
     if (x_pt.pt_schemedark < 0) {
-        int isdark;
+        int isdark  = -1;
 
-        if ((isdark = term_luminance()) == -1) {
-            /*
-             *  Legacy
-             */
-            const char *fgbg, *term = ggetenv("TERM");
-
-            isdark = 0;
-            if (term) {
-                if (strcmp(term, "linux") == 0
-                    || strcmp(term, "screen.linux") == 0
-                    || strcmp(term, "cygwin") == 0
-                    || strcmp(term, "putty") == 0
-                    || strcmp(term, "ms-terminal") == 0
-                        || ggetenv("WT_SESSION")
-                    || (x_pt.pt_vtdatype == 'M') // mintty
-                    || ((fgbg = ggetenv("COLORFGBG")) != NULL && // rxvt, COLORFGBG='0;default;15'
-                            (fgbg = strrchr(fgbg, ';')) != NULL && ((fgbg[1] >= '0' && fgbg[1] <= '6') || fgbg[1] == '8') && fgbg[2] == '\0')) {
-                    isdark = 1;
-                }
-            }
+        if (tigetflag("XT") > 0) {              /* OSC-11 supported? */
+            isdark = tty_luminance(ESCDELAY);
         }
+
+        if (isdark < 0) {
+            isdark = tty_defaultscheme();       /* Legacy */
+        }
+
         x_pt.pt_schemedark = isdark;
     }
-    trace_log("ttdefaultscheme=%s\n", (x_pt.pt_schemedark ? "dark" : "light"));
 }
 
 
 /*
- *  term_read ---
- *      Terminal low-level read.
+ *  term_dump ---
+ *      Dump the terminal definition.
  */
-static int
-term_read(char *buffer, int length, accint_t timeoutms)
-{
-    int cnt = 0;
-
-    if (timeoutms <= -2) timeoutms = ESCDELAY;  /* ms escape character wait */
-
-    assert(buffer && length);
-    assert(timeoutms >= -1);
-    if (NULL == buffer || 0 == length)
-        return 0;
-
-    if (length > 1) {
-        int ret;
-
-        --length;                               /* null terminator */
-
-        if (timeoutms < 0) {                    /* blocking */
-            if ((ret = sys_read(TTY_INFD, buffer + cnt, length - cnt)) > 0) {
-                cnt = ret;
-                while (cnt < length &&
-                        (ret = sys_read_timed(TTY_INFD, buffer + cnt, length - cnt, 50, NULL)) > 0) {
-                    cnt += ret;                 /* secondary characters */
-                }
-            }
-
-        } else {                                /* timed */
-            if ((ret = sys_read_timed(TTY_INFD, buffer, length, timeoutms, NULL)) > 0) {
-                cnt = ret;
-            }
-        }
-    }
-
-    buffer[cnt] = '\0';
-    return cnt;
-}
-
-
 static void
 term_dump(void)
 {
@@ -1322,4 +1146,3 @@ term_tidy(void)
 #endif  /*HAVE_LIBNCURSES*/
 
 /*end*/
-
