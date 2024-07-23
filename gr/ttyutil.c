@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyutil_c,"$Id: ttyutil.c,v 1.3 2024/07/23 12:52:20 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyutil_c,"$Id: ttyutil.c,v 1.4 2024/07/23 14:33:49 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyutil.c,v 1.3 2024/07/23 12:52:20 cvsuser Exp $
+/* $Id: ttyutil.c,v 1.4 2024/07/23 14:33:49 cvsuser Exp $
  * TTY common utility functions
  *
  *
@@ -344,7 +344,7 @@ tty_utf8_features(void)
  *      Terminal low-level write.
  */
 int
-tty_write(const char *buffer, int length)
+tty_write(const void *buffer, int length)
 {
     return sys_write(TTY_OUTFD, buffer, length);
 }
@@ -355,8 +355,9 @@ tty_write(const char *buffer, int length)
  *      Terminal low-level read.
  */
 int
-tty_read(char *buffer, int length, int timeoutms)
+tty_read(void *ibuffer, int length, int timeoutms)
 {
+    char *buffer = ((char *)ibuffer);
     int cnt = 0;
 
     if (timeoutms <= -2)
@@ -395,4 +396,5 @@ tty_read(char *buffer, int length, int timeoutms)
 #endif  /*!USE_VIO_BUFFER && !DJGPP */
 
 /*end*/
+
 

@@ -1,4 +1,4 @@
-dnl $Id: libterm.m4,v 1.30 2024/07/21 07:02:23 cvsuser Exp $
+dnl $Id: libterm.m4,v 1.31 2024/07/23 14:34:35 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -829,7 +829,7 @@ extern char *UP, *BC, PC;
 
 	dnl -- tputs
 	AC_MSG_CHECKING(whether tputs() uses outfuntype)
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
 #if defined(HAVE_NCURSESW_CURSES_H)
 #  include <ncursesw/curses.h>
 #  include <ncursesw/termcap.h>
@@ -853,10 +853,10 @@ extern char *UP, *BC, PC;
 #     include <term.h>
 #  endif
 #endif
-]], [[extern int xx(); tputs("test", 1, (outfuntype)xx)]])],
+], [[extern int xx(); tputs("test", 1, (outfuntype)xx)]])],
 			[AC_MSG_RESULT(yes); AC_DEFINE([HAVE_OUTFUNTYPE], 1, [typedef outfuntype available.])],
 			[AC_MSG_RESULT(no); AC_MSG_CHECKING(determining tputs() function final argument type)
-			AC_EGREP_CPP([tputs.*[(][ \\\t]*char[ \\\t]*[)]],[[
+			AC_EGREP_CPP([tputs.*[(][ \\\t]*char[ \\\t]*[)]],[
 #if defined(HAVE_NCURSESW_CURSES_H)
 #  include <ncursesw/curses.h>
 #  include <ncursesw/termcap.h>
@@ -880,7 +880,7 @@ extern char *UP, *BC, PC;
 #     include <term.h>
 #  endif
 #endif
-]], [AC_MSG_RESULT(char); AC_DEFINE([TPUTS_TAKES_CHAR], 1, [tputs character interface.])],
+], [AC_MSG_RESULT(char); AC_DEFINE([TPUTS_TAKES_CHAR], 1, [tputs character interface.])],
 					[AC_MSG_RESULT(not char, int assumed);
 					])
 		])
