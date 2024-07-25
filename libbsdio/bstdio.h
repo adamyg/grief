@@ -37,16 +37,37 @@
  *	@(#)stdio.h	5.17 (Berkeley) 6/3/91
  */
 
-#if defined(__BSTDIO_INTERNAL) || defined(_BSD_SOURCE) 
+#if defined(HAVE_CONFIG_H)
+#include <config.h>
+#endif
+
+#if defined(HAVE_FEATURES_H)
+#include <features.h>
+#endif
+
+#if defined(__BSTDIO_INTERNAL) || defined(_BSD_SOURCE)
 #ifndef __BSD_VISIBLE
 #define __BSD_VISIBLE 1
 #endif
+
+#if !defined(_DEFAULT_SOURCE) && \
+        defined(__GLIBC__) && defined(__GLIBC_PREREQ)
+#if __GLIBC_PREREQ(2, 20)
+// see: https://www.gnu.org/software/libc/manual/html_node/Feature-Test-Macros.html
+#define _DEFAULT_SOURCE 1
+#endif
+#endif
+
+#if !defined(_DEFAULT_SOURCE)
 #ifndef _BSD_SOURCE
 #define _BSD_SOURCE 1
 #endif
+#endif
+
 #ifndef __POSIX_VISIBLE
 #define __POSIX_VISIBLE 199506
 #endif
+
 #endif /*__BSTDIO_INTERNAL || _BSD_SOURCE*/
 
 #include <edcdefs.h>
