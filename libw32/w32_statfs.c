@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_statfs_c,"$Id: w32_statfs.c,v 1.22 2024/03/31 15:57:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_statfs_c,"$Id: w32_statfs.c,v 1.23 2024/07/25 15:43:33 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -183,7 +183,7 @@ statfsA(const char *path, struct statfs *sb)
     }
 
     sb->f_type = MOUNT_PC;
-    strncat(sb->f_fstypename, "unknown", MFSNAMELEN);
+    strncpy(sb->f_fstypename, "unknown", MFSNAMELEN);
     if (GetVolumeInformationA(path,
             volName, MNAMELEN,                  /* VolumeName and size */
             NULL, &MaximumComponentLength, &FileSystemFlags, fsName, MNAMELEN)) /* filesystem type */
@@ -258,7 +258,7 @@ statfsW(const wchar_t *path, struct statfs *sb)
     }
 
     sb->f_type = MOUNT_PC;
-    strncat(sb->f_fstypename, "unknown", MFSNAMELEN);
+    strncpy(sb->f_fstypename, "unknown", MFSNAMELEN);
     if (GetVolumeInformationW(path,
             volName, MNAMELEN,                  /* VolumeName and size */
             NULL, &MaximumComponentLength, &FileSystemFlags, fsName, MNAMELEN)) /* filesystem type */

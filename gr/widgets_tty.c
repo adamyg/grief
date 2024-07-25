@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_widgets_tty_c,"$Id: widgets_tty.c,v 1.40 2024/05/20 17:16:39 cvsuser Exp $")
+__CIDENT_RCSID(gr_widgets_tty_c,"$Id: widgets_tty.c,v 1.41 2024/07/25 15:39:11 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: widgets_tty.c,v 1.40 2024/05/20 17:16:39 cvsuser Exp $
+/* $Id: widgets_tty.c,v 1.41 2024/07/25 15:39:11 cvsuser Exp $
  * Dialog widgets, tty interface.
  *
  *
@@ -2964,11 +2964,12 @@ lb_paint(Listbox_t *lb, WIDGET_t *w, int repaint)
 static int
 lb_caret(Listbox_t *lb, WIDGET_t *w)
 {
-    const int32_t focus   = lb->lb_focus;
-    const int32_t rows    = (lb->lb_rows > 0 ? lb->lb_rows : (w && w->w_rows > 0 ? w->w_rows : 1));
-    const int popup = (LB_FISPOPUP & lb->lb_flags) ? TRUE : FALSE;
+    const int32_t focus = lb->lb_focus;
 
     if (focus >= 0) {
+        const int32_t rows = (lb->lb_rows > 0 ? lb->lb_rows : (w->w_rows > 0 ? w->w_rows : 1));
+        const int popup = (LB_FISPOPUP & lb->lb_flags) ? TRUE : FALSE;
+
         if (popup) {
             if (! dialog_tty_popup_select(w->w_root, TRUE)) {
                 return FALSE;

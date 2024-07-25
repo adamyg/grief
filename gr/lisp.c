@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_lisp_c,"$Id: lisp.c,v 1.46 2022/05/26 16:36:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_lisp_c,"$Id: lisp.c,v 1.48 2024/07/25 15:38:40 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: lisp.c,v 1.46 2022/05/26 16:36:12 cvsuser Exp $
+/* $Id: lisp.c,v 1.48 2024/07/25 15:38:40 cvsuser Exp $
  * List primitives.
  *
  *
@@ -2394,6 +2394,9 @@ do_length_of_list(void)         /* int (list expr) */
         polymorphic expression and tests whether the specified
         'symbol' has of a NULL type.
 
+        Beware that the is_type collection of functions wont behave when 
+        given list elements, as these are not referenceable l-values.
+
     Macro Parameters:
         symbol - Symbol reference.
 
@@ -2416,6 +2419,9 @@ do_length_of_list(void)         /* int (list expr) */
         The 'is_string()' primitive determines the type of a polymorphic
         expression and tests whether the specified 'symbol' has of a
         string type.
+
+        Beware that the is_type collection of functions wont behave when 
+        given list elements, as these are not referenceable l-values.
 
     Macro Parameters:
         symbol - Symbol reference.
@@ -2440,6 +2446,9 @@ do_length_of_list(void)         /* int (list expr) */
         polymorphic expression and tests whether the specified
         'symbol' has of a array type.
 
+        Beware that the is_type collection of functions wont behave when 
+        given list elements, as these are not referenceable l-values.
+
     Macro Parameters:
         symbol - Symbol reference.
 
@@ -2462,6 +2471,9 @@ do_length_of_list(void)         /* int (list expr) */
         The 'is_type()' primitive determines the type of a polymorphic
         expression and tests whether the specified 'symbol' is of the
         type 'type'.
+
+        Beware that the is_type collection of functions wont behave when 
+        given list elements, as these are not referenceable l-values.
 
     Macro Parameters:
         symbol - Symbol reference.
@@ -2574,6 +2586,10 @@ do_is_type(int type)            /* int (declare symbol, [int | string type]) */
         } else {
             ret = (sp->s_type == type);         /* symbol type */
         }
+    } else {
+        if (F_NULL == type) {
+            ret = 1;
+        }
     }
     acc_assign_int(ret ? 1 : 0);
 }
@@ -2643,7 +2659,7 @@ do_typeof(void)                 /* (declare symbol) */
     } else if (isa_list(1)) {
         acc_assign_str("list", 4);
 
-    } else if (TRUE == isa_null(1)) {
+    } else if (TRUE == isa_null(1) || NULL == get_symbol(1)) {
         acc_assign_str("NULL", 4);
 
     } else if (isa_undef(1)) {

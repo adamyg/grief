@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.66 2022/06/16 10:19:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.67 2024/07/25 15:41:25 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: builtin.c,v 1.66 2022/06/16 10:19:31 cvsuser Exp $
+/* $Id: builtin.c,v 1.67 2024/07/25 15:41:25 cvsuser Exp $
  * Builtin expresssion evaluation.
  *
  *
@@ -1012,24 +1012,30 @@ execute_expr2(const argtype_t arg, register const LIST *argp, LISTV *lap)
                     assert(sp == sp2);
                 }
 #endif  //_DEBUG
+                type = sp->s_type;
 
             } else if (F_SYM == argtype) {      /* SYM <symbol> */
                 if (NULL == (sp = sym_elookup(LGET_PTR2(const char, argp)))) {
                     return EERROR;              /* lookup error */
                 }
+                type = sp->s_type;
 
             } else {
                 if (F_NULL != argtype) {        /* 05/01/11 */
-                    ewprintf("Symbol reference expected");
+                    if (ARG_OPT & arg) {
+                        type = F_NULL;
+                        sp = NULL;              /* optional LVAL, 07/24 */
+                    } else {
+                        ewprintf("Symbol reference expected");
+                        return EERROR;          /* symbol/register expected */
+                    }
 #if !defined(NDEBUG)
                 } else {
                     panic("execute_xmacro: F_WHAT? (0x%x/%u)", argtype, argtype);
+                    return EERROR;              /* symbol/register expected */
 #endif
                 }
-                return EERROR;                  /* symbol/register expected */
             }
-
-            type = sp->s_type;
             lap->l_sym = sp;
             lap->l_flags = F_SYM;
             assert(type >= 0 && type <= F_OPDATA);
