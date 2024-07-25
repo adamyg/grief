@@ -39,8 +39,8 @@
 #define HTTP_DEFAULT_PROXY_PORT	3128
 
 #if defined(HAVE_OPENSSL) && (WITH_SSL)
-#if !defined(OPENSSL_API_COMPAT) /*MD5*/
-#define OPENSSL_API_COMPAT 0x10100000L
+#if !defined(OPENSSL_API_COMPAT) /*MD5, 1.1.1*/
+#define OPENSSL_API_COMPAT 0x10101000L
 #endif
 #include <openssl/crypto.h>
 #include <openssl/x509.h>
