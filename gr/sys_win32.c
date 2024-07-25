@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.75 2024/05/19 09:08:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.76 2024/07/25 15:40:34 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_win32.c,v 1.75 2024/05/19 09:08:31 cvsuser Exp $
+/* $Id: sys_win32.c,v 1.76 2024/07/25 15:40:34 cvsuser Exp $
  * WIN32 system support.
  *
  *
@@ -60,6 +60,8 @@ static void CALLBACK        HandleWinEvent(HWINEVENTHOOK hook, DWORD event, HWND
 
 static int                  Resize(int winch);
 static int                  ResizeCheck(unsigned *checks);
+
+static void                 OutputDebugPrintA(const char* fmt, ...);
 
 #if defined(__WATCOMC__)
 #if (__WATCOMC__ >= 1300)   /*XXX, still supported?*/
@@ -437,21 +439,25 @@ MouseEvent(const DWORD dwEventFlags, const DWORD dwButtonState)
 static int
 AltPlusEnabled(void)
 {
-    HKEY hKey = 0;
-    int enabled = 0;
+    static int state = -1;
 
-    if (RegOpenKeyExA(HKEY_CURRENT_USER,
-            "Control Panel\\Input Method", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
-        char szEnableHexNumpad[100] = {0};
-        DWORD dwSize = _countof(szEnableHexNumpad);
-        if (RegQueryValueExA(hKey, "EnableHexNumpad", NULL, NULL, (LPBYTE) szEnableHexNumpad, &dwSize) == ERROR_SUCCESS) {
-            if (szEnableHexNumpad[0] == '1' && szEnableHexNumpad[1] == 0) {
-                enabled = 1;
+    if (-1 == state) {
+        HKEY hKey = 0;
+
+        state = 0;
+        if (RegOpenKeyExA(HKEY_CURRENT_USER,
+                "Control Panel\\Input Method", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+            char szEnableHexNumpad[100] = { 0 };
+            DWORD dwSize = _countof(szEnableHexNumpad);
+            if (RegQueryValueExA(hKey, "EnableHexNumpad", NULL, NULL, (LPBYTE)szEnableHexNumpad, &dwSize) == ERROR_SUCCESS) {
+                if (szEnableHexNumpad[0] == '1' && szEnableHexNumpad[1] == 0) {
+                    state = 1;
+                }
             }
+            RegCloseKey(hKey);
         }
-        RegCloseKey(hKey);
     }
-    return enabled;
+    return state;
 }
 
 static int
@@ -460,32 +466,57 @@ AltPlusEvent(const KEY_EVENT_RECORD *ke, struct IOEvent *evt)
 #define ISXDIGIT(_uc) \
             ((_uc >= '0' && _uc <= '9') || (_uc >= 'a' && _uc <= 'f') || (_uc >= 'A' && _uc <= 'F') ? 1 : 0)
 
-    static int alt_code = -2;                    // >0=active, 0=enabled, -1=disabled, -2=auto.
+    static unsigned alt_code = 0;               // >0=active
     static DWORD alt_control = 0;
 
-    if (alt_code < 0) {
-        if (-1 == alt_code) return -1;
-        if (! AltPlusEnabled()) {
-            alt_code = -1;
-            return -1;
-        }
-        alt_code = 0;
-    }
+    const unsigned wVirtualKeyCode = ke->wVirtualKeyCode,
+        dwControlKeyState = (CTRLSTATUSMASK & ke->dwControlKeyState),
+        dwEnhanced = (ENHANCED_KEY & ke->dwControlKeyState);
+
+#if (DO_KEYTRACE)
+    OutputDebugPrintA("Key: %s-%s%s%s%s%s%sVK=0x%02x/%u, UC=0x%04x/%u/%c, SC=0x%x/%u\n",
+        (ke->bKeyDown ? "DN" : "UP"),
+        (dwEnhanced ? "Enh-" : ""),
+            (dwControlKeyState & LEFT_ALT_PRESSED) ? "LAlt-" : "",
+                (dwControlKeyState & RIGHT_ALT_PRESSED) ? "RAlt-" : "",
+            (dwControlKeyState & LEFT_CTRL_PRESSED) ? "LCtrl-" : "",
+                (dwControlKeyState & RIGHT_CTRL_PRESSED) ? "RCtrl-" : "",
+            (dwControlKeyState & SHIFT_PRESSED) ? "Shift-" : "",
+        wVirtualKeyCode, wVirtualKeyCode,
+            ke->uChar.UnicodeChar, ke->uChar.UnicodeChar,
+                (ke->uChar.UnicodeChar && ke->uChar.UnicodeChar < 255 ? ke->uChar.UnicodeChar : ' '),
+        ke->wVirtualScanCode, ke->wVirtualScanCode);
+#endif
 
     if (ke->bKeyDown) {                         // down event
-        const unsigned controlKeyState = (CTRLSTATUSMASK & ke->dwControlKeyState);
 
-        if (VK_ADD == ke->wVirtualKeyCode &&
-                (LEFT_ALT_PRESSED == controlKeyState || RIGHT_ALT_PRESSED == controlKeyState)) {
-            // "Alt + ..." event
-            alt_control = controlKeyState;
-            if (alt_code == 0) {
+        if ((wVirtualKeyCode >= VK_NUMPAD0 && wVirtualKeyCode <= VK_NUMPAD9) &&
+                0 == dwEnhanced && (LEFT_ALT_PRESSED == dwControlKeyState || RIGHT_ALT_PRESSED == dwControlKeyState)) {
+            // "Alt NumPad ..." event
+            // Note: 
+            //  o NumLock is required to be enabled for NUMPAD key reporting.
+            //  o Non-enhanced, NumPad verses 101 cursor-keys; same VK codes.
+            if (0 == alt_code) {
+                alt_control = dwControlKeyState;
                 alt_code = 1;
             }
             return 1;                           // consume
+        }
 
-        } else if (alt_code) {
-            if (alt_control != controlKeyState ||
+        if (VK_ADD == wVirtualKeyCode &&
+                (LEFT_ALT_PRESSED == dwControlKeyState || RIGHT_ALT_PRESSED == dwControlKeyState)) {
+            // "Alt + Hex" event
+            if (0 == AltPlusEnabled())
+                return -1;                      // enabled?
+            if (0 == alt_code) {
+                alt_control = dwControlKeyState;
+                alt_code = 1;
+            }
+            return 1;                           // consume
+        }
+        
+        if (alt_code) {
+            if (alt_control != dwControlKeyState ||
                     (ke->uChar.UnicodeChar && 0 == ISXDIGIT(ke->uChar.UnicodeChar))) {
                 // new control status or non-hex, emit "Alt-Plus" and reset state
                 evt->type = EVT_KEYDOWN;
@@ -494,29 +525,29 @@ AltPlusEvent(const KEY_EVENT_RECORD *ke, struct IOEvent *evt)
                 alt_code = 0;
                 return 0;
             }
-
             ++alt_code;                         // associated key count
             return 1;                           // consume
         }
 
     } else if (alt_code) {                      // up event
-        if (VK_MENU == ke->wVirtualKeyCode &&
+        if (VK_MENU == wVirtualKeyCode &&
                 (0 == (ke->dwControlKeyState & ALT_PRESSED))) {
             // Alt completion
-            const int oalt_code = alt_code;
+            const WCHAR UnicodeChar = ke->uChar.UnicodeChar;
+            const int alt_old = alt_code;
 
             alt_code = 0;
-            if (1 == oalt_code && 0 == ke->uChar.UnicodeChar) {
-                // "Alt-Plus" only, emit
+            if (1 == alt_old && 0 == UnicodeChar) {
+                // Alt only, emit.
                 evt->type = EVT_KEYDOWN;
                 evt->code = KEYPAD_PLUS;
                 evt->modifiers = MOD_ALT;
                 return 0;
 
-            } else if (ke->uChar.UnicodeChar) {
-                // "Alt-Plus keycode", return keycode.
+            } else if (UnicodeChar) {
+                // Alt keycode, return keycode.
                 evt->type = EVT_KEYDOWN;
-                evt->code = ke->uChar.UnicodeChar;
+                evt->code = UnicodeChar;
                 evt->modifiers = 0;
                 return 0;
             }
@@ -527,7 +558,7 @@ AltPlusEvent(const KEY_EVENT_RECORD *ke, struct IOEvent *evt)
 }
 
 
-/*  Function:           key_normalizeAltGr
+/*  Function:           AltGrEvent
  *      Filter AtrGr events from modifiers; attempt to allow:
  *
  *          Left-Alt + AltGr,
@@ -535,7 +566,7 @@ AltPlusEvent(const KEY_EVENT_RECORD *ke, struct IOEvent *evt)
  *          Left-Alt + Right-Ctrl + AltGr.
  */
 static DWORD
-key_normalizeAltGr(const KEY_EVENT_RECORD* key)
+AltGrEvent(const KEY_EVENT_RECORD* key)
 {
     DWORD state = key->dwControlKeyState;
 
@@ -626,8 +657,8 @@ sys_getevent(struct IOEvent *evt, int tmo)
                         if (altstate == 1) break;
                     }
 
-                    if (k.Event.KeyEvent.bKeyDown) {
-                        const DWORD dwControlKeyState = key_normalizeAltGr(ke);
+                    if (ke->bKeyDown) {
+                        const DWORD dwControlKeyState = AltGrEvent(ke);
                         int code;
                                                 /* see kbd.c */
                         if ((code = key_mapwin32((unsigned) dwControlKeyState,
@@ -1312,4 +1343,31 @@ sys_running(int pid)
     }
     return 0;
 }
+
+
+void
+OutputDebugPrintA(const char* fmt, ...)
+{
+    struct timeval tv;
+    char out[512];
+    va_list ap;
+    int prefix;
+
+    va_start(ap, fmt);
+    w32_gettimeofday(&tv, NULL);
+#if !defined(SIZEOF_TIME_T)
+#error SIZEOF_TIME_T missing
+#endif
+#if (SIZEOF_TIME_T == SIZEOF_LONG_LONG)
+    prefix = sprintf(out, "%lld.%03u: ", (long long)tv.tv_sec, (unsigned)(tv.tv_usec / 1000));
+#elif (SIZEOF_TIME_T == SIZEOF_LONG)
+    prefix = sprintf(out, "%ld.%03u: ", (long)tv.tv_sec, (unsigned)(tv.tv_usec / 1000));
+#else
+    prefix = sprintf(out, "%d.%03u: ", tv.tv_sec, (unsigned)(tv.tv_usec / 1000));
+#endif
+    vsprintf_s(out + prefix, _countof(out) - prefix, fmt, ap);
+    va_end(ap);
+    OutputDebugStringA(out);
+}
+
 #endif  /*WIN32*/

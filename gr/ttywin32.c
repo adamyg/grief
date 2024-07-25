@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.56 2024/04/14 15:31:10 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.57 2024/07/25 15:39:50 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttywin32.c,v 1.56 2024/04/14 15:31:10 cvsuser Exp $
+/* $Id: ttywin32.c,v 1.57 2024/07/25 15:39:50 cvsuser Exp $
  * WIN32 VIO driver.
  *  see: http://www.edm2.com/index.php/Category:Vio
  *
@@ -444,7 +444,7 @@ int
 VioGetFont(char *font, int buflen)
 {
     if (font && buflen > 0) {
-        vio_profile(TRUE);
+        vio_profile(-1);
         sxprintf(font, buflen, "%s %dx%d", vio.fcfacename, vio.fcwidth, vio.fcheight);
         return 0;
     }
