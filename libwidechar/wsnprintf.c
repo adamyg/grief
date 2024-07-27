@@ -1583,6 +1583,12 @@ cast(LDOUBLE value)
 	 * comparison (cf. C99: 6.3.1.4, 2).  It might then equal the LDOUBLE
 	 * value although converting the latter to UINTMAX_T would overflow.
 	 */
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wimplicit-float-conversion"
+#endif
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wimplicit-const-int-float-conversion"
+#endif
 	if (value >= UINTMAX_MAX)
 		return UINTMAX_MAX;
 

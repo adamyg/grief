@@ -104,8 +104,12 @@
 #include <unistd.h>
 
 #if defined(HAVE_OPENSSL) && (WITH_SSL)
+#if defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+#if defined(__clang__)
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
 #include <openssl/md5.h>
 #else
 #include "md5.h"
