@@ -1,11 +1,11 @@
 #ifndef GR_BUILTIN_H_INCLUDED
 #define GR_BUILTIN_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_builtin_h,"$Id: builtin.h,v 1.27 2024/04/07 15:49:17 cvsuser Exp $")
+__CIDENT_RCSID(gr_builtin_h,"$Id: builtin.h,v 1.29 2024/07/28 11:59:31 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: builtin.h,v 1.27 2024/04/07 15:49:17 cvsuser Exp $
+/* $Id: builtin.h,v 1.29 2024/07/28 11:59:31 cvsuser Exp $
  * Builtin primitive table.
  *
  *
@@ -26,6 +26,7 @@ __CPRAGMA_ONCE
 __CBEGIN_DECLS
 
 extern int                  execute_str(const char *str);
+extern int                  execute_opendir(const char *name);
 extern void                 execute_expr(const LISTV *lp);
 extern void                 execute_macro(const LIST *lp);
 extern void                 execute_nmacro(const LIST *lp);

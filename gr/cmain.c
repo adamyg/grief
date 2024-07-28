@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.57 2024/07/12 12:56:25 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.59 2024/07/28 11:59:31 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.57 2024/07/12 12:56:25 cvsuser Exp $
+/* $Id: cmain.c,v 1.59 2024/07/28 11:59:31 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -276,7 +276,7 @@ int                     xf_wait = TRUE;         /* Set to FALSE if read_char sho
                                                  * No macros currently use the fact that read_char can return -1
                                                  */
 
-int                     xf_restore = FALSE;     /* TRUE if -a or no files are specified */
+int                     xf_restore = -1;        /* TRUE if -a or no files are specified */
 int                     xf_readonly = FALSE;    /* TRUE if -R/--readonly specified. */
 
 int                     xf_profile = FALSE;     /* TRUE if profiling on. */
@@ -296,7 +296,7 @@ int                     xf_graph = -1;          /* TRUE/FALSE, user specified gr
 
 int                     xf_visbell = FALSE;     /* TRUE/FALSE, visual bell. */
 
-int                     xf_cygwinkb = TRUE;    /* TRUE/FALSE, cygwin raw keyboard. */
+int                     xf_cygwinkb = TRUE;     /* TRUE/FALSE, cygwin raw keyboard. */
 
 int                     xf_sigtrap = TRUE;      /* TRUE/FALSE, control signal traps. */
 
@@ -361,6 +361,9 @@ static const char *     m_strings[MAX_M+1];     /* Array of pointer to -m string
 
 BUFFER_t *              curbp = NULL;           /* Current buffer. */
 WINDOW_t *              curwp = NULL;           /* Current window. */
+
+
+static int              isdir(const char *path);
 
 static int              path_cat(const char *path, const char *sub, char *buf, int length);
 static char *           path_cook2(const char *name, char *result, int length);
@@ -443,6 +446,7 @@ cpp_linkage(const char *str);
 int
 cmain(int argc, char **argv)
 {
+    unsigned loaded = 0;
     int arg_index, i;
 
 #if defined(HAVE_SIGACTION)
@@ -595,23 +599,42 @@ cmain(int argc, char **argv)
     x_mflag = FALSE;
 
     if (arg_index < argc) {                     /* load listed files */
-        BUFFER_t *firstbp = NULL;
+        BUFFER_t* firstbp = NULL;
 
         while (arg_index < argc) {
-            x_msglevel = 1;                     /* no warnings */
-            file_edit(argv[arg_index++], EDIT_NORMAL, NULL);
-            if (NULL == firstbp) {
-                firstbp = curbp;
+            const char* name = argv[arg_index++];
+
+            if (!*name || isdir(name)) {
+                if (execute_opendir(name) >= 1) {
+                    if (NULL == firstbp) {
+                        firstbp = curbp;
+                    }
+                    ++loaded;
+                }
+            } else {
+                x_msglevel = 1;                 /* no warnings */
+                file_edit(name, EDIT_NORMAL, NULL);
+                if (NULL == firstbp) {
+                    firstbp = curbp;
+                }
+                ++loaded;
             }
         }
-        buf_show(firstbp, curwp);
-        set_curbp(firstbp);
 
-    } else  {                                   /* load default quietly */
+        if (firstbp) {
+            if (-1 == xf_restore)
+                xf_restore = FALSE;
+            buf_show(firstbp, curwp);
+            set_curbp(firstbp);
+        }
+    }
+
+    if (0 == loaded) {                           /* load default quietly */
         const char *grfile = ggetenv("GRFILE");
 
+        x_msglevel = 1;
         file_load((grfile && *grfile ? grfile : "newfile"), EDIT_NORMAL|EDIT_STARTUP, NULL);
-        xf_restore = 1;
+        xf_restore = TRUE;
     }
 
     /* Hook to allow restore state macro to get called. */
@@ -632,6 +655,14 @@ cmain(int argc, char **argv)
 
     gr_exit(EXIT_SUCCESS);
     return 0;
+}
+
+
+static int
+isdir(const char *path)
+{
+    struct stat st = {0};
+    return (0 == stat(path, &st) && (S_ISDIR(st.st_mode) ? 1 : 0));
 }
 
 
@@ -989,6 +1020,7 @@ argv_process(const int doerr, int argc, const char **argv)
         case 10:            /* disable termcap keypad init/deinit strings. */
             xf_nokeypad = TRUE;
             break;
+
 
         case 12:            /* window (main) borders. */
             xf_borders = FALSE;

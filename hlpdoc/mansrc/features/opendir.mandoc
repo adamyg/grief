@@ -1,0 +1,104 @@
+.\" .................................................................
+.\" -*- mode: nroff; -*-
+.\"
+.\" | -- Mandoc template
+.\" | $Id: opendir.mandoc,v 1.1 2024/07/28 12:22:58 cvsuser Exp $
+.\" | .\"The following commands are required for all man pages.
+.\" | .Dd Month day, year
+.\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
+.\" | .Os [OPERATING_SYSTEM] [version/release]
+.\" | .Sh NAME
+.\" | .Nm name
+.\" | .Nd one line description of name
+.\" | .Sh LIBRARY
+.\" |         Sections 2 and 3 only.
+.\" | .Sh SYNOPSIS
+.\" |         Usage. All '.Nm' macros must be given an argument.
+.\" | .Sh DESCRIPTION
+.\" | .\" The following commands should be uncommented and used where appropriate.
+.\" | .Sh IMPLEMENTATION NOTES
+.\" | .Sh RETURN VALUES
+.\" |     Sections two, three, and nine function calls.
+.\" | .Sh ENVIRONMENT
+.\" |         Sections 1, 6, 7 and 8 only; describe environment variables.
+.\" | .Sh FILES
+.\" |         Files associated with the subject, with short descriptions.
+.\" | .Sh EXAMPLES
+.\" |         Examples and suggestions.
+.\" | .Sh DIAGNOSTICS
+.\" |         Sections 1, 6, 7, 8 and 9 only (command return values (to shell)
+.\" |         and fprintf/stderr type diagnostics).
+.\" | .Sh COMPATIBILITY
+.\" | .Sh ERRORS
+.\" |         Sections two, three, and nine error and signal handling.
+.\" | .Sh SEE ALSO
+.\" |         Cross references and citations.
+.\" | .Sh STANDARDS
+.\" |         Conformance to standards if applicable.
+.\" | .Sh HISTORY
+.\" |         A brief history of the subject, including where support first appeared.
+.\" | .Sh AUTHORS
+.\" |         Credit to the person or persons who wrote the code and/or documentation.
+.\" | .Sh CAVEATS
+.\" |         Explanations of common misuses, i.e., security considerations for certain
+.\" |         library functions.
+.\" | .Sh BUGS
+.\" |         Gotchas and caveats.
+.\" | --
+.Dd $Mdocdate$
+.Dt NC 1
+.Os
+.Sh NAME
+.Nm opendir
+.Nd Directory open dialog
+.Sh DESCRIPTION
+.Pp
+The \fIopendir\fR macro gives you capabilities to select one-or-more files within a given directory to edit.
+To edit a single file, select then hit <Enter> to edit.
+.Pp
+Alternatively, multiple files can be selected with the <Ins> key and/or the <+> or <-> keys to mask the selection.
+On exit using <F10>, the selected files are opened for editing.
+.Pp
+The following commands are available:
+.Bl -tag -offset 1 -width xxxxxxxx
+.It F1
+Usage informaion.
+.It F4/F10
+Exit and continue.
+Which shall either edit the selected files, otherwise when no files are selected only the highlighted file will be edited.
+.It ESC
+Exit without editing.
+.It <+>
+Select the file(s) matching the specified pattern.
+.It <->
+Unselect the file(s) matching the specified pattern.
+.It <Ins>
+Toggle the selection state of the active file and reposition to the next file.
+.It <Enter>
+When a directory, is used to move-up or down the directory tree.
+Otherwise when used on a file and no other items are selected, the active file is opened for editing, otherwise behaves the same as <Ins>; its selecton status is toggled and next file is selected.
+.It <Ctrl-\\> or <\\>
+Move to the root directory.
+.It Alt-F1
+Where suitable, change the current drive.
+.It <Ctrl-PgUp>
+Move up one directory level.
+.It <Ctrl-d>
+Change the current active directory.
+.It <Ctrl-r>
+Re-read the current active Directory.
+.It <Home>, <End>, <PgUp>, <PgDn>, <Up> and <Down>
+Cursor control, repositioning the active element within the directory list.
+.It F9
+Change the display sort order.
+.It <Ctrl-F2>
+Change the display order to unordered.
+.It <Ctrl-F3>
+Order by file name.
+.It <Ctrl-F4>
+Order by file extension.
+.It <Alt-[a-z_A-Z0-9]>
+Fast select, add the given character to the current match pattern, positioning the active element to the closest match.
+To go to a particular location hold down the <Alt> key and input the name of the desired file.
+Once the <Alt> key is release, the search string will be cleared and ready to start a new search.
+.El
