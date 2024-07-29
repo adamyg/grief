@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.59 2024/07/28 11:59:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.60 2024/07/29 16:14:30 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.59 2024/07/28 11:59:31 cvsuser Exp $
+/* $Id: cmain.c,v 1.60 2024/07/29 16:14:30 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -125,7 +125,7 @@ static struct argoption options[] = {
 
     { "dark",           arg_none,           NULL,       4,      "or dark color scheme" },
 
-    { "utf8",           arg_optional,       NULL,       303,    "UTF8 features",
+    { "utf8",           arg_optional,       NULL,       303,    "UTF8 display features",
                             "=[no|yes],[[no]combined,seperate],[subst|ncr|ucn|hex]" },
 
     { "8bit",           arg_optional,       NULL,       304,    "Eight bit terminal encoding, with optional encoding",
@@ -2043,4 +2043,3 @@ usage(int what)
 }
 
 /*end*/
-
