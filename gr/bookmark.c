@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bookmark_c,"$Id: bookmark.c,v 1.33 2020/04/21 00:01:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_bookmark_c,"$Id: bookmark.c,v 1.34 2024/07/29 16:14:45 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: bookmark.c,v 1.33 2020/04/21 00:01:54 cvsuser Exp $
+/* $Id: bookmark.c,v 1.34 2024/07/29 16:14:45 cvsuser Exp $
  * Bookmark implementation.
  *
  *

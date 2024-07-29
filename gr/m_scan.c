@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_scan_c,"$Id: m_scan.c,v 1.26 2024/07/07 15:43:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_scan_c,"$Id: m_scan.c,v 1.27 2024/07/29 16:14:45 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_scan.c,v 1.26 2024/07/07 15:43:02 cvsuser Exp $
+/* $Id: m_scan.c,v 1.27 2024/07/29 16:14:45 cvsuser Exp $
  * scanf implementation.
  *
  *
@@ -1142,6 +1142,5 @@ do_sscanf(void)                 /* (string buf, string format, ...) */
     ret = scan_formatted(&io, 2);
     acc_assign_int((accint_t) ret);
 }
+
 /*end*/
-
-

@@ -1,11 +1,11 @@
 #ifndef GR_DIFF_H_INCLUDED
 #define GR_DIFF_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_diff_h,"$Id: diff.h,v 1.10 2020/04/21 00:01:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_diff_h,"$Id: diff.h,v 1.11 2024/07/29 16:14:45 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: diff.h,v 1.10 2020/04/21 00:01:55 cvsuser Exp $
+/* $Id: diff.h,v 1.11 2024/07/29 16:14:45 cvsuser Exp $
  * Differ interface.
  *
  *
