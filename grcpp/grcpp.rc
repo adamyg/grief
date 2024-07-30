@@ -1,74 +1,70 @@
-/*
- *  Copyright (c) 2020 - 2022 Adam Young.
- *  All rights reserved.
+/* -*- mode: c; indent-width: 4; -*-
  *
- *  This file is part of the GRIEF Editor.
+ * windows resource file
  *
- *  The GRIEF Editor is free software: you can redistribute it        
- *  and/or modify it under the terms of the GRIEF Editor License.     
- *                                                                    
- *  Redistributions of source code must retain the above copyright    
- *  notice, and must be distributed with the license document above.  
- *                                                                    
- *  Redistributions in binary form must reproduce the above copyright 
- *  notice, and must include the license document above in            
- *  the documentation and/or other materials provided with the        
- *  distribution.                                                     
- *                                                                    
- *  The GRIEF Editor is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of    
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the      
- *  License for more details.                                         
- *  ==end==
+ * This file is part of the GRIEF Editor.
+ *
+ * The GRIEF Editor is free software: you can redistribute it
+ * and/or modify it under the terms of the GRIEF Editor License.
+ *
+ * Redistributions of source code must retain the above copyright
+ * notice, and must be distributed with the license document above.
+ *
+ * Redistributions in binary form must reproduce the above copyright
+ * notice, and must include the license document above in
+ * the documentation and/or other materials provided with the
+ * distribution.
+ *
+ * The GRIEF Editor is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * License for more details.
+ * ==end==
  */
 
-#include <winver.h>
 #include "../include/edbuildinfo.h"
+
+#define RC_PRODUCTVERSION       GR_VERSION_1 , GR_VERSION_2 , GR_VERSION_3 , GR_VERSION_4
+#define RC_FILEVERSION          GR_VERSION_1 , GR_VERSION_2 , GR_VERSION_3 , GR_VERSION_4
+
+#ifndef  WINDRES
+#include <winver.h>
+#include "winver.h"
+#endif
 
 #ifdef GCC_WINDRES
 VS_VERSION_INFO		VERSIONINFO
 #else
 VS_VERSION_INFO		VERSIONINFO	MOVEABLE IMPURE LOADONCALL DISCARDABLE
 #endif
-	FILEVERSION	GR_VERSION_1,GR_VERSION_2,GR_VERSION_3,GR_VERSION_4
-	PRODUCTVERSION	GR_VERSION_1,GR_VERSION_2,GR_VERSION_3,GR_VERSION_4
-	FILEFLAGSMASK	VS_FFI_FILEFLAGSMASK
+	FILEVERSION		RC_FILEVERSION
+	PRODUCTVERSION		RC_PRODUCTVERSION
+	FILEFLAGSMASK		VS_FFI_FILEFLAGSMASK
 #ifdef _DEBUG
-	FILEFLAGS	1
+	FILEFLAGS		1
 #else
-	FILEFLAGS	0
+	FILEFLAGS		0
 #endif
-	FILEOS		VOS__WINDOWS32
-	FILETYPE	VFT_DLL
-	FILESUBTYPE	0			// not used
+	FILEOS			VOS_NT_WINDOWS32
+	FILETYPE		VFT_APP
+	FILESUBTYPE		VFT2_UNKNOWN
 BEGIN
 	BLOCK "StringFileInfo"
 	BEGIN
 		BLOCK "040904E4"
 		//language ID = U.S. English, char set = Windows, Multilingual
 		BEGIN
-			VALUE "FileDescription", "Grief grucpp utility, based on ucpp-1.3.2\0"
-
-			VALUE "FileVersion",	GR_VERSION "\0"
-
-			VALUE "InternalName",	"grcpp.exe\0"
-
+			VALUE "FileDescription",	"GRIEF Editor, grucpp; ucpp-1.3.2\0"
+			VALUE "FileVersion",		GR_VERSION ", Build:" GR_BUILD_DATE "-" GR_BUILD_NUMBER
+			VALUE "InternalName",		"grcpp.exe\0"
 			VALUE "LegalCopyright",
-				"Copyright (c) 2022 Adam Young, \n"
-				"Copyright (c) Thomas Pornin 1999 - 2002, \n"
+				"Copyright (c) 2022 - " GR_BUILD_YEAR ", Adam Young. \n"
+				"Copyright (c) Thomas Pornin 1999 - 2002. \n"
 				"See --license for details. \n\0"
-
-			VALUE "OriginalFilename",
-				"grcpp.exe\0"
-
-			VALUE "ProductName",
-				"grcpp (ucpp-1.3.2)\0"
-
-			VALUE "ProductVersion",
-				GR_VERSION "\0"
-
-			VALUE "Comments",
-				"https://github/adamyg/grief\0"
+			VALUE "Maintainers",		"https://github.com/adamyg/grief\n"
+			VALUE "LegalTrademarks",	"see GRIEF License"
+			VALUE "OriginalFilename",	"grcpp.exe"
+			VALUE "ProductName",		"grcpp (ucpp-1.3.2)\0"
 		END
 	END
 	BLOCK "VarFileInfo"

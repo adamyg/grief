@@ -60,12 +60,14 @@
 #define TF_DEFAULT_FG           32          /* default foreground color */
 #define TF_DEFAULT_BG           33          /* default background color */
 #define TF_SCHEMEDARK           34          /* *true* if the default color is "dark" */
-#define TF_COLORSETFGBG         35
-#define TF_COLORSET_FG          36          /* color set foreground control sequence */
-#define TF_COLORSET_BG          37          /* color set background control sequence */
+#define TF_COLORRGB             35          /* *true* if RGB colors are supported */
+#define TF_COLORSET_FG          36          /* color set foreground control sequence (ANSI colors) */
+#define TF_COLORSET_BG          37          /* color set background control sequence (ANSI colors) */
 #define TF_COLORMAP             38          /* color map (terminal) */
 #define TF_COLORPALETTE         39          /* color palette (driver) */
-#define TF_COLORSCHEME          40          /* current scheme dark or light */
+#define TF_COLORSCHEME          40          /* current color-scheme */
+#define TF_COLORSETRGB_FG       41          /* color set foreground control sequence (RGB colors) */
+#define TF_COLORSETRGB_BG       42          /* color set background control sequence (RGB colors) */
 
 #define TF_CLEAR_IS_BLACK       50          /* clear is black */
 #define TF_DISABLE_INSDEL       51          /* disable ins/del scrolling method */
@@ -92,8 +94,8 @@
 #define TF_XTERM_COMPAT         82          /* XTERM compatible termuinal */
 #define TF_XTERM_PALETTE        83          /* XTERM palette control */
 
-#define TF_VT_DATYPE            90          /* VT/XTERM Devive Attribute Type */
-#define TF_VT_DAVERSION         91          /* VT/XTERM Devive Attribute Version */
+#define TF_VT_DATYPE            90          /* VT/XTERM Device Attribute Type */
+#define TF_VT_DAVERSION         91          /* VT/XTERM Device Attribute Version */
 
 #define TF_ENCODING             100         /* terminal character encoding */
 #define TF_ENCODING_GUESS       101         /* text encoding guess specification */
@@ -125,6 +127,8 @@
 #define TF_AUTF8ENCODING        0x0000010   /* UTF8 character encoding, Unicode implied */
 #define TF_AUNICODEENCODING     0x0000020   /* Unicode character encoding */
 #define TF_AMETAKEY             0x0000100   /* Meta keys */
+#define TF_AXTERMKEYS           0x0000200   /* XTerm modifyOtherKeys */
+#define TF_AKITTYKEYS           0x0000400   /* Kitty extended keycodes */
 
 /*
  *  Registered macro types
@@ -1464,13 +1468,8 @@ extern void                     coloriser(~ string);
 extern int                      colorscheme(~ string scheme, ...);
 extern string                   inq_coloriser(void);
 
-#define VIM_16DEPTH             (1 << 1)
-#define VIM_88DEPTH             (1 << 2)
-#define VIM_256DEPTH            (1 << 3)
-#define VIM_GUIDEPTH            (1 << 4)
-
+                                /*colorsvim.cr*/
 extern int                      vim_colorscheme(string label, int colors, ~string base, list spec, int asgui);
-extern int                      vim_colorschemex(string label, int colors, ~string base, list spec, int asgui, int &gui);
 
                                 /*command.cr*/
 extern string                   fixslash(string str);

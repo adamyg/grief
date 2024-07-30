@@ -1,0 +1,121 @@
+/* -*- mode: c; indent-width: 4; -*-
+ *
+ * windows resource file
+ *
+ * This file is part of the GRIEF Editor.
+ *
+ * The GRIEF Editor is free software: you can redistribute it
+ * and/or modify it under the terms of the GRIEF Editor License.
+ *
+ * Redistributions of source code must retain the above copyright
+ * notice, and must be distributed with the license document above.
+ *
+ * Redistributions in binary form must reproduce the above copyright
+ * notice, and must include the license document above in
+ * the documentation and/or other materials provided with the
+ * distribution.
+ *
+ * The GRIEF Editor is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * License for more details.
+ * ==end==
+ */
+
+#include "../include/edbuildinfo.h"
+
+#define RC_PRODUCTVERSION	GR_VERSION_1 , GR_VERSION_2 , GR_VERSION_3 , GR_VERSION_4
+#define RC_FILEVERSION		GR_VERSION_1 , GR_VERSION_2 , GR_VERSION_3 , GR_VERSION_4
+
+#ifndef WINDRES
+#include "windows.h"
+#include "winver.h"
+#endif
+
+/*
+ * English (U.S.) resources
+ */
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+
+#ifdef _WIN32
+#ifndef WINDRES
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#endif
+#pragma code_page(1252)
+#endif /* _WIN32 */
+
+/*
+ * Manifest
+ */
+
+#ifndef RT_MANIFEST
+#define RT_MANIFEST 24
+#endif
+#ifndef CREATEPROCESS_MANIFEST_RESOURCE_ID
+#define CREATEPROCESS_MANIFEST_RESOURCE_ID 1
+#endif
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "../gr/gr.manifest.xml"
+
+/*
+ * Updater Meta Data
+ *  nameID      typeID  {  raw data  }
+ */
+
+UPDATER HostURL		{ "\0" }
+UPDATER Channel		{ "release\0" }
+
+
+/*
+ * Version Information
+ */
+
+VS_VERSION_INFO VERSIONINFO
+	FILEVERSION		RC_FILEVERSION
+	PRODUCTVERSION		RC_PRODUCTVERSION
+	FILEFLAGSMASK		VS_FFI_FILEFLAGSMASK
+#ifdef _DEBUG
+	FILEFLAGS		(VS_FF_SPECIALBUILD|VS_FF_DEBUG)
+#else
+	FILEFLAGS		(VS_FF_SPECIALBUILD)
+#endif
+	FILEOS			VOS_NT_WINDOWS32
+	FILETYPE		VFT_APP
+	FILESUBTYPE		VFT2_UNKNOWN
+	BEGIN
+		BLOCK	"StringFileInfo"
+		BEGIN
+			BLOCK	"040904E4"
+			BEGIN
+				VALUE "CompanyName",		""
+				VALUE "FileDescription",	"GRIEF Editor, grtags"
+				VALUE "FileVersion",		GR_VERSION ", Build:" GR_BUILD_DATE "-" GR_BUILD_NUMBER
+				VALUE "InternalName",		"grtags"
+				VALUE "Copyright",
+					"Copyright (C) 2014 - " GR_BUILD_YEAR ", Adam Young. \n"
+					"Copyright (c) 1980, 1987, 1991, 1993, The Regents of the University of California.  All rights reserved. \n"
+					"Licensed under the Grief License.\n "
+					"This is free software; see the source for copying conditions. \n"
+					"There is NO warranty; not even for MERCHANTABILITY \n"
+					"or FITNESS FOR A PARTICULAR PURPOSE. \0"
+				VALUE "Maintainers",		"https://github.com/adamyg/grief\n"
+				VALUE "LegalTrademarks",	"see GRIEF License"
+				VALUE "OriginalFilename",	"grtags.exe"
+				VALUE "ProductName",		"GRIEF"
+			END
+		END
+
+		/* The following line should only be modified for localized versions.     */
+		/* It consists of any number of WORD,WORD pairs, with each pair           */
+		/* describing a language,codepage combination supported by the file.      */
+		/*                                                                        */
+		/* For example, a file might have values "0x409,1252" indicating that it  */
+		/* supports English language (0x409) in the Windows ANSI codepage (1252). */
+
+		BLOCK	"VarFileInfo"
+		BEGIN
+			VALUE "Translation", 0x409, 1252
+		END
+	END
+
+#endif	/* English (U.S.) resources */

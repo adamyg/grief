@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.37 2024/06/13 06:44:03 cvsuser Exp $
+# $Id: Makefile.in,v 1.38 2024/07/30 08:16:09 cvsuser Exp $
 # libbsdmdoc and grmanddoc
 #
 #
@@ -46,11 +46,12 @@ XCLEAN=
 
 CC=		@CC@
 CXX=		@CXX@
+RM=		@RM@
+RC=		@RC@
 AR=		@AR@
 RANLIB=		@RANLIB@
 LIBTOOL=	@LIBTOOL@
 PERL=		@PERL@
-RM=		@RM@
 
 # Configuration
 
@@ -247,6 +248,16 @@ MANDOC_OBJS=\
 	$(D_OBJ)/mansearch$(O)		\
 	$(MANDOC_DB_OBJS)
 
+MANDOC_RESOURCES=	grmandoc.rc
+
+ifeq ("win32","@build_os@")
+ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
+MANDOC_OBJS+=		$(addprefix $(D_OBJ)/,$(subst .rc,_res.o,$(MANDOC_RESOURCES)))
+else
+MANDOC_OBJS+=		$(addprefix $(D_OBJ)/,$(subst .rc,.res,$(MANDOC_RESOURCES)))
+endif
+endif #build_os
+
 MANDOC=		$(D_BIN)/grmandoc$(E)
 
 	#---------------------------------------------------
@@ -381,6 +392,12 @@ $(D_OBJ)/sqlite3$(O):	CFLAGS := $(filter-out -gw -hw,$(CFLAGS))
 
 $(D_OBJ)/%$(O):		%$(C)
 		$(CC) $(CFLAGS) -o $@ -I ./sqlite3 -DHAVE_SQLITE3 -c $<
+
+$(D_OBJ)/%.res:		%.rc
+		$(RC) -fo $@ $<
+
+$(D_OBJ)/%_res.o:	%.rc
+		$(RC) -o $@ $<
 
 #end
 

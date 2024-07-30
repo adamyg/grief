@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.16 2024/05/03 14:35:16 cvsuser Exp $
+# $Id: Makefile.in,v 1.18 2024/07/30 05:17:19 cvsuser Exp $
 # GRIEF utilities makefile.
 #
 #
@@ -45,6 +45,7 @@ XCLEAN=
 
 CC=		@CC@
 RM=		@RM@
+RC=		@RC@
 PERL=		@PERL@
 LIBTOOL=	@LIBTOOL@
 
@@ -107,16 +108,33 @@ RMDFLAGS=	-rf
 #########################################################################################
 # Targets
 
+ifeq ("win32","@build_os@")
+ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
+define Resource
+$(2)+=		$(addprefix $(D_OBJ)/,$(subst .rc,_res.o,$(1)))
+endef
+else
+define Resource
+$(2)+=		$(addprefix $(D_OBJ)/,$(subst .rc,.res,$(1)))
+endef
+endif
+else 
+define Resource
+endef
+endif #build_os
+
 GRTAGS=		$(D_BIN)/grtags$(E)
 GRTAGSOBJS=	$(D_OBJ)/grtags$(O)	\
 		$(D_OBJ)/arg$(O)	\
 		$(D_OBJ)/tagsex$(O)	\
 		$(D_OBJ)/tagse$(O)
+$(eval $(call Resource,grtags.rc,GRTAGSOBJS))
 
 GRWC=		$(D_BIN)/grwc$(E)
 GRWCOBJS=	$(D_OBJ)/grwc$(O)	\
 		$(D_OBJ)/fmt_scaled$(O)	\
 		$(D_OBJ)/err$(O)
+$(eval $(call Resource,grwc.rc,GRWCOBJS))
 
 GRKEYTEST=	$(D_BIN)/grkeytest$(E)
 GRKEYTESTOBJS=	$(D_OBJ)/grkeytest$(O)
@@ -128,6 +146,7 @@ TARGETS=	$(GRTAGS)		\
 OBJS=		$(GRTAGSOBJS)		\
 		$(GRWCOBJS)		\
 		$(GRKEYTESTOBJS)
+
 
 #########################################################################################
 # Rules
@@ -169,5 +188,11 @@ $(D_OBJ)/%$(O):		%$(C)
 
 $(D_OBJ)/%$(O):		$(D_GR)/%$(C)
 		$(CC) $(CFLAGS) -o $@ -c -DGRTAGS $<
+
+$(D_OBJ)/%.res:		%.rc
+		$(RC) -fo $@ $<
+
+$(D_OBJ)/%_res.o:	%.rc
+		$(RC) -o $@ $<
 
 #end

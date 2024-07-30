@@ -273,3 +273,5 @@ print_counts(int64_t lines, int64_t words, int64_t chars, char *name)
 
 	(void)printf(" %s\n", name);
 }
+
+/*end*/
