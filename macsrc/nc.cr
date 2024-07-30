@@ -1,8 +1,8 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: nc.cr,v 1.35 2021/07/11 08:26:12 cvsuser Exp $
- * Norton Commander (NC) style directory services
+/* $Id: nc.cr,v 1.37 2024/07/29 16:15:54 cvsuser Exp $
+ * Norton Commander (NC)/Midnight Commander style directory services
  *
- *
+ * TODO: retain marked/position post command.
  */
 
 #include "grief.h"
@@ -21,11 +21,10 @@
 #define BACKWARD_SLASH      '\\'
 #define WILD                "?*"
 #define SMINCOLUMNS         62                  /* screen width */
-#define SMAXCOLUMNS         90
+#define SMAXCOLUMNS         142
 #define SFILECOLUMNS        (nc_fwidth)
 #define SINFOCOLUMNS        38
 #define TYPEPOS(__base)     (__base + 1)
-#define NAMEPOS(__base)     (__base + 2)
 
 #if defined(MSDOS)
 #define MARKER              "\xfe"
@@ -53,43 +52,47 @@
 
 /* Functions */
 #if defined(__PROTOTYPES__)
-void                        mc(void);
-void                        nc(void);
+int                         mc(~ string);
+int                         nc(~ string);
 
 static void                 NcSize(void);
-static int                  NcPosition(int line);
-static void                 NcPrompt(void);
+static string               NcParts(string line, int &type, int &size, int &mtime);
 static void                 NcCd(~ string);
-static void                 NcDirectory(string cwd);
-static int                  sort_versions(int i1, string s1, int l2, string s2);
-static void                 NcSelMsg(void);
-static void                 NcSelSpace(void);
-static void                 NcSelBack(void);
-static void                 NcSel(string);
-static int                  NcSelFind(string fname, int dir);
-static int                  NcSelSearch(int next, string pattern);
+static void                 NcRead(string cwd);
+static void                 NcMessage(void);
+static void                 NcSpace(void);
+static void                 NcBack(void);
+static void                 NcMatch(string);
+static int                  NcNext(string fname, int dir);
+static int                  NcSearch(int next, string pattern);
+
+static void                 NcRename(void);
 static void                 NcMkdir(void);
 static void                 NcChdir(void);
-static void                 NcUpdir(void);
-static void                 NcTree(void);
 static void                 NcDelete(void);
-static void                 NcRemove(void);
-static void                 NcEdit(void);
-static void                 NcExit(void);
+static void                 NcUpdir(void);
+static void                 NcEscape(void);
+static void                 NcAction(void);
+
 static int                  NcPosition(int line);
+static void                 NcDiagnostics(void);
 static void                 NcPrompt(void);
+
 static void                 NcHome(void);
 static void                 NcUp(void);
 static void                 NcDown(void);
 static void                 NcEnd(void);
 static void                 NcPgup(void);
 static void                 NcPgdn(void);
-static int                  NcMark(void);
-static void                 NcMarkSet(void);
-static void                 NcMarkClr(void);
-static void                 NcMarkInv(void);
-static void                 NcMarkMultiple(int);
-#endif   /*__PROTOTYPES__*/
+
+static int                  NcToggle(void);
+static void                 NcSelect(void);
+static void                 NcUnselect(void);
+static void                 NcInverse(void);
+static void                 NcMultiple(int);
+
+static void                 NcSort(~ string);
+#endif /*__PROTOTYPES__*/
 
 static string               ncsortorder = "Name";
 static int                  nckeymap;           /* keyboard map */
@@ -98,9 +101,9 @@ static int                  ncrows, nccols;     /* screen rows/cols */
 static int                  ncwidth, ncfwidth;
 
 static int                  nclineno;           /* current line count */
-static string               nclinebuf;          /* line buffer */
-static string               ncfilebuf;          /* file buffer */
-static string               ncselpattern;       /* selection pattern */
+static int                  ncactiveno;         /* selected count */
+static string               ncexitname;         /* file buffer */
+static string               ncpattern;          /* selection pattern */
 
 static list                 ncdirlist = {       /* Mkdir/Chdir */
     "Name: ",      ""
@@ -115,9 +118,9 @@ static list                 ncsortlist = {      /* Sort order */
     };
 
 
+
 /*
- *  main ---
- *      Run-time initialisation.
+ *  Run-time initialisation.
  */
 void
 main()
@@ -138,9 +141,8 @@ main()
     keyboard_typeables();                       /* keys 0...127 */
 
     assign_to_key("<Enter>",        "::NcEnter");
-    assign_to_key("<Backspace>",    "::NcSelBack");
-    assign_to_key("<Space>",        "::NcSelSpace");
- /* assign_to_key("<Esc>",          "::NcSelEsc");      -- exit. */
+    assign_to_key("<Backspace>",    "::NcBack");
+    assign_to_key("<Space>",        "::NcSpace");
     assign_to_key("<Home>",         "::NcHome");
     assign_to_key("<End>",          "::NcEnd");
     assign_to_key("<Up>",           "::NcUp");
@@ -156,34 +158,135 @@ main()
  /* assign_to_key("<F3>",           "::NcView");        -- Viewer. */
     assign_to_key("<F4>",           "::NcEdit");
  /* assign_to_key("<F5>",           "::NcCopy");        -- Copy. */
- /* assign_to_key("<F6>",           "::NcRename");      -- Rename/move. */
+    assign_to_key("<F6>",           "::NcRename");
     assign_to_key("<F7>",           "::NcMkdir");
     assign_to_key("<F8>",           "::NcDelete");
-    assign_to_key("<F9>",           "::NcSort");        /* Sort order. */
-    assign_to_key("<F10>",          "::NcExit");
-    assign_to_key("<Esc>",          "::NcExit");
-    assign_to_key("<Ctrl-D>",       "::NcChdir");       /* Change directory. */
-    assign_to_key("<Ctrl-R>",       "::NcCd");          /* Reread. */
-    assign_to_key("<Ctrl-PgUp>",    "::NcUpdir");
-    assign_to_key("<Ctrl-F3>",      "::NcSort F");      /* Filename. */
-    assign_to_key("<Ctrl-F4>",      "::NcSort E");      /* Extension. */
-    assign_to_key("<Ctrl-F5>",      "::NcSort T");      /* Time. */
-    assign_to_key("<Ctrl-F6>",      "::NcSort S");      /* Size. */
-    assign_to_key("<Ctrl-F7>",      "::NcSort U");      /* Unsorted. */
-#if defined(MSDOS)
-    assign_to_key("<Alt-F1>",       "::NcDrive");       /* DOS special. */
-#endif
-    assign_to_key("<Alt-F7>",       "ff");
-    assign_to_key("<Alt-F10>",      "::NcTree");
     assign_to_key("<Del>",          "::NcDelete");
-    assign_to_key("<Ins>",          "::NcMark");
-    assign_to_key("<Keypad-Minus>", "::NcMarkClr");
-    assign_to_key("<Keypad-Plus>",  "::NcMarkSet");
-    assign_to_key("<Keypad-Star>",  "::NcMarkInv");
+    assign_to_key("<F9>",           "::NcSort");
+    assign_to_key("<F10>",          "::NcAction");
+    assign_to_key("<Esc>",          "::NcEscape");
+    assign_to_key("<Ctrl-D>",       "::NcChdir");
+    assign_to_key("<Ctrl-R>",       "::NcCd");
+    assign_to_key("<Ctrl-PgUp>",    "::NcUpdir");
+    assign_to_key("<Ctrl-F3>",      "::NcSort Name");
+    assign_to_key("<Ctrl-F4>",      "::NcSort Extension");
+    assign_to_key("<Ctrl-F5>",      "::NcSort Time");
+    assign_to_key("<Ctrl-F6>",      "::NcSort Size");
+    assign_to_key("<Ctrl-F7>",      "::NcSort Unsorted");
+#if defined(MSDOS)
+    assign_to_key("<Alt-F1>",       "::NcDrive");
+#endif
+    assign_to_key("<Alt-F>",        "ff");
+    assign_to_key("<Alt-F10>",      "::NcTree");
+    assign_to_key("<Ins>",          "::NcToggle");
+    assign_to_key("<Keypad-Plus>",  "::NcSelect");
+    assign_to_key("<Keypad-Minus>", "::NcUnselect");
+    assign_to_key("<Keypad-Star>",  "::NcInverse");
 
     nckeymap = inq_keyboard();
     keyboard_pop(1);                            /* save keyboard */
     NcSize();
+}
+
+
+/*
+ *  mc ---
+ *      Directory services (NC/Midnight commander style).
+ */
+int
+mc(~ string)
+{
+    string dir;
+    get_parm(0, dir);
+    nc(dir);
+}
+
+
+/*
+ *  nc ---
+ *      Directory services (NC/Midnight commander style).
+ */
+int
+nc(~ string)
+{
+    string dir, cwd;                            /* saved directory */
+    int old_buffer, old_window;
+    int new_buffer = -1;
+    int dir_buffer;
+
+    /* Initialise directory */
+    old_buffer = inq_buffer();
+    old_window = inq_window();
+    if ((dir_buffer = create_buffer("nc", NULL, 1)) < 0) {
+        return -1;
+    }
+
+    getwd(NULL, cwd);                           /* current working dir */
+    if (! get_parm(0, dir) || 0 == strlen(dir) || dir == ".")
+        dir = cwd;
+
+    NcSize();
+    set_buffer(dir_buffer);
+    attach_syntax(SYNTAX);
+    set_buffer_type(NULL, BFTYP_UTF8);
+    NcRead(dir);
+
+    create_window(nccols, ncrows + 4, nccols + ncwidth + 30, 3,
+            "<F1> Help, <Ins/+/-/Enter> select, <F10/Esc> action/exit");
+    attach_buffer(dir_buffer);
+    NcPosition(1);
+    ncpattern = "";
+
+    /* User process */
+    keyboard_push(nckeymap);
+    register_macro(0, "::NcBadkey", 1);         /* local Bad key */
+    process();
+    unregister_macro(0, "::NcBadkey", 1);
+    keyboard_pop(1);                            /* pop, but retain */
+    delete_window();
+
+    /* Load selected files */
+    if (strlen(ncexitname)) {                    /* exit condition */
+        if (ncexitname == MARKER) {
+            /* Load all marked files */
+            string name;
+            int type, size, mtime;
+
+            top_of_buffer();
+            while (search_fwd("<\\c" + MARKER)) {
+                name = NcParts(read(), type, size, mtime);
+                ncexitname = "./" + name;
+                down();
+
+                message("Loading \"%s\" for editing...", ncexitname);
+                if (edit_file(ncexitname) > 0) {
+                    if (new_buffer == -1) {     /* first */
+                        new_buffer = inq_buffer();
+                    }
+                }
+                set_buffer(dir_buffer);         /* for next search */
+            }
+        } else {
+            /* Load specified file */
+            message("Loading \"%s\" for editing...", ncexitname);
+            if (edit_file(ncexitname) > 0) {
+                if (new_buffer == -1) {
+                    new_buffer = inq_buffer();
+                }
+            }
+        }
+        display_file_name();
+    }
+
+    cd(cwd);                                    /* restore cwd */
+
+    delete_buffer(dir_buffer);
+    if (new_buffer == -1)
+        new_buffer = old_buffer;
+    set_buffer(new_buffer);
+    set_window(old_window);
+    attach_buffer(new_buffer);
+    return (new_buffer == -1 ? 0 : 1);
 }
 
 
@@ -192,7 +295,8 @@ NcSize(void)
 {
     inq_screen_size(ncrows, nccols);
     if (nccols > SMINCOLUMNS + 2) {
-        if ((ncwidth = nccols - 6) > SMAXCOLUMNS) {
+        ncwidth = (nccols / 3) * 2;             /* 2/3 width */
+        if (ncwidth >SMAXCOLUMNS) {
             ncwidth = SMAXCOLUMNS;
         }
     } else {
@@ -205,92 +309,12 @@ NcSize(void)
 }
 
 
-/*
- *  mc ---
- *      Directory services (NC/Midnight commander style).
- */
-void
-mc(void)
+static string
+NcParts(string line, int &type, int &size, int &mtime)
 {
-    nc();
-}
-
-
-/*
- *  nc ---
- *      Directory services (NC/Midnight commander style).
- */
-void
-nc(void)
-{
-    string cwd;                                 /* saved directory */
-    int old_buffer, old_window;
-    int dir_buffer;
-    int base;
-
-    /* Initialise directory */
-    old_buffer = inq_buffer();
-    old_window = inq_window();
-    dir_buffer = create_buffer("NC", NULL, 1);
-    if (dir_buffer == -1) {
-        return;                                 /* template missing */
-    }
-    NcSize();
-
-    getwd(NULL, cwd);                           /* current working dir */
-    set_buffer(dir_buffer);
-    attach_syntax(SYNTAX);
-    set_buffer_type(NULL, BFTYP_UTF8);
-    NcDirectory(cwd);
-
-    create_window(nccols, ncrows + 4, nccols + ncwidth, 3,
-            "<F1> Help, <Enter> to select, <F10/Esc> to exit");
-    attach_buffer(dir_buffer);
-    NcPosition(1);
-    ncselpattern = "";
-
-    /* User process */
-    keyboard_push(nckeymap);
-    register_macro(0, "::NcBadkey", 1);         /* local Bad key */
-    process();
-    unregister_macro(0, "::NcBadkey", 1);
-    keyboard_pop(1);                            /* pop, but retain */
-    delete_window();
-
-    /* Load selected files */
-    if (strlen(ncfilebuf)) {                    /* F10 or Esc ? */
-        if (ncfilebuf == MARKER) {
-            /* Load all marked files */
-            top_of_buffer();
-            while (search_fwd("<\\c" + MARKER)) {
-                nclinebuf = read();
-                base = index(nclinebuf, '\t');  /* delimiter */
-                ncfilebuf = "./" + trim(substr(nclinebuf, NAMEPOS(base)));
-                down();
-
-                message("Loading \"%s\" for editing...", ncfilebuf);
-                if (edit_file(ncfilebuf) > 0) {
-                    old_buffer = inq_buffer();
-                }
-                set_buffer(dir_buffer);         /* for next search */
-            }
-        } else {
-            /* Load specified file */
-            message("Loading \"%s\" for editing...", ncfilebuf);
-            if (edit_file(ncfilebuf) > 0) {
-                old_buffer = inq_buffer();
-            }
-        }
-        display_file_name();
-    }
-
-    cd(cwd);                                    /* restore cwd */
-
-    delete_buffer(dir_buffer);
-
-    set_buffer(old_buffer);
-    set_window(old_window);
-    attach_buffer(old_buffer);
+    string name;
+    sscanf(substr(line, index(line, '\t') + 1), "%c|%[^/]/%d/%d", type, name, size, mtime);
+    return trim(name);
 }
 
 
@@ -306,10 +330,10 @@ NcBadkey()
     left();
     c = read(1);
     delete_char();
-    if (c == "/") {
+    if (c == "/" || c == "\\") {
         NcCd("/");
     } else {
-        NcSel(lower(c));
+        NcMatch(lower(c));
     }
     return "";
 }
@@ -338,103 +362,88 @@ NcForeach(string funcname)
 
 
 /*
- *  NcSelMsg ---
- *      Display the current selected file name, APY 06/12/90
+ *  NcMessage ---
+ *      Display the current selected file name.
  */
 static void
-NcSelMsg(void)
+NcMessage(void)
 {
-    message("File: %s", ncselpattern);
+    message("File: %s", ncpattern);
 }
 
 
 /*
- *  NcSelSpace ---
- *      called whenever the user presses a <Space> key. Finds the next file name match
- *      ensuring the user does not go past the end of the buffer.
+ *  NcSpace ---
+ *      Called whenever the user presses a <Space> key.
+ *      Finds the next file name match ensuring the user does not go past the end of the buffer.
  */
 static void
-NcSelSpace(void)
+NcSpace(void)
 {
-    if (ncselpattern == "") {
-        if (NcMark() != 0) {
+    if (ncpattern == "") {
+        if (NcToggle() != 0) {
             NcDown();
         }
     } else {
-        if (NcSelFind(ncselpattern, SEL_NEXT) == -1) {
-            NcSelFind(ncselpattern, SEL_TOP);
+        if (NcNext(ncpattern, SEL_NEXT) == -1) {
+            NcNext(ncpattern, SEL_TOP);
         }
     }
 }
 
 
 /*
- *  NcSelBack ---
- *      called whenever the user presses a <Backspace> key. Removes the last key from the
- *      buf search fname.
+ *  NcBack ---
+ *      Called whenever the user presses a <Backspace> key.
+ *      Removes the last key from the buffer search filename.
  */
 static void
-NcSelBack(void)
+NcBack(void)
 {
     int len;
 
-    if ((len = strlen(ncselpattern)) > 0) {
-        ncselpattern = substr(ncselpattern, 1, len - 1);
-        if (strlen(ncselpattern) == 0) {
+    if ((len = strlen(ncpattern)) > 0) {
+        ncpattern = substr(ncpattern, 1, len - 1);
+        if (strlen(ncpattern) == 0) {
             NcPosition(1);
         } else {
-            if (NcSelFind(ncselpattern, SEL_TOP) == -1) {
+            if (NcNext(ncpattern, SEL_TOP) == -1) {
                 beep();
             }
         }
-        NcSelMsg();
+        NcMessage();
     }
 }
 
 
 /*
- *  NcSelEsc ---
- *      called whenever the user presses a <Esc> (key. Clears the search file-name
- *
-    static void
-    NcSelEsc(void)
-    {
-        if (ncselpattern != "") {
-            ncselpattern = "";
-            NcSelMsg();
-        }
-    }
- */
-
-
-/*
- *  NcSel ---
+ *  NcMatch ---
  *      Select engine.
  */
 static void
-NcSel(string new_key)
+NcMatch(string new_key)
 {
     string new_pattern;
 
-    new_pattern = ncselpattern;
+    new_pattern = ncpattern;
     new_pattern += new_key;
-    if (strlen(new_pattern) == 1 || NcSelFind(new_pattern, SEL_NEXT) == -1) {
-        if (NcSelFind(new_pattern, SEL_TOP) == -1) {
+    if (strlen(new_pattern) == 1 || NcNext(new_pattern, SEL_NEXT) == -1) {
+        if (NcNext(new_pattern, SEL_TOP) == -1) {
             beep();
             return;
         }
     }
-    ncselpattern = new_pattern;
-    NcSelMsg();
+    ncpattern = new_pattern;
+    NcMessage();
 }
 
 
 /*
- *  NcSelFind ---
+ *  NcNext ---
  *      Finds the next matching file name.
  */
 static int
-NcSelFind(string fname, int dir)
+NcNext(string fname, int dir)
 {
     save_position();                            /* Save the current position. */
 
@@ -450,7 +459,7 @@ NcSelFind(string fname, int dir)
         break;
     }
 
-    if (NcSelSearch(dir, "<" + MARKER + "|  "+fname) <= 0) {
+    if (NcSearch(dir, "<" + MARKER + "|  "+fname) <= 0) {
         /* not found, restore position */
         restore_position();
         return -1;
@@ -461,12 +470,12 @@ NcSelFind(string fname, int dir)
 
 
 /*
- *  NcSelSearch ---
+ *  NcSearch ---
  *      Searches forward and back depending on first parameter if that parameter is not
  *      zero it searches forward else back.
  */
 static int
-NcSelSearch(int next, string pattern)
+NcSearch(int next, string pattern)
 {
     return (next ? search_fwd(pattern, 1, 0, 0) : search_back(pattern, 1, 0, 0));
 }
@@ -475,7 +484,7 @@ NcSelSearch(int next, string pattern)
 #if defined(MSDOS)
 /*
  *  NcDrive ---
- *      called whenever the user presses the <Alt-F1> key, "change current working drive".
+ *      Change-drive
  */
 static void
 NcDrive(void)
@@ -504,8 +513,34 @@ NcDrive(void)
 
 
 /*
+ *  NcRename ---
+ *      Rename directory/file command
+ */
+static void
+NcRename(void)
+{
+    string name;
+    int type, size, mtime;
+    list result;
+
+    name = NcParts(read(), type, size, mtime);
+    result[0] = name;
+    result = field_list("Rename", result, ncdirlist, TRUE);
+    if (result[0] == "") {
+        NcPrompt();
+    } else {
+        message("Renaming \"%s\" to \"%s\"...", name, result[0]);
+        if (rename(name, result[0]) == -1) {
+            error("Unable to rename \"%s\" : %d (%s)", name, errno, strerror(errno));
+        } else {
+            NcCd();
+        }
+    }
+}
+
+/*
  *  NcMkdir ---
- *      called whenever the user presses the <F7> key, "make directory".
+ *      Make directory command.
  */
 static void
 NcMkdir(void)
@@ -529,7 +564,7 @@ NcMkdir(void)
 
 /*
  *  NcChdir ---
- *      called whenever the user presses the <Ctrl-d> key, "change directory".
+ *      Change-directory command.
  */
 static void
 NcChdir(void)
@@ -548,7 +583,7 @@ NcChdir(void)
 
 /*
  *  NcUpdir ---
- *      Process <Ctrl-PgUp> "up directory" key request
+ *      Process <Ctrl-PgUp> "up directory" key request.
  */
 static void
 NcUpdir(void)
@@ -566,7 +601,7 @@ NcUpdir(void)
 
 /*
  *  NcTree ---
- *      called whenever the user presses the <Alt-F10> key, "directory tree".
+ *      Directory tree command.
  */
 static void
 NcTree(void)
@@ -586,20 +621,20 @@ NcTree(void)
 
 /*
  *  NcDelete ---
- *      called whenever the user presses the <F8> or <Del> key, "delete".
+ *      Delete file/directory command.
  */
 static void
 NcDelete(void)
 {
-    string answer;
-    int line, base;
+    string linebuf, name, answer;
+    int line, type, size, mtime;
 
     inq_position(line);
     raise_anchor();
     top_of_buffer();
     if (search_fwd("<\\c" + MARKER)) {
         answer = "?";
-        while (upper(answer) != "Y" && upper (answer) != "N") {
+        while (answer != "Y" && answer != "N") {
             if (answer != "?") {
                 beep();
             }
@@ -609,37 +644,32 @@ NcDelete(void)
                 answer = "N";
             } else if (answer == "?") {
                 beep();
+            } else {
+                answer = upper(answer);
             }
         }
 
-        if (upper(answer) == "Y") {
+        if (answer == "Y") {
             top_of_buffer();
             while (search_fwd("<\\c" + MARKER)) {
-                nclinebuf = read();
                 beginning_of_line();
+                linebuf = read();
                 down();
 
-                base = index(nclinebuf, '\t');  /* delimiter */
-
-                if (substr(nclinebuf, TYPEPOS(base), 1) == "D") {
-                                                /* directory */
-                    ncfilebuf = trim(substr(nclinebuf, NAMEPOS(base)));
-                    if (ncfilebuf != "..") {
-                        error("%s", nclinebuf);
-                        message("Deleting Directory \"%s\"...", ncfilebuf);
-                        if (-1 == rmdir(ncfilebuf)) {
-                            error("Unable to rmdir \"%s\" : %d (%s)",
-                                ncfilebuf, errno, strerror(errno));
+                name = NcParts(linebuf, type, size, mtime);
+                if (type == 'D') {              /* directory */
+                    if (name != "..") {
+                        message("Deleting Directory \"%s\"...", name);
+                        if (rmdir(name) == -1) {
+                            error("Unable to rmdir \"%s\" : %d (%s)", name, errno, strerror(errno));
                         }
                     }
 
-                } else if (substr(nclinebuf, TYPEPOS(base), 1) == "F") {
-                                                /* file */
-                    ncfilebuf = "./" + trim(substr(nclinebuf, NAMEPOS(base)));
-                    message("Deleting \"%s\"...", ncfilebuf);
-                    if (remove(ncfilebuf) == -1) {
-                        error("Unable to delete \"%s\" : %d (%s) - Press any key",
-                                ncfilebuf, errno, strerror(errno));
+                } else if (type == 'F') {       /* file */
+                    name = "./" + name;
+                    message("Deleting \"%s\"...", name);
+                    if (remove(name) == -1) {
+                        error("Unable to delete \"%s\" : %d (%s) - Press any key", name, errno, strerror(errno));
                         beep();
                         while (!inq_kbd_char())
                             ;
@@ -655,44 +685,39 @@ NcDelete(void)
 
     } else {
         NcPosition(line);
-        nclinebuf = read();
+        linebuf = read();
         beginning_of_line();
 
         answer = "?";
-        while (upper(answer) != "Y" && upper(answer) != "N") {
+        while (answer != "Y" && answer != "N") {
             if (answer != "?")
                 beep();
             answer = "";
-            get_parm(NULL, answer,
-                "Delete 'highlighted' file [yn]? ", 1);
+            get_parm(NULL, answer, "Delete 'highlighted' file [yn]? ", 1);
             if (answer == "") {
                 answer = "N";
             } else if (answer == "?") {
                 beep();
+            } else {
+                answer = upper(answer);
             }
         }
 
-        if (upper(answer) == "Y") {
-            base = index(nclinebuf, '\t');      /* delimiter */
-
-            if (substr(nclinebuf, TYPEPOS(base), 1) == "D") {
-                                                /* directory */
-                ncfilebuf = trim(substr(nclinebuf, NAMEPOS(base)));
-                if (ncfilebuf != "..") {
-                    message("Deleting Directory \"%s\"...", ncfilebuf);
-                    if (-1 == rmdir(ncfilebuf)) {
-                        error("Unable to rmdir \"%s\" : %d (%s)",
-                                ncfilebuf, errno, strerror(errno));
+        if (answer == "Y") {
+            name = NcParts(linebuf, type, size, mtime);
+            if (type == 'D') {                  /* directory */
+                if (name != "..") {
+                    message("Deleting Directory \"%s\"...", name);
+                    if (rmdir(name) == -1) {
+                        error("Unable to rmdir \"%s\" : %d (%s)", name, errno, strerror(errno));
                     }
                 }
 
-            } else if (substr(nclinebuf, TYPEPOS(base), 1) == "F") {
-                                                /* file */
-                ncfilebuf = "./" + trim(substr(nclinebuf, NAMEPOS(base)));
-                message("Deleting \"%s\"...", ncfilebuf);
-                if (remove(ncfilebuf) == -1) {
-                    error("Unable to delete \"%s\" : %d (%s) - Press any key",
-                            ncfilebuf, errno, strerror(errno));
+            } else if (type == 'F') {           /* file */
+                name = "./" + name;
+                message("Deleting \"%s\"...", name);
+                if (remove(name) == -1) {
+                    error("Unable to delete \"%s\" : %d (%s) - Press any key", name, errno, strerror(errno));
                     beep();
                     while(!inq_kbd_char())
                         ;
@@ -709,38 +734,49 @@ NcDelete(void)
 
 
 /*
- *  NcEdit ---
- *      called whenever the user presses the <F4>, "edit".
+ *  NcEscape/ESC ---
+ *      Escape, without action.
+ */
+static void
+NcEscape(void)
+{
+    ncexitname = "";
+    exit();
+}
+
+
+/*
+ *  NcEdit/F4 ---
+ *      Edit command.
  */
 static void
 NcEdit(void)
 {
-    int line, base;
+    string linebuf, name;
+    int line, size, type, mtime;
 
     inq_position(line);
-    nclinebuf = read();
+    linebuf = read();
     raise_anchor();
     top_of_buffer();
 
     if (search_fwd("<\\c" + MARKER)) {
-        ncfilebuf = MARKER;
+        ncexitname = MARKER;
 
     } else {
-        base = index(nclinebuf, '\t');          /* delimiter */
-
-                                                /* directory */
-        if (substr(nclinebuf, TYPEPOS(base), 1) == "D") {
+        name = NcParts(linebuf, type, size, mtime);
+        if (type == 'D') {                      /* directory */
             error("Cannot edit directory, press any key...");
             beep();
-            while(!inq_kbd_char())
-                ;
-            read_char();
             NcPosition(line);
             return;
 
-                                                /* file */
-        } else if (substr(nclinebuf, TYPEPOS(base), 1) == "F") {
-            ncfilebuf = "./" + trim(substr(nclinebuf, NAMEPOS(base)));
+        } else if (type == 'F') {               /* file */
+            ncexitname = "./" + name;
+
+        } else {
+            NcPrompt();
+            return;
         }
     }
     exit();                                     /* exit 'nc' */
@@ -748,14 +784,18 @@ NcEdit(void)
 
 
 /*
- *  NcExit ---
+ *  NcExit/F10 ---
  *      Exit.
  */
 static void
 NcExit(void)
 {
-    ncfilebuf = "";
-    exit();
+    if (ncactiveno) {
+        ncexitname = MARKER;
+        exit();
+    } else {
+        beep();
+    }
 }
 
 
@@ -774,7 +814,20 @@ NcPosition(int line)
     move_abs(line, 1);
     drop_anchor(ANCHOR_LINE);
     refresh();
+//  NcDiagnostics();
     return line;
+}
+
+
+static void
+NcDiagnostics(void)
+{
+    string linebuf, name;
+    int type, size, mtime;
+
+    linebuf = read();
+    name = NcParts(linebuf, type, size, mtime);
+    message("type=%c,name=%s,size=%d,mtime=%d", type, name, size, mtime);
 }
 
 
@@ -810,8 +863,8 @@ NcHome(void)
 static void
 NcUp(void)
 {
-   up();
-   NcPosition(0);
+    up();
+    NcPosition(0);
 }
 
 
@@ -888,57 +941,60 @@ NcPgdn(void)
 
 
 /*
- *  NcMarkSet ---
+ *  NcSelect ---
  *      Multiple file marking.
  */
 static void
-NcMarkSet(void)
+NcSelect(void)
 {
-    NcMarkMultiple(MARK_SELECT);
+    NcMultiple(MARK_SELECT);
 }
 
 
 /*
- *  NcMarkClr ---
+ *  NcUnselect ---
  *      Multiple file unmarking.
  */
 static void
-NcMarkClr(void)
+NcUnselect(void)
 {
-    NcMarkMultiple(MARK_UNSELECT);
+    NcMultiple(MARK_UNSELECT);
 }
 
 
 /*
- *  NcMarkInv ---
+ *  NcInverse ---
  *      Invert file marking.
  */
 static void
-NcMarkInv(void)
+NcInverse(void)
 {
-    NcMarkMultiple(MARK_INVERT);
+    NcMultiple(MARK_INVERT);
 }
 
 
 /*
- *  NcMark ---
+ *  NcToggle ---
  *      Toggle file mark of current file
  */
 static int
-NcMark(void)
+NcToggle(void)
 {
+    string linebuf;
     int base;
 
-    nclinebuf = read();
-    base = index(nclinebuf, '\t');              /* delimiter */
-    if (substr(nclinebuf, TYPEPOS(base), 1) != "F") {
+    linebuf = read();
+    base = index(linebuf, '\t');                /* delimiter */
+    if (substr(linebuf, TYPEPOS(base), 1) != "F") {
         return (-1);
     }
     delete_char();
-    if (substr(nclinebuf,1,1) == MARKER) {
+    if (substr(linebuf,1,1) == MARKER) {
+        --ncactiveno;
         insert(" ");
     } else {
         insert(MARKER);
+        ++ncactiveno;
     }
     beginning_of_line();
     NcDown();
@@ -947,18 +1003,17 @@ NcMark(void)
 
 
 /*
- *  NcMarkMultiple ---
+ *  NcMultiple ---
  *      Multiple file marking engine
  */
 static void
-NcMarkMultiple( int mark_typ )
+NcMultiple(int mark_type)
 {
     list result;
-    int base;
 
-    result[0] ="";
-    result = field_list((mark_typ == MARK_SELECT ? "Select" :
-                    (mark_typ == MARK_UNSELECT ? "Unselect" : "Invert")),
+    result[0] = "";
+    result = field_list((mark_type == MARK_SELECT ? "Select" :
+                    (mark_type == MARK_UNSELECT ? "Unselect" : "Invert")),
                 result, ncpatlist, TRUE);
 
     if (result[0] == "") {
@@ -966,7 +1021,8 @@ NcMarkMultiple( int mark_typ )
 
     } else {
         int line_no, line;
-        string pat;
+        string linebuf, pat, name;
+        int type, size, mtime;
 
         pat = result[0];
         message("Marking specified files... (%s)", pat);
@@ -975,28 +1031,38 @@ NcMarkMultiple( int mark_typ )
         line_no = nclineno;
         while (line_no) {
             move_abs(line_no, 1);
-            nclinebuf = read();
-            base = index(nclinebuf, '\t');      /* delimiter */
-
-            if (substr(nclinebuf, TYPEPOS(base), 1) == "F" &&
-                    re_search(NULL, pat, ncfilebuf) > 0) {
-                message(".. %s", trim(substr(nclinebuf, NAMEPOS(base))));
-
-                delete_char();
-                switch (mark_typ) {
-                case MARK_INVERT:
-                    if (substr(nclinebuf,1,1) == MARKER) {
-                        insert(" ");
-                    } else {
-                        insert(MARKER);
+            linebuf = read();
+            name = NcParts(linebuf, type, size, mtime);
+            if (type == 'F')
+            {
+                if (re_search(NULL, pat, name) > 0) {
+                    message(".. %s", name);
+                    switch (mark_type) {
+                    case MARK_INVERT:
+                        delete_char();
+                        if (substr(linebuf,1,1) == MARKER) {
+                            --ncactiveno;
+                            insert(" ");
+                        } else {
+                            ++ncactiveno;
+                            insert(MARKER);
+                        }
+                        break;
+                    case MARK_SELECT:
+                        if (substr(linebuf,1,1) != MARKER) {
+                            delete_char();
+                            ++ncactiveno;
+                            insert(MARKER);
+                        }
+                        break;
+                    case MARK_UNSELECT:
+                        if (substr(linebuf,1,1) == MARKER) {
+                            delete_char();
+                            --ncactiveno;
+                            insert(" ");
+                        }
+                        break;
                     }
-                    break;
-                case MARK_SELECT:
-                    insert(MARKER);
-                    break;
-                case MARK_UNSELECT:
-                    insert(" ");
-                    break;
                 }
                 beginning_of_line();
             }
@@ -1015,23 +1081,25 @@ NcMarkMultiple( int mark_typ )
 static void
 NcEnter(void)
 {
-    int base;
+    string linebuf, name;
+    int type, size, mtime;
 
-    nclinebuf = read();
-    base = index(nclinebuf, '\t');              /* delimiter */
-
-    if (substr(nclinebuf, TYPEPOS(base), 1) == "D") { /* Directory selection */
-        ncfilebuf = trim(substr(nclinebuf, NAMEPOS(base)));
-        if (ncfilebuf == "..") {
+    linebuf = read();
+    name = NcParts(linebuf, type, size, mtime);
+    if (type == 'D') {                          /* directory */
+        if (name == "..") {
             NcCd(DIR_UP);
-
         } else {
-            NcCd(DIR_DOWN + ncfilebuf);
+            NcCd(DIR_DOWN + name);
         }
-                                                /* File selection */
-    } else if (substr(nclinebuf, TYPEPOS(base), 1) == "F") {
-        ncfilebuf = "./" + trim(substr(nclinebuf, NAMEPOS(base)));
-        exit();
+
+    } else if (type == 'F') {                   /* file */
+        if (0 == ncactiveno) {
+            ncexitname = "./" + name;
+            exit();
+        } else {
+            NcToggle();
+        }
     }
 }
 
@@ -1060,8 +1128,8 @@ NcCd(~ string)
     }
 
     /* Refresh directory list */
-    ncselpattern = "";
-    NcDirectory(cwd);
+    ncpattern = "";
+    NcRead(cwd);
 
     /* Position cursor at parent directory */
     pos = 1;
@@ -1091,15 +1159,15 @@ NcCd(~ string)
 
 
 /*
- *  NcDirectory ---
- *      Read the current.
+ *  NcRead ---
+ *      Read the current directory.
  */
 static void
-NcDirectory(string cwd)
+NcRead(string cwd)
 {
     int cyear, year, day, hour, min;
     int bytes, mtime, mode;
-    int pass, lines;
+    int pass, dirs, lines;
     string name, mon, size;
     string buffer;
 
@@ -1110,17 +1178,16 @@ NcDirectory(string cwd)
     message("Reading disk directory...");
 
     nclineno = 0;                               /* line count */
+    ncactiveno = 0;
     clear_buffer();
     for (pass = 1; pass <= 2; pass++) {
-        int start = nclineno;                   /* first line-index of section 0... */
-
         if (ncsortorder == "Unsorted" && 2 == pass) {
             break;                              /* unsorted is single pass */
         }
 
         file_pattern(WILD);
         while (find_file(name, bytes, mtime, NULL, mode)) {
-            if  (S_IFDIR & mode) {
+            if (S_IFDIR & mode) {
                 /*
                  *  Directories
                  */
@@ -1128,8 +1195,9 @@ NcDirectory(string cwd)
                         name == "." ) {         /* skip on 2nd sort pass */
                     continue;                   /* or if '.' directory */
                 }
-
                 sprintf(buffer, " /%-*.*W|  <DIR>|", ncfwidth, ncfwidth, name);
+                bytes = 0;
+                ++dirs;
 
             } else {
                 /*
@@ -1150,34 +1218,41 @@ NcDirectory(string cwd)
                 }
 
                 sprintf(buffer, " %s%-*.*W|%7s|",
-                    substr(mode_string(mode, cwd+"/"+name, TRUE), 1, 1), ncfwidth, ncfwidth, name, size);
+                    substr(mode_string(mode, cwd + "/" + name, TRUE), 1, 1), ncfwidth, ncfwidth, name, size);
             }
 
             buffer += mode_string(mode);        /* decode mode */
 
             localtime(mtime, year, NULL, day, mon, NULL, hour, min, NULL);
             if (cyear == year) {
-                sprintf(buffer, "%s|%s %2d %02d:%02d   ?", buffer, substr(mon,1,3), day, hour, min);
+                sprintf(buffer, "%s|%s %2d %02d:%02d ", buffer, substr(mon,1,3), day, hour, min);
             } else {
-                sprintf(buffer, "%s|%s %2d  %04d   ?", buffer, substr(mon,1,3), day, year);
+                sprintf(buffer, "%s|%s %2d  %04d ", buffer, substr(mon,1,3), day, year);
             }
-            insert(buffer);
 
-            if (mode & S_IFDIR) {               /* <delimiter><type><name><nl> */
-                insert(" \tD" + name + "\n");
-            } else {
-                insert(" \tF" + name + "\n");
-            }
+            insertf("%s\t%c|%s/%d/%d\n",        /* <delimiter><type>|<name>/<size>/<mtime><nl> */
+                buffer, ((mode & S_IFDIR) ? 'D' : 'F'), name, bytes, mtime);
             ++nclineno;
         }
 
-        /*
-         *  Sort current section
-         *      TODO - sort order
-         */
-        if (nclineno > start) {                 /* sort section to end-of-buffer */
-            delete_line();
-            sort_buffer(NULL, "::sort_versions", start + 1);
+        delete_line();
+        if (ncsortorder != "Unsorted") {
+            string sortby;
+            if (dirs > 1)
+                sortby = "::sort_names";
+            if (ncsortorder == "Name") {
+                sortby = "::sort_names";
+            } else if (ncsortorder == "Extension") {
+                sortby = "::sort_extensions";
+            } else if (ncsortorder == "Time") {
+                sortby = "::sort_times";
+            } else if (ncsortorder == "Size") {
+                sortby = "::sort_sizes";
+            }
+            if (sortby) {
+                sort_buffer(NULL, sortby, 1, dirs);
+                sort_buffer(NULL, sortby, dirs + 1);
+            }
         }
     }
 
@@ -1193,26 +1268,80 @@ NcDirectory(string cwd)
 
 
 static int
-sort_versions(int l1, string s1, int l2, string s2)
+sort_names(int l1, string s1, int l2, string s2)
 {
+    int type, size, mtime;
+
     UNUSED(l1, l2);
-    return strverscmp(substr(s1, 3), substr(s2, 3));
+    s1 = NcParts(s1, type, size, mtime);
+    s2 = NcParts(s2, type, size, mtime);
+    return strfilecmp(s1, s2);
+}
+
+
+static int
+sort_extensions(int l1, string s1, int l2, string s2)
+{
+    int type, size, mtime, ext;
+
+    UNUSED(l1, l2);
+    s1 = NcParts(s1, type, size, mtime);
+    ext = rindex(s1, '.');
+    if (ext) s1 = substr(s1, ext + 1);
+
+    s2 = NcParts(s2, type, size, mtime);
+    ext = rindex(s2, '.');
+    if (ext) s2 = substr(s2, ext + 1);
+
+    return strfilecmp(s1, s2);
+}
+
+
+static int
+sort_times(int l1, string s1, int l2, string s2)
+{
+    int type, size, mtime1, mtime2;
+
+    UNUSED(l1, l2);
+    NcParts(s1, type, size, mtime1);
+    NcParts(s2, type, size, mtime2);
+    return mtime1 <=> mtime2;
+}
+
+
+static int
+sort_sizes(int l1, string s1, int l2, string s2)
+{
+    int type, size1, size2, mtime;
+
+    UNUSED(l1, l2);
+    NcParts(s1, type, size1, mtime);
+    NcParts(s2, type, size2, mtime);
+    return size1 <=> size2;
 }
 
 
 /*
- *  NcSort ---
- *      This routine is called whenever the user presses the <F9>, "sort".
+ *  <sort>
  */
 static void
-NcSort(...)
+NcSort(~ string)
 {
-    list result;
+    string sortorder;
 
-    result[0] = ncsortorder;
-    result = field_list("Sort Order", result, ncsortlist, TRUE);
-    if (result[0] != "" && result[0] !=  ncsortorder) {
-        ncsortorder = result[0];
+    if (! get_parm(0, sortorder)) {
+        list result;
+
+        result[0] = ncsortorder;
+        result = field_list("Sort Order", result, ncsortlist, TRUE);
+        if (result[0] != "" && result[0] != ncsortorder) {
+            sortorder = result[0];
+        }
+    }
+
+    if (sortorder) {
+        message("sorting by %s...", sortorder);
+        ncsortorder = sortorder;
         NcCd();
     }
 }
