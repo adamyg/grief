@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: grief.cr,v 1.90 2024/05/20 17:04:23 cvsuser Exp $
+/* $Id: grief.cr,v 1.94 2024/07/28 11:57:19 cvsuser Exp $
  * GRIEF startup macro.
  *
  *
@@ -42,6 +42,8 @@ void                    _griset_colorscheme16(string arg);
 string                  _griget_colorscheme16(void);
 void                    _griset_colorscheme(string arg);
 string                  _griget_colorscheme(void);
+
+void                    console_detect(void);
 #endif  /*__PROTOTYPES__*/
 
 /*
@@ -185,9 +187,7 @@ main(void)
 void
 grief(void)
 {
-    string envvar, term;
-    list suf_list;
-    int i, len;
+    string envvar;
 
     /*
      *  Inform GRIEF where to find macros, done prior 2 keyboard mapping to allow
@@ -227,8 +227,7 @@ grief(void)
     autoload("colors",
         "coloriser",
         "inq_coloriser",
-        "colorscheme",
-        "vim_colorscheme");
+        "colorscheme");
     autoload("compile",
         "_griset_load",
         "load",
@@ -615,20 +614,7 @@ grief(void)
     register_macro(REG_ALT_H, "prompt_help");
 
     /*
-     *  Determine the terminal type, and initialise the terminal characteristics.
-     *
-     *  First test whether GRTERM is set. If it is, then load tty/$GRTERM;
-     *  If not, use TERM, and test to see if tty/$TERM exists. Otherwise,
-     *  default to tty.m.
-     *
-     *  If the GRTERM environment variable is of the form:
-     *
-     *      type-type1-type2,
-     *
-     *  then load tty/type.m and execute macros 'type1', 'type2', ... This is to
-     *  avoid exceeding the 14 character filename limit on Sys V, and also to keep
-     *  terminal definitions which are similar in the same tty file
-     *
+     *  Determine the interface type, and initialise.
      */
     if (display_mode() & DC_WINDOW) {
         /*
@@ -647,38 +633,8 @@ grief(void)
         /*
          *  Console
          */
-        term = lower(getenv("GRTERM"));         /* TERM override ? */
-        if (term == "") {
-            term = lower(getenv("TERM"));
-        }
-
-        if (term == "") {
-            load_macro("tty/tty");              /* default */
-        } else {
-            suf_list = split(term, "-");        /* split */
-            if (! load_macro("tty/" + suf_list[0])) {
-                load_macro("tty/tty");          /* default */
-            }
-            term = suf_list[0];
-        }
-
-        /*
-         *  Process attributes (XXX - should limit to a set of well known features)
-         *
-         *  Examples:
-         *      xterm-ansi_arrows
-         */
-        len = length_of_list(suf_list);
-        for (i = 1; i < len; ++i) {
-            string func = term + "_" + suf_list[i];
-
-            if (inq_macro(func) > 0) {
-                execute_macro(func);            /* ie. xterm_ansi_arrows */
-
-            } else if (inq_macro(suf_list[i]) > 0) {
-                execute_macro(suf_list[i]);     /* ie. ansi_arrows */
-            }
-        }
+        load_macro("tty/console");
+        console_detect();
     }
 
     /* Display,mouse */
@@ -731,19 +687,6 @@ void
 _chg_properties(void)
 {
     gri_changed = TRUE;
-}
-
-
-/*
- *  ansi_arrows ---
- *      Following macro used for setting arrow keys to standard ANSI sequences.
- */
-void
-ansi_arrows(void)
-{
-    set_term_keyboard(
-        KEY_UP,     "\x1b[A",   KEY_DOWN,   "\x1b[B",
-        KEY_LEFT,   "\x1b[D",   KEY_RIGHT,  "\x1b[C");
 }
 
 
@@ -959,7 +902,15 @@ grinit_onload(void)
     //
     const string sect = "GRIEF",
         inifile = inq_grinit();
+    string grscheme;
     int ifd;
+
+    grscheme = getenv("GRCOLORSCHEME");         // env/cmdline override, use unconditionally.
+    if (grscheme) {
+        if (colorscheme(grscheme) == TRUE) {
+            coloriserenv = TRUE;
+        }
+    }
 
     if (! exist(inifile)) {                     // apply defaults
         string pkg =
@@ -974,14 +925,6 @@ grinit_onload(void)
         message("%s does not exist -- using defaults", inifile);
         gri_changed = TRUE;
         return;
-    }
-
-    string arg;
-    arg = getenv("GRCOLORSCHEME");              // user override, use unconditionally.
-    if (arg) {
-        if (colorscheme(arg) == TRUE) {
-            coloriserenv = TRUE;
-        }
     }
 
     if ((ifd = iniopen(inifile, IFILE_STANDARD|IFILE_COLON)) >= 0) {
@@ -1613,6 +1556,4 @@ clear_buffer(void)
 }
 
 /*end*/
-
-
 

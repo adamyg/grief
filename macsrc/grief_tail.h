@@ -1,5 +1,5 @@
 /* -*- mode: cr; tabs: 4; -*- */
-/* $Id: grief_tail.h,v 1.23 2021/04/15 15:44:59 cvsuser Exp $
+/* $Id: grief_tail.h,v 1.24 2024/07/05 18:41:55 cvsuser Exp $
  * Common GRIEF macro definitions -- tail.
  * Utilised by the makeinc.pl script.
  *
@@ -176,13 +176,8 @@ extern void                     coloriser(~ string);
 extern int                      colorscheme(~ string scheme, ...);
 extern string                   inq_coloriser(void);
 
-#define VIM_16DEPTH             (1 << 1)
-#define VIM_88DEPTH             (1 << 2)
-#define VIM_256DEPTH            (1 << 3)
-#define VIM_GUIDEPTH            (1 << 4)
-
+                                /*colorsvim.cr*/
 extern int                      vim_colorscheme(string label, int colors, ~string base, list spec, int asgui);
-extern int                      vim_colorschemex(string label, int colors, ~string base, list spec, int asgui, int &gui);
 
                                 /*command.cr*/
 extern string                   fixslash(string str);
@@ -416,3 +411,5 @@ extern void                     unzoom(void);
 /*end*/
 #endif /*MACSRC_GRIEF_H_INCLUDED*/
 /*--end--*/
+
+

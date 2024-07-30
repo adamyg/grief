@@ -1,5 +1,5 @@
 /* -*- indent-width: 4; -*-/
- * $Id: dispinfo.cr,v 1.6 2014/10/27 23:28:20 ayoung Exp $
+ * $Id: dispinfo.cr,v 1.7 2024/06/23 15:42:02 cvsuser Exp $
  * Display information/configuration.
  *
  *
@@ -92,6 +92,9 @@ main()
                 DLGC_LABEL,
                     DLGA_LABEL,                 "Encoding",
                     DLGA_ALIGN_W,
+                DLGC_LABEL,
+                    DLGA_LABEL,                 "Scheme",
+                    DLGA_ALIGN_W,
             DLGC_END,
             DLGC_CONTAINER,
                 DLGA_ATTACH_RIGHT,
@@ -114,6 +117,11 @@ main()
                 DLGC_LABEL,
                     DLGA_ALIGN_E,
                     DLGA_NAME,                  "encoding",
+                    DLGA_ROWS,                  1,
+                    DLGA_ALLOW_FILLX,
+                DLGC_LABEL,
+                    DLGA_ALIGN_E,
+                    DLGA_NAME,                  "scheme",
                     DLGA_ROWS,                  1,
                     DLGA_ALLOW_FILLX,
             DLGC_END,
@@ -329,22 +337,30 @@ di_callback(int ident, string name, int p1, int p2)
     UNUSED(ident, p2);
     switch (p1) {
     case DLGE_INIT: {
-            string feature, encoding;
-            int lines, cols, colors, escsource;
+            string feature, encoding, colorscheme, scheme;
+            int isdark, lines, cols, colors, escsource;
             int i;
 
             inq_screen_size(lines, cols);       // display
             get_term_feature(TF_NAME, feature);
             get_term_feature(TF_COLORDEPTH, colors);
             get_term_feature(TF_ENCODING, encoding);
+            get_term_feature(TF_SCHEMEDARK, isdark);
+            get_term_feature(TF_COLORSCHEME, colorscheme);
 
             sprintf(feature, "%dx%d-%d (%s)", cols, lines, colors, feature);
+            if (colorscheme == "")
+               scheme += (isdark ? "dark" : "light");
+            else
+               sprintf(scheme, "%s (%s)", colorscheme, (isdark ? "dark" : "light"));
+
             widget_set(NULL, "display", feature);
             inq_font(feature);
             widget_set(NULL, "font", feature);
             sprintf(feature, "%dms (%d)", inq_char_timeout(escsource), escsource);
             widget_set(NULL, "escdelay", feature);
             widget_set(NULL, "encoding", encoding);
+            widget_set(NULL, "scheme", scheme);
 
                                                 // scroll parameters, plus line-number column.
             widget_set(NULL, "scroll_cols",  inq_display_mode("scroll_cols"));

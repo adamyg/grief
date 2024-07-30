@@ -1,16 +1,19 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: colors.cr,v 1.18 2024/05/20 17:04:23 cvsuser Exp $
+/* $Id: colors.cr,v 1.23 2024/07/05 18:41:55 cvsuser Exp $
  * Enhanced colour/colorscheme support.
  *
  *
  */
 
 #include "grief.h"
+#include "colorsvim.h"
 
-#define SCHEME_CTERMONLY    0x0001
-#define SCHEME_GUIONLY      0x0002
+static list             coloriser_list(void);
+static list             vimcoloriser_list(void);
 
-static int              colorscheme_view(int ids);
+static int              schemeview(int ids);
+static int              schemevim(~ string base, ~int flags);
+static int              schemeload(string scheme, ~list args, ~string base, ~int flags);
 
 static void             ca_keys(void);
 static void             ca_attribute(void);
@@ -19,167 +22,6 @@ static string           ca_type(string value);
 static void             ca_setfg(string type, int set);
 static void             ca_setbg(string type, int set);
 static int              ca_callback(int ident, string name, int p1, int p2);
-
-static int              colorscheme_vim(~ string base, ~int flags);
-static int              schemeload(string scheme, ~list args, ~string base, ~int flags);
-static void             schemeload_vim(string scheme, string base, int flags, string file);
-
-void                    vim_groupmap(string name);
-string                  vim_attrmap(string attr);
-
-static list             scheme_colors = {
-    //  VIM to GRIEF attribute (where possible)
-    //
-    //      default highlighting groups.
-    //
-    "=ColorColumn=",    "ruler_column",         // used for the columns set with 'colorcolumn'.  (ie. colorcolumn=80)
-
-    "=Conceal=",        "",                     // place-holder characters substituted for concealed text.
-
-    "=Cursor=",         "cursor",               // the character under the cursor.
-    "=CursorIM=",       "",                     // like Cursor, but used when in IME mode.
-    "=CursorColumn=",   "cursor_col",           // the screen column that the cursor is in when 'cursorcolumn' is set.
-    "=CursorLine=",     "cursor_row",           // the screen line that the cursor is in when 'cursorline' is set.
-
-    "=Directory=",      "lsdirectory",          // directory names (and other special names in listings).
-
-    "=DiffAdd=",        "additional",           // diff: added line.
-    "=DiffChange=",     "modified",             // diff: changed line.
-    "=DiffDelete=",     "diffdelete",           // diff: deleted line.
-    "=DiffText=",       "difftext",             // diff: changed text within a changed line.
-
-    "=ModeMsg=",        "",                     // 'showmode' message.
-    "=MoreMsg=",        "message",              // |more-prompt|.
-    "=WarningMsg=",     "",                     // warning messages.
-    "=ErrorMsg=",       "error",                // error messages on the command line.
-
-    "=VertSplit=",      "frame",                // the column separating vertically split   windows.
-
-            // TODO ==> folded/fold_column
-    "=Folded=",         "",                     // line used for closed folds.
-    "=FoldColumn=",     "",                     // Foldcolumn.
-
-    "=SignColumn=",     "column_status",        // column where *signs* are displayed.
-    "=LineNr=",         "column_lineno",        // line number.
-
-    "=IncSearch=",      "search_inc",           // 'incsearch' highlighting; also used for the text replaced with.
-    "=MatchParen=",     "search_match",         // a paired character.
-
-    "=NonText=",        "nonbuffer",            // '~' and '@' at the end of the window.
-
-    "=Normal=",         "normal",               // normal text.
-
-    "=Pmenu=",          "popup_normal",         // popup: normal item.
-    "=PmenuSel=",       "popup_hilite",         // popup: selected item.
-    "=PmenuSbar=",      "scrollbar",            // popup: scrollbar.
-    "=PmenuThumb=",     "scrollbar_thumb",      // popup: thumb of the scrollbar.
-
-    "=Question=",       "prompt",               // prompt and yes/no questions.
-
-    "=Search=",         "search",               // last search pattern highlighting.
-
-    "=SpecialKey=",     "",                     // meta and special keys listed with ":map", also unprintable characters.
-
-    "=Todo=",           "todo",                 // anything that needs extra attention; mostly the keywords TODO FIXME and XXX.
-
-    "=SpellBad=",       "spell",                // spell: recognized word.
-    "=SpellCap=",       "",                     // spell: word that should start with a capital.
-    "=SpellLocal=",     "",                     // spell: recognized word as one that is used in another region.
-    "=SpellRare=",      "",                     // spell: recognized word as one that is hardly ever used.
-    "=Spell=",          "spell",
-
-    "=StatusLine=",     "echo_line",            // status line of current window.
-    "=StatusLineNC=",   "",                     // status lines of not-current windows.
-
-    "=TabLine=",        "",                     // tab pages line, not active tab page label.
-    "=TabLineFill=",    "",                     // tab pages line, where there are no labels.
-    "=TabLineSel=",     "",                     // tab pages line, active tab page label.
-
-    "=Title=",          "select",               // titles for output from ":set all", ":autocmd" etc.
-
-    "=Visual=",         "hilite",               // visual mode selection.
-    "=VisualNOS=",      "",                     // visual mode selection when vim is "Not Owning the Selection".
-
-    "=WildMenu=",       "prompt_complete",      // current match in 'wildmenu' completion.
-
-    //  syntax groups/
-    //      naming conventions.
-    //
-    "=Comment=",        "comment",              // any comment.
-
-    "=Constant=",       "constant",             // any constant.
-    "=String=",         "string",               //  a string constant:      "this is a string"
-    "=Character=",      "character",            //  a character constant:   'c', '\n'
-    "=Number=",         "number",               //  a number constant:      123, 012, 0x12
-    "=Boolean=",        "boolean",              //  a boolean constant:     TRUE, false
-    "=Float=",          "float",                //  a floating constant:    2.3e10
-
-            // TODO ==> identifier
-    "=Identifier=",     "keyword_function",     // any variable name.
-    "=Function=",       "keyword_function",     //  function name (also: methods for classes).
-
-    "=PreProc=",        "preprocessor",         // preprocessor.
-    "=Include=",        "preprocessor_include",     //  preprocessor #include
-    "=Define=",         "preprocessor_define",      //  preprocessor #define
-    "=Macro=",          "preprocessor_keyword",     //  same as Define
-    "=PreCondit=",      "preprocessor_conditional", //  preprocessor #if, #else, #endif, etc.
-
-    "=Statement=",      "code",                 // any statement.
-    "=Conditional=",    "keyword_conditional",  //  if, then, else, endif, switch, etc.
-    "=Repeat=",         "keyword_repeat",       //  for, do, while, etc.
-    "=Label=",          "keyword_label",        //  case, default, etc.
-    "=Operator=",       "operator",             //  operators
-    "=Keyword=",        "keyword",              //  any other keyword
-    "=Exception=",      "keyword_exception",    //  try, catch, throw
-
-    "=Type=",           "keyword_type",         // int, long, char, etc.
-    "=StorageClass=",   "keyword_storageclass", //  static, register, volatile, etc.
-    "=Structure=",      "keyword_structure",    //  struct, union, enum, etc.
-    "=Typedef=",        "keyword_typedef",      //  Atypedef.
-
-    "=Special=",        "standout",             // any special symbol.
-    "=SpecialChar=",    "constant_standout",    //  special character in a constant.
-    "=Tag=",            "tag",                  //  you can use CTRL-] on this.
-    "=Delimiter=",      "delimiter",            //  character that needs attention.
-    "=SpecialComment=", "comment_standout",     //  special things inside a comment.
-    "=Debug=",          "keyword_debug",        //  debugging statements.
-
-    "=Underlined=",     "link",                 // text that stands out.
-
-        // Notes:
-        //  Some HTML tags are used to change the rendering of text within HTML (see: html.vim).
-        //
-        //      - htmlBold                      <b>..</b>
-        //      - htmlUnderline                 <u>..</u>
-        //      - htmlItalic                    <i>..</i>
-        //      - htmlBoldUnderline
-        //      - htmlBoldUnderlineItalic
-        //      - htmlUnderlineItalic
-        //      - htmlLink for links
-        //      - htmlTitle for titles
-        //      - htmlH1 ...htmlH6 for headings
-        //
-        //  To make theses definitions work you must redefine them all with the exception of the last
-        //  two (htmlTitle and htmlH[1-6], which are optional).
-        //
-
-    "=Ignore=",         "",                     // left blank, hidden.
-
-    "=Error=",          "alert",                // any erroneous construct.
-
-    //  misc/
-    //
-    "=Tab=",            "whitespace",
-    "=Space=",          "",
-    };
-
-static list             vim_paths = {           // FIXME - needs work
-    "~/.vim/colors/",
-    "/usr/share/vim/vimcurrent/colors/"
-    };
-
-static string           scheme_background = "default";
-static string           scheme_name = "";       // current color scheme.
 
 enum {
 #define IDENT_BASE          1000
@@ -195,6 +37,13 @@ enum {
     IDENT_DIM,
     IDENT_NONE          // must be last
 };
+
+static string           scheme_background = "default";
+
+static list             vim_paths = {           // TODO, interface
+    "~/.vim/colors/",
+    "/usr/share/vim/vimcurrent/colors/"
+    };
 
 static list             attrsset = {
     "bold",
@@ -230,7 +79,6 @@ static list             color_names = {
 static int              ca_dialog;              // dialog resource.
 
 static list             coloriser_list(void);
-static list             vimcoloriser_list(void);
 
 
 /*  Function:           main
@@ -259,6 +107,11 @@ void
 main(void)
 {
     require("colorlabels");
+    autoload("colorsvim",
+        "vim_colorscript",
+        "vim_colorscheme",
+        "vim_condition_tests"
+        );
 }
 
 
@@ -266,7 +119,7 @@ main(void)
  *      Coloriser loader.
  *
  *  Parameters:
- *      scheme -            Optional color scheme name.
+ *      scheme - Optional color scheme name.
  *
  *  Returns:
  *      nothing
@@ -286,7 +139,9 @@ coloriser(~ string)
 string
 inq_coloriser(void)
 {
-    return scheme_name;
+    string name;
+    get_term_feature(TF_COLORSCHEME, name);
+    return name;
 }
 
 
@@ -340,7 +195,7 @@ _completion_Coloriser(string arg)
  *      colorscheme loader/viewer/editor.
  *
  *  Parameters:
- *      scheme -            Color scheme name.
+ *      scheme - Color scheme name.
  *
  *  Returns:
  *      *true* if successful, otherwise *false*.
@@ -351,33 +206,33 @@ colorscheme(~ string scheme, ...)
     //  view or loader
     //
     if ("" == scheme) {
-        colorscheme_view(FALSE);
+        schemeview(FALSE);
         return FALSE;
 
     } else if ("--ids" == scheme) {
-        colorscheme_view(TRUE);
+        schemeview(TRUE);
         return FALSE;
 
     } else if ("--vim" == scheme) {
-        return colorscheme_vim();
+        return schemevim();
 
     } else if ("--vim-gui" == scheme) {
-        return colorscheme_vim(NULL, SCHEME_GUIONLY);
+        return schemevim(NULL, SCHEME_GUIONLY);
 
     } else if ("--vim-cterm" == scheme) {
-        return colorscheme_vim(NULL, SCHEME_CTERMONLY);
+        return schemevim(NULL, SCHEME_CTERMONLY);
 
     } else if ("--vim=dark" == scheme) {
-        return colorscheme_vim("dark");
+        return schemevim("dark");
 
     } else if ("--vim=light" == scheme) {
-        return colorscheme_vim("light");
+        return schemevim("light");
     }
 
     //  default schemes/
     //      dark, light or default
     //
-    if ("dark" == scheme || "light" == scheme || "lite" == scheme || "default" == scheme) {
+    if ("dark" == scheme || "light" == scheme || "default" == scheme) {
         set_color("scheme=" + scheme);
         message("colorscheme: '%s'", scheme);
         return TRUE;
@@ -436,13 +291,13 @@ vimcoloriser_list(void)
 //  Display current color scheme definition.
 //
 static int
-colorscheme_view(int ids)
+schemeview(int ids)
 {
-    string title;
+    string title, coloriser = inq_coloriser();
     int buf, idx;
 
     save_position();
-    sprintf(title, "Color Scheme [%s]", (scheme_name ? scheme_name : "none"));
+    sprintf(title, "Color Scheme [%s]", (coloriser ? coloriser : "none"));
 
     if ((buf = create_buffer(title, NULL, 1)) >= 0) {
         list colors = get_color(ids ? (COLORGET_FNAME|COLORGET_FVALUE|COLORGET_FFLAGS) : COLORGET_FNAME|COLORGET_FFLAGS);
@@ -511,8 +366,7 @@ ca_attribute(void)
     string  ca_name;
     int     ca_flags;
 
-    //  flags,attribute=foreground[,background][: [link@name|sticky@name|styles][, ...]]
-    //
+    // flags,attribute=foreground[,background][: [link@name|sticky@name|styles][, ...]]
     move_abs(NULL, 81);
     string spec = trim(read());
     move_abs(NULL, 1);
@@ -520,7 +374,7 @@ ca_attribute(void)
         return;
     }
 
-    //  clear dialog
+    // clear dialog
     if (0 == ca_dialog) {
         ca_dialoginit();
     }
@@ -533,7 +387,7 @@ ca_attribute(void)
     widget_set(ca_dialog, "link", "");
     widget_set(ca_dialog, "sticky", "");
 
-    //  initialise dialog
+    // initialise dialog
     if (index(parts[1], ':')) {
         list colors_attrs = split(parts[1], ':');
         list attrs = split(colors_attrs[1], ",@");
@@ -1073,7 +927,7 @@ ca_callback(int ident, string name, int p1, int p2)
 //  Search for loadable 'vim' color schemes.
 //
 static int
-colorscheme_vim(~ string base, ~int flags)
+schemevim(~ string base, ~int flags)
 {
     list schemes;
 
@@ -1099,28 +953,96 @@ colorscheme_vim(~ string base, ~int flags)
 
 
 //
-//  Load the specific color scheme.
+// Load the specific color scheme.
 //
 static int
 schemeload(string scheme, ~list args, ~string base, ~int flags)
 {
+    //  Scheme, examples:
+    //
+    //   o colorscheme-package:
+    //
+    //      o sunset-light
+    //            ==> colors/sunset/cscheme
+    //                  colorschemepkg_sunset("light" ..)
+    //
+    //      o sunset
+    //            ==> colors/sunset/cscheme
+    //                  colorschemepkg_sunset(NULL, ..)
+    //
+    //   o colorscheme:
+    //
+    //      o sunset-light
+    //            ==> colors/sunset
+    //                  colorscheme_sunset_light
+    //
+    //      o sunset-light-lowcontrast
+    //            ==> colors/sunset
+    //                  colorscheme_sunset_light_lowcontrast
+    //
+    //      o sunset
+    //            ==> colors/sunset
+    //                  colorscheme_sunset
+    //
     scheme = re_translate(SF_GLOBAL, "[ \t]+", "_", scheme);
+    list components = split(scheme, "-", NULL, NULL, NULL, 2);
 
-    if (require("colors/" + scheme) >= 0) {
-        if (inq_macro("colorscheme_" + scheme)) {
-            if (is_null(args)) {
-                execute_macro("colorscheme_" + scheme);
+    // colorscheme-package
+    if (require("colors/" + components[0] + "/cscheme") >= 0) {
+        string name = "colorschemepkg_" + components[0];
+        int ret = -1;
+
+        if (inq_macro(name) > 0) {
+            if (length_of_list(components) == 2) {
+                if (! is_null(args)) {
+                    ret = execute_macro(name, components[1], args);
+                } else {
+                    ret = execute_macro(name, components[1]);
+                }
             } else {
-                execute_macro("colorscheme_" + scheme, args);
+                if (! is_null(args)) {
+                    ret = execute_macro(name, NULL, args);
+                } else {
+                    ret = execute_macro(name);
+                }
             }
+
+        } else {
+            error("colorschemepkg: '%s', not available", scheme);
         }
+
+        if (ret == -1)
+            return FALSE;
+        set_term_feature(TF_COLORSCHEME, scheme);
         message("colorscheme: '%s'", scheme);
-        scheme_name = scheme;
         return TRUE;
     }
 
-    //  import a vim colorscheme/
-    //      use with caution.
+    // colorscheme
+    if (require("colors/" + components[0]) >= 0) {
+        string name = "colorscheme_" + re_translate(SF_GLOBAL, "-", "_", scheme);
+        int ret = -1;
+
+        if (inq_macro(name) > 0) {
+            if (! is_null(args)) {
+                ret = execute_macro(name, args);
+            } else {
+                ret = execute_macro(name);
+            }
+        } else {
+            error("colorscheme: '%s', not available", scheme);
+            return FALSE;
+        }
+
+        if (ret == -1)
+            return FALSE;
+        set_term_feature(TF_COLORSCHEME, scheme);
+        message("colorscheme: '%s'", scheme);
+        return TRUE;
+    }
+
+    //  Import a vim colorscheme/
+    //      use with caution -- limited vim script support.
     //
     //  Example:
     //      runtimepath=
@@ -1161,603 +1083,17 @@ schemeload(string scheme, ~list args, ~string base, ~int flags)
             }
 
             if (exist(path + file + ".vim")) {
-                schemeload_vim(scheme, base, flags, path + file + ".vim");
+                vim_colorscript(scheme, base, flags, path + file + ".vim");
                 list_reset(vim_paths);
                 return TRUE;
             }
         }
     }
+
     message("colorscheme: unavailable to locate '%s'", scheme);
     return FALSE;
 }
 
-
-static void
-schemeload_vim(string scheme, string base, int flags, string file)
-{
-    int buf, curbuf = inq_buffer();
-    list spec;
-
-    if ((buf = create_buffer("-colorscheme-vim-", file, TRUE)) >= 0) {
-        string ln;
-        int gui;
-
-        message("loading: %s", file);
-        set_buffer(buf);
-        top_of_buffer();
-        do {
-            ln = compress(read(), TRUE);        // hi or :hi, set or let, conditionals
-            if (re_search(0, "^[:]@hi", ln) > 0 ||
-                re_search(0, "^[sl]et", ln) > 0 ||
-                re_search(0, "^{if}|{else}|{endif}", ln) > 0) {
-                spec += ln;
-            }
-        } while (down());
-        set_buffer(curbuf);
-        delete_buffer(buf);
-
-        if (SCHEME_GUIONLY & flags) {
-            //
-            //  GUI only
-            //
-            vim_colorschemex(scheme, 0, base, spec, TRUE, gui);
-
-        } else if (0 == vim_colorschemex(scheme, 0, base, spec, FALSE, gui) && gui > 15) {
-            //
-            //  Console load failure, yet there maybe suitable GUI color settings
-            //      try loading the GUI settings (unless CTERMONLY).
-            //
-            if (0 == (SCHEME_CTERMONLY & flags)) {
-                vim_colorschemex(scheme, 0, base, spec, TRUE, gui);
-            }
-        }
-    }
-}
-
-
-/*  Function:           vim_colorscheme
- *      Load a VIM style colorscheme.
- *
- *      This interface is simple and requires a strict structure yet follows many of the
- *      basic colour schemas reviewed.
- *
- *      See blackdust for an example schema.
- *
- *      The latest top 100 VIM color schemes are www.vim.org are available as a single
- *      package "Color Scheme Pack", which generally fit the required structure for a
- *      successful import.
- *
- *      In additional are a number of sites which demo the colorschemes, to name a few.
- *
- *          http://www.vi-improved.org/color_sampler_pack/
- *          http://vimcolorschemetest.googlecode.com/svn/html/index-c.html
- *
- *      Color-Scheme editor
- *
- *          http://bytefluent.com/vivify/
- *
- *  Parameters:
- *      label -             Colorscheme name.
- *      colors -            Supported colors (8, 16, 88 or 256).
- *      base -              Base color scheme "dark" or "light".
- *      spec -              Highlight command list.
- *      asgui -             If *1* utilise gui colors otherwise terminal, *-1* dynamic.
- *      gui -               GUI element count.
- *
- *  Returns:
- *      Imported color count.
- */
-
-int
-vim_colorscheme(string label, int colors, ~string base, list spec, int asgui)
-{
-    int gui; return vim_colorschemex(label, colors, base, spec, asgui, gui);
-}
-
-int
-vim_colorschemex(string label, int colors, ~string base, list spec, int asgui, int &gui)
-{
-    list ifstack;
-    int  iflevel = -1, ifactive = 1, ifdepth;
-    int  idx, done, links, ignored, cond;
-    declare value;
-
-    //  verify colors against current display environment
-    get_term_feature(TF_COLORDEPTH, ifdepth);
-    if (colors > 0) {
-        if (ifdepth != colors) {
-            message("%s: color depth %d not available (%d)", label, colors, ifdepth);
-            return -1;
-        }
-    }
-
-    if (-1 == asgui) {                          // dynamic
-        asgui = (ifdepth > 256 ? TRUE : FALSE);
-    }
-
-    if (0 == strlen(base)) {                    // dark or light base
-        get_term_feature(TF_COLORSCHEME, base);
-        base = "dark";
-    }
-
-    scheme_name = label;
-
-    //  load schema
-    //      best effort load logic, with weak condition expression evaluation.
-    //
-    gui = 0;
-    while ((idx = list_each(spec, value)) >= 0) {
-        const list parts =
-                tokenize(value, " ", TOK_DOUBLE_QUOTES|TOK_PRESERVE_QUOTES|TOK_WHITESPACE|TOK_COLLAPSE_MULTIPLE|TOK_TRIM);
-
-        switch (parts[0]) {
-        case "let":
-        case "set":             // set command
-            if (length_of_list(parts) >= 2) {
-                //  set bg=[dark|light]/
-                //  set background=[dark|light]/
-                //      When set to "dark", use colors that look good on a dark background.  When
-                //      set to "light", try to use colors that look good on a light background.
-                //      Any other value is illegal.
-                //
-                //  set g:colors_name=<scheme>
-                //  set colors_name=<scheme>
-                //
-                const list parts2 =
-                        tokenize(parts[1], "=", TOK_DOUBLE_QUOTES|TOK_WHITESPACE|TOK_TRIM);
-
-                if (length_of_list(parts2) >= 2) {
-                    if ("bg" == parts2[0] || "background" == parts2[0]) {
-                        const string arg = parts2[1];
-
-                        if (0 == strcasecmp("dark", arg) ||
-                                0 == strcasecmp("light", arg) ||
-                                0 == strcasecmp("default", arg)) {
-                            scheme_background = arg;
-                        }
-                    }
-                }
-            }
-            break;
-
-        case "hi":
-        case "hi!":
-        case ":hi":
-        case "highlight":
-        case ":highlight":      // hi[ghtlight] command
-            if (length_of_list(parts) >= 2 && 1 == ifactive) {
-                if ("clear" == parts[1]) {
-                    //  clear
-                    //      Reset all highlighting to the defaults. Removes all highlighting for groups
-                    //      added by the user. Uses the current value of 'background' to decide which
-                    //      default colors to use.
-                    //
-                    //  clear {group-name}
-                    //      Disable the highlighting for the specified highlight group. It is *not* set
-                    //      wback to the default colors.
-                    //
-                    const string groupname =
-                        (length_of_list(parts) == 3 ? parts[2] : "");
-
-                    // scheme=dark|light|default
-                    if (0 == strlen(groupname)) {
-                        set_color("scheme=" + scheme_background);
-                    }
-                    vim_groupmap(groupname);
-
-                } else if ("link" == parts[1] ||
-                                (length_of_list(parts) >= 3 && "link" == parts[2])) {
-                    //  [default] link {from-group} {to-group}
-                    //      Setup an attribute link.
-                    //
-                    //  [default] link {from-group} NONE
-                    //      Remove an attribute link.
-                    //
-                    string link;
-
-                    if ("default" == parts[1]) {
-                        if (5 == length_of_list(parts)) {
-                            string id1 = vim_attrmap(parts[3]),
-                                    id2 = vim_attrmap(parts[4]);
-
-                            if (strlen(id1) && strlen(id2)) {
-                                sprintf(link, "%s=none:sticky@%s", id1, id2);
-                            }
-                        }
-                    } else if (4 == length_of_list(parts)) {
-                        string id1 = vim_attrmap(parts[2]),
-                                id2 = vim_attrmap(parts[3]);
-
-                        if (strlen(id1) && strlen(id2)) {
-                            sprintf(link, "%s=none:link@%s", id1, id2);
-                        }
-                    }
-
-                    if (link) {
-                        set_color(link);
-                        ++links;
-                    } else {
-                        ++ignored;
-                    }
-
-                } else {
-                    //  [default] {group-name} key=arg
-                    //      State an attributes color specification.
-                    //
-                    int baseidx = ("default" == parts[1] ? 2 : 1);
-                    string fg, bg, sf,
-                        ident = vim_attrmap(parts[baseidx]);
-                    int i;
-
-                    if (ident) {
-                        for (i = baseidx + 1; i < length_of_list(parts); ++i) {
-                            if ("\"" == parts[i]) {
-                                break;          // comment
-                            }
-
-                            const list parts2 =
-                                    tokenize(parts[i], "=", TOK_DOUBLE_QUOTES|TOK_WHITESPACE|TOK_TRIM);
-
-                            if (length_of_list(parts2) >= 2) {
-                                string val = parts2[1];
-
-                                if (0 == asgui) {
-                                    //  cterm={attr-list}
-                                    //      Color termination attribute list. One or more of the
-                                    //      following comma seperated values (without spaces),
-                                    //
-                                    //          bold, underline, undercurl, none
-                                    //          reverse, inverse, italic, standout,
-                                    //
-                                    //  ctermfg={color}
-                                    //      Color terminal foreground color.
-                                    //
-                                    //  ctermbg={color}
-                                    //      Color terminal background color.
-                                    //
-                                    switch(parts2[0]) {
-                                    case "cterm":   sf  = val; break;
-                                    case "ctermfg": fg  = val; break;
-                                    case "ctermbg": bg  = val; break;
-                                    case "gui": ++gui; break;
-                                    }
-                                } else {
-                                    //  gui={attr-list}
-                                    //      Color termination attribute list. One or more of the
-                                    //      following comma seperated values (without spaces).
-                                    //
-                                    //  font={font-name}
-                                    //      Font (ignored).
-                                    //
-                                    //  guifg={color}
-                                    //      Color terminal foreground color.
-                                    //
-                                    //  guibg={color}
-                                    //      Color terminal background color.
-                                    //
-                                    //  guisp={color}
-                                    //      Foregroud. background and special color.
-                                    //
-                                    switch(parts2[0]) {
-                                    case "gui":     sf  = val; break;
-                                    case "guifg":   fg  = val; break;
-                                    case "guibg":   bg  = val; break;
-                                    case "font":    break;
-                                    case "guisp":   break;
-                                    }
-                                }
-                            }
-                        }
-
-                        if (strlen(fg) || strlen(bg)) {
-                            dprintf("%s: attribute: %s=%s fg:%s, bg:%s, sf:%s",
-                                label, parts[baseidx], ident, fg, bg, sf);
-
-                            switch (ident) {
-                            case "normal":
-                                if (bg) set_color_pair("background", bg);
-                                if (fg) set_color_pair("normal", fg);
-                                break;
-                            case "hilite":
-                                if (fg) {
-                                    if (bg) {
-                                        set_color_pair("hilite", fg, bg);
-                                    } else {
-                                        set_color_pair("hilite_fg", fg);
-                                    }
-                                } else {
-                                    set_color_pair("hilite", "fg", bg);
-                                }
-                                break;
-                            default:
-                                if (0 == strlen(fg)) {
-                                    fg = "fg";                  // current foreground
-
-                                } else if (0 == strlen(bg) || 0 == strcasecmp(bg, "NONE")) {
-                                    bg = "bg";                  // current background
-                                }
-
-                                if ("frame" == ident) sf = "";  // ignore underline etc
-
-                                set_color_pair(ident, fg, bg, sf);
-                                break;
-                            }
-                            if (asgui) ++gui;
-                            ++done;
-                        }
-                    } else {
-                        dprintf("%s: attribute: %s=unknown", label, parts[baseidx]);
-                        ++ignored;
-                    }
-                }
-            } else {
-                dprintf("%s: <%s> in-active", label, value);
-            }
-            break;
-
-        case "set_color":       // set_color
-            //
-            //  set_color <attribute> <specification>
-            //
-            if (3 == length_of_list(parts)) {
-                set_color(parts[1], parts[2]);
-            }
-            break;
-
-        case "if":              // if <condition>
-            //
-            //  if &background == "dark"
-            //  if &background == "light"
-            //
-            //  if &t_Co >= 8, 16, 88, 256
-            //  if &t_Co == 8, 16, 88, 256
-            //
-            //      note, other color condition expressions has been sighted yet the above
-            //      represent 90% of all cases.
-            //
-            ifstack[ ++iflevel ] = ifactive;
-
-            if (1 == ifactive) {
-                ifactive = 1;                   // unknown condition, assume active
-
-                if (length_of_list(parts) >= 2) {
-                    if (strstr(value, "&background")) {
-                        if (strstr(value, "==")) {
-                            if (strstr(value, "&background")) {
-                                ifactive = (0 != strstr(value, base));
-                            }
-
-                        } else if (strstr(value, "!=")) {
-                            if (strstr(value, "&background")) {
-                                ifactive = (0 == strstr(value, base));
-                            }
-                        }
-
-                    } else if (strstr(value, "&t_Co") && colors > 0) {
-                        if (strstr(value, "==")) {
-                            ifactive = (strstr(value, "" + colors));
-
-                        } else if (strstr(value, ">=")) {
-                            if (strstr(value, "256")) {
-                                ifactive = (colors >= 256);
-                            } else if (strstr(value, "88")) {
-                                ifactive = (colors >= 88);
-                            } else if (strstr(value, "16")) {
-                                ifactive = (colors >= 16);
-                            } else if (strstr(value, "8")) {
-                                ifactive = (colors >= 8);
-                            }
-                        }
-                    }
-                }
-                if (1 == ifactive) ++cond;
-            } else {
-                ifactive = 2;                   // inactive branch
-            }
-            dprintf("%s: COND/if     (%d) %*s <%s> == %d\n", label, iflevel, iflevel*4, "", value, ifactive);
-            break;
-
-        case "elseif":          // elseif <condition>
-            if (0 == ifactive) {
-                if (length_of_list(parts) >= 2) {
-                    if (strstr(value, "&background")) {
-                        if (strstr(value, "==")) {
-                            if (strstr(value, "&background")) {
-                                ifactive = (0 != strstr(value, base));
-                            }
-
-                        } else if (strstr(value, "!=")) {
-                            if (strstr(value, "&background")) {
-                                ifactive = (0 == strstr(value, base));
-                            }
-                        }
-
-                    } else if (strstr(value, "&t_Co")) {
-                        if (strstr(value, "==")) {
-                            ifactive = (0 == strstr(value, "" + colors));
-
-                        } else if (strstr(value, ">=")) {
-                            if (strstr(value, "256")) {
-                                ifactive = (colors >= 256);
-                            } else if (strstr(value, "88")) {
-                                ifactive = (colors >= 88);
-                            } else if (strstr(value, "16")) {
-                                ifactive = (colors >= 16);
-                            } else if (strstr(value, "8")) {
-                                ifactive = (colors >= 8);
-                            }
-                        }
-                    }
-                }
-            } else {
-                ifactive = 2;                   // inactive branch
-            }
-            dprintf("%s: COND/elseif (%d) %*s <%s> == %d\n", label, iflevel, iflevel*4, "", value, ifactive);
-            break;
-
-        case "else":            // else
-            if (0 == ifactive) {
-                ++ifactive;                     // default condition
-            }
-            dprintf("%s: COND/else   (%d) %*s <%s> == %d\n", label, iflevel, iflevel*4, "", value, ifactive);
-            break;
-
-        case "endif":           // endif
-            if (iflevel >= 0) {                 // pop level
-                ifactive = ifstack[ iflevel ];
-            } else {
-                ifactive = 1;
-            }
-            dprintf("%s: COND/endif  (%d) %*s <%s> == %d\n", label, iflevel, iflevel*4, "", value, ifactive);
-            if (iflevel >= 0) iflevel--;
-            break;
-
-        default:                // unknown
-            break;
-        }
-    }
-
-    if (done > 0) {
-        if (0 == asgui) gui = 0;
-        if (colors > 0) {
-            message("%s:%d(%d): gui=%d, links=%d, ignored=%d, cond=%d", label, colors, done, gui, links, ignored, cond);
-        } else {
-            message("%s(%d): gui=%d, links=%d, ignored=%d, cond=%d", label, done, gui, links, ignored, cond);
-        }
-    }
-    return done;
-}
-
-
-/*  Function:           vim_groupmap
- *      Setup the VIM style color links.
- *
- *  Parameters:
- *      name - Groupname to be initialised, otherwise "". Note that highlight group names are not
- *              case sensitive.  "String" and "string" can be used for the same group.
- *
- *  Note:
- *      The names marked with '*' below are the preferred groups; the others are minor groups.
- *
- *  Returns:
- *      nothing
- */
-void
-vim_groupmap(string name)
-{
-    // Constant [constant]
-    //     *Constant        any constant
-    //      String          a string constant: "this is a string"
-    //      Character       a character constant: 'c', '\n'
-    //      Number          a number constant: 234, 0xff
-    //      Boolean         a boolean constant: TRUE, false
-    //      Float           a floating point constant: 2.3e10
-    //
-    if (0 == strlen(name) || 0 == strcasecmp(name, "Constant")) {
-        const string link = "=clear:link@constant";
-        set_color("string"   +link);
-        set_color("character"+link);
-        set_color("number"   +link);
-        set_color("boolean"  +link);
-        set_color("float"    +link);
-    }
-
-    // Identifier [n/a]
-    //      *Identifier     any variable name
-    //       Function       function name (also: methods for classes)
-    //
-    if (0 == strlen(name) || 0 == strcasecmp(name, "Identifier")) {
-        set_color("word=clear:link@normal");
-        set_color("keyword_function=clear:link@normal");
-    }
-
-    // Statement [code]
-    //      *Statement      any statement
-    //       Conditional    if, then, else, endif, switch, etc.
-    //       Repeat         for, do, while, etc.
-    //       Label          case, default, etc.
-    //       Operator       "sizeof", "+", "*", etc.
-    //       Keyword        any other keyword
-    //       Exception      try, catch, throw
-    //
-    if (0 == strlen(name) || 0 == strcasecmp(name, "Statement")) {
-        const string link = "=clear:link@code";
-        set_color("keyword"            +link);
-        set_color("keyword_extension"  +link);
-        set_color("keyword_definition" +link);
-        set_color("keyword_conditional"+link);
-        set_color("keyword_repeat"     +link);
-        set_color("keyword_exception"  +link);
-        set_color("keyword_label"      +link);
-    }
-
-    //  PreProc [preprocessor]
-    //      *PreProc        generic Preprocessor
-    //       Include        preprocessor #include
-    //       Define         preprocessor #define
-    //       Macro          same as Define
-    //       PreCondit      preprocessor #if, #else, #endif, etc.
-    //
-    if (0 == strlen(name) || 0 == strcasecmp(name, "PreProc")) {
-        const string link = "=clear:link@preprocessor";
-        set_color("preprocessor_include"    +link);
-        set_color("preprocessor_define"     +link);
-        set_color("preprocessor_keyword"    +link);
-        set_color("preprocessor_conditional"+link);
-    }
-
-    // Type [storageclass]
-    //      *Type           int, long, char, etc.
-    //      StorageClass    static, register, volatile, etc.
-    //      Structure       struct, union, enum, etc.
-    //      Typedef         A typedef
-    //
-    if (0 == strlen(name) || 0 == strcasecmp(name, "Type")) {
-        const string link = "=clear:link@keyword_type";
-        set_color("keyword_storageclass"    +link);
-        set_color("keyword_structure"       +link);
-        set_color("keyword_typedef"         +link);
-    }
-
-    // Special [standout]
-    //     *Special         any special symbol
-    //      SpecialChar     special character in a constant
-    //      Tag             you can use CTRL-] on this
-    //      Delimiter       character that needs attention
-    //      SpecialComment  special things inside a comment
-    //      Debug           debugging statements
-    //
-    if (0 == strlen(name) || 0 == strcasecmp(name, "Special")) {
-        const string link = "=clear:link@standout";
-        set_color("constant_standout"       +link);
-        set_color("tag"                     +link);
-        set_color("delimiter"               +link);
-        set_color("comment_standout"        +link);
-        set_color("keyword_debug"           +link);
-    }
-}
-
-
-/*  Function:           vim_attrmap
- *      Map a VIM style hi[ghlight] attribute to a GRIEF attribute.
- *
- *      Many of the attributes are simple one-to-one mappings. Unsupported are simply ignored.
- *
- *  Parameters:
- *      attr - VIM attribute name.
- *
- *  Returns:
- *      Attribute name, otherwise an empty string.
- */
-string
-vim_attrmap(string attr)
-{
-    int idx;
-
-    if ((idx = re_search(SF_NOT_REGEXP|SF_IGNORE_CASE, "=" + attr + "=", scheme_colors)) >= 0) {
-        return scheme_colors[idx + 1];
-    }
-    return "";
-}
 /*eof*/
+
 
