@@ -245,6 +245,8 @@ Process(HANDLE in)
                         KEY_EVENT_RECORD t_ker = *ker;
                         const wchar_t *kd;
 
+//TODO                  dwControlKeyState = AltGrEvent(&t_ke);
+
                         t_ker.dwControlKeyState |= apps_control;
                         if (NULL != (kd = key_description(&t_ker))) {
                             wprintf(L"%*s<%s>", COLUMN1 - offset, L"", kd);
@@ -311,63 +313,141 @@ CtrlHandler(DWORD fdwCtrlType)
 //      given, the key-code is invalidated and UnicodeChar=0 is returned on the ALT release.
 //
 //      Notes:
-//       o Requires the registry REG_SZ value "EnableHexNumpad" under
-//         "HKEY_Current_User/Control Panel/Input Method" to be "1".
+//       o To enable requires the registry REG_SZ value "EnableHexNumpad" under
+//          "HKEY_Current_User/Control Panel/Input Method" to be "1".
 //
-//       o Hex-value overflow goes unreported, limiting input to a 16-bit result.
+//       o Hex-value overflow goes unreported, limiting input to a 16-bit unicode result.
 //
+
+#pragma comment(lib, "Imm32.lib")
+
 static int
-AltPlusEvent(const KEY_EVENT_RECORD *ke, int offset)
+AltPlusEnabled(void)
+{
+    static int state = -1;
+
+    if (-1 == state) {
+        HKEY hKey = 0;
+
+        state = 0;
+        if (RegOpenKeyExA(HKEY_CURRENT_USER,
+                "Control Panel\\Input Method", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+            char szEnableHexNumpad[100] = { 0 };
+            DWORD dwSize = _countof(szEnableHexNumpad);
+            if (RegQueryValueExA(hKey, "EnableHexNumpad", NULL, NULL, (LPBYTE)szEnableHexNumpad, &dwSize) == ERROR_SUCCESS) {
+                if (szEnableHexNumpad[0] == '1' && szEnableHexNumpad[1] == 0) {
+                    state = 1;
+                }
+            }
+            RegCloseKey(hKey);
+        }
+    }
+    return state;
+}
+
+
+static int
+AltPlusEvent(const KEY_EVENT_RECORD* ke, /*struct IOEvent* evt*/ int offset)
 {
 #define ISXDIGIT(_uc) \
             ((_uc >= '0' && _uc <= '9') || (_uc >= 'a' && _uc <= 'f') || (_uc >= 'A' && _uc <= 'F') ? 1 : 0)
 
-    static int alt_code = 0;
+    static unsigned alt_code = 0;               // >0=active
     static DWORD alt_control = 0;
-    wchar_t completion[64];
 
-    if (! xf_altcode) return -1;                // enabled?
+    const unsigned wVirtualKeyCode = ke->wVirtualKeyCode,
+        dwControlKeyState = (CTRLSTATUSMASK & ke->dwControlKeyState),
+        dwEnhanced = (ENHANCED_KEY & ke->dwControlKeyState);
 
+#if (DO_KEYTRACE)
+    OutputDebugPrintA("Key: %s-%s%s%s%s%s%sVK=0x%02x/%u, UC=0x%04x/%u/%c, SC=0x%x/%u\n",
+        (ke->bKeyDown ? "DN" : "UP"),
+        (dwEnhanced ? "Enh-" : ""),
+        (dwControlKeyState & LEFT_ALT_PRESSED) ? "LAlt-" : "",
+        (dwControlKeyState & RIGHT_ALT_PRESSED) ? "RAlt-" : "",
+        (dwControlKeyState & LEFT_CTRL_PRESSED) ? "LCtrl-" : "",
+        (dwControlKeyState & RIGHT_CTRL_PRESSED) ? "RCtrl-" : "",
+        (dwControlKeyState & SHIFT_PRESSED) ? "Shift-" : "",
+        wVirtualKeyCode, wVirtualKeyCode,
+        ke->uChar.UnicodeChar, ke->uChar.UnicodeChar,
+        (ke->uChar.UnicodeChar && ke->uChar.UnicodeChar < 255 ? ke->uChar.UnicodeChar : ' '),
+        ke->wVirtualScanCode, ke->wVirtualScanCode);
+#endif
+    wchar_t completion[64] = {0};
     completion[0] = 0;
-    if (ke->bKeyDown) {                         // down event
-        const unsigned controlKeyState = (CTRLSTATUSMASK & ke->dwControlKeyState);
 
-        if (VK_ADD == ke->wVirtualKeyCode &&
-                (LEFT_ALT_PRESSED == controlKeyState || RIGHT_ALT_PRESSED == controlKeyState)) {
-            // "Alt + ..." event
-            alt_control = controlKeyState;
-            if (alt_code == 0) {
+    if (ke->bKeyDown) {                         // down event
+
+        if ((wVirtualKeyCode >= VK_NUMPAD0 && wVirtualKeyCode <= VK_NUMPAD9) &&
+                0 == dwEnhanced && (LEFT_ALT_PRESSED == dwControlKeyState || RIGHT_ALT_PRESSED == dwControlKeyState)) {
+            // "Alt NumPad ..." event
+            // Note: 
+            //  o NumLock is required to be enabled for NUMPAD key reporting.
+            //  o Non-enhanced, NumPad verses 101 cursor-keys; same VK codes.
+            if (0 == alt_code) {
+                alt_control = dwControlKeyState;
                 alt_code = 1;
             }
             return 1;                           // consume
+        }
 
-        } else if (alt_code) {
-            if (alt_control != controlKeyState ||
+        if (VK_ADD == wVirtualKeyCode &&
+                (LEFT_ALT_PRESSED == dwControlKeyState || RIGHT_ALT_PRESSED == dwControlKeyState)) {
+            // "Alt + Hex" event
+            if (0 == AltPlusEnabled())
+                return -1;                      // enabled?
+            if (0 == alt_code) {
+                alt_control = dwControlKeyState;
+                alt_code = 0x101;
+            }
+            return 1;                           // consume
+        }
+
+        if (alt_code) {
+            if (alt_control != dwControlKeyState ||
                     (ke->uChar.UnicodeChar && 0 == ISXDIGIT(ke->uChar.UnicodeChar))) {
                 // new control status or non-hex, emit "Alt-Plus" and reset state
-                swprintf(completion, _countof(completion), L"Alt-Plus");
+                // TODO/XXX - or should these consumed 
+//              evt->type = EVT_KEYDOWN;
+//              evt->code = KEYPAD_PLUS;
+//              evt->modifiers = MOD_ALT;
+                swprintf(completion, _countof(completion), L"Alt-Plus (error)");
                 alt_code = 0;
+//              return 0;
 
             } else {
                 ++alt_code;                     // associated key count
-                return alt_code;                // consume
+                return 1;                       // consume
             }
         }
 
     } else if (alt_code) {                      // up event
-        if (VK_MENU == ke->wVirtualKeyCode &&
+        if (VK_MENU == wVirtualKeyCode &&
                 (0 == (ke->dwControlKeyState & ALT_PRESSED))) {
             // Alt completion
-            const int oalt_code = alt_code;
+            const WCHAR UnicodeChar = ke->uChar.UnicodeChar;
+            const int alt_old = alt_code;
 
             alt_code = 0;
-            if (1 == oalt_code && 0 == ke->uChar.UnicodeChar) {
-                // "Alt-Plus" only, emit
+            if (1 == (alt_old & 0xff) && 0 == UnicodeChar) {
+                // Alt only, emit.
+//              evt->type = EVT_KEYDOWN;
+//              evt->code = KEYPAD_PLUS;
+//              evt->modifiers = MOD_ALT;
                 swprintf(completion, _countof(completion), L"Alt-Plus");
+//              return 0;
 
-            } else if (ke->uChar.UnicodeChar) {
-                // "Alt-Plus keycode", return keycode.
-                swprintf(completion, _countof(completion), L"Alt-Plus-#%d", ke->uChar.UnicodeChar);
+            } else if (UnicodeChar) {
+                // Alt keycode, return keycode.
+//              evt->type = EVT_KEYDOWN;
+//              evt->code = UnicodeChar;
+//              evt->modifiers = 0;
+                if (alt_old & 0x100) {
+                    swprintf(completion, _countof(completion), L"Alt-Plus-#0x%x", UnicodeChar);
+                } else {
+                    swprintf(completion, _countof(completion), L"Alt-#%d", UnicodeChar);
+                }
+//              return 0;
             }
         }
     }
@@ -381,25 +461,57 @@ AltPlusEvent(const KEY_EVENT_RECORD *ke, int offset)
 }
 
 
-static int
-AltPlusEnabled(void)
+/*  Function:           AltGrEvent
+ *      Filter AtrGr events from modifiers; attempt to allow:
+ *
+ *          Left-Alt + AltGr,
+ *          Right-Ctrl + AltGr,
+ *          Left-Alt + Right-Ctrl + AltGr.
+ */
+static DWORD
+AltGrEvent(const KEY_EVENT_RECORD* key)
 {
-    HKEY hKey = 0;
-    int enabled = 0;
+    DWORD state = key->dwControlKeyState;
 
-    if (RegOpenKeyExA(HKEY_CURRENT_USER,
-            "Control Panel\\Input Method", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
-        char szEnableHexNumpad[100] = { 0 };
-        DWORD dwSize = _countof(szEnableHexNumpad);
-        if (RegQueryValueExA(hKey, "EnableHexNumpad", NULL, NULL, (LPBYTE) szEnableHexNumpad, &dwSize) == ERROR_SUCCESS) {
-            if (szEnableHexNumpad[0] == '1') {
-                enabled = 1;
-            }
+    // AltGr condition (LCtrl + RAlt)
+    if (0 == (state & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)))
+        return state;
+
+    if (0 == (state & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)))
+        return state;
+
+    if (0 == key->uChar.UnicodeChar)
+        return state;
+
+    if (state & RIGHT_ALT_PRESSED) {
+        // Remove Right-Alt.
+        state &= ~RIGHT_ALT_PRESSED;
+
+        // As a character was presented, Left-Ctrl is almost always set,
+        // except if the user presses Right-Ctrl, then AltGr (in that specific order) for whatever reason.
+        // At any rate, make sure the bit is not set.
+        state &= ~LEFT_CTRL_PRESSED;
+
+    } else if (state & LEFT_ALT_PRESSED) {
+        // Remove Left-Alt.
+        state &= ~LEFT_ALT_PRESSED;
+
+        // Whichever Ctrl key is down, remove it from the state.
+        // We only remove one key, to improve our chances of detecting the corner-case of Left-Ctrl + Left-Alt + Right-Ctrl.
+        if ((state & LEFT_CTRL_PRESSED) != 0) {
+            // Remove Left-Ctrl.
+            state &= ~LEFT_CTRL_PRESSED;
+
+        } else if ((state & RIGHT_CTRL_PRESSED) != 0) {
+            // Remove Right-Ctrl.
+            state &= ~RIGHT_CTRL_PRESSED;
         }
-        RegCloseKey(hKey);
     }
-    return enabled;
+
+//  trace_log("AltGr: 0x%04lx = 0x%04lx", (unsigned long)key->dwControlKeyState, (unsigned long)state);
+    return state;
 }
+
 
 
 static const wchar_t *
@@ -755,5 +867,7 @@ ImmTest(void)
     ImmReleaseContext(hWnd, imc);
     Sleep(100);
 }
+
 #endif
 
+/*end*/

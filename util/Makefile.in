@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.18 2024/07/30 05:17:19 cvsuser Exp $
+# $Id: Makefile.in,v 1.19 2024/07/30 15:03:44 cvsuser Exp $
 # GRIEF utilities makefile.
 #
 #
@@ -138,6 +138,7 @@ $(eval $(call Resource,grwc.rc,GRWCOBJS))
 
 GRKEYTEST=	$(D_BIN)/grkeytest$(E)
 GRKEYTESTOBJS=	$(D_OBJ)/grkeytest$(O)
+$(eval $(call Resource,grkeytest.rc,GRKEYTESTOBJS))
 
 TARGETS=	$(GRTAGS)		\
 		$(GRWC)			\
