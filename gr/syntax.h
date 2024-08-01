@@ -1,11 +1,11 @@
 #ifndef GR_SYNTAX_H_INCLUDED
 #define GR_SYNTAX_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntax_h,"$Id: syntax.h,v 1.39 2022/08/28 12:38:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntax_h,"$Id: syntax.h,v 1.40 2024/08/01 14:10:44 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntax.h,v 1.39 2022/08/28 12:38:01 cvsuser Exp $
+/* $Id: syntax.h,v 1.40 2024/08/01 14:10:44 cvsuser Exp $
  * Syntax hiliting constructs.
  *
  *
@@ -416,6 +416,7 @@ extern void                 do_syntax_rule(void);
 extern void                 do_syntax_token(void);
 extern void                 do_syntax_find(void);
 extern void                 inq_syntax(void);
+extern void                 inq_syntax_name(void);
 
 __CEND_DECLS
 

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntax_c, "$Id: syntax.c,v 1.69 2024/07/13 08:30:34 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntax_c, "$Id: syntax.c,v 1.70 2024/08/01 14:10:44 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntax.c,v 1.69 2024/07/13 08:30:34 cvsuser Exp $
+/* $Id: syntax.c,v 1.70 2024/08/01 14:10:44 cvsuser Exp $
  * Syntax pre-processor.
  *
  *
@@ -434,7 +434,7 @@ do_set_syntax_flags(void)       /* int ([int flags], [int|string syntable]) */
         A Grief extension.
 
     Macro See Also:
-        create_syntax, set_syntax_flags, inq_syntax
+        create_syntax, set_syntax_flags, inq_syntax, inq_syntax_name
  */
 void
 inq_syntax(void)                /* ([int &flags], [int|string syntable]) */
@@ -447,6 +447,43 @@ inq_syntax(void)                /* ([int &flags], [int|string syntable]) */
     }
     argv_assign_int(1, (accint_t)st->st_flags);
     acc_assign_int((accint_t)st->st_ident);
+}
+
+
+/*<<GRIEF>>
+    Macro: inq_syntax_name - Retrieve the syntax name.
+
+        int
+        inq_syntax_name([int bufnum])
+
+    Macro Description:
+        The 'inq_syntax_name()' primitive retrieves the name of the syntax
+        associated with the specified buffer.
+
+    Macro Parameters:
+        bufnum - Optional buffer number, if omitted the current buffer
+            shall be referenced.
+
+    Macro Returns:
+        The 'inq_syntax_name()' primitive returns the syntax-table
+        name, otherwise an empty string.
+
+    Macro Portability:
+        A Grief extension.
+
+    Macro See Also:
+        create_syntax, set_syntax_flags, inq_syntax
+ */
+void
+inq_syntax_name(void)           /* [int bufnum = -1]) */
+{
+    BUFFER_t* bp = buf_argument(1);
+    SyntaxTable_t* st = NULL;
+    
+    if (bp) {
+        st = bp->b_syntax;
+    }
+    acc_assign_str(st ? st->st_name : "", -1);
 }
 
 
