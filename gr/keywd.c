@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.108 2024/08/01 14:10:44 cvsuser Exp $")
+__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.109 2024/08/01 17:11:07 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keywd.c,v 1.108 2024/08/01 14:10:44 cvsuser Exp $
+/* $Id: keywd.c,v 1.109 2024/08/01 17:11:07 cvsuser Exp $
  * Keyword table.
  *
  *
@@ -121,10 +121,10 @@ const int cm_version = CM_VERSION;
 #define VERSION_205         /* 01/04/2020, register(), __lexicalblock(), isclose() and cast_xxx() */
 #define VERSION_206         /* 06/21, UTF8 */
 #define VERSION_207         /* 07/22, syntax_find() */
-#define VERSION_208         /* 07/24, inq_syntax_name() */
+#define VERSION_208         /* 07/24, inq_syntax_name(), splitpath() */
 
-//  #define VERSION_XX1     /* array's, staged/experimental */
-//  #define VERSION_XX2     /* not implemented/alpha */
+// #define VERSION_XX1      /* array's, staged/experimental */
+// #define VERSION_XX2      /* not implemented/alpha */
 
 /*
  *  Keyword table, assumed to be in alphabetic order.
@@ -2150,6 +2150,15 @@ BUILTIN builtin[] = {
 
     {"split", MACRO(do_split), ARG_LIST, 0, 0,              /* string */
     6,  {ARG_STRING, ARG_INT | ARG_STRING, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
+
+#if defined(VERSION_208)
+    { "splitpath", MACRO(do_splitpath), ARG_VOID, 0, 0,     /* file */
+    5,  {ARG_STRING,
+         ARG_OPT | ARG_LVAL | ARG_STRING,
+         ARG_OPT | ARG_LVAL | ARG_STRING,
+         ARG_OPT | ARG_LVAL | ARG_STRING,
+         ARG_OPT | ARG_LVAL | ARG_STRING}},
+#endif
 
     {"split_arguments", MACRO(do_split_arguments), ARG_LIST, 0, 0, /* string */
     1,  {ARG_OPT | ARG_STRING}},

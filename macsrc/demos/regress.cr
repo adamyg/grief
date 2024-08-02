@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: regress.cr,v 1.43 2024/07/25 13:36:37 cvsuser Exp $
+/* $Id: regress.cr,v 1.44 2024/08/02 12:59:02 cvsuser Exp $
  *
  *  This set of macros are used when debugging and fixing CRISP to aid in regression testing and
  *  catching bugs introduced inadvertently. These tests dont attempt an exhaustive test, yet
@@ -1503,7 +1503,7 @@ test_list(void)
     d1 = l1[3];
     TEST(378, is_list(d1));                     /* hello() */
     TEST(379, is_type(d1, "list"));
-    
+
     d1 = l1[4];
     TEST(380, is_null(d1));                     /* NULL */
     TEST(381, is_type(d1, "NULL"));
@@ -2713,7 +2713,6 @@ test_scope(void)
     TEST(677, 0 != inq_symbol("x_static"));
 }
 
-
 static int
 scope_1(void)
 {
@@ -2976,4 +2975,3 @@ regress_renumber(void)
 }
 
 /*end*/
-

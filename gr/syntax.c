@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntax_c, "$Id: syntax.c,v 1.70 2024/08/01 14:10:44 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntax_c, "$Id: syntax.c,v 1.71 2024/08/01 17:11:43 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntax.c,v 1.70 2024/08/01 14:10:44 cvsuser Exp $
+/* $Id: syntax.c,v 1.71 2024/08/01 17:11:43 cvsuser Exp $
  * Syntax pre-processor.
  *
  *
@@ -22,6 +22,7 @@ __CIDENT_RCSID(gr_syntax_c, "$Id: syntax.c,v 1.70 2024/08/01 14:10:44 cvsuser Ex
 #include <libstr.h>                             /* str_...()/sxprintf() */
 
 #include "accum.h"
+#include "buffer.h"
 #include "color.h"                              /* attribute_value() */
 #include "builtin.h"
 #include "debug.h"

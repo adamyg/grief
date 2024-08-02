@@ -1,6 +1,6 @@
 /* -*- mode: cr; indent-width: 4; -*- */
 /* charset=utf8
- * $Id: regress2.cr,v 1.28 2024/07/12 12:54:37 cvsuser Exp $
+ * $Id: regress2.cr,v 1.30 2024/08/02 12:59:02 cvsuser Exp $
  * Regression tests ... part2.
  *
  *
@@ -47,6 +47,7 @@ static void             test_getsubopt(void);
 static void             test_parsename(void);
 static void             test_command_list(void);
 static void             test_file(void);
+static void             test_splitpath(void);
 static void             test_module(void);
 static void             test_misc(void);
 static void             test_try(void);
@@ -55,6 +56,7 @@ static void             test_ruler(void);
 static void             test_datetime(void);
 static void             test_sysinfo(void);
 static void             test_ini(void);
+static void		test_block(void);
 static void             test_register_int(void);
 
 static void             test_unicode_version(void);
@@ -140,6 +142,7 @@ regress2(void)
     test_parsename();
     test_command_list();
     test_file();
+    test_splitpath();
     test_module();
     test_misc();
  // test_try();
@@ -978,17 +981,61 @@ test_file(void)
 
 
 /*
+ *  test_splitpath ---
+ *      splitpath functionality.
+ */
+static void
+test_splitpath(void)
+{
+    string dir, name, ext, drive;
+
+    splitpath("x/y", dir, name, ext, drive);
+    TEST(1180, dir == "x/" && name == "y" && ext == "" && drive == "");
+
+    splitpath("x/", dir, name, ext, drive);
+    TEST(1181, dir == "x/" && name == "" && ext == "" && drive == "");
+
+    splitpath("/x", dir, name, ext, drive);
+    TEST(1182, dir == "/" && name == "x" && ext == "" && drive == "");
+
+    splitpath("x", dir, name, ext, drive);
+    TEST(1183, dir == "" && name == "x" && ext == "" && drive == "");
+
+    splitpath("", dir, name, ext, drive);
+    TEST(1184, dir == "" && name == "" && ext == "" && drive == "");
+
+    splitpath(".x", dir, name, ext, drive);
+    TEST(1185, dir == "" && name == "" && ext == ".x" && drive == "");
+
+    splitpath("a.b.c", dir, name, ext, drive);
+    TEST(1186, dir == "" && name == "a.b" && ext == ".c" && drive == "");
+
+    splitpath(":x", dir, name, ext, drive);
+    TEST(1187, dir == "" && name == ":x" && ext == "" && drive == "");
+
+    splitpath("a:x", dir, name, ext, drive);
+    TEST(1188, dir == "" && name == "x" && ext == "" && drive == "a:");
+
+    splitpath("a.b:x", dir, name, ext, drive);
+    TEST(1189, dir == "" && name == "a" && ext == ".b:x" && drive == "");
+
+    splitpath("C:/dos/command.com", dir, name, ext, drive);
+    TEST(1190, dir == "/dos/" && name  == "command" && ext == ".com" && drive == "C:");
+}
+
+
+/*
  *  test_module ---
  *      module functionality.
  */
 static void
 test_module(void)
 {
-    TEST(1180, inq_module() == "regress");      // current association
-    TEST(1181, inq_macro("test_module", 2) == inq_macro("test_misc", 2));
-    TEST(1182, inq_macro("test_module", 2) != inq_macro("crisp", 2));
-    TEST(1183,  2 == module("regress"));        // pre-existing association
-    TEST(1184, -1 == module("newmodule"));      // re-assignment, error
+    TEST(1191, inq_module() == "regress");      // current association
+    TEST(1192, inq_macro("test_module", 2) == inq_macro("test_misc", 2));
+    TEST(1193, inq_macro("test_module", 2) != inq_macro("crisp", 2));
+    TEST(1194,  2 == module("regress"));        // pre-existing association
+    TEST(1195, -1 == module("newmodule"));      // re-assignment, error
 }
 
 
@@ -1003,7 +1050,7 @@ test_misc(void)
     int vmajor, vminor, vedit;
     string vmachtype, vcompiled;
 
-    TEST(1185, version(vmajor, vminor, vedit, NULL, vmachtype, vcompiled) >= 302 && \
+    TEST(1196, version(vmajor, vminor, vedit, NULL, vmachtype, vcompiled) >= 302 && \
             vmajor >= 3 && vminor >= 0 && vedit >= 0);
     switch (vmachtype) {
     case "VMS":
@@ -1016,17 +1063,17 @@ test_misc(void)
         vmachtype = "";
         break;
     }
-    TEST(1186, "" == vmachtype);                // defined
+    TEST(1197, "" == vmachtype);                // defined
 
     //  srand()/rand()
     const int seed = 1234;
 
     srand(seed); int rand1 = rand(); srand(seed);
-    TEST(1187, rand1 == rand());
+    TEST(1198, rand1 == rand());
 
     //  strerror - need EINVAL etc
-    TEST(1188, "Success" == strerror(0));
-    TEST(1189, "Unknown error" == strerror(-1));
+    TEST(1199, "Success" == strerror(0));
+    TEST(1200, "Unknown error" == strerror(-1));
 }
 
 
@@ -1074,10 +1121,10 @@ test_try(void)
 static void
 test_display(void)
 {
-    TEST(1190, inq_display_mode("scroll_cols")  == display_mode(NULL, NULL, -1));
-    TEST(1191, inq_display_mode("scroll_rows")  == display_mode(NULL, NULL, NULL, -1));
-    TEST(1192, inq_display_mode("visible_cols") == display_mode(NULL, NULL, NULL, NULL, -1));
-    TEST(1193, inq_display_mode("visible_rows") == display_mode(NULL, NULL, NULL, NULL, NULL, -1));
+    TEST(1201, inq_display_mode("scroll_cols")  == display_mode(NULL, NULL, -1));
+    TEST(1202, inq_display_mode("scroll_rows")  == display_mode(NULL, NULL, NULL, -1));
+    TEST(1203, inq_display_mode("visible_cols") == display_mode(NULL, NULL, NULL, NULL, -1));
+    TEST(1204, inq_display_mode("visible_rows") == display_mode(NULL, NULL, NULL, NULL, NULL, -1));
 }
 
 
@@ -1095,33 +1142,33 @@ test_ruler(void)
 
     /* tabs */
     tabs(8, 17);
-    TEST(1194, inq_tabs() == "8 17");
+    TEST(1205, inq_tabs() == "8 17");
 
     tabs("9 17");
-    TEST(1195, inq_tabs() == "9 17");
-    TEST(1196, 8 == inq_tab());                  /* default */
+    TEST(1206, inq_tabs() == "9 17");
+    TEST(1207, 8 == inq_tab());                  /* default */
 
     tabs("");
-    TEST(1197, inq_tabs() == "");
+    TEST(1208, inq_tabs() == "");
 
     execute_macro("tabs " + saved_tabs);
-    TEST(1198, inq_tabs() == saved_tabs);
+    TEST(1209, inq_tabs() == saved_tabs);
 
     /* indent */
     set_indent(5);
-    TEST(1199, inq_indent() == 5);               /* indent builds simple ruler */
+    TEST(1210, inq_indent() == 5);               /* indent builds simple ruler */
 
     set_indent(0);
-    TEST(1200, inq_indent() == 0);
+    TEST(1211, inq_indent() == 0);
 
     set_indent(saved_indent);
-    TEST(1201, inq_indent() == saved_indent);
+    TEST(1212, inq_indent() == saved_indent);
 
     /* ruler */
     set_ruler(NULL, ruler);
-    TEST(1202, inq_ruler(NULL, 5) == "5 9 20 25 30");
+    TEST(1213, inq_ruler(NULL, 5) == "5 9 20 25 30");
     r = inq_ruler(NULL, 10, TRUE);
-    TEST(1203, r[0] == 5 && r[1] == 9 && r[4] == 30);
+    TEST(1214, r[0] == 5 && r[1] == 9 && r[4] == 30);
     set_ruler(NULL, NULL);                      /* clear */
 }
 
@@ -1137,22 +1184,22 @@ test_datetime(void)
     int curtime = time();
 
     sleep(1);
-    TEST(1204, time() > curtime);
+    TEST(1215, time() > curtime);
     sleep(1);
-    TEST(1205, time() > ++curtime);
+    TEST(1216, time() > ++curtime);
     sleep(1);
-    TEST(1206, time() > ++curtime);
+    TEST(1217, time() > ++curtime);
 
     //  inq_idle_time/sleep
-    TEST(1207, inq_idle_time() >= 1);
+    TEST(1218, inq_idle_time() >= 1);
     sleep(1);
-    TEST(1208, inq_idle_time()  > 1);
+    TEST(1219, inq_idle_time()  > 1);
 
     //  inq_clock/sleep(ms)
     int clock1 = inq_clock();
     for (curtime = time(); curtime == time();)
         { }
-    TEST(1209, inq_clock() > clock1);
+    TEST(1220, inq_clock() > clock1);
 
     //  localtime/date
     int year1, mon1, mday1, hour1, min1, sec1;
@@ -1166,11 +1213,11 @@ test_datetime(void)
     gmtime(curtime, year2, mon2, mday2, monname2, dayname2, hour2, min2, sec2);
     date(year3, mon3, mday3, monname3, dayname3);
 
-    TEST(1210, year1 >= 2020 && mon1 >= 1 && mon1 <= 12 && mday1 >= 1 && mday1 <= 31);
-    TEST(1211, year2 >= 2020 && mon2 >= 1 && mon2 <= 12 && mday2 >= 1 && mday2 <= 31);
-    TEST(1212, year3 >= 2020 && mon3 >= 1 && mon3 <= 12 && mday3 >= 1 && mday3 <= 31);
-    TEST(1213, year1 == year2 && year2 == year3);
-    TEST(1214, mon1  == mon2  && mon2  == mon3);
+    TEST(1221, year1 >= 2020 && mon1 >= 1 && mon1 <= 12 && mday1 >= 1 && mday1 <= 31);
+    TEST(1222, year2 >= 2020 && mon2 >= 1 && mon2 <= 12 && mday2 >= 1 && mday2 <= 31);
+    TEST(1223, year3 >= 2020 && mon3 >= 1 && mon3 <= 12 && mday3 >= 1 && mday3 <= 31);
+    TEST(1224, year1 == year2 && year2 == year3);
+    TEST(1225, mon1  == mon2  && mon2  == mon3);
   //TEST(XXXX, mday1 == mday2 && mday2 == mday3);
 
     //TODO
@@ -1189,19 +1236,19 @@ test_sysinfo(void)
         profiledir = inq_profile(),
         tmpdir = inq_tmpdir();
 
-    TEST(1215, 0 == access(homedir));
-    TEST(1216, strlen(profiledir));
-    TEST(1217, 0 == access(tmpdir));
+    TEST(1226, 0 == access(homedir));
+    TEST(1227, strlen(profiledir));
+    TEST(1228, 0 == access(tmpdir));
 
     string username = inq_username(),
         hostname = inq_hostname();
 
-    TEST(1218, username);
-    TEST(1219, hostname);
+    TEST(1229, username);
+    TEST(1230, hostname);
 
     string usysname, unodename, uversion, urelease, umachine;
 
-    TEST(1220, 0 == uname(usysname, unodename, uversion, urelease, umachine) && \
+    TEST(1231, 0 == uname(usysname, unodename, uversion, urelease, umachine) && \
             strlen(usysname) && strlen(unodename) && strlen(uversion) && strlen(urelease) && strlen(umachine));
 }
 
@@ -1221,7 +1268,7 @@ test_ini(void)
     //  export
     //
     fd = iniopen();
-    TEST(1221, fd >= 0);
+    TEST(1232, fd >= 0);
 
     inipush(fd, section, "zzz", "9999", "comment 1");
     inipush(fd, section, "zzz", "8888", "comment 2");
@@ -1234,16 +1281,16 @@ test_ini(void)
             ret = ininext(fd, sect, key, value)) {
         switch (++cnt) {
         case 1:
-            TEST(1222, sect == section);
-            TEST(1223, key == "zzz" && value == "8888");
+            TEST(1233, sect == section);
+            TEST(1234, key == "zzz" && value == "8888");
             break;
         case 2:
-            TEST(1224, sect == section);
-            TEST(1225, key == "xxx" && value == "5555");
+            TEST(1235, sect == section);
+            TEST(1236, key == "xxx" && value == "5555");
             break;
         }
     }
-    TEST(1226, 2 == cnt);
+    TEST(1237, 2 == cnt);
 
     iniexport(fd, inifile);
     iniclose(fd);
@@ -1253,23 +1300,23 @@ test_ini(void)
     //
     int fd2 = iniopen(inifile, IFILE_STANDARD|IFILE_STANDARDEOL);
 
-    TEST(1227, fd2 >= 0);
-    TEST(1228, fd2 != fd);
+    TEST(1238, fd2 >= 0);
+    TEST(1239, fd2 != fd);
 
     for (cnt = 0, ret = inifirst(fd2, sect, key, value); 1 == ret;
             ret = ininext(fd2, sect, key, value)) {
         switch (++cnt) {
         case 1:
-            TEST(1229, sect == section);
-            TEST(1230, key == "zzz" && value == "8888");
+            TEST(1240, sect == section);
+            TEST(1241, key == "zzz" && value == "8888");
             break;
         case 2:
-            TEST(1231, sect == section);
-            TEST(1232, key == "xxx" && value == "5555");
+            TEST(1242, sect == section);
+            TEST(1243, key == "xxx" && value == "5555");
             break;
         }
     }
-    TEST(1233, 2 == cnt);
+    TEST(1244, 2 == cnt);
 
     iniclose(fd2);
     remove(inifile);
@@ -1290,6 +1337,46 @@ test_ini(void)
 #define REGISTER
 #endif
 
+static void
+test_block0(~ int)
+{
+    extern int x;
+    int y;
+
+    get_parm(1, y);
+    TEST(1245, x == 42);
+    TEST(1246, y == 42);
+    {
+        int x = 1;
+        TEST(1247, x == 1);
+        {
+            int x = 2;
+            TEST(1248, x == 2);
+            {
+                int x = 3;
+                TEST(1249, x == 3);
+                {
+                    int x = 4;
+                    TEST(1250, x == 4);
+                }
+                TEST(1251, x == 3);
+            }
+            TEST(1252, x == 2);
+       }
+       TEST(1253, x == 1);
+    }
+    TEST(1254, x == 42);
+}
+
+
+static void
+test_block(void)
+{
+    int x = 42;
+    scope_block0(x);
+}
+
+
 static int
 test_register_int2(int level = 0)
 {
@@ -1306,47 +1393,47 @@ test_register_int(void)
 {
     REGISTER int i1 = 1234;
 
-    TEST(1234, 1234 == i1);
+    TEST(1255, 1234 == i1);
 
     i1 += 10;
-    TEST(1235, 1244 == i1);
+    TEST(1256, 1244 == i1);
 
     i1 -= 10;
-    TEST(1236, 1234 == i1);
+    TEST(1257, 1234 == i1);
 
     i1 += i1;
-    TEST(1237, 2468 == i1);
+    TEST(1258, 2468 == i1);
 
     i1  = i1 - 1234;
-    TEST(1238, 1234 == i1);
+    TEST(1259, 1234 == i1);
 
     { /*nesting*/
         REGISTER int i2 = 4567;                 /* additional */
 
-        TEST(1239, 1234 == i1);
-        TEST(1240, 4567 == i2);
+        TEST(1260, 1234 == i1);
+        TEST(1261, 4567 == i2);
 
         { /*nesting*/
             REGISTER int i1 = 8901;             /* hidden */
 
-            TEST(1241, 8901 == i1);
-            TEST(1242, 4567 == i2);
+            TEST(1262, 8901 == i1);
+            TEST(1263, 4567 == i2);
 
             {
                 REGISTER int i1 = 101234;       /* hidden */
-                TEST(1243, 101234 == i1);
+                TEST(1264, 101234 == i1);
             }
 
-            TEST(1244, 8901 == i1);
-            TEST(1245, 4567 == i2);
+            TEST(1265, 8901 == i1);
+            TEST(1266, 4567 == i2);
         }
 
-        TEST(1246, 1234 == i1);
+        TEST(1267, 1234 == i1);
     }
-    TEST(1247, 1234 == i1);
+    TEST(1268, 1234 == i1);
 
-    TEST(1248, 7890 == test_register_int2());   /* nested calls */
-    TEST(1249, 1234 == i1);
+    TEST(1269, 7890 == test_register_int2());   /* nested calls */
+    TEST(1270, 1234 == i1);
 }
 
 #if defined(__REGISTERS__)
@@ -1358,9 +1445,9 @@ static void
 test_unicode_version(void)
 {
     string uv = inq_unicode_version();
-    TEST(1250, set_unicode_version("11.0.0") == 110000); //match
-    TEST(1251, set_unicode_version("13.0.0") == 130000); //match
-    TEST(1252, set_unicode_version("19.0.0") == 150100); //closest (15.1.0, current upper)
+    TEST(1271, set_unicode_version("11.0.0") == 110000); //match
+    TEST(1272, set_unicode_version("13.0.0") == 130000); //match
+    TEST(1273, set_unicode_version("19.0.0") == 150100); //closest (15.1.0, current upper)
     set_unicode_version(uv);
 }
 
@@ -1368,88 +1455,88 @@ test_unicode_version(void)
 static void
 test_wcwidth(void)
 {
-    TEST(1253, wcwidth("") == 0);
-    TEST(1254, wcwidth("a") == 1);
-    TEST(1255, wcwidth("The quick brown fox jumps over the lazy dog") == 43);
-    TEST(1256, wcwidth("ξεσκεπάζω την ψυχοφθόρα βδελυγμία") == 33);
+    TEST(1274, wcwidth("") == 0);
+    TEST(1275, wcwidth("a") == 1);
+    TEST(1276, wcwidth("The quick brown fox jumps over the lazy dog") == 43);
+    TEST(1277, wcwidth("ξεσκεπάζω την ψυχοφθόρα βδελυγμία") == 33);
 }
 
 
 static void
 test_wstrlen(void)
 {
-    TEST(1257, wstrlen("") == 0);
-    TEST(1258, wstrlen("a") == 1);
-    TEST(1259, wstrlen("The quick brown fox jumps over the lazy dog") == 43);
-    TEST(1260, wstrlen("ξεσκεπάζω την ψυχοφθόρα βδελυγμία") == 33);
+    TEST(1278, wstrlen("") == 0);
+    TEST(1279, wstrlen("a") == 1);
+    TEST(1280, wstrlen("The quick brown fox jumps over the lazy dog") == 43);
+    TEST(1281, wstrlen("ξεσκεπάζω την ψυχοφθόρα βδελυγμία") == 33);
 }
 
 
 static void
 test_wstrnlen(void)
 {
-    TEST(1261, wstrnlen("", 0) == 0);
-    TEST(1262, wstrnlen("a", 1) == 1);
-    TEST(1263, wstrnlen("The quick brown fox jumps over the lazy dog", 30) == 30);
-    TEST(1264, wstrnlen("ξεσκεπάζω την ψυχοφθόρα βδελυγμία", 34) == 33);
+    TEST(1282, wstrnlen("", 0) == 0);
+    TEST(1283, wstrnlen("a", 1) == 1);
+    TEST(1284, wstrnlen("The quick brown fox jumps over the lazy dog", 30) == 30);
+    TEST(1285, wstrnlen("ξεσκεπάζω την ψυχοφθόρα βδελυγμία", 34) == 33);
 }
 
 
 static void
 test_wcharacterat(void)
 {
-    TEST(1265, wcharacterat("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", 1)  == L'А')
-    TEST(1266, wcharacterat("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", 7)  == L'Ж')
-    TEST(1267, wcharacterat("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", 33) == -1)
+    TEST(1286, wcharacterat("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", 1)  == L'А')
+    TEST(1287, wcharacterat("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", 7)  == L'Ж')
+    TEST(1288, wcharacterat("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", 33) == -1)
 }
 
 
 static void
 test_wstrstr(void)
 {
-    TEST(1268, 4 == wstrstr("abcmandefg", "man"));
-    TEST(1269, 4 == wstrstr("abcmanmandefg", "man"));
-    TEST(1270, 0 == wstrstr("abcmanmandefg", "ban"));
-    TEST(1271, 1 == wstrstr("abcmanmandefg", ""));
+    TEST(1289, 4 == wstrstr("abcmandefg", "man"));
+    TEST(1290, 4 == wstrstr("abcmanmandefg", "man"));
+    TEST(1291, 0 == wstrstr("abcmanmandefg", "ban"));
+    TEST(1292, 1 == wstrstr("abcmanmandefg", ""));
 
-    TEST(1272, wstrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "БВ") == 2)
-    TEST(1273, wstrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "A")  == 0)
-    TEST(1274, wstrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "")   == 1)
+    TEST(1293, wstrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "БВ") == 2)
+    TEST(1294, wstrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "A")  == 0)
+    TEST(1295, wstrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "")   == 1)
 }
 
 
 static void
 test_wstrrstr(void)
 {
-    TEST(1275, 4 == wstrrstr("abcmandefg", "man"));
-    TEST(1276, 7 == wstrrstr("abcmanmandefg", "man"));
-    TEST(1277, 0 == wstrrstr("abcmanmandefg", "ban"));
-    TEST(1278, 0 == wstrrstr("abcmanmandefg", ""));
+    TEST(1296, 4 == wstrrstr("abcmandefg", "man"));
+    TEST(1297, 7 == wstrrstr("abcmanmandefg", "man"));
+    TEST(1298, 0 == wstrrstr("abcmanmandefg", "ban"));
+    TEST(1299, 0 == wstrrstr("abcmanmandefg", ""));
 
-    TEST(1279, wstrrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "БВ") == 34)
-    TEST(1280, wstrrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "A")  == 0)
-    TEST(1281, wstrrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "")   == 0)
+    TEST(1300, wstrrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "БВ") == 34)
+    TEST(1301, wstrrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "A")  == 0)
+    TEST(1302, wstrrstr("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "")   == 0)
 }
 
 
 static void
 test_wsubstr(void)
 {
-    TEST(1282, wsubstr("ABC", 0, 3) == "ABC");
-    TEST(1283, wsubstr("ABC", -1000, 1000) == "ABC");
-    TEST(1284, wsubstr("ABC", 1000, 1000) == "");
-    TEST(1285, wsubstr("ABC", 1, 0) == "");
-    TEST(1286, wsubstr("ABC", 1, 1) == "A");
-    TEST(1287, wsubstr("ABC", 1, 2) == "AB");
-    TEST(1288, wsubstr("ABC", 1, 3) == "ABC");
-    TEST(1289, wsubstr("ABC", 1, 100) == "ABC");
-    TEST(1290, wsubstr("ABC", 3, 0) == "");
-    TEST(1291, wsubstr("ABC", 3, 1) == "C");
-    TEST(1292, wsubstr("ABC", 3, 100) == "C");
+    TEST(1303, wsubstr("ABC", 0, 3) == "ABC");
+    TEST(1304, wsubstr("ABC", -1000, 1000) == "ABC");
+    TEST(1305, wsubstr("ABC", 1000, 1000) == "");
+    TEST(1306, wsubstr("ABC", 1, 0) == "");
+    TEST(1307, wsubstr("ABC", 1, 1) == "A");
+    TEST(1308, wsubstr("ABC", 1, 2) == "AB");
+    TEST(1309, wsubstr("ABC", 1, 3) == "ABC");
+    TEST(1310, wsubstr("ABC", 1, 100) == "ABC");
+    TEST(1311, wsubstr("ABC", 3, 0) == "");
+    TEST(1312, wsubstr("ABC", 3, 1) == "C");
+    TEST(1313, wsubstr("ABC", 3, 100) == "C");
 
-    TEST(1293, wsubstr("ξεσκεπάζω την ψυχοφθόρα βδελυγμία", 33, 0) == "");
-    TEST(1294, wsubstr("ξεσκεπάζω την ψυχοφθόρα βδελυγμία", 1, 9)  == "ξεσκεπάζω");
-    TEST(1295, wsubstr("ξεσκεπάζω την ψυχοφθόρα βδελυγμία", 11, 3) == "την");
+    TEST(1314, wsubstr("ξεσκεπάζω την ψυχοφθόρα βδελυγμία", 33, 0) == "");
+    TEST(1315, wsubstr("ξεσκεπάζω την ψυχοφθόρα βδελυγμία", 1, 9)  == "ξεσκεπάζω");
+    TEST(1316, wsubstr("ξεσκεπάζω την ψυχοφθόρα βδελυγμία", 11, 3) == "την");
 }
 
 
@@ -1457,19 +1544,19 @@ static void
 test_wfirstof(void)
 {
     int wch;
-    TEST(1296, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "БВ", wch)  == 2 && wch == L'Б')
-    TEST(1297, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "CФВ", wch) == 3 && wch == L'В')
-    TEST(1298, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "XBC", wch) == 0 && wch == 0)
+    TEST(1317, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "БВ", wch)  == 2 && wch == L'Б')
+    TEST(1318, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "CФВ", wch) == 3 && wch == L'В')
+    TEST(1319, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "XBC", wch) == 0 && wch == 0)
 }
 
 
 static void
 test_wstrpbrk(void)
 {
-    TEST(1299,  3 == wstrpbrk("abcdefg", "dc"));
-    TEST(1300, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "БВ")  == 2)
-    TEST(1301, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "CФВ") == 3)
-    TEST(1302, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "XBC") == 0)
+    TEST(1320,  3 == wstrpbrk("abcdefg", "dc"));
+    TEST(1321, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "БВ")  == 2)
+    TEST(1322, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "CФВ") == 3)
+    TEST(1323, wfirstof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "XBC") == 0)
 }
 
 
@@ -1477,45 +1564,45 @@ static void
 test_wlastof(void)
 {
     int wch;
-    TEST(1303, wlastof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "БВ", wch)  == 35 && wch == L'В')
-    TEST(1304, wlastof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "CФВ", wch) == 53 && wch == L'Ф')
-    TEST(1305, wlastof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "XBC", wch) == 0  && wch == 0)
+    TEST(1324, wlastof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "БВ", wch)  == 35 && wch == L'В')
+    TEST(1325, wlastof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "CФВ", wch) == 53 && wch == L'Ф')
+    TEST(1326, wlastof("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "XBC", wch) == 0  && wch == 0)
 }
 
 
 static void
 test_wstrcmp(void)
 {
-    TEST(1306, 0 == wstrcmp("aaa", "aaa"));
-    TEST(1307, 0 == wstrcmp("aaa", "aaa"));
-    TEST(1308, 0 == wstrcmp("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"));
-    TEST(1309, 0 == wstrcmp("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯYYYY", "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯXXXX", 32));
+    TEST(1327, 0 == wstrcmp("aaa", "aaa"));
+    TEST(1328, 0 == wstrcmp("aaa", "aaa"));
+    TEST(1329, 0 == wstrcmp("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"));
+    TEST(1330, 0 == wstrcmp("АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯYYYY", "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯXXXX", 32));
 }
 
 
 static void
 test_wstrcasecmp(void)
 {
-    TEST(1310, 0 == wstrcasecmp("AaA", "aAa"));
-    TEST(1311, 0 == wstrcasecmp("AaAXXX", "aAaYYY", 3));
+    TEST(1331, 0 == wstrcasecmp("AaA", "aAa"));
+    TEST(1332, 0 == wstrcasecmp("AaAXXX", "aAaYYY", 3));
 }
 
 
 static void
 test_wlower(void)
 {
-    TEST(1312, wlower("AbC") == "abc");
-    TEST(1313, wlower("ÓÓ") == "óó");
-    TEST(1314, wlower(L'Ó') == L'ó');
+    TEST(1333, wlower("AbC") == "abc");
+    TEST(1334, wlower("ÓÓ") == "óó");
+    TEST(1335, wlower(L'Ó') == L'ó');
 }
 
 
 static void
 test_wupper(void)
 {
-    TEST(1315, wupper("aBc") == "ABC");
-    TEST(1316, wupper("óó") == "ÓÓ");
-    TEST(1317, wupper(L'ó') == L'Ó');
+    TEST(1336, wupper("aBc") == "ABC");
+    TEST(1337, wupper("óó") == "ÓÓ");
+    TEST(1338, wupper(L'ó') == L'Ó');
 }
 
 
@@ -1538,23 +1625,23 @@ test_wread(void)
     insert(sval);
     top_of_buffer();
     line = read(NULL, status);
-    TEST(1318, status == 1);                     /* EOF */
-    TEST(1319, line == sval);
+    TEST(1339, status == 1);                     /* EOF */
+    TEST(1340, line == sval);
 
     top_of_buffer();
     insert(wval);
     top_of_buffer();
     line = read(NULL, status);
-    TEST(1320, status == 1);                     /* EOF */
-    TEST(1321, line == wval);
+    TEST(1341, status == 1);                     /* EOF */
+    TEST(1342, line == wval);
 
     line = read(wlen, status);
-    TEST(1322, status == 1);                     /* EOF */
-    TEST(1323, line == wval);
+    TEST(1343, status == 1);                     /* EOF */
+    TEST(1344, line == wval);
 
     line = read(10, status);
-    TEST(1324, status == 0);                     /* partial */
-    TEST(1325, line == wsubstr(line, 1, 10));
+    TEST(1345, status == 0);                     /* partial */
+    TEST(1346, line == wsubstr(line, 1, 10));
 
     restore_position(2);
     delete_buffer(buf);
@@ -1571,14 +1658,13 @@ test_wsprintf(void)
     int wc;
 
     wc = sprintf(buffer, "%s", sval);           // string, by length.
-    TEST(1326, wc == strlen(sval));
+    TEST(1347, wc == strlen(sval));
 
     wc = sprintf(buffer, "%S", wval);           // wide-string, by length.
-    TEST(1327, wc == wstrlen(wval));
+    TEST(1348, wc == wstrlen(wval));
 
     wc = sprintf(buffer, "%W", dval);           // by width
-    TEST(1328, wc == wcwidth(dval));
+    TEST(1349, wc == wcwidth(dval));
 }
 
 /*end*/
-

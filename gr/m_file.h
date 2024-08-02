@@ -1,11 +1,11 @@
 #ifndef GR_M_FILE_H_INCLUDED
 #define GR_M_FILE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_file_h,"$Id: m_file.h,v 1.17 2014/10/26 22:13:11 ayoung Exp $")
+__CIDENT_RCSID(gr_m_file_h,"$Id: m_file.h,v 1.18 2024/08/01 17:11:07 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_file.h,v 1.17 2014/10/26 22:13:11 ayoung Exp $
+/* $Id: m_file.h,v 1.18 2024/08/01 17:11:07 cvsuser Exp $
  * File primitives.
  *
  *
@@ -39,6 +39,7 @@ extern void                 do_copy_ea_info(void);
 extern void                 do_exist(void);
 extern void                 do_expandpath(void);
 extern void                 do_searchpath(void);
+extern void                 do_splitpath(void);
 extern void                 do_file_canon(void);
 extern void                 do_file_glob(void);
 extern void                 do_file_match(void);

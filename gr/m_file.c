@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_file_c,"$Id: m_file.c,v 1.45 2024/07/19 05:04:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_file_c,"$Id: m_file.c,v 1.46 2024/08/01 17:11:07 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_file.c,v 1.45 2024/07/19 05:04:22 cvsuser Exp $
+/* $Id: m_file.c,v 1.46 2024/08/01 17:11:07 cvsuser Exp $
  * File primitives.
  *
  *
@@ -343,6 +343,89 @@ do_searchpath(void)             /* int (string searchpath, string file, [string 
     }
     acc_assign_int(ret);
 }
+
+
+/*  Function:           do_splitpath
+ *      searchpath primitive.
+ *
+ *  Parameters:
+ *      none.
+ *
+ *  Returns:
+ *      nothing.
+ *
+ *<<GRIEF>>
+    Macro: splitpath - Searches for a given file in a specified path.
+
+        int
+        splithpath(string path, 
+            [string &dir], [string &name], [string &ext], [string &drive])
+
+    Macro Description:
+        The 'splitpath()' primitive break a path into components.
+
+    Macro Parameters:
+        path - Full path.
+
+        dir - Optional string variable reference to be populated with the
+            directory path, including trailing slash. Forward slashes(/ ), 
+            backslashes(\), or both may be used.
+
+        name - Optional string variable reference to be populated with the
+            base filename (no extension).
+
+        ext - Optional string variable reference to be populated with the
+            filename extension, including leading period (.)
+
+        drive - Optional string variable reference to be populated with the
+            drive letter, followed by a colon(:).
+
+    Macro Returns:
+        The 'splitpath()' primitive returns pothing.
+
+    Macro Portability:
+        A Grief extension.
+
+    Macro See Also:
+        expandpath
+
+ */
+void
+do_splitpath(void)              /* int (string path, string &dir, string &name, string &ext, [string &drive]) */
+{
+    const char* path = get_xstr(1);
+    const char* end, *p, *ext = "";
+    char drv[3] = { 0,0,0 };
+
+    /* drive */
+    if (path[0] && path[1] == ':') {
+        if (isalpha(path[0])) {
+            drv[0] = *path++;
+            drv[1] = *path++;
+        }
+    }
+    end = path + strlen(path);
+
+    /* extension */
+    for (p = end; p > path && *--p != '\\' && *p != '/'; )
+        if (*p == '.') {
+            end = ext = p;
+            break;
+        }
+
+    /* directory / name */
+    for (p = end; p > path; )
+        if (*--p == '\\' || *p == '/') {
+            p++;
+            break;
+        }
+
+    argv_assign_str(5, (const char*)drv);
+    argv_assign_str(4, (const char*)ext);
+    argv_assign_nstr(3, p, (int)(end - p));
+    argv_assign_nstr(2, path, (int)(p - path));
+}
+
 
 
 /*  Function:           do_file_glob
