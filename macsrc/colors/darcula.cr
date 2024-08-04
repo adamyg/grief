@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: darcula.cr,v 1.2 2021/04/16 15:24:58 cvsuser Exp $
+/* $Id: darcula.cr,v 1.3 2024/08/04 11:42:44 cvsuser Exp $
  * Darcula colorscheme, GRIEF port.
  *
  *  see https://github.com/blueshirts/darcula
@@ -229,4 +229,3 @@ colorscheme_darcula(void)
 }
 
 /*end*/
-

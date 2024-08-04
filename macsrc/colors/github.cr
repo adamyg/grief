@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 8; -*- */
-/* $Id: github.cr,v 1.3 2014/11/27 15:54:12 ayoung Exp $
+/* $Id: github.cr,v 1.4 2024/08/04 11:42:44 cvsuser Exp $
  * github coloriser, GRIEF port.
  *
  * Original:
@@ -131,4 +131,3 @@ colorscheme_github(void)
         vim_colorscheme("github", 256, NULL, github_colors, TRUE);
 }
 /*end*/
-

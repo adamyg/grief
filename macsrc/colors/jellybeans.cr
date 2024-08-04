@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 8; -*- */
-/* $Id: jellybeans.cr,v 1.2 2014/11/27 15:54:13 ayoung Exp $
+/* $Id: jellybeans.cr,v 1.3 2024/08/04 11:42:44 cvsuser Exp $
  * jellybean coloriser, GRIEF port.
  *
  * Original:
@@ -352,4 +352,3 @@ colorscheme_jellybeans(void)
         vim_colorscheme("jellybeans", 0, NULL, colors, (!low_color ? TRUE : FALSE));
 }
 /*end*/
-

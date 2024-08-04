@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 8; -*- */
-/* $Id: desertEx.cr,v 1.2 2014/11/27 15:54:12 ayoung Exp $
+/* $Id: desertEx.cr,v 1.3 2024/08/04 11:42:44 cvsuser Exp $
  * desertEx coloriser, GRIEF port.
  *
  * Original:
@@ -64,4 +64,3 @@ colorscheme_desertEx(void)
         vim_colorscheme("desertEx", 256, NULL, desertEx_colors, -1);
 }
 /*end*/
-
