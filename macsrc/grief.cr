@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: grief.cr,v 1.94 2024/07/28 11:57:19 cvsuser Exp $
+/* $Id: grief.cr,v 1.95 2024/08/04 10:07:57 cvsuser Exp $
  * GRIEF startup macro.
  *
  *
@@ -620,11 +620,11 @@ grief(void)
         /*
          *  Windowed environment
          */
-        int maj, min, edit;
+        int maj, min, edit, rel;
         string buf, buf1;
 
-        version(maj, min, edit);
-        sprintf(buf, "%s v%d.%d%c", APPNAME, maj, min, edit);
+        version(maj, min, edit, rel);
+        sprintf(buf, "%s v%d.%d.%d.%d", APPNAME, maj, min, edit, rel);
         sprintf(buf1, "v%d.%d%c", maj, min, edit);
         set_wm_name(buf, buf1);
         set_term_feature(TF_COLOR, TRUE);

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mac1_c,"$Id: mac1.c,v 1.77 2024/05/04 18:00:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_mac1_c,"$Id: mac1.c,v 1.78 2024/08/04 10:07:46 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mac1.c,v 1.77 2024/05/04 18:00:16 cvsuser Exp $
+/* $Id: mac1.c,v 1.78 2024/08/04 10:07:46 cvsuser Exp $
  * Basic primitives.
  *
  *
@@ -2201,10 +2201,10 @@ do_self_insert(void)            /* void ([int character]) */
 
             edit - Integer sub version number.
 
-            machtype - Machine type labels, value include
-                "DOS", "OS/2", "UNIX" and "VMS".
+            release - Integer build-number.
 
-            release - Reserved for future use.
+            machtype - Machine type labels, value include
+               "DOS", "OS/2", "UNIX" and "VMS"; for additional host information see <uname>.
 
             compiled - GRIEF engine compilation timestamp.
 
@@ -2217,13 +2217,13 @@ do_self_insert(void)            /* void ([int character]) */
 
     Macro Returns:
         The 'version()' primitive returns the current version multiplied
-	by 100, plus the minor; for example '301' represents version '3.1'.
+        by 100, plus the minor; for example '301' represents version '3.1'.
 
     Macro Portability:
         All the arguments are extensions.
 
     Macro See Also:
-        grief_version
+        grief_version, uname
  */
 void
 do_version(void)                /* int ([maj|mach], [min], [edit], [release], [machtype],
@@ -2248,7 +2248,7 @@ do_version(void)                /* int ([maj|mach], [min], [edit], [release], [m
 
     argv_assign_int(2,  (accint_t) x_minor_version);
     argv_assign_int(3,  (accint_t) x_edit_version);
-    argv_assign_int(4,  (accint_t) 0);          /* todo - o/s release */
+    argv_assign_int(4,  (accint_t) x_build_version);
     argv_assign_str(5,  x_machtype);            /* DOS, OS/2, UNIX and VMS. */
     argv_assign_str(6,  x_compiled);
     argv_assign_int(7,  (accint_t) cm_version);

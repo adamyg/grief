@@ -1,5 +1,5 @@
 /* -*- indent-width: 4; -*- */
-/* $Id: license.cr,v 1.18 2024/05/12 17:13:18 cvsuser Exp $
+/* $Id: license.cr,v 1.19 2024/08/04 10:07:57 cvsuser Exp $
  * License information.
  *
  *
@@ -58,11 +58,11 @@ main()
             };
     license_text += license_import();
 
-    int maj, min, edit;
+    int maj, min, edit, rel;
     string verbuf;
 
-    version(maj, min, edit);
-    sprintf(verbuf, "%s v%d.%d.%d", APPNAME, maj, min, edit);
+    version(maj, min, edit, rel);
+    sprintf(verbuf, "%s v%d.%d.%d.%d", APPNAME, maj, min, edit, rel);
 
     dialog =
         dialog_create( make_list(

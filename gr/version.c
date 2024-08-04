@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_version_c,"$Id: version.c,v 1.32 2024/04/16 10:30:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_version_c,"$Id: version.c,v 1.33 2024/08/04 10:07:46 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: version.c,v 1.32 2024/04/16 10:30:37 cvsuser Exp $
+/* $Id: version.c,v 1.33 2024/08/04 10:07:46 cvsuser Exp $
  * Version strings.
  *
  *
@@ -23,6 +23,7 @@ __CIDENT_RCSID(gr_version_c,"$Id: version.c,v 1.32 2024/04/16 10:30:37 cvsuser E
 const int               x_major_version = GR_VERSION_1;
 const int               x_minor_version = GR_VERSION_2;
 const int               x_edit_version  = GR_VERSION_3;
+const int               x_build_version = GR_VERSION_4;
 
 const char *            x_version       = GR_VERSION;
 const char *            x_buildnumber   = GR_BUILD_NUMBER;
