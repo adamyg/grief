@@ -1,11 +1,11 @@
 #ifndef GR_EDSTDARG_H_INCLUDED
 #define GR_EDSTDARG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edstdarg_h,"$Id: edstdarg.h,v 1.4 2024/04/08 15:07:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_edstdarg_h,"$Id: edstdarg.h,v 1.5 2024/08/17 08:36:27 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edstdarg.h,v 1.4 2024/04/08 15:07:03 cvsuser Exp $
+/* $Id: edstdarg.h,v 1.5 2024/08/17 08:36:27 cvsuser Exp $
  * stdarg() interface/implemenation.
  *
  *
@@ -82,6 +82,3 @@ __CPRAGMA_ONCE
 #endif /*GR_EDSTDARG_H_INCLUDED*/
 
 /*end*/
-
-
-

@@ -3,7 +3,7 @@
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: winntvers.h,v 1.2 2024/04/10 15:50:54 cvsuser Exp $
+/* $Id: winntvers.h,v 1.3 2024/08/17 08:36:27 cvsuser Exp $
  * _WIN32_WINNT version constants
  *
  */
@@ -27,4 +27,3 @@ __CPRAGMA_ONCE
 #endif //_WIN32_WINNT_NT4
 
 #endif /*GR_WINNTVERS_H_INCLUDED*/
-
