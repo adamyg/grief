@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: xterm_mrxvt.cr,v 1.4 2021/07/11 08:26:12 cvsuser Exp $
+/* $Id: xterm_mrxvt.cr,v 1.6 2024/07/12 16:33:22 cvsuser Exp $
  * mrxvt terminal
  *
  *      The mrxvt program is a terminal emulator for X Window System. It provides DEC VT102
@@ -76,6 +76,9 @@ main()
      *  keyboard for non-ascii characters.
      */
     set_term_keyboard(                          /* Function keys */
+        //
+        //  Function keys
+        //
         SHIFT_F1_F12, quote_list(
             "\x1b[11;2~",   "\x1b[12;2~",   "\x1b[13;2~",   "\x1b[14;2~",   "\x1b[15;2~",
             "\x1b[17;2~",   "\x1b[18;2~",   "\x1b[19;2~",   "\x1b[20;2~",   "\x1b[21;2~",
@@ -183,3 +186,4 @@ mrxvt()
     /*NOTHING*/
 }
 
+/*end*/

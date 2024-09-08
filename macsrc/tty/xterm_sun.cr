@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: xterm_sun.cr,v 1.11 2014/10/22 02:34:43 ayoung Exp $
+/* $Id: xterm_sun.cr,v 1.13 2024/07/12 16:33:22 cvsuser Exp $
  * terminal description file for the xterm window under X11 which is a VT-100 like emulator
  *
  *
@@ -92,4 +92,6 @@ main()
             "\x1bA8",       "\x1bA9")
         );
 }
+
+/*end*/
 

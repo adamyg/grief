@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: xterm_linux.cr,v 1.23 2021/07/11 08:26:12 cvsuser Exp $
+/* $Id: xterm_linux.cr,v 1.25 2024/07/12 16:33:22 cvsuser Exp $
  * terminal description file for the xterm window under X11/Linux.
  *
  *
@@ -72,6 +72,9 @@ main()
      *  Define keyboard layout for non-ascii characters.
      */
     set_term_keyboard(
+        //
+        //  Function keys
+        //
         F1_F12, quote_list(
             "\x1bOP",       "\x1bOQ",       "\x1bOR",       "\x1bOS",
             "\x1b[15~",     "\x1b[17~",     "\x1b[18~",     "\x1b[19~",
@@ -189,3 +192,5 @@ linux_standard()
     set_term_feature(TF_GRAPHIC_MODE,   "\x1B(0");      /* Enter graphics mode. */
     set_term_feature(TF_TEXT_MODE,      "\x1B(B");      /* Exit graphics mode. */
 }
+
+/*end*/

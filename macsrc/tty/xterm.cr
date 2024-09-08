@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; tabs: 8; -*-
- * $Id: xterm.cr,v 1.23 2024/05/03 00:13:04 cvsuser Exp $
+ * $Id: xterm.cr,v 1.28 2024/08/25 06:02:04 cvsuser Exp $
  * terminal description file for the xterm window under X11, an VT-100 like emulator.
  *
  *
@@ -56,18 +56,18 @@ XTerm*VT100.Translations:	#override \
 	Ctrl<Key>F10:			string(\033[CF10~)\n\
 	Ctrl<Key>F11:			string(\033[CF11~)\n\
 	Ctrl<Key>F12:			string(\033[CF12~)\n\
-	Meta<Key>F1:			string(\033[MF1~)\n\
-	Meta<Key>F2:			string(\033[MF2~)\n\
-	Meta<Key>F3:			string(\033[MF3~)\n\
-	Meta<Key>F4:			string(\033[MF4~)\n\
-	Meta<Key>F5:			string(\033[MF5~)\n\
-	Meta<Key>F6:			string(\033[MF6~)\n\
-	Meta<Key>F7:			string(\033[MF7~)\n\
-	Meta<Key>F8:			string(\033[MF8~)\n\
-	Meta<Key>F9:			string(\033[MF9~)\n\
-	Meta<Key>F10:			string(\033[MF10~)\n\
-	Meta<Key>F11:			string(\033[MF11~)\n\
-	Meta<Key>F12:			string(\033[MF12~)\n\
+	Meta<Key>F1:			string(\033[AF1~)\n\
+	Meta<Key>F2:			string(\033[AF2~)\n\
+	Meta<Key>F3:			string(\033[AF3~)\n\
+	Meta<Key>F4:			string(\033[AF4~)\n\
+	Meta<Key>F5:			string(\033[AF5~)\n\
+	Meta<Key>F6:			string(\033[AF6~)\n\
+	Meta<Key>F7:			string(\033[AF7~)\n\
+	Meta<Key>F8:			string(\033[AF8~)\n\
+	Meta<Key>F9:			string(\033[AF9~)\n\
+	Meta<Key>F10:			string(\033[AF10~)\n\
+	Meta<Key>F11:			string(\033[AF11~)\n\
+	Meta<Key>F12:			string(\033[AF12~)\n\
 	Shift<Key>KP_0:			string(\033OP)\n\
 	Shift<Key>KP_1:			string(\033OQ)\n\
 	Shift<Key>KP_2:			string(\033OR)\n\
@@ -119,24 +119,27 @@ XTerm*VT100.Translations:	#override \
 #include "tty.h"
 #include "tty_xterm.h"
 
-static void             xterm_locale();
+static int xterm_load(string name);
+static void xterm_locale();
 
 void
-main()
+main(void)
 {
-    string t_grterm, bterm, ostype, colorterm, sysname;
+    string bterm, ostype, colorterm, sysname;
     int datype = -1, daversion = -1;
-    list bterm_parts;
 
-    /*
-     *   Auto-configure with specialised term spec.
-     */
-    t_grterm = getenv("GRTERM");                /* term override */
-    if (strlen(t_grterm)) {
-        bterm_parts = split(t_grterm, "-");
-        if (length_of_list(bterm_parts)) {
-            if ("xterm" == bterm_parts[0]) {
-                bterm = bterm_parts[1];         /* xterm-rxvt */
+    //  Auto-configure with specialised term spec.
+    //
+    //  Note, either GRTERM=xterm or TERM=xterm was set.
+    //
+    bterm = lower(getenv("GRTERM"));
+    if (strlen(bterm)) {
+        list termpts = split(bterm, "-");
+
+        bterm = "";
+        if (length_of_list(termpts) > 1) {
+            if ("xterm" == termpts[0]) {        /* assume: xterm-xxx, for example xterm-rxvt */
+                bterm = termpts[1];
                 lower(bterm);
             }
         }
@@ -150,140 +153,191 @@ main()
         load_macro("tty/xterm_util", FALSE);
     }
 
-    //  TERM/GRTERM
+    //  GRTERM/TERM
     //
     if (bterm == "gnome" ||
-            (bterm == "" && colorterm == "gnome-terminal")) {
-        message("xterm_gnome");
-        load_macro("tty/xterm_gnome");
+            (bterm == "" && colorterm == "gnome-terminal") /*legacy*/) {
+        xterm_load("xterm-gnome");
         return;
     }
 
-//TODO
-//  if (bterm == "konsole" ||
-//          getenv("KONSOLE_DCOP") != "") ||
-//          getenv("KONSOLE_DBUS_SESSION") != "") {
-//      message("xterm_konsole");
-//      load_macro("tty/xterm_konsole");
-//      return;
-//  }
-
     if (bterm == "aix" || bterm == "aixterm" ||
             (bterm == "" && sysname == "AIX")) {
+        //
+        //  xterm-aixterm or AIX host.
+        //
         message("xterm_aix");
         xterm_arrow();
         bterm = "aix";
 
     } else if (bterm == "linux" ||
                 (bterm == "" && (ostype == "linux" || ostype == "linux-gnu" || sysname == "Linux"))) {
-        message("xterm_linux");
+        //
+        //  xterm-linux or linux host.
+        //
         xterm_locale();
-        load_macro("tty/xterm_linux");
+        xterm_load("xterm-linux");
         return;
 
     } else if (bterm == "mrxvt" || (bterm == "rxvt" && getenv("MRXVT_TABTITLE") != "")) {
+        //
+        //  xterm-mrxvt or xterm-rxvt
         //
         //  MRXVT_TABTITLE
         //      Set to the initial tab title of each terminal. Notice that its value will not be
         //      altered if the user uses a shortcut or escape sequence to change the tab title;
         //      the user must modify manually after doing so.
         //
-        message("xterm-mrxvt");                 /* 05/01/10 */
-        load_macro("tty/xterm_mrxvt");
+        xterm_load("xterm-mrxvt");
         return;
 
-    } else if (bterm == "rxvt" || colorterm == "rxvt" || colorterm == "rxvt-xpm") {
-        message("xterm-rxvt");
-        load_macro("tty/xterm_rxvt");
+    } else if (bterm == "rxvt" || bterm == "urxvt" ||
+                colorterm == "rxvt" || colorterm == "rxvt-xpm") {
+        //
+        //  term-rxvt, term-urxvt or
+        //  COLORTERM=rxvt/rxvt-xpm
+        //
+        xterm_load("xterm-rxvt");
         return;
 
-    } else if (bterm == "rxvt" || bterm == "urxvt" || bterm == "mintty") {
-        message("xterm-" + bterm);
-        if (load_macro("tty/xterm_" + bterm)) {
+    } else if (bterm == "mrxvt" || bterm == "mintty") {
+        //
+        //  xterm-mrxvt or xterm-mintty
+        //
+        if (xterm_load("xterm_" + bterm)) {
             return;
         }
     }
 
+    //TODO/TEST
+    //  COLORTERM=xfce4-terminal
+
+    //TODO/TEST
+    //  if (bterm == "konsole" ||
+    //          getenv("KONSOLE_DCOP") != "") ||
+    //          getenv("KONSOLE_DBUS_SESSION") != "") {
+    //      message("xterm_konsole");
+    //      load_macro("tty/xterm_konsole");
+    //      return;
+    //  }
+
     //  Device Attribute Tests
+    //
+    //      DECDA2R (CSI > 65 ; FIRMWARE ; KEYBOARD [; OPTION]* c)
+    //
+    //      Firmware:
+    //
+    //          1  = VT220
+    //          2  = VT240
+    //          3  = DECmate II
+    //          18 = VT330
+    //          19 = VT340
+    //          24 = VT320
+    //          28 = DECterm
+    //          32 = VT382J
+    //          41 = VTV420
+    //          42 = VT1000
+    //          44 = VT382T
+    //          61 = VT510
+    //          64 = VT520
+    //          65 = VT525
+    //          66 = VTStar
     //
     //      A number of xterm compatible terminals normally run under the generic TERM
     //      identifier "xterm" yet can be derived using the "VT/XTERM Device Attribute",
     //      these include.
     //
-    //          Terminal            Type        Version
-    //
-    //          gnone-terminal      0/1         >= 1115
-    //          PuTTY               0/1         136
-    //          rxvt                82
-    //          urxvt               83
-    //          MinTTY              77
-    //          xterm               -2(a)
+    //          Terminal                  Type        Version         Example
+    //          -------------------------------------------------------------------------
+    //          Gnome-terminal (legacy)   1           >= 1115         1;3801;0
+    //          Gnome-terminal            65          >= 6001         65;6001;1
+    //          PuTTY                     0           136             0;136;0
+    //          kconsole                                              0;115;0
+    //          Terminal.app              1           95              1;95;0
+    //          iTerm2                    0           95              0;95;0
+    //          minTTY                    77(M)                       77;20005;0c ("20000" == 2.0.0)
+    //          rxvt                      82(R)                       82;20703;0c ("20703" == 2.7.3)
+    //          screen                    83(S)                       83;40500;0 (added "30600" == 3.6.0)
+    //          urxvt                     85(U)
+    //          libvterm                                              0;100;0
+    //          msterminal                0           10              0;10;1c
+    //          xterm                     -2(a)
     //
     //      Notes:
-    //          a) Sourced from XTERM_VERSION not DA values.
+    //      a) Sourced from XTERM_VERSION not DA values.
+    //
+    //      https://invisible-island.net/xterm/ctlseqs/ctlseqs.pdf
     //
     bterm = "xterm";                            /* default */
 
     get_term_feature(TF_VT_DATYPE, datype);
     get_term_feature(TF_VT_DAVERSION, daversion);
+#if defined(TF_VT_HARDWARE)
+    get_term_feature(TF_VT_HARDWARE, dahardware);
+#endif
 
     if (datype >= 0) {
-        if ((datype | 1) == 1) {
-            if (daversion >= 1115) {            /* gnome, hopefully */
-                message("xterm_gnome");
-                load_macro("tty/xterm_gnome");
+        switch (datype) {
+        case 0:
+            if (daversion == 115) {             /* kconsole */
+                bterm = "xterm-kconsole";
+
+            } else if (daversion == 136) {      /* PuTTY (mintty) */
+                xterm_load("xterm-mintty");
                 return;
 
-            } else if (136 == daversion) {      /* MinTTY/PuTTY */
-                bterm = "mintty";
-
-            } else if (83 == datype) {          /* urxvt */
-                message("xterm-urxvt");
-//TODO          load_macro("tty/xterm_rxvt");
-//              return;
+            } else {
+                if (daversion == 10) {
+                    /* https://github.com/microsoft/terminal/pull/6850/files */
+                    if (getenv("WT_SESSION")) { /* msterminal "0;10;1c" */
+                        xterm_load("xterm-msterminal");
+                        return;
+                    }
+                }
             }
+            break;
 
-        } else if (82 == datype) {              /* rxvt */
-            message("xterm-rxvt");
-            load_macro("tty/xterm_rxvt");
-            return;
+        case 1:
+            if (daversion >= 1115) {            /* gnome, hopefully */
+                xterm_load("xterm-gnome");
+                return;
+            }
+            break;
 
-        } else if (77 == datype) {              /* MinTTY */
-            bterm = "mintty";
+        case 61: /* see: https://github.com/GNOME/vte/blob/master/src/vteseq.cc */
+        case 65:
+            if (daversion >= 6001) {
+                xterm_load("xterm-gnome");
+                return;
+            }
+            break;
 
+        case 77:                                /* minTTY (ASCII=M) */
+           xterm_load("xterm-mintty");
+           return;
+
+        case 82:                                /* rxvt (ASCII=R) */
+           xterm_load("xterm-rxvt");
+           return;
+
+        case 83:                                /* TODO/screen (ASCII=S) */
+           bterm = "xterm-screen";
+           break;
+
+        case 85:                                /* TODO/urxvt (ASCII=U) */
+           bterm = "xterm-urxvt";
+           break;
         }
     }
 
     set_term_feature(TF_NAME, bterm);
     xterm_graphic();
 
-    if ("mintty" == bterm) {
-        if (load_macro("tty/xterm_mintty")) {
-            return;
-        }
-    }
-
     if (-2 == datype) {
-        if (daversion > 0 && daversion < 166) {
+        if (daversion > 0 && daversion < 166) { /* legacy unicode */
             set_term_feature(TF_UNICODE_VERSION, "3.0.0");
         }
         xterm_locale();
-    }
-
-    /*
-     *  Color suffix
-     */
-    if (index(colorterm, "-256") > 0 || colorterm == "truecolor") {
-        xterm_256color();                       /* 256[color] */
-
-    } else if (index(colorterm, "-88") > 0) {
-        xterm_88color();                        /* 88[color] */
-
-    } else if (index(colorterm, "-m") > 0) {
-        xterm_mono();                           /* m[ono] */
-
-    } else {
-        xterm_color();                          /* 16 colour by default */
     }
 
     xterm_standard();
@@ -313,9 +367,9 @@ main()
             "\x1b[CF9~",    "\x1b[CF10~",   "\x1b[CF11~",   "\x1b[CF12~"),
 
         ALT_F1_F12, quote_list(                 /* VT100.Trans */
-            "\x1b[MF1~",    "\x1b[MF2~",    "\x1b[MF3~",    "\x1b[MF4~",
-            "\x1b[MF5~",    "\x1b[MF6~",    "\x1b[MF7~",    "\x1b[MF8~",
-            "\x1b[MF9~",    "\x1b[MF10~",   "\x1b[MF11~",   "\x1b[MF12~"),
+            "\x1b[AF1~",    "\x1b[AF2~",    "\x1b[AF3~",    "\x1b[AF4~",
+            "\x1b[AF5~",    "\x1b[AF6~",    "\x1b[AF7~",    "\x1b[AF8~",
+            "\x1b[AF9~",    "\x1b[AF10~",   "\x1b[AF11~",   "\x1b[AF12~"),
 
         ALT_A_Z, quote_list(                    /* X.Org (7bit) (lower case) */
             "\xC3\xA1",     "\xC3\xA2",     "\xC3\xA3",     "\xC3\xA4",     "\xC3\xA5",
@@ -428,6 +482,21 @@ main()
 }
 
 
+static int
+xterm_load(string name)
+{
+    string macroname;
+
+    macroname = "tty/" + name;
+    macroname = re_translate(SF_GLOBAL, "[ -]+", "_", macroname);
+
+    message(name);
+    set_term_feature(TF_NAME, name);
+
+    return load_macro(macroname);
+}
+
+
 static void
 xterm_locale()
 {
@@ -445,3 +514,5 @@ xterm(void)
 {
     /*NOTHING*/
 }
+
+/*end*/

@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: xterm_rxvt.cr,v 1.10 2021/07/11 08:26:12 cvsuser Exp $
+/* $Id: xterm_rxvt.cr,v 1.12 2024/07/12 16:33:22 cvsuser Exp $
  *
     rxvt is a very popular xterm replacement.
 
@@ -185,6 +185,9 @@ main()
      *  Define keyboard layout for non-ascii characters.
      */
     set_term_keyboard(                          /* Function keys */
+        //
+        //  Function keys
+        //
         SHIFT_F1_F12, quote_list(
             "\x1b[23~",     "\x1b[24~",     "\x1b[25~",     "\x1b[26~",     "\x1b[28~",
             "\x1b[29~",     "\x1b[31~",     "\x1b[32~",     "\x1b[33~",     "\x1b[34~",
@@ -211,6 +214,7 @@ main()
             "\x1b\xda",     NULL,           NULL,           NULL,           NULL,
             NULL),
 
+        //
         //  Ins/0           End/1           Down/2          PgDn/3          Left/4
         //  5               Right/6         Home/7          Up/8            PgUp/9
         //  Del/.           Plus            Minus           Star            Divide
@@ -280,4 +284,6 @@ rxvt()
 {
     /*NOTHING*/
 }
+
+/*end*/
 

@@ -1,8 +1,7 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: xterm_mintty.cr,v 1.8 2024/08/25 06:02:04 cvsuser Exp $
- * Mintty terminal profile.
- * See: https://github.com/mintty/mintty/wiki/CtrlSeqs
- *
+/* $Id: xterm_msterminal.cr,v 1.2 2024/08/25 06:02:04 cvsuser Exp $
+ * msterminal terminal profile.
+ * https://learn.microsoft.com/en-us/windows/terminal/
  *
  *
  */
@@ -17,7 +16,7 @@ main()
     /*
      *  Load support functions
      */
-    set_term_feature(TF_NAME, "xterm-mintty");
+    set_term_feature(TF_NAME, "xterm-msterminal");
     if (inq_macro("xterm_util") <= 0) {
         load_macro("tty/xterm_util", FALSE);
     }
@@ -25,7 +24,13 @@ main()
     /*
      *  Basic/common configuration
      */
-    xterm_standard();
+//  set_term_feature(TF_INIT, "\x1b=");         /* DECKPAM  Enable Keypad Application Mode */
+//  set_term_feature(TF_INIT, "\x1b[?1h");      /* DECCKM - Enable Cursor Keys Application Mode */
+//  set_term_feature(TF_RESET, "\x1b>");        /* DECKPNM  Enable Keypad Numeric Mode */
+
+//  set_term_feature(TF_INIT, "\x1b[?9001h");   /* enable win32-input-mode */
+//  set_term_feature(TF_RESET, "\x1b[?9001l");  /* disable win32-input-mode */
+
     xterm_graphic();
     xterm_256color();                           /* full 256 color is available */
 
@@ -51,34 +56,15 @@ main()
             "\x1b[17;5~",   "\x1b[18;5~",   "\x1b[19;5~",   "\x1b[20;5~",   "\x1b[21;5~",
             "\x1b[23;5~",   "\x1b[24;5~"),
 
-        CTRLSHIFT_F1_F12, quote_list(           /* mintty */
+        CTRLSHIFT_F1_F12, quote_list(           /* msterminal/mintty */
             "\x1b[1;6P",    "\x1b[1;6Q",    "\x1b[1;6R",    "\x1b[1;6S",    "\x1b[15;6~",
             "\x1b[17;6~",   "\x1b[18;6~",   "\x1b[19;6~",   "\x1b[20;6~",   "\x1b[21;6~",
             "\x1b[23;6~",   "\x1b[24;6~"),
 
-        //
-        //  <Alt-A>,        <Alt-B>,        <Alt-C>,        <Alt-D>,        <Alt-E>,
-        //  <Alt-F>,        <Alt-G>,        <Alt-H>,        <Alt-I>,        <Alt-J>,
-        //  <Alt-K>,        <Alt-L>,        <Alt-M>,        <Alt-N>,        <Alt-O>,
-        //  <Alt-P>,        <Alt-Q>,        <Alt-R>,        <Alt-S>,        <Alt-T>,
-        //  <Alt-U>,        <Alt-V>,        <Alt-W>,        <Alt-X>,        <Alt-Y>,
-        //  <Alt-Z>
-        //
-        ALT_A_Z, quote_list(                    /* 8bit (lower case) Meta */
-            "\x1ba",        "\x1bb",        "\x1bc",        "\x1bd",        "\x1be",
-            "\x1bf",        "\x1bg",        "\x1bh",        "\x1bi",        "\x1bj",
-            "\x1bk",        "\x1bl",        "\x1bm",        "\x1bn",        "\x1bo",
-            "\x1bp",        "\x1bq",        "\x1br",        "\x1bs",        "\x1bt",
-            "\x1bu",        "\x1bv",        "\x1bw",        "\x1bx",        "\x1by",
-            "\x1bz" ),
-
-        ALT_A_Z, quote_list(                    /* 8bit (upper case) Meta */
-            "\x1bA",        "\x1bB",        "\x1bC",        "\x1bD",        "\x1bE",
-            "\x1bF",        "\x1bG",        "\x1bH",        "\x1bI",        "\x1bJ",
-            "\x1bK",        "\x1bL",        "\x1bM",        "\x1bN",        "\x1b0",
-            "\x1bP",        "\x1bQ",        "\x1bR",        "\x1bS",        "\x1bT",
-            "\x1bU",        "\x1bV",        "\x1bW",        "\x1bX",        "\x1bY",
-            "\x1bZ"),
+        ALT_F1_F12, quote_list(                 /* msterminal */
+            "\x1b[1;3P",    "\x1b[1;3Q",    "\x1b[1;3R",    "\x1b[1;3S",    "\x1b[15;3~",
+            "\x1b[17;3~",   "\x1b[18;3~",   "\x1b[19;3~",   "\x1b[20;3~",   "\x1b[21;3~",
+            "\x1b[23;3~",   "\x1b[24;3~"),
 
         //
         //  Ins/0           End/1           Down/2          PgDn/3          Left/4
@@ -93,43 +79,45 @@ main()
             "\x1b[3~",      "\x1bOk",       "\x1bOm",       "\x1bOj",       "\x1bOo",
             NULL,           "\x1bOM"),
 
+        //
         //  Ins,            End,            Down,           PgDn,           Left,
         //  5,              Right,          Home,           Up,             PgUp,
         //  Del,            Plus,           Minus,          Star,           Divide,
         //  Equals,         Enter,          Pause,          PrtSc,          Scroll,
         //  NumLock
         //
-        SHIFT_KEYPAD_0_9, quote_list(           /* mintty */
+        SHIFT_KEYPAD_0_9, quote_list(           /* msterminal */
             NULL,           "\x1b[1;2F",    "\x1b[1;2B",    "\x1b[6;2~",    "\x1b[1;2D",
             NULL,           "\x1b[1;2C",    "\x1b[1;2H",    "\x1b[1;2A",    "\x1b[5;2~",
             NULL,           NULL,           NULL,           NULL,           NULL,
             NULL,           NULL,           NULL,           NULL,           NULL,
             NULL),
 
-        CTRL_KEYPAD_0_9, quote_list(            /* mintty */
+        CTRL_KEYPAD_0_9, quote_list(            /* msterminal */
             NULL,           "\x1b[1;5F",    "\x1b[1;5B",    "\x1b[6;5~",    "\x1b[1;5D",
             NULL,           "\x1b[1;5C",    "\x1b[1;5H",    "\x1b[1;5A",    "\x1b[5;5~",
-            "\x1b[1;5n",    NULL,           NULL,           "\x1b[1;5j",    NULL,
+            "\x1b[3;5~",    NULL,           NULL,           "\x1b[1;5j",    NULL,
             NULL,           "\x1b[1;5M",    "\x1c",         NULL,           NULL,
             NULL),
 
-        ALT_KEYPAD_0_9, quote_list(             /* mintty */
-            "\x1b[1;3p",    "\x1b[1;2F",    "\x1b[1;3B",    "\x1b[6;3~",    "\x1b[1;3D",
-            NULL,           "\x1b[1;3C",    "\x1b[1;3H",    "\x1b[1;3A",    "\x1b[5;3~",
-            "\x1b[1;3n",    NULL,           NULL,           NULL,           NULL,
-            NULL,           NULL,           NULL,           NULL,           NULL,
-            NULL),
-
+        //
         //  Miscellous keys
         //
+        ALT_KEYPAD_2,       "\x1b[1;3B",        /* Alt-Down */
+        ALT_KEYPAD_4,       "\x1b[1;3D",        /* Alt-Left */
+        ALT_KEYPAD_6,       "\x1b[1;3C",        /* Alt-Right */
+        ALT_KEYPAD_8,       "\x1b[1;3A",        /* Alt-Up */
+
         BACK_TAB,           "\x1b[Z",
         KEY_BACKSPACE,      "\x7f"
     );
+
+    xterm_altmeta_keys();
 }
 
 
 void
-mintty(void)
+msterminal(void)
 {
     /*NOTHING*/
 }

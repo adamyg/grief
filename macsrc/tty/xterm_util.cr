@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: xterm_util.cr,v 1.10 2014/10/22 02:34:43 ayoung Exp $
+/* $Id: xterm_util.cr,v 1.12 2024/07/12 16:33:22 cvsuser Exp $
  * Standard Xterm features ...
  *
  *
@@ -80,6 +80,14 @@ void
 xterm_altmeta_keys(void)
 {
     set_term_keyboard(
+        //
+        //  <Alt-A>,        <Alt-B>,        <Alt-C>,        <Alt-D>,        <Alt-E>,
+        //  <Alt-F>,        <Alt-G>,        <Alt-H>,        <Alt-I>,        <Alt-J>,
+        //  <Alt-K>,        <Alt-L>,        <Alt-M>,        <Alt-N>,        <Alt-O>,
+        //  <Alt-P>,        <Alt-Q>,        <Alt-R>,        <Alt-S>,        <Alt-T>,
+        //  <Alt-U>,        <Alt-V>,        <Alt-W>,        <Alt-X>,        <Alt-Y>,
+        //  <Alt-Z>
+        //
         ALT_A_Z, quote_list(        /*lower case*/
             "\x1ba",        "\x1bb",        "\x1bc",        "\x1bd",        "\x1be",
             "\x1bf",        "\x1bg",        "\x1bh",        "\x1bi",        "\x1bj",
@@ -139,64 +147,32 @@ xterm_altmeta_keys(void)
 
 
 /*
- *  xterm_colour256 ---
+ *  xterm_256color ---
  *      Color terminal.
  *
  *  Usage:
- *      GRTERM=xterm-colour256
- *      GRTERM=xterm-color256
  *      GRTERM=xterm-256color
  */
 void
-xterm_colour256(void)
+xterm_256color(void)
 {
     set_term_feature(TF_COLOR, TRUE);           /* Terminal supports color. */
     set_term_feature(TF_COLORDEPTH, 256);       /* using a colour depth of 256. */
 }
 
 
-void
-xterm_color256(void)
-{
-    xterm_colour256();
-}
-
-
-void
-xterm_256color(void)
-{
-    xterm_colour256();
-}
-
-
 /*
- *  xterm_colour88 ---
+ *  xterm_88color
  *      Color terminal.
  *
  *  Usage:
- *      GRTERM=xterm-colour88
- *      GRTERM=xterm-color88
  *      GRTERM=xterm-88colour
  */
 void
-xterm_colour88(void)
+xterm_88color(void)
 {
     set_term_feature(TF_COLOR, TRUE);           /* terminal supports color. */
     set_term_feature(TF_COLORDEPTH, 88);        /* using a colour depth of 88. */
-}
-
-
-void
-xterm_color88(void)
-{
-    xterm_colour88();
-}
-
-
-void
-xterm_88color(void)
-{
-    xterm_colour88();
 }
 
 
@@ -215,10 +191,32 @@ xterm_pccolours(void)
 }
 
 
+/*
+ *  xterm_pccolors
+ *      Color terminal attribute.
+ *
+ *  Usage:
+ *      GRTERM=xterm-pccolors
+ */
 void
 xterm_pccolors(void)
 {
     xterm_pccolours();
+}
+
+
+/*
+ *  xterm_unicode
+ *      Unicode terminal.
+ *
+ *  Usage:
+ *      GRTERM=xterm-unicode
+ */
+void
+xterm_unicode(void)
+{
+    //TODO
+    //set_term_feature(TF_UNICODE_VERSION, "15.0.0");
 }
 
 
@@ -228,7 +226,6 @@ xterm_pccolors(void)
  *
  *  Usage:
  *      GRTERM=xterm-mono
- *      GRTERM=xterm-m
  */
 void
 xterm_mono(void)
@@ -404,4 +401,3 @@ xterm_mouse(void)
 }
 
 /*end*/
-
