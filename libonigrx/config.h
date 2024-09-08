@@ -1,7 +1,7 @@
 #ifndef LIBONIGRX_CONFIG_H_INCLUDED
 #define LIBONIGRX_CONFIG_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: config.h,v 1.3 2024/07/20 17:41:21 cvsuser Exp $
+/* $Id: config.h,v 1.4 2024/08/24 15:11:13 cvsuser Exp $
  * libonigrx config.h
  *
  *
@@ -12,7 +12,9 @@
 #include "../libw32/config.h"
 
 #if defined(_MSC_VER) || defined(__WATCOMC__)
+#if !defined(inline)
 #define inline _inline
+#endif
 #endif
 
 #if defined(__WATCOMC__)
