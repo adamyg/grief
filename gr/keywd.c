@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.109 2024/08/01 17:11:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.111 2024/09/08 16:29:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keywd.c,v 1.109 2024/08/01 17:11:07 cvsuser Exp $
+/* $Id: keywd.c,v 1.111 2024/09/08 16:29:24 cvsuser Exp $
  * Keyword table.
  *
  *
@@ -549,7 +549,7 @@ BUILTIN builtin[] = {
     2,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
     {"dialog_run", MACRO(do_dialog_run), ARG_INT, 0, 0,     /* dialog */
-    1,  {ARG_INT}},
+    3,  {ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
 #if defined(VERSION_204)
     {"dict_clear", MACRO(do_dict_clear), ARG_INT, 0, 0,     /* macro */
@@ -1357,7 +1357,7 @@ BUILTIN builtin[] = {
 
     {"inq_username", MACRO(inq_username), ARG_STRING, 0, 0, /* env */
     0,  {0}},
-       
+
     {"inq_vfs_mounts", MACRO(inq_vfs_mounts), ARG_LIST, 0, 0, /* file */
     0,  {0}},
 
@@ -2151,6 +2151,9 @@ BUILTIN builtin[] = {
     {"split", MACRO(do_split), ARG_LIST, 0, 0,              /* string */
     6,  {ARG_STRING, ARG_INT | ARG_STRING, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
+    {"split_arguments", MACRO(do_split_arguments), ARG_LIST, 0, 0, /* string */
+    1,  {ARG_OPT | ARG_STRING}},
+
 #if defined(VERSION_208)
     { "splitpath", MACRO(do_splitpath), ARG_VOID, 0, 0,     /* file */
     5,  {ARG_STRING,
@@ -2159,9 +2162,6 @@ BUILTIN builtin[] = {
          ARG_OPT | ARG_LVAL | ARG_STRING,
          ARG_OPT | ARG_LVAL | ARG_STRING}},
 #endif
-
-    {"split_arguments", MACRO(do_split_arguments), ARG_LIST, 0, 0, /* string */
-    1,  {ARG_OPT | ARG_STRING}},
 
     {"sprintf", MACRO(do_sprintf), ARG_INT, 0, 0,           /* string */
     -3, {ARG_LVAL | ARG_STRING,
@@ -2557,10 +2557,10 @@ builtin_init(void)
             bp->b_flags |= B_VARARGS;
         }
 
-#if !defined(NDEBUG) 
+#if !defined(NDEBUG)
         {   const int argc = bp->b_arg_count;
             int iarg;
-      
+
             assert(argc <= MAX_BUILTIN_ARGS);
             for (iarg = 0; iarg < argc; ++iarg) {
                 assert(bp->b_arg_types[iarg]);
@@ -2608,3 +2608,4 @@ builtin_index(const char *str)
 }
 
 /*end*/
+

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_unix_c,"$Id: sys_unix.c,v 1.66 2024/06/23 15:41:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_unix_c,"$Id: sys_unix.c,v 1.68 2024/08/27 12:44:33 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_unix.c,v 1.66 2024/06/23 15:41:55 cvsuser Exp $
+/* $Id: sys_unix.c,v 1.68 2024/08/27 12:44:33 cvsuser Exp $
  * System dependent functionality - UNIX.
  *
  *
@@ -50,6 +50,7 @@ __CIDENT_RCSID(gr_sys_unix_c,"$Id: sys_unix.c,v 1.66 2024/06/23 15:41:55 cvsuser
 #include "keyboard.h"
 #include "system.h"                             /* sys_...() */
 #include "tty.h"
+#include "ttyutil.h"
 
 #include "edstacktrace.h"
 #include "m_pty.h"
@@ -86,7 +87,12 @@ static int              nonblocking(int fd);
 #define MOUSE_NONE          0x00                /* mouse types */
 #define MOUSE_GPM           0x01
 #define MOUSE_X11           0x02
-#define MOUSE_XTERM         0x03
+#define MOUSE_XTERM         0x10
+#define MOUSE_XTERM_X11     0x11
+#define MOUSE_XTERM_SGR     0x12
+
+static int              xterm_mouse_detect(void);
+static void             xterm_mouse_keys(void);
 
 static const char *     mouse_dev   = NULL;     /* mouse device name/type */
 static int              mouse_fd    = -1;       /* fd resource, if any */
@@ -354,7 +360,7 @@ sys_iocheck(struct IOEvent *evt)
         unsigned char ch = 0;
 
         sys_tty_delay(TTY_INFD, 0);
-        if (1 == read(TTY_INFD, (char *)&ch, 1)) {
+        if (1 == read(TTY_INFD, (void *)&ch, 1)) {
             evt->type = EVT_KEYRAW;             /* uncooked key */
             evt->code = ch;
             return TRUE;
@@ -502,7 +508,7 @@ sys_getshell(void)
     if (NULL == shname) {
         shname = ggetenv("SHELL");
     }
-#if defined(__CYGWIN__) || defined(linux)
+#if defined(__CYGWIN__) || defined(linux) || defined(__APPLE__) || defined(BSD)
     if (NULL == shname && 0 == access("/bin/bash", F_OK)) {
         shname = "/bin/bash";
     }
@@ -1207,7 +1213,8 @@ sys_abort(void)
  *      Signal handler installation.
  *
  *  Parameters:
- *      XXX -
+ *      sig - signal number.
+ *      func - handler function.
  *
  *  Returns:
  *      Returns 0 on success, otherwise -1;
@@ -1223,7 +1230,7 @@ sys_signal(int sig, signal_handler_t func)
  *      Determine if given process is still running.
  *
  *  Parameters:
- *      pid -               Process identifier.
+ *      pid - Process identifier.
  *
  *  Returns:
  *      Returns 1 if the processing is still running, 0 if not otherwise -1 on an error condition.
@@ -1238,7 +1245,6 @@ sys_running(int pid)
     }
     return 1;
 }
-
 
 
 #if defined(HAVE_MOUSE)
@@ -1264,32 +1270,26 @@ sys_mouseinit(const char *dev)
     }
 
     if (NULL == dev || '\0' == *dev) {
-        if (NULL == (dev = bmouse))  {          /* BMOUSE or auto-configure */
-            static const struct {
-                unsigned    len;
-                const char *desc;
-            } xtermlike[] = {
-#define XTERMLIKE(x)            { sizeof(x)-1, x }
-                XTERMLIKE("xterm"),
-                XTERMLIKE("rxvt"),
-                XTERMLIKE("Eterm"),
-                XTERMLIKE("dtterm"),
-                XTERMLIKE("cygwin")
-                };
-#undef XTERMLIKE
+	dev = bmouse;				/* BMOUSE or auto-configure */
+    }
 
-            const char *term = ggetenv("TERM");
+    if (NULL == dev || '\0' == *dev) {
+        if (ttxtermlike() | xterm_mouse_detect()) {
+            xterm = MOUSE_XTERM_SGR;
+            dev = "xterm-sgr";
+        }
 
-            if (term) {
-                unsigned i;
-                                                /* e.g. xterm-color */
-                for (i = 0; i < (sizeof(xtermlike)/sizeof(xtermlike[0])); ++i)
-                    if (strncmp(term, xtermlike[i].desc, xtermlike[i].len) == 0 &&
-                            ('\0' == term[xtermlike[i].len] || '-' == term[xtermlike[i].len])) {
-                        xterm = 1;              /* known xterm, force xterm */
-                        break;
-                    }
-            }
+    } else {
+        if (0 == strcmp(dev, "sgr") || 0 == strcmp(dev, "xterm-sgr")) {
+            xterm = MOUSE_XTERM_SGR;
+            dev = "xterm-sgr";
+
+        } else if (0 == strcmp(dev, "xterm2") || 0 == strcmp(dev, "xterm-x11")) {
+            xterm = MOUSE_XTERM_X11;
+            dev = "xterm-x11";
+
+        } else if (0 == strcmp(dev, "xterm")) {
+            xterm = MOUSE_XTERM;
         }
     }
 
@@ -1313,39 +1313,45 @@ sys_mouseinit(const char *dev)
             io_device_add(gpm_fd);
             mouse_type = MOUSE_GPM;
 
-        } else if (-2 == mouse_fd) {            /* running under xterm */
-         /* ttpush("\033[?1000h"); */
-            key_define_key_seq(MOUSE_KEY, "\x1b[M");
+        } else if (-2 == mouse_fd) {
+            key_define_key_seq(MOUSE_XTERM_KEY, "\x1b[M");
             mouse_type = MOUSE_XTERM;
             mouse_fd = -1;
         }
-#endif  /*HAVE_LIBGPM*/
+#endif /*HAVE_LIBGPM*/
 
-    } else if (xterm || (dev && 0 == strcmp(dev, "xterm"))) {
+    } else if (xterm) {
         /*
-         *  xterm
-         *    o 1001 not supported under Cygwin, causes terminal state corruption.
+         *  xterm/xterm-x11/xterm-sgr
          */
 #if !defined(__CYGWIN__)
-        ttpush("\033[?1001s");                  /* save old highlight mouse tracking */
+        ttpush("\033[?1001s");                  /* disable/save highlight mouse tracking. */
 #endif
-        ttpush("\033[?1000h");                  /* enable mouse tracking */
+        if (xterm == MOUSE_XTERM) {
+            ttpush("\033[?1000h");              /* enable mouse presses. */
+        } else {
+            ttpush("\033[?1002h");              /* enable cell-motion tracking tracking. */
+            if (xterm == MOUSE_XTERM_SGR) {
+              //ttpush("\033[?1003h");          /* enable any-event tracking mode. */
+                ttpush("\033[?1006h");          /* enable SGR extended mouse mode. */
+            }
+            ttpush("\033[?1004h");              /* enable mouse focus events. */
+        }
         ttflush();
-
-        key_define_key_seq(MOUSE_KEY, "\x1b[M");
-        mouse_type = MOUSE_XTERM;
-        dev = "xterm";
+        xterm_mouse_keys();
+        mouse_type = xterm;
 
     } else {                                    /* X11 */
         /*
          *  X11 mouse --
-         *      if open fails, then no mouse support is available.
-         *
+         *      If open fails, then no mouse support is available.
          *      Fail quietly so we can use same aliases with or without mouse support.
          */
         TERMIO mouse_term;
 
-        dev = (bmouse ? bmouse : "/dev/tty00"); /* /dev/tty00 as default */
+	if (NULL == dev || dev[0] != '/')
+	    dev = (bmouse ? bmouse : "/dev/tty00"); /* /dev/tty00 as default */
+
         mouse_fd = open(dev, O_RDONLY | O_EXCL);
         if (mouse_fd != -1) {
             /* Make mouse device into raw mode, etc */
@@ -1381,10 +1387,39 @@ sys_mouseinit(const char *dev)
     trace_ilog("mouse_init(%s) : %d (%d)\n", (dev ? dev : "n/a"),
         (mouse_type == MOUSE_NONE ? -1 : 0), mouse_fd);
 
-    if (mouse_type != MOUSE_NONE) {
-        return (TRUE);
-    }
-    return (FALSE);
+    return (mouse_type != MOUSE_NONE);
+}
+
+
+static int
+xterm_mouse_detect(void)
+{
+    const char *name = ggetenv("TERM");
+    return (name != NULL && (                   /* Also See: term_xtermlike() */
+                tty_isterm(name, "screen") ||
+                tty_isterm(name, "tmux") ||
+                tty_isterm(name, "st") ||
+                    tty_isterm(name, "stterm")));
+}
+
+
+static void
+xterm_mouse_keys(void)
+{
+    /* X10 compatibility mode (1000) */
+    key_define_key_seq(MOUSE_XTERM_KEY, "\x1b[M");
+
+    /* SGR mode (1006) */
+    key_define_key_seq(MOUSE_SGR_KEY, "\x1b[<");
+
+    /* FocusIn/FocusOut (1004):
+     *
+     *  FocusIn/FocusOut can be combined with any of the mouse events since it uses a different protocol.
+     *  When set, it causes xterm to send "CSI I" when the terminal gains focus, and "CSI O" when it loses focus.
+     *
+     */
+    key_define_key_seq(MOUSE_FOCUSIN_KEY, "\x1b[I");
+    key_define_key_seq(MOUSE_FOCUSOUT_KEY, "\x1b[O");
 }
 
 
@@ -1397,6 +1432,9 @@ sys_mouseclose(void)
 {
     switch (mouse_type) {
     case MOUSE_GPM:
+        /*
+         *  GPM driver
+         */
 #if defined(HAVE_LIBGPM) && defined(HAVE_GPM_H)
         if (mouse_fd != -1) {
             io_device_remove(gpm_fd);
@@ -1407,6 +1445,9 @@ sys_mouseclose(void)
         break;
 
     case MOUSE_X11:
+        /*
+         *  X11 mouse
+         */
         if (mouse_fd != -1) {
             io_device_remove(mouse_fd);
             close(mouse_fd);
@@ -1415,13 +1456,23 @@ sys_mouseclose(void)
         break;
 
     case MOUSE_XTERM:
+    case MOUSE_XTERM_X11:
+    case MOUSE_XTERM_SGR:
         /*
-         *  xterm
-         *    o 1001 not supported under Cygwin, causing terminal state corruption.
+         *  xterm/xterm-x11/xterm-sgr
          */
-        ttpush("\033[?1000l");                  /* disable mouse tracking */
+        if (mouse_type == MOUSE_XTERM) {
+            ttpush("\033[?1000l");              /* disable mouse presses. */
+        } else {
+            ttpush("\033[?1004h");              /* disable mouse focus events. */
+            if (mouse_type == MOUSE_XTERM_SGR) {
+              //ttpush("\033[?1003l");          /* disable any-event tracking mode. */
+                ttpush("\033[?1006l");          /* disable SGR extended mouse mode. */
+            }
+            ttpush("\033[?1002l");              /* disable cell-motion tracking tracking. */
+        }
 #if !defined(__CYGWIN__)
-        ttpush("\033[?1001r");                  /* restore old highlight mouse tracking */
+        ttpush("\033[?1001r");                  /* restore highlight mouse tracking. */
 #endif
         ttflush();
         break;
@@ -1461,7 +1512,8 @@ sys_mousepoll(fd_set *fds, struct MouseEvent *m)
                     } else  {
                         m->multi = 0;
                     }
-
+                    m->type == (ev.type == GPM_DRAG ? MOUSEEVT_TMOTION :
+                        (ev.type == GPM_DOWN ? MOUSEEVT_TPRESS : 0);
                     trace_ilog("mouse_event(%0x[%d,%d])\n", ev.type, ev.x, ev.y);
                     return TRUE;
                 }
@@ -1474,7 +1526,7 @@ sys_mousepoll(fd_set *fds, struct MouseEvent *m)
         break;
 
     case MOUSE_X11: {
-            static int x_pitch, y_pitch;
+            static int pitch_x, pitch_y;
             static int max_x, max_y;
             unsigned char mbuf[3];
             int n;
@@ -1483,11 +1535,11 @@ sys_mousepoll(fd_set *fds, struct MouseEvent *m)
                 break;
             }
 
-            if (x_pitch == 0) {
-                x_pitch = MAX_X / ttcols();
-                y_pitch = MAX_Y / ttrows();
-                max_x = x_pitch * (ttcols() - 1);
-                max_y = y_pitch * (ttrows() - 1);
+            if (pitch_x == 0) {
+                pitch_x = MAX_X / ttcols();
+                pitch_y = MAX_Y / ttrows();
+                max_x = pitch_x * (ttcols() - 1);
+                max_y = pitch_y * (ttrows() - 1);
             }
 
             /*
@@ -1505,7 +1557,7 @@ sys_mousepoll(fd_set *fds, struct MouseEvent *m)
                 return FALSE;
 
             if (mbuf[1] != 0x80) {
-                int d = mbuf[1] & 0x3f;
+                const int d = mbuf[1] & 0x3f;
                 if (mbuf[0] & 0x03) {
                     m->x -= 0x40 - d;
                 } else {
@@ -1514,7 +1566,7 @@ sys_mousepoll(fd_set *fds, struct MouseEvent *m)
             }
 
             if (mbuf[2] != 0x80) {
-                int d = mbuf[2] & 0x3f;
+                const int d = mbuf[2] & 0x3f;
                 if (mbuf[0] & 0x0c) {
                     m->y -= 0x40 - d;
                 } else {
@@ -1524,29 +1576,52 @@ sys_mousepoll(fd_set *fds, struct MouseEvent *m)
             m->b1 = (mbuf[0] & 0x20) != 0;
             m->b2 = (mbuf[0] & 0x10) != 0;
             m->b3 = 0;
-            m->multi = 0;
+            m->multi = -1;
 
             /*
              *  Check againt dim, limit bottom-right usage to
              *  remove possible scrolling issues.
              */
-            if (m->y < 0)       m->y = 0;
-            if (m->x < 0)       m->x = 0;
-            if (m->y >= max_y)  m->y = max_y - 1;
-            if (m->x > max_x)   m->x = max_x;
+            if (m->y < 0) m->y = 0;
+            if (m->x < 0) m->x = 0;
+            if (m->y >= max_y) m->y = max_y - 1;
+            if (m->x > max_x) m->x = max_x;
 
             if (m->x == max_x - 1 && m->y == max_y - 1) {
                 --m->x;
             }
 
             if (m->y != mouse_oldy || m->x != mouse_oldx) {
-                vtmouseicon(m->y / y_pitch, m->x / x_pitch, mouse_oldy / y_pitch, mouse_oldx / x_pitch);
+                vtmouseicon(m->y / pitch_y, m->x / pitch_x, mouse_oldy / pitch_y, mouse_oldx / pitch_x);
                 mouse_oldy = m->y;
                 mouse_oldx = m->x;
             }
             return TRUE;
         }
         break;
+
+//  case MOUSE_CONSOLE:
+//      // see:
+//      //  https://man7.org/linux/man-pages/man4/console_ioctl.4.html
+//      //  and https://github.com/Lyude/libinput
+//      //
+//
+//              libinput_dispatch(li);
+//              while (((event = libinput_get_event(li)) != NULL) {
+//                  if (libinput_event_get_type(event) == LIBINPUT_EVENT_POINTER_MOTION_ABSOLUTE) {
+//                      ::
+//                  }
+//                  if (libinput_event_get_type(event) == LIBINPUT_EVENT_POINTER_MOTION) {
+//                      ::
+//                  }
+//                  if (libinput_event_get_type(event) == LIBINPUT_EVENT_POINTER_BUTTON) {
+//                      ::
+//                  }
+//                  if (libinput_event_get_type(event) == LIBINPUT_EVENT_POINTER_AXIS) {
+//                      ::
+//                  }
+//              }
+//      break;
     }
     return FALSE;
 }
@@ -1557,18 +1632,25 @@ sys_mousepointer(int on)
 {
     (void) on;
 }
+
 #endif  /*HAVE_MOUSE*/
+
+/*  Function:		sys_doubleclickms 
+ *      System double-click time.
+ *
+ *  Parameters:
+ *      none
+ *
+ *  Returns:
+ *      Returns double-click time is milliseconds.
+ */
+unsigned
+sys_doubleclickms(void)
+{
+  //return GetDoubleClickTime();		/* os configuration? */
+    return 500; //ms
+}
 
 #endif  /*!_VMS && !__OS2__ && !__MSDOS__*/
 
-
-
-
-
-
-
-
-
-
-
-
+//end

@@ -1,11 +1,11 @@
 #ifndef GR_MAIN_H_INCLUDED
 #define GR_MAIN_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_main_h,"$Id: main.h,v 1.30 2022/08/10 15:44:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_main_h,"$Id: main.h,v 1.31 2024/08/25 06:01:53 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: main.h,v 1.30 2022/08/10 15:44:57 cvsuser Exp $
+/* $Id: main.h,v 1.31 2024/08/25 06:01:53 cvsuser Exp $
  * Globals and main process primitives.
  *
  *
@@ -31,7 +31,7 @@ __CBEGIN_DECLS
  */
 extern const char *         x_progname;         /* arg0 or better */
 
-extern int                  xf_mouse;           /* TRUE enable mouse. */
+extern const char *         xf_mouse;           /* mouse mode; NULL disabled. */
 
 extern int                  xf_compat;          /* TRUE normal stdout I/O otherwise optimised */
 
@@ -57,7 +57,11 @@ extern int                  xf_graph;           /* TRUE/FALSE, user specified gr
 
 extern int                  xf_visbell;         /* TRUE/FALSE, visual bell. */
 
-extern int                  xf_cygwinkb;        /* TRUE/FALSE, cygwin raw keyboard */
+#define RAWKB_ENABLE            0x0001
+#define RAWKB_CYGWIN            0x0010
+#define RAWKB_MSTERMINAL        0x0020
+
+extern int                  xf_rawkb;           /* RAWKB_ENABLE/0, raw keyboard. */
 
 extern int                  xf_underline;       /* TRUE/FALSE, user specified underline mode. */
 
@@ -113,8 +117,8 @@ extern int                  x_ctrlc;            /* TRUE when SIGINT occured */
 
 extern uint32_t             xf_test;            /* TRUE enables test code --- internal use only --- */
 
-#define XF_FLAG(__test)     (1 << (__test - 1))
-#define XF_TEST(__test)     (xf_test & XF_FLAG(__test))
+#define XF_FLAG(__flag)         (1 << (__flag - 1))
+#define XF_TEST(__test)         (xf_test & XF_FLAG(__test))
 
 extern BUFFER_t *           curbp;              /* Current buffer */
 extern WINDOW_t *           curwp;              /* Current window */
@@ -137,3 +141,4 @@ extern void                 do_suspend(void);
 __CEND_DECLS
 
 #endif /*GR_MAIN_H_INCLUDED*/
+

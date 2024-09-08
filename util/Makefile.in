@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.19 2024/07/30 15:03:44 cvsuser Exp $
+# $Id: Makefile.in,v 1.22 2024/09/02 13:40:21 cvsuser Exp $
 # GRIEF utilities makefile.
 #
 #
@@ -79,7 +79,7 @@ D_GR=		$(ROOT)/gr
 
 # Common flags
 
-XFLAGS=		
+XFLAGS=
 CFLAGS=		@CFLAGS@
 CWARN=		@CWARN@ $(CWALL)
 CDEBUG=		@CDEBUG@
@@ -118,7 +118,7 @@ define Resource
 $(2)+=		$(addprefix $(D_OBJ)/,$(subst .rc,.res,$(1)))
 endef
 endif
-else 
+else
 define Resource
 endef
 endif #build_os
@@ -137,7 +137,8 @@ GRWCOBJS=	$(D_OBJ)/grwc$(O)	\
 $(eval $(call Resource,grwc.rc,GRWCOBJS))
 
 GRKEYTEST=	$(D_BIN)/grkeytest$(E)
-GRKEYTESTOBJS=	$(D_OBJ)/grkeytest$(O)
+GRKEYTESTOBJS=	$(D_OBJ)/grkeytest$(O)	\
+		$(D_OBJ)/conkey$(O)
 $(eval $(call Resource,grkeytest.rc,GRKEYTESTOBJS))
 
 TARGETS=	$(GRTAGS)		\
@@ -169,8 +170,14 @@ $(GRWC):		$(D_OBJ)/.created $(GRWCOBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(GRWCOBJS) $(LDLIBS)
 
 $(GRKEYTEST):		LINKLIBS=-lmisc -lllist
+ifeq ("cygwin","@build_os@")
+	# libiberty has a local implementation of getopt; an invalid optarg binding results, conflicting local/dllexport usage, filter-out.
+$(GRKEYTEST):		LDLIBS:=$(filter-out -liberty, $(LDLIBS))
+endif
 $(GRKEYTEST):		$(D_OBJ)/.created $(GRKEYTESTOBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(GRKEYTESTOBJS) $(LDLIBS)
+
+$(D_OBJ)/grkeytest$(O):	w32keytest.c conkeytest.c
 
 $(D_OBJ)/.created:
 		-@mkdir $(D_OBJ)

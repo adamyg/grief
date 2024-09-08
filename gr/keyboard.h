@@ -1,11 +1,11 @@
 #ifndef GR_KEYBOARD_H_INCLUDED
 #define GR_KEYBOARD_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keyboard_h,"$Id: keyboard.h,v 1.24 2024/04/14 16:03:45 cvsuser Exp $")
+__CIDENT_RCSID(gr_keyboard_h,"$Id: keyboard.h,v 1.26 2024/08/27 12:44:33 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keyboard.h,v 1.24 2024/04/14 16:03:45 cvsuser Exp $
+/* $Id: keyboard.h,v 1.26 2024/08/27 12:44:33 cvsuser Exp $
  * Key maps and binding management.
  *
  *
@@ -29,10 +29,17 @@ struct IOEvent;
 
 #define MAX_KEYBUF      64                      /* key description buffer length. */
 
-typedef struct keyseq_t {
-    KEY                 ks_code;                /* internal keycode */
-    char                ks_buf[1];              /* array of characters null terminated */
+typedef struct keyseq {
+    KEY ks_code;                                /* internal keycode */
+    char ks_buf[1];                             /* array of characters null terminated */
 } keyseq_t;
+
+typedef struct mouseevt {
+    const char* seq;
+    int x, y;
+    int win;
+    int where;
+} mouseevt_t;
 
 extern void                 key_init(void);
 extern void                 key_shutdown(void);
@@ -46,13 +53,13 @@ extern const char *         key_code2name(int key);
 extern int                  key_name2code(const char *name, int *lenp);
 
 extern void                 key_cache_key(ref_t *pp, int ch, int front);
-extern void                 key_cache_mouse(ref_t *pp, int ch, int front, int x, int y, int win, int where);
+extern void                 key_cache_mouse(ref_t *pp, int ch, int front, const mouseevt_t *evt);
 extern int                  key_cache_test(ref_t *pp);
 extern int                  key_cache_pop(ref_t *pp, struct IOEvent *evt);
 
-extern void                 key_execute(int c);
+extern void                 key_execute(int c, const char *seq);
 
-extern int                  key_check(const KEY *sbuf, int *multi_key, int no_ambig);             
+extern int                  key_check(const char *buf, unsigned buflen, int *multi, int no_ambig);
 extern int                  key_mapwin32(unsigned, unsigned, unsigned);
 
 extern void                 key_local_detach(BUFFER_t *bp);
@@ -84,3 +91,4 @@ extern int32_t              x_character;        /* Current character typed. */
 __CEND_DECLS
 
 #endif /*GR_KEYBOARD_H_INCLUDED*/
+

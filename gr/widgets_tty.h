@@ -1,11 +1,11 @@
 #ifndef GR_WIDGETS_TTY_H_INCLUDED
 #define GR_WIDGETS_TTY_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_widgets_tty_h,"$Id: widgets_tty.h,v 1.8 2014/10/22 02:33:25 ayoung Exp $")
+__CIDENT_RCSID(gr_widgets_tty_h,"$Id: widgets_tty.h,v 1.9 2024/09/08 16:29:25 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: widgets_tty.h,v 1.8 2014/10/22 02:33:25 ayoung Exp $
+/* $Id: widgets_tty.h,v 1.9 2024/09/08 16:29:25 cvsuser Exp $
  * Widgets, TTY specific functionality.
  *
  *
@@ -99,6 +99,7 @@ __CBEGIN_DECLS
      *          of the BUTTON_ keys manifest values.
      */
 #define WIDGET_MOUSE        (WIDGET_BASE+9)
+#define WIDGET_MOUSE_POPUP  (WIDGET_BASE+19)
 
     /*  Geometry support --
      *      The SIZE message is sent to a widget that the user is resizing. By

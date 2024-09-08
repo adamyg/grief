@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_os2_c,"$Id: sys_os2.c,v 1.28 2023/09/10 16:35:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_os2_c,"$Id: sys_os2.c,v 1.29 2024/08/25 06:01:53 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_os2.c,v 1.28 2023/09/10 16:35:52 cvsuser Exp $
+/* $Id: sys_os2.c,v 1.29 2024/08/25 06:01:53 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -299,7 +299,7 @@ sys_noinherit(int fd)
 }
 
 
-/* System specific copy, under OS/2's DosCopy is faster and may 
+/* System specific copy, under OS/2's DosCopy is faster and may
  * be able to preserve EA's
  */
 int
@@ -351,7 +351,7 @@ kbhit(void)
 
 
 /*  Function:           sys_getchar
- *      Retrieve the character from the status keyboard stream, within 
+ *      Retrieve the character from the status keyboard stream, within
  *      the specified timeout 'tmo'.
  *
  *  Parameters:
@@ -364,7 +364,7 @@ kbhit(void)
  */
 int
 sys_getchar(int fd, int *buf, accint_t tmo)
-{                                      
+{
     KBDKEYINFO ky;
 
     (void)fd; (void)(tmo); (void)(mt);
@@ -384,7 +384,7 @@ sys_getchar(int fd, int *buf, accint_t tmo)
  *
  *  Returns:
  *      *true* or *false*.
- */                   
+ */
 int
 sys_iocheck(struct IOEvent *evt)
 {
@@ -507,7 +507,7 @@ getcwd(char *buffer, size_t size)
 #endif
 
 
-/* 
+/*
  *  sys_getcwd ---
  */
 void
@@ -518,7 +518,7 @@ sys_cwdd(int drv, char *path, int size)
 }
 
 
-/* 
+/*
  *  Get current drive ---
  */
 int
@@ -569,7 +569,7 @@ sys_fstype(const char *path)
 }
 
 
-/* 
+/*
  *  Set the current drive ---
  */
 int
@@ -597,7 +597,7 @@ sys_enable_char(int ch, int enable)
 }
 
 
-/* 
+/*
  *  Routines which are machine independent but are useful for
  *  making the rest of the code portable, especially to VMS.
  */
@@ -678,7 +678,7 @@ sys_mousepoll(fd_set *fds, struct MouseEvent *m)
         return FALSE;
     }
 
-    if (MouGetNumQueEl(&qi, mouse_fd) != 0 || 
+    if (MouGetNumQueEl(&qi, mouse_fd) != 0 ||
             !qi.cEvents || MouReadEventQue(&me, &p, mouse_fd) != 0) {
         return FALSE;
     }
@@ -688,7 +688,6 @@ sys_mousepoll(fd_set *fds, struct MouseEvent *m)
     m->b1 = (me.fs & MOUSE_BN1_DOWN) != 0;
     m->b2 = (me.fs & MOUSE_BN2_DOWN) != 0;
     m->b3 = (me.fs & MOUSE_BN3_DOWN) != 0;
-    m->mutli = 0;
     return TRUE;
 }
 
@@ -702,7 +701,7 @@ sys_mousepointer(int state)
                 MouDrawPtr(mouse_fd);
             }
             mouse_is_visible = 1;
-        
+
         } else if (mouse_is_visible) {
             NOPTRRECT pr;
 
@@ -718,3 +717,5 @@ sys_mousepointer(int state)
 #endif  /*HAVE_MOUSE*/
 
 #endif  /*__OS2__*/
+
+

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_anchor_c,"$Id: anchor.c,v 1.51 2024/07/29 16:04:47 cvsuser Exp $")
+__CIDENT_RCSID(gr_anchor_c,"$Id: anchor.c,v 1.52 2024/08/24 10:34:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: anchor.c,v 1.51 2024/07/29 16:04:47 cvsuser Exp $
+/* $Id: anchor.c,v 1.52 2024/08/24 10:34:37 cvsuser Exp $
  * Anchor primitives.
  *
  *
@@ -563,6 +563,7 @@ do_end_anchor(void)             /* int ([int line], [int column]) */
         Anchor_t *ap = (Anchor_t *)curbp->b_anchor;
 
         u_anchor();
+        win_modify(WFHARD);
         ap->a_eline = line;
         ap->a_eoffset = col;
         ret = 1;

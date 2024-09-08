@@ -1642,7 +1642,7 @@ Optional Packages:
   --with-libclang        enable libclang use (default=yes)
   --with-clang-h=DIR      libclang header location
   --with-clang-lib=DIR    libclang library location
-  --with-mouse            enable mouse support
+  --without-mouse         disable mouse support
   --with-gpm              use gpm mouse library
   --without-debug         compile without debugging information
   --with-gdbdebug         compile with GDB debugging information
@@ -25439,7 +25439,7 @@ printf "%s\n" "no" >&6; }; { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checkin
 printf %s "checking determining tputs() function final argument type... " >&6; }
 			cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-[
+
 #if defined(HAVE_NCURSESW_CURSES_H)
 #  include <ncursesw/curses.h>
 #  include <ncursesw/termcap.h>
@@ -25463,7 +25463,7 @@ printf %s "checking determining tputs() function final argument type... " >&6; }
 #     include <term.h>
 #  endif
 #endif
-]
+
 _ACEOF
 if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
   $EGREP_TRADITIONAL "tputs.*[(][ \\\t]*char[ \\\t]*[)]" >/dev/null 2>&1
@@ -28420,9 +28420,9 @@ printf %s "checking whether to enable mouse handling... " >&6; }
 # Check whether --with-mouse was given.
 if test ${with_mouse+y}
 then :
-  withval=$with_mouse; with_mouse=$withval
+  withval=$with_mouse; with_mouse=nol
 else case e in #(
-  e) with_mouse=no ;;
+  e) with_mouse=yes ;;
 esac
 fi
 

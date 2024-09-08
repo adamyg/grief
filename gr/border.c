@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_border_c,"$Id: border.c,v 1.15 2014/10/22 02:32:54 ayoung Exp $")
+__CIDENT_RCSID(gr_border_c,"$Id: border.c,v 1.16 2024/08/18 10:49:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: border.c,v 1.15 2014/10/22 02:32:54 ayoung Exp $
+/* $Id: border.c,v 1.16 2024/08/18 10:49:23 cvsuser Exp $
  * Window helper function, dealing with size and border requirements.
  *
  *
@@ -262,4 +262,5 @@ win_rcolumn(const WINDOW_t *wp)
 {
     return (win_fcolumn(wp) + win_width(wp) - 1);
 }
+
 /*end*/

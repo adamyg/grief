@@ -1,10 +1,10 @@
-dnl $Id: configure.in,v 1.97 2024/07/20 08:26:22 cvsuser Exp $
+dnl $Id: configure.in,v 1.98 2024/08/25 06:00:04 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl Adam Young (c) 1995-2024
 
-AC_REVISION($Revision: 1.97 $)
+AC_REVISION($Revision: 1.98 $)
 AC_SUBST([PACKAGE])
 AC_INIT([GriefEdit],[3.2.3],[https://github.com/adamyg/grief])
 AC_PREREQ([2.69])
@@ -363,13 +363,13 @@ dnl
 mouse_lib="none"
 AC_MSG_CHECKING(whether to enable mouse handling)
 AC_ARG_WITH(mouse,
-	[  --with-mouse            enable mouse support],
-			[with_mouse=$withval],
-			[with_mouse=no])
+	[  --without-mouse         disable mouse support],
+			[with_mouse=nol],
+			[with_mouse=yes])
 AC_MSG_RESULT($with_mouse)
 if test "$with_mouse" = yes ; then
-	AC_DEFINE(HAVE_MOUSE, 1,
-			[Define to enable mouse support])
+	AC_DEFINE(HAVE_MOUSE, 1, 
+		[Define to enable mouse support])
 	mouse_lib="xterm only"
 fi
 

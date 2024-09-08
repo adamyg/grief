@@ -1,4 +1,4 @@
-/* $Id: help.cr,v 1.51 2014/10/27 23:28:22 ayoung Exp $
+/* $Id: help.cr,v 1.52 2024/09/06 14:35:57 cvsuser Exp $
  * Help subsystem.
  *
  *
@@ -179,15 +179,15 @@ void
 help_about(void)
 {
     string  machtype, compiled;
-    int     curbuf;
-    int     buf, win, lines, width;
+    int     curbuf, aboutbuf, aboutwin;
+    int     lines, width;
     int     maj, min, edit, rel, cmver;
 
     curbuf = inq_buffer();
-    if ((buf = create_buffer("About", NULL, 1)) < 0) {
+    if ((aboutbuf = create_buffer("About", NULL, 1)) < 0) {
         return;
     }
-    set_buffer(buf);
+    set_buffer(aboutbuf);
     insert("\n");
     version(maj, min, edit, rel, machtype, compiled, cmver);
     insertf("%s %s v%d.%d.%d (%d)\n\n", APPNAME, machtype, maj, min, edit, cmver);
@@ -195,9 +195,9 @@ help_about(void)
     lines = inq_lines() + 1;
     width = inq_line_length() + 2;
     set_buffer(curbuf);                         /* restore buffer */
-    win = sized_window(lines, width, "");
-    select_buffer(buf, win, SEL_CENTER, "", NULL, NULL);
-    delete_buffer(buf);                         /* release local buffer */
+    aboutwin = sized_window(lines, width, "");
+    select_buffer(aboutbuf, aboutwin, SEL_CENTER, "", NULL, NULL);
+    delete_buffer(aboutbuf);                    /* release local buffer */
 }
 
 
@@ -936,7 +936,7 @@ help_sumlist(string title, list l)
     string s;
     int i;
 
-    insert("\t\t[[ " + title + " ]]\n\n");      
+    insert("\t\t[[ " + title + " ]]\n\n");
     drop_anchor(MK_LINE);
     for (i = 0; i < length_of_list(l); i += 2) {
         s = l[i];
@@ -1060,9 +1060,9 @@ mapcs()
 string
 help_window(int type, int buf, int lines, int width, int initial_line, ~int, ~string)
 {
-#define HR_ELEMS        3                       /* text,line,col */
+#define HR_ELEMS        4                       /* text,line,col,lenw */
 
-    list   refer_list;                          /* refer elements [name,start,end] */
+    list   refer_list;                          /* refer elements [name,line,col1,col2] */
     list   unique_refer_list;                   /* unique refer names */
 
     string refer;
@@ -1071,7 +1071,7 @@ help_window(int type, int buf, int lines, int width, int initial_line, ~int, ~st
 
     string msg, pattern, entry, c;
     int    sbuf, sline, scol;                   /* buffer for striping \b's */
-    int    curbuf, win;
+    int    curbuf, hlpwin;
     int    ret;
 
     UNUSED(unique_refer_list);
@@ -1230,7 +1230,7 @@ help_window(int type, int buf, int lines, int width, int initial_line, ~int, ~st
     tabs(8);                                    /* defacto terminal standard */
 
     set_buffer(curbuf);                         /* restore buffer */
-    win = sized_window( lines, width,
+    hlpwin = sized_window( lines, width,
                 ((msg != "" ? msg : help_level > 1 ?
                     "<F10> exit, <Back>" : "<F10> exit")) +
                 (help_ret == HR_INACTIVE ?
@@ -1238,7 +1238,7 @@ help_window(int type, int buf, int lines, int width, int initial_line, ~int, ~st
                 (type == HELP_MAN ? ", <Alt-L>" : "") );
 
     cursor(0);
-    ret = select_buffer(buf, win, SEL_NORMAL,
+    ret = select_buffer(buf, hlpwin, SEL_NORMAL,
                 "help_winkeys", NULL, NULL, initial_line);
     cursor(1);
     if (help_level > 0) {
@@ -1369,6 +1369,7 @@ help_rpush(string entry)
     refer_list += entry;                        /* non-unique references */
     refer_list += sline;
     refer_list += col;
+    refer_list += col + strlen(entry);
 
     if (-1 == re_search(SF_IGNORE_CASE,         /* unique references */
                     "<" + entry + ">", unique_refer_list)) {
@@ -1412,20 +1413,20 @@ help_winkeys()
         replace_assigned_keys("search__back", "::help_search_back");
     }
 #endif
-    assign_to_key("^G",            "routines hlp");
-    assign_to_key("<Alt-R>",       "::help_refer");
+    assign_to_key("^G",             "routines hlp");
+    assign_to_key("<Alt-R>",        "::help_refer");
     if (help_type == HELP_MAN) {
-        assign_to_key("<Alt-L>",   "::help_list");
+        assign_to_key("<Alt-L>",    "::help_list");
     }
-    assign_to_key("<Esc>",         "::help_esc");
-    assign_to_key("<Space>",       "::help_space");
-    assign_to_key("<Backspace>",   "::help_prev");
- // assign_to_key("<Enter>",       "::help_item");
-    assign_to_key("<F10>",         "::help_exit");
-    assign_to_key("<Tab>",         "::help_tab 1");
-    assign_to_key("<Right>",       "::help_tab 1");
-    assign_to_key("<Shift-Tab>",   "::help_tab 0");
-    assign_to_key("<Left>",        "::help_tab 0");
+    assign_to_key("<Esc>",          "::help_esc");
+    assign_to_key("<Space>",        "::help_space");
+    assign_to_key("<Backspace>",    "::help_prev");
+    assign_to_key("<F10>",          "::help_exit");
+    assign_to_key("<Tab>",          "::help_tab 1");
+    assign_to_key("<Right>",        "::help_tab 1");
+    assign_to_key("<Shift-Tab>",    "::help_tab 0");
+    assign_to_key("<Left>",         "::help_tab 0");
+    assign_to_key("<Button1-Down>", "::help_link");
 }
 
 
@@ -1503,8 +1504,8 @@ help_refer()
     extern int window_offset, top_line;         /* sized_window() globals */
     extern list refer_list, unique_refer_list;  /* refer lists */
 
-    int o_window_offset = window_offset;
-    int o_top_line = top_line;
+    int owindow_offset = window_offset;
+    int otop_line = top_line;
     int ret;
 
     if (0 == length_of_list(refer_list)) {      /* list length */
@@ -1515,8 +1516,8 @@ help_refer()
     inq_window_info(NULL, NULL, window_offset, NULL, NULL, top_line);
     window_offset += 10, top_line += 2;
     ret = select_slim_list("refer", "", unique_refer_list, SEL_CENTER, NULL, NULL, 1);
-    window_offset = o_window_offset;
-    top_line = o_top_line;
+    window_offset = owindow_offset;
+    top_line = otop_line;
 
     if (ret > 0) {
         if ((ret = re_search(SF_IGNORE_CASE,    /* map unique to first refer element */
@@ -1524,6 +1525,20 @@ help_refer()
             help_ret = ret;
             sel_enter();
         }
+    }
+}
+
+static void
+refer_highlight()
+{
+    extern list refer_list;
+
+    raise_anchor();
+    if (help_ret >= 0) {
+        move_abs( refer_list[ help_ret+1 ], refer_list[ help_ret+2 ] );
+        re_search( SF_NOT_REGEXP, refer_list[ help_ret ] );
+        drop_anchor( MK_COLUMN );
+        next_char( strlen(refer_list[ help_ret ])-1 );
     }
 }
 
@@ -1535,8 +1550,8 @@ help_list()
     extern list flist;                          /* see man.cr */
     extern int fidx;                            /* see man.cr */
 
-    int o_window_offset = window_offset;
-    int o_top_line = top_line;
+    int owindow_offset = window_offset;
+    int otop_line = top_line;
     int ret;
 
     if (0 == length_of_list(flist)) {           /* list length */
@@ -1547,8 +1562,8 @@ help_list()
     inq_window_info( NULL, NULL, window_offset, NULL, NULL, top_line );
     window_offset += 10, top_line += 2;
     ret = select_slim_list("apropos", "", flist, 0, NULL, NULL, 1);
-    window_offset = o_window_offset;
-    top_line = o_top_line;
+    window_offset = owindow_offset;
+    top_line = otop_line;
 
     if (ret > 0 && fidx != (ret - 1)) {
         fidx = ret - 1;
@@ -1618,7 +1633,6 @@ help_tab()
         return;
 
     len = length_of_list(refer_list);           /* list length */
-
     inq_position(curline);
 
     get_parm(0, fwd);                           /* direction */
@@ -1652,13 +1666,42 @@ help_tab()
                 }
         }
     }
+    refer_highlight();
+}
 
-    /* locate and hilight text  */
-    raise_anchor();
-    move_abs( refer_list[ help_ret+1 ], refer_list[ help_ret+2 ] );
-    re_search( SF_NOT_REGEXP, refer_list[ help_ret ] );
-    drop_anchor( MK_COLUMN );
-    next_char( strlen(refer_list[ help_ret ])-1 );
+
+static void
+help_link()
+{
+    extern list refer_list;                     /* refer list */
+    extern int hlpwin;
+
+    int i, cwin, line, col, where;
+
+    get_mouse_pos(NULL, NULL, cwin, line, col, where, NULL, NULL);
+    if (cwin == hlpwin) {
+        switch (where) {
+        case MOBJ_INSIDE:
+            help_ret = HR_INACTIVE;
+            for (i = 0; i < length_of_list(refer_list); i += HR_ELEMS) {
+                if (refer_list[i + 1] == line) {
+                    if (col >= refer_list[i + 2] && col <= refer_list[i + 3]) {
+                        help_ret = i;
+                        sel_enter();
+                        break;
+                    }
+                }
+            }
+            refer_highlight();
+            break;
+        case MOBJ_TOP_EDGE:
+        case MOBJ_BOTTOM_EDGE:
+        case MOBJ_TITLE:
+        case MOBJ_CLOSE:
+            sel_esc();
+            break;
+        }
+    }
 }
 
 

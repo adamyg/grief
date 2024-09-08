@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: grief.cr,v 1.95 2024/08/04 10:07:57 cvsuser Exp $
+/* $Id: grief.cr,v 1.97 2024/09/08 16:25:51 cvsuser Exp $
  * GRIEF startup macro.
  *
  *
@@ -294,8 +294,9 @@ grief(void)
         "_open_line");
     autoload("key",
         "key",
-        "keyx",
+        "key_code",
         "key_test",
+        "key_trace",
         "key_map",
         "key_val",
         "key_learn_menu",
@@ -341,6 +342,8 @@ grief(void)
         "delete_character",
         "delete_blank_lines",
         "hex", "dec");
+    autoload("popup",
+        "popup_mouse");
     autoload("print",
         "_griget_print", "_griset_print");
     autoload("options",
@@ -1556,4 +1559,5 @@ clear_buffer(void)
 }
 
 /*end*/
+
 

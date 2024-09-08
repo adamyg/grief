@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_widgets_tty_c,"$Id: widgets_tty.c,v 1.41 2024/07/25 15:39:11 cvsuser Exp $")
+__CIDENT_RCSID(gr_widgets_tty_c,"$Id: widgets_tty.c,v 1.43 2024/09/08 16:29:25 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: widgets_tty.c,v 1.41 2024/07/25 15:39:11 cvsuser Exp $
+/* $Id: widgets_tty.c,v 1.43 2024/09/08 16:29:25 cvsuser Exp $
  * Dialog widgets, tty interface.
  *
  *
@@ -305,7 +305,7 @@ tty_isunicode(int special)
 {
     __CUNUSED(special)
 #if defined(WIN32) || defined(__CYGWIN__)
-    if (special)        /* FIXME; generally aren't available. */
+    if (special)        /* FIXME */
         return FALSE;
 #endif
     return (DC_UNICODE == ((DC_UNICODE|DC_ASCIIONLY) & x_display_ctrl));
@@ -380,7 +380,8 @@ typedef struct {
     char                hotkey;                 /* hotkey value */
     int                 offset;                 /* hilite offset within text */
     int                 lalign;
-    int                 position;
+    int                 pstart;                 /* start line/column */
+    int                 pend;                   /* end column */
     int                 multiline;
 } WButtonText_t;
 
@@ -430,7 +431,7 @@ bt_text(WButtonText_t *b, const char *text)
             }
         }
         b->multiline = (NULL != strchr(b->text, '\n') ? 1 : 0);
-        b->position = 0;
+        b->pstart = b->pend = 0;
         b->lalign = 0;
     }
 }
@@ -511,7 +512,7 @@ static int              container_callback(WContainer_t *g, WIDGETMSG_t msg, WID
 
 
 WIDGET_t *
-    container_new(void)
+container_new(void)
 {
     return tty_new(sizeof(WContainer_t), (WIDGETCB_t)container_callback);
 }
@@ -612,6 +613,7 @@ group_find(const WIDGET_t *group, int direction)
                 case DLGC_GROUP:
                 case DLGC_CONTAINER:
                 case DLGC_TAB:
+                case DLGC_MENU:
                 case DLGC_SPACER:
                     break;
 
@@ -1218,7 +1220,17 @@ radiobutton_callback(WRadioButton_t *b, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETA
             const int horiz = w->w_orientation;
 
             if (horiz) {
-                /*TODO*/;
+                const int x = GetXParam(p1);
+
+                for (i = 0; i < b->rb_count; ++i) {
+                    WButtonText_t* bt = b->rb_buttons + i;
+
+                    if (x >= bt->pstart && x <= bt->pend) {
+                        b->rb_cursor = i;
+                        radiobutton_callback(b, WIDGET_KEYDOWN, ' ', 0);
+                        break;
+                    }
+                }
             } else {
                 b->rb_cursor = GetYParam(p1);
                 radiobutton_callback(b, WIDGET_KEYDOWN, ' ', 0);
@@ -1280,7 +1292,7 @@ radiobutton_callback(WRadioButton_t *b, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETA
                 if (horiz) {
                     const size_t len = strlen(bt->text);
 
-                    bt->position = offset;
+                    bt->pstart = offset;
                     tty_move(w, offset, 0);
                     if (b->rb_unicode) {        /* MCHAR */
                         tty_char(NORMAL, (i == b->rb_active ? CH_RADIO_ON : CH_RADIO_OFF));
@@ -1297,10 +1309,10 @@ radiobutton_callback(WRadioButton_t *b, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETA
                         tty_char((HasFocus(w) ? HOTKEY_FOCUS : HOTKEY_NORMAL), bt->text[bt->offset]);
                     }
                     offset += len + 2;
+                    bt->pend = offset - 1;
 
                 } else {
-                    bt->position = i;
-
+                    bt->pstart = i;
                     tty_move(w, 0, i);
                     if (b->rb_unicode) {        /* MCHAR */
                         tty_char(NORMAL, (i == b->rb_active ? CH_RADIO_ON : CH_RADIO_OFF));
@@ -1327,9 +1339,9 @@ radiobutton_callback(WRadioButton_t *b, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETA
             const int offset = (b->rb_unicode ? 0 : 1);
 
             if (horiz) {
-                tty_move(w, b->rb_buttons[b->rb_cursor].position + offset, 0);
+                tty_move(w, b->rb_buttons[b->rb_cursor].pstart + offset, 0);
             } else {
-                tty_move(w, offset, b->rb_buttons[b->rb_cursor].position);
+                tty_move(w, offset, b->rb_buttons[b->rb_cursor].pstart);
             }
             return TRUE;
         }
@@ -1681,11 +1693,15 @@ typedef struct ListboxItem {
     uint16_t            li_flags;               /* control flags */
 #define LBI_FHIDDEN                 0x0001
 #define LBI_FFILTERED               0x0002
+#define LBI_FSEPARATOR              0x0004
 
     int16_t             li_shortcut;            /* short cut key, eg. 'Y - Yes' */
     const char *        li_display;             /* display text */
     uint32_t            li_length;              /* length, in bytes */
     const char *        li_data;                /* item text/data */
+    struct {
+        int32_t x, y;
+    } li_coord;
 } ListboxItem_t;
 
 #define LB_POSNORM                  -1
@@ -1743,7 +1759,7 @@ static int              lb_active(Listbox_t *lb, int32_t active);
 static ListboxItem_t *  lb_item_add(Listbox_t *lb, int32_t pos, uint16_t flags, const char *data);
 static int              lb_item_delete(Listbox_t *lb, ListboxItem_t *n, int32_t index);
 static int              lb_item_zap(Listbox_t *lb);
-static const ListboxItem_t *lb_item_get(const Listbox_t *lb, int32_t index);
+static ListboxItem_t *  lb_item_get(const Listbox_t *lb, int32_t index);
 static const ListboxItem_t *lb_item_find(const Listbox_t *lb, const char *text, int32_t len, int32_t *index);
 static const ListboxItem_t *lb_item_match(const Listbox_t *lb, const ListboxItem_t *n, const char *text, int32_t *index);
 static const ListboxItem_t *lb_item_shortcut(const Listbox_t *lb, uint16_t ch, int32_t *index, int text0);
@@ -1762,7 +1778,6 @@ static int              lb_backward(Listbox_t *lb, WIDGET_t *w, int count);
 static int              lb_cursor(Listbox_t *lb, WIDGET_t *w, int32_t cursor);
 static void             lb_paint(Listbox_t *lb, WIDGET_t *w, int repaint);
 static int              lb_caret(Listbox_t *lb, WIDGET_t *w);
-
 
 
 static void
@@ -1812,7 +1827,7 @@ lb_open(Listbox_t *lb, WIDGET_t *w)
 static void
 lb_complete(Listbox_t *lb)
 {
-    lb->lb_open     = FALSE;
+    lb->lb_open = FALSE;
 }
 
 
@@ -2062,12 +2077,18 @@ lb_item_add(Listbox_t *lb, int32_t pos, uint16_t flags, const char *data)
             }
 
             datalen = (int)strlen(data);
+
+        } else {
+            data = "";
+            datalen = 0;
         }
 
-        if (0 == (LB_FALLOWDUPLICATES & lb->lb_flags) &&
-                NULL != lb_item_find(lb, display, displaylen ? displaylen : datalen, NULL)) {
-            trace_log("\t== duplicate:<%d/%s>\n", displaylen ? displaylen : datalen, display);
-            return NULL;
+        if (0 == (flags & LBI_FSEPARATOR)) {
+            if (0 == (LB_FALLOWDUPLICATES & lb->lb_flags) &&
+                    NULL != lb_item_find(lb, display, displaylen ? displaylen : datalen, NULL)) {
+                trace_log("\t== duplicate:<%d/%s>\n", displaylen ? displaylen : datalen, display);
+                return NULL;
+            }
         }
 
         if (NULL == (n = chk_alloc(sizeof(ListboxItem_t) + datalen + 1 + displaylen + 1))) {
@@ -2101,9 +2122,11 @@ lb_item_add(Listbox_t *lb, int32_t pos, uint16_t flags, const char *data)
         n->li_data      = buffer;
 
     } else {                                    /* non-strings, assign image */
-        if (0 == (LB_FALLOWDUPLICATES & lb->lb_flags) &&
-                NULL != lb_item_find(lb, data, 0, NULL)) {
-            return NULL;
+        if (0 == (flags & LBI_FSEPARATOR)) {
+            if (0 == (LB_FALLOWDUPLICATES & lb->lb_flags) &&
+                    NULL != lb_item_find(lb, data, 0, NULL)) {
+                return NULL;
+            }
         }
 
         if (NULL == (n = chk_alloc(sizeof(ListboxItem_t)))) {
@@ -2249,11 +2272,11 @@ lb_item_remove(Listbox_t *lb, int32_t idx)
 }
 
 
-static const ListboxItem_t *
+static ListboxItem_t *
 lb_item_get(const Listbox_t *lb, int32_t idx)
 {
     const ListboxList_t *queue = &lb->lb_list;
-    const ListboxItem_t *n;
+    ListboxItem_t *n;
 
     if (idx >= 0 && idx < lb->lb_count) {
         for (n = TAILQ_FIRST(queue); n; n = TAILQ_NEXT(n, li_node)) {
@@ -2311,7 +2334,7 @@ lb_item_match(const Listbox_t *lb, const ListboxItem_t *n, const char *text, int
 
             n = (n ? TAILQ_NEXT(n, li_node) : TAILQ_FIRST(queue));
             while (n) {
-                if (0 == (LBI_FHIDDEN & n->li_flags)) {
+                if (0 == ((LBI_FHIDDEN|LBI_FSEPARATOR) & n->li_flags)) {
                     if (0 == (match)(n->li_display, text, len)) {
                         if (idx) *idx = t_idx;
                         return n;
@@ -2591,37 +2614,37 @@ lb_key(Listbox_t *lb, WIDGET_t *w, int key)
         widget_callback(w, DLGE_CHANGE, (WIDGETARG_t) lb->lb_active, 0);
         return TRUE;
 
-    case KEY_HOME:      /* <Home> -     top of list */
+    case KEY_HOME:      /* <Home> - top of list */
         lb_cursor(lb, w, 0);
         break;
 
-    case KEY_PAGEUP:    /* <PgUp> -     scroll up one page */
+    case KEY_PAGEUP:    /* <PgUp> - scroll up one page */
         repaint = lb_backward(lb, w, page);
         break;
 
-    case KEY_UP:        /* <Up> -       scroll up one item */
+    case KEY_UP:        /* <Up> - scroll up one item */
     case WHEEL_UP:
         repaint = lb_backward(lb, w, 1);
         break;
 
-    case KEY_LEFT:      /* <Left> -     previous item/column */
+    case KEY_LEFT:      /* <Left> - previous item/column */
         repaint = lb_backward(lb, w, (columns > 1 ? rows : 1));
         break;
 
-    case KEY_RIGHT:     /* <Right> -    previous item/column */
-        repaint = lb_forward(lb, w, (columns > 1 ? rows : 1));
+    case KEY_RIGHT:     /* <Right> - previous item/column */
+        repaint = lb_forward(lb, w,  (columns > 1 ? rows : 1));
         break;
 
-    case KEY_DOWN:      /* <Down> -     scroll down one item */
+    case KEY_DOWN:      /* <Down> - scroll down one item */
     case WHEEL_DOWN:
         repaint = lb_forward(lb, w, 1);
         break;
 
-    case KEY_PAGEDOWN:  /* <PgDn> -     scroll down one page */
+    case KEY_PAGEDOWN:  /* <PgDn> - scroll down one page */
         repaint = lb_forward(lb, w, page);
         break;
 
-    case KEY_END:       /* <End> -      bottom of list */
+    case KEY_END:       /* <End> - bottom of list */
         if (lb->lb_count) {
             lb_cursor(lb, w, lb->lb_count - 1);
         }
@@ -2676,12 +2699,12 @@ lb_filter(Listbox_t *lb, int state, ListboxItem_t *n)
 {
     if (n) {
         if (state) {                            /* filter */
-            if (0 == ((LBI_FHIDDEN|LBI_FFILTERED) & n->li_flags)) {
+            if (0 == ((LBI_FHIDDEN|LBI_FFILTERED|LBI_FSEPARATOR) & n->li_flags)) {
                 n->li_flags |= LBI_FFILTERED;
                 --lb->lb_visible;
             }
         } else {                                /* unfilter */
-            if (LBI_FFILTERED == ((LBI_FHIDDEN|LBI_FFILTERED) & n->li_flags)) {
+            if (LBI_FFILTERED == ((LBI_FHIDDEN|LBI_FFILTERED|LBI_FSEPARATOR) & n->li_flags)) {
                 n->li_flags &= (uint16_t)~LBI_FFILTERED;
                 ++lb->lb_visible;
             }
@@ -2694,12 +2717,14 @@ lb_filter(Listbox_t *lb, int state, ListboxItem_t *n)
 
             if (state) {                        /* filter */
                 for (n = TAILQ_FIRST(queue); n; n = TAILQ_NEXT(n, li_node)) {
-                    n->li_flags |= LBI_FFILTERED;
+                    if (0 == ((LBI_FHIDDEN|LBI_FSEPARATOR) & n->li_flags)) {
+                        n->li_flags |= LBI_FFILTERED;
+                    }
                 }
                 lb->lb_visible = 0;
             } else {                            /* unfilter, ignore HIDDEN elements */
                 for (n = TAILQ_FIRST(queue); n; n = TAILQ_NEXT(n, li_node)) {
-                    if (LBI_FFILTERED == ((LBI_FHIDDEN|LBI_FFILTERED) & n->li_flags)) {
+                    if (LBI_FFILTERED == ((LBI_FHIDDEN|LBI_FFILTERED|LBI_FSEPARATOR) & n->li_flags)) {
                         n->li_flags &= (uint16_t)~LBI_FFILTERED;
                         if (count <= ++lb->lb_visible) {
                             break;
@@ -2838,7 +2863,7 @@ lb_paint(Listbox_t *lb, WIDGET_t *w, int repaint)
             (popup ? tty_absmove : tty_move);
 
     int32_t item = lb->lb_top;
-    const ListboxItem_t *n;
+    ListboxItem_t *n;
 
     if (0 == repaint || NULL == lb->lb_topcache) {
         repaint = LB_PAINT1|LB_PAINT2;
@@ -2877,42 +2902,62 @@ lb_paint(Listbox_t *lb, WIDGET_t *w, int repaint)
                 if (n) {
                     const char *text = n->li_display;
 
+                    n->li_coord.x = 0;
+                    n->li_coord.y = 0;
+
                     if ((LBI_FHIDDEN|LBI_FFILTERED) & n->li_flags) {
                         n = TAILQ_NEXT(n, li_node);
                         ++item;
                         continue;
                     }
 
-                    if ((len = n->li_length) > maxlen) {
-                        len = maxlen;
-                    }
+                    if (LBI_FSEPARATOR & n->li_flags) {
+                        int separator = (maxlen / 3) * 2, left = (maxlen - separator) / 2;
 
-                    if (len) {                  /* current line */
-                        if (prefixlength) {
-                            int idxoffset = 0;
+                        len = left + separator;
+                        move(w, frame + x, frame + y);
+                        while (left--)
+                            tty_char(NORMAL, ' ');
+                        while (separator--)
+                            tty_char(NORMAL, '-');  /* FIXME */
 
-                            if (LB_FHASSHORTCUT & lb->lb_flags) {
-                                sxprintf(idxbuffer, sizeof(idxbuffer), "%c%*s",
-                                    (n->li_shortcut ? n->li_shortcut : ' '), prefixlength - 1, "");
-
-                                                /* 1. .. 20. */
-                            } else if (lb->lb_unicode && lb->lb_count <= 20) {
-                                move(w, frame + x, frame + y);
-                                tty_char(FOCUS, 0x2488 + item);
-                                strcpy(idxbuffer, " ");
-                                idxoffset = 2;
-
-                            } else {
-                                sxprintf(idxbuffer, sizeof(idxbuffer), "%-*d ", prefixlength - 1, item + 1);
-                            }
-
-                            move(w, frame + x + idxoffset, frame + y);
-                            tty_str(FOCUS, idxbuffer);
+                    } else {
+                        if ((len = n->li_length) > maxlen) {
+                            len = maxlen;
                         }
 
-                        move(w, frame + x + prefixlength, frame + y);
-                        tty_strn(attr, text, len);
+                        if (len) {                  /* current line */
+                            int idxoffset = 0;
+
+                            if (prefixlength) {
+                                if (LB_FHASSHORTCUT & lb->lb_flags) {
+                                    sxprintf(idxbuffer, sizeof(idxbuffer), "%c%*s",
+                                        (n->li_shortcut ? n->li_shortcut : ' '), prefixlength - 1, "");
+
+                                                    /* 1. .. 20. */
+                                } else if (lb->lb_unicode && lb->lb_count <= 20) {
+                                    move(w, frame + x, frame + y);
+                                    tty_char(FOCUS, 0x2488 + item);
+                                    strcpy(idxbuffer, " ");
+                                    idxoffset = 2;
+
+                                } else {
+                                    sxprintf(idxbuffer, sizeof(idxbuffer), "%-*d ", prefixlength - 1, item + 1);
+                                }
+
+                                move(w, frame + x + idxoffset, frame + y);
+                                tty_str(FOCUS, idxbuffer);
+
+                            } else {
+                                move(w, frame + x, frame + y);
+                            }
+
+                            n->li_coord.x = frame + x;
+                            n->li_coord.y = frame + y;
+                            tty_strn(attr, text, len);
+                        }
                     }
+
                     n = TAILQ_NEXT(n, li_node);
                     if (cursor == item++) {
                         lb->lb_focus = idx;     /* focus element */
@@ -2958,6 +3003,27 @@ lb_paint(Listbox_t *lb, WIDGET_t *w, int repaint)
     if (popup) {
         dialog_tty_popup_select(w->w_root, FALSE);
     }
+}
+
+
+static int32_t
+lb_item_index(const Listbox_t* lb, int x, int y)
+{
+    int32_t item = lb->lb_top;
+    ListboxItem_t *n = lb_item_get(lb, item);
+
+    while (n) {
+        if (0 == ((LBI_FHIDDEN|LBI_FFILTERED|LBI_FSEPARATOR) & n->li_flags)) {
+            if (n->li_coord.y == y) {
+                if (x >= n->li_coord.x && x < (n->li_coord.x + lb->lb_width)) {
+                    return item;
+                }
+            }
+        }
+        n = TAILQ_NEXT(n, li_node);
+        ++item;
+    }
+    return -1;
 }
 
 
@@ -3778,6 +3844,25 @@ increment:;     dval = 0;
 }
 
 
+static int
+ef_setpos(Editfield_t* ef, int pos)
+{
+    if (ef->ef_cursor != (ef->ef_loffset + pos)) {
+#if defined(EWIDECHAR)
+        const int len = (int)Wcslen(ef->ef_buffer);
+#else
+        const int len = (int)strlen(ef->ef_buffer);
+#endif
+        ef->ef_cursor = ef->ef_loffset + pos;
+        if (ef->ef_cursor > len) {
+            ef->ef_cursor = len;
+        }
+        return TRUE;
+    }
+    return FALSE;
+}
+
+
 //
 //  Unicode Resources:
 //      o 0x25BC    BLACK DOWN-POINTING TRIANGLE
@@ -4173,6 +4258,18 @@ editfield_callback(WEditfield_t *e, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETARG_t
         }
         return TRUE;
 
+    case WIDGET_MOUSE:          /* mouse event */
+        if (BUTTON1_DOWN == p2) {
+            if (!HasFocus(w)) {
+                dialog_tty_setfocus(w->w_root, w);
+            } else {
+                if (ef_setpos(ef, GetXParam(p1))) {
+                    ef_paint(ef, w);
+                }
+            }
+        }
+        return TRUE;
+
     case WIDGET_KEYDOWN:        /* keyboard event */
         return ef_key(ef, w, p1, NULL, NULL);
 
@@ -4286,6 +4383,14 @@ numericfield_callback(WNumericfield_t *n, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGE
         } else {
             ef_change(ef, w);
             ef_complete(ef);
+        }
+        return TRUE;
+
+    case WIDGET_MOUSE:          /* mouse event */
+        if (BUTTON1_DOWN == p2) {
+            if (! HasFocus(w)) {
+                dialog_tty_setfocus(w->w_root, w);
+            }
         }
         return TRUE;
 
@@ -4444,6 +4549,7 @@ combofield_select(WCombofield_t *cf, int idx)
 }
 
 
+
 static void
 combofield_build(WCombofield_t *cf)
 {
@@ -4495,8 +4601,8 @@ combofield_build(WCombofield_t *cf)
 
         } else {
             /*
-            *  fixed columns
-            */
+             *  fixed columns
+             */
             columns = (columns > 0 ? columns : 1);
             cols = columns * reqcols;
             if (cols < mincols) cols = mincols;
@@ -4557,7 +4663,6 @@ combofield_autocomplete(Editfield_t *ef, WIDGET_t *w, void *arg)
     } else {                                    /* single character short-cut */
         if ((LB_FHASSHORTCUT & lb->lb_flags) && 0 == buffer[1] &&
                 (NULL != (n = lb_item_shortcut(lb, (uint16_t) *buffer, &idx, FALSE)))) {
-
             strxcpy(complete + 1, n->li_display + strlen(buffer), sizeof(ef->ef_complete));
             complete[0] = '-';
 
@@ -4623,20 +4728,8 @@ combofield_listbox(WCombofield_t *cf, const int state)
     const int current_state = cf->cf_popupstate;
 
     switch (state) {
-//  case CB_POPUPSTATE_HIDDEN:
-//      switch (current_state) {
-//      case CB_POPUPSTATE_FOCUS:
-//      case CB_POPUPSTATE_VISIBLE:
-//          if (dialog_tty_popup_focus(w->w_root, -1)) {
-//              cf->cf_popupstate = CB_POPUPSTATE_HIDDEN;
-//          }
-//          break;
-//      }
-//      break;
-
     case CB_POPUPSTATE_VISIBLE:
         switch (current_state) {
-//      case CB_POPUPSTATE_HIDDEN:
         case CB_POPUPSTATE_FOCUS:
             if (dialog_tty_popup_focus(w->w_root, FALSE)) {
                 cf->cf_popupstate = CB_POPUPSTATE_VISIBLE;
@@ -4653,7 +4746,6 @@ combofield_listbox(WCombofield_t *cf, const int state)
         case CB_POPUPSTATE_NONE:
             combofield_build(cf);
             /*FALLTHRU*/
-//      case CB_POPUPSTATE_HIDDEN:
         case CB_POPUPSTATE_VISIBLE:
             if (dialog_tty_popup_focus(w->w_root, TRUE)) {
                 cf->cf_popupstate = CB_POPUPSTATE_FOCUS;
@@ -4990,21 +5082,26 @@ combofield_callback(WCombofield_t *cf, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETAR
         }
         return FALSE;
 
-#if defined(TODO)
     case WIDGET_MOUSE:          /* mouse event */
-        if ((CB_POPUPSTATE_FOCUS == cf->cf_popupstate || CB_POPUPSTATE_VISIBLE == cf->cf_popupstate) &&
-                    cf->cf_lbwidget == w) {
-            if (BUTTON1_DOWN == p2) {
-                const int y = GetYParam(p1) - w->w_border;
-
-                if (combofield_select(cf, lb->lb_top + y)) {
-                    combofield_listbox(cf, CB_POPUPSTATE_VISIBLE);
+        if (BUTTON1_DOWN == p2) {
+            if (! HasFocus(w)) {
+                if (dialog_tty_setfocus(w->w_root, w)) {
+                    combofield_listbox(cf, CB_POPUPSTATE_FOCUS);
                 }
             }
-            return TRUE;
         }
-        break;
-#endif
+        return TRUE;
+
+    case WIDGET_MOUSE_POPUP:    /* mouse event, child popup */
+        if (BUTTON1_DOWN == p2) {
+            if (CB_POPUPSTATE_VISIBLE == cf->cf_popupstate || CB_POPUPSTATE_FOCUS == cf->cf_popupstate) {
+                const int32_t item = lb_item_index(lb, GetXParam(p1), GetYParam(p1));
+                if (item >= 0) {
+                    combofield_select(cf, item);
+                }
+            }
+        }
+        return TRUE;
 
     case WIDGET_PAINT:          /* widget display */
         if (0 == (w->w_flags & WIDGET_FHIDDEN)) {
@@ -5027,6 +5124,66 @@ combofield_callback(WCombofield_t *cf, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETAR
     case WIDGET_DESTROY:        /* destructor */
         ef_destroy(ef);
         lb_destroy(lb);
+        return TRUE;
+
+    default:
+        return tty_default(w, msg, p1, p2);
+    }
+    return FALSE;
+}
+
+
+/*
+ *  Group:  Menu
+**/
+typedef struct {
+    WIDGET_t            mn_widget;
+    Listbox_t           mn_listimpl;
+} WMenu_t;
+
+static int              menu_callback(WMenu_t* mn, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETARG_t p2);
+
+
+WIDGET_t*
+menu_new(void)
+{
+    WMenu_t* mn;
+
+    if (NULL == (mn = (WMenu_t*)tty_new(sizeof(WMenu_t), (WIDGETCB_t)menu_callback))) {
+        return NULL;
+    }
+    lb_init(&mn->mn_listimpl, LB_FISPOPUP | LB_FHASSTRINGS);
+    return (WIDGET_t*)mn;
+}
+
+
+WIDGET_t*
+menu_item_new(void)
+{
+    return tty_new(sizeof(WIDGET_t), (WIDGETCB_t)menu_callback);
+}
+
+
+WIDGET_t*
+menu_separator_new(void)
+{
+    return tty_new(sizeof(WIDGET_t), (WIDGETCB_t)menu_callback);
+}
+
+
+static int
+menu_callback(WMenu_t* mn, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETARG_t p2)
+{
+    WIDGET_t* w = (WIDGET_t*)mn;
+
+    switch (msg) {
+    case WIDGET_INIT:           /* initialise */
+        if (w->w_reqrows <= 0) w->w_reqrows = 1;
+        if (w->w_reqcols <= 0) w->w_reqcols = 1;
+        w->w_flags |= WIDGET_FTABSTOP;
+        return TRUE;
+
+    case WIDGET_READY:          /* dialog session ready */
         return TRUE;
 
     default:

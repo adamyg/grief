@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.69 2024/07/28 11:59:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.71 2024/08/27 12:44:33 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: builtin.c,v 1.69 2024/07/28 11:59:31 cvsuser Exp $
+/* $Id: builtin.c,v 1.71 2024/08/27 12:44:33 cvsuser Exp $
  * Builtin expresssion evaluation.
  *
  *
@@ -20,6 +20,9 @@ __CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.69 2024/07/28 11:59:31 cvsuser E
 
 #include <editor.h>
 #include <libstr.h>                             /* str_...()/sxprintf() */
+#if defined(HAVE_ALLOCA_H)
+#include <alloca.h>
+#endif
 
 #include "accum.h"                              /* acc_... */
 #include "builtin.h"
@@ -238,6 +241,7 @@ string:;    term = ' ';
                     ewprintf("Out of space in execute_str(3)");
                     return -1;
                 }
+                //XXX: remove quotes?
                 *dp++ = *cp++;
             }
             *dp++ = '\0';
@@ -254,6 +258,7 @@ string:;    term = ' ';
 }
 
 
+
 int
 execute_opendir(const char *path)
 {
@@ -266,6 +271,114 @@ execute_opendir(const char *path)
     atom_push_halt(lp);
     execute_nmacro(list);
     return (int)acc_get_ival();
+}
+
+
+
+void
+execute_unassigned(const char *spec, int key, const char *seq)
+{
+    //
+    //  TODO: general execute_key(), precompile during assign_to_key()
+    //
+#define UNASSIGNED_ARGV 16
+
+    LIST list[LIST_SIZEOF(UNASSIGNED_ARGV)],    // 16 atoms
+        *lp = list, *lpend = lp + (sizeof(list) - 1 /*HALT*/);
+
+    const int speclen = strlen(spec) + 1 /*nul*/;
+    char *cp = memcpy(alloca(speclen), spec, speclen);
+
+    if (NULL == cp)
+        return;
+
+    lp = atom_push_sym(lp, cp);                 // macro
+
+    if ((cp = strchr(cp, ' ')) != NULL) {
+        //
+        //  trailing arguments
+        //
+        int argv = 0;
+
+        *cp++ = 0;                              // terminate macro
+
+        for (argv = 1; argv < (UNASSIGNED_ARGV - 2); ++argv) {
+
+            // leading white-space
+            while (*cp && isspace(*cp))
+                ++cp;
+            if (! *cp)
+                break;                          // EOS
+
+            // sequence placeholder
+            if (cp[0] == '{' && cp[1] == '}') {
+                // TODO: {k} == key, {s} = seq, {d} = description
+                lp = atom_push_const(lp, seq ? seq : "");
+                cp += 2;
+                continue;
+            }
+
+            // numeric value (possible)
+            if ((*cp >= '0' && *cp <= '9') ||
+                    (*cp == '-' && (cp[1] >= '0' && cp[1] <= '9')) ||
+                    (*cp == '+' && (cp[1] >= '0' && cp[1] <= '9')) ||
+                    (*cp == '.' && (cp[1] >= '0' && cp[1] <= '9')))
+            {
+                accfloat_t fval;
+                accint_t ival;
+                int ret, len = 0;
+
+#if (CM_ATOMSIZE == SIZEOF_LONG_LONG && CM_ATOMSIZE != SIZEOF_LONG)
+                ret = str_numparsel((const char *)cp, &fval, &ival, &len);
+#else
+                ret = str_numparse((const char *)cp, &fval, &ival, &len);
+#endif
+                switch (ret) {
+                case NUMPARSE_INTEGER:          // integer-constant
+                case NUMPARSE_FLOAT:            // float-constant
+                    cp += len;
+                    if (!*cp || isspace(*cp)) {
+                        if (ret == NUMPARSE_INTEGER) {
+                            lp = atom_push_int(lp, ival);
+                        } else {
+                            lp = atom_push_float(lp, fval);
+                        }
+                        continue;
+                    }
+                    cp -= len;
+                    /*FALLTHRU*/
+                default:                        // bad number
+                    break;
+                }
+            }
+
+            // string constants
+            {
+                char term = ' ', *out = cp;
+
+                lp = atom_push_const(lp, (const char*)out);
+                if (*cp == '"') {               // quoted string
+                    term = '"', ++cp;
+                }
+                while (*cp) {
+                    if (*cp == '\\') {          // escaped, consume; if suitable
+                        if (cp[1])
+                            ++cp;
+                    } else if (*cp == term) {   // terminator
+                        break;
+                    }
+                    *out++ = *cp++;
+                }
+                *out = 0;                       // terminate string             
+            }
+        }
+    }
+
+    lp = atom_push_int(lp, key);
+    assert(lp < lpend);
+    atom_push_halt(lp);
+
+    execute_nmacro(list);
 }
 
 

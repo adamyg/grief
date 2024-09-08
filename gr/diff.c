@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_diff_c,"$Id: diff.c,v 1.16 2022/08/10 15:44:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_diff_c,"$Id: diff.c,v 1.17 2024/08/25 06:01:53 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: diff.c,v 1.16 2022/08/10 15:44:56 cvsuser Exp $
+/* $Id: diff.c,v 1.17 2024/08/25 06:01:53 cvsuser Exp $
  * Buffer differ.
  *
  *
@@ -312,17 +312,17 @@ do_diff_strings(void)           /* int([int flags], string s1, string s2,
 //      BUFFER_t *saved_bp = curbp;
 //      uint32_t line, nlines = bp->b_numlines;
 //      LINE_t *lp;
-//  
+//
 //      curbp = bp;
-//  
+//
 //      for (lp = linep(1), line = 1; line < nlines; ++line) {
 //          uint32_t hash;
-//  
+//
 //          hash = diff_hash(ltext(lp), llength(lp), flags);
 //          lp->l_oldlineno = hash;                 // test only
 //          lp = lforw(lp);
 //      }
-//  
+//
 //      curbp = saved_bp;
 //      //TODO - return v;
 //  }

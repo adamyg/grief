@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.130 2024/07/23 12:00:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.133 2024/09/08 16:29:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.130 2024/07/23 12:00:35 cvsuser Exp $
+/* $Id: ttyterm.c,v 1.133 2024/09/08 16:29:24 cvsuser Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -18,7 +18,7 @@ __CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.130 2024/07/23 12:00:35 cvsuser 
  * ==end==
  */
 
-//  #define ED_LEVEL 2
+// #define ED_LEVEL 2
 
 #include <editor.h>
 
@@ -232,9 +232,6 @@ static void             term_display(void);
 static int              term_control(int action, int param, ...);
 static void             term_close(void);
 
-static int              isterm(const char *term, const char *what);
-static int              hasfeature(const char *term, const char *what);
-
 static const char *     ttisetup(void);
 static const char *     ttiname(const Term_t *ti);
 static const char *     ttigetstr(const Term_t *ti);
@@ -242,6 +239,9 @@ static int              ttigetnum(const Term_t *ti);
 static int              ttigetflag(const Term_t *ti);
 
 static TAttributes_t    term_xtermlike(const char *term);
+
+static void             key_enable(char mode);
+static void             key_disable(char mode);
 
 static void             acs_dump(const char *bp);
 static const char *     acs_box_characters(const char *bp);
@@ -332,7 +332,7 @@ static char             tcapstrings[TC_SLEN];   /* termcap local storage */
 #define TA_CYGWIN               0x00020000
 #define TA_KONSOLE              0x00040000
 #define TA_SCREEN               0x00080000
-#define TA_MINTTY               0x00100000
+#define TA_MINTTY               0x00100000      /* see: https://github.com/mintty/mintty/wiki/CtrlSeqs */
 #define TA_PUTTY                0x00200000
 #define TA_MSTERMINAL           0x00400000
 #define TA_GNOME                0x01000000
@@ -1464,10 +1464,10 @@ ttinit(void)
     /*
      *  build attributes, non-xterm
      */
-    if (isterm(term, "linux")) {                /* linux console */
+    if (tty_isterm(term, "linux")) {            /* linux console */
         t_attributes = TA_LINUX | TA_DARK;
 
-    } else if (isterm(term, "cygwin")) {
+    } else if (tty_isterm(term, "cygwin")) {
         const char *cygwin = ggetenv("CYGWIN");
 
         if (cygwin) {
@@ -1487,18 +1487,18 @@ ttinit(void)
         t_attributes = TA_CYGWIN|TA_XTERMLIKE|TA_DARK;
 
 #if defined(linux)
-    } else if (isterm(term, "console") ||       /* console, con80x25 etc */
+    } else if (tty_isterm(term, "console") ||   /* console, con80x25 etc */
             (0 == strncmp(term, "con", 3) && term[3] && isdigit(term[3]))) {
         t_attributes = TA_LINUX|TA_DARK;
 #endif
 
-    } else if (isterm(term, "konsole") ||
+    } else if (tty_isterm(term, "konsole") ||
                 getenv("KONSOLE_DCOP") || getenv("KONSOLE_DBUS_SESSION")) {
         t_attributes = TA_KONSOLE|TA_XTERMLIKE;
 
-    } else if (isterm(term, "screen")) {
+    } else if (tty_isterm(term, "screen")) {
         t_attributes = TA_SCREEN;               /* screen[.linux] */
-        if (0 == isterm(term, "screen.linux")) {
+        if (0 == tty_isterm(term, "screen.linux")) {
             t_attributes |= TA_DARK;
         }
 
@@ -1510,17 +1510,17 @@ ttinit(void)
         t_attributes = term_xtermlike(term);
 #if defined(__CYGWIN__)
         if (ggetenv("WT_SESSION")) {
-            t_attributes |= TA_DARK;            /* ms-terminal */
+            t_attributes |= TA_MSTERMINAL|TA_DARK; /* ms-terminal */
         } else if (ggetenv("COMSPEC")) {
             t_attributes |= TA_DARK;            /* cmd/mintty */
         }
 #endif /*__CYGWIN__*/
     }
 
-    if (hasfeature(term, "rv")) {
+    if (tty_hasfeature(term, "rv")) {
         t_attributes |= TA_LIGHT;               /* rv = reverse video (black on white) */
 
-    } else if (hasfeature(term, "m") || hasfeature(term, "mono")) {
+    } else if (tty_hasfeature(term, "m") || tty_hasfeature(term, "mono")) {
         t_attributes |= TA_MONO;                /* m  = monochrome, suppress color support */
     }
 
@@ -1561,7 +1561,7 @@ ttinit(void)
     }
 
     if (NULL == tc_graphic_pairs &&
-            isterm(term, "aixterm")) {          /* aixterm (VT102) */
+            tty_isterm(term, "aixterm")) {      /* aixterm (VT102) */
         tc_acs_start  = "\016";
         tc_acs_end    = "\017";
         tc_acs_enable = "\033(B\033)0";
@@ -1655,7 +1655,7 @@ ttinit(void)
         x_pt.pt_attributes |= TF_ACYGWIN;       /* Cygwin terminal */
         tf_xn = 1;
     }
-#endif  /*__CYGWIN__*/
+#endif /*__CYGWIN__*/
 
     if (tf_km) {
         x_pt.pt_attributes |= TF_AMETAKEY;
@@ -1664,39 +1664,6 @@ ttinit(void)
     if (0 == x_pt.pt_codepage) {
         x_pt.pt_codepage = 437;                 /* default */
     }
-}
-
-
-static int
-isterm(const char *term, const char *name)
-{
-    const size_t tlen = (size_t)strlen(term);
-    const size_t nlen = (size_t)strlen(name);
-
-    if (tlen >= nlen) {                         /* xxxx[\0.-] */
-        if (0 == memcmp(term, name, nlen)) {    /* dot, allow <screen.xterm> */
-            return (term[nlen] == '\0' || term[nlen] == '-' || term[nlen] == '.');
-        }
-    }
-    return 0;
-}
-
-
-static int
-hasfeature(const char *term, const char *what)
-{
-    const size_t wlen = (size_t)strlen(what);
-    const char *elm;
-
-    for (elm = strchr(term, '-'); elm; elm = strchr(elm, '-')) {
-        ++elm;
-        if (0 == strncmp(elm, what, wlen)) {    /* -xxxx[\0-] */
-            if (elm[wlen] == '\0' || elm[wlen] == '-') {
-                return 1;
-            }
-        }
-    }
-    return 0;
 }
 
 
@@ -1810,6 +1777,23 @@ term_config(void)
         }
     }
 }
+
+
+/*  Function:           ttxtermlike
+ *      Retrieve the derived xterm attributes.
+ *
+ *  Parameters:
+ *      none.
+ *
+ *  Returns:
+ *      Returns whether the terminal has xterm characteristics.
+ */
+int
+ttxtermlike(void)
+{
+    return ((t_attributes & (TA_XTERM|TA_XTERMLIKE)) ? 1 : 0);
+}
+
 
 /*  Function:           ttdefaultscheme
  *      Retrieve the derived/guessed default background color based on the either
@@ -2023,20 +2007,32 @@ term_ready(int repaint, scrprofile_t *profile)
         ttputpad(tc_vs ? tc_vs : tc_ve);        /* enable enhanced cursor */
         if (tf_am)
             ttputpad(tc_am_on);                 /* enable automatic margins */
-        ttputpad(tc_mm);                        /* enable meta key-codes */
+        key_enable(/*TODO*/0);                  /* enable keyboard mode */
     }
 
     /*
      *  terminal specific specials
      */
     if (t_attributes & TA_CYGWIN) {
-        if (xf_cygwinkb) {
-            ttpush("\033[?2000h");              /* enable RAW mode (gives us WIN32 scancodes) */
+        if (xf_rawkb) {                         /* enable cygwin-raw-mode */
+            trace_log("\tcygwin-raw-mode.\n");
+            ttpush("\033[?2000h");
+            xf_rawkb |= RAWKB_CYGWIN;
+        }
+
+    } else if (t_attributes & TA_MSTERMINAL) {
+        if (xf_rawkb) {                         /* enable win32-input-mode */
+//CYGWIN issues; 
+//  https://sourceware.org/pipermail/cygwin-patches/2024q3/012748.html
+//          trace_log("\twin32-input-mode.\n");
+//          ttpush("\033[?9001h");
+//          xf_rawkb |= RAWKB_MSTERMINAL;
         }
 
     } else if (t_attributes & TA_MINTTY) {
-        if (xf_mouse) {                         /* mouse enabled? */
-            ttpush("\033[?7786h");              /* mouse-wheel reports only */
+        if (! xf_mouse) {
+            ttpush("\033[?7786h");              /* nomouse, mouse-wheel reports only */
+                // mousewheel events are reported as cursor key presses
         }
 
     } else if (t_attributes & TA_VT100LIKE) {
@@ -2059,7 +2055,7 @@ term_ready(int repaint, scrprofile_t *profile)
  *      Signal a terminal feature change.
  *
  *  Parameters:
- *      ident -   Feature identifier.
+ *      ident - Feature identifier.
  *
  *  Returns:
  *      nothing.
@@ -2442,6 +2438,76 @@ ttisetflag(const char *tag, int taglen, const char *value)
 }
 
 
+
+/*  Function:           key_enable/disable
+ *      Control alternative key encoding modes.
+ *
+ *  Parameters:
+ *      mode - Encoding mode.
+ *
+ *  Returns:
+ *      nothing.
+ */
+static void
+key_enable(char mode)
+{
+    switch (mode)
+    {
+    case 'k':
+        /*
+         *  kitty progressive enhancement
+         *      0b1 (1)         Disambiguate escape codes.
+         *      0b10 (2)        Report event types.
+         *      0b100 (4)       Report alternate keys.
+         *      0b1000 (8)      Report all keys as escape codes.
+         *      0b10000 (16)    Report associated text.
+         */
+        ttpush("\x1b[>1u");
+        break;
+    case 'x':
+        /*
+         * XTMODKEYS: set/reset key modifier options (modifyOtherKeys)
+         *      CSI > Pp; Pv m
+         *      CSI > Pp m
+         *
+         *  The first parameter Pp identifies the resource to set/reset.
+         *      Pp = 0, modifyKeyboard.
+         *      Pp = 1, modifyCursorKeys.
+         *      Pp = 2, modifyFunctionKeys.
+         *      Pp = 4, modifyOtherKeys.
+         *
+         *  The second parameter Pv is the value to assign to the resource.
+         *      Pv = 0, disables
+         *      Pv = 1, enables
+         *      Pv = 2, extended
+         */
+        ttpush("\x1b[>4;2m"); // t_TI, vim
+        break;
+    default:
+        ttputpad(tc_mm);                        /* enable meta key-codes */
+        break;
+    }
+}
+
+
+static void
+key_disable(char mode)
+{
+    switch (mode)
+    {
+    case 'k':
+        ttpush("\x1b[<1u");
+        break;
+    case 'x':
+        ttpush("\x1b[>4;0m"); // t_TE, vim
+        break;
+    default:
+     /* ttputpad(tc_mo);                        -* restore meta key-codes */
+        break;
+    }
+}
+
+
 /*  Function:           acs_dump
  *      Alternative character dump.
  *
@@ -2532,11 +2598,11 @@ acs_locale_breaks(void)
         return atoi(env);                       /* ncurses compatibility */
 
     } else if ((env = ggetenv("TERM")) != NULL) {
-        if (isterm(env, "linux")) {
+        if (tty_isterm(env, "linux")) {
             return TRUE;
         }
 
-        if (isterm(env, "screen") &&
+        if (tty_isterm(env, "screen") &&
                 ((env = ggetenv("TERMCAP")) != 0 && strstr(env, "screen") != 0) &&
                     strstr(env, "hhII00") != 0) {
 
@@ -2603,7 +2669,7 @@ term_xtermlike(const char *term)
         unsigned i;
 
         for (i = 0; i < (unsigned)(sizeof(xtermlike)/sizeof(xtermlike[0])); ++i)
-            if (isterm(term, xtermlike[i].name)) {
+            if (tty_isterm(term, xtermlike[i].name)) {
                 ret = xtermlike[i].flags | TA_XTERMLIKE;
                 break;
             }
@@ -3307,12 +3373,16 @@ term_tidy(void)
     term_flush();
 
     if (t_attributes & TA_CYGWIN) {
-        if (xf_cygwinkb) {
-            ttpush("\033[?2000l");              /* disable RAW mode */
+        if (xf_rawkb & RAWKB_CYGWIN) {
+            ttpush("\033[?2000l");              /* disable cygwin-raw-mode */
+        }
+    } else if (t_attributes & TA_MSTERMINAL) {
+        if (xf_rawkb & RAWKB_MSTERMINAL) {
+            ttpush("\033[?9001l");              /* disable win32-input-mode */
         }
     } else if (t_attributes & TA_MINTTY) {
-        if (xf_mouse) {                         /* mouse enabled? */
-            ttpush("\033[?7786l");              /* disable mouse-wheel reports */
+        if (! xf_mouse) {
+            ttpush("\033[?7786l");              /* nomouse, disable mouse-wheel reports */
         }
     }
 
@@ -3322,7 +3392,7 @@ term_tidy(void)
     term_styleoff();
     xterm_colors_set(t_colorsorg);
 
- /* ttputpad(tc_mo);                            -* restore meta key-codes */
+    key_disable(/*TODO*/0);                     /* restore keyboard mode */
 
     ttputpad(tc_ve);                            /* restore normal cursor */
 
@@ -5425,16 +5495,5 @@ do_copy_screen(void)            /* void () */
 {
 }
 
-#if (TODO_TESTS)
-    assert(isterm("screen", "screen"));
-    assert(isterm("screen-xxx", "screen"));
-    assert(isterm("screen.linux", "screen"));
-    assert(isterm("screen.linux", "screen.linux"));
-    assert(! isterm("screen1", "screen"));
-    assert(! isterm("screen2", "screen"));
-    assert(hasfeature("screen-rv", "rv"));
-    assert(hasfeature("screen-rv-xxx", "rv"));
-    assert(hasfeature("screen-xxx-rv", "rv"));
-#endif
-
 #endif  /*!USE_VIO_BUFFER && !DJGPP */
+

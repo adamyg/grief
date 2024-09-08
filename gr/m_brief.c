@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_brief_c,"$Id: m_brief.c,v 1.9 2022/07/10 13:13:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_brief_c,"$Id: m_brief.c,v 1.10 2024/08/18 10:50:14 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_brief.c,v 1.9 2022/07/10 13:13:07 cvsuser Exp $
+/* $Id: m_brief.c,v 1.10 2024/08/18 10:50:14 cvsuser Exp $
  * BRIEF compatibility.
  *
  *
@@ -31,7 +31,7 @@ __CIDENT_RCSID(gr_m_brief_c,"$Id: m_brief.c,v 1.9 2022/07/10 13:13:07 cvsuser Ex
 /*<<GRIEF>>
     Macro: inq_brief_level - Retrieve the editor nesting level.
 
-        int 
+        int
         inq_brief_level()
 
     Macro Description:
@@ -70,18 +70,64 @@ inq_brief_level(void)
 /*<<GRIEF>>
     Macro: set_mouse_action - Set keyboard mouse handler.
 
-        int 
-        set_mouse_action(string name)
+        int
+        set_mouse_action(string mouse_handler)
 
     Macro Description:
         The 'set_mouse_button()' primitive is reserved for future BRIEF
         compatibility.
 
-        The 'set_mouse_action()' primitive sets the name of the mouse
-        action handler within the current keyboard.
+        The 'set_mouse_action()' primitive sets the function mouse_handler
+        as the mouse action handler within the current keyboard.
+
+>           void
+>           mouse_handler(
+>                   int event,      // event code; see below
+>                   int modifier,   // modifier keys
+>                   int parm2,      // either line or scrollbar position
+>                   int parm3       // either colume or thrumb position
+>                   )
+>           {
+>               switch(event) {
+>               case BTN1_MOVE:
+>                   break;
+>               case BTN2_MOVE:
+>                   break;
+>               case BTN3_MOVE:
+>                   break;
+>
+>               case BTN1_DOWN:
+>                   break;
+>               case BTN2_DOWN:
+>                   break;
+>               case BTN3_DOWN:
+>                   break;
+>
+>               case BTN1_UP:
+>                   break;
+>               case BTN2_UP:
+>                   break;
+>               case BTN3_UP:
+>                   break;
+>
+>               case BTN1_CLICK:
+>                   break;
+>               case BTN2_CLICK:
+>                   break;
+>               case BTN3_CLICK:
+>                   break;
+>
+>               case BTN1_DBLCLK:
+>                   break;
+>               case BTN2_DBLCLK:
+>                   break;
+>               case BTN3_DBLCLK:
+>                   break;
+>               }
+>           }
 
     Macro Parameters:
-        name - A string containing the name of the function to be
+        mouse_handler - A string containing the name of the function to be
             associated with the current keyboard.
 
     Macro Returns:
@@ -138,7 +184,7 @@ inq_mouse_action(void)          /* string () */
 /*<<GRIEF>>
     Macro: set_mouse_type - Sets the mouse type.
 
-        int 
+        int
         set_mouse_type()
 
     Macro Description:
@@ -148,7 +194,7 @@ inq_mouse_action(void)          /* string () */
         type - Integer stating the current mouse type.
 
 (start table,format=nd)
-            [Value  [Description            ]
+            [Value  [Description                ]
           ! 0       No mouse.
           ! 1       One-button mouse.
           ! 2       Two-button mouse.
@@ -180,7 +226,7 @@ do_set_mouse_type(void)         /* void ([int type], [int button1]) */
 /*<<GRIEF>>
     Macro: inq_mouse_type - Retrieve the button type.
 
-        int 
+        int
         inq_mouse_type()
 
     Macro Description:
@@ -193,7 +239,7 @@ do_set_mouse_type(void)         /* void ([int type], [int button1]) */
         Returns the current mouse type.
 
 (start table,format=nd)
-            [Value  [Description            ]
+            [Value  [Description                ]
           ! 0       No mouse.
           ! 1       One-button mouse.
           ! 2       Two-button mouse.
@@ -217,7 +263,7 @@ inq_mouse_type(void)            /* int () */
 /*<<GRIEF>>
     Macro: inq_btn2_action - Retrieve the second button action.
 
-        int 
+        int
         inq_btn2_action()
 
     Macro Description:
@@ -250,7 +296,7 @@ inq_btn2_action(void)           /* string () */
 /*<<GRIEF>>
     Macro: set_btn2_action - Set the second button action.
 
-        int 
+        int
         set_btn2_action([int action])
 
     Macro Description:
@@ -282,7 +328,7 @@ do_set_btn2_action(void)        /* int ([int action]) */
 /*<<GRIEF>> [env]
     Macro: inq_environment - Retrieve an environment variable.
 
-        string 
+        string
         inq_environment(string name)
 
     Macro Description:
@@ -347,11 +393,11 @@ do_set_btn2_action(void)        /* int ([int action]) */
 /*<<GRIEF>> [proc]
     Macro: dos - Create a sub-shell.
 
-        int 
+        int
         dos([string cmd], [int use_shell], [string callback])
 
     Macro Description:
-        The 'dos()' primitive executes the specified command 'cmd', 
+        The 'dos()' primitive executes the specified command 'cmd',
         if omitted starts an interactive command shell.
 
         This function is provided for compatibility using the <shell>
@@ -367,7 +413,7 @@ do_set_btn2_action(void)        /* int ([int action]) */
 
         callback - Optional string containing the name of a macro to be
             executed on the completion of the task. If stated the
-            command is intended to run as a background task, 
+            command is intended to run as a background task,
             otherwise in the foreground.
 
     Macro Returns:
@@ -419,3 +465,6 @@ do_set_btn2_action(void)        /* int ([int action]) */
 //  }
 
 /*end*/
+
+
+

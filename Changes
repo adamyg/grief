@@ -1,5 +1,33 @@
 -*- encoding: utf-8; -*-
 
+Mon Sep  2 21:23:42 2024 adamy
+
+	* Keyboard/interface extensions
+
+		- mouse
+			- command line option (xterm,xterm and sgr).
+			- <Button-xxx> key events cleanup.
+			- mouse actions
+			- popup menu
+
+		- <Unassigned> key event.
+		- FocusIn/FosusOut events.
+		- key_trace macro.
+
+Sun Jun 16 12:09:22 2024 adamy
+
+	* configure upgrades
+
+	* libtrie-3.9.9
+
+	* libtre-0.8.1
+
+	* FLTK-1.3.9 import
+
+Sun Jun 16 12:09:22 2024 adamy
+
+	* BUILD 26, maintenance release, version: 3.2.3
+
 Tue May 28 19:08:00 2024 adamy
 
 	* BUILD 25, version: 3.2.3

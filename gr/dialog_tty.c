@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dialog_tty_c,"$Id: dialog_tty.c,v 1.28 2022/08/10 15:44:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_dialog_tty_c,"$Id: dialog_tty.c,v 1.30 2024/09/08 16:29:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dialog_tty.c,v 1.28 2022/08/10 15:44:56 cvsuser Exp $
+/* $Id: dialog_tty.c,v 1.30 2024/09/08 16:29:24 cvsuser Exp $
  * Dialog manager, TTY interface.
  *
  *
@@ -323,6 +323,7 @@ dialog_tty_popup_close(DIALOG_t *d)
 static int
 dlg_open(DIALOG_t *d, DialogContext_t *c)
 {
+    const int cols = ttcols() - 1, rows = ttrows() - 3;
     int x, y;
 
     /*
@@ -341,9 +342,7 @@ dlg_open(DIALOG_t *d, DialogContext_t *c)
     if (0 == d->d_uflags) {
         dialog_send(d, WIDGET_INIT, 0, 0);
         dialog_bcast(d, NULL, NULL, FALSE, WIDGET_INIT, 0, 0);
-
         dialog_callback(d, DLGE_INIT, 0, 0);    /* dialog initialisation */
-
         d->d_uflags |= DIALOG_UFPACKED;
         dlg_pack(d);
 
@@ -355,15 +354,32 @@ dlg_open(DIALOG_t *d, DialogContext_t *c)
      *  Create the window,
      *      positioned (if possible) centered 1/2 vert and 1/3 horz.
      */
-    if ((x = (ttcols() - (d->d_cols + 2)) / 2) < 0) {
-        x = 0;
+    if ((x = d->d_xhint) < 0) {                 /* dynamic position */
+        if ((x = (cols - (d->d_cols + 2)) / 2) < 0) {
+            x = 0;
+        }
+    } 
+
+    if ((x + d->d_cols) >= cols) {              /* limit to cols */
+        if ((x = cols - (d->d_cols + 2)) < 0) {
+            x = 0;
+        }
     }
-    if ((y = (ttrows() - (d->d_rows + 2)) / 3) < 0) {
-        y = 0;
+
+    if ((y = d->d_yhint) < 0) {                 /* dynamic position */
+        if ((y = (rows - (d->d_rows + 2)) / 3) < 0) {
+            y = 0;
+        }
+    }  
+
+    if ((y + d->d_rows) >= rows) {              /* limit to rows */
+        if ((y = rows - (d->d_rows + 2)) < 0) {
+            y = 0;
+        }
     }
 
     if (! ttyframe_create(&c->cx_base, TRUE,
-            (d->d_title ? d->d_title : "dialog"), x + 1, y + 1, d->d_cols, d->d_rows)) {
+            (d->d_title ? d->d_title : ""), x + 1, y + 1, d->d_cols, d->d_rows)) {
         return -1;
     }
 
@@ -782,7 +798,7 @@ dlg_keydown(DIALOG_t *d, const int key)
             done = TRUE;
             break;
 
-        case F(10):                             /* XXX - backdoor exit */
+        case F(10):     /* XXX - backdoor exit */
             d->d_retval = -1;
             dlg_stop(d);
             done = TRUE;
@@ -809,6 +825,7 @@ dlg_mouse(DIALOG_t *d, struct IOEvent *evt)
 {
     DialogContext_t *c = d->d_ucontrol;
     WIDGET_t *parent, *first, *w;
+    WINDOW_t* wp = NULL;
     int wid, where;
     int x, y;
 
@@ -820,7 +837,12 @@ dlg_mouse(DIALOG_t *d, struct IOEvent *evt)
     }
 
     if (NULL == (w = first) || EVT_MOUSE != evt->type ||
-            curwp != mouse_pos(x, y, &wid, &where) || MOBJ_INSIDE != where) {
+            curwp != (wp = mouse_pos(x, y, &wid, &where)) || MOBJ_INSIDE != where) {
+        if (wp && c->cx_popup.f_wp == wp) {     /* popup/child */
+            x -= wp->w_x + win_lborder(wp) + 1;
+            y -= wp->w_y + win_tborder(wp) + 1;
+            widget_send(w, WIDGET_MOUSE_POPUP, DIALOGARG32(x, y), evt->code);
+        }
         return;
     }
 
@@ -830,7 +852,7 @@ dlg_mouse(DIALOG_t *d, struct IOEvent *evt)
     parent = NULL;
     if (first) {
         do {
-            if ((WIDGET_FGREYED|WIDGET_FHIDDEN) & w->w_flags) {
+            if (0 == ((WIDGET_FGREYED|WIDGET_FHIDDEN) & w->w_flags)) {
                 if ((x >= w->w_absx) && (x < w->w_absx + w->w_cols + (w->w_border * 2)) &&
                         (y >= w->w_absy) && (y < w->w_absy + w->w_rows + (w->w_border * 2))) {
 
@@ -943,10 +965,16 @@ dialog_tty_setfocus(DIALOG_t *d, WIDGET_t *w)
         WIDGET_t *current = c->cx_current;
 
         if (current) {
+            if (current == w) {
+                assert(HasFocus(w));
+                return TRUE;
+            }
             dlg_clrfocus(d, TRUE);              /* unfocus current */
         }
 
         c->cx_current = w;                      /* focus new/current */
+        assert(! HasFocus(w));
+
         if (FALSE == widget_send(w, WIDGET_SETFOCUS, 1, 0)) {
             if (NULL == current || FALSE == widget_send(current, WIDGET_SETFOCUS, 1, 0)) {
                 c->cx_current = w = NULL;
@@ -973,7 +1001,7 @@ dialog_tty_setfocus(DIALOG_t *d, WIDGET_t *w)
  *
  *  Parameters:
  *      d - Dialog instances.
- *      force - *TRUE* if the focus should be forecfully unfocused.
+ *      force - *TRUE* if the focus should be forcefully unfocused.
  *
  *  Returns:
  *      TRUE if the current widget was unfocused, otherwise *FALSE*.

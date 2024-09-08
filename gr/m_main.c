@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_main_c,"$Id: m_main.c,v 1.13 2022/07/10 13:13:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_main_c,"$Id: m_main.c,v 1.15 2024/08/27 12:44:33 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_main.c,v 1.13 2022/07/10 13:13:08 cvsuser Exp $
+/* $Id: m_main.c,v 1.15 2024/08/27 12:44:33 cvsuser Exp $
  * Initialisation and primary processing loop.
  *
  *
@@ -115,8 +115,9 @@ do_process(void)                /* () */
     vtupdate_cursor();
     vtupdate2(TRUE);                            /* ignore typehead() */
     while (1) {
+        struct IOEvent evt = {0};
         last_plevel = x_plevel;
-        (void) key_execute(io_next(0));
+        (void) key_execute(io_next(&evt, 0), (const char *)evt.sequence.data);
         if (x_plevel < last_plevel) {
             return;
         }

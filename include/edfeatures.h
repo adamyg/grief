@@ -1,11 +1,11 @@
 #ifndef GR_EDFEATURES_H_INCLUDED
 #define GR_EDFEATURES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edfeatures_h,"$Id: edfeatures.h,v 1.21 2024/07/23 12:52:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_edfeatures_h,"$Id: edfeatures.h,v 1.22 2024/08/25 06:04:55 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edfeatures.h,v 1.21 2024/07/23 12:52:29 cvsuser Exp $
+/* $Id: edfeatures.h,v 1.22 2024/08/25 06:04:55 cvsuser Exp $
  * Editor features.
  *
  *
@@ -138,6 +138,7 @@ __CBEGIN_DECLS
 #define TF_AMETAKEY             0x0000100       /* Meta keys */
 #define TF_AXTERMKEYS           0x0000200       /* XTerm modifyOtherKeys */
 #define TF_AKITTYKEYS           0x0000400       /* Kitty extended keycodes */
+#define TF_AMSTERMINALKEYS      0x0000800       /* MS-Terminal extended keycodes */
 /*--end--*/
 
 
@@ -257,10 +258,3 @@ __CEND_DECLS
 
 #endif /*GR_EDFEATURES_H_INCLUDED*/
 /*end*/
-
-
-
-
-
-
-

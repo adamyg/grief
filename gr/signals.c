@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_signals_c,"$Id: signals.c,v 1.22 2024/07/19 05:04:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_signals_c,"$Id: signals.c,v 1.23 2024/08/25 06:01:53 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: signals.c,v 1.22 2024/07/19 05:04:22 cvsuser Exp $
+/* $Id: signals.c,v 1.23 2024/08/25 06:01:53 cvsuser Exp $
  * Signal handling.
  *
  *
@@ -24,7 +24,7 @@ __CIDENT_RCSID(gr_signals_c,"$Id: signals.c,v 1.22 2024/07/19 05:04:22 cvsuser E
 #include <edstacktrace.h>
 #include <libstr.h>                             /* str_...()/sxprintf() */
 
-#include "signals.h"			        /* public interface */
+#include "signals.h"                            /* public interface */
 
 #include "builtin.h"
 #include "debug.h"
@@ -40,7 +40,7 @@ static int              x_fatallevel = 0;       /* Fatal exception level */
 static void             signal_mode0(void);
 static void             signal_mode1(void);
 static const char *     signame(int sig, int unknown);
-static int              sigfatal(int sig, const char **name);
+static int              sigfatal(int sig, const char *name);
 
 extern void             sighandler_int(int sig);
 extern void             sighandler_tstp(int sig);
@@ -293,19 +293,20 @@ signame(int sig, int unknown)
  *      Common fatal handler.
  */
 static __CINLINE int
-sigfatal(int sig, const char **name)
+sigfatal(int sig, const char *name)
 {
-    const char *t_name = signame(sig, TRUE);
     const int level = ++x_fatallevel;
+
+    if (NULL == name)
+        name = signame(sig, TRUE);
 
     if (1 == level) {
         char buf[100];
 
         signal(sig, SIG_DFL);                   /* reset handler */
-        sxprintf(buf, sizeof(buf), "_fatal_error %d \"%s\"", sig, t_name);
+        sxprintf(buf, sizeof(buf), "_fatal_error %d \"%s\"", sig, name);
         execute_str(buf);
     }
-    *name = t_name;
     return level;
 }
 
@@ -382,7 +383,7 @@ void
 sighandler_sys2(int sig)
 {
     const char *name = signame(sig, TRUE);
-    const int level = sigfatal(sig, &name);
+    const int level = sigfatal(sig, name);
 
     xf_dumpcore = 2;                            /* dump core on exit */
 
@@ -534,3 +535,4 @@ sighandler_danger(int sig)
 #endif  /*SIGDANGER*/
 
 /*end*/
+

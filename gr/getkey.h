@@ -1,11 +1,11 @@
 #ifndef GR_GETKEY_H_INCLUDED
 #define GR_GETKEY_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_getkey_h,"$Id: getkey.h,v 1.18 2014/10/22 02:32:57 ayoung Exp $")
+__CIDENT_RCSID(gr_getkey_h,"$Id: getkey.h,v 1.19 2024/08/25 06:01:53 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: getkey.h,v 1.18 2014/10/22 02:32:57 ayoung Exp $
+/* $Id: getkey.h,v 1.19 2024/08/25 06:01:53 cvsuser Exp $
  * Keyboard event interface.
  *
  *
@@ -30,28 +30,37 @@ __CPRAGMA_ONCE
 __CBEGIN_DECLS
 
 struct IOMouse {
-    int         x, y;                           /* coordinates */
-    int         win;                            /* associated window */
-    int         where;                          /* window location */
-    accint_t    when;                           /* timestamp, in milliseconds */
+    int x, y;                                   /* coordinates */
+    int win;                                    /* associated window */
+    int where;                                  /* window location */
+    accint_t when;                              /* timestamp, in milliseconds */
+};
+
+typedef unsigned char KEYCHAR;
+
+struct IOSequence {
+    unsigned len;                               /* sequence length, in bytes */
+#define IOSEQUENCE_LENGTH   64
+    KEYCHAR data[IOSEQUENCE_LENGTH];            /* raw key sequence data (63 + NUL) */
 };
 
 struct IOEvent {
-    int         type;                           /* event type */
-#define EVT_TIMEOUT         -1
-#define EVT_NONE            0
+    int type;                                   /* event type */
+#define EVT_TIMEOUT         -1                  /* read timeout */
+#define EVT_NONE            0                   /* no reportable event */
 #define EVT_KEYDOWN         1                   /* key-down event */
 #define EVT_MOUSE           2                   /* mouse event */
 #define EVT_KEYRAW          99                  /* raw key-code */
-    int         code;                           /* key-code */
-    unsigned    modifiers;                      /* raw modifiers */
-    struct IOMouse mouse;
+    int code;                                   /* key-code, see edalt.h */
+    unsigned modifiers;                         /* raw modifiers */
+    struct IOMouse mouse;                       /* associated mouse details; type=EVT_MOUSE */
+    struct IOSequence sequence;                 /* underlying key data */
 };
 
 #define EVT_SECOND(_s)  ((_s) * 1000L)
 #define EVT_MILLISECOND(_m) (_m)
 
-extern int                  io_next(accint_t tmo);
+extern int                  io_next(struct IOEvent *evt, accint_t tmo);
 extern int                  io_get_event(struct IOEvent *evt, accint_t tmo);
 extern int                  io_get_key(accint_t tmo);
 extern int                  io_get_raw(accint_t tmo);

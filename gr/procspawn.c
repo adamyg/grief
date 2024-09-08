@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_procspawn_c,"$Id: procspawn.c,v 1.25 2024/06/10 06:00:44 cvsuser Exp $")
+__CIDENT_RCSID(gr_procspawn_c,"$Id: procspawn.c,v 1.26 2024/08/18 10:50:36 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: procspawn.c,v 1.25 2024/06/10 06:00:44 cvsuser Exp $
+/* $Id: procspawn.c,v 1.26 2024/08/18 10:50:36 cvsuser Exp $
  * Process spawn primitive and management.
  *
  *
@@ -122,15 +122,15 @@ int                     x_background = FALSE;   /* background process ? */
         output plus registers the macro 'gmake_complete' to be
         executed on completion.
 
->	    shell("gmake 2>&1 >/tmp/gmake.tmp", TRUE, "gmake_completion");
+>           shell("gmake 2>&1 >/tmp/gmake.tmp", TRUE, "gmake_completion");
 
         associated completion macro.
 
 >           void
 >           gmake_completion(int status)
->	    {
+>           {
 >               message("gmake done, status = %d", status);
->	    }
+>           }
 
     Meta Characters::
 
@@ -618,3 +618,4 @@ proc_prep_start(void)
 }
 
 /*end*/
+

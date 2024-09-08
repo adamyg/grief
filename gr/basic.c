@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_basic_c,"$Id: basic.c,v 1.31 2021/10/18 13:14:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_basic_c,"$Id: basic.c,v 1.32 2024/09/03 14:08:33 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: basic.c,v 1.31 2021/10/18 13:14:57 cvsuser Exp $
+/* $Id: basic.c,v 1.32 2024/09/03 14:08:33 cvsuser Exp $
  * Basic cursor movement.
  *
  *
@@ -422,12 +422,14 @@ do_page_down(void)              /* int ([int pages = 1]) */
     accint_t pages = get_xinteger(1, 1);        /* extension */
     const int lines = win_height(curwp);
 
-    if (pages < 0) {                            /* half pages */
-        mov_forwline(lines > 2 ? (lines / 2) : 1);
-    } else if (pages) {
-        mov_forwline(pages * lines);
-    } else {
-        mov_forwline(lines);
+    if (lines > 0) {
+        if (pages < 0) {                        /* half pages */
+            mov_forwline(lines > 2 ? (lines / 2) : 1);
+        } else if (pages) {
+            mov_forwline(pages * lines);
+        } else {
+            mov_forwline(lines);
+        }
     }
 }
 
@@ -473,12 +475,14 @@ do_page_up(void)                /* int ([int pages = 1]) */
     accint_t pages = get_xinteger(1, 1);        /* extension */
     const int lines = win_height(curwp);
 
-    if (pages < 0) {                            /* half pages */
-        mov_backline(lines > 2 ? (lines / 2) : 1);
-    } else if (pages) {
-        mov_backline(pages * lines);
-    } else {
-        mov_backline(lines);
+    if (lines > 0) {
+        if (pages < 0) {                        /* half pages */
+            mov_backline(lines > 2 ? (lines / 2) : 1);
+        } else if (pages) {
+            mov_backline(pages * lines);
+        } else {
+            mov_backline(lines);
+        }
     }
 }
 

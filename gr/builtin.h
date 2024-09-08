@@ -1,11 +1,11 @@
 #ifndef GR_BUILTIN_H_INCLUDED
 #define GR_BUILTIN_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_builtin_h,"$Id: builtin.h,v 1.29 2024/07/28 11:59:31 cvsuser Exp $")
+__CIDENT_RCSID(gr_builtin_h,"$Id: builtin.h,v 1.30 2024/08/25 06:01:52 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: builtin.h,v 1.29 2024/07/28 11:59:31 cvsuser Exp $
+/* $Id: builtin.h,v 1.30 2024/08/25 06:01:52 cvsuser Exp $
  * Builtin primitive table.
  *
  *
@@ -27,6 +27,7 @@ __CBEGIN_DECLS
 
 extern int                  execute_str(const char *str);
 extern int                  execute_opendir(const char *name);
+extern void                 execute_unassigned(const char *spec, int key, const char *seq);
 extern void                 execute_expr(const LISTV *lp);
 extern void                 execute_macro(const LIST *lp);
 extern void                 execute_nmacro(const LIST *lp);
@@ -48,7 +49,6 @@ extern struct mac_stack     mac_stack[];        /* Macro name stack */
 extern unsigned __CCACHEALIGN mexecflags;
 extern const LISTV         *margv;
 extern int                  margc;
-    //extern const char          *mname;
 
 extern void                *x_returns;
 

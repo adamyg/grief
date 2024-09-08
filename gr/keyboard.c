@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.67 2022/05/26 16:35:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.71 2024/09/08 16:29:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keyboard.c,v 1.67 2022/05/26 16:35:06 cvsuser Exp $
+/* $Id: keyboard.c,v 1.71 2024/09/08 16:29:24 cvsuser Exp $
  * Manipulate key maps and bindings.
  *
  *
@@ -49,6 +49,7 @@ __CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.67 2022/05/26 16:35:06 cvsuser
 #include "symbol.h"
 #include "system.h"
 #include "tty.h"
+#include "ttyutil.h"
 #include "undo.h"
 #include "window.h"
 #include "word.h"
@@ -119,6 +120,7 @@ static const char *     key_macro_find(int key);
 
 static char *           key_to_char(char *buf, int key);
 static int              cygwin_to_int(const char *buf);
+static int              msterminal_to_int(const char *buf);
 
 static char *           historyget(int idx);
 
@@ -194,7 +196,10 @@ static const struct map keystring_tbl[] = {
     { 3,    "INS",          RANGE_KEYPAD,   KEY_INS },
     { 5,    "PRTSC",        RANGE_KEYPAD,   KEYPAD_PRTSC },
     { 6,    "SCROLL",       RANGE_KEYPAD,   KEYPAD_SCROLL },
-    { 5,    "MOUSE",        RANGE_MISC,     MOUSE_KEY },
+    { 5,    "MOUSE",        RANGE_SPECIAL,  MOUSE_XTERM_KEY },
+    { 5,    "MOUSE",        RANGE_SPECIAL,  MOUSE_SGR_KEY },
+    { 7,    "FOCUSIN",      RANGE_SPECIAL,  MOUSE_FOCUSIN_KEY },
+    { 8,    "FOCUSOUT",     RANGE_SPECIAL,  MOUSE_FOCUSOUT_KEY },
     { 4,    "UNDO",         RANGE_MISC,     KEY_UNDO_CMD },
     { 4,    "REDO",         RANGE_MISC,     KEY_REDO },
     { 4,    "COPY",         RANGE_MISC,     KEY_COPY_CMD },
@@ -212,7 +217,8 @@ static const struct map keystring_tbl[] = {
     { 4,    "SAVE",         RANGE_MISC,     KEY_SAVE },
     { 4,    "MENU",         RANGE_MISC,     KEY_MENU },
     { 5,    "BREAK",        RANGE_MISC,     KEY_BREAK },
-    { 0,    NULL,           0,              0}
+    { 10,   "UNASSIGNED",   0,              KEY_UNASSIGNED },
+    { 0, NULL, 0, 0 }
     };
 
 
@@ -779,6 +785,7 @@ key_macro_add(int key, const char *value)
     object_t *def;
 
     if (NULL != (def = obj_alloc())) {
+        // TODO: compile into a ARGV; reduce execute overheads.
         if (value) {                            /* assign value, otherwise NULL */
             obj_assign_str(def, value, -1);
         }
@@ -841,15 +848,25 @@ key_macro_find(int key)
 
     if (curbp->b_keyboard) {                    /* buffer specific */
         sep = stype_lookup(curbp->b_keyboard->kt_macros, (stypekey_t) key);
-        if (NULL == sep && IS_UNICODE(key)) {
-            sep = stype_lookup(curbp->b_keyboard->kt_macros, (stypekey_t) KEY_UNICODE);
+        if (NULL == sep) {
+            if (IS_UNICODE(key)) {
+                sep = stype_lookup(curbp->b_keyboard->kt_macros, (stypekey_t) KEY_UNICODE);
+            }
+            if (NULL == sep) {
+                sep = stype_lookup(curbp->b_keyboard->kt_macros, (stypekey_t) KEY_UNASSIGNED);
+            }
         }
     }
 
     if (NULL == sep) {                          /* keyboard */
         sep = stype_lookup(x_kbdcur->kt_macros, (stypekey_t) key);
-        if (NULL == sep && IS_UNICODE(key)) {
-            sep = stype_lookup(x_kbdcur->kt_macros, (stypekey_t) KEY_UNICODE);
+        if (NULL == sep) {
+            if (IS_UNICODE(key)) {
+                sep = stype_lookup(x_kbdcur->kt_macros, (stypekey_t) KEY_UNICODE);
+            }
+            if (NULL == sep) {
+                sep = stype_lookup(x_kbdcur->kt_macros, (stypekey_t) KEY_UNASSIGNED);
+            }
         }
     }
 
@@ -1067,6 +1084,12 @@ key_name2code(const char *string, int *lenp)
                 } else if (0 == strncmp(cp, "DOWN", 4)) {
                     key = WHEEL_DOWN;
                     cp += 4;
+                } else if (0 == strncmp(cp, "LEFT", 4)) {
+                    key = WHEEL_LEFT;
+                    cp += 4;
+                } else if (0 == strncmp(cp, "RIGHT", 5)) {
+                    key = WHEEL_RIGHT;
+                    cp += 5;
                 }
             }
             flags |= RANGE_MISC;
@@ -1175,9 +1198,10 @@ key_name2code(const char *string, int *lenp)
         key - String identifying the particular keystroke that is
             being assigned.
 
-        macro - String containing the command which shall be invoked,
-            which may contain literal integer and/or string arguments
-            to be passed upon the macro upon execution.
+        macro - String containing the command to be invoked, which
+            may optionally contain one or more space seperated
+            integer or string arguments, to be passed upon the
+            macro upon execution.
 
     Key Sequences:
 
@@ -1299,7 +1323,18 @@ key_name2code(const char *string, int *lenp)
 
     |wheel-Down     |Mousewheel down       |      |     |     |     |     |
                      movement
+
+    |Unassigned     |Default key Event     |  x   |  x  |  x  |  x  |  x  |
+
+    |FocusIn        |Mouse focus Events    |  x   |  x  |  x  |  x  |  x  |
+    |FocusOut       |                      |  x   |  x  |  x  |  x  |  x  |
+
 (end table)
+
+        Note!:
+        The special 'Unassigned' key matches any unregistered key events,
+        similar to <register_macro> REG_UNASSIGNED yet is assignable within
+        the context of a specific keyboard.
 
     Macro Returns:
         The 'assign_to_key' returns the key value assigned to
@@ -1472,13 +1507,14 @@ do_push_back(void)              /* (int key, [int front], [int x], [int y]) */
             key_cache_key(x_push_ref, key, front);
 
         } else {                                /* mouse-event, extension */
-            const int x = get_xinteger(3, -1);
-            const int y = get_xinteger(4, -1);
-            int win = 0, where = 0;
+            mouseevt_t evt = { 0 };
 
-            if (x >= 0 && y >= 0) {
-                if (mouse_pos(x, y, &win, &where)) {
-                    key_cache_mouse(x_push_ref, key, front, x, y, win, where);
+            evt.x = get_xinteger(3, -1);
+            evt.y = get_xinteger(4, -1);
+
+            if (evt.x >= 0 && evt.y >= 0) {
+                if (mouse_pos(evt.x, evt.y, &evt.win, &evt.where)) {
+                    key_cache_mouse(x_push_ref, key, front, &evt);
                 }
             }
         }
@@ -1502,7 +1538,7 @@ void
 key_cache_key(ref_t *pp, int ch, int front)
 {
     assert(RANGE_BUTTON != (ch & RANGE_MASK));
-    key_cache_mouse(pp, ch, front, 0, 0, 0, 0);
+    key_cache_mouse(pp, ch, front, NULL);
 }
 
 
@@ -1515,43 +1551,63 @@ key_cache_key(ref_t *pp, int ch, int front)
  *      code - Key code.
  *      front - If TRUE, insert to the front of the keyboard queue
  *          otherwise append to the end.
- *      x,y - Mouse coordinates.
- *      win - Where within the window.
- *      where - Timestamp, in milliseconds.
+ *      evt - Mouse event, containing
+ *
+ *          seq - Optional escape sequence.
+ *          x,y - Mouse coordinates.
+ *          win - Where within the window.
+ *          where - Timestamp, in milliseconds.
  *
  *  Returns:
  *      nothing
  */
+
 void
-key_cache_mouse(ref_t *pp, int code, int front, int x, int y, int win, int where)
+key_cache_mouse(ref_t *pp, int code, int front, const mouseevt_t* evt)
 {
-    size_t length = sizeof(KEY);
+    unsigned char buffer[sizeof(KEY) + sizeof(struct IOMouse) + IOSEQUENCE_LENGTH] = {0},
+        *cursor = buffer;
 
-    KEY buffer[(sizeof(KEY) + sizeof(struct IOMouse))/2] = {0},
-            *msg = buffer;
-
+    assert(sizeof(buffer) <= 128);
     assert(code > 0 && code <= (MOD_MASK|RANGE_MASK|KEY_MASK) && code != KEY_VOID);
-    *msg++ = (KEY)code;
+    assert(evt || 0 == (RANGE_BUTTON == (RANGE_MASK & code)));
+
+    *((KEY *)cursor) = (KEY)code;
+    cursor += sizeof(KEY);
 
     if (RANGE_BUTTON == (RANGE_MASK & code)) {
-        struct IOMouse *mouse = (struct IOMouse *)(msg);
-        int ms = 0;
-        time_t now = sys_time(&ms);
+        if (NULL == evt) {
+            return;
+        } else {
+            unsigned char seqlen = (evt->seq ? (unsigned char)strlen(evt->seq) : 0);
+            struct IOMouse* mouse = (struct IOMouse*)(cursor);
+            int ms = 0;
+            time_t now = sys_time(&ms);
 
-        mouse->x = x;
-        mouse->y = y;
-        mouse->win = win;
-        mouse->where = where;
-        mouse->when =
-            (accint_t) (((now - x_startup_time) * 1000) + ms);
-        length += sizeof(struct IOMouse);
+            assert(seqlen <= IOSEQUENCE_LENGTH);
+            if (seqlen > IOSEQUENCE_LENGTH) seqlen = IOSEQUENCE_LENGTH;
+
+            mouse->x = evt->x;
+            mouse->y = evt->y;
+            mouse->win = evt->win;
+            mouse->where = evt->where;
+            mouse->when =
+                (accint_t)(((now - x_startup_time) * 1000) + ms);
+            cursor += sizeof(struct IOMouse);
+            *cursor++ = seqlen;
+
+            if (seqlen) {
+                (void)memcpy(cursor, evt->seq, seqlen);
+                cursor += seqlen;
+            }
+        }
     }
 
     assert(1 == r_refs(pp));
     if (TRUE == front) {
-        r_push(pp, (void *)buffer, length, 128);
+        r_push(pp, (void *)buffer, cursor - buffer, 128);
     } else {
-        r_append(pp, (void *)buffer, length, 128);
+        r_append(pp, (void *)buffer, cursor - buffer, 128);
     }
 }
 
@@ -1569,8 +1625,9 @@ key_cache_mouse(ref_t *pp, int code, int front, int x, int y, int win, int where
 int
 key_cache_pop(ref_t *pp, struct IOEvent *evt)
 {
-    const KEY *msg = (const KEY *)r_ptr(pp);
-    size_t used, length = sizeof(KEY);
+    const unsigned char *msg = (const unsigned char *)r_ptr(pp),
+        *cursor = msg;
+    size_t used;
     int code;
 
     if (0 == (used = r_used(pp))) {
@@ -1578,7 +1635,8 @@ key_cache_pop(ref_t *pp, struct IOEvent *evt)
     }
 
     assert(used >= (int)sizeof(KEY));
-    code = (int) *msg;
+    code = (int) *((const KEY *)cursor);
+    cursor += sizeof(KEY);
 
     assert(code > 0 && code <= (MOD_MASK|RANGE_MASK|KEY_MASK) && code != KEY_VOID);
     evt->type = EVT_KEYDOWN;
@@ -1587,14 +1645,26 @@ key_cache_pop(ref_t *pp, struct IOEvent *evt)
         /*
          *  mouse actions ...
          */
-        if (used >= (sizeof(KEY) + sizeof(struct IOMouse))) {
-            memcpy(&evt->mouse, (const void *)(msg + 1), sizeof(struct IOMouse));
+        if (used >= (sizeof(KEY) + sizeof(struct IOMouse) + 1)) {
+            unsigned char seqlen;
+
+            memcpy(&evt->mouse, (const void *)(cursor), sizeof(struct IOMouse));
             evt->type = EVT_MOUSE;
-            length += sizeof(struct IOMouse);
+            cursor += sizeof(struct IOMouse);
+            seqlen = *cursor++;
+
+            if (seqlen) {
+                if (used >= (sizeof(KEY) + sizeof(struct IOMouse) + 1 + seqlen)) {
+                    assert(seqlen && seqlen < IOSEQUENCE_LENGTH);
+                    evt->sequence.len = seqlen;
+                    (void) memcpy(evt->sequence.data, (const void *)(cursor), seqlen);
+                    cursor += seqlen;
+                }
+            }
         }
     }
 
-    r_pop(pp, length);
+    r_pop(pp, cursor - msg);
     return (evt->code = code);
 }
 
@@ -1676,7 +1746,7 @@ key_cache_test(ref_t *pp)
       ! KEY_CLOSE           Close key.
       ! KEY_COMMAND
       ! KEY_COPY            Copy to clipboard.
-      ! KEY_COPY_CMD        
+      ! KEY_COPY_CMD
       ! KEY_CUT             Cut to clipboard.
       ! KEY_CUT_CMD
       ! KEY_DEL             Delete, rubout.
@@ -1769,13 +1839,23 @@ do_key_to_int(void)             /* (string key, int raw) */
 
     } else {
         if (NULL == (sp = splookup(cp, x_kseqtree))) {
-            const int kcode = cygwin_to_int(cp);
+            int kcode;
 
-            if (kcode > 0) {
+            if ((kcode = cygwin_to_int(cp)) > 0 ||
+                    (kcode = msterminal_to_int(cp)) > 0) {
                 acc_assign_int((accint_t) kcode);
-            } else {
-                acc_assign_int((accint_t) -1);
+                return;
             }
+
+#if !defined(USE_VIO_BUFFER) && !defined(DJGPP)
+            if ((kcode = tty_mouse_xterm(NULL, cp)) > 0 ||
+                    (kcode = tty_mouse_sgr(NULL, cp)) > 0) {
+                acc_assign_int((accint_t) kcode);
+                return;
+            }
+#endif
+
+            acc_assign_int((accint_t) -1);
 
         } else {
             const keyseq_t *ks = (const keyseq_t *) sp->data;
@@ -1903,20 +1983,42 @@ do_normal:
     buf[0] = '<';
     buf[1] = '\0';
 
-    if (key & MOD_META)  strcat(buf, "Alt-");
-    if (key & MOD_CTRL)  strcat(buf, "Ctrl-");
+    if (key & MOD_META) strcat(buf, "Alt-");
+    if (key & MOD_CTRL) strcat(buf, "Ctrl-");
     if (key & MOD_SHIFT) strcat(buf, "Shift-");
 
     /* function keys */
     bp = buf + strlen(buf);
     switch (key & RANGE_MASK) {
+    case RANGE_SPECIAL: {
+            const char *desc = NULL;
+
+            switch (key) {
+            case MOUSE_XTERM_KEY:
+            case MOUSE_SGR_KEY:
+                desc = "Mouse";
+                break;
+            case PASTE_BRACKETED_EVT:
+                desc = "PasteBracketed";
+                break;
+            case MOUSE_FOCUSOUT_KEY:
+                desc = "FosusOut";
+                break;
+            case MOUSE_FOCUSIN_KEY:
+                desc = "FosusIn";
+                break;
+            default:
+                sprintf(bp, "#%u", key);
+                break;
+            }
+            if (desc) strcpy(bp, desc);
+        }
+        break;
+
     case RANGE_MISC: {
             const char *desc = NULL;
 
             switch (key) {
-            case MOUSE_KEY:
-                desc ="Mouse";
-                break;
             case BACK_TAB:
                 desc = "Back-Tab";
                 break;
@@ -1995,6 +2097,12 @@ do_normal:
             case WHEEL_DOWN:
                 desc = "Wheel-Down";
                 break;
+            case WHEEL_LEFT:
+                desc = "Wheel-Left";
+                break;
+            case WHEEL_RIGHT:
+                desc = "Wheel-Right";
+                break;
             default:
                 sprintf(bp, "#%u", key);
                 break;
@@ -2054,16 +2162,16 @@ do_normal:
     case RANGE_BUTTON:
         key &= ~(MOD_META | MOD_CTRL | MOD_SHIFT);
         if (key >= BUTTON1_MOTION) {
-            sprintf(bp, "Button%d-Motion",  key - (BUTTON1_MOTION + 1));
+            sprintf(bp, "Button%u-Motion", (key - BUTTON1_MOTION) + 1);
 
         } else if (key >= BUTTON1_UP) {
-            sprintf(bp, "Button%d-Up",      key - (BUTTON1_UP + 1));
+            sprintf(bp, "Button%u-Up", (key - BUTTON1_UP) + 1);
 
         } else if (key >= BUTTON1_DOUBLE) {
-            sprintf(bp, "Button%d-Double",  key - (BUTTON1_DOUBLE + 1));
+            sprintf(bp, "Button%u-Double", (key - BUTTON1_DOUBLE) + 1);
 
         } else {
-            sprintf(bp, "Button%d-Down",    key - (BUTTON1_DOWN + 1));
+            sprintf(bp, "Button%u-Down", (key - BUTTON1_DOWN) + 1);
         }
         break;
 
@@ -2173,12 +2281,19 @@ key_to_char(char *buf, int key)
 
 /*  Function:           key_execute
  *      Execute the macro associated with an internal key code.
+ *
+ *  Parameter:
+ *      key - Keycode.
+ *
+ *  Returns:
+ *      void
  */
 void
-key_execute(int key)
+key_execute(int key, const char *seq)
 {
     sentry_t *sep = NULL;
-    const char *cp;
+    const char *cp = "";
+    int badkey = 0;
 
     assert(key >= 0);
     if (KEY_WINCH == key) {
@@ -2188,21 +2303,31 @@ key_execute(int key)
 
     if (curbp && curbp->b_keyboard) {           /* buffer specific */
         sep = stype_lookup(curbp->b_keyboard->kt_macros, key);
-        if (NULL == sep && IS_UNICODE(key)) {
-            sep = stype_lookup(curbp->b_keyboard->kt_macros, (stypekey_t) KEY_UNICODE);
+        if (NULL == sep) {
+            if (IS_UNICODE(key)) {
+                sep = stype_lookup(curbp->b_keyboard->kt_macros, (stypekey_t) KEY_UNICODE);
+            }
+            if (NULL == sep) {
+                sep = stype_lookup(curbp->b_keyboard->kt_macros, (stypekey_t) KEY_UNASSIGNED);
+                if (sep) badkey = 1;
+            }
         }
     }
 
     if (NULL == sep) {                          /* current keyboard */
         sep = stype_lookup(x_kbdcur->kt_macros, key);
-        if (NULL == sep && IS_UNICODE(key)) {
-            sep = stype_lookup(x_kbdcur->kt_macros, (stypekey_t) KEY_UNICODE);
+        if (NULL == sep) {
+            if (IS_UNICODE(key)) {
+                sep = stype_lookup(x_kbdcur->kt_macros, (stypekey_t) KEY_UNICODE);
+            }
+            if (NULL == sep) {
+                sep = stype_lookup(x_kbdcur->kt_macros, (stypekey_t) KEY_UNASSIGNED);
+                if (sep) badkey = 1;
+            }
         }
     }
 
-    if (NULL == sep) {
-        cp = "";
-    } else {
+    if (sep) {
         cp = key_macro_value((const object_t *)sep->se_ptr);
     }
 
@@ -2248,7 +2373,11 @@ key_execute(int key)
     if (0 == *cp) {
         trigger(REG_UNASSIGNED /*REG_INVALID*/);
     } else {
-        execute_str(cp);
+        if (badkey) {
+            execute_unassigned(cp, key, seq);
+        } else {
+            execute_str(cp);
+        }
     }
 }
 
@@ -2505,70 +2634,80 @@ inq_local_keyboard(void)        /* int inq_local_keyboard() */
 
 
 /*  Function:           key_check
- *      Utility used whilst assembling a keystroke to test whether a
- *      full key sequence has been encountered. Return key code if we
- *      have an unambiguous keystroke.
+ *      Utility used whilst assembling a keystroke to test whether a full key sequence has been encountered.
+ *      Return key code if we have an unambiguous keystroke.
  *
- *      If we have an ambiguity, check for a multikey press, and set
- *      multi_key if so. This way we can force the caller to wait
- *      until the ambiguity is resolved.
+ *      If we have an ambiguity, check for a multikey press, and set 'multi' if so.
+ *      This way we can force the caller to wait until the ambiguity is resolved.
  *
  *  Parameters:
- *      sbuf - Key buffer.
- *      multi_key - Multiple key flag storage.
+ *      buf - Key buffer; nul terminated.
+ *      buflen - Buffer length, in bytes; excluding nul.
+ *      multi - Multiple key flag storage.
  *      noambig - Ambiguity flag.
  *
  *  Results:
  *      Key code, otherwise -1.
  */
 int
-key_check(const KEY *sbuf, int *multi_key, int noambig)
+key_check(const char *buf, unsigned buflen, int *multi, int noambig)
 {
-    char buf[128], *cp;                         /* MAGIC */
     SPBLK *sp_first, *sp;
-    int klen, kcode, ambig = 0;
+    int kcode, ambig = 0;
 
-    *multi_key = FALSE;
-
-    /*
-     *  Import key, 16bit to 8bit conversion
-     */
-    for (cp = buf, klen = 0; *sbuf; ++klen) {
-        *cp++ = (char) *sbuf++;
-    }
-    *cp = 0;
-
-    assert(cp < buf + sizeof(buf));
+    *multi = FALSE;
 
     /*
-     *  Cook cygwin raw keyboard mode which reports the native WIN32 scancode, for example
+     *  WIN32 specials
      *
-     *  <ESC>{0;1;13;28;13;0K
+     *  Cygwin raw mode, cygwin-raw-mode, for example
+     *
+     *      <ESC>{0;1;13;28;13;0K
+     *
+     *  also allow MSTerminal, win32-input-mode, for example
+     *
+     *      <ESC>[17;29;0;1;8;1_
      */
 #if defined(__CYGWIN__)
-    if ('\033' == buf[0] && '{' == buf[1]) {    /* RAW MODE */
-        extern int xf_cygwinkdb;
+    if ('\033' == buf[0]) {
+        const char *end = buf + (buflen - 1);
 
-        if (xf_cygwinkb) {
-            *multi_key = TRUE;
-            if (klen < 10 || 'K' != buf[klen-1]) {  /* incomplete */
-                return -1;
+        if (xf_rawkb & RAWKB_CYGWIN)            /* cygwin-raw-mode */
+            if ('{' == buf[1]) {
+                const int final = (buflen >= 4 && (*end == 'K'));
+                if (! final) {
+                    *multi = TRUE;
+                    return -1;
+                }
+                kcode = cygwin_to_int(buf);
+                return (-1 == kcode ? 0 : kcode);
             }
-            kcode = cygwin_to_int(buf);
-            return (-1 == kcode ? 0 : kcode);
-        }
+
+        if (xf_rawkb & RAWKB_MSTERMINAL)        /* win32-input-mode */
+            if ('[' == buf[1]) {
+                const int final = (buflen >= 4 && (*end >= 0x40 && *end < 0x80)); // SGR final
+                if (! final) {
+                    *multi = TRUE;
+                    return -1;
+                }
+
+                if ('_' == *end) {
+                    kcode = msterminal_to_int(buf);
+                    return (-1 == kcode ? 0 : kcode);
+                }
+            }
     }
-#endif   /*__CYGWIN__*/
+#endif /*__CYGWIN__*/
 
     trace_log("KEYSEQ=");
-    trace_hex(buf, klen);
+    trace_hex(buf, buflen);
 
     if (NULL == (sp = sp_partial_lookup(buf, x_kseqtree, &ambig, &sp_first))) {
         if (sp_first) {
             const keyseq_t *kst = (const keyseq_t *) sp_first->data;
 
             if (IS_MULTIKEY(kst->ks_code)) {
-                *multi_key = TRUE;
+                *multi = TRUE;
             }
         }
         trace_log("keycode: %d\n", ambig ? -1 : 0);
@@ -2587,11 +2726,10 @@ key_check(const KEY *sbuf, int *multi_key, int noambig)
 
 
 /*  Function:           cygwin_to_int
- *      Decode a cygwin specific key escape sequence into
- *      our internal key-code.
+ *      Decode a cygwin specific key escape sequence into our internal key-code.
  *
  *  Parameters:
- *      buf - Escape sequnence buffer.
+ *      buf - Escape sequence buffer.
  *
  *  Results:
  *      nothing
@@ -2599,26 +2737,148 @@ key_check(const KEY *sbuf, int *multi_key, int noambig)
 static int
 cygwin_to_int(const char *buf)
 {
-#if defined(WIN32) || defined(__CYGWIN__)
-    if (buf[0] == '\033' && buf[1] == '{') {    /* RAW MODE */
-        unsigned bKeyDown, wRepeatCount;
-        unsigned wVirtKeyCode, wVirtScanCode, Unicode;
-        unsigned dwCtrlState;
-
-        /*  Example:
+#if defined(WIN32) || defined(__CYGWIN__)       /* cygwin-raw-mode */
+    if (buf[0] == '\033' && buf[1] == '{' && buf[2]) {
+        /*
+         *  \033[2000h - turn on raw keyboard mode,
+         *  \033[2000l - turn off raw keyboard mode.
+         *
+         *  Format:
+         *      <ESC>{Kd;Rc;Vk;Sc;Uc;CsK
+         *
+         *       Kd: the value of bKeyDown.
+         *       Rc: the value of wRepeatCount.
+         *       Vk: the value of wVirtualKeyCode.
+         *       Sc: the value of wVirtualScanCode.
+         *       Uc: the decimal value of UnicodeChar.
+         *       Cs: the value of dwControlKeyState.
+         *
+         *  Example:
          *      <ESC>{0;1;13;28;13;0K
+         *
          */
-        if (6 == sscanf(buf + 2, "%u;%u;%u;%u;%u;%uK", &bKeyDown, &wRepeatCount,
-                    &wVirtKeyCode, &wVirtScanCode, &Unicode, &dwCtrlState)) {
-            if (bKeyDown) {
-                const int w32key = key_mapwin32(dwCtrlState, wVirtKeyCode, Unicode);
+        unsigned bKeyDown, wRepeatCount;
+        unsigned wVirtKeyCode, wVirtScanCode, UnicodeChar;
+        unsigned dwControlKeyState;
 
-                trace_log("cygwin32[%s]=%d/0x%x\n", buf + 2, w32key, w32key);
+        if (6 == sscanf(buf + 2, "%u;%u;%u;%u;%u;%uK",
+                    &bKeyDown, &wRepeatCount, &wVirtKeyCode, &wVirtScanCode, &UnicodeChar, &dwControlKeyState)) {
+            if (bKeyDown) {
+                const int w32key =
+                    key_mapwin32(dwControlKeyState, wVirtKeyCode, UnicodeChar);
+
+                trace_log("cygkey[%s]=%d/0x%x\n", buf + 2, w32key, w32key);
                 return w32key;
             }
-            trace_log("cygwin32[%s]=up\n", buf + 2);
+            trace_log("cygkey[%s]=up\n", buf + 2);
             return KEY_VOID;
         }
+    }
+#else
+    __CUNUSED(buf)
+#endif
+    return -1;
+}
+
+
+/*  Function:           msterminal_to_int
+ *      Decode a MSTerminal specific key escape sequence into our internal key-code.
+ *
+ *  Parameters:
+ *      buf - Escape sequnence buffer.
+ *
+ *  Results:
+ *      nothing
+ */
+
+enum {
+    msVirtualKeyCode,
+    msVirtualScanCode,
+    msUnicodeChar,
+    msKeyDown,
+    msControlKeyState,
+    msRepeatCount,
+    msgArgumentMax
+};
+
+
+static int
+msterminal_args(const char *buffer, unsigned arguments[])
+{
+    const char *cursor = buffer + 2, *value = NULL;
+    unsigned args = 0;
+
+    while (*cursor) {
+        const BYTE c = *cursor++;
+
+        if (c >= '0' && c <= '9') {
+            if (NULL == value) {
+                value = cursor - 1;             // value
+            }
+
+        } else if (c == ';' || c == '_') {
+            if (args >= msgArgumentMax) {
+                args = 0;                       // overflow
+                break;
+            }
+
+            if (value) {
+                arguments[args] = (unsigned)strtoul((const char *)value, NULL, 10);
+                value = NULL;
+            }
+            ++args;
+            if (c == '_') {
+                break;                          // terminator
+            }
+
+        } else {
+            args = 0;                           // non-digit
+            break;
+        }
+    }
+    return (args >= 1);
+}
+
+
+static int
+msterminal_to_int(const char *buf)
+{
+#if defined(WIN32) || defined(__CYGWIN__)       /* win32-input-mode */
+    if (buf[0] == '\033' && buf[1] == '[' && buf[2]) {
+       /*
+        *   Terminal win32-input-mode
+        *
+        *       <ESC>[17;29;0;1;8;1_
+        *
+        *   Format:
+        *
+        *       <ESC>[Vk;Sc;Uc;Kd;Cs;Rc_
+        *
+        *       Vk: the value of wVirtualKeyCode - any number. If omitted, defaults to '0'.
+        *       Sc: the value of wVirtualScanCode - any number. If omitted, defaults to '0'.
+        *       Uc: the decimal value of UnicodeChar - for example, NUL is "0", LF is
+        *           "10", the character 'A' is "65". If omitted, defaults to '0'.
+        *       Kd: the value of bKeyDown - either a '0' or '1'. If omitted, defaults to '0'.
+        *       Cs: the value of dwControlKeyState - any number. If omitted, defaults to '0'.
+        *       Rc: the value of wRepeatCount - any number. If omitted, defaults to '1'.
+        *
+        *   Reference
+        *       https://github.com/microsoft/terminal/blob/main/doc/specs/%234999%20-%20Improved%20keyboard%20handling%20in%20Conpty.md
+        */
+        unsigned args[msgArgumentMax] = { 0, 0, 0, 0, 0, 1 };
+
+        if (msterminal_args(buf, args)) {
+            if (args[msKeyDown]) {
+                const int w32key =
+                    key_mapwin32(args[msControlKeyState], args[msVirtualKeyCode], args[msUnicodeChar]);
+
+                trace_log("winkey[%s]=0x%x/%u\n", buf + 2, w32key, w32key);
+                return w32key;
+            }
+            trace_log("winkey[%s]=up\n", buf + 2);
+            return KEY_VOID;
+        }
+        trace_log("winkey[%s]=na\n", buf + 2);
     }
 #else
     __CUNUSED(buf)
@@ -2694,10 +2954,12 @@ key_mapwin32(unsigned dwCtrlKeyState, unsigned wVirtKeyCode, unsigned CharCode)
         }
     }
 
-    trace_log("W32KEY %c%c%c = %d/0x%x (%s=%s)\n",
-        (mod & MOD_META  ? 'M' : '.'), (mod & MOD_CTRL  ? 'C' : '.'), (mod & MOD_SHIFT ? 'S' : '.'),
-        ch, ch, (ch == -1 ? "n/a" : (key >= w32Keys ? key->desc : "ASCII")), key_code2name(ch));
-    return (ch);
+    if (ch != -1) {
+        trace_log("W32KEY %c%c%c = %d/0x%x (%s=%s)\n",
+            (mod & MOD_META ? 'M' : '.'), (mod & MOD_CTRL ? 'C' : '.'), (mod & MOD_SHIFT ? 'S' : '.'),
+                ch, ch, (key >= w32Keys ? key->desc : "ASCII"), key_code2name(ch));
+    }
+    return ch;
 }
 #endif  /*WIN32 || __CYGWIN__*/
 

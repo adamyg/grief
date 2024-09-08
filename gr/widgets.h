@@ -1,11 +1,11 @@
 #ifndef GR_WIDGETS_H_INCLUDED
 #define GR_WIDGETS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_widgets_h,"$Id: widgets.h,v 1.8 2014/10/22 02:33:25 ayoung Exp $")
+__CIDENT_RCSID(gr_widgets_h,"$Id: widgets.h,v 1.9 2024/09/08 16:29:24 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: widgets.h,v 1.8 2014/10/22 02:33:25 ayoung Exp $
+/* $Id: widgets.h,v 1.9 2024/09/08 16:29:24 cvsuser Exp $
  * Standard widgets.
  *
  *
@@ -41,6 +41,10 @@ extern WIDGET_t *           label_new(void);
 extern WIDGET_t *           listbox_new(void);
 extern WIDGET_t *           pushbutton_new(void);
 extern WIDGET_t *           radiobutton_new(void);
+
+extern WIDGET_t *           menu_new(void);
+extern WIDGET_t *           menu_item_new(void);
+extern WIDGET_t *           menu_separator_new(void);
 
 __CEND_DECLS
 

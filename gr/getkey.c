@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_getkey_c,"$Id: getkey.c,v 1.46 2021/10/15 08:58:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_getkey_c,"$Id: getkey.c,v 1.49 2024/08/31 08:13:38 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: getkey.c,v 1.46 2021/10/15 08:58:07 cvsuser Exp $
+/* $Id: getkey.c,v 1.49 2024/08/31 08:13:38 cvsuser Exp $
  * Low level input, both keyboard and mouse.
  *
  *
@@ -54,6 +54,7 @@ __CIDENT_RCSID(gr_getkey_c,"$Id: getkey.c,v 1.46 2021/10/15 08:58:07 cvsuser Exp
 #include "symbol.h"
 #include "system.h"
 #include "tty.h"
+#include "ttyutil.h"
 
 #if defined(__OS2__)
 #define INCL_BASE
@@ -98,8 +99,8 @@ static int              x_escsource;
 
 static int              x_kbdq;                 /* pending key event */
 
-static KEY *            x_pushback = NULL;      /* local push back */
-static KEY              x_pushbuffer[32];
+static KEYCHAR *        x_pushback = NULL;      /* local push back */
+static KEYCHAR          x_pushbuffer[IOSEQUENCE_LENGTH * 2];
 
 #if defined(HAVE_SELECT) && \
         !defined(__OS2__) && !defined(__MSDOS__)
@@ -205,7 +206,7 @@ static int
 io_wait(int state, struct IOEvent *evt, accint_t utmo)
 {
     int tmo = EVT_SECOND(DEF_TIMEOUT);          /* default */
-    int ret, event = 0;
+    int ret, event;
 
 #if defined(HAVE_SELECT) && \
         !defined(__OS2__) && !defined(__MSDOS__)
@@ -228,8 +229,9 @@ io_wait(int state, struct IOEvent *evt, accint_t utmo)
      *      STATE_2ND       ESC delay (~750 ms).
      *      utmo            If callers/user specified timeout is shorter.
      */
+    event = WAIT_TIMEDOUT;
+
     if (STATE_RAW & state) {                    /* 'utmo' is absolute */
-        event = WAIT_TIMEDOUT;
         tmo = utmo;
 
     } else if (STATE_2ND & state) {             /* 2nd character, apply esc-delay */
@@ -296,11 +298,12 @@ io_wait(int state, struct IOEvent *evt, accint_t utmo)
     if (tmo > 0 && ((STATE_RAW|STATE_2ND) & state)) {
         do {
             if (sys_iocheck(evt)) {             /* poll issues, 1.7/windows 7 */
-                assert(EVT_NONE != evt->type);
+                assert(EVT_KEYRAW == evt->type);
                 return 0;
             }
             Sleep(50);
         } while ((tmo -= 50) > 0);
+        assert(event);
         return event;
     }
 #endif  /*CYGWIN*/
@@ -771,6 +774,7 @@ do_read_char(void)              /* int ([int ms = 0], [int mode = 0]) */
 {
     const accint_t tmo = get_xaccint(1, 0);     /* timeout, default=0 (block) */
     const accint_t mode = get_xaccint(2, 0);    /* >0=raw, <0=full, 0=normal */
+    struct IOEvent evt = {0};
     int ret;
 
     vtupdate();                                 /* echo-line update */
@@ -787,7 +791,7 @@ do_read_char(void)              /* int ([int ms = 0], [int mode = 0]) */
         /*
          *  full, including mouse (extension)
          */
-        ret = io_next(tmo);
+        ret = io_next(&evt, tmo);
         acc_assign_int(ret > 0 ? (accint_t) ret : (accint_t) -1);
 
     } else {
@@ -813,115 +817,75 @@ do_read_char(void)              /* int ([int ms = 0], [int mode = 0]) */
  *      buffer.
  *
  *  Parameters:
- *      buf -               Current i/o status.
- *      multikey -          Reply buffer.
- *      noambig -           Timeout in milliseconds.
- *
- *  Notes:
- *
- *      Normal tracking mode sends an escape sequence on both button press and
- *      release. Modifier key (shift, ctrl, meta) information is also sent. It
- *      is enabled by specifying parameter 1000 to DECSET.
- *
- *      On button press or release, xterm sends CSI M Cb Cx Cy .
- *
- *      o The low two bits of C b encode button information:
- *
- *              0=MB1 pressed,
- *              1=MB2 pressed,
- *              2=MB3 pressed,
- *              3=release.
- *
- *      o The next three bits encode the modifiers which were down when the
- *        button was pressed and are added together:
- *
- *              4=Shift, 8=Meta, 16=Control.
- *
- *        Note however that the shift and control bits are normally unavailable
- *        because xterm uses the control modifier with mouse for popup menus, and
- *        the shift modifier is used in the default translations for button events.
- *        The Meta modifier recognized by xterm is the mod1 mask, and is not
- *        necessarily the "Meta" key (see xmodmap).
- *
- *      o C x and C y are the x and y coordinates of the mouse event, encoded as
- *        in X10 mode. x = (Cx - 33), y = (Cy - 33)
- *
- *      Wheel mice may return buttons 4 and 5. Those buttons are represented by
- *      the same event codes as buttons 1 and 2 respectively, except that 64 is
- *      added to the event code. Release events for the wheel buttons are not
- *      reported. By default, the wheel mouse events are translated to scroll-back
- *      and scroll-forw actions. Those actions normally scroll the whole window,
- *      as if the scrollbar was used. However if Alternate Scroll mode is set,
- *      then cursor up/down controls are sent when the terminal is displaying the
- *      alternate screen.
+ *      buf - Current i/o status.
+ *      multikey - Reply buffer.
+ *      noambig - Timeout in milliseconds.
  *
  */
 static int
-io_cook(const KEY *buf, int noambig, struct IOEvent *evt, int *multikey)
+io_cook(struct IOEvent *evt, int noambig, int *multikey)
 {
     int key;
 
-    if ((key = key_check(buf, multikey, noambig)) > 0) {
-        if (MOUSE_KEY == key) {
+    if ((key = key_check((const char *)(evt->sequence.data), evt->sequence.len, multikey, noambig)) > 0) {
+        if (IS_SPECIAL(key)) {
             /*
              *  mouse events ...
              */
-            struct IOEvent t_evt = {0};
-            int button, ch[3] = {0};
-            unsigned i;
+            if (key == MOUSE_XTERM_KEY || key == MOUSE_SGR_KEY) {
+                KEYCHAR *buf = evt->sequence.data;
+                struct MouseEvent me = {0};
+                int ret = 0;
 
-            for (i = 0; i < 3; ++i) {
-                if (io_wait(STATE_2ND, &t_evt, 0) ||
-                        t_evt.type != EVT_KEYRAW) {
-                    evt->type = EVT_TIMEOUT;
-                    return (evt->code = -1);
+                while (0 == ret && evt->sequence.len < (IOSEQUENCE_LENGTH - 1))
+                {
+                    if (key == MOUSE_XTERM_KEY)
+                        ret = tty_mouse_xterm(&me, buf);
+                    else if (key == MOUSE_SGR_KEY)
+                        ret = tty_mouse_sgr(&me, buf);
+                    else
+                        ret = -1;
+
+                    if (ret >= 1) {             /* success */
+                        if (me.type & MOUSEEVENT_TWHEELED) {
+                            if (0 == (me.type & MOUSEEVENT_TRELEASE)) {
+                                if (me.b1) {
+                                    key = (me.ctrl ? KEY_PAGEUP : KEY_UP);
+                                } else {
+                                    key = (me.ctrl ? KEY_PAGEDOWN : KEY_DOWN);
+                                }
+                                evt->type = EVT_KEYDOWN;
+                                return (evt->code = key);
+                            }
+                        } else {
+                            mouse_process(&me, (const char *)buf);
+                        }
+                        evt->type = EVT_NONE;
+                        return (evt->code = KEY_VOID);
+                    }
+
+                    if (0 == ret) {             /* additional */
+                        if (io_wait(STATE_2ND, evt, 0)
+                                || evt->type != EVT_KEYRAW) {
+                            evt->type = EVT_TIMEOUT;
+                            return (evt->code = -1);
+                        }
+
+                        if (evt->code == 0 || evt->code > 0xff)
+                            evt->code = 0xff;   /* mintty/xterm-mode, coord 224 returns NUL, remap */
+
+                        buf[evt->sequence.len++] = (KEYCHAR)evt->code;
+                        buf[evt->sequence.len] = 0;
+
+                        trace_log("KEYSEQ=");
+                        trace_hex(buf, evt->sequence.len);
+                    }
                 }
-                ch[i] = t_evt.code;
+
+                evt->type = EVT_NONE;
+                return (evt->code = KEY_VOID);
             }
-
-            /* wheel, convert to cursor and page up/down events. */
-            button = ch[0];
-            if (0x60 == (0x60 & button)) {
-                switch (button & 0x1f) {
-                case    0:  /* 00000 - '`'        */
-                    key = KEY_UP;
-                    break;
-
-                case    1:  /* 00001 - 'a'        */
-                    key = KEY_DOWN;
-                    break;
-
-                case  4|0:  /* 00100 - 'd', shift */
-                case  8|0:  /* 01000 - 'h', meta  */
-                case 16|0:  /* 10000 - 'p', ctrl  */
-                    key = KEY_PAGEUP;
-                    break;
-
-                case  4|1:  /* 00101 - 'e', shift */
-                case  8|1:  /* 01000 - 'i', meta  */
-                case 16|1:  /* 10001 - 'q', ctrl  */
-                    key = KEY_PAGEDOWN;
-                    break;
-
-                default:
-                    evt->type = EVT_NONE;
-                    return (evt->code = KEY_VOID);
-                }
-
-                evt->type = EVT_KEYDOWN;
-                return (evt->code = key);
-            }
-
-            /* others, click and movement */
-            mouse_process((ch[1] - ' ' - 1), (ch[2] - ' ' - 1),
-                (' ' == button), ('!' == button), ('"' == button), -1);
-
-            evt->type = EVT_NONE;
-            return (evt->code = KEY_VOID);
         }
-
-        evt->type = EVT_KEYDOWN;
-        return (evt->code = key);
     }
 
     evt->type = EVT_NONE;
@@ -942,9 +906,9 @@ io_cook(const KEY *buf, int noambig, struct IOEvent *evt, int *multikey)
  *      buffered up.
  *
  *  Parameteres:
- *      evt -               Input event.
- *      mousemode -         Whether mouse events should be returned.
- *      tmo -               Timeout, in milliseconds.
+ *      evt - Input event.
+ *      mousemode - Whether mouse events should be returned.
+ *      tmo - Timeout, in milliseconds.
  *
  *  Returns:
  *      -1 -                Timeout.
@@ -955,21 +919,24 @@ static int
 io_check(struct IOEvent *evt, int mousemode, accint_t tmo)
 {
     IOTimer_t timer;
-    KEY seq[32], seqidx;
+    struct IOSequence *seq = &evt->sequence;
     int state, event, multikey;
     int ch16 = 0, key, ret;
 
     iot_current();
 
     if (tmo <= -1) {                            /* poll, only process typeahead */
-        if (!x_pushback && !io_typeahead()) {
+        if (NULL == x_pushback && !io_typeahead()) {
             evt->type = EVT_TIMEOUT;
+            seq->len = 0;
             return (evt->code = -1);
         }
     }
+
 #define IO_RESET() {                            /* initial state WAIT1 and IDLE */ \
         state = (x_waitstate & ~STATE_KEYS) | (STATE_1ST | STATE_IDLE); \
-        seq[seqidx = 0] = 0; \
+        seq->data[0] = 0; \
+        seq->len = 0; \
         ch16 = 0; \
     }
 
@@ -1049,23 +1016,28 @@ io_check(struct IOEvent *evt, int mousemode, accint_t tmo)
 
             if (0 == ret && (ch16 = io_pending(evt)) > 0) {
                 if (EVT_KEYRAW != evt->type) {
-                    if (EVT_MOUSE == evt->type && !mousemode) {
-                        continue;               /* consume */
+                    if (EVT_MOUSE == evt->type) {
+                        if (!mousemode || ch16 == KEY_VOID) {
+                            continue;           /* consume */
+                        }
                     }
                     return ch16;
                 }
-                break;  //KEYRAW
+                break; //KEYRAW
             }
 
             if (0 == (event = io_wait(state, evt, tmo))) {
                 ch16 = evt->code;
+                assert(ch16);
                 if (EVT_KEYRAW != evt->type) {
-                    if (EVT_MOUSE == evt->type && !mousemode) {
-                        continue;               /* consume */
+                    if (EVT_MOUSE == evt->type) {
+                        if (!mousemode || ch16 == KEY_VOID) {
+                            continue;           /* consume */
+                        }
                     }
                     return ch16;
                 }
-                break;  //KEYRAW
+                break; //KEYRAW
             }
 
             /* timers */
@@ -1100,7 +1072,7 @@ io_check(struct IOEvent *evt, int mousemode, accint_t tmo)
                  *  Awaiting additional character(s) and previous sequence was an
                  *  ambiguous sequence, eg ABC & ABCD; now check not ambiguous.
                  */
-                if ((key = io_cook(seq, TRUE, evt, &multikey)) > 0) {
+                if ((key = io_cook(evt, TRUE, &multikey)) > 0) {
                     if (EVT_MOUSE == evt->type && !mousemode) {
                         if (tmo <= -1 || iot_expired(&timer)) {
                             evt->type = EVT_TIMEOUT;
@@ -1114,25 +1086,23 @@ io_check(struct IOEvent *evt, int mousemode, accint_t tmo)
                     }
                     return key;
                 }
-                goto timeout;
+                goto unmatched;
             }
-
-        } //while (ch16 <= 0);
+        }
 
         /*
          *  Append to sequence and cook ...
          *      determine whether the current sequence (seq) is a complete key.
          */
         assert(ch16 > 0);
-        assert(ch16 <= KEY_VOID);
-        assert(0 == (ch16 & ~0xff));            /* 8-bit only */
+        assert(0 == (ch16 & ~0xff));            /* positive 8-bit only */
 
         iot_current();                          /* update timer */
 
-        seq[seqidx] = (KEY) ch16;
-        seq[++seqidx] = 0;
+        seq->data[seq->len++] = (KEYCHAR) ch16;
+        seq->data[seq->len] = 0;
 
-        if ((key = io_cook(seq, STATE_2ND & state, evt, &multikey)) <= 0) {
+        if ((key = io_cook(evt, STATE_2ND & state, &multikey)) <= 0) {
             if (0 == key) {
                 break;                          /* no matches */
             }
@@ -1151,29 +1121,37 @@ io_check(struct IOEvent *evt, int mousemode, accint_t tmo)
             return key;
         }
 
+        if (seq->len >= (IOSEQUENCE_LENGTH - 1)) {
+            goto unmatched;                     /* overflow guard */
+        }
+
         if (! multikey) {                       /* !multikey, secondary characters */
             state &= ~STATE_KEYS;
             state |= STATE_2ND;
         }
     }
 
-timeout:;
-    ch16 = seq[0];
-    assert(seqidx > 0);
+unmatched:;
+    assert(seq->len);
+    ch16 = seq->data[0];
     assert(ch16);
-    playback_store(ch16);
 
-    if (seq[seqidx]) {
-        KEY tkey;
-
+    if (seq->len > 1) {
+        assert(x_pushback == NULL);
         x_pushback = x_pushbuffer;
-        for (ret = 1; 0 != (tkey = seq[ret]); ++ret) {
-            *x_pushback++ = tkey;
+
+        for (ret = 1; ret < seq->len; ++ret) {
+            x_pushbuffer[ret - 1] = seq->data[ret];
         }
-        *x_pushback = 0;
+        x_pushbuffer[ret] = 0;
+        seq->data[1] = 0;
+        seq->len = 1;
+
     } else {
         x_pushback = NULL;
     }
+
+    playback_store(ch16);
 
     evt->type = EVT_KEYDOWN;
     return (evt->code = ch16);
@@ -1189,24 +1167,25 @@ timeout:;
  *      and the echo-line are serviced.
  *
  *  Parameters:
- *      none
+ *      evt - Event management object.
+ *      tmo - Timeout.
  *
  *  Returns:
  *      Key code, otherwise -1 on a timeout.
  */
 int
-io_next(accint_t tmo)
+io_next(struct IOEvent *evt, accint_t tmo)
 {
-    struct IOEvent evt = {0};
     int key;
 
-    if ((key = io_check(&evt, TRUE, tmo)) > 0) {
+    if ((key = io_check(evt, TRUE, tmo)) > 0) {
         x_time_last_key = x_ionow;
-        if (EVT_MOUSE == evt.type) {
-            mouse_execute(&evt);
+        if (EVT_MOUSE == evt->type) {
+            mouse_execute(evt);
         }
     }
-    ED_TRACE(("io_next() = [%d/0x%x]\n", key, key))
+    ED_TRACE(("io_next() = [%d/0x%x] <%.*s>\n", key, key, evt->sequence.len, evt->sequence.data))
+    assert(evt->code == key);
     return key;
 }
 
@@ -1219,8 +1198,8 @@ io_next(accint_t tmo)
  *      display-timers and the echo-line are serviced.
  *
  *  Parameters:
- *      evt -               Input event.
- *      tmo -               Timeout, in milliseconds.
+ *      evt - Input event.
+ *      tmo - Timeout, in milliseconds.
  *
  *  Returns:
  *      EVT_TIMEOUT, EVT_MOUSE or EVT_KEYDOWN.
@@ -1251,7 +1230,7 @@ io_get_event(struct IOEvent *evt, accint_t tmo)
  *      update-timers and the echo-line are serviced.
  *
  *  Parameters:
- *      tmo -               Timeout, in milliseconds.
+ *      tmo - Timeout, in milliseconds.
  *
  *  Returns:
  *      Key code, otherwise -1 on a timeout.
@@ -1264,7 +1243,7 @@ io_get_key(accint_t tmo)
 
     ED_TRACE(("io_getkey(tmo:%d) = [%d/0x%x]\n", (int)tmo, key, key))
     if (key > 0) {
-	x_time_last_key = x_ionow;
+        x_time_last_key = x_ionow;
     }
     return key;
 }
@@ -1274,7 +1253,7 @@ io_get_key(accint_t tmo)
  *      Retrieve the next raw keystroke from the keyboard.
  *
  *  Parameters:
- *      tmo -               Timeout, in milliseconds.
+ *      tmo - Timeout, in milliseconds.
  *
  *  Returns:
  *      Key-code, otherwise 0.
@@ -1348,7 +1327,7 @@ io_typeahead(void)
  *      streams and secondary from the underlying keyboard stream.
  *
  *  Parameters:
- *      evt -               Input event.
+ *      evt - Input event.
  *
  *  Returns:
  *      Character code otherwise -1.
@@ -1385,7 +1364,7 @@ io_pending(struct IOEvent *evt)
  *      Controls whether pty are polled (at least) every 1 second.
  *
  *  Parameters:
- *      state -             *true* or *false*.
+ *      state - *true* or *false*.
  *
  *  Returns:
  *      nothing.
@@ -1455,7 +1434,7 @@ io_reset_timers(void)
  *      we may need to tell the operating system in a funny way (e.g. X-Windows).
  *
  *  Parameters:
- *      fd -                File descriptor.
+ *      fd - File descriptor.
  *
  *  Returns:
  *      nothing.

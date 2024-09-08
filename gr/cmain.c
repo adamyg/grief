@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.60 2024/07/29 16:14:30 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.62 2024/08/27 12:44:33 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.60 2024/07/29 16:14:30 cvsuser Exp $
+/* $Id: cmain.c,v 1.62 2024/08/27 12:44:33 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -78,7 +78,19 @@ __CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.60 2024/07/29 16:14:30 cvsuser Exp $
 #include "m_feature.h"                          /* x_features */
 #include "m_userprofile.h"
 
-#define MAX_M       32                          /* Number of -m switches, including -u switch. */
+#if defined(HAVE_MOUSE)
+#define MOUSE_MODE_DEFAULT      "auto"
+#if defined(HAVE_LIBGPM) && defined(HAVE_GPM_H)
+#define MOUSE_MODE_OPTIONS      "=[/ttydev|gpm|xterm|xterm-x11,xterm2|xterm-sgr,sgr]"
+#else
+#define MOUSE_MODE_OPTIONS      "=[/ttydev|xterm|xterm-x11,xterm2|xterm-sgr,sgr]"
+#endif
+#else
+#define MOUSE_MODE_DEFAULT      "disabled"
+#define MOUSE_MODE_OPTIONS      "=none"
+#endif
+
+#define MAX_M                   32              /* -m switches, including -u switch. */
 
 static struct argoption options[] = {
     { "add",            arg_none,           NULL,       'a',    "Add file to current profile" },
@@ -106,7 +118,8 @@ static struct argoption options[] = {
     { "vm",             arg_required,       NULL,       'M',    "Set virtual memory size to # lines",
                             "#" },
 
-    { "mouse",          arg_none,           NULL,       1,      "Enable mouse" },
+    { "mouse",          arg_required,       NULL,       1,      "Configure the mouse mode; default=" MOUSE_MODE_DEFAULT,
+                            MOUSE_MODE_OPTIONS },
 
     { "nomouse",        arg_none,           NULL,       1,      "Disable mouse support" },
 
@@ -153,7 +166,7 @@ static struct argoption options[] = {
 
     { "nohilite",       arg_none,           NULL,       7,      "Disable syntax hiliting" },
 
-    { "nocygwinkb",     arg_none,           NULL,       8,      "Disable use of cygwin raw scancodes" },
+    { "norawkb",        arg_none,           NULL,       8,      "Disable use of raw scancodes; Cygwin/Terminal" },
 
     { "nosigtrap",      arg_none,           NULL,       17,     "Disable signal trapping (for debugging)" },
 
@@ -260,7 +273,11 @@ static int              xf_dumpstats = FALSE;   /* TRUE if stats reporting on ex
 
 static int              xf_dumprefs = FALSE;    /* TRUE if ref status are dumped on exit. */
 
-int                     xf_mouse = TRUE;        /* TRUE enable mouse. */
+#if defined(HAVE_MOUSE) || defined(WIN32)
+const char *            xf_mouse = "";          /* mouse mode; default auto-detect */
+#else
+const char *            xf_mouse = NULL;
+#endif
 
 static int              xf_ttydrv = 't';        /* TTY driver type */
 
@@ -296,7 +313,7 @@ int                     xf_graph = -1;          /* TRUE/FALSE, user specified gr
 
 int                     xf_visbell = FALSE;     /* TRUE/FALSE, visual bell. */
 
-int                     xf_cygwinkb = TRUE;     /* TRUE/FALSE, cygwin raw keyboard. */
+int                     xf_rawkb = RAWKB_ENABLE;/* TRUE/FALSE, raw keyboard. */
 
 int                     xf_sigtrap = TRUE;      /* TRUE/FALSE, control signal traps. */
 
@@ -522,6 +539,7 @@ cmain(int argc, char **argv)
 #endif
     vtinit(&argc, argv);
     ttopen();
+	//TODO: resource macro?
 
     /* high-level */
     color_setscheme(NULL);
@@ -537,7 +555,7 @@ cmain(int argc, char **argv)
     unicode_init();
     vtready();
     if (xf_mouse) {
-        if (mouse_init("")) {                   /* mouse interface */
+        if (mouse_init(xf_mouse)) {             /* mouse interface */
             x_display_ctrl |= DC_MOUSE;
         }
         xf_usevmin = TRUE;
@@ -970,8 +988,12 @@ argv_process(const int doerr, int argc, const char **argv)
         }
 
         switch(c) {
-        case 1:             /* [no]mouse */
-            xf_mouse = (args.opt == 'm' ? TRUE : FALSE);
+        case 1:             /* [no]mouse=[type] */
+            if (args.opt == 'm') {
+                xf_mouse = (args.val ? args.val : "");
+            } else {
+                xf_mouse = NULL;               /* nomouse; disable */
+            }
             break;
 
         case 2:             /* tty - [no]scroll regions */
@@ -1001,8 +1023,8 @@ argv_process(const int doerr, int argc, const char **argv)
             xf_visbell = TRUE;
             break;
 
-        case 8:             /* tty - cygwin raw keyboard disabled. */
-            xf_cygwinkb = FALSE;
+        case 8:             /* tty - raw keyboard disabled. */
+            xf_rawkb &= ~RAWKB_ENABLE;
             break;
 
         case 6:             /* tty - underline mode. */
@@ -2039,7 +2061,7 @@ usage(int what)
 
     fflush(stderr);
     exit(EXIT_FAILURE);
-#undef      HINDENT
+#undef HINDENT
 }
 
 /*end*/

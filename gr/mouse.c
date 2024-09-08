@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mouse_c,"$Id: mouse.c,v 1.41 2023/09/10 16:35:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_mouse_c,"$Id: mouse.c,v 1.47 2024/09/08 16:29:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mouse.c,v 1.41 2023/09/10 16:35:52 cvsuser Exp $
+/* $Id: mouse.c,v 1.47 2024/09/08 16:29:24 cvsuser Exp $
  * Mouse support code.
  *
  *
@@ -21,6 +21,7 @@ __CIDENT_RCSID(gr_mouse_c,"$Id: mouse.c,v 1.41 2023/09/10 16:35:52 cvsuser Exp $
 #include <editor.h>
 #include <edtermio.h>
 #include <edalt.h>
+#include <libstr.h>
 
 #include "accum.h"
 #include "anchor.h"
@@ -34,6 +35,7 @@ __CIDENT_RCSID(gr_mouse_c,"$Id: mouse.c,v 1.41 2023/09/10 16:35:52 cvsuser Exp $
 #include "main.h"
 #include "register.h"                           /* trigger() */
 #include "symbol.h"
+#include "system.h"
 #include "tty.h"
 #include "window.h"
 
@@ -63,9 +65,8 @@ static time_t           x_mouse_prev;
 
 /*
  *  mouse_init ---
- *      Function to try and initialise mouse device. Called only
- *      if -mouse flag set. Called with name of device for
- *      accessing.
+ *      Initialise the mouse interface using the given device.
+ *      Called only if mouse functionality has been enabled.
  */
 int
 mouse_init(const char *dev)
@@ -113,8 +114,9 @@ mouse_poll(fd_set *fds)
 {
     struct MouseEvent m = {0};
 
+    m.multi = -1;
     if (sys_mousepoll(fds, &m)) {
-        mouse_process(m.x, m.y, m.b1, m.b2, m.b3, m.multi);
+        mouse_process(&m, NULL);
     }
     return (0);
 }
@@ -199,7 +201,7 @@ do_translate_pos(void)              /* int (int x, int y, int &wid, int &line, i
         y -= (wp->w_y - !win_tborder(wp)) - 1;
 
         argv_assign_int(4, (accint_t)(wp->w_top_line + y));
-        argv_assign_int(5, (accint_t)(wp->w_left_offset + x));
+        argv_assign_int(5, (accint_t)(wp->w_left_offset + 1 + x));
 
     } else {
         argv_assign_int(4, (accint_t) -1);
@@ -226,9 +228,8 @@ do_translate_pos(void)              /* int (int x, int y, int &wid, int &line, i
             [int b1], [int b2], [int b3], int x, int y)
 
     Macro Description:
-        The 'process_mouse()' primitive allows an external mouse
-        event to be processed; some mice types are handled internally
-        whereas others require macro support.
+        The 'process_mouse()' primitive allows an external mouse event to be processed;
+        some mice types are handled internally whereas others require macro support.
 
     Macro Parameters:
         b1, b2, b3 - Button states, zero for up otherwise non-zero
@@ -247,13 +248,14 @@ do_translate_pos(void)              /* int (int x, int y, int &wid, int &line, i
 void
 do_process_mouse(void)              /* void (int b1, int b2, int b3, int x, int y) */
 {
-    const int b1 = get_xinteger(1, 0);
-    const int b2 = get_xinteger(2, 0);
-    const int b3 = get_xinteger(3, 0);
-    const int x  = get_xinteger(4, 0);
-    const int y  = get_xinteger(5, 0);
+    struct MouseEvent m = {0};
 
-    mouse_process(x, y, b1, b2, b3, 0);
+    m.b1 = get_xinteger(1, 0);
+    m.b2 = get_xinteger(2, 0);
+    m.b3 = get_xinteger(3, 0);
+    m.x  = get_xinteger(4, 0);
+    m.y  = get_xinteger(5, 0);
+    mouse_process(&m, NULL);
 }
 
 
@@ -301,24 +303,24 @@ do_process_mouse(void)              /* void (int b1, int b2, int b3, int x, int 
     Where::
 
 (start table)
-        [Value              [Definition                     ]
-      ! MOBJ_NOWHERE        Not in any window.
+        [Value  [Definition         [Definition             ]
+      ! 0       MOBJ_NOWHERE        Not in any window.
 
-      ! MOBJ_LEFT_EDGE      Left bar of window.
-      ! MOBJ_RIGHT_EDGE     Right bar of window.
-      ! MOBJ_TOP_EDGE       Top line of window.
-      ! MOBJ_BOTTOM_EDGE    Bottom line of window.
-      ! MOBJ_INSIDE         Mouse inside window.
-      ! MOBJ_TITLE          On title.
+      ! 1       MOBJ_LEFT_EDGE      Left bar of window.
+      ! 2       MOBJ_RIGHT_EDGE     Right bar of window.
+      ! 3       MOBJ_TOP_EDGE       Top line of window.
+      ! 4       MOBJ_BOTTOM_EDGE    Bottom line of window.
+      ! 5       MOBJ_INSIDE         Mouse inside window.
+      ! 6       MOBJ_TITLE          On title.
 
-      ! MOBJ_VSCROLL        Vertical scroll area.
-      ! MOBJ_VTHUMB         Vertical scroll area.
-      ! MOBJ_HSCROLL        Horizontal scroll area.
-      ! MOBJ_HTHUMB         Horizontal scroll area.
+      ! 20      MOBJ_VSCROLL        Vertical scroll area.
+      ! 21      MOBJ_VTHUMB         Vertical scroll area.
+      ! 22      MOBJ_HSCROLL        Horizontal scroll area.
+      ! 23      MOBJ_HTHUMB         Horizontal scroll area.
 
-      ! MOBJ_ZOOM           Zoom button,
-      ! MOBJ_CLOSE          Close.
-      ! MOBJ_SYSMENU        System Menu.
+      ! 30      MOBJ_ZOOM           Zoom button.
+      ! 31      MOBJ_CLOSE          Close.
+      ! 32      MOBJ_SYSMENU        System Menu.
 (end table)
 
     Region::
@@ -334,7 +336,7 @@ do_process_mouse(void)              /* void (int b1, int b2, int b3, int x, int 
 (end table)
 
     Macro Returns:
-        nothing
+        Returns the time since the previous mouse event.
 
     Macro Portability:
         n/a
@@ -364,7 +366,7 @@ do_get_mouse_pos(void)          /* int ([int x], [int y], [int win]. [int line],
         x -= wp->w_x + win_lborder(wp) + 1;     /* normalise to window */
         y -= wp->w_y + win_tborder(wp) + 1;
         y += wp->w_top_line;
-        x += wp->w_left_offset;
+        x += wp->w_left_offset + 1;
 
         argv_assign_int(4, (accint_t) y);       /* line */
         argv_assign_int(5, (accint_t) x);       /* column */
@@ -435,93 +437,370 @@ do_get_mouse_pos(void)          /* int ([int x], [int y], [int win]. [int line],
 
 /*
  *  mouse_process ---
- *      Determine if a mouse status change has occured
- *      and generate a key action to match.
+ *      Determine if a mouse status change has occured and generate a key action to match.
  */
-int
-mouse_process(int x, int y, int b1, int b2, int b3, int multi)
-{
-    static int click_last, click_ypos, click_xpos;
-    static struct MouseEvent oldm;
-    static clock_t click_time;
 
-    WINDOW_t *wp;
-    int click, win, where;
+struct MouseState {
+    mouseevt_t evt;
+    unsigned mods;
+    WINDOW_t* wp;
+};
+
+static uint64_t mouse_time(void);
+static unsigned mouse_mods(const struct MouseEvent* me);
+static int mouse_press(const struct MouseEvent* me, const struct MouseState* ms);
+static int mouse_press_release(const struct MouseEvent* me, const struct MouseState* ms);
+static int mouse_ismulti(int click, int x, int y);
+static int mouse_motion(const struct MouseEvent *me, const struct MouseState *ms);
+static int mouse_release(const struct MouseEvent *me, const struct MouseState *ms, int b1, int b2, int b3);
+
+static struct MouseEvent prev;
+
+int
+mouse_process(const struct MouseEvent *me, const char *seq)
+{
+    struct MouseState ms = {0};
+    int msgs = 0;
+
+#if (0)
+    char buffer[64];
+    sxprintf(buffer, sizeof(buffer), "%s:%u%u%u,%x,%x", seq, me->b1, me->b2, me->b3, me->type, me->ctrl);
+    seq = buffer;
+#endif
+
+    ms.evt.seq = seq;
+    ms.evt.x = me->x;
+    ms.evt.y = me->y;
+    ms.mods = mouse_mods(me);
+    ms.wp = mouse_pos(me->x, me->y, &ms.evt.win, &ms.evt.where);
+
+    if (me->type == MOUSEEVENT_TPRESSRELEASE) {
+        /*
+         *  Absolute mouse reporting semantics for example win32,
+         *  explicit button status events.
+         */
+        if ((msgs = mouse_press_release(me, &ms)) != 0) {
+            return msgs;
+        }
+
+    } else if (me->type & (MOUSEEVENT_TPRESS | MOUSEEVENT_TRELEASE)) {
+        /*
+         *  Advanced mouse reporting semantics,
+         *  individual explicit press and release events
+         */
+        if (me->type & MOUSEEVENT_TRELEASE) {
+            return mouse_release(me, &ms, me->b1, me->b2, me->b3);
+        }
+        msgs = mouse_press(me, &ms);
+
+    } else {
+        /*
+         *  Simple mouse reporting semantics for example xterm legacy,
+         *  individual press event and with a group release event.
+         */
+        if (me->type & MOUSEEVENT_TRELEASE_ALL) {
+            msgs =  mouse_motion(me, &ms);
+            msgs += mouse_release(me, &ms, prev.b1, prev.b2, prev.b3);
+            return msgs;
+        }
+        msgs = mouse_press(me, &ms);
+    }
+
+    if (0 == msgs) {
+        msgs = mouse_motion(me, &ms);
+    }
+
+    return msgs;
+}
+
+
+static uint64_t
+mouse_time(void)
+{
+    int ms = 0;
+    time_t now = sys_time(&ms);
+    return ((uint64_t)now * 1000) + ms;
+}
+
+
+static unsigned
+mouse_mods(const struct MouseEvent* me)
+{
+    unsigned mods = 0;
+
+    if (me->ctrl & MOUSEEVENT_CSHIFT)
+        mods |= MOD_SHIFT;
+    if (me->ctrl & MOUSEEVENT_CCTRL)
+        mods |= MOD_CTRL;
+    if (me->ctrl & MOUSEEVENT_CMETA)
+        mods |= MOD_META;
+    return mods;
+}
+
+
+/*
+ *  mouse_press ---
+ *      Mouse press logic, common to mouse handlers; unless multi, emumulate double-click
+ */
+static int
+mouse_press(const struct MouseEvent* me, const struct MouseState* ms)
+{
+    const int x = me->x, y = me->y;
+    int b1 = me->b1, b2 = me->b2, b3 = me->b3, click = 0;
     int msgs = 0;
 
     /*
-     *  Find out if this is a multi-click
+     *  determine click type.
      */
-    click = 0;
-    if (b1 && !oldm.b1) {
+    if (b1 && 0 == prev.b1) {
         click = 1;
-    } else if (b2 && !oldm.b2) {
+    }  else if (b2 && 0 == prev.b2) {
         click = 2;
-    } else if (b3 && !oldm.b3) {
+    } else if (b3 && 0 == prev.b3) {
         click = 3;
     }
 
     if (click) {
-        if (-1 == multi) {
-            const clock_t now = clock();
+        int multi = me->multi;
 
-            if (click == click_last && x == click_xpos && y == click_ypos &&
-                        now < click_time + (CLOCKS_PER_SEC/3)) {
-                multi = 1;                      /* ~330ms */
-            } else {
-                click_last = click;
-                click_xpos = x;
-                click_ypos = y;
-                click_time = now;
-                multi = 0;
+        if (-1 == multi) { /* derive */
+            multi = mouse_ismulti(click, x, y);
+        }
+        if (multi) {
+            if (click == 1) {
+                ++b1;
+            } else if (click == 2) {
+                ++b2;
+            } else if (click == 3) {
+                ++b3;
             }
         }
-
-        if (multi) {
-            if (click == 1) b1++;
-            else if (click == 2) b2++;
-            else if (click == 3) b3++;
-            click_last = 0;
-        }
     }
-
-    trace_log("mouse_process(%d, %d, %d-%d-%d-%d)\n", x, y, b1, b2, b3, multi);
 
     /*
-     *  State change, send message
+     *  publish
      */
-    if ((b1 != oldm.b1) || (b2 != oldm.b2) || (b3 != oldm.b3) || (x != oldm.x) || (y != oldm.y)) {
-        if ((wp = mouse_pos(x, y, &win, &where)) != NULL) {
-            int motion = ((x != oldm.x) || (y != oldm.y));
+    if (!click) {
+        return 0;
+    }
 
-#define BUTTON_ACTION(s, b) \
-                (s ? (s > 1 ? (BUTTON1_DOUBLE + b) : (BUTTON1_DOWN + b)) : BUTTON1_UP + b)
+    trace_log("mouse_press(%d, %d, %d-%d-%d, 0x%x)\n", x, y, b1, b2, b3, ms->mods);
+    if (ms->wp) {
+        triggerx(REG_MOUSE, "%d %d %d %d %d %d %d %d %d", ms->evt.win, ms->evt.where, x, y, click, b1, b2, b3, ms->mods);
+    }
 
-            /*
-             *  Old-style mouse trigger
-             */
-            triggerx(REG_MOUSE, "%d %d %d %d %d %d %d", win, where, x, y, b1, b2, b3);
+#define BUTTON_PRESS(__s, __b) \
+    ((1 == __s ? (BUTTON1_DOWN + __b) : (BUTTON1_DOUBLE + __b)) | ms->mods)
 
-            /*
-             *  report button changes
-             */
-            if (b1 != oldm.b1) key_cache_mouse(x_push_ref, BUTTON_ACTION(b1, 0), FALSE, x, y, win, where), ++msgs;
-            if (b2 != oldm.b2) key_cache_mouse(x_push_ref, BUTTON_ACTION(b2, 1), FALSE, x, y, win, where), ++msgs;
-            if (b3 != oldm.b3) key_cache_mouse(x_push_ref, BUTTON_ACTION(b3, 2), FALSE, x, y, win, where), ++msgs;
+#define BUTTON_MOTION(__b) \
+    ((BUTTON1_MOTION + __b) | ms->mods)
 
-            /*
-             *  and secondary motion
-             */
-            if (motion) {
-                if (b1) key_cache_mouse(x_push_ref, BUTTON1_MOTION, FALSE, x, y, win, where), ++msgs;
-                if (b2) key_cache_mouse(x_push_ref, BUTTON2_MOTION, FALSE, x, y, win, where), ++msgs;
-                if (b3) key_cache_mouse(x_push_ref, BUTTON3_MOTION, FALSE, x, y, win, where), ++msgs;
+    // XXX: should mods be sticky, for example Button1-Ctl- is retained across motion and release?
+    if (click) {
+        if (b1 && b1 != prev.b1) {
+            if (ms->wp) {
+                key_cache_mouse(x_push_ref, BUTTON_PRESS(b1, 0), FALSE, &ms->evt);
+                ++msgs;
             }
+            prev.b1 = b1;
         }
 
-        oldm.x = x; oldm.y = y;
-        oldm.b1 = b1; oldm.b2 = b2; oldm.b3 = b3;
+        if (b2 && b2 != prev.b2) {
+            if (ms->wp) {
+                key_cache_mouse(x_push_ref, BUTTON_PRESS(b2, 1), FALSE, &ms->evt);
+                ++msgs;
+            }
+            prev.b2 = b2;
+        }
+
+        if (b3 && b3 != prev.b3) {
+            if (ms->wp) {
+                key_cache_mouse(x_push_ref, BUTTON_PRESS(b3, 2), FALSE, &ms->evt);
+                ++msgs;
+            }
+            prev.b3 = b3;
+        }
+
+        prev.x = x;
+        prev.y = y;
     }
+    return msgs;
+}
+
+
+/*
+ *  mouse_press_release ---
+ *      Mouse specific release logic, for example win32-console, system double-click reporting assumed.
+ */
+static int
+mouse_press_release(const struct MouseEvent* me, const struct MouseState* ms)
+{
+    const int x = me->x, y = me->y,
+        b1 = me->b1, b2 = me->b2, b3 = me->b3;
+    const int multi = (me->multi > 0 ? 1 : 0);
+    int msgs = 0;
+
+#define BUTTON_PRESSRELEASE(__s, __b) \
+    ((__s ? (multi ? (BUTTON1_DOUBLE + __b) : (BUTTON1_DOWN + __b)) : (BUTTON1_UP + __b)) | ms->mods)
+
+    if (b1 == prev.b1 && b2 == prev.b2 && b3 == prev.b3) {
+        return 0;
+    }
+
+    trace_log("mouse_press_release(%d, %d, %d-%d-%d, 0x%x)\n", x, y, b1, b2, b3, ms->mods);
+    if (ms->wp) {
+        triggerx(REG_MOUSE, "%d %d %d %d %d %d %d %d %d", ms->evt.win, ms->evt.where, x, y, 0, b1, b2, b3, ms->mods);
+    }
+
+    if (b1 != prev.b1) {
+        if (ms->wp) {
+            key_cache_mouse(x_push_ref, BUTTON_PRESSRELEASE(b1, 0), FALSE, &ms->evt);
+            ++msgs;
+        }
+        prev.b1 = b1;
+    }
+
+    if (b2 != prev.b2) {
+        if (ms->wp) {
+            key_cache_mouse(x_push_ref, BUTTON_PRESSRELEASE(b2, 1), FALSE, &ms->evt);
+            ++msgs;
+        }
+        prev.b2 = b2;
+    }
+
+    if (b3 != prev.b3) {
+        if (ms->wp) {
+            key_cache_mouse(x_push_ref, BUTTON_PRESSRELEASE(b3, 2), FALSE, &ms->evt);
+            ++msgs;
+        }
+        prev.b3 = b3;
+    }
+
+    return msgs;
+}
+
+
+static int
+mouse_ismulti(int click, int x, int y)
+{
+    static int click_last, click_ypos, click_xpos;
+    static uint64_t click_time;
+    uint64_t now = mouse_time();
+
+    if (click == click_last && x == click_xpos && y == click_ypos &&
+                now < (click_time + sys_doubleclickms())) {
+        click_last = 0;
+        return 1;                               /* double-click */
+    }
+    click_last = click;
+    click_xpos = x;
+    click_ypos = y;
+    click_time = now;
+    return 0;
+}
+
+
+/*
+ *  mouse_motion ---
+ *      Mouse motion logic, common to mouse handlers.
+ */
+static int
+mouse_motion(const struct MouseEvent* me, const struct MouseState* ms)
+{
+    const int x = me->x, y = me->y,
+        motion = (x != prev.x) || (y != prev.y) || (me->type & MOUSEEVENT_TMOTION);
+    const int b1 = me->b1, b2 = me->b2, b3 = me->b3;
+    int msgs = 0;
+
+    if (!motion) {
+        return 0;
+    }
+
+    trace_log("mouse_motion(%d, %d, %d-%d-%d, 0x%x)\n", x, y, b1, b2, b3, ms->mods);
+    if (ms->wp) {
+        triggerx(REG_MOUSE, "%d %d %d %d %d %d %d %d %d", ms->evt.win, ms->evt.where, x, y, -1, b1, b2, b3, ms->mods);
+    }
+
+    if (ms->wp) {
+        if (prev.b1) {
+            key_cache_mouse(x_push_ref, BUTTON_MOTION(0), FALSE, &ms->evt);
+            ++msgs;
+        }
+
+        if (prev.b2) {
+            key_cache_mouse(x_push_ref, BUTTON_MOTION(1), FALSE, &ms->evt);
+            ++msgs;
+        }
+
+        if (prev.b3) {
+            key_cache_mouse(x_push_ref, BUTTON_MOTION(2), FALSE, &ms->evt);
+            ++msgs;
+        }
+    }
+
+    prev.x = x;
+    prev.y = y;
+    return msgs;
+}
+
+
+/*
+ *  mouse_release ---
+ *      Mouse specific release logic, for example xterm-sgr.
+ */
+static int
+mouse_release(const struct MouseEvent *me, const struct MouseState* ms, int b1, int b2, int b3)
+{
+    const int x = me->x, y = me->y;
+    int msgs = 0;
+
+    if (!((b1 && prev.b1) ||  (b2 && prev.b2) || (b3 || prev.b3))) {
+        return 0;
+    }
+
+    /*
+     *  publish
+     */
+    trace_log("mouse_release(%d, %d, %d-%d-%d)\n", x, y, b1, b2, b3);
+    if (ms->wp) {
+        triggerx(REG_MOUSE, "%d %d %d %d %d %d %d %d %d", ms->evt.win, ms->evt.where, x, y, 0, b1, b2, b3, 0);
+    }
+
+#define BUTTON_RELEASE(__b) \
+    (BUTTON1_UP + __b)
+
+    if (b1 && prev.b1) {
+        if (ms->wp) {
+            key_cache_mouse(x_push_ref, BUTTON_RELEASE(0), FALSE, &ms->evt);
+            ++msgs;
+        }
+        prev.b1 = 0;
+    }
+
+    if (b2 && prev.b2) {
+        if (ms->wp) {
+            key_cache_mouse(x_push_ref, BUTTON_RELEASE(1), FALSE, &ms->evt);
+            ++msgs;
+        }
+        prev.b2 = 0;
+
+    }
+
+    if (b3 && prev.b3) {
+        if (ms->wp) {
+            key_cache_mouse(x_push_ref, BUTTON_RELEASE(2), FALSE, &ms->evt);
+            ++msgs;
+        }
+        prev.b3 = 0;
+    }
+
+    if (prev.b1 | prev.b2 | prev.b3) {
+        prev.x = x;
+        prev.y = y;
+    } else {
+        prev.x = prev.y = 0;
+    }
+
     return msgs;
 }
 
@@ -538,6 +817,7 @@ mouse_execute(const struct IOEvent *evt)
 
     assert(EVT_MOUSE == evt->type);
     assert(RANGE_BUTTON == (RANGE_MASK & code));
+
     x_mouse_event = code;
     x_mouse_xpos  = mouse->x;
     x_mouse_ypos  = mouse->y;
@@ -551,23 +831,25 @@ mouse_execute(const struct IOEvent *evt)
 /*
  *  mouse_pos ---
  *      Determine on what type of object the mouse is sitting on.
- *      Returns window pointer to window where mouse is. Set win_id to the
- *      window id, and where identifies the type of area the mouse is on.
+ *
+ *  Returns:
+ *      Returns window pointer to window where mouse is located, otherwise NULL.
+ *      If successful, set win to the window id, and where identifies the type of area the mouse is on.
  */
 WINDOW_t *
-mouse_pos(int x, int y, int * win, int * where)
+mouse_pos(int x, int y, int *win, int *where)
 {
-    register WINDOW_t *wp, *topwp;
-    int b;
-
-    --x, --y;                                   /* mouse 1,1 via window 0,0 origins */
+    register WINDOW_t *wp, *topwp = NULL;
+    int t_where = 0;
 
     /*
      *  Walk window chain,
      *      all windows within the current stack must be checked as the
      *      current (top) popup shall match last.
      */
-    topwp = NULL;
+    if (x) --x;
+    if (y) --y;                                  /* mouse 1,1 via window 0,0 origins */
+
     for (wp = window_first(); wp; wp = window_next(wp))
         if (x >= (win_lcolumn(wp) - win_lborder(wp)) && x <= (win_rcolumn(wp) + win_rborder(wp)) &&
                 y >= (win_tline(wp) - win_tborder(wp)) && y <= (win_bline(wp) + win_bborder(wp)) ) {
@@ -577,47 +859,50 @@ mouse_pos(int x, int y, int * win, int * where)
     /*
      *  Process matched window
      */
-    *where = 0;
-    if (NULL == topwp) {
-        *win = -1;                              /* no active window */
-
-    } else  {
-        *win = topwp->w_num;
+    if (topwp) {
+        int b;
 
         if ((b = win_lborder(topwp)) && x == win_lcolumn(topwp) - b) {
-            *where = MOBJ_LEFT_EDGE;
+            t_where = MOBJ_LEFT_EDGE;
 
-//          *where = MOBJ_ZOOM;
-//          *where = MOBJ_CLOSE;
+                // TODO: MOBJ_ZOOM, MOBJ_CLOSE
 
-//      } else if (win_lmargin(topwp)) {        /* XXX/TOD0 */
-//          *where = MOBJ_LEFT_MARGIN;
+//      } else if (win_lmargin(topwp)) {        /* TOD0 */
+//          t_where = MOBJ_LEFT_MARGIN;
 
         } else if ((b = win_rborder(topwp)) && x == win_rcolumn(topwp) + b) {
 //          if (y >= win_tline(topwp) + 1 && y <= win_bline(topwp) - 1) {
-//              *where = MOBJ_VSCROLL_AREA;
+//              t_where = MOBJ_VSCROLL_AREA;
 //          } else {
-                *where = MOBJ_RIGHT_EDGE;
+                t_where = MOBJ_RIGHT_EDGE;
 //          }
 
         } else if ((b = win_tborder(topwp)) && y == win_tline(topwp) - b) {
-//          if (vscreen[y][x] & 0x80) {
-                *where = MOBJ_TOP_EDGE;
-//          } else {
-//              *where = MOBJ_TITLE;
-//          }
+            t_where = MOBJ_TOP_EDGE;
+
+                // TODO: MOBJ_TITLE, need title coord cache.
 
         } else if ((b = win_bborder(topwp)) && y == win_bline(topwp) + b) {
-//          if (x >= win_lcolumn(topwp)+1 && x <= win_rcolumn(topwp)-1) {
+//          if (x >= win_lcolumn(topwp)+1 && x <= win_rcolumn(topwp) - 1) {
 //              *where = MOBJ_HSCROLL_AREA;
 //          } else {
-                *where = MOBJ_BOTTOM_EDGE;
+                t_where = MOBJ_BOTTOM_EDGE;
 //          }
 
         } else {
-            *where = MOBJ_INSIDE;               /* must be inside */
+            t_where = MOBJ_INSIDE;              /* must be inside */
         }
     }
+
+    if (win)
+        *win = (topwp ? topwp->w_num : -1 );
+
+    if (where)
+        *where = t_where;
+
     return topwp;
 }
+
+/*end*/
+
 

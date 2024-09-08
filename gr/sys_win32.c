@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.76 2024/07/25 15:40:34 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.81 2024/09/08 16:29:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_win32.c,v 1.76 2024/07/25 15:40:34 cvsuser Exp $
+/* $Id: sys_win32.c,v 1.81 2024/09/08 16:29:24 cvsuser Exp $
  * WIN32 system support.
  *
  *
@@ -259,6 +259,22 @@ sys_mousepointer(int on)
 }
 
 
+/*  Function:           sys_doubleclickms
+ *      System double-click time.
+ *
+ *  Parameters:
+ *      none
+ *
+ *  Returns:
+ *      Returns double-click time is milliseconds.
+ */
+unsigned
+sys_doubleclickms(void)
+{
+    return GetDoubleClickTime();                /* default=500ms */
+}
+
+
 /*  Function:           sys_noinherit
  *      Make sure we don't inherit the specified file descriptor when we create a new process.
  *
@@ -388,32 +404,63 @@ Modifiers(const DWORD dwControlKeyState)
 }
 
 
+//  MouseProcess ---
+//      Process a console mouse event.
+//
+//  Notes:
+//    o Mouse events are placed in the input buffer when the console is in mouse mode (ENABLE_MOUSE_INPUT).
+//    o Mouse events are generated whenever the user moves the mouse, or presses or releases one of the mouse buttons.
+//    o Mouse events are placed in a console's input buffer only when the console group has the keyboard focus
+//      and the cursor is within the borders of the console's window. 
+//    o Focus is retained if button are active and the mouse cursor is moved outside the window borders, 
+//      with reported positions clipped to the borders.
+//    o Coordinate system (0, 0) is at the top, left cell of the buffer.
+//
 static int
-MouseEvent(const DWORD dwEventFlags, const DWORD dwButtonState)
+MouseProcess(const MOUSE_EVENT_RECORD *mer)
 {
-    const int move  = (dwEventFlags & MOUSE_MOVED  ? 1 : 0);
-    const int multi = (dwEventFlags & DOUBLE_CLICK ? 1 : 0);
+    struct MouseEvent me = { 0 };
+    const DWORD dwButtonState = mer->dwButtonState;
+    const DWORD dwControlKeyState = mer->dwControlKeyState;
+    const DWORD dwEventFlags = mer->dwEventFlags;
 
-    if (dwButtonState & FROM_LEFT_1ST_BUTTON_PRESSED) {
-        //button1
-        if (move) return BUTTON1_MOTION;
-        return (multi ? BUTTON1_DOUBLE : BUTTON1_DOWN);
+    // meta data
+    me.x  = mer->dwMousePosition.X + 1;
+    me.y  = mer->dwMousePosition.Y + 1;
+    me.b1 = (dwButtonState & FROM_LEFT_1ST_BUTTON_PRESSED) ? 1 : 0;
+    me.b2 = (dwButtonState & FROM_LEFT_2ND_BUTTON_PRESSED) ? 1 : 0;
+    me.b3 = (dwButtonState & RIGHTMOST_BUTTON_PRESSED) ? 1 : 0;
+    if (dwControlKeyState & ALT_PRESSED)
+        me.ctrl |= MOUSEEVENT_CMETA;
+    if (dwControlKeyState & CTRL_PRESSED)
+        me.ctrl |= MOUSEEVENT_CCTRL;
+    if (dwControlKeyState & SHIFT_PRESSED)
+        me.ctrl |= MOUSEEVENT_CSHIFT;
+    me.multi = 0;
 
-    } else if (dwButtonState & RIGHTMOST_BUTTON_PRESSED) {
-        //button2
-        if (move) return BUTTON2_MOTION;
-        return (multi ? BUTTON2_DOUBLE : BUTTON2_DOWN);
-
-    } else if (dwButtonState & FROM_LEFT_2ND_BUTTON_PRESSED) {
-        //button3
-        if (move) return BUTTON3_MOTION;
-        return (multi ? BUTTON3_DOUBLE : BUTTON3_DOWN);
+    if (dwEventFlags == MOUSE_MOVED) {
+        // motion events
+        if (me.b1 | me.b2 | me.b3) {
+            me.type = MOUSEEVENT_TMOTION;
+            mouse_process(&me, "");
+            return 1;
+        }
+    } else {
+        // button events
+        assert(dwEventFlags == 0 || dwEventFlags == DOUBLE_CLICK);
+        if (dwEventFlags == DOUBLE_CLICK)
+            me.multi = 1;
+        me.type = MOUSEEVENT_TPRESSRELEASE;
+        mouse_process(&me, "");
+        return 1;
     }
     return 0;
 }
 
 
-//  Alt+<key-code> event handler
+//  AltPlusEnabled, AltPlusEvent ---
+// 
+//      Alt+<key-code> event handler
 //
 //      Alt+KeyCode works and behaves well when character only input is required, by simply
 //      reporting any down or up key events which populate the 'UnicodeChar' value. Whereas
@@ -427,11 +474,11 @@ MouseEvent(const DWORD dwEventFlags, const DWORD dwButtonState)
 //      to filter.  Furthermore, if during the key-code entry an invalid non-hex key combination is
 //      given, the key-code is invalidated and UnicodeChar=0 is returned on the ALT release.
 //
-//      Notes:
-//       o To enable requires the registry REG_SZ value "EnableHexNumpad" under
-//          "HKEY_Current_User/Control Panel/Input Method" to be "1".
+//  Notes:
+//    o To enable requires the registry REG_SZ value "EnableHexNumpad" under
+//       "HKEY_Current_User/Control Panel/Input Method" to be "1".
 //
-//       o Hex-value overflow goes unreported, limiting input to a 16-bit unicode result.
+//    o Hex-value overflow goes unreported, limiting input to a 16-bit unicode result.
 //
 
 #pragma comment(lib, "Imm32.lib")
@@ -459,6 +506,7 @@ AltPlusEnabled(void)
     }
     return state;
 }
+
 
 static int
 AltPlusEvent(const KEY_EVENT_RECORD *ke, struct IOEvent *evt)
@@ -493,7 +541,7 @@ AltPlusEvent(const KEY_EVENT_RECORD *ke, struct IOEvent *evt)
         if ((wVirtualKeyCode >= VK_NUMPAD0 && wVirtualKeyCode <= VK_NUMPAD9) &&
                 0 == dwEnhanced && (LEFT_ALT_PRESSED == dwControlKeyState || RIGHT_ALT_PRESSED == dwControlKeyState)) {
             // "Alt NumPad ..." event
-            // Note: 
+            // Note:
             //  o NumLock is required to be enabled for NUMPAD key reporting.
             //  o Non-enhanced, NumPad verses 101 cursor-keys; same VK codes.
             if (0 == alt_code) {
@@ -514,7 +562,7 @@ AltPlusEvent(const KEY_EVENT_RECORD *ke, struct IOEvent *evt)
             }
             return 1;                           // consume
         }
-        
+
         if (alt_code) {
             if (alt_control != dwControlKeyState ||
                     (ke->uChar.UnicodeChar && 0 == ISXDIGIT(ke->uChar.UnicodeChar))) {
@@ -670,7 +718,6 @@ sys_getevent(struct IOEvent *evt, int tmo)
                             assert(code > 0 && code <= (MOD_MASK|RANGE_MASK|KEY_MASK) && code != KEY_VOID);
                             return 0;
                         }
-
                     } else {
                         resize = ResizeCheck(&checks);
                     }
@@ -681,8 +728,12 @@ sys_getevent(struct IOEvent *evt, int tmo)
                     const MOUSE_EVENT_RECORD *me = &k.Event.MouseEvent;
 
 #ifndef MOUSE_WHEELED
-#define MOUSE_WHEELED   4                       /* Not available within NT or 95/98 SDK */
+#define MOUSE_WHEELED 0x0004 /* Not available within NT or 95/98 SDK */
 #endif
+#ifndef MOUSE_HWHEELED
+#define MOUSE_HWHEELED 0x0008
+#endif
+
                     if (MOUSE_WHEELED & me->dwEventFlags) {
                         const int down = (0xFF000000 & me->dwButtonState ? TRUE : FALSE);
 
@@ -695,13 +746,17 @@ sys_getevent(struct IOEvent *evt, int tmo)
                         return 0;
                     }
 
-                    if (0 == me->dwEventFlags ||
-                            ((me->dwEventFlags & (MOUSE_MOVED|DOUBLE_CLICK)) && me->dwButtonState)) {
+                    if (MOUSE_HWHEELED & me->dwEventFlags) {
+                        const int down = (0xFF000000 & me->dwButtonState ? TRUE : FALSE);
+
+                        evt->type = EVT_KEYDOWN;
+                        evt->code = (down ? WHEEL_RIGHT : WHEEL_LEFT);
+                        return 0;
+                    }
+
+                    if (MouseProcess(me)) {
                         evt->type = EVT_MOUSE;
-                        evt->code = MouseEvent(me->dwEventFlags, me->dwButtonState);
-                        evt->modifiers = Modifiers(me->dwControlKeyState);
-                        evt->mouse.x = me->dwMousePosition.X + 1;
-                        evt->mouse.y = me->dwMousePosition.Y + 1;
+                        evt->code = KEY_VOID;
                         return 0;
                     }
                 }
@@ -798,7 +853,7 @@ sys_cut(int total, int append, void (*copy)(char *buf, int total))
 {
     int ret = 0;
 
-    if (OpenClipboard(NULL)) {
+    if (NULL == copy || OpenClipboard(NULL)) {
         ret = -1;
     } else {
         HGLOBAL hglb;
@@ -828,7 +883,7 @@ sys_cut(int total, int append, void (*copy)(char *buf, int total))
  *      Paste the 'system' clipboard/scrap into the current buffer.
  *
  *  Parameters:
- *      paste -             Paste callback.
+ *      paste - Paste callback.
  *
  */
 int
@@ -968,9 +1023,9 @@ sys_drive_set(int drive)
 int
 sys_fstype(const char *directory)
 {
-#define DISABLE_HARD_ERRORS     SetErrorMode (0)
-#define ENABLE_HARD_ERRORS      SetErrorMode (SEM_FAILCRITICALERRORS | \
-                                        SEM_NOOPENFILEERRORBOX)
+#define DISABLE_HARD_ERRORS SetErrorMode (0)
+#define ENABLE_HARD_ERRORS  SetErrorMode (SEM_FAILCRITICALERRORS | \
+                                    SEM_NOOPENFILEERRORBOX)
 
     char            bName[4];
     DWORD           flags;
@@ -1164,7 +1219,7 @@ GetSystemTimeNS100(void)
     FILETIME ft = {0};
     unsigned long long ns100;
 
-    /* 
+    /*
      *  GetSystemTime(Precise)AsFileTime returns the number of 100-nanosecond intervals since January 1, 1601 (UTC).
      *
      *  GetSystemTimeAsFileTime has a resolution of approximately the TimerResolution (~15.6ms) on Windows XP.
@@ -1178,9 +1233,9 @@ GetSystemTimeNS100(void)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-function-type"
 #endif
-        if (0 == (hinst = LoadLibraryA("Kernel32")) ||
-                NULL == (fGetSystemTimePreciseAsFileTime =
-                            (GetSystemTimePreciseAsFileTime_t)GetProcAddress(hinst, "GetSystemTimePreciseAsFileTime"))) {
+        hinst = LoadLibraryA("Kernel32");
+        if (NULL == (fGetSystemTimePreciseAsFileTime =
+                             (GetSystemTimePreciseAsFileTime_t)GetProcAddress(hinst, "GetSystemTimePreciseAsFileTime"))) {
             fGetSystemTimePreciseAsFileTime =
                 (GetSystemTimePreciseAsFileTime_t)GetProcAddress(hinst, "GetSystemTimeAsFileTime"); /*fall-back*/
         }
@@ -1188,7 +1243,7 @@ GetSystemTimeNS100(void)
 #pragma GCC diagnostic pop
 #endif
     }
-     
+
     fGetSystemTimePreciseAsFileTime(&ft);
 
     ns100 = ft.dwHighDateTime;
@@ -1370,4 +1425,4 @@ OutputDebugPrintA(const char* fmt, ...)
     OutputDebugStringA(out);
 }
 
-#endif  /*WIN32*/
+#endif /*WIN32*/
