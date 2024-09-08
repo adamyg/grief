@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crsubs_c,"$Id: crsubs.c,v 1.30 2022/05/31 16:18:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_crsubs_c,"$Id: crsubs.c,v 1.31 2024/09/08 16:30:50 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crsubs.c,v 1.30 2022/05/31 16:18:22 cvsuser Exp $
+/* $Id: crsubs.c,v 1.31 2024/09/08 16:30:50 cvsuser Exp $
  * Parser ultities.
  *
  *
@@ -1492,10 +1492,11 @@ switch_end(node_t *np)
 void
 case_start(node_t *np)
 {
-    switch_t *sw = (switch_t *) ll_elem(ll_first(hd_switch));
+    List_p headlp = ll_first(hd_switch);
+    switch_t* sw = (switch_t *)(headlp ? ll_elem(headlp) : NULL);
     int typecheck = 0;
 
-    assert(sw);
+    if (NULL == sw) return;                     /* error */
     xprintf("case_start(%p)->", np);
     node_dprint(np, 0);
     xprintf("\n");
