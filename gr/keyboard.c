@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.71 2024/09/08 16:29:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.72 2024/09/08 17:07:39 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keyboard.c,v 1.71 2024/09/08 16:29:24 cvsuser Exp $
+/* $Id: keyboard.c,v 1.72 2024/09/08 17:07:39 cvsuser Exp $
  * Manipulate key maps and bindings.
  *
  *
@@ -2809,7 +2809,7 @@ msterminal_args(const char *buffer, unsigned arguments[])
     unsigned args = 0;
 
     while (*cursor) {
-        const BYTE c = *cursor++;
+        const unsigned char c = *cursor++;
 
         if (c >= '0' && c <= '9') {
             if (NULL == value) {
