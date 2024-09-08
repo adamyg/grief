@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: nc.mandoc,v 1.2 2018/10/01 21:19:58 cvsuser Exp $
+.\" | $Id: nc.mandoc,v 1.3 2024/07/27 15:17:39 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -98,7 +98,7 @@ decide NOT to change the drive, or HIT the letter of the drive you
 want [A-Z]. No colon or return is needed, ONLY the drive letter.
 .It Alt-F7
 File find
-.It Alt-F7
+.It Alt-F10
 Directory tree
 .It ESC
 Performs the same function as F10 when NOT withing a prompt for
