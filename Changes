@@ -1,9 +1,10 @@
 -*- encoding: utf-8; -*-
 
-Mon Sep  9 01:10:31 2024 adamy
+Mon Sep  9 00:10:31 2024 adamy
 
 	* Tickets
-
+	
+		- grunch crash, on an invalid switch case; #83 
 		- portability improvements; non Linux/WIN32 builds; #78
 		- dark/light background detection; #76
 		- directory open; prompt file(s) to open; #73
