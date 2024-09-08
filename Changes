@@ -1,11 +1,21 @@
 -*- encoding: utf-8; -*-
 
-Mon Sep  2 21:23:42 2024 adamy
+Mon Sep  9 01:10:31 2024 adamy
+
+	* Tickets
+
+		- portability improvements; non Linux/WIN32 builds; #78
+		- dark/light background detection; #76
+		- directory open; prompt file(s) to open; #73
+		- oniguruma upgrade; #67
+		- binutils, backward lib; #61
+		- configure enhancements; #60
+		- bison/flex option; #59
 
 	* Keyboard/interface extensions
 
 		- mouse
-			- command line option (xterm,xterm and sgr).
+			- command line option (xterm, xterm2 and sgr).
 			- <Button-xxx> key events cleanup.
 			- mouse actions
 			- popup menu
@@ -13,6 +23,11 @@ Mon Sep  2 21:23:42 2024 adamy
 		- <Unassigned> key event.
 		- FocusIn/FosusOut events.
 		- key_trace macro.
+
+	* CI Pipelines
+
+		- Solaris
+		- FreeBSD/OpenBSD and NetBSD
 
 Sun Jun 16 12:09:22 2024 adamy
 
@@ -22,7 +37,7 @@ Sun Jun 16 12:09:22 2024 adamy
 
 	* libtre-0.8.1
 
-	* FLTK-1.3.9 import
+	* FLTK-1.3.9 import; experimental only
 
 Sun Jun 16 12:09:22 2024 adamy
 
