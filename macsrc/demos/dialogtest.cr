@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: dialogtest.cr,v 1.7 2024/09/03 15:26:07 cvsuser Exp $
+/* $Id: dialogtest.cr,v 1.8 2024/09/12 17:11:03 cvsuser Exp $
  *
  *  This file is used when debugging and fixing CRISP to aid in regression
  *  testing - catching bugs introduced inadvertently. This script does not
@@ -74,6 +74,7 @@ dialogmake()
     dialog_tst =  dialog_create( make_list(
         DLGA_TITLE,                             "dialog test",
         DLGA_CALLBACK,                          "::callback",   // global call-back
+        DLGA_STYLES,                            DLGS_CAPTION|DLGS_SYSCLOSE,
 
         DLGC_CONTAINER,
             DLGA_ATTACH_TOP,
@@ -351,12 +352,15 @@ dialogmake()
 }
 
 
-static void
+static int
 callback(int ident, string name, int p1, int p2)
 {
     message("ident=0x%x, name=%s, p1=%d/0x%x, p2=%d/0x%x", ident, name, p1, p1, p2, p2);
-    if (name == "exit")
-         dialog_exit();
+    if (name == "exit") {
+        dialog_exit();
+        return TRUE;
+    }
+    return FALSE;
 }
 
 //end

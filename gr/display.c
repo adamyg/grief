@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.87 2024/05/17 16:43:00 cvsuser Exp $")
+__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.88 2024/09/12 17:28:50 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: display.c,v 1.87 2024/05/17 16:43:00 cvsuser Exp $
+/* $Id: display.c,v 1.88 2024/09/12 17:28:50 cvsuser Exp $
  * High level display interface.
  *
  *
@@ -111,7 +111,7 @@ static __CINLINE int        hasborders(const WINDOW_t *wp);
 
 static void                 draw_window(WINDOW_t *wp, int top, LINENO line, int end, const int bottom, int actions);
 
-static void                 draw_title(const WINDOW_t *wp, const int top, const int line);
+static void                 draw_title(WINDOW_t *wp, const int top, const int line);
 static int                  draw_hscroll(WINDOW_t *wp, int line);
 static void                 draw_ruler(const WINDOW_t *wp, int line, int ledge);
 static void                 draw_left(const WINDOW_t *wp);
@@ -2938,14 +2938,15 @@ draw_window(WINDOW_t *wp, int top, LINENO line, int end, const int bottom, int a
  *      nothing.
  */
 static void
-draw_title(const WINDOW_t *wp, const int top, const int line)
+draw_title(WINDOW_t *wp, const int top, const int line)
 {
     const BUFFER_t *bp  = wp->w_bufp;
     const int width     = wp->w_w;
     const int ledge     = win_ledge(wp);
-    const int digits    = (((x_dflags && width > 20) || x_applevel > 1) && 0 == line) ? 1 : 0;
+    const int digits    = (0 == line && ((x_dflags && width > 20) || x_applevel > 1) && W_TILED == wp->w_type) ? 1 : 0;
     const int closebtn  = (top && W_POPUP == wp->w_type ? window_ctrl_test(wp, WCTRLO_CLOSE_BTN) : FALSE);
 //  const int zoombtn   = (top && W_POPUP == wp->w_type ? window_ctrl_test(wp, WCTRLO_ZOOM_BTN) : FALSE);
+//  const int sysmenu   = (top && W_POPUP == wp->w_type ? window_ctrl_test(wp, WCTRLO_SYSMENU) : FALSE);
     const unsigned char *title =
             (unsigned char *)(!top ? wp->w_message :
                     (bp && BF2TST(bp, BF2_TITLE_FULL) && bp->b_fname[0] ? bp->b_fname : wp->w_title));
@@ -2953,8 +2954,8 @@ draw_title(const WINDOW_t *wp, const int top, const int line)
     const char *suffix  = NULL;
     const vbyte_t col   = framecolor(wp);
     int  titlelen       = (title && *title ? (int)utf8_width(title, titleend) : 0); /*MCHAR*/
-    int  left           = 0;
-    int  right          = 0;
+    int  left = 0;
+    int  right = 0;
     char numbuf[20];
     vbyte_t ch;
 
@@ -2977,7 +2978,8 @@ draw_title(const WINDOW_t *wp, const int top, const int line)
 
     /* calc display offset */
     if (titlelen <= 0) {
-        left = width;
+        left  = width/2;
+        right = width - left;
     } else {
         const int scroll = (bp ? BF2TST(bp, BF2_TITLE_SCROLL) : 0);
         int norm;                               /* title length, include left/right separators (+2) */
@@ -3017,19 +3019,25 @@ draw_title(const WINDOW_t *wp, const int top, const int line)
             if (right < 0) right = 0;
         }
     }
-    assert(left >= 0);
+    assert(left  >= 0);
     assert(right >= 0);
+
+    if (top) {
+        if (titlelen) {
+            wp->w_coords.title_start = left + 1;
+            wp->w_coords.title_end = left + titlelen + 1;
+        } else {
+            wp->w_coords.title_start = 0;
+            wp->w_coords.title_end = 0;
+        }
+        wp->w_coords.close_start = 0;
+        wp->w_coords.close_end = 0;
+    }
 
     /* corner */
     vtmove(line, ledge);
     ch = col | v_corner_map[wp->w_corner_hints[top ? TL_CORNER : BL_CORNER]];
     vtputb(ch);
-
-    /* close button */
-    if (closebtn && right > 3) {                /* MCHAR??? */
-        vtputs((const unsigned char *)"[*]", col);
-        right -= 3;
-    }
 
     /* left side of frame */
     ch = col | CH_HORIZONTAL;
@@ -3075,9 +3083,20 @@ draw_title(const WINDOW_t *wp, const int top, const int line)
     }
 
     /* right */
-    ch = col | CH_HORIZONTAL;
-    while (right-- > 0) {
-        vtputb(ch);
+    if (closebtn && right > 3) {
+        right -= 3;
+        ch = col | CH_HORIZONTAL;
+        while (right-- > 0) {
+            vtputb(ch);
+        }
+        vtputs((const unsigned char*)"[x]", col); //TODO: Ux2327 or U+1F5D9
+        wp->w_coords.close_start = width - 4;
+        wp->w_coords.close_end = width - 1;
+    } else {
+        ch = col | CH_HORIZONTAL;
+        while (right-- > 0) {
+            vtputb(ch);
+        }
     }
 
     /* window level or corner */

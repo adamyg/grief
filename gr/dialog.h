@@ -1,11 +1,11 @@
 #ifndef GR_DIALOG_H_INCLUDED
 #define GR_DIALOG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dialog_h,"$Id: dialog.h,v 1.19 2024/09/08 16:29:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_dialog_h,"$Id: dialog.h,v 1.20 2024/09/12 17:28:50 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dialog.h,v 1.19 2024/09/08 16:29:24 cvsuser Exp $
+/* $Id: dialog.h,v 1.20 2024/09/12 17:28:50 cvsuser Exp $
  * Dialog manager public interface.
  *
  *
@@ -82,6 +82,7 @@ __CPRAGMA_ONCE
 #define DLGA_COLS               0x3009
 #define DLGA_ROWS               0x300a
 #define DLGA_VERSION            0x300b          /* Wiget specific version/feature set identifier */
+#define DLGA_STYLES             0x300c
 
 #define DLGA_ATTACH_BOTTOM      0x3010          /* Attachment of widget within dialog box. */
 #define DLGA_ATTACH_TOP         0x3011
@@ -213,6 +214,22 @@ __CPRAGMA_ONCE
 
 /*--export--defines--*/
 /*
+ *  Dialog styles.
+ */
+#define DLGS_BORDER             0x0001
+#define DLGS_CAPTION            0x0002
+
+#define DLGS_MAXIMIZE           0x0100
+#define DLGS_MINIMIZE           0x0200
+#define DLGS_RESTORE            0x0400
+#define DLGS_SYSCLOSE           0x1000
+#define DLGS_SYSMOVE            0x2000
+#define DLGS_SYSSIZE            0x4000
+#define DLGS_SYSMENU            0x8000
+/*--end--*/
+
+/*--export--defines--*/
+/*
  *  Dialog callback events
 
     DLGE_KEYDOWN
@@ -246,6 +263,19 @@ __CPRAGMA_ONCE
 #define DLGE_KEYDOWN            6               /* Keydown event */
 #define DLGE_COMMAND            7               /* Accelerator/Menu command */
 #define DLGE_HELP               8               /* Help event */
+#define DLGE_SYSCOMMAND         9               /* System command */
+/*--end--*/
+
+/*--export--defines--*/
+/*
+ *  System commands.
+ */
+#define DLSC_CLOSE              0xf010
+#define DLSC_TITLE              0xf020
+#define DLSC_MOVE               0xf100
+#define DLSC_SIZE               0xf120
+#define DLSC_MAXIMIZE           0xf200  
+#define DLSC_MINIMIZE           0xf210
 /*--end--*/
 
 /*--export--defines--*/
@@ -276,6 +306,7 @@ __CPRAGMA_ONCE
 #define DLIDNO                  103
 #define DLIDYES                 104
 /*--end--*/
+
 
 /*
  *  BS_3STATE
@@ -312,8 +343,8 @@ __CPRAGMA_ONCE
 
 #define WIDGET_READY            2
 
-    /*  The DESTROY message is sent when a widget is being destroyed. It is
-     *  sent to the widget handler being destroyed after the dialog
+    /*  The DESTROY message is sent when a widget is being destroyed. 
+     *  It is sent to the widget handler being destroyed after the dialog
      *  has been removed from the screen.
      */
 #define WIDGET_DESTROY          3
@@ -327,6 +358,11 @@ __CPRAGMA_ONCE
      *  attribute to be retrieved from a specific value.
      */
 #define WIDGET_GET              5
+
+     /*  Message when the user chooses a command from the window control menu or
+      *  when one the window buttons is selected.
+      */
+#define WIDGET_SYSCOMMAND       6
 
     /*  BASE for implementation specific messages
      */
@@ -421,6 +457,7 @@ typedef struct _widget {
 
     void               *w_ucontrol;             /* Fields for use by controller */
     uint32_t            w_uflags;               /* User flags, widget specific */
+    uint32_t            w_styles;               /* Style, most only apply to top */
 } WIDGET_t;
 
 typedef struct {
@@ -457,6 +494,7 @@ typedef struct _dialog {
 
     int32_t             d_ident;                /* Object identifier (handle) */
     uint32_t            d_widgetseq;            /* Widget sequence */
+    uint32_t            d_styles;               /* Styles DLGS_XXXX */
 
     TAILQ_ENTRY(_dialog)                        /* Dialog queue */
                         d_node;

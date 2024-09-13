@@ -1,22 +1,17 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: popup.cr,v 1.1 2024/09/08 16:25:51 cvsuser Exp $
+/* $Id: popup.cr,v 1.2 2024/09/12 17:08:28 cvsuser Exp $
  *
  *  Mouse popup
  */
 
 #include "grief.h"
 
-#define POPUP_COPY 0
-#define POPUP_CUT 1
-#define POPUP_PASTE 2
-#define POPUP_SHIFT_LEFT 3
-#define POPUP_SHIFT_RIGHT 4
-
-static list elements = 
+static list elements =
     quote_list(
         "Copy", "Cut", "Paste",
-        "Left-Shift", "right-Shift"
-    );
+        "Left-Shift", "Right-Shift",
+        "Exit"
+        );
 
 void
 popup_mouse(~ int x, ~ int y)
@@ -27,6 +22,7 @@ popup_mouse(~ int x, ~ int y)
     int handle =
         dialog_create( make_list(
             DLGA_CALLBACK,                  "::popup_callback",
+            DLGA_STYLES,                    DLGS_BORDER|DLGS_SYSCLOSE,
             DLGC_MENU,
                 DLGA_NAME,                  "popup",
                 DLGC_MENU_ITEM,
@@ -50,11 +46,15 @@ popup_mouse(~ int x, ~ int y)
                     DLGA_NAME,              "Right-Shift",
                     DLGA_CALLBACK,          "::popup_shift"
                     DLGA_GREYED,
+                DLGC_MENU_ITEM,
+                    DLGA_NAME,              "Exit",
+                    DLGA_CALLBACK,          "::popup_exit"
             ));
 #else
     int handle =
         dialog_create( make_list(
-            DLGA_CALLBACK,                  "::popup_lbcallback",
+            DLGA_CALLBACK,                  "::popup_listbox",
+            DLGA_STYLES,                    DLGS_BORDER|DLGS_SYSCLOSE,
             DLGC_LIST_BOX,
                 DLGA_NAME,                  "popup",
                 DLGA_KEYDOWN,               1,
@@ -73,56 +73,70 @@ popup_mouse(~ int x, ~ int y)
 }
 
 
-static void
-popup_lbcallback(int ident, string name, int p1, int p2)
+static int
+popup_listbox(int ident, string name, int p1, int p2)
 {
     extern int popup_buf;
+    string action;
 
     switch (p1) {
-     case DLGE_INIT:
+    case DLGE_INIT:
          if (inq_marked() == MK_NONE) {
-            widget_set(NULL, "popup", NULL, DLGA_LBREMOVE, POPUP_SHIFT_RIGHT);
-            widget_set(NULL, "popup", NULL, DLGA_LBREMOVE, POPUP_SHIFT_LEFT);
+            widget_set(NULL, "popup", NULL, DLGA_LBREMOVE, 3);
+            widget_set(NULL, "popup", NULL, DLGA_LBREMOVE, 3);
         }
         break;
     case DLGE_CHANGE:
-        switch (p2) {
-        case POPUP_COPY:
+        action = widget_get(NULL, "popup", DLGA_LBTEXT, p2);
+        switch (action) {
+        case "Copy":
             set_buffer(popup_buf);
             copy();
             break;
-        case POPUP_CUT:
+        case "Cut":
             set_buffer(popup_buf);
             cut();
             break;
-        case POPUP_PASTE:
+        case "Paste":
             set_buffer(popup_buf);
             paste();
             break;
-        case POPUP_SHIFT_LEFT:
+        case "Left-Shift":
             set_buffer(popup_buf);
             if (inq_marked()) {
                 shiftl();
             }
             break;
-        case POPUP_SHIFT_RIGHT:
+        case "Right-Shift":
             set_buffer(popup_buf);
             if (inq_marked()) {
                 shiftr();
             }
             break;
+         case "Exit":
+            exit();
+            break;
         }
         dialog_exit();
         break;
+//  case DLGE_SYSCOMMAND:
+//      if (p2 == DLSC_CLOSE) {
+//          dialog_exit();
+//          return TRUE;
+//      }
+//      break;
     case DLGE_KEYDOWN:
         if (p2 == key_to_int("<Esc>")) {
             dialog_exit();
+            return TRUE;
         }
         break;
     default:
         message("ident=0x%x, name=%s, p1=%d/0x%x, p2=%d/0x%x", ident, name, p1, p1, p2, p2);
         break;
     }
+    return FALSE; // default action
 }
 
 //end
+

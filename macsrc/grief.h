@@ -899,6 +899,7 @@
 #define DLGA_COLS               0x3009
 #define DLGA_ROWS               0x300a
 #define DLGA_VERSION            0x300b      /* Wiget specific version/feature set identifier */
+#define DLGA_STYLES             0x300c
 
 #define DLGA_ATTACH_BOTTOM      0x3010      /* Attachment of widget within dialog box. */
 #define DLGA_ATTACH_TOP         0x3011
@@ -1027,6 +1028,20 @@
 
 
 /*
+ *  Dialog styles.
+ */
+#define DLGS_BORDER             0x0001
+#define DLGS_CAPTION            0x0002
+
+#define DLGS_MAXIMIZE           0x0100
+#define DLGS_MINIMIZE           0x0200
+#define DLGS_RESTORE            0x0400
+#define DLGS_SYSCLOSE           0x1000
+#define DLGS_SYSMOVE            0x2000
+#define DLGS_SYSSIZE            0x4000
+#define DLGS_SYSMENU            0x8000
+
+/*
  *  Dialog callback events
 
     DLGE_KEYDOWN
@@ -1060,6 +1075,17 @@
 #define DLGE_KEYDOWN            6           /* Keydown event */
 #define DLGE_COMMAND            7           /* Accelerator/Menu command */
 #define DLGE_HELP               8           /* Help event */
+#define DLGE_SYSCOMMAND         9           /* System command */
+
+/*
+ *  System commands.
+ */
+#define DLSC_CLOSE              0xf010
+#define DLSC_TITLE              0xf020
+#define DLSC_MOVE               0xf100
+#define DLSC_SIZE               0xf120
+#define DLSC_MAXIMIZE           0xf200
+#define DLSC_MINIMIZE           0xf210
 
 /*
  *  create_notice

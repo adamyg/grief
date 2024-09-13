@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dialog_c,"$Id: dialog.c,v 1.32 2024/09/08 16:29:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_dialog_c,"$Id: dialog.c,v 1.33 2024/09/12 17:28:50 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dialog.c,v 1.32 2024/09/08 16:29:24 cvsuser Exp $
+/* $Id: dialog.c,v 1.33 2024/09/12 17:28:50 cvsuser Exp $
  * Dialog manager.
  *
  *
@@ -94,9 +94,6 @@ static WidgetDef frame_widgets[] = {            /* Frame widget classes */
     /*- { DLGC_TABLE,                   "TABLE",                table_new },        -*/
         { DLGC_GAUGE,                   "GAUGE",                gauge_new },
     /*- { DLGC_SLIDER,                  "SLIDER",               slider_new },       -*/
-    /*- { DLGC_VSCROLLBAR,              "VSCROLLBAR",           vscrollbar_new },   -*/
-    /*- { DLGC_HSCROLLBAR,              "HSCROLLBAR",           hscrollbar_new },   -*/
-    /*- { DLGC_TOGGLE,                  "TOGGLE",               toggle_new },       -*/
         { 0, NULL, NULL }
         };
 
@@ -128,6 +125,8 @@ static AttributeDef attrs[] = {
         { DLGA_Y,                       "Y",                    A_INT|A_STR },
         { DLGA_COLS,                    "COLS",                 A_INT|A_STR },
         { DLGA_ROWS,                    "ROWS",                 A_INT|A_STR },
+        { DLGA_VERSION,                 "VERSION",              A_INT },
+        { DLGA_STYLES,                  "STYLES",               A_INT },
 
         { DLGA_ATTACH_TOP,              "ATTACH_TOP",           A_NONE },
         { DLGA_ATTACH_BOTTOM,           "ATTACH_BOTTOM",        A_NONE },
@@ -193,7 +192,7 @@ static AttributeDef attrs[] = {
         { DLGA_LBICASESTRINGS,          "LBICASESTRINGS",       A_INT  },
         { DLGA_LBDUPLICATES,            "LBDUPLICATES",         A_INT  },
     /*  { DLGA_LBINSERT,                "LBINSERT",             A_INT|A_STR|A_LIST },  */
-    /*  { DLGA_LBREMOVE,                "LBREMOVE",             A_INT|A_STR|A_LIST },  */
+    /*  { DLGA_LBREMOVE,                "LBREMOVE",             A_INT },  */
         { DLGA_LBCLEAR,                 "LBCLEAR",              A_NONE },
 
         { DLGA_LBCURSOR,                "LBCURSOR",             A_INT  },
@@ -1217,7 +1216,7 @@ dlg_new(void)
     widget_init(&d->d_widget, sizeof(WIDGET_t), (WIDGETCB_t)dialog_default);
     d->d_widget.w_root = d;
     d->d_widget.w_ident = d->d_ident;           /* need by callback() */
-
+    d->d_styles = DLGS_BORDER | DLGS_CAPTION;
     return d;
 }
 
@@ -1437,8 +1436,8 @@ dialog_callback(DIALOG_t *d, int event, accint_t val1, accint_t val2)
 
 
 /*  Function:           widget_callback2
- *      Send a message to the widget "callback". The message shall be
- *      directed firstly at the widget specific callback, if assigned,
+ *      Send a message to the widget "callback".
+ *      The message shall be directed firstly at the widget specific callback, if assigned,
  *      otherwise the dialog callback, if assigned.
  *
  *  Parameters:
@@ -1532,7 +1531,7 @@ callback(const char *label,
     assert(lp < (tmpl + sizeof(tmpl)));
     execute_nmacro(tmpl);
     ret = (int) acc_get_ival();
-    trace_ilog("%s_callback ; %d\n", label, ret);
+    trace_ilog("%s_callback : %d\n", label, ret);
     if (rval) {
         *rval = ret;
     }
@@ -1630,6 +1629,7 @@ uint32_t
 dialog_default(WIDGET_t *w, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETARG_t p2)
 {
     DIALOG_t *d = (DIALOG_t *)w;
+    int iret = 0;
 
     switch (msg) {
     case WIDGET_SET: {          /* set attribute */
@@ -1646,7 +1646,13 @@ dialog_default(WIDGET_t *w, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETARG_t p2)
 
             case DLGA_TEXT_ONLY:
             case DLGA_GUI_ONLY:
-                d->d_type = DIALOGARGLO(p1);
+                d->d_type = widgetdata_uint32(data);
+                break;
+
+            case DLGA_STYLES:
+                if (d->d_running)
+                    return FALSE;               /* read-only */
+                d->d_styles = widgetdata_uint32(data);
                 break;
 
             default:
@@ -1654,6 +1660,25 @@ dialog_default(WIDGET_t *w, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETARG_t p2)
             }
         }
         return TRUE;
+
+    case WIDGET_GET: {          /* get attribute */
+            WIDGETDATA_t* data = (WIDGETDATA_t*)p2;
+
+            switch (DIALOGARGLO(p1)) {
+            case DLGA_STYLES:
+                data->d_u.ivalue = d->d_styles;
+                data->d_type = D_INT;
+                d->d_styles;
+                return TRUE;
+            }
+        }
+        break;
+
+    case WIDGET_SYSCOMMAND:
+        if (dialog_callback2(d, DLGE_SYSCOMMAND, p1, p2, &iret)) {
+            return iret;
+        }
+        break;
 
     case WIDGET_DESTROY:
         chk_free((void *)d->d_title), d->d_title = NULL;
@@ -1820,6 +1845,12 @@ widget_default(WIDGET_t *w, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETARG_t p2)
                 if ((w->w_reqrows = (int)widgetdata_int32(data)) < 1) {
                     w->w_reqrows = 1;
                 }
+                break;
+
+            case DLGA_STYLES:           /* styles, DLGS_XXXX */
+                if (w->w_root && w->w_root->d_running)
+                    return FALSE;               /* read-only */
+                w->w_styles = widgetdata_int32(data);
                 break;
 
             case DLGA_PADX:
@@ -2039,4 +2070,3 @@ widgetdata_get(const WIDGETDATA_t *data, char *buf, int len)
 }
 
 /*end*/
-

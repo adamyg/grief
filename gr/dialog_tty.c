@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dialog_tty_c,"$Id: dialog_tty.c,v 1.30 2024/09/08 16:29:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_dialog_tty_c,"$Id: dialog_tty.c,v 1.31 2024/09/12 17:28:50 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dialog_tty.c,v 1.30 2024/09/08 16:29:24 cvsuser Exp $
+/* $Id: dialog_tty.c,v 1.31 2024/09/12 17:28:50 cvsuser Exp $
  * Dialog manager, TTY interface.
  *
  *
@@ -225,7 +225,7 @@ dialog_tty_popup_create(DIALOG_t *d, const WIDGET_t *w, int rows, int cols, cons
         y = (maxrows - (d->d_rows + 2)) / 3;
     }
 
-    if (-1 == ttyframe_create(&c->cx_popup, TRUE, NULL, x, y, cols, rows)) {
+    if (! ttyframe_create(&c->cx_popup, TRUE, NULL, x, y, cols, rows)) {
         return -1;
     }
 
@@ -381,6 +381,10 @@ dlg_open(DIALOG_t *d, DialogContext_t *c)
     if (! ttyframe_create(&c->cx_base, TRUE,
             (d->d_title ? d->d_title : ""), x + 1, y + 1, d->d_cols, d->d_rows)) {
         return -1;
+    }
+
+    if (d->d_styles & DLGS_SYSCLOSE) {
+        window_ctrl_set(c->cx_base.f_wp, WCTRLO_CLOSE_BTN);
     }
 
     ttyframe_focus(&c->cx_base);
@@ -826,7 +830,7 @@ dlg_mouse(DIALOG_t *d, struct IOEvent *evt)
     DialogContext_t *c = d->d_ucontrol;
     WIDGET_t *parent, *first, *w;
     WINDOW_t* wp = NULL;
-    int wid, where;
+    int wid, where = MOBJ_NOWHERE;
     int x, y;
 
     x = evt->mouse.x;
@@ -836,50 +840,83 @@ dlg_mouse(DIALOG_t *d, struct IOEvent *evt)
         first = dialog_next(d, NULL);           /* retrieve first */
     }
 
-    if (NULL == (w = first) || EVT_MOUSE != evt->type ||
-            curwp != (wp = mouse_pos(x, y, &wid, &where)) || MOBJ_INSIDE != where) {
-        if (wp && c->cx_popup.f_wp == wp) {     /* popup/child */
-            x -= wp->w_x + win_lborder(wp) + 1;
-            y -= wp->w_y + win_tborder(wp) + 1;
-            widget_send(w, WIDGET_MOUSE_POPUP, DIALOGARG32(x, y), evt->code);
-        }
-        return;
-    }
-
-    x -= curwp->w_x + win_lborder(curwp) + 1;   /* normalise to window */
-    y -= curwp->w_y + win_tborder(curwp) + 1;
-
-    parent = NULL;
-    if (first) {
-        do {
-            if (0 == ((WIDGET_FGREYED|WIDGET_FHIDDEN) & w->w_flags)) {
-                if ((x >= w->w_absx) && (x < w->w_absx + w->w_cols + (w->w_border * 2)) &&
-                        (y >= w->w_absy) && (y < w->w_absy + w->w_rows + (w->w_border * 2))) {
-
-                                                /* inner most widget */
-                    if (NULL == TAILQ_FIRST(&w->w_children)) {
-                        x -= w->w_absx;         /* normalise to widget */
-                        y -= w->w_absy;
-                        widget_send(w, WIDGET_MOUSE, DIALOGARG32(x, y), evt->code);
-                        parent = NULL;
-                        break;
-                    } else {                    /* parent */
-                        parent = w;
-                    }
+    if (NULL != (w = first)) {
+        /*
+         *  popup/child
+         */
+        if (curwp != (wp = mouse_pos(x, y, &wid, &where))) {
+            if (wp && c->cx_popup.f_wp == wp) {
+                switch (where) {
+                case MOBJ_INSIDE:
+                    x -= wp->w_x + win_lborder(wp) + 1;
+                    y -= wp->w_y + win_tborder(wp) + 1;
+                    widget_send(w, WIDGET_MOUSE_POPUP, DIALOGARG32(x, y), evt->code);
+                    break;
                 }
             }
-        } while ((w = dialog_next(d, w)) != first);
-    }
+            return;
+        }
 
-    __CUNUSED(parent)
-#if (XXX_WIDGET_NORMALISE)
-    if (parent) {
-        x -= w->w_absx;                         /* normalise to widget */
-        y -= w->w_absy;
-        widget_send(parent, WIDGET_MOUSE, DIALOGARG32(x, y), e->u.mouse.event);
-    }
+        /*
+         *  primary
+         */
+        assert(wp == curwp);
+        switch (where) {
+        case MOBJ_INSIDE:
+            x -= wp->w_x + win_lborder(wp) + 1;
+            y -= wp->w_y + win_tborder(wp) + 1;
+
+            parent = NULL;
+            do {
+                if (0 == ((WIDGET_FGREYED | WIDGET_FHIDDEN) & w->w_flags)) {
+                    if ((x >= w->w_absx) && (x < w->w_absx + w->w_cols + (w->w_border * 2)) &&
+                        (y >= w->w_absy) && (y < w->w_absy + w->w_rows + (w->w_border * 2))) {
+
+                        /* inner most widget */
+                        if (NULL == TAILQ_FIRST(&w->w_children)) {
+                            x -= w->w_absx;     /* normalise to widget */
+                            y -= w->w_absy;
+                            widget_send(w, WIDGET_MOUSE, DIALOGARG32(x, y), evt->code);
+                            parent = NULL;
+                            break;
+                        } else {                /* parent */
+                            parent = w;
+                        }
+                    }
+                }
+            } while ((w = dialog_next(d, w)) != first);
+
+            __CUNUSED(parent)
+#if (TODO)  // style WIDGET_NORMALISE
+            if (parent) {
+                x -= w->w_absx;                 /* normalise to widget */
+                y -= w->w_absy;
+                widget_send(parent, WIDGET_MOUSE, DIALOGARG32(x, y), evt->code);
+            }
 #endif
+            break;
+        case MOBJ_CLOSE:
+            if (FALSE == widget_send(&d->d_widget, WIDGET_SYSCOMMAND, DLSC_CLOSE, DIALOGARG32(x, y))) {
+                dlg_stop(d);
+            }
+            break;
+        case MOBJ_TITLE:
+            widget_send(&d->d_widget, WIDGET_SYSCOMMAND, DLSC_TITLE, DIALOGARG32(x, y));
+            break;
+        default:
+            break;
+        }
+   }
 }
+
+
+#if (XXX)
+    case WIDGET_SYSCOMMAND:
+        if (dialog_callback2(d, DLGE_COMMAND, p1, p2, &iret)) {
+            return iret;
+        }
+        break;
+#endif
 
 
 /*  Function:           dlg_focusfirst

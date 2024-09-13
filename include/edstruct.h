@@ -1,11 +1,11 @@
 #ifndef GR_EDSTRUCT_H_INCLUDED
 #define GR_EDSTRUCT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.80 2024/08/04 10:53:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.81 2024/09/12 17:29:13 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edstruct.h,v 1.80 2024/08/04 10:53:53 cvsuser Exp $
+/* $Id: edstruct.h,v 1.81 2024/09/12 17:29:13 cvsuser Exp $
  * Window, buffer, line and character-map definitions.
  *
  *
@@ -349,6 +349,13 @@ struct _window {
     vbyte_t             w_disp_nattr;           /* Normal attribute */
     vbyte_t             w_disp_ansicolor;       /* ANSI color cursor */
     unsigned            w_disp_ansiflags;
+
+    struct WCoords {
+        int title_start;
+        int title_end;
+        int close_start;
+        int close_end;
+    } w_coords;                                 /* Element coordinates */
 
     struct _wthumbs     w_vthumb;               /* Vertical elevator positions */
     struct _wthumbs     w_hthumb;               /* Horizontal elevator positions */

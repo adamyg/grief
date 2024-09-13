@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_widgets_tty_c,"$Id: widgets_tty.c,v 1.43 2024/09/08 16:29:25 cvsuser Exp $")
+__CIDENT_RCSID(gr_widgets_tty_c,"$Id: widgets_tty.c,v 1.44 2024/09/12 17:28:50 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: widgets_tty.c,v 1.43 2024/09/08 16:29:25 cvsuser Exp $
+/* $Id: widgets_tty.c,v 1.44 2024/09/12 17:28:50 cvsuser Exp $
  * Dialog widgets, tty interface.
  *
  *
@@ -4032,7 +4032,6 @@ listbox_callback(WListbox_t *l, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETARG_t p2)
             w->w_reqcols = 1;
         }
         w->w_flags |= WIDGET_FTABSTOP;
-        w->w_border = 1;
         return TRUE;
 
     case WIDGET_READY:          /* dialog session ready */

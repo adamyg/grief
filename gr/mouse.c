@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mouse_c,"$Id: mouse.c,v 1.47 2024/09/08 16:29:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_mouse_c,"$Id: mouse.c,v 1.48 2024/09/12 17:28:50 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mouse.c,v 1.47 2024/09/08 16:29:24 cvsuser Exp $
+/* $Id: mouse.c,v 1.48 2024/09/12 17:28:50 cvsuser Exp $
  * Mouse support code.
  *
  *
@@ -860,37 +860,36 @@ mouse_pos(int x, int y, int *win, int *where)
      *  Process matched window
      */
     if (topwp) {
+        const int wx = x - topwp->w_x, wy = y - topwp->w_y;
         int b;
 
         if ((b = win_lborder(topwp)) && x == win_lcolumn(topwp) - b) {
             t_where = MOBJ_LEFT_EDGE;
 
-                // TODO: MOBJ_ZOOM, MOBJ_CLOSE
-
-//      } else if (win_lmargin(topwp)) {        /* TOD0 */
-//          t_where = MOBJ_LEFT_MARGIN;
+    //  } else if (win_lmargin(topwp)) {
+    //      t_where = MOBJ_LEFT_MARGIN;
 
         } else if ((b = win_rborder(topwp)) && x == win_rcolumn(topwp) + b) {
-//          if (y >= win_tline(topwp) + 1 && y <= win_bline(topwp) - 1) {
-//              t_where = MOBJ_VSCROLL_AREA;
-//          } else {
-                t_where = MOBJ_RIGHT_EDGE;
-//          }
+            // MOBJ_VSCROLL_AREA;
+            t_where = MOBJ_RIGHT_EDGE;
 
         } else if ((b = win_tborder(topwp)) && y == win_tline(topwp) - b) {
-            t_where = MOBJ_TOP_EDGE;
-
-                // TODO: MOBJ_TITLE, need title coord cache.
+            if (wx <= topwp->w_coords.title_end && wx > topwp->w_coords.title_start) {
+                t_where = MOBJ_TITLE;
+         // } else if (wx <= topwp->w_coords.zoom_end && wx > topwp->w_coords.zoom_start) {
+         //     t_where = MOBJ_ZOOM;
+            } else if (wx <= topwp->w_coords.close_end && wx > topwp->w_coords.close_start) {
+                t_where = MOBJ_CLOSE;
+            } else {
+                t_where = MOBJ_TOP_EDGE;
+            }
 
         } else if ((b = win_bborder(topwp)) && y == win_bline(topwp) + b) {
-//          if (x >= win_lcolumn(topwp)+1 && x <= win_rcolumn(topwp) - 1) {
-//              *where = MOBJ_HSCROLL_AREA;
-//          } else {
-                t_where = MOBJ_BOTTOM_EDGE;
-//          }
+            // MOBJ_HSCROLL_AREA;
+            t_where = MOBJ_BOTTOM_EDGE;
 
         } else {
-            t_where = MOBJ_INSIDE;              /* must be inside */
+            t_where = MOBJ_INSIDE; 
         }
     }
 
@@ -904,5 +903,3 @@ mouse_pos(int x, int y, int *win, int *where)
 }
 
 /*end*/
-
-
