@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 8; -*- */
-/* $Id: gruvbox.cr,v 1.2 2014/11/27 15:54:12 ayoung Exp $
+/* $Id: gruvbox.cr,v 1.3 2024/07/06 18:03:26 cvsuser Exp $
  * gruvbox coloriser, GRIEF port.
  *
  * Original:
@@ -75,8 +75,8 @@ HL(string group, declare fg, ~declare bg, ~string gui, ~declare sp)
                 histring += "guibg=NONE ctermbg=NONE ";
         }
 
-        // " Hotfixing #24;
-        // " TODO: get rid of this spaghetti
+        // Hotfixing #24;
+        // TODO: get rid of this spaghetti
         if (is_string(gui) && strlen(gui)) {
                 if (gui == "none") {
                         histring += "gui=NONE cterm=NONE ";
@@ -204,30 +204,30 @@ gruvbox_colorscheme(void)
         list red, green, yellow, blue, purple, aqua, orange;
 
         if (is_dark) {
-                dark0  = quote_list("282828", 235);             // " 40-40-40
-                dark1  = quote_list("3c3836", 237);             // " 60-56-54
-                dark2  = quote_list("504945", 239);             // " 80-73-69
-                dark3  = quote_list("665c54", 241);             // " 102-92-84
-                dark4  = quote_list("7c6f64", 243);             // " 124-111-100
+                dark0  = quote_list("282828", 235);             // 40-40-40
+                dark1  = quote_list("3c3836", 237);             // 60-56-54
+                dark2  = quote_list("504945", 239);             // 80-73-69
+                dark3  = quote_list("665c54", 241);             // 102-92-84
+                dark4  = quote_list("7c6f64", 243);             // 124-111-100
 
-                medium = quote_list("928374", 245);             // " 146-131-116
+                medium = quote_list("928374", 245);             // 146-131-116
 
-                light0 = quote_list("fdf4c1", 229);             // " 253-244-193
-                light1 = quote_list("ebdbb2", 223);             // " 235-219-178
-                light2 = quote_list("d5c4a1", 250);             // " 213-196-161
-                light3 = quote_list("bdae93", 248);             // " 189-174-147
-                light4 = quote_list("a89984", 246);             // " 168-153-132
+                light0 = quote_list("fdf4c1", 229);             // 253-244-193
+                light1 = quote_list("ebdbb2", 223);             // 235-219-178
+                light2 = quote_list("d5c4a1", 250);             // 213-196-161
+                light3 = quote_list("bdae93", 248);             // 189-174-147
+                light4 = quote_list("a89984", 246);             // 168-153-132
 
                 light4_256
-                       = quote_list("a89984", 246);             // " 168-153-132
+                       = quote_list("a89984", 246);             // 168-153-132
 
-                red    = quote_list("fb4934", 167);             // " 251-73-52
-                green  = quote_list("b8bb26", 142);             // " 184-187-38
-                yellow = quote_list("fabd2f", 214);             // " 250-189-47
-                blue   = quote_list("83a598", 109);             // " 131-165-152
-                purple = quote_list("d3869b", 175);             // " 211-134-155
-                aqua   = quote_list("8ec07c", 108);             // " 142-192-124
-                orange = quote_list("fe8019", 208);             // " 254-128-25
+                red    = quote_list("fb4934", 167);             // 251-73-52
+                green  = quote_list("b8bb26", 142);             // 184-187-38
+                yellow = quote_list("fabd2f", 214);             // 250-189-47
+                blue   = quote_list("83a598", 109);             // 131-165-152
+                purple = quote_list("d3869b", 175);             // 211-134-155
+                aqua   = quote_list("8ec07c", 108);             // 142-192-124
+                orange = quote_list("fe8019", 208);             // 254-128-25
 
                 if (gruvbox_termcolors == 16) {
                         dark0  = quote_list("282828", 0);
@@ -243,44 +243,44 @@ gruvbox_colorscheme(void)
                 }
 
                 if (gruvbox_contrast == "soft") {
-                        dark0  = quote_list("32302f", 236);     // " 50-48-47
+                        dark0  = quote_list("32302f", 236);     // 50-48-47
                 }
 
                 if (gruvbox_contrast == "hard") {
-                        dark0  = quote_list("1d2021", 234);     // " 29-32-33
+                        dark0  = quote_list("1d2021", 234);     // 29-32-33
                 }
 
                 if (gruvbox_contrast_dark == "soft") {
-                        dark0  = quote_list("32302f", 236);     // " 50-48-47
+                        dark0  = quote_list("32302f", 236);     // 50-48-47
                 }
 
                 if (gruvbox_contrast_dark == "hard") {
-                        dark0  = quote_list("1d2021", 234);     // " 29-32-33
+                        dark0  = quote_list("1d2021", 234);     // 29-32-33
                 }
         } else {
-                dark0  = quote_list("fbf1c7", 229);             // " 251-241-199
-                dark1  = quote_list("ebdbb2", 223);             // " 235-219-178
-                dark2  = quote_list("d5c4a1", 250);             // " 213-196-161
-                dark3  = quote_list("bdae93", 248);             // " 189-174-147
-                dark4  = quote_list("a89984", 246);             // " 168-153-132
+                dark0  = quote_list("fbf1c7", 229);             // 251-241-199
+                dark1  = quote_list("ebdbb2", 223);             // 235-219-178
+                dark2  = quote_list("d5c4a1", 250);             // 213-196-161
+                dark3  = quote_list("bdae93", 248);             // 189-174-147
+                dark4  = quote_list("a89984", 246);             // 168-153-132
 
-                medium = quote_list("928374", 244);             // " 146-131-116
+                medium = quote_list("928374", 244);             // 146-131-116
 
-                light0 = quote_list("282828", 235);             // " 40-40-40
-                light1 = quote_list("3c3836", 237);             // " 60-56-54
-                light2 = quote_list("504945", 239);             // " 80-73-69
-                light3 = quote_list("665c54", 241);             // " 102-92-84
-                light4 = quote_list("7c6f64", 243);             // " 124-111-100
+                light0 = quote_list("282828", 235);             // 40-40-40
+                light1 = quote_list("3c3836", 237);             // 60-56-54
+                light2 = quote_list("504945", 239);             // 80-73-69
+                light3 = quote_list("665c54", 241);             // 102-92-84
+                light4 = quote_list("7c6f64", 243);             // 124-111-100
 
-                light4_256 = quote_list("7c6f64", 243);         // " 124-111-100
+                light4_256 = quote_list("7c6f64", 243);         // 124-111-100
 
-                red    = quote_list("9d0006", 88);              // " 157-0-6
-                green  = quote_list("79740e", 100);             // " 121-116-14
-                yellow = quote_list("b57614", 136);             // " 181-118-20
-                blue   = quote_list("076678", 24);              // " 7-102-120
-                purple = quote_list("8f3f71", 96);              // " 143-63-113
-                aqua   = quote_list("427b58", 66);              // " 66-123-88
-                orange = quote_list("af3a03", 130);             // " 175-58-3
+                red    = quote_list("9d0006", 88);              // 157-0-6
+                green  = quote_list("79740e", 100);             // 121-116-14
+                yellow = quote_list("b57614", 136);             // 181-118-20
+                blue   = quote_list("076678", 24);              // 7-102-120
+                purple = quote_list("8f3f71", 96);              // 143-63-113
+                aqua   = quote_list("427b58", 66);              // 66-123-88
+                orange = quote_list("af3a03", 130);             // 175-58-3
 
                 if (gruvbox_termcolors == 16) {
                         dark0  = quote_list("fbf1c7", 0);
@@ -296,47 +296,47 @@ gruvbox_colorscheme(void)
                 }
 
                 if (gruvbox_contrast == "soft") {
-                        dark0  = quote_list("f2e5bc", 228);     // " 242-229-188
+                        dark0  = quote_list("f2e5bc", 228);     // 242-229-188
                 }
 
                 if (gruvbox_contrast == "hard") {
-                        dark0  = quote_list("f9f5d7", 230);     // " 249-245-215
+                        dark0  = quote_list("f9f5d7", 230);     // 249-245-215
                 }
 
                 if (gruvbox_contrast_light == "soft") {
-                        dark0  = quote_list("f2e5bc", 228);     // " 242-229-188
+                        dark0  = quote_list("f2e5bc", 228);     // 242-229-188
                 }
 
                 if (gruvbox_contrast_light == "hard") {
-                        dark0  = quote_list("f9f5d7", 230);     // " 249-245-215
+                        dark0  = quote_list("f9f5d7", 230);     // 249-245-215
                 }
         }
 
 
-        // " Vanilla colorscheme ---------------------------------------------------------
-        // " General UI: {{{
+        // Vanilla colorscheme ---------------------------------------------------------
+        // General UI: {{{
 
-        // " Normal text
+        // Normal text
         colors += HL("Normal", light1, dark0);
 
-        // " Correct background (see issue #7):
-        // " --- Problem with changing between dark and light on 256 color terminal
-        // " --- https://github.com/morhetz/gruvbox/issues/7
+        // Correct background (see issue #7):
+        // --- Problem with changing between dark and light on 256 color terminal
+        // --- https://github.com/morhetz/gruvbox/issues/7
         if (is_dark) {
                 colors += "set background=dark";
         } else {
                 colors += "set background=light";
         }
 
-        // " Screen line that the cursor is
+        // Screen line that the cursor is
         colors += HL("CursorLine", "none", dark1);
 
-        // " Screen column that the cursor is
+        // Screen column that the cursor is
         colors += HL("CursorColumn", "none", dark1);
 
-        // " Tab pages line filler
-        // " Active tab page label
-        // " Not active tab page label
+        // Tab pages line filler
+        // Active tab page label
+        // Not active tab page label
         if (gruvbox_invert_tabline == 0) {
                 colors += HL("TabLineFill", dark4, "bg");
                 colors += HL("TabLineSel", "bg", dark4, "bold");
@@ -347,16 +347,16 @@ gruvbox_colorscheme(void)
                 colors += HL("TabLine", "bg", dark4);
         }
 
-        // " Match paired bracket under the cursor
+        // Match paired bracket under the cursor
         colors += HL("MatchParen", "none", dark3, "bold");
 
-        // " Highlighted screen columns
+        // Highlighted screen columns
         colors += HL("ColorColumn", "none", CO(gruvbox_color_column));
 
-        // " Concealed element: \lambda → λ
+        // Concealed element: \lambda → λ
         colors += HL("Conceal", blue, "none");
 
-        // " Line number of CursorLine
+        // Line number of CursorLine
         colors += HL("CursorLineNr", yellow, dark1);
 
         colors += HL("NonText", dark2);
@@ -378,57 +378,57 @@ gruvbox_colorscheme(void)
         colors += HL("StatusLine", dark4, dark0, "bold,inverse");
         colors += HL("StatusLineNC", dark2, light4, "bold,inverse");
 
-        // " The column separating vertically split windows
+        // The column separating vertically split windows
         colors += HL("VertSplit", light4, CO(gruvbox_vert_split));
 
-        // " Current match in wildmenu completion
+        // Current match in wildmenu completion
         colors += HL("WildMenu", blue, dark2, "bold");
 
-        // " Directory names, special names in listing
+        // Directory names, special names in listing
         colors += HL("Directory", green, "none", "bold");
 
-        // " Titles for output from :set all, :autocmd, etc.
+        // Titles for output from :set all, :autocmd, etc.
         colors += HL("Title", green, "none", "bold");
 
-        // " Error messages on the command line
+        // Error messages on the command line
         colors += HL("ErrorMsg", "bg", red, "bold");
-        // " More prompt: -- More --
+        // More prompt: -- More --
         colors += HL("MoreMsg", yellow, "none", "bold");
-        // " Current mode message: -- INSERT --
+        // Current mode message: -- INSERT --
         colors += HL("ModeMsg", yellow, "none", "bold");
-        // " "Press enter" prompt and yes/no questions
+        // "Press enter" prompt and yes/no questions
         colors += HL("Question", orange, "none", "bold");
-        // " Warning messages
+        // Warning messages
         colors += HL("WarningMsg", red, "none", "bold");
 
-        // " }}}
-        // " Gutter: {{{
+        // }}}
+        // Gutter: {{{
 
-        // " Line number for :number and :# commands
+        // Line number for :number and :# commands
         colors += HL("LineNr", dark4);
 
-        // " Column where signs are displayed
+        // Column where signs are displayed
         colors += HL("SignColumn", "none", CO(gruvbox_sign_column));
 
-        // " Line used for closed folds
+        // Line used for closed folds
         colors += HL("Folded", medium, dark1, "italic");
-        // " Column where folds are displayed
+        // Column where folds are displayed
         colors += HL("FoldColumn", medium, dark1);
 
-        // " }}}
-        // " Cursor: {{{
+        // }}}
+        // Cursor: {{{
 
-        // " Character under cursor
+        // Character under cursor
         colors += HL("Cursor", "none", "none", "inverse");
-        // " Visual mode cursor, selection
+        // Visual mode cursor, selection
         colors += HL("vCursor", "none", "none", "inverse");
-        // " Input moder cursor
+        // Input moder cursor
         colors += HL("iCursor", "none", "none", "inverse");
-        // " Language mapping cursor
+        // Language mapping cursor
         colors += HL("lCursor", "none", "none", "inverse");
 
-        // " }}}
-        // " Syntax Highlightin {{{
+        // }}}
+        // Syntax Highlightin {{{
 
         colors += HL("Special", orange);
         if (gruvbox_italicize_comments == 0) {
@@ -439,117 +439,117 @@ gruvbox_colorscheme(void)
         colors += HL("Todo","fg", "bg", "bold");
         colors += HL("Error", "bg", red, "bold");
 
-        // " Generic statement
+        // Generic statement
         colors += HL("Statement", red);
-        // " if, then, } else {, }, swicth, etc.
+        // if, then, } else {, }, swicth, etc.
         colors += HL("Conditional", red);
-        // " for, do, while, etc.
+        // for, do, while, etc.
         colors += HL("Repeat", red);
-        // " case, default, etc.
+        // case, default, etc.
         colors += HL("Label", red);
-        // " try, catch, throw
+        // try, catch, throw
         colors += HL("Exception", red);
-        // " sizeof, "+", "*", etc.
+        // sizeof, "+", "*", etc.
         colors += "hi link Operator Normal";
-        // " Any other keyword
+        // Any other keyword
         colors += HL("Keyword", red);
 
-        // " Variable name
+        // Variable name
         colors += HL("Identifier", blue);
-        // " Function name
+        // Function name
         colors += HL("Function", green, "none", "bold");
 
-        // " Generic preprocessor
+        // Generic preprocessor
         colors += HL("PreProc", aqua);
-        // " Preprocessor #include
+        // Preprocessor #include
         colors += HL("Include", aqua);
-        // " Preprocessor #define
+        // Preprocessor #define
         colors += HL("Define", aqua);
-        // " Same as Define
+        // Same as Define
         colors += HL("Macro", aqua);
-        // " Preprocessor #if, #} else {, #}, etc.
+        // Preprocessor #if, #} else {, #}, etc.
         colors += HL("PreCondit", aqua);
 
-        // " Generic constant
+        // Generic constant
         colors += HL("Constant",purple);
-        // " Character constant: "c", "/n"
+        // Character constant: "c", "/n"
         colors += HL("Character", purple);
-        // " String constant: "this is a string"
+        // String constant: "this is a string"
         if (gruvbox_italicize_strings == 0) {
                 colors += HL("String", green);
         } else {
                 colors += HL("String", green, "none", "italic");
         }
-        // " Boolean constant: TRUE, false
+        // Boolean constant: TRUE, false
         colors += HL("Boolean", purple);
-        // " Number constant: 234, 0xff
+        // Number constant: 234, 0xff
         colors += HL("Number", purple);
-        // " Floating point constant: 2.3e10
+        // Floating point constant: 2.3e10
         colors += HL("Float", purple);
 
-        // " Generic type
+        // Generic type
         colors += HL("Type", yellow);
-        // " static, register, volatile, etc
+        // static, register, volatile, etc
         colors += HL("StorageClass", orange);
-        // " struct, union, enum, etc.
+        // struct, union, enum, etc.
         colors += HL("Structure", aqua);
-        // " typedef
+        // typedef
         colors += HL("Typedef", yellow);
 
-        // " }}}
-        // " Completion Menu: {{{
+        // }}}
+        // Completion Menu: {{{
 
-        // " Popup menu: normal item
+        // Popup menu: normal item
         colors += HL("Pmenu", light1, dark2);
-        // " Popup menu: selected item
+        // Popup menu: selected item
         colors += HL("PmenuSel", dark2, blue, "bold");
-        // " Popup menu: scrollbar
+        // Popup menu: scrollbar
         colors += HL("PmenuSbar", "none", dark2);
-        // " Popup menu: scrollbar thumb
+        // Popup menu: scrollbar thumb
         colors += HL("PmenuThumb", "none", dark4);
 
-        // " }}}
-        // " Diffs: {{{
+        // }}}
+        // Diffs: {{{
 
         colors += HL("DiffDelete", dark0, red);
         colors += HL("DiffAdd", dark0, green);
         // "colors += HL("DiffChange", dark0, blue);
         // "colors += HL("DiffText", dark0, yellow);
 
-        // " Alternative setting
+        // Alternative setting
         colors += HL("DiffChange", dark0, aqua);
         colors += HL("DiffText", dark0, yellow);
 
-        // " }}}
-        // " Spellin {{{
+        // }}}
+        // Spellin {{{
 
-        // " Not capitalised word
+        // Not capitalised word
         colors += HL("SpellCap", "none", "none", "undercurl", red);
-        // " Not recognized word
+        // Not recognized word
         colors += HL("SpellBad", "none", "none", "undercurl", blue);
-        // " Wrong spelling for selected region
+        // Wrong spelling for selected region
         colors += HL("SpellLocal", "none", "none", "undercurl", aqua);
-        // " Rare word
+        // Rare word
         colors += HL("SpellRare", "none", "none", "undercurl", purple);
 
-        // " }}}
+        // }}}
 
-        // " Plugin specific -------------------------------------------------------------
-        // " EasyMotion: {{{
+        // Plugin specific -------------------------------------------------------------
+        // EasyMotion: {{{
 
         // colors += "hi! link EasyMotionTarget Search";
         // colors += "hi! link EasyMotionShade Comment";
 
-        // " }}}
-        // " Sneak: {{{
+        // }}}
+        // Sneak: {{{
 
         // colors += "hi! link SneakPluginTarget Search";
         // colors += "hi! link SneakStreakTarget Search";
         // colors += HL("SneakStreakMask", yellow, yellow);
         // hi! link SneakStreakStatusLine Search
 
-        // " }}}
-        // " Indent Guides: {{{
+        // }}}
+        // Indent Guides: {{{
         //
         // let indent_guides_auto_colors = 0
         //
@@ -561,14 +561,14 @@ gruvbox_colorscheme(void)
         //      colors += HL("IndentGuidesEven", "bg", dark3, "inverse");
         // }
         //
-        // " }}}
-        // " IndentLine: {{{
+        // }}}
+        // IndentLine: {{{
         //
         // string indentLine_color_term = dark2[1];
         // string indentLine_color_gui = "#" + dark2[0];
         //
-        // " }}}
-        // " Rainbow Parentheses: {{{
+        // }}}
+        // Rainbow Parentheses: {{{
         //
         // if (!exists("rbpt_colorpairs");
         //      let rbpt_colorpairs =
@@ -595,7 +595,7 @@ gruvbox_colorscheme(void)
         // let niji_light_colours = rbpt_colorpairs
         //
         // "}}}
-        // " GitGutter: {{{
+        // GitGutter: {{{
         //
         // if (gruvbox_invert_signs == 0) {
         //      colors += HL("GitGutterAdd", green, gruvbox_sign_column);
@@ -609,8 +609,8 @@ gruvbox_colorscheme(void)
         //      colors += HL("GitGutterChangeDelete", aqua, gruvbox_sign_column, "inverse");
         // }
         //
-        // " }}}
-        // " Signify: {{{
+        // }}}
+        // Signify: {{{
         //
         // if (gruvbox_invert_signs == 0) {
         //      colors += HL("SignifySignAdd", green, gruvbox_sign_column);
@@ -622,8 +622,8 @@ gruvbox_colorscheme(void)
         //      colors += HL("SignifySignDelete", red, gruvbox_sign_column, "inverse");
         // }
         //
-        // " }}}
-        // " Syntastic: {{{
+        // }}}
+        // Syntastic: {{{
         //
         // colors += HL("SyntasticError", "none", "none", "undercurl", red);
         // colors += HL("SyntasticWarning", "none", "none", "undercurl", yellow);
@@ -636,8 +636,8 @@ gruvbox_colorscheme(void)
         //      colors += HL("SyntasticWarningSign", yellow, gruvbox_sign_column, "inverse");
         // }
         //
-        // " }}}
-        // " Signature: {{{
+        // }}}
+        // Signature: {{{
         //
         // if (gruvbox_invert_signs == 0
         //      colors += HL("SignatureMarkerText", purple, gruvbox_sign_column);
@@ -650,8 +650,8 @@ gruvbox_colorscheme(void)
         // let SignatureMarkerTextHL=""SignatureMarkerText""
         // let SignatureMarkTextHL=""SignatureMarkText""
         //
-        // " }}}
-        // " ShowMarks: {{{
+        // }}}
+        // ShowMarks: {{{
         //
         // if (gruvbox_invert_signs == 0
         //      colors += HL("ShowMarksHLl", blue, gruvbox_sign_column);
@@ -665,8 +665,8 @@ gruvbox_colorscheme(void)
         //      colors += HL("ShowMarksHLm", blue, gruvbox_sign_column, "inverse");
         // }
         //
-        // " }}}
-        // " CtrlP: {{{
+        // }}}
+        // CtrlP: {{{
         //
         // colors += HL("CtrlPMatch", yellow);
         // colors += HL("CtrlPNoEntries", red);
@@ -678,8 +678,8 @@ gruvbox_colorscheme(void)
         // colors += HL("CtrlPMode2", dark0, blue, "bold");
         // colors += HL("CtrlPStats", light4, dark2, "bold");
         //
-        // " }}}
-        // " Startify: {{{
+        // }}}
+        // Startify: {{{
         //
         // colors += HL("StartifyBracket", light3);
         // colors += HL("StartifyFile", light0);
@@ -691,18 +691,18 @@ gruvbox_colorscheme(void)
         // colors += HL("StartifyHeader", orange);
         // colors += HL("StartifyFooter", dark2);
         //
-        // " }}}
-        // " Vimshell: {{{
+        // }}}
+        // Vimshell: {{{
         //
         // let vimshell_escape_colors = map(split(
         //      \ "dark4 red green yellow blue purple aqua light4 " .
         //      \ "dark0 red green orange blue purple aqua light0"
         //      \ ), ""#" + s:gb[v:val][0]");
         //
-        // " }}}
+        // }}}
         //
-        // " Filetype specific -----------------------------------------------------------
-        // " Diff: {{{
+        // Filetype specific -----------------------------------------------------------
+        // Diff: {{{
 
         colors += HL("diffAdded", green);
         colors += HL("diffRemoved", red);
@@ -713,8 +713,8 @@ gruvbox_colorscheme(void)
 
         colors += HL("diffLine", blue);
 
-        // " }}}
-        // " Html: {{{
+        // }}}
+        // Html: {{{
         //
         // colors += HL("htmlTag", blue);
         // colors += HL("htmlEndTag", blue);
@@ -739,8 +739,8 @@ gruvbox_colorscheme(void)
         // colors += HL("htmlUnderlineItalic", "fg", "bg", "underline,italic");
         // colors += HL("htmlItalic", "fg", "bg", "italic");
         //
-        // " }}}
-        // " Xml: {{{
+        // }}}
+        // Xml: {{{
         //
         // colors += HL("xmlTag", blue);
         // colors += HL("xmlEndTag", blue);
@@ -763,8 +763,8 @@ gruvbox_colorscheme(void)
         //
         // colors += HL("xmlEntity", orange);
         // colors += HL("xmlEntityPunct", orange);
-        // " }}}
-        // " Vim: {{{
+        // }}}
+        // Vim: {{{
         //
         // if (gruvbox_italicize_comments == 0
         //      colors += HL("vimCommentTitle", light4_256, "none", "bold");
@@ -779,8 +779,8 @@ gruvbox_colorscheme(void)
         // colors += HL("vimSep", light3);
         // colors += HL("vimContinue", light3);
         //
-        // " }}}
-        // " Clojure: {{{
+        // }}}
+        // Clojure: {{{
         //
         // colors += HL("clojureKeyword", blue);
         // colors += HL("clojureCond", orange);
@@ -809,14 +809,14 @@ gruvbox_colorscheme(void)
         // colors += HL("clojureQuote", yellow);
         // colors += HL("clojureUnquote", yellow);
         //
-        // " }}}
-        // " C: {{{
+        // }}}
+        // C: {{{
         //
         // colors += HL("cOperator", purple);
         // colors += HL("cStructure", orange);
         //
-        // " }}}
-        // " Python: {{{
+        // }}}
+        // Python: {{{
         //
         // colors += HL("pythonBuiltin", orange);
         // colors += HL("pythonBuiltinObj", orange);
@@ -832,8 +832,8 @@ gruvbox_colorscheme(void)
         // colors += HL("pythonBoolean", purple);
         // colors += HL("pythonDot", light3);
         //
-        // " }}}
-        // " CSS: {{{
+        // }}}
+        // CSS: {{{
         //
         // colors += HL("cssBraces", blue);
         // colors += HL("cssFunctionName", yellow);
@@ -867,8 +867,8 @@ gruvbox_colorscheme(void)
         // colors += HL("cssColorProp", aqua);
         // colors += HL("cssGeneratedContentProp", aqua);
         //
-        // " }}}
-        // " JavaScript: {{{
+        // }}}
+        // JavaScript: {{{
         //
         // colors += HL("javaScriptBraces", orange);
         // colors += HL("javaScriptFunction", aqua);
@@ -878,8 +878,8 @@ gruvbox_colorscheme(void)
         // colors += HL("javaScriptNull", purple);
         // colors += HL("javaScriptParens", light3);
         //
-        // " }}}
-        // " CoffeeScript: {{{
+        // }}}
+        // CoffeeScript: {{{
         //
         // colors += HL("coffeeExtendedOp", light3);
         // colors += HL("coffeeSpecialOp", light3);
@@ -887,20 +887,20 @@ gruvbox_colorscheme(void)
         // colors += HL("coffeeParen", light3);
         // colors += HL("coffeeBracket", orange);
         //
-        // " }}}
-        // " Ruby: {{{
+        // }}}
+        // Ruby: {{{
         //
         // colors += HL("rubyStringDelimiter", green);
         // colors += HL("rubyInterpolationDelimiter", aqua);
         //
-        // " }}}
-        // " ObjectiveC: {{{
+        // }}}
+        // ObjectiveC: {{{
         //
         // colors += HL("objcTypeModifier", red);
         // colors += HL("objcDirective", blue);
         //
-        // " }}}
-        // " Go: {{{
+        // }}}
+        // Go: {{{
         //
         // colors += HL("goDirective", aqua);
         // colors += HL("goConstants", purple);
@@ -908,23 +908,23 @@ gruvbox_colorscheme(void)
         // colors += HL("goDeclType", blue);
         // colors += HL("goBuiltins", orange);
         //
-        // " }}}
-        // " Lua: {{{
+        // }}}
+        // Lua: {{{
         //
         // colors += HL("luaIn", red);
         // colors += HL("luaFunction", aqua);
         // colors += HL("luaTable", orange);
         //
-        // " }}}
-        // " MoonScript: {{{
+        // }}}
+        // MoonScript: {{{
         //
         // colors += HL("moonSpecialOp", light3);
         // colors += HL("moonExtendedOp", light3);
         // colors += HL("moonFunction", light3);
         // colors += HL("moonObject", yellow);
         //
-        // " }}}
-        // " Java: {{{
+        // }}}
+        // Java: {{{
         //
         // colors += HL("javaAnnotation", blue);
         // colors += HL("javaDocTags", aqua);
@@ -939,18 +939,18 @@ gruvbox_colorscheme(void)
         //
         // colors += HL("javaVarArg", green);
         //
-        // " }}}
-        // " Elixir: {{{
+        // }}}
+        // Elixir: {{{
         //
         // colors += "hi! link elixirDocString Comment";
         //
         // colors += HL("elixirStringDelimiter", green);
         // colors += HL("elixirInterpolationDelimiter", aqua);
         //
-        // " }}}
-        // " Scala: {{{
+        // }}}
+        // Scala: {{{
         //
-        // " NB: scala vim syntax file is kinda horrible
+        // NB: scala vim syntax file is kinda horrible
         // colors += HL("scalaNameDefinition", light1);
         // colors += HL("scalaCaseFollowing", light1);
         // colors += HL("scalaCapitalWord", light1);
@@ -1125,4 +1125,5 @@ gruvbox_options(void)
 
         colorscheme_gruvbox();
 }
+
 /*end*/

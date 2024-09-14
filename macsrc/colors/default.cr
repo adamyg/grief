@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: default.cr,v 1.3 2014/11/24 03:56:36 ayoung Exp $
+/* $Id: default.cr,v 1.4 2024/07/11 10:42:49 cvsuser Exp $
  * Default coloriser, GRIEF port.
  *
  *
@@ -12,3 +12,5 @@ colorscheme_default(void)
 {
     set_color("clear=default");
 }
+
+//end

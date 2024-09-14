@@ -1,10 +1,10 @@
-/* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: tomorrow_night.cr,v 1.2 2014/11/25 04:44:50 ayoung Exp $
- * Tomorrow_Night coloriser, GRIEF port.
+/* -*- mode: cr; indent-width: 8; -*- */
+/* $Id: tomorrow_night.cr,v 1.4 2024/08/04 11:42:44 cvsuser Exp $
+ * Tomorrow_Night coloriser, GriefEdit port.
  *
  * Original:
  *  Name: Tomorrow_Night.vim
- *  Maintainer: http://chriskempson.com
+ *  https://github.com/chriskempson
  */
 
 #include "../grief.h"
@@ -32,9 +32,11 @@ HI(string group, string fg, string bg, string at)
 }
 
 
-void
+int
 colorscheme_tomorrow_night(void)
 {
+        const string scheme = "Tomorrow-Night";
+
         string foreground = "c5c8c6";
         string background = "1d1f21";
         string selection  = "373b41";
@@ -48,7 +50,7 @@ colorscheme_tomorrow_night(void)
         string blue       = "81a2be";
         string purple     = "b294bb";
         string window     = "4d5057";
-        list   colors[] = {
+        list  colors[] = {
             "set background=dark",
             "hi clear"
             };
@@ -57,8 +59,8 @@ colorscheme_tomorrow_night(void)
         // Depth >= 88
         get_term_feature(TF_COLORDEPTH, colordepth);
         if (colordepth < 88) {
-                error("Tomorrow-Night, color depth not supported");
-                return;
+                error("%s: color depth not supported", scheme);
+                return -1;
         }
         if (colordepth <= 256) {
                 background = "303030";
@@ -93,8 +95,18 @@ colorscheme_tomorrow_night(void)
         colors += HI("PMenuSel", foreground, selection, "reverse");
         colors += HI("SignColumn", "", background, "none");
         colors += HI("ColorColumn", "", line, "none");
+//      if version >= 700
+                colors += HI("CursorLine", "", line, "none");
+                colors += HI("CursorColumn", "", line, "none");
+                colors += HI("PMenu", foreground, selection, "none");
+                colors += HI("PMenuSel", foreground, selection, "reverse");
+                colors += HI("SignColumn", "", background, "none");
+//      end
+//      if version >= 703
+                colors += HI("ColorColumn", "", line, "none");
+//      end
 
-        //  Standard Highlighting
+        // Standard Highlighting
         colors += HI("Comment", comment, "", "");
         colors += HI("Todo", comment, background, "");
         colors += HI("Title", comment, "", "");
@@ -112,17 +124,18 @@ colorscheme_tomorrow_night(void)
         colors += HI("Type", blue, "", "none");
         colors += HI("Define", purple, "", "none");
         colors += HI("Include", blue, "", "");
+     // colors += HI("Ignore", "666666", "", "");
 
-        //  Vim Highlighting
+        // Vim Highlighting
         colors += HI("vimCommand", red, "", "none");
 
-        //  C Highlighting
+        // C Highlighting
         colors += HI("cType", yellow, "", "");
         colors += HI("cStorageClass", purple, "", "");
         colors += HI("cConditional", purple, "", "");
         colors += HI("cRepeat", purple, "", "");
 
-        //  PHP Highlighting
+        // PHP Highlighting
         colors += HI("phpVarSelector", red, "", "");
         colors += HI("phpKeyword", purple, "", "");
         colors += HI("phpRepeat", purple, "", "");
@@ -130,7 +143,7 @@ colorscheme_tomorrow_night(void)
         colors += HI("phpStatement", purple, "", "");
         colors += HI("phpMemberSelector", foreground, "", "");
 
-        //  Ruby Highlighting
+        // Ruby Highlighting
         colors += HI("rubySymbol", green, "", "");
         colors += HI("rubyConstant", yellow, "", "");
         colors += HI("rubyAccess", yellow, "", "");
@@ -145,7 +158,7 @@ colorscheme_tomorrow_night(void)
         colors += HI("rubyControl", purple, "", "");
         colors += HI("rubyException", purple, "", "");
 
-        //  Python Highlighting
+        // Python Highlighting
         colors += HI("pythonInclude", purple, "", "");
         colors += HI("pythonStatement", purple, "", "");
         colors += HI("pythonConditional", purple, "", "");
@@ -156,7 +169,11 @@ colorscheme_tomorrow_night(void)
         colors += HI("pythonRepeat", aqua, "", "");
         colors += HI("pythonExClass", orange, "", "");
 
-        //  JavaScript Highlighting
+        // CoffeeScript Highlighting
+        colors += HI("coffeeKeyword", purple, "", "");
+        colors += HI("coffeeConditional", purple, "", "");
+
+        // JavaScript Highlighting
         colors += HI("javaScriptBraces", foreground, "", "");
         colors += HI("javaScriptFunction", purple, "", "");
         colors += HI("javaScriptConditional", purple, "", "");
@@ -167,27 +184,32 @@ colorscheme_tomorrow_night(void)
         colors += HI("javascriptGlobal", blue, "", "");
         colors += HI("javascriptStatement", red, "", "");
 
-        //  HTML Highlighting
+        // HTML Highlighting
         colors += HI("htmlTag", red, "", "");
         colors += HI("htmlTagName", red, "", "");
         colors += HI("htmlArg", red, "", "");
         colors += HI("htmlScriptTag", red, "", "");
 
-        //  Diff Highlighting
+        // Diff Highlighting
+        string diffbackground = "494e56";
         colors += HI("diffAdded", green, "", "");
         colors += HI("diffRemoved", red, "", "");
+        colors += HI("DiffAdd", green, diffbackground, "");
+        colors += HI("DiffDelete", red, diffbackground, "");
+        colors += HI("DiffChange", yellow, diffbackground, "");
+        colors += HI("DiffText", diffbackground, orange, "");
 
-        //  ShowMarks Highlighting
+        // ShowMarks Highlighting
         colors += HI("ShowMarksHLl", orange, background, "none");
         colors += HI("ShowMarksHLo", purple, background, "none");
         colors += HI("ShowMarksHLu", yellow, background, "none");
         colors += HI("ShowMarksHLm", aqua, background, "none");
 
-        //  Cucumber Highlighting
+        // Cucumber Highlighting
         colors += HI("cucumberGiven", blue, "", "");
         colors += HI("cucumberGivenAnd", blue, "", "");
 
-        //  Go Highlighting
+        // Go Highlighting
         colors += HI("goDirective", purple, "", "");
         colors += HI("goDeclaration", purple, "", "");
         colors += HI("goStatement", purple, "", "");
@@ -197,7 +219,7 @@ colorscheme_tomorrow_night(void)
         colors += HI("goDeclType", blue, "", "");
         colors += HI("goBuiltins", purple, "", "");
 
-        //  Lua Highlighting
+        // Lua Highlighting
         colors += HI("luaStatement", purple, "", "");
         colors += HI("luaRepeat", purple, "", "");
         colors += HI("luaCondStart", purple, "", "");
@@ -205,7 +227,7 @@ colorscheme_tomorrow_night(void)
         colors += HI("luaCond", purple, "", "");
         colors += HI("luaCondEnd", purple, "", "");
 
-        //  Clojure highlighting
+        // Clojure highlighting
         colors += HI("clojureConstant", orange, "", "");
         colors += HI("clojureBoolean", orange, "", "");
         colors += HI("clojureCharacter", orange, "", "");
@@ -230,7 +252,7 @@ colorscheme_tomorrow_night(void)
         colors += HI("clojureRepeat", blue, "", "");
         colors += HI("clojureDispatch", blue, "", "");
 
-        //  Scala highlighting
+        // Scala highlighting
         colors += HI("scalaKeyword", purple, "", "");
         colors += HI("scalaKeywordModifier", purple, "", "");
         colors += HI("scalaOperator", blue, "", "");
@@ -274,7 +296,8 @@ colorscheme_tomorrow_night(void)
         colors += HI("scalaConstructorSpecializer", yellow, "", "");
         colors += HI("scalaBackTick", blue, "", "");
 
-        vim_colorscheme("Tomorrow-Night", 0, NULL, colors, -1);
+        vim_colorscheme(scheme, 0, NULL, colors, -1);
+        return 0;
 }
-/*end*/
 
+/*end*/

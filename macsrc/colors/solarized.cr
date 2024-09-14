@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 8; -*- */
-/* $Id: solarized.cr,v 1.3 2014/11/27 15:54:15 ayoung Exp $
+/* $Id: solarized.cr,v 1.6 2024/08/04 11:42:44 cvsuser Exp $
  * solarized coloriser, GRIEF port -- **experimental**.
  *
  * Original:
@@ -735,6 +735,7 @@ solarized_colorscheme(int dark)
      // "rubyBoolean
      // "rubyClassVariable
      // "rubyBeginEnd
+
      // "rubyRepeatModifier
      // colors += "hi! link rubyArrayDelimiter    Special";     // " [ , , ]
      // "rubyCurlyBlock  { , , }
@@ -917,27 +918,28 @@ solarized_colorscheme(int dark)
 }
 
 
-void
+int
 colorscheme_solarized(~list args)
 {
         if (!is_null(args)) {                   /* options */
                 const list longoptions = {
-                        "mode:s",
-                        "termtrans:b",
-                        "degrade:b",
-                        "bold:b",
-                        "underline:b",
-                        "italic:b",
-                        "termcolors:i",
-                        "contrast:s",
-                        "visibility:s",
-                        "diffmode:s"
+                        /*0*/ "mode:s",
+                        /*1*/ "termtrans:b",
+                        /*2*/ "degrade:b",
+                        /*3*/ "bold:b",
+                        /*4*/ "underline:b",
+                        /*5*/ "italic:b",
+                        /*6*/ "termcolors:i",
+                        /*7*/ "contrast:s",
+                        /*8*/ "visibility:s",
+                        /*9*/ "diffmode:s"
                         };
                 string value;
-                int ch;
+                int optidx = 0, ch;
 
-                if ((ch = getopt(value, NULL, longoptions, args, "colorarized")) >= 0) {
+                if ((ch = getopt(value, NULL, longoptions, args, "solorarized")) >= 0) {
                         do {
+                                ++optidx;
                                 switch(ch) {
                                 case 0: solarized_mode          = value; break;
                                 case 1: solarized_termtrans     = atoi(value); break;
@@ -952,6 +954,11 @@ colorscheme_solarized(~list args)
                                 }
                         } while ((ch = getopt(value)) >= 0);
                 }
+
+                if (optidx < length_of_list(args)) {
+                        error("solorarized: invalid option <" + args[optidx] + ">");
+                        return -1;
+                }
         }
 
         int dark;
@@ -962,6 +969,7 @@ colorscheme_solarized(~list args)
                 dark = (solarized_mode == "dark" ? 1 : 0);
         }
         solarized_colorscheme(dark);
+        return 0;
 }
 
 

@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 8; -*- */
-/* $Id: brief.cr,v 1.8 2024/05/20 17:21:07 cvsuser Exp $
+/* $Id: brief.cr,v 1.9 2024/07/11 10:42:49 cvsuser Exp $
  * Brief/Borland coloriser.
  *
  *
@@ -19,18 +19,20 @@ brief16_colors = {              /*basic brief coloriser specification*/
         "hilite_fg=light-white",
         "standout=light-cyan",
         "frame=white",
+        "whitespace=white,light-red",
+
+        "spell=red,underline",
+        "todo=brown",
+        "code=white",
         "string=light-magenta",
         "operator=yellow",
         "number=light-magenta",
-        "comment=white:italic",
+        "delimiter=cyan",
+        "word=yellow",
+
         "preprocessor=light-green",
         "preprocessor_keyword=light-green",
-        "whitespace=white,light-red",
-        "delimiter=cyan",
-        "code=white",
-        "word=yellow",
-        "todo=brown",
-        "spell=red,underline"
+        "keyword=white"
         };
 
 void
