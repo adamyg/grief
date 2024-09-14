@@ -8,13 +8,13 @@
 [![Solaris](https://github.com/adamyg/grief/actions/workflows/solaris.yml/badge.svg)](https://github.com/adamyg/grief/actions/workflows/linux.yml)
 [![BSD](https://github.com/adamyg/grief/actions/workflows/bsd.yml/badge.svg)](https://github.com/adamyg/grief/actions/workflows/bsd.yml)
 
-[![Cirrus Build Status](https://api.cirrus-ci.com/github/adamyg/grief.svg)](https://cirrus-ci.com/github/adamyg/grief)
-
 [![Build status](https://ci.appveyor.com/api/projects/status/3tx1vwwclydfp1t6?svg=true&passingText=Ubuntu%20Passing&failingText=Ubuntu%20Failing&pendingText=Ubuntu%20Pending)](https://ci.appveyor.com/project/adamyg/grief-ubuntu)
 [![Build status](https://ci.appveyor.com/api/projects/status/k63ggto1v8t1c28d?svg=true&passingText=MacOS%20Passing&failingText=MacOS%20Failing&pendingText=MacOS%20Pending)](https://ci.appveyor.com/project/adamyg/grief-macos)
 [![Build status](https://ci.appveyor.com/api/projects/status/77myicx6ab5d6g1a?svg=true&passingText=Win32%20Passing&failingText=Win32%20Failing&pendingText=Win32%20Pending)](https://ci.appveyor.com/project/adamyg/grief-win32)
 [![Build status](https://ci.appveyor.com/api/projects/status/3h8sweuo36r8q28t?svg=true&passingText=Cygwin32%20Passing&failingText=Cygwin32%20Failing&pendingText=Cygwin32%20Pending)](https://ci.appveyor.com/project/adamyg/grief-cygwin32)
 [![Build status](https://ci.appveyor.com/api/projects/status/8jk4qx55d4bql3l1?svg=true&passingText=MinGW32%20Passing&failingText=MinGW32%20Failing&pendingText=MinGW32%20Pending)](https://ci.appveyor.com/project/adamyg/grief-mingw)
+
+[![Cirrus FreBSD](https://api.cirrus-ci.com/github/adamyg/grief.svg)](https://cirrus-ci.com/github/adamyg/grief)
 
 # GRIEF - BRIEF clone
 
