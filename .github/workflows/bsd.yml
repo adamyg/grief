@@ -6,9 +6,10 @@
 #   https://github.com/vmactions/netbsd-vm
 #
 
-on: [push, pull_request]
 name: "FreeOpenNetBSD builds"
+on: [push, pull_request]
 
+#https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
 concurrency:
   group: ${{ github.ref }}-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && github.sha || '' }}
   cancel-in-progress: true
