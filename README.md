@@ -1,7 +1,12 @@
 [![Website](https://img.shields.io/badge/View-Website-blue)](https://sourceforge.net/projects/grief/)
 
 [![GitHub release](https://img.shields.io/github/release/Naereen/StrapDown.js.svg)](https://gitHub.com/adamyg/grief/releases/)
-[![Workflow](https://github.com/adamyg/grief/actions/workflows/build.yml/badge.svg)](https://github.com/adamyg/grief/actions)
+
+[![GitHub Windows](https://github.com/adamyg/grief/actions/workflows/windows.yml/badge.svg)](https://github.com/adamyg/grief/actions/workflows/windows.yml)
+[![Linux](https://github.com/adamyg/grief/actions/workflows/windows.yml/badge.svg)](https://github.com/adamyg/grief/actions/workflows/linux.yml)
+[![MacOS](https://github.com/adamyg/grief/actions/workflows/windows.yml/badge.svg)](https://github.com/adamyg/grief/actions/workflows/macos.yml)
+[![Solaris](https://github.com/adamyg/grief/actions/workflows/windows.yml/badge.svg)](https://github.com/adamyg/grief/actions/workflows/linux.yml)
+[![BSD](https://github.com/adamyg/grief/actions/workflows/windows.yml/badge.svg)](https://github.com/adamyg/grief/actions/workflows/bsd.yml)
 
 [![Cirrus Build Status](https://api.cirrus-ci.com/github/adamyg/grief.svg)](https://cirrus-ci.com/github/adamyg/grief)
 
