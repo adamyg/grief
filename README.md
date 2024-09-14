@@ -3,10 +3,10 @@
 [![GitHub release](https://img.shields.io/github/release/Naereen/StrapDown.js.svg)](https://gitHub.com/adamyg/grief/releases/)
 
 [![GitHub Windows](https://github.com/adamyg/grief/actions/workflows/windows.yml/badge.svg)](https://github.com/adamyg/grief/actions/workflows/windows.yml)
-[![Linux](https://github.com/adamyg/grief/actions/workflows/windows.yml/badge.svg)](https://github.com/adamyg/grief/actions/workflows/linux.yml)
-[![MacOS](https://github.com/adamyg/grief/actions/workflows/windows.yml/badge.svg)](https://github.com/adamyg/grief/actions/workflows/macos.yml)
-[![Solaris](https://github.com/adamyg/grief/actions/workflows/windows.yml/badge.svg)](https://github.com/adamyg/grief/actions/workflows/linux.yml)
-[![BSD](https://github.com/adamyg/grief/actions/workflows/windows.yml/badge.svg)](https://github.com/adamyg/grief/actions/workflows/bsd.yml)
+[![Linux](https://github.com/adamyg/grief/actions/workflows/linux.yml/badge.svg)](https://github.com/adamyg/grief/actions/workflows/linux.yml)
+[![MacOS](https://github.com/adamyg/grief/actions/workflows/macos.yml/badge.svg)](https://github.com/adamyg/grief/actions/workflows/macos.yml)
+[![Solaris](https://github.com/adamyg/grief/actions/workflows/solaris.yml/badge.svg)](https://github.com/adamyg/grief/actions/workflows/linux.yml)
+[![BSD](https://github.com/adamyg/grief/actions/workflows/bsd.yml/badge.svg)](https://github.com/adamyg/grief/actions/workflows/bsd.yml)
 
 [![Cirrus Build Status](https://api.cirrus-ci.com/github/adamyg/grief.svg)](https://cirrus-ci.com/github/adamyg/grief)
 
