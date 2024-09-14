@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: snake.cr,v 1.4 2014/10/27 23:28:32 ayoung Exp $
+/* $Id: snake.cr,v 1.6 2024/08/02 12:59:02 cvsuser Exp $
  * Game of Snake.
  *
  *
@@ -19,8 +19,9 @@
 #define FOODMAX         10
 
 #define TMUNIT          800                     // milliseconds
-#define TMFRAME         50                      // frame per speed increment
-#define SPEEDMAX        15                      // (TMFRAME * SPEEDMAX) < TMUNIT
+#define TMFRAME         80                      // frame per speed increment
+#define SPEEDBASE       3
+#define SPEEDMAX        10                      // (TMFRAME * (SPEEDMAX+1)) < TMUNIT (default=BASE)
 
 enum {
     LEFT,
@@ -138,7 +139,7 @@ snake_play(void)
     extern int score, bx, by;
 
     list body, food;                            // body/food elements.
-    int  size, speed, moves;                    // statistics.
+    int  size, speed, hits, moves;              // statistics.
     int  sx, sy, sd;                            // snake position and direction.
     int  ftm, ctm;                              // time references.
     int  ch;
@@ -148,14 +149,14 @@ snake_play(void)
     srand(time());
 
     UNUSED(body, food);
-    UNUSED(size, speed, moves);
+    UNUSED(size, speed, hits, moves);
     UNUSED(bx, by);
     UNUSED(sx, sy, sd);
 
     moves = 0;
     while (1) {
         move_abs(sy, sx);
-     // message("Score: %d, Moves: %d, Speed: %d, Size: %d", score, moves, speed, size);
+//      message("Score: %d, Moves: %d, Speed: %d, Hits: %d, Size: %d", score, moves, speed, hits, size);
         ch = read_char(TMUNIT / TMFRAME);
         keyboard_flush();
 
@@ -224,15 +225,16 @@ snake_play(void)
 static void
 snake_init(void)
 {
-    extern int score, size, speed, moves;       // statistics
+    extern int score, hits, size, speed, moves; // statistics
     extern int sx, sy, sd;                      // snake position and direction
     extern int bx, by;                          // bounds
     extern int ftm;                             // time references
 
     ftm   = snake_time() + 1000;
     score = 0;
+    hits  = 0;
     size  = SIZEMIN;
-    speed = 1;
+    speed = SPEEDBASE;
     moves = 0;
     sx    = bx/2;
     sy    = by/2;
@@ -251,7 +253,7 @@ snake_time(void)
 static int
 snake_move(void)
 {
-    extern int score, size, speed, moves;       // statistics.
+    extern int score, hits, size, speed, moves; // statistics.
     extern int sx, sy, sd;                      // snake position and direction.
     extern int bx, by;                          // bounds.
 
@@ -287,16 +289,18 @@ snake_move(void)
     if (food_hit(sx, sy, TRUE)) {               // grow new food
 
         food_generate(1);
+        ++hits;
 
-        if (speed < SPEEDMAX) {                  
-            ++speed;                            // increase speed
+        int factor = 3 + (hits / 8);
+        if (0 == (hits % factor)) {             // hits=3,6,10,13,17 ..
+            if (speed < SPEEDMAX) {
+                ++speed;                        // increase speed
+            }
         }
 
         if (size < SIZEMAX) {
             size += 2;                          // increase size
         }
-
-        message("Score: %d", ++score);
 
     } else if (speed < SPEEDMAX) {
         if (0 == (moves % (SPEEDMAX - speed))) {
@@ -304,6 +308,13 @@ snake_move(void)
                 ++size;                         // increase size */
             }
         }
+    }
+    
+    int newscore = (hits * 10) + (size * 2);
+    if (newscore != score)
+    {
+        message("Scoore: %d", newscore);
+        score = newscore;
     }
 
     /* erase trailing image */
@@ -409,9 +420,5 @@ food_hit(int x, int y, int rm)
     }
     return FALSE;
 }
+
 /*end*/
-
-
-
-
-
