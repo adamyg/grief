@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.79 2024/08/25 06:01:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.80 2024/09/20 14:50:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.79 2024/08/25 06:01:53 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.80 2024/09/20 14:50:06 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -1373,7 +1373,7 @@ do_ega(void)                /* void (int flag) */
                     mi.row = orows;             /* restore, unless modified */
                     mi.col = ocols;
                 }
-            state = 0;
+                state = 0;
             } else if (0 == state && (-1 == flag || -3 == flag)) {
                 orows  = crows;                 /* maximise */
                 ocols  = ccols;
@@ -1440,4 +1440,3 @@ do_copy_screen(void)
     chk_free(tmp);
 }
 #endif  /*USE_VIO_BUFFER*/
-

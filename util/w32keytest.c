@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: w32keytest.c,v 1.32 2024/09/04 11:16:54 cvsuser Exp $
+/* $Id: w32keytest.c,v 1.33 2024/09/20 14:51:42 cvsuser Exp $
  * console key-test -- win32
  *
  *
@@ -158,9 +158,9 @@ static int AltPlusEnabled(void);
 static int AltPlusEvent(const KEY_EVENT_RECORD *ke, int offset);
 static DWORD AltGrEvent(const KEY_EVENT_RECORD* key);
 
-static const wchar_t* key_description(const KEY_EVENT_RECORD* ker);
-static const wchar_t *control_state(DWORD dwControlKeyState);
-static const wchar_t *virtual_description(WORD wVirtualKeyCode);
+static const wchar_t* wkey_description(const KEY_EVENT_RECORD* ker);
+static const wchar_t *wcontrol_state(DWORD dwControlKeyState);
+static const wchar_t *wvirtual_description(WORD wVirtualKeyCode);
 
 static int cprinta(const char* fmt, ...);
 static int cprintw(const wchar_t* fmt, ...);
@@ -421,8 +421,8 @@ Process(HANDLE in, int rawmode)
                     event_count, (WORD) ker->uChar.UnicodeChar,
                         (ker->uChar.UnicodeChar > 32 ? ker->uChar.UnicodeChar : ' '),
                         (ker->bKeyDown ? L"down" : L" up "), ker->wRepeatCount,
-                    ker->wVirtualKeyCode, virtual_description(ker->wVirtualKeyCode), ker->wVirtualScanCode,
-                    ker->dwControlKeyState, control_state(ker->dwControlKeyState|apps_control),
+                    ker->wVirtualKeyCode, wvirtual_description(ker->wVirtualKeyCode), ker->wVirtualScanCode,
+                    ker->dwControlKeyState, wcontrol_state(ker->dwControlKeyState|apps_control),
                     alt_state);
 
                 if (ker->bKeyDown) {
@@ -432,7 +432,7 @@ Process(HANDLE in, int rawmode)
 
                         t_ker.dwControlKeyState = AltGrEvent(&t_ker);
                         t_ker.dwControlKeyState |= apps_control;
-                        if (NULL != (kd = key_description(&t_ker))) {
+                        if (NULL != (kd = wkey_description(&t_ker))) {
                             cprintw(L"%*s<%s>", COLUMN1 - offset, L"", kd);
                             offset = COLUMN1;
                         }
@@ -917,7 +917,7 @@ AltGrEvent(const KEY_EVENT_RECORD* key)
 
 
 static const wchar_t *
-key_description(const KEY_EVENT_RECORD *ker)
+wkey_description(const KEY_EVENT_RECORD *ker)
 {
     static wchar_t t_buffer[200];
     wchar_t *cursor = t_buffer, *end = cursor + _countof(t_buffer);
@@ -961,11 +961,11 @@ key_description(const KEY_EVENT_RECORD *ker)
     }
 
     // Control states
+    if (dwControlKeyState & APP_PRESSED) // special
+        cursor += swprintf(cursor, end - cursor, L"App-");
+
     if (dwControlKeyState & ALT_PRESSED)
         cursor += swprintf(cursor, end - cursor, L"Alt-");
-
-    if (dwControlKeyState & APP_PRESSED)
-        cursor += swprintf(cursor, end - cursor, L"App-");
 
     if (dwControlKeyState & CTRL_PRESSED)
         cursor += swprintf(cursor, end - cursor, L"Ctrl-");
@@ -1017,8 +1017,9 @@ key_description(const KEY_EVENT_RECORD *ker)
     return (cursor > t_buffer ? t_buffer :  NULL);
 }
 
+
 static const wchar_t *
-control_state(DWORD dwControlKeyState)
+wcontrol_state(DWORD dwControlKeyState)
 {
     static wchar_t t_buffer[200];
     wchar_t *cursor = t_buffer;
@@ -1041,7 +1042,7 @@ control_state(DWORD dwControlKeyState)
 
 
 static const wchar_t *
-virtual_description(WORD wVirtualKeyCode)
+wvirtual_description(WORD wVirtualKeyCode)
 {
     switch (wVirtualKeyCode) {
     case VK_LBUTTON             :  /*0x01*/ return L"LBUTTON";

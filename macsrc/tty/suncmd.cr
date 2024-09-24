@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: suncmd.cr,v 1.3 2014/06/27 19:22:21 ayoung Exp $
+/* $Id: suncmd.cr,v 1.4 2024/09/20 12:15:15 cvsuser Exp $
  * This file can be used for a variety of Sun based applications.
  *
  *  The GRTERM entry should start with 'sun', and then you can append 'type3' if you have an old
@@ -76,8 +76,8 @@ main()
             NULL,           "\x1B[231z"),
 
         ALT_0_9, quote_list(
-            "\xB0",         "\xB1",         "\xB2",         "\xB3",         "\xB4",
-            "\xB5",         "\xB6",         "\xB7",         "\xB8",         "\xB9")
+            "\xB0",         "\xB1",         "\xB2",         "\xB3",         "\xB4",     /* ALT-0..4 */
+            "\xB5",         "\xB6",         "\xB7",         "\xB8",         "\xB9")     /* ALT-5..9 */
     );
 }
 

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.62 2024/08/27 12:44:33 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.64 2024/09/21 09:05:16 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.62 2024/08/27 12:44:33 cvsuser Exp $
+/* $Id: cmain.c,v 1.64 2024/09/21 09:05:16 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -90,6 +90,9 @@ __CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.62 2024/08/27 12:44:33 cvsuser Exp $
 #define MOUSE_MODE_OPTIONS      "=none"
 #endif
 
+#define KBPROTOCOL_DEFAULT      "auto"
+#define KBPROTOCOL_OPTIONS      "=none|auto|basic|cygwin|msterminal|xterm-mok2|mintty-mok2"
+
 #define MAX_M                   32              /* -m switches, including -u switch. */
 
 static struct argoption options[] = {
@@ -166,9 +169,14 @@ static struct argoption options[] = {
 
     { "nohilite",       arg_none,           NULL,       7,      "Disable syntax hiliting" },
 
-    { "norawkb",        arg_none,           NULL,       8,      "Disable use of raw scancodes; Cygwin/Terminal" },
+    { "norawkb",        arg_none,           NULL,       420,    "Disable use of raw kbprotocol; kbprotocol=basic" },
 
-    { "nosigtrap",      arg_none,           NULL,       17,     "Disable signal trapping (for debugging)" },
+    { "kbprotocol",     arg_required,       NULL,       421,    "Enable given keyboard protocol: default=" KBPROTOCOL_DEFAULT,
+                            KBPROTOCOL_OPTIONS },
+
+    { "kbconfig",       arg_required,       NULL,       422,    "Keyboard protocol selection config; format \"term:mode[;..]\"" },
+
+    { "nosigtrap",	arg_none,	    NULL,       17,     "Disable signal trapping (for debugging)" },
 
     { "term",           arg_required,       NULL,       308,    "Override the TERM setting",
                             "<termname>" },
@@ -313,7 +321,9 @@ int                     xf_graph = -1;          /* TRUE/FALSE, user specified gr
 
 int                     xf_visbell = FALSE;     /* TRUE/FALSE, visual bell. */
 
-int                     xf_rawkb = RAWKB_ENABLE;/* TRUE/FALSE, raw keyboard. */
+int                     xf_kbprotocol = KBPROTOCOL_AUTO; /* TRUE/FALSE, raw keyboard. */
+
+const char *            xf_kbconfig = NULL;     /* Optional keyboard configuration. */
 
 int                     xf_sigtrap = TRUE;      /* TRUE/FALSE, control signal traps. */
 
@@ -539,7 +549,7 @@ cmain(int argc, char **argv)
 #endif
     vtinit(&argc, argv);
     ttopen();
-	//TODO: resource macro?
+        //TODO: resource macro?
 
     /* high-level */
     color_setscheme(NULL);
@@ -1023,8 +1033,25 @@ argv_process(const int doerr, int argc, const char **argv)
             xf_visbell = TRUE;
             break;
 
-        case 8:             /* tty - raw keyboard disabled. */
-            xf_rawkb &= ~RAWKB_ENABLE;
+        case 420:           /* tty - raw keyboard disabled. */
+            xf_kbprotocol = KBPROTOCOL_BASIC;
+            break;
+
+        case 421: {         /* tty - keyboard protocol. */
+                const int protocol = key_protocolid(args.val, -1);
+
+                if (protocol >= 0) {
+                    xf_kbprotocol = (unsigned)protocol;
+                } else {
+                    fprintf(stderr, "%s: unknown keyboard protocol mode '%s'\n", x_progname, args.val);
+                    ++errflag;
+                }
+            }
+            break;
+
+        case 422:           /* tty - keyboard config. */
+            xf_kbprotocol = KBPROTOCOL_AUTO;
+            xf_kbconfig = args.val;
             break;
 
         case 6:             /* tty - underline mode. */

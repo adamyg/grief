@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: xterm_msterminal.cr,v 1.2 2024/08/25 06:02:04 cvsuser Exp $
+/* $Id: xterm_msterminal.cr,v 1.3 2024/09/19 15:10:54 cvsuser Exp $
  * msterminal terminal profile.
  * https://learn.microsoft.com/en-us/windows/terminal/
  *
@@ -123,5 +123,4 @@ msterminal(void)
 }
 
 /*end*/
-
 

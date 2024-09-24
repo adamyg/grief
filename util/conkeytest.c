@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: conkeytest.c,v 1.3 2024/09/01 15:36:40 cvsuser Exp $
+/* $Id: conkeytest.c,v 1.11 2024/09/20 03:21:34 cvsuser Exp $
  * console key-test -- ttyconsole
  * Build: gcc -o conkeytest conkeytest.c conkey.c
  *
@@ -32,7 +32,10 @@
 enum KeyboardMode {
         KEYBOARD_STANDARD,
         KEYBOARD_CYGWIN,
-        KEYBOARD_MSTERMINAL
+        KEYBOARD_MSTERMINAL,
+        KEYBOARD_XTERM_META,
+        KEYBOARD_XTERM_MOK2,
+        KEYBOARD_KITTY
 };
 
 enum MouseMode {
@@ -99,10 +102,17 @@ main(int argc, char **argv)
                                 struct uversion uv = {0};
 
                                  if (UVERSION_CYGWIN == uversion_get(&uv) && uversion_cmp(&uv, 3, 5, 5) < 0) {
-                                        printf("cygwin: %u.%u.%u, wont correctly support win-input-mode\n");
+                                        printf("cygwin: %u.%u.%u, wont correctly support win-input-mode\n",
+                                            uv.umajor, uv.uminor, uv.upatch);
                                         return EXIT_FAILURE;
                                 }
                                 kmode = KEYBOARD_MSTERMINAL;
+                        } else if (0 == strcmp(optarg, "xterm-meta")) {
+                                kmode = KEYBOARD_XTERM_META;
+                        } else if (0 == strcmp(optarg, "xterm-mok2")) {
+                                kmode = KEYBOARD_XTERM_MOK2;
+                        } else if (0 == strcmp(optarg, "kitty")) {
+                                kmode = KEYBOARD_KITTY;
                         } else {
                                 printf("%s: unexpected raw-mode <%s>\n", progname, optarg);
                                 usage();
@@ -160,7 +170,7 @@ usage(void)
         static const char *options[] = {
                 "",
                 "Options:",
-                "   -k,--key=<mode>         Keyboard mode (standard [default],cygwin,msterminal)",
+                "   -k,--key=<mode>         Keyboard mode (standard [default],cygwin,msterminal,xterm-meta,xterm-mok2,kitty)",
                 "   -m,--mouse=<mode>       Mouse mode (off [default],xterm,x11,sgr)",
                 "",
                 "   -h,--help               Command line usage",
@@ -219,20 +229,22 @@ runner(const enum MouseMode mmode, const enum KeyboardMode kmode)
                 }
 
                 for (cursor = buf, end = cursor + cnt; cursor < end; ) {
-                        if (kmode) {            // raw-key events
+                        if (kmode) {            // key events
                                 if (cursor[0] == 0x1b && (cursor[1] == '{' || cursor[1] == '[')) {
                                         const char *term;
 
                                         if (NULL != (term = DecodeCygwinKey(&ir, cursor, end)) ||
-                                            NULL != (term = DecodeMSTerminalKey(&ir, cursor, end))) {
+                                            NULL != (term = DecodeMSTerminalKey(&ir, cursor, end)) ||
+                                            NULL != (term = DecodeXTermKey(&ir, cursor, end))) {
                                                 const KEY_EVENT_RECORD* ke = &ir.Event.KeyEvent;
                                                 const WCHAR ch = ke->uChar.UnicodeChar;
 
-                                                printf("%4d: %s %02u VC=0x%04x/%u, SC=0x%04x/%u, KEY=0x%x/'%c', CTRL=%08llx\n\r",
+                                                printf("%4d: %s %02u VC=0x%04x/%u, SC=0x%04x/%u, KEY=0x%x/'%c', CTRL=%08llx %s\n\r",
                                                     event_count, (ke->bKeyDown ? "Dn" : "Up"), (unsigned)ke->wRepeatCount,
                                                     (unsigned)ke->wVirtualKeyCode, (unsigned)ke->wVirtualKeyCode,
                                                     (unsigned)ke->wVirtualScanCode, (unsigned)ke->wVirtualScanCode,
-                                                        (unsigned)ch, (ch >= ' ' && ch < 0x7f ? ch : '.'), (unsigned long long)ke->dwControlKeyState);
+                                                        (unsigned)ch, (ch >= ' ' && ch < 0x7f ? ch : '.'), (unsigned long long)ke->dwControlKeyState,
+                                                    key_description(ke));
                                                 if (ke->bKeyDown && 0 == firstchar) {
                                                         firstchar = ch;
                                                 }
@@ -272,7 +284,7 @@ runner(const enum MouseMode mmode, const enum KeyboardMode kmode)
                         }
                 }
 
-                prints("\n\r");
+                //prints("\n\r");
         }
 
         keyboard_mode(kmode, 0);
@@ -289,7 +301,7 @@ runner(const enum MouseMode mmode, const enum KeyboardMode kmode)
 static void
 hex(const void *buf, unsigned len)
 {
-#define HEXWIDTH 32
+#define HEXWIDTH 16
 #define HEXCOLUMN 4
         const unsigned char *cursor = buf, *end = cursor + len;
         unsigned offset = 0;
@@ -377,14 +389,50 @@ keyboard_mode(const enum KeyboardMode mode, int state)
         if (state) {
                 if (mode == KEYBOARD_CYGWIN) {
                         prints("\033[?2000h");              // enable cygwin-raw-mode.
+
                 } else if (mode == KEYBOARD_MSTERMINAL) {
                         prints("\033[?9001h");              // enable win32-input-mode.
+
+                } else if (mode == KEYBOARD_XTERM_META) {
+                        prints("\033[?1034h");              // enable meta-8bit-mode.
+
+                } else if (mode == KEYBOARD_XTERM_MOK2) {
+                        //
+                        //  \e[27;<modifier>;<char>~ or     xterm
+                        //  \e[<char>;<modifier>u           formatOtherKeys=1 in xterm; which is the mintty default.
+                        //
+                        //  https://invisible-island.net/xterm/modified-keys-gb-altgr-intl.html#other_modifiable_keycodes
+                        //
+                        prints("\033[>4;2m");               // enable modifyOtherKeys
+
+                } else if (mode == KEYBOARD_KITTY) {
+                        //
+                        //  \e[ number ; modifiers [u~]
+                        //  \e[ 1; modifiers [ABCDEFHPQS]
+                        //  0x0d - for the Enter key
+                        //  0x7f or 0x08 - for Backspace
+                        //  0x09 - for Tab
+                        //
+                        //  https://sw.kovidgoyal.net/kitty/keyboard-protocol/
+                        //  http://www.leonerd.org.uk/hacks/fixterms/
+                        //
+                        prints("\033[>1u");                 // enable kitty-keyboard-protocol
                 }
         } else {
                 if (mode == KEYBOARD_CYGWIN) {
                         prints("\033[?2000l");              // disable cygwin-raw-mode.
+
                 } else if (mode == KEYBOARD_MSTERMINAL) {
                         prints("\033[?9001l");              // disable win32-input-mode.
+
+                } else if (mode == KEYBOARD_XTERM_META) {
+                        prints("\033[?1034l");              // disable meta-8bit-mode.
+
+                } else if (mode == KEYBOARD_XTERM_MOK2) {
+                        prints("\033[>4;0m");               // disable modifyOtherKeys
+
+                } else if (mode == KEYBOARD_KITTY) {
+                        prints("\033[<u");                  // disable kitty-keyboard-protocol
                 }
         }
 }
@@ -438,3 +486,4 @@ uversion_cmp(const struct uversion *uv, unsigned umajor, unsigned uminor, unsign
 }
 
 //end
+

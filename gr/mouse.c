@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mouse_c,"$Id: mouse.c,v 1.48 2024/09/12 17:28:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_mouse_c,"$Id: mouse.c,v 1.49 2024/09/15 14:29:51 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mouse.c,v 1.48 2024/09/12 17:28:50 cvsuser Exp $
+/* $Id: mouse.c,v 1.49 2024/09/15 14:29:51 cvsuser Exp $
  * Mouse support code.
  *
  *
@@ -860,7 +860,7 @@ mouse_pos(int x, int y, int *win, int *where)
      *  Process matched window
      */
     if (topwp) {
-        const int wx = x - topwp->w_x, wy = y - topwp->w_y;
+        const int wx = x - topwp->w_x; //, wy = y - topwp->w_y;
         int b;
 
         if ((b = win_lborder(topwp)) && x == win_lcolumn(topwp) - b) {

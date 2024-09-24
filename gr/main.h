@@ -1,11 +1,11 @@
 #ifndef GR_MAIN_H_INCLUDED
 #define GR_MAIN_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_main_h,"$Id: main.h,v 1.31 2024/08/25 06:01:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_main_h,"$Id: main.h,v 1.33 2024/09/21 09:05:16 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: main.h,v 1.31 2024/08/25 06:01:53 cvsuser Exp $
+/* $Id: main.h,v 1.33 2024/09/21 09:05:16 cvsuser Exp $
  * Globals and main process primitives.
  *
  *
@@ -57,11 +57,9 @@ extern int                  xf_graph;           /* TRUE/FALSE, user specified gr
 
 extern int                  xf_visbell;         /* TRUE/FALSE, visual bell. */
 
-#define RAWKB_ENABLE            0x0001
-#define RAWKB_CYGWIN            0x0010
-#define RAWKB_MSTERMINAL        0x0020
+extern int                  xf_kbprotocol;      /* Keyboard protocol mode. */
 
-extern int                  xf_rawkb;           /* RAWKB_ENABLE/0, raw keyboard. */
+extern const char *         xf_kbconfig;        /* Optional keyboard configuration. */
 
 extern int                  xf_underline;       /* TRUE/FALSE, user specified underline mode. */
 
@@ -141,4 +139,5 @@ extern void                 do_suspend(void);
 __CEND_DECLS
 
 #endif /*GR_MAIN_H_INCLUDED*/
+
 

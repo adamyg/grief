@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: xterm_util.cr,v 1.12 2024/07/12 16:33:22 cvsuser Exp $
+/* $Id: xterm_util.cr,v 1.13 2024/09/20 12:15:16 cvsuser Exp $
  * Standard Xterm features ...
  *
  *
@@ -71,11 +71,50 @@ xterm_graphic(void)
  */
 void
 xterm_color(void)
-{
+{                                                                                                                 
     set_term_feature(TF_COLOR, TRUE);           /* Terminal supports color. */
 }
 
 
+/*
+ *  xterm_alt8bit_keys ---
+ *      Legacy Alt-X key encoding; not-compatible with UTF8 encoding.
+ */
+void
+xterm_alt8bit_keys(void)
+{
+    set_term_keyboard(
+        //
+        //  <Alt-A>,        <Alt-B>,        <Alt-C>,        <Alt-D>,        <Alt-E>,
+        //  <Alt-F>,        <Alt-G>,        <Alt-H>,        <Alt-I>,        <Alt-J>,
+        //  <Alt-K>,        <Alt-L>,        <Alt-M>,        <Alt-N>,        <Alt-O>,
+        //  <Alt-P>,        <Alt-Q>,        <Alt-R>,        <Alt-S>,        <Alt-T>,
+        //  <Alt-U>,        <Alt-V>,        <Alt-W>,        <Alt-X>,        <Alt-Y>,
+        //  <Alt-Z>
+        //
+        ALT_A_Z, quote_list(                    /* 8bit-Meta-Alpha/remove */
+            "\xE1",         "\xE2",         "\xE3",         "\xE4",         "\xE5",
+            "\xE6",         "\xE7",         "\xE8",         "\xE9",         "\xEa",
+            "\xEb",         "\xEc",         "\xED",         "\xEe",         "\xEf",
+            "\xF0",         "\xF1",         "\xF2",         "\xF3",         "\xF4",
+            "\xF5",         "\xF6",         "\xF7",         "\xF8",         "\xF9",
+            "\xFa"),
+
+        //
+        //  <Alt-0>,        <Alt-1>,        <Alt-2>,        <Alt-3>,        <Alt-4>,
+        //  <Alt-5>,        <Alt-6>,        <Alt-7>,        <Alt-8>,        <Alt-9>
+        //
+        ALT_0_9, quote_list(                    /* 8bit-Meta-Numeric/remove */
+            "\xB0",         "\xB1",         "\xC0",         "\xA4",         "\xA4",
+            "\xB5",         "\xB6",         "\xB7",         "\xB8",         "\xB9" )
+        );
+}
+
+
+/*
+ *  xterm_altmetas ---
+ *      Escape Alt-X key encoding.
+ */
 void
 xterm_altmeta_keys(void)
 {
@@ -401,3 +440,4 @@ xterm_mouse(void)
 }
 
 /*end*/
+

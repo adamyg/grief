@@ -37,9 +37,17 @@
 #ifdef   HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#if defined(linux)
+#ifndef  _DEFAULT_SOURCE
+#define  _DEFAULT_SOURCE
+#endif
+#else
 #ifndef  _BSD_SOURCE
 #define  _BSD_SOURCE
 #endif
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

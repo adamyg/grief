@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_getkey_c,"$Id: getkey.c,v 1.49 2024/08/31 08:13:38 cvsuser Exp $")
+__CIDENT_RCSID(gr_getkey_c,"$Id: getkey.c,v 1.50 2024/09/15 14:17:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: getkey.c,v 1.49 2024/08/31 08:13:38 cvsuser Exp $
+/* $Id: getkey.c,v 1.50 2024/09/15 14:17:23 cvsuser Exp $
  * Low level input, both keyboard and mouse.
  *
  *
@@ -1137,13 +1137,15 @@ unmatched:;
     assert(ch16);
 
     if (seq->len > 1) {
+        unsigned idx;
+
         assert(x_pushback == NULL);
         x_pushback = x_pushbuffer;
 
-        for (ret = 1; ret < seq->len; ++ret) {
-            x_pushbuffer[ret - 1] = seq->data[ret];
+        for (idx = 1; idx < seq->len; ++idx) {
+            x_pushbuffer[idx - 1] = seq->data[idx];
         }
-        x_pushbuffer[ret] = 0;
+        x_pushbuffer[idx] = 0;
         seq->data[1] = 0;
         seq->len = 1;
 

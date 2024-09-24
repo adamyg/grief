@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.133 2024/09/08 16:29:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.136 2024/09/22 08:27:16 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.133 2024/09/08 16:29:24 cvsuser Exp $
+/* $Id: ttyterm.c,v 1.136 2024/09/22 08:27:16 cvsuser Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -240,8 +240,9 @@ static int              ttigetflag(const Term_t *ti);
 
 static TAttributes_t    term_xtermlike(const char *term);
 
-static void             key_enable(char mode);
-static void             key_disable(char mode);
+static void             key_enable(void);
+static void             key_config(void);
+static void             key_disable(void);
 
 static void             acs_dump(const char *bp);
 static const char *     acs_box_characters(const char *bp);
@@ -2007,36 +2008,7 @@ term_ready(int repaint, scrprofile_t *profile)
         ttputpad(tc_vs ? tc_vs : tc_ve);        /* enable enhanced cursor */
         if (tf_am)
             ttputpad(tc_am_on);                 /* enable automatic margins */
-        key_enable(/*TODO*/0);                  /* enable keyboard mode */
-    }
-
-    /*
-     *  terminal specific specials
-     */
-    if (t_attributes & TA_CYGWIN) {
-        if (xf_rawkb) {                         /* enable cygwin-raw-mode */
-            trace_log("\tcygwin-raw-mode.\n");
-            ttpush("\033[?2000h");
-            xf_rawkb |= RAWKB_CYGWIN;
-        }
-
-    } else if (t_attributes & TA_MSTERMINAL) {
-        if (xf_rawkb) {                         /* enable win32-input-mode */
-//CYGWIN issues; 
-//  https://sourceware.org/pipermail/cygwin-patches/2024q3/012748.html
-//          trace_log("\twin32-input-mode.\n");
-//          ttpush("\033[?9001h");
-//          xf_rawkb |= RAWKB_MSTERMINAL;
-        }
-
-    } else if (t_attributes & TA_MINTTY) {
-        if (! xf_mouse) {
-            ttpush("\033[?7786h");              /* nomouse, mouse-wheel reports only */
-                // mousewheel events are reported as cursor key presses
-        }
-
-    } else if (t_attributes & TA_VT100LIKE) {
-        ttpush("\033=\033[?1]");                /* enable cursor keys */
+        key_enable();                           /* enable keyboard mode */
     }
 
     if (profile) {
@@ -2440,33 +2412,59 @@ ttisetflag(const char *tag, int taglen, const char *value)
 
 
 /*  Function:           key_enable/disable
- *      Control alternative key encoding modes.
+ *      Control alternative key encoding modes, based on xf_kbprotocol.
  *
  *  Parameters:
- *      mode - Encoding mode.
+ *      none
  *
  *  Returns:
  *      nothing.
  */
 static void
-key_enable(char mode)
+key_enable(void)
 {
-    switch (mode)
-    {
-    case 'k':
+    key_config();                               /* terminal specific selection */
+
+    if (xf_kbprotocol == KBPROTOCOL_NONE)
+        return;
+
+    ttputpad(tc_mm);                            /* enable meta key-codes */
+    xf_kbprotocol |= KBPROTOCOL_BASIC;
+
+    if (t_attributes & TA_MINTTY) {
+        if (! xf_mouse) {
+            ttpush("\033[?7786h");              /* nomouse, mouse-wheel reports only */
+                // mousewheel events are reported as cursor key presses; https://github.com/mintty/mintty/wiki/CtrlSeqs
+        }
+    }
+
+    if (xf_kbprotocol & KBPROTOCOL_CYGWIN) {
+        trace_log("\tcygwin-raw-mode.\n");
+        ttpush("\033[?2000h");                  /* enable cygwin-raw-mode */
+
+#if defined(KBPROTOCOL_MSTERMINAL) //TODO
+    } else if (xf_kbprotocol & KBPROTOCOL_MSTERMINAL) {
+        trace_log("\twin32-input-mode.\n");
+        ttpush("\033[?9001h");                  /* enable win32-input-mode */
+#endif
+
+#if defined(KBPROTOCOL_KITTY) //TODO
+    } else if (xf_kbprotocol & KBPROTOCOL_KITTY) {
         /*
-         *  kitty progressive enhancement
+         *  Kitty progressive enhancement
          *      0b1 (1)         Disambiguate escape codes.
          *      0b10 (2)        Report event types.
          *      0b100 (4)       Report alternate keys.
          *      0b1000 (8)      Report all keys as escape codes.
          *      0b10000 (16)    Report associated text.
          */
-        ttpush("\x1b[>1u");
-        break;
-    case 'x':
+        trace_log("\tkitty-key-mode.\n");
+        ttpush("\x1b[>1u");                     /* enable kitty-keyboard-protocol */
+#endif
+
+    } else if (xf_kbprotocol & (KBPROTOCOL_XTERM_MOK2|KBPROTOCOL_MINTTY_MOK2)) {
         /*
-         * XTMODKEYS: set/reset key modifier options (modifyOtherKeys)
+         *  XTMODKEYS: set/reset key modifier options (modifyOtherKeys)
          *      CSI > Pp; Pv m
          *      CSI > Pp m
          *
@@ -2481,29 +2479,143 @@ key_enable(char mode)
          *      Pv = 1, enables
          *      Pv = 2, extended
          */
-        ttpush("\x1b[>4;2m"); // t_TI, vim
-        break;
-    default:
-        ttputpad(tc_mm);                        /* enable meta key-codes */
-        break;
+        trace_log("\tmok2-mode.\n");
+        ttpush("\x1b[>4;2m");                   /* enable xterm-mok2-mode */
+
+    } else if (xf_kbprotocol & KBPROTOCOL_VT100_CURSOR) {
+        ttpush("\033[=\033[?1h");               /* enable cursor keys/DECCKM */
+    }
+}
+
+
+/*  Function:           key_config
+ *      Keyboard protocol selection.
+ *
+ *  Parameters:
+ *      none
+ *
+ *  Returns:
+ *      nothing.
+ */
+static void
+key_config(void)
+{
+    if (xf_kbprotocol != KBPROTOCOL_AUTO)
+        return;
+
+    xf_kbprotocol = KBPROTOCOL_BASIC;           /* implied */
+
+    if (xf_kbconfig) {
+        /*
+         *  user-config
+         */
+        const char *term = ggetenv("TERM"), *elm = strchr(term, '-');
+        const int termlen = (elm ? elm - term : strlen(term));
+
+        for (elm = xf_kbconfig; *elm; ) {
+            const char *end = strchr(elm, ';'); /* term:protocol[;...] */
+
+            if (0 == strncmp(elm, term, termlen)) {
+                if (elm[termlen] == ':') {
+                    const char *name = elm + termlen + 1;
+                    const int namelen = (end ? end - name : strlen(name));
+                    int protocol;
+
+                    protocol = key_protocolid(name, namelen);
+                    if (protocol >= 0 && protocol != KBPROTOCOL_AUTO) {
+                        trace_log("\tkbprotocol: %*s=%*s\n", termlen, term, name, namelen);
+                        xf_kbprotocol = protocol;
+                    }
+                    break;
+                }
+            }
+
+            if (NULL != (elm = end))
+                ++elm;
+        }
+
+    } else {
+        /*
+         *  terminal probe
+         */
+        if (t_attributes & TA_CYGWIN) {
+            xf_kbprotocol |= KBPROTOCOL_CYGWIN;
+
+#if defined(KBPROTOCOL_MSTERMINAL) //TODO, See issues: https://sourceware.org/pipermail/cygwin-patches/2024q3/012748.html
+        } else if (t_attributes & TA_MSTERMINAL) {
+            xf_kbprotocol = KBPROTOCOL_MSTERMINAL;
+#endif
+
+#if defined(KBPROTOCOL_KITTY) //TODO
+        } else if (t_attributes & TA_KITTY) {
+            xf_kbprotocol = KBPROTOCOL_KITTY;
+#endif
+
+        } else if (t_attributes & TA_MINTTY) {
+            xf_kbprotocol |= KBPROTOCOL_MINTTY_MOK2;
+
+        } else if (t_attributes & TA_XTERMLIKE) {
+            xf_kbprotocol |= KBPROTOCOL_XTERM_MOK2;
+
+        } else if (t_attributes & TA_VT100LIKE) {
+            xf_kbprotocol |= KBPROTOCOL_VT100_CURSOR;
+        }
     }
 }
 
 
 static void
-key_disable(char mode)
+key_disable(void)
 {
-    switch (mode)
-    {
-    case 'k':
-        ttpush("\x1b[<1u");
-        break;
-    case 'x':
-        ttpush("\x1b[>4;0m"); // t_TE, vim
-        break;
-    default:
-     /* ttputpad(tc_mo);                        -* restore meta key-codes */
-        break;
+    if (xf_kbprotocol <= KBPROTOCOL_AUTO)
+        return;
+
+    //ttputpad(tc_mm);                          /* disable meta key-codes */
+    if (t_attributes & TA_MINTTY) {
+        if (! xf_mouse) {
+            ttpush("\033[?7786l");              /* nomouse, disable mouse-wheel reports */
+        }
+    }
+
+    if (xf_kbprotocol & KBPROTOCOL_CYGWIN) {
+        ttpush("\033[?2000l");                  /* disable cygwin-raw-mode */
+
+#if defined(KBPROTOCOL_MSTERMINAL) //TODO
+    } else if (xf_kbprotocol & KBPROTOCOL_MSTERMINAL) {
+        ttpush("\033[?9001l");                  /* disable win32-input-mode */
+#endif
+
+#if defined(KBPROTOCOL_KITTY) //TODO
+    } else if (xf_kbprotocol & KBPROTOCOL_KITTY) {
+        /*
+            *  kitty progressive enhancement
+            *      0b1 (1)         Disambiguate escape codes.
+            *      0b10 (2)        Report event types.
+            *      0b100 (4)       Report alternate keys.
+            *      0b1000 (8)      Report all keys as escape codes.
+            *      0b10000 (16)    Report associated text.
+            */
+        ttpush("\x1b[<1u");                     /* disable kitty-keyboard-protocol */
+#endif
+
+    } else if (xf_kbprotocol & (KBPROTOCOL_XTERM_MOK2|KBPROTOCOL_MINTTY_MOK2)) {
+        /*
+            *  XTMODKEYS: set/reset key modifier options (modifyOtherKeys)
+            *      CSI > Pp; Pv m
+            *      CSI > Pp m
+            *
+            *  The first parameter Pp identifies the resource to set/reset.
+            *      Pp = 0, modifyKeyboard.
+            *      Pp = 1, modifyCursorKeys.
+            *      Pp = 2, modifyFunctionKeys.
+            *      Pp = 4, modifyOtherKeys.
+            *
+            *  The second parameter Pv is the value to assign to the resource.
+            *      Pv = 0, disables
+            *      Pv = 1, enables
+            *      Pv = 2, extended
+            */
+        ttpush("\x1b[>4;0m");                   /* disable xterm-mok2-mode */
     }
 }
 
@@ -2646,7 +2758,7 @@ term_xtermlike(const char *term)
         { "xterm", TA_XTERM },                  /* Generic */
         { "mintty", TA_MINTTY },                /* Non-standard. normally "xterm-256color" */
         { "putty", TA_PUTTY | TA_DARK },
-        { "ms-terminal", TA_MSTERMINAL | TA_DARK },
+        { "msterminal", TA_MSTERMINAL | TA_DARK },
         { "gnome", TA_GNOME },
         { "vte", TA_GNOME },
         { "xterm-kitty", TA_KITTY },
@@ -2942,16 +3054,18 @@ fgbg_value(const char *src, int *result)
 
     if (0 == strncmp(src, "default", 7)) {
         end = src + 7;                          /* special case */
+
     } else {
-        char *endp = 0;
+        char *endp = NULL;
         int value = (int) strtol(src, &endp, 0);
 
-        if (0 == endp) {
+        if (NULL == endp) {
             end = src;
         } else if (value >= 0 && value <= 255) {
             *result = (unsigned) value;
             end = endp;
         }
+
         while (*end && *end != ';') {
             ++end;
         }
@@ -3254,7 +3368,6 @@ term_identification(void)
 static int
 term_luminance(void)
 {
-    const unsigned timeoutms = io_escdelay();
     int ret;
 
     if (!tf_XT && 0 == ((TA_XTERM|TA_XTERMLIKE) & t_attributes)) {
@@ -3372,30 +3485,14 @@ term_tidy(void)
 
     term_flush();
 
-    if (t_attributes & TA_CYGWIN) {
-        if (xf_rawkb & RAWKB_CYGWIN) {
-            ttpush("\033[?2000l");              /* disable cygwin-raw-mode */
-        }
-    } else if (t_attributes & TA_MSTERMINAL) {
-        if (xf_rawkb & RAWKB_MSTERMINAL) {
-            ttpush("\033[?9001l");              /* disable win32-input-mode */
-        }
-    } else if (t_attributes & TA_MINTTY) {
-        if (! xf_mouse) {
-            ttpush("\033[?7786l");              /* nomouse, disable mouse-wheel reports */
-        }
-    }
-
     term_graphic_exit();                        /* graphic mode */
 
     term_colorreset();
     term_styleoff();
     xterm_colors_set(t_colorsorg);
-
-    key_disable(/*TODO*/0);                     /* restore keyboard mode */
-
     ttputpad(tc_ve);                            /* restore normal cursor */
 
+    key_disable();                              /* restore keyboard mode */
     if (! xf_nokeypad) {
         ttputpad(tc_ke);                        /* out of ``keypad-transmit'' mode */
     }
@@ -3524,7 +3621,7 @@ term_move(int row, int col)
     if (1 != tf_ms)
         if (tt_style) {
             term_styleoff();
-            tt_hue = -1;
+            tt_hue = (vbyte_t)-1;
         }
 
     if (tc_ho && 0 == col && 0 == row) {        /* <home> */
@@ -4813,6 +4910,7 @@ putpadch(TPUTS_OUTTYPE ch)
     }
     if (t_count >= sizeof(t_buffer)) {
         panic("ttputpad buffer overflow.");
+        return -1;
     }
     t_buffer[ t_count++ ] = (unsigned char)ch;
     return 0;
@@ -5496,4 +5594,5 @@ do_copy_screen(void)            /* void () */
 }
 
 #endif  /*!USE_VIO_BUFFER && !DJGPP */
+
 

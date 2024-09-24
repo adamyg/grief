@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.57 2024/07/25 15:39:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.58 2024/09/20 14:50:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttywin32.c,v 1.57 2024/07/25 15:39:50 cvsuser Exp $
+/* $Id: ttywin32.c,v 1.58 2024/09/20 14:50:06 cvsuser Exp $
  * WIN32 VIO driver.
  *  see: http://www.edm2.com/index.php/Category:Vio
  *
@@ -229,14 +229,14 @@ VioGetMode(VIOMODEINFO *info, HVIO viohandle)
         }
 
     } else if (info) {
-        /* 
+        /*
          *  initialised  - report underlying size;
          *     utilised during resize operations, see also VioSetMode() and VioGetBuf().
          */
         int rows = 0, cols = 0;
 
         assert(info->cb == sizeof(VIOMODEINFO));
-        vio_size(&rows, &cols);                 // current physical size.       
+        vio_size(&rows, &cols);                 // current physical size.
         info->row = (USHORT)rows;
         info->col = (USHORT)cols;
         info->color = (USHORT)vio.activecolors;
@@ -978,5 +978,36 @@ DosBeep(int freq, int duration)
 
 #endif // USE_VIO_BUFFER
 #endif // WIN32
+
+#if (XXX)
+int
+UnicodeCharSupported(HWND Handle, wchar_t ch)
+{
+    int supported = 0;
+    if (Handle)
+    {
+        const DWORD dwSize = GetFontUnicodeRanges(Handle, NULL);
+        if (dwSize) {
+            BYTE* buffer;
+
+            if (NULL != (buffer = calloc(sizeof(BYTE), sizeof(GLYPHSET) + dwSize))) {
+                GLYPHSET* pGlyphSet = (GLYPHSET *)(buffer);
+
+                if (GetFontUnicodeRanges(Handle, pGlyphSet)) {
+                    for (DWORD x = 0; x < pGlyphSet->cRanges; ++x) {
+                        if (ch >= pGlyphSet->ranges[x].wcLow &&
+                            ch < (pGlyphSet->ranges[x].wcLow + pGlyphSet->ranges[x].cGlyphs)) {
+                            supported = 1;
+                            break;
+                        }
+                    }
+                }
+            }
+            free(buffer);
+        }
+    }
+    return supported;
+}
+#endif  //XXX
 
 /*end*/

@@ -40,7 +40,7 @@ typedef struct _KEY_EVENT_RECORD {
 #define RIGHT_CTRL_PRESSED 0x0004
 #define SCROLLLOCK_ON 0x0040
 #define SHIFT_PRESSED 0x0010
-
+#define META_PRESSED 0x1000 /*extension*/
 } KEY_EVENT_RECORD;
 
         /////////////////////////////////////////////////////

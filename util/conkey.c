@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: conkey.c,v 1.4 2024/09/04 11:16:54 cvsuser Exp $
+/* $Id: conkey.c,v 1.8 2024/09/20 14:51:42 cvsuser Exp $
  * console key util, support.
  *
  *
@@ -36,6 +36,8 @@
 
 #include "conkey.h"
 
+static unsigned XTermModifiers(unsigned n);
+
 
 //
 //  Mouse event description
@@ -43,7 +45,7 @@
 const char *
 mouse_description(const MOUSE_EVENT_RECORD *me)
 {
-        static char t_buffer[200];                          // local description buffer
+        static char t_buffer[200];              // local description buffer
 
         const DWORD dwControlKeyState = me->dwControlKeyState,
                 dwEventFlags = me->dwEventFlags, dwButtonState = me->dwButtonState;
@@ -112,6 +114,85 @@ mouse_description(const MOUSE_EVENT_RECORD *me)
         }
 
         return (cursor > t_buffer ? t_buffer : NULL);
+}
+
+
+const char *
+key_description(const KEY_EVENT_RECORD *ke)
+{
+#if defined(META_PRESSED)
+#define CTRLSTATUSMASK  (META_PRESSED|ALT_PRESSED|CTRL_PRESSED||SHIFT_PRESSED)
+#else
+#define CTRLSTATUSMASK  (ALT_PRESSED|CTRL_PRESSED||SHIFT_PRESSED)
+#endif
+
+        static char t_buffer[200];              // local description buffer
+
+        const DWORD dwControlKeyState = ke->dwControlKeyState;
+//      const WORD wVirtualKeyCode = ke->wVirtualKeyCode;
+        char* cursor = t_buffer, * end = cursor + sizeof(t_buffer);
+
+        // Control states
+#if defined(META_PRESSED)
+        if (dwControlKeyState & META_PRESSED)
+            cursor += snprintf(cursor, end - cursor, "Meta-");
+#endif
+
+        if (dwControlKeyState & ALT_PRESSED)
+            cursor += snprintf(cursor, end - cursor, "Alt-");
+
+        if (dwControlKeyState & CTRL_PRESSED)
+            cursor += snprintf(cursor, end - cursor, "Ctrl-");
+
+        if (dwControlKeyState & SHIFT_PRESSED)
+            cursor += snprintf(cursor, end - cursor, "Shift-");
+
+        // Key code
+        if (ke->uChar.UnicodeChar) {
+                const WORD uc = ke->uChar.UnicodeChar;
+                const char *desc = NULL;
+
+                switch (uc) {
+                case '\a': desc = "Alert"; break;
+                case '\b': desc = "Backspace"; break;
+                case '\n': desc = "Newline"; break;
+                case '\r': desc = "Enter"; break;
+                case '\t': desc = "Tab"; break;
+                case '\v': desc = "Vtab"; break;
+                case '\f': desc = "Formfeed"; break;
+                case 0x1b: desc = "Esc"; break;
+                case ' ':
+                        if (dwControlKeyState & CTRLSTATUSMASK) {
+                                desc = "Space";
+                        }
+                        break;
+                }
+
+            if (desc) {
+                    cursor += snprintf(cursor, end - cursor, "%s", desc);
+            } else {
+                    if (uc > ' ' && uc < 0xff) {
+                            // ASCII
+                            if ((dwControlKeyState & CTRLSTATUSMASK) && uc >= 'a' && uc <= 'z') {
+                                *cursor++ = (char)(uc - 'a' + 'A'); // upper-case meta controls.
+                            } else {
+                                *cursor++ = (char)uc;
+                            }
+                            *cursor++ = 0;
+
+                    } else if (uc < ' ' && (dwControlKeyState & CTRL_PRESSED)) {
+                            // Controls
+                            *cursor++ = (char)(('A' - 1) + uc);
+                            *cursor++ = 0;
+
+                    } else {
+                            // Unicode
+                            cursor += snprintf(cursor, end - cursor, "#%u", uc);
+                    }
+            }
+        }
+
+        return (cursor > t_buffer ? t_buffer :  NULL);
 }
 
 
@@ -229,6 +310,87 @@ DecodeMSTerminalKey(INPUT_RECORD *ir, const char *buf, const char *end)
         ir->EventType = 0;
         return NULL;
 }
+
+
+const char *
+DecodeXTermKey(INPUT_RECORD *ir, const char *buf, const char *end)
+{
+        if ((buf + 6) < end && buf[0] == '\033' && buf[1] == '[') {
+                /*
+                 *      \e[27;<modifier>;<char>~ or     xterm
+                 *      \e[<char>;<modifier>u           formatOtherKeys=1 in xterm; which is the mintty default.
+                 *
+                 *      https://invisible-island.net/xterm/modified-keys-gb-altgr-intl.html#other_modifiable_keycodes
+                 */
+                unsigned args[3] = { 0, 0, 0 };
+                const char *cursor;
+
+                if (buf[2] == '2' && buf[3] == '7') {
+                        if (NULL != (cursor = DecodeKeyArguments(args, 3, '~', buf + 2, end))) {
+                                if (args[0] == 27) {
+                                        KEY_EVENT_RECORD* ke = &ir->Event.KeyEvent;
+                                        const unsigned modifiers = XTermModifiers(args[1]);
+                                        WCHAR key = (WCHAR)args[2];
+
+                                        if ((modifiers & SHIFT_PRESSED) && key >= 'a' && key <= 'z')
+                                                key += (WCHAR)('A' - 'a');
+
+                                        memset(ke, 0, sizeof(*ke));
+                                        ke->bKeyDown = 1U;
+                                        ke->wRepeatCount = 1;
+                                        ke->wVirtualKeyCode = (WORD)(0);
+                                        ke->wVirtualScanCode = (WORD)(0);
+                                        ke->uChar.UnicodeChar = (WCHAR)(key);
+                                        ke->dwControlKeyState = (DWORD)(modifiers);
+                                        ir->EventType = KEY_EVENT;
+                                        return cursor;
+                                }
+                        }
+                }
+
+                if (NULL != (cursor = DecodeKeyArguments(args, 2, 'u', buf + 2, end))) {
+                        KEY_EVENT_RECORD* ke = &ir->Event.KeyEvent;
+                        const unsigned modifiers = XTermModifiers(args[1]);
+                        WCHAR key = (WCHAR)args[0];
+
+                        if ((modifiers & SHIFT_PRESSED) && key >= 'a' && key <= 'z')
+                                key += (WCHAR)('A' - 'a');
+
+                        memset(ke, 0, sizeof(*ke));
+                        ke->bKeyDown = 1U;
+                        ke->wRepeatCount = 1;
+                        ke->wVirtualKeyCode = (WORD)(0);
+                        ke->wVirtualScanCode = (WORD)(0);
+                        ke->uChar.UnicodeChar = (WCHAR)(key);
+                        ke->dwControlKeyState = (DWORD)(modifiers);
+                        ir->EventType = KEY_EVENT;
+                        return cursor;
+                }
+        }
+        ir->EventType = 0;
+        return NULL;
+}
+
+
+static unsigned
+XTermModifiers(unsigned n)
+{
+        unsigned code = n - 1, modifiers = 0;
+
+        if (code & 1)
+            modifiers |= SHIFT_PRESSED;
+        if (code & 2)
+            modifiers |= ALT_PRESSED;
+        if (code & 4)
+            modifiers |= CTRL_PRESSED;
+#if defined(META_PRESSED)
+        if (code & 8)
+            modifiers |= META_PRESSED;
+#endif
+        // others?
+        return modifiers;
+}
+
 
 
 const void *

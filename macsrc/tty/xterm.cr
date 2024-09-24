@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; tabs: 8; -*-
- * $Id: xterm.cr,v 1.28 2024/08/25 06:02:04 cvsuser Exp $
+ * $Id: xterm.cr,v 1.30 2024/09/20 12:15:16 cvsuser Exp $
  * terminal description file for the xterm window under X11, an VT-100 like emulator.
  *
  *
@@ -16,13 +16,13 @@ Xterm*colormode:		on
 
 XTerm*VT100.Translations:	#override \
 	~Shift<Key>Home:		string(\033[1~)\n\
-	~Shift<Key>End:			string(\033[4~)\n\
+	~Shift<Key>End: 		string(\033[4~)\n\
 	~Shift<Key>Prior:		string(\033[5~)\n\
 	~Shift<Key>Next:		string(\033[6~)\n\
-	Shift<Key>Home:			scroll-back(100,page)\n\
+	Shift<Key>Home: 		scroll-back(100,page)\n\
 	Shift<Key>End:			scroll-forw(100,page)\n\
 	Shift<Key>Tab:			string("\033	")\n\
-	~Shift<Key>Tab:			string("	")\n\
+	~Shift<Key>Tab: 		string("	")\n\
 	Ctrl<Key>=:			string(\033[C=)\n\
 	Ctrl<Key>-:			string(\033[C-)\n\
 	Ctrl<Key>Insert:		string(\033[CR0~)\n\
@@ -32,7 +32,7 @@ XTerm*VT100.Translations:	#override \
 	Ctrl<Key>Left:			string(\033[Ot)\n\
 	Ctrl<Key>Down:			string(\033[Or)\n\
 	Ctrl<Key>Up:			string(\033[Ox)\n\
-	Ctrl<Key>Right:			string(\033[Ov)\n\
+	Ctrl<Key>Right: 		string(\033[Ov)\n\
 	Shift<Key>F1:			string(\033[SF1~)\n\
 	Shift<Key>F2:			string(\033[SF2~)\n\
 	Shift<Key>F3:			string(\033[SF3~)\n\
@@ -68,16 +68,16 @@ XTerm*VT100.Translations:	#override \
 	Meta<Key>F10:			string(\033[AF10~)\n\
 	Meta<Key>F11:			string(\033[AF11~)\n\
 	Meta<Key>F12:			string(\033[AF12~)\n\
-	Shift<Key>KP_0:			string(\033OP)\n\
-	Shift<Key>KP_1:			string(\033OQ)\n\
-	Shift<Key>KP_2:			string(\033OR)\n\
-	Shift<Key>KP_3:			string(\033OS)\n\
-	Shift<Key>KP_4:			string(\033OT)\n\
-	Shift<Key>KP_5:			string(\033OU)\n\
-	Shift<Key>KP_6:			string(\033OV)\n\
-	Shift<Key>KP_7:			string(\033OW)\n\
-	Shift<Key>KP_8:			string(\033OX)\n\
-	Shift<Key>KP_9:			string(\033OY)\n\
+	Shift<Key>KP_0: 		string(\033OP)\n\
+	Shift<Key>KP_1: 		string(\033OQ)\n\
+	Shift<Key>KP_2: 		string(\033OR)\n\
+	Shift<Key>KP_3: 		string(\033OS)\n\
+	Shift<Key>KP_4: 		string(\033OT)\n\
+	Shift<Key>KP_5: 		string(\033OU)\n\
+	Shift<Key>KP_6: 		string(\033OV)\n\
+	Shift<Key>KP_7: 		string(\033OW)\n\
+	Shift<Key>KP_8: 		string(\033OX)\n\
+	Shift<Key>KP_9: 		string(\033OY)\n\
 	Ctrl<Key>KP_0:			string(\033Op)\n\
 	Ctrl<Key>KP_1:			string(\033Oq)\n\
 	Ctrl<Key>KP_2:			string(\033Or)\n\
@@ -344,6 +344,42 @@ main(void)
 
     /*
      *  Define keyboard layout for non-ascii characters.
+     *
+     *  https://invisible-island.net/xterm/xterm-function-keys.html
+     *
+     *      NAME        vt100       vt220       scoansi     xterm-r5    xterm-r6    xterm-vt220 xterm-xf86  xterm-new   rxvt     mgt      screen
+     *      kcub1       \EOD        \E[D        \E[D        \EOD        \EOD        \EOD        \EOD        \EOD        \E[D     \EOD     \EOD
+     *      kcud1       \EOB        \E[B        \E[B        \EOB        \EOB        \EOB        \EOB        \EOB        \E[B     \EOB     \EOB
+     *      kcuf1       \EOC        \E[C        \E[C        \EOC        \EOC        \EOC        \EOC        \EOC        \E[C     \EOC     \EOC
+     *      kcuu1       \EOA        \E[A        \E[A        \EOA        \EOA        \EOA        \EOA        \EOA        \E[A     \EOA     \EOA
+     *      kf0         \EOy        \EOq                    \E[21~
+     *      kf1         \EOP        \EOP        \E[M        \E[11~      \E[11~      \EOP        \EOP        \EOP        \E[11~   \EOP     \EOP
+     *      kf2         \EOQ        \EOQ        \E[N        \E[12~      \E[12~      \EOQ        \EOQ        \EOQ        \E[12~   \EOQ     \EOQ
+     *      kf3         \EOR        \EOR        \E[O        \E[13~      \E[13~      \EOR        \EOR        \EOR        \E[13~   \EOR     \EOR
+     *      kf4         \EOS        \EOS        \E[P        \E[14~      \E[14~      \EOS        \EOS        \EOS        \E[14~   \EOS     \EOS
+     *      kf5         \EOt        \E[Q        \E[15~      \E[15~      \E[15~      \E[15~      \E[15~      \E[15~      \E[15~   \E[15~
+     *      kf6         \EOu        \E[17~      \E[R        \E[17~      \E[17~      \E[17~      \E[17~      \E[17~      \E[17~   \E[17~   \E[17~
+     *      kf7         \EOv        \E[18~      \E[S        \E[18~      \E[18~      \E[18~      \E[18~      \E[18~      \E[18~   \E[18~   \E[18~
+     *      kf8         \EOl        \E[19~      \E[T        \E[19~      \E[19~      \E[19~      \E[19~      \E[19~      \E[19~   \E[19~   \E[19~
+     *      kf9         \EOw        \E[20~      \E[U        \E[20~      \E[20~      \E[20~      \E[20~      \E[20~      \E[20~   \E[20~   \E[20~
+     *      kf10        \EOx        \E[21~      \E[V        \E[21~      \E[21~      \E[21~      \E[21~      \E[21~      \E[21~   \E[21~   \E[21~
+     *      kf11        \E[23~      \E[W        \E[23~      \E[23~      \E[23~      \E[23~      \E[23~      \E[23~      \E[23~   \E[23~
+     *      kf12        \E[24~      \E[X        \E[24~      \E[24~      \E[24~      \E[24~      \E[24~      \E[24~      \E[24~   \E[24
+     *
+     *      kDC                                                                                 \E[3;2~     \E[3;2~     \E[3$
+     *      kEND                                                                                \E[1;2F     \E[1;2F     \E[8$
+     *      kHOM                                                                                \E[1;2H     \E[1;2H     \E[7$
+     *      kIC                                                                                 \E[2;2~     \E[2;2~     \E[2$
+     *      kLFT                                                                                \E[1;2D     \E[1;2D     \E[d
+     *      kNXT                                                                                \E[6;2~     \E[6;2~     \E[6$
+     *      kPRV                                                                                \E[5;2~     \E[5;2~     \E[5$
+     *      kRIT                                                                                \E[1;2C     \E[1;2C     \E[c
+     *
+     *      kend                                \E[F        \E[4~                   \E[4~       \EOF        \EOF        \E[8~    \EOF     \E[4~
+     *      khome                               \E[H        \E[1~                   \E[1~       \EOH        \EOH        \E[7~    \EOH     \E[1~
+     *
+     *      kDN                                                                                             \E[1;2B     \E[b
+     *      kUP                                                                                             \E[1;2A     \E[a
      */
     set_term_keyboard(
         F1_F12, quote_list(                     /* standard */
@@ -403,14 +439,6 @@ main(void)
             "\x1bU",        "\x1bV",        "\x1bW",        "\x1bX",        "\x1bY",
             "\x1bZ"),
 
-        ALT_A_Z, quote_list(                    /* ??? */
-            "\xE1",         "\xE2",         "\xE3",         "\xE4",         "\xE5",
-            "\xE6",         "\xE7",         "\xE8",         "\xE9",         "\xEa",
-            "\xEb",         "\xEc",         "\xED",         "\xEe",         "\xEf",
-            "\xF0",         "\xF1",         "\xF2",         "\xF3",         "\xF4",
-            "\xF5",         "\xF6",         "\xF7",         "\xF8",         "\xF9",
-            "\xFa"),
-
         //  Ins/0           End/1           Down/2          PgDn/3          Left/4
         //  5               Right/6         Home/7          Up/8            PgUp/9
         //  Del/.           Plus            Minus           Star            Divide
@@ -418,10 +446,11 @@ main(void)
         //  NumLock
         //
         KEYPAD_0_9, quote_list(                 /* Standard (Application mode) */
-            "\x1b[2~",      "\x1bOw",       "\x1bOB",       "\x1b[6~",      "\x1bOD",
+            "\x1b[2~",      "\x1bOF",       "\x1bOB",       "\x1b[6~",      "\x1bOD",
             "\x1bOE",       "\x1bOC",       "\x1bOH",       "\x1bOA",       "\x1b[5~",
             "\x1b[3~",      "\x1bOk",       "\x1bOm",       "\x1bOj",       "\x1bOo",
-            NULL,           "\x1bOM"),
+            NULL,           "\x1bOM",       NULL,           NULL,           NULL,
+            NULL),
 
         ALT_0_9, quote_list(                    /* X.Org (7bit) */
             "\xC2\xB0",     "\xC2\xB1",     "\xC2\xB2",     "\xC2\xB3",     "\xC2\xB4",
@@ -431,13 +460,9 @@ main(void)
             "\x1b0",        "\x1b1",        "\x1b2",        "\x1b3",        "\x1b4",
             "\x1b5",        "\x1b6",        "\x1b7",        "\x1b8",        "\x1b9" ),
 
-        ALT_0_9, quote_list(                    /* ??? */
+        ALT_0_9, quote_list(                    /* Meta-Numeric */
             "\x1ba0",       "\x1ba1",       "\x1ba2",       "\x1ba3",       "\x1ba4",
             "\x1ba5",       "\x1ba6",       "\x1ba7",       "\x1ba8",       "\x1ba9"),
-
-        ALT_0_9, quote_list(                    /* ??? */
-            "\xB0",         "\xB1",         "\xC0",         "\xA4",         "\xA4",
-            "\xB5",         "\xB6",         "\xB7",         "\xB8",         "\xB9" ),
 
         SHIFT_KEYPAD_0_9, quote_list(           /* VT100.Trans */
             "\x1bOP",       "\x1bOQ",       "\x1bOR",       "\x1bOS",

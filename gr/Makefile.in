@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.100 2024/08/04 10:07:46 cvsuser Exp $
+# $Id: Makefile.in,v 1.101 2024/09/19 15:43:53 cvsuser Exp $
 # GRIEF editor makefile.
 #
 #
@@ -357,6 +357,7 @@ CSRC=\
 	tty.c			\
 	ttyrgb.c		\
 	ttyterm.c		\
+	ttycmd.c		\
 	ttyutil.c		\
 	ttyvio.c		\
 	ttyncurses.c		\

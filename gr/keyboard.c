@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.72 2024/09/08 17:07:39 cvsuser Exp $")
+__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.78 2024/09/24 12:54:15 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keyboard.c,v 1.72 2024/09/08 17:07:39 cvsuser Exp $
+/* $Id: keyboard.c,v 1.78 2024/09/24 12:54:15 cvsuser Exp $
  * Manipulate key maps and bindings.
  *
  *
@@ -53,6 +53,10 @@ __CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.72 2024/09/08 17:07:39 cvsuser
 #include "undo.h"
 #include "window.h"
 #include "word.h"
+
+#if !defined(USE_VIO_BUFFER) && !defined(DJGPP)
+#define USE_KBPROTOCOL
+#endif
 
 
 /*
@@ -119,6 +123,9 @@ static const char *     key_macro_value(const object_t *def);
 static const char *     key_macro_find(int key);
 
 static char *           key_to_char(char *buf, int key);
+static int              mok2_to_key(const char *buf, unsigned buflen);
+static int              xterm_to_key(const char *buf, unsigned buflen);
+static unsigned         xterm_modifiers(unsigned mods);
 static int              cygwin_to_int(const char *buf);
 static int              msterminal_to_int(const char *buf);
 
@@ -261,11 +268,11 @@ static const struct w32key {
 
     { VK_BACK,          0,                  "Back",             KEY_BACKSPACE },
     { VK_TAB,           0,                  "Tab",              KEY_TAB },
-    { VK_BACK,          MOD_SHIFT,          "Shift-Back",       SHIFT_BACKSPACE },
+    { VK_BACK,          MOD_SHIFT,          "Shift-Backspace",  SHIFT_BACKSPACE },
     { VK_TAB,           MOD_SHIFT,          "Shift-Tab",        BACK_TAB },
-    { VK_BACK,          MOD_CTRL,           "Ctrl-Back",        CTRL_BACKSPACE },
+    { VK_BACK,          MOD_CTRL,           "Ctrl-Backspace",   CTRL_BACKSPACE },
     { VK_TAB,           MOD_CTRL,           "Ctrl-Tab",         CTRL_TAB },
-    { VK_BACK,          MOD_META,           "Alt-Back",         ALT_BACKSPACE },
+    { VK_BACK,          MOD_META,           "Alt-Backspace",    ALT_BACKSPACE },
     { VK_TAB,           MOD_META,           "Alt-Tab",          ALT_TAB },
     { VK_ESCAPE,        VKMOD_ANY,          "Esc",              KEY_ESC },
     { VK_RETURN,        VKMOD_ANY,          "Return",           KEY_ENTER },
@@ -372,6 +379,28 @@ static const struct w32key {
 
     };
 #endif  /*WIN32 || __CYGWIN__*/
+
+
+static const struct {
+    const char* name;
+    size_t namelen;
+    int mode;
+} protocols[] = {
+#define PROTONAME(__name)       __name, sizeof(__name)-1
+        { PROTONAME("none"),                KBPROTOCOL_NONE },
+        { PROTONAME("auto"),                KBPROTOCOL_AUTO },
+        { PROTONAME("basic"),               KBPROTOCOL_BASIC },
+        { PROTONAME("cygwin"),              KBPROTOCOL_CYGWIN },
+        { PROTONAME("xterm-mok2"),          KBPROTOCOL_XTERM_MOK2 },
+        { PROTONAME("mintty-mok2"),         KBPROTOCOL_MINTTY_MOK2 },
+#if defined(KBPROTOCOL_MSTERMINAL)
+        { PROTONAME("msterminal"),          KBPROTOCOL_MSTERMINAL },
+#endif
+#if defined(KBPROTOCOL_MSTERMINAL)
+        { PROTONAME("kitty"),               KBPROTOCOL_MSTERMINAL }
+#endif
+#undef PROTONAME
+};
 
 
 /*  Function:           key_init
@@ -1807,8 +1836,8 @@ key_cache_test(ref_t *pp)
 >               :
 
     Macro Parameters:
-        key - String contains a single mnemonic key description
-                (like "i" or "<Ctrl-z>").
+        key - String contains a single mnemonic key description,
+                for example ("i" or "<Ctrl-z>").
 
         raw - Optional boolean flag. If non-zero, then 'key' is
             taken to be a raw key stroke/escape sequence, as
@@ -1831,6 +1860,7 @@ void
 do_key_to_int(void)             /* (string key, int raw) */
 {
     const char *cp = get_str(1);
+    const int len = strlen(cp);
     const int raw = get_xinteger(2, FALSE);
     SPBLK *sp;
 
@@ -1839,23 +1869,43 @@ do_key_to_int(void)             /* (string key, int raw) */
 
     } else {
         if (NULL == (sp = splookup(cp, x_kseqtree))) {
-            int kcode;
+            int kcode = -1;
 
-            if ((kcode = cygwin_to_int(cp)) > 0 ||
-                    (kcode = msterminal_to_int(cp)) > 0) {
-                acc_assign_int((accint_t) kcode);
-                return;
-            }
-
-#if !defined(USE_VIO_BUFFER) && !defined(DJGPP)
-            if ((kcode = tty_mouse_xterm(NULL, cp)) > 0 ||
-                    (kcode = tty_mouse_sgr(NULL, cp)) > 0) {
-                acc_assign_int((accint_t) kcode);
-                return;
+#if defined(USE_KBPROTOCOL)
+            kcode = cygwin_to_int(cp);
+#if defined(KBPROTOCOL_MSTERMINAL)
+            if (kcode <= 0) {
+                if (xf_kbprotocol & (KBPROTOCOL_MSTERMINAL)) {
+                    kcode = msterminal_to_int(cp);
+                }
             }
 #endif
+#if defined(KBPROTOCOL_KITTY)
+            if (xf_kbprotocol & (KBPROTOCOL_KITTY)) {
+                if (kcode <= 0) {
+                    kcode = kitty_to_key(cp, len);
+                }
+            }
+#endif
+            if (xf_kbprotocol & (KBPROTOCOL_MOK2)) {
+                if (kcode <= 0) {
+                    kcode = mok2_to_key(cp, len);
+                }
+            }
 
-            acc_assign_int((accint_t) -1);
+            if (kcode <= 0) {
+                kcode = xterm_to_key(cp, len);
+            }
+
+            if (kcode < 0) {
+                kcode = tty_mouse_xterm(NULL, cp);
+            }
+            if (kcode < 0) {
+                kcode = tty_mouse_sgr(NULL, cp);
+            }
+#endif //USE_KBPROTOCOL
+
+            acc_assign_int((accint_t) kcode);
 
         } else {
             const keyseq_t *ks = (const keyseq_t *) sp->data;
@@ -2633,12 +2683,56 @@ inq_local_keyboard(void)        /* int inq_local_keyboard() */
 }
 
 
+
+/*  Function:           key_protocolid
+ *      Map a keyboard protocol to its idenifier.
+ *
+ *  Parameters:
+ *      name - Keyboard protocol name.
+ *
+ *  Results:
+ *      Protocol identifier, otherwise -1.
+ */
+int
+key_protocolid(const char* name, int namelen)
+{
+    if (name && *name) {
+        unsigned p = 0;
+
+        if (namelen < 0)
+            namelen = strlen(name);
+
+        for (p = 0; p < (sizeof(protocols) / sizeof(protocols[0])); ++p) {
+            if (namelen == (int)protocols[p].namelen &&
+                    0 == memcmp(protocols[p].name, name, namelen)) {
+                return protocols[p].mode;
+            }
+        }
+    }
+    return -1;
+}
+
+
+const char *
+key_protocolname(int mode, const char *def)
+{
+    unsigned p = 0;
+
+    for (p = 0; p < (sizeof(protocols) / sizeof(protocols[0])); ++p) {
+        if (mode == protocols[p].mode) {
+            return protocols[p].name;
+        }
+    }
+    return def;
+}
+
+
 /*  Function:           key_check
  *      Utility used whilst assembling a keystroke to test whether a full key sequence has been encountered.
  *      Return key code if we have an unambiguous keystroke.
  *
  *      If we have an ambiguity, check for a multikey press, and set 'multi' if so.
- *      This way we can force the caller to wait until the ambiguity is resolved.
+ *      When multi implies the caller should wait until the ambiguity is resolved.
  *
  *  Parameters:
  *      buf - Key buffer; nul terminated.
@@ -2652,57 +2746,89 @@ inq_local_keyboard(void)        /* int inq_local_keyboard() */
 int
 key_check(const char *buf, unsigned buflen, int *multi, int noambig)
 {
+#if defined(USE_KBPROTOCOL)
+    const char* end = buf + (buflen - 1);
+#endif
     SPBLK *sp_first, *sp;
     int kcode, ambig = 0;
 
     *multi = FALSE;
 
+#if defined(USE_KBPROTOCOL)
     /*
-     *  WIN32 specials
-     *
-     *  Cygwin raw mode, cygwin-raw-mode, for example
-     *
+     *  cygwin:
      *      <ESC>{0;1;13;28;13;0K
-     *
-     *  also allow MSTerminal, win32-input-mode, for example
-     *
-     *      <ESC>[17;29;0;1;8;1_
      */
-#if defined(__CYGWIN__)
-    if ('\033' == buf[0]) {
-        const char *end = buf + (buflen - 1);
+    if (xf_kbprotocol & KBPROTOCOL_CYGWIN) {
+        if ('\033' == buf[0] && '{' == buf[1]) {
+             const int isfinal = (buflen >= 4 && (*end == 'K'));
 
-        if (xf_rawkb & RAWKB_CYGWIN)            /* cygwin-raw-mode */
-            if ('{' == buf[1]) {
-                const int final = (buflen >= 4 && (*end == 'K'));
-                if (! final) {
-                    *multi = TRUE;
-                    return -1;
-                }
-                kcode = cygwin_to_int(buf);
-                return (-1 == kcode ? 0 : kcode);
-            }
-
-        if (xf_rawkb & RAWKB_MSTERMINAL)        /* win32-input-mode */
-            if ('[' == buf[1]) {
-                const int final = (buflen >= 4 && (*end >= 0x40 && *end < 0x80)); // SGR final
-                if (! final) {
-                    *multi = TRUE;
-                    return -1;
-                }
-
-                if ('_' == *end) {
-                    kcode = msterminal_to_int(buf);
-                    return (-1 == kcode ? 0 : kcode);
-                }
-            }
+             if (! isfinal) {
+                 *multi = TRUE;
+                 return -1;
+             }
+             kcode = cygwin_to_int(buf);        /* cygwin-raw-mode */
+             return (-1 == kcode ? 0 : kcode);
+        }
     }
-#endif /*__CYGWIN__*/
+#endif //USE_KBPROTOCOL
 
     trace_log("KEYSEQ=");
     trace_hex(buf, buflen);
 
     if (NULL == (sp = sp_partial_lookup(buf, x_kseqtree, &ambig, &sp_first))) {
+        /*
+         *  Keyboard protocols
+         */
+#if defined(USE_KBPROTOCOL)
+#if defined(KBPROTOCOL_MSTERMINAL)
+#define KBPROTOCOL_1 KBPROTOCOL_MSTERMINAL
+#else
+#define KBPROTOCOL_1 0
+#endif
+#if defined(KBPROTOCOL_KITTY)
+#define KBPROTOCOL_2 KBPROTOCOL_KITTY
+#else
+#define KBPROTOCOL_2 0
+#endif
+        if (xf_kbprotocol & (KBPROTOCOL_MOK2|KBPROTOCOL_1|KBPROTOCOL_2)) {
+            if ('\033' == buf[0] && '[' == buf[1]) { // CSI
+                const int isfinal =
+                    (buflen >= 4 && (*end >= 0x40 && *end < 0x80)); // SGR final
+
+                if (! isfinal) {
+                    *multi = TRUE;
+                    return -1;
+                }
+
+                if ('_' == *end) {              /* win32-input-mode */
+#if defined(KBPROTOCOL_MSTERMINAL)
+                    kcode = msterminal_to_int(buf);
+                    return (-1 == kcode ? 0 : kcode);
+#endif
+                } else if ('~' == *end || 'u' == *end) { /* xterm-mok2/mintty-mok2 or kitty-protocol */
+#if defined(KBPROTOCOL_KITTY)
+                    if (xf_kbprotocol & (KBPROTOCOL_KITTY)) {
+                        if ((kcode = kitty_to_key(buf, buflen)) > 0) {
+                            return kcode;
+                        }
+                    }
+#endif
+                    if (xf_kbprotocol & (KBPROTOCOL_MOK2)) {
+                        if ((kcode = mok2_to_key(buf, buflen)) > 0) {
+                            return kcode;
+                        }
+                    }
+
+                } else {                        /* others */
+                    if ((kcode = xterm_to_key(buf, buflen)) > 0) {
+                        return kcode;
+                    }
+                }
+            }
+        }
+#endif //USE_KBPROTOCOL
+
         if (sp_first) {
             const keyseq_t *kst = (const keyseq_t *) sp_first->data;
 
@@ -2710,6 +2836,7 @@ key_check(const char *buf, unsigned buflen, int *multi, int noambig)
                 *multi = TRUE;
             }
         }
+
         trace_log("keycode: %d\n", ambig ? -1 : 0);
         return (ambig ? -1 : 0);
     }
@@ -2722,6 +2849,191 @@ key_check(const char *buf, unsigned buflen, int *multi, int noambig)
     kcode = (ambig ? -1 : ((const keyseq_t *) sp->data)->ks_code);
     trace_log("keycode: %d\n", kcode);
     return kcode;
+}
+
+
+/*  Function:           mok2_to_key
+ *      Decode a xterm modifyOtherKeys into our internal key-code.
+ *
+ *  Parameters:
+ *      buf - Escape sequence buffer.
+ *      buflen - Buffer length in bytes.
+ *
+ *  Results:
+ *      nothing
+ */
+static int
+mok2_to_key(const char *buf, unsigned buflen)
+{
+    unsigned args[4] = {0, 0, 0, 0}, nargs = 0;
+    char params[3] = {0};
+
+    /*
+     *  xterm-mok2/mintty-mok2:
+     *      \e[27;<modifier>;<char>~ or     xterm
+     *      \e[<char>;<modifier>u           formatOtherKeys=1 in xterm; which is the mintty default.
+     *
+     *          https://invisible-island.net/xterm/modified-keys-gb-altgr-intl.html#other_modifiable_keycodes
+     *
+     *  plus:
+     *
+     *      \e[<number>;<modifier> ~        Edit, cursor and function keys.
+     */
+    if (tty_csi_parse(buf, buflen, 4, args, params, &nargs)) {
+        unsigned key =
+            ((params[0] == '~' && 3 == nargs && args[0] == 27) ? args[2]
+                : ((params[0] == 'u' &&  2 == nargs) ? args[0] : 0));
+
+        if (key) {
+            unsigned modifiers = xterm_modifiers(args[1]);
+            int kcode;
+
+            if (key == KEY_TAB) {               /* XXX - consider remapping */
+                if (modifiers & MOD_SHIFT) {
+                    key = BACK_TAB;
+                } else if (modifiers & MOD_CTRL) {
+                    key = CTRL_TAB;
+                } else if (modifiers & MOD_META) {
+                    key = ALT_TAB;
+                }
+                modifiers = 0;
+
+            } else if (key == KEY_DELETE) {     /* XXX - consider remapping */
+                if (modifiers & MOD_SHIFT) {
+                    key = SHIFT_BACKSPACE;
+                } else if (modifiers & MOD_CTRL) {
+                    key = CTRL_BACKSPACE;
+                } else if (modifiers & MOD_META) {
+                    key = ALT_BACKSPACE;
+                }
+                modifiers = 0;
+
+            } else if (key >= 'a' && key <= 'z') {
+                if (modifiers) {                /* upper-case, apply shift */
+                    modifiers &= ~MOD_SHIFT;
+                    key += (unsigned)('A' - 'a');
+                }
+
+            } else if (key >= ' ') {
+                modifiers &= ~MOD_SHIFT;
+
+            } else {
+                switch (key) {                  // ^[[#;m~
+             // case 0:  n/a
+                case 1:  key = KEY_SEARCH; break;
+                case 2:  key = KEY_INS; break;
+                case 3:  key = KEY_DELETE; break;
+             // case 4:  n/a
+                case 5:  key = KEY_PAGEUP; break;
+                case 6:  key = KEY_PAGEDOWN; break;
+                case 7:  key = KEY_HOME; break;
+                case 8:  key = KEY_END; break;
+             // case 9:  KEY_TAB
+             // case 10: n/a
+             // case 11: n/a
+             // case 12: n/a
+             // case 13: KEY_ENTER
+             // case 14: n/a
+                case 15: key = F(5); break;
+             // case 16; n/a
+                case 17: key = F(6); break;
+                case 18: key = F(7); break;
+                case 19: key = F(8); break;
+                case 20: key = F(9); break;
+                case 21: key = F(10); break;
+             // case 22: n/a
+                case 23: key = F(11); break;
+                case 24: key = F(12); break;
+             // case 25: n/a
+             // case 26: n/a
+             // case 27: KEY_ESCAPE
+                }
+            }
+
+            kcode = (int)(modifiers | key);
+            trace_log("keycode-mok2: %d\n", kcode);
+            return kcode;
+        }
+    }
+    return -1;
+}
+
+
+static int
+xterm_to_key(const char *buf, unsigned buflen)
+{
+    unsigned args[4] = {1,0,0,0}, nargs = 0;
+    char params[3] = {0};
+
+    /*
+     *  CSI 1;m{ABCDFHPQRS} {MXjklmnopqrstuvwxy}
+     */
+    if (tty_csi_parse(buf, buflen, 4, args, params, &nargs)) {
+        if (2 == nargs && args[0] == 1) {
+            const unsigned modifiers = xterm_modifiers(args[1]);
+            int key = 0;
+
+            switch (params[0]) {
+            case 'A': key = KEY_UP; break;          // ^[[1;mA
+            case 'B': key = KEY_DOWN; break;        // ^[[1;mB
+            case 'D': key = KEY_LEFT; break;        // ^[[1;mD
+            case 'C': key = KEY_RIGHT; break;       // ^[[1;mC
+            case 'F': key = KEY_END; break;         // ^[[1;mF
+            case 'H': key = KEY_HOME; break;        // ^[[1;mH
+            case 'P': key = F(1); break;            // ^[[1;mP
+            case 'Q': key = F(2); break;            // ^[[1;mQ
+            case 'R': key = F(3); break;            // ^[[1;mR
+            case 'S': key = F(4); break;            // ^[[1;mS
+
+            case 'M': key = KEYPAD_ENTER; break;    // ^[[1;mM, Enter
+            case 'X': key = KEYPAD_EQUAL; break;    // ^[[1;mX, '='
+            case 'j': key = KEYPAD_STAR; break;     // ^[[1;mj, '*'
+            case 'k': key = KEYPAD_PLUS; break;     // ^[[1;mk, '+'
+            case 'l': key = ','; break;             // ^[[1;ml, ','
+            case 'm': key = KEYPAD_MINUS; break;    // ^[[1;mm, '-'
+            case 'n': key = KEYPAD_DEL; break;      // ^[[1;mn, '.'
+            case 'o': key = KEYPAD_DIV; break;      // ^[[1;mo, '/'
+            case 'p': key = KEYPAD_0; break;        // ^[[1;mp, '0'
+            case 'q': key = KEYPAD_1; break;        // ^[[1;mq, '1'
+            case 'r': key = KEYPAD_2; break;        // ^[[1;mr, '2'
+            case 's': key = KEYPAD_3; break;        // ^[[1;ms, '3'
+            case 't': key = KEYPAD_4; break;        // ^[[1;mt, '4'
+            case 'u': key = KEYPAD_5; break;        // ^[[1;mu, '5'
+            case 'v': key = KEYPAD_6; break;        // ^[[1;mv, '6'
+            case 'w': key = KEYPAD_7; break;        // ^[[1;mw, '7'
+            case 'x': key = KEYPAD_8; break;        // ^[[1;mx, '8'
+            case 'y': key = KEYPAD_9; break;        // ^[[1;my, '9'
+
+            default:
+                break;
+            }
+
+            if (key) {
+                int kcode = (int)(modifiers | key);
+                trace_log("keycode-xt: %d\n", kcode);
+                return kcode;
+            }
+        }
+    }
+    return -1;
+}
+
+
+static unsigned
+xterm_modifiers(unsigned mods)
+{
+    unsigned code = mods - 1, modifiers = 0;
+
+    if (code & 1)
+        modifiers |= MOD_SHIFT;
+    if (code & 2)
+        modifiers |= MOD_META; //ALT
+    if (code & 4)
+        modifiers |= MOD_CTRL;
+    if (code & 8)
+        modifiers |= MOD_META;
+            //generally consumed by system, for example WINKEY/mintty.
+    return modifiers;
 }
 
 
@@ -2738,7 +3050,7 @@ static int
 cygwin_to_int(const char *buf)
 {
 #if defined(WIN32) || defined(__CYGWIN__)       /* cygwin-raw-mode */
-    if (buf[0] == '\033' && buf[1] == '{' && buf[2]) {
+    if (buf[0] == '\033' && buf[1] == '{') {
         /*
          *  \033[2000h - turn on raw keyboard mode,
          *  \033[2000l - turn off raw keyboard mode.
@@ -2844,7 +3156,7 @@ static int
 msterminal_to_int(const char *buf)
 {
 #if defined(WIN32) || defined(__CYGWIN__)       /* win32-input-mode */
-    if (buf[0] == '\033' && buf[1] == '[' && buf[2]) {
+    if (buf[0] == '\033' && buf[1] == '[') {
        /*
         *   Terminal win32-input-mode
         *
@@ -3742,3 +4054,4 @@ inq_kbd_name(void)              /* string ([int kbdid]) */
 }
 
 /*end*/
+

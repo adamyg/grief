@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_unix_c,"$Id: sys_unix.c,v 1.68 2024/08/27 12:44:33 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_unix_c,"$Id: sys_unix.c,v 1.70 2024/09/21 09:05:16 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_unix.c,v 1.68 2024/08/27 12:44:33 cvsuser Exp $
+/* $Id: sys_unix.c,v 1.70 2024/09/21 09:05:16 cvsuser Exp $
  * System dependent functionality - UNIX.
  *
  *
@@ -203,7 +203,21 @@ sys_initialise(void)
  /* nt.c_iflag &= ~IXON;                        -* disable stop/start output flow control */
 
     nt.c_oflag &= ~OPOST;                       /* disable output processing. */
+/* --- review
+#if defined(ONLCR)                              // disable NL -> CR/NL mapping.
+# if defined(XTABS)                             // disable expanding tabs if possible.
+    nt.c_oflag &= ~(ONLCR | XTABS);
+#  else
+#    if defined(TAB3)
+    nt.c_oflag &= ~(ONLCR | TAB3);
+#    else
+    nt.c_oflag &= ~ONLCR;
+#    endif
+#  endif
+#endif
+ */
 
+    nt.c_cflag &= ~CSIZE;                       /* clear existing CS5, CS6, CS7, or CS8 */
     nt.c_cflag |= CS8;                          /* allow 8th bit on input. */
     nt.c_cflag &= ~PARENB;                      /* don't check parity. */
 
@@ -440,7 +454,7 @@ sys_getchar(int fd, int *ibuf, accint_t tmo)
 #endif
             n = read(TTY_INFD, (char *) buf, 1);
         }
-        *ibuf = buf[0];
+        *ibuf = (int)buf[0];
         if (n == 1) {
             return 1;
         }
@@ -1270,7 +1284,7 @@ sys_mouseinit(const char *dev)
     }
 
     if (NULL == dev || '\0' == *dev) {
-	dev = bmouse;				/* BMOUSE or auto-configure */
+        dev = bmouse;                           /* BMOUSE or auto-configure */
     }
 
     if (NULL == dev || '\0' == *dev) {
@@ -1349,8 +1363,8 @@ sys_mouseinit(const char *dev)
          */
         TERMIO mouse_term;
 
-	if (NULL == dev || dev[0] != '/')
-	    dev = (bmouse ? bmouse : "/dev/tty00"); /* /dev/tty00 as default */
+        if (NULL == dev || dev[0] != '/')
+            dev = (bmouse ? bmouse : "/dev/tty00"); /* /dev/tty00 as default */
 
         mouse_fd = open(dev, O_RDONLY | O_EXCL);
         if (mouse_fd != -1) {
@@ -1635,7 +1649,7 @@ sys_mousepointer(int on)
 
 #endif  /*HAVE_MOUSE*/
 
-/*  Function:		sys_doubleclickms 
+/*  Function:           sys_doubleclickms
  *      System double-click time.
  *
  *  Parameters:
@@ -1647,7 +1661,7 @@ sys_mousepointer(int on)
 unsigned
 sys_doubleclickms(void)
 {
-  //return GetDoubleClickTime();		/* os configuration? */
+  //return GetDoubleClickTime();                /* os configuration? */
     return 500; //ms
 }
 

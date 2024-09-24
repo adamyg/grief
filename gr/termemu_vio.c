@@ -315,7 +315,7 @@ static struct {                                 /* Video state */
         uint32_t        available;
     } fcnames[FACENAME_MAX];
 
-    int                 fontindex;
+    unsigned            fontindex;
     int                 fontnumber;
     CONSOLE_FONT_INFOEX fonts[FONTS_MAX];
 
@@ -918,7 +918,7 @@ vio_profile(int rebuild /*TRUE/FALSE/-1 (check)*/)
                 vio.fcfacename[0] = 0;          // Note: GetTextFace() is 'System'
 
             } else {
-                vio.fontindex = -1;             // full screen
+                vio.fontindex = (unsigned)-1;   // full screen
                 vio.fcheight  = 16;
                 vio.fcwidth   =  8;
                 vio.fcweight  = -1;
@@ -2675,7 +2675,7 @@ parse_color(const char *color, const char *defname, const struct attrmap *map, i
 
     if (0 == sscanf(color, "color%u", &col)) {   // extension
         for (c = 0; (name = map[c].name) != NULL; ++c) { // search color map
-            if (len == strlen(name) && 0 == strnicmp(color, name, len)) {
+            if (len == (int)strlen(name) && 0 == strnicmp(color, name, len)) {
                 return map[c].win; // done
 
             } else if (0 == stricmp(defname, name)) {

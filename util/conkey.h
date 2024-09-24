@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: conkey.h,v 1.2 2024/08/31 17:51:21 cvsuser Exp $
+/* $Id: conkey.h,v 1.3 2024/09/16 16:20:36 cvsuser Exp $
  * console key support
  *
  *
@@ -26,11 +26,15 @@
 #define MOUSE_HWHEELED 0x0008
 #endif
 
+const char *mouse_description(const MOUSE_EVENT_RECORD* mer);
+const char *key_description(const KEY_EVENT_RECORD *ke);
+
 const char *DecodeCygwinKey(INPUT_RECORD *ir, const char *spec, const char *end);
 const char *DecodeMSTerminalKey(INPUT_RECORD *ir, const char *spec, const char *end);
+const char *DecodeXTermKey(INPUT_RECORD *ir, const char *spec, const char *end);
+
 const void *DecodeKeyArguments(unsigned arguments[], unsigned maxargs, char terminator, const void *buffer, const void *end);
 
-const char *mouse_description(const MOUSE_EVENT_RECORD* mer);
 const void *DecodeXTermMouse(INPUT_RECORD *ir, const void *spec, const void *end);
 const void *DecodeSGRMouse(INPUT_RECORD *ir, const void *spec, const void *end);
 

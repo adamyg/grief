@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: sun.cr,v 1.8 2014/10/27 23:28:33 ayoung Exp $
+/* $Id: sun.cr,v 1.9 2024/09/20 12:15:15 cvsuser Exp $
  * terminal description for variety of Sun based applications.
  *
  *  The GRTERM entry should start with 'sun', and then you can append 'type3' if you have an old
@@ -73,8 +73,8 @@ main()
             NULL,           "\x1B[209z",    NULL,           NULL,           "\x1B[231z"),
 
         ALT_0_9, quote_list(
-            "\xB0",         "\xB1",         "\xB2",         "\xB3",         "\xB4",
-            "\xB5",         "\xB6",         "\xB7",         "\xB8",         "\xB9")
+            "\xB0",         "\xB1",         "\xB2",         "\xB3",         "\xB4",     /* ALT-0..4 */
+            "\xB5",         "\xB6",         "\xB7",         "\xB8",         "\xB9")     /* ALT-5..9 */
         );
 }
 
@@ -229,3 +229,4 @@ xmodmap()
 }
 
 /*end*/
+
