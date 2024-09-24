@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: colorsvim.cr,v 1.4 2024/07/12 12:53:20 cvsuser Exp $
+/* $Id: colorsvim.cr,v 1.5 2024/09/24 16:39:18 cvsuser Exp $
  * Enhanced colour/colorscheme support.
  *
  *
@@ -126,7 +126,7 @@ static list             scheme_colors = {
     "=Float=",          "float",                //  a floating constant:    2.3e10
 
         // TODO ==> identifier
-    "=Identifier=",     "keyword_function",     // any variable name.
+    "=Identifier=",     "keyword_definition",   // any variable name.
     "=Function=",       "keyword_function",     //  function name (also: methods for classes).
 
     "=PreProc=",        "preprocessor",         // preprocessor.

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.78 2024/09/24 12:54:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.79 2024/09/24 15:54:16 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keyboard.c,v 1.78 2024/09/24 12:54:15 cvsuser Exp $
+/* $Id: keyboard.c,v 1.79 2024/09/24 15:54:16 cvsuser Exp $
  * Manipulate key maps and bindings.
  *
  *
@@ -123,11 +123,13 @@ static const char *     key_macro_value(const object_t *def);
 static const char *     key_macro_find(int key);
 
 static char *           key_to_char(char *buf, int key);
+#if defined(USE_KBPROTOCOL)
 static int              mok2_to_key(const char *buf, unsigned buflen);
 static int              xterm_to_key(const char *buf, unsigned buflen);
 static unsigned         xterm_modifiers(unsigned mods);
 static int              cygwin_to_int(const char *buf);
 static int              msterminal_to_int(const char *buf);
+#endif
 
 static char *           historyget(int idx);
 
@@ -1860,7 +1862,6 @@ void
 do_key_to_int(void)             /* (string key, int raw) */
 {
     const char *cp = get_str(1);
-    const int len = strlen(cp);
     const int raw = get_xinteger(2, FALSE);
     SPBLK *sp;
 
@@ -1872,6 +1873,8 @@ do_key_to_int(void)             /* (string key, int raw) */
             int kcode = -1;
 
 #if defined(USE_KBPROTOCOL)
+            const int len = strlen(cp);
+
             kcode = cygwin_to_int(cp);
 #if defined(KBPROTOCOL_MSTERMINAL)
             if (kcode <= 0) {
@@ -2852,6 +2855,7 @@ key_check(const char *buf, unsigned buflen, int *multi, int noambig)
 }
 
 
+#if defined(USE_KBPROTOCOL)
 /*  Function:           mok2_to_key
  *      Decode a xterm modifyOtherKeys into our internal key-code.
  *
@@ -2957,8 +2961,10 @@ mok2_to_key(const char *buf, unsigned buflen)
     }
     return -1;
 }
+#endif //USE_KBPROTOCOL
 
 
+#if defined(USE_KBPROTOCOL)
 static int
 xterm_to_key(const char *buf, unsigned buflen)
 {
@@ -3017,8 +3023,10 @@ xterm_to_key(const char *buf, unsigned buflen)
     }
     return -1;
 }
+#endif //USE_KBPROTOCOL
 
 
+#if defined(USE_KBPROTOCOL)
 static unsigned
 xterm_modifiers(unsigned mods)
 {
@@ -3035,8 +3043,10 @@ xterm_modifiers(unsigned mods)
             //generally consumed by system, for example WINKEY/mintty.
     return modifiers;
 }
+#endif //USE_KBPROTOCOL
 
 
+#if defined(USE_KBPROTOCOL)
 /*  Function:           cygwin_to_int
  *      Decode a cygwin specific key escape sequence into our internal key-code.
  *
@@ -3091,8 +3101,10 @@ cygwin_to_int(const char *buf)
 #endif
     return -1;
 }
+#endif //USE_KBPROTOCOL
 
 
+#if defined(USE_KBPROTOCOL)
 /*  Function:           msterminal_to_int
  *      Decode a MSTerminal specific key escape sequence into our internal key-code.
  *
@@ -3151,7 +3163,6 @@ msterminal_args(const char *buffer, unsigned arguments[])
     return (args >= 1);
 }
 
-
 static int
 msterminal_to_int(const char *buf)
 {
@@ -3197,6 +3208,7 @@ msterminal_to_int(const char *buf)
 #endif
     return -1;
 }
+#endif //USE_KBPROTOCOL
 
 
 #if defined(WIN32) || defined(__CYGWIN__)
@@ -4054,4 +4066,5 @@ inq_kbd_name(void)              /* string ([int kbdid]) */
 }
 
 /*end*/
+
 
