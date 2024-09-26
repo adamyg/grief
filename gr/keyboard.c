@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.79 2024/09/24 15:54:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.80 2024/09/25 15:51:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keyboard.c,v 1.79 2024/09/24 15:54:16 cvsuser Exp $
+/* $Id: keyboard.c,v 1.80 2024/09/25 15:51:54 cvsuser Exp $
  * Manipulate key maps and bindings.
  *
  *
@@ -391,7 +391,7 @@ static const struct {
 #define PROTONAME(__name)       __name, sizeof(__name)-1
         { PROTONAME("none"),                KBPROTOCOL_NONE },
         { PROTONAME("auto"),                KBPROTOCOL_AUTO },
-        { PROTONAME("basic"),               KBPROTOCOL_BASIC },
+        { PROTONAME("meta"),                KBPROTOCOL_META },
         { PROTONAME("cygwin"),              KBPROTOCOL_CYGWIN },
         { PROTONAME("xterm-mok2"),          KBPROTOCOL_XTERM_MOK2 },
         { PROTONAME("mintty-mok2"),         KBPROTOCOL_MINTTY_MOK2 },

@@ -1,11 +1,11 @@
 #ifndef GR_EDFEATURES_H_INCLUDED
 #define GR_EDFEATURES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edfeatures_h,"$Id: edfeatures.h,v 1.22 2024/08/25 06:04:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_edfeatures_h,"$Id: edfeatures.h,v 1.23 2024/09/25 16:00:42 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edfeatures.h,v 1.22 2024/08/25 06:04:55 cvsuser Exp $
+/* $Id: edfeatures.h,v 1.23 2024/09/25 16:00:42 cvsuser Exp $
  * Editor features.
  *
  *
@@ -86,6 +86,7 @@ __CBEGIN_DECLS
 #define TF_ATTRIBUTES           60              /* terminal attribute flags */
 #define TF_TTY_FAST             62              /* fast tty optimisations */
 #define TF_TTY_GRAPHICSBOX      63              /* graphics mode required for box characters */
+#define TF_KBPROTOCOL           64              /* kbprotocol */
 
 #define TF_SCREEN_ROWS          70              /* screen rows */
 #define TF_SCREEN_COLS          71              /* screen cols */
@@ -248,6 +249,7 @@ struct _features {
     char        pt_colormap[512];               /* STRING,      XTERM color map. */
     char        pt_colorpalette[512];           /* STRING,      Driver color palette <index>=<color>. */
     char        pt_colorscheme[128];            /* STRING,      Current color scheme name. */
+    char        pt_kbprotocol[32];              /* STRING,      Active kbprotocol. */
 
     uint32_t    pt_magic2;                      /* Structure magic. */
 };
@@ -258,3 +260,5 @@ __CEND_DECLS
 
 #endif /*GR_EDFEATURES_H_INCLUDED*/
 /*end*/
+
+

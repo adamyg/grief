@@ -1,11 +1,11 @@
 #ifndef GR_KEYBOARD_H_INCLUDED
 #define GR_KEYBOARD_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keyboard_h,"$Id: keyboard.h,v 1.27 2024/09/21 09:05:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_keyboard_h,"$Id: keyboard.h,v 1.28 2024/09/25 15:51:54 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keyboard.h,v 1.27 2024/09/21 09:05:16 cvsuser Exp $
+/* $Id: keyboard.h,v 1.28 2024/09/25 15:51:54 cvsuser Exp $
  * Key maps and binding management.
  *
  *
@@ -31,7 +31,7 @@ struct IOEvent;
 
 #define KBPROTOCOL_NONE             0
 #define KBPROTOCOL_AUTO             0x0001      /* Auto select, based on terminal type */
-#define KBPROTOCOL_BASIC            0x0002      /* Meta- only */
+#define KBPROTOCOL_META             0x0002      /* Meta- only */
 #define KBPROTOCOL_FEATURE          0x0004      /* Terminal feature overrides -- internal only */
 #define KBPROTOCOL_VT100_CURSOR     0x0008
 #define KBPROTOCOL_XTERM_MOK2       0x0010
@@ -106,3 +106,4 @@ extern int32_t              x_character;        /* Current character typed. */
 __CEND_DECLS
 
 #endif /*GR_KEYBOARD_H_INCLUDED*/
+

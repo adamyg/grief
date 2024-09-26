@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.64 2024/09/21 09:05:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.65 2024/09/25 15:51:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.64 2024/09/21 09:05:16 cvsuser Exp $
+/* $Id: cmain.c,v 1.65 2024/09/25 15:51:54 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -91,7 +91,7 @@ __CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.64 2024/09/21 09:05:16 cvsuser Exp $
 #endif
 
 #define KBPROTOCOL_DEFAULT      "auto"
-#define KBPROTOCOL_OPTIONS      "=none|auto|basic|cygwin|msterminal|xterm-mok2|mintty-mok2"
+#define KBPROTOCOL_OPTIONS      "=none|auto|meta|cygwin|msterminal|xterm-mok2|mintty-mok2"
 
 #define MAX_M                   32              /* -m switches, including -u switch. */
 
@@ -169,14 +169,14 @@ static struct argoption options[] = {
 
     { "nohilite",       arg_none,           NULL,       7,      "Disable syntax hiliting" },
 
-    { "norawkb",        arg_none,           NULL,       420,    "Disable use of raw kbprotocol; kbprotocol=basic" },
+    { "norawkb",        arg_none,           NULL,       420,    "Disable use of raw kbprotocol; kbprotocol=meta" },
 
     { "kbprotocol",     arg_required,       NULL,       421,    "Enable given keyboard protocol: default=" KBPROTOCOL_DEFAULT,
                             KBPROTOCOL_OPTIONS },
 
     { "kbconfig",       arg_required,       NULL,       422,    "Keyboard protocol selection config; format \"term:mode[;..]\"" },
 
-    { "nosigtrap",	arg_none,	    NULL,       17,     "Disable signal trapping (for debugging)" },
+    { "nosigtrap",      arg_none,           NULL,       17,     "Disable signal trapping (for debugging)" },
 
     { "term",           arg_required,       NULL,       308,    "Override the TERM setting",
                             "<termname>" },
@@ -1034,7 +1034,7 @@ argv_process(const int doerr, int argc, const char **argv)
             break;
 
         case 420:           /* tty - raw keyboard disabled. */
-            xf_kbprotocol = KBPROTOCOL_BASIC;
+            xf_kbprotocol = KBPROTOCOL_META;
             break;
 
         case 421: {         /* tty - keyboard protocol. */
@@ -2092,3 +2092,4 @@ usage(int what)
 }
 
 /*end*/
+

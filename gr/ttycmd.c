@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttycmd_c,"$Id: ttycmd.c,v 1.1 2024/09/19 15:43:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttycmd_c,"$Id: ttycmd.c,v 1.2 2024/09/25 15:51:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttycmd.c,v 1.1 2024/09/19 15:43:53 cvsuser Exp $
+/* $Id: ttycmd.c,v 1.2 2024/09/25 15:51:54 cvsuser Exp $
  * TTY common command functions
  *
  *
@@ -48,7 +48,7 @@ static int isterm(const char *term, const char *name);
 int
 tty_defaultscheme(void)
 {
-    const char *fgbg, *term = ggetenv("TERM");
+    const char *fgbg, *term = ggetenv("TERM");  // TODO/TERM_PROGRAM
     int isdark = 0;
 
     if (term) {
@@ -134,7 +134,7 @@ isterm(const char *term, const char *name)
  */
 int
 tty_identification(const char *RV, int timeoutms)
-{
+{                                               // TODO/TERM_PROGRAM
     static char xterm_da2_cmd[] = "\033[>c";
     const char *xterm_version;
     int ret = -1;
@@ -398,4 +398,6 @@ tty_read(void *ibuffer, int length, int timeoutms)
 #endif /*!USE_VIO_BUFFER && !DJGPP*/
 
 /*end*/
+
+
 

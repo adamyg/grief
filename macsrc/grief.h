@@ -82,6 +82,7 @@
 #define TF_ATTRIBUTES           60          /* terminal attribute flags */
 #define TF_TTY_FAST             62          /* fast tty optimisations */
 #define TF_TTY_GRAPHICSBOX      63          /* graphics mode required for box characters */
+#define TF_KBPROTOCOL           64          /* kbprotocol */
 
 #define TF_SCREEN_ROWS          70          /* screen rows */
 #define TF_SCREEN_COLS          71          /* screen cols */

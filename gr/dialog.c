@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dialog_c,"$Id: dialog.c,v 1.33 2024/09/12 17:28:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_dialog_c,"$Id: dialog.c,v 1.35 2024/09/25 13:59:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dialog.c,v 1.33 2024/09/12 17:28:50 cvsuser Exp $
+/* $Id: dialog.c,v 1.35 2024/09/25 13:59:56 cvsuser Exp $
  * Dialog manager.
  *
  *
@@ -1253,6 +1253,21 @@ dialog_find(int ident)
         }
     }
     return NULL;
+}
+
+
+void
+widget_clear(DIALOG_t* d)
+{
+    WIDGET_t *first, *w;
+
+    if (NULL != (first = CIRCLEQ_FIRST(&d->d_widgetq))) {
+        w = first;
+        do {
+            assert(WIDGET_MAGIC == w->w_magic);
+            w->w_uflags = 0;
+        } while (first != (w = dialog_next(d, w)));
+    }
 }
 
 

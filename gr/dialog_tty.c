@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dialog_tty_c,"$Id: dialog_tty.c,v 1.31 2024/09/12 17:28:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_dialog_tty_c,"$Id: dialog_tty.c,v 1.32 2024/09/25 13:58:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dialog_tty.c,v 1.31 2024/09/12 17:28:50 cvsuser Exp $
+/* $Id: dialog_tty.c,v 1.32 2024/09/25 13:58:06 cvsuser Exp $
  * Dialog manager, TTY interface.
  *
  *
@@ -339,6 +339,7 @@ dlg_open(DIALOG_t *d, DialogContext_t *c)
      *  widget sizing/
      *      either run the widget packer or grid processing logic.
      */
+    widget_clear(d);
     if (0 == d->d_uflags) {
         dialog_send(d, WIDGET_INIT, 0, 0);
         dialog_bcast(d, NULL, NULL, FALSE, WIDGET_INIT, 0, 0);

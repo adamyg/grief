@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.22 2024/07/23 12:52:20 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.23 2024/09/25 15:51:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_terminal.c,v 1.22 2024/07/23 12:52:20 cvsuser Exp $
+/* $Id: m_terminal.c,v 1.23 2024/09/25 15:51:54 cvsuser Exp $
  * Terminal screen and keyboard primitives.
  *
  *
@@ -159,6 +159,7 @@ static struct pt_map    pt_features[] = {
 
     { TF_TTY_FAST,              PT_MKINT(x_pt.pt_tty_fast),               "tty_fast" },
     { TF_TTY_GRAPHICSBOX,       PT_MKINT(x_pt.pt_tty_graphicsbox),        "tty_graphicsbox" },
+    { TF_KBPROTOCOL,            PT_MKSTR(x_pt.pt_kbprotocol),             "kbprotocol" },
 
     { TF_SCREEN_ROWS,           PT_MKINT(x_pt.pt_screen_rows),            "screen_rows" },
     { TF_SCREEN_COLS,           PT_MKINT(x_pt.pt_screen_cols),            "screen_cols" },
@@ -503,6 +504,8 @@ do_set_term_characters(void)    /* int ([int ident string desc], [string|int] va
 
   ! TF_TTY_GRAPHICSBOX      tty_graphicsbox         Integer     When *true* enables use of graphic
                                                                 box characters.
+
+  ! TF_KBPROTOCOL           kbprotocol              String      Active kb-protocol.
 
   ! TF_SCREEN_ROWS          screen_rows             Integer     Number of screen rows.
 
@@ -1387,5 +1390,8 @@ do_get_term_keyboard(void)      /* list () */
 }
 
 /*end*/
+
+
+
 
 

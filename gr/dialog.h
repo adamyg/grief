@@ -1,11 +1,11 @@
 #ifndef GR_DIALOG_H_INCLUDED
 #define GR_DIALOG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dialog_h,"$Id: dialog.h,v 1.20 2024/09/12 17:28:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_dialog_h,"$Id: dialog.h,v 1.21 2024/09/25 13:58:06 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dialog.h,v 1.20 2024/09/12 17:28:50 cvsuser Exp $
+/* $Id: dialog.h,v 1.21 2024/09/25 13:58:06 cvsuser Exp $
  * Dialog manager public interface.
  *
  *
@@ -525,6 +525,7 @@ extern int                  dialog_count(DIALOG_t *d);
 extern WIDGET_t *           dialog_next(DIALOG_t *d, WIDGET_t *w);
 extern WIDGET_t *           dialog_prev(DIALOG_t *d, WIDGET_t *w);
 
+extern void                 widget_clear(DIALOG_t* d);
 extern WIDGET_t *           widget_byname(DIALOG_t *d, const char *name);
 extern WIDGET_t *           widget_byident(DIALOG_t *d, int ident);
 

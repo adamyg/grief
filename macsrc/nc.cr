@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: nc.cr,v 1.37 2024/07/29 16:15:54 cvsuser Exp $
+/* $Id: nc.cr,v 1.38 2024/09/26 12:15:32 cvsuser Exp $
  * Norton Commander (NC)/Midnight Commander style directory services
  *
  * TODO: retain marked/position post command.
@@ -231,7 +231,7 @@ nc(~ string)
     set_buffer_type(NULL, BFTYP_UTF8);
     NcRead(dir);
 
-    create_window(nccols, ncrows + 4, nccols + ncwidth + 30, 3,
+    create_window(nccols, ncrows + 4, nccols + ncwidth, 3,
             "<F1> Help, <Ins/+/-/Enter> select, <F10/Esc> action/exit");
     attach_buffer(dir_buffer);
     NcPosition(1);
@@ -302,6 +302,7 @@ NcSize(void)
     } else {
         ncwidth = SMINCOLUMNS;                  /* center window */
     }
+
     ncfwidth = ncwidth - SINFOCOLUMNS;
     nccols -= (ncwidth + 2);                    /* center window */
     nccols /= 2;

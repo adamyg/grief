@@ -1,11 +1,11 @@
 #ifndef GR_WIDGETS_TTY_H_INCLUDED
 #define GR_WIDGETS_TTY_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_widgets_tty_h,"$Id: widgets_tty.h,v 1.10 2024/09/12 17:28:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_widgets_tty_h,"$Id: widgets_tty.h,v 1.11 2024/09/25 13:58:06 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: widgets_tty.h,v 1.10 2024/09/12 17:28:50 cvsuser Exp $
+/* $Id: widgets_tty.h,v 1.11 2024/09/25 13:58:06 cvsuser Exp $
  * Widgets, TTY specific functionality.
  *
  *
@@ -135,15 +135,16 @@ __CBEGIN_DECLS
      *  CLEAR ---
      *      Widget was hidden and the underlying area needs clearing.
      */
-#define WTTY_FFOCUS             0x0001
-#define WTTY_FHIDDEN            0x0002
+#define WTTY_FFOCUS         0x0001
+#define WTTY_FHIDDEN        0x0002
 
-#define WTTY_FREPACK            0x0010
-#define WTTY_FRESIZE            0x0020
+#define WTTY_FREPACK        0x0010
+#define WTTY_FRESIZE        0x0020
 
-#define WTTY_FDIRTY             0x0100
-#define WTTY_FCLEAR             0x0200
+#define WTTY_FDIRTY         0x0100
+#define WTTY_FCLEAR         0x0200
 
+#define ClrFocus(w)         w->w_uflags &= ~WTTY_FFOCUS
 #define HasFocus(w)         (((WIDGET_t *)(w))->w_uflags & WTTY_FFOCUS)
 
 #define GetXParam(p)        DIALOGARGLO(p)
@@ -154,3 +155,4 @@ extern WIDGET_t *           tty_new(uint32_t size, WIDGETCB_t handler);
 __CEND_DECLS
 
 #endif /*GR_WIDGETS_TTY_H_INCLUDED*/
+

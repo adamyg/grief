@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.136 2024/09/22 08:27:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.138 2024/09/26 12:19:35 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.136 2024/09/22 08:27:16 cvsuser Exp $
+/* $Id: ttyterm.c,v 1.138 2024/09/26 12:19:35 cvsuser Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -242,6 +242,7 @@ static TAttributes_t    term_xtermlike(const char *term);
 
 static void             key_enable(void);
 static void             key_config(void);
+static int              key_protocol(const char *term, int termlen);
 static void             key_disable(void);
 
 static void             acs_dump(const char *bp);
@@ -2425,11 +2426,13 @@ key_enable(void)
 {
     key_config();                               /* terminal specific selection */
 
+    strxcpy(x_pt.pt_kbprotocol, key_protocolname(xf_kbprotocol, "unknown"), sizeof(x_pt.pt_kbprotocol));
+
     if (xf_kbprotocol == KBPROTOCOL_NONE)
         return;
 
     ttputpad(tc_mm);                            /* enable meta key-codes */
-    xf_kbprotocol |= KBPROTOCOL_BASIC;
+    xf_kbprotocol |= KBPROTOCOL_META;
 
     if (t_attributes & TA_MINTTY) {
         if (! xf_mouse) {
@@ -2503,35 +2506,24 @@ key_config(void)
     if (xf_kbprotocol != KBPROTOCOL_AUTO)
         return;
 
-    xf_kbprotocol = KBPROTOCOL_BASIC;           /* implied */
+    xf_kbprotocol = KBPROTOCOL_META;            /* implied */
 
     if (xf_kbconfig) {
         /*
          *  user-config
          */
-        const char *term = ggetenv("TERM"), *elm = strchr(term, '-');
-        const int termlen = (elm ? elm - term : strlen(term));
+        const char *term = ggetenv("TERM");     // TODO/TERM_PROGRAM
 
-        for (elm = xf_kbconfig; *elm; ) {
-            const char *end = strchr(elm, ';'); /* term:protocol[;...] */
+        if (-1 == key_protocol(term, strlen(term))) {
+            const char *dash = strchr(term, '-');
+            if (dash) {                         /* term[-options] */
+                const int termlen = dash - term;
 
-            if (0 == strncmp(elm, term, termlen)) {
-                if (elm[termlen] == ':') {
-                    const char *name = elm + termlen + 1;
-                    const int namelen = (end ? end - name : strlen(name));
-                    int protocol;
-
-                    protocol = key_protocolid(name, namelen);
-                    if (protocol >= 0 && protocol != KBPROTOCOL_AUTO) {
-                        trace_log("\tkbprotocol: %*s=%*s\n", termlen, term, name, namelen);
-                        xf_kbprotocol = protocol;
-                    }
-                    break;
+                if (-1 == key_protocol(term, termlen)) {
+                    trace_log("\tkbprotocol: %*s=N/A (none)\n", termlen, term);
+                    xf_kbprotocol = KBPROTOCOL_NONE;
                 }
             }
-
-            if (NULL != (elm = end))
-                ++elm;
         }
 
     } else {
@@ -2539,7 +2531,7 @@ key_config(void)
          *  terminal probe
          */
         if (t_attributes & TA_CYGWIN) {
-            xf_kbprotocol |= KBPROTOCOL_CYGWIN;
+            xf_kbprotocol = KBPROTOCOL_CYGWIN;
 
 #if defined(KBPROTOCOL_MSTERMINAL) //TODO, See issues: https://sourceware.org/pipermail/cygwin-patches/2024q3/012748.html
         } else if (t_attributes & TA_MSTERMINAL) {
@@ -2552,15 +2544,48 @@ key_config(void)
 #endif
 
         } else if (t_attributes & TA_MINTTY) {
-            xf_kbprotocol |= KBPROTOCOL_MINTTY_MOK2;
+            xf_kbprotocol = KBPROTOCOL_MINTTY_MOK2;
 
         } else if (t_attributes & TA_XTERMLIKE) {
-            xf_kbprotocol |= KBPROTOCOL_XTERM_MOK2;
+            xf_kbprotocol = KBPROTOCOL_XTERM_MOK2;
 
         } else if (t_attributes & TA_VT100LIKE) {
-            xf_kbprotocol |= KBPROTOCOL_VT100_CURSOR;
+            xf_kbprotocol = KBPROTOCOL_VT100_CURSOR;
         }
     }
+}
+
+
+static int
+key_protocol(const char *term, int termlen)
+{
+    const char *elm;
+
+    for (elm = xf_kbconfig; elm && *elm; ) {
+        const char *end = strchr(elm, ';');     /* term:protocol[;...] */
+
+        if (0 == strncmp(elm, term, termlen)) {
+            if (elm[termlen] == ':') {
+                const char *name = elm + termlen + 1;
+                const int namelen = (end ? end - name : strlen(name));
+                int protocol;
+
+                protocol = key_protocolid(name, namelen);
+                if (protocol >= 0 && protocol != KBPROTOCOL_AUTO) {
+                    trace_log("\tkbprotocol: %*s=%*s\n", termlen, term, name, namelen);
+                    xf_kbprotocol = protocol;
+                    return 0; //success
+                }
+                trace_log("\tkbprotocol: *s, unknown ignored\n", name, namelen);
+                break;
+            }
+        }
+
+        if (NULL != (elm = end)) {
+            ++elm;
+        }
+    }
+    return -1;
 }
 
 
@@ -3536,6 +3561,7 @@ term_tidy(void)
  */
 static int
 term_cursor(int visible, int imode, int virtual_space)
+
 {
     if (visible >= 0) {
         if (visible != tt_cursor)
@@ -5317,6 +5343,7 @@ term_flush(void)
  *      Retrieve the display screen.
  *
  *  Parameters:
+
  *      nrow - Storage for row number.
  *      ncol - Number of columns.
  *
@@ -5594,5 +5621,3 @@ do_copy_screen(void)            /* void () */
 }
 
 #endif  /*!USE_VIO_BUFFER && !DJGPP */
-
-
