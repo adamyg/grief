@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: select.cr,v 1.45 2024/05/15 08:22:45 cvsuser Exp $
+/* $Id: select.cr,v 1.46 2024/09/06 14:35:57 cvsuser Exp $
  * Selection macros implementing buffer based popup user interface.
  *
  *
@@ -894,7 +894,7 @@ select_list(string title, string message_string, int step,
 
 /*
  *  select_slim_list ---
- *      This function is similar to select_list() but we assume that the list is
+ *      Similar to select_list() but we assume that the list is 
  *      unstructured -- there are no actions or help associated with each element.
  */
 int
@@ -987,7 +987,7 @@ int
 select_buffer(int buf, int win, ~int flags, ~declare, ~list do_list,
       ~declare help_list, ~int start_line, ~int keep_window)
 {
-    int but_clicks, but_line;
+    int last_but_line;
     int old_buf, old_win;
     int list_items, width, depth, retval;
     int selection, selection_flags;
@@ -996,10 +996,7 @@ select_buffer(int buf, int win, ~int flags, ~declare, ~list do_list,
     UNUSED(do_list);                            /* used by lower level functions */
     UNUSED(help_list);                          /* used by lower level functions */
 
-    UNUSED(but_clicks, but_line);
-
-    but_clicks = but_line = 0;
-
+    last_but_line = 0;
     old_buf = inq_buffer();
     old_win = inq_window();
 
@@ -1155,32 +1152,20 @@ sel_copy(void)
 static void
 sel_button1(int type)
 {
-    extern int but_clicks, but_line, win;
-    int tm, x, y, cwin, line, col, where, region, event;
+    extern int last_but_line, win;
+    int x, y, cwin, line, col, where, region, event;
 
-    /* Count clicks */
-    tm = get_mouse_pos(x, y, cwin, line, col, where, region, event);
-    if (1 == type) {
-        if (tm < 0 || tm > CLICK_TIME_MS) {
-            but_clicks = 1;                     // click window expired
-        } else {
-            ++but_clicks;
-        }
-    } else if (2 == type) {
-        ++but_clicks;                           // double click
-    }
-
-    /* Process event */
+    get_mouse_pos(x, y, cwin, line, col, where, region, event);
     if (win == cwin) {
         switch (where) {
         case MOBJ_INSIDE:
             move_abs(line, 1);                  // move selection
             sel_warp();
-            if (line == but_line && 2 == but_clicks) {
+            if (line == last_but_line && 2 == type) {
                 push_back(key_to_int("<Enter>"));
-                break;                          // double-clicks
+                break;                          // double-click
             }
-            but_line = line;
+            last_but_line = line;
             break;
         case MOBJ_TOP_EDGE:
         case MOBJ_BOTTOM_EDGE:
@@ -1468,8 +1453,7 @@ sel_timer(int reset)
 
 /*
  *  sel_list ---
- *      This function is called when user selects an item in a list, returning the item
- *      (line number) selected.
+ *      Called when user selects an item in a list, returning the item (line number) selected.
  */
 void
 sel_list(void)
@@ -1495,16 +1479,15 @@ sel_list(void)
         } else {
             execute_macro(function);
         }
-
     } else {
-        select_list("XYZ", "ABC", 1, function);   /* ??? */
+        select_list("XYZ", "ABC", 1, function); /* ??? */
     }
 }
 
 
 /*
  *  sel_warp ---
- *      This function called by the mouse code to 'warp' the cursor.
+ *      Called by the mouse code to 'warp' the cursor.
  *
  *      The user clicked on an entry and we want to unhilight the old entry and hilight
  *      the currrent.

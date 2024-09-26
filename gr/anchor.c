@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_anchor_c,"$Id: anchor.c,v 1.50 2024/05/16 15:45:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_anchor_c,"$Id: anchor.c,v 1.52 2024/08/24 10:34:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: anchor.c,v 1.50 2024/05/16 15:45:56 cvsuser Exp $
+/* $Id: anchor.c,v 1.52 2024/08/24 10:34:37 cvsuser Exp $
  * Anchor primitives.
  *
  *
@@ -324,12 +324,15 @@ anchor_get(WINDOW_t *wp, BUFFER_t *bp, ANCHOR_t *a)
         a->end_col = CURSOR_HUGE_COL;
 
     } else if (MK_NONINC == a->type) {
-        if (--a->end_col <= 0) { // start-of-line
-            if (--a->end_line > 0) {
-                a->end_col = CURSOR_HUGE_COL;
-            } else {
-                a->end_line = 1;
-                a->end_col = 1;
+        if (a->start_line < a->end_line || // able to move back
+                (a->start_line == a->end_line && a->start_col < a->end_col)) {
+            if (--a->end_col <= 0) { // start-of-line
+                if (--a->end_line > 0) {
+                    a->end_col = CURSOR_HUGE_COL;
+                } else {
+                    a->end_line = 1;
+                    a->end_col = 1;
+                }
             }
         }
 
@@ -560,6 +563,7 @@ do_end_anchor(void)             /* int ([int line], [int column]) */
         Anchor_t *ap = (Anchor_t *)curbp->b_anchor;
 
         u_anchor();
+        win_modify(WFHARD);
         ap->a_eline = line;
         ap->a_eoffset = col;
         ret = 1;

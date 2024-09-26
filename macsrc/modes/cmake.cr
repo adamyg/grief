@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*-
- * $Id: cmake.cr,v 1.3 2022/07/10 13:08:02 cvsuser Exp $
+ * $Id: cmake.cr,v 1.4 2024/07/30 16:29:20 cvsuser Exp $
  * 'cmake' language mode.
  *
  *
@@ -22,7 +22,7 @@ main()
     syntax_token(SYNT_BRACKET,      "([{", ")]}");
     syntax_token(SYNT_DELIMITER,    ",;.?:$");
     syntax_token(SYNT_OPERATOR,     "-+/&*=<>|!~^%");
-    syntax_token(SYNT_KEYWORD,      "A-Za-z0-9_");
+    syntax_token(SYNT_KEYWORD,      "a-zA-Z_", "0-9a-zA-Z_");
     syntax_token(SYNT_NUMERIC,      "-+.0-9_xa-fA-F");
 
         // comments

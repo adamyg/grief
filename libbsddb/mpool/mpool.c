@@ -412,8 +412,7 @@ mpool_look(MPOOL *mp, pgno_t pgno)
  *	Print out cache statistics.
  */
 void
-mpool_stat(mp)
-	MPOOL *mp;
+mpool_stat(MPOOL *mp)
 {
 	BKT *bp;
 	int cnt;

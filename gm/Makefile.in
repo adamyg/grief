@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.27 2024/05/03 14:35:16 cvsuser Exp $
+# $Id: Makefile.in,v 1.28 2024/07/30 05:25:48 cvsuser Exp $
 # GRIEF Macro Compiler makefile.
 #
 #
@@ -44,6 +44,7 @@ XCLEAN=
 
 CC=		@CC@
 RM=		@RM@
+RC=		@RC@
 PERL=		@PERL@
 LIBTOOL=	@LIBTOOL@
 
@@ -114,6 +115,16 @@ OBJS=		$(D_OBJ)/gm$(O)			\
 		$(D_OBJ)/language$(O)		\
 		$(D_OBJ)/word$(O)
 
+RESOURCES=	gm.rc
+
+ifeq ("win32","@build_os@")
+ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
+OBJS+=		$(addprefix $(D_OBJ)/,$(subst .rc,_res.o,$(RESOURCES)))
+else
+OBJS+=		$(addprefix $(D_OBJ)/,$(subst .rc,.res,$(RESOURCES)))
+endif
+endif #build_os
+
 
 #########################################################################################
 # Rules
@@ -146,5 +157,11 @@ $(D_OBJ)/%$(O):		%$(C)
 
 $(D_OBJ)/%$(O):		$(D_GR)/%$(C)
 		$(CC) $(CFLAGS) -o $@ -c $<
+
+$(D_OBJ)/%.res:		%.rc
+		$(RC) -fo $@ $<
+
+$(D_OBJ)/%_res.o:	%.rc
+		$(RC) -o $@ $<
 
 #end

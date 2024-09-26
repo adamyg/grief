@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: xterm_linux.cr,v 1.23 2021/07/11 08:26:12 cvsuser Exp $
+/* $Id: xterm_linux.cr,v 1.26 2024/09/20 12:15:16 cvsuser Exp $
  * terminal description file for the xterm window under X11/Linux.
  *
  *
@@ -72,6 +72,9 @@ main()
      *  Define keyboard layout for non-ascii characters.
      */
     set_term_keyboard(
+        //
+        //  Function keys
+        //
         F1_F12, quote_list(
             "\x1bOP",       "\x1bOQ",       "\x1bOR",       "\x1bOS",
             "\x1b[15~",     "\x1b[17~",     "\x1b[18~",     "\x1b[19~",
@@ -116,15 +119,15 @@ main()
             "\xC3\x9A" ),
 
         ALT_0_9, quote_list(        /*X.Org (7bit)*/
-            "\xC2\xB0",       "\xC2\xB1",   "\xC2\xB2",      "\xC2\xB3",    "\xC2\xB4",
-            "\xC2\xB5",       "\xC2\xB6",   "\xC2\xB7",      "\xC2\xB8",    "\xC2\xB9" ),
+            "\xC2\xB0",     "\xC2\xB1",     "\xC2\xB2",      "\xC2\xB3",    "\xC2\xB4",
+            "\xC2\xB5",     "\xC2\xB6",     "\xC2\xB7",      "\xC2\xB8",    "\xC2\xB9" ),
 
         //  Ins/0           End/1           Down/2          PgDn/3          Left/4
         //  5               Right/6         Home/7          Up/8            PgUp/9
-	//
+        //
         KEYPAD_0_9, quote_list(
-	    "\x1b[2~",	    "\x1bOF",	    "\x1bOB",	    "\x1b[6~",	    "\x1bOD",
-	    "\x1bOE",	    "\x1bOC",	    "\x1bOH",	    "\x1bOA",       "\x1b[5~"),
+            "\x1b[2~",      "\x1bOF",       "\x1bOB",       "\x1b[6~",      "\x1bOD",
+            "\x1bOE",       "\x1bOC",       "\x1bOH",       "\x1bOA",       "\x1b[5~"),
 
         KEYPAD_DIV,         "\x1bOo",       /* Keypad-/         */
         KEYPAD_STAR,        "\x1bOj",       /* Keypad-*         */
@@ -189,3 +192,6 @@ linux_standard()
     set_term_feature(TF_GRAPHIC_MODE,   "\x1B(0");      /* Enter graphics mode. */
     set_term_feature(TF_TEXT_MODE,      "\x1B(B");      /* Exit graphics mode. */
 }
+
+/*end*/
+

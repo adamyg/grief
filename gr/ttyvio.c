@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.78 2024/05/20 17:06:25 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.80 2024/09/20 14:50:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.78 2024/05/20 17:06:25 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.80 2024/09/20 14:50:06 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -269,6 +269,22 @@ ttinit(void)
 
     (void)sprintf(tt_title, "%s (%s)", x_appname, x_version);
     vio_reference();
+}
+
+
+/*  Function:           ttxtermlike
+ *      Retrieve the derived xterm attributes.
+ *
+ *  Parameters:
+ *      none.
+ *
+ *  Returns:
+ *      Returns whether the terminal has xterm characteristics.
+ */
+int
+ttxtermlike(void)
+{
+    return 0;
 }
 
 
@@ -611,7 +627,7 @@ vio_image_save(void)
     origCols = currCols;
 
     if (NULL != (screen = chk_calloc(length, 1))) {
-        rc = VioReadCellStr(screen, &length, 0, 0, 0);           
+        rc = VioReadCellStr(screen, &length, 0, 0, 0);
         assert(0 == rc);                        /* image */
 
         origCursor.cb = sizeof(VIOCURSORINFO);
@@ -637,7 +653,7 @@ static void
 vio_image_restore(void)
 {
 #if defined(WIN32)
-    if (origTitle[0]) 
+    if (origTitle[0])
         SetConsoleTitleW(origTitle);
     vio_restore();
 
@@ -858,7 +874,7 @@ static void
 term_print(int row, int col, int len, const VCELL_t *vvp)
 {
     static VIOCELL null = { 0 };
-    
+
     if (len > 0) {
         const int isuc = (DC_CMAPFRAME & x_display_ctrl) || vtisunicode() || vtisutf8();
         VIOCELL *p = currScreen + (row * ttcols()) + col;
@@ -876,7 +892,7 @@ term_print(int row, int col, int len, const VCELL_t *vvp)
                 continue;
             }
 
-            if (cattr != attr) {		/* attribute change */
+            if (cattr != attr) {                /* attribute change */
                 cattr = attr, term_attribute(cattr);
             }
 
@@ -1340,7 +1356,7 @@ term_hue(int fg, int bg)
  *      nothing
  */
 void
-do_ega(void)		    /* void (int flag) */
+do_ega(void)                /* void (int flag) */
 {
     static USHORT orows, ocols, mrows, mcols, state;
 
@@ -1352,12 +1368,12 @@ do_ega(void)		    /* void (int flag) */
         VIOMODEINFO mi = { sizeof(VIOMODEINFO) };
 
         if (flag < 0) {                         /* min/max toggle (-1), restore (-2) used on exit */
-            if (state && (-1 == flag || -2 == flag)) {						
+            if (state && (-1 == flag || -2 == flag)) {
                 if (crows == mrows && ccols == mcols) {
                     mi.row = orows;             /* restore, unless modified */
                     mi.col = ocols;
                 }
-            state = 0;
+                state = 0;
             } else if (0 == state && (-1 == flag || -3 == flag)) {
                 orows  = crows;                 /* maximise */
                 ocols  = ccols;

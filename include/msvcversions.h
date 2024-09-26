@@ -1,11 +1,11 @@
 #ifndef GR_MSVCVERSIONS_H_INCLUDED
 #define GR_MSVCVERSIONS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_msvcversions_h,"$Id: msvcversions.h,v 1.7 2024/06/09 14:05:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_msvcversions_h,"$Id: msvcversions.h,v 1.8 2024/08/17 08:36:27 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: msvcversions.h,v 1.7 2024/06/09 14:05:15 cvsuser Exp $
+/* $Id: msvcversions.h,v 1.8 2024/08/17 08:36:27 cvsuser Exp $
  * _MSC_VER definitions
  *
  * Copyright (c) 2017 - 2024, Adam Young.
@@ -52,6 +52,3 @@ __CPRAGMA_ONCE
 #define _MSC_VER_2003 1310                      /* (Visual Studio 2003 / MSVC++ 7.1)  */
 
 #endif /*GR_MSVCVERSIONS_H_INCLUDED*/
-
-
-

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_buffer_c,"$Id: buffer.c,v 1.52 2022/09/12 15:57:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_buffer_c,"$Id: buffer.c,v 1.53 2024/09/06 14:02:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: buffer.c,v 1.52 2022/09/12 15:57:28 cvsuser Exp $
+/* $Id: buffer.c,v 1.53 2024/09/06 14:02:02 cvsuser Exp $
  * Buffer managment.
  *
  *
@@ -478,8 +478,12 @@ buf_create(const char *name, const char *encoding, int aflag)
     bp->b_attrnormal = ATTR_NORMAL;
 
     bp->b_imode = -1;                           /* non-localised insert-mode */
-
-    bp->b_fname = file_canonicalize(name, NULL, 0);
+    if (name && *name) {
+        name = file_canonicalize(name, NULL, 0);
+    } else {
+        name = chk_salloc("");
+    }
+    bp->b_fname = name;
 #if defined(S_IRUSR) && !defined(__MINGW32__)
     bp->b_mode = (S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH) & ~x_umask;
 #else
@@ -728,7 +732,7 @@ buf_dirty(BUFFER_t *bp, LINENO start, LINENO end)
 
     if (0 == bp->b_dirty_min) {
         bp->b_dirty_min = start;
-        bp->b_dirty_max = end;          
+        bp->b_dirty_max = end;
     } else {
         if (bp->b_dirty_min > start) {
             bp->b_dirty_min = start;
@@ -1121,3 +1125,4 @@ set_buffer_parms(BUFFER_t *bp, const WINDOW_t *wp)
 }
 
 /*end*/
+

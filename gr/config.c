@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_config_c,"$Id: config.c,v 1.35 2022/08/10 15:44:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_config_c,"$Id: config.c,v 1.36 2024/07/11 10:24:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: config.c,v 1.35 2022/08/10 15:44:56 cvsuser Exp $
+/* $Id: config.c,v 1.36 2024/07/11 10:24:54 cvsuser Exp $
  * Machine dependent configuration variables.
  *
  *
@@ -117,7 +117,7 @@ const char *                x_col_table_dark[] = {
     "operator="                 "BLUE",
     "number="                   "GREEN",
     "comment="                  "CYAN",
-    "delimiter="                "DARK-GREY",
+    "delimiter="                "GREY",
     "preprocessor="             "MAGENTA",
     "preprocessor_keyword="     "DARK-MAGENTA",
     "keyword="                  "YELLOW",

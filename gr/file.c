@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.95 2024/05/11 16:38:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.96 2024/07/20 09:21:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: file.c,v 1.95 2024/05/11 16:38:28 cvsuser Exp $
+/* $Id: file.c,v 1.96 2024/07/20 09:21:58 cvsuser Exp $
  * File-buffer primitives and support.
  *
  *
@@ -26,6 +26,9 @@ __CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.95 2024/05/11 16:38:28 cvsuser Exp $")
 #include <errno.h>
 #if defined(HAVE_PWD_H)
 #include <pwd.h>
+#endif
+#if defined(HAVE_ALLOCA_H)
+#include <alloca.h>
 #endif
 #include <edfileio.h>
 #include <edenv.h>                              /* gputenvv(), ggetenv() */

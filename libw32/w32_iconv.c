@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_iconv_c,"$Id: w32_iconv.c,v 1.23 2024/03/31 15:57:26 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_iconv_c,"$Id: w32_iconv.c,v 1.24 2024/07/19 18:50:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -69,15 +69,17 @@ static iconvfn_t        x_iconv;
 //  static void *       x_iconv_errno;
 
 static const char *     x_iconvnames[] = {
-        NULL,                                   // place-holder
-#if defined(ICONVDLL_NAME)
-        ICONVDLL_NAME,                          // compile-time configuration
+        NULL,                                   // place-holder/runtime configuration
+#if defined(HAVE_LIBICONV_CITRUS_DLL)
+        HAVE_LIBICONV_CITRUS_DLL,
+#elif defined(ICONVDLL_NAME)
+        ICONVDLL_NAME,
 #else
-#define ICONVDLL_NAME   "[lib]iconv[2].dll"     // dynamic
-        "libiconv2.dll",
         "libiconv.dll",
-        "iconv2.dll",
-        "iconv.dll",
+        "iconv.dll"
+#endif
+#if !defined(ICONVDLL_NAME)
+#define ICONVDLL_NAME "iconv.dll"               // generic name
 #endif
        };
 

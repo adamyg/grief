@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntax_c, "$Id: syntax.c,v 1.68 2022/09/13 14:31:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntax_c, "$Id: syntax.c,v 1.71 2024/08/01 17:11:43 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntax.c,v 1.68 2022/09/13 14:31:24 cvsuser Exp $
+/* $Id: syntax.c,v 1.71 2024/08/01 17:11:43 cvsuser Exp $
  * Syntax pre-processor.
  *
  *
@@ -22,6 +22,7 @@ __CIDENT_RCSID(gr_syntax_c, "$Id: syntax.c,v 1.68 2022/09/13 14:31:24 cvsuser Ex
 #include <libstr.h>                             /* str_...()/sxprintf() */
 
 #include "accum.h"
+#include "buffer.h"
 #include "color.h"                              /* attribute_value() */
 #include "builtin.h"
 #include "debug.h"
@@ -434,7 +435,7 @@ do_set_syntax_flags(void)       /* int ([int flags], [int|string syntable]) */
         A Grief extension.
 
     Macro See Also:
-        create_syntax, set_syntax_flags, inq_syntax
+        create_syntax, set_syntax_flags, inq_syntax, inq_syntax_name
  */
 void
 inq_syntax(void)                /* ([int &flags], [int|string syntable]) */
@@ -447,6 +448,43 @@ inq_syntax(void)                /* ([int &flags], [int|string syntable]) */
     }
     argv_assign_int(1, (accint_t)st->st_flags);
     acc_assign_int((accint_t)st->st_ident);
+}
+
+
+/*<<GRIEF>>
+    Macro: inq_syntax_name - Retrieve the syntax name.
+
+        int
+        inq_syntax_name([int bufnum])
+
+    Macro Description:
+        The 'inq_syntax_name()' primitive retrieves the name of the syntax
+        associated with the specified buffer.
+
+    Macro Parameters:
+        bufnum - Optional buffer number, if omitted the current buffer
+            shall be referenced.
+
+    Macro Returns:
+        The 'inq_syntax_name()' primitive returns the syntax-table
+        name, otherwise an empty string.
+
+    Macro Portability:
+        A Grief extension.
+
+    Macro See Also:
+        create_syntax, set_syntax_flags, inq_syntax
+ */
+void
+inq_syntax_name(void)           /* [int bufnum = -1]) */
+{
+    BUFFER_t* bp = buf_argument(1);
+    SyntaxTable_t* st = NULL;
+    
+    if (bp) {
+        st = bp->b_syntax;
+    }
+    acc_assign_str(st ? st->st_name : "", -1);
 }
 
 
@@ -802,11 +840,16 @@ keyword_push_pat(SyntaxTable_t *st, int attr, int length, int total, const char 
         st->keyword_patterns = patterns = trie_create();
     }
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wint-to-pointer-cast" /*XXX*/
+#endif
     if (sep) {
         const char *end = keywords + total + /*seps*/count;
         while (keywords < end) {
             assert(sep == keywords[length] || 0 == keywords[length]);
             trace_ilog("\t%.*s\n", length, keywords);
+
             trie_insert_nwild(patterns, (const char *)keywords, length, (void *)attr);
             keywords += length + /*sep*/1;
             ++elements;
@@ -821,6 +864,9 @@ keyword_push_pat(SyntaxTable_t *st, int attr, int length, int total, const char 
             ++elements;
         }
     }
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
     return elements;
 }
@@ -2097,7 +2143,14 @@ syntax_keywordx(const SyntaxTable_t *st, const LINECHAR *token, int length, int 
         const void *attr =
             trie_search_nwild(st->keyword_patterns, (const char *)token, length);
         if (attr) {
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-to-int-cast" /*XXX*/
+#endif
             return (int)attr;                   /* associated attribute */
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
         }
     }
 

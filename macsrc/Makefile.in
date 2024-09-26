@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.26 2024/04/16 10:37:31 cvsuser Exp $
+# $Id: Makefile.in,v 1.28 2024/07/05 18:41:28 cvsuser Exp $
 # GRIEF macro library makefile.
 #
 #
@@ -52,18 +52,23 @@ MACROS=		$(ROOT)/macros.x64
 else
 MACROS=		$(ROOT)/macros
 endif
-MKBD=		$(MACROS)/kbd
-MTTY=		$(MACROS)/tty
-MDEMOS=		$(MACROS)/demos
-MBENCHMARKS=	$(MACROS)/benchmarks
-MMODES=		$(MACROS)/modes
-MPROFILES=	$(MACROS)/profiles
-MCOLORS=	$(MACROS)/colors
-MACRODIRS=	$(MACROS) $(MKBD) $(MTTY) $(MDEMOS) $(MBENCHMARKS) $(MMODES) $(MPROFILES) $(MCOLORS)
+
+Unique=		$(if $(1),$(strip $(word 1,$(1)) $(call Unique,$(filter-out $(word 1,$(1)),$(1)))))
+Reverse=	$(if $(1),$(call Reverse,$(wordlist 2,$(words $(1)),$(1)))) $(firstword $(1))
+
+COLORDIRS=	$(filter-out %\CVS\,$(filter-out %/CVS/,$(call Unique,$(dir $(wildcard colors/*.cr colors/*/*.cr)))))
+SOURCEDIRS=	kbd tty demos benchmarks modes profiles $(COLORDIRS)
+
+MACRODIRS=	$(MACROS) $(addprefix $(MACROS)/,$(SOURCEDIRS))
+RMACRODIRS=	$(call Reverse, $(MACRODIRS))
+
+#$(info SOURCEDIRS=$(SOURCEDIRS))
+#$(info MACRODIRS=$(MACRODIRS))
 
 # Compilers, programs
 
 RM=		@RM@
+MKDIR_P=	@MKDIR_P@
 RMDIR=		@RMDIR@
 PERL=		@PERL@
 
@@ -81,44 +86,28 @@ release:
 debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
-SOURCE=		$(wildcard *.cr kbd/*.cr tty/*.cr demos/*.cr benchmarks/*.cr modes/*.cr profiles/*.cr colors/*.cr)
-OBJECTS=	$(wildcard $(MACROS)/*.cm $(MACROS)/*.m $(MKBD)/*.cm $(MTTY)/*.cm $(MDEMOS)/*.cm $(MBENCHMARKS)/*.cm $(MMODES)/*.cm $(MPROFILES)/*.cm  $(MCOLORS)/*.cm)
+SOURCE=		$(wildcard *.cr) $(foreach dir,$(SOURCEDIRS),$(wildcard $(dir)/*.cr))
+OBJECTS=	$(foreach dir,$(MACRODIRS),$(wildcard $(dir)/*.cm))
 
-macros:			$(MACRODIRS)
+DIRECTORIES=	$(addsuffix /.created, $(MACRODIRS))
+RDIRECTORIES=	$(addsuffix /.created, $(RMACRODIRS))
+
+macros:			$(DIRECTORIES)
 		$(GRUNCH) -w -m -A autoload.inc -o $(MACROS) $(SOURCE)
 
-force:			$(MACRODIRS)
+force:			$(DIRECTORIES)
 		${GRUNCH} -w -A autoload.inc -o $(MACROS) $(SOURCE)
 
-withdebug:		$(MACRODIRS)
+withdebug:		$(DIRECTORIES)
 		$(GRUNCH) -w -g -A autoload.inc -o $(MACROS) $(SOURCE)
 		${GRUNCH} -w $(MACROS) grief.cr debug.cr
 
-$(MACROS):		$(MACROS)/.created
-
-$(MKBD):		$(MKBD)/.created
-
-$(MTTY):		$(MTTY)/.created
-
-$(MDEMOS):		$(MDEMOS)/.created
-
-$(MBENCHMARKS):		$(MBENCHMARKS)/.created
-
-$(MMODES):		$(MMODES)/.created
-
-$(MPROFILES):		$(MPROFILES)/.created
-
-$(MCOLORS):		$(MCOLORS)/.created
-
 %/.created:
-		-@$(PERL) ../win32/mkdir_p.pl $(@D)
+		-@$(MKDIR_P) $(@D)
 		@echo "++ do not delete, grief edit managed content ++" > $@
 
-reverse = $(if $(1),$(call reverse,$(wordlist 2,$(words $(1)),$(1)))) $(firstword $(1))
-RMACRODIRS = $(call reverse, $(MACRODIRS))
-
 vclean:			clean
-		-$(RM) $(RMDFLAGS) $(addsuffix /.created, $(RMACRODIRS))
+		-$(RM) $(RMDFLAGS) $(RDIRECTORIES)
 		-$(RMDIR) $(RMACRODIRS)
 
 clean:

@@ -3,6 +3,7 @@ defunct/
 EXTRA/
 win32/Autoupdater/
 CoreUtils/
+libfltk/
 acdefines.h
 config.sub
 config.guess

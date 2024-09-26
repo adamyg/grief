@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.in,v 1.20 2024/05/24 16:03:54 cvsuser Exp $
+# $Id: makelib.in,v 1.22 2024/06/16 16:31:42 cvsuser Exp $
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 # makelib configuration
 #
@@ -98,9 +98,8 @@ $PACKAGE_FILE   = 'edpackage.h';
             '!^contrib/libiconv',               # optional/recursive
             '^contrib/libintl',
         '^contrib/hunspell',
-      # '^contrib/liblua',
-      # '^contrib/libssh2',
         '!^contrib/icu',                        # optional local ICU installation
+        '^libfltk',
         'libduktape',
         'libvfs',
         'libchartable',
@@ -194,7 +193,10 @@ Configure()
                 remove_define('WIN32');
                 add_define('HAVE_CONFIG_H');
                 add_define('LIBW32_DYNAMIC');
+
                 add_define('_WIN32_WINNT=0x501');       # Windows SDK
+                add_define('WINVER=0x501');
+
                 add_define('_CRT_SECURE_NO_WARNINGS');
                 add_define('_CRT_SECURE_NO_DEPRECATE');
                 add_define('_CRT_NONSTDC_NO_DEPRECATE');
@@ -212,7 +214,10 @@ Configure()
                 remove_define('WIN32');
                 add_define('HAVE_CONFIG_H');
                 add_define('LIBW32_DYNAMIC');
+
                 add_define('_WIN32_WINNT=0x501');       # Windows SDK
+                add_define('WINVER=0x501');
+
                 add_define('__STDC_WANT_LIB_EXT1__');
 
                 add_xinclude('$(ROOT)/libw32');
@@ -227,8 +232,9 @@ Configure()
                 remove_define('WIN32');
                 add_define('HAVE_CONFIG_H');
                 add_define('LIBW32_DYNAMIC');
+
                 add_define('_WIN32_WINNT=0x501');       # Windows SDK
-                add_define('_WIN32_VER=0x501');
+                add_define('WINVER=0x501');
 
                 add_define('__USE_MINGW_ANSI_STDIO=1'); # printf() ANSI C99 compatible implementation
 
@@ -242,6 +248,7 @@ Configure()
                 }
 
                 add_system_library('-lComctl32');       # updater, common controls
+                add_system_library('-lComdlg32');
                 add_system_library('-lOleAut32');
 
                 add_system_library('-lMswsock');

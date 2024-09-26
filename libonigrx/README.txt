@@ -11,21 +11,17 @@
 
         Oniguruma is Japanese for "Devil's Chariot".
 
-        Source, http://www.geocities.jp/kosako3/oniguruma
+        Source:
+          https://github.com/kkos/oniguruma
+          http://www.geocities.jp/kosako3/oniguruma (old)
 
     Releases:
-
-        o 6.9.6 (patched), 5 Nov, 2020
-
-            WatcomC tweaks.
-
-        o 5.9.5 (patched), October 21, 2013
-
-            'onig_reg_init' modified, replaced regex_t reference.
+    
+        6.9.9, Oct 14, 2023
 
     Copyright:
 
-        Copyright (c) 2002-2020  K.Kosako  <kkosako0@gmail.com>
+        Copyright (c) 2002-2021  K.Kosako  <kkosako0@gmail.com>
         All rights reserved.
 
         Redistribution and use in source and binary forms, with or without
@@ -48,4 +44,3 @@
         LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
         OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
         SUCH DAMAGE.
-

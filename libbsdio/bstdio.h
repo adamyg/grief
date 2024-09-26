@@ -37,8 +37,40 @@
  *	@(#)stdio.h	5.17 (Berkeley) 6/3/91
  */
 
+#if defined(HAVE_CONFIG_H)
+#include <config.h>
+#endif
 
-#include <sys/cdefs.h>
+#if defined(HAVE_FEATURES_H)
+#include <features.h>
+#endif
+
+#if defined(__BSTDIO_INTERNAL) || defined(_BSD_SOURCE)
+#ifndef __BSD_VISIBLE
+#define __BSD_VISIBLE 1
+#endif
+
+#if !defined(_DEFAULT_SOURCE) && \
+        defined(__GLIBC__) && defined(__GLIBC_PREREQ)
+#if __GLIBC_PREREQ(2, 20)
+// see: https://www.gnu.org/software/libc/manual/html_node/Feature-Test-Macros.html
+#define _DEFAULT_SOURCE 1
+#endif
+#endif
+
+#if !defined(_DEFAULT_SOURCE)
+#ifndef _BSD_SOURCE
+#define _BSD_SOURCE 1
+#endif
+#endif
+
+#ifndef __POSIX_VISIBLE
+#define __POSIX_VISIBLE 199506
+#endif
+
+#endif /*__BSTDIO_INTERNAL || _BSD_SOURCE*/
+
+#include <edcdefs.h>
 #include <sys/types.h>
 
 #include <edtypes.h>
@@ -48,16 +80,6 @@
 #include <stddef.h>
 #if !defined(__va_list)
 #define __va_list va_list
-#endif
-
-#if defined(__BSTDIO_INTERNAL) || defined(_BSD_SOURCE) 
-#ifndef __BSD_VISIBLE
-#define __BSD_VISIBLE 1
-#endif
-
-#ifndef __POSIX_VISIBLE
-#define __POSIX_VISIBLE 1
-#endif
 #endif
 
 #if defined(__BSTDIO_INLINE) || defined(__BSTDIO_INTERNAL)

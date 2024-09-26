@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_time_c,"$Id: m_time.c,v 1.18 2015/02/11 23:25:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_time_c,"$Id: m_time.c,v 1.19 2024/08/25 06:01:53 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_time.c,v 1.18 2015/02/11 23:25:13 cvsuser Exp $
+/* $Id: m_time.c,v 1.19 2024/08/25 06:01:53 cvsuser Exp $
  * Time primitives.
  *
  *
@@ -196,7 +196,7 @@ do_time(void)                   /* int ([int &hour], [int &min], [int &sec], [in
     argv_assign_int(1, (accint_t) tp->tm_hour);
     argv_assign_int(2, (accint_t) tp->tm_min);
     argv_assign_int(3, (accint_t) tp->tm_sec);
-    argv_assign_int(4, (accint_t) msec);            /*5/03/06*/
+    argv_assign_int(4, (accint_t) msec);
     acc_assign_int((accint_t) tmsec);
 }
 

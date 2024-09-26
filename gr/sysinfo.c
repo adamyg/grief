@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.53 2022/08/10 15:44:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.57 2024/07/19 05:04:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sysinfo.c,v 1.53 2022/08/10 15:44:58 cvsuser Exp $
+/* $Id: sysinfo.c,v 1.57 2024/07/19 05:04:22 cvsuser Exp $
  * System information services.
  *
  *
@@ -28,9 +28,10 @@ __CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.53 2022/08/10 15:44:58 cvsuser E
 #if defined(HAVE_PWD_H)
 #include <pwd.h>
 #endif
-#if defined(unix) || defined(__APPLE__) || defined(HAVE_NETDB_H)
+#if defined(unix) || defined(__unix__) || defined(__APPLE__) || defined(HAVE_NETDB_H)
 #include <netdb.h>
 #endif
+
 #if defined(linux)
 #ifndef  _GNU_SOURCE
 #define  _GNU_SOURCE
@@ -38,7 +39,7 @@ __CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.53 2022/08/10 15:44:58 cvsuser E
 #include <sys/types.h>
 #endif
 
-#if defined(unix) || defined(_AIX) || defined(linux) || defined(__APPLE__)
+#if defined(unix) || defined(__unix__) || defined(__APPLE__) || defined(_AIX) || defined(linux)
 #include <sys/utsname.h>
 #endif
 
@@ -48,6 +49,11 @@ __CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.53 2022/08/10 15:44:58 cvsuser E
 
 #if defined(__APPLE__)
 #include <libproc.h>                            /* proc_pidpath */
+#endif
+
+#if defined(BSD)
+#include <sys/types.h>
+#include <sys/sysctl.h>
 #endif
 
 #if defined(WIN32) || defined(__CYGWIN__)
@@ -286,7 +292,7 @@ sysinfo_tmpdir(void)
 #else
             static const char *tmpdirs[] = {
                 "/tmp",
-#if defined(unix) || defined(__APPLE__)
+#if defined(unix) || defined(__unix__) || defined(__APPLE__)
                 "/var/tmp",
 #endif
 #if defined(__MSDOS__)
@@ -389,7 +395,7 @@ resolve_execname(const char *name)
     }
 #endif  /*CYGWIN*/
 
-#else   /*unix and friends */
+#else /*unix and friends */
     char t_path[MAX_PATH+1] = {0}, t_self[64];
     struct stat sb = {0};
     int source = -1;
@@ -406,15 +412,17 @@ resolve_execname(const char *name)
     if (name != t_name) {
 #if defined(linux) || defined(__linux__)
         sxprintf(t_self, sizeof(t_self), "/proc/%d/exe", getpid());
-        if ((namelen = readlink("/proc/self/exe", t_name, sizeof(t_name))) > 0 ||
-                (namelen = readlink(t_self, t_name, sizeof(t_name))) > 0) {
+        if ((namelen = readlink("/proc/self/exe", t_name, sizeof(t_name)-1)) > 0 ||
+                (namelen = readlink(t_self, t_name, sizeof(t_name)-1)) > 0) {
+            // Note:
+            // if /proc/self/exe points to a deleted/updated image then linux adds a " (deleted)" suffix.
             t_name[namelen] = 0;
             name = t_name;
             source = 1;
         }
 
 #elif defined(__sun__) || defined(sun)
-        if ((namelen = readlink("/proc/self/paths/a.out", t_name, sizeof(t_name))) > 0) {
+        if ((namelen = readlink("/proc/self/paths/a.out", t_name, sizeof(t_name)-1)) > 0) {
             t_name[namelen] = 0;
             name = t_name;
             source = 2;
@@ -431,20 +439,54 @@ resolve_execname(const char *name)
         }
 
 #elif defined(BSD)
-        if ((namelen = readlink("/proc/curproc/file", t_name, sizeof(t_name))) > 0) {
+        if ((namelen = readlink("/proc/curproc/file", t_name, sizeof(t_name)-1)) > 0 || // Free and DragonFly
+                (namelen = readlink("/proc/curproc/exe", t_name, sizeof(t_name)-1)) > 0) { // Net
             t_name[namelen] = 0;
             name = t_name;                      /* procfs */
             source = 5;
 
         } else {
+#if defined(__FreeBSD__) || defined(__DragonFly__)
             int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
-            size cb = sizeof(t_name);
+            size_t cb = sizeof(t_name);
 
             if (-1 != sysctl(mib, 4, t_name, &cb, NULL, 0)) {
                 name = t_name;                  /* alt method */
                 source = 6;
             }
+
+#elif defined(__NetBSD__)
+            int mib[4] = { CTL_KERN, KERN_PROC_ARGS, -1, KERN_PROC_PATHNAME };
+            size_t cb = sizeof(t_name);
+
+            if (-1 != sysctl(mib, 4, t_name, &cb, NULL, 0)) {
+                name = t_name;                  /* alt method */
+                source = 6;
+            }
+
+#elif defined(__OpenBSD__)
+            int mib[4] = {CTL_KERN, KERN_PROC, getpid(), KERN_PROC_ARGV};
+            size_t size;
+
+            if (sysctl(mib, 4, NULL, &size, NULL, 0) == 0) {
+                char **argv;
+
+                if (size && (argv = (char **)calloc(1, size)) != NULL) {
+                    if (sysctl(mib, 4, argv, &size, NULL, 0) == 0) {
+                        if (strchr(argv[0], '/') == NULL || realpath(argv[0], t_name) == NULL) {
+                            strxcpy(t_name, argv[0], sizeof(t_name));
+                        }
+                        name = t_name;          /* alt method */
+                        source = 7;
+                    }
+                    free((void *)argv);
+                }
+            }
+#else
+#error Unsupported BSD target
+#endif
         }
+
 #endif  /*unix||linux*/
     }
 
@@ -545,17 +587,17 @@ sysinfo_hostname(char *buf, int len)
 #if !defined(MAXHOSTNAMELEN)
 #define MAXHOSTNAMELEN          256
 #endif
-#if defined(unix) || defined(__APPLE__)
+#if defined(unix) || defined(__unix__) || defined(__APPLE__)
         char host_buf[MAXHOSTNAMELEN];
 #endif
         char domain_buf[MAXHOSTNAMELEN];
-#if defined(unix) || defined(__APPLE__) || defined(HAVE_NETDB_H)
+#if defined(unix) || defined(__unix__) || defined(__APPLE__) || defined(HAVE_NETDB_H)
         struct hostent *hent = NULL;
 #endif
         const char * p = NULL;
 
         /* default gethostname(), then env */
-#if defined(unix) || defined(__APPLE__)
+#if defined(unix) || defined(__unix__) || defined(__APPLE__)
         if (0 == gethostname(host_buf, sizeof(host_buf)) && host_buf[0]) {
             p = host_buf;
         }
@@ -570,7 +612,7 @@ sysinfo_hostname(char *buf, int len)
         host = (char *)p;
 
         /* gethostbyname seems a better option */
-#if defined(unix) || defined(__APPLE__) || defined(HAVE_NETDB_H)
+#if defined(unix) || defined(__unix__) || defined(__APPLE__) || defined(HAVE_NETDB_H)
         if (NULL != (hent = gethostbyname (host)) &&
                     NULL != hent->h_name && hent->h_name[0] != 0) {
 

@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: xterm_gnome.cr,v 1.7 2014/10/22 02:34:43 ayoung Exp $
+/* $Id: xterm_gnome.cr,v 1.8 2024/06/18 16:26:25 cvsuser Exp $
  * terminal description file for the xterm window under Gnome-terminal.
  *
  *
@@ -24,7 +24,7 @@ main(void)
      *  drawing windows.
      */
     xterm_graphic();
-    xterm_colour256();          /* full 256 color is available */
+    xterm_256color();                   /* full 256 color is available */
 
     /*
      *  Define escape sequences used for special optimisations on output.
@@ -143,28 +143,4 @@ gnome(void)
     /*gnome*/
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/*end*/

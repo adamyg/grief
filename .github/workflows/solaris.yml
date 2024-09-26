@@ -1,0 +1,62 @@
+name: "Solaris builds"
+on: [push]
+
+#https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Solaris 11.4
+      uses: vmactions/solaris-vm@v1.0.2
+      with:
+        usesh: true
+        mem: 6144
+        prepare: |
+          export LC_ALL=C
+          export LANG=C
+          pkg publisher solaris
+          beadm list
+          pkg info entire
+          pkg list -af entire
+          echo ===== Installed packages 
+          pkg list '*'
+          echo ===== Available developer/library packages 
+          pkg list -a 'developer/*'
+          pkg list -a 'library/*'
+          echo ===== Packages requirements
+          pkg install -v system/locale system/header
+          pkg install -v --accept \
+            developer/gcc-7@7.3.0-11.4.0.0.1.14.0 \
+            developer/build/gnu-make \
+            developer/build/make \
+            developer/build/autoconf \
+            developer/build/autoconf \
+            developer/build/libtool \
+            developer/build/pkg-config \
+            developer/lexer/flex \
+            developer/parser/bison \
+            library/ncurses
+
+        run: |
+          export LC_ALL=C
+          export LANG=C
+          uname -a
+          whoami
+          pwd          
+          cat /etc/release
+          export PATH=/opt/csw/bin:$PATH:/usr/sfw/bin
+          export CFLAGS="-std=gnu11 -D_XOPEN_SOURCE=500 -D__EXTENSIONS__=1"
+          ./configure --prefix=/usr
+          gmake release build
+         
+## References:
+## https://github.com/oracle/solaris-userland/blob/master/make-rules/shared-macros.mk
+## https://docs.oracle.com/cd/E86824_01/html/E54772/intro-3.html#REFMAN3Fintro-3
+##
+##   "-std=gnu11 -D_XOPEN_SOURCE=500 -D__EXTENSIONS__=1"
+##

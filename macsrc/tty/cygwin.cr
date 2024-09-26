@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: cygwin.cr,v 1.13 2014/10/22 02:34:39 ayoung Exp $
+/* $Id: cygwin.cr,v 1.14 2024/06/18 16:26:25 cvsuser Exp $
  * terminal description for the cygwin window
  *
  *
@@ -175,7 +175,7 @@ main()
 
 
 /*
- *  cygwin_colour256 ---
+ *  cygwin_256color ---
  *      Color terminal.
  *
  *  Usage:
@@ -187,5 +187,6 @@ cygwin_256color(void)
     set_term_feature(TF_COLOR, TRUE);           /* Terminal supports color. */
     set_term_feature(TF_COLORDEPTH, 256);       /* using a colour depth of 256. */
 }
+
 
 

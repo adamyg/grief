@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_direntunc_c,"$Id: w32_direntunc.c,v 1.6 2024/03/31 15:57:25 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_direntunc_c,"$Id: w32_direntunc.c,v 1.7 2024/07/25 15:50:13 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -197,7 +197,7 @@ struct dirent *
 w32_unc_readdirA(DIR *dp)
 {
     DWORD bufsize = 4 * 1024;
-    DWORD result, count;
+    DWORD result, count = 0;
     void *buffer;
     char *cursor;
 
@@ -242,7 +242,7 @@ struct dirent *
 w32_unc_readdirW(DIR *dp)
 {
     DWORD bufsize = 4 * 1024;
-    DWORD result, count;
+    DWORD result, count = 0;
     void *buffer;
     wchar_t *cursor;
 

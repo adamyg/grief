@@ -1,10 +1,10 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: ir_dark.cr,v 1.2 2014/11/27 15:54:13 ayoung Exp $
+/* $Id: ir_dark.cr,v 1.3 2024/07/04 11:49:13 cvsuser Exp $
  * ir_dark coloriser, GRIEF port.
  *
  * Original:
  *  Name: ir_dark.vim
- *  More at: http://blog.infinitered.com
+ *  Source: https://github.com/twerth/ir_black
  */
 
 #include "../grief.h"

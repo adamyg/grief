@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_sysinfo_c,"$Id: m_sysinfo.c,v 1.11 2022/12/03 16:40:17 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_sysinfo_c,"$Id: m_sysinfo.c,v 1.12 2024/07/19 05:04:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_sysinfo.c,v 1.11 2022/12/03 16:40:17 cvsuser Exp $
+/* $Id: m_sysinfo.c,v 1.12 2024/07/19 05:04:22 cvsuser Exp $
  * System information primitives.
  *
  *
@@ -20,7 +20,7 @@ __CIDENT_RCSID(gr_m_sysinfo_c,"$Id: m_sysinfo.c,v 1.11 2022/12/03 16:40:17 cvsus
 
 #include <editor.h>
 
-#if defined(unix) || defined(_AIX) || defined(linux) || \
+#if defined(unix) || defined(__unix__) || defined(_AIX) || defined(linux) || \
         defined(WIN32) || defined(__APPLE__)
 #define HAVE_UTSNAME
 #include <sys/utsname.h>
@@ -260,7 +260,7 @@ do_uname(void)                  /* int ([string &sysname], [string &nodename], [
                                             [string &release], [string &machine]) */
 {
 #if defined(HAVE_UTSNAME)
-#if defined(unix) || defined(_AIX) || defined(linux) || \
+#if defined(unix) || defined(__unix__) || defined(_AIX) || defined(linux) || \
         defined(WIN32) || defined(__APPLE__)
     struct utsname u = {0};
 

@@ -1,11 +1,11 @@
 #ifndef GR_EDTHREADS_H_INCLUDED
 #define GR_EDTHREADS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_h,"$Id: edthreads.h,v 1.21 2024/04/08 15:07:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_edthreads_h,"$Id: edthreads.h,v 1.22 2024/08/17 08:36:27 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads.h,v 1.21 2024/04/08 15:07:03 cvsuser Exp $
+/* $Id: edthreads.h,v 1.22 2024/08/17 08:36:27 cvsuser Exp $
  * Threads interface
  * ISO/IEC 9899:201x Committee Draft
  * April 12, 2011 N1570
@@ -126,4 +126,3 @@ extern struct timespec      timespec_sub(struct timespec ts1, struct timespec ts
 __CEND_DECLS
 
 #endif /*GR_EDTHREADS_H_INCLUDED*/
-

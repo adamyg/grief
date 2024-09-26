@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_pty_unix_c,"$Id: pty_unix.c,v 1.24 2020/06/20 12:39:45 cvsuser Exp $")
+__CIDENT_RCSID(gr_pty_unix_c,"$Id: pty_unix.c,v 1.27 2024/07/19 05:04:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: pty_unix.c,v 1.24 2020/06/20 12:39:45 cvsuser Exp $
+/* $Id: pty_unix.c,v 1.27 2024/07/19 05:04:22 cvsuser Exp $
  * PTY interface for Unix and Unix-like environments.
  *
  *      Linux
@@ -38,7 +38,7 @@ __CIDENT_RCSID(gr_pty_unix_c,"$Id: pty_unix.c,v 1.24 2020/06/20 12:39:45 cvsuser
 #include <editor.h>
 #include <edenv.h>                              /* gputenvv(), ggetenv() */
 
-#if defined(unix) || defined(__APPLE__)
+#if defined(unix) || defined(__unix__) || defined(__APPLE__)
 
 #if !defined(ED_LEVEL)
 #define ED_LEVEL            1                   /* debug/trace level */
@@ -759,9 +759,9 @@ sys_pty_ptsname(int fd, char *buf, int len)
         int pty = 0;
 
         if (0 == ioctl(fd, TIOCGPTN, &pty)) {
-            sxprintf(buf, len), "/dev/pts/%d", pty);
+            sxprintf(buf, len, "/dev/pts/%d", pty);
             if (0 != stat(buf, &sb)) {
-                pty_perror("warning: stat(\"%s\")", namebuf);
+                pty_perror("warning: stat(\"%s\")", buf);
             }
             return buf;
         }

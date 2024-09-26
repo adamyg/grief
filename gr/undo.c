@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_undo_c,"$Id: undo.c,v 1.52 2023/03/05 10:17:45 cvsuser Exp $")
+__CIDENT_RCSID(gr_undo_c,"$Id: undo.c,v 1.53 2024/08/25 06:01:53 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: undo.c,v 1.52 2023/03/05 10:17:45 cvsuser Exp $
+/* $Id: undo.c,v 1.53 2024/08/25 06:01:53 cvsuser Exp $
  * undo and redo facilities.
  *
  *
@@ -676,11 +676,11 @@ uwrite_op(undo_t *undo)
     assert(*cur_col  >= 1);
 
     undo->u_line  = *cur_line;
-    undo->u_col	  = *cur_col;
+    undo->u_col   = *cur_col;
     undo->u_last  = up->u_last;
     undo->u_chain = up->u_chain++;
-    undo->u_cmap  = cur_cmap;			/*XXX - cmap identifier??*/
-    up->u_last	  = u_end_of_file;
+    undo->u_cmap  = cur_cmap;                   /*XXX - cmap identifier??*/
+    up->u_last    = u_end_of_file;
 
     undo_debug(undo, US_NORMAL == x_undo_state ? "normal" :
         (US_UNDO == x_undo_state ? "undo" : "redo"));
@@ -734,7 +734,7 @@ uwrite_data(FSIZE_t offset, const char *buf, int len)
 
 
 /*  Function:           slice_read_last
- *      Read from the undo file, caching were possible; used for undo 
+ *      Read from the undo file, caching were possible; used for undo
  *      compaction code.
  *
  *  Parameters:
@@ -893,7 +893,7 @@ slice_find(FSIZE_t offset, const int rdwr)
 
 
 /*  Function:           upwrite
- *      Write data to undo file at a specified offset, seeking offset 
+ *      Write data to undo file at a specified offset, seeking offset
  *      if required.
  *
  *  Parameters:
@@ -965,7 +965,7 @@ upread(char *buf, int len, FSIZE_t offset)
     Macro Description:
         The 'undo()' primitive undoes buffer modifications on the current
         buffer.
-        
+
         Executing without arguments undoes the last operation performed
         on the buffer, including cursor movement, any text modification
         and marked region modification. If the previous operation on the
@@ -977,14 +977,14 @@ upread(char *buf, int len, FSIZE_t offset)
         buffer modification, restoring the cursor to the its location
         where the buffer was actually modified.
 
-        Each buffer maintains their own undo stack, unless disabled 
+        Each buffer maintains their own undo stack, unless disabled
         (see set_buffer_flags). Under BRIEF the undo stack for a
         particular buffer was cleared when the buffer is written to
         disk, as such it was not possible to undo any operations
         performed on the buffer before the last 'write_buffer'.
 
         Under Grief the undo stack is retained for the duration of the
-        editor lifetime. If 'pastwrite' is specified as positive value, 
+        editor lifetime. If 'pastwrite' is specified as positive value,
         the 'undo' shall perform undo's beyond the last write_buffer; by
         default the user is prompted as follows
 
@@ -1024,7 +1024,7 @@ do_undo(int mode)              /* (int move, [int pastwrite = -1]. [int redo = F
     const int past = (-1 == mode ? get_xinteger(2, -1) : -1);
     const int redo = (-1 == mode ? get_xinteger(3, FALSE) : FALSE);
     int ret = 0;
-    
+
     enum undo_state s_undo_state = x_undo_state;
 
     UNDO_t *up = (redo ? &curbp->b_redo : &curbp->b_undo);
@@ -1110,6 +1110,7 @@ void
 do_redo(void)                   /* () */
 {
     /*see macro implementation*/
-}   
+}
 
 /*end*/
+

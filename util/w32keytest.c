@@ -1,13 +1,33 @@
-/*
- *  win32 console key-test
+/* -*- mode: c; indent-width: 4; -*- */
+/* $Id: w32keytest.c,v 1.33 2024/09/20 14:51:42 cvsuser Exp $
+ * console key-test -- win32
+ *
+ *
+ * This file is part of the GRIEF Editor.
+ *
+ * The GRIEF Editor is free software: you can redistribute it
+ * and/or modify it under the terms of the GRIEF Editor License.
+ *
+ * The GRIEF Editor is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * License for more details.
+ * ==end==
  */
+
+#if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
+#define _CRT_SECURE_NO_WARNINGS
+#endif
 
 #include <windows.h>
 #include <wincon.h>
-#include <stdio.h>
 
-#define ALT_PRESSED             (LEFT_ALT_PRESSED|RIGHT_ALT_PRESSED)
-#define CTRL_PRESSED            (LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED)
+#include <stdio.h>
+#include <assert.h>
+
+#include "getopt.h"
+#include "conkey.h"
+
 #define APP_PRESSED             0x0200      /* APPS enabled, extension */
 
 #if defined(__WATCOMC__) || defined(__MINGW32__)
@@ -15,10 +35,6 @@
 #define _countof(array) (sizeof(array) / (unsigned)sizeof(array[0]))
 #endif
 #endif
-
-//#if defined(__MINGW32__) /*older mingw*/
-//#define swprintf _swprintf
-//#endif
 
 #define CTRLSTATUSMASK          (LEFT_ALT_PRESSED|LEFT_CTRL_PRESSED|RIGHT_ALT_PRESSED|RIGHT_CTRL_PRESSED|SHIFT_PRESSED|APP_PRESSED)
 
@@ -133,45 +149,169 @@ static const struct w32key {
 #define ISHEX(_uc) \
     ((_uc >= '0' && _uc <= '9') || (_uc >= 'a' && _uc <= 'f') || (_uc >= 'A' && _uc <= 'F') ? 1 : 0)
 
-static void Process(HANDLE in);
-static BOOL WINAPI CtrlHandler(DWORD fdwCtrlType);
-static int AltPlusEvent(const KEY_EVENT_RECORD *ke, int offset);
-static int AltPlusEnabled(void);
-static const wchar_t *key_description(const KEY_EVENT_RECORD *ker);
-static const wchar_t *control_state(DWORD dwControlKeyState);
-static const wchar_t *virtual_description(WORD wVirtualKeyCode);
+static void Usage();
+static void Process(HANDLE in, int rawmode);
+static int ReadConsoleInputRaw(HANDLE hConsoleInput, PINPUT_RECORD ir);
 
+static BOOL WINAPI CtrlHandler(DWORD fdwCtrlType);
+static int AltPlusEnabled(void);
+static int AltPlusEvent(const KEY_EVENT_RECORD *ke, int offset);
+static DWORD AltGrEvent(const KEY_EVENT_RECORD* key);
+
+static const wchar_t* wkey_description(const KEY_EVENT_RECORD* ker);
+static const wchar_t *wcontrol_state(DWORD dwControlKeyState);
+static const wchar_t *wvirtual_description(WORD wVirtualKeyCode);
+
+static int cprinta(const char* fmt, ...);
+static int cprintw(const wchar_t* fmt, ...);
+
+static int xf_verbose = 0;
+static int xf_rawmode = -1;
 static int xf_altcode = -1;                     /* 1=enable,0=disable,-1=auto */
 static int xf_mouse = 1;
+static int xf_tracking = 0;
+static int xf_paste = 1;
+static int x_break = 0;
+
+static struct option long_options[] = {
+    {"verbose",     no_argument, NULL, 'v'},
+    {"rawmode",     no_argument, NULL, 'r'},
+    {"norawmode",   no_argument, NULL, 'R'},
+    {"nomouse",     no_argument, NULL, 'm'},
+    {"nomouse",     no_argument, NULL, 'M'},
+    {"tracking",    no_argument, NULL, 't'},
+    {"altcode",     no_argument, NULL, 'a'},
+    {"noaltcode",   no_argument, NULL, 'A'},
+    {"help",        no_argument, 0, 'h'},
+    {0}
+};
 
 
 int
-main(void)
+main(int argc, char **argv)
 {
     HANDLE in = GetStdHandle(STD_INPUT_HANDLE);
     DWORD mode = 0;
+    int optidx = 0, c;
+    int rawmode = 0;
+
+    // arguments
+    xf_tracking = 1000;
+    while ((c = getopt_long(argc, (const char * const *)argv, "vrRmMtaAh", long_options, &optidx, -1)) != -1) {
+        switch (c) {
+        case 'v':   // -v,--verbose
+            ++xf_verbose;
+            break;
+        case 'r':   // -r,--rawmode
+            xf_rawmode = 1;
+            break;
+        case 'R':   // -R,--norawmode
+            xf_rawmode = 0;
+            break;
+        case 'm':   // -m,--mouse
+            xf_mouse = 1;
+            break;
+        case 'M':   // -M,--nomouse
+            xf_mouse = 0;
+            break;
+        case 't':   // -t,--tracking
+            // 1000 -> only listen to button press and release
+            // 1002 -> listen to button press and release + mouse motion only while pressing button
+            // 1003 -> listen to button press and release + mouse motion at all times
+            if (1000 == xf_tracking)
+                xf_tracking = 1002;
+            else if (1002 == xf_tracking)
+                xf_tracking = 1003;
+            break;
+        case 'a':   // -a,--altmode
+            xf_altcode = 1;
+            break;
+        case 'A':   // -A,--noaltmode
+            xf_altcode = 0;
+            break;
+        case 'h':   // -h,--help
+            Usage();
+            return EXIT_FAILURE;
+        default:
+            assert('?' == c || ':' == c);
+            return EXIT_FAILURE;
+        }
+    }
+
+    if (xf_rawmode == -1) {                     // running under MsTerminal?
+        xf_rawmode = (getenv("WT_SESSION") != NULL);
+    }
 
     GetConsoleMode(in, &mode);
-    if (xf_mouse) {                             /* mouse enabled */
-        if (! SetConsoleMode(in, ENABLE_EXTENDED_FLAGS|\
-                    ENABLE_WINDOW_INPUT|ENABLE_MOUSE_INPUT/*|ENABLE_PROCESSED_INPUT*/)) {
-                // Note: Stating ENABLE_EXTENDED_FLAGS disables ENABLE_INSERT_MODE and/or ENABLE_QUICK_EDIT_MODE.
-                //  required for correct mouse operation; restored within sys_shutdown().
-            SetConsoleMode(in, ENABLE_WINDOW_INPUT|ENABLE_MOUSE_INPUT/*|ENABLE_PROCESSED_INPUT*/);
-                // No extended support/XP.
+    if (xf_rawmode) {
+#if !defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+#endif
+#if !defined(ENABLE_VIRTUAL_TERMINAL_INPUT)
+#define ENABLE_VIRTUAL_TERMINAL_INPUT 0x0200
+#endif
+        DWORD nmode;
+
+        nmode = mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+        if ((ENABLE_VIRTUAL_TERMINAL_PROCESSING & mode) ||
+                    SetConsoleMode(in, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING)) {
+
+            SetConsoleMode(in, (nmode & ~ENABLE_LINE_INPUT) | ENABLE_VIRTUAL_TERMINAL_INPUT);
+            cprinta("\x1b[4:3mVT Processing enabled:\x1b[0m\n");
+            cprinta("\x1b[?9001h");             // enable win32-input-mode.
+
+            if (xf_mouse) {
+                cprinta("\x1b[?%uh", xf_tracking); // enable X11 mouse mode.
+                cprinta("\x1b[?1006h");         // enable SGR extended mouse mode.
+            }
+
+            if (xf_paste) {
+                cprinta("\x1B[?2004s");         // save bracketed paste.
+                cprinta("\x1B[?2004h");         // enable bracketed paste.
+            }
+            rawmode = 1;
+
+        } else {
+            cprinta("error: Could not enable VT Processing - please update to a recent Windows 10 build\n");
+            return 3;
         }
+
     } else {
-        SetConsoleMode(in, ENABLE_WINDOW_INPUT/*|ENABLE_PROCESSED_INPUT*/);
+        if (xf_mouse) {                         // mouse enabled.
+            if (!SetConsoleMode(in, ENABLE_EXTENDED_FLAGS | \
+                        ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT/*|ENABLE_PROCESSED_INPUT*/)) {
+                    // Note: Stating ENABLE_EXTENDED_FLAGS disables ENABLE_INSERT_MODE and/or ENABLE_QUICK_EDIT_MODE.
+                    //  required for correct mouse operation; restored within sys_shutdown().
+                SetConsoleMode(in, ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT /*|ENABLE_PROCESSED_INPUT*/);
+                    // No extended support/XP.
+            }
+        } else {
+            SetConsoleMode(in, ENABLE_WINDOW_INPUT /*|ENABLE_PROCESSED_INPUT*/);
+        }
     }
 
         // The ENABLE_LINE_INPUT and ENABLE_ECHO_INPUT modes only affect processes that use ReadFile or ReadConsole
-        // to read  from the console's input buffer. Similarly, the ENABLE_PROCESSED_INPUT mode primarily affects
-        // ReadFile and ReadConsole users, except that it also determines whether CTRL+C input is reported in the
+        // to read from the console's input buffer. Similarly, the ENABLE_PROCESSED_INPUT mode primarily affects
+        // ReadFile and readReadConsole users, except that it also determines whether CTRL+C input is reported in the
         // input buffer (to be read by the ReadConsoleInput function) or is passed to a function defined by
         // the application.
     SetConsoleCtrlHandler(CtrlHandler, TRUE);
 
-    Process(in);
+    Process(in, rawmode);
+
+    if (rawmode) {
+        if (xf_paste) {
+            cprinta("\x1B[?2004l");             // disable bracketed paste.
+            cprinta("\x1B[?2004r");             // restore bracketed paste.
+        }
+
+        if (xf_mouse) {
+            cprinta("\x1b[?1006l");             // disable extended mouse mode.
+            cprinta("\x1b[?%ul", xf_tracking);  // disable mouse tracking.
+        }
+
+        cprinta("\x1b[?9001l");                 // disable win32-input-mode.
+    }
     SetConsoleMode(in, mode);
 
     return 0;
@@ -179,37 +319,82 @@ main(void)
 
 
 static void
-Process(HANDLE in)
+Usage()
+{
+    static const char usage[] = {
+        "\n" \
+        "Options:\n" \
+        "   -v,--verbose        increased disgnostics.\n" \
+        "\n" \
+        "   -r,--rawmode        enable win32-input-mode; default auto\n" \
+        "   -R,--norawmode      disable win32-input-mode.\n" \
+        "\n" \
+        "   -m,--mouse          enable mouse events\n" \
+        "   -M,--nomouse        disable mouse events.\n" \
+        "   -t,--tracking       extended mouse tracking.\n" \
+        "\n" \
+        "   -a,--altmode        enable Alt + Numpad mode.\n" \
+        "   -A,--noaltmode      disable alt-numpad mode.\n" \
+        "\n" \
+        "   -h,--help           command line usage.\n" \
+        "\n"
+        };
+
+    printf("w32keytest [options]\n%s", usage);
+}
+
+
+static void
+Process(HANDLE in, int rawmode)
 {
     int alt_state = 0, esc_state = 0, event_count = 0;
     DWORD apps_control = 0;
     int offset = 0;
 
-#define COLUMN1     100
+#define COLUMN1 100
 
-    printf("\nConsole input test, ESC+ESC to quit.");
+    cprinta("\nConsole input test, ESC+ESC to quit.");
     if (xf_altcode < 0) {
-        if (0 == xf_altcode ||
-                (xf_altcode < 0 && ! AltPlusEnabled())) {
-            wprintf(L"\nAlt-Plus-KeyCode not enabled");
+        if (0 == xf_altcode ||(xf_altcode < 0 && ! AltPlusEnabled())) {
+            cprintw(L"\nAlt-Plus-KeyCode not enabled");
             xf_altcode = 0;
         } else {
-            wprintf(L"\nAlt-Plus-KeyCode enabled");
+            cprintw(L"\nAlt-Plus-KeyCode enabled");
             xf_altcode = 1;
         }
     }
 
-    printf("\n\n#     UC     Chr Dir  Rpt VK                SC   State\n");
-    fflush(stdout);
+    cprinta("\n\n#     UC     Chr Dir  Rpt VK                SC   State\n");
         //  nnnn  U+uuuu c   1111 111 111111111111 1111 1111 xxxxxxxxxxxxxxx
 
     for (;;) {
         INPUT_RECORD ir[1] = {0};
         DWORD i, cEventsRead = 0;
 
-        if (! ReadConsoleInputW(in, ir, 1, &cEventsRead)) {
-            puts("ReadConsoleInput failed!");
-            return;
+        if (rawmode) {
+            for (;;) {
+                const int ret = ReadConsoleInputRaw(in, ir);
+                if (x_break >= 3) {
+                    cprinta("\nbye...");
+                    return;
+                }
+                if (ret == 1) {
+                    cEventsRead = 1;
+                    break;
+                } else if (ret == -1) {
+                    cprinta("ReadConsoleInput failed!");
+                    return;
+                }
+            }
+        } else {
+            if (! ReadConsoleInputW(in, ir, 1, &cEventsRead)) {
+                cprinta("ReadConsoleInput failed!");
+                return;
+            }
+            if (x_break >= 3) {
+                cprinta("\nbye...");
+                return;
+            }
         }
 
         for (i = 0; i < cEventsRead; ++i, ++event_count) {
@@ -231,13 +416,13 @@ Process(HANDLE in)
 
                 // Key details
 
-                wprintf(L"\n");
-                offset = wprintf(L"%4d: U+%04x %c   %s %03u %04x %-12s %04x %08x %s = %d",
+                cprintw(L"\n");
+                offset = cprintw(L"%4d: U+%04x %c   %s %03u %04x %-12s %04x %08x %s = %d",
                     event_count, (WORD) ker->uChar.UnicodeChar,
                         (ker->uChar.UnicodeChar > 32 ? ker->uChar.UnicodeChar : ' '),
-                    (ker->bKeyDown ? L"down" : L" up "), ker->wRepeatCount,
-                    ker->wVirtualKeyCode, virtual_description(ker->wVirtualKeyCode), ker->wVirtualScanCode,
-                    ker->dwControlKeyState, control_state(ker->dwControlKeyState|apps_control),
+                        (ker->bKeyDown ? L"down" : L" up "), ker->wRepeatCount,
+                    ker->wVirtualKeyCode, wvirtual_description(ker->wVirtualKeyCode), ker->wVirtualScanCode,
+                    ker->dwControlKeyState, wcontrol_state(ker->dwControlKeyState|apps_control),
                     alt_state);
 
                 if (ker->bKeyDown) {
@@ -245,9 +430,10 @@ Process(HANDLE in)
                         KEY_EVENT_RECORD t_ker = *ker;
                         const wchar_t *kd;
 
+                        t_ker.dwControlKeyState = AltGrEvent(&t_ker);
                         t_ker.dwControlKeyState |= apps_control;
-                        if (NULL != (kd = key_description(&t_ker))) {
-                            wprintf(L"%*s<%s>", COLUMN1 - offset, L"", kd);
+                        if (NULL != (kd = wkey_description(&t_ker))) {
+                            cprintw(L"%*s<%s>", COLUMN1 - offset, L"", kd);
                             offset = COLUMN1;
                         }
                     }
@@ -255,16 +441,246 @@ Process(HANDLE in)
                     if (0 == (CTRLSTATUSMASK & ker->dwControlKeyState) &&
                                 0x1b == ker->uChar.UnicodeChar) {
                         if (++esc_state >= 2) { // Escape
-                            puts("\nbye...");
+                            cprinta("\nbye...");
                             return;
                         }
                     } else {
                         esc_state = 0;
                     }
                 }
+
+            } else if (ir[i].EventType & MOUSE_EVENT) {
+                const MOUSE_EVENT_RECORD* me = &ir[i].Event.MouseEvent;
+
+                cprinta("\n");
+                offset = cprinta("%4d: %03u %04u %03u                          %s",
+                    event_count, (unsigned)me->dwEventFlags,
+                        (unsigned)LOWORD(me->dwButtonState), (unsigned)me->dwControlKeyState,
+                    mouse_description(me));
             }
         }
     }
+}
+
+
+static int
+ReadConsoleInputRaw(HANDLE hConsoleInput, PINPUT_RECORD ir)
+{
+    static BYTE cached[128] = {0};
+    static unsigned cache_length = 0;
+
+    BYTE buffer[128];
+    DWORD timeout = INFINITE;
+    unsigned length = 0;
+    WCHAR ch = 0;
+
+    for (;;) {
+        for (;;) {
+            DWORD dwRead = 0;
+
+            memset(ir, 0, sizeof(*ir));
+            if (WaitForSingleObject(hConsoleInput, timeout) != WAIT_OBJECT_0 ||
+                        ! ReadConsoleInputA(hConsoleInput, ir, 1, &dwRead) || 1 != dwRead) {
+                cprinta("\nerror: i/o error (timeout=%u, error=%u, read=%u)\n",
+                    timeout, GetLastError(), dwRead);
+                break;
+            }
+
+            if (ir->EventType == KEY_EVENT) {
+                KEY_EVENT_RECORD *ker = &ir->Event.KeyEvent;
+
+                if (xf_verbose >= 2) {
+                    cprintw(L"  RAW %4d: U+%04x %c %s %03u %04x %04x %08x\n",
+                        length, (WORD) ker->uChar.UnicodeChar,
+                            (ker->uChar.UnicodeChar > 32 ? ker->uChar.UnicodeChar : ' '),
+                        (ker->bKeyDown ? L"down" : L" up "),
+                        ker->wRepeatCount, ker->wVirtualKeyCode, ker->wVirtualScanCode, ker->dwControlKeyState);
+                }
+
+                if (ker->bKeyDown) { // down event
+                    ch = ker->uChar.UnicodeChar;
+                    break;
+                } else {
+                    if (1 == length) { // true ESC, return
+                        if (ker->uChar.UnicodeChar == 0x1b) {
+                            ker->bKeyDown = 1;
+                            return TRUE;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (0 == length) { // first character
+            if (ch == '\x1b') {
+                buffer[length++] = 0x1b;
+                timeout = 500;
+                continue;
+            }
+            return TRUE;
+        }
+
+        if (ch < ' ' || ch > 0xff) {
+            cprinta("\nerror: unexpected character 0X%x/'%c'\n", ch, isprint(ch) ? ch : ' ');
+            break;
+        }
+
+        if (1 == length) { // second character
+            if (ch == '[') {
+                buffer[length++] = (char)ch;
+                timeout = 100;
+                continue;
+            }
+            cprinta("\nerror: expected character 0X%x/'%c'\n", ch, isprint(ch) ? ch : ' ');
+            break;
+        }
+
+        if (length == (_countof(buffer) - 1)) {
+            cprinta("\nerror: buffer overflow <%.*s>.\n", length, buffer);
+            break;
+        }
+
+        buffer[length++] = (char)ch;
+        if (ch != '_') {
+            continue;
+        }
+        buffer[length] = 0;
+
+        //  https://github.com/microsoft/terminal/blob/main/doc/specs/%234999%20-%20Improved%20keyboard%20handling%20in%20Conpty.md
+        //
+        //  ^ [[ Vk; Sc; Uc; Kd; Cs; Rc _
+        //
+        //      Vk : the value of wVirtualKeyCode - any number. If omitted, defaults to '0'.
+        //      Sc : the value of wVirtualScanCode - any number. If omitted, defaults to '0'.
+        //      Uc : the decimal value of UnicodeChar - for example, NUL is "0", LF is
+        //          "10", the character 'A' is "65". If omitted, defaults to '0'.
+        //      Kd : the value of bKeyDown - either a '0' or '1'. If omitted, defaults to '0'.
+        //      Cs : the value of dwControlKeyState - any number. If omitted, defaults to '0'.
+        //      Rc : the value of wRepeatCount - any number. If omitted, defaults to '1'.
+        //
+        {
+            unsigned arguments[6] = { 0, 0, 0, 0, 0, 1 };
+
+            if (NULL == DecodeKeyArguments(arguments, _countof(arguments), '_', buffer + 2, buffer + length)) {
+                const BYTE *cursor, *end;
+
+                cprinta("\nerror: buffer format, length=%u [", length);
+                for (cursor = buffer, end = cursor + length; cursor != end; ++cursor) {
+                    cprinta("0x%x/%c", *cursor, isprint(*cursor) ? *cursor: ' ');
+                }
+                cprinta("] ==> %u;%u;%u;%u;%lu;%u_\n", arguments[0], arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
+                break;
+            }
+
+            if (0 == arguments[0] && 0 == arguments[1] && arguments[2] == 0x1b) {
+                if (arguments[3]) {
+                    // ESC (special VK=SC=0) + down
+                    cache_length = 0;
+                    cached[cache_length++] = 0x1b;
+                    if (xf_verbose) {
+                        cprinta("\nESC: [%s] ==> %u;%u;%u;%u;%lu;%u_",
+                            buffer + 2, arguments[0], arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
+                        cprinta(": %u, <\\x1b%.*s>", cache_length, cache_length - 1, cached + 1);
+                    }
+                    return FALSE;
+                }
+            }
+
+            if (cache_length) {
+                if (arguments[2] && arguments[3]) {
+                    // unicode + down
+                    cached[cache_length++] = (BYTE)arguments[2];
+                    if (xf_verbose) {
+                        cprinta("\nADD: [%s] ==> %u;%u;%u;%u;%lu;%u_",
+                            buffer + 2, arguments[0], arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
+                        cprinta(": %u, <\\x1b%.*s>", cache_length, cache_length - 1, cached + 1);
+                    }
+                }
+
+                if (cache_length >= 6) {
+                    if (cached[1] == '[' && cached[2] == 'M') {
+                        //
+                        //  \x1B[Mabc", where:
+                        //     a:  Button number plus 32.
+                        //     b:  Column number (one-based) plus 32.
+                        //     c:  Row number (one-based) plus 32.
+                        //
+                        const void* end = cached + cache_length;
+
+                        cache_length = 0;
+                        return (DecodeXTermMouse(ir, cached, end) != NULL);
+
+                    } else if (cached[1] == '[' && cached[2] == '<') {
+                        //
+                        //  \x1B[<B;Px;PyM":
+                        //     B:  Button event.
+                        //     Px: Column number.
+                        //     Py: Row number.
+                        //     M:  M=press or m=release.
+                        //
+                        if (cached[cache_length - 1] == 'M' || cached[cache_length - 1] == 'm') {
+                            const void *end = cached + cache_length;
+
+                            cache_length = 0;
+                            return (DecodeSGRMouse(ir, cached, end) != NULL);
+                        }
+
+                    } else if (0 == memcmp(cached, "\x1b[200~", 6)) {
+                        //
+                        //  Bracketed Paste Mode
+                        //      When bracketed paste mode is set, pasted text is bracketed with control sequences so that the program
+                        //      can differentiate pasted text from typed - in text.When bracketed paste mode is set, the program will receive :
+                        //
+                        //          ESC[200~, <text>, ESC[201~
+                        //
+                        cache_length = 0;
+
+                    } else if (0 == memcmp(cached, "\x1b[201~", 6)) {
+                        cache_length = 0;
+
+                    } else {
+                        const BYTE *cursor, *end;
+
+                        cprinta("\nerror: unexpected escape, length=%u [", cache_length);
+                        for (cursor = cached, end = cursor + cache_length; cursor != end; ++cursor) {
+                            cprinta("0x%x/%c", *cursor, isprint(*cursor) ? *cursor : ' ');
+                        }
+                        cprinta("]\n");
+                        return FALSE;
+                    }
+                }
+
+                if (0 == arguments[2] || 0 == arguments[3])
+                    goto ignored;                   // non-unicode or up
+                return FALSE;
+            }
+
+            if (xf_verbose) {
+                cprinta("\nKEY: [%s] ==> %u;%u;%u;%u;%lu;%u_",
+                    buffer + 2, arguments[0], arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
+            }
+
+            {
+                KEY_EVENT_RECORD* ke = &ir->Event.KeyEvent;
+                ke->wVirtualKeyCode = (WORD)arguments[0];
+                ke->wVirtualScanCode = (WORD)arguments[1];
+                ke->uChar.UnicodeChar = (WCHAR)arguments[2];
+                ke->bKeyDown = (arguments[3] ? TRUE : FALSE);
+                ke->dwControlKeyState = (DWORD)arguments[4];
+                ke->wRepeatCount = (WORD)arguments[5];
+                ir->EventType = KEY_EVENT;
+            }
+            return TRUE;
+
+        ignored:;
+            if (xf_verbose) {
+                cprinta("\nNUL: [%s] ==> %u;%u;%u;%u;%lu;%u_",
+                    buffer + 2, arguments[0], arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
+            }
+            return FALSE;
+        }
+    }
+    return -1;
 }
 
 
@@ -273,21 +689,22 @@ CtrlHandler(DWORD fdwCtrlType)
 {
     switch (fdwCtrlType) {
     case CTRL_C_EVENT:      // Ctrl-C signal.
-        printf("\nCtrl-C event\n");
+        cprinta("\nCtrl-C event\n");
         return TRUE;
     case CTRL_BREAK_EVENT:  // Ctrl-Break signal.
-        printf("\nCtrl-Break event\n");
+        cprinta("\nCtrl-Break event\n");
+        ++x_break;
         return TRUE;
     case CTRL_CLOSE_EVENT:  // Ctrl-Close: confirm that the user wants to exit.
-        printf("\nCtrl-Close event\n");
+        cprinta("\nCtrl-Close event\n");
         Beep(600, 200);
         return TRUE;
     case CTRL_LOGOFF_EVENT:
-        printf("\nCtrl-Logoff event\n");
+        cprinta("\nCtrl-Logoff event\n");
         Beep(1000, 200);
         return FALSE;
     case CTRL_SHUTDOWN_EVENT:
-        printf("\nCtrl-Shutdown event\n");
+        cprinta("\nCtrl-Shutdown event\n");
         Beep(750, 500);
         return FALSE;
     default:
@@ -311,69 +728,136 @@ CtrlHandler(DWORD fdwCtrlType)
 //      given, the key-code is invalidated and UnicodeChar=0 is returned on the ALT release.
 //
 //      Notes:
-//       o Requires the registry REG_SZ value "EnableHexNumpad" under
-//         "HKEY_Current_User/Control Panel/Input Method" to be "1".
+//       o To enable requires the registry REG_SZ value "EnableHexNumpad" under
+//          "HKEY_Current_User/Control Panel/Input Method" to be "1".
 //
-//       o Hex-value overflow goes unreported, limiting input to a 16-bit result.
+//       o Hex-value overflow goes unreported, limiting input to a 16-bit unicode result.
 //
+
+#pragma comment(lib, "Imm32.lib")
+
 static int
-AltPlusEvent(const KEY_EVENT_RECORD *ke, int offset)
+AltPlusEnabled(void)
+{
+    static int state = -1;
+
+    if (-1 == state) {
+        HKEY hKey = 0;
+
+        state = 0;
+        if (RegOpenKeyExA(HKEY_CURRENT_USER,
+                "Control Panel\\Input Method", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+            char szEnableHexNumpad[100] = { 0 };
+            DWORD dwSize = _countof(szEnableHexNumpad);
+            if (RegQueryValueExA(hKey, "EnableHexNumpad", NULL, NULL, (LPBYTE)szEnableHexNumpad, &dwSize) == ERROR_SUCCESS) {
+                if (szEnableHexNumpad[0] == '1' && szEnableHexNumpad[1] == 0) {
+                    state = 1;
+                }
+            }
+            RegCloseKey(hKey);
+        }
+    }
+    return state;
+}
+
+
+static int
+AltPlusEvent(const KEY_EVENT_RECORD* ke, /*struct IOEvent* evt*/ int offset)
 {
 #define ISXDIGIT(_uc) \
             ((_uc >= '0' && _uc <= '9') || (_uc >= 'a' && _uc <= 'f') || (_uc >= 'A' && _uc <= 'F') ? 1 : 0)
 
-    static int alt_code = 0;
+    static unsigned alt_code = 0;               // >0=active
     static DWORD alt_control = 0;
-    wchar_t completion[64];
 
-    if (! xf_altcode) return -1;                // enabled?
+    const unsigned wVirtualKeyCode = ke->wVirtualKeyCode,
+        dwControlKeyState = (CTRLSTATUSMASK & ke->dwControlKeyState),
+        dwEnhanced = (ENHANCED_KEY & ke->dwControlKeyState);
 
+    wchar_t completion[64] = { 0 };
     completion[0] = 0;
-    if (ke->bKeyDown) {                         // down event
-        const unsigned controlKeyState = (CTRLSTATUSMASK & ke->dwControlKeyState);
 
-        if (VK_ADD == ke->wVirtualKeyCode &&
-                (LEFT_ALT_PRESSED == controlKeyState || RIGHT_ALT_PRESSED == controlKeyState)) {
-            // "Alt + ..." event
-            alt_control = controlKeyState;
-            if (alt_code == 0) {
+    if (xf_verbose >= 2) {
+        cprinta(" Key: %s-%s%s%s%s%s%sVK=0x%02x/%u, UC=0x%04x/%u/%c, SC=0x%x/%u\n",
+            (ke->bKeyDown ? "DN" : "UP"),
+                (dwEnhanced ? "Enh-" : ""),
+                (dwControlKeyState & LEFT_ALT_PRESSED) ? "LAlt-" : "",
+                (dwControlKeyState & RIGHT_ALT_PRESSED) ? "RAlt-" : "",
+                (dwControlKeyState & LEFT_CTRL_PRESSED) ? "LCtrl-" : "",
+                (dwControlKeyState & RIGHT_CTRL_PRESSED) ? "RCtrl-" : "",
+                (dwControlKeyState & SHIFT_PRESSED) ? "Shift-" : "",
+            wVirtualKeyCode, wVirtualKeyCode,
+            ke->uChar.UnicodeChar, ke->uChar.UnicodeChar,
+            (ke->uChar.UnicodeChar && ke->uChar.UnicodeChar < 255 ? ke->uChar.UnicodeChar : ' '),
+            ke->wVirtualScanCode, ke->wVirtualScanCode);
+    }
+
+    if (ke->bKeyDown) {                         // down event
+
+        if ((wVirtualKeyCode >= VK_NUMPAD0 && wVirtualKeyCode <= VK_NUMPAD9) &&
+                0 == dwEnhanced && (LEFT_ALT_PRESSED == dwControlKeyState || RIGHT_ALT_PRESSED == dwControlKeyState)) {
+            // "Alt NumPad ..." event
+            // Note:
+            //  o NumLock is required to be enabled for NUMPAD key reporting.
+            //  o Non-enhanced, NumPad verses 101 cursor-keys; same VK codes.
+            if (0 == alt_code) {
+                alt_control = dwControlKeyState;
                 alt_code = 1;
             }
             return 1;                           // consume
+        }
 
-        } else if (alt_code) {
-            if (alt_control != controlKeyState ||
+        if (VK_ADD == wVirtualKeyCode &&
+                (LEFT_ALT_PRESSED == dwControlKeyState || RIGHT_ALT_PRESSED == dwControlKeyState)) {
+            // "Alt + Hex" event
+            if (0 == AltPlusEnabled())
+                return -1;                      // enabled?
+            if (0 == alt_code) {
+                alt_control = dwControlKeyState;
+                alt_code = 0x101;
+            }
+            return 1;                           // consume
+        }
+
+        if (alt_code) {
+            if (alt_control != dwControlKeyState ||
                     (ke->uChar.UnicodeChar && 0 == ISXDIGIT(ke->uChar.UnicodeChar))) {
                 // new control status or non-hex, emit "Alt-Plus" and reset state
-                swprintf(completion, _countof(completion), L"Alt-Plus");
+                // TODO/XXX - or should these consumed
+                swprintf(completion, _countof(completion), L"Alt-Plus (error)");
                 alt_code = 0;
 
             } else {
                 ++alt_code;                     // associated key count
-                return alt_code;                // consume
+                return 1;                       // consume
             }
         }
 
     } else if (alt_code) {                      // up event
-        if (VK_MENU == ke->wVirtualKeyCode &&
+        if (VK_MENU == wVirtualKeyCode &&
                 (0 == (ke->dwControlKeyState & ALT_PRESSED))) {
             // Alt completion
-            const int oalt_code = alt_code;
+            const WCHAR UnicodeChar = ke->uChar.UnicodeChar;
+            const int alt_old = alt_code;
 
             alt_code = 0;
-            if (1 == oalt_code && 0 == ke->uChar.UnicodeChar) {
-                // "Alt-Plus" only, emit
+            if (1 == (alt_old & 0xff) && 0 == UnicodeChar) {
+                // Alt only, emit.
                 swprintf(completion, _countof(completion), L"Alt-Plus");
 
-            } else if (ke->uChar.UnicodeChar) {
-                // "Alt-Plus keycode", return keycode.
-                swprintf(completion, _countof(completion), L"Alt-Plus-#%d", ke->uChar.UnicodeChar);
+            } else if (UnicodeChar) {
+                // Alt keycode, return keycode.
+                if (alt_old & 0x100) {
+                    swprintf(completion, _countof(completion), L"Alt-Plus-#0x%x", UnicodeChar);
+                } else {
+                    swprintf(completion, _countof(completion), L"Alt-#%d", UnicodeChar);
+                }
             }
         }
     }
 
     if (completion[0]) {                        // completion
-        wprintf(L"%*s<%s>", COLUMN1 - offset, L"", completion);
+        cprintw(L"%*s<%s>", COLUMN1 - offset, L"", completion);
         return 0;
     }
 
@@ -381,29 +865,59 @@ AltPlusEvent(const KEY_EVENT_RECORD *ke, int offset)
 }
 
 
-static int
-AltPlusEnabled(void)
+/*  Function:           AltGrEvent
+ *      Filter AtrGr events from modifiers; attempt to allow:
+ *
+ *          Left-Alt + AltGr,
+ *          Right-Ctrl + AltGr,
+ *          Left-Alt + Right-Ctrl + AltGr.
+ */
+static DWORD
+AltGrEvent(const KEY_EVENT_RECORD* key)
 {
-    HKEY hKey = 0;
-    int enabled = 0;
+    DWORD state = key->dwControlKeyState;
 
-    if (RegOpenKeyExA(HKEY_CURRENT_USER,
-            "Control Panel\\Input Method", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
-        char szEnableHexNumpad[100] = { 0 };
-        DWORD dwSize = _countof(szEnableHexNumpad);
-        if (RegQueryValueExA(hKey, "EnableHexNumpad", NULL, NULL, (LPBYTE) szEnableHexNumpad, &dwSize) == ERROR_SUCCESS) {
-            if (szEnableHexNumpad[0] == '1') {
-                enabled = 1;
-            }
+    // AltGr condition (LCtrl + RAlt)
+    if (0 == (state & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)))
+        return state;
+
+    if (0 == (state & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)))
+        return state;
+
+    if (0 == key->uChar.UnicodeChar)
+        return state;
+
+    if (state & RIGHT_ALT_PRESSED) {
+        // Remove Right-Alt.
+        state &= ~RIGHT_ALT_PRESSED;
+
+        // As a character was presented, Left-Ctrl is almost always set,
+        // except if the user presses Right-Ctrl, then AltGr (in that specific order) for whatever reason.
+        // At any rate, make sure the bit is not set.
+        state &= ~LEFT_CTRL_PRESSED;
+
+    } else if (state & LEFT_ALT_PRESSED) {
+        // Remove Left-Alt.
+        state &= ~LEFT_ALT_PRESSED;
+
+        // Whichever Ctrl key is down, remove it from the state.
+        // We only remove one key, to improve our chances of detecting the corner-case of Left-Ctrl + Left-Alt + Right-Ctrl.
+        if ((state & LEFT_CTRL_PRESSED) != 0) {
+            // Remove Left-Ctrl.
+            state &= ~LEFT_CTRL_PRESSED;
+
+        } else if ((state & RIGHT_CTRL_PRESSED) != 0) {
+            // Remove Right-Ctrl.
+            state &= ~RIGHT_CTRL_PRESSED;
         }
-        RegCloseKey(hKey);
     }
-    return enabled;
+    return state;
 }
 
 
+
 static const wchar_t *
-key_description(const KEY_EVENT_RECORD *ker)
+wkey_description(const KEY_EVENT_RECORD *ker)
 {
     static wchar_t t_buffer[200];
     wchar_t *cursor = t_buffer, *end = cursor + _countof(t_buffer);
@@ -447,11 +961,11 @@ key_description(const KEY_EVENT_RECORD *ker)
     }
 
     // Control states
+    if (dwControlKeyState & APP_PRESSED) // special
+        cursor += swprintf(cursor, end - cursor, L"App-");
+
     if (dwControlKeyState & ALT_PRESSED)
         cursor += swprintf(cursor, end - cursor, L"Alt-");
-
-    if (dwControlKeyState & APP_PRESSED)
-        cursor += swprintf(cursor, end - cursor, L"App-");
 
     if (dwControlKeyState & CTRL_PRESSED)
         cursor += swprintf(cursor, end - cursor, L"Ctrl-");
@@ -505,7 +1019,7 @@ key_description(const KEY_EVENT_RECORD *ker)
 
 
 static const wchar_t *
-control_state(DWORD dwControlKeyState)
+wcontrol_state(DWORD dwControlKeyState)
 {
     static wchar_t t_buffer[200];
     wchar_t *cursor = t_buffer;
@@ -528,9 +1042,9 @@ control_state(DWORD dwControlKeyState)
 
 
 static const wchar_t *
-virtual_description(WORD wVirtualKeyCode)
+wvirtual_description(WORD wVirtualKeyCode)
 {
-    switch(wVirtualKeyCode) {
+    switch (wVirtualKeyCode) {
     case VK_LBUTTON             :  /*0x01*/ return L"LBUTTON";
     case VK_RBUTTON             :  /*0x02*/ return L"RBUTTON";
     case VK_CANCEL              :  /*0x03*/ return L"CANCEL";
@@ -552,12 +1066,12 @@ virtual_description(WORD wVirtualKeyCode)
     case VK_CAPITAL             :  /*0x14*/ return L"CAPITAL";
 
     case VK_KANA                :  /*0x15*/ return L"KANA";
-//  case VK_HANGEUL             :  /*0x15*/ return L"HANGEUL";
-//  case VK_HANGUL              :  /*0x15*/ return L"HANGUL";
+  //case VK_HANGEUL             :  /*0x15*/ return L"HANGEUL";
+  //case VK_HANGUL              :  /*0x15*/ return L"HANGUL";
     case VK_JUNJA               :  /*0x17*/ return L"JUNJA";
     case VK_FINAL               :  /*0x18*/ return L"FINAL";
     case VK_HANJA               :  /*0x19*/ return L"HANJA";
-//  case VK_KANJI               :  /*0x19*/ return L"KANJI";
+  //case VK_KANJI               :  /*0x19*/ return L"KANJI";
 
     case VK_ESCAPE              :  /*0x1B*/ return L"ESCAPE";
 
@@ -638,7 +1152,7 @@ virtual_description(WORD wVirtualKeyCode)
 #endif
 
 #if defined(VK_OEM_FJ_MASSHOU)
-//  case VK_OEM_FJ_JISHO        :  /*0x92*/ return L"OEM_FJ_JISHO";
+  //case VK_OEM_FJ_JISHO        :  /*0x92*/ return L"OEM_FJ_JISHO";
     case VK_OEM_FJ_MASSHOU      :  /*0x93*/ return L"OEM_FJ_MASSHOU";
     case VK_OEM_FJ_TOUROKU      :  /*0x94*/ return L"OEM_FJ_TOUROKU";
     case VK_OEM_FJ_LOYA         :  /*0x95*/ return L"OEM_FJ_LOYA";
@@ -720,7 +1234,7 @@ virtual_description(WORD wVirtualKeyCode)
     case VK_OEM_ENLW            :  /*0xF4*/ return L"OEM_ENLW";
     case VK_OEM_BACKTAB         :  /*0xF5*/ return L"OEM_BACKTAB";
 #endif
-    
+
     case VK_ATTN                :  /*0xF6*/ return L"ATTN";
     case VK_CRSEL               :  /*0xF7*/ return L"CRSEL";
     case VK_EXSEL               :  /*0xF8*/ return L"EXSEL";
@@ -735,6 +1249,66 @@ virtual_description(WORD wVirtualKeyCode)
         return L"";
     }
 }
+
+
+/*
+ *  Console formatted output
+ */
+static int
+cprinta(const char* fmt, ...)
+{
+    HANDLE cout = GetStdHandle(STD_OUTPUT_HANDLE);
+    char* cursor, * nl;
+    char buffer[512];
+    int total, len;
+    va_list ap;
+
+    va_start(ap, fmt);
+    total = len = vsnprintf(buffer, _countof(buffer), fmt, ap);
+    buffer[_countof(buffer) - 1] = 0;
+    va_end(ap);
+
+    cursor = buffer;
+    while ((nl = strchr(cursor, '\n')) != NULL) {
+        const int part = (nl - cursor) + 1;
+        WriteConsoleA(cout, cursor, part - 1, NULL, NULL);
+        WriteConsoleA(cout, "\n\r", 2, NULL, NULL);
+        cursor += part;
+        len -= part;
+    }
+    WriteConsoleA(cout, cursor, len, NULL, NULL);
+
+    return total;
+}
+
+
+static int
+cprintw(const wchar_t* fmt, ...)
+{
+    HANDLE cout = GetStdHandle(STD_OUTPUT_HANDLE);
+    wchar_t* cursor, * nl;
+    wchar_t buffer[512];
+    int total, len;
+    va_list ap;
+
+    va_start(ap, fmt);
+    total = len = vswprintf(buffer, _countof(buffer)-1, fmt, ap);
+    buffer[_countof(buffer) - 1] = 0;
+    va_end(ap);
+
+    cursor = buffer;
+    while ((nl = wcschr(cursor, '\n')) != NULL) {
+        const int part = (nl - cursor) + 1;
+        WriteConsoleW(cout, cursor, part - 1, NULL, NULL);
+        WriteConsoleA(cout, "\n\r", 2, NULL, NULL);
+        cursor += part;
+        len -= part;
+    }
+    WriteConsoleW(cout, cursor, len, NULL, NULL);
+
+    return total;
+}
+
 
 
 #if (0)
@@ -755,5 +1329,8 @@ ImmTest(void)
     ImmReleaseContext(hWnd, imc);
     Sleep(100);
 }
+
 #endif
+
+/*end*/
 

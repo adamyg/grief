@@ -1,11 +1,11 @@
 #ifndef GR_LIBLLIST_H_INCLUDED
 #define GR_LIBLLIST_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_llist_h,"$Id: libllist.h,v 1.20 2024/04/08 15:07:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_llist_h,"$Id: libllist.h,v 1.21 2024/08/17 08:36:27 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: libllist.h,v 1.20 2024/04/08 15:07:12 cvsuser Exp $
+/* $Id: libllist.h,v 1.21 2024/08/17 08:36:27 cvsuser Exp $
  * Linked list management system
  *
  *
@@ -138,4 +138,3 @@ extern struct llist *       ll_unhook(List_p);
 __CEND_DECLS
 
 #endif /*GR_LIBLLIST_H_INCLUDED*/
-

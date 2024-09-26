@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_pty_c,"$Id: m_pty.c,v 1.26 2022/08/10 15:44:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_pty_c,"$Id: m_pty.c,v 1.27 2024/08/25 06:01:53 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_pty.c,v 1.26 2022/08/10 15:44:57 cvsuser Exp $
+/* $Id: m_pty.c,v 1.27 2024/08/25 06:01:53 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -116,13 +116,13 @@ static int              x_ptyident = 12000;
                       | |                            |  |
          ..........   | |   ...................      |  |  ..............
                       | |                            |  |
-       Kernel Space   | |                            |  |       
+       Kernel Space   | |                            |  |
                       | |                            |  |
                       | V                            |  V
                    /-----------------\     /-----------------\
                    | Psuedo Terminal |<--->| Slave /dev/tty/ |
                    \-----------------/     \-----------------/
-  
+
 (end ditaa)
 
         All text inserted into the buffer is automatically forwarded

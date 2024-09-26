@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ftpeplf.c,v 1.5 2020/06/05 23:45:01 cvsuser Exp $
+/* $Id: ftpeplf.c,v 1.6 2024/07/13 09:34:10 cvsuser Exp $
  * FTP EPLF command reply parser.
  *
  *
@@ -27,6 +27,7 @@
 #endif
 #endif
 
+#include <sys/stat.h>
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>

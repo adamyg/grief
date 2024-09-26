@@ -1,0 +1,16 @@
+dnl CF_ADD_CXXFLAGS version: 1 updated: 2020/04/04 16:16:13
+dnl ---------------
+dnl Copy non-preprocessor flags to $CXXFLAGS, preprocessor flags to $CPPFLAGS
+dnl The second parameter if given makes this macro verbose.
+dnl
+dnl Put any preprocessor definitions that use quoted strings in $EXTRA_CPPFLAGS,
+dnl to simplify use of $CPPFLAGS in compiler checks, etc., that are easily
+dnl confused by the quotes (which require backslashes to keep them usable).
+AC_DEFUN([CF_ADD_CXXFLAGS],
+[
+cf_save_CXXFLAGS="$CFLAGS"
+CFLAGS="$CXXFLAGS"
+CF_ADD_CFLAGS($1 ifelse($2,,,[,$2]))
+CXXFLAGS="$CFLAGS"
+CFLAGS="$cf_save_CXXFLAGS"
+])dnl

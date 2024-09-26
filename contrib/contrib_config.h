@@ -1,6 +1,6 @@
 #ifndef CONTRIB_CONFIG_H_INCLUDED
 #define CONTRIB_CONFIG_H_INCLUDED
-/* $Id: contrib_config.h,v 1.17 2024/05/25 03:51:42 cvsuser Exp $
+/* $Id: contrib_config.h,v 1.18 2024/07/19 05:05:21 cvsuser Exp $
  * contrib <config.h> ...
  *
  *
@@ -28,7 +28,7 @@
  */
 
 /*config.h*/
-#if defined(unix)
+#if defined(unix) || defined(__unix__)
 #undef _WIN32
 #undef _WIN32_NT
 #elif !defined(_WIN32)
@@ -38,7 +38,7 @@
 
 #define APPLICATIONDIR  "Grief"                 /* FIXME, edconfig.h */
 
-#if defined(unix)
+#if defined(unix) || defined(__unix__)
 #include "../../include/config.h"
 #else
 #include "../../libw32/config.h"

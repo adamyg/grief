@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_stype_c,"$Id: stype.c,v 1.23 2024/04/17 15:57:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_stype_c,"$Id: stype.c,v 1.24 2024/06/30 14:19:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: stype.c,v 1.23 2024/04/17 15:57:14 cvsuser Exp $
+/* $Id: stype.c,v 1.24 2024/06/30 14:19:20 cvsuser Exp $
  * Simple integer data table.
  *
  *
@@ -404,7 +404,7 @@ stype_remove(stype_t * sp, sentry_t *sep)
     assert(sp && sep);
     assert(STMAGIC == sp->st_magic);
     assert(sep >= sp->st_block);
-    assert(sep < sp->st_block + sp->st_bused);
+    assert(sep < sp->st_block + sp->st_used);
 
     idx = sep - sp->st_block;
     assert(idx < sp->st_used);
@@ -580,4 +580,5 @@ main(void)
     printf("stype complete\n");
     return 0;
 }
+
 #endif  //DO_LOCALMAIN

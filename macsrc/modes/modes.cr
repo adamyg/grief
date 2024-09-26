@@ -27,8 +27,8 @@ static list xlist =  {      // mode extension map
       */
     "awk",                  ".awk.",
     "c",                    ".c.C.h.",
-    "cplusplus",            ".cpp.cc.c++.cxx.hpp.h++.hxx.",
     "cmake",                ".cmake.",
+    "cplusplus",            ".cpp.cc.c++.cxx.hpp.h++.hxx.",
     "cr",                   ".cr.",
     "csharp",               ".cs.",
     "dosbatch",             ".bat.BAT.cmd.CMD.",
@@ -40,6 +40,7 @@ static list xlist =  {      // mode extension map
     "masm",                 ".asm.",
     "perl",                 ".pl.pm.",
     "python",               ".py.",
+    "rust",                 ".rs.",
     "sh",                   ".sh.csh.tcsh.zsh.bash.ash.rsh.",
     "slang",                ".sl.",
     "txt",                  ".txt.",
@@ -92,6 +93,10 @@ main(void)
     autoload("modes/perl",          "_perl_mode", "_perl_hier_list");
 
     autoload("modes/protobuf",      "_protobuf_mode");
+
+    autoload("modes/python",        "_python_mode");
+
+    autoload("modes/rust",          "_rust_mode");
 
     autoload("modes/sh",            "_sh_mode");
 

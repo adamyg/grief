@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.16 2024/05/03 14:35:16 cvsuser Exp $
+# $Id: Makefile.in,v 1.22 2024/09/02 13:40:21 cvsuser Exp $
 # GRIEF utilities makefile.
 #
 #
@@ -45,6 +45,7 @@ XCLEAN=
 
 CC=		@CC@
 RM=		@RM@
+RC=		@RC@
 PERL=		@PERL@
 LIBTOOL=	@LIBTOOL@
 
@@ -78,7 +79,7 @@ D_GR=		$(ROOT)/gr
 
 # Common flags
 
-XFLAGS=		
+XFLAGS=
 CFLAGS=		@CFLAGS@
 CWARN=		@CWARN@ $(CWALL)
 CDEBUG=		@CDEBUG@
@@ -107,19 +108,38 @@ RMDFLAGS=	-rf
 #########################################################################################
 # Targets
 
+ifeq ("win32","@build_os@")
+ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
+define Resource
+$(2)+=		$(addprefix $(D_OBJ)/,$(subst .rc,_res.o,$(1)))
+endef
+else
+define Resource
+$(2)+=		$(addprefix $(D_OBJ)/,$(subst .rc,.res,$(1)))
+endef
+endif
+else
+define Resource
+endef
+endif #build_os
+
 GRTAGS=		$(D_BIN)/grtags$(E)
 GRTAGSOBJS=	$(D_OBJ)/grtags$(O)	\
 		$(D_OBJ)/arg$(O)	\
 		$(D_OBJ)/tagsex$(O)	\
 		$(D_OBJ)/tagse$(O)
+$(eval $(call Resource,grtags.rc,GRTAGSOBJS))
 
 GRWC=		$(D_BIN)/grwc$(E)
 GRWCOBJS=	$(D_OBJ)/grwc$(O)	\
 		$(D_OBJ)/fmt_scaled$(O)	\
 		$(D_OBJ)/err$(O)
+$(eval $(call Resource,grwc.rc,GRWCOBJS))
 
 GRKEYTEST=	$(D_BIN)/grkeytest$(E)
-GRKEYTESTOBJS=	$(D_OBJ)/grkeytest$(O)
+GRKEYTESTOBJS=	$(D_OBJ)/grkeytest$(O)	\
+		$(D_OBJ)/conkey$(O)
+$(eval $(call Resource,grkeytest.rc,GRKEYTESTOBJS))
 
 TARGETS=	$(GRTAGS)		\
 		$(GRWC)			\
@@ -128,6 +148,7 @@ TARGETS=	$(GRTAGS)		\
 OBJS=		$(GRTAGSOBJS)		\
 		$(GRWCOBJS)		\
 		$(GRKEYTESTOBJS)
+
 
 #########################################################################################
 # Rules
@@ -149,8 +170,14 @@ $(GRWC):		$(D_OBJ)/.created $(GRWCOBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(GRWCOBJS) $(LDLIBS)
 
 $(GRKEYTEST):		LINKLIBS=-lmisc -lllist
+ifeq ("cygwin","@build_os@")
+	# libiberty has a local implementation of getopt; an invalid optarg binding results, conflicting local/dllexport usage, filter-out.
+$(GRKEYTEST):		LDLIBS:=$(filter-out -liberty, $(LDLIBS))
+endif
 $(GRKEYTEST):		$(D_OBJ)/.created $(GRKEYTESTOBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(GRKEYTESTOBJS) $(LDLIBS)
+
+$(D_OBJ)/grkeytest$(O):	w32keytest.c conkeytest.c
 
 $(D_OBJ)/.created:
 		-@mkdir $(D_OBJ)
@@ -169,5 +196,11 @@ $(D_OBJ)/%$(O):		%$(C)
 
 $(D_OBJ)/%$(O):		$(D_GR)/%$(C)
 		$(CC) $(CFLAGS) -o $@ -c -DGRTAGS $<
+
+$(D_OBJ)/%.res:		%.rc
+		$(RC) -fo $@ $<
+
+$(D_OBJ)/%_res.o:	%.rc
+		$(RC) -o $@ $<
 
 #end

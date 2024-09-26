@@ -60,12 +60,14 @@
 #define TF_DEFAULT_FG           32          /* default foreground color */
 #define TF_DEFAULT_BG           33          /* default background color */
 #define TF_SCHEMEDARK           34          /* *true* if the default color is "dark" */
-#define TF_COLORSETFGBG         35
-#define TF_COLORSET_FG          36          /* color set foreground control sequence */
-#define TF_COLORSET_BG          37          /* color set background control sequence */
+#define TF_COLORRGB             35          /* *true* if RGB colors are supported */
+#define TF_COLORSET_FG          36          /* color set foreground control sequence (ANSI colors) */
+#define TF_COLORSET_BG          37          /* color set background control sequence (ANSI colors) */
 #define TF_COLORMAP             38          /* color map (terminal) */
 #define TF_COLORPALETTE         39          /* color palette (driver) */
-#define TF_COLORSCHEME          40          /* current scheme dark or light */
+#define TF_COLORSCHEME          40          /* current color-scheme */
+#define TF_COLORSETRGB_FG       41          /* color set foreground control sequence (RGB colors) */
+#define TF_COLORSETRGB_BG       42          /* color set background control sequence (RGB colors) */
 
 #define TF_CLEAR_IS_BLACK       50          /* clear is black */
 #define TF_DISABLE_INSDEL       51          /* disable ins/del scrolling method */
@@ -80,6 +82,7 @@
 #define TF_ATTRIBUTES           60          /* terminal attribute flags */
 #define TF_TTY_FAST             62          /* fast tty optimisations */
 #define TF_TTY_GRAPHICSBOX      63          /* graphics mode required for box characters */
+#define TF_KBPROTOCOL           64          /* kbprotocol */
 
 #define TF_SCREEN_ROWS          70          /* screen rows */
 #define TF_SCREEN_COLS          71          /* screen cols */
@@ -92,8 +95,9 @@
 #define TF_XTERM_COMPAT         82          /* XTERM compatible termuinal */
 #define TF_XTERM_PALETTE        83          /* XTERM palette control */
 
-#define TF_VT_DATYPE            90          /* VT/XTERM Devive Attribute Type */
-#define TF_VT_DAVERSION         91          /* VT/XTERM Devive Attribute Version */
+#define TF_VT_DATYPE            90          /* VT/XTERM Device Attribute Type */
+#define TF_VT_DAVERSION         91          /* VT/XTERM Device Attribute Version */
+#define TF_VT_DAOPTIONS         92          /* VT/XTERM Device Attribute Options */
 
 #define TF_ENCODING             100         /* terminal character encoding */
 #define TF_ENCODING_GUESS       101         /* text encoding guess specification */
@@ -125,6 +129,9 @@
 #define TF_AUTF8ENCODING        0x0000010   /* UTF8 character encoding, Unicode implied */
 #define TF_AUNICODEENCODING     0x0000020   /* Unicode character encoding */
 #define TF_AMETAKEY             0x0000100   /* Meta keys */
+#define TF_AXTERMKEYS           0x0000200   /* XTerm modifyOtherKeys */
+#define TF_AKITTYKEYS           0x0000400   /* Kitty extended keycodes */
+#define TF_AMSTERMINALKEYS      0x0000800   /* MS-Terminal extended keycodes */
 
 /*
  *  Registered macro types
@@ -847,6 +854,7 @@
 #define DLGC_CONTAINER          0x2001      /* Widget container */
 #define DLGC_GROUP              0x2002      /* Group start */
 #define DLGC_TAB                0x2003      /* Tab panel */
+#define DLGC_MENU               0x2004      /* Menu */
 #define DLGC_END                0x200f      /* End of current container */
 
 #define DLGC_PUSH_BUTTON        0x2011      /* Push button */
@@ -858,17 +866,21 @@
 #define DLGC_EDIT_FIELD         0x2017      /* Edit field */
 #define DLGC_NUMERIC_FIELD      0x2018      /* Numeric edit field */
 #define DLGC_COMBO_FIELD        0x2019      /* Edit field and drop list */
+#define DLGC_GAUGE              0x201a      /* Gauge */
 
 #define DLGC_SPACER             0x2030      /* Display spacer */
 #define DLGC_SEPARATOR_HORIZONTAL 0x2031
 #define DLGC_SEPARATOR_VERTICAL 0x2032
 
-#define DLGC_TREE               0x2040      /* *not* implemented */
-#define DLGC_GAUGE              0x2041      /* *not* implemented */
-#define DLGC_SLIDER             0x2042      /* *not* implemented */
-#define DLGC_VSCROLLBAR         0x2043      /* *not* implemented */
-#define DLGC_HSCROLLBAR         0x2044      /* *not* implemented */
-#define DLGC_GRID               0x2070      /* *not* implemented */
+#define DLGC_MENU_ITEM          0x2041
+#define DLGC_MENU_SEPARATOR     0x2042
+
+#define DLGC_TREE               0x20f0      /* *not* implemented */
+#define DLGC_TABLE              0x20f1      /* *not* implemented */
+#define DLGC_SLIDER             0x20f2      /* *not* implemented */
+#define DLGC_VSCROLLBAR         0x20f3      /* *not* implemented */
+#define DLGC_HSCROLLBAR         0x20f4      /* *not* implemented */
+#define DLGC_GRID               0x20f5      /* *not* implemented */
 #define DLGC_MAX                0x2100
 
 /*
@@ -888,6 +900,7 @@
 #define DLGA_COLS               0x3009
 #define DLGA_ROWS               0x300a
 #define DLGA_VERSION            0x300b      /* Wiget specific version/feature set identifier */
+#define DLGA_STYLES             0x300c
 
 #define DLGA_ATTACH_BOTTOM      0x3010      /* Attachment of widget within dialog box. */
 #define DLGA_ATTACH_TOP         0x3011
@@ -1016,6 +1029,20 @@
 
 
 /*
+ *  Dialog styles.
+ */
+#define DLGS_BORDER             0x0001
+#define DLGS_CAPTION            0x0002
+
+#define DLGS_MAXIMIZE           0x0100
+#define DLGS_MINIMIZE           0x0200
+#define DLGS_RESTORE            0x0400
+#define DLGS_SYSCLOSE           0x1000
+#define DLGS_SYSMOVE            0x2000
+#define DLGS_SYSSIZE            0x4000
+#define DLGS_SYSMENU            0x8000
+
+/*
  *  Dialog callback events
 
     DLGE_KEYDOWN
@@ -1034,10 +1061,10 @@
     DLGE_HELP
         Indicates that the user pressed the F1 key.
 
-        If a menu is active when F1 is pressed, WM_HELP is sent to the
-        window associated with the menu; otherwise, WM_HELP is sent to
+        If a menu is active when F1 is pressed, DLGE_HELP is sent to the
+        window associated with the menu; otherwise, DLGE_HELP is sent to
         the widget that has the keyboard focus. If no widget has the
-        focus, WM_HELP is sent to the currently active window.
+        focus, DLGE_HELP is sent to the currently active window.
 
  */
 #define DLGE_INIT               0           /* Initlisation */
@@ -1049,6 +1076,17 @@
 #define DLGE_KEYDOWN            6           /* Keydown event */
 #define DLGE_COMMAND            7           /* Accelerator/Menu command */
 #define DLGE_HELP               8           /* Help event */
+#define DLGE_SYSCOMMAND         9           /* System command */
+
+/*
+ *  System commands.
+ */
+#define DLSC_CLOSE              0xf010
+#define DLSC_TITLE              0xf020
+#define DLSC_MOVE               0xf100
+#define DLSC_SIZE               0xf120
+#define DLSC_MAXIMIZE           0xf200
+#define DLSC_MINIMIZE           0xf210
 
 /*
  *  create_notice
@@ -1464,13 +1502,8 @@ extern void                     coloriser(~ string);
 extern int                      colorscheme(~ string scheme, ...);
 extern string                   inq_coloriser(void);
 
-#define VIM_16DEPTH             (1 << 1)
-#define VIM_88DEPTH             (1 << 2)
-#define VIM_256DEPTH            (1 << 3)
-#define VIM_GUIDEPTH            (1 << 4)
-
+                                /*colorsvim.cr*/
 extern int                      vim_colorscheme(string label, int colors, ~string base, list spec, int asgui);
-extern int                      vim_colorschemex(string label, int colors, ~string base, list spec, int asgui, int &gui);
 
                                 /*command.cr*/
 extern string                   fixslash(string str);

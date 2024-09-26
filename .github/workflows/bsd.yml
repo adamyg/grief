@@ -1,0 +1,71 @@
+# CI-*BSD platforms
+#
+# References:
+#   https://github.com/vmactions/freebsd-vm
+#   https://github.com/vmactions/openbsd-vm
+#   https://github.com/vmactions/netbsd-vm
+#
+
+name: "FreeOpenNetBSD builds"
+on: [push, pull_request]
+
+#https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && github.sha || '' }}
+  cancel-in-progress: true
+
+jobs:
+# freebsd:
+#    runs-on: ubuntu-22.04
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: FreeBSD
+#        uses: vmactions/freebsd-vm@v1
+#        with:
+#          usesh: true
+#          prepare: |
+#            pkg install -y bash gmake perl5 autoconf automake libtool pkgconf flex bison wget
+#            pkg install -y gettext libiconv libarchive curl ncurses expat liblz4 lzo2 zstd
+#          run: |
+#            ./configure
+#            cat acdefines.h
+#            gmake release
+
+# Packages: see: https://cdn.openbsd.org/pub/OpenBSD/7.5/packages/amd64/
+#  openbsd:
+#    runs-on: ubuntu-22.04
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: OpenBSD
+#        uses: vmactions/openbsd-vm@v1
+#        with:
+#          usesh: true
+#          prepare: |
+#            pkg_add bash gmake libtool pkgconf bison wget curl unzip-6.0p17
+#            pkg_add libiconv libarchive lz4 lzo2 zstd
+#          run: |
+#            ./configure
+#            cat acdefines.h
+#            gmake release
+
+# Packages: see: https://ftp.netbsd.org/pub/pkgsrc/current/pkgsrc/pkgtools/index.html
+  netbsd:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: NetBSD
+        uses: vmactions/netbsd-vm@v1
+        with:
+          usesh: true
+          prepare: |
+            /usr/sbin/pkg_add -v pkgin
+            pkgin update
+            pkgin -y install perl gcc11-*
+            pkgin -y install bash gmake libtool pkgconf bison byacc flex wget curl unzip
+            pkgin -y install ncurses libiconv libarchive enchant2 file enca lzma lz4 zstd
+          run: |
+            ./configure
+            cat acdefines.h
+            gmake release
+
+#end

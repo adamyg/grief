@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_spell_c,"$Id: m_spell.c,v 1.45 2024/04/16 10:30:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_spell_c,"$Id: m_spell.c,v 1.46 2024/07/20 09:22:39 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_spell.c,v 1.45 2024/04/16 10:30:36 cvsuser Exp $
+/* $Id: m_spell.c,v 1.46 2024/07/20 09:22:39 cvsuser Exp $
  * Spell primitives.
  *
  *      Enchant - AbiWord spell-checker generic interface
@@ -380,7 +380,10 @@ spell_nextword(BUFFER_t *bp,
         const char *buffer, const int length, int *wordlen, int *offset, int *chars, int *column)
 {
     static const unsigned char punctuationchars[] = "_-'";
-    static const unsigned char wordchars[] =    /* FIXME - ascii/latin-1 plus backspace */
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Winvalid-source-encoding"
+#endif
+    static const unsigned char wordchars[] =    /* XXX/FIXME - ascii/latin-1 plus backspace */
             "\b" "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZÈ·˙ı˚Û¸ˆÌ…¡’⁄÷‹”€Õ";
     static unsigned char wordtable[256] = {0};
 

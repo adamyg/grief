@@ -1,11 +1,11 @@
 #ifndef GR_EDHEADERS_H_INCLUDED
 #define GR_EDHEADERS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edheaders_h,"$Id: edheaders.h,v 1.20 2024/06/09 20:09:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_edheaders_h,"$Id: edheaders.h,v 1.26 2024/07/14 09:58:17 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edheaders.h,v 1.20 2024/06/09 20:09:36 cvsuser Exp $
+/* $Id: edheaders.h,v 1.26 2024/07/14 09:58:17 cvsuser Exp $
  * System headers.
  *
  *
@@ -138,12 +138,24 @@ __CPRAGMA_ONCE
 #include <sys/socket.h>
 #endif
 
-#ifdef HAVE_WAIT_H
-#include <wait.h>
+#ifdef HAVE_SYS_WAIT_H
+#if defined(sun) || defined(__sun)
+#   if defined(HAVE_SYS_SIGINFO_H)
+#   include <sys/siginfo.h>
+#   endif
+#include <sys/types.h>
+#endif /*sun*/
+#include <sys/wait.h>
 #endif
 
-#ifdef HAVE_SYS_WAIT_H
-#include <sys/wait.h>
+#ifdef HAVE_WAIT_H
+#if defined(sun) || defined(__sun)
+#   if defined(HAVE_SYS_SIGINFO_H)
+#   include <sys/siginfo.h>
+#   endif
+#include <sys/types.h>
+#endif /*sun*/
+#include <wait.h>
 #endif
 
 #if !defined(WNOHANG) && !defined(SOLARIS2)

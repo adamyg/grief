@@ -532,12 +532,16 @@ fetch_ssl(conn_t *conn, const struct url *URL, int verbose)
 
 #if defined(HAVE_OPENSSL) && (WITH_SSL)
 	/* Init the SSL library and context */
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) /*1.1.1, defunct interface*/
 	if (!SSL_library_init()){
 		fprintf(stderr, "SSL library init failed\n");
 		return (-1);
 	}
 
 	SSL_load_error_strings();
+#else
+        OPENSSL_init_ssl(0, NULL);
+#endif
 
 	conn->ssl_meth = SSLv23_client_method();
 	conn->ssl_ctx = SSL_CTX_new(conn->ssl_meth);

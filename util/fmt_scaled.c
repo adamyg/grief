@@ -36,6 +36,8 @@
  * Scanning code written for OpenBSD libutil.
  */
 
+#include <config.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -235,9 +237,13 @@ fmt_scaled(long long number, char *result)
 		fract = 0;
 	}
 
-	if (number == 0)
+	if (number == 0) {
+#if defined(HAVE_STRLCPY)
 		strlcpy(result, "0B", FMT_SCALED_STRSIZE);
-	else if (unit == NONE || number >= 100 || number <= -100) {
+#else
+                strcpy(result, "0B");
+#endif
+	} else if (unit == NONE || number >= 100 || number <= -100) {
 		if (fract >= 5) {
 			if (number >= 0)
 				number++;
@@ -252,3 +258,6 @@ fmt_scaled(long long number, char *result)
 
 	return 0;
 }
+
+//end
+

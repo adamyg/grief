@@ -1,11 +1,11 @@
 #ifndef GR_EDSTRUCT_H_INCLUDED
 #define GR_EDSTRUCT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.78 2024/05/17 16:46:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.81 2024/09/12 17:29:13 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edstruct.h,v 1.78 2024/05/17 16:46:09 cvsuser Exp $
+/* $Id: edstruct.h,v 1.81 2024/09/12 17:29:13 cvsuser Exp $
  * Window, buffer, line and character-map definitions.
  *
  *
@@ -350,6 +350,13 @@ struct _window {
     vbyte_t             w_disp_ansicolor;       /* ANSI color cursor */
     unsigned            w_disp_ansiflags;
 
+    struct WCoords {
+        int title_start;
+        int title_end;
+        int close_start;
+        int close_end;
+    } w_coords;                                 /* Element coordinates */
+
     struct _wthumbs     w_vthumb;               /* Vertical elevator positions */
     struct _wthumbs     w_hthumb;               /* Horizontal elevator positions */
 
@@ -611,7 +618,7 @@ struct _display {
 #endif
     char                d_buf[PTY_BUFSIZ];      /* Buffer for reading into */
 #endif
-#if defined(unix) || defined(__APPLE__)
+#if defined(unix) || defined(__unix__) || defined(__APPLE__)
     pid_t               d_pgrp;                 /* Process group of child */
 #endif
 };
@@ -1217,6 +1224,7 @@ extern const char * const nameof_atoms[];
 extern const int        x_major_version;
 extern const int        x_minor_version;
 extern const int        x_edit_version;
+extern const int        x_build_version;
 
 extern const char *     x_appname;
 extern const char *     x_version;

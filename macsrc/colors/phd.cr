@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: phd.cr,v 1.2 2014/11/27 15:54:14 ayoung Exp $
+/* $Id: phd.cr,v 1.3 2024/07/06 18:03:27 cvsuser Exp $
  * PhD coloriser, GRIEF port.
  *
  * Original:
@@ -136,4 +136,5 @@ colorscheme_phd(void)
 {
     vim_colorscheme("phd", 256, NULL, phd_gui, TRUE);
 }
+
 /*end*/

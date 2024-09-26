@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.35 2024/05/26 12:58:44 cvsuser Exp $
+# $Id: Makefile.in,v 1.36 2024/07/29 17:09:50 cvsuser Exp $
 # GRIEF macro compiler.
 #
 #
@@ -51,6 +51,7 @@ endif
 YACC=		@YACC@
 GREP=		@GREP@
 RM=		@RM@
+RC=		@RC@
 PERL=		@PERL@
 LIBTOOL=	@LIBTOOL@
 LANG=C
@@ -170,6 +171,16 @@ OBJS=		$(D_OBJ)/crmain$(O)		\
 		$(D_OBJ)/version$(O)		\
 		$(D_OBJ)/word$(O)
 
+RESOURCES=	grunch.rc
+
+ifeq ("win32","@build_os@")
+ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
+OBJS+=		$(addprefix $(D_OBJ)/,$(subst .rc,_res.o,$(RESOURCES)))
+else
+OBJS+=		$(addprefix $(D_OBJ)/,$(subst .rc,.res,$(RESOURCES)))
+endif
+endif #build_os
+
 XCLEAN+=	$(YTAB)$(C) $(YTAB)$(H) $(YTAB)$(C) yygen$(H) crntypes$(H)
 
 
@@ -204,7 +215,13 @@ $(D_OBJ)/%$(O):		%$(C)
 
 $(D_OBJ)/%$(O):		$(D_GR)/%$(C)
 		$(CC) $(CFLAGS) -o $@ -c -DGRUNCH $<
-      
+
+$(D_OBJ)/%.res:		%.rc
+		$(RC) -fo $@ $<
+
+$(D_OBJ)/%_res.o:	%.rc
+		$(RC) -o $@ $<
+
 ifeq (bison,$(findstring bison,$(YACC)))
 # bison
 crntypes$(H):		grunch$(H) $(YTAB)$(C) makentypes.pl
@@ -241,4 +258,3 @@ $(YTAB)$(C):		cry$(Y)
 endif
 
 #end
-

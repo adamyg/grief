@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_select_c,"$Id: w32_select.c,v 1.18 2024/03/31 15:57:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_select_c,"$Id: w32_select.c,v 1.19 2024/07/30 08:17:12 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -210,7 +210,7 @@ static int
 sel_wait(u_int cnt, Select_t *selfds, DWORD timeout)
 {
     DWORD  stick, ret;
-    HANDLE waitfor[MAXIMUM_WAIT_OBJECTS];       // system limit
+    HANDLE waitfor[MAXIMUM_WAIT_OBJECTS] = {0}; // system limit
     u_int i = 0;
 
     if (cnt > sizeof(waitfor)/sizeof(waitfor[0]))

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_getpwd_c,"$Id: getpwd.c,v 1.4 2021/04/19 16:35:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_getpwd_c,"$Id: getpwd.c,v 1.5 2024/09/21 09:05:16 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: getpwd.c,v 1.4 2021/04/19 16:35:28 cvsuser Exp $
+/* $Id: getpwd.c,v 1.5 2024/09/21 09:05:16 cvsuser Exp $
  * Pasword support.
  *
  *
@@ -109,8 +109,8 @@ getpwlimit(void)
 #if defined(_SC_GETPW_R_SIZE_MAX)
     const long limit = sysconf(_SC_GETPW_R_SIZE_MAX);
     if (limit > 0)
-	return (size_t)limit;
-#endif	//_SC_GETPW_R_SIZE_MAX
+        return (size_t)limit;
+#endif  //_SC_GETPW_R_SIZE_MAX
     return 4096;
 }
 
@@ -125,7 +125,7 @@ sys_getpwnam(passwd_t *pwd, const char *user)
 
     assert(pwd && user);
     if (NULL == pwd || NULL == user) {
-	return NULL;
+        return NULL;
     }
 
     pwd->buffer = pwd->result = NULL;
@@ -344,8 +344,8 @@ native_getpwlogin()
 int
 main()
 {
-    {	const size_t length_limit = getpwlimit();
-	assert(length_limit);
+    {   const size_t length_limit = getpwlimit();
+        assert(length_limit);
         printf("length_limit: %u\n", (unsigned)length_limit);
     }
 
@@ -373,5 +373,6 @@ main()
 #endif  //LOCAL_MAIN
 
 /*end*/
+
 
 

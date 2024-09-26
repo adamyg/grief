@@ -1,5 +1,5 @@
 /* -*- indent-width: 4; -*- */
-/* $Id: bufinfo.cr,v 1.17 2022/08/10 15:44:58 cvsuser Exp $
+/* $Id: bufinfo.cr,v 1.18 2024/08/01 14:06:46 cvsuser Exp $
  * Buffer Information/Configuration.
  *
  *
@@ -132,7 +132,7 @@ main()
                         DLGA_NAME,              "buffername",
                         DLGA_ATTACH_LEFT,
                         DLGA_ROWS,              1,
-                        DLGA_COLS,              60,
+                        DLGA_COLS,              68,
                         DLGA_ALLOW_FILLX,
                         DLGA_GREYED,
                 DLGC_END,
@@ -145,7 +145,7 @@ main()
                         DLGA_NAME,              "filename",
                         DLGA_ATTACH_LEFT,
                         DLGA_ROWS,              1,
-                        DLGA_COLS,              60,
+                        DLGA_COLS,              68,
                         DLGA_ALLOW_FILLX,
                         DLGA_GREYED,
                 DLGC_END,
@@ -245,6 +245,18 @@ main()
                         DLGA_COLS,              13,
                     DLGC_EDIT_FIELD,
                         DLGA_NAME,              "terminator",
+                        DLGA_ATTACH_LEFT,
+                        DLGA_ROWS,              1,
+                        DLGA_COLS,              18,
+                        DLGA_GREYED,
+                DLGC_END,
+                DLGC_CONTAINER,
+                    DLGC_LABEL,
+                        DLGA_VALUE,             "Syntax:",
+                        DLGA_ATTACH_LEFT,
+                        DLGA_COLS,              13,
+                    DLGC_EDIT_FIELD,
+                        DLGA_NAME,              "syntax",
                         DLGA_ATTACH_LEFT,
                         DLGA_ROWS,              1,
                         DLGA_COLS,              18,
@@ -494,7 +506,7 @@ main()
                         DLGA_IDENT,             IDENT_TITLE_FULL,
                         DLGA_ALIGN_W,
                     DLGC_CHECK_BOX,
-                        DLGA_LABEL,             "Read-only suffix",
+                        DLGA_LABEL,             "Readonly suffix",
                         DLGA_IDENT,             IDENT_SUFFIX_READONLY,
                         DLGA_ALIGN_W,
                     DLGC_CHECK_BOX,
@@ -599,6 +611,9 @@ bi_callback(int ident, string name, int p1, int p2)
             // character-map.
             inq_char_map(curwin, charactermap);
             widget_set(NULL, "charactermap", charactermap);
+            
+            // syntax
+            widget_set(NULL, "syntax", inq_syntax_name());
 
             // backup.
             widget_set(NULL, "bk_dir", inq_backup_option(BK_DIR));

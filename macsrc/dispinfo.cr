@@ -1,5 +1,5 @@
 /* -*- indent-width: 4; -*-/
- * $Id: dispinfo.cr,v 1.6 2014/10/27 23:28:20 ayoung Exp $
+ * $Id: dispinfo.cr,v 1.8 2024/09/25 15:52:03 cvsuser Exp $
  * Display information/configuration.
  *
  *
@@ -92,6 +92,12 @@ main()
                 DLGC_LABEL,
                     DLGA_LABEL,                 "Encoding",
                     DLGA_ALIGN_W,
+                DLGC_LABEL,
+                    DLGA_LABEL,                 "Scheme",
+                    DLGA_ALIGN_W,
+                DLGC_LABEL,
+                    DLGA_LABEL,                 "KBProtocol",
+                    DLGA_ALIGN_W,
             DLGC_END,
             DLGC_CONTAINER,
                 DLGA_ATTACH_RIGHT,
@@ -114,6 +120,16 @@ main()
                 DLGC_LABEL,
                     DLGA_ALIGN_E,
                     DLGA_NAME,                  "encoding",
+                    DLGA_ROWS,                  1,
+                    DLGA_ALLOW_FILLX,
+                DLGC_LABEL,
+                    DLGA_ALIGN_E,
+                    DLGA_NAME,                  "scheme",
+                    DLGA_ROWS,                  1,
+                    DLGA_ALLOW_FILLX,
+                DLGC_LABEL,
+                    DLGA_ALIGN_E,
+                    DLGA_NAME,                  "kbprotocol",
                     DLGA_ROWS,                  1,
                     DLGA_ALLOW_FILLX,
             DLGC_END,
@@ -219,7 +235,7 @@ main()
                     DLGC_LABEL,
                         DLGA_LABEL,             "Scroll row/cols:",
                         DLGA_ATTACH_LEFT,
-                        DLGA_COLS,              20,
+                        DLGA_COLS,              18,
                     DLGC_EDIT_FIELD,
                         DLGA_NAME,              "scroll_rows",
                         DLGA_ATTACH_LEFT,
@@ -239,7 +255,7 @@ main()
                     DLGC_LABEL,
                         DLGA_LABEL,             "Visible row/cols:",
                         DLGA_ATTACH_LEFT,
-                        DLGA_COLS,              20,
+                        DLGA_COLS,              18,
                     DLGC_EDIT_FIELD,
                         DLGA_NAME,              "visible_rows",
                         DLGA_ATTACH_LEFT,
@@ -258,8 +274,9 @@ main()
             DLGC_END,
             DLGC_GROUP,
                 DLGA_TITLE,                     "Scroll Bars",
+                DLGA_ATTACH_LEFT,
+                DLGA_PADX,                      1,
                 DLGA_ALIGN_W,
-                DLGA_PADY,                      1,
                 DLGC_CHECK_BOX,
                     DLGA_LABEL,                 "Vertical",
                     DLGA_ATTACH_TOP,
@@ -271,31 +288,27 @@ main()
                     DLGA_ALIGN_W,
                     DLGA_NAME,                  "sb_horz",
             DLGC_END,                           // GROUP
-        DLGC_END,                               // CONTAINER
-
-        DLGC_CONTAINER,
-            DLGA_ATTACH_TOP,
-            DLGA_ALIGN_W,
             DLGC_GROUP,
                 DLGA_TITLE,                     "Columns",
-                DLGA_ATTACH_LEFT,
+                DLGA_ATTACH_RIGHT,
                 DLGA_ALIGN_W,
+                DLGA_PADX,                      1,
                 DLGC_CONTAINER,
-                    DLGA_ALIGN_W,
-                    DLGC_LABEL,
+                     DLGA_ALIGN_W,
+                     DLGC_LABEL,
                         DLGA_LABEL,             "Number:",
                         DLGA_ATTACH_LEFT,
-                        DLGA_COLS,              20,
-                    DLGC_EDIT_FIELD,
+                        DLGA_COLS,              12,
+                     DLGC_EDIT_FIELD,
                         DLGA_NAME,              "number_cols",
                         DLGA_ATTACH_LEFT,
                         DLGA_ROWS,              1,
-                        DLGA_COLS,              5,
+                        DLGA_COLS,              4,
                 DLGC_END,
             DLGC_END,                           // GROUP
-        DLGC_END,                               // CONTAINER
+         DLGC_END,                              // CONTAINER
 
-        DLGC_CONTAINER,
+         DLGC_CONTAINER,
             DLGA_ATTACH_BOTTOM,
             DLGC_PUSH_BUTTON,
                 DLGA_LABEL,                     "&Done",
@@ -329,22 +342,32 @@ di_callback(int ident, string name, int p1, int p2)
     UNUSED(ident, p2);
     switch (p1) {
     case DLGE_INIT: {
-            string feature, encoding;
-            int lines, cols, colors, escsource;
+            string feature, encoding, colorscheme, scheme, kbprotocol;
+            int isdark, lines, cols, colors, escsource;
             int i;
 
             inq_screen_size(lines, cols);       // display
             get_term_feature(TF_NAME, feature);
             get_term_feature(TF_COLORDEPTH, colors);
             get_term_feature(TF_ENCODING, encoding);
+            get_term_feature(TF_SCHEMEDARK, isdark);
+            get_term_feature(TF_COLORSCHEME, colorscheme);
+            get_term_feature(TF_KBPROTOCOL, kbprotocol);
 
             sprintf(feature, "%dx%d-%d (%s)", cols, lines, colors, feature);
+            if (colorscheme == "")
+               scheme += (isdark ? "dark" : "light");
+            else
+               sprintf(scheme, "%s (%s)", colorscheme, (isdark ? "dark" : "light"));
+
             widget_set(NULL, "display", feature);
             inq_font(feature);
             widget_set(NULL, "font", feature);
             sprintf(feature, "%dms (%d)", inq_char_timeout(escsource), escsource);
             widget_set(NULL, "escdelay", feature);
             widget_set(NULL, "encoding", encoding);
+            widget_set(NULL, "scheme", scheme);
+            widget_set(NULL, "kbprotocol", kbprotocol);
 
                                                 // scroll parameters, plus line-number column.
             widget_set(NULL, "scroll_cols",  inq_display_mode("scroll_cols"));
@@ -404,3 +427,7 @@ di_callback(int ident, string name, int p1, int p2)
 }
 
 /*eof*/
+
+
+
+

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_tokenize_c,"$Id: m_tokenize.c,v 1.28 2022/07/10 13:13:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_tokenize_c,"$Id: m_tokenize.c,v 1.29 2024/07/05 18:33:16 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_tokenize.c,v 1.28 2022/07/10 13:13:08 cvsuser Exp $
+/* $Id: m_tokenize.c,v 1.29 2024/07/05 18:33:16 cvsuser Exp $
  * String primitives.
  *
  *
@@ -47,6 +47,7 @@ struct split {
     unsigned            sp_quoting;
     unsigned            sp_numerics;
     unsigned            sp_empties;
+    unsigned            sp_limit;
     unsigned            sp_strings;             /* string atom count */
     unsigned            sp_integers;            /* integer atom count */
     LIST *              sp_list;                /* reply */
@@ -113,7 +114,7 @@ static unsigned         tok_trimr(const struct tokenizer *tok, const char *buffe
         list
         split(string expr, string|integer delims,
             [int numeric = FALSE], [int noquoting = FALSE],
-                [int empties = FALSE], [int limit = NULL])
+                [int empties = FALSE], [int limit = 0])
 
     Macro Description:
         The 'split()' primitive splits the string 'expr' into a list of
@@ -147,8 +148,9 @@ static unsigned         tok_trimr(const struct tokenizer *tok, const char *buffe
             control enabling (non-zero) and disabling (zero) to whether
             empties are returned.
 
-        limit - Limit the split to 'limit' elements, returning remaining
-            content in the last element; not implemented at this time.
+        limit - Limit the split to 'limit' elements, returning the trailing
+            content in the last element; note any special processing
+            including quotes and numeric wont apply on the trailing.
 
     Macro Results:
         List of strings where each string is a 'token' from the string
@@ -186,15 +188,15 @@ static unsigned         tok_trimr(const struct tokenizer *tok, const char *buffe
  */
 void
 do_split(void)                  /* (string buffer, string|integer delims, [, int numeric = FALSE]
-                                        [, int noquoting = FALSE] [, int empties = FALSE]  [, int limit = NULL]) */
+                                        [, int noquoting = FALSE] [, int empties = FALSE] [, int limit = 0]) */
 {
     const char *buffer = get_str(1);            /* buffer */
     int length = (buffer ? get_strlen(1) : 0);  /* and its associated length */
     const char *delims = get_xstr(2);           /* string|integer */
-    int numerics  = get_xinteger(3, FALSE);
+    int numerics = get_xinteger(3, FALSE);
     int noquoting = get_xinteger(4, FALSE);
-    int empties   = get_xinteger(5, FALSE);
- /* int limit     = get_xinteger(6, 0xffff);*/  /* TODO - limit elements */
+    int empties = get_xinteger(5, FALSE);
+    int limit = get_xinteger(6, 0);
     unsigned quoting = 0;
     char t_delims[2];
 
@@ -242,8 +244,9 @@ do_split(void)                  /* (string buffer, string|integer delims, [, int
         sp.sp_numerics = numerics;
         sp.sp_quoting  = quoting;
         sp.sp_empties  = empties;
+        sp.sp_limit    = (limit <= 0 ? 0 : (unsigned)limit);
 
-        ED_TRACE(("\tsplit(%d, %d/%d/%d, '%s', '%s')\n", length, numerics, quoting, empties, delims, buffer))
+        ED_TRACE(("\tsplit(%d, %d/%d/%d/%d, '%s', '%s')\n", length, numerics, quoting, empties, limit, delims, buffer))
 
         if (0 == split_buffer(&sp, buffer, length)) {
             acc_assign_null();
@@ -270,6 +273,7 @@ split_buffer(struct split *sp, const char *str, unsigned length)
     const char *delims = sp->sp_delims;
     const unsigned numerics = sp->sp_numerics;
     const unsigned empties = sp->sp_empties;
+    unsigned limit = sp->sp_limit;
     LIST *lp = sp->sp_list;
     unsigned atoms = 0;
     const char *start, *end;
@@ -294,6 +298,12 @@ split_buffer(struct split *sp, const char *str, unsigned length)
 
         /* Skip over this token. */
         start = end;
+        if (limit && 0 == --limit) {
+            while (*end)
+                ++end;                          /* last token; implied string */
+            goto asstring;
+        }
+
         if (split_isquote(sp, *end)) {
             char endquote = *end;               /* closing character */
 
@@ -449,8 +459,8 @@ split_isnumeric(char ch)
 
         o *TOK_COLLAPSE_MULTIPLE* -
             Splits the string 'expr' into a list of strings and returns
-            the list in list context. Collapses occurrences of the repeated 
-            delimiter characters treating them as single delimiter, in other 
+            the list in list context. Collapses occurrences of the repeated
+            delimiter characters treating them as single delimiter, in other
             words empty elements with the delimited text shall not be returned.
 
 
@@ -463,7 +473,7 @@ split_isnumeric(char ch)
 
         o *TOK_NUMERIC_STRTOL* -
             Numeric fields are converted using <strtol> allowing
-            support leading base specifications hexadecimal (0x), 
+            support leading base specifications hexadecimal (0x),
             octal (0) and binary (0b).
 
         o *TOK_NUMERIC_STRICT* -
@@ -789,7 +799,7 @@ tokenize_buffer(struct tokenizer *tok, const char *buffer, int buflen)
                 //  Numeric
                 //      allow hex (0x###), dec, oct (0###) and binary (0b###) (numerics >= 2)
                 */
-                accint_t ret = 0;		/* result */
+                accint_t ret = 0;               /* result */
 
                 if (lp || (TOK_NUMERIC_STRICT & flags)) {
                     char *endp = NULL;
@@ -1084,8 +1094,8 @@ tok_iswhitespace(const struct tokenizer *tok, const char ch)
  *  local test framework
  */
 struct ATOM {
-    int                 type;
-    unsigned            length;
+    int type;
+    unsigned length;
     union {
         const char *s;
         double d;
@@ -1331,31 +1341,33 @@ acc_donate_list(LIST *lp, int length) {
 }
 
 static void
-split_test1(unsigned test, const char *text, const char *delim, int numeric, int noquoting, int empties) {
+split_test1(unsigned test, const char *text, const char *delim, int numeric, int noquoting, int empties, int limit) {
     trace_log("\n\n");
-    trace_log("test 1.%u: split('%s','%s', numeric:%u, noquoting:%u, empties:%u)\n",
-                test, text, delim, numeric, noquoting, empties);
+    trace_log("test 1.%u: split('%s','%s', numeric:%u, noquoting:%u, empties:%u, limit:%u)\n",
+                test, text, delim, numeric, noquoting, empties, limit);
     arg_clear();
     arg_strings[0]  = text;
     arg_strings[1]  = delim;
     arg_integers[2] = numeric;
     arg_integers[3] = noquoting;
     arg_integers[4] = empties;
+    arg_integers[5] = limit;
     ret_clear();
     do_split();
 }
 
 static void
-split_test2(unsigned test, const char *text, char delim, int numeric, int noquoting, int empties) {
+split_test2(unsigned test, const char *text, char delim, int numeric, int noquoting, int empties, int limit) {
     trace_log("\n\n");
-    trace_log("test 1.%u: split('%s','%c', numeric:%u, noquoting:%u, empties:%u)\n",
-                test, text, delim, numeric, noquoting, empties);
+    trace_log("test 1.%u: split('%s','%c', numeric:%u, noquoting:%u, empties:%u, limit:%u)\n",
+                test, text, delim, numeric, noquoting, empties, limit);
     arg_clear();
     arg_strings[0]  = text;
     arg_integers[1] = delim;
     arg_integers[2] = numeric;
     arg_integers[3] = noquoting;
     arg_integers[4] = empties;
+    arg_integers[5] = limit;
     ret_clear();
     do_split();
 }
@@ -1368,6 +1380,7 @@ tokenize_test1(unsigned test, const char *text, const char *delim, int flags) {
     arg_strings[0]  = text;
     arg_strings[1]  = delim;
     arg_integers[2] = flags;
+    arg_integers[5] = 0;
     ret_clear();
     do_tokenize();
 }
@@ -1398,18 +1411,37 @@ test_split(void) {
     int rc;
 
     /* basic */
-    split_test1(1, "hello world", " ", 0, 0, 0);
+    split_test1(1, "hello world", " ", 0, 0, 0, 0);
         rc =  ret_test_str(0, "hello");
         rc |= ret_test_str(1, "world");
         ret_success(rc);
 
-    split_test2(2, "hello world", ' ', 0, 0, 0);
+    split_test2(2, "hello world", ' ', 0, 0, 0, 0);
         rc =  ret_test_str(0, "hello");
         rc |= ret_test_str(1, "world");
+        ret_success(rc);
+
+    /* limits */
+    split_test2(10, "hello", ' ', 0, 0, 0, 1);
+        rc =  ret_test_str(0, "hello");
+        ret_success(rc);
+
+    split_test2(11, "hello", ' ', 0, 0, 0, 2);
+        rc =  ret_test_str(0, "hello");
+        ret_success(rc);
+
+    split_test2(12, "hello world", ' ', 0, 0, 0, 2);
+        rc =  ret_test_str(0, "hello");
+        rc |= ret_test_str(1, "world");
+        ret_success(rc);
+
+    split_test2(13, "hello world hello world ", ' ', 0, 0, 0, 2);
+        rc =  ret_test_str(0, "hello");
+        rc |= ret_test_str(1, "world hello world ");
         ret_success(rc);
 
     /* quotes */
-    split_test1(20, "\" hello \",\" world \"", "\",", 0, 0, 0);
+    split_test1(20, "\" hello \",\" world \"", "\",", 0, 0, 0, 0);
         rc =  ret_test_str(0, " hello ");
         rc |= ret_test_str(1, " world ");
         ret_success(rc);
@@ -1690,3 +1722,6 @@ main(int argc, char *argv[]) {
 #endif  /*LOCAL_MAIN*/
 
 /*eof*/
+
+
+

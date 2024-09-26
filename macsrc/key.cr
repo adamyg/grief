@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: key.cr,v 1.24 2021/07/11 10:59:08 cvsuser Exp $
+/* $Id: key.cr,v 1.25 2024/08/25 06:02:04 cvsuser Exp $
  * Key definition tools.
  *
  *
@@ -134,7 +134,7 @@ key(void)
 }
 
 
-/*  Function:           keyx
+/*  Function:           key_code
  *      Retrieve the "key-code" for the next input event, including mouse.
  *
  *  Parameters:
@@ -144,13 +144,13 @@ key(void)
  *      none
  */
 void
-keyx()
+key_code()
 {
     string description;
     int seq = 7;
 
     while (--seq > 0) {
-        message("keyx (%d): %s", seq, description);
+        message("key_code (%d): %s", seq, description);
         int key = read_char(1000, -1);          /* next event */
         if (key >= 0) {
             if (IsMouse(key)) {
@@ -221,6 +221,7 @@ key_test(void)
 
             ascii = "";
             while (1) {
+                // TODO: CSI/OSC detection
                 sprintf(tmp, "%c", ch);
                 escseq += tmp;                  /* raw esc sequence */
 
@@ -254,6 +255,68 @@ key_test(void)
 }
 
 
+/*  Function:           key_trace
+ *      Keyboard diagnostics
+ *
+ *  Parameters:
+ *      none
+ *
+ *  Returns:
+ *      none
+ */
+void
+key_trace()
+{
+    int buf, curbuf;
+
+    if ((buf = create_buffer("key_trace")) < 0) {
+         return;
+    }
+
+    curbuf = inq_buffer();
+    set_buffer(buf);
+    attach_buffer(buf);
+
+    keyboard_push();
+    assign_to_key("<ESC>", "exit");
+    assign_to_key("<F10>", "exit");
+    assign_to_key("<unassigned>", "::_key_trace {}"); // <esc> <key>
+
+    message("key_trace: <ESC> or <F10> to exit");
+    process();
+    message("");
+    keyboard_pop(1);
+
+    delete_buffer(buf);
+    set_buffer(curbuf);
+    attach_buffer(curbuf);
+}
+
+
+static void
+_key_trace(string seq, int key)
+{
+    int hour, min, sec, msec, line;
+
+    inq_position(line);
+    time(hour, min, sec, msec);
+
+    insertf("%6u: %02d:%02d:%02d.%03d: ", line, hour, min, sec, msec);
+    if (IsMouse(key)) {
+        int x, y, where, region, event;
+
+        get_mouse_pos(x, y, NULL, NULL, NULL, where, region, event);
+        insertf("0x%08x/%-9u %-32s (x=%u, y=%u, where=%u, region=%u, event=0x%x) [%s]\n",
+            key, key, int_to_key(key), x, y, where, region, event, seq);
+
+    } else {
+        insertf("0x%08x/%-9d %-32s [%s]\n",
+            key, key, int_to_key(key), seq);
+    }
+}
+
+
+
 /*  Function:           key_map
  *      Display the current keyboard mapping
  *
@@ -266,14 +329,13 @@ key_test(void)
 void
 key_map()
 {
-    int    curbuf = inq_buffer(),
-                curwin = inq_window();
-    int    i, len, buf, win;
-    list   lst;
+    int curbuf = inq_buffer(), curwin = inq_window();
+    int i, len, buf, win;
+    list lst;
 
-    lst    = key_list(NULL, NULL, NULL);
-    len    = length_of_list(lst);
-    buf    = create_buffer("Key Map", NULL, 1);
+    lst = key_list(NULL, NULL, NULL);
+    len = length_of_list(lst);
+    buf = create_buffer("Key Map", NULL, 1);
     set_buffer(buf);
     for (i = 0; i < len; i += 2) {
         insert(lst[i]);
@@ -282,7 +344,6 @@ key_map()
         insert("\n");
     }
     delete_line();
- // sort_buffer();
 
     win = sized_window(inq_lines(), inq_line_length() + 1);
     select_buffer(buf, win, SEL_NORMAL);
@@ -629,3 +690,7 @@ key_termmapping(void)
 }
 
 /*end*/
+
+
+
+

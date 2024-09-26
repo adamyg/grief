@@ -19,12 +19,13 @@ The following environments and toolchains are supported.
   * Not recently tested, yet builds.
 
       * OS/X 10.4+
+      * Solaris (gcc)
+      * FreeBSD 14.1 (gcc)
 
   * Not recently tested, yet *should* build; with minimal effort.
 
+      * NetBSD/OpenBSD (gcc)
       * HP/UX (gcc)
-      * Solaris (gcc)
-      * BSD Net/Free/Open (gcc)
       * AIX (gcc)
 
   * Defunct yet previously supported; development effort assumed.

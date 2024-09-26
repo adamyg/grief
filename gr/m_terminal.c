@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.18 2021/06/22 15:52:44 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.23 2024/09/25 15:51:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_terminal.c,v 1.18 2021/06/22 15:52:44 cvsuser Exp $
+/* $Id: m_terminal.c,v 1.23 2024/09/25 15:51:54 cvsuser Exp $
  * Terminal screen and keyboard primitives.
  *
  *
@@ -129,14 +129,16 @@ static struct pt_map    pt_features[] = {
      *      o scheme_dark -             Boolean,  *true* if a dark color scheme is desired, otherwise light.
      *
      */
-    { TF_COLORSETFGBG,          PT_MKSTR(x_pt.pt_colorsetfgbg),           "colorset_fgbg" },
-    { TF_COLORSET_FG,           PT_MKSTR(x_pt.pt_colorsetfg),             "colorset_fg" },
-    { TF_COLORSET_BG,           PT_MKSTR(x_pt.pt_colorsetbg),             "colorset_bg" },
+//  { TF_COLORSET_FG,           PT_MKSTR(x_pt.pt_colorsetfg),             "color_set_fg" },
+//  { TF_COLORSET_BG,           PT_MKSTR(x_pt.pt_colorsetbg),             "color_set_bg" },
+//  { TF_COLORSETRGB_FG,        PT_MKSTR(x_pt.pt_colorsetrgbfg),          "color_setrgb_fg" },
+//  { TF_COLORSETRGB_BG,        PT_MKSTR(x_pt.pt_colorsetrgbbg),          "color_setrgb_bg" },
 
     { TF_COLORDEPTH,            PT_MKINT(x_pt.pt_colordepth),             "color_depth" },
     { TF_DEFAULT_FG,            PT_MKINT(x_pt.pt_defaultfg),              "default_fg_color" },
     { TF_DEFAULT_BG,            PT_MKINT(x_pt.pt_defaultbg),              "default_bg_color" },
     { TF_SCHEMEDARK,            PT_MKFLG(x_pt.pt_schemedark),             "scheme_dark" },
+    { TF_COLORRGB,              PT_MKFLG(x_pt.pt_colorrgb),               "color_rgb" },
     { TF_COLORMAP,              PT_MKSTR(x_pt.pt_colormap),               "color_map" },
     { TF_COLORPALETTE,          PT_MKSTR(x_pt.pt_colorpalette),           "color_palette" },
     { TF_COLORSCHEME,           PT_MKSTR(x_pt.pt_colorscheme),            "color_scheme" },
@@ -157,6 +159,7 @@ static struct pt_map    pt_features[] = {
 
     { TF_TTY_FAST,              PT_MKINT(x_pt.pt_tty_fast),               "tty_fast" },
     { TF_TTY_GRAPHICSBOX,       PT_MKINT(x_pt.pt_tty_graphicsbox),        "tty_graphicsbox" },
+    { TF_KBPROTOCOL,            PT_MKSTR(x_pt.pt_kbprotocol),             "kbprotocol" },
 
     { TF_SCREEN_ROWS,           PT_MKINT(x_pt.pt_screen_rows),            "screen_rows" },
     { TF_SCREEN_COLS,           PT_MKINT(x_pt.pt_screen_cols),            "screen_cols" },
@@ -171,6 +174,7 @@ static struct pt_map    pt_features[] = {
 
     { TF_VT_DATYPE,             PT_MKINT(x_pt.pt_vtdatype),               "vt_datype" },
     { TF_VT_DAVERSION,          PT_MKINT(x_pt.pt_vtdaversion),            "vt_daversion" },
+    { TF_VT_DAOPTIONS,          PT_MKINT(x_pt.pt_vtdaoptions),            "vt_daoptions" },
 
     { TF_ENCODING,              PT_MKSTR(x_pt.pt_encoding),               "encoding" },
     { TF_UNICODE_VERSION,       PT_MKSTR(x_pt.pt_unicode_version),        "unicode_version" },
@@ -501,6 +505,8 @@ do_set_term_characters(void)    /* int ([int ident string desc], [string|int] va
   ! TF_TTY_GRAPHICSBOX      tty_graphicsbox         Integer     When *true* enables use of graphic
                                                                 box characters.
 
+  ! TF_KBPROTOCOL           kbprotocol              String      Active kb-protocol.
+
   ! TF_SCREEN_ROWS          screen_rows             Integer     Number of screen rows.
 
   ! TF_SCREEN_COLS          screen_cols             Integer     Number of screen columns.
@@ -535,17 +541,18 @@ do_set_term_characters(void)    /* int ([int ident string desc], [string|int] va
 
   ! TF_VT_DAVERSION         vt_daversion            Integer     Terminal version.
 
+  ! TF_VT_DAOPTIONS         vt_daoptions            Integer     Terminal options.
+
   ! TF_ENCODING             encoding                String      Terminal character encoding.
 
   ! TF_UNICODE_VERSION      unicode_version         String      UNICODE interface version, for
-                                                                example "6.0.1".                                                                 
+                                                                example "6.0.1".
 (end table)
 
     TF_ATTRIBUTE:
 
-        The reported *TF_ATTRIBUTE* attribute represents special
-        terminal features mined during terminal initialisation. The
-        flag argument can contain none or more of the following
+        The reported *TF_ATTRIBUTE* attribute represents special terminal features mined during
+        terminal initialisation. The flag argument can contain none or more of the following
         symbols bitwise OR'ed together.
 
 (start table)
@@ -561,6 +568,10 @@ do_set_term_characters(void)    /* int ([int ident string desc], [string|int] va
   ! TF_AUNICODEENCODING     Unicode character encoding.
 
   ! TF_AMETAKEY             Meta keys.
+
+  ! TF_AXTERMKEYS           XTerm modifyOtherKeys available.
+
+  ! TF_AKITTYKEYS           Kitty extended keycodes available.
 (end table)
 
         Note!:
@@ -1377,5 +1388,10 @@ do_get_term_keyboard(void)      /* list () */
     acc_donate_list(newlp, llen);               /* return value */
     chk_free(array);
 }
+
 /*end*/
+
+
+
+
 

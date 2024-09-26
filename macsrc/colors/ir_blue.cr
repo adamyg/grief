@@ -1,10 +1,10 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: ir_blue.cr,v 1.2 2014/11/27 15:54:13 ayoung Exp $
+/* $Id: ir_blue.cr,v 1.4 2024/08/04 11:42:44 cvsuser Exp $
  * ir_blue coloriser, GRIEF port.
  *
  * Original:
  *  Name: ir_blue.vim
- *  More at: http://blog.infinitered.com
+ *  Source: https://github.com/twerth/ir_black
  */
 
 #include "../grief.h"
@@ -152,4 +152,3 @@ colorscheme_ir_blue(void)
     vim_colorscheme("ir_blue", 256, NULL, ir_blue_colors, TRUE);
 }
 /*end*/
-

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.103 2024/05/11 16:38:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.111 2024/09/08 16:29:24 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keywd.c,v 1.103 2024/05/11 16:38:28 cvsuser Exp $
+/* $Id: keywd.c,v 1.111 2024/09/08 16:29:24 cvsuser Exp $
  * Keyword table.
  *
  *
@@ -121,9 +121,10 @@ const int cm_version = CM_VERSION;
 #define VERSION_205         /* 01/04/2020, register(), __lexicalblock(), isclose() and cast_xxx() */
 #define VERSION_206         /* 06/21, UTF8 */
 #define VERSION_207         /* 07/22, syntax_find() */
+#define VERSION_208         /* 07/24, inq_syntax_name(), splitpath() */
 
-//  #define VERSION_XX1     /* array's, staged/experimental */
-//  #define VERSION_XX2     /* not implemented/alpha */
+// #define VERSION_XX1      /* array's, staged/experimental */
+// #define VERSION_XX2      /* not implemented/alpha */
 
 /*
  *  Keyword table, assumed to be in alphabetic order.
@@ -548,7 +549,7 @@ BUILTIN builtin[] = {
     2,  {ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
     {"dialog_run", MACRO(do_dialog_run), ARG_INT, 0, 0,     /* dialog */
-    1,  {ARG_INT}},
+    3,  {ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
 #if defined(VERSION_204)
     {"dict_clear", MACRO(do_dict_clear), ARG_INT, 0, 0,     /* macro */
@@ -1318,6 +1319,11 @@ BUILTIN builtin[] = {
     {"inq_syntax", MACRO(inq_syntax), ARG_INT, 0, 0,        /* syntax */
     2,  {ARG_OPT | ARG_LVAL | ARG_INT, ARG_OPT | ARG_INT | ARG_STRING}},
 
+#if defined(VERSION_208)
+    {"inq_syntax_name", MACRO(inq_syntax_name), ARG_STRING, 0, 0, /* syntax */
+    1,  {ARG_OPT | ARG_INT}},
+#endif
+
     {"inq_system", MACRO(inq_system), ARG_INT, 0, 0,        /* buffer */
     1,  {ARG_OPT | ARG_INT}},
 
@@ -1351,7 +1357,7 @@ BUILTIN builtin[] = {
 
     {"inq_username", MACRO(inq_username), ARG_STRING, 0, 0, /* env */
     0,  {0}},
-       
+
     {"inq_vfs_mounts", MACRO(inq_vfs_mounts), ARG_LIST, 0, 0, /* file */
     0,  {0}},
 
@@ -2143,10 +2149,19 @@ BUILTIN builtin[] = {
     -4, {ARG_LVAL | ARG_LIST, ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_ANY}},
 
     {"split", MACRO(do_split), ARG_LIST, 0, 0,              /* string */
-    5,  {ARG_STRING, ARG_INT | ARG_STRING, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
+    6,  {ARG_STRING, ARG_INT | ARG_STRING, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT, ARG_OPT | ARG_INT}},
 
     {"split_arguments", MACRO(do_split_arguments), ARG_LIST, 0, 0, /* string */
     1,  {ARG_OPT | ARG_STRING}},
+
+#if defined(VERSION_208)
+    { "splitpath", MACRO(do_splitpath), ARG_VOID, 0, 0,     /* file */
+    5,  {ARG_STRING,
+         ARG_OPT | ARG_LVAL | ARG_STRING,
+         ARG_OPT | ARG_LVAL | ARG_STRING,
+         ARG_OPT | ARG_LVAL | ARG_STRING,
+         ARG_OPT | ARG_LVAL | ARG_STRING}},
+#endif
 
     {"sprintf", MACRO(do_sprintf), ARG_INT, 0, 0,           /* string */
     -3, {ARG_LVAL | ARG_STRING,
@@ -2542,10 +2557,10 @@ builtin_init(void)
             bp->b_flags |= B_VARARGS;
         }
 
-#if !defined(NDEBUG) 
+#if !defined(NDEBUG)
         {   const int argc = bp->b_arg_count;
             int iarg;
-      
+
             assert(argc <= MAX_BUILTIN_ARGS);
             for (iarg = 0; iarg < argc; ++iarg) {
                 assert(bp->b_arg_types[iarg]);
@@ -2593,3 +2608,4 @@ builtin_index(const char *str)
 }
 
 /*end*/
+

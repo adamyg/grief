@@ -1,13 +1,13 @@
 /* -*- mode: cr; indent-width: 8; -*- */
-/* $Id: grb256.cr,v 1.3 2014/11/27 15:54:12 ayoung Exp $
+/* $Id: grb256.cr,v 1.5 2024/08/04 11:42:44 cvsuser Exp $
  * grb256 coloriser, GRIEF port.
  *
  * Original:
  *  Name: grb256.vim
  *  Source: https://github.com/garybernhardt/dotfiles/blob/master/.vim/colors
  *
- *  GRB256 is a color scheme based on ir_black by Gary Bernhardt. It feels really nice
- *  especially for Ruby on Rails development.
+ *  GRB256 is a color scheme based on ir_black by Gary Bernhardt.
+ *  It feels really nice especially for Ruby on Rails development.
  */
 
 #include "../grief.h"
@@ -41,8 +41,7 @@ grb256_cteam = {
         };
 
 
-extern void
-colorscheme_ir_black();
+extern void colorscheme_ir_black();
 
 void
 colorscheme_grb256(void)
@@ -51,5 +50,5 @@ colorscheme_grb256(void)
         colorscheme_ir_black();
         vim_colorscheme("grb256", 256, NULL, grb256_cteam, FALSE);
 }
-/*end*/
 
+/*end*/

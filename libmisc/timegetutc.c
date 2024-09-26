@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_timegetutc_c,"$Id: timegetutc.c,v 1.10 2024/04/17 15:57:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_timegetutc_c,"$Id: timegetutc.c,v 1.11 2024/07/19 05:05:03 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: timegetutc.c,v 1.10 2024/04/17 15:57:14 cvsuser Exp $
+/* $Id: timegetutc.c,v 1.11 2024/07/19 05:05:03 cvsuser Exp $
  * Portable (somewhat) method to determine GMT offset.
  *
  *
@@ -40,7 +40,7 @@ time_t
 timeutcoffsetx(const int year, const int mon, const int mday, const int hour, const int min)
 {
 /*  #if defined(HAVE_MKTIME) || \
- *          defined(_MSC_VER) || defined(__WATCOMC__) || defined(unix)
+ *          defined(_MSC_VER) || defined(__WATCOMC__) || defined(unix) || defined(__unix__)
  */
 
     struct tm local_tm = {0}, utc_tm = {0}, *utc_tmptr;

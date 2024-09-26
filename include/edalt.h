@@ -1,11 +1,11 @@
 #ifndef GR_EDALT_H_INCLUDED
 #define GR_EDALT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edalt_h,"$Id: edalt.h,v 1.35 2024/04/08 15:07:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_edalt_h,"$Id: edalt.h,v 1.38 2024/09/02 14:04:03 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edalt.h,v 1.35 2024/04/08 15:07:02 cvsuser Exp $
+/* $Id: edalt.h,v 1.38 2024/09/02 14:04:03 cvsuser Exp $
  * Key definitions.
  * ==noguard==
  *
@@ -126,6 +126,7 @@ typedef int32_t KEY;
 #define RANGE_MULTIKEY          (4 << 26)
 #define RANGE_PRIVATE           (5 << 26)
 #define RANGE_BUTTON            (6 << 26)
+#define RANGE_SPECIAL           (7 << 26)
 #define RANGE_MAX               (15 << 26)
 #define RANGE_MASK              0x3c000000
 
@@ -134,6 +135,7 @@ typedef int32_t KEY;
 #define IS_FUNCTION(x)          (((x) & RANGE_MASK) == RANGE_FUNCTION) // function key.
 #define IS_MULTIKEY(x)          ((x) >= RANGE_MULTIKEY && (x) <= (RANGE_MULTIKEY + MULTIKEY_SIZE))
 #define IS_BUTTON(x)            (((x) & RANGE_MASK) == RANGE_BUTTON) // mouse button.
+#define IS_SPECIAL(x)           (((x) & RANGE_MASK) == RANGE_SPECIAL) // special events.
 
 #define MOD_SHIFT               0x00200000      // modifiers
 #define MOD_CTRL                0x00400000
@@ -146,6 +148,7 @@ typedef int32_t KEY;
  */
 #define KEY_VOID                0x001fffff      // null
 #define KEY_WINCH               0x001ffffe      // winch/resize event
+#define KEY_UNASSIGNED          0x001ffffd      // unassigned hook
 #define KEY_UNICODE             0x001ffff0      // keyboard special
 
 /*
@@ -391,9 +394,17 @@ typedef int32_t KEY;
 #define KEY_WUP2                CTRL_KEYPAD_8
 
 /*
+ *  Special events, not keys.
+ */
+#define MOUSE_XTERM_KEY         (RANGE_SPECIAL | 1)
+#define MOUSE_SGR_KEY           (RANGE_SPECIAL | 2)
+#define PASTE_BRACKETED_EVT     (RANGE_SPECIAL | 10)
+#define MOUSE_FOCUSOUT_KEY      (RANGE_SPECIAL | 11)
+#define MOUSE_FOCUSIN_KEY       (RANGE_SPECIAL | 12)
+
+/*
  *  Miscellaneous keys.
  */
-#define MOUSE_KEY               (RANGE_MISC | 0)    /* Xterm Mouse, not really a key. */
 #define BACK_TAB                (RANGE_MISC | 1)
 #define CTRL_TAB                (RANGE_MISC | 2)
 #define ALT_TAB                 (RANGE_MISC | 3)
@@ -419,8 +430,10 @@ typedef int32_t KEY;
 #define KEY_MENU                (RANGE_MISC | 22)
 #define KEY_BREAK               (RANGE_MISC | 23)
 
-#define WHEEL_UP                (RANGE_MISC | 31)   /* Mouse scroll wheel */
+#define WHEEL_UP                (RANGE_MISC | 31)
 #define WHEEL_DOWN              (RANGE_MISC | 32)
+#define WHEEL_LEFT              (RANGE_MISC | 33)
+#define WHEEL_RIGHT             (RANGE_MISC | 34)
 
 /*
  *  Mouse events.

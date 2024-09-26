@@ -1,4 +1,4 @@
-# $Id: makelib.def,v 1.4 2021/06/12 15:34:33 cvsuser Exp $
+# $Id: makelib.def,v 1.5 2024/07/19 18:11:01 cvsuser Exp $
 # win32 makelib configuration
 #
 inc=../include
@@ -6,5 +6,5 @@ lbl=LIBICONV
 lib=libiconv.lib
 def=HAVE_LIBICONV
 def=HAVE_ICONV_CITRUS_H
-def=HAVE_LIBICONV_CITRUS_DLL="libiconv.1.0.dll"
+def=HAVE_LIBICONV_CITRUS_DLL="libiconv.1.0.3.dll"
 

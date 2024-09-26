@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.59 2022/09/19 16:30:11 cvsuser Exp $")
+__CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.62 2024/07/18 15:19:27 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crmain.c,v 1.59 2022/09/19 16:30:11 cvsuser Exp $
+/* $Id: crmain.c,v 1.62 2024/07/18 15:19:27 cvsuser Exp $
  * grunch command line.
  *
  *
@@ -30,9 +30,15 @@ __CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.59 2022/09/19 16:30:11 cvsuser Exp
 #undef   u_char
 #include <windows.h>
 #endif
+
 #if defined(__APPLE__)
 #include <libproc.h>                            /* proc_..() */
 #include <mach-o/dyld.h>                        /* _NSGetExecutablePath() */
+#endif
+
+#if defined(BSD)
+#include <sys/types.h>
+#include <sys/sysctl.h>
 #endif
 
 /*
@@ -1147,15 +1153,47 @@ resolve_self(const char *name)
             }
 
 #elif defined(BSD)
-            if ((namelen = readlink("/proc/curproc/file", t_name, sizeof(t_name))) > 0) {
+            if ((namelen = readlink("/proc/curproc/file", t_name, sizeof(t_name)-1)) > 0 || // Free and DragonFly
+                    (namelen = readlink("/proc/curproc/exe", t_name, sizeof(t_name)-1)) > 0) { // Net
                 t_name[namelen] =  0;
                 name = t_name;                  /* procfs */
             } else {
+#if defined(__FreeBSD__) || defined(__DragonFly__)
                 int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
-                size cb = sizeof(t_name);
+                size_t cb = sizeof(t_name);
+
                 if (-1 != sysctl(mib, 4, t_name, &cb, NULL, 0)) {
-                  name = t_name;                /* alt method */
+                    name = t_name;              /* alt method */
                 }
+
+#elif defined(__NetBSD__)
+                int mib[4] = { CTL_KERN, KERN_PROC_ARGS, -1, KERN_PROC_PATHNAME };
+                size_t cb = sizeof(t_name);
+
+                if (-1 != sysctl(mib, 4, t_name, &cb, NULL, 0)) {
+                    name = t_name;              /* alt method */
+                }
+
+#elif defined(__OpenBSD__)
+                int mib[4] = {CTL_KERN, KERN_PROC, getpid(), KERN_PROC_ARGV};
+                size_t size;
+
+                if (sysctl(mib, 4, NULL, &size, NULL, 0) == 0) {
+                    char **argv;
+
+                    if (size && (argv = (char **)calloc(1, size)) != NULL) {
+                        if (sysctl(mib, 4, argv, &size, NULL, 0) == 0) {
+                            if (strchr(argv[0], '/') == NULL || realpath(argv[0], t_name) == NULL) {
+                                strxcpy(t_name, argv[0], sizeof(t_name));
+                            }
+                            name = t_name;      /* alt method */
+                        }
+                        free((void *)argv);
+                    }
+                }
+#else
+#error Unsupported BSD target
+#endif
             }
 #endif
         }
@@ -1383,3 +1421,5 @@ expand_var(const char *xenv, char *buf, int buflen)
 }
 
 /*end*/
+
+

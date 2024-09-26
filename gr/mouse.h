@@ -1,11 +1,11 @@
 #ifndef GR_MOUSE_H_INCLUDED
 #define GR_MOUSE_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mouse_h,"$Id: mouse.h,v 1.23 2020/06/03 16:04:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_mouse_h,"$Id: mouse.h,v 1.25 2024/08/27 12:44:33 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mouse.h,v 1.23 2020/06/03 16:04:16 cvsuser Exp $
+/* $Id: mouse.h,v 1.25 2024/08/27 12:44:33 cvsuser Exp $
  * Mouse support.
  *
  *
@@ -80,8 +80,19 @@ struct IOEvent;
 
 struct MouseEvent {
     int b1, b2, b3;                             /* Button state */
-    int multi;
+    int multi;                                  /* Multiple button click's */
     int x, y;                                   /* Coordinates */
+#define MOUSEEVENT_CSHIFT 1
+#define MOUSEEVENT_CCTRL 2
+#define MOUSEEVENT_CMETA 4
+    int ctrl;                                   /* Optional Ctrl keys */
+#define MOUSEEVENT_TPRESS 1                     // single press 
+#define MOUSEEVENT_TRELEASE 2                   // signle release
+#define MOUSEEVENT_TRELEASE_ALL 4               // release all buttons
+#define MOUSEEVENT_TPRESSRELEASE 8              // button delta
+#define MOUSEEVENT_TMOTION 16
+#define MOUSEEVENT_TWHEELED 32
+    int type;                                   /* Event, otherwise 0 if undefined */
 };
 
 extern int                  mouse_init(const char *dev);
@@ -89,7 +100,7 @@ extern void                 mouse_close(void);
 extern int                  mouse_active(void);
 extern void                 mouse_pointer(int state);
 extern WINDOW_t *           mouse_pos(int x, int y, int *win, int *where);
-extern int                  mouse_process(int x, int y, int b1, int b2, int b3, int multi);
+extern int                  mouse_process(const struct MouseEvent *m, const char *seq);
 extern void                 mouse_execute(const struct IOEvent *evt);
 
 #if defined(HAVE_MOUSE)
@@ -100,10 +111,13 @@ extern void                 sys_mousepointer(int on);
 extern void                 mouse_pointer(int state);
 extern void                 mouse_draw_icon(int y, int x, int oldy, int oldx);
 extern int                  mouse_poll(fd_set *fds);
-extern int                  sys_mousepoll(fd_set *fds, struct MouseEvent *mevt);
+extern int                  sys_mousepoll(fd_set *fds, struct MouseEvent *me);
 #endif
+
+extern unsigned             sys_doubleclickms(void);
 
 extern void                 do_process_mouse(void);
 extern void                 do_translate_pos(void);
 
 #endif /*GR_MOUSE_H_INCLUDED*/
+

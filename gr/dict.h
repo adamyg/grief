@@ -1,11 +1,11 @@
 #ifndef GR_DICT_H_INCLUDED
 #define GR_DICT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dict_h,"$Id: dict.h,v 1.10 2020/04/21 00:01:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_dict_h,"$Id: dict.h,v 1.11 2024/07/29 16:14:45 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dict.h,v 1.10 2020/04/21 00:01:55 cvsuser Exp $
+/* $Id: dict.h,v 1.11 2024/07/29 16:14:45 cvsuser Exp $
  * Dictionaries.
  *
  *

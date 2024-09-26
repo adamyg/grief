@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_macros_c,"$Id: macros.c,v 1.56 2023/09/10 17:06:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_macros_c,"$Id: macros.c,v 1.57 2024/07/05 18:34:12 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: macros.c,v 1.56 2023/09/10 17:06:53 cvsuser Exp $
+/* $Id: macros.c,v 1.57 2024/07/05 18:34:12 cvsuser Exp $
  * Manipulating macro definitions.
  *
  *
@@ -560,7 +560,7 @@ macro_resolve(const char *cmd)
         modules from accessing on each other's variables.
 
         The purpose of this functionality is to provide data hiding
-        within a set of common macro files (objects), by allowed separate
+        within a set of common macro files (objects), by allowing separate
         function and variables namespaces. Each namespace creates a
         container for a set of symbols, providing a level of indirection
         to specific identifiers, thus making it possible to distinguish
@@ -800,15 +800,15 @@ mac_validname(const char *name)
         The following example setups a static scoped callback function:
 
 >       void
->	main(void)
->	{
->		register_callback( inq_module() + "::callback" );
->	}
+>       main(void)
+>       {
+>               register_callback( inq_module() + "::callback" );
+>       }
 >
->	static void
->	callback(void)
->	{
->	}
+>       static void
+>       callback(void)
+>       {
+>       }
 
     Macro Returns:
         The 'inq_module()' primitive returns the name of the current
@@ -913,7 +913,7 @@ mac_walk(SPBLK *sp, void *arg)
             scoping flags, macro name and the function body.
 
     Macro Note!:
-        This interface should be considered as a *internal* primitive, 
+        This interface should be considered as a *internal* primitive,
         reserved for exclusive use by the GRIEF Macro Compiler and
         may change without notice. Management of macro definitions
         plus any associated argument binding shall be handled
@@ -2314,3 +2314,4 @@ do_require(void)                /* int (string filename) */
     acc_assign_int((accint_t) ret);
 }
 /*end*/
+

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edbt_unix_c,"$Id: edbt_unix.c,v 1.10 2024/04/17 15:57:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_edbt_unix_c,"$Id: edbt_unix.c,v 1.17 2024/07/19 05:05:03 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edbt_unix.c,v 1.10 2024/04/17 15:57:13 cvsuser Exp $
+/* $Id: edbt_unix.c,v 1.17 2024/07/19 05:05:03 cvsuser Exp $
  * unix backtrace implementation
  *
  *
@@ -33,6 +33,7 @@ __CIDENT_RCSID(gr_edbt_unix_c,"$Id: edbt_unix.c,v 1.10 2024/04/17 15:57:13 cvsus
 #if defined(HAVE_CONFIG_H)
 #include <config.h>
 #endif
+
 #include <edstacktrace.h>
 
 //  #define HAVE_BACKTRACE
@@ -40,7 +41,7 @@ __CIDENT_RCSID(gr_edbt_unix_c,"$Id: edbt_unix.c,v 1.10 2024/04/17 15:57:13 cvsus
 //  #define HAVE_PSTACK
 //  #define HAVE_PROCSTACK
 
-#if defined(unix)
+#if defined(unix) || defined(__unix__)
 #if !defined(__CYGWIN__) && !defined(linux)
 
 #if defined(HAVE_BACKTRACE)
@@ -56,6 +57,9 @@ __CIDENT_RCSID(gr_edbt_unix_c,"$Id: edbt_unix.c,v 1.10 2024/04/17 15:57:13 cvsus
 #endif	/*!PSTACK && !PROCSTACK*/
 
 #if defined(HAVE_PSTACK) || defined(HAVE_PROCSTACK)
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
 #endif

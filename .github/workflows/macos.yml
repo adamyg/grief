@@ -1,5 +1,11 @@
-name: build
+name: "MacOS builds"
 on: [push]
+
+#https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: ${{ matrix.config.name }}
@@ -8,34 +14,34 @@ jobs:
       fail-fast: false
       matrix:
         config:
-        - {
-           name: "Windows Latest MSVC",
-           os: windows-latest,
-           toolchain: vc2022,
-           toollabel: vs170,
-           package: win32-vs22
-          }
-        - {
-           name: "Windows Latest MinGW",
-           os: windows-latest,
-           toolchain: mingw64,
-           toollabel: mingw64,
-           package: win32-w64
-          }
-        - {
-           name: "Windows Latest OWC",
-           os: windows-latest,
-           toolchain: owc20,
-           toollabel: owc20,
-           package: win32-owc
-          }
-        - {
-           name: "Ubuntu Latest GCC",
-           os: ubuntu-latest,
-           toolchain: gcc,
-           toollabel: gcc,
-           package: ubuntu-gcc
-          }
+#       - {
+#          name: "Windows Latest MSVC",
+#          os: windows-latest,
+#          toolchain: vc2022,
+#          toollabel: vs170,
+#          package: win32-vs22
+#         }
+#       - {
+#          name: "Windows Latest MinGW",
+#          os: windows-latest,
+#          toolchain: mingw64,
+#          toollabel: mingw64,
+#          package: win32-w64
+#         }
+#       - {
+#          name: "Windows Latest OWC",
+#          os: windows-latest,
+#          toolchain: owc20,
+#          toollabel: owc20,
+#          package: win32-owc
+#         }
+#       - {
+#          name: "Ubuntu Latest GCC",
+#          os: ubuntu-latest,
+#          toolchain: gcc,
+#          toollabel: gcc,
+#          package: ubuntu-gcc
+#         }
         - {
            name: "MacOS Latest GCC",
            os: macos-latest,

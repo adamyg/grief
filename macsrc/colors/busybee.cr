@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 8; -*- */
-/* $Id: busybee.cr,v 1.2 2014/11/27 15:54:10 ayoung Exp $
+/* $Id: busybee.cr,v 1.3 2024/07/06 18:03:26 cvsuser Exp $
  * busybee coloriser, GRIEF port.
  *
  * Original:
@@ -52,7 +52,7 @@ busybee_colors = {
         "hi PreProc         guifg=#faf4c6 gui=none ctermfg=230",
         "hi Todo            guifg=#ff9f00 guibg=#202020 gui=none",
 
-        // " Code-specific colors
+        // Code-specific colors
         "hi pythonImport    guifg=#009000 gui=none ctermfg=255",
         "hi pythonException guifg=#f00000 gui=none ctermfg=200",
         "hi pythonOperator  guifg=#7e8aa2 gui=none ctermfg=103",
@@ -65,4 +65,5 @@ colorscheme_busybee(void)
 {
         vim_colorscheme("busybee", 0, NULL, busybee_colors, -1);
 }
+
 /*end*/

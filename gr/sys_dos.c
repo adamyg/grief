@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_dos_c,"$Id: sys_dos.c,v 1.38 2023/09/10 16:35:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_dos_c,"$Id: sys_dos.c,v 1.39 2024/08/25 06:01:53 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_dos.c,v 1.38 2023/09/10 16:35:52 cvsuser Exp $
+/* $Id: sys_dos.c,v 1.39 2024/08/25 06:01:53 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -419,12 +419,12 @@ mouse_area(void)
         int rows, columns;
 
         ttgetsize(&rows, &columns);
-        regs.x.cx = 0;                  /* mouse visible between cx and dx */
+        regs.x.cx = 0;                          /* mouse visible between cx and dx */
         regs.x.dx = columns * mouse_x_div - 1;
         regs.x.ax = 7;
         (void)int86(0x33, &regs, &regs);
 
-        regs.x.cx = 0;                  /* mouse visible between cx and dx */
+        regs.x.cx = 0;                          /* mouse visible between cx and dx */
         regs.x.dx = rows * mouse_y_div - 1;
         regs.x.ax = 8;
         (void)int86(0x33, &regs, &regs);
@@ -437,14 +437,14 @@ sys_mousepoll(fd_set *fds, struct MouseEvent *m)
 {
     (void) fds;
 
-    if (!mouse_avail || !mouse_click) {
+    if (!mouse_avail || 0 == mouse_click) {
         return FALSE;
     }
 
-    m->b1    = (mouse_click & MOUSE_LEFT);
-    m->b2    = (mouse_click & MOUSE_RIGHT);
-    m->b3    = (mouse_click & MOUSE_MIDDLE);
-    m->multi = (mouse_click & MOUSE_DOUBLE);
+    m->b1 = (mouse_click & MOUSE_LEFT);
+    m->b2 = (mouse_click & MOUSE_RIGHT);
+    m->b3 = (mouse_click & MOUSE_MIDDLE);
+    m->multi = (mouse_click & MOUSE_DOUBLE) ? 1 : 0;
     if (mouse_click & MOUSE_DRAG) {
         m->x = mouse_x;
         m->y = mouse_y;
@@ -452,6 +452,8 @@ sys_mousepoll(fd_set *fds, struct MouseEvent *m)
         m->x = mouse_click_x;
         m->y = mouse_click_y;
     }
+    m->type = (mouse_click == MOUSE_RELEASE ? MOUSEEVT_TRELEASE :
+        (mouse_click == MOUSE_DRAG ? MOUSEEVT_TMOTION : 0));
     mouse_click = 0;
     return TRUE;
 }
@@ -479,6 +481,22 @@ sys_mousepointer(int on)
 #endif  /*HAVE_MOUSE*/
 
 
+/*  Function:           sys_doubleclickms
+ *      System double-click time.
+ *
+ *  Parameters:
+ *      none
+ *
+ *  Returns:
+ *      Returns double-click time is milliseconds.
+ */
+unsigned
+sys_doubleclickms(void)
+{
+    return 500;
+}
+
+
 #define BIOSTICK     55                         /* biostime() about every 55 msec */
 
 static KEY
@@ -498,9 +516,9 @@ vio_keyxlat(int key)
  *      the specified timeout 'tmo'.
  *
  *  Parameters:
- *      fd -                File descriptor.
- *      buf -               Output buffer.
- *      tmo -               Timeout, in milliseconds.
+ *      fd - File descriptor.
+ *      buf - Output buffer.
+ *      tmo - Timeout, in milliseconds.
  *
  *  Returns:
  *      On success (1), otherwise (0) unless a timeout (-1).
@@ -842,4 +860,4 @@ sys_realpath(const char *name, char *buf)
     return buf;
 }
 
-#endif  /*__MSDOS__*/
+#endif /*__MSDOS__*/

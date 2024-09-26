@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 8; -*- */
-/* $Id: herald.cr,v 1.3 2014/11/27 15:54:12 ayoung Exp $
+/* $Id: herald.cr,v 1.4 2024/08/04 11:42:44 cvsuser Exp $
  * herald coloriser, GRIEF port.
  *
  * Original:
@@ -340,4 +340,3 @@ colorscheme_herald(void)
         }
 }
 /*end*/
-

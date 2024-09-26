@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: buildinfo.pl,v 1.8 2024/04/22 14:34:13 cvsuser Exp $
+# $Id: buildinfo.pl,v 1.9 2024/07/30 05:06:10 cvsuser Exp $
 # buildinfo generation
 #
 # Copyright Adam Young 2018 - 2024
@@ -42,6 +42,9 @@ my $packagename = undef;
 my $version = "0.0.1";
 
 my $builddate = undef;
+my $buildyear = undef;
+my $buildmonth = undef;
+my $buildmday = undef;
 my $buildnumber = "1";
 my $buildtype = undef;
 my $buildtoolchain = undef;
@@ -102,6 +105,12 @@ $version = "0.0.1"
 $builddate = strftime('%Y%m%d', localtime)
 	if (! $builddate);
 
+($buildyear, $buildmonth, $buildmday) = ($1,$2,$3)
+	if ($builddate =~ /^(\d\d\d\d)(\d\d)(\d\d)$/);
+
+die "buildinfo: BUILD_DATE invalid"
+	if (! $buildyear);
+
 Generate();
 
 sub
@@ -128,6 +137,9 @@ Generate	#()
 #define ${prefix}VERSION_3 ${version3}
 #define ${prefix}VERSION_4 ${buildnumber}
 #define ${prefix}BUILD_DATE "${builddate}"
+#define ${prefix}BUILD_YEAR "${buildyear}"
+#define ${prefix}BUILD_MONTH "${buildmonth}"
+#define ${prefix}BUILD_MDAY "${buildmday}"
 #define ${prefix}BUILD_NUMBER "${buildnumber}"
 EOT
 

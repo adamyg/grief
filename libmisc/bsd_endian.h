@@ -29,6 +29,19 @@
 #include <edsym.h>
 #include <edendian.h>
 
+#if (defined(__NetBSD__) && (defined(_XOPEN_SOURCE) || defined(_NETBSD_SOURCE)))
+
+/*
+ * Suitable definitions available
+ */
+
+#if !defined(HAVE_SYS_ENDIAN_H)
+#error <sys/endian.h> assumed ...
+#elif !defined(ntohl) || !defined(ntohs) || !defined(htonl) || !defined(htons)
+#error Unknown BSD endian configuration ...
+#endif
+
+#else
 
 /*
  * General byte order swapping functions.
@@ -187,6 +200,8 @@ le64enc(void *pp, uint64_t u)
 	le32enc(p, (uint32_t)(u & 0xffffffff));
 	le32enc(p + 4, (uint32_t)(u >> 32));
 }
+
+#endif  /*__NetBSD__*/
 
 #endif  /*GR_BSD_ENDIAN_H_INCLUDED*/
 /*end*/

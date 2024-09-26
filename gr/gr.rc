@@ -70,26 +70,20 @@ VS_VERSION_INFO VERSIONINFO
                             //  VALUE "CompanyName",            ""
 
                                 VALUE "FileDescription",        "The GRIEF Editor"
-
                                 VALUE "FileVersion",            GR_VERSION ", Build:" GR_BUILD_DATE "-" GR_BUILD_NUMBER
-
                                 VALUE "InternalName",           "GRIEFEdit"
-
                                 VALUE "LegalCopyright",
-                                        "Copyright (C) 1998 - 2024, Adam Young. All rights reserved. \n"
-                                        "Derived from crisp2.2, Paul Fox, 1991. \n"
+                                        "Copyright (C) 1998 - " GR_BUILD_YEAR ", Adam Young. All rights reserved. \n"
                                         "Copyright (C) 1990, 1993, The Regents of the University of California. \n"
-
+                                        "Derived from crisp2.2, Paul Fox, 1991. \n"
+                                        "This is free software; see the source for copying conditions. \n"
+                                        "There is NO warranty; not even for MERCHANTABILITY \n"
+                                        "or FITNESS FOR A PARTICULAR PURPOSE. \0"
                                 VALUE "LegalTrademarks",        "see the GRIEF License"
-
                                 VALUE "Maintainers",            "https://github.com/adamyg/grief\n"
-
                                 VALUE "OriginalFilename",       "gr.exe"
-
-                                VALUE "ProductName",            "GRIEF Edit"
-
+                                VALUE "ProductName",            "GRIEFEdit"
                                 VALUE "ProductVersion",         GR_VERSION "-win32"
-
                                 VALUE "SpecialBuild",           "gr-win32-native"
                         END
                 END
@@ -117,5 +111,3 @@ VS_VERSION_INFO VERSIONINFO
  */
 
 #endif  /* English (U.S.) resources */
-
-

@@ -1,5 +1,5 @@
 /* -*- indent-width: 4; -*- */
-/* $Id: about.cr,v 1.14 2024/04/17 15:57:15 cvsuser Exp $
+/* $Id: about.cr,v 1.15 2024/08/04 10:07:57 cvsuser Exp $
  * About box.
  *
  *
@@ -54,7 +54,7 @@ main()
 
     version(maj, min, edit, rel, machtype, compiled);
 
-    sprintf(extra1, "%s %s v%d.%d.%d", APPNAME, machtype, maj, min, edit, compiled);
+    sprintf(extra1, "%s %s v%d.%d.%d.%d", APPNAME, machtype, maj, min, edit, rel);
     sprintf(extra2, "Built on %s", compiled);
 
     dialog =

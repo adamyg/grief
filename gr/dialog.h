@@ -1,11 +1,11 @@
 #ifndef GR_DIALOG_H_INCLUDED
 #define GR_DIALOG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dialog_h,"$Id: dialog.h,v 1.18 2014/10/26 22:13:10 ayoung Exp $")
+__CIDENT_RCSID(gr_dialog_h,"$Id: dialog.h,v 1.21 2024/09/25 13:58:06 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dialog.h,v 1.18 2014/10/26 22:13:10 ayoung Exp $
+/* $Id: dialog.h,v 1.21 2024/09/25 13:58:06 cvsuser Exp $
  * Dialog manager public interface.
  *
  *
@@ -36,6 +36,7 @@ __CPRAGMA_ONCE
 #define DLGC_CONTAINER          0x2001          /* Widget container */
 #define DLGC_GROUP              0x2002          /* Group start */
 #define DLGC_TAB                0x2003          /* Tab panel */
+#define DLGC_MENU               0x2004          /* Menu */
 #define DLGC_END                0x200f          /* End of current container */
 
 #define DLGC_PUSH_BUTTON        0x2011          /* Push button */
@@ -47,17 +48,21 @@ __CPRAGMA_ONCE
 #define DLGC_EDIT_FIELD         0x2017          /* Edit field */
 #define DLGC_NUMERIC_FIELD      0x2018          /* Numeric edit field */
 #define DLGC_COMBO_FIELD        0x2019          /* Edit field and drop list */
+#define DLGC_GAUGE              0x201a          /* Gauge */
 
 #define DLGC_SPACER             0x2030          /* Display spacer */
 #define DLGC_SEPARATOR_HORIZONTAL 0x2031
 #define DLGC_SEPARATOR_VERTICAL 0x2032
 
-#define DLGC_TREE               0x2040          /* *not* implemented */
-#define DLGC_GAUGE              0x2041          /* *not* implemented */
-#define DLGC_SLIDER             0x2042          /* *not* implemented */
-#define DLGC_VSCROLLBAR         0x2043          /* *not* implemented */
-#define DLGC_HSCROLLBAR         0x2044          /* *not* implemented */
-#define DLGC_GRID               0x2070          /* *not* implemented */
+#define DLGC_MENU_ITEM          0x2041
+#define DLGC_MENU_SEPARATOR     0x2042
+
+#define DLGC_TREE               0x20f0          /* *not* implemented */
+#define DLGC_TABLE              0x20f1          /* *not* implemented */
+#define DLGC_SLIDER             0x20f2          /* *not* implemented */
+#define DLGC_VSCROLLBAR         0x20f3          /* *not* implemented */
+#define DLGC_HSCROLLBAR         0x20f4          /* *not* implemented */
+#define DLGC_GRID               0x20f5          /* *not* implemented */
 #define DLGC_MAX                0x2100
 
 /*
@@ -77,6 +82,7 @@ __CPRAGMA_ONCE
 #define DLGA_COLS               0x3009
 #define DLGA_ROWS               0x300a
 #define DLGA_VERSION            0x300b          /* Wiget specific version/feature set identifier */
+#define DLGA_STYLES             0x300c
 
 #define DLGA_ATTACH_BOTTOM      0x3010          /* Attachment of widget within dialog box. */
 #define DLGA_ATTACH_TOP         0x3011
@@ -208,6 +214,22 @@ __CPRAGMA_ONCE
 
 /*--export--defines--*/
 /*
+ *  Dialog styles.
+ */
+#define DLGS_BORDER             0x0001
+#define DLGS_CAPTION            0x0002
+
+#define DLGS_MAXIMIZE           0x0100
+#define DLGS_MINIMIZE           0x0200
+#define DLGS_RESTORE            0x0400
+#define DLGS_SYSCLOSE           0x1000
+#define DLGS_SYSMOVE            0x2000
+#define DLGS_SYSSIZE            0x4000
+#define DLGS_SYSMENU            0x8000
+/*--end--*/
+
+/*--export--defines--*/
+/*
  *  Dialog callback events
 
     DLGE_KEYDOWN
@@ -226,10 +248,10 @@ __CPRAGMA_ONCE
     DLGE_HELP
         Indicates that the user pressed the F1 key.
 
-        If a menu is active when F1 is pressed, WM_HELP is sent to the
-        window associated with the menu; otherwise, WM_HELP is sent to
+        If a menu is active when F1 is pressed, DLGE_HELP is sent to the
+        window associated with the menu; otherwise, DLGE_HELP is sent to
         the widget that has the keyboard focus. If no widget has the
-        focus, WM_HELP is sent to the currently active window.
+        focus, DLGE_HELP is sent to the currently active window.
 
  */
 #define DLGE_INIT               0               /* Initlisation */
@@ -241,6 +263,19 @@ __CPRAGMA_ONCE
 #define DLGE_KEYDOWN            6               /* Keydown event */
 #define DLGE_COMMAND            7               /* Accelerator/Menu command */
 #define DLGE_HELP               8               /* Help event */
+#define DLGE_SYSCOMMAND         9               /* System command */
+/*--end--*/
+
+/*--export--defines--*/
+/*
+ *  System commands.
+ */
+#define DLSC_CLOSE              0xf010
+#define DLSC_TITLE              0xf020
+#define DLSC_MOVE               0xf100
+#define DLSC_SIZE               0xf120
+#define DLSC_MAXIMIZE           0xf200  
+#define DLSC_MINIMIZE           0xf210
 /*--end--*/
 
 /*--export--defines--*/
@@ -271,6 +306,7 @@ __CPRAGMA_ONCE
 #define DLIDNO                  103
 #define DLIDYES                 104
 /*--end--*/
+
 
 /*
  *  BS_3STATE
@@ -307,8 +343,8 @@ __CPRAGMA_ONCE
 
 #define WIDGET_READY            2
 
-    /*  The DESTROY message is sent when a widget is being destroyed. It is
-     *  sent to the widget handler being destroyed after the dialog
+    /*  The DESTROY message is sent when a widget is being destroyed. 
+     *  It is sent to the widget handler being destroyed after the dialog
      *  has been removed from the screen.
      */
 #define WIDGET_DESTROY          3
@@ -322,6 +358,11 @@ __CPRAGMA_ONCE
      *  attribute to be retrieved from a specific value.
      */
 #define WIDGET_GET              5
+
+     /*  Message when the user chooses a command from the window control menu or
+      *  when one the window buttons is selected.
+      */
+#define WIDGET_SYSCOMMAND       6
 
     /*  BASE for implementation specific messages
      */
@@ -416,6 +457,7 @@ typedef struct _widget {
 
     void               *w_ucontrol;             /* Fields for use by controller */
     uint32_t            w_uflags;               /* User flags, widget specific */
+    uint32_t            w_styles;               /* Style, most only apply to top */
 } WIDGET_t;
 
 typedef struct {
@@ -442,6 +484,8 @@ typedef struct _dialog {
 #define d_name          d_widget.w_name
 #define d_help          d_widget.w_help
 
+    int                 d_xhint;                /* Hint from the top left corner coordinates */
+    int                 d_yhint;
     int                 d_retval;               /* Last return from dialog_run() */
     const char *        d_title;                /* Title */
     int                 d_running;              /* Are we running? */
@@ -450,6 +494,7 @@ typedef struct _dialog {
 
     int32_t             d_ident;                /* Object identifier (handle) */
     uint32_t            d_widgetseq;            /* Widget sequence */
+    uint32_t            d_styles;               /* Styles DLGS_XXXX */
 
     TAILQ_ENTRY(_dialog)                        /* Dialog queue */
                         d_node;
@@ -480,6 +525,7 @@ extern int                  dialog_count(DIALOG_t *d);
 extern WIDGET_t *           dialog_next(DIALOG_t *d, WIDGET_t *w);
 extern WIDGET_t *           dialog_prev(DIALOG_t *d, WIDGET_t *w);
 
+extern void                 widget_clear(DIALOG_t* d);
 extern WIDGET_t *           widget_byname(DIALOG_t *d, const char *name);
 extern WIDGET_t *           widget_byident(DIALOG_t *d, int ident);
 

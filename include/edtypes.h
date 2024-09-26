@@ -1,11 +1,11 @@
 #ifndef GR_EDTYPES_H_INCLUDED
 #define GR_EDTYPES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edtypes_h,"$Id: edtypes.h,v 1.44 2024/05/02 17:20:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_edtypes_h,"$Id: edtypes.h,v 1.45 2024/07/14 14:27:13 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edtypes.h,v 1.44 2024/05/02 17:20:29 cvsuser Exp $
+/* $Id: edtypes.h,v 1.45 2024/07/14 14:27:13 cvsuser Exp $
  * Editor base types.
  *
  *
@@ -351,7 +351,7 @@ typedef unsigned char LINEATTR;                 /* line attribute management */
 #define __CBEGIN_DECLS
 #define __CEND_DECLS
 #endif
-#endif  /*__BEGIN_DECLS*/
+#endif  /*__CBEGIN_DECLS*/
 
 #ifndef __CSTRINGIZE
 #define ____CSTRINGIZE(s)       #s

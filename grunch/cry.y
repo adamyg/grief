@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cry.y,v 1.36 2021/08/14 17:09:30 cvsuser Exp $
+/* $Id: cry.y,v 1.37 2024/08/02 12:58:32 cvsuser Exp $
  * grunch/crunch grammer, extended c99
  *
  *
@@ -107,8 +107,8 @@
 %type <nval>    constant_expression
 
 /*declarations*/
-%type <nval>    declaration
-%type <nval>    declaration_specifiers
+%type <tval>    declaration
+%type <tval>    declaration_specifiers
 %type <tval>    decl_specs
 %type <nval>    init_declarator_list init_declarator
 %type <tval>    storage_class_specifier
@@ -807,8 +807,8 @@ declaration:
                         $$ = $1;
                         decl_pop();
                     }
-                | error O_SEMICOLON { $$ = NULL; }
-                | error O_CCURLY    { $$ = NULL; }
+                | error O_SEMICOLON { $$ = 0; }
+                | error O_CCURLY    { $$ = 0; }
                 ;
 
 declaration_specifiers:
@@ -1623,12 +1623,16 @@ compound_statement:
 
 block_item_list:                                /* c99, 27/08/08 */
                   block_item
+                    { }
                 | block_item_list block_item
+                    { }
                 ;
 
 block_item:                                     /* c99, 27/08/08 */
                   declaration
+                    { }
                 | statement
+                    { }
                 ;
 
 expression_statement:

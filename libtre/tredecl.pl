@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: tredecl.pl,v 1.3 2014/10/22 02:33:56 ayoung Exp $
+# $Id: tredecl.pl,v 1.4 2024/06/15 08:23:27 cvsuser Exp $
 # -*- tabs: 8; indent-width: 4; -*-
 # tre.h import utility
 # extern to cdecl
@@ -56,8 +56,8 @@ main()
     my $ret
         = GetOptions(
             'dryrun'    => \$o_dryrun,
-            'in'        => \$o_trein,
-            'out'       => \$o_treout,
+            'in:s'      => \$o_trein,
+            'out:s'     => \$o_treout,
             'help'      => \$o_help
             );
 

@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: dialogtest.cr,v 1.6 2014/10/22 02:34:29 ayoung Exp $
+/* $Id: dialogtest.cr,v 1.8 2024/09/12 17:11:03 cvsuser Exp $
  *
  *  This file is used when debugging and fixing CRISP to aid in regression
  *  testing - catching bugs introduced inadvertently. This script does not
@@ -8,7 +8,7 @@
  *
  *  The tests in this file are mainly to do with tty dialog interface.
  *
- *  This file can also be run after porting CRISP, to ensure that these tests
+ *  This file can also be run after porting GRIEF, to ensure that these tests
  *  work as expected. If anything doesn't work that should, the porter will
  *  have to check for portability problems. These tests attempt to do things in
  *  order of complexity.
@@ -74,6 +74,7 @@ dialogmake()
     dialog_tst =  dialog_create( make_list(
         DLGA_TITLE,                             "dialog test",
         DLGA_CALLBACK,                          "::callback",   // global call-back
+        DLGA_STYLES,                            DLGS_CAPTION|DLGS_SYSCLOSE,
 
         DLGC_CONTAINER,
             DLGA_ATTACH_TOP,
@@ -337,20 +338,31 @@ dialogmake()
                 DLGA_LABEL,                     "&OK",
                 DLGA_NAME,                      "ok",
             DLGC_PUSH_BUTTON,
+                DLGA_ATTACH_LEFT,
+                DLGA_LABEL,                     "e&Xit",
+                DLGA_NAME,                      "exit",
+            DLGC_PUSH_BUTTON,
                 DLGA_ATTACH_RIGHT,
                 DLGA_LABEL,                     "&Cancel",
                 DLGA_NAME,                      "cancel",
-                DLGA_ATTACH_RIGHT,
                 DLGA_CANCEL_BUTTON,
                 DLGA_DEFAULT_BUTTON,
-                DLGA_ATTACH_RIGHT,
         DLGC_END
         ));
 }
 
 
-static void
+static int
 callback(int ident, string name, int p1, int p2)
 {
     message("ident=0x%x, name=%s, p1=%d/0x%x, p2=%d/0x%x", ident, name, p1, p1, p2, p2);
+    if (name == "exit") {
+        dialog_exit();
+        return TRUE;
+    }
+    return FALSE;
 }
+
+//end
+
+

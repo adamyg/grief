@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sh_os2_c,"$Id: sh_os2.c,v 1.13 2014/10/22 02:33:19 ayoung Exp $")
+__CIDENT_RCSID(gr_sh_os2_c,"$Id: sh_os2.c,v 1.14 2024/08/18 10:52:14 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sh_os2.c,v 1.13 2014/10/22 02:33:19 ayoung Exp $
+/* $Id: sh_os2.c,v 1.14 2024/08/18 10:52:14 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -124,7 +124,7 @@ static const char *
 outdirect(const char *path, int *mode)
 {
     *mode = O_WRONLY|O_CREAT|O_TRUNC;
-    if (path) {                 
+    if (path) {
         if (*path == '>') {                     /* ">name" */
             ++path;
             if (*path == '>') {                 /* ">>name" */

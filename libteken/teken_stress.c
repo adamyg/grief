@@ -28,7 +28,7 @@
  * $FreeBSD: head/sys/teken/stress/teken_stress.c 326272 2017-11-27 15:23:17Z pfg $
  */
 
-#include <sys/cdefs.h>
+#include <edcdefs.h>
 
 #include <fcntl.h>
 #include <inttypes.h>

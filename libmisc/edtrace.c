@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edtrace_c,"$Id: edtrace.c,v 1.48 2024/04/27 15:22:32 cvsuser Exp $")
+__CIDENT_RCSID(gr_edtrace_c,"$Id: edtrace.c,v 1.49 2024/06/13 16:56:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edtrace.c,v 1.48 2024/04/27 15:22:32 cvsuser Exp $
+/* $Id: edtrace.c,v 1.49 2024/06/13 16:56:21 cvsuser Exp $
  * Simple diagnostic trace.
  *
  *
@@ -35,9 +35,7 @@ __CIDENT_RCSID(gr_edtrace_c,"$Id: edtrace.c,v 1.48 2024/04/27 15:22:32 cvsuser E
 #if defined(HAVE_SYS_TIME_H)
 #include <sys/time.h>
 #endif
-#if !defined(HAVE_SYS_TIME_H) || defined(TIME_WITH_SYS_TIME)
 #include <time.h>
-#endif
 #include <stdarg.h>
 #include <assert.h>
 

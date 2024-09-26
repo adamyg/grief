@@ -1,11 +1,11 @@
 #ifndef GR_GETPWD_H_INCLUDED
 #define GR_GETPWD_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_getpwd_h,"$Id: getpwd.h,v 1.1 2021/04/18 15:54:44 cvsuser Exp $")
+__CIDENT_RCSID(gr_getpwd_h,"$Id: getpwd.h,v 1.2 2024/09/21 09:05:16 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: getpwd.h,v 1.1 2021/04/18 15:54:44 cvsuser Exp $
+/* $Id: getpwd.h,v 1.2 2024/09/21 09:05:16 cvsuser Exp $
  * Pasword support.
  *
  *
@@ -36,5 +36,3 @@ void sys_getpwend(passwd_t *pwd, struct passwd *result);
 __CEND_DECLS
 
 #endif /*GR_GETPWD_H_INCLUDED*/
-
-

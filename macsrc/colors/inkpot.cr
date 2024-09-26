@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 8; -*- */
-/* $Id: inkpot.cr,v 1.2 2014/11/27 15:54:12 ayoung Exp $
+/* $Id: inkpot.cr,v 1.3 2024/08/04 11:42:44 cvsuser Exp $
  * inkpot coloriser, GRIEF port.
  *
  * Original:
@@ -247,6 +247,3 @@ colorscheme_inkpot(void)
         vim_colorscheme("inkpot", 0, NULL, colors, -1);
 }
 /*end*/
-
-
-

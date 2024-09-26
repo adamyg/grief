@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charseticonv_c,"$Id: charseticonv.c,v 1.25 2024/04/17 16:00:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_charseticonv_c,"$Id: charseticonv.c,v 1.26 2024/07/27 09:04:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* Conversion tables loader/interface.
@@ -688,7 +688,7 @@ dlmod_error(int xerrno)
         int n;
 
         buffer[0] = 0;
-        if ((n = loadquery(L_GETMESSAGE, msgs, sizeof(msgs))) > 0) {
+        if ((n = loadquery(L_GETMESSAGES, msgs, sizeof(msgs))) > 0) {
             int m, len;
 
             len = strpush(0, buffer, "dlopen: ");

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dialog_c,"$Id: dialog.c,v 1.31 2022/08/10 15:44:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_dialog_c,"$Id: dialog.c,v 1.35 2024/09/25 13:59:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dialog.c,v 1.31 2022/08/10 15:44:56 cvsuser Exp $
+/* $Id: dialog.c,v 1.35 2024/09/25 13:59:56 cvsuser Exp $
  * Dialog manager.
  *
  *
@@ -48,11 +48,26 @@ static void             dlg_inherit(WIDGET_t *parent, WIDGET_t *w);
 static int              callback(const char *label, const char *callback,
                             WIDGET_t *w, int event, accint_t val1, accint_t val2, int *iret);
 
-static const struct {                           /* Widget classes */
+typedef struct {                                /* Widget definition */
     uint16_t            w_class;
     const char *        w_desc;
     WIDGETNEW_t         w_new;
-} widgets[] = {
+} WidgetDef;
+
+typedef struct {                                /* Attribute definition */
+    uint16_t            a_ident;
+    const char *        a_desc;
+    int32_t             a_type;
+#define A_NONE                  0x00
+#define A_STR                   0x01
+#define A_INT                   0x02
+#define A_BOOL                  A_INT
+#define A_FLOAT                 0x04
+#define A_LIST                  0x08
+#define A_NULL                  0x10
+} AttributeDef;
+
+static WidgetDef frame_widgets[] = {            /* Frame widget classes */
         /*
          *  containers
          */
@@ -62,7 +77,7 @@ static const struct {                           /* Widget classes */
         { DLGC_CONTAINER,               "CONTAINER",            container_new },
 
         /*
-         *  primitives
+         *  elements
          */
         { DLGC_SPACER,                  "SPACER",               spacer_new },
         { DLGC_SEPARATOR_HORIZONTAL,    "SEPARATOR_HORIZONTAL", separatorh_new },
@@ -76,27 +91,30 @@ static const struct {                           /* Widget classes */
         { DLGC_NUMERIC_FIELD,           "NUMERIC_FIELD",        numericfield_new },
         { DLGC_COMBO_FIELD,             "COMBO_FIELD",          combofield_new },
     /*- { DLGC_TREE,                    "TREE",                 tree_new },         -*/
+    /*- { DLGC_TABLE,                   "TABLE",                table_new },        -*/
         { DLGC_GAUGE,                   "GAUGE",                gauge_new },
     /*- { DLGC_SLIDER,                  "SLIDER",               slider_new },       -*/
-    /*- { DLGC_VSCROLLBAR,              "VSCROLLBAR",           vscrollbar_new },   -*/
-    /*- { DLGC_HSCROLLBAR,              "HSCROLLBAR",           hscrollbar_new },   -*/
-    /*- { DLGC_TOGGLE,                  "TOGGLE",               toggle_new },       -*/
         { 0, NULL, NULL }
         };
 
-static const struct {                           /* Attribute definition */
-    uint16_t            a_ident;
-    const char *        a_desc;
-    int32_t             a_type;
-} attrs[] = {
-#define A_NONE                  0x00
-#define A_STR                   0x01
-#define A_INT                   0x02
-#define A_BOOL                  A_INT
-#define A_FLOAT                 0x04
-#define A_LIST                  0x08
-#define A_NULL                  0x10
+static WidgetDef menu_widgets[] = {             /* Menu context, widget classes */
+        /*
+         *  containers
+         */
+        { DLGC_MENU,                    "MENU",                 menu_new },
 
+        /*
+         *  elements
+         */
+        { DLGC_MENU_ITEM,               "MENU_ITEM",            menu_item_new },
+        { DLGC_MENU_SEPARATOR,          "MENU_SEPARATOR",       menu_separator_new },
+        { 0, NULL, 0 }
+        };
+
+static AttributeDef attrs[] = {
+        /*
+         *  Attribute definitions
+         */
         { DLGA_TITLE,                   "TITLE",                A_STR },
         { DLGA_NAME,                    "NAME",                 A_STR },
         { DLGA_IDENT,                   "IDENT",                A_INT },
@@ -107,6 +125,8 @@ static const struct {                           /* Attribute definition */
         { DLGA_Y,                       "Y",                    A_INT|A_STR },
         { DLGA_COLS,                    "COLS",                 A_INT|A_STR },
         { DLGA_ROWS,                    "ROWS",                 A_INT|A_STR },
+        { DLGA_VERSION,                 "VERSION",              A_INT },
+        { DLGA_STYLES,                  "STYLES",               A_INT },
 
         { DLGA_ATTACH_TOP,              "ATTACH_TOP",           A_NONE },
         { DLGA_ATTACH_BOTTOM,           "ATTACH_BOTTOM",        A_NONE },
@@ -132,7 +152,7 @@ static const struct {                           /* Attribute definition */
         { DLGA_DEFAULT_BUTTON,          "DEFAULT_BUTTON",       A_NONE },
         { DLGA_DEFAULT_FOCUS,           "DEFAULT_FOCUS",        A_NONE },
         { DLGA_VALUE,                   "VALUE",                A_INT|A_STR|A_LIST|A_NULL },
-        { DLGA_LABEL,                   "LABEL",                A_STR },
+        { DLGA_LABEL,                   "LABEL",                A_STR  },
         { DLGA_TEXT_ONLY,               "TEXT_ONLY",            A_NONE },
         { DLGA_GUI_ONLY,                "GUI_ONLY",             A_NONE },
         { DLGA_ACCELERATOR,             "ACCELERATOR",          A_STR  },
@@ -172,7 +192,7 @@ static const struct {                           /* Attribute definition */
         { DLGA_LBICASESTRINGS,          "LBICASESTRINGS",       A_INT  },
         { DLGA_LBDUPLICATES,            "LBDUPLICATES",         A_INT  },
     /*  { DLGA_LBINSERT,                "LBINSERT",             A_INT|A_STR|A_LIST },  */
-    /*  { DLGA_LBREMOVE,                "LBREMOVE",             A_INT|A_STR|A_LIST },  */
+    /*  { DLGA_LBREMOVE,                "LBREMOVE",             A_INT },  */
         { DLGA_LBCLEAR,                 "LBCLEAR",              A_NONE },
 
         { DLGA_LBCURSOR,                "LBCURSOR",             A_INT  },
@@ -255,7 +275,7 @@ dialog_shutdown(void)
      *Containers*
 
 (start table,table=nd)
-        [Atom                       [Description                        ]
+        [Atom                       [Description                            ]
       ! DLGC_GROUP                  Variable sized visual and logical
                                     group container, with an optional
                                     frame and title.
@@ -265,12 +285,17 @@ dialog_shutdown(void)
 
       ! DLGC_TAB                    Fixed size visual and logical
                                     container, with an optional title.
+
+      ! DLGC_MENU                   Specialised menu container.
+                                    Note: work-in-progress
 (end table)
 
      *Widgets*
 
+        Non-menu containers support the following widgets.
+
 (start table,table=nd)
-        [Atom                       [Description                        ]
+        [Atom                       [Description                            ]
       ! DLGC_CHECK_BOX              Check box
       ! DLGC_COMBO_FIELD            Combo field
       ! DLGC_EDIT_FIELD             Edit field
@@ -284,28 +309,38 @@ dialog_shutdown(void)
       ! DLGC_SPACER                 Spacer
 (end table)
 
-     *Attributes*
+        Menu containers support the following widgets only.
 
 (start table,table=nd)
-        [Atom                   [Type   [Description                    ]
-      ! DLGA_TITLE              String  Attribute title.
-      ! DLGA_NAME               String  Attribute name.
-      ! DLGA_IDENT              Int     Identifier.
-      ! DLGA_CALLBACK           String  Macro callback.
-      ! DLGA_HELP               String  Help topic.
-      ! DLGA_TOOLTIP            String  Tooltip topic.
+        [Atom                       [Description                            ]
+      ! DLGC_MENU_ITEM              Item
+      ! DLGC_MENU_SEPARATOR         Separator
+(end table)
 
-      ! DLGA_X                  Int     Horizontal position.
-      ! DLGA_Y                  Int     Vertical position.
-      ! DLGA_COLS               Int     Width in columns.
-      ! DLGA_ROWS               Int     Height in rows.
+     *Attributes*
 
-      ! DLGA_ATTACH_TOP         n/a
+        Frame/non-menu dialog widgets support the following attributes.
+
+(start table,table=nd)
+        [Atom                   [Type       [Description                    ]
+      ! DLGA_TITLE              String      Attribute title.
+      ! DLGA_NAME               String      Attribute name.
+      ! DLGA_IDENT              Int         Identifier.
+      ! DLGA_CALLBACK           String      Macro callback.
+      ! DLGA_HELP               String      Help topic.
+      ! DLGA_TOOLTIP            String      Tooltip topic.
+
+      ! DLGA_X                  Int         Horizontal position.
+      ! DLGA_Y                  Int         Vertical position.
+      ! DLGA_COLS               Int         Width in columns.
+      ! DLGA_ROWS               Int         Height in rows.
+
+      ! DLGA_ATTACH_TOP         n/a         Attachment within frame.
       ! DLGA_ATTACH_BOTTOM      n/a
       ! DLGA_ATTACH_LEFT        n/a
       ! DLGA_ATTACH_RIGHT       n/a
 
-      ! DLGA_ALIGN_N            n/a
+      ! DLGA_ALIGN_N            n/a         Alignment within frame.
       ! DLGA_ALIGN_NE           n/a
       ! DLGA_ALIGN_E            n/a
       ! DLGA_ALIGN_SE           n/a
@@ -315,7 +350,7 @@ dialog_shutdown(void)
       ! DLGA_ALIGN_NW           n/a
       ! DLGA_ALIGN_CENTER       n/a
 
-      ! DLGA_ALLOW_EXPAND       n/a
+      ! DLGA_ALLOW_EXPAND       n/a         Auto sizing
       ! DLGA_ALLOW_FILLX        n/a
       ! DLGA_ALLOW_FILLY        n/a
       ! DLGA_PROPAGATE          Boolean
@@ -377,11 +412,29 @@ dialog_shutdown(void)
       ! DLGA_GAUGEMAX           Int|Str
 (end table)
 
+        Menu widgets support the following attributes (work-in-progress).
+
+(start table,table=nd)
+        [Atom                   [Type       [Description                    ]
+      ! DLGA_NAME               String      Attribute name.
+      ! DLGA_IDENT              Int         Identifier.
+      ! DLGA_CALLBACK           String      Macro callback.
+      ! DLGA_HELP               String      Help topic.
+      ! DLGA_TOOLTIP            String      Tooltip topic.
+
+      ! DLGA_VALUE              Any
+      ! DLGA_LABEL              String
+      ! DLGA_ACCELERATOR        String
+      ! DLGA_HOTKEY             Integer
+      ! DLGA_GREYED             n/a
+      ! DLGA_ACTIVE             n/a
+(end table)
+
     Macro Parameters:
         decl - Dialog definition.
 
     Macro TODO:
-        Allow the dialog definition to be XML.
+        Allow the dialog definition to be json.
 
     Macro Returns:
         On success returns a unique dialog resource identifier otherwise
@@ -399,8 +452,14 @@ do_dialog_create(void)          /* int (list decl) */
     DIALOG_t *dialog;
     WIDGET_t *stack[WIDGET_MAXDEPTH] = {0},     /* container stack */
         *parent = NULL, *widget = NULL;
-    uint32_t groupid = 1, containerid = 10000;
     const LIST *nextlp, *lp;
+
+    unsigned dlgcontext = 0;
+#define DLGCONTEXT_UNDEFINED 0
+#define DLGCONTEXT_FRAME 1
+#define DLGCONTEXT_MENU 2
+
+    uint32_t groupid = 1, containerid = 10000;
     int length, padding;
     int32_t attribute;
     int depth = 0, object = 0;                  /* current depths */
@@ -451,57 +510,77 @@ do_dialog_create(void)          /* int (list decl) */
                         break;
                     case DLGC_CONTAINER:
                     case DLGC_TAB:
+                    case DLGC_MENU:
                         ++containerid;
                         break;
                     }
                     widget = NULL;
-
                 } else {
                     ewprintf("dialog_create: container nesting incorrect.");
                     idx = -idx;                 /* error */
                 }
             } else {
-                for (i = 0; widgets[i].w_class; ++i)
-                    if (attribute == widgets[i].w_class) {
-                        WIDGET_t *t_widget;
+                const WidgetDef *def = NULL;
 
-                        if ((WIDGET_t *)NULL != (t_widget = (widgets[i].w_new)())) {
-                            widget = t_widget;
-
-                            widget->w_desc = widgets[i].w_desc;
-                            widget->w_class = (uint16_t)attribute;
-
-                            dlg_queue(dialog, widget);
-                            dlg_inherit(parent, widget);
-
-                            object = 1;         /* containers, push and inc identifiers */
-                            if (attribute < DLGC_END) {
-                                if (depth >= WIDGET_MAXDEPTH) {
-                                    ewprintf("dialog_create: nesting depth >%d.", WIDGET_MAXDEPTH);
-                                    break;
-                                }
-                                if (0 == depth) {
-                                    ++containerid, ++groupid;
-                                }
-                                stack[ depth++ ] = parent;
-                                parent = widget;
-                                object = 0;
-                            }
-
-                            widget->w_groupid = groupid;
-                            widget->w_containerid = containerid;
-
-                            length = trace_log("\t[%3d/%3d] %*sDLGC_%s,",
-                                        idx, depth, (depth + object) * 4, "", widgets[i].w_desc);
-                            trace_log(" %*s// group:%u, container:%u\n",
-                                (length > 59 ? 0 : 59 - length), "", (unsigned)groupid, (unsigned)containerid);
-
-                            attribute = 0;      /* done */
+                if (dlgcontext != DLGCONTEXT_MENU)
+                    for (i = 0; frame_widgets[i].w_class; ++i)
+                        if (attribute == frame_widgets[i].w_class) {
+                            dlgcontext = DLGCONTEXT_FRAME;
+                            def = frame_widgets + i;
+                            break;
                         }
-                        break;
+                if (dlgcontext != DLGCONTEXT_FRAME && NULL == def)
+                    for (i = 0; menu_widgets[i].w_class; ++i)
+                        if (attribute == menu_widgets[i].w_class) {
+                            dlgcontext = DLGCONTEXT_MENU;
+                            def = menu_widgets + i;
+                            break;
+                        }
+
+                if (def) {
+                    WIDGET_t *t_widget;
+
+                    if ((WIDGET_t *)NULL != (t_widget = def->w_new())) {
+                        widget = t_widget;
+
+                        widget->w_desc = def->w_desc;
+                        widget->w_class = (uint16_t)attribute;
+
+                        dlg_queue(dialog, widget);
+                        dlg_inherit(parent, widget);
+
+                        object = 1;             /* containers, push and inc identifiers */
+                        if (attribute < DLGC_END) {
+                            if (depth >= WIDGET_MAXDEPTH) {
+                                ewprintf("dialog_create: nesting depth >%d.", WIDGET_MAXDEPTH);
+                                break;
+                            }
+                            if (0 == depth) {
+                                ++containerid, ++groupid;
+                            }
+                            stack[ depth++ ] = parent;
+                            parent = widget;
+                            object = 0;
+                        }
+
+                        widget->w_groupid = groupid;
+                        widget->w_containerid = containerid;
+                        length = trace_log("\t[%3d/%3d] %*sDLGC_%s,",
+                                    idx, depth, (depth + object) * 4, "", def->w_desc);
+                        trace_log(" %*s// group:%u, container:%u\n",
+                            (length > 59 ? 0 : 59 - length), "", (unsigned)groupid, (unsigned)containerid);
+
+                        attribute = 0;          /* done */
+
+                    } else {
+                        ewprintf("dialog_create: unable to create %swidget '%d/0x%x'.",
+                            (dlgcontext == DLGCONTEXT_FRAME ? "dialog " : (dlgcontext == DLGCONTEXT_MENU ? "menu " : "")), attribute, attribute);
+                        idx = -idx;             /* error */
                     }
-                if (attribute) {
-                    ewprintf("dialog_create: invalid widget '%d/0x%x'.", attribute, attribute);
+
+                } else {
+                    ewprintf("dialog_create: invalid %swidget '%d/0x%x'.",
+                        (dlgcontext == DLGCONTEXT_FRAME ? "dialog " : (dlgcontext == DLGCONTEXT_MENU ? "menu " : "")), attribute, attribute);
                     idx = -idx;                 /* error */
                 }
             }
@@ -610,7 +689,7 @@ do_dialog_create(void)          /* int (list decl) */
     Macro: dialog_run - Execute a dialog resource
 
         int
-        dialog_run(int dialog, [string args])
+        dialog_run(int dialog, [int x], [int y], [string args])
 
     Macro Description:
         The 'dialog_run()' primitive executes the dialog associated
@@ -618,7 +697,8 @@ do_dialog_create(void)          /* int (list decl) */
 
     Macro Parameters:
         dialog - Dialog instance handle.
-        args - Optional string containing
+        x, y - Optional coordinates of the top left corner.
+        args - Optional arguments; future extensions.
 
     Macro Returns:
         The 'dialog_run()' primitive returns the exit value of the
@@ -642,6 +722,9 @@ do_dialog_run(void)             /* int (int dialog, [string args]) */
 
         ocurdlg = curdlg;
         curdlg = ident;
+
+        d->d_xhint = get_xinteger(2, -1);       /* coordinates */
+        d->d_yhint = get_xinteger(3, -1);
         d->d_retval = -1;
         d->d_running = 1;
 
@@ -1133,7 +1216,7 @@ dlg_new(void)
     widget_init(&d->d_widget, sizeof(WIDGET_t), (WIDGETCB_t)dialog_default);
     d->d_widget.w_root = d;
     d->d_widget.w_ident = d->d_ident;           /* need by callback() */
-
+    d->d_styles = DLGS_BORDER | DLGS_CAPTION;
     return d;
 }
 
@@ -1170,6 +1253,21 @@ dialog_find(int ident)
         }
     }
     return NULL;
+}
+
+
+void
+widget_clear(DIALOG_t* d)
+{
+    WIDGET_t *first, *w;
+
+    if (NULL != (first = CIRCLEQ_FIRST(&d->d_widgetq))) {
+        w = first;
+        do {
+            assert(WIDGET_MAGIC == w->w_magic);
+            w->w_uflags = 0;
+        } while (first != (w = dialog_next(d, w)));
+    }
 }
 
 
@@ -1353,8 +1451,8 @@ dialog_callback(DIALOG_t *d, int event, accint_t val1, accint_t val2)
 
 
 /*  Function:           widget_callback2
- *      Send a message to the widget "callback". The message shall be
- *      directed firstly at the widget specific callback, if assigned,
+ *      Send a message to the widget "callback".
+ *      The message shall be directed firstly at the widget specific callback, if assigned,
  *      otherwise the dialog callback, if assigned.
  *
  *  Parameters:
@@ -1448,7 +1546,7 @@ callback(const char *label,
     assert(lp < (tmpl + sizeof(tmpl)));
     execute_nmacro(tmpl);
     ret = (int) acc_get_ival();
-    trace_ilog("%s_callback ; %d\n", label, ret);
+    trace_ilog("%s_callback : %d\n", label, ret);
     if (rval) {
         *rval = ret;
     }
@@ -1546,6 +1644,7 @@ uint32_t
 dialog_default(WIDGET_t *w, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETARG_t p2)
 {
     DIALOG_t *d = (DIALOG_t *)w;
+    int iret = 0;
 
     switch (msg) {
     case WIDGET_SET: {          /* set attribute */
@@ -1562,7 +1661,13 @@ dialog_default(WIDGET_t *w, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETARG_t p2)
 
             case DLGA_TEXT_ONLY:
             case DLGA_GUI_ONLY:
-                d->d_type = DIALOGARGLO(p1);
+                d->d_type = widgetdata_uint32(data);
+                break;
+
+            case DLGA_STYLES:
+                if (d->d_running)
+                    return FALSE;               /* read-only */
+                d->d_styles = widgetdata_uint32(data);
                 break;
 
             default:
@@ -1570,6 +1675,25 @@ dialog_default(WIDGET_t *w, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETARG_t p2)
             }
         }
         return TRUE;
+
+    case WIDGET_GET: {          /* get attribute */
+            WIDGETDATA_t* data = (WIDGETDATA_t*)p2;
+
+            switch (DIALOGARGLO(p1)) {
+            case DLGA_STYLES:
+                data->d_u.ivalue = d->d_styles;
+                data->d_type = D_INT;
+                d->d_styles;
+                return TRUE;
+            }
+        }
+        break;
+
+    case WIDGET_SYSCOMMAND:
+        if (dialog_callback2(d, DLGE_SYSCOMMAND, p1, p2, &iret)) {
+            return iret;
+        }
+        break;
 
     case WIDGET_DESTROY:
         chk_free((void *)d->d_title), d->d_title = NULL;
@@ -1736,6 +1860,12 @@ widget_default(WIDGET_t *w, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETARG_t p2)
                 if ((w->w_reqrows = (int)widgetdata_int32(data)) < 1) {
                     w->w_reqrows = 1;
                 }
+                break;
+
+            case DLGA_STYLES:           /* styles, DLGS_XXXX */
+                if (w->w_root && w->w_root->d_running)
+                    return FALSE;               /* read-only */
+                w->w_styles = widgetdata_int32(data);
                 break;
 
             case DLGA_PADX:

@@ -1,5 +1,5 @@
 /* -*- indent-width: 4; -*- */
-/* $Id: sysinfo.cr,v 1.15 2014/10/27 23:28:29 ayoung Exp $
+/* $Id: sysinfo.cr,v 1.16 2024/08/04 10:07:57 cvsuser Exp $
  * System information Dialog.
  *
  *
@@ -145,7 +145,7 @@ sysinfo_cb(int ident, string name, int p1, int p2)
             string buf;
 
             version(maj, min, edit, rel, machtype, compiled, cmver, NULL, build);
-            sprintf(buf, "%s v%d.%d.%d (%d)", APPNAME, maj, min, edit, cmver);
+            sprintf(buf, "%s v%d.%d.%d.%d (%d)", APPNAME, maj, min, edit, cmver);
             widget_set(ident, "version", buf);
             widget_set(ident, "compiled", compiled);
             widget_set(ident, "build", build);

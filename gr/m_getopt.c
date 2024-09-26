@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_getopt_c,"$Id: m_getopt.c,v 1.25 2022/07/10 13:13:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_getopt_c,"$Id: m_getopt.c,v 1.26 2024/07/04 11:09:30 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_getopt.c,v 1.25 2022/07/10 13:13:07 cvsuser Exp $
+/* $Id: m_getopt.c,v 1.26 2024/07/04 11:09:30 cvsuser Exp $
  * Command line/argument option processing.
  *
  *
@@ -84,7 +84,7 @@ static const char *         x_getsubopt_quotes;
     Macro: getopt - Get options
 
         int
-        getopt(string value, [[string shortopts], list longopts,
+        getopt(string &value, [[string shortopts], list longopts,
             string|list args, [string caller]])
 
     Macro Description:
@@ -167,6 +167,9 @@ static const char *         x_getsubopt_quotes;
             -3 -    Ambiguous option.
             -4 -    Argument required.
             -5 -    Unexpected argument.
+
+        Plus the following argument syntax error conditions.
+
             -10 -   Invalid value, for example "expected a numeric value".
             -99 -   Invalid option specification.
 
@@ -218,7 +221,7 @@ static const char *         x_getsubopt_quotes;
         arg_list, split_arguments
  */
 void
-do_getopt(void)                 /* (string value, [[string shortoptions], list longoptions, string|list args,
+do_getopt(void)                 /* (string &value, [[string shortoptions], list longoptions, string|list args,
                                         [string caller], [int maxargc], [int flags]]) */
 {
     const char *shortoptions = get_xstr(2);
@@ -322,14 +325,14 @@ do_getopt(void)                 /* (string value, [[string shortoptions], list l
             if (x_getopt_parms.lidx >= 0) {
                 const struct argoption *lopt = &x_getopt_longoptions[x_getopt_parms.lidx];
                 const int type = lopt->udata;
-    
+
                 if (OTYPE_BOOLEAN == type) {
                     switch (booleanvalue(value)) {
                     case TRUE:  value = "1"; break;
                     case FALSE: value = "0"; break;
-                    default: 
+                    default:
                         ret = -10;
-                    }    
+                    }
                 } else {
                     if (! optioncheck(type, value)) {
                         ret = -10;
@@ -394,7 +397,7 @@ do_getopt(void)                 /* (string value, [[string shortoptions], list l
             }
         }
 
-	ED_TRACE(("getopt() : %d (%s)\n", ret, value?value:"(null)"))
+        ED_TRACE(("getopt() : %d (%s)\n", ret, value?value:"(null)"))
         argv_assign_str(1, value);
         acc_assign_int(ret);
 
@@ -1147,3 +1150,4 @@ is_white(int ch)
 }
 
 /*end*/
+

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edbt_linux_c,"$Id: edbt_linux.c,v 1.14 2024/04/17 15:57:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_edbt_linux_c,"$Id: edbt_linux.c,v 1.15 2024/06/14 19:06:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edbt_linux.c,v 1.14 2024/04/17 15:57:13 cvsuser Exp $
+/* $Id: edbt_linux.c,v 1.15 2024/06/14 19:06:23 cvsuser Exp $
  * linux backtrace implementation
  *
  *
@@ -117,16 +117,30 @@ section_search(bfd *bfd, asection *section, void *data)
         return;
     }
 
+#if defined(HAVE_BFD_SECTION_FLAGS)
+    if (0 == (bfd_section_flags(bfd, section) & SEC_ALLOC)) {
+        return;
+    }
+#else
     if (0 == (bfd_get_section_flags(bfd, section) & SEC_ALLOC)) {
         return;
     }
+#endif
 
+#if defined(HAVE_BFD_SECTION_VMA)
+    vma = bfd_section_vma(bfd, section);
+#else
     vma = bfd_get_section_vma(bfd, section);
+#endif
     if (psi->si_pc < vma) {
         return;
     }
 
+#if defined(HAVE_BFD_SECTION_SIZE)
+    size = bfd_section_size(section);
+#else
     size = bfd_get_section_size(section);
+#endif
     if (psi->si_pc >= vma + size) {
         return;
     }

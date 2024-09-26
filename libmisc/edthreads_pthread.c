@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_pthread_c,"$Id: edthreads_pthread.c,v 1.15 2024/04/27 15:22:32 cvsuser Exp $")
+__CIDENT_RCSID(gr_edthreads_pthread_c,"$Id: edthreads_pthread.c,v 1.17 2024/07/27 12:58:52 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads_pthread.c,v 1.15 2024/04/27 15:22:32 cvsuser Exp $
+/* $Id: edthreads_pthread.c,v 1.17 2024/07/27 12:58:52 cvsuser Exp $
  * C11 threads implementation, for/using pthreads
  * based on ISO/IEC 9899:201x Committee Draft, April 12, 2011
  *
@@ -43,6 +43,9 @@ edthreads_pthreads_native(void)
 
 #elif defined(HAVE_PTHREAD_H) || defined(__CYGWIN__)
 
+#if defined(HAVE_STDINT_H)
+#include <stdint.h>
+#endif
 #include <stdlib.h>
 #include <time.h>
 #include <assert.h>
@@ -56,7 +59,7 @@ struct threadproc {
     void *arg;
 };
 
-static void *               ThreadProc(void *p);
+static void *ThreadProc(void *p);
 
 
 // 7.25.2.1
@@ -518,8 +521,9 @@ ThreadProc(void *p)
     struct threadproc *proc = (struct threadproc *)p;
     thrd_start_t func = proc->func;
     void *arg = proc->arg;
+
     free(p);
-    return (void *)(*func)(arg);
+    return (void *)(intptr_t)(*func)(arg);
 }
 
 
@@ -594,7 +598,7 @@ thrd_equal(thrd_t thr0, thrd_t thr1)
 void
 thrd_exit(int res)
 {
-    pthread_exit((void *)res);
+    pthread_exit((void *)(intptr_t)res);
 }
 
 
@@ -620,7 +624,7 @@ thrd_join(thrd_t thr, int *res)
     if (pthread_join(thr, &code) != 0) {
         return thrd_error;
     }
-    if (res) *res = (int)code;
+    if (res) *res = (int)(intptr_t)code;
     return thrd_success;
 }
 

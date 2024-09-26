@@ -2,7 +2,7 @@
 .\" -*- mode: nroff; -*-
 .\"
 .\" | -- Mandoc template
-.\" | $Id: hpcalc.mandoc,v 1.2 2018/10/01 21:19:57 cvsuser Exp $
+.\" | $Id: hpcalc.mandoc,v 1.3 2024/06/14 07:26:19 cvsuser Exp $
 .\" | .\"The following commands are required for all man pages.
 .\" | .Dd Month day, year
 .\" | .Dt DOCUMENT_TITLE [section number] [architecture/volume]
@@ -106,7 +106,7 @@ The calculator also supports the following trig and logarithmic functions:
 This macro can be accessed from the GRIEF features menu or by typing
 \f(HBhpcalc\fR at the command prompt.
 .Sh BUGS
-This calculator demonstrates the use of certain esoteric crunch language
+This calculator demonstrates the use of certain esoteric grunch language
 features. It is a very trivial calculator but useful. Needs a lot
 of work to compare to anybody elses.
 .Pp

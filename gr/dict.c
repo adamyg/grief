@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dict_c,"$Id: dict.c,v 1.22 2020/04/21 00:01:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_dict_c,"$Id: dict.c,v 1.23 2024/07/05 18:33:38 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dict.c,v 1.22 2020/04/21 00:01:55 cvsuser Exp $
+/* $Id: dict.c,v 1.23 2024/07/05 18:33:38 cvsuser Exp $
  * Dictionary functionality.
  *
  *
@@ -490,7 +490,7 @@ do_dict_name(void)              /* string (int obj_id) */
         A Grief extension.
 
     Macro See Also:
-        create_dictionary, dict_delete, dict_each, dict_keys, dict_values
+        delete_dictionary, dict_delete, dict_each, dict_keys, dict_values
 */
 void
 do_dict_clear(void)             /* int (int obj_id) */
@@ -523,14 +523,14 @@ do_dict_clear(void)             /* int (int obj_id) */
         key - Item key.
 
     Macro Returns:
-        The 'dict_clear()' primitive returns 0 on success, otherwise
+        The 'dict_delete()' primitive returns 0 on success, otherwise
         -1 on error.
 
     Macro Portability:
         A Grief extension.
 
     Macro See Also:
-        create_dictionary, dict_each, dict_keys, dict_values
+        delete_dictionary, dict_clear, dict_each, dict_keys, dict_values
 */
 void
 do_dict_delete(void)            /* int (int obj_id) */
@@ -561,7 +561,7 @@ do_dict_delete(void)            /* int (int obj_id) */
     Macro: dict_list - Retrieve dictionary items.
 
         list
-        dict_list(int obj_id)
+        dict_list(int obj_id, [int keys = TRUE])
 
     Macro Description:
         The 'dict_list()' primitive retrieves the keys or values
@@ -584,10 +584,10 @@ do_dict_delete(void)            /* int (int obj_id) */
         create_dictionary
 */
 void
-do_dict_list(void)              /* list (int obj_id, [int value = FALSE]) */
+do_dict_list(void)              /* list (int obj_id, [int keys = TRUE]) */
 {
     const int objid = get_xinteger(1, -1);      /* objid */
-    const int keys = get_xinteger(2, 1);        /* 1=keys, 0=values */
+    const int keys = get_xinteger(2, TRUE);     /* 1=keys, 0=values */
 
     DICT *dict = dict_lookup(objid);
     LIST *dictlist = NULL;

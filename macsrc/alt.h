@@ -1,4 +1,4 @@
-/* $Id: alt.h,v 1.12 2021/07/12 15:55:11 cvsuser Exp $
+/* $Id: alt.h,v 1.13 2024/09/21 17:02:02 cvsuser Exp $
  * Key definitions
  *
  */
@@ -27,7 +27,7 @@
  *                          x   Shift                       - MOD_SHIFT
  *                        x     Ctrl/control                - MOD_CTRL
  *                      x       Meta                        - MOD_META
- *                    x         App                         - MOD_APP  
+ *                    x         App                         - MOD_APP
  *      s . r r r r .           Character ranges/namespaces - RANGE_MASK
  *
  *              RANGE_CHARACTER, RANGE_FUNCTION, RANGE_KEYPAD,
@@ -84,7 +84,7 @@
 #define KEY_ENTER               __ENTER
 #define KEY_NEWLINE             '\n'
 
-/* 
+/*
  *  Namespaces and modifiers.
  */
 #define KEY_MASK                0x001fffff      // 0..10ffff
@@ -113,7 +113,7 @@
 /*
  *  Specials
  */
-#define KEY_VOID                0x001fffff      // null 
+#define KEY_VOID                0x001fffff      // null
 #define KEY_WINCH               0x001ffffe      // winch/resize event
 #define KEY_UNICODE             0x001ffff0      // keyboard special
 
@@ -292,6 +292,9 @@
 #define CTRL_KEYPAD_SCROLL      __CTRL_KEYPAD(19)
 #define CTRL_KEYPAD_NUMLOCK     __CTRL_KEYPAD(20)
 
+#define __CTRLSHIFT_KEYPAD(__x) (MOD_SHIFT | MOD_CTRL | RANGE_KEYPAD | (__x))
+#define CTRLSHIFT_KEYPAD_0      __CTRLSHIFT_KEYPAD(0)
+
 #define __ALT_KEYPAD(__x)       (MOD_META | RANGE_KEYPAD | (__x))
 #define ALT_KEYPAD_0            __ALT_KEYPAD(0)
 #define ALT_KEYPAD_1            __ALT_KEYPAD(1)
@@ -303,6 +306,9 @@
 #define ALT_KEYPAD_7            __ALT_KEYPAD(7)
 #define ALT_KEYPAD_8            __ALT_KEYPAD(8)
 #define ALT_KEYPAD_9            __ALT_KEYPAD(9)
+
+#define __ALTSHIFT_KEYPAD(__x)  (MOD_SHIFT | MOD_META | RANGE_KEYPAD | (__x))
+#define ALTSHIFT_KEYPAD_0       __ALTSHIFT_KEYPAD(0)
 
 #define ALT_KEYPAD_END          __ALT_KEYPAD(1)
 #define ALT_KEYPAD_LEFT         __ALT_KEYPAD(4)
@@ -319,6 +325,12 @@
 #define ALT_KEYPAD_PRTSC        __ALT_KEYPAD(18)
 #define ALT_KEYPAD_SCROLL       __ALT_KEYPAD(19)
 #define ALT_KEYPAD_NUMLOCK      __ALT_KEYPAD(20)
+
+#define __ALTCTRL_KEYPAD(__x)   (MOD_CTRL | MOD_META | RANGE_KEYPAD | (__x))
+#define ALTCTRL_KEYPAD_0        __ALTCTRL_KEYPAD(0)
+
+#define __ALTCTRLSHIFT_KEYPAD(__x) (MOD_META | MOD_CTRL | MOD_SHIFT | RANGE_KEYPAD | (__x))
+#define ALTCTRLSHIFT_KEYPAD_0   __ALTCTRLSHIFT_KEYPAD(0)
 
 /*
  *  Shift keypad keys.
@@ -428,4 +440,7 @@
 /*--end--*/
 
 #endif  /*__ALT_H*/
+
+
+
 

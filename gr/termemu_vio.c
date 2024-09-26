@@ -315,7 +315,7 @@ static struct {                                 /* Video state */
         uint32_t        available;
     } fcnames[FACENAME_MAX];
 
-    int                 fontindex;
+    unsigned            fontindex;
     int                 fontnumber;
     CONSOLE_FONT_INFOEX fonts[FONTS_MAX];
 
@@ -707,7 +707,7 @@ vio_size(int *rows, int *cols)
 
 
 static void
-vio_profile(int rebuild)
+vio_profile(int rebuild /*TRUE/FALSE/-1 (check)*/)
 {
     HANDLE chandle = vio.chandle;
     DWORD consolemode = 0;
@@ -854,22 +854,24 @@ vio_profile(int rebuild)
         consolefontsenum();
     }
 
-    if (0 == vio.fontnumber || rebuild) {
-
+    if (0 == vio.fontnumber || rebuild == TRUE) {
         // dynamic colors
         if (vio.GetConsoleScreenBufferInfoEx) { // vista+
-            CONSOLE_SCREEN_BUFFER_INFOEX csbix = {0};
+            CONSOLE_SCREEN_BUFFER_INFOEX csbix = { 0 };
             WORD c;
 
             csbix.cbSize = sizeof(csbix);
             vio.GetConsoleScreenBufferInfoEx(chandle, &csbix);
             TRACE_LOG(("Console Colors (BBGGRR)\n"))
-            for (c = 0; c < 16; ++c) {
-                TRACE_LOG(("  [%2u] 0x%06x\n", c, (unsigned)csbix.ColorTable[c]))
-                vio.rgb16[c] = csbix.ColorTable[c];
-            }
+                for (c = 0; c < 16; ++c) {
+                    TRACE_LOG(("  [%2u] 0x%06x\n", c, (unsigned)csbix.ColorTable[c]))
+                        vio.rgb16[c] = csbix.ColorTable[c];
+                }
             vio.console_rgb16 = 1;              // RGB16 is available
         }
+    }
+
+    if (0 == vio.fontnumber || rebuild) {
 
         // current fonts
         if (vio.GetCurrentConsoleFontEx) {
@@ -879,8 +881,14 @@ vio_profile(int rebuild)
             if (vio.GetCurrentConsoleFontEx(chandle, FALSE, &cfix)) {
                 COORD coord;
 
-                vio.fontindex = cfix.nFont;
                 coord = GetConsoleFontSize(chandle, cfix.nFont);
+                if (-1 == rebuild) {
+                    if (vio.fontindex == cfix.nFont && 
+                            vio.fcheight == coord.Y && vio.fcwidth == coord.X) {
+                        return;                 // no-change
+                    }
+                }
+                vio.fontindex = cfix.nFont;
                 vio.fcheight  = coord.Y;        // cfix.dwFontSize.Y;
                 vio.fcwidth   = coord.X;        // cfix.dwFontSize.X;
                 vio.fcfamily  = cfix.FontFamily;
@@ -895,8 +903,14 @@ vio_profile(int rebuild)
             if (GetCurrentConsoleFont(chandle, FALSE, &cfi)) {
                 COORD coord;
 
-                vio.fontindex = cfi.nFont;
                 coord = GetConsoleFontSize(chandle, cfi.nFont);
+                if (-1 == rebuild) {
+                    if (vio.fontindex == cfi.nFont && 
+                            vio.fcheight == coord.Y && vio.fcwidth == coord.X) {
+                        return;                 // no-change
+                    }
+                }
+                vio.fontindex = cfi.nFont;
                 vio.fcheight  = coord.Y;        // cfi.dwFontSize.Y;
                 vio.fcwidth   = coord.X;        // cfi.dwFontSize.X;
                 vio.fcfamily  = -1;
@@ -904,7 +918,7 @@ vio_profile(int rebuild)
                 vio.fcfacename[0] = 0;          // Note: GetTextFace() is 'System'
 
             } else {
-                vio.fontindex = -1;             // full screen
+                vio.fontindex = (unsigned)-1;   // full screen
                 vio.fcheight  = 16;
                 vio.fcwidth   =  8;
                 vio.fcweight  = -1;
@@ -2639,38 +2653,33 @@ WCHAR_UPDATE(WCHAR_INFO *cursor, const uint32_t ch, const struct WCHAR_COLORINFO
 static int
 parse_color(const char *color, const char *defname, const struct attrmap *map, int *attr)
 {
-    char t_name[128] = {0};
-    const char *a;
+    int len = strlen(color);
+    const char *name, *a;
     int c, col = -1;
 
-    //  color[;attribute[;...]]
-    //
+    // color[;attribute[;...]]
     if (!defname || !*defname)                   // undefined; assume white/black.
         defname = (map == win16_foreground ? "white" : "black");
 
     if (!color || !*color) color = defname;      // undefined, apply default.
 
-    //  optional trailing attributes
+    // optional trailing attributes
     if (NULL != (a = strchr(color, ';'))) {
-        const int len = (int)(a - color);
-
-        strncpy(t_name, color, sizeof(t_name)-1);// remove attribute component.
-        if (len < (int)sizeof(t_name)) 
-            t_name[len] = 0;
-        color = t_name;
-
         *attr = parse_attributes(a);
+        len = (int)(a - color);                 // remove attribute component.
     }
 
-    //  non-optional color
-    while (' ' == *color || '\t' == *color) ++color;
-    if (0 == sscanf(color, "color%u", &col)) {   // extension
-        for (c = 0; map[c].name; ++c) {          // search color map
-            if (0 == stricmp(color, map[c].name)) {
-                return map[c].win; //done
+    // non-optional color
+    while (' ' == *color || '\t' == *color) 
+        ++color;
 
-            } else if (0 == stricmp(defname, map[c].name)) {
-                col = map[c].win;  //apply default
+    if (0 == sscanf(color, "color%u", &col)) {   // extension
+        for (c = 0; (name = map[c].name) != NULL; ++c) { // search color map
+            if (len == (int)strlen(name) && 0 == strnicmp(color, name, len)) {
+                return map[c].win; // done
+
+            } else if (0 == stricmp(defname, name)) {
+                col = map[c].win;  // apply default
             }
         }
     }

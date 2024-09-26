@@ -1,11 +1,11 @@
 #ifndef GR_WIDGETS_TTY_H_INCLUDED
 #define GR_WIDGETS_TTY_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_widgets_tty_h,"$Id: widgets_tty.h,v 1.8 2014/10/22 02:33:25 ayoung Exp $")
+__CIDENT_RCSID(gr_widgets_tty_h,"$Id: widgets_tty.h,v 1.11 2024/09/25 13:58:06 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: widgets_tty.h,v 1.8 2014/10/22 02:33:25 ayoung Exp $
+/* $Id: widgets_tty.h,v 1.11 2024/09/25 13:58:06 cvsuser Exp $
  * Widgets, TTY specific functionality.
  *
  *
@@ -59,12 +59,6 @@ __CBEGIN_DECLS
      */
 #define WIDGET_COMMAND      (WIDGET_BASE+5)
 
-    /*  A widget receives this message when the user chooses a command from
-     *  the system menu or when the user chooses the maximize button,
-     *  minimize button, restore button, or close button.
-     */
-#define WIDGET_SYSCOMMAND   (WIDGET_BASE+6)
-
     /*  The CLOSE message is sent as a signal that a widget should terminate.
      */
 #define WIDGET_CLOSE        (WIDGET_BASE+7)
@@ -99,6 +93,7 @@ __CBEGIN_DECLS
      *          of the BUTTON_ keys manifest values.
      */
 #define WIDGET_MOUSE        (WIDGET_BASE+9)
+#define WIDGET_MOUSE_POPUP  (WIDGET_BASE+10)
 
     /*  Geometry support --
      *      The SIZE message is sent to a widget that the user is resizing. By
@@ -106,9 +101,10 @@ __CBEGIN_DECLS
      *      position of the drag rectangle and, if needed, change its size or
      *      position.
      */
-#define WIDGET_SIZE         (WIDGET_BASE+10)
-#define WIDGET_BORDER       (WIDGET_BASE+11)
-#define WIDGET_RESIZED      (WIDGET_BASE+12)
+#define WIDGET_SIZE         (WIDGET_BASE+11)
+#define WIDGET_BORDER       (WIDGET_BASE+12)
+#define WIDGET_RESIZED      (WIDGET_BASE+13)
+
 
     /*  Widget flags
      *
@@ -139,15 +135,16 @@ __CBEGIN_DECLS
      *  CLEAR ---
      *      Widget was hidden and the underlying area needs clearing.
      */
-#define WTTY_FFOCUS             0x0001
-#define WTTY_FHIDDEN            0x0002
+#define WTTY_FFOCUS         0x0001
+#define WTTY_FHIDDEN        0x0002
 
-#define WTTY_FREPACK            0x0010
-#define WTTY_FRESIZE            0x0020
+#define WTTY_FREPACK        0x0010
+#define WTTY_FRESIZE        0x0020
 
-#define WTTY_FDIRTY             0x0100
-#define WTTY_FCLEAR             0x0200
+#define WTTY_FDIRTY         0x0100
+#define WTTY_FCLEAR         0x0200
 
+#define ClrFocus(w)         w->w_uflags &= ~WTTY_FFOCUS
 #define HasFocus(w)         (((WIDGET_t *)(w))->w_uflags & WTTY_FFOCUS)
 
 #define GetXParam(p)        DIALOGARGLO(p)
@@ -158,3 +155,4 @@ extern WIDGET_t *           tty_new(uint32_t size, WIDGETCB_t handler);
 __CEND_DECLS
 
 #endif /*GR_WIDGETS_TTY_H_INCLUDED*/
+

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.55 2024/06/10 06:00:44 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.65 2024/09/25 15:51:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.55 2024/06/10 06:00:44 cvsuser Exp $
+/* $Id: cmain.c,v 1.65 2024/09/25 15:51:54 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -78,7 +78,22 @@ __CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.55 2024/06/10 06:00:44 cvsuser Exp $
 #include "m_feature.h"                          /* x_features */
 #include "m_userprofile.h"
 
-#define MAX_M       32                          /* Number of -m switches, including -u switch. */
+#if defined(HAVE_MOUSE)
+#define MOUSE_MODE_DEFAULT      "auto"
+#if defined(HAVE_LIBGPM) && defined(HAVE_GPM_H)
+#define MOUSE_MODE_OPTIONS      "=[/ttydev|gpm|xterm|xterm-x11,xterm2|xterm-sgr,sgr]"
+#else
+#define MOUSE_MODE_OPTIONS      "=[/ttydev|xterm|xterm-x11,xterm2|xterm-sgr,sgr]"
+#endif
+#else
+#define MOUSE_MODE_DEFAULT      "disabled"
+#define MOUSE_MODE_OPTIONS      "=none"
+#endif
+
+#define KBPROTOCOL_DEFAULT      "auto"
+#define KBPROTOCOL_OPTIONS      "=none|auto|meta|cygwin|msterminal|xterm-mok2|mintty-mok2"
+
+#define MAX_M                   32              /* -m switches, including -u switch. */
 
 static struct argoption options[] = {
     { "add",            arg_none,           NULL,       'a',    "Add file to current profile" },
@@ -106,7 +121,8 @@ static struct argoption options[] = {
     { "vm",             arg_required,       NULL,       'M',    "Set virtual memory size to # lines",
                             "#" },
 
-    { "mouse",          arg_none,           NULL,       1,      "Enable mouse" },
+    { "mouse",          arg_required,       NULL,       1,      "Configure the mouse mode; default=" MOUSE_MODE_DEFAULT,
+                            MOUSE_MODE_OPTIONS },
 
     { "nomouse",        arg_none,           NULL,       1,      "Disable mouse support" },
 
@@ -125,7 +141,7 @@ static struct argoption options[] = {
 
     { "dark",           arg_none,           NULL,       4,      "or dark color scheme" },
 
-    { "utf8",           arg_optional,       NULL,       303,    "UTF8 features",
+    { "utf8",           arg_optional,       NULL,       303,    "UTF8 display features",
                             "=[no|yes],[[no]combined,seperate],[subst|ncr|ucn|hex]" },
 
     { "8bit",           arg_optional,       NULL,       304,    "Eight bit terminal encoding, with optional encoding",
@@ -153,7 +169,12 @@ static struct argoption options[] = {
 
     { "nohilite",       arg_none,           NULL,       7,      "Disable syntax hiliting" },
 
-    { "nocygwinkb",     arg_none,           NULL,       8,      "Disable use of cygwin raw scancodes" },
+    { "norawkb",        arg_none,           NULL,       420,    "Disable use of raw kbprotocol; kbprotocol=meta" },
+
+    { "kbprotocol",     arg_required,       NULL,       421,    "Enable given keyboard protocol: default=" KBPROTOCOL_DEFAULT,
+                            KBPROTOCOL_OPTIONS },
+
+    { "kbconfig",       arg_required,       NULL,       422,    "Keyboard protocol selection config; format \"term:mode[;..]\"" },
 
     { "nosigtrap",      arg_none,           NULL,       17,     "Disable signal trapping (for debugging)" },
 
@@ -260,7 +281,11 @@ static int              xf_dumpstats = FALSE;   /* TRUE if stats reporting on ex
 
 static int              xf_dumprefs = FALSE;    /* TRUE if ref status are dumped on exit. */
 
-int                     xf_mouse = TRUE;        /* TRUE enable mouse. */
+#if defined(HAVE_MOUSE) || defined(WIN32)
+const char *            xf_mouse = "";          /* mouse mode; default auto-detect */
+#else
+const char *            xf_mouse = NULL;
+#endif
 
 static int              xf_ttydrv = 't';        /* TTY driver type */
 
@@ -276,7 +301,7 @@ int                     xf_wait = TRUE;         /* Set to FALSE if read_char sho
                                                  * No macros currently use the fact that read_char can return -1
                                                  */
 
-int                     xf_restore = FALSE;     /* TRUE if -a or no files are specified */
+int                     xf_restore = -1;        /* TRUE if -a or no files are specified */
 int                     xf_readonly = FALSE;    /* TRUE if -R/--readonly specified. */
 
 int                     xf_profile = FALSE;     /* TRUE if profiling on. */
@@ -296,7 +321,9 @@ int                     xf_graph = -1;          /* TRUE/FALSE, user specified gr
 
 int                     xf_visbell = FALSE;     /* TRUE/FALSE, visual bell. */
 
-int                     xf_cygwinkb = TRUE;    /* TRUE/FALSE, cygwin raw keyboard. */
+int                     xf_kbprotocol = KBPROTOCOL_AUTO; /* TRUE/FALSE, raw keyboard. */
+
+const char *            xf_kbconfig = NULL;     /* Optional keyboard configuration. */
 
 int                     xf_sigtrap = TRUE;      /* TRUE/FALSE, control signal traps. */
 
@@ -361,6 +388,9 @@ static const char *     m_strings[MAX_M+1];     /* Array of pointer to -m string
 
 BUFFER_t *              curbp = NULL;           /* Current buffer. */
 WINDOW_t *              curwp = NULL;           /* Current window. */
+
+
+static int              isdir(const char *path);
 
 static int              path_cat(const char *path, const char *sub, char *buf, int length);
 static char *           path_cook2(const char *name, char *result, int length);
@@ -443,6 +473,7 @@ cpp_linkage(const char *str);
 int
 cmain(int argc, char **argv)
 {
+    unsigned loaded = 0;
     int arg_index, i;
 
 #if defined(HAVE_SIGACTION)
@@ -517,10 +548,11 @@ cmain(int argc, char **argv)
     else if ('x' == xf_ttydrv) ttx11();
 #endif
     vtinit(&argc, argv);
-    color_setscheme(NULL);
     ttopen();
+        //TODO: resource macro?
 
     /* high-level */
+    color_setscheme(NULL);
     cmap_init();                                /* character map */
     syntax_init();                              /* syntax hilite engine */
     key_init();
@@ -533,7 +565,7 @@ cmain(int argc, char **argv)
     unicode_init();
     vtready();
     if (xf_mouse) {
-        if (mouse_init("")) {                   /* mouse interface */
+        if (mouse_init(xf_mouse)) {             /* mouse interface */
             x_display_ctrl |= DC_MOUSE;
         }
         xf_usevmin = TRUE;
@@ -595,23 +627,42 @@ cmain(int argc, char **argv)
     x_mflag = FALSE;
 
     if (arg_index < argc) {                     /* load listed files */
-        BUFFER_t *firstbp = NULL;
+        BUFFER_t* firstbp = NULL;
 
         while (arg_index < argc) {
-            x_msglevel = 1;                     /* no warnings */
-            file_edit(argv[arg_index++], EDIT_NORMAL, NULL);
-            if (NULL == firstbp) {
-                firstbp = curbp;
+            const char* name = argv[arg_index++];
+
+            if (!*name || isdir(name)) {
+                if (execute_opendir(name) >= 1) {
+                    if (NULL == firstbp) {
+                        firstbp = curbp;
+                    }
+                    ++loaded;
+                }
+            } else {
+                x_msglevel = 1;                 /* no warnings */
+                file_edit(name, EDIT_NORMAL, NULL);
+                if (NULL == firstbp) {
+                    firstbp = curbp;
+                }
+                ++loaded;
             }
         }
-        buf_show(firstbp, curwp);
-        set_curbp(firstbp);
 
-    } else  {                                   /* load default quietly */
+        if (firstbp) {
+            if (-1 == xf_restore)
+                xf_restore = FALSE;
+            buf_show(firstbp, curwp);
+            set_curbp(firstbp);
+        }
+    }
+
+    if (0 == loaded) {                           /* load default quietly */
         const char *grfile = ggetenv("GRFILE");
 
+        x_msglevel = 1;
         file_load((grfile && *grfile ? grfile : "newfile"), EDIT_NORMAL|EDIT_STARTUP, NULL);
-        xf_restore = 1;
+        xf_restore = TRUE;
     }
 
     /* Hook to allow restore state macro to get called. */
@@ -632,6 +683,14 @@ cmain(int argc, char **argv)
 
     gr_exit(EXIT_SUCCESS);
     return 0;
+}
+
+
+static int
+isdir(const char *path)
+{
+    struct stat st = {0};
+    return (0 == stat(path, &st) && (S_ISDIR(st.st_mode) ? 1 : 0));
 }
 
 
@@ -939,8 +998,12 @@ argv_process(const int doerr, int argc, const char **argv)
         }
 
         switch(c) {
-        case 1:             /* [no]mouse */
-            xf_mouse = (args.opt == 'm' ? TRUE : FALSE);
+        case 1:             /* [no]mouse=[type] */
+            if (args.opt == 'm') {
+                xf_mouse = (args.val ? args.val : "");
+            } else {
+                xf_mouse = NULL;               /* nomouse; disable */
+            }
             break;
 
         case 2:             /* tty - [no]scroll regions */
@@ -970,8 +1033,25 @@ argv_process(const int doerr, int argc, const char **argv)
             xf_visbell = TRUE;
             break;
 
-        case 8:             /* tty - cygwin raw keyboard disabled. */
-            xf_cygwinkb = FALSE;
+        case 420:           /* tty - raw keyboard disabled. */
+            xf_kbprotocol = KBPROTOCOL_META;
+            break;
+
+        case 421: {         /* tty - keyboard protocol. */
+                const int protocol = key_protocolid(args.val, -1);
+
+                if (protocol >= 0) {
+                    xf_kbprotocol = (unsigned)protocol;
+                } else {
+                    fprintf(stderr, "%s: unknown keyboard protocol mode '%s'\n", x_progname, args.val);
+                    ++errflag;
+                }
+            }
+            break;
+
+        case 422:           /* tty - keyboard config. */
+            xf_kbprotocol = KBPROTOCOL_AUTO;
+            xf_kbconfig = args.val;
             break;
 
         case 6:             /* tty - underline mode. */
@@ -989,6 +1069,7 @@ argv_process(const int doerr, int argc, const char **argv)
         case 10:            /* disable termcap keypad init/deinit strings. */
             xf_nokeypad = TRUE;
             break;
+
 
         case 12:            /* window (main) borders. */
             xf_borders = FALSE;
@@ -1075,7 +1156,6 @@ argv_process(const int doerr, int argc, const char **argv)
                 const char *val = args.val;
                 unsigned v;
 
-                trace_log("-D%s\n", val);
                 for (v = 0; v < (sizeof(vm)/sizeof(vm[0])); ++v) {
                     if (0 == strncmp(vm[v].from, val, vm[v].fromlen)) {
                         const char *path = val + vm[v].fromlen;
@@ -1083,13 +1163,16 @@ argv_process(const int doerr, int argc, const char **argv)
                         if (vm[v].ispath) {
                             path = path_cook2(path, t_path, sizeof(t_path));
                         }
-                        trace_log("==> %s=%s (%s)\n", vm[v].to, path, val + vm[v].fromlen);
+                        trace_log("\t==> %s=%s (%s)\n", vm[v].to, path, val + vm[v].fromlen);
                         gputenv2(vm[v].to, path);
                         val = NULL;
                         break;
                     }
                 }
-                gputenv(val);
+                if (val) {
+                    trace_log("\t==>%s", val);
+                    gputenv(val);
+                }
             }
             break;
 
@@ -1855,7 +1938,7 @@ description(const struct argoption *arg, void *buffer)
 {
 #define DESCRIPTIONLEN 1024
     const char *desc = arg->d1, *token;
-    
+
     if (NULL != (token = strchr(desc, '%'))) {
         const char *value = NULL;
 
@@ -2005,7 +2088,8 @@ usage(int what)
 
     fflush(stderr);
     exit(EXIT_FAILURE);
-#undef      HINDENT
+#undef HINDENT
 }
 
 /*end*/
+
