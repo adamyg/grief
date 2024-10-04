@@ -1,11 +1,11 @@
 #ifndef GR_EDFEATURES_H_INCLUDED
 #define GR_EDFEATURES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edfeatures_h,"$Id: edfeatures.h,v 1.23 2024/09/25 16:00:42 cvsuser Exp $")
+__CIDENT_RCSID(gr_edfeatures_h,"$Id: edfeatures.h,v 1.24 2024/10/01 12:55:03 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edfeatures.h,v 1.23 2024/09/25 16:00:42 cvsuser Exp $
+/* $Id: edfeatures.h,v 1.24 2024/10/01 12:55:03 cvsuser Exp $
  * Editor features.
  *
  *
@@ -72,6 +72,13 @@ __CBEGIN_DECLS
 #define TF_COLORSCHEME          40              /* current color-scheme */
 #define TF_COLORSETRGB_FG       41              /* color set foreground control sequence (RGB colors) */
 #define TF_COLORSETRGB_BG       42              /* color set background control sequence (RGB colors) */
+
+#define TF_UNDERSTYLE           43              /* Smulx; 0=none,1=normal,2=double,3=curly,4=dotted,5=dashed */
+#define TF_UNDEROFF             44              /* t_Ce */
+#define TF_UNDERDOUBLE          45              /* t_Us */
+#define TF_UNDERCURL            46              /* t_Cs */
+#define TF_UNDERDOTTED          47              /* t_ds */
+#define TF_UNDERDASHED          48              /* t_Ds */
 
 #define TF_CLEAR_IS_BLACK       50              /* clear is black */
 #define TF_DISABLE_INSDEL       51              /* disable ins/del scrolling method */
@@ -200,6 +207,13 @@ struct _features {
     char        pt_init[PT_ESCMAX];             /* STRING,      Escape sequence, init on startup. */
     char        pt_reset[PT_ESCMAX];            /* STRING,      Escape sequence, to reset on exit. */
 
+    char        pt_understyle[PT_ESCMAX];       /* STRING,      Escape sequence, general underline style; 0=none,1=normal,2=double,3=curly,4=dotted,5=dashed. */
+    char        pt_underoff[PT_ESCMAX];         /* STRING,      Escape sequence, clear underline style. */
+    char        pt_underdouble[PT_ESCMAX];      /* STRING,      Escape sequence, double underline style. */
+    char        pt_undercurl[PT_ESCMAX];        /* STRING,      Escape sequence, curly underline style. */
+    char        pt_underdotted[PT_ESCMAX];      /* STRING,      Escape sequence, dotted underline style. */
+    char        pt_underdashed[PT_ESCMAX];      /* STRING,      Escape sequence, dashed underline style. */
+
     /*
      *  options/settings
      */
@@ -260,5 +274,3 @@ __CEND_DECLS
 
 #endif /*GR_EDFEATURES_H_INCLUDED*/
 /*end*/
-
-

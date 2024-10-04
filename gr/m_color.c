@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_color_c,"$Id: m_color.c,v 1.50 2024/07/11 10:20:05 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_color_c,"$Id: m_color.c,v 1.54 2024/10/02 12:30:33 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_color.c,v 1.50 2024/07/11 10:20:05 cvsuser Exp $
+/* $Id: m_color.c,v 1.54 2024/10/02 12:30:33 cvsuser Exp $
  * Color configuration.
  *
  *
@@ -189,12 +189,15 @@ static const struct {
     { NFIELD("bold"),           COLORSTYLE_BOLD },
     { NFIELD("inverse"),        COLORSTYLE_INVERSE },
     { NFIELD("underline"),      COLORSTYLE_UNDERLINE },
+    { NFIELD("underdouble"),    COLORSTYLE_UNDERDOUBLE },
+    { NFIELD("undercurl"),      COLORSTYLE_UNDERCURLY },    /* undercurl if available, otherwise underline */
+    { NFIELD("underdot"),       COLORSTYLE_UNDERDOTTED },
+    { NFIELD("underdash"),      COLORSTYLE_UNDERDASHED },
     { NFIELD("blink"),          COLORSTYLE_BLINK },
     { NFIELD("italic"),         COLORSTYLE_ITALIC },
     { NFIELD("reverse"),        COLORSTYLE_REVERSE },       /* generally same as INVERSE */
     { NFIELD("standout"),       COLORSTYLE_STANDOUT },
     { NFIELD("dim"),            COLORSTYLE_DIM },
-    { NFIELD("undercurl"),      COLORSTYLE_UNDERLINE },     /* undercurl is a curly underline, generally underline */
 
     { NFIELD("bold"),           COLORSTYLE_ISBOLD },        /* BOLD, yet applied */
     { NFIELD("dim"),            COLORSTYLE_ISDIM },         /* DIM, yet applied */
@@ -1773,10 +1776,6 @@ col_encode(const colors_t *colors, const struct attribute *ap, const colattr_t *
     char buf[ATTRIBUTES_WIDTH];
     colattr_t ret = *ca;
 
-    if (ret.sf < 0) {
-        ret.sf = 0;                             /* assign default */
-    }
-
     ret.fg = col_static(colors, &ret.fg);
 
     if (COL_HILITE_BACKGROUND == ap->ca_enum) { /* special -- hilite, both fg and bg */
@@ -2038,7 +2037,6 @@ col_apply(colors_t *colors)
                 assert(ca.fg.color  >= -1);                 //>= 0
                 assert(ca.bg.source >= COLORSOURCE_NONE);   //>= SYMBOLIC
                 assert(ca.bg.color  >= -1);                 //>= 0
-                assert(ca.sf >= 0);
 
                 x_attrs[ attr ].fg = ca.fg;
                 x_attrs[ attr ].bg = ca.bg;
@@ -3134,7 +3132,16 @@ style_print(int sf, char *buf, int length)
         unsigned i;
 
         for (i = 0; idx < length && i < (unsigned)(sizeof(x_style_names)/sizeof(x_style_names[0])); ++i) {
-            if (sf & x_style_names[i].sn_value) {
+            const int sn_value = x_style_names[i].sn_value;
+            int set;
+
+            if (sn_value & COLORSTYLE_UNDERMASK) { // bit-set
+                set = (COLORSTYLE_UNDERSTYLE(sf) == sn_value);
+            } else { // bit-value
+                set = (sf & sn_value);
+            }
+
+            if (set) {
                 idx += sxprintf(buf + idx, length - idx, "%c%s", delimiter, x_style_names[i].sn_name);
                 delimiter = ',';
             }
@@ -3144,3 +3151,4 @@ style_print(int sf, char *buf, int length)
 }
 
 /*end*/
+

@@ -1,10 +1,21 @@
 -*- encoding: utf-8; -*-
 
-Mon Sep  9 00:10:31 2024 adamy
+Tue Oct  1 22:28:50 2024 adamy
 
 	* Tickets
-	
-		- grunch crash, on an invalid switch case; #83 
+
+		- Putty profile; #87
+		- understyles; #72
+
+Thu Sep 26 21:27:49 2024 adamy
+
+	* build-27
+
+	* Tickets
+
+		- xterm-mok2 and kbprotocol options; #85
+		- mouse-sgr and mouse-mode; #84
+		- grunch crash, on an invalid switch case; #83
 		- portability improvements; non Linux/WIN32 builds; #78
 		- dark/light background detection; #76
 		- directory open; prompt file(s) to open; #73
@@ -15,6 +26,7 @@ Mon Sep  9 00:10:31 2024 adamy
 
 	* Keyboard/interface extensions
 
+		- keyboard, protocol options (none,auto,basic,mok2,cygwin).
 		- mouse
 			- command line option (xterm, xterm2 and sgr).
 			- <Button-xxx> key events cleanup.
@@ -28,7 +40,7 @@ Mon Sep  9 00:10:31 2024 adamy
 	* CI Pipelines
 
 		- Solaris
-		- FreeBSD/OpenBSD and NetBSD
+		- FreeBSD/OpenBSD and NetBSD.
 
 Sun Jun 16 12:09:22 2024 adamy
 

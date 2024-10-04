@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: w32keytest.c,v 1.33 2024/09/20 14:51:42 cvsuser Exp $
+/* $Id: w32keytest.c,v 1.34 2024/10/02 11:51:00 cvsuser Exp $
  * console key-test -- win32
  *
  *
@@ -149,7 +149,7 @@ static const struct w32key {
 #define ISHEX(_uc) \
     ((_uc >= '0' && _uc <= '9') || (_uc >= 'a' && _uc <= 'f') || (_uc >= 'A' && _uc <= 'F') ? 1 : 0)
 
-static void Usage();
+static void Usage(void);
 static void Process(HANDLE in, int rawmode);
 static int ReadConsoleInputRaw(HANDLE hConsoleInput, PINPUT_RECORD ir);
 
@@ -173,7 +173,8 @@ static int xf_tracking = 0;
 static int xf_paste = 1;
 static int x_break = 0;
 
-static struct option long_options[] = {
+static const char *soptions = "vrRmMtaAh";
+static struct option loptions[] = {
     {"verbose",     no_argument, NULL, 'v'},
     {"rawmode",     no_argument, NULL, 'r'},
     {"norawmode",   no_argument, NULL, 'R'},
@@ -197,7 +198,7 @@ main(int argc, char **argv)
 
     // arguments
     xf_tracking = 1000;
-    while ((c = getopt_long(argc, (const char * const *)argv, "vrRmMtaAh", long_options, &optidx, -1)) != -1) {
+    while ((c = getopt_long(argc, (const char * const *)argv, soptions, loptions, &optidx, -1)) != -1) {
         switch (c) {
         case 'v':   // -v,--verbose
             ++xf_verbose;
@@ -319,7 +320,7 @@ main(int argc, char **argv)
 
 
 static void
-Usage()
+Usage(void)
 {
     static const char usage[] = {
         "\n" \

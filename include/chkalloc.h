@@ -1,11 +1,11 @@
 #ifndef GR_CHKALLOC_H_INCLUDED
 #define GR_CHKALLOC_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_chkalloc_h,"$Id: chkalloc.h,v 1.26 2024/04/08 15:07:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_chkalloc_h,"$Id: chkalloc.h,v 1.27 2024/10/01 12:55:03 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: chkalloc.h,v 1.26 2024/04/08 15:07:02 cvsuser Exp $
+/* $Id: chkalloc.h,v 1.27 2024/10/01 12:55:03 cvsuser Exp $
  * Memory management interface.
  *
  *  #define CHKALLOC_DEBUG 1
@@ -125,4 +125,3 @@ extern int              check_isleak(const void *p);
 __CEND_DECLS
 
 #endif /*GR_CHKALLOC_H_INCLUDED*/
-

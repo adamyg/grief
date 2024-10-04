@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.65 2024/09/25 15:51:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.67 2024/10/02 16:24:52 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.65 2024/09/25 15:51:54 cvsuser Exp $
+/* $Id: cmain.c,v 1.67 2024/10/02 16:24:52 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -165,7 +165,9 @@ static struct argoption options[] = {
 
     { "nounicode",      arg_none,           NULL,       307,    "Disable use of UNICODE graphic characters" },
 
-    { "nounderline",    arg_none,           NULL,       6,      "Disable use of underline mode" },
+    { "nounderline",    arg_none,           NULL,       323,    "Disable use of all underline/undestylee modes" },
+
+    { "noundercurl",    arg_none,           NULL,       324,    "Disable use of extended understyle modes" },
 
     { "nohilite",       arg_none,           NULL,       7,      "Disable syntax hiliting" },
 
@@ -329,7 +331,7 @@ int                     xf_sigtrap = TRUE;      /* TRUE/FALSE, control signal tr
 
 int                     xf_dumpcore = 0;        /* 1=dumpcore, 2=stack-dump (if available). */
 
-int                     xf_underline = -1;      /* TRUE/FALSE, user specified underline mode. */
+int                     xf_understyle = UNDERSTYLE_LINE|UNDERSTYLE_EXTENDED|UNDERSTYLE_BLINK;
 
 int                     xf_title = -1;          /* TRUE/FALSE, user specified console title mode. */
 
@@ -1054,8 +1056,12 @@ argv_process(const int doerr, int argc, const char **argv)
             xf_kbconfig = args.val;
             break;
 
-        case 6:             /* tty - underline mode. */
-            xf_underline = FALSE;
+        case 323:           /* tty - nounderline. */
+            xf_understyle = 0;
+            break;
+
+        case 324:           /* tty - noundercurl. */
+            xf_understyle &= ~UNDERSTYLE_EXTENDED;
             break;
 
         case 7:             /* tty - disable syntax hiliting. */
@@ -2092,4 +2098,3 @@ usage(int what)
 }
 
 /*end*/
-

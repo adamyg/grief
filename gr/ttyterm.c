@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.138 2024/09/26 12:19:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.140 2024/10/03 11:37:46 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.138 2024/09/26 12:19:35 cvsuser Exp $
+/* $Id: ttyterm.c,v 1.140 2024/10/03 11:37:46 cvsuser Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -227,6 +227,7 @@ typedef uint32_t TAttributes_t;
 
 static void             term_open(scrprofile_t *profile);
 static void             term_ready(int repaint, scrprofile_t *profile);
+static void             set_understyles(void);
 static void             term_feature(int ident, scrprofile_t *profile);
 static void             term_display(void);
 static int              term_control(int action, int param, ...);
@@ -289,8 +290,9 @@ static int              term_dell(int row, int bot, int nlines, vbyte_t fillcolo
 static void             term_scrollset(int top, int bot);
 static void             term_scrollreset(void);
 static void             term_attr(vbyte_t color);
-static void             term_styleon(unsigned mode);
+static void             term_styleon(colstyles_t nstyle);
 static void             term_styleoff(void);
+static void             term_understyle(int enable, colstyles_t style);
 static void             term_colorreset(void);
 static int              term_cost(const char *s);
 
@@ -298,7 +300,6 @@ static void             ttputpad(const char *str);
 static void             ttputctl(const char *str, int a);
 static void             ttputctl2(const char *str, int a, int b);
 static void             ttprintf(const char *str, ...);
-static void             ttprintf2(const char *str, ...);
 
 static void             ega_switch(int flag);
 
@@ -470,6 +471,8 @@ static const char
     *tc_ZH, *tc_ZR,                             /* Italic (on/off). */
     *tc_mr, *tc_ZX,                             /* Reverse (on/off). */
     *tc_sa,                                     /* Attribute set. */
+
+    *tc_Smulx,                                  /* understyle. */
 
     *tc_RV;                                     /* XTerm version */
 
@@ -898,15 +901,16 @@ static TermString_t term_strings[] = {          /* strings - termcap/terminfo el
     { TC_UNAME(tmux),                       NULL, "Csr",        TC_DESC("change the cursor style, overriding Ss") },
     { TC_UNAME(tmux),                       NULL, "Ms",         TC_DESC("store buffer in the host clipboard") },
     { TC_UNAME(tmux),                       NULL, "Se",         TC_DESC("reset the cursor style") },
-    { TC_UNAME(tmux),                       NULL, "Smulx",      TC_DESC("modify the appearance of underlines in VTE") },
+    { TC_UNAME(tmux),                       NULL, "Smulx",      TC_DESC("modify the appearance of underlines in VTE"), &tc_Smulx },
                                                                         //
-                                                                        // 0 for no underscore,
-                                                                        // 1 for normal underscore,
-                                                                        // 2 for double underscore,
-                                                                        // 3 for curly underscore,
-                                                                        // 4 for dotted underscore and;
-                                                                        // 5 for dashed underscore.
+                                                                        // 0 - no underscore
+                                                                        // 1 - normal underscore
+                                                                        // 2 - double underscore
+                                                                        // 3 - curly underscore
+                                                                        // 4 - dotted underscore
+                                                                        // 5 - dashed underscore
                                                                         //
+    { TC_UNAME(tmux),                       NULL, "Setulc",     TC_DESC("set the underscore color") }, // tmux-3.0+
     { TC_UNAME(tmux),                       NULL, "Ss",         TC_DESC("change the cursor style") },
                                                                         //
                                                                         // 0, 1 or none - blinking block cursor
@@ -1046,16 +1050,16 @@ static TermKey_t term_keys[] = {                /* keys - termcap/terminfo eleme
     { TC_FNAME(key_c1),                     "K4", "kc1",        TC_DESC("lower left of keypad"), TC_TOKEN(KEYPAD_1) },
     { TC_FNAME(key_c3),                     "K5", "kc3",        TC_DESC("lower right of key-pad"), TC_TOKEN(KEYPAD_3) },
     { TC_FNAME(key_btab),                   "kB", "kcbt",       TC_DESC("back-tab key"), TC_TOKEN(BACK_TAB) },
-    { TC_FNAME(key_beg),                    "@1", "kbeg",       TC_DESC("reference key") },
-    { TC_FNAME(key_cancel),                 "@2", "kcan",       TC_DESC("refresh key") },
-    { TC_FNAME(key_close),                  "@3", "kclo",       TC_DESC("replace key"), TC_TOKEN(KEY_REPLACE) },
-    { TC_FNAME(key_command),                "@4", "kcmd",       TC_DESC("restart key") },
-    { TC_FNAME(key_copy),                   "@5", "kcpy",       TC_DESC("resume key") },
-    { TC_FNAME(key_create),                 "@6", "kcrt",       TC_DESC("save key"), TC_TOKEN(KEY_SAVE) },
-    { TC_FNAME(key_end),                    "@7", "kend",       TC_DESC("suspend key") },
-    { TC_FNAME(key_enter),                  "@8", "kent",       TC_DESC("undo key"), TC_TOKEN(KEY_UNDO_CMD) },
-    { TC_FNAME(key_exit),                   "@9", "kext",       TC_DESC("shifted begin key") },
-    { TC_FNAME(key_find),                   "@0", "kfnd",       TC_DESC("shifted cancel key") },
+    { TC_FNAME(key_beg),                    "@1", "kbeg",       TC_DESC("begin key") },
+    { TC_FNAME(key_cancel),                 "@2", "kcan",       TC_DESC("canel key") },
+    { TC_FNAME(key_close),                  "@3", "kclo",       TC_DESC("close key") },
+    { TC_FNAME(key_command),                "@4", "kcmd",       TC_DESC("command key") },
+    { TC_FNAME(key_copy),                   "@5", "kcpy",       TC_DESC("copy key"), TC_TOKEN(KEY_COPY_CMD) },
+    { TC_FNAME(key_create),                 "@6", "kcrt",       TC_DESC("create key") },
+    { TC_FNAME(key_end),                    "@7", "kend",       TC_DESC("end key") },
+    { TC_FNAME(key_enter),                  "@8", "kent",       TC_DESC("undo key") },
+    { TC_FNAME(key_exit),                   "@9", "kext",       TC_DESC("exit key"), TC_TOKEN(KEY_EXIT) },
+    { TC_FNAME(key_find),                   "@0", "kfnd",       TC_DESC("find key"), TC_TOKEN(KEY_SEARCH) },
     { TC_FNAME(key_help),                   "%1", "khlp",       TC_DESC("help key"), TC_TOKEN(KEY_HELP) },
     { TC_FNAME(key_mark),                   "%2", "kmrk",       TC_DESC("mark key") },                  /* KEY_MARK */
     { TC_FNAME(key_message),                "%3", "kmsg",       TC_DESC("message key") },
@@ -1105,14 +1109,14 @@ static TermKey_t term_keys[] = {                /* keys - termcap/terminfo eleme
     { TC_FNAME(key_sundo),                  "!3", "kUND",       TC_DESC("shifted undo key"), TC_TOKEN(KEY_REDO) },
     { TC_FNAME(key_f11),                    "F1", "kf11",       TC_DESC("F11 function key"), TC_TOKEN(F(11)) },
     { TC_FNAME(key_f12),                    "F2", "kf12",       TC_DESC("F12 function key"), TC_TOKEN(F(12)) },
-    { TC_FNAME(key_f13),                    "F3", "kf13",       TC_DESC("F13 function key") /*, TC_TOKEN(F(13))*/ },
-    { TC_FNAME(key_f14),                    "F4", "kf14",       TC_DESC("F14 function key") /*, TC_TOKEN(F(14))*/ },
-    { TC_FNAME(key_f15),                    "F5", "kf15",       TC_DESC("F15 function key") /*, TC_TOKEN(F(15))*/ },
-    { TC_FNAME(key_f16),                    "F6", "kf16",       TC_DESC("F16 function key") /*, TC_TOKEN(F(16))*/ },
-    { TC_FNAME(key_f17),                    "F7", "kf17",       TC_DESC("F17 function key") /*, TC_TOKEN(F(17))*/ },
-    { TC_FNAME(key_f18),                    "F8", "kf18",       TC_DESC("F18 function key") /*, TC_TOKEN(F(18))*/ },
-    { TC_FNAME(key_f19),                    "F9", "kf19",       TC_DESC("F19 function key") /*, TC_TOKEN(F(19))*/ },
-    { TC_FNAME(key_f20),                    "FA", "kf20",       TC_DESC("F20 function key") /*, TC_TOKEN(F(20))*/ },
+    { TC_FNAME(key_f13),                    "F3", "kf13",       TC_DESC("F13 function key") },          /* SF(3)  */
+    { TC_FNAME(key_f14),                    "F4", "kf14",       TC_DESC("F14 function key") },          /* SF(4)  */
+    { TC_FNAME(key_f15),                    "F5", "kf15",       TC_DESC("F15 function key") },          /* SF(5)  */
+    { TC_FNAME(key_f16),                    "F6", "kf16",       TC_DESC("F16 function key") },          /* SF(6)  */
+    { TC_FNAME(key_f17),                    "F7", "kf17",       TC_DESC("F17 function key") },          /* SF(7)  */
+    { TC_FNAME(key_f18),                    "F8", "kf18",       TC_DESC("F18 function key") },          /* SF(8)  */
+    { TC_FNAME(key_f19),                    "F9", "kf19",       TC_DESC("F19 function key") },          /* SF(9)  */
+    { TC_FNAME(key_f20),                    "FA", "kf20",       TC_DESC("F20 function key") },          /* SF(10) */
     { TC_FNAME(key_f21),                    "FB", "kf21",       TC_DESC("F21 function key") },
     { TC_FNAME(key_f22),                    "FC", "kf22",       TC_DESC("F22 function key") },
     { TC_FNAME(key_f23),                    "FD", "kf23",       TC_DESC("F23 function key") },
@@ -1353,7 +1357,8 @@ static int              tt_defaultbg = NOCOLOR;
 
 static int              tt_fg = NOCOLOR;        /* foreground color */
 static int              tt_bg = NOCOLOR;        /* background color */
-static int              tt_style;               /* text standout/underline mode */
+static colstyles_t      tt_style;               /* text standout/underline mode */
+static colstyles_t      tt_understyles;         /* available understyle's */
 
 static int              tt_active = 0;          /* display status */
 static int              tt_cursor = 0;          /* cursor status */
@@ -1967,16 +1972,18 @@ term_ready(int repaint, scrprofile_t *profile)
             trace_log("\tAlternative character support available.\n");
         }
         if (t_acs_locale_breaks) {
-            trace_log("\tlocale breaks alternative character support.\n");
+            trace_log("\tLocale breaks alternative character support.\n");
         }
 
         if (xf_noinit) {
-            trace_log("\ttermcap init/reinit disabled.\n");
+            trace_log("\tTermcap init/reinit disabled.\n");
         }
 
         if (xf_nokeypad)  {
-            trace_log("\ttermcap keypad init/reinit disabled.\n");
+            trace_log("\tTermcap keypad init/reinit disabled.\n");
         }
+
+        set_understyles();
 
         trace_log("\tDeleting lines using %s\n",
             ((tc_cs) ? "scrolling regions" : t_insdel ? "line del/ins" : "hard refresh"));
@@ -2024,6 +2031,42 @@ term_ready(int repaint, scrprofile_t *profile)
 }
 
 
+static void
+set_understyles(void)
+{
+    tt_understyles = 0;                         /* disabled */
+
+    if (xf_understyle & UNDERSTYLE_LINE) {
+        tt_understyles |= COLORSTYLE_UNDERLINE;
+
+        if (xf_understyle & UNDERSTYLE_EXTENDED) {  /* available understyles, otherwise underline */
+            if (x_pt.pt_understyle[0] || tc_Smulx) {
+                tt_understyles |= COLORSTYLE_UNDERMASK;
+
+            } else {
+                tt_understyles |= COLORSTYLE_UNDERSINGLE;
+                if (x_pt.pt_underdouble[0])
+                    tt_understyles |= COLORSTYLE_UNDERDOUBLE;
+                if (x_pt.pt_undercurl[0])
+                    tt_understyles |= COLORSTYLE_UNDERCURLY;
+                if (x_pt.pt_underdotted[0])
+                    tt_understyles |= COLORSTYLE_UNDERDOTTED;
+                if (x_pt.pt_underdashed[0])
+                    tt_understyles |= COLORSTYLE_UNDERDASHED;
+            }
+        }
+    }
+
+    trace_log("\tUnderstyles=%u:%u,%u,%u,%u,%u\n",
+        !!(tt_understyles & COLORSTYLE_UNDERLINE),
+        !!(tt_understyles & COLORSTYLE_UNDERSINGLE),
+        !!(tt_understyles & COLORSTYLE_UNDERDOUBLE),
+        !!(tt_understyles & COLORSTYLE_UNDERCURLY),
+        !!(tt_understyles & COLORSTYLE_UNDERDOTTED),
+        !!(tt_understyles & COLORSTYLE_UNDERDASHED));
+}
+
+
 /*  Function:           term_feature
  *      Signal a terminal feature change.
  *
@@ -2053,6 +2096,15 @@ term_feature(int ident, scrprofile_t *profile)
             term_colors();
             profile->sp_colors = tt_colors;
         }
+        break;
+
+    case TF_UNDERSTYLE:                          /* understyle comands */
+    case TF_UNDEROFF:
+    case TF_UNDERDOUBLE:
+    case TF_UNDERCURL:
+    case TF_UNDERDOTTED:
+    case TF_UNDERDASHED:
+        set_understyles();
         break;
 
     case TF_COLORMAP:                           /* terminal color palette */
@@ -4497,14 +4549,15 @@ term_attr(vbyte_t color)
     } else {
         const char *reset = (tc_me ? tc_me : "\033[0m");
         colattr_t ca = {0};
-        int fg, bg, sf;
+        int fg, bg;
+        unsigned sf;
 
         color_definition(attr, &ca);
         fg = ca.fg.color;
         bg = ca.bg.color;
         sf = ca.sf;
 
-        ED_TERM((", curr(fg:%d, bg:%d, sf:%d), attr(fg:%d, bg:%d, sf:%d)", tt_fg, tt_bg, tt_style, fg, bg, sf))
+        ED_TERM((", curr(fg:%d, bg:%d, sf:%u), attr(fg:%d, bg:%d, sf:%u)", tt_fg, tt_bg, tt_style, fg, bg, sf))
 
         if (tt_colors >= 88 /*88 or 256*/) {
             /* 256 color mode
@@ -4761,13 +4814,13 @@ term_attr(vbyte_t color)
  *      Enable the states styles.
  *
  *  Parameters:
- *      ntype -   New style bitmap.
+ *      nstyle - New style bitmap.
  *
  *  Returns:
  *      nothing.
  */
 static void
-term_styleon(unsigned nstyle)
+term_styleon(colstyles_t nstyle)
 {
     if (vtiscolor() && tn_NC > 0) {
         return;                                 /* XXX - color/attributes dont mix, should mask */
@@ -4785,41 +4838,43 @@ term_styleon(unsigned nstyle)
             /*INVISIBLE*/   0,
             /*PROTECT*/     0,
             /*ALTCHAR*/     (t_gmode ? 1 : 0)));
-        tt_style |= nstyle;
+        tt_style = nstyle;
         return;
     }
 #endif  /*HAVE_TERMINFO*/
 
 #define ACTIVATE_STYLE(x) \
-                ((nstyle & (x)) && 0 == (tt_style & (x)))
+            ((nstyle & (x)) && 0 == (tt_style & (x)))
 
     if (ACTIVATE_STYLE(COLORSTYLE_STANDOUT)) {
+        tt_style |= COLORSTYLE_STANDOUT;
         ttputpad(tc_so);                        /* standout mode. */
     } else if (ACTIVATE_STYLE(COLORSTYLE_INVERSE)) {
+        tt_style |= COLORSTYLE_INVERSE;
         ttputpad(tc_so);
     }
 
     if (ACTIVATE_STYLE(COLORSTYLE_REVERSE)) {
+        tt_style |= COLORSTYLE_REVERSE;
         ttputpad(tc_mr ? tc_mr : tc_so);        /* reverse  */
     }
 
-    if (ACTIVATE_STYLE(COLORSTYLE_UNDERLINE)) {
-        ttputpad(tc_us);                        /* underline */
-    }
+    term_understyle(1, nstyle);                 /* underline etc */
 
     if (ACTIVATE_STYLE(COLORSTYLE_BOLD)) {
+        tt_style |= COLORSTYLE_BOLD;
         ttputpad(tc_md);                        /* bold */
     }
 
     if (ACTIVATE_STYLE(COLORSTYLE_BLINK)) {
+        tt_style |= COLORSTYLE_BLINK;
         ttputpad(tc_mb);                        /* blink */
     }
 
     if (ACTIVATE_STYLE(COLORSTYLE_ITALIC)) {
+        tt_style |= COLORSTYLE_ITALIC;
         ttputpad(tc_ZH);                        /* italic */
     }
-
-    tt_style |= nstyle;
 }
 
 
@@ -4853,15 +4908,99 @@ term_styleoff(void)
             ttputpad(tc_ZX);                    /* reverse */
         }
 
-        if (tt_style & COLORSTYLE_UNDERLINE) {  /* underline */
-            ttputpad(tc_ue);
-        }
+        term_understyle(0, tt_style);           /* underline etc */
 
         if (tt_style & COLORSTYLE_ITALIC) {     /* italic */
             ttputpad(tc_ZR);
         }
     }
     tt_style = 0;
+}
+
+
+static void
+term_understyle(int enable, colstyles_t style)
+{
+    if (enable) {
+        const colstyles_t understyle = COLORSTYLE_UNDERSTYLE(style);
+
+        if (understyle & tt_understyles) {      /* an active understyle */
+
+            if ((tt_style | understyle) != tt_style) { /* activate? */
+                if (x_pt.pt_understyle[0]) {
+                    int mode = 0;
+
+                    switch (understyle) {       /* understyle-mode */
+                    case COLORSTYLE_UNDERSINGLE: mode = 1; break;
+                    case COLORSTYLE_UNDERDOUBLE: mode = 2; break;
+                    case COLORSTYLE_UNDERCURLY:  mode = 3; break;
+                    case COLORSTYLE_UNDERDOTTED: mode = 4; break;
+                    case COLORSTYLE_UNDERDASHED: mode = 5; break;
+                    }
+
+//TODO              if (color && x_pt.understylecolor == 58) {
+//                          if (color.rgb) {    // true-color
+//                                  sprintf(";58:2:%u:%u:%u", r, g, b);
+//                          } else {
+//                                  sprintf(";58:5:%u", v);
+//                          }
+//                  }
+
+                    ttprintf(x_pt.pt_understyle, mode, "");
+
+                } else if (tc_Smulx) {
+                    int mode = 0;
+
+                    switch (understyle) {       /* understyle-mode */
+                    case COLORSTYLE_UNDERSINGLE: mode = 1; break;
+                    case COLORSTYLE_UNDERDOUBLE: mode = 2; break;
+                    case COLORSTYLE_UNDERCURLY:  mode = 3; break;
+                    case COLORSTYLE_UNDERDOTTED: mode = 4; break;
+                    case COLORSTYLE_UNDERDASHED: mode = 5; break;
+                    }
+                    ttputctl(tc_Smulx, mode);
+
+                } else {
+                    const char *cmd = "";
+
+                    switch (understyle) {       /* understyle-cmd */
+                    case COLORSTYLE_UNDERSINGLE: cmd = tc_us; break;
+                    case COLORSTYLE_UNDERDOUBLE: cmd = x_pt.pt_underdouble; break;
+                    case COLORSTYLE_UNDERCURLY:  cmd = x_pt.pt_undercurl; break;
+                    case COLORSTYLE_UNDERDOTTED: cmd = x_pt.pt_underdotted; break;
+                    case COLORSTYLE_UNDERDASHED: cmd = x_pt.pt_underdashed; break;
+                    }
+                    ttputpad(cmd);
+                }
+                tt_style |= understyle;
+            }
+
+        } else if (tt_understyles & COLORSTYLE_UNDERLINE) {
+            if ((style & COLORSTYLE_UNDERLINE) || understyle /*underline default*/) {
+
+                if (0 == (tt_style & COLORSTYLE_UNDERLINE)) { /* activate? */
+                    tt_style |= COLORSTYLE_UNDERLINE;
+                    ttputpad(tc_us);            /* underline-on */
+                }
+            }
+        }
+
+    } else {
+        if (style & tt_understyles) {
+            if (x_pt.pt_understyle[0]) {        /* underline-none(0) */
+                ttprintf(x_pt.pt_understyle, 0, "");
+            } else if (tc_Smulx) {
+                ttputctl(tc_Smulx, 0);
+            } else if (x_pt.pt_underoff[0]) {
+                ttputpad(x_pt.pt_underoff);
+            } else {
+                ttputpad(tc_ue);
+            }
+
+        } else if (style & COLORSTYLE_UNDERLINE) {
+            ttputpad(tc_ue);                    /* underline-off */
+        }
+    }
 }
 
 

@@ -1,11 +1,11 @@
 #ifndef GR_KEYBOARD_H_INCLUDED
 #define GR_KEYBOARD_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keyboard_h,"$Id: keyboard.h,v 1.28 2024/09/25 15:51:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_keyboard_h,"$Id: keyboard.h,v 1.29 2024/10/02 16:24:52 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keyboard.h,v 1.28 2024/09/25 15:51:54 cvsuser Exp $
+/* $Id: keyboard.h,v 1.29 2024/10/02 16:24:52 cvsuser Exp $
  * Key maps and binding management.
  *
  *
@@ -106,4 +106,3 @@ extern int32_t              x_character;        /* Current character typed. */
 __CEND_DECLS
 
 #endif /*GR_KEYBOARD_H_INCLUDED*/
-

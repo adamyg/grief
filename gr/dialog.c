@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dialog_c,"$Id: dialog.c,v 1.35 2024/09/25 13:59:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_dialog_c,"$Id: dialog.c,v 1.36 2024/10/01 17:16:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dialog.c,v 1.35 2024/09/25 13:59:56 cvsuser Exp $
+/* $Id: dialog.c,v 1.36 2024/10/01 17:16:21 cvsuser Exp $
  * Dialog manager.
  *
  *
@@ -1683,7 +1683,6 @@ dialog_default(WIDGET_t *w, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETARG_t p2)
             case DLGA_STYLES:
                 data->d_u.ivalue = d->d_styles;
                 data->d_type = D_INT;
-                d->d_styles;
                 return TRUE;
             }
         }

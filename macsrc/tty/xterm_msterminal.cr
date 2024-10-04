@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: xterm_msterminal.cr,v 1.3 2024/09/19 15:10:54 cvsuser Exp $
+/* $Id: xterm_msterminal.cr,v 1.4 2024/10/01 12:55:19 cvsuser Exp $
  * msterminal terminal profile.
  * https://learn.microsoft.com/en-us/windows/terminal/
  *
@@ -24,12 +24,11 @@ main()
     /*
      *  Basic/common configuration
      */
-//  set_term_feature(TF_INIT, "\x1b=");         /* DECKPAM  Enable Keypad Application Mode */
-//  set_term_feature(TF_INIT, "\x1b[?1h");      /* DECCKM - Enable Cursor Keys Application Mode */
-//  set_term_feature(TF_RESET, "\x1b>");        /* DECKPNM  Enable Keypad Numeric Mode */
+//  set_term_feature(TF_INIT, "\x1b=");         /* DECKPAM - Enable Keypad Application Mode */
+//  set_term_feature(TF_INIT, "\x1b[?1h");      /* DECCKM  - Enable Cursor Keys Application Mode */
+//  set_term_feature(TF_RESET, "\x1b>");        /* DECKPNM - Enable Keypad Numeric Mode */
 
-//  set_term_feature(TF_INIT, "\x1b[?9001h");   /* enable win32-input-mode */
-//  set_term_feature(TF_RESET, "\x1b[?9001l");  /* disable win32-input-mode */
+    set_term_feature(TF_UNDERSTYLE, "\x1b[4:%dm"); // Smulx, terminfo=\E[4:%p1%dm
 
     xterm_graphic();
     xterm_256color();                           /* full 256 color is available */
@@ -37,6 +36,8 @@ main()
     /*
      *  Terminal map
      */
+    xterm_altmeta_keys();
+
     set_term_keyboard(
         //
         //  Function keys
@@ -111,8 +112,6 @@ main()
         BACK_TAB,           "\x1b[Z",
         KEY_BACKSPACE,      "\x7f"
     );
-
-    xterm_altmeta_keys();
 }
 
 
@@ -123,4 +122,3 @@ msterminal(void)
 }
 
 /*end*/
-

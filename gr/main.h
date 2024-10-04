@@ -1,11 +1,11 @@
 #ifndef GR_MAIN_H_INCLUDED
 #define GR_MAIN_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_main_h,"$Id: main.h,v 1.33 2024/09/21 09:05:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_main_h,"$Id: main.h,v 1.34 2024/10/01 12:54:54 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: main.h,v 1.33 2024/09/21 09:05:16 cvsuser Exp $
+/* $Id: main.h,v 1.34 2024/10/01 12:54:54 cvsuser Exp $
  * Globals and main process primitives.
  *
  *
@@ -61,7 +61,11 @@ extern int                  xf_kbprotocol;      /* Keyboard protocol mode. */
 
 extern const char *         xf_kbconfig;        /* Optional keyboard configuration. */
 
-extern int                  xf_underline;       /* TRUE/FALSE, user specified underline mode. */
+#define UNDERSTYLE_LINE         0x0001          /* underline */
+#define UNDERSTYLE_EXTENDED     0x0002          /* undercurl and others */
+#define UNDERSTYLE_BLINK        0x0004          /* b/w blink */
+
+extern int                  xf_understyle;      /* Active understyle's. */
 
 extern int                  xf_title;           /* TRUE/FALSE, user specified console title mode. */
 
@@ -139,5 +143,4 @@ extern void                 do_suspend(void);
 __CEND_DECLS
 
 #endif /*GR_MAIN_H_INCLUDED*/
-
 

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.80 2024/09/25 15:51:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.81 2024/10/02 16:24:52 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keyboard.c,v 1.80 2024/09/25 15:51:54 cvsuser Exp $
+/* $Id: keyboard.c,v 1.81 2024/10/02 16:24:52 cvsuser Exp $
  * Manipulate key maps and bindings.
  *
  *
@@ -4066,5 +4066,3 @@ inq_kbd_name(void)              /* string ([int kbdid]) */
 }
 
 /*end*/
-
-
