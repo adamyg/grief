@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.80 2024/09/20 14:50:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.84 2024/10/02 16:24:52 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.80 2024/09/20 14:50:06 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.84 2024/10/02 16:24:52 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -1238,6 +1238,10 @@ term_repeat(int cnt, vbyte_t fill, int where)
 static void
 term_attribute(const vbyte_t attr)
 {
+#if defined(VIO_UNDERLINE)
+    unsigned understyle;
+#endif
+
     assert(attr <= 512);
     if (vtiscolor()) {
         /*
@@ -1249,9 +1253,21 @@ term_attribute(const vbyte_t attr)
         color_definition(attr, &ca);
         term_hue(term_colvalue(ca.fg, tt_defaultfg), term_colvalue(ca.bg, tt_defaultbg));
 #if defined(VIO_UNDERLINE)
-        if (COLORSTYLE_UNDERLINE & ca.sf)       tt_style |= VIO_UNDERLINE;
-        if (COLORSTYLE_ITALIC & ca.sf)          tt_style |= VIO_ITALIC;
-        if (COLORSTYLE_BOLD & ca.sf)            tt_style |= VIO_BOLD;
+        if (0 != (understyle = COLORSTYLE_UNDERSTYLE(ca.sf))) {
+            switch (understyle) {
+            case COLORSTYLE_UNDERSINGLE:    tt_style |= VIO_UNDERLINE | VIO_UNDERSTYLE_SINGLE; break;
+            case COLORSTYLE_UNDERDOUBLE:    tt_style |= VIO_UNDERLINE | VIO_UNDERSTYLE_DOUBLE; break;
+            case COLORSTYLE_UNDERCURLY:     tt_style |= VIO_UNDERLINE | VIO_UNDERSTYLE_CURLY;  break;
+            case COLORSTYLE_UNDERDOTTED:    tt_style |= VIO_UNDERLINE | VIO_UNDERSTYLE_DOTTED; break;
+            case COLORSTYLE_UNDERDASHED:    tt_style |= VIO_UNDERLINE | VIO_UNDERSTYLE_DASHED; break;
+            default:
+                tt_style |= VIO_UNDERLINE;
+                break;
+            }
+        }
+        if (COLORSTYLE_UNDERLINE & ca.sf)   tt_style |= VIO_UNDERLINE;
+        if (COLORSTYLE_ITALIC & ca.sf)      tt_style |= VIO_ITALIC;
+        if (COLORSTYLE_BOLD & ca.sf)        tt_style |= VIO_BOLD;
 #endif
 
     } else {
@@ -1275,15 +1291,27 @@ term_attribute(const vbyte_t attr)
         if (0 == nstyle) {
             term_attr(__NORMAL__);
         } else {
-            if (nstyle & COLORSTYLE_BOLD)      term_attr(__BOLD__);
-            if (nstyle & COLORSTYLE_STANDOUT)  term_attr(__STANDOUT__);
-            if (nstyle & COLORSTYLE_INVERSE)   term_attr(__INVERSE__);
+            if (nstyle & COLORSTYLE_BOLD)       term_attr(__BOLD__);
+            if (nstyle & COLORSTYLE_STANDOUT)   term_attr(__STANDOUT__);
+            if (nstyle & COLORSTYLE_INVERSE)    term_attr(__INVERSE__);
 #if defined(VIO_UNDERLINE)
-            if (nstyle & COLORSTYLE_UNDERLINE) tt_style |= VIO_UNDERLINE;
-            if (nstyle & COLORSTYLE_ITALIC)    tt_style |= VIO_ITALIC;
-            if (nstyle & COLORSTYLE_BOLD)      tt_style |= VIO_BOLD;
+            if (0 != (understyle = COLORSTYLE_UNDERSTYLE(nstyle))) {
+                switch (understyle) {
+                case COLORSTYLE_UNDERSINGLE:    tt_style |= VIO_UNDERLINE | VIO_UNDERSTYLE_SINGLE; break;
+                case COLORSTYLE_UNDERDOUBLE:    tt_style |= VIO_UNDERLINE | VIO_UNDERSTYLE_DOUBLE; break;
+                case COLORSTYLE_UNDERCURLY:     tt_style |= VIO_UNDERLINE | VIO_UNDERSTYLE_CURLY;  break;
+                case COLORSTYLE_UNDERDOTTED:    tt_style |= VIO_UNDERLINE | VIO_UNDERSTYLE_DOTTED; break;
+                case COLORSTYLE_UNDERDASHED:    tt_style |= VIO_UNDERLINE | VIO_UNDERSTYLE_DASHED; break;
+                default:
+                    tt_style |= VIO_UNDERLINE;
+                    break;
+                }
+            }
+            if (nstyle & COLORSTYLE_UNDERLINE)  tt_style |= VIO_UNDERLINE;
+            if (nstyle & COLORSTYLE_ITALIC)     tt_style |= VIO_ITALIC;
+            if (nstyle & COLORSTYLE_BOLD)       tt_style |= VIO_BOLD;
 #endif
-            if (nstyle & COLORSTYLE_REVERSE)   term_attr(__REVERSE__);
+            if (nstyle & COLORSTYLE_REVERSE)    term_attr(__REVERSE__);
         }
 
 #undef  __NORMAL__

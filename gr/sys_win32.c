@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.81 2024/09/08 16:29:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.82 2024/10/02 16:24:38 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_win32.c,v 1.81 2024/09/08 16:29:24 cvsuser Exp $
+/* $Id: sys_win32.c,v 1.82 2024/10/02 16:24:38 cvsuser Exp $
  * WIN32 system support.
  *
  *
@@ -447,8 +447,8 @@ MouseProcess(const MOUSE_EVENT_RECORD *mer)
         }
     } else {
         // button events
-        assert(dwEventFlags == 0 || dwEventFlags == DOUBLE_CLICK);
-        if (dwEventFlags == DOUBLE_CLICK)
+        assert(dwEventFlags == 0 || (dwEventFlags & DOUBLE_CLICK));
+        if (dwEventFlags & DOUBLE_CLICK) //note: MOUSE_MOVED|DOUBLE_CLICK possible
             me.multi = 1;
         me.type = MOUSEEVENT_TPRESSRELEASE;
         mouse_process(&me, "");

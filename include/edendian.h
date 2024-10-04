@@ -1,11 +1,11 @@
 #ifndef GR_EDENDIAN_H_INCLUDED
 #define GR_EDENDIAN_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edendian_h,"$Id: edendian.h,v 1.18 2024/07/17 17:34:11 cvsuser Exp $")
+__CIDENT_RCSID(gr_edendian_h,"$Id: edendian.h,v 1.19 2024/10/01 12:55:03 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edendian.h,v 1.18 2024/07/17 17:34:11 cvsuser Exp $
+/* $Id: edendian.h,v 1.19 2024/10/01 12:55:03 cvsuser Exp $
  * Endian interface.
  *
  *
@@ -134,6 +134,3 @@ __CPRAGMA_ONCE
 
 #endif /*GR_EDENDIAN_H_INCLUDED*/
 /*end*/
-
-
-

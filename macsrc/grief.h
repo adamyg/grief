@@ -69,6 +69,13 @@
 #define TF_COLORSETRGB_FG       41          /* color set foreground control sequence (RGB colors) */
 #define TF_COLORSETRGB_BG       42          /* color set background control sequence (RGB colors) */
 
+#define TF_UNDERSTYLE           43          /* Smulx; 0=none,1=normal,2=double,3=curly,4=dotted,5=dashed */
+#define TF_UNDEROFF             44          /* t_Ce */
+#define TF_UNDERDOUBLE          45          /* t_Us */
+#define TF_UNDERCURL            46          /* t_Cs */
+#define TF_UNDERDOTTED          47          /* t_ds */
+#define TF_UNDERDASHED          48          /* t_Ds */
+
 #define TF_CLEAR_IS_BLACK       50          /* clear is black */
 #define TF_DISABLE_INSDEL       51          /* disable ins/del scrolling method */
 #define TF_DISABLE_SCROLL       52          /* disable scroll regions scrolling method */

@@ -205,6 +205,7 @@ static void             vio_setcursor(int col, int row);
 static int              rgb_search(const int maxval, const COLORREF rgb);
 
 static BOOL             IsVirtualConsole(int *depth);
+static BOOL             IsWindowsTerminal(void);
 static BOOL             IsConsole2(void);
 
 static uint32_t         unicode_remap(uint32_t ch);
@@ -325,7 +326,8 @@ static struct {                                 /* Video state */
     int                 dynamic;                /* Dynamic bindings */
     int                 envtest;                /* One-shot environment tests */
     int                 notruecolor;            /* Disable true-color decoding */
-    int                 isvirtualconsole;       /* Virtual console mode (1=detected, 2=enabled. 3=enabled+restore) */
+    int                 isVirtualConsole;       /* Virtual console mode (1=detected, 2=enabled. 3=enabled+restore) */
+    int                 isConPTY;               /* ConPTY */
     DWORD               oldConsoleMode;         /* Previous console mode */
     unsigned            oldConsoleCP;
 
@@ -730,11 +732,16 @@ vio_profile(int rebuild /*TRUE/FALSE/-1 (check)*/)
         if (IsVirtualConsole(&depth)) {
 #if defined(WIN32_CONSOLEVIRTUAL)
             if (depth > 16) {
-                printf("Running under a virtual console, enabling 256/true-color support\n");
-                vio.isvirtualconsole = 1;
+                if (IsWindowsTerminal()) {
+                    printf("Running under a windows terminal, enabling 256/true-color support\n");
+                    vio.isConPTY = 1;
+                } else {
+                    printf("Running under a virtual console, enabling 256/true-color support\n");
+                    vio.isConPTY = 0;
+                }
+                vio.isVirtualConsole = 1;
                 vio.maxcolors = 256;
-            }
-            else {
+            } else {
                 printf("Running under a prelim virtual console, disabling 256 support\n");
                 vio.maxcolors = 16;
             }
@@ -883,7 +890,7 @@ vio_profile(int rebuild /*TRUE/FALSE/-1 (check)*/)
 
                 coord = GetConsoleFontSize(chandle, cfix.nFont);
                 if (-1 == rebuild) {
-                    if (vio.fontindex == cfix.nFont && 
+                    if (vio.fontindex == cfix.nFont &&
                             vio.fcheight == coord.Y && vio.fcwidth == coord.X) {
                         return;                 // no-change
                     }
@@ -905,7 +912,7 @@ vio_profile(int rebuild /*TRUE/FALSE/-1 (check)*/)
 
                 coord = GetConsoleFontSize(chandle, cfi.nFont);
                 if (-1 == rebuild) {
-                    if (vio.fontindex == cfi.nFont && 
+                    if (vio.fontindex == cfi.nFont &&
                             vio.fcheight == coord.Y && vio.fcwidth == coord.X) {
                         return;                 // no-change
                     }
@@ -999,6 +1006,8 @@ vio_profile(int rebuild /*TRUE/FALSE/-1 (check)*/)
         }
     }
 }
+
+
 
 
 static DWORD        // move to w32_process.c
@@ -1140,6 +1149,18 @@ IsVirtualConsole(int *depth)
         }
     }
     return FALSE;
+}
+
+
+static BOOL
+IsWindowsTerminal(void)
+{
+    if (getenv("WT_SESSION") == NULL)
+        return FALSE;                           // Terminal session identifier
+
+    // https://github.com/microsoft/terminal/issues/7434
+    // Send WM_GETICON (127). conhost will return a valid HANDLE; openconsole will return 0.
+    return (SendMessageW(vio.chandle, WM_GETICON, 0, 0) == 0);
 }
 
 
@@ -1527,7 +1548,7 @@ CopyOut(copyoutctx_t *ctx, unsigned pos, unsigned cnt, unsigned flags)
 #if defined(WIN32_CONSOLEVIRTUAL)
         //
         //  windows 10 virtual console.
-        if (vio.isvirtualconsole) {
+        if (vio.isVirtualConsole) {
             CopyOutEx2(ctx, pos, cnt, flags);   // export text
             return;
         }
@@ -1932,13 +1953,13 @@ CopyOutEx2(copyoutctx_t *ctx, size_t pos, size_t cnt, unsigned flags)
     assert(pos < vio.size);
     assert(0 == (pos % cols));
     assert((pos + cnt) <= vio.size);
-    assert(vio.isvirtualconsole);
+    assert(vio.isVirtualConsole);
 
-    if (1 == vio.isvirtualconsole) {            // enable Windows 10 virtual console
+    if (1 == vio.isVirtualConsole) {            // enable Windows 10 virtual console
         const UINT cp = GetConsoleOutputCP();
         DWORD mode = 0;
 
-        vio.isvirtualconsole = 2;               // post initialisation state
+        vio.isVirtualConsole = 2;               // post initialisation state
 
         if (GetConsoleMode(chandle, &mode)) {
             vio.oldConsoleMode = mode;
@@ -1951,7 +1972,7 @@ CopyOutEx2(copyoutctx_t *ctx, size_t pos, size_t cnt, unsigned flags)
                 //  enable virtual terminal processing
                 mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN;
                             /*| ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT |*/
-                vio.isvirtualconsole = 3;       // update/restore
+                vio.isVirtualConsole = 3;       // update/restore
 
             } else {
                 //
@@ -1959,11 +1980,11 @@ CopyOutEx2(copyoutctx_t *ctx, size_t pos, size_t cnt, unsigned flags)
                 //  and retain/inherit other settings.
                 if (0 == (mode & DISABLE_NEWLINE_AUTO_RETURN)) {
                     mode |= DISABLE_NEWLINE_AUTO_RETURN;
-                    vio.isvirtualconsole = 3;   // update/restore
+                    vio.isVirtualConsole = 3;   // update/restore
                 }
             }
 
-            if (3 == vio.isvirtualconsole) {
+            if (3 == vio.isVirtualConsole) {
                 (void) SetConsoleMode(chandle, mode);
             }
         }
@@ -2015,13 +2036,20 @@ CopyOutEx2(copyoutctx_t *ctx, size_t pos, size_t cnt, unsigned flags)
                 //      0                       Default, returns all attributes to the default state prior to modification.
                 //
                 //      1                       Bold / Bright Applies brightness / intensity flag to foreground color.
+                //      2                       Faint
+                //      3                       Italic
                 //      4                       Underline
-                //      7                       Negative; swaps foreground and background colors.
+                //      7                       Negative; swaps foreground and background colors
+                //      9                       Crossed-out/strike
                 //
                 //      38; 2; <r>; <g>; <b>    Set foreground color to RGB value specified in <r>, <g>, <b> parameters.
                 //      48; 2; <r>; <g>; <b>    Set background color to RGB value specified in <r>, <g>, <b> parameters.
                 //      38; 5; <s>              Set foreground color to <s> index in 88 or 256 color table.
                 //      48; 5; <s>              Set background color to <s> index in 88 or 256 color table.
+                //
+                //      58; 2; <r>; <g>; <b>    Set underline color to RGB value specified in <r>, <g>, <b> parameters.
+                //      58; 5; <s>              Set underline color to <s> index in 88 or 256 color table.
+                //      59                      Default underline color.
                 //
                 ocursor[col++] = cell;          // update out image.
 
@@ -2033,12 +2061,35 @@ CopyOutEx2(copyoutctx_t *ctx, size_t pos, size_t cnt, unsigned flags)
 
                 {   const WORD Attributes = info.Attributes;
                     if (Attributes) {           // special attributes.
-                        if (Attributes & VIO_UNDERLINE)           wctext += wsprintfW(wctext, L_VTCSI L"4m");
-                        if (Attributes & (VIO_BOLD | VIO_BLINK))  wctext += wsprintfW(wctext, L_VTCSI L"1m");
-                        if (Attributes & VIO_INVERSE)             wctext += wsprintfW(wctext, L_VTCSI L"7m");
-                      //if (Attributes & VIO_ITALIC)
-                      //if (Attributes & VIO_STRIKE)
-                      //if (Attributes & VIO_FAINT)
+                        //
+                        // Note: Bundled copies of conpty.dll and OpenConsole.exe were both updated in e7fe7c0
+                        // to the version that ships with Windows Terminal 1.19.240130002 (15/May/2024).
+                        //
+                        // ConPTY shipped in Windows is usually behind the latest one (https://github.com/microsoft/terminal/releases).
+                        // Even though ConPTY version shipped in Windows 11 is more or less up-to-date, the version shipped in Windows 10 is generally outdated.
+                        //
+                        // TODO: combine
+
+                        if (Attributes & VIO_UNDERLINE) {
+                            const WORD understyle = VIO_UNDERSTYLE(Attributes);
+                            if (understyle && vio.isConPTY) {
+                                wctext += wsprintfW(wctext, L_VTCSI L"4:%um", understyle); // 1=Single,2=Double,3=Curly,4=Dotted,5=Dashed
+                                    // TODO: understyle color.
+                            } else {
+                                wctext += wsprintfW(wctext, L_VTCSI L"4m");
+                            }
+                        }
+
+                        if (Attributes & (VIO_BOLD | VIO_BLINK)) // SGR1
+                            wctext += wsprintfW(wctext, L_VTCSI L"1m");
+                        if (Attributes & VIO_INVERSE) // SGR7
+                            wctext += wsprintfW(wctext, L_VTCSI L"7m");
+                        if (Attributes & VIO_ITALIC)  // SGR3/20H1
+                            wctext += wsprintfW(wctext, L_VTCSI L"3m");
+                        if (Attributes & VIO_STRIKE)  // SGR9/20H1
+                            wctext += wsprintfW(wctext, L_VTCSI L"9m");
+                        if (Attributes & VIO_FAINT)   // SGR2/20H1
+                            wctext += wsprintfW(wctext, L_VTCSI L"2m");
                     }
                 }
 
@@ -2670,7 +2721,7 @@ parse_color(const char *color, const char *defname, const struct attrmap *map, i
     }
 
     // non-optional color
-    while (' ' == *color || '\t' == *color) 
+    while (' ' == *color || '\t' == *color)
         ++color;
 
     if (0 == sscanf(color, "color%u", &col)) {   // extension
@@ -2744,6 +2795,8 @@ parse_attributes(const char *attr)
                 attributes |= VIO_BLINK;
             } else if (0 == _strnicmp(attr, "underline", 9)) {
                 attributes |= VIO_UNDERLINE;
+            } else if (0 == _strnicmp(attr, "undercurl", 9)) {
+                attributes |= VIO_UNDERLINE|VIO_UNDERSTYLE_CURLY;
             } else if (0 == _strnicmp(attr, "italic", 6)) {
                 attributes |= VIO_ITALIC;
             } else if (0 == _strnicmp(attr, "inverse", 7) || 0 == _strnicmp(attr, "reverse", 7)) {
@@ -3069,8 +3122,8 @@ vio_close(void)
     TRACE_LOG(("close(rows:%d, cols:%d)", vio.rows, vio.cols))
     if (vio.maximised) {
         vio_setsize(vio.maximised_oldrows, vio.maximised_oldcols);
-        if (vio.isvirtualconsole) {
-            if (3 == vio.isvirtualconsole) {    /* restore? */
+        if (vio.isVirtualConsole) {
+            if (3 == vio.isVirtualConsole) {    /* restore? */
                 const DWORD mode = vio.oldConsoleMode;
 
                 if (mode) {
@@ -3080,7 +3133,7 @@ vio_close(void)
                     (void) SetConsoleOutputCP(vio.oldConsoleCP);
                 }
             }
-            vio.isvirtualconsole = 1;           /* reinitialise state */
+            vio.isVirtualConsole = 1;           /* reinitialise state */
         }
         ShowWindow(vio.whandle, /*SW_RESTORE*/ SW_NORMAL);
         vio.maximised = 0;

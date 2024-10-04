@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.23 2024/09/25 15:51:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.25 2024/10/02 14:30:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_terminal.c,v 1.23 2024/09/25 15:51:54 cvsuser Exp $
+/* $Id: m_terminal.c,v 1.25 2024/10/02 14:30:20 cvsuser Exp $
  * Terminal screen and keyboard primitives.
  *
  *
@@ -117,7 +117,7 @@ static struct pt_map    pt_features[] = {
     { TF_INIT,                  PT_MKSTR(x_pt.pt_init),                   "init" },
 
     /*
-     *  non-order specific
+     *  non-order specific:
      *
      *      o colorset_fgbg -           Sequence, color set control sequence foreground and background.
      *      o colorset_fg -             Sequence, set foreground color.
@@ -128,6 +128,12 @@ static struct pt_map    pt_features[] = {
      *      o default_bg_color -        Numeric,  terminals default background color.
      *      o scheme_dark -             Boolean,  *true* if a dark color scheme is desired, otherwise light.
      *
+     *      o under_style -             Sequence, general underline style; 0=none,1=normal,2=double,3=curly,4=dotted,5=dashed
+     *      o under_off -               Sequence, clear underline style.
+     *      o under_double -            Sequence, double underline style.
+     *      o under_curl -              Sequence, curly underline style.
+     *      o under_dotted -            Sequence, dotted underline style.
+     *      o under_dashed -            Sequence, dashed underline style.
      */
 //  { TF_COLORSET_FG,           PT_MKSTR(x_pt.pt_colorsetfg),             "color_set_fg" },
 //  { TF_COLORSET_BG,           PT_MKSTR(x_pt.pt_colorsetbg),             "color_set_bg" },
@@ -142,6 +148,13 @@ static struct pt_map    pt_features[] = {
     { TF_COLORMAP,              PT_MKSTR(x_pt.pt_colormap),               "color_map" },
     { TF_COLORPALETTE,          PT_MKSTR(x_pt.pt_colorpalette),           "color_palette" },
     { TF_COLORSCHEME,           PT_MKSTR(x_pt.pt_colorscheme),            "color_scheme" },
+
+    { TF_UNDERSTYLE,            PT_MKSTR(x_pt.pt_understyle),             "under_style" }, // 0=none,1=normal,2=double,3=curly,4=dotted,5=dashed
+    { TF_UNDEROFF,              PT_MKSTR(x_pt.pt_underoff),               "under_off" },
+    { TF_UNDERDOUBLE,           PT_MKSTR(x_pt.pt_underdouble),            "under_double" },
+    { TF_UNDERCURL,             PT_MKSTR(x_pt.pt_undercurl),              "under_curl" },
+    { TF_UNDERDOTTED,           PT_MKSTR(x_pt.pt_underdotted),            "under_dotted" },
+    { TF_UNDERDASHED,           PT_MKSTR(x_pt.pt_underdashed),            "under_dashed" },
 
     { TF_EIGHT_BIT,             PT_MKFLG(x_pt.pt_8bit),                   "eight_bit" },
     { TF_MOUSE,                 PT_MKSTR(x_pt.pt_mouse),                  "mouse" },
@@ -1390,8 +1403,3 @@ do_get_term_keyboard(void)      /* list () */
 }
 
 /*end*/
-
-
-
-
-

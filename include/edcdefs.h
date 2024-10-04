@@ -4,7 +4,7 @@
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edcdefs.h,v 1.3 2024/07/14 15:30:51 cvsuser Exp $
+/* $Id: edcdefs.h,v 1.4 2024/10/01 12:55:03 cvsuser Exp $
  * <sys/cdefs.h> interface
  *
  * __BEGIN_DECLS
@@ -57,8 +57,6 @@ __CPRAGMA_ONCE
 #define __unused
 #endif
 
-#endif /*HAVE_SYS_CDEFS_H*/	
+#endif /*HAVE_SYS_CDEFS_H*/
 
 #endif /*GR_EDCDEFS_H_INCLUDED*/
-
-
