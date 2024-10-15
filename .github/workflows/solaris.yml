@@ -31,7 +31,7 @@ jobs:
           echo ===== Packages requirements
           pkg install -v system/locale system/header
           pkg install -v --accept \
-            developer/gcc-7@7.3.0-11.4.0.0.1.14.0 \
+            developer/gcc-11 \
             developer/build/gnu-make \
             developer/build/make \
             developer/build/autoconf \
@@ -41,6 +41,8 @@ jobs:
             developer/lexer/flex \
             developer/parser/bison \
             library/ncurses
+
+## vm1.0.2: was: gcc-7@7.3.0-11.4.0.0.1.14
 
         run: |
           export LC_ALL=C
