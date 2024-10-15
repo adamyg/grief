@@ -109,17 +109,17 @@ jobs:
       shell: bash
       run: |
         sudo add-apt-repository universe
-        sudo add-apt-repository restricted
-        sudo add-apt-repository multiverse
         sudo apt-get install -y libncurses-dev
         sudo apt-get install -y libncursesw5-dev
         sudo apt-get install -y libenchant-2-dev
         sudo apt-get install -y libaspell-dev
         sudo apt-get install -y libhunspell-dev
         sudo apt-get install -y libenca-dev
-        sudo apt-get install -y libguess-dev
         sudo apt-get install -y libexplain-dev
         sudo apt-get install -y libarchive-dev
+
+## 24.04: missing (Oct/24)
+##      sudo apt-get install -y libguess-dev
 
     - name: MacOS, setup
       if: startsWith(matrix.config.name, 'MacOS Latest')
