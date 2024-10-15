@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.32 2024/10/15 11:20:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.33 2024/10/15 13:49:55 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyncurses.c,v 1.32 2024/10/15 11:20:35 cvsuser Exp $
+/* $Id: ttyncurses.c,v 1.33 2024/10/15 13:49:55 cvsuser Exp $
  * [n]curses tty driver interface -- alt driver when running under ncurses.
  *
  * This file is part of the GRIEF Editor.
@@ -1085,8 +1085,10 @@ term_clearpairs(void)
     if (tt_pairs != 0) {
         tt_pairs = 0;
         color_valueclr(-1);
-#if ((NCURSES_VERSION_MAJOR > 6) || ((NCURSES_VERSION_MAJOR == 6) && (NCURSES_VERSION_MINOR >= 2)))
-        reset_color_pairs();                    // +6.1 yet not all releases, +6.2
+#if defined(CURSES_EXTENDED_COLOR)
+#if defined(HAVE_RESET_COLOR_PAIRS)
+        reset_color_pairs();                    // TODO: not all 6.1 releases
+#endif
 #endif
     }
 }
