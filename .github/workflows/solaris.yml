@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Solaris 11.4
-      uses: vmactions/solaris-vm@v1.0.2
+      uses: vmactions/solaris-vm@v1.1.0
       with:
         usesh: true
         mem: 6144
@@ -23,9 +23,9 @@ jobs:
           beadm list
           pkg info entire
           pkg list -af entire
-          echo ===== Installed packages 
+          echo ===== Installed packages
           pkg list '*'
-          echo ===== Available developer/library packages 
+          echo ===== Available developer/library packages
           pkg list -a 'developer/*'
           pkg list -a 'library/*'
           echo ===== Packages requirements
@@ -47,13 +47,13 @@ jobs:
           export LANG=C
           uname -a
           whoami
-          pwd          
+          pwd
           cat /etc/release
           export PATH=/opt/csw/bin:$PATH:/usr/sfw/bin
           export CFLAGS="-std=gnu11 -D_XOPEN_SOURCE=500 -D__EXTENSIONS__=1"
           ./configure --prefix=/usr
           gmake release build
-         
+
 ## References:
 ## https://github.com/oracle/solaris-userland/blob/master/make-rules/shared-macros.mk
 ## https://docs.oracle.com/cd/E86824_01/html/E54772/intro-3.html#REFMAN3Fintro-3
