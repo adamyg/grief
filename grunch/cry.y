@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cry.y,v 1.37 2024/08/02 12:58:32 cvsuser Exp $
+/* $Id: cry.y,v 1.38 2024/10/15 15:50:08 cvsuser Exp $
  * grunch/crunch grammer, extended c99
  *
  *
@@ -21,7 +21,6 @@
 
 #include "grunch.h"
 %}
-
 
 /*control structure*/
 %union {
