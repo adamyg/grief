@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 8; -*- */
-/* $Id: sonofobsidian.cr,v 1.3 2014/11/25 04:44:50 ayoung Exp $
+/* $Id: sonofobsidian.cr,v 1.5 2024/10/08 11:40:03 cvsuser Exp $
  * Son-of-Obsidian coloriser, GRIEF port.
  *
  *
@@ -106,3 +106,4 @@ colorscheme_soo(void)
         colorscheme_sonofobsidian();
 }
 
+/*end*/

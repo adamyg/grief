@@ -1,11 +1,11 @@
 #ifndef GR_COLOR_H_INCLUDED
 #define GR_COLOR_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_color_h,"$Id: color.h,v 1.14 2024/10/02 16:24:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_color_h,"$Id: color.h,v 1.15 2024/10/06 17:01:22 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: color.h,v 1.14 2024/10/02 16:24:52 cvsuser Exp $
+/* $Id: color.h,v 1.15 2024/10/06 17:01:22 cvsuser Exp $
  * Color configuration.
  *
  *
@@ -32,7 +32,7 @@ __CBEGIN_DECLS
 #define ANSICOLOR_BG(col)       ((0x7f & col) & 0x07)
 #define ANSICOLOR_MK(fg,bg)     (ATTR_ANSI128 + ((fg * ANSIBG_MAX) + bg))
 
-#define COLVALUE_INIT           { COLOR_UNKNOWN, COLORSOURCE_NONE, 0 }
+#define COLVALUE_INIT           { COLOR_UNKNOWN, 0, COLORSOURCE_NONE, 0 }
 
 enum {
 /*--export--enum--*/
@@ -228,6 +228,7 @@ enum {
 
 typedef struct {
     int                 color;                  /* color value, -1 == undefined */
+    unsigned            rgbcolor;               /* RGB */
     unsigned char       source;                 /* definition source (see below) */
     unsigned char       type;                   /* source specific type information */
 
@@ -239,10 +240,10 @@ typedef struct {
 #define COLORSOURCE_RGBLABEL    5               /* <name> == RGB */
 #define COLORSOURCE_RGBCVT      6               /* converted RGB value to current color depth */
 
-#define COLOR_RGB(_r, _g, _b)   ((int)((unsigned char)(_r) | ((int)(unsigned char)(_g) << 8) | ((int)(unsigned char)(_b) << 16)))
-#define COLOR_RVAL(_rgb)        ((_rgb) & 0xff)
-#define COLOR_GVAL(_rgb)        ((_rgb) >> 8) & 0xff)
-#define COLOR_BVAL(_rgb)        ((_rgb) >> 16) & 0xff)
+#define COLOR_RGB(_r, _g, _b)   (((unsigned)((unsigned char)(_r) << 0) | ((unsigned)(unsigned char)(_g) << 8) | ((unsigned)(unsigned char)(_b) << 16)))
+#define COLOR_RVAL(_rgb)        (((_rgb) >> 0)  & 0xff)
+#define COLOR_GVAL(_rgb)        (((_rgb) >> 8)  & 0xff)
+#define COLOR_BVAL(_rgb)        (((_rgb) >> 16) & 0xff)
 
 } colvalue_t;
 
@@ -271,6 +272,7 @@ typedef struct {
 #define COLORSTYLE_UNDERDOTTED  0x0800
 #define COLORSTYLE_UNDERDASHED  0x1000
 
+#define COLORSTYLE_STRIKEOUT    0x2000
 #define COLORSTYLE_ISBOLD       0x4000          /* BOLD has been applied */
 #define COLORSTYLE_ISDIM        0x8000          /* DIM has been applied */
     colstyles_t         sf;
@@ -291,3 +293,5 @@ extern int                  attribute_new(const char *name, const char *spec);
 __CEND_DECLS
 
 #endif /*GR_COLOR_H_INCLUDED*/
+
+

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttycmd_c,"$Id: ttycmd.c,v 1.2 2024/09/25 15:51:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttycmd_c,"$Id: ttycmd.c,v 1.3 2024/10/09 15:55:49 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttycmd.c,v 1.2 2024/09/25 15:51:54 cvsuser Exp $
+/* $Id: ttycmd.c,v 1.3 2024/10/09 15:55:49 cvsuser Exp $
  * TTY common command functions
  *
  *
@@ -113,15 +113,21 @@ isterm(const char *term, const char *name)
  *                ^type
  *                   ^version
  *
- *          Terminal                    Type        Version         Example
+ *          Terminal                  Type        Version         Example
  *          ------------------------------------------------------------------
- *          Gnome-terminal (legacy)     1           >= 1115         1;3801;0
- *          PuTTY                       0           136             0;136;0
- *          MinTTY                      77(=M)                      77;20005;0c
- *          rxvt                        82(=R)
- *          screen                      83(=S)                      83;40500;0
- *          urxvt                       85(=U)
- *          xterm                       -2(a)       123             XTERM_VERSION=123
+ *          Gnome-terminal (legacy)   1           >= 1115         1;3801;0
+ *          Gnome-terminal            65(e)       >= 6001         65;6001;1
+ *          PuTTY                     0           136             0;136;0
+ *          kconsole                                              0;115;0
+ *          Terminal.app              1           95              1;95;0
+ *          iTerm2                    0           95              0;95;0
+ *          minTTY                    77(M)                       77;20005;0c ("20000" == 2.0.0)
+ *          rxvt                      82(R)                       82;20703;0c ("20703" == 2.7.3)
+ *          screen                    83(S)                       83;40500;0 (added "30600" == 3.6.0)
+ *          urxvt                     85(U)
+ *          libvterm                                              0;100;0
+ *          msterminal                0           10              0;10;1c
+ *          xterm                     -2(a)
  *
  *  Parameters:
  *      RV - Optional request-command string; default applied otherwise.

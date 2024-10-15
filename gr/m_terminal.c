@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.25 2024/10/02 14:30:20 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.26 2024/10/06 17:01:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_terminal.c,v 1.25 2024/10/02 14:30:20 cvsuser Exp $
+/* $Id: m_terminal.c,v 1.26 2024/10/06 17:01:22 cvsuser Exp $
  * Terminal screen and keyboard primitives.
  *
  *
@@ -141,10 +141,10 @@ static struct pt_map    pt_features[] = {
 //  { TF_COLORSETRGB_BG,        PT_MKSTR(x_pt.pt_colorsetrgbbg),          "color_setrgb_bg" },
 
     { TF_COLORDEPTH,            PT_MKINT(x_pt.pt_colordepth),             "color_depth" },
+    { TF_TRUECOLOR,             PT_MKFLG(x_pt.pt_truecolor),              "truecolor" },
     { TF_DEFAULT_FG,            PT_MKINT(x_pt.pt_defaultfg),              "default_fg_color" },
     { TF_DEFAULT_BG,            PT_MKINT(x_pt.pt_defaultbg),              "default_bg_color" },
     { TF_SCHEMEDARK,            PT_MKFLG(x_pt.pt_schemedark),             "scheme_dark" },
-    { TF_COLORRGB,              PT_MKFLG(x_pt.pt_colorrgb),               "color_rgb" },
     { TF_COLORMAP,              PT_MKSTR(x_pt.pt_colormap),               "color_map" },
     { TF_COLORPALETTE,          PT_MKSTR(x_pt.pt_colorpalette),           "color_palette" },
     { TF_COLORSCHEME,           PT_MKSTR(x_pt.pt_colorscheme),            "color_scheme" },

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_color_c,"$Id: m_color.c,v 1.54 2024/10/02 12:30:33 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_color_c,"$Id: m_color.c,v 1.57 2024/10/08 12:22:41 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_color.c,v 1.54 2024/10/02 12:30:33 cvsuser Exp $
+/* $Id: m_color.c,v 1.57 2024/10/08 12:22:41 cvsuser Exp $
  * Color configuration.
  *
  *
@@ -127,7 +127,7 @@ static const struct name {
 } x_color_names[] = {
 #define NFIELD(__x)     __x, (sizeof(__x) - 1)
             /*
-             *  crisp-style                             alternative name      ****
+             *  brief-style                             alternative name      ****
              */
     /*0 */  { NFIELD("black"),          BLACK },
     /*1 */  { NFIELD("blue"),           BLUE },
@@ -193,6 +193,7 @@ static const struct {
     { NFIELD("undercurl"),      COLORSTYLE_UNDERCURLY },    /* undercurl if available, otherwise underline */
     { NFIELD("underdot"),       COLORSTYLE_UNDERDOTTED },
     { NFIELD("underdash"),      COLORSTYLE_UNDERDASHED },
+    { NFIELD("strikeout"),      COLORSTYLE_STRIKEOUT },
     { NFIELD("blink"),          COLORSTYLE_BLINK },
     { NFIELD("italic"),         COLORSTYLE_ITALIC },
     { NFIELD("reverse"),        COLORSTYLE_REVERSE },       /* generally same as INVERSE */
@@ -2187,31 +2188,27 @@ col_dynamic(const colors_t *colors, const colvalue_t val)
 
     case COLORSOURCE_RGBLABEL:
     case COLORSOURCE_RGB: {
-            colvalue_t nval = val;
+            /*
+             *  Convert to current color depth.
+             */
             const int colordepth = vtcolordepth();
+            const unsigned rgbcolor = val.rgbcolor;
+            colvalue_t nval = val;
+            struct rgbvalue rgb;
 
-            if (colordepth <= 256) {
-                /*
-                 *  Convert to current color depth.
-                 */
-                const unsigned color = (unsigned)nval.color;
-                struct rgbvalue rgb;
+            rgb.type  = nval.type;
+            rgb.red   = COLOR_RVAL(rgbcolor);
+            rgb.green = COLOR_GVAL(rgbcolor);
+            rgb.blue  = COLOR_BVAL(rgbcolor);
 
-                rgb.type  = nval.type;
-                rgb.red   = 0xff & (color);
-                rgb.green = 0xff & (color >> 8);
-                rgb.blue  = 0xff & (color >> 16);
-
-                if (256 == colordepth) {
-                    nval.color = rgb_xterm256(&rgb);
-                } else if (colordepth >= 88) {
-                    nval.color = rgb_xterm88(&rgb);
-                } else {
-                    nval.color = rgb_xterm16(&rgb);
-                }
-                nval.source = COLORSOURCE_RGBCVT;
-                nval.type = (uint8_t)color;
+            if (colordepth >= 256) {
+                nval.color = rgb_xterm256(&rgb);
+            } else if (colordepth >= 88) {
+                nval.color = rgb_xterm88(&rgb);
+            } else {
+                nval.color = rgb_xterm16(&rgb);
             }
+            nval.source = COLORSOURCE_RGBCVT;
             return nval;
         }
 
@@ -2520,42 +2517,57 @@ col_import(const colors_t *colors, const char *who, const struct attribute *ap, 
         colvalue_t fg = COLVALUE_INIT, bg = COLVALUE_INIT;
         int sf = 0;
 
-        if (end == spec ||                      /* foreground */
-                ! color_nvalue(spec, end - spec, &fg, FALSE)) {
-            errorf("%s: invalid %scolor '%s'", who, (comma ? "foreground " : ""), spec);
+        if (end == spec) {                      /* foreground */
+            errorf("%s: missing foreground color", who);
             ret = -1;
 
         } else {
-            if (comma && *++comma) {            /* ,background */
-                if (0 == ((CA_ATTR|CA_FULL) & ap->ca_flags)) {
-                    errorf("%s: unexpected background color '%s'", who, spec);
+            const int wordlen = end - spec;
+
+            if (wordlen == 5 && 0 == str_nicmp(spec, "clear", 5)) {
+                if (comma) {
+                    errorf("%s: clear, unexpected background color '%s'", who, spec);
                     ret = -1;
-                } else {
-                    if ((NULL == colon && ! color_value(comma, &bg, TRUE)) ||
-                            (NULL != colon && ! color_nvalue(comma, colon - comma, &bg, TRUE))) {
-                        errorf("%s: invalid background color '%s'", who, spec);
-                        ret = -1;
-                    }
                 }
-            } else if (CA_ATTR & ap->ca_flags) {
-                bg.color = COLOUR_DYNAMIC_BACKGROUND;
-                bg.source = COLORSOURCE_SYMBOLIC;
-            }
 
-            if (0 == ret) {                     /* :style[,...] */
-                if (links && colon && *++colon) {
-                    if ((sf = style_import(colors, who, colon, links, ap->ca_attr)) < 0) {
+            } else if (! color_nvalue(spec, wordlen, &fg, FALSE)) {
+                errorf("%s: invalid foreground color '%s'", who, spec);
+                ret = -1;
+
+            } else {
+                if (comma && *++comma) {        /* ,background */
+                    if (0 == ((CA_ATTR | CA_FULL) & ap->ca_flags)) {
+                        errorf("%s: unexpected background color '%s'", who, spec);
                         ret = -1;
-                    }
-                }
-            }
 
-            if (0 == ret) {                     /* commit */
-                ca->fg = fg;
-                ca->bg = bg;
-                ca->sf = sf;
+                    } else {
+                        if ((NULL == colon && !color_value(comma, &bg, TRUE)) ||
+                            (NULL != colon && !color_nvalue(comma, colon - comma, &bg, TRUE))) {
+                            errorf("%s: invalid background color '%s'", who, spec);
+                            ret = -1;
+                        }
+                    }
+
+                } else if (CA_ATTR & ap->ca_flags) {
+                    bg.color = COLOUR_DYNAMIC_BACKGROUND;
+                    bg.source = COLORSOURCE_SYMBOLIC;
+                }
             }
         }
+
+        if (0 == ret) {                         /* :style[,...] */
+            if (links && colon && *++colon) {
+                if ((sf = style_import(colors, who, colon, links, ap->ca_attr)) < 0) {
+                    ret = -1;
+                }
+            }
+        }
+
+        if (0 == ret) {                         /* commit */
+            ca->fg = fg;
+            ca->bg = bg;
+            ca->sf = sf;
+        }      
 
     } else {
         /*
@@ -2564,18 +2576,16 @@ col_import(const colors_t *colors, const char *who, const struct attribute *ap, 
          */
         colvalue_t fg = COLVALUE_INIT;
 
-        if (! color_value(spec, &fg, FALSE)) {
-            if (0 == str_icmp(spec, "clear")) {
-                ca->fg.color  = COLOR_UNKNOWN;
-                ca->fg.source = COLORSOURCE_NONE;
-                ca->bg.color  = COLOR_UNKNOWN;
-                ca->bg.source = COLORSOURCE_NONE;
-                ca->sf = 0;
+        if (0 == str_icmp(spec, "clear")) {
+            ca->fg.color = COLOR_UNKNOWN;
+            ca->fg.source = COLORSOURCE_NONE;
+            ca->bg.color = COLOR_UNKNOWN;
+            ca->bg.source = COLORSOURCE_NONE;
+            ca->sf = 0;
 
-            } else {
-                errorf("%s: invalid color '%s'", who, spec);
-                ret = -1;
-            }
+        } else  if (!color_value(spec, &fg, FALSE)) {
+            errorf("%s: invalid color '%s'", who, spec);
+            ret = -1;
 
         } else {
             ca->fg = fg;
@@ -2711,7 +2721,7 @@ color_value(const char *name, colvalue_t *val, int bg)
  *>         color-<dec>                         where <dec> represents a color value.
  *>         color#<hex>                         where <hex> represents a color value.
  *>         0[X]xx                              Numeric valus (decimal, octal or hex).
- *>         <name>                              Symbolic name, sourced from 'color_labels'.
+ *>         <[%]name>                           Symbolic name, sourced from 'color_labels'.
  *
  *  Parameters:
  *      name - Name buffer.
@@ -2764,8 +2774,14 @@ color_nvalue(const char *name, int length, colvalue_t *val, int bg)
     if (COLOR_UNKNOWN == ca.color || COLORSOURCE_NONE == ca.source) {
         colvalue_t result;
 
-        if (color_label(name, length, &result)) {
-            ca = result;
+        if (name[0] == '%') {                   /* explicit label */
+            if (color_label(name + 1, length, &result)) {
+                ca = result;
+            }
+        } else {
+            if (color_label(name, length, &result)) {
+                ca = result;
+            }
         }
     }
 
@@ -2786,14 +2802,14 @@ color_nvalue(const char *name, int length, colvalue_t *val, int bg)
  *          :              :
  */
 static const char *
-color_label(const char *name, const int length_or_color, colvalue_t *result)
+color_label(const char *name, const int length_or_rgbcolor, colvalue_t *result)
 {
-    colvalue_t val = COLVALUE_INIT;
     SYMBOL *sp;
 
     if (NULL != (sp = sym_global_lookup("color_labels")) && F_LIST == sp->s_type) {
+        colvalue_t cached_val, val = COLVALUE_INIT;
         const LIST *nextlp, *lp = (const LIST *) r_ptr(sp->s_obj);
-        const char *key;
+        const char *cached_key = NULL, *key;
 
         while (lp && (nextlp = atom_next(lp)) != lp) {
             if (NULL != (key = atom_xstr(lp))) {
@@ -2803,7 +2819,7 @@ color_label(const char *name, const int length_or_color, colvalue_t *result)
                     int keylen = (int)strlen(key);
 
                     if (NULL != (key = str_trim(key, &keylen)) &&
-                            (NULL == name || (keylen == length_or_color && 0 == str_icmp(key, name)))) {
+                            (NULL == name || (keylen == length_or_rgbcolor && 0 == str_icmp(key, name)))) {
                         const char *sval;
                         accint_t ival;
 
@@ -2821,23 +2837,35 @@ color_label(const char *name, const int length_or_color, colvalue_t *result)
                             }
 
                         } else {
-                            continue;           /* neither integer nor string */
+                            continue;           /* neither integer nor string; ignore */
                         }
 
-                        if (NULL == name) {
-                            if (length_or_color == val.color)  {
-                                if (result) *result = val;
-                                return key;
+                        if (NULL == name) {     /* lookup by value; otherwise name */
+                            if (val.source == COLORSOURCE_RGBLABEL && length_or_rgbcolor == val.rgbcolor) {
+                                if (strchr(key, ' ')) { // name contains space, cache
+                                    cached_val = val;
+                                    cached_key = key;
+                                } else {
+                                    if (result) *result = val;
+                                    return key;
+                                }
+                            } else {
+                                if (cached_key)
+                                    break;
                             }
-                            continue;
+                        } else {
+                            if (result) *result = val;
+                            return name;
                         }
-
-                        if (result) *result = val;
-                        return name;
                     }
                 }
             }
             lp = nextlp;
+        }
+
+        if (cached_key) {
+            if (result) *result = cached_val;
+            return cached_key;
         }
     }
     return NULL;
@@ -2859,36 +2887,36 @@ color_numeric(const char *name, unsigned length)
     if (length) {
         char *endp = NULL;
         struct rgbvalue rgb = {0};
-        int type;
+        int color, type;
                                                 /* RGB (rgb:, rgbi:, #xxx) */
         if ((type = rgb_import(name, length, &rgb, 0xff)) >= 0) {
-
+            val.color = 0;
+            val.rgbcolor = (unsigned)COLOR_RGB(rgb.red, rgb.green, rgb.blue);
             val.source = COLORSOURCE_RGB;
-            val.color = (int)(rgb.red | (rgb.green << 8) | (rgb.blue << 16));
             val.type = (unsigned char) type;
 
         } else if (length > 6 &&                /* color#<hex> */
                     0 == strncmp(name, "color#", 6) && isxdigit(name[6])) {
-
-            val.color = (int) strtol(name + 6, &endp, 16);
-            if (isterm(endp) && val.color >= 0 && val.color <= 0xff) {
+            color = (int) strtol(name + 6, &endp, 16);
+            if (isterm(endp) && color >= 0 && color <= 0xff) {
+                val.color = color;
                 val.source = COLORSOURCE_COLOR;
                 val.type = 16;
             }
 
         } else if (length > 5 &&                /* color-<dec> */
                     0 == strncmp(name, "color-", 6) && isdigit(name[6])) {
-
-            val.color = (int) strtol(name + 6, &endp, 10);
-            if (isterm(endp) && val.color >= 0 && val.color <= 0xff) {
+            color = (int) strtol(name + 6, &endp, 10);
+            if (isterm(endp) && color >= 0 && color <= 0xff) {
+                val.color = color;
                 val.source = COLORSOURCE_COLOR;
                 val.type = 10;
             }
 
         } else if (isxdigit(name[0])) {         /* oct, decimal or hex */
-
-            val.color = (int) strtol(name, &endp, 0);
-            if (isterm(endp) && val.color >= 0 && val.color <= 0xff) {
+            color = (int) strtol(name, &endp, 0);
+            if (isterm(endp) && color >= 0 && color <= 0xff) {
+                val.color = color;
                 val.source = COLORSOURCE_NUMERIC;
                 val.type = 10;
                 if ('0' == name[0]) {
@@ -2935,7 +2963,7 @@ color_print(const colvalue_t *val, char *buf, int len)
     case COLORSOURCE_RGBLABEL: {    /* %<label> */
             const char *label;
 
-            if (NULL != (label = color_label(NULL, val->color, NULL))) {
+            if (NULL != (label = color_label(NULL, val->rgbcolor, NULL))) {
                 buf[0] = '%';
                 strxcpy(buf+1, label, len-1);
                 return (int)strlen(buf);
@@ -2944,22 +2972,22 @@ color_print(const colvalue_t *val, char *buf, int len)
         /*FALLTHRU*/
 
     case COLORSOURCE_RGB: {         /* rgb(<def>) or #<rrggbb> */
-            const unsigned color = (unsigned) val->color;
+            const unsigned rgbcolor = val->rgbcolor;
             struct rgbvalue rgb;
 
             rgb.type  = val->type;
-            rgb.red   = 0xff & (color);
-            rgb.green = 0xff & (color >> 8);
-            rgb.blue  = 0xff & (color >> 16);
+            rgb.red   = COLOR_RVAL(rgbcolor);
+            rgb.green = COLOR_GVAL(rgbcolor);
+            rgb.blue  = COLOR_BVAL(rgbcolor);
             return rgb_export(buf, len, &rgb, 0xff);
         }
         /*NOTREACHED*/
 
     case COLORSOURCE_RGBCVT: {      /* cvt(#<rrggbb>/<color>) */
-            const unsigned rgb = (unsigned) val->type;
+            const unsigned rgbcolor = val->rgbcolor;
 
             return sxprintf(buf, len, "cvt(#%02x%02x%02x/0x%x)",
-                (0xff & rgb), (0xff & (rgb >> 8)), (0xff & (rgb >> 16)), val->color);
+                COLOR_RVAL(rgbcolor), COLOR_GVAL(rgbcolor), COLOR_BVAL(rgbcolor), val->color);
         }
         /*NOTREACHED*/
     }
@@ -3151,4 +3179,3 @@ style_print(int sf, char *buf, int length)
 }
 
 /*end*/
-

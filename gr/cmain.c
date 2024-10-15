@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.67 2024/10/02 16:24:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.68 2024/10/06 17:01:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.67 2024/10/02 16:24:52 cvsuser Exp $
+/* $Id: cmain.c,v 1.68 2024/10/06 17:01:22 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -130,8 +130,8 @@ static struct argoption options[] = {
 
     { "noscroll",       arg_none,           NULL,       2,      "Disable xterm scrolling" },
 
-    { "color",          arg_optional,       NULL,       3,      "Force color mode",
-                            "=<depth>" },
+    { "color",          arg_optional,       NULL,       3,      "Color depth/mode",
+                            "=<depth>|<truecolor>|<none>" },
 
     { "nocolor",        arg_none,           NULL,       3,      "Force black and white display" },
 
@@ -1014,8 +1014,11 @@ argv_process(const int doerr, int argc, const char **argv)
 
         case 3:             /* tty - [no]color=[depth] */
             if ('c' == args.opt) {
-                if (! args.val ||
-                        (xf_color = atoi(args.val)) <= 0) {
+                if (args.val && 0 == strcmp(args.val, "none")) {
+                    xf_color = 0;
+                } else if (args.val && (0 == strcmp(args.val, "truecolor") || 0 == strcmp(args.val, "24bit"))) {
+                    xf_color = INT_MAX;
+                } else if (! args.val || (xf_color = atoi(args.val)) <= 0) {
                     xf_color = 1;
                 }
             } else {

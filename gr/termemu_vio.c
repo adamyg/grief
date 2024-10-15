@@ -2709,10 +2709,10 @@ parse_color(const char *color, const char *defname, const struct attrmap *map, i
     int c, col = -1;
 
     // color[;attribute[;...]]
-    if (!defname || !*defname)                   // undefined; assume white/black.
+    if (!defname || !*defname)                  // undefined; assume white/black.
         defname = (map == win16_foreground ? "white" : "black");
 
-    if (!color || !*color) color = defname;      // undefined, apply default.
+    if (!color || !*color) color = defname;     // undefined, apply default.
 
     // optional trailing attributes
     if (NULL != (a = strchr(color, ';'))) {
@@ -2724,7 +2724,7 @@ parse_color(const char *color, const char *defname, const struct attrmap *map, i
     while (' ' == *color || '\t' == *color)
         ++color;
 
-    if (0 == sscanf(color, "color%u", &col)) {   // extension
+    if (0 == sscanf(color, "color%u", &col)) {  // extension
         for (c = 0; (name = map[c].name) != NULL; ++c) { // search color map
             if (len == (int)strlen(name) && 0 == strnicmp(color, name, len)) {
                 return map[c].win; // done
@@ -2801,7 +2801,7 @@ parse_attributes(const char *attr)
                 attributes |= VIO_ITALIC;
             } else if (0 == _strnicmp(attr, "inverse", 7) || 0 == _strnicmp(attr, "reverse", 7)) {
                 attributes |= VIO_INVERSE;
-            } else if (0 == _strnicmp(attr, "strike", 6)) {
+            } else if (0 == _strnicmp(attr, "strike", 6) || 0 == _strnicmp(attr, "strikeout", 9)) {
                 attributes |= VIO_STRIKE;
             } else if (0 == _strnicmp(attr, "faint", 5)) {
                 attributes |= VIO_FAINT;
@@ -4026,3 +4026,4 @@ int vio_wcwidth(wchar_t ucs)
 }
 
 /*end*/
+

@@ -1,11 +1,11 @@
 #ifndef GR_EDFEATURES_H_INCLUDED
 #define GR_EDFEATURES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edfeatures_h,"$Id: edfeatures.h,v 1.24 2024/10/01 12:55:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_edfeatures_h,"$Id: edfeatures.h,v 1.25 2024/10/07 16:39:27 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edfeatures.h,v 1.24 2024/10/01 12:55:03 cvsuser Exp $
+/* $Id: edfeatures.h,v 1.25 2024/10/07 16:39:27 cvsuser Exp $
  * Editor features.
  *
  *
@@ -64,7 +64,7 @@ __CBEGIN_DECLS
 #define TF_DEFAULT_FG           32              /* default foreground color */
 #define TF_DEFAULT_BG           33              /* default background color */
 #define TF_SCHEMEDARK           34              /* *true* if the default color is "dark" */
-#define TF_COLORRGB             35              /* *true* if RGB colors are supported */
+#define TF_TRUECOLOR            35              /* *true* if RGB colors are supported/truecolor */
 #define TF_COLORSET_FG          36              /* color set foreground control sequence (ANSI colors) */
 #define TF_COLORSET_BG          37              /* color set background control sequence (ANSI colors) */
 #define TF_COLORMAP             38              /* color map (terminal) */
@@ -223,7 +223,7 @@ struct _features {
     int         pt_0m;                          /* BOOL,        "\033[0m" resets color as well as character attributes. */
     int         pt_color;                       /* BOOL,INT     TRUE if terminal supports color (> 1 states default depth). */
     int         pt_colordepth;                  /* INT,         Color depth (active). */
-    int         pt_colorrgb;                    /* INT,         RGB color support (truecolor/24bit). */
+    int         pt_truecolor;                   /* INT,         RGB color support (truecolor/24bit). */
     int         pt_clrisblack;                  /* BOOL,        Erasing line clears to a black space. */
     int         pt_scroll_disable;              /* BOOL,        Disable scroll regions. */
     int         pt_scroll_max;                  /* INT,         Max scroll region size. */

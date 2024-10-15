@@ -1,11 +1,11 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: rgb256.cr,v 1.4 2014/11/27 15:54:15 ayoung Exp $
+/* $Id: rgb256.cr,v 1.5 2024/10/07 16:23:06 cvsuser Exp $
  * Default RGB color-labels.
  *
  * Hex colour conversion functions borrowed from the theme "Desert256".
  */
 
-#include "../grief.h"
+#include "../../grief.h"
 
 static list
 rgb256 = {                                      // default X11/WEB color-names

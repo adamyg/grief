@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: colorlabels.cr,v 1.8 2014/10/27 23:28:18 ayoung Exp $
+/* $Id: colorlabels.cr,v 1.9 2024/10/07 16:23:06 cvsuser Exp $
  * Color label support.
  *
  *
@@ -137,7 +137,7 @@ rgb_init(void)
             return;
         }
     }
-    load_macro("colors/rgb256");                // default
+    load_macro("colors/util/rgb256");           // default
 }
 
 static void

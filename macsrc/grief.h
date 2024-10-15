@@ -60,7 +60,7 @@
 #define TF_DEFAULT_FG           32          /* default foreground color */
 #define TF_DEFAULT_BG           33          /* default background color */
 #define TF_SCHEMEDARK           34          /* *true* if the default color is "dark" */
-#define TF_COLORRGB             35          /* *true* if RGB colors are supported */
+#define TF_TRUECOLOR            35          /* *true* if RGB colors are supported/truecolor */
 #define TF_COLORSET_FG          36          /* color set foreground control sequence (ANSI colors) */
 #define TF_COLORSET_BG          37          /* color set background control sequence (ANSI colors) */
 #define TF_COLORMAP             38          /* color map (terminal) */

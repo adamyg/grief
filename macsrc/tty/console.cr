@@ -126,7 +126,13 @@ console_detect()
 static string
 iscolor(string name)
 {
-    if (name == "256color" || name == "256" /*legacy*/) {
+    if (name == "truecolor") {
+        return "256color";
+
+    } else if (name == "24bit" || name == "24bits" /*emac*/) {
+        return "256color";
+
+    } else if (name == "256color" || name == "256" /*legacy*/) {
         return "256color";
 
     } else if (name == "88color" || name == "88" /*legacy*/) {

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.81 2024/10/02 16:24:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.82 2024/10/09 15:55:48 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keyboard.c,v 1.81 2024/10/02 16:24:52 cvsuser Exp $
+/* $Id: keyboard.c,v 1.82 2024/10/09 15:55:48 cvsuser Exp $
  * Manipulate key maps and bindings.
  *
  *
@@ -461,7 +461,7 @@ key_init(void)
     x_push_ref = r_string("");
 
 #if !defined(DOSISH)
-    ttkeys();                                   /* termcap bindings */
+    ttkeybind();                                /* termcap bindings */
 #endif
 }
 

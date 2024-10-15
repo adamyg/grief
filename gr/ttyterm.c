@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.140 2024/10/03 11:37:46 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.146 2024/10/15 10:48:57 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.140 2024/10/03 11:37:46 cvsuser Exp $
+/* $Id: ttyterm.c,v 1.146 2024/10/15 10:48:57 cvsuser Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -177,12 +177,13 @@ extern int ospeed;
 #include "system.h"
 #include "tty.h"
 #include "ttyutil.h"
+#include "ttycfg.h"
 #include "undo.h"
 #include "window.h"
 
-#define ANSI_COLORS             16
-#define XTERM_COLORS            16
-#define NOCOLOR                 0x7fff
+#define ANSI_COLORS      16
+#define XTERM_COLORS     16
+#define NOCOLOR          0x7fff
 
 #if defined(NCURSES_CONST)
 #define CURSES_CAST(__x) (NCURSES_CONST char *)(__x)
@@ -190,43 +191,11 @@ extern int ospeed;
 #define CURSES_CAST(__x) (char *)(__x)
 #endif
 
-typedef struct {
-    const char *        termfname;              /* function name */
-    unsigned            userdef;                /* is userdef attribute */
-    const char *        termcapname;            /* termcap name */
-    const char *        terminfoname;           /* terminfo name */
-    const char *        comment;                /* comment string */
-#define TC_FNAME(__fname)       #__fname, 0
-#define TC_UNAME(__uname)       "userdef_" #__uname, 1
-#define TC_KNAME(__kname)       "keydef_" #__kname, 1
-#define TC_DESC(__desc)         __desc
-} Term_t;
-
-typedef struct {
-    Term_t              term;
-    int                 key;
-#define TC_TOKEN(__token)       __token
-    const char *        svalue;                 /* runtime value */
-} TermKey_t;
-
-typedef struct {
-    Term_t              term;
-    const char **       stoken;
-#define TC_STRING(__token)      __token
-    const char *        svalue;                 /* runtime value */
-} TermString_t;
-
-typedef struct {
-    Term_t              term;
-    int *               itoken;
-#define TC_FLAG(__token)        __token
-    int                 ivalue;                 /* runtime value*/
-} TermNumeric_t;
-
 typedef uint32_t TAttributes_t;
 
 static void             term_open(scrprofile_t *profile);
 static void             term_ready(int repaint, scrprofile_t *profile);
+static void             term_keybind(void);
 static void             set_understyles(void);
 static void             term_feature(int ident, scrprofile_t *profile);
 static void             term_display(void);
@@ -234,10 +203,10 @@ static int              term_control(int action, int param, ...);
 static void             term_close(void);
 
 static const char *     ttisetup(void);
-static const char *     ttiname(const Term_t *ti);
-static const char *     ttigetstr(const Term_t *ti);
-static int              ttigetnum(const Term_t *ti);
-static int              ttigetflag(const Term_t *ti);
+static const char *     ttiname(const TermVal_t *ti);
+static const char *     ttigetstr(const TermVal_t *ti);
+static int              ttigetnum(const TermVal_t *ti);
+static int              ttigetflag(const TermVal_t *ti);
 
 static TAttributes_t    term_xtermlike(const char *term);
 
@@ -258,6 +227,8 @@ static void             term_beep(int freq, int duration);
 
 static void             term_config(void);
 static void             term_colors(void);
+static void             term_special(void);
+static int              istruecolor(void);
 static void             term_fgbg(void);
 static const char *     fgbg_value(const char *src, int *result);
 static unsigned         fgbg_import(unsigned edefault, int udefault);
@@ -290,6 +261,12 @@ static int              term_dell(int row, int bot, int nlines, vbyte_t fillcolo
 static void             term_scrollset(int top, int bot);
 static void             term_scrollreset(void);
 static void             term_attr(vbyte_t color);
+static void             term_truecolor(const colattr_t *ca);
+static void             term_monocolor(const vbyte_t attr);
+static void             term_legacycolor(const colattr_t *ca);
+static void             term_256color(int fg, int bg, const char *reset);
+static void             term_sgrcolor(int fg, int bg, const char *reset);
+static void             term_16color(int fg, int bg, const char **cmds, const char *reset);
 static void             term_styleon(colstyles_t nstyle);
 static void             term_styleoff(void);
 static void             term_understyle(int enable, colstyles_t style);
@@ -398,13 +375,14 @@ static int
     tf_be,                                      /* back color erase (xterm). */
     tf_xs, tf_xt,                               /* attribute clear mode */
     tf_ms,                                      /* save to move cursor whilst standout/underlined */
-    tf_XT;                                      /* supports xterm OCS and mouse */
+    tf_XT,                                      /* supports xterm OCS and mouse */
+    tf_RGB;                                     /* RGB active; direct mode */
 
 static int
     tn_sg,                                      /* number of glitches, 0 for invisable, -1 for none */
     tn_li, tn_co,                               /* lines/columns */
     tn_NC,                                      /* attributes which dont mix with colors */
-    tn_RGB;                                     /* RGB bits */
+    tn_RGB;                                     /* RGB bits; direct mode */
 
 static const char
     *tc_ti,                                     /* Term init -- start using cursor motion. */
@@ -472,7 +450,8 @@ static const char
     *tc_mr, *tc_ZX,                             /* Reverse (on/off). */
     *tc_sa,                                     /* Attribute set. */
 
-    *tc_Smulx,                                  /* understyle. */
+    *tc_Smulx,                                  /* Understyle. */
+    *tc_smxx, *tc_rmxx,                         /* Strikeout/crossed-out. */
 
     *tc_RV;                                     /* XTerm version */
 
@@ -492,8 +471,8 @@ static const char
     *tc_box_characters;
 
 static const char
-    *tc_ANSI_Color_Fg, *tc_Color_Fg,            /* color selection */
-    *tc_ANSI_Color_Bg, *tc_Color_Bg;
+    *tc_ANSI_Color[2],                          /* color selection */
+    *tc_Color[2];
 
 typedef struct {
     char                ident;                  /* internal identifier */
@@ -575,7 +554,8 @@ static GraphicChars_t term_characters[] =  {    /* graphic characters */
 
 static TermString_t term_strings[] = {          /* strings - termcap/terminfo elements */
     /*
-     *  Source: https://invisible-island.net/ncurses/man/terminfo.5.html
+     *  Source:   https://invisible-island.net/ncurses/man/terminfo.5.html
+     *  Examples: https://invisible-island.net/ncurses/terminfo.src.html
      */
     { TC_FNAME(back_tab),                   "bt", "cbt",        TC_DESC("back tab") },
     { TC_FNAME(bell),                       "bl", "bel",        TC_DESC("audible signal (bell)"), TC_STRING(&tc_bl) },
@@ -731,8 +711,8 @@ static TermString_t term_strings[] = {          /* strings - termcap/terminfo el
     { TC_FNAME(initialize_color),           "Ic", "initc",      TC_DESC("initialize color #1 to (#2,#3,#4)") },
     { TC_FNAME(initialize_pair),            "Ip", "initp",      TC_DESC("initialize color pair #1 to fg=(#2,#3,#4), bg=(#5,#6,#7)") },
     { TC_FNAME(set_color_pair),             "sp", "scp",        TC_DESC("set current color pair to #1") },
-    { TC_FNAME(set_foreground),             "Sf", "setf",       TC_DESC("set foreground (color)"), &tc_Color_Fg },
-    { TC_FNAME(set_background),             "Sb", "setb",       TC_DESC("set background (color)"), &tc_Color_Bg },
+    { TC_FNAME(set_foreground),             "Sf", "setf",       TC_DESC("set foreground (color)"), &tc_Color[0] },
+    { TC_FNAME(set_background),             "Sb", "setb",       TC_DESC("set background (color)"), &tc_Color[1] },
     { TC_FNAME(change_char_pitch),          "ZA", "cpi",        TC_DESC("change number of characters per inch") },
     { TC_FNAME(change_line_pitch),          "ZB", "lpi",        TC_DESC("change number of lines per inch") },
     { TC_FNAME(change_res_horz),            "ZC", "chr",        TC_DESC("change horizontal resolution") },
@@ -792,8 +772,8 @@ static TermString_t term_strings[] = {          /* strings - termcap/terminfo el
     { TC_FNAME(mouse_info),                 "Mi", "minfo",      TC_DESC("mouse status information") },
     { TC_FNAME(req_mouse_pos),              "RQ", "reqmp",      TC_DESC("request mouse position") },
     { TC_FNAME(get_mouse),                  "Gm", "getm",       TC_DESC("curses should get button events") },
-    { TC_FNAME(set_a_foreground),           "AF", "setaf",      TC_DESC("set ANSI color foreground"), &tc_ANSI_Color_Fg },
-    { TC_FNAME(set_a_background),           "AB", "setab",      TC_DESC("set ANSI color background"), &tc_ANSI_Color_Bg },
+    { TC_FNAME(set_a_foreground),           "AF", "setaf",      TC_DESC("set ANSI color foreground"), &tc_ANSI_Color[0] },
+    { TC_FNAME(set_a_background),           "AB", "setab",      TC_DESC("set ANSI color background"), &tc_ANSI_Color[1] },
     { TC_FNAME(pkey_plab),                  "xl", "pfxl",       TC_DESC("program function key #1 to type string #2 and show string #3") },
     { TC_FNAME(device_type),                "dv", "devt",       TC_DESC("indicate language/codeset support") },
     { TC_FNAME(code_set_init),              "ci", "csin",       TC_DESC("init sequence for multiple codesets") },
@@ -920,8 +900,8 @@ static TermString_t term_strings[] = {          /* strings - termcap/terminfo el
                                                                         // 5 - blinking vertical bar cursor
                                                                         // 6 - vertical bar cursor
                                                                         //
-    { TC_UNAME(tmux),                       NULL, "rmxx",       TC_DESC("reset ECMA-48 strikeout/crossed-out attributes") },
-    { TC_UNAME(tmux),                       NULL, "smxx",       TC_DESC("set ECMA-48 strikeout/crossed-out attributes") },
+    { TC_UNAME(tmux),                       NULL, "smxx",       TC_DESC("set ECMA-48 strikeout/crossed-out attributes"), &tc_smxx }, // SGR attribute or VK100-compatible DECSET20.
+    { TC_UNAME(tmux),                       NULL, "rmxx",       TC_DESC("reset ECMA-48 strikeout/crossed-out attributes"), &tc_rmxx },
 
         /* VIM specials */
     { TC_UNAME(vim),                        NULL, "BD",         TC_DESC("disables bracketed paste") },
@@ -934,7 +914,7 @@ static TermString_t term_strings[] = {          /* strings - termcap/terminfo el
     { TC_UNAME(vim),                        NULL, "fe",         TC_DESC("enable xterm focus-events") },
     { TC_UNAME(vim),                        NULL, "rv",         TC_DESC("response to RV, regular expression") },
     { TC_UNAME(vim),                        NULL, "xr",         TC_DESC("response to XR, regular expression") },
-    { TC_UNAME(vim),                        NULL, "SH",         TC_DESC("cursor shape") } //XXX
+    { TC_UNAME(vim),                        NULL, "SH",         TC_DESC("cursor shape") } //TODO
                                                                         //
                                                                         // 0, 1 or none - blinking block cursor
                                                                         // 2 - block cursor
@@ -1276,7 +1256,7 @@ static TermNumeric_t term_flags[] = {           /* boolean - termcap/terminfo el
          *  See: ncurses/include/Caps-ncurses
          */
     { TC_UNAME(xt),                         NULL, "NQ",         TC_DESC("terminal does not support query/response") },
-    { TC_UNAME(xt),                         NULL, "RGB",        TC_DESC("RGB color support") },
+    { TC_UNAME(xt),                         NULL, "RGB",        TC_DESC("RGB color support"), TC_FLAG(&tf_RGB) },
 
         /* screen */
     { TC_UNAME(xt),                         NULL, "AN",         TC_DESC("turn on autonuke") },
@@ -1444,6 +1424,7 @@ ttinit(void)
      */
     x_scrfn.scr_open    = term_open;
     x_scrfn.scr_ready   = term_ready;
+    x_scrfn.scr_keybind = term_keybind;
     x_scrfn.scr_feature = term_feature;
     x_scrfn.scr_display = term_display;
     x_scrfn.scr_control = term_control;
@@ -1552,12 +1533,12 @@ ttinit(void)
         tf_be = 1;                              /* slang compat override */
     }
 
-    if (NULL == tc_Color_Fg || NULL == tc_Color_Bg) {
-        tc_Color_Fg = tc_Color_Bg = NULL;
+    if (NULL == tc_ANSI_Color[0] || NULL == tc_ANSI_Color[1]) {
+        tc_ANSI_Color[0] = tc_ANSI_Color[1] = NULL;
     }
 
-    if (NULL == tc_ANSI_Color_Fg || NULL == tc_ANSI_Color_Bg) {
-        tc_ANSI_Color_Fg = tc_ANSI_Color_Bg = NULL;
+    if (NULL == tc_Color[0] || NULL == tc_Color[0]) {
+        tc_Color[0] = tc_Color[1] = NULL;
     }
 
     if (NULL == tc_graphic_pairs &&
@@ -1628,7 +1609,7 @@ ttinit(void)
         exit(1);
 
     } else if (tf_hc) {
-        fprintf(stderr, "Hard copy terminal '%s', not supported.\n", term);
+        fprintf(stderr, "Terminal '%s' is hardcopy, cannot be used for curses applications.\n", term);
         exit(1);
 
     } else if (tf_xonoff) {
@@ -1677,7 +1658,7 @@ ttinit(void)
 static void
 term_config(void)
 {
-    unsigned i, fkeys = 0;
+    unsigned i;
     const char *cp;
 
     trace_log("termcap:\n");
@@ -1688,7 +1669,7 @@ term_config(void)
          *  string values
          */
         TermString_t *ti = term_strings + i;
-        const Term_t *term = &ti->term;
+        const TermVal_t *term = &ti->term;
         const char *name = ttiname(term);
 
         if (name && NULL != (cp = ttigetstr(term))) {
@@ -1718,32 +1699,35 @@ term_config(void)
         }
     }
 
-    fkeys = 0;
-    trace_log("  Keys:\n");
-    for (i = 0; i < (sizeof(term_keys)/sizeof(term_keys[0])); ++i) {
-        /*
-         *  keys
-         */
-        TermKey_t *ti = term_keys + i;
-        const Term_t *term = &ti->term;
-        const char *name = ttiname(term);
+    /*
+     *  keys
+     */
+    {
+        const TermKey_t *ti;
+        unsigned count, fkeys = 0;
 
-        if (name && NULL != (cp = ttigetstr(term))) {
-            const size_t kcode = (size_t)ti->key;
+        trace_log("  Keys:\n");
+        if (NULL != (ti = ttcfgkeys(&count))) { /* load */
+            for (i = 0; i < count; ++i) {
+                const TermVal_t *term = &ti->term;
 
-            ti->svalue = cp;                    /* loaded later by ttkeys() */
+                if (NULL != (cp = ti->svalue)) {
+                    const char *name = ttiname(term);
+                    const size_t kcode = (size_t)ti->key;
 
-            trace_log("\t%-24s %-50s%c %-6s : %s\n",
-                term->termfname, term->comment, (kcode ? '*' : ' '), name, c_string(cp));
-
-            if (kcode >= F(1) && kcode <= F(10)) {
-                ++fkeys;
+                    trace_log("\t%-24s %-50s%c %-6s : %s\n",
+                        term->termfname, term->comment, (kcode ? '*' : ' '), name, c_string(cp));
+                    if (kcode >= F(1) && kcode <= F(10)) {
+                        ++fkeys;
+                    }
+                }
+                ++ti;
             }
         }
-    }
 
-    if (fkeys >= 10) {                          /* have all 10 function keys */
-        x_pt.pt_attributes |= TF_AFUNCTIONKEYS;
+        if (fkeys >= 10) {                      /* have all 10 function keys */
+            x_pt.pt_attributes |= TF_AFUNCTIONKEYS;
+        }
     }
 
     trace_log("  Numeric:\n");
@@ -1752,7 +1736,7 @@ term_config(void)
          *  numbers
          */
         TermNumeric_t *ti = term_numbers + i;
-        const Term_t *term = &ti->term;
+        const TermVal_t *term = &ti->term;
         const char *name = ttiname(term);
 
         if (name) {
@@ -1771,7 +1755,7 @@ term_config(void)
          *  flags
          */
         TermNumeric_t *ti = term_flags + i;
-        const Term_t *term = &ti->term;
+        const TermVal_t *term = &ti->term;
         const char *name = ttiname(term);
 
         if (name) {
@@ -1867,6 +1851,8 @@ term_open(scrprofile_t *profile)
     term_identification();                      /* terminal identification */
     term_luminance();
     term_sizeget(&profile->sp_rows, &profile->sp_cols);
+    term_colors();
+    term_special();
     profile->sp_colors = tt_colors;
 }
 
@@ -2037,8 +2023,6 @@ set_understyles(void)
     tt_understyles = 0;                         /* disabled */
 
     if (xf_understyle & UNDERSTYLE_LINE) {
-        tt_understyles |= COLORSTYLE_UNDERLINE;
-
         if (xf_understyle & UNDERSTYLE_EXTENDED) {  /* available understyles, otherwise underline */
             if (x_pt.pt_understyle[0] || tc_Smulx) {
                 tt_understyles |= COLORSTYLE_UNDERMASK;
@@ -2055,6 +2039,10 @@ set_understyles(void)
                     tt_understyles |= COLORSTYLE_UNDERDASHED;
             }
         }
+
+        if (tc_us || (tt_understyles & COLORSTYLE_UNDERSINGLE)) {
+            tt_understyles |= COLORSTYLE_UNDERLINE;
+        }
     }
 
     trace_log("\tUnderstyles=%u:%u,%u,%u,%u,%u\n",
@@ -2064,6 +2052,28 @@ set_understyles(void)
         !!(tt_understyles & COLORSTYLE_UNDERCURLY),
         !!(tt_understyles & COLORSTYLE_UNDERDOTTED),
         !!(tt_understyles & COLORSTYLE_UNDERDASHED));
+}
+
+
+/*  Function:           term_keybind
+ *      Map keys from termcap database to our keys. These are often overridden by the term
+ *      macros, but at least we can set up some sensible default that are likely to work.
+ *
+ *  Parameters:
+ *      none
+ *
+ *  Returns:
+ *      nothing.
+ */
+static void
+term_keybind(void)
+{
+    unsigned i;
+
+    for (i = 0; i < (sizeof(term_keys)/sizeof(term_keys[0])); ++i)
+        if (term_keys[i].key && term_keys[i].svalue) {
+            key_define_key_seq(term_keys[i].key, term_keys[i].svalue);
+        }
 }
 
 
@@ -2080,7 +2090,6 @@ static void
 term_feature(int ident, scrprofile_t *profile)
 {
     trace_log("term_feature(%d)\n", ident);
-
     switch (ident) {
     case TF_INIT:
         if (tty_open && x_pt.pt_init[0]) {
@@ -2259,9 +2268,17 @@ ttisetup(void)
 
 #if defined(HAVE_TERMINFO)
     XF_TERMINFO {
+        int err = 0;
+
         trace_log("TERMINFO(%s) open\n", term);
-        if (setupterm((char *)term, fileno(stdout), NULL) != 0) {
-            fprintf(stderr, "Terminal type '%s' not found in terminfo database.\n", term);
+        if (setupterm((char *)term, fileno(stdout), &err) != 0) {
+            if (0 == err) {
+                fprintf(stderr, "Terminal '%s' not found within terminfo database.\n", term);
+            } else if (1 == err) {
+                fprintf(stderr, "Terminal '%s' is hardcopy, cannot be used for curses applications.\n", term);
+            } else {
+                fprintf(stderr, "Terminfo database not available.\n");
+            }
             exit(1);
         }
     }
@@ -2293,7 +2310,7 @@ ttisetup(void)
  *      Attribute name.
  */
 static const char *
-ttiname(const Term_t *ti)
+ttiname(const TermVal_t *ti)
 {
     const char *name = NULL;
 
@@ -2317,7 +2334,7 @@ ttiname(const Term_t *ti)
  *      Sequence buffer address, otherwis NULL.
  */
 static const char *
-ttigetstr(const Term_t *ti)
+ttigetstr(const TermVal_t *ti)
 {
     char *s = NULL;
 
@@ -2381,7 +2398,7 @@ ttigetstr(const Term_t *ti)
  *      Attribute value, otherwise -1.
  */
 static int
-ttigetnum(const Term_t *ti)
+ttigetnum(const TermVal_t *ti)
 {
     const char *name = "n/a";
     int num = -1;
@@ -2415,7 +2432,7 @@ ttigetnum(const Term_t *ti)
  *      Attribute value of either 0 or 1.
  */
 static int
-ttigetflag(const Term_t *ti)
+ttigetflag(const TermVal_t *ti)
 {
     const char *name = "n/a";
     int flag = -1;
@@ -2462,6 +2479,28 @@ ttisetflag(const char *tag, int taglen, const char *value)
     return -1;
 }
 
+
+TermKey_t *
+ttcfgkeys(unsigned *count)
+{
+    TermKey_t *ti = term_keys;
+    const char *cp;
+    unsigned i;
+
+    for (i = 0; i < (sizeof(term_keys)/sizeof(term_keys[0])); ++i) {
+        const TermVal_t *term = &ti->term;
+
+        if (NULL != (cp = ttigetstr(term))) {
+            ti->svalue = cp;                    /* loaded later by ttkeybind() */
+        }
+        ++ti;
+    }
+
+    if (count) {
+        *count = (sizeof(term_keys)/sizeof(term_keys[0]));
+    }
+    return term_keys;
+}
 
 
 /*  Function:           key_enable/disable
@@ -2624,11 +2663,11 @@ key_protocol(const char *term, int termlen)
 
                 protocol = key_protocolid(name, namelen);
                 if (protocol >= 0 && protocol != KBPROTOCOL_AUTO) {
-                    trace_log("\tkbprotocol: %*s=%*s\n", termlen, term, name, namelen);
+                    trace_log("\tkbprotocol: %*s=%*s\n", termlen, term, namelen, name);
                     xf_kbprotocol = protocol;
                     return 0; //success
                 }
-                trace_log("\tkbprotocol: *s, unknown ignored\n", name, namelen);
+                trace_log("\tkbprotocol: %*s, unknown ignored\n", namelen, name);
                 break;
             }
         }
@@ -2665,33 +2704,33 @@ key_disable(void)
 #if defined(KBPROTOCOL_KITTY) //TODO
     } else if (xf_kbprotocol & KBPROTOCOL_KITTY) {
         /*
-            *  kitty progressive enhancement
-            *      0b1 (1)         Disambiguate escape codes.
-            *      0b10 (2)        Report event types.
-            *      0b100 (4)       Report alternate keys.
-            *      0b1000 (8)      Report all keys as escape codes.
-            *      0b10000 (16)    Report associated text.
-            */
+         *  kitty progressive enhancement
+         *      0b1 (1)         Disambiguate escape codes.
+         *      0b10 (2)        Report event types.
+         *      0b100 (4)       Report alternate keys.
+         *      0b1000 (8)      Report all keys as escape codes.
+         *      0b10000 (16)    Report associated text.
+         */
         ttpush("\x1b[<1u");                     /* disable kitty-keyboard-protocol */
 #endif
 
     } else if (xf_kbprotocol & (KBPROTOCOL_XTERM_MOK2|KBPROTOCOL_MINTTY_MOK2)) {
         /*
-            *  XTMODKEYS: set/reset key modifier options (modifyOtherKeys)
-            *      CSI > Pp; Pv m
-            *      CSI > Pp m
-            *
-            *  The first parameter Pp identifies the resource to set/reset.
-            *      Pp = 0, modifyKeyboard.
-            *      Pp = 1, modifyCursorKeys.
-            *      Pp = 2, modifyFunctionKeys.
-            *      Pp = 4, modifyOtherKeys.
-            *
-            *  The second parameter Pv is the value to assign to the resource.
-            *      Pv = 0, disables
-            *      Pv = 1, enables
-            *      Pv = 2, extended
-            */
+         *  XTMODKEYS: set/reset key modifier options (modifyOtherKeys)
+         *      CSI > Pp; Pv m
+         *      CSI > Pp m
+         *
+         *  The first parameter Pp identifies the resource to set/reset.
+         *      Pp = 0, modifyKeyboard.
+         *      Pp = 1, modifyCursorKeys.
+         *      Pp = 2, modifyFunctionKeys.
+         *      Pp = 4, modifyOtherKeys.
+         *
+         *  The second parameter Pv is the value to assign to the resource.
+         *      Pv = 0, disables
+         *      Pv = 1, enables
+         *      Pv = 2, extended
+         */
         ttpush("\x1b[>4;0m");                   /* disable xterm-mok2-mode */
     }
 }
@@ -2870,41 +2909,10 @@ term_xtermlike(const char *term)
 }
 
 
-/*  Function:           ttkeys
- *      Map keys from termcap database to our keys. These are often overridden by the term
- *      macros, but at least we can set up some sensible default that are likely to work.
- *
- *  Parameters:
- *      repaint - *true* if the screen should be repainted.
- *
- *  Returns:
- *      nothing.
- */
-void
-ttkeys(void)
+static void
+term_special(void)
 {
     unsigned i;
-
-    trace_log("ttkeys()\n");
-
-    /*
-     *  Keys
-     */
-    for (i = 0; i < (sizeof(term_keys)/sizeof(term_keys[0])); ++i)
-        if (term_keys[i].svalue && term_keys[i].key) {
-            key_define_key_seq(term_keys[i].key, term_keys[i].svalue);
-        }
-
-    /*
-     *  Color
-     */
-    if (tf_Colors > 2 /*user specification*/ ||
-            (tc_Color_Fg && tc_Color_Bg) || (tc_ANSI_Color_Fg && tc_ANSI_Color_Bg) ||
-                ggetenv("COLORTERM") /*override*/) {
-        x_pt.pt_color = TRUE;
-    }
-
-    term_colors();
 
     /*
      *  Graphic (alt) characters
@@ -2968,12 +2976,27 @@ ttkeys(void)
 static void
 term_colors(void)
 {                                               /* save user color specification */
-    int col, source = 0;
+    int col, source = 0, truecolor = 0;
+
+    /* color? */
+//  if (x_pt.pt_color == -1) {
+//      if (tf_Colors > 2 /*max colors*/ ||
+//               (tc_Color[0] && tc_Color[1]) || (tc_ANSI_Color[0] && tc_ANSI_Color[1]) ||
+//                   ggetenv("COLORTERM") /*legacy override*/) {
+//          x_pt.pt_color = TRUE;
+//      }
+//  }
 
     /* configure color depth */
-    if (xf_color > 1) {
-        tt_colors = xf_color;                   /* command line override */
-        source = 2;
+    if (xf_color > 1) {                         /* command line override */
+        if (xf_color == INT_MAX) {
+            tt_colors = 256;
+            truecolor = 1;
+        } else {
+            tt_colors = xf_color;
+            truecolor = (tt_colors >= 256 && istruecolor());
+        }
+        source = 4;
 
     } else if (TA_MONO & t_attributes) {
         tt_colors = 2;                          /* mono feature (xterm-mono) */
@@ -2981,23 +3004,31 @@ term_colors(void)
 
     } else if (x_pt.pt_colordepth > 1) {
         tt_colors = x_pt.pt_colordepth;         /* set_term_feature() */
-        source = 1;
+        truecolor =
+            (x_pt.pt_truecolor > 0 || (tt_colors >= 256 && istruecolor()));
+        source = 2;
 
-    } else if (x_pt.pt_color /*-1 or 1*/) {
-        if (t_attributes & TA_XTERMLIKE) {
+    } else if (x_pt.pt_color /*-1 or 1*/) {     /* auto-select */
+        if (x_pt.pt_truecolor > 0 || istruecolor()) {
+            tt_colors = 256;
+            truecolor = 1;
+
+        } else if (t_attributes & TA_XTERMLIKE) {
             tt_colors = XTERM_COLORS;
 
         } else if (0 == (tt_colors = tf_Colors)) {
-            if (tc_ANSI_Color_Fg && tc_ANSI_Color_Bg) {
+            if (tc_ANSI_Color[0]) {
                 tt_colors = ANSI_COLORS;
-            } else if (tc_Color_Fg && tc_Color_Bg) {
+            } else if (tc_Color[0]) {
                 tt_colors = 8;
             } else {
                 tt_colors = 0;
             }
         }
     }
-    x_pt.pt_colorrgb = (tt_colors >= 256 && tn_RGB > 0 ? 1 : 0);
+    if (tt_colors > 256) tt_colors = 256;
+    x_pt.pt_truecolor = truecolor;
+//  x_pt.pt_color = (tt_colors != 0);
 
     /* configure colors */
     assert((COLOR_NONE + 1) == (sizeof(tt_colormap)/sizeof(tt_colormap[0])));
@@ -3041,13 +3072,38 @@ term_colors(void)
         assert(color_map[col].ident == col);
     }
 
-    trace_ilog("term_colors(source=%d,depth=%d)\n", source, tt_colors);
+    trace_ilog("term_colors(source=%d,depth=%d,truecolor=%d)\n", source, tt_colors, truecolor);
     x_pt.pt_colordepth = tt_colors;             /* derived depth */
 
     if (tt_colors > 2) {
         x_display_ctrl |= DC_SHADOW_SHOWTHRU;
     }
     term_fgbg();
+}
+
+
+static int
+istruecolor(void)
+{
+    const char *term = ggetenv("TERM"),
+        *colorterm = ggetenv("COLORTERM");
+
+    // https://github.com/termstandard/colors
+    if (tf_RGB || tn_RGB > 0)                   /* term definition */
+        return 1;
+
+    if (term) {                                 /* xxx-truecolor || xxx-24bit */
+        if (tty_hasfeature(term, "truecolor") || tty_hasfeature(term, "24bit")) {
+            return 1;
+        }
+    }
+
+    if (colorterm) {                            /* COLORTERM=truecolor || COLORTERM=24bit */
+        if (0 == strcmp(colorterm, "truecolor") || 0 == strcmp(colorterm, "24bit")) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 
@@ -3288,7 +3344,7 @@ xterm_colors_set(const char *value)
             len = term - value;
         }
 
-        trace_ilog("\tset[%d]=%.*s\n", color, len, value );
+        trace_ilog("\tset[%d]=%.*s\n", color, len, value);
         if (len) {
             cnt += sprintf((char *)(t_buffer + cnt), ";%d;%.*s", color, len, value);
         }
@@ -3323,7 +3379,8 @@ xterm_colors_set(const char *value)
  *              9/11    6/3             9/11    0       6/3
  *
  *          Terminal Response:
- *              The terminal responds by sending its architectural class and basic attributes to the host. This response depends on the terminal's current operating VT level.
+ *              The terminal responds by sending its architectural class and basic attributes to the host.
+ *              This response depends on the terminal's current operating VT level.
  *
  *              CSI     ?       6       4       ;       Ps1     ...
  *              9/11    3/15    3/6     3/4     3/11    3/n     ..
@@ -3422,7 +3479,7 @@ term_identification(void)
             trace_ilog("\tcygwin_uname(%s) = %d.%d\n", u.release, r1, r2);
         }
     }
-#endif
+#endif //__CYGWIN__
 
     /*
      *  xterm and compatible terminals
@@ -3537,7 +3594,6 @@ term_isutf8(void)
             trace_ilog("\tisutf8A(%d) = col:%d\n", len, col);
             sys_write(TTY_OUTFD, (void *)xterm_utf8_clean1, XTERM_UTF8_CLEAN1);
         }
-
     }
 
     trace_ilog("UTF8 support=%d\n", ret);
@@ -4517,7 +4573,7 @@ term_scrollreset(void)
 static void
 term_attr(vbyte_t color)
 {
-    vbyte_t attr = VBYTE_ATTR_GET(color);       /* encode attribute */
+    const vbyte_t attr = VBYTE_ATTR_GET(color);     /* encode attribute */
 
     if (tt_hue == attr) {
         return;
@@ -4525,288 +4581,482 @@ term_attr(vbyte_t color)
     tt_hue = attr;
 
     ED_TERM(("ttattr(%d/0x%x)", attr, attr))
-
     if (! vtiscolor()) {
-        /*
-         *  black-wbite/no-color mode
-         *      \033[0m     Normal.
-         *      \033[1m     Bold (extra bright).
-         *      \033[4m     Underline.
-         *      \033[5m     Blink (appears as Bold on Xterm etc).
-         *      \033[7m     Inverse (hilight).
-         *
-         *  optional:
-         *      \033[22m    Normal (neither bold nor faint).
-         *      \033[24m    End underline.
-         */
-        const int nstyle = ttbandw(attr, tc_us?1:0, tc_ZH?1:0, tc_mb?1:0);
-
-        if (tt_style != nstyle) {
-            term_styleoff();
-            term_styleon(nstyle);
-        }
+        term_monocolor(attr);
 
     } else {
-        const char *reset = (tc_me ? tc_me : "\033[0m");
         colattr_t ca = {0};
-        int fg, bg;
-        unsigned sf;
 
         color_definition(attr, &ca);
-        fg = ca.fg.color;
-        bg = ca.bg.color;
-        sf = ca.sf;
-
-        ED_TERM((", curr(fg:%d, bg:%d, sf:%u), attr(fg:%d, bg:%d, sf:%u)", tt_fg, tt_bg, tt_style, fg, bg, sf))
-
-        if (tt_colors >= 88 /*88 or 256*/) {
-            /* 256 color mode
-             *
-             *      \033[0m         Set normal (foreground, background and styles)
-             *      \033[39m        Default foreground color (Implementation defined)
-             *      \033[49m        Default background color (Implementation defined)
-             *
-             *  SGR 38 and 48/
-             *
-             *      \033[38;5;#m    Set the foreground color to index #
-             *      \033[48;5;#m    Set the background color to index #
-             *
-             *          0-7:     Standard colors (as in "ESC [ 30-37 m")
-             *          8-15:    High intensity colors (as in "ESC [ 90-97 m")
-             *          16-231:  6x6x6 cube (216 colors)
-             *          232-255: Grayscale from dark to light in 24 steps.
-             */
-            if (COLORSOURCE_SYMBOLIC == ca.fg.source) fg = tt_colormap[fg];
-            if (COLORSOURCE_SYMBOLIC == ca.bg.source) bg = tt_colormap[bg];
-
-            ED_TERM(("->map256(fg:%d, bg:%d)", fg, bg))
-
-            if (fg != tt_fg || bg != tt_bg || sf != tt_style) {
-                char ebuf[64];
-
-                if (tt_style) term_styleoff();
-
-                if (fg >= 0 && bg >= 0) {       /* foreground,background */
-                //  if (x_pt.pt_colorsetfgbg[0]) {
-                //      sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfgbg, 0xff & fg, 0xff & bg);
-                //
-                //  } else if (x_pt.pt_colorsetfg[0] && x_pt.pt_colorsetbg[0]) {
-                //      int len = sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfg, 0xff & fg);
-                //      sxprintf(ebuf + len, sizeof(ebuf) - len, x_pt.pt_colorsetbg, 0xff & bg);
-                //
-                //  } else {
-                        sxprintf(ebuf, sizeof(ebuf), "\033[38;5;%u;48;5;%um", 0xff & fg, 0xff & bg);
-                //  }
-                    ttputpad(ebuf);
-
-                } else if (fg >= 0) {           /* foreground,normal */
-                //  if (x_pt.pt_colorsetfgbg[0]) {
-                //      sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfgbg, 0xff & fg, 0);
-                //
-                //  } else if (x_pt.pt_colorsetfg[0] && x_pt.pt_colorsetbg[0]) {
-                //      int len = sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfg, 0xff & fg);
-                //      sxprintf(ebuf + len, sizeof(ebuf) - len, x_pt.pt_colorsetbg, 0);
-                //
-                //  } else {
-                        sxprintf(ebuf, sizeof(ebuf), "\033[49;38;5;%um", 0xff & fg);
-                //  }
-                    ttputpad(ebuf);
-
-                } else if (bg >= 0) {           /* normal,background */
-                //  if (x_pt.pt_colorsetfgbg[0]) {
-                //      sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfgbg, 0, 0xff & bg);
-                //
-                //  } else if (x_pt.pt_colorsetfg[0] && x_pt.pt_colorsetbg[0]) {
-                //      int len = sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfg, 0);
-                //      sxprintf(ebuf + len, sizeof(ebuf) - len, x_pt.pt_colorsetbg, 0xff & bg);
-                //
-                //  } else {
-                        sxprintf(ebuf, sizeof(ebuf), "\033[39;48;5;%um", 0xff & bg);
-                //  }
-                    ttputpad(ebuf);
-
-                } else {                        /* normal */
-                    ttputpad(reset);
-                }
-
-                if (sf) term_styleon(sf);
-            }
-
-        } else if ((tt_colors >= 16 && tc_ANSI_Color_Fg) ||
-                        (NULL == tc_Color_Fg && NULL == tc_ANSI_Color_Fg)) {
-            /* 16 color mode (standard - ANSI)
-             *
-             *      \033[0m         Set normal (foreground and background)
-             *      \033[39m        Default foreground color (Implementation defined)
-             *      \033[49m        Default background color (Implementation defined)
-             *
-             *      \033[30m        Set foreground color to Black
-             *      \033[31m        Set foreground color to Red
-             *      \033[32m        Set foreground color to Green
-             *      \033[33m        Set foreground color to Yellow
-             *      \033[34m        Set foreground color to Blue
-             *      \033[35m        Set foreground color to Magenta
-             *      \033[36m        Set foreground color to Cyan
-             *      \033[37m        Set foreground color to White
-             *      \033[38;5;%dm   Set foreground color (0 .. 15)
-             *
-             *      \033[40m        Set background color to Black
-             *      \033[41m        Set background color to Red
-             *      \033[42m        Set background color to Green
-             *      \033[43m        Set background color to Yellow
-             *      \033[44m        Set background color to Blue
-             *      \033[45m        Set background color to Magenta
-             *      \033[46m        Set background color to Cyan
-             *      \033[47m        Set background color to White
-             *      \033[48;5;%dm   Set background color (0 .. 15)
-             */
-            if (COLORSOURCE_SYMBOLIC == ca.fg.source) fg = tt_colormap[fg];
-            if (COLORSOURCE_SYMBOLIC == ca.bg.source) bg = tt_colormap[bg];
-            if (fg == bg && bg >= 0) {
-                if (TA_DARK & t_attributes) {
-                    fg = tt_colormap[WHITE];
-                    bg = tt_colormap[BLACK];
-                } else {
-                    fg = tt_colormap[BLACK];
-                    bg = tt_colormap[WHITE];
-                }
-            }
-
-            ED_TERM(("->map16(fg:%d, bg:%d)", fg, bg))
-
-            if (fg != tt_fg || bg != tt_bg || sf != tt_style) {
-                char ebuf[64];
-                int l = 0;
-
-                if (tt_style) {
-                    if (tc_me) reset = "";
-                    term_styleoff();
-                }
-
-                if (fg > 0 && bg > 0) {         /* foreground (30-37,38+), background (40-47,48+) */
-                    if (fg > 7) {
-                        l = sprintf(ebuf, "\033[38;5;%u;", fg & 0xff);
-                    } else {
-                        l = sprintf(ebuf, "\033[%u;", 30 + (fg & 7));
-                    }
-                    if (bg > 7) {
-                        l += sprintf(ebuf+l, "48;5;%um", bg & 0xff);
-                    } else {
-                        l += sprintf(ebuf+l, "%um", 40 + (bg & 7));
-                    }
-                    ttputpad(ebuf);
-
-                } else if (fg > 0) {            /* normal + foreground (30-37,38+) */
-                    if (fg > 7) {
-                        l = sprintf(ebuf, "%s\033[38;5;%um", reset, fg & 0xff);
-                    } else {
-                        l = sprintf(ebuf, "%s\033[%um", reset, 30 + (fg & 7));
-                    }
-                    ttputpad(ebuf);
-
-                } else if (bg > 0) {            /* normal + background (40-47,48+) */
-                    if (bg > 7) {
-                        l = sprintf(ebuf, "%s\033[48;5;%um", reset, bg & 0xff);
-                    } else {
-                        l = sprintf(ebuf, "%s\033[%um", reset, 40 + (bg & 7));
-                    }
-                    ttputpad(ebuf);
-
-                } else if (*reset) {            /* normal */
-                    ttputpad(reset);
-                }
-                assert(l < sizeof(ebuf));
-
-                if (sf) term_styleon(sf);
-            }
-
-        } else if (tc_ANSI_Color_Fg) {
-            /*
-             *  ANSI - 16+8 color mode
-             */
-            if (COLORSOURCE_SYMBOLIC == ca.fg.source) fg = color_map[fg].c16;
-            if (COLORSOURCE_SYMBOLIC == ca.bg.source) bg = color_map[bg].c16;
-            if (fg == bg && bg >= 0) {
-                if (TA_DARK & t_attributes) {
-                    fg = color_map[WHITE].c16;
-                    bg = color_map[BLACK].c16;
-                } else {
-                    fg = color_map[BLACK].c16;
-                    bg = color_map[WHITE].c16;
-                }
-            }
-
-            ED_TERM(("->mapansi(fg:%d, bg:%d)", fg, bg))
-
-            if (fg != tt_fg || bg != tt_bg || sf != tt_style) {
-                if (tt_style) {
-                    if (tc_me) reset = NULL;
-                    term_styleoff();
-                }
-
-                if (reset && (fg <= 0 || bg <= 0)) {
-                    ttputpad(reset);            /* normal */
-                }
-
-                if (fg > 0) {                   /* foreground */
-                    if (tt_colors == 8) ttputpad((fg & 0x8) ? tc_md : tc_se);
-                    ttputctl(tc_ANSI_Color_Fg, fg);
-                }
-
-                if (bg > 0) {                   /* background */
-                    ttputctl(tc_ANSI_Color_Bg, bg & 7);
-                }
-
-                if (sf) term_styleon(sf);
-            }
-
+        if (x_pt.pt_truecolor) {
+            term_truecolor(&ca);
         } else {
-            /*
-             *  PC - 16+8 color mode
-             *  Note: assumes alternative color mapping.
-             */
-            if (COLORSOURCE_SYMBOLIC == ca.fg.source) fg = color_map[fg].c16_pc;
-            if (COLORSOURCE_SYMBOLIC == ca.bg.source) bg = color_map[bg].c16_pc;
-            if (fg == bg && bg >= 0) {
-                if (TA_DARK & t_attributes) {
-                    fg = color_map[WHITE].c16_pc;
-                    bg = color_map[BLACK].c16_pc;
-                } else {
-                    fg = color_map[BLACK].c16_pc;
-                    bg = color_map[WHITE].c16_pc;
-                }
-            }
-
-            ED_TERM(("->mappc(fg:%d, bg:%d)", fg, bg))
-
-            if (fg != tt_fg || bg != tt_bg || sf != tt_style) {
-                if (tt_style) {
-                    if (tc_me) reset = NULL;
-                    term_styleoff();
-                }
-
-                if (reset && (fg <= 0 || bg <= 0)) {
-                    ttputpad(reset);            /* normal */
-                }
-
-                if (fg > 0) {                   /* foreground */
-                    if (tt_colors == 8) ttputpad((fg & 0x8) ? tc_md : tc_se);
-                    ttputctl(tc_Color_Fg, fg);
-                }
-
-                if (bg > 0) {                   /* background */
-                    ttputctl(tc_Color_Bg, bg & 7);
-                }
-
-                if (sf) term_styleon(sf);
-            }
+            term_legacycolor(&ca);
         }
+    }
+    ED_TERM(("\n"))
+}
 
+
+/*  Function:           term_truecolor
+ *      true-color mode.
+ *
+ *      Controls:
+ *
+ *          \033[0m             Set normal (foreground, background and styles)
+ *          \033[39m            Default foreground color (Implementation defined)
+ *          \033[49m            Default background color (Implementation defined)
+ *
+ *      SGR38 and SRG48/
+ *
+ *          \033[38;2;r;g;bm    Select RGB foreground color
+ *          \033[48;2;r;g;bm    Select RGB background color
+ *
+ *        plus:
+ *
+ *          \033[38;5;#m        Set the foreground color to index #
+ *          \033[48;5;#m        Set the background color to index #
+ *
+ *              0-7:                Standard colors (as in "ESC [ 30-37 m")
+ *              8-15:               High intensity colors (as in "ESC [ 90-97 m")
+ *              16-231:             6x6x6 cube (216 colors)
+ *              232-255:            Grayscale from dark to light in 24 steps.
+ *
+ *      ITU-RGB (xterm/kconsole)/TODO:
+ *
+ *          \0O3[38:2:<Color-Space-ID>:<r>:<g>:<b>:<unused>:<CS tolerance>m
+ *          \0O3[48:2:<Color-Space-ID>:<r>:<g>:<b>:<unused>:<CS tolerance>m
+ *
+ *      TODO:
+ *
+ *          \033[49;1m          Transparent.
+ *
+ *  Parameters:
+ *      ca - Color attribute.
+ *
+ *  Returns:
+ *      nothing.
+ */
+static void
+term_truecolor(const colattr_t *ca)
+{
+    char ebuf[64];                              // max:36
+    const colstyles_t sf = ca->sf;
+    unsigned rgbcolor;
+    int fg, bg;
+    int len;
+
+    /* foreground */
+    rgbcolor = ca->fg.rgbcolor;
+    if (rgbcolor) {                             // RGB
+        len = sxprintf(ebuf, sizeof(ebuf), "\033[38;2;%u;%u;%u",
+                    COLOR_RVAL(rgbcolor), COLOR_GVAL(rgbcolor), COLOR_BVAL(rgbcolor));
+        fg = (int)rgbcolor;
+
+    } else {
+        fg = (COLORSOURCE_SYMBOLIC == ca->fg.source ? tt_colormap[ca->fg.color] : ca->fg.color);
+
+        if (fg >= 0) {                          // Index
+            len = sxprintf(ebuf, sizeof(ebuf), "\033[38;5;%u", 0xff & fg);
+        } else {                                // Default
+            len = sxprintf(ebuf, sizeof(ebuf), "\033[39");
+        }
+    }
+
+    /* background */
+    rgbcolor = ca->bg.rgbcolor;
+    if (rgbcolor) {                              // RGB
+        len += sxprintf(ebuf+len, sizeof(ebuf)-len, ";48;2;%u;%u;%um",
+                    COLOR_RVAL(rgbcolor), COLOR_GVAL(rgbcolor), COLOR_BVAL(rgbcolor));
+        bg = (int)rgbcolor;
+
+    } else {
+        bg = (COLORSOURCE_SYMBOLIC == ca->bg.source ? tt_colormap[ca->bg.color] : ca->bg.color);
+
+        if (bg >= 0) {                          // Index
+            len += sxprintf(ebuf+len, sizeof(ebuf)-len, ";48;5;%um", 0xff & bg);
+        } else {                                // Default
+            len += sxprintf(ebuf+len, sizeof(ebuf)-len, ";49m");
+        }
+    }
+
+    /* apply */
+    ED_TERM((", curr(fg:%d, bg:%d, sf:%u), ->true-color(fg:%d, bg:%d, sf:%u)", tt_fg, tt_bg, tt_style, fg, bg, sf))
+
+    if (fg != tt_fg || bg != tt_bg || sf != tt_style) {
+        const char *reset = (tc_me ? tc_me : "\033[0m");
+
+        if (tt_style) {
+            if (tc_me) reset = "";
+            term_styleoff();
+        }
+        if (len <= 8) {                         // "\033[39;49m"
+            ttputpad(reset);
+        } else {
+            ttputpad(ebuf);
+        }
+        if (sf) {
+            term_styleon(sf);
+        }
         tt_fg = fg;
         tt_bg = bg;
     }
+}
 
-    ED_TERM(("\n"))
+/*  Function:           term_monocolor
+ *      Monochrome colors.
+ *
+ *  Parameters:
+ *      attr - attribute.
+ *
+ *  Returns:
+ *      nothing.
+ */
+static void
+term_monocolor(const vbyte_t attr)
+{
+    /*
+     *  black-white/no-color mode
+     *      \033[0m     Normal.
+     *      \033[1m     Bold (extra bright).
+     *      \033[4m     Underline.
+     *      \033[5m     Blink (appears as Bold on Xterm etc).
+     *      \033[7m     Inverse (hilight).
+     *
+     *  optional:
+     *      \033[22m    Normal (neither bold nor faint).
+     *      \033[24m    End underline.
+     */
+    const int nstyle = ttbandw(attr, tc_us?1:0, tc_ZH?1:0, tc_mb?1:0);
+
+    if (tt_style != nstyle) {
+        term_styleoff();
+        term_styleon(nstyle);
+    }
+}
+
+
+/*  Function:           term_legacycolor
+ *      Standard terminal colors, 256 or less.
+ *
+ *  Parameters:
+ *      ca - Color attribute.
+ *
+ *  Returns:
+ *      nothing.
+ */
+static void
+term_legacycolor(const colattr_t *ca)
+{
+    const char *reset = (tc_me ? tc_me : "\033[0m");
+    const colstyles_t sf = ca->sf;
+    int fg = ca->fg.color;
+    int bg = ca->bg.color;
+
+    ED_TERM((", curr(fg:%d, bg:%d, sf:%u), attr(fg:%d, bg:%d, sf:%u)", tt_fg, tt_bg, tt_style, fg, bg, sf))
+
+    if (tt_colors >= 88) {
+        /*
+         *  SGR - 88/256 color mode
+         */
+        if (COLORSOURCE_SYMBOLIC == ca->fg.source) fg = tt_colormap[fg];
+        if (COLORSOURCE_SYMBOLIC == ca->bg.source) bg = tt_colormap[bg];
+
+        ED_TERM(("->map256(fg:%d, bg:%d)", fg, bg))
+
+        if (fg != tt_fg || bg != tt_bg || sf != tt_style) {
+            if (tt_style) {
+                if (tc_me) reset = "";
+                term_styleoff();
+            }
+            term_256color(fg, bg, reset);
+            if (sf) {
+                term_styleon(sf);
+            }
+            tt_fg = fg;
+            tt_bg = bg;
+        }
+
+    } else if ((tt_colors >= 16 && tc_ANSI_Color[0]) ||
+                    (NULL == tc_ANSI_Color[0] && NULL == tc_Color[0])) {
+        /*
+         *  SGR - 16 color mode
+         */
+        if (COLORSOURCE_SYMBOLIC == ca->fg.source) fg = tt_colormap[fg];
+        if (COLORSOURCE_SYMBOLIC == ca->bg.source) bg = tt_colormap[bg];
+
+        if (fg == bg && bg >= 0) {
+            if (TA_DARK & t_attributes) {
+                fg = tt_colormap[WHITE];
+                bg = tt_colormap[BLACK];
+            } else {
+                fg = tt_colormap[BLACK];
+                bg = tt_colormap[WHITE];
+            }
+        }
+
+        ED_TERM(("->map16(fg:%d, bg:%d)", fg, bg))
+        if (fg != tt_fg || bg != tt_bg || sf != tt_style) {
+            if (tt_style) {
+                if (tc_me) reset = "";
+                term_styleoff();
+            }
+            term_sgrcolor(fg, bg, reset);
+            if (sf) {
+                term_styleon(sf);
+            }
+            tt_fg = fg;
+            tt_bg = bg;
+        }
+
+    } else if (tc_ANSI_Color[0]) {
+        /*
+         *  ANSI - legacy 16+8 color mode.
+         */
+        if (COLORSOURCE_SYMBOLIC == ca->fg.source) fg = color_map[fg].c16;
+        if (COLORSOURCE_SYMBOLIC == ca->bg.source) bg = color_map[bg].c16;
+
+        if (fg == bg && bg >= 0) {
+            if (TA_DARK & t_attributes) {
+                fg = color_map[WHITE].c16;
+                bg = color_map[BLACK].c16;
+            } else {
+                fg = color_map[BLACK].c16;
+                bg = color_map[WHITE].c16;
+            }
+        }
+
+        ED_TERM(("->mapansi(fg:%d, bg:%d)", fg, bg))
+        if (fg != tt_fg || bg != tt_bg || sf != tt_style) {
+            if (tt_style) {
+                if (tc_me) reset = "";
+                term_styleoff();
+            }
+            term_16color(fg, bg, tc_ANSI_Color, reset);
+            if (sf) {
+                term_styleon(sf);
+            }
+            tt_fg = fg;
+            tt_bg = bg;
+        }
+
+    } else {
+        /*
+         *  NON-ANSI/PC - legacy 16+8 color mode.
+         *  Note: assumes alternative color mapping.
+         */
+        if (COLORSOURCE_SYMBOLIC == ca->fg.source) fg = color_map[fg].c16_pc;
+        if (COLORSOURCE_SYMBOLIC == ca->bg.source) bg = color_map[bg].c16_pc;
+
+        if (fg == bg && bg >= 0) {
+            if (TA_DARK & t_attributes) {
+                fg = color_map[WHITE].c16_pc;
+                bg = color_map[BLACK].c16_pc;
+            } else {
+                fg = color_map[BLACK].c16_pc;
+                bg = color_map[WHITE].c16_pc;
+            }
+        }
+
+        ED_TERM(("->mappc(fg:%d, bg:%d)", fg, bg))
+        if (fg != tt_fg || bg != tt_bg || sf != tt_style) {
+            if (tt_style) {
+                if (tc_me) reset = "";
+                term_styleoff();
+            }
+            term_16color(fg, bg, tc_Color, reset);
+            if (sf) term_styleon(sf);
+            tt_fg = fg;
+            tt_bg = bg;
+        }
+    }
+}
+
+
+/*  Function:           term_256color
+ *      256 color mode.
+ *
+ *      Controls:
+ *
+ *          \033[0m             Set normal (foreground, background and styles)
+ *          \033[39m            Default foreground color (Implementation defined)
+ *          \033[49m            Default background color (Implementation defined)
+ *
+ *      SGR 38 and 48/
+ *
+ *          \033[38;5;#m        Set the foreground color to index #
+ *          \033[48;5;#m        Set the background color to index #
+ *
+ *              0-7:                Standard colors (as in "ESC [ 30-37 m")
+ *              8-15:               High intensity colors (as in "ESC [ 90-97 m")
+ *              16-231:             6x6x6 cube (216 colors)
+ *              232-255:            Grayscale from dark to light in 24 steps.
+ *
+ *  Parameters:
+ *      fg, bg - Foreground/background colors.
+ *      reset - Optional reset command.
+ *
+ *  Returns:
+ *      nothing.
+ */
+static void
+term_256color(int fg, int bg, const char *reset)
+{
+    char ebuf[64];
+
+    if (fg >= 0 && bg >= 0) {                   /* foreground,background */
+#if (0)
+//      if (x_pt.pt_colorsetfgbg[0]) {
+//          sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfgbg, 0xff & fg, 0xff & bg);
+//
+//      } else if (x_pt.pt_colorsetfg[0] && x_pt.pt_colorsetbg[0]) {
+//          int len = sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfg, 0xff & fg);
+//          sxprintf(ebuf + len, sizeof(ebuf) - len, x_pt.pt_colorsetbg, 0xff & bg);
+//
+//      } else
+#endif
+            sxprintf(ebuf, sizeof(ebuf), "\033[38;5;%u;48;5;%um", 0xff & fg, 0xff & bg);
+        ttputpad(ebuf);
+
+    } else if (fg >= 0) {                       /* foreground,normal */
+#if (0)
+//      if (x_pt.pt_colorsetfgbg[0]) {
+//          sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfgbg, 0xff & fg, 0);
+//
+//      } else if (x_pt.pt_colorsetfg[0] && x_pt.pt_colorsetbg[0]) {
+//          int len = sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfg, 0xff & fg);
+//          sxprintf(ebuf + len, sizeof(ebuf) - len, x_pt.pt_colorsetbg, 0);
+//
+//      } else
+#endif
+            sxprintf(ebuf, sizeof(ebuf), "\033[49;38;5;%um", 0xff & fg);
+        ttputpad(ebuf);
+
+    } else if (bg >= 0) {                       /* normal,background */
+#if (0)
+//      if (x_pt.pt_colorsetfgbg[0]) {
+//          sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfgbg, 0, 0xff & bg);
+//
+//      } else if (x_pt.pt_colorsetfg[0] && x_pt.pt_colorsetbg[0]) {
+//          int len = sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfg, 0);
+//          sxprintf(ebuf + len, sizeof(ebuf) - len, x_pt.pt_colorsetbg, 0xff & bg);
+//
+//      } else
+#endif
+            sxprintf(ebuf, sizeof(ebuf), "\033[39;48;5;%um", 0xff & bg);
+        ttputpad(ebuf);
+
+    } else {                                    /* normal */
+        ttputpad(reset);
+    }
+}
+
+
+/*  Function:           term_sgrcolor
+ *      SGR-16 color mode.
+ *
+ *          Standard:
+ *
+ *          \033[0m         Set normal (foreground and background)
+ *          \033[39m        Default foreground color (Implementation defined)
+ *          \033[49m        Default background color (Implementation defined)
+ *
+ *          \033[30m        Set foreground color to Black
+ *          \033[31m        Set foreground color to Red
+ *          \033[32m        Set foreground color to Green
+ *          \033[33m        Set foreground color to Yellow
+ *          \033[34m        Set foreground color to Blue
+ *          \033[35m        Set foreground color to Magenta
+ *          \033[36m        Set foreground color to Cyan
+ *          \033[37m        Set foreground color to White
+ *          \033[38;5;%dm   Set foreground color (0 .. 15)
+ *
+ *          \033[40m        Set background color to Black
+ *          \033[41m        Set background color to Red
+ *          \033[42m        Set background color to Green
+ *          \033[43m        Set background color to Yellow
+ *          \033[44m        Set background color to Blue
+ *          \033[45m        Set background color to Magenta
+ *          \033[46m        Set background color to Cyan
+ *          \033[47m        Set background color to White
+ *          \033[48;5;%dm   Set background color (0 .. 15)
+ *
+ *  Parameters:
+ *      fg, bg - Foreground/background colors.
+ *      reset - Optional reset command.
+ *
+ *  Returns:
+ *      nothing.
+ */
+static void
+term_sgrcolor(int fg, int bg, const char *reset)
+{
+    char ebuf[64];
+    int l = 0;
+
+    if (fg > 0 && bg > 0) {                     /* foreground (30-37,38+), background (40-47,48+) */
+        if (fg > 7) {
+            l = sprintf(ebuf, "\033[38;5;%u;", fg & 0xff);
+        } else {
+            l = sprintf(ebuf, "\033[%u;", 30 + (fg & 7));
+        }
+        if (bg > 7) {
+            l += sprintf(ebuf+l, "48;5;%um", bg & 0xff);
+        } else {
+            l += sprintf(ebuf+l, "%um", 40 + (bg & 7));
+        }
+        ttputpad(ebuf);
+
+    } else if (fg > 0) {                        /* normal + foreground (30-37,38+) */
+        if (fg > 7) {
+            l = sprintf(ebuf, "%s\033[38;5;%um", reset, fg & 0xff);
+        } else {
+            l = sprintf(ebuf, "%s\033[%um", reset, 30 + (fg & 7));
+        }
+        ttputpad(ebuf);
+
+    } else if (bg > 0) {                        /* normal + background (40-47,48+) */
+        if (bg > 7) {
+            l = sprintf(ebuf, "%s\033[48;5;%um", reset, bg & 0xff);
+        } else {
+            l = sprintf(ebuf, "%s\033[%um", reset, 40 + (bg & 7));
+        }
+        ttputpad(ebuf);
+
+    } else {                                    /* normal */
+        ttputpad(reset);
+    }
+
+    assert(l < sizeof(ebuf));
+}
+
+
+/*  Function:           term_16color
+ *      Legacy 16-foreground + 8-background color mode.
+ *
+ *  Parameters:
+ *      fg, bg - Foreground/background colors.
+ *      cmds - Color selection commands, 0=foreground and 1=background.
+ *      reset - Optional reset command.
+ *
+ *  Returns:
+ *      nothing.
+ */
+static void
+term_16color(int fg, int bg, const char **cmds, const char *reset)
+{
+    if (reset && (fg <= 0 || bg <= 0)) {
+        ttputpad(reset);                        /* normal */
+    }
+
+    if (fg > 0) {                               /* foreground */
+        if (tt_colors == 8) ttputpad((fg & 0x8) ? tc_md : tc_se);
+        ttputctl(cmds[0], fg);
+    }
+
+    if (bg > 0) {                               /* background */
+        ttputctl(cmds[1], bg & 7);
+    }
 }
 
 
@@ -4822,10 +5072,6 @@ term_attr(vbyte_t color)
 static void
 term_styleon(colstyles_t nstyle)
 {
-    if (vtiscolor() && tn_NC > 0) {
-        return;                                 /* XXX - color/attributes dont mix, should mask */
-    }
-
 #if defined(HAVE_TERMINFO)
     if (tc_sa && !vtiscolor()) {
         ttputpad(tparm((char *)tc_sa,           /* attribute set, mono only */
@@ -4843,6 +5089,10 @@ term_styleon(colstyles_t nstyle)
     }
 #endif  /*HAVE_TERMINFO*/
 
+    if (vtiscolor() && tn_NC > 0) {
+        return;                                 /* color/attributes dont mix */
+    }
+
 #define ACTIVATE_STYLE(x) \
             ((nstyle & (x)) && 0 == (tt_style & (x)))
 
@@ -4856,7 +5106,7 @@ term_styleon(colstyles_t nstyle)
 
     if (ACTIVATE_STYLE(COLORSTYLE_REVERSE)) {
         tt_style |= COLORSTYLE_REVERSE;
-        ttputpad(tc_mr ? tc_mr : tc_so);        /* reverse  */
+        ttputpad(tc_mr ? tc_mr : tc_so);        /* reverse */
     }
 
     term_understyle(1, nstyle);                 /* underline etc */
@@ -4874,6 +5124,11 @@ term_styleon(colstyles_t nstyle)
     if (ACTIVATE_STYLE(COLORSTYLE_ITALIC)) {
         tt_style |= COLORSTYLE_ITALIC;
         ttputpad(tc_ZH);                        /* italic */
+    }
+
+    if (ACTIVATE_STYLE(COLORSTYLE_STRIKEOUT)) {
+        tt_style |= COLORSTYLE_STRIKEOUT;
+        ttputpad(tc_smxx);                      /* strikeout */
     }
 }
 
@@ -4913,6 +5168,10 @@ term_styleoff(void)
         if (tt_style & COLORSTYLE_ITALIC) {     /* italic */
             ttputpad(tc_ZR);
         }
+
+        if (tt_style & COLORSTYLE_STRIKEOUT) {  /* strikeout */
+            ttputpad(tc_rmxx);
+       }
     }
     tt_style = 0;
 }
@@ -4939,11 +5198,11 @@ term_understyle(int enable, colstyles_t style)
                     }
 
 //TODO              if (color && x_pt.understylecolor == 58) {
-//                          if (color.rgb) {    // true-color
-//                                  sprintf(";58:2:%u:%u:%u", r, g, b);
-//                          } else {
-//                                  sprintf(";58:5:%u", v);
-//                          }
+//                      if (rgbcolor) {        // true-color
+//                          sprintf(";58:2:%u:%u:%u", r, g, b);
+//                      } else {
+//                          sprintf(";58:5:%u", v);
+//                      }
 //                  }
 
                     ttprintf(x_pt.pt_understyle, mode, "");
@@ -5759,4 +6018,6 @@ do_copy_screen(void)            /* void () */
 {
 }
 
-#endif  /*!USE_VIO_BUFFER && !DJGPP */
+#endif /*!USE_VIO_BUFFER && !DJGPP */
+
+/*end*/

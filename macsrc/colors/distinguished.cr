@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: distinguished.cr,v 1.4 2024/08/04 11:42:44 cvsuser Exp $
+/* $Id: distinguished.cr,v 1.6 2024/10/08 11:40:03 cvsuser Exp $
  * distinguished coloriser, GRIEF port.
  *
  * Original:
@@ -173,4 +173,5 @@ colorscheme_distinguished(void)
 
     vim_colorscheme("distinguished", 0, NULL, distinguished_colors, -1);
 }
+
 /*end*/

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.84 2024/10/02 16:24:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.85 2024/10/10 17:46:13 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.84 2024/10/02 16:24:52 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.85 2024/10/10 17:46:13 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -106,9 +106,9 @@ static int              term_dell(int row, int bot, int nlines, vbyte_t fillcolo
 static int              term_eeol(void);
 static void             term_repeat(int cnt, vbyte_t fill, int where);
 static void             term_attribute(const vbyte_t color);
-static unsigned         term_colvalue(const colvalue_t ca, unsigned def);
 static void             term_attr(int fg, int bg);
-static void             term_hue(int fg, int bg);
+static void             term_truecolor(const colattr_t *ca);
+static void             term_legacycolor(const colattr_t *ca);
 
 static void             vio_reference(void);
 static void             vio_image_save(void);
@@ -338,9 +338,18 @@ term_ready(int repaint, scrprofile_t *profile)
         VioGetMode(&mi, 0);
         profile->sp_rows = (int)mi.row;
         profile->sp_cols = (int)mi.col;
-        if (mi.color > 0 && mi.color <= 256) {
-            if (-1 == xf_color || mi.attrib <= xf_color) {
+        if (mi.color > 0) {
+            if (-1 == xf_color) {
                 tt_colors = mi.color;
+            } else {
+                if ((tt_colors = mi.color) > xf_color) {
+                   tt_colors = xf_color;
+                }
+            }
+            x_pt.pt_truecolor = 0;
+            if (tt_colors > 256) {              /* assume true-color */
+                x_pt.pt_truecolor = 1;
+                tt_colors = 256;
             }
         }
         profile->sp_colors = tt_colors;
@@ -1251,7 +1260,13 @@ term_attribute(const vbyte_t attr)
         colattr_t ca;
 
         color_definition(attr, &ca);
-        term_hue(term_colvalue(ca.fg, tt_defaultfg), term_colvalue(ca.bg, tt_defaultbg));
+
+        if (x_pt.pt_truecolor) {
+            term_truecolor(&ca);
+        } else {
+            term_legacycolor(&ca);
+        }
+
 #if defined(VIO_UNDERLINE)
         if (0 != (understyle = COLORSTYLE_UNDERSTYLE(ca.sf))) {
             switch (understyle) {
@@ -1323,26 +1338,6 @@ term_attribute(const vbyte_t attr)
 }
 
 
-/*import a color value*/
-static unsigned
-term_colvalue(const colvalue_t ca, unsigned def)
-{
-    int color = 0;
-
-    if (COLORSOURCE_SYMBOLIC == ca.source) {
-        if ((color = ca.color) < 0 || color >= COLOR_NONE ||
-                (color = tt_colormap[color]) < 0 || color >= tt_colors) {
-            color = def;
-        }
-    } else {
-        if ((color = ca.color) < 0 || color >= tt_colors) {
-            color = def;
-        }
-    }
-    return (unsigned)color;
-}
-
-
 /*import a standard color value*/
 static void
 term_attr(int fg, int bg)
@@ -1350,24 +1345,86 @@ term_attr(int fg, int bg)
     if ((fg <= COLOR_NONE && (fg = tt_colormap[fg]) < 0) || fg >= tt_colors) {
         fg = tt_defaultfg;
     }
+
     if ((fg <= COLOR_NONE && (bg = tt_colormap[bg]) < 0) || bg >= tt_colors) {
         bg = tt_defaultbg;
     }
-    term_hue(fg, bg);
+
+    tt_hue = VIO_FGBG(fg, bg);
+    tt_style = 0;
 }
 
 
-/*assign the color/hue, guarding against fg and bg issues*/
-static void
-term_hue(int fg, int bg)
+/*import 16/267 a color value*/
+static int
+colvalue(const colvalue_t ca, unsigned def)
 {
-    if (fg == bg) {
-        fg = tt_colormap[tt_defaultfg];
-        bg = tt_colormap[tt_defaultbg];
-        if (fg == bg) {
-            fg = tt_colormap[WHITE];
-            bg = tt_colormap[BLACK];
+    int color = 0;
+
+    if (COLORSOURCE_SYMBOLIC == ca.source) {
+        if ((color = ca.color) < 0 || color >= COLOR_NONE ||
+                (color = tt_colormap[color]) < 0 || color >= tt_colors) {
+            color = (int)def;
         }
+    } else {
+        if ((color = ca.color) < 0 || color >= tt_colors) {
+            color = (int)def;
+        }
+    }
+    return color;
+}
+
+
+/*assign a true-color as the current hue*/
+static void
+term_truecolor(const colattr_t *ca)
+{
+    VIOHUE hue = {0};
+    unsigned rgbcolor;
+
+    /* foreground */
+    rgbcolor = ca->fg.rgbcolor;
+    if (rgbcolor) {                             // RGB
+        hue.Flags = VIO_FRGB;
+        hue.fgrgb = rgbcolor;
+    } else {                                    // legacy
+        hue.fg = (short)colvalue(ca->fg, tt_defaultfg);
+        hue.fgrgb = (COLORREF)-1;
+    }
+
+    /* background */
+    rgbcolor = ca->bg.rgbcolor;
+    if (rgbcolor) {                             // RGB
+        hue.Flags = VIO_FRGB;
+        hue.bgrgb = rgbcolor;
+    } else {                                    // legacy
+        hue.bg = (short)colvalue(ca->bg, tt_defaultbg);
+        hue.bgrgb = (COLORREF)-1;
+    }
+
+    if (0 == hue.Flags) {
+        hue.Flags = VIO_FNORMAL;
+        if (hue.fg == hue.bg) {                 // guard against fg and bg issues
+            hue.fg = tt_colormap[WHITE];
+            hue.bg = tt_colormap[BLACK];
+        }
+    }
+
+    tt_hue = hue;
+    tt_style = 0;
+}
+
+
+/*assign a legacy-color as the current hue*/
+static void
+term_legacycolor(const colattr_t *ca)
+{
+    int fg = colvalue(ca->fg, tt_defaultfg);
+    int bg = colvalue(ca->bg, tt_defaultbg);
+
+    if (fg == bg) {                             // guard against fg and bg issues
+        fg = tt_colormap[WHITE];
+        bg = tt_colormap[BLACK];
     }
     tt_hue = VIO_FGBG(fg, bg);
     tt_style = 0;

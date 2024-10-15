@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 8; -*- */
-/* $Id: desertEx.cr,v 1.3 2024/08/04 11:42:44 cvsuser Exp $
+/* $Id: desertEx.cr,v 1.5 2024/10/08 11:40:03 cvsuser Exp $
  * desertEx coloriser, GRIEF port.
  *
  * Original:
@@ -15,7 +15,7 @@ desertEx_colors = {
         "hi clear",
         "highlight Normal guifg=gray guibg=grey17 gui=NONE ctermfg=250 ctermbg=235 cterm=NONE",
 
-        // " highlight groups
+        // highlight groups
         "highlight Cursor guifg=black guibg=yellow gui=NONE ctermfg=16 ctermbg=226 cterm=NONE",
         "highlight DiffAdd guifg=black guibg=wheat1 ctermfg=16 ctermbg=223",
         "highlight DiffChange guifg=black guibg=skyblue1 ctermfg=16 ctermbg=117",
@@ -44,7 +44,7 @@ desertEx_colors = {
         "highlight WildMenu guifg=gray guibg=gray17 gui=NONE ctermfg=250 ctermbg=235 cterm=NONE",
         "highlight colorcolumn guibg=gray30 ctermbg=240",
 
-        // " syntax highlighting groups
+        // syntax highlighting groups
         "highlight Comment guifg=palegreen3 gui=NONE ctermfg=114 cterm=NONE",
         "highlight Constant guifg=salmon gui=NONE ctermfg=210 cterm=NONE",
         "highlight Identifier guifg=skyblue gui=NONE ctermfg=117 cterm=NONE",
@@ -63,4 +63,5 @@ colorscheme_desertEx(void)
 {
         vim_colorscheme("desertEx", 256, NULL, desertEx_colors, -1);
 }
+
 /*end*/

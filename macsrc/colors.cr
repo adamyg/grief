@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: colors.cr,v 1.24 2024/10/01 12:55:09 cvsuser Exp $
+/* $Id: colors.cr,v 1.25 2024/10/07 16:14:59 cvsuser Exp $
  * Enhanced colour/colorscheme support.
  *
  *
@@ -1097,7 +1097,4 @@ schemeload(string scheme, ~list args, ~string base, ~int flags)
     return FALSE;
 }
 
-/*eof*/
-
-
-
+/*end*/
