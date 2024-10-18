@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: colorsvim.cr,v 1.5 2024/09/24 16:39:18 cvsuser Exp $
+/* $Id: colorsvim.cr,v 1.7 2024/10/12 14:24:25 cvsuser Exp $
  * Enhanced colour/colorscheme support.
  *
  *
@@ -11,6 +11,7 @@
 static void             groupclear(string name);
 static void             syntaxreset(void);
 static string           attrmap(string attr);
+static declare          attrval(string attr);
 
 static list             scheme_colors = {
     //
@@ -219,11 +220,12 @@ vim_colorscript(string scheme, string base, int flags, string file)
     //
     //      best effort load logic, with weak condition expression evaluation (TODO/FIXME).
     //
-    int colordepth, iflevel = -1, ifactive = 1;
+    int colordepth, truecolor, iflevel = -1, ifactive = 1;
     list ifstack, spec;
     string ln;
 
     get_term_feature(TF_COLORDEPTH, colordepth);
+    get_term_feature(TF_TRUECOLOR, truecolor);
     if (SCHEME_GUIONLY & flags) {
         if (colordepth < 256) {
             message("%s: GUI color depth not available", scheme);
@@ -344,7 +346,7 @@ condition(list parts)
     //  o Other color condition expressions has been sighted yet the above represent 90% of all cases.
     //
     extern string base;                         // "light" or "dark"
-    extern int colordepth;
+    extern int colordepth, truecolor;
 
     string word, lhs, op;
     int ret = 0;
@@ -363,7 +365,7 @@ condition(list parts)
 
         } else if (strstr(word, "has(")) {      // has(xxx) function
             if (strstr(word, "gui_running")) {
-                if (colordepth > 256) {
+                if (truecolor) {
                     ret = 1;
                     break;
                 }
@@ -467,11 +469,13 @@ int
 vim_colorscheme(string label, int colors, ~string base, list spec, int asgui)
 {
     string background;                          // scheme background.
-    int colordepth, done, links, ignored;
+    int colordepth, truecolor;
+    int done, links, ignored;
     declare value;
 
     // verify colors against current display environment
     get_term_feature(TF_COLORDEPTH, colordepth);
+    get_term_feature(TF_TRUECOLOR, truecolor);
     if (colors > 0) {
         if (colordepth != colors) {
             message("%s: color depth %d not available (%d)", label, colors, colordepth);
@@ -479,8 +483,8 @@ vim_colorscheme(string label, int colors, ~string base, list spec, int asgui)
         }
     }
 
-    if (-1 == asgui) {                          // dynamic
-        asgui = (colordepth > 256 ? TRUE : FALSE);
+    if (-1 == asgui) {                          // dynamic; gui=truecolor
+        asgui = (truecolor ? TRUE : FALSE);
     }
 
     if (0 == strlen(base)) {                    // dark or light base
@@ -563,10 +567,11 @@ vim_colorscheme(string label, int colors, ~string base, list spec, int asgui)
                     //      State an attributes color specification.
                     //
                     int baseidx = ("default" == parts[1] ? 2 : 1);
-                    string fg, bg, sf, ident = attrmap(parts[baseidx]);
+                    declare ident = attrval(parts[baseidx]);
+                    string fg, bg, sf;
                     int i;
 
-                    if (ident) {
+                    if (is_string(ident) && strlen(ident)) {
                         for (i = baseidx + 1; i < length_of_list(parts); ++i) {
                             const list parts2 =
                                     tokenize(parts[i], "=", TOK_DOUBLE_QUOTES|TOK_WHITESPACE|TOK_TRIM);
@@ -608,14 +613,14 @@ vim_colorscheme(string label, int colors, ~string base, list spec, int asgui)
                                     //      Color terminal background color.
                                     //
                                     //  guisp={color}
-                                    //      Foregroud. background and special color.
+                                    //      Foregroud, background and special color.
                                     //
                                     switch (parts2[0]) {
                                     case "gui":     sf = val; break;
                                     case "guifg":   fg = val; break;
                                     case "guibg":   bg = val; break;
                                     case "font":    break;
-                                    case "guisp":   break;
+                                    case "guisp":   break; //TODO
                                     }
                                 }
                             }
@@ -659,7 +664,9 @@ vim_colorscheme(string label, int colors, ~string base, list spec, int asgui)
                         }
 
                     } else {
-                        dprintf("%s: attribute: %s=unknown", label, parts[baseidx]);
+                        if (is_null(ident)) {
+                           dprintf("%s: attribute: %s=unknown", label, parts[baseidx]);
+                        }
                         ++ignored;
                     }
                 }
@@ -904,7 +911,7 @@ syntaxreset(void)
  *  Returns:
  *      Attribute name, otherwise an empty string.
  */
-string
+static string
 attrmap(string attr)
 {
     int idx;
@@ -913,6 +920,18 @@ attrmap(string attr)
         return scheme_colors[idx + 1];
     }
     return "";
+}
+
+
+static declare
+attrval(string attr)
+{
+    int idx;
+
+    if ((idx = re_search(SF_NOT_REGEXP|SF_IGNORE_CASE, "=" + attr + "=", scheme_colors)) >= 0) {
+        return scheme_colors[idx + 1];
+    }
+    return NULL;
 }
 
 
@@ -971,3 +990,4 @@ vim_condition_tests()
 }
 
 /*eof*/
+

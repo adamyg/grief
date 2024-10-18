@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 8; -*- */
-/* $Id: jellybeans.cr,v 1.3 2024/08/04 11:42:44 cvsuser Exp $
+/* $Id: jellybeans.cr,v 1.4 2024/10/07 16:14:59 cvsuser Exp $
  * jellybean coloriser, GRIEF port.
  *
  * Original:
@@ -72,11 +72,11 @@ RGB(string rgb)
 static string
 X(string group, string fg, string bg, string attr, string lcfg, string lcbg)
 {
-        extern int low_color;
+        extern int gui;
         string histring = "hi " + group + " ";
 
         // colors
-        if (low_color) {
+        if (0 == gui) {
                 int fge = ("" == lcfg);
                 int bge = ("" == lcbg);
 
@@ -122,7 +122,7 @@ X(string group, string fg, string bg, string attr, string lcfg, string lcbg)
 void
 colorscheme_jellybeans(void)
 {
-        int colordepth, gui_running = 0;        // TODO: TF_GUI
+        int colordepth, truecolor, gui;
         list colors = {
                 "set background=dark",
                 "hi clear"
@@ -130,19 +130,19 @@ colorscheme_jellybeans(void)
 
         // depth >= 88
         get_term_feature(TF_COLORDEPTH, colordepth);
+        get_term_feature(TF_TRUECOLOR, truecolor);
         if (colordepth < 88) {
                 error("jellybeans, color depth not supported");
                 return;
         }
 
         // scheme
-        int low_color;
         string termBlack;
 
-        if (gui_running || colordepth == 88 || colordepth == 256) {
-                low_color = 0;                  // gui
+        if (truecolor || colordepth == 256) {
+                gui = 1; // gui
         } else {
-                low_color = 1;                  // cterm
+                gui = 0; // cterm
         }
 
         if (0 == jellybeans_use_lowcolor_black) {
@@ -160,7 +160,7 @@ colorscheme_jellybeans(void)
         colors += X("TabLineFill","9098a0","","","",termBlack);
         colors += X("TabLineSel","000000","f0f0f0","italic,bold",termBlack,"White");
 
-        // " Auto-completion
+        // Auto-completion
         colors += X("Pmenu","ffffff","606060","","White",termBlack);
         colors += X("PmenuSel","101010","eeeeee","",termBlack,"White");
 
@@ -212,26 +212,26 @@ colorscheme_jellybeans(void)
         colors += "hi! link MoreMsg Special";
         colors += X("Question","65C254","","","Green","");
 
-        // " Spell Checking
+        // Spell Checking
 
         colors += X("SpellBad","","902020","underline","","DarkRed");
         colors += X("SpellCap","","0000df","underline","","Blue");
         colors += X("SpellRare","","540063","underline","","DarkMagenta");
         colors += X("SpellLocal","","2D7067","underline","","Green");
 
-        // " Diff
+        // Diff
 
         colors += "hi! link diffRemoved Constant";
         colors += "hi! link diffAdded String";
 
-        // " VimDiff
+        // VimDiff
 
         colors += X("DiffAdd","D2EBBE","437019","","White","DarkGreen");
         colors += X("DiffDelete","40000A","700009","","DarkRed","DarkRed");
         colors += X("DiffChange","","2B5B77","","White","DarkBlue");
         colors += X("DiffText","8fbfdc","000000","reverse","Yellow","");
 
-        // " PHP
+        // PHP
 
         colors += "hi! link phpFunctions Function";
         colors += X("StorageClass","c59f6f","","","Red","");
@@ -245,11 +245,11 @@ colorscheme_jellybeans(void)
         colors += "hi! link phpRelation Normal";
         colors += "hi! link phpVarSelector Identifier";
 
-        // " Python
+        // Python
 
         colors += "hi! link pythonOperator Statement";
 
-        // " Ruby
+        // Ruby
 
         colors += "hi! link rubySharpBang Comment";
         colors += X("rubyClass","447799","","","DarkBlue","");
@@ -273,7 +273,7 @@ colorscheme_jellybeans(void)
 
         colors += X("rubyPredefinedIdentifier","de5577","","","Red","");
 
-        // " Erlang
+        // Erlang
 
         colors += "hi! link erlangAtom rubySymbol";
         colors += "hi! link erlangBIF rubyPredefinedIdentifier";
@@ -281,25 +281,25 @@ colorscheme_jellybeans(void)
         colors += "hi! link erlangDirective Statement";
         colors += "hi! link erlangNode Identifier";
 
-        // " JavaScript
+        // JavaScript
 
         colors += "hi! link javaScriptValue Constant";
         colors += "hi! link javaScriptRegexpString rubyRegexp";
 
-        // " CoffeeScript
+        // CoffeeScript
 
         colors += "hi! link coffeeRegExp javaScriptRegexpString";
 
-        // " Lua
+        // Lua
 
         colors += "hi! link luaOperator Conditional";
 
-        // " C
+        // C
 
         colors += "hi! link cFormat Identifier";
         colors += "hi! link cOperator Constant";
 
-        // " Objective-C/Cocoa
+        // Objective-C/Cocoa
 
         colors += "hi! link objcClass Type";
         colors += "hi! link cocoaClass objcClass";
@@ -312,27 +312,27 @@ colorscheme_jellybeans(void)
         colors += "hi! link objcMethodArg Normal";
         colors += "hi! link objcMessageName Identifier";
 
-        // " Vimscript
+        // Vimscript
 
         colors += "hi! link vimOper Normal";
 
-        // " Debugger.vim
+        // Debugger.vim
 
         colors += X("DbgCurrent","DEEBFE","345FA8","","White","DarkBlue");
         colors += X("DbgBreakPt","","4F0037","","","DarkMagenta");
 
-        // " vim-indent-guides
+        // vim-indent-guides
 
         colors += X("IndentGuidesOdd","","232323","","","");
         colors += X("IndentGuidesEven","","1b1b1b","","","");
 
-        // " Plugins, etc.
+        // Plugins, etc.
 
         colors += "hi! link TagListFileName Directory";
         colors += X("PreciseJumpTarget","B9ED67","405026","","White","Green");
 
-        // " Manual overrides for 256-color terminals. Dark colors auto-map badly.
-        if (0 == low_color) {
+        // Manual overrides for 256-color terminals. Dark colors auto-map badly.
+        if (!gui && colordepth == 256) {
                 colors += "hi StatusLineNC ctermbg=235";
                 colors += "hi Folded ctermbg=236";
                 colors += "hi FoldColumn ctermbg=234";
@@ -349,6 +349,7 @@ colorscheme_jellybeans(void)
                 colors += "hi IndentGuidesEven ctermbg=234";
         }
 
-        vim_colorscheme("jellybeans", 0, NULL, colors, (!low_color ? TRUE : FALSE));
+        vim_colorscheme("jellybeans", 0, NULL, colors, gui);
 }
+
 /*end*/

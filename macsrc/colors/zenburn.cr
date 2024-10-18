@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: zenburn.cr,v 1.12 2024/09/15 13:51:00 cvsuser Exp $
+/* $Id: zenburn.cr,v 1.15 2024/10/10 17:46:54 cvsuser Exp $
  * zenburn coloriser, GriefEdit port.
  *
  * References:
@@ -19,7 +19,7 @@ zenburn_spec[] = {
 
             // High contrast
 
-        { 2|4,  "Normal",                       188,    234,    NULL,               "#dcdccc",  "#1f1f1f",  NULL,               NULL            },
+        { 2|4,  "Normal",                       188,    234,    NULL,               "#d7d7d7",  "#1f1f1f",  NULL,               NULL            },
         { 2,    "NonText",                      238,    NULL,   NULL,               "#404040",  NULL,       "bold",             NULL            },
         { 2,    "CursorLine",                   NULL,   233,    NULL,               NULL,       "#121212",  "bold",             NULL            },
         { 2,    "CursorColumn",                 NULL,   235,    NULL,               NULL,       "#2b2b2b",  NULL,               NULL            },
@@ -29,13 +29,13 @@ zenburn_spec[] = {
 
             // Normal contrast
 
-        { 1|4,  "Normal",                       188,    237,    NULL,               "#dcdccc",  "#3f3f3f",  NULL,               NULL            },
+        { 1|4,  "Normal",                       188,    237,    NULL,               "#d7d7d7",  "#3a3a3a",  NULL,               NULL            },
         { 1,    "NonText",                      240,    NULL,   NULL,               "#5b605e",  NULL,       "bold",             NULL            },
         { 1,    "CursorLine",                   NULL,   238,    NULL,               NULL,       "#434443",  NULL,               NULL            },
         { 1,    "CursorColumn",                 NULL,   239,    NULL,               NULL,       "#4f4f4f",  NULL,               NULL            },
         { 1,    "LineNr",                       248,    233,    NULL,               "#9fafaf",  "#262626",  NULL,               NULL            },
-        { 1,    "Visual",                       235,    210,    "bold",             "#333333",  "#2f2f2f",  "bold,underline",   NULL            },
-        { 1,    "VisualNOS",                    235,    210,    "bold",             "#333333",  "#2f2f2f",  "bold,underline",   NULL            },
+        { 1,    "Visual",                       235,    32,     "bold",             "#333333",  "#0087d7",  "bold",             NULL            },
+        { 1,    "VisualNOS",                    235,    32,     "bold",             "#333333",  "#0087d7",  "bold",             NULL            },
 
             // Context-less
 
@@ -78,7 +78,7 @@ zenburn_spec[] = {
         { 0,    "SpecialComment",               181,    NULL,   "bold",             "#82a282",  NULL,       "bold",             NULL            },
         { 0,    "SpecialKey",                   151,    NULL,   NULL,               "#9ece9e",  NULL,       NULL,               NULL            },
         { 0,    "Spell",                        108,    NULL,   "underline",        "#dc8c6c",  NULL,       "underline",        NULL            },
-        { 0,    "SpellBad",                     9,      237,    NULL,               "#dc8c6c",  NULL,       NULL,               "#bc6c4c"       },
+        { 0,    "SpellBad",                     9,      237,    "undercurl",        "#dc8c6c",  NULL,       "undercurl",        "#bc6c4c"       },
         { 0,    "SpellCap",                     12,     237,    NULL,               "#8c8cbc",  NULL,       NULL,               "#6c6c9c"       },
         { 0,    "SpellLocal",                   14,     237,    NULL,               "#9ccc9c",  NULL,       NULL,               "#7cac7c"       },
         { 0,    "SpellRare",                    13,     237,    NULL,               "#bc8cbc",  NULL,       NULL,               "#bc6c9c"       },
@@ -93,7 +93,7 @@ zenburn_spec[] = {
         { 0,    "Todo",                         108,    234,    "bold",             "#dfdfdf",  "bg",       "bold",             NULL            },
         { 0,    "Type",                         187,    NULL,   "bold",             "#dfdfbf",  NULL,       "bold",             NULL            },
         { 0,    "Typedef",                      253,    NULL,   "bold",             "#dfe4cf",  NULL,       "bold",             NULL            },
-        { 0,    "Underlined",                   188,    234,    "bold",             "#dcdccc",  NULL,       "underline",        NULL            },
+        { 0,    "Underlined",                   188,    234,    "underlined",       "#dcdccc",  NULL,       "underline",        NULL            },
     //  { 0,    "VertSplit",                    236,    65,     NULL,               "#2e3330",  "#688060",  NULL,               NULL            },
         { 0,    "Frame",  /*GRIEF*/             188,    237,    NULL,               "#2e3330",  "#688060",  NULL,               NULL            },
 

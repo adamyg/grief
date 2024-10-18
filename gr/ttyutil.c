@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyutil_c,"$Id: ttyutil.c,v 1.12 2024/09/24 12:54:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyutil_c,"$Id: ttyutil.c,v 1.13 2024/10/18 05:19:14 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyutil.c,v 1.12 2024/09/24 12:54:15 cvsuser Exp $
+/* $Id: ttyutil.c,v 1.13 2024/10/18 05:19:14 cvsuser Exp $
  * TTY common utility functions
  *
  *
@@ -281,7 +281,29 @@ tty_hasfeature(const char *term, const char *what)
     for (elm = strchr(term, '-'); elm; elm = strchr(elm, '-')) {
         ++elm;
         if (0 == strncmp(elm, what, wlen)) {    /* -xxxx[\0-] */
-            if (elm[wlen] == '\0' || elm[wlen] == '-') {
+            const char end = elm[wlen];
+            if (end == '\0' || end == '-') {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+
+int
+tty_hasfeatureplus(const char *term, const char *what)
+{
+    size_t wlen = (size_t)strlen(what);
+    const char *elm;
+
+    for (elm = strchr(term, '-'); elm; elm = strchr(elm, '-')) {
+        ++elm;
+        if (0 == strncmp(elm, what, wlen)) {    /* -xxxx[digits][\0-] */
+            char end = elm[wlen];
+            while (end && isdigit(end))
+                end = elm[++wlen];
+            if (end == '\0' || end == '-') {
                 return 1;
             }
         }
@@ -444,9 +466,15 @@ main()
     assert(tty_isterm("screen.linux", "screen.linux"));
     assert(! tty_isterm("screen1", "screen"));
     assert(! tty_isterm("screen2", "screen"));
+
     assert(tty_hasfeature("screen-rv", "rv"));
     assert(tty_hasfeature("screen-rv-xxx", "rv"));
     assert(tty_hasfeature("screen-xxx-rv", "rv"));
+
+    assert(tty_hasfeatureplus("xterm-direct", "direct"));
+    assert(tty_hasfeatureplus("xterm-direct256", "direct"));
+    assert(! tty_hasfeatureplus("xterm-direct256a", "direct"));
+
 
     { // xterm-mok2
         const char ctrltab[] = "\x1b[27;5;9~";  // Control-TAB

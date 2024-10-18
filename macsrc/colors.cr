@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: colors.cr,v 1.23 2024/07/05 18:41:55 cvsuser Exp $
+/* $Id: colors.cr,v 1.25 2024/10/07 16:14:59 cvsuser Exp $
  * Enhanced colour/colorscheme support.
  *
  *
@@ -54,6 +54,9 @@ static list             attrsset = {
     "reverse",
     "standout",
     "undercurl",
+//  "underdouble",
+//  "underdotted",
+//  "underdashed",
     "dim"
     };
 
@@ -1094,6 +1097,4 @@ schemeload(string scheme, ~list args, ~string base, ~int flags)
     return FALSE;
 }
 
-/*eof*/
-
-
+/*end*/

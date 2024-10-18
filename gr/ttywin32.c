@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.58 2024/09/20 14:50:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.59 2024/10/10 17:46:13 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttywin32.c,v 1.58 2024/09/20 14:50:06 cvsuser Exp $
+/* $Id: ttywin32.c,v 1.59 2024/10/10 17:46:13 cvsuser Exp $
  * WIN32 VIO driver.
  *  see: http://www.edm2.com/index.php/Category:Vio
  *
@@ -241,6 +241,13 @@ VioGetMode(VIOMODEINFO *info, HVIO viohandle)
         info->col = (USHORT)cols;
         info->color = (USHORT)vio.activecolors;
     }
+
+    if (info && info->color == 256) {
+        if (vio.isVirtualConsole) {
+            info->color = 0xffff;               // truecolor available.
+        }
+    }
+
     return 0;
 }
 

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.65 2024/09/25 15:51:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.69 2024/10/18 05:19:14 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.65 2024/09/25 15:51:54 cvsuser Exp $
+/* $Id: cmain.c,v 1.69 2024/10/18 05:19:14 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -130,8 +130,8 @@ static struct argoption options[] = {
 
     { "noscroll",       arg_none,           NULL,       2,      "Disable xterm scrolling" },
 
-    { "color",          arg_optional,       NULL,       3,      "Force color mode",
-                            "=<depth>" },
+    { "color",          arg_optional,       NULL,       3,      "Color depth/mode",
+                            "=<depth>|<truecolor>|<direct>|<none>" },
 
     { "nocolor",        arg_none,           NULL,       3,      "Force black and white display" },
 
@@ -165,7 +165,9 @@ static struct argoption options[] = {
 
     { "nounicode",      arg_none,           NULL,       307,    "Disable use of UNICODE graphic characters" },
 
-    { "nounderline",    arg_none,           NULL,       6,      "Disable use of underline mode" },
+    { "nounderline",    arg_none,           NULL,       323,    "Disable use of all underline/undestylee modes" },
+
+    { "noundercurl",    arg_none,           NULL,       324,    "Disable use of extended understyle modes" },
 
     { "nohilite",       arg_none,           NULL,       7,      "Disable syntax hiliting" },
 
@@ -315,7 +317,7 @@ int                     xf_spell = -1;          /* TRUE/FALSE/-1 enable spell. *
                                                 /* TRUE enables tty regions scrolling. */
 int                     xf_scrollregions = FALSE;
 
-int                     xf_color = -1;          /* TRUE/FALSE, user specified color mode. */
+int                     xf_color = COLORMODE_AUTO; /* color depth/mode. */
 
 int                     xf_graph = -1;          /* TRUE/FALSE, user specified graphic mode. */
 
@@ -329,7 +331,7 @@ int                     xf_sigtrap = TRUE;      /* TRUE/FALSE, control signal tr
 
 int                     xf_dumpcore = 0;        /* 1=dumpcore, 2=stack-dump (if available). */
 
-int                     xf_underline = -1;      /* TRUE/FALSE, user specified underline mode. */
+int                     xf_understyle = UNDERSTYLE_LINE|UNDERSTYLE_EXTENDED|UNDERSTYLE_BLINK;
 
 int                     xf_title = -1;          /* TRUE/FALSE, user specified console title mode. */
 
@@ -1012,12 +1014,28 @@ argv_process(const int doerr, int argc, const char **argv)
 
         case 3:             /* tty - [no]color=[depth] */
             if ('c' == args.opt) {
-                if (! args.val ||
-                        (xf_color = atoi(args.val)) <= 0) {
-                    xf_color = 1;
+                if (! args.val || 0 == strcmp(args.val, "auto")) {
+                    xf_color = COLORMODE_AUTO;
+                } else if (0 == strcmp(args.val, "none")) {
+                    xf_color = COLORMODE_NONE;
+                } else if (0 == strcmp(args.val, "truecolor") || 0 == strcmp(args.val, "24bit")) {
+                    xf_color = COLORMODE_TRUECOLOR; // semicolon
+                } else if (0 == strcmp(args.val, "direct")) {
+                    xf_color = COLORMODE_DIRECT; // colon
+                } else {
+                    xf_color = (int)strtoul(args.val, NULL, 10);
+                    if (xf_color >= COLORMODE_256) {
+                        xf_color = COLORMODE_256;
+                    } else if (xf_color >= COLORMODE_88) {
+                        xf_color = COLORMODE_88;
+                    } else if (xf_color >= COLORMODE_16) {
+                        xf_color = COLORMODE_16;
+                    } else if (xf_color >= 1) {
+                        xf_color = COLORMODE_8;
+                    }
                 }
             } else {
-                xf_color = 0;
+                xf_color = COLORMODE_NONE;
             }
             break;
 
@@ -1054,8 +1072,12 @@ argv_process(const int doerr, int argc, const char **argv)
             xf_kbconfig = args.val;
             break;
 
-        case 6:             /* tty - underline mode. */
-            xf_underline = FALSE;
+        case 323:           /* tty - nounderline. */
+            xf_understyle = 0;
+            break;
+
+        case 324:           /* tty - noundercurl. */
+            xf_understyle &= ~UNDERSTYLE_EXTENDED;
             break;
 
         case 7:             /* tty - disable syntax hiliting. */
@@ -2092,4 +2114,7 @@ usage(int what)
 }
 
 /*end*/
+
+
+
 
