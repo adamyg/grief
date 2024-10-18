@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.69 2024/10/18 05:19:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.70 2024/10/18 15:11:49 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.69 2024/10/18 05:19:14 cvsuser Exp $
+/* $Id: cmain.c,v 1.70 2024/10/18 15:11:49 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -283,6 +283,8 @@ static int              xf_dumpstats = FALSE;   /* TRUE if stats reporting on ex
 
 static int              xf_dumprefs = FALSE;    /* TRUE if ref status are dumped on exit. */
 
+static const char *     xf_colorscheme = NULL;  /* default color-scheme */
+
 #if defined(HAVE_MOUSE) || defined(WIN32)
 const char *            xf_mouse = "";          /* mouse mode; default auto-detect */
 #else
@@ -554,7 +556,7 @@ cmain(int argc, char **argv)
         //TODO: resource macro?
 
     /* high-level */
-    color_setscheme(NULL);
+    color_setscheme(xf_colorscheme);
     cmap_init();                                /* character map */
     syntax_init();                              /* syntax hilite engine */
     key_init();
@@ -1040,7 +1042,7 @@ argv_process(const int doerr, int argc, const char **argv)
             break;
 
         case 4:             /* tty - d[ark]|l[ight]. */
-            color_setscheme('d' == args.opt ? "dark" : "light");
+            xf_colorscheme = ('d' == args.opt ? "dark" : "light");
             break;
 
         case 5:             /* tty - graphic character. */
@@ -2114,7 +2116,3 @@ usage(int what)
 }
 
 /*end*/
-
-
-
-

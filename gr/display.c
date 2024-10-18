@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.89 2024/10/18 05:19:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.90 2024/10/18 15:11:49 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: display.c,v 1.89 2024/10/18 05:19:14 cvsuser Exp $
+/* $Id: display.c,v 1.90 2024/10/18 15:11:49 cvsuser Exp $
  * High level display interface.
  *
  *
@@ -1571,7 +1571,7 @@ vtwindow(WINDOW_t *wp)
         draw_window(wp, top, top_line, bottom, bottom, VTDRAW_REPAINT);
         return;
     }
-    
+
     if ((WFEDIT & status) || (bp && bp->b_dirty_min)) {
                                                 /* line edit or scrolled, update mined arena */
         const LINENO diff2 = top - top_line;
@@ -3846,6 +3846,10 @@ ansidecode(const LINECHAR *cp, const LINECHAR *end, vbyte_t *color, unsigned *fl
                         case 15: case 16: case 17: case 18: case 19:
                             break;
 
+                        case 20:                /* fraktur/gothic - rare */
+                            break;
+                        case 21:                /* doubly underlined; or: not bold */
+                            break;
                         case 22:                /* clear bold */
                             nflags &= ~ANSI_MABOLD;
                             break;
@@ -3886,6 +3890,7 @@ ansidecode(const LINECHAR *cp, const LINECHAR *end, vbyte_t *color, unsigned *fl
                                 fgcol = ansicolor(args[idx + 2]);
                                 idx += 2;       /* 38;5;<color> */
                             }
+                            //TODO: 2/RGB
                             break;
                         case 48:                /* background color - 256 color mode */
                             if ((idx + 2) < no && 5 == args[idx + 1]) {
@@ -3894,6 +3899,7 @@ ansidecode(const LINECHAR *cp, const LINECHAR *end, vbyte_t *color, unsigned *fl
                                 bgcol = ansicolor(args[idx + 2]);
                                 idx += 2;       /* 48;5;<color> */
                             }
+                            //TODO: 2/RGB
                             break;
                         case 39:                /* set default background color */
                             nflags &= ~ANSI_MANORMAL;
