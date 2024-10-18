@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.85 2024/10/10 17:46:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.86 2024/10/18 05:19:14 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.85 2024/10/10 17:46:13 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.86 2024/10/18 05:19:14 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -339,8 +339,10 @@ term_ready(int repaint, scrprofile_t *profile)
         profile->sp_rows = (int)mi.row;
         profile->sp_cols = (int)mi.col;
         if (mi.color > 0) {
-            if (-1 == xf_color) {
+            if (COLORMODE_AUTO == xf_color) {
                 tt_colors = mi.color;
+            } else if (COLORMODE_NONE == xf_color) {
+                tt_colors = 2;
             } else {
                 if ((tt_colors = mi.color) > xf_color) {
                    tt_colors = xf_color;
@@ -1524,4 +1526,5 @@ do_copy_screen(void)
     }
     chk_free(tmp);
 }
+
 #endif  /*USE_VIO_BUFFER*/

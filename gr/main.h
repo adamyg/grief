@@ -1,11 +1,11 @@
 #ifndef GR_MAIN_H_INCLUDED
 #define GR_MAIN_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_main_h,"$Id: main.h,v 1.34 2024/10/01 12:54:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_main_h,"$Id: main.h,v 1.35 2024/10/18 05:19:14 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: main.h,v 1.34 2024/10/01 12:54:54 cvsuser Exp $
+/* $Id: main.h,v 1.35 2024/10/18 05:19:14 cvsuser Exp $
  * Globals and main process primitives.
  *
  *
@@ -51,7 +51,16 @@ extern int                  xf_spell;           /* TRUE/FALSE/-1 enable spell. *
 
 extern int                  xf_scrollregions;   /* TRUE/FALSE, enable scroll regions. */
 
-extern int                  xf_color;           /* TRUE/FALSE, use color override. */
+#define COLORMODE_AUTO          -1
+#define COLORMODE_NONE          0
+#define COLORMODE_8             8
+#define COLORMODE_16            16
+#define COLORMODE_88            88
+#define COLORMODE_256           256
+#define COLORMODE_TRUECOLOR     1000
+#define COLORMODE_DIRECT        1001
+
+extern int                  xf_color;           /* color-mode override, default=COLORMODE_AUTO. */
 
 extern int                  xf_graph;           /* TRUE/FALSE, user specified graphic mode. */
 
@@ -143,4 +152,3 @@ extern void                 do_suspend(void);
 __CEND_DECLS
 
 #endif /*GR_MAIN_H_INCLUDED*/
-

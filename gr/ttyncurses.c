@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.33 2024/10/15 13:49:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.34 2024/10/18 05:19:14 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyncurses.c,v 1.33 2024/10/15 13:49:55 cvsuser Exp $
+/* $Id: ttyncurses.c,v 1.34 2024/10/18 05:19:14 cvsuser Exp $
  * [n]curses tty driver interface -- alt driver when running under ncurses.
  *
  * This file is part of the GRIEF Editor.
@@ -834,7 +834,7 @@ istruecolor(void)
 {
 #if defined(CURSES_DIRECT_COLORS)
     if (COLORS == DIRECT_COLORS) {
-        return 1;                               /* direct RGB support. */
+        return COLORIF_DIRECT;                  /* direct RGB support. */
     }
 #endif
     return 0;
@@ -1119,8 +1119,10 @@ term_colors(void)
 {
     int truecolor = 0;
 
+    tt_colors = 2;                              // black&white
+
 #if defined(A_COLOR)
-    if (xf_color > 1 || (-1 == xf_color && has_colors()) ||
+    if (xf_color >= COLORMODE_8 || (COLORMODE_AUTO == xf_color && has_colors()) ||
             x_pt.pt_colordepth > 1) {
 
         tt_defaultfg = COLOR_WHITE;
@@ -1129,15 +1131,7 @@ term_colors(void)
         start_color();
         tt_colors = COLORS;
 
-#if defined(CURSES_DIRECT_COLORS)
-        if (COLORS == DIRECT_COLORS) {          // direct, overlap count
-            if ((tt_direct = tigetnum(CURSES_CAST("CO"))) <= 0)  {
-                tt_direct = 1;
-            }
-        }
-#endif
-
-        if (xf_color == -1 || xf_color == INT_MAX) {
+        if (xf_color == COLORMODE_AUTO || xf_color > COLORMODE_256) {
             truecolor = istruecolor();          // enable if supported
         } else if (tt_colors > xf_color) {
             tt_colors = xf_color;               // limit to configuration
@@ -1154,13 +1148,16 @@ term_colors(void)
         } else if (OK == use_default_colors()) {
             tt_defaultfg = tt_defaultbg = -1;
         }
-
-    } else {
-        tt_colors = 2;
     }
-#else
-    tt_colors = 2;
+
+#if defined(CURSES_DIRECT_COLORS)
+    if (COLORS == DIRECT_COLORS) {              // direct, overlap count
+        if ((tt_direct = tigetnum(CURSES_CAST("CO"))) <= 0)  {
+            tt_direct = 1;
+        }
+    }
 #endif
+#endif //A_COLOR
 
     trace_log("ttync: colors(depth:%d,truecolor:%d,fg:%d,bg:%d)\n", tt_colors, truecolor, tt_defaultfg, tt_defaultbg);
 
@@ -1369,3 +1366,4 @@ term_tidy(void)
 #endif  /*HAVE_LIBNCURSES*/
 
 /*end*/
+

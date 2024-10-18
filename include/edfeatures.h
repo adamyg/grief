@@ -1,11 +1,11 @@
 #ifndef GR_EDFEATURES_H_INCLUDED
 #define GR_EDFEATURES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edfeatures_h,"$Id: edfeatures.h,v 1.25 2024/10/07 16:39:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_edfeatures_h,"$Id: edfeatures.h,v 1.26 2024/10/18 05:19:40 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edfeatures.h,v 1.25 2024/10/07 16:39:27 cvsuser Exp $
+/* $Id: edfeatures.h,v 1.26 2024/10/18 05:19:40 cvsuser Exp $
  * Editor features.
  *
  *
@@ -156,6 +156,9 @@ __CBEGIN_DECLS
 #define PT_ESCMAX               20
 #define PT_NAME                 64
 
+#define COLORIF_TRUECOLOR       1
+#define COLORIF_DIRECT          2
+
 struct _features {
     uint32_t    pt_magic;                       /* Structure magic. */
 #define PT_MAGIC                MKMAGIC('P','t','p','T')
@@ -273,4 +276,5 @@ typedef struct _features features_t;
 __CEND_DECLS
 
 #endif /*GR_EDFEATURES_H_INCLUDED*/
+
 /*end*/

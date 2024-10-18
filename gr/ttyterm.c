@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.146 2024/10/15 10:48:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.147 2024/10/18 05:19:14 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.146 2024/10/15 10:48:57 cvsuser Exp $
+/* $Id: ttyterm.c,v 1.147 2024/10/18 05:19:14 cvsuser Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -261,7 +261,7 @@ static int              term_dell(int row, int bot, int nlines, vbyte_t fillcolo
 static void             term_scrollset(int top, int bot);
 static void             term_scrollreset(void);
 static void             term_attr(vbyte_t color);
-static void             term_truecolor(const colattr_t *ca);
+static void             term_truecolor(const colattr_t *ca, int mode);
 static void             term_monocolor(const vbyte_t attr);
 static void             term_legacycolor(const colattr_t *ca);
 static void             term_256color(int fg, int bg, const char *reset);
@@ -2978,23 +2978,15 @@ term_colors(void)
 {                                               /* save user color specification */
     int col, source = 0, truecolor = 0;
 
-    /* color? */
-//  if (x_pt.pt_color == -1) {
-//      if (tf_Colors > 2 /*max colors*/ ||
-//               (tc_Color[0] && tc_Color[1]) || (tc_ANSI_Color[0] && tc_ANSI_Color[1]) ||
-//                   ggetenv("COLORTERM") /*legacy override*/) {
-//          x_pt.pt_color = TRUE;
-//      }
-//  }
-
     /* configure color depth */
-    if (xf_color > 1) {                         /* command line override */
-        if (xf_color == INT_MAX) {
+    if (xf_color >= COLORMODE_NONE) {           /* command line override */
+        if (xf_color == COLORMODE_NONE) {
+            tt_colors = 2;
+        } else if (xf_color > COLORMODE_256) {
             tt_colors = 256;
-            truecolor = 1;
-        } else {
+            truecolor = (xf_color == COLORMODE_DIRECT ? COLORIF_DIRECT : COLORIF_TRUECOLOR);
+        } else { // 256, 16 or 8
             tt_colors = xf_color;
-            truecolor = (tt_colors >= 256 && istruecolor());
         }
         source = 4;
 
@@ -3008,10 +3000,13 @@ term_colors(void)
             (x_pt.pt_truecolor > 0 || (tt_colors >= 256 && istruecolor()));
         source = 2;
 
-    } else if (x_pt.pt_color /*-1 or 1*/) {     /* auto-select */
-        if (x_pt.pt_truecolor > 0 || istruecolor()) {
+    } else {    /* auto-select */
+        if (x_pt.pt_truecolor > 0) {
+            truecolor = x_pt.pt_truecolor;
             tt_colors = 256;
-            truecolor = 1;
+
+        } else if (0 != (truecolor = istruecolor())) {
+            tt_colors = 256;
 
         } else if (t_attributes & TA_XTERMLIKE) {
             tt_colors = XTERM_COLORS;
@@ -3026,9 +3021,7 @@ term_colors(void)
             }
         }
     }
-    if (tt_colors > 256) tt_colors = 256;
     x_pt.pt_truecolor = truecolor;
-//  x_pt.pt_color = (tt_colors != 0);
 
     /* configure colors */
     assert((COLOR_NONE + 1) == (sizeof(tt_colormap)/sizeof(tt_colormap[0])));
@@ -3089,18 +3082,24 @@ istruecolor(void)
         *colorterm = ggetenv("COLORTERM");
 
     // https://github.com/termstandard/colors
-    if (tf_RGB || tn_RGB > 0)                   /* term definition */
-        return 1;
+    if (tf_RGB || tn_RGB > 0) {                 /* ncurses: term definition */
+        if (tc_ANSI_Color[0]) {
+            if (strchr(tc_ANSI_Color[0], ':')) {
+                return COLORIF_DIRECT;
+            }
+        }
+        return COLORIF_TRUECOLOR;
+    }
 
-    if (term) {                                 /* xxx-truecolor || xxx-24bit */
-        if (tty_hasfeature(term, "truecolor") || tty_hasfeature(term, "24bit")) {
-            return 1;
+    if (term) {                                 /* ncurses: direct<digits> */
+        if (tty_hasfeatureplus(term, "direct")) {
+            return COLORIF_DIRECT;
         }
     }
 
-    if (colorterm) {                            /* COLORTERM=truecolor || COLORTERM=24bit */
+    if (colorterm) {                            /* S-lang: COLORTERM=truecolor || COLORTERM=24bit */
         if (0 == strcmp(colorterm, "truecolor") || 0 == strcmp(colorterm, "24bit")) {
-            return 1;
+            return COLORIF_TRUECOLOR;
         }
     }
     return 0;
@@ -4585,11 +4584,12 @@ term_attr(vbyte_t color)
         term_monocolor(attr);
 
     } else {
+        const int truecolor = x_pt.pt_truecolor;
         colattr_t ca = {0};
 
         color_definition(attr, &ca);
-        if (x_pt.pt_truecolor) {
-            term_truecolor(&ca);
+        if (truecolor) {
+            term_truecolor(&ca, truecolor);
         } else {
             term_legacycolor(&ca);
         }
@@ -4599,7 +4599,7 @@ term_attr(vbyte_t color)
 
 
 /*  Function:           term_truecolor
- *      true-color mode.
+ *      true-color/16-million color mode.
  *
  *      Controls:
  *
@@ -4622,10 +4622,10 @@ term_attr(vbyte_t color)
  *              16-231:             6x6x6 cube (216 colors)
  *              232-255:            Grayscale from dark to light in 24 steps.
  *
- *      ITU-RGB (xterm/kconsole)/TODO:
+ *      ITU-RGB (xterm/kconsole):
  *
- *          \0O3[38:2:<Color-Space-ID>:<r>:<g>:<b>:<unused>:<CS tolerance>m
- *          \0O3[48:2:<Color-Space-ID>:<r>:<g>:<b>:<unused>:<CS tolerance>m
+ *          \0O3[38:2:[<Color-Space-ID>]:<r>:<g>:<b>:[<unused>]:[<CS tolerance>]m
+ *          \0O3[48:2:[<Color-Space-ID>]:<r>:<g>:<b>:[<unused>]:[<CS tolerance>]m
  *
  *      TODO:
  *
@@ -4633,13 +4633,37 @@ term_attr(vbyte_t color)
  *
  *  Parameters:
  *      ca - Color attribute.
+ *      mode - Interface mode (ISTRUECOLOR or ISDIRECT).
+ *
+ *  Notes:
+ *      Only background color changes are optimised, on the assumption foreground changes are the primary action.
  *
  *  Returns:
  *      nothing.
  */
 static void
-term_truecolor(const colattr_t *ca)
+term_truecolor(const colattr_t *ca, int mode)
 {
+    static const char *sgrs[2][4] =              // fg-rgb/fg-256/bg-rgb/bg-256
+        {
+            {       // ISO/IEC 8613-6 (ITU Recommendation T.416) - direct
+                    // See:
+                    //  https://en.wikipedia.org/wiki/Talk:ANSI_escape_code#Clarification_for_sentence_in_24-bit_colour_section_sought
+                    //  https://dicom.nema.org/medical/dicom/2019d/output/html/part05.html#sect_6.1.1
+                "\033[38:2::%u:%u:%u",
+                "\033[38:5:%u",
+                    ";48:2::%u:%u:%um",
+                    ";48:5:%um"
+            },
+            {       // defacto standard - truecolor
+                "\033[38;2;%u;%u;%u",
+                "\033[38;5;%u",
+                    ";48;2;%u;%u;%um",
+                    ";48;5;%um"
+            },
+        };
+    const char **sgr = sgrs[mode == COLORIF_TRUECOLOR ? 1 : 0];
+
     char ebuf[64];                              // max:36
     const colstyles_t sf = ca->sf;
     unsigned rgbcolor;
@@ -4649,7 +4673,7 @@ term_truecolor(const colattr_t *ca)
     /* foreground */
     rgbcolor = ca->fg.rgbcolor;
     if (rgbcolor) {                             // RGB
-        len = sxprintf(ebuf, sizeof(ebuf), "\033[38;2;%u;%u;%u",
+        len = sxprintf(ebuf, sizeof(ebuf), sgr[0],
                     COLOR_RVAL(rgbcolor), COLOR_GVAL(rgbcolor), COLOR_BVAL(rgbcolor));
         fg = (int)rgbcolor;
 
@@ -4657,26 +4681,35 @@ term_truecolor(const colattr_t *ca)
         fg = (COLORSOURCE_SYMBOLIC == ca->fg.source ? tt_colormap[ca->fg.color] : ca->fg.color);
 
         if (fg >= 0) {                          // Index
-            len = sxprintf(ebuf, sizeof(ebuf), "\033[38;5;%u", 0xff & fg);
+            len = sxprintf(ebuf, sizeof(ebuf), sgr[1], 0xff & fg);
         } else {                                // Default
             len = sxprintf(ebuf, sizeof(ebuf), "\033[39");
         }
     }
 
-    /* background */
+    /* background, only on change or style */
     rgbcolor = ca->bg.rgbcolor;
-    if (rgbcolor) {                              // RGB
-        len += sxprintf(ebuf+len, sizeof(ebuf)-len, ";48;2;%u;%u;%um",
-                    COLOR_RVAL(rgbcolor), COLOR_GVAL(rgbcolor), COLOR_BVAL(rgbcolor));
-        bg = (int)rgbcolor;
+    if (rgbcolor) {                             // RGB
+        if (tt_bg != (bg = (int)rgbcolor) || sf != tt_style) {
+            len += sxprintf(ebuf+len, sizeof(ebuf)-len, sgr[2],
+                        COLOR_RVAL(rgbcolor), COLOR_GVAL(rgbcolor), COLOR_BVAL(rgbcolor));
+        } else {
+            ebuf[len++] = 'm';
+            ebuf[len] = 0;
+        }
 
     } else {
         bg = (COLORSOURCE_SYMBOLIC == ca->bg.source ? tt_colormap[ca->bg.color] : ca->bg.color);
 
-        if (bg >= 0) {                          // Index
-            len += sxprintf(ebuf+len, sizeof(ebuf)-len, ";48;5;%um", 0xff & bg);
-        } else {                                // Default
-            len += sxprintf(ebuf+len, sizeof(ebuf)-len, ";49m");
+        if (tt_bg != bg || sf != tt_style) {
+            if (bg >= 0) {                       // Index
+                len += sxprintf(ebuf+len, sizeof(ebuf)-len, sgr[3], 0xff & bg);
+            } else {                             // Default
+                len += sxprintf(ebuf+len, sizeof(ebuf)-len, ";49m");
+            }
+        } else {
+            ebuf[len++] = 'm';
+            ebuf[len] = 0;
         }
     }
 

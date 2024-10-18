@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.68 2024/10/06 17:01:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.69 2024/10/18 05:19:14 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.68 2024/10/06 17:01:22 cvsuser Exp $
+/* $Id: cmain.c,v 1.69 2024/10/18 05:19:14 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -131,7 +131,7 @@ static struct argoption options[] = {
     { "noscroll",       arg_none,           NULL,       2,      "Disable xterm scrolling" },
 
     { "color",          arg_optional,       NULL,       3,      "Color depth/mode",
-                            "=<depth>|<truecolor>|<none>" },
+                            "=<depth>|<truecolor>|<direct>|<none>" },
 
     { "nocolor",        arg_none,           NULL,       3,      "Force black and white display" },
 
@@ -317,7 +317,7 @@ int                     xf_spell = -1;          /* TRUE/FALSE/-1 enable spell. *
                                                 /* TRUE enables tty regions scrolling. */
 int                     xf_scrollregions = FALSE;
 
-int                     xf_color = -1;          /* TRUE/FALSE, user specified color mode. */
+int                     xf_color = COLORMODE_AUTO; /* color depth/mode. */
 
 int                     xf_graph = -1;          /* TRUE/FALSE, user specified graphic mode. */
 
@@ -1014,15 +1014,28 @@ argv_process(const int doerr, int argc, const char **argv)
 
         case 3:             /* tty - [no]color=[depth] */
             if ('c' == args.opt) {
-                if (args.val && 0 == strcmp(args.val, "none")) {
-                    xf_color = 0;
-                } else if (args.val && (0 == strcmp(args.val, "truecolor") || 0 == strcmp(args.val, "24bit"))) {
-                    xf_color = INT_MAX;
-                } else if (! args.val || (xf_color = atoi(args.val)) <= 0) {
-                    xf_color = 1;
+                if (! args.val || 0 == strcmp(args.val, "auto")) {
+                    xf_color = COLORMODE_AUTO;
+                } else if (0 == strcmp(args.val, "none")) {
+                    xf_color = COLORMODE_NONE;
+                } else if (0 == strcmp(args.val, "truecolor") || 0 == strcmp(args.val, "24bit")) {
+                    xf_color = COLORMODE_TRUECOLOR; // semicolon
+                } else if (0 == strcmp(args.val, "direct")) {
+                    xf_color = COLORMODE_DIRECT; // colon
+                } else {
+                    xf_color = (int)strtoul(args.val, NULL, 10);
+                    if (xf_color >= COLORMODE_256) {
+                        xf_color = COLORMODE_256;
+                    } else if (xf_color >= COLORMODE_88) {
+                        xf_color = COLORMODE_88;
+                    } else if (xf_color >= COLORMODE_16) {
+                        xf_color = COLORMODE_16;
+                    } else if (xf_color >= 1) {
+                        xf_color = COLORMODE_8;
+                    }
                 }
             } else {
-                xf_color = 0;
+                xf_color = COLORMODE_NONE;
             }
             break;
 
@@ -2101,3 +2114,7 @@ usage(int what)
 }
 
 /*end*/
+
+
+
+

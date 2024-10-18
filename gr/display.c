@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.88 2024/09/12 17:28:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.89 2024/10/18 05:19:14 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: display.c,v 1.88 2024/09/12 17:28:50 cvsuser Exp $
+/* $Id: display.c,v 1.89 2024/10/18 05:19:14 cvsuser Exp $
  * High level display interface.
  *
  *
@@ -588,7 +588,7 @@ vtupdating(void)
 int
 vtiscolor(void)
 {
-    if (-1 != xf_color) {
+    if (COLORMODE_AUTO != xf_color) {
         return xf_color;                        /* user override */
     }
     return x_pt.pt_color;                       /* ... otherwise terminal specific */

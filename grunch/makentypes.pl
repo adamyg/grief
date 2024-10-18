@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makentypes.pl,v 1.14 2024/10/15 15:50:08 cvsuser Exp $
+# $Id: makentypes.pl,v 1.15 2024/10/18 05:24:59 cvsuser Exp $
 # Generate crntypes.h from the gen and grunch symbols.
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 #
@@ -336,7 +336,7 @@ EOT
     #
     print OUT<<EOT;
 #if !defined(YYEMPTY)
-#define YYEMPTY -2 /* bison 3.6.1 issues */
+#define YYEMPTY (-2) /* bison 3.6.1 issues */
 #endif
 
 enum crntypes {

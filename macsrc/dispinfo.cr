@@ -1,5 +1,5 @@
 /* -*- indent-width: 4; -*-/
- * $Id: dispinfo.cr,v 1.9 2024/10/06 17:01:12 cvsuser Exp $
+ * $Id: dispinfo.cr,v 1.10 2024/10/18 05:20:59 cvsuser Exp $
  * Display information/configuration.
  *
  *
@@ -349,17 +349,19 @@ di_callback(int ident, string name, int p1, int p2)
             inq_screen_size(lines, cols);       // display
             get_term_feature(TF_NAME, feature);
             get_term_feature(TF_COLORDEPTH, colordepth);
-            get_term_feature(TF_TRUECOLOR, truecolor);
+            get_term_feature(TF_TRUECOLOR, truecolor); // 0=no,1=truecolor,2=direct
             get_term_feature(TF_ENCODING, encoding);
             get_term_feature(TF_SCHEMEDARK, isdark);
             get_term_feature(TF_COLORSCHEME, colorscheme);
             get_term_feature(TF_KBPROTOCOL, kbprotocol);
 
-            sprintf(feature, "%dx%d-%d%s (%s)", cols, lines, colordepth, (truecolor ? "-truecolor" : ""), feature);
-            if (colorscheme == "")
-               scheme += (isdark ? "dark" : "light");
-            else
-               sprintf(scheme, "%s (%s)", colorscheme, (isdark ? "dark" : "light"));
+            sprintf(feature, "%dx%d-%d%s (%s)", cols, lines, colordepth,
+                        (truecolor ? (truecolor > 1 ? "-direct" : "-truecolor") : ""), feature);
+            if (colorscheme == "") {
+                scheme += (isdark ? "dark" : "light");
+            } else {
+                sprintf(scheme, "%s (%s)", colorscheme, (isdark ? "dark" : "light"));
+            }
 
             widget_set(NULL, "display", feature);
             inq_font(feature);
