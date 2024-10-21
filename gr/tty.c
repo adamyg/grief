@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_tty_c,"$Id: tty.c,v 1.33 2024/10/09 15:55:48 cvsuser Exp $")
+__CIDENT_RCSID(gr_tty_c,"$Id: tty.c,v 1.34 2024/10/21 15:20:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: tty.c,v 1.33 2024/10/09 15:55:48 cvsuser Exp $
+/* $Id: tty.c,v 1.34 2024/10/21 15:20:22 cvsuser Exp $
  * Common basic tty functionality.
  *
  *
@@ -328,6 +328,24 @@ ttfeature(int ident)
 
     if (TF_EIGHT_BIT == ident || TF_ENCODING == ident) {
         cmap_init();                            /* reinitialise character-map */
+    }
+}
+
+
+/*  Function:           ttsetdefaultscheme
+ *      Set the default color scheme.
+ *
+ *  Parameters:
+ *      isdark = 0 or 1.
+ *
+ *  Returns:
+ *      void
+ */
+void
+ttsetdefaultscheme(int isdark)
+{
+    if (isdark >= 0) {
+        x_pt.pt_schemedark = isdark;
     }
 }
 

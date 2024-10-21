@@ -1,11 +1,11 @@
 #ifndef GR_TTY_H_INCLUDED
 #define GR_TTY_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_tty_h,"$Id: tty.h,v 1.38 2024/10/09 15:55:49 cvsuser Exp $")
+__CIDENT_RCSID(gr_tty_h,"$Id: tty.h,v 1.39 2024/10/21 15:20:22 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: tty.h,v 1.38 2024/10/09 15:55:49 cvsuser Exp $
+/* $Id: tty.h,v 1.39 2024/10/21 15:20:22 cvsuser Exp $
  * TTY interface.
  *
  *
@@ -152,6 +152,7 @@ extern int                  ttcursor(int visible, int imode, int vspace);
 
 extern int                  ttcolordepth(void);
 extern void                 ttcolornormal(void);
+extern void                 ttsetdefaultscheme(int isdark);
 extern const char *         ttdefaultscheme(void);
 
 extern void                 ttwinch(void);
