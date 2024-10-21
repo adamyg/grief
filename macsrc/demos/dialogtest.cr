@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: dialogtest.cr,v 1.8 2024/09/12 17:11:03 cvsuser Exp $
+/* $Id: dialogtest.cr,v 1.9 2024/10/07 16:23:06 cvsuser Exp $
  *
  *  This file is used when debugging and fixing CRISP to aid in regression
  *  testing - catching bugs introduced inadvertently. This script does not
@@ -364,5 +364,3 @@ callback(int ident, string name, int p1, int p2)
 }
 
 //end
-
-

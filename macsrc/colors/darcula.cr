@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: darcula.cr,v 1.3 2024/08/04 11:42:44 cvsuser Exp $
+/* $Id: darcula.cr,v 1.4 2024/10/07 16:14:59 cvsuser Exp $
  * Darcula colorscheme, GRIEF port.
  *
  *  see https://github.com/blueshirts/darcula
@@ -225,7 +225,7 @@ darcula_256_cterm[] = {
 void
 colorscheme_darcula(void)
 {
-    vim_colorscheme("darcula", 256, NULL, darcula_256_cterm, FALSE);
+        vim_colorscheme("darcula", 256, NULL, darcula_256_cterm, -1);
 }
 
 /*end*/

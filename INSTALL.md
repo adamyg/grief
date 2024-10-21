@@ -139,7 +139,7 @@ On completion the resulting configuration shall be presented, including installa
 Once reviewed execute the following:
 
     $ make release
-   
+
 
 ### Windows
 

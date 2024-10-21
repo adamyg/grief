@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; tabs: 8; -*-
- * $Id: xterm.cr,v 1.30 2024/09/20 12:15:16 cvsuser Exp $
+ * $Id: xterm.cr,v 1.33 2024/10/20 16:51:19 cvsuser Exp $
  * terminal description file for the xterm window under X11, an VT-100 like emulator.
  *
  *
@@ -10,19 +10,19 @@
 Example 'xterm' resources allowing full keyboard access.
 
 XTerm*font:			9x15
-XTerm*appKeypadDefault:		true
+XTerm*appKeypadDefault: 	true
 XTerm*scrollKey:		true
 Xterm*colormode:		on
 
 XTerm*VT100.Translations:	#override \
 	~Shift<Key>Home:		string(\033[1~)\n\
-	~Shift<Key>End: 		string(\033[4~)\n\
+	~Shift<Key>End:			string(\033[4~)\n\
 	~Shift<Key>Prior:		string(\033[5~)\n\
 	~Shift<Key>Next:		string(\033[6~)\n\
-	Shift<Key>Home: 		scroll-back(100,page)\n\
+	Shift<Key>Home:			scroll-back(100,page)\n\
 	Shift<Key>End:			scroll-forw(100,page)\n\
 	Shift<Key>Tab:			string("\033	")\n\
-	~Shift<Key>Tab: 		string("	")\n\
+	~Shift<Key>Tab:			string("	")\n\
 	Ctrl<Key>=:			string(\033[C=)\n\
 	Ctrl<Key>-:			string(\033[C-)\n\
 	Ctrl<Key>Insert:		string(\033[CR0~)\n\
@@ -32,7 +32,7 @@ XTerm*VT100.Translations:	#override \
 	Ctrl<Key>Left:			string(\033[Ot)\n\
 	Ctrl<Key>Down:			string(\033[Or)\n\
 	Ctrl<Key>Up:			string(\033[Ox)\n\
-	Ctrl<Key>Right: 		string(\033[Ov)\n\
+	Ctrl<Key>Right:			string(\033[Ov)\n\
 	Shift<Key>F1:			string(\033[SF1~)\n\
 	Shift<Key>F2:			string(\033[SF2~)\n\
 	Shift<Key>F3:			string(\033[SF3~)\n\
@@ -68,16 +68,16 @@ XTerm*VT100.Translations:	#override \
 	Meta<Key>F10:			string(\033[AF10~)\n\
 	Meta<Key>F11:			string(\033[AF11~)\n\
 	Meta<Key>F12:			string(\033[AF12~)\n\
-	Shift<Key>KP_0: 		string(\033OP)\n\
-	Shift<Key>KP_1: 		string(\033OQ)\n\
-	Shift<Key>KP_2: 		string(\033OR)\n\
-	Shift<Key>KP_3: 		string(\033OS)\n\
-	Shift<Key>KP_4: 		string(\033OT)\n\
-	Shift<Key>KP_5: 		string(\033OU)\n\
-	Shift<Key>KP_6: 		string(\033OV)\n\
-	Shift<Key>KP_7: 		string(\033OW)\n\
-	Shift<Key>KP_8: 		string(\033OX)\n\
-	Shift<Key>KP_9: 		string(\033OY)\n\
+	Shift<Key>KP_0:			string(\033OP)\n\
+	Shift<Key>KP_1:			string(\033OQ)\n\
+	Shift<Key>KP_2:			string(\033OR)\n\
+	Shift<Key>KP_3:			string(\033OS)\n\
+	Shift<Key>KP_4:			string(\033OT)\n\
+	Shift<Key>KP_5:			string(\033OU)\n\
+	Shift<Key>KP_6:			string(\033OV)\n\
+	Shift<Key>KP_7:			string(\033OW)\n\
+	Shift<Key>KP_8:			string(\033OX)\n\
+	Shift<Key>KP_9:			string(\033OY)\n\
 	Ctrl<Key>KP_0:			string(\033Op)\n\
 	Ctrl<Key>KP_1:			string(\033Oq)\n\
 	Ctrl<Key>KP_2:			string(\033Or)\n\
@@ -170,8 +170,7 @@ main(void)
         xterm_arrow();
         bterm = "aix";
 
-    } else if (bterm == "linux" ||
-                (bterm == "" && (ostype == "linux" || ostype == "linux-gnu" || sysname == "Linux"))) {
+    } else if (bterm == "linux") {
         //
         //  xterm-linux or linux host.
         //
@@ -282,8 +281,8 @@ main(void)
             if (daversion == 115) {             /* kconsole */
                 bterm = "xterm-kconsole";
 
-            } else if (daversion == 136) {      /* PuTTY (mintty) */
-                xterm_load("xterm-mintty");
+            } else if (daversion == 136) {      /* putty */
+                xterm_load("xterm-putty");
                 return;
 
             } else {
@@ -327,6 +326,17 @@ main(void)
         case 85:                                /* TODO/urxvt (ASCII=U) */
            bterm = "xterm-urxvt";
            break;
+        }
+    }
+
+    if (bterm == "xterm") {
+        if (ostype == "linux" || ostype == "linux-gnu" || sysname == "Linux") {
+            //
+            // xterm-linux or linux host.
+            //
+            xterm_locale();
+            xterm_load("xterm-linux");
+            return;
         }
     }
 
@@ -541,3 +551,4 @@ xterm(void)
 }
 
 /*end*/
+

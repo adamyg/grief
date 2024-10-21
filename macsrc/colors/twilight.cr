@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: twilight.cr,v 1.1 2014/11/24 03:56:39 ayoung Exp $
+/* $Id: twilight.cr,v 1.2 2024/10/07 16:14:59 cvsuser Exp $
  * twilight coloriser, GRIEF port.
  *
  *
@@ -104,4 +104,5 @@ colorscheme_twilight(void)
 {
     vim_colorscheme("twilight", 256, NULL, twilight_colors, TRUE);
 }
+
 /*end*/

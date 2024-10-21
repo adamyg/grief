@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 8; -*- */
-/* $Id: brief.cr,v 1.9 2024/07/11 10:42:49 cvsuser Exp $
+/* $Id: brief.cr,v 1.11 2024/10/08 11:40:03 cvsuser Exp $
  * Brief/Borland coloriser.
  *
  *
@@ -40,3 +40,5 @@ colorscheme_brief(void)
 {
         set_color(brief16_colors);
 }
+
+/*end*/

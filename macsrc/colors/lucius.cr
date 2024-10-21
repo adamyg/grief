@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-// $Id: lucius.cr,v 1.5 2024/07/06 18:03:27 cvsuser Exp $
+// $Id: lucius.cr,v 1.6 2024/10/07 16:23:06 cvsuser Exp $
 // lucius coloriser, GriefEdit port - beta.
 //
 // ============================================================================
@@ -97,12 +97,12 @@
 // ============================================================================
 
 #include "../grief.h"
-#include "rgbmap.h"
+#include "util/rgbmap.h"
 
 void
 main(void)
 {
-    require("colors/rgbmap");
+    require("colors/util/rgbmap");
 }
 
 

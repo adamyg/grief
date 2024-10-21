@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: xterm_util.cr,v 1.13 2024/09/20 12:15:16 cvsuser Exp $
+/* $Id: xterm_util.cr,v 1.14 2024/10/07 16:08:57 cvsuser Exp $
  * Standard Xterm features ...
  *
  *
@@ -195,7 +195,7 @@ xterm_altmeta_keys(void)
 void
 xterm_256color(void)
 {
-    set_term_feature(TF_COLOR, TRUE);           /* Terminal supports color. */
+    set_term_feature(TF_COLOR, TRUE);           /* terminal supports color. */
     set_term_feature(TF_COLORDEPTH, 256);       /* using a colour depth of 256. */
 }
 
@@ -269,7 +269,7 @@ xterm_unicode(void)
 void
 xterm_mono(void)
 {
-    set_term_feature(TF_COLOR, FALSE);          /* Terminal supports color. */
+    set_term_feature(TF_COLOR, FALSE);          /* terminal supports color. */
 }
 
 

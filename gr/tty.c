@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_tty_c,"$Id: tty.c,v 1.31 2022/08/10 15:44:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_tty_c,"$Id: tty.c,v 1.34 2024/10/21 15:20:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: tty.c,v 1.31 2022/08/10 15:44:58 cvsuser Exp $
+/* $Id: tty.c,v 1.34 2024/10/21 15:20:22 cvsuser Exp $
  * Common basic tty functionality.
  *
  *
@@ -244,6 +244,25 @@ ttready(int repaint)
 }
 
 
+/*  Function:           ttkeybind
+ *      Keybindings.
+ *
+ *  Parameters:
+ *      none.
+ *
+ *  Returns:
+ *      nothing.
+ */
+void
+ttkeybind(void)
+{
+    trace_log("ttkeybind()\n");
+    if (x_scrfn.scr_keybind) {
+        (*x_scrfn.scr_keybind)();
+    }
+}
+
+
 /*  Function:           ttclose
  *      Close the console.
  *
@@ -309,6 +328,24 @@ ttfeature(int ident)
 
     if (TF_EIGHT_BIT == ident || TF_ENCODING == ident) {
         cmap_init();                            /* reinitialise character-map */
+    }
+}
+
+
+/*  Function:           ttsetdefaultscheme
+ *      Set the default color scheme.
+ *
+ *  Parameters:
+ *      isdark = 0 or 1.
+ *
+ *  Returns:
+ *      void
+ */
+void
+ttsetdefaultscheme(int isdark)
+{
+    if (isdark >= 0) {
+        x_pt.pt_schemedark = isdark;
     }
 }
 
@@ -777,7 +814,7 @@ ttbandw(int attr, int underline, int italic, int blink)
     if (ATTR_NORMAL != attr) {
         if (ATTR_ERROR == attr) {               /* errors */
             nstyle = COLORSTYLE_BOLD;
-            if (blink && 2 == xf_underline) {
+            if (blink && (xf_understyle & UNDERSTYLE_BLINK)) {
                 nstyle = COLORSTYLE_BLINK;
             }
 
@@ -811,7 +848,7 @@ ttbandw(int attr, int underline, int italic, int blink)
         } else if ((attr >= ATTR_KEYWORD_MIN && attr <= ATTR_KEYWORD_MAX) ||
                         ATTR_DIALOG_HOTKEY_NORMAL == attr || ATTR_DIALOG_HOTKEY_FOCUS  == attr ||
                         ATTR_DIALOG_BUT_KEY_NORMAL == attr || ATTR_DIALOG_BUT_KEY_FOCUS == attr) {
-            if (underline & xf_underline /*-1 or 1*/) {
+            if (underline && (xf_understyle & (UNDERSTYLE_LINE|UNDERSTYLE_EXTENDED))) {
                 nstyle = COLORSTYLE_UNDERLINE;
             } else if (italic) {
                 nstyle = COLORSTYLE_ITALIC;
