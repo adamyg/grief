@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: select.cr,v 1.46 2024/09/06 14:35:57 cvsuser Exp $
+/* $Id: select.cr,v 1.47 2024/10/23 16:28:50 cvsuser Exp $
  * Selection macros implementing buffer based popup user interface.
  *
  *
@@ -869,6 +869,9 @@ select_list(string title, string message_string, int step,
     if (width < strlen(title)) {
         width = strlen(title) + 3;
     }
+    if (width < strlen(message_string)) {
+        width = strlen(message_string) + 3;
+    }
     if (! is_string(help_var)) {
         help_var = help_list;
     }
@@ -894,7 +897,7 @@ select_list(string title, string message_string, int step,
 
 /*
  *  select_slim_list ---
- *      Similar to select_list() but we assume that the list is 
+ *      Similar to select_list() but we assume that the list is
  *      unstructured -- there are no actions or help associated with each element.
  */
 int
@@ -932,6 +935,9 @@ select_slim_list(string title, string message_string,
     width = inq_line_length();
     if (width < strlen(title)) {
         width = strlen(title) + 3;
+    }
+    if (width < strlen(message_string)) {
+        width = strlen(message_string) + 3;
     }
     if (!is_string(help_var)) {
         help_var = help_list;
