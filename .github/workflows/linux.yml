@@ -110,7 +110,6 @@ jobs:
       run: |
         sudo add-apt-repository universe
         sudo apt-get install -y libncurses-dev
-        sudo apt-get install -y libncursesw6-dev
         sudo apt-get install -y libenchant-2-dev
         sudo apt-get install -y libaspell-dev
         sudo apt-get install -y libhunspell-dev
@@ -118,7 +117,9 @@ jobs:
         sudo apt-get install -y libexplain-dev
         sudo apt-get install -y libarchive-dev
 
-## 24.04: missing (Oct/24)
+## 24.10: removed
+##      sudo apt-get install -y libncursesw6-dev
+## 24.10: missing (Oct/24)
 ##      sudo apt-get install -y libguess-dev
 
     - name: MacOS, setup

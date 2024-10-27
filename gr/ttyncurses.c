@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.34 2024/10/18 05:19:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.35 2024/10/27 16:13:56 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyncurses.c,v 1.34 2024/10/18 05:19:14 cvsuser Exp $
+/* $Id: ttyncurses.c,v 1.35 2024/10/27 16:13:56 cvsuser Exp $
  * [n]curses tty driver interface -- alt driver when running under ncurses.
  *
  * This file is part of the GRIEF Editor.
@@ -95,10 +95,6 @@ ttcurses(void)
 #endif
 #endif
 
-#if defined(NCURSES_VERSION) && defined(HAVE_LIBNCURSESW)
-extern int _nc_unicode_locale(void);            /* XXX - private/exported */
-#endif
-
 #include "cmap.h"
 #include "color.h"
 #include "debug.h"                              /* trace_...() */
@@ -133,10 +129,18 @@ extern int _nc_unicode_locale(void);            /* XXX - private/exported */
 #define ToNCurses(n)    ((NCURSES_COLOR_T)(((n) * MaxSCALE) / MaxRGB))
 #endif
 
+#if defined(HAVE_LIBNCURSESW) || (NCURSES_VERSION_MAJOR >= 6)
+#define HAVE_WIDECURSES 			/* enable wide character support */
+#endif
+
 #if defined(CURSES_EXTENDED_COLOR)
 typedef int nccolor_t;
 #else
 typedef short nccolor_t;
+#endif
+
+#if defined(NCURSES_VERSION) && defined(HAVE_WIDECURSES)
+extern int _nc_unicode_locale(void);            /* private/exported */
 #endif
 
 static void             nc_init(int *argcp, char **argv);
@@ -351,7 +355,7 @@ nc_ready(int repaint, scrprofile_t *profile)
     profile->sp_lastsafe = FALSE;               /* not safe */
 #endif
 
-#if !defined(NCURSES_VERSION) || !defined(HAVE_LIBNCURSESW)
+#if !defined(NCURSES_VERSION) || !defined(HAVE_WIDECURSES)
     if (DISPTYPE_UTF8 == xf_disptype) {
         trace_log("ttync: UTF8 not supported\n");
         xf_disptype = -1;                       /* down-grade */
@@ -359,7 +363,7 @@ nc_ready(int repaint, scrprofile_t *profile)
 #endif
 
     if (DISPTYPE_UNKNOWN == xf_disptype) {
-#if defined(NCURSES_VERSION) && defined(HAVE_LIBNCURSESW)
+#if defined(NCURSES_VERSION) && defined(HAVE_WIDECURSES)
         int ncunicode;
 
         if (0 != (ncunicode = _nc_unicode_locale())) {
@@ -395,7 +399,7 @@ nc_ready(int repaint, scrprofile_t *profile)
 #endif
     }
 
-#if !defined(HAVE_LIBNCURSESW)
+#if !defined(HAVE_WIDECURSES)
     x_display_ctrl |= DC_ASCIIONLY;             /* no wide character support */
 #endif
 
@@ -677,7 +681,7 @@ nc_putc(const struct _VCELL *cell)
             case CH_RIGHT_JOIN: c = ACS_LTEE;       break;
             case CH_CROSS:      c = ACS_PLUS;       break;
                 break;
-#if defined(HAVE_LIBNCURSESW) && defined(CCHARW_MAX)
+#if defined(HAVE_WIDECURSES) && defined(CCHARW_MAX)
             case CH_HSCROLL:
             case CH_VSCROLL:
             case CH_HTHUMB:
@@ -742,7 +746,7 @@ nograph:;   const char *cp;
     }
 
     if (c > 0) {
-#if defined(HAVE_LIBNCURSESW) && defined(CCHARW_MAX)
+#if defined(HAVE_WIDECURSES) && defined(CCHARW_MAX)
         if ((DISPTYPE_UTF8 == xf_disptype && c <= 0x9f) ||
                 (DISPTYPE_UTF8 != xf_disptype && c <= 0xff)) {
             waddch(tt_win, c);
@@ -1366,4 +1370,5 @@ term_tidy(void)
 #endif  /*HAVE_LIBNCURSES*/
 
 /*end*/
+
 
