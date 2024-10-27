@@ -1,10 +1,14 @@
 -*- encoding: utf-8; -*-
 
-Sun Oct  6 22:29:12 2024 adamy
+Sun Oct 27 18:54:42 2024 adamy
 
 	* Tickets
 
-		- true-color; #81
+		- colorscheme for truecolor #91
+			- colorshemegui.
+			- save/restore colorscheme extended name.
+		- Putty profile; #87
+		- true-color/direct support; #81
 		- understyles and strikeout; #72
 
 Thu Sep 26 21:27:49 2024 adamy

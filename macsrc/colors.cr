@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: colors.cr,v 1.25 2024/10/07 16:14:59 cvsuser Exp $
+/* $Id: colors.cr,v 1.26 2024/10/27 06:09:35 cvsuser Exp $
  * Enhanced colour/colorscheme support.
  *
  *
@@ -993,32 +993,40 @@ schemeload(string scheme, ~list args, ~string base, ~int flags)
     // colorscheme-package
     if (require("colors/" + components[0] + "/cscheme") >= 0) {
         string name = "colorschemepkg_" + components[0];
-        int ret = -1;
+        declare ret;
 
-        if (inq_macro(name) > 0) {
-            if (length_of_list(components) == 2) {
-                if (! is_null(args)) {
-                    ret = execute_macro(name, components[1], args);
-                } else {
-                    ret = execute_macro(name, components[1]);
-                }
-            } else {
-                if (! is_null(args)) {
-                    ret = execute_macro(name, NULL, args);
-                } else {
-                    ret = execute_macro(name);
-                }
-            }
-
-        } else {
+        if (inq_macro(name) <= 0) {
             error("colorschemepkg: '%s', not available", scheme);
+            return FALSE;
         }
 
-        if (ret == -1)
-            return FALSE;
-        set_term_feature(TF_COLORSCHEME, scheme);
-        message("colorscheme: '%s'", scheme);
-        return TRUE;
+        if (length_of_list(components) == 2) {
+            if (! is_null(args)) {
+                ret = execute_macro(name, components[1], args);
+            } else {
+                ret = execute_macro(name, components[1]);
+            }
+        } else {
+            if (! is_null(args)) {
+                ret = execute_macro(name, NULL, args);
+            } else {
+                ret = execute_macro(name);
+            }
+        }
+
+        if (is_string(ret) && strlen(ret)) {
+            // success, explicit color-scheme
+            set_term_feature(TF_COLORSCHEME, ret);
+            message("colorscheme: '%s'", ret);
+            return TRUE;
+
+        } else if (is_integer(ret) && ret == 0) {
+            // success, implied color-scheme
+            set_term_feature(TF_COLORSCHEME, scheme);
+            message("colorscheme: '%s'", scheme);
+            return TRUE;
+        }
+        return FALSE;
     }
 
     // colorscheme
@@ -1098,3 +1106,5 @@ schemeload(string scheme, ~list args, ~string base, ~int flags)
 }
 
 /*end*/
+
+

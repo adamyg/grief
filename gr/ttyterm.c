@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.147 2024/10/18 05:19:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.148 2024/10/21 15:03:30 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.147 2024/10/18 05:19:14 cvsuser Exp $
+/* $Id: ttyterm.c,v 1.148 2024/10/21 15:03:30 cvsuser Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -2522,8 +2522,10 @@ key_enable(void)
     if (xf_kbprotocol == KBPROTOCOL_NONE)
         return;
 
-    ttputpad(tc_mm);                            /* enable meta key-codes */
-    xf_kbprotocol |= KBPROTOCOL_META;
+    if (tc_mm && *tc_mm) {
+        ttputpad(tc_mm);                        /* enable meta key-codes */
+        xf_kbprotocol |= KBPROTOCOL_META;
+    }
 
     if (t_attributes & TA_MINTTY) {
         if (! xf_mouse) {
@@ -2686,7 +2688,10 @@ key_disable(void)
     if (xf_kbprotocol <= KBPROTOCOL_AUTO)
         return;
 
-    //ttputpad(tc_mm);                          /* disable meta key-codes */
+//  if (xf_kbprotocol & KBPROTOCOL_META) {
+//      ttputpad(tc_mo);                        /* disable meta key-codes */
+//  }
+
     if (t_attributes & TA_MINTTY) {
         if (! xf_mouse) {
             ttpush("\033[?7786l");              /* nomouse, disable mouse-wheel reports */
