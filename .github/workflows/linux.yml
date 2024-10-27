@@ -110,7 +110,7 @@ jobs:
       run: |
         sudo add-apt-repository universe
         sudo apt-get install -y libncurses-dev
-        sudo apt-get install -y libncursesw5-dev
+        sudo apt-get install -y libncursesw-dev
         sudo apt-get install -y libenchant-2-dev
         sudo apt-get install -y libaspell-dev
         sudo apt-get install -y libhunspell-dev
