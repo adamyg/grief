@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: grief.cr,v 1.97 2024/09/08 16:25:51 cvsuser Exp $
+/* $Id: grief.cr,v 1.98 2024/10/28 15:45:11 cvsuser Exp $
  * GRIEF startup macro.
  *
  *
@@ -34,6 +34,8 @@ string                  _griget_menubar(void);
 void                    _griset_menubar(string arg);
 string                  _griget_colors(void);
 void                    _griset_colors(string arg);
+void                    _griset_colorschemegui(string arg);
+string                  _griget_colorschemegui(void);
 void                    _griset_colorscheme256(string arg);
 string                  _griget_colorscheme256(void);
 void                    _griset_colorscheme88(string arg);
@@ -69,6 +71,7 @@ static list             gri_properties = {
     "abbrev",                   /* Abbrev list */
     "autoindent",               /* Auto indent setting */
     "autosave",                 /* Autosave times */
+    "colorschemegui",           /* Color scheme (truecolor) */
     "colorscheme256",           /* Color scheme (colors >= 256) */
     "colorscheme88",            /* Color scheme (colors >= 88) */
     "colorscheme16",            /* Color scheme (colors >= 16) */
@@ -115,6 +118,7 @@ static int              gri_menubar = FALSE;
 static int              gri_changed = FALSE;
 
 static int              coloriserenv = FALSE;
+static string           gri_colorisergui = "";
 static string           gri_coloriser256 = "";
 static string           gri_coloriser88 = "";
 static string           gri_coloriser16 = "";
@@ -1399,16 +1403,36 @@ _griset_colors(string arg)
 
 
 void
+_griset_colorschemegui(string arg)
+{
+    if (strlen(arg)) {
+        gri_colorisergui = arg;
+        if (!coloriserenv) {
+            int truecolor;
+
+            get_term_feature(TF_TRUECOLOR, truecolor);
+            if (truecolor) {
+                colorscheme(arg);
+            }
+        }
+    }
+}
+
+
+void
 _griset_colorscheme256(string arg)
 {
     if (strlen(arg)) {
         gri_coloriser256 = arg;
         if (!coloriserenv) {
-            int depth;
+            int depth, truecolor;
 
             inq_screen_size(NULL, NULL, depth);
             if (depth >= 256) {
-                colorscheme(arg);
+                get_term_feature(TF_TRUECOLOR, truecolor);
+                if (gri_colorisergui == "" || truecolor == 0) {
+                    colorscheme(arg);
+                }
             }
         }
     }
@@ -1465,6 +1489,13 @@ _griset_colorscheme(string arg)
             }
         }
     }
+}
+
+
+string
+_griget_colorschemegui(void)
+{
+    return gri_colorisergui;
 }
 
 
@@ -1559,5 +1590,3 @@ clear_buffer(void)
 }
 
 /*end*/
-
-
