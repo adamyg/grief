@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.36 2024/10/28 16:28:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.37 2024/10/29 05:21:04 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyncurses.c,v 1.36 2024/10/28 16:28:07 cvsuser Exp $
+/* $Id: ttyncurses.c,v 1.37 2024/10/29 05:21:04 cvsuser Exp $
  * [n]curses tty driver interface -- alt driver when running under ncurses.
  *
  * This file is part of the GRIEF Editor.
@@ -116,8 +116,8 @@ ttcurses(void)
 #define CURSES_CAST(__x) (char *)(__x)
 #endif
 
-#if defined(HAVE_LIBNCURSESW) || defined(NCURSES_WIDECHAR)
-#define CURSES_WIDECHAR                         /* wide character support available */
+#if defined(HAVE_LIBNCURSESW) && defined(NCURSES_WIDECHAR)
+#define CURSES_WIDECHAR                         /* wide character support enabled (configure options) and available */
 #endif
 
 #if ((NCURSES_VERSION_MAJOR > 6) || ((NCURSES_VERSION_MAJOR == 6) && (NCURSES_VERSION_MINOR >= 1))) && \

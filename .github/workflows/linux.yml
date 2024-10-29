@@ -117,10 +117,9 @@ jobs:
         sudo apt-get install -y libexplain-dev
         sudo apt-get install -y libarchive-dev
 
-## 24.10: removed
-##      sudo apt-get install -y libncursesw6-dev
-## 24.10: missing (Oct/24)
-##      sudo apt-get install -y libguess-dev
+## 24/10: removed
+##  legacy:  sudo apt-get install -y libncursesw5-dev
+##  missing: sudo apt-get install -y libguess-dev
 
     - name: MacOS, setup
       if: startsWith(matrix.config.name, 'MacOS Latest')
@@ -162,7 +161,7 @@ jobs:
       shell: bash
       run: |
         chmod +x configure
-        ./support/config_withncurses
+        ./support/config_withncursesw
 
     - name: Ubuntu, compile
       if: startsWith(matrix.config.name, 'Ubuntu Latest')
