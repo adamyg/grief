@@ -1,4 +1,4 @@
-dnl $Id: libterm.m4,v 1.32 2024/09/09 12:20:39 cvsuser Exp $
+dnl $Id: libterm.m4,v 1.33 2024/10/29 14:10:47 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -66,9 +66,14 @@ dnl     HAVE_NCURSES_H
 dnl     HAVE_TERMCAP_H
 dnl     HAVE_TERM_H
 dnl
+dnl     HAVE_CURSES_EXTENDED
+dnl         init_extended_pair()/init_extend_color()
+dnl     HAVE_CURSES_WIDECHAR
+dnl         add_wch(),wget_wch()
 dnl     HAVE_CURSES_ENHANCED
+dnl         wattr_set(),wgetch()
 dnl     HAVE_CURSES_COLOR
-dnl
+dnl         init_pair()
 dnl     HAVE_OSPEED
 dnl     or OSPEED_EXTERN
 dnl
@@ -188,7 +193,7 @@ AC_DEFUN([LIBTERM_CHECK_CONFIG],[
 		dnl Selection rules/
 		dnl
 		dnl     o newer versions of ncursesw/ncurses are preferred over anything else,
-		dnl        Note: older versions of ncurses have bugs hence we assume the latest (5.5 +).
+		dnl       Note: older versions of ncurses have incompatibilities hence we assume the latest (5.5 +).
 		dnl     o smaller ncurses tinfo library.
 		dnl     o otherwise termlib/curses.
 		dnl
@@ -599,6 +604,95 @@ extern int tgetent(char *, const char *);
 	fi; fi; fi; fi; fi
 
 	dnl
+	dnl extended api
+	dnl
+	AC_MSG_CHECKING([for curses extended api])
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#define _XOPEN_SOURCE_EXTENDED 1
+#if defined(HAVE_NCURSESW_CURSES_H)
+#  include <ncursesw/curses.h>
+#  include <ncursesw/termcap.h>
+#  include <ncursesw/term.h>
+#elif defined(HAVE_NCURSES_CURSES_H)
+#  include <ncurses/curses.h>
+#  include <ncurses/termcap.h>
+#  include <ncurses/term.h>
+#else
+#  if defined(HAVE_NCURSESW_H)
+#     include <ncursesw.h>
+#  elif defined(HAVE_NCURSES_H)
+#     include <ncurses.h>
+#  elif defined(HAVE_CURSES_H)
+#     include <curses.h>
+#  endif
+#  if defined(HAVE_TERMCAP_H)
+#     include <termcap.h>
+#  endif
+#  if defined(HAVE_TERM_H)
+#     include <term.h>
+#  endif
+#endif
+]], [[
+	{
+		int f, b;
+		init_extended_pair(1, 0xaabbcc, 0xccbbaa);
+		extended_pair_content(1, &f, &b);
+	}
+	{	int r, g, b;
+		init_extended_color(1, 0xff, 0xff, 0xff);
+		extended_color_content(1, &r, &g, &b);
+	}]])],
+		[cf_result=yes],[cf_result=no])
+AC_MSG_RESULT($cf_result)
+if test "$cf_result" = "yes"; then
+	AC_DEFINE(HAVE_CURSES_EXTENDED, 1, [extended curses api available])
+	AC_CHECK_FUNCS(reset_color_pairs)
+fi
+
+	AC_MSG_CHECKING([for curses wide-character api])
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#define _XOPEN_SOURCE_EXTENDED 1
+#if defined(HAVE_NCURSESW_CURSES_H)
+#  include <ncursesw/curses.h>
+#  include <ncursesw/termcap.h>
+#  include <ncursesw/term.h>
+#elif defined(HAVE_NCURSES_CURSES_H)
+#  include <ncurses/curses.h>
+#  include <ncurses/termcap.h>
+#  include <ncurses/term.h>
+#else
+#  if defined(HAVE_NCURSESW_H)
+#     include <ncursesw.h>
+#  elif defined(HAVE_NCURSES_H)
+#     include <ncurses.h>
+#  elif defined(HAVE_CURSES_H)
+#     include <curses.h>
+#  endif
+#  if defined(HAVE_TERMCAP_H)
+#     include <termcap.h>
+#  endif
+#  if defined(HAVE_TERM_H)
+#     include <term.h>
+#  endif
+#endif
+]], [[
+	cchar_t wch = {0};
+	wint_t f;
+
+	wch.chars[0] = 'a';
+	wadd_wch(stdscr, &wch);
+	mvwadd_wch(stdscr, 1, 2, &wch);
+	waddwstr(stdscr, L"12345");
+	mvwaddwstr(stdscr, 1, 2, L"12345");
+	wget_wch(stdscr, &f);
+]])],
+		[cf_result=yes],[cf_result=no])
+AC_MSG_RESULT($cf_result)
+if test "$cf_result" = "yes"; then
+	AC_DEFINE(HAVE_CURSES_WIDECHAR, 1, [widechar curses api available])
+fi
+
+	dnl
 	dnl features
 	dnl
 	AC_MSG_CHECKING([for curses features])
@@ -629,17 +723,22 @@ extern int tgetent(char *, const char *);
 #endif
 ]], [[
 	chtype a = A_BOLD;
-	int b = KEY_LEFT;
 	chtype c = COLOR_PAIR(1) & A_COLOR;
 	attr_t d = WA_NORMAL;
-	cchar_t e;
-	wint_t f;
-	int g = getattrs(stdscr);
-	int h = getcurx(stdscr) + getmaxx(stdscr);
+	int k = KEY_LEFT;
+	int g, h;
+	short f, b;
+
 	initscr();
+	start_color();
+	has_colors();
+	can_change_color();
+	g = getattrs(stdscr);
+	h = getcurx(stdscr) + getmaxx(stdscr);
 	init_pair(1, COLOR_WHITE, COLOR_RED);
+	pair_content(1, &f, &b);
 	wattr_set(stdscr, d, 0, NULL);
-	wget_wch(stdscr, &f);]])],
+	wgetch(stdscr);]])],
 			[cf_libterm_cv_features=enhanced],[])
 	fi
 
@@ -670,11 +769,14 @@ extern int tgetent(char *, const char *);
 #endif
 ]], [[
 	chtype a = A_BOLD;
-	int b = KEY_LEFT;
 	chtype c = COLOR_PAIR(1) & A_COLOR;
-	int g = getattrs(stdscr);
-	int h = getcurx(stdscr) + getmaxx(stdscr);
+	int g, h;
+
 	initscr();
+	start_color();
+	has_colors();
+	g = getattrs(stdscr);
+	h = getcurx(stdscr) + getmaxx(stdscr);
 	init_pair(1, COLOR_WHITE, COLOR_RED);]])],
 			[cf_libterm_cv_features=color],[])
 	fi

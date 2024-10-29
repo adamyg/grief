@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.37 2024/10/29 05:21:04 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.38 2024/10/29 14:19:12 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyncurses.c,v 1.37 2024/10/29 05:21:04 cvsuser Exp $
+/* $Id: ttyncurses.c,v 1.38 2024/10/29 14:19:12 cvsuser Exp $
  * [n]curses tty driver interface -- alt driver when running under ncurses.
  *
  * This file is part of the GRIEF Editor.
@@ -116,7 +116,8 @@ ttcurses(void)
 #define CURSES_CAST(__x) (char *)(__x)
 #endif
 
-#if defined(HAVE_LIBNCURSESW) && defined(NCURSES_WIDECHAR)
+#if defined(HAVE_LIBNCURSESW) && \
+            (defined(NCURSES_WIDECHAR) || defined(HAVE_CURSES_WIDECHAR))
 #define CURSES_WIDECHAR                         /* wide character support enabled (configure options) and available */
 #endif
 
@@ -492,6 +493,9 @@ nc_feature(int ident, scrprofile_t *profile)
                 const char *cursor = x_pt.pt_colormap;
                 nccolor_t color = 0, r, g, b;
 
+#if defined(HAVE_RESET_COLOR_PAIRS)
+                reset_color_pairs();
+#endif
                 while ((cursor = foreach_color(cursor, &r, &g, &b)) {
                     if (r >= 0) {                   /* 0...255 */
                         init_color(color, ToNCurses(r), ToNCurses(g), ToNCurses(b));
@@ -1090,11 +1094,6 @@ term_clearpairs(void)
     if (tt_pairs != 0) {
         tt_pairs = 0;
         color_valueclr(-1);
-#if defined(CURSES_EXTENDED_COLOR)
-#if defined(HAVE_RESET_COLOR_PAIRS)
-        reset_color_pairs();                    // TODO: not all 6.1 releases
-#endif
-#endif
     }
 }
 
@@ -1371,4 +1370,5 @@ term_tidy(void)
 #endif  /*HAVE_LIBNCURSES*/
 
 /*end*/
+
 
