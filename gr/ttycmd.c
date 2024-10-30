@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttycmd_c,"$Id: ttycmd.c,v 1.3 2024/10/09 15:55:49 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttycmd_c,"$Id: ttycmd.c,v 1.5 2024/10/30 16:14:09 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttycmd.c,v 1.3 2024/10/09 15:55:49 cvsuser Exp $
+/* $Id: ttycmd.c,v 1.5 2024/10/30 16:14:09 cvsuser Exp $
  * TTY common command functions
  *
  *
@@ -48,26 +48,45 @@ static int isterm(const char *term, const char *name);
 int
 tty_defaultscheme(void)
 {
-    const char *fgbg, *term = ggetenv("TERM");  // TODO/TERM_PROGRAM
+    const char *fgbg, *term = ggetenv("TERM");  // XXX/TERM_PROGRAM
     int isdark = 0;
 
     if (term) {
-        if (isterm(term, "linux") == 0
-            || isterm(term, "screen.linux") == 0
-            || isterm(term, "cygwin") == 0
-            || isterm(term, "putty") == 0
-            || isterm(term, "ms-terminal") == 0
-                || ggetenv("WT_SESSION")
-            || ((fgbg = ggetenv("COLORFGBG")) != NULL && // rxvt, COLORFGBG='0;default;15'
-                    (fgbg = strrchr(fgbg, ';')) != NULL && ((fgbg[1] >= '0' && fgbg[1] <= '6') || fgbg[1] == '8') && fgbg[2] == '\0')) {
+        if (isterm(term, "linux")
+            || isterm(term, "screen.linux")
+            || isterm(term, "cygwin")
+            || isterm(term, "putty")
+            || isterm(term, "ms-terminal")
+                || ggetenv("WT_SESSION")) {
             isdark = 1;
+
+        } else if ((fgbg = ggetenv("COLORFGBG")) != NULL &&
+                            (fgbg = strrchr(fgbg, ';')) != NULL) {
+            // rxvt style COLORFGBG='0;default;15'
+            if (((fgbg[1] >= '0' && fgbg[1] <= '6') || fgbg[1] == '8') && fgbg[2] == '\0') {
+                isdark = 2;
+            }
+
+        } else if (isterm(term, "xterm")) {
+            switch (x_pt.pt_vtdatype) {
+            case 0:   // putty/msterminal
+                if (136 == x_pt.pt_vtdaversion || 10 == x_pt.pt_vtdaversion) {
+                    isdark = 3;
+                }
+                break;
+            case 'M': // mintty
+                isdark = 4;
+                break;
+            }
         }
+
     } else {
 #if defined(WIN32) || defined(__CYGWIN__)
-        isdark = 1;                             /* generally dark */
+        isdark = 5;                             /* generally dark */
 #endif
     }
-    return isdark;
+    trace_ilog("term_defaultscheme : %d\n", isdark);
+    return isdark ? 1 : 0;
 }
 
 
@@ -231,7 +250,7 @@ tty_luminance(int timeoutms)
      */
     if ((XTERM_OCS11_LEN != tty_write(xterm_ocs11, XTERM_OCS11_LEN)) ||
             (len = tty_read(buffer, sizeof(buffer), timeoutms)) < 1) {
-        trace_ilog("ttluminance : io (tm=%d, len=%d)\n", timeoutms, len);
+        trace_ilog("ttluminance : io (tm=%d, len=%d) : tmr\n", timeoutms, len);
         return -1;
     }
 
@@ -282,7 +301,7 @@ tty_luminance(int timeoutms)
         return 0;                               /* otherwise light */
     }
 
-    trace_ilog("ttluminance(%d, %s) : n/a", len, buffer);
+    trace_ilog("ttluminance(%d, %s) : n/a\n", len, buffer);
     return -1;
 }
 
@@ -404,6 +423,5 @@ tty_read(void *ibuffer, int length, int timeoutms)
 #endif /*!USE_VIO_BUFFER && !DJGPP*/
 
 /*end*/
-
 
 

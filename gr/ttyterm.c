@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.148 2024/10/21 15:03:30 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.149 2024/10/30 16:14:09 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.148 2024/10/21 15:03:30 cvsuser Exp $
+/* $Id: ttyterm.c,v 1.149 2024/10/30 16:14:09 cvsuser Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -2876,8 +2876,11 @@ term_xtermlike(const char *term)
         const char *name;
         TAttributes_t flags;
     } xtermlike[] = {
+         /*
+          * many are non-standard, normally represented as "xterm[-256color]"
+          */
         { "xterm", TA_XTERM },                  /* Generic */
-        { "mintty", TA_MINTTY },                /* Non-standard. normally "xterm-256color" */
+        { "mintty", TA_MINTTY | TA_DARK },
         { "putty", TA_PUTTY | TA_DARK },
         { "msterminal", TA_MSTERMINAL | TA_DARK },
         { "gnome", TA_GNOME },
@@ -3501,7 +3504,7 @@ term_identification(void)
  *      none
  *
  *  Returns:
- *      0 on success, otherwise -1 if not available.
+ *      nothing
  */
 static int
 term_luminance(void)
@@ -3510,11 +3513,18 @@ term_luminance(void)
 
     if (!tf_XT && 0 == ((TA_XTERM|TA_XTERMLIKE) & t_attributes)) {
         trace_ilog("ttluminance : not supported\n");
-        return -1;                              /* supported? */
+        return -1;                              /* supported */
     }
 
     term_flush();
     if ((ret = tty_luminance(io_escdelay())) < 0) {
+        if (0 == ((TA_DARK|TA_LIGHT) & t_attributes)) {
+            ret = tty_defaultscheme();          /* legacy */
+            if (ret >= 0) {
+                t_attributes |= (ret == 1 ? TA_DARK : TA_LIGHT);
+                return 0;
+            }
+        }
         return -1;
     }
 
