@@ -1,11 +1,11 @@
 #ifndef GR_LIBSPLAY_H_INCLUDED
 #define GR_LIBSPLAY_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libsplay_h,"$Id: libsplay.h,v 1.23 2024/04/08 15:07:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_libsplay_h,"$Id: libsplay.h,v 1.24 2024/11/26 15:04:56 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: libsplay.h,v 1.23 2024/04/08 15:07:13 cvsuser Exp $
+/* $Id: libsplay.h,v 1.24 2024/11/26 15:04:56 cvsuser Exp $
  *  A SPLAY tree is a self-adjusting binary search tree with the additional property that
  *  recently accessed elements are quick to access again. It performs basic operations such as
  *  insertion, look-up and removal in O(log n) amortized time. For many sequences of non-random
@@ -163,7 +163,7 @@ extern SPBLK *          splookup(const void *, SPTREE *);
         * Note, only functions correctly if the tree was created using the
         * default comparsion function (i.e. spinit()).
         */
-extern SPBLK *          sp_partial_lookup(const void *, SPTREE *, int *, SPBLK **);
+extern SPBLK *          sp_partial_lookup(const void *, SPTREE *, unsigned *, SPBLK **);
 
        /* Return pointer to node at top of tree */
 extern SPBLK *          sphead(SPTREE *);

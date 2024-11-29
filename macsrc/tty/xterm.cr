@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; tabs: 8; -*-
- * $Id: xterm.cr,v 1.33 2024/10/20 16:51:19 cvsuser Exp $
+ * $Id: xterm.cr,v 1.39 2024/11/24 12:26:42 cvsuser Exp $
  * terminal description file for the xterm window under X11, an VT-100 like emulator.
  *
  *
@@ -7,7 +7,7 @@
 
 /**********************************************************************
 
-Example 'xterm' resources allowing full keyboard access.
+Example legacy 'xterm' resources allowing full keyboard access.
 
 XTerm*font:			9x15
 XTerm*appKeypadDefault: 	true
@@ -89,7 +89,7 @@ XTerm*VT100.Translations:	#override \
 	Ctrl<Key>KP_8:			string(\033Ox)\n\
 	Ctrl<Key>KP_9:			string(\033Oy)\n
 
-!  Optional:
+! Optional:
 !	None<Key>KP_0:			string(\033[2~)\n\
 !	None<Key>KP_1:			string(\033[OF)\n\
 !	None<Key>KP_2:			string(\033[OB)\n\
@@ -351,6 +351,7 @@ main(void)
     }
 
     xterm_standard();
+    xterm_altmeta_keys();
 
     /*
      *  Define keyboard layout for non-ascii characters.
@@ -392,30 +393,40 @@ main(void)
      *      kUP                                                                                             \E[1;2A     \E[a
      */
     set_term_keyboard(
-        F1_F12, quote_list(                     /* standard */
-            "\x1b[11~",     "\x1b[12~",     "\x1b[13~",     "\x1b[14~",
-            "\x1b[15~",     "\x1b[17~",     "\x1b[18~",     "\x1b[19~",
-            "\x1b[20~",     "\x1b[21~",     "\x1b[23~",     "\x1b[24~"),
+        F1_F12, quote_list(                     /* xterm */
+            "\x1bOP",       "\x1bOQ",       "\x1bOR",       "\x1bOS",       "\x1b[15~",
+            "\x1b[17~",     "\x1b[18~",     "\x1b[19~",     "\x1b[20~",     "\x1b[21~",
+            "\x1b[23~",     "\x1b[24~"),
+
+        F1_F12, quote_list(                     /* rxvt */
+            "\x1b[11~",     "\x1b[12~",     "\x1b[13~",     "\x1b[14~",     "\x1b[15~",
+            "\x1b[17~",     "\x1b[18~",     "\x1b[19~",     "\x1b[20~",     "\x1b[21~",
+            "\x1b[23~",     "\x1b[24~"),
+
+        SHIFT_F1_F12, quote_list(               /* rxvt */
+            "\x1b[25~",     "\x1b[26~",     "\x1b[28~",     "\x1b[29~",     "\x1b[31~",
+            "\x1b[32~",     "\x1b[33~",     "\x1b[34~",     NULL,           NULL,
+            NULL,           NULL),
 
         F1_F12, quote_list(                     /* Sun Function Keys */
-            "\x1b[192z",    "\x1b[193z",    "\x1b[194z",    "\x1b[195z",
-            "\x1b[196z",    "\x1b[197z",    "\x1b[198z",    "\x1b[199z",
-            "\x1b[200z",    "\x1b[201z",    "\x1b[234z",    "\x1b[235z"),
+            "\x1b[192z",    "\x1b[193z",    "\x1b[194z",    "\x1b[195z",    "\x1b[196z",
+            "\x1b[197z",    "\x1b[198z",    "\x1b[199z",    "\x1b[200z",    "\x1b[201z",
+            "\x1b[234z",    "\x1b[235z"),
 
         SHIFT_F1_F12, quote_list(               /* VT100.Trans */
-            "\x1b[SF1~",    "\x1b[SF2~",    "\x1b[SF3~",    "\x1b[SF4~",
-            "\x1b[SF5~",    "\x1b[SF6~",    "\x1b[SF7~",    "\x1b[SF8~",
-            "\x1b[SF9~",    "\x1b[SF10~",   "\x1b[SF11~",   "\x1b[SF12~"),
+            "\x1b[SF1~",    "\x1b[SF2~",    "\x1b[SF3~",    "\x1b[SF4~",    "\x1b[SF5~",
+            "\x1b[SF6~",    "\x1b[SF7~",    "\x1b[SF8~",    "\x1b[SF9~",    "\x1b[SF10~",
+            "\x1b[SF11~",   "\x1b[SF12~"),
 
         CTRL_F1_F12, quote_list(                /* VT100.Trans */
-            "\x1b[CF1~",    "\x1b[CF2~",    "\x1b[CF3~",    "\x1b[CF4~",
-            "\x1b[CF5~",    "\x1b[CF6~",    "\x1b[CF7~",    "\x1b[CF8~",
-            "\x1b[CF9~",    "\x1b[CF10~",   "\x1b[CF11~",   "\x1b[CF12~"),
+            "\x1b[CF1~",    "\x1b[CF2~",    "\x1b[CF3~",    "\x1b[CF4~",    "\x1b[CF5~",
+            "\x1b[CF6~",    "\x1b[CF7~",    "\x1b[CF8~",    "\x1b[CF9~",    "\x1b[CF10~",
+            "\x1b[CF11~",   "\x1b[CF12~"),
 
         ALT_F1_F12, quote_list(                 /* VT100.Trans */
-            "\x1b[AF1~",    "\x1b[AF2~",    "\x1b[AF3~",    "\x1b[AF4~",
-            "\x1b[AF5~",    "\x1b[AF6~",    "\x1b[AF7~",    "\x1b[AF8~",
-            "\x1b[AF9~",    "\x1b[AF10~",   "\x1b[AF11~",   "\x1b[AF12~"),
+            "\x1b[AF1~",    "\x1b[AF2~",    "\x1b[AF3~",    "\x1b[AF4~",    "\x1b[AF5~",
+            "\x1b[AF6~",    "\x1b[AF7~",    "\x1b[AF8~",    "\x1b[AF9~",    "\x1b[AF10~",
+            "\x1b[AF11~",   "\x1b[AF12~"),
 
         ALT_A_Z, quote_list(                    /* X.Org (7bit) (lower case) */
             "\xC3\xA1",     "\xC3\xA2",     "\xC3\xA3",     "\xC3\xA4",     "\xC3\xA5",
@@ -432,22 +443,6 @@ main(void)
             "\xC3\x90",     "\xC3\x91",     "\xC3\x92",     "\xC3\x93",     "\xC3\x94",
             "\xC3\x95",     "\xC3\x96",     "\xC3\x97",     "\xC3\x98",     "\xC3\x99",
             "\xC3\x9A" ),
-
-        ALT_A_Z, quote_list(                    /* 8bit (lower case) Meta */
-            "\x1ba",        "\x1bb",        "\x1bc",        "\x1bd",        "\x1be",
-            "\x1bf",        "\x1bg",        "\x1bh",        "\x1bi",        "\x1bj",
-            "\x1bk",        "\x1bl",        "\x1bm",        "\x1bn",        "\x1bo",
-            "\x1bp",        "\x1bq",        "\x1br",        "\x1bs",        "\x1bt",
-            "\x1bu",        "\x1bv",        "\x1bw",        "\x1bx",        "\x1by",
-            "\x1bz" ),
-
-        ALT_A_Z, quote_list(                    /* 8bit (upper case) Meta */
-            "\x1bA",        "\x1bB",        "\x1bC",        "\x1bD",        "\x1bE",
-            "\x1bF",        "\x1bG",        "\x1bH",        "\x1bI",        "\x1bJ",
-            "\x1bK",        "\x1bL",        "\x1bM",        "\x1bN",        "\x1b0",
-            "\x1bP",        "\x1bQ",        "\x1bR",        "\x1bS",        "\x1bT",
-            "\x1bU",        "\x1bV",        "\x1bW",        "\x1bX",        "\x1bY",
-            "\x1bZ"),
 
         //  Ins/0           End/1           Down/2          PgDn/3          Left/4
         //  5               Right/6         Home/7          Up/8            PgUp/9
@@ -466,13 +461,9 @@ main(void)
             "\xC2\xB0",     "\xC2\xB1",     "\xC2\xB2",     "\xC2\xB3",     "\xC2\xB4",
             "\xC2\xB5",     "\xC2\xB6",     "\xC2\xB7",     "\xC2\xB8",     "\xC2\xB9" ),
 
-        ALT_0_9, quote_list(                    /* XFree */
-            "\x1b0",        "\x1b1",        "\x1b2",        "\x1b3",        "\x1b4",
-            "\x1b5",        "\x1b6",        "\x1b7",        "\x1b8",        "\x1b9" ),
-
-        ALT_0_9, quote_list(                    /* Meta-Numeric */
-            "\x1ba0",       "\x1ba1",       "\x1ba2",       "\x1ba3",       "\x1ba4",
-            "\x1ba5",       "\x1ba6",       "\x1ba7",       "\x1ba8",       "\x1ba9"),
+//      ALT_0_9, quote_list(                    /* Meta-Numeric */
+//          "\x1ba0",       "\x1ba1",       "\x1ba2",       "\x1ba3",       "\x1ba4",
+//          "\x1ba5",       "\x1ba6",       "\x1ba7",       "\x1ba8",       "\x1ba9"),
 
         SHIFT_KEYPAD_0_9, quote_list(           /* VT100.Trans */
             "\x1bOP",       "\x1bOQ",       "\x1bOR",       "\x1bOS",
@@ -551,4 +542,3 @@ xterm(void)
 }
 
 /*end*/
-

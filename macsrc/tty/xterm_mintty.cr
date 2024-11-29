@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: xterm_mintty.cr,v 1.10 2024/09/21 17:02:02 cvsuser Exp $
+/* $Id: xterm_mintty.cr,v 1.11 2024/11/18 13:42:10 cvsuser Exp $
  * Mintty terminal profile.
  * See: https://github.com/mintty/mintty/wiki/CtrlSeqs
  *
@@ -107,7 +107,7 @@ main()
 
         //  Cursor keys:
         //
-        //     Key         plain       app         modified
+        //     Key         Plain       App         Modified
         //     -------------------------------------------------
         //     Up          ^[[A        ^[OA        ^[[1;mA
         //     Down        ^[[B        ^[OB        ^[[1;mB
@@ -119,7 +119,7 @@ main()
         //  Editing keys:
         //
         //
-        //     Key         plain       modified
+        //     Key         Plain       Modified
         //     -------------------------------------------------
         //     Ins         ^[[2~       ^[[2;m~
         //     Del         ^[[3~       ^[[3;m~
@@ -130,7 +130,7 @@ main()
         //
         //  Number and symbol keys:
         //
-        //     Key         modified    appl keypad modified
+        //     Key         Modified    Appl keypad modified
         //     -------------------------------------------------
         //     /           ^[[1;mo     ^[Omo
         //     *           ^[[1;mj     ^[Omj
@@ -145,6 +145,19 @@ main()
         //     ...
         //     8           ^[[1;mx     ^[Omx
         //     9           ^[[1;my     ^[Omy
+        //
+        //  Modifiers:
+        //
+        //     Code         Modifier
+        //     -------------------------------------------------
+        //     1            Normal (1 is optional)
+        //     2            Shift
+        //     3            Alt
+        //     4            Shift + Alt
+        //     5            Control
+        //     6            Shift + Control
+        //     7            Alt + Control
+        //     8            Shift + Alt + Control
         //
 
         //  Ins/0           End/1           Down/2          PgDn/3          Left/4
@@ -173,20 +186,6 @@ main()
             NULL,           "\x1b[1;2M",    NULL,           NULL,           NULL,
             NULL),
 
-        CTRL_KEYPAD_0_9, quote_list(            /* xterm/mintty */
-            "\x1b[2;5~",    "\x1b[1;5F",    "\x1b[1;5B",    "\x1b[6;5~",    "\x1b[1;5D",
-            NULL,           "\x1b[1;5C",    "\x1b[1;5H",    "\x1b[1;5A",    "\x1b[5;5~",
-            "\x1b[3;5~",    NULL,           NULL,           "\x1b[1;5j",    NULL,
-            NULL,           "\x1b[1;5M",    "\x1c",         NULL,           NULL,
-            NULL),
-
-        CTRLSHIFT_KEYPAD_0_9, quote_list(       /* xterm/mintty */
-            "\x1b[2;6~",    "\x1b[1;6F",    "\x1b[1;6B",    "\x1b[6;6~",    "\x1b[1;6D",
-            NULL,           "\x1b[1;6C",    "\x1b[1;6H",    "\x1b[1;6A",    "\x1b[5;6~",
-            "\x1b[3;6~",    NULL,           NULL,           "\x1b[1;6j",    NULL,
-            NULL,           "\x1b[1;6M",    NULL,           NULL,           NULL,
-            NULL),
-
         ALT_KEYPAD_0_9, quote_list(             /* xterm/mintty */
             "\x1b[2;3~",    "\x1b[1;3F",    "\x1b[1;3B",    "\x1b[6;3~",    "\x1b[1;3D",
             NULL,           "\x1b[1;3C",    "\x1b[1;3H",    "\x1b[1;3A",    "\x1b[5;3~",
@@ -199,6 +198,20 @@ main()
             NULL,           "\x1b[1;4C",    "\x1b[1;4H",    "\x1b[1;4A",    "\x1b[5;4~",
             "\x1b[3;4~",    NULL,           NULL,           "\x1b[1;4j",    NULL,
             NULL,           "\x1b[1;4M",    NULL,           NULL,           NULL,
+            NULL),
+
+        CTRL_KEYPAD_0_9, quote_list(            /* xterm/mintty */
+            "\x1b[2;5~",    "\x1b[1;5F",    "\x1b[1;5B",    "\x1b[6;5~",    "\x1b[1;5D",
+            NULL,           "\x1b[1;5C",    "\x1b[1;5H",    "\x1b[1;5A",    "\x1b[5;5~",
+            "\x1b[3;5~",    NULL,           NULL,           "\x1b[1;5j",    NULL,
+            NULL,           "\x1b[1;5M",    "\x1c",         NULL,           NULL,
+            NULL),
+
+        CTRLSHIFT_KEYPAD_0_9, quote_list(       /* xterm/mintty */
+            "\x1b[2;6~",    "\x1b[1;6F",    "\x1b[1;6B",    "\x1b[6;6~",    "\x1b[1;6D",
+            NULL,           "\x1b[1;6C",    "\x1b[1;6H",    "\x1b[1;6A",    "\x1b[5;6~",
+            "\x1b[3;6~",    NULL,           NULL,           "\x1b[1;6j",    NULL,
+            NULL,           "\x1b[1;6M",    NULL,           NULL,           NULL,
             NULL),
 
         ALTCTRL_KEYPAD_0_9, quote_list(         /* xterm/mintty */

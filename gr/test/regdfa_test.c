@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_regdfa_test_c,"$Id: regdfa_test.c,v 1.10 2015/02/21 22:46:35 ayoung Exp $")
+__CIDENT_RCSID(gr_regdfa_test_c,"$Id: regdfa_test.c,v 1.1 2024/11/18 13:42:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: regdfa_test.c,v 1.10 2015/02/21 22:46:35 ayoung Exp $
+/* $Id: regdfa_test.c,v 1.1 2024/11/18 13:42:22 cvsuser Exp $
  *
  *
  *
@@ -103,7 +103,7 @@ test(void)
             }
 
             if (nm) {
-                printf("0-%.*s", data - nm, nm);
+                printf("0-%.*s", (unsigned)(data - nm), nm);
                 nm = NULL;
             }
             printf("%d-%.*s", idx+1, len, start);
@@ -122,7 +122,7 @@ test(void)
 
             if (sol) {
                 if (nm) {
-                    printf("0-%.*s\n", data - nm, nm);
+                    printf("0-%.*s\n", (unsigned)(data - nm), nm);
                 } else {
                     printf("0-\n");
                 }
@@ -135,7 +135,7 @@ test(void)
     }
 
     if (nm) {
-        printf("0-%.s\n", nm - data, nm);
+        printf("0-%.*s\n", (unsigned)(nm - data), nm);
         nm = NULL;
     }
 

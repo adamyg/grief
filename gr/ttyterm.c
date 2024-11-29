@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.149 2024/10/30 16:14:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.151 2024/11/29 11:51:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.149 2024/10/30 16:14:09 cvsuser Exp $
+/* $Id: ttyterm.c,v 1.151 2024/11/29 11:51:58 cvsuser Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -167,6 +167,7 @@ extern int ospeed;
 #include "eval.h"                               /* get_str() ... */
 #include "getkey.h"                             /* io_... */
 #include "keyboard.h"
+#include "kbprotocols.h"
 #include "line.h"
 #include "main.h"
 #include "map.h"
@@ -517,7 +518,7 @@ enum {
     TACS_VLINE          = 'x'
     };
 
-static GraphicChars_t term_characters[] =  {    /* graphic characters */
+static GraphicChars_t term_characters[] = {     /* graphic characters */
     { TACS_STERLING,        TC_DESC("UK pound sign") },
     { TACS_DARROW,          TC_DESC("arrow pointing down") },
     { TACS_LARROW,          TC_DESC("arrow pointing left") },
@@ -765,7 +766,7 @@ static TermString_t term_strings[] = {          /* strings - termcap/terminfo el
     { TC_FNAME(zero_motion),                "Zx", "zerom",      TC_DESC("no motion for subsequent character") },
 
        /*
-        *  The following string  capabilities  are  present  in  the  SVr4.0  term
+        *  The following string capabilities are present in the SVr4.0 term
         *  structure, but were originally not documented in the man page.
         */
     { TC_FNAME(char_set_names),             "Zy", "csnm",       TC_DESC("list of character set names") },
@@ -989,7 +990,14 @@ static TermNumeric_t term_numbers[] = {         /* numeric - termcap/terminfo el
 
 static TermKey_t term_keys[] = {                /* keys - termcap/terminfo elements */
     /*
-     *  Standard
+     *  Standard:
+     *
+     *      F01-F12 are F1-F12
+     *      F13-F24 are Shift F1-F12
+     *      F25-F36 are Control F1-F12
+     *      F37-F48 are Shift + Control F1-F12
+     *      F49-F60 are Alt F1-F12
+     *      F61-F63 are Alt + Shift F1-F3
      */
     { TC_FNAME(key_backspace),              "kb", "kbs",        TC_DESC("backspace key"), TC_TOKEN(CTRL_H) },
     { TC_FNAME(key_catab),                  "ka", "ktbc",       TC_DESC("clear-all-tabs key") },
@@ -1089,54 +1097,54 @@ static TermKey_t term_keys[] = {                /* keys - termcap/terminfo eleme
     { TC_FNAME(key_sundo),                  "!3", "kUND",       TC_DESC("shifted undo key"), TC_TOKEN(KEY_REDO) },
     { TC_FNAME(key_f11),                    "F1", "kf11",       TC_DESC("F11 function key"), TC_TOKEN(F(11)) },
     { TC_FNAME(key_f12),                    "F2", "kf12",       TC_DESC("F12 function key"), TC_TOKEN(F(12)) },
-    { TC_FNAME(key_f13),                    "F3", "kf13",       TC_DESC("F13 function key") },          /* SF(3)  */
-    { TC_FNAME(key_f14),                    "F4", "kf14",       TC_DESC("F14 function key") },          /* SF(4)  */
-    { TC_FNAME(key_f15),                    "F5", "kf15",       TC_DESC("F15 function key") },          /* SF(5)  */
-    { TC_FNAME(key_f16),                    "F6", "kf16",       TC_DESC("F16 function key") },          /* SF(6)  */
-    { TC_FNAME(key_f17),                    "F7", "kf17",       TC_DESC("F17 function key") },          /* SF(7)  */
-    { TC_FNAME(key_f18),                    "F8", "kf18",       TC_DESC("F18 function key") },          /* SF(8)  */
-    { TC_FNAME(key_f19),                    "F9", "kf19",       TC_DESC("F19 function key") },          /* SF(9)  */
-    { TC_FNAME(key_f20),                    "FA", "kf20",       TC_DESC("F20 function key") },          /* SF(10) */
-    { TC_FNAME(key_f21),                    "FB", "kf21",       TC_DESC("F21 function key") },
-    { TC_FNAME(key_f22),                    "FC", "kf22",       TC_DESC("F22 function key") },
-    { TC_FNAME(key_f23),                    "FD", "kf23",       TC_DESC("F23 function key") },
-    { TC_FNAME(key_f24),                    "FE", "kf24",       TC_DESC("F24 function key") },
-    { TC_FNAME(key_f25),                    "FF", "kf25",       TC_DESC("F25 function key") },
-    { TC_FNAME(key_f26),                    "FG", "kf26",       TC_DESC("F26 function key") },
-    { TC_FNAME(key_f27),                    "FH", "kf27",       TC_DESC("F27 function key") },
-    { TC_FNAME(key_f28),                    "FI", "kf28",       TC_DESC("F28 function key") },
-    { TC_FNAME(key_f29),                    "FJ", "kf29",       TC_DESC("F29 function key") },
-    { TC_FNAME(key_f30),                    "FK", "kf30",       TC_DESC("F30 function key") },
-    { TC_FNAME(key_f31),                    "FL", "kf31",       TC_DESC("F31 function key") },
-    { TC_FNAME(key_f32),                    "FM", "kf32",       TC_DESC("F32 function key") },
-    { TC_FNAME(key_f33),                    "FN", "kf33",       TC_DESC("F33 function key") },
-    { TC_FNAME(key_f34),                    "FO", "kf34",       TC_DESC("F34 function key") },
-    { TC_FNAME(key_f35),                    "FP", "kf35",       TC_DESC("F35 function key") },
-    { TC_FNAME(key_f36),                    "FQ", "kf36",       TC_DESC("F36 function key") },
-    { TC_FNAME(key_f37),                    "FR", "kf37",       TC_DESC("F37 function key") },
-    { TC_FNAME(key_f38),                    "FS", "kf38",       TC_DESC("F38 function key") },
-    { TC_FNAME(key_f39),                    "FT", "kf39",       TC_DESC("F39 function key") },
-    { TC_FNAME(key_f40),                    "FU", "kf40",       TC_DESC("F40 function key") },
-    { TC_FNAME(key_f41),                    "FV", "kf41",       TC_DESC("F41 function key") },
-    { TC_FNAME(key_f42),                    "FW", "kf42",       TC_DESC("F42 function key") },
-    { TC_FNAME(key_f43),                    "FX", "kf43",       TC_DESC("F43 function key") },
-    { TC_FNAME(key_f44),                    "FY", "kf44",       TC_DESC("F44 function key") },
-    { TC_FNAME(key_f45),                    "FZ", "kf45",       TC_DESC("F45 function key") },
-    { TC_FNAME(key_f46),                    "Fa", "kf46",       TC_DESC("F46 function key") },
-    { TC_FNAME(key_f47),                    "Fb", "kf47",       TC_DESC("F47 function key") },
-    { TC_FNAME(key_f48),                    "Fc", "kf48",       TC_DESC("F48 function key") },
-    { TC_FNAME(key_f49),                    "Fd", "kf49",       TC_DESC("F49 function key") },
-    { TC_FNAME(key_f50),                    "Fe", "kf50",       TC_DESC("F50 function key") },
-    { TC_FNAME(key_f51),                    "Ff", "kf51",       TC_DESC("F51 function key") },
-    { TC_FNAME(key_f52),                    "Fg", "kf52",       TC_DESC("F52 function key") },
-    { TC_FNAME(key_f53),                    "Fh", "kf53",       TC_DESC("F53 function key") },
-    { TC_FNAME(key_f54),                    "Fi", "kf54",       TC_DESC("F54 function key") },
-    { TC_FNAME(key_f55),                    "Fj", "kf55",       TC_DESC("F55 function key") },
-    { TC_FNAME(key_f56),                    "Fk", "kf56",       TC_DESC("F56 function key") },
-    { TC_FNAME(key_f57),                    "Fl", "kf57",       TC_DESC("F57 function key") },
-    { TC_FNAME(key_f58),                    "Fm", "kf58",       TC_DESC("F58 function key") },
-    { TC_FNAME(key_f59),                    "Fn", "kf59",       TC_DESC("F59 function key") },
-    { TC_FNAME(key_f60),                    "Fo", "kf60",       TC_DESC("F60 function key") },
+    { TC_FNAME(key_f13),                    "F3", "kf13",       TC_DESC("F13 function key") /* TC_TOKEN(SF(1))   */ },
+    { TC_FNAME(key_f14),                    "F4", "kf14",       TC_DESC("F14 function key") /* TC_TOKEN(SF(2))   */ },
+    { TC_FNAME(key_f15),                    "F5", "kf15",       TC_DESC("F15 function key") /* TC_TOKEN(SF(3))   */ },
+    { TC_FNAME(key_f16),                    "F6", "kf16",       TC_DESC("F16 function key") /* TC_TOKEN(SF(4))   */ },
+    { TC_FNAME(key_f17),                    "F7", "kf17",       TC_DESC("F17 function key") /* TC_TOKEN(SF(5))   */ },
+    { TC_FNAME(key_f18),                    "F8", "kf18",       TC_DESC("F18 function key") /* TC_TOKEN(SF(6))   */ },
+    { TC_FNAME(key_f19),                    "F9", "kf19",       TC_DESC("F19 function key") /* TC_TOKEN(SF(7))   */ },
+    { TC_FNAME(key_f20),                    "FA", "kf20",       TC_DESC("F20 function key") /* TC_TOKEN(SF(8))   */ },
+    { TC_FNAME(key_f21),                    "FB", "kf21",       TC_DESC("F21 function key") /* TC_TOKEN(SF(9))   */ },
+    { TC_FNAME(key_f22),                    "FC", "kf22",       TC_DESC("F22 function key") /* TC_TOKEN(SF(10))  */ },
+    { TC_FNAME(key_f23),                    "FD", "kf23",       TC_DESC("F23 function key") /* TC_TOKEN(SF(11))  */ },
+    { TC_FNAME(key_f24),                    "FE", "kf24",       TC_DESC("F24 function key") /* TC_TOKEN(SF(12))  */ },
+    { TC_FNAME(key_f25),                    "FF", "kf25",       TC_DESC("F25 function key") /* TC_TOKEN(CF(1))   */ },
+    { TC_FNAME(key_f26),                    "FG", "kf26",       TC_DESC("F26 function key") /* TC_TOKEN(CF(2))   */ },
+    { TC_FNAME(key_f27),                    "FH", "kf27",       TC_DESC("F27 function key") /* TC_TOKEN(CF(3))   */ },
+    { TC_FNAME(key_f28),                    "FI", "kf28",       TC_DESC("F28 function key") /* TC_TOKEN(CF(4))   */ },
+    { TC_FNAME(key_f29),                    "FJ", "kf29",       TC_DESC("F29 function key") /* TC_TOKEN(CF(5))   */ },
+    { TC_FNAME(key_f30),                    "FK", "kf30",       TC_DESC("F30 function key") /* TC_TOKEN(CF(6))   */ },
+    { TC_FNAME(key_f31),                    "FL", "kf31",       TC_DESC("F31 function key") /* TC_TOKEN(CF(7))   */ },
+    { TC_FNAME(key_f32),                    "FM", "kf32",       TC_DESC("F32 function key") /* TC_TOKEN(CF(8))   */ },
+    { TC_FNAME(key_f33),                    "FN", "kf33",       TC_DESC("F33 function key") /* TC_TOKEN(CF(9))   */ },
+    { TC_FNAME(key_f34),                    "FO", "kf34",       TC_DESC("F34 function key") /* TC_TOKEN(CF(10))  */ },
+    { TC_FNAME(key_f35),                    "FP", "kf35",       TC_DESC("F35 function key") /* TC_TOKEN(CF(11))  */ },
+    { TC_FNAME(key_f36),                    "FQ", "kf36",       TC_DESC("F36 function key") /* TC_TOKEN(CF(12))  */ },
+    { TC_FNAME(key_f37),                    "FR", "kf37",       TC_DESC("F37 function key") /* TC_TOKEN(CSF(1))  */ },
+    { TC_FNAME(key_f38),                    "FS", "kf38",       TC_DESC("F38 function key") /* TC_TOKEN(CSF(2))  */ },
+    { TC_FNAME(key_f39),                    "FT", "kf39",       TC_DESC("F39 function key") /* TC_TOKEN(CSF(3))  */ },
+    { TC_FNAME(key_f40),                    "FU", "kf40",       TC_DESC("F40 function key") /* TC_TOKEN(CSF(4))  */ },
+    { TC_FNAME(key_f41),                    "FV", "kf41",       TC_DESC("F41 function key") /* TC_TOKEN(CSF(5))  */ },
+    { TC_FNAME(key_f42),                    "FW", "kf42",       TC_DESC("F42 function key") /* TC_TOKEN(CSF(6))  */ },
+    { TC_FNAME(key_f43),                    "FX", "kf43",       TC_DESC("F43 function key") /* TC_TOKEN(CSF(7))  */ },
+    { TC_FNAME(key_f44),                    "FY", "kf44",       TC_DESC("F44 function key") /* TC_TOKEN(CSF(8))  */ },
+    { TC_FNAME(key_f45),                    "FZ", "kf45",       TC_DESC("F45 function key") /* TC_TOKEN(CSF(9))  */ },
+    { TC_FNAME(key_f46),                    "Fa", "kf46",       TC_DESC("F46 function key") /* TC_TOKEN(CSF(10)) */ },
+    { TC_FNAME(key_f47),                    "Fb", "kf47",       TC_DESC("F47 function key") /* TC_TOKEN(CSF(11)) */ },
+    { TC_FNAME(key_f48),                    "Fc", "kf48",       TC_DESC("F48 function key") /* TC_TOKEN(CSF(12)) */ },
+    { TC_FNAME(key_f49),                    "Fd", "kf49",       TC_DESC("F49 function key") /* TC_TOKEN(AF(1))   */ },
+    { TC_FNAME(key_f50),                    "Fe", "kf50",       TC_DESC("F50 function key") /* TC_TOKEN(AF(2))   */ },
+    { TC_FNAME(key_f51),                    "Ff", "kf51",       TC_DESC("F51 function key") /* TC_TOKEN(AF(3))   */ },
+    { TC_FNAME(key_f52),                    "Fg", "kf52",       TC_DESC("F52 function key") /* TC_TOKEN(AF(4))   */ },
+    { TC_FNAME(key_f53),                    "Fh", "kf53",       TC_DESC("F53 function key") /* TC_TOKEN(AF(5))   */ },
+    { TC_FNAME(key_f54),                    "Fi", "kf54",       TC_DESC("F54 function key") /* TC_TOKEN(AF(6))   */ },
+    { TC_FNAME(key_f55),                    "Fj", "kf55",       TC_DESC("F55 function key") /* TC_TOKEN(AF(7))   */ },
+    { TC_FNAME(key_f56),                    "Fk", "kf56",       TC_DESC("F56 function key") /* TC_TOKEN(AF(8))   */ },
+    { TC_FNAME(key_f57),                    "Fl", "kf57",       TC_DESC("F57 function key") /* TC_TOKEN(AF(9))   */ },
+    { TC_FNAME(key_f58),                    "Fm", "kf58",       TC_DESC("F58 function key") /* TC_TOKEN(AF(10))  */ },
+    { TC_FNAME(key_f59),                    "Fn", "kf59",       TC_DESC("F59 function key") /* TC_TOKEN(AF(11))  */ },
+    { TC_FNAME(key_f60),                    "Fo", "kf60",       TC_DESC("F60 function key") /* TC_TOKEN(AF(12))  */ },
     { TC_FNAME(key_f61),                    "Fp", "kf61",       TC_DESC("F61 function key") },
     { TC_FNAME(key_f62),                    "Fq", "kf62",       TC_DESC("F62 function key") },
     { TC_FNAME(key_f63),                    "Fr", "kf63",       TC_DESC("F63 function key") },
@@ -2072,7 +2080,7 @@ term_keybind(void)
 
     for (i = 0; i < (sizeof(term_keys)/sizeof(term_keys[0])); ++i)
         if (term_keys[i].key && term_keys[i].svalue) {
-            key_define_key_seq(term_keys[i].key, term_keys[i].svalue);
+            key_sequence(term_keys[i].key, term_keys[i].svalue);
         }
 }
 
@@ -2523,7 +2531,7 @@ key_enable(void)
         return;
 
     if (tc_mm && *tc_mm) {
-        ttputpad(tc_mm);                        /* enable meta key-codes */
+        ttputpad(tc_mm);                        /* enable metaSendsEscape */
         xf_kbprotocol |= KBPROTOCOL_META;
     }
 

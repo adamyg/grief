@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.10 2024/06/16 17:01:42 cvsuser Exp $
+# $Id: Makefile.in,v 1.11 2024/11/24 15:46:30 cvsuser Exp $
 # libtrie - prefix tree
 #
 #
@@ -161,6 +161,7 @@ debug:
 
 XCLEAN +=	$(basename $(D_BIN)/$(TARGET)).map
 $(D_BIN)/$(TARGET):	MAPFILE=$(basename $@).map
+$(D_BIN)/$(TARGET):	$(LIBRARY)
 $(D_BIN)/$(TARGET):	LINKLIBS=-ltrie
 $(D_BIN)/$(TARGET):	$(OBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS) @LDMAPFILE@

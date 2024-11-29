@@ -1,12 +1,16 @@
 -*- encoding: utf-8; -*-
 
-Sun Oct 27 18:54:42 2024 adamy
+Tue Oct 29 22:48:55 2024 adamy
+
+	* build-28
 
 	* Tickets
 
-		- colorscheme for truecolor #91
+		- ncursesw6 configuration; #93
+		- colorscheme for truecolor; #91
 			- colorshemegui.
 			- save/restore colorscheme extended name.
+			- colorschemes, bones/base16.
 		- Putty profile; #87
 		- true-color/direct support; #81
 		- understyles and strikeout; #72

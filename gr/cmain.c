@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.72 2024/10/21 15:20:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.73 2024/11/18 13:42:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.72 2024/10/21 15:20:22 cvsuser Exp $
+/* $Id: cmain.c,v 1.73 2024/11/18 13:42:22 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -47,6 +47,7 @@ __CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.72 2024/10/21 15:20:22 cvsuser Exp $
 #include "file.h"
 #include "getkey.h"
 #include "keyboard.h"
+#include "kbprotocols.h"
 #include "keywd.h"
 #include "kill.h"
 #include "language.h"
@@ -2117,4 +2118,3 @@ usage(int what)
 }
 
 /*end*/
-

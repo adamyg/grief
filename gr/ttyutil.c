@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyutil_c,"$Id: ttyutil.c,v 1.13 2024/10/18 05:19:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyutil_c,"$Id: ttyutil.c,v 1.15 2024/11/18 15:17:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyutil.c,v 1.13 2024/10/18 05:19:14 cvsuser Exp $
+/* $Id: ttyutil.c,v 1.15 2024/11/18 15:17:20 cvsuser Exp $
  * TTY common utility functions
  *
  *
@@ -22,7 +22,7 @@ __CIDENT_RCSID(gr_ttyutil_c,"$Id: ttyutil.c,v 1.13 2024/10/18 05:19:14 cvsuser E
 
 #include "ttyutil.h"
 
-#if !defined(USE_VIO_BUFFER) && !defined(DJGPP)
+#if (!defined(USE_VIO_BUFFER) && !defined(DJGPP)) || defined(KBPROTOCOLS_TEST)
 
 #include <edtermio.h>
 #include <edalt.h>
@@ -319,7 +319,7 @@ tty_hasfeatureplus(const char *term, const char *what)
  *  Parameters:
  *      buffer - Control string buffer.
  *      buflen - Length of the control buffer.
- *      maxargs - Maximum arguments; system limit is 16.
+ *      maxargs - Maximum arguments; system limit is NPAR(16).
  *      arguments - Numeric arguments.
  *      params - Parameters, [0]=final, [1]=opening and [2]=intermediate (only one supported).
  *      pnargs - Optional value, populated with numeric arguments.
@@ -434,87 +434,6 @@ tty_csi_parse(const char *buffer, size_t buflen,
 
     return (cursor - buffer);                   // number of bytes consumed
 }
-
-
-/*
- *  UnitTest's
- */
-
-#if defined(LOCAL_MAIN)
-#if defined(NDEBUG)
-#undef NDEBUG
-#endif
-
-#include <assert.h>
-
-void
-trace_ilog(const char *fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    vprintf(fmt, ap);
-    va_end(ap);
-}
-
-
-int
-main()
-{
-    assert(tty_isterm("screen", "screen"));
-    assert(tty_isterm("screen-xxx", "screen"));
-    assert(tty_isterm("screen.linux", "screen"));
-    assert(tty_isterm("screen.linux", "screen.linux"));
-    assert(! tty_isterm("screen1", "screen"));
-    assert(! tty_isterm("screen2", "screen"));
-
-    assert(tty_hasfeature("screen-rv", "rv"));
-    assert(tty_hasfeature("screen-rv-xxx", "rv"));
-    assert(tty_hasfeature("screen-xxx-rv", "rv"));
-
-    assert(tty_hasfeatureplus("xterm-direct", "direct"));
-    assert(tty_hasfeatureplus("xterm-direct256", "direct"));
-    assert(! tty_hasfeatureplus("xterm-direct256a", "direct"));
-
-
-    { // xterm-mok2
-        const char ctrltab[] = "\x1b[27;5;9~";  // Control-TAB
-        unsigned args[4] = {0}, nargs = sizeof(args)/sizeof(args[0]);
-        char params[3] = {0};
-        int ret;
-
-        ret = tty_csi_parse(ctrltab, sizeof(ctrltab) - 1, nargs, args, params, &nargs);
-        printf("Control-TAB = %d %u;%u;%u;%u %u\n", ret, args[0], args[1], args[2], args[3], params[0]);
-
-        assert(ret == (sizeof(ctrltab) - 1));
-        assert('~' == params[0]);
-        assert(3   == nargs);
-        assert(27  == args[0]);
-        assert(5   == args[1]);
-        assert(9   == args[2]);
-        assert(0   == args[3]);
-    }
-
-    { // mintty-mok2
-        const char ctrlp[] = "\x1b[112;5u";     // Control-p
-        unsigned args[4] = {0}, nargs = sizeof(args)/sizeof(args[0]);
-        char params[3] = {0};
-        int ret;
-
-        ret = tty_csi_parse(ctrlp, sizeof(ctrlp) - 1, nargs, args, params, &nargs);
-        printf("Control-p = %d %u;%u;%u;%u %u\n", ret, args[0], args[1], args[2], args[3], params[0]);
-
-        assert(ret == (sizeof(ctrlp) - 1));
-        assert('u' == params[0]);
-        assert(2   == nargs);
-        assert(112 == args[0]);
-        assert(5   == args[1]);
-        assert(0   == args[2]);
-        assert(0   == args[3]);
-    }
-
-    return 0;
-}
-#endif
 
 #else
 

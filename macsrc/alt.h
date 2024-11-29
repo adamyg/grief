@@ -1,4 +1,4 @@
-/* $Id: alt.h,v 1.13 2024/09/21 17:02:02 cvsuser Exp $
+/* $Id: alt.h,v 1.14 2024/11/02 18:11:51 cvsuser Exp $
  * Key definitions
  *
  */
@@ -166,9 +166,12 @@
  */
 #define F(__x)                  (RANGE_FUNCTION + (__x) - 1)
 #define SF(__x)                 (MOD_SHIFT | (RANGE_FUNCTION + (__x) - 1))
-#define CF(__x)                 (MOD_CTRL  | (RANGE_FUNCTION + (__x) - 1))
-#define CSF(__x)                (MOD_CTRL  | MOD_SHIFT | (RANGE_FUNCTION + (__x) - 1))
-#define AF(__x)                 (MOD_META  | (RANGE_FUNCTION + (__x) - 1))
+#define CF(__x)                 (MOD_CTRL | (RANGE_FUNCTION + (__x) - 1))
+#define CSF(__x)                (MOD_CTRL | MOD_SHIFT | (RANGE_FUNCTION + (__x) - 1))
+#define AF(__x)                 (MOD_META | (RANGE_FUNCTION + (__x) - 1))
+#define ASF(__x)                (MOD_META | MOD_SHIFT | (RANGE_FUNCTION + (__x) - 1))
+#define ACF(__x)                (MOD_META | MOD_CTRL | (RANGE_FUNCTION + (__x) - 1))
+#define ACSF(__x)               (MOD_META | MOD_CTRL | MOD_SHIFT | (RANGE_FUNCTION + (__x) - 1))
 
 /*
  *  Alt-letter definitions.
@@ -440,7 +443,3 @@
 /*--end--*/
 
 #endif  /*__ALT_H*/
-
-
-
-

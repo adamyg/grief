@@ -1,0 +1,4 @@
+.grief.log
+*.err
+*.obj
+*.exe

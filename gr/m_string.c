@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.46 2022/05/26 16:36:46 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.47 2024/11/23 14:02:38 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_string.c,v 1.46 2022/05/26 16:36:46 cvsuser Exp $
+/* $Id: m_string.c,v 1.47 2024/11/23 14:02:38 cvsuser Exp $
  * String primitives.
  *
  *
@@ -1083,7 +1083,7 @@ do_wlastof(void)                /* int (string str, string chars [,int &result])
 
     if (characters && *characters) {
         accint_t cursor;
-        
+
         for (cursor = 1; *str; ++cursor) {
             const char *c = characters;
 
@@ -3434,7 +3434,7 @@ x_strcasestr(const char *haystack, const char *needle)
 void
 do_characterat(void)            /* int (string str, int index, [int encoding]) */
 {
-    const char *str = get_str(1);
+    const unsigned char *str = (const unsigned char *)get_str(1);
     int length = get_strlen(1);
     accint_t position = get_xinteger(2, -1);
 /*- int encoding = (int) get_xinteger(3, -1); -*/

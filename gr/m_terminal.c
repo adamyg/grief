@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.26 2024/10/06 17:01:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.29 2024/11/29 11:51:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_terminal.c,v 1.26 2024/10/06 17:01:22 cvsuser Exp $
+/* $Id: m_terminal.c,v 1.29 2024/11/29 11:51:58 cvsuser Exp $
  * Terminal screen and keyboard primitives.
  *
  *
@@ -31,6 +31,7 @@ __CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.26 2024/10/06 17:01:22 cvs
 #include "echo.h"
 #include "eval.h"
 #include "keyboard.h"
+#include "kbsequence.h"
 #include "lisp.h"
 #include "symbol.h"
 #include "tty.h"
@@ -1213,7 +1214,7 @@ set_term_assign(struct pt_map *p, const LISTV *result)
         Note!:
         Many of the reported escapes are specific to the underlying
         terminal, a well known is the 'Xterm Control Sequences'
-        available on http://invisible-island.net.
+        available on http ://invisible-island.net.
 
     Macro Parameters:
         none
@@ -1296,14 +1297,14 @@ do_set_term_keyboard(void)      /* (list def) */
                 accint_t ival;
 
                 if (NULL != (str = atom_xstr(retlp))) {
-                    key_define_key_seq(keyno, str);
+                    key_sequence(keyno, str);
 
                 } else if (atom_xint(retlp, &ival)) {
                     char buf[2];
 
                     buf[0] = (char) ival;
                     buf[1] = '\0';
-                    key_define_key_seq(keyno, buf);
+                    key_sequence(keyno, buf);
                 }
                 retlp = nextretlp;
                 ++keyno;
@@ -1320,14 +1321,14 @@ set_term_key(int keyno, const LISTV *result)
     accint_t ival;
 
     if (listv_str(result, &sval)) {
-        key_define_key_seq(keyno, sval);
+        key_sequence(keyno, sval);
 
     } else if (listv_int(result, &ival)) {
         char buf[2];
 
         buf[0] = (char) ival;
         buf[1] = '\0';
-        key_define_key_seq(keyno, buf);
+        key_sequence(keyno, buf);
     }
 }
 
@@ -1375,11 +1376,11 @@ set_term_key(int keyno, const LISTV *result)
 void
 do_get_term_keyboard(void)      /* list () */
 {
-    SPBLK **array;
+    const keyseq_t * const *array;
     LIST *newlp, *lp;
-    int atoms = 0, llen, i;
+    unsigned atoms = 0, llen, i;
 
-    if (NULL == (array = key_get_seq_list(&atoms))) {
+    if (NULL == (array = kbsequence_flatten(&atoms))) {
         acc_assign_null();
         return;
     }
@@ -1390,16 +1391,15 @@ do_get_term_keyboard(void)      /* list () */
         return;
     }
 
-    for (lp = newlp, i = 0; array[i]; ++i) {
-        const keyseq_t *ks = (const keyseq_t *) array[i]->data;
-
-        lp = atom_push_int(lp, ks->ks_code);    /* key code */
-        lp = atom_push_str(lp, array[i]->key);  /* escape key */
+    for (lp = newlp, i = 0; array[i]; ++i) {    /* elements */
+        lp = atom_push_int(lp, array[i]->ks_code);
+        lp = atom_push_str(lp, array[i]->ks_buf);
     }
+    assert(i == atoms);
     atom_push_halt(lp);
 
     acc_donate_list(newlp, llen);               /* return value */
-    chk_free(array);
+    chk_free((void *)array);
 }
 
 /*end*/

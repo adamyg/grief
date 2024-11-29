@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.102 2024/10/02 12:35:07 cvsuser Exp $
+# $Id: Makefile.in,v 1.105 2024/11/29 11:51:58 cvsuser Exp $
 # GRIEF editor makefile.
 #
 #
@@ -253,6 +253,10 @@ CSRC=\
 	getkey.c		\
 	getpwd.c		\
 	hilite.c		\
+	kbname.c		\
+	kbsequence.c		\
+	kbprotocols.c		\
+	kbwin32.c		\
 	keyboard.c		\
 	keywd.c			\
 	kill.c			\
@@ -429,7 +433,7 @@ gr.manifest.xml:	../win32/exe.manifest.in ../include/edbuildinfo.h
 endif #build_os
 
 XCLEAN +=	grlicense.h
-grlicense.h:		Makefile ../util/mklicense.pl ../COPYING 
+grlicense.h:		Makefile ../util/mklicense.pl ../COPYING
 		@$(PERL) ../util/mklicense.pl ../COPYING $@ grlicense
 
 clean:
@@ -458,4 +462,3 @@ $(D_OBJ)/%_res.o:	%.rc
 		$(RC) -o $@ $<
 
 #end
-

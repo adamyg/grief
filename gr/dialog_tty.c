@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dialog_tty_c,"$Id: dialog_tty.c,v 1.32 2024/09/25 13:58:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_dialog_tty_c,"$Id: dialog_tty.c,v 1.33 2024/11/29 11:51:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dialog_tty.c,v 1.32 2024/09/25 13:58:06 cvsuser Exp $
+/* $Id: dialog_tty.c,v 1.33 2024/11/29 11:51:58 cvsuser Exp $
  * Dialog manager, TTY interface.
  *
  *
@@ -30,7 +30,7 @@ __CIDENT_RCSID(gr_dialog_tty_c,"$Id: dialog_tty.c,v 1.32 2024/09/25 13:58:06 cvs
 #include "display.h"
 #include "eval.h"
 #include "getkey.h"
-#include "keyboard.h"
+#include "kbname.h"
 #include "kill.h"
 #include "lisp.h"                               /* atom_...() */
 #include "macros.h"                             /* loadup_macro */
@@ -691,7 +691,7 @@ static int
 dlg_accelerator(WIDGET_t *w, const int key)
 {
     if (w->w_accelerator &&                     /* allow multiple ??? */
-            key == key_name2code(w->w_accelerator, NULL)) {
+            key == kbname_tokey(w->w_accelerator, NULL)) {
         trace_ilog("\tACCELERATOR(%s)\n", w->w_accelerator);
         return TRUE;
     }

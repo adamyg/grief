@@ -1,7 +1,7 @@
 #ifndef TTY_TTY_XTERM_H_INCLUDDED
 #define TTY_TTY_XTERM_H_INCLUDDED
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: tty_xterm.h,v 1.5 2024/06/18 16:26:25 cvsuser Exp $
+/* $Id: tty_xterm.h,v 1.6 2024/11/18 13:42:10 cvsuser Exp $
  * xterm tty features ...
  *
  *
@@ -26,4 +26,3 @@ extern void                 vga(void);
 #endif
 
 #endif /*TTY_TTY_XTERM_H_INCLUDED*/
-

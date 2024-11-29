@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: grief.cr,v 1.98 2024/10/28 15:45:11 cvsuser Exp $
+/* $Id: grief.cr,v 1.99 2024/11/24 14:37:53 cvsuser Exp $
  * GRIEF startup macro.
  *
  *
@@ -305,7 +305,7 @@ grief(void)
         "key_val",
         "key_learn_menu",
         "key_learn",
-        "key_termmapping");
+        "key_termmap");
     autoload("linenumbers",
         "_griset_linenumbers");
     autoload("man",

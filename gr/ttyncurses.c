@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.38 2024/10/29 14:19:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.39 2024/11/29 11:51:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyncurses.c,v 1.38 2024/10/29 14:19:12 cvsuser Exp $
+/* $Id: ttyncurses.c,v 1.39 2024/11/29 11:51:58 cvsuser Exp $
  * [n]curses tty driver interface -- alt driver when running under ncurses.
  *
  * This file is part of the GRIEF Editor.
@@ -418,7 +418,7 @@ nc_keybind(void)
     if (NULL != (ti = ttcfgkeys(&count))) {     /* load */
         for (i = 0; i < count; ++i) {
             if (ti->key && ti->svalue) {
-                key_define_key_seq(ti->key, ti->svalue);
+                key_sequence(ti->key, ti->svalue);
             }
             ++ti;
         }

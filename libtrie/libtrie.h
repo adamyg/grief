@@ -48,6 +48,14 @@ void *trie_search(const struct trie *trie, const char *key);
 void *trie_nsearch(const struct trie *trie, const char *key, size_t length);
 
 /**
+ * Finds for the data associated with KEY.
+ * @return the previously inserted data and details of any children, representing an ambiguous match.
+ * Optionally also one of the next matching elements.
+ */
+void *trie_search_ambiguous(const struct trie *self, const char *key, unsigned *ambiguous, void **partial);
+void *trie_nsearch_ambiguous(const struct trie *self, const char *key, size_t length, unsigned *ambiguous, void **partial);
+
+/**
  * Finds for the data associated with KEY, treating '+' as simple wild-card; one or more characters.
  * @return the previously inserted data
  */

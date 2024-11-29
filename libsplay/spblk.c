@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(cr_spblk_c,"$Id: spblk.c,v 1.18 2024/04/17 15:57:14 cvsuser Exp $")
+__CIDENT_RCSID(cr_spblk_c,"$Id: spblk.c,v 1.19 2024/11/26 16:51:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: spblk.c,v 1.18 2024/04/17 15:57:14 cvsuser Exp $
+/* $Id: spblk.c,v 1.19 2024/11/26 16:51:29 cvsuser Exp $
  * libsplay version 2.0 - SPLAY tree implementation.
  *
  *
@@ -34,10 +34,10 @@ __CIDENT_RCSID(cr_spblk_c,"$Id: spblk.c,v 1.18 2024/04/17 15:57:14 cvsuser Exp $
 static vmpool_t         hd_blks;
 
 
-/*  
+/*
  *  spblk ---
- *      Return an SPBLK structure together with some room for user to
- *      put data in it.
+ *      Allocate a SPBLK structure, with optional user storage using chk_alloc().
+ *      Returned storage should be destroyed using spfreeblk() whereas the user storage, if any, using chk_free().
  */
 SPBLK *
 spblk(size_t size)
@@ -63,7 +63,7 @@ spblk(size_t size)
 }
 
 
-/*  
+/*
  *  spfreeblk ---
  *      Free memory for an SPBLK structure.
  */
@@ -76,3 +76,4 @@ spfreeblk(SPBLK *sp)
     vm_free(&hd_blks, sp);
 }
 
+/*end*/

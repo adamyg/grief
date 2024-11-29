@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: xterm_putty.cr,v 1.3 2024/10/21 14:12:08 cvsuser Exp $
+/* $Id: xterm_putty.cr,v 1.6 2024/11/24 12:26:43 cvsuser Exp $
  * Putty terminal profile.
  *
  *
@@ -31,9 +31,26 @@ main()
     xterm_altmeta_keys();
 
     /*
-     *  Terminal map
+     *  Terminal map ---
      *
-     *   keyboard modes:
+     *   Supported/advised Keyboard Setup:
+     *
+     *      Backspace key:
+     *         [x] Control-H              [x] Control-? (127)
+     *
+     *      Home/End:
+     *         [x] Standard               [ ] rxvt
+     *
+     *      Function keys and keypad:
+     *
+     *         [x] ESC[n~     [x] Linux   [x] Xterm R6    [x] VT400
+     *         [ ] VT100+     [ ] SCO     [x] Xterm 216+
+     *
+     *      Shift/Ctrl/Alt:
+     *
+     *         [ ] Ctrl toggles appmode   [x] xterm style bitmap
+     *
+     *	 Keyboard modes:
      *
      *   o  Default mode -- labelled ESC [n~, the function keys generate sequences like ESC [11~,
      *      ESC [12~ and so on. This matches the general behaviour of Digital's terminals.
@@ -68,32 +85,48 @@ main()
      *      sequences like ESC [A and ESC [B, and the sequences Digital's terminals generate in "application cursor keys"
      *      mode, i.e. ESC O A and so on. Shift and Alt have no effect.
      *
-     *   o  In the "xterm-style bitmap" mode, Shift, Ctrl and Alt all generate different sequences, 
+     *   o  In the "xterm-style bitmap" mode, Shift, Ctrl and Alt all generate different sequences,
      *      with a number indicating which set of modifiers is active.
      */
     set_term_keyboard(
+        //  F1,             F2,             F3,             F4,             F5,
+        //  F6,             F7,             F8,             F9,             F10,
+        //  F11,            F12
+        //
         F1_F12, quote_list(                     /* default */
             "\x1b[11~",     "\x1b[12~",     "\x1b[13~",     "\x1b[14~",     "\x1b[15~",
             "\x1b[17~",     "\x1b[18~",     "\x1b[19~",     "\x1b[20~",     "\x1b[21~",
             "\x1b[23~",     "\x1b[24~"),
 
+            //F11=SF1,F12=SF12: are ambiguous.
+
         SHIFT_F1_F12, quote_list(
-            "\x1b[23~",     "\x1b[24~",     "\x1b[25~",     "\x1b[26~",     "\x1b[28~",
+            NULL,           NULL,           "\x1b[25~",     "\x1b[26~",     "\x1b[28~",
             "\x1b[29~",     "\x1b[31~",     "\x1b[32~",     "\x1b[33~",     "\x1b[34~",
             NULL,           NULL),
 
-        ALT_F1_F12, quote_list(
+        ALT_F1_F12, quote_list(                 /* meta-esc */
             "\x1b\x1b[11~", "\x1b\x1b[12~", "\x1b\x1b[13~", "\x1b\x1b[14~", "\x1b\x1b[15~",
             "\x1b\x1b[17~", "\x1b\x1b[18~", "\x1b\x1b[19~", "\x1b\x1b[20~", "\x1b\x1b[21~",
+            "\x1b\x1b[23~", "\x1b\x1b[24~"),
+
+        F1_F12, quote_list(                     /* linux: F1..F5, xterm: F6..F12 */
+            "\x1b[[A",      "\x1b[[B",      "\x1b[[C",      "\x1b[[D",      "\x1b[[E",
+            NULL,           NULL,           NULL,           NULL,           NULL,
             NULL,           NULL),
 
-        F1_F12, quote_list(                     /* linux: F1..F5 */
-            "\x1b[[A",      "\x1b[[B",      "\x1b[[C",      "\x1b[[D",      "\x1b[[E",
+        ALT_F1_F12, quote_list(                 /* meta-esc, linux: F1..F5, xterm: F6..F12 */
+            "\x1b\x1b[[A",  "\x1b\x1b[[B",  "\x1b\x1b[[C",  "\x1b\x1b[[D",  "\x1b\x1b[[E",
             NULL,           NULL,           NULL,           NULL,           NULL,
             NULL,           NULL),
 
         F1_F12, quote_list(                     /* xterm: F1..F4 */
             "\x1bOP",       "\x1bOQ",       "\x1bOR",       "\x1bOS",       NULL,
+            NULL,           NULL,           NULL,           NULL,           NULL,
+            NULL,           NULL),
+
+        ALT_F1_F12, quote_list(                 /* xterm: F1..F4 */
+            "\x1b\x1bOP",   "\x1b\x1bOQ",   "\x1b\x1bOR",   "\x1b\x1bOS",   NULL,
             NULL,           NULL,           NULL,           NULL,           NULL,
             NULL,           NULL),
 
@@ -107,7 +140,12 @@ main()
             "\x1b[17;2~",   "\x1b[18;2~",   "\x1b[19;2~",   "\x1b[20;2~",   "\x1b[21;2~",
             "\x1b[23;2~",   "\x1b[24;2~"),
 
-        CTRL_F1_F12, quote_list(                /* xterm-215: CF1..CF12 */
+        ALTSHIFT_F1_F12, quote_list(            /* xterm-216: ASF1..ASF12 */
+            "\x1b\x1b[1;4P",     "\x1b\x1b[1;4Q",     "\x1b\x1b[1;4R",        "\x1b\x1b[1;4S",     "\x1b\x1b[15;4~",
+            "\x1b\x1b[17;4~",    "\x1b\x1b[18;4~",    "\x1b\x1b[19;4~",       "\x1b\x1b[20;4~",    "\x1b\x1b[21;4~",
+            "\x1b\x1b[23;4~",    "\x1b\x1b[24;4~"),
+
+        CTRL_F1_F12, quote_list(                /* xterm-216: CF1..CF12 */
             "\x1b[1;5P",    "\x1b[1;5Q",    "\x1b[1;5R",    "\x1b[1;5S",    "\x1b[15;5~",
             "\x1b[17;5~",   "\x1b[18;5~",   "\x1b[19;5~",   "\x1b[20;5~",   "\x1b[21;5~",
             "\x1b[23;5~",   "\x1b[24;5~"),
@@ -139,7 +177,7 @@ main()
             NULL,           NULL,           NULL,           NULL,           NULL,
             NULL),
 
-        ALT_KEYPAD_0_9, quote_list(             /* xterm */
+        ALT_KEYPAD_0_9, quote_list(             /* meta-esc, xterm */
             "\x1b\x1b[2~",  "\x1b\x1b[4~",  "\x1b\x1bOB",   "\x1b\x1b[6~",  "\x1b\x1bOD",
             "\x1b\x1bOE",   "\x1b\x1bOC",   "\x1b\x1bOH",   "\x1b\x1bOA",   "\x1b\x1b[5~",
             "\x1b\x1b[3~",  NULL,           NULL,           NULL,           NULL,
@@ -164,5 +202,3 @@ putty(void)
 }
 
 /*end*/
-
-
