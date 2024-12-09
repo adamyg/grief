@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.20 2024/12/08 09:00:17 cvsuser Exp $
+# $Id: Makefile.in,v 1.21 2024/12/09 16:50:07 cvsuser Exp $
 # Help documentation.
 #
 #
@@ -131,8 +131,8 @@ features:		$(FEATOBJS)
 license:		../COPYING
 	@cp ../COPYING $(OUTDIR)/license.txt
 
-grinit:			../EXTRA/grinit_example
-	@cp ../EXTRA/grinit_example $(OUTDIR)/grinit_example
+grinit:			grinit_example
+	@cp grinit_example $(OUTDIR)/grinit_example
 
 quickstart:		../doc/quickstart.txt ../doc/quickstart.html
 

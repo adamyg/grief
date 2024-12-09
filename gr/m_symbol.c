@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_symbol_c,"$Id: m_symbol.c,v 1.47 2024/12/09 14:13:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_symbol_c,"$Id: m_symbol.c,v 1.48 2024/12/09 15:38:26 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_symbol.c,v 1.47 2024/12/09 14:13:08 cvsuser Exp $
+/* $Id: m_symbol.c,v 1.48 2024/12/09 15:38:26 cvsuser Exp $
  * Symbol primitives.
  *
  *
@@ -142,7 +142,7 @@ static const struct {   /* string values */
         GRRESTORE_FILE, GRSTATE_FILE, GRSTATE_DB, GRINIT_FILE
 
  *<<GRIEF>> [macro]
-    Constant: GRRC_FILE - GRIEF initialisation name.
+    Constant: GRRC_FILE - GRIEF resource name.
 
         extern const string
             GRRC_FILE;
@@ -2730,4 +2730,3 @@ do_ref_parm(void)               /* (int argument, string local_symbol, [int opti
 }
 
 /*end*/
-

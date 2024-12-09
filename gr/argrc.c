@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_argrc_c,"$Id: argrc.c,v 1.4 2024/12/05 19:04:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_argrc_c,"$Id: argrc.c,v 1.5 2024/12/09 14:48:39 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: argrc.c,v 1.4 2024/12/05 19:04:37 cvsuser Exp $
+/* $Id: argrc.c,v 1.5 2024/12/09 14:48:39 cvsuser Exp $
  * Command line argument resource functionality.
  *
  *
@@ -18,13 +18,13 @@ __CIDENT_RCSID(gr_argrc_c,"$Id: argrc.c,v 1.4 2024/12/05 19:04:37 cvsuser Exp $"
  * ==end==
  */
 
-#include "config.h"
-
 #include <editor.h>
+#include <errno.h>
 #include <assert.h>
 
 #include <edfileio.h>
 #include <chkalloc.h>
+#include <libstr.h>
 
 #include "argrc.h"
 

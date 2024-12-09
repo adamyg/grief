@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.76 2024/12/09 14:13:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.77 2024/12/09 14:48:39 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.76 2024/12/09 14:13:08 cvsuser Exp $
+/* $Id: cmain.c,v 1.77 2024/12/09 14:48:39 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
