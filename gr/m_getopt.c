@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_getopt_c,"$Id: m_getopt.c,v 1.26 2024/07/04 11:09:30 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_getopt_c,"$Id: m_getopt.c,v 1.27 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_getopt.c,v 1.26 2024/07/04 11:09:30 cvsuser Exp $
+/* $Id: m_getopt.c,v 1.27 2024/12/06 15:46:06 cvsuser Exp $
  * Command line/argument option processing.
  *
  *
@@ -159,7 +159,7 @@ static const char *         x_getsubopt_quotes;
     Macro Returns:
         Option value or index, starting at zero, otherwise one of the
         following negative error codes. If the case of error codes -2
-        or less, value shall contain an error condition descripting
+        or less, value shall contain an error condition describing
         the condition.
 
             -1 -    End of the options (EOF).
@@ -313,8 +313,8 @@ do_getopt(void)                 /* (string &value, [[string shortoptions], list 
 
     /*
      *  next option/
-     *      returns either the associated option value otheriwise ':' is an option was
-     *      required yet was omitter or '?' on an unknown/ambiguous option.
+     *      returns either the associated option value otherwise ':' is an option was
+     *      required yet was omitted or '?' on an unknown/ambiguous option.
      */
     if (x_getopt_argc) {
         const char *value;
@@ -489,7 +489,7 @@ getopterr(struct argparms *p, const char *msg)
     Macro Return:
         Option index, otherwise one of the following negative error
         codes. If the case of error codes -2 or less, value shall
-        contain an error condition descripting the condition,
+        contain an error condition describing the condition,
 
             -1 -    End of the options (EOF).
             -2 -    Unknown option.
@@ -1150,4 +1150,3 @@ is_white(int ch)
 }
 
 /*end*/
-

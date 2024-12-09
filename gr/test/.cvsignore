@@ -1,4 +1,6 @@
 .grief.log
+*.ilk
+*.pdb
 *.err
 *.obj
 *.exe

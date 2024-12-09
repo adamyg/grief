@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.19 2024/05/27 13:30:05 cvsuser Exp $
+# $Id: Makefile.in,v 1.20 2024/12/08 09:00:17 cvsuser Exp $
 # Help documentation.
 #
 #
@@ -108,7 +108,7 @@ release:
 debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
-help:			outdirs $(OBJS) prog user cshelp features quickstart license
+help:			outdirs $(OBJS) prog user cshelp features quickstart grinit license
 
 outdirs:		$(OUTDIR)/.created $(CSOUTDIR)/.created $(FEATOUTDIR)/.created
 
@@ -131,7 +131,10 @@ features:		$(FEATOBJS)
 license:		../COPYING
 	@cp ../COPYING $(OUTDIR)/license.txt
 
-quickstart:	../doc/quickstart.txt ../doc/quickstart.html
+grinit:			../EXTRA/grinit_example
+	@cp ../EXTRA/grinit_example $(OUTDIR)/grinit_example
+
+quickstart:		../doc/quickstart.txt ../doc/quickstart.html
 
 ../doc/quickstart.txt:	Makefile
 	$(GRMANDOC) -mdoc -Tascii doc/mandoc/quickstart-txt.mandoc > ../doc/quickstart.txt

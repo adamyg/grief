@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.96 2024/07/20 09:21:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.97 2024/12/05 19:00:11 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: file.c,v 1.96 2024/07/20 09:21:58 cvsuser Exp $
+/* $Id: file.c,v 1.97 2024/12/05 19:00:11 cvsuser Exp $
  * File-buffer primitives and support.
  *
  *
@@ -266,7 +266,7 @@ do_output_file(void)            /* ([string filename]) */
 
     Macro Returns:
         The 'read_file()' primitive returns a positive value on
-        success, 0 if the user was prompted and cancelled, otherwise
+        success, 0 if the user was prompted and canceled, otherwise
         -1 on error.
 
     Macro Portability:
@@ -471,7 +471,7 @@ inq_terminator(void)            /* int ([int bufnum], [string &term]) */
 
     Macro Returns:
         The 'set_terminator()' primitive returns 1 is the line
-        terminator was modified, 0 when no change occured, otherwise
+        terminator was modified, 0 when no change occurred, otherwise
         -1 on error.
 
     Macro Portability:
@@ -888,8 +888,8 @@ file_write(const char *fname, const int32_t flags)
     }
 
     /*
-     *  Dont save file if it is a normal buffer and there aren't any changes;
-     *  if its a system buffer save it anyway, because we dont keep track of
+     *  Don't save file if it is a normal buffer and there aren't any changes;
+     *  if its a system buffer save it anyway, because we don't keep track of
      *  'b_nummod' for system buffers.
      */
     if (0 == (WRITE_FORCE & flags)) {
@@ -914,7 +914,7 @@ file_write(const char *fname, const int32_t flags)
 #if (TODO_REG_FILE_SAVE)
     if (0 == (WRITE_NOTRIGGER & flags))
         if (0 == trigger_rint(REG_FILE_SAVE)) {
-            infof("Buffer write was denyed -- not written.");
+            infof("Buffer write was denied -- not written.");
             return -4;
         }
 #endif

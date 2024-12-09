@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sh_win32_c,"$Id: sh_win32.c,v 1.29 2022/08/10 15:44:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_sh_win32_c,"$Id: sh_win32.c,v 1.30 2024/12/09 14:13:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sh_win32.c,v 1.29 2022/08/10 15:44:57 cvsuser Exp $
+/* $Id: sh_win32.c,v 1.30 2024/12/09 14:13:08 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -53,8 +53,6 @@ struct procdata {
     HANDLE              hOutput;
     HANDLE              hError;
 };
-
-extern int              w32_errno_set(void);
 
 static const char *     OutDirect(const char *path, int *append);
 static int              Dup(HANDLE old, HANDLE *dup, BOOL inherit);

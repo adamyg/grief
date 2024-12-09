@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_symbol_c,"$Id: m_symbol.c,v 1.44 2022/05/26 16:37:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_symbol_c,"$Id: m_symbol.c,v 1.47 2024/12/09 14:13:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_symbol.c,v 1.44 2022/05/26 16:37:06 cvsuser Exp $
+/* $Id: m_symbol.c,v 1.47 2024/12/09 14:13:08 cvsuser Exp $
  * Symbol primitives.
  *
  *
@@ -47,12 +47,54 @@ static void             i_currentbuffer(SYMBOL *sp);
 static void             i_currentwindow(SYMBOL *sp);
 static void             s_getenv(SYMBOL *sp);
 
+/*
+ *<<GRIEF>> [macro]
+    Constant: CRISP_OPSYS - Operating system identifier.
+
+        extern const string
+            CRISP_OPSYS;
+
+    Constant Description:
+        The 'CRISP_OPSYS' global constant is assigned the name associated
+        with the current running operating system.
+
+    Constant See Also:
+        GRPROGNAME
+
+ *<<GRIEF>> [macro]
+    Constant: GRPROGNAME - GRIEF application path.
+
+        extern const string
+            GRPROGNAME;
+
+    Constant Description:
+        The 'GRPROGNAME' global constant is assigned the full-path of
+        the current running application;
+
+    Constant See Also:
+        GRINIT_FILE
+
+ *<<GRIEF>> [macro]
+    Constant: GRRC - GRIEF resource file path.
+
+        extern const string
+            GRRC;
+
+    Constant Description:
+        The 'GRRC' global constant is assigned the full-path of
+        the active resource file, if any.
+
+    Constant See Also:
+        GRRC_FILE
+*/
+
 static const struct {   /* string values */
     const char *        tag;
     const char **       value;
 } svalues[] = {
         { "CRISP_OPSYS",        &x_machtype     },
         { "GRPROGNAME",         &x_progname     },
+        { "GRRC",               &x_resource     },
     /*- { "CRISP_DELIM",        NULL            }, -*/
     /*- { "CRISP_SLASH",        NULL            }, -*/
     /*- { "CRISP_DIRSEP",       NULL            }, -*/
@@ -64,7 +106,7 @@ static const struct {   /* string values */
     Constant: GRRESTORE_FILE - GRIEF restore file name.
 
         extern const string
-        GRRESTORE_FILE;
+            GRRESTORE_FILE;
 
     Constant Description:
         The 'GRRESTORE_FILE' global constant is assigned to the
@@ -77,7 +119,7 @@ static const struct {   /* string values */
     Constant: GRSTATE_FILE - GRIEF state file name.
 
         extern const string
-        GRSTATE_FILE;
+            GRSTATE_FILE;
 
     Constant Description:
         The 'GRSTATE_FILE' global constant is assigned to the system
@@ -90,7 +132,7 @@ static const struct {   /* string values */
     Constant: GRSTATE_DB - GRIEF state database name.
 
         extern const string
-        GRSTATE_DB;
+            GRSTATE_DB;
 
     Constant Description:
         The 'GRSTATE_DB' global constant is assigned to the system
@@ -100,10 +142,79 @@ static const struct {   /* string values */
         GRRESTORE_FILE, GRSTATE_FILE, GRSTATE_DB, GRINIT_FILE
 
  *<<GRIEF>> [macro]
+    Constant: GRRC_FILE - GRIEF initialisation name.
+
+        extern const string
+            GRRC_FILE;
+
+    Constant Description:
+        The 'GRRC_FILE' global constant is assigned to the system
+        dependent resource file name. The resource file is an
+        alternative source of application arguments, equivalent to
+        the <GRFLAGS> environment variable.
+
+        The resource file provides a means to set up private user
+        options to be automatically applied on each execution.
+
+            o Unix style systems, ".grrc".
+
+            o Windows systems, either ".grrc" or "_grrc"
+
+        The resource file is used to specify implied command line
+        arguments. GRFLAGS and GRRC are mutually exclusive, GRIEF
+        either processes the switches stated within <GRFLAGS> or
+        the resource file before processing the explicit flags on
+        the command line. As such, if both are present *GRFLAGS*
+        has priority.
+
+        For example, your GRIEF profile macro can be automatic
+        loaded on start using:
+
+>           # .grrc example
+>           -mmyprofile
+
+        The character `#' introduces a comment if used at the
+        beginning of a line. Lines starting with `#' are ignored
+        as are blank lines.  One or more white-space separated
+        options can be stated per-line but it is advised to use
+        one for readability.
+
+        Processing may be inhibited by using the *--norc* option on
+        the command line, disabling both <GRFLAGS> and resource file
+        processing.
+
+     Location::
+
+        The standard location of the configuration is within the home
+        directory.
+
+            o Unix style systems, the home directory of the
+                current user is specified by the $HOME environment
+                variable; this is also represented by the '~'
+                directory.
+
+>                   ~/.grrc
+
+            o Windows systems, the home directory is normally a
+                derived from the $HOMEDRIVE and $HOMEPATH environment
+                variables or system calls.
+
+>                   $HOMEDRIVE\$HOMEPATH\_grrc
+
+        The <GRRC> global string shall represent the path of the
+        resolved resource file.
+
+        The 'sysinfo' macro can be used to see the path of the
+        active resource name.
+
+    Constant See Also:
+        GRRC, GRINIT_FILE, vars
+
+ *<<GRIEF>> [macro]
     Constant: GRINIT_FILE - GRIEF initialisation name.
 
         extern const string
-        GRINIT_FILE;
+            GRINIT_FILE;
 
     Constant Description:
         The 'GRINIT_FILE' global constant is assigned to the system
@@ -118,8 +229,8 @@ static const struct {   /* string values */
 
      Location::
 
-        The standard location of the configuration is within the home
-        directory.
+        The standard location of the configuration is either within
+        profile directory or the home directory.
 
             o On Unix style systems, the home directory of the
                 current user is specified by the $HOME environment
@@ -147,7 +258,7 @@ static const struct {   /* string values */
     Constant: GRLOG_FILE - GRIEF diagnostics log file name.
 
         extern const string
-        GRLOG_FILE;
+            GRLOG_FILE;
 
     Constant Description:
         The 'GRLOG_FILE' global constant is assigned to the system
@@ -163,6 +274,7 @@ static const struct {   /* string constant's */
     const char *        tag;
     const char *        value;
 } sconsts[] = {
+        { "GRRC_FILE",          GRRC_FILE       },
         { "GRRESTORE_FILE",     GRRESTORE_FILE  },
         { "GRSTATE_FILE",       GRSTATE_FILE    },
         { "GRSTATE_DB",         GRSTATE_DB      },
@@ -294,7 +406,7 @@ static const struct {    /* float constant's */
     Constant: GRVERSIONMAJOR - GRIEF major version
 
         extern const int
-            GRVERSIONMAJOR;
+        GRVERSIONMAJOR;
 
     Constant Description:
         The 'GRVERSIONMAJOR' global constant is set to the minor
@@ -307,14 +419,14 @@ static const struct {    /* float constant's */
     Constant: GRVERSIONMINOR - GRIEF minor version.
 
         extern const int
-            GRVERSIONMINOR;
+        GRVERSIONMINOR;
 
     Constant Description:
         The 'GRVERSIONMINOR' global constant is set to the minor
         number of the running GRIEF implementation version.
 
     Constant See Also:
-        GRVERSIONMAJOR, GRVERSIONMINOR
+        GRVERSIONMAJOR, GRVERSIONMINOR, vars
 
  *<<GRIEF>> [macro]
     Constant: GRLEVEL - GRIEF Nesting level.
@@ -436,7 +548,7 @@ static const struct {   /* dynamic integer values */
         GRHELP is equivalent to the BRIEF 'BHELP' environment variable.
 
     Constant See Also:
-        GRPATH, GRHELP, GRBACKUP, GRDICTIONARIES
+        GRPATH, GRHELP, GRBACKUP, GRDICTIONARIES, vars
 
  *<<GRIEF>> [macro]
     Constant: GRDICTIONARIES - Dictionary locales
@@ -477,7 +589,7 @@ static const struct {   /* dynamic integer values */
         dictionaries are to be sourced during spell check operations.
 
     Constant See Also:
-        GRPATH, GRDICTIONARY, GRDICTIONARIES
+        GRPATH, GRDICTIONARY, GRDICTIONARIES, vars
 
  *<<GRIEF>> [macro]
     Constant: GRTERM - Terminal override.
@@ -542,7 +654,7 @@ static const struct {   /* dynamic integer values */
         console applications.
 
     Constant See Also:
-        GRTERM, GRTERMCAP
+        GRTERM, GRTERMCAP, vars
 
  *<<GRIEF>> [macro]
     Constant: GRTMP - Temporary dictionary.
@@ -568,7 +680,7 @@ static const struct {   /* dynamic integer values */
         GRTMP is equivalent to the BRIEF 'BTMP' environment variable.
 
     Constant See Also:
-        GRPATH
+        GRPATH, vars
 
  *<<GRIEF>> [macro]
     Constant: GRFLAGS - Default command line arguments.
@@ -579,7 +691,7 @@ static const struct {   /* dynamic integer values */
     Constant Description:
         The 'GRFLAGS' global string is used to specify the default
         implied command line arguments. GRIEF processes the switches
-        stated in GRFLAGS after processing the explicit flags on the
+        stated in GRFLAGS before processing the explicit flags on the
         command line.
 
         The GRFLAGS variable provides a means to set up private user
@@ -937,7 +1049,7 @@ sym_globals(void)
     /*strings*/
     for (i = 0; i < (sizeof(svalues)/sizeof(svalues[0])); ++i) {
         sp = sym_push(1, svalues[i].tag, F_STR, SF_CONSTANT|SF_SYSTEM);
-        sym_assign_str(sp, *svalues[i].value);
+        sym_assign_str(sp, *svalues[i].value ? *svalues[i].value : "");
     }
 
     for (i = 0; i < (sizeof(sconsts)/sizeof(sconsts[0])); ++i) {
@@ -1279,7 +1391,7 @@ do_make_local_variable(void)    /* void (name ...) */
         'string', 'list', 'float' or 'declare' statement before it
         can be made into a global.
 
-        The 'global' is a managed primitive and shall be automaticlly
+        The 'global' is a managed primitive and shall be automatically
         invoked on global variable declarations as follows:
 
 (start code)
@@ -2251,11 +2363,11 @@ reprompt:;
             type should match the type of the parameter.
 
         optional - Optional boolean value, if *true* missing
-            parameters shall not generate an error, otherwose if
+            parameters shall not generate an error, otherwise if
             *false* or omitted an error will be echoed.
 
     Macro Returns:
-        The 'put_parm()' primitive returns 1 or greater on sucesss,
+        The 'put_parm()' primitive returns 1 or greater on success,
         otherwise 0 or less on error.
 
         On the detection of error conditions the following
@@ -2618,3 +2730,4 @@ do_ref_parm(void)               /* (int argument, string local_symbol, [int opti
 }
 
 /*end*/
+

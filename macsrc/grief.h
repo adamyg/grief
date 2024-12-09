@@ -1463,6 +1463,9 @@ extern string                   CRISP_DIRSEP;
 /*
  *  Profile and configuration names.
  */
+extern const string             GRRC;
+extern const string             GRRC_FILE;
+
 extern const string             GRRESTORE_FILE;
 extern const string             GRSTATE_FILE;
 extern const string             GRSTATE_DB;

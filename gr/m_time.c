@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_time_c,"$Id: m_time.c,v 1.19 2024/08/25 06:01:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_time_c,"$Id: m_time.c,v 1.20 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_time.c,v 1.19 2024/08/25 06:01:53 cvsuser Exp $
+/* $Id: m_time.c,v 1.20 2024/12/06 15:46:06 cvsuser Exp $
  * Time primitives.
  *
  *
@@ -557,4 +557,5 @@ do_cftime(void)                 /* string (string format, int time) */
 {
     do_strftime();
 }
+
 /*end*/

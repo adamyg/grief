@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_brief_c,"$Id: m_brief.c,v 1.10 2024/08/18 10:50:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_brief_c,"$Id: m_brief.c,v 1.11 2024/12/05 19:00:11 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_brief.c,v 1.10 2024/08/18 10:50:14 cvsuser Exp $
+/* $Id: m_brief.c,v 1.11 2024/12/05 19:00:11 cvsuser Exp $
  * BRIEF compatibility.
  *
  *
@@ -85,7 +85,7 @@ inq_brief_level(void)
 >                   int event,      // event code; see below
 >                   int modifier,   // modifier keys
 >                   int parm2,      // either line or scrollbar position
->                   int parm3       // either colume or thrumb position
+>                   int parm3       // either column or thumb position
 >                   )
 >           {
 >               switch(event) {
@@ -465,6 +465,3 @@ do_set_btn2_action(void)        /* int ([int action]) */
 //  }
 
 /*end*/
-
-
-

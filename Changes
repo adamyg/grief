@@ -1,11 +1,13 @@
 -*- encoding: utf-8; -*-
 
-Tue Oct 29 22:48:55 2024 adamy
+Sat Dec  7 00:20:15 2024 adamy
 
 	* build-28
 
 	* Tickets
 
+		- grrc and dayone logic; #62, #96
+		- Meta/ESC processing, kbprotocols extensions; #95
 		- ncursesw6 configuration; #93
 		- colorscheme for truecolor; #91
 			- colorshemegui.

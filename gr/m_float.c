@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_float_c,"$Id: m_float.c,v 1.28 2022/08/10 15:44:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_float_c,"$Id: m_float.c,v 1.29 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_float.c,v 1.28 2022/08/10 15:44:57 cvsuser Exp $
+/* $Id: m_float.c,v 1.29 2024/12/06 15:46:06 cvsuser Exp $
  * Floating point primitives.
  *
  *
@@ -150,7 +150,7 @@ unsigned _WCNEAR _chipbug = 0;			/* suppress Pentuin div checking */
  *  allowed by the format (single- or double-precision) and a
  *  mantissa that is non-zero.
  *
- *   o The bit pattern of the mantissa for a signalling NaN has the
+ *   o The bit pattern of the mantissa for a signaling NaN has the
  *     most significant digit set to zero and at least one of the
  *     remaining digits set to one.
  *
@@ -161,7 +161,7 @@ unsigned _WCNEAR _chipbug = 0;			/* suppress Pentuin div checking */
  *
  *   o Positive infinity is represented by the bit pattern 7F800000.
  *   o Negative infinity is represented by the bit pattern FF800000.
- *   o A signalling NaN (NANS) is represented by any bit pattern
+ *   o A signaling NaN (NANS) is represented by any bit pattern
  *      between 7F800001 and 7FBFFFFF or between FF800001 and FFBFFFFF.
  *   o A quiet NaN (NANQ) is represented by any bit pattern
  *      between 7FC00000 and 7FFFFFFF or between FFC00000 and FFFFFFFF.
@@ -170,7 +170,7 @@ unsigned _WCNEAR _chipbug = 0;			/* suppress Pentuin div checking */
  *
  *   o Positive infinity is represented by the bit pattern 7FF0000000000000.
  *   o Negative infinity is represented by the bit pattern FFF0000000000000.
- *   o A signalling NaN is represented by any bit pattern
+ *   o A signaling NaN is represented by any bit pattern
  *      between 7FF0000000000001 and 7FF7FFFFFFFFFFFF or
  *      between FFF0000000000001 and FFF7FFFFFFFFFFFF.
  *   o A quiet NaN is represented by any bit pattern

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_region_c,"$Id: m_region.c,v 1.12 2022/07/10 13:13:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_region_c,"$Id: m_region.c,v 1.13 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_region.c,v 1.12 2022/07/10 13:13:08 cvsuser Exp $
+/* $Id: m_region.c,v 1.13 2024/12/06 15:46:06 cvsuser Exp $
  * Block primitives.
  *
  *
@@ -154,7 +154,7 @@ do_delete_block(void)           /* int delete_block() */
             the end of the file; otherwise the file content is replaced.
 
         keep - Optional boolean value, if true the marked region is
-            retainined, otherwise on completion the region is cleared.
+            retained, otherwise on completion the region is cleared.
 
         pause - Optional boolean value control pipe completion handling.
             During pipe operations the command may destroy the screen.

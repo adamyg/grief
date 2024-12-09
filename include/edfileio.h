@@ -1,11 +1,11 @@
 #ifndef GR_EDFILEIO_H_INCLUDED
 #define GR_EDFILEIO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edfileio_h,"$Id: edfileio.h,v 1.20 2024/04/08 15:07:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_edfileio_h,"$Id: edfileio.h,v 1.21 2024/12/05 18:18:30 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edfileio.h,v 1.20 2024/04/08 15:07:03 cvsuser Exp $
+/* $Id: edfileio.h,v 1.21 2024/12/05 18:18:30 cvsuser Exp $
  * File input/output functionality system api names.
  * Required by non-posix environments (ie. WIN32).
  *
@@ -56,7 +56,12 @@ __CBEGIN_DECLS
 /*
  *  MSVC and WATCOMC
  */
+#if defined(EDFILE_NATIVE)
+#define fileio_open(_fn, _of, _om)  _open(_fn, _of, _om)
+#else
+#include <../libw32/win32_io.h>
 #define fileio_open(_fn, _of, _om)  w32_open(_fn, _of, _om)
+#endif
 #define fileio_close(_fd)           _close(_fd)
 #define fileio_read(_fd, _ib, _is)  _read(_fd, _ib, _is)
 #define fileio_write(_fd, _ob, _is) _write(_fd, _ob, _is)

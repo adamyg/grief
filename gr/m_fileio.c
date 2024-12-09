@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_fileio_c,"$Id: m_fileio.c,v 1.19 2015/02/24 23:10:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_fileio_c,"$Id: m_fileio.c,v 1.20 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_fileio.c,v 1.19 2015/02/24 23:10:08 cvsuser Exp $
+/* $Id: m_fileio.c,v 1.20 2024/12/06 15:46:06 cvsuser Exp $
  * File i/o primitives.
  *
  *
@@ -896,4 +896,5 @@ do_ftruncate(void)              /* (int handle, ..) */
 {
     acc_assign_int(-1);
 }
+
 /*end*/

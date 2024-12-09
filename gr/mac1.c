@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mac1_c,"$Id: mac1.c,v 1.78 2024/08/04 10:07:46 cvsuser Exp $")
+__CIDENT_RCSID(gr_mac1_c,"$Id: mac1.c,v 1.79 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mac1.c,v 1.78 2024/08/04 10:07:46 cvsuser Exp $
+/* $Id: mac1.c,v 1.79 2024/12/06 15:46:06 cvsuser Exp $
  * Basic primitives.
  *
  *
@@ -222,7 +222,7 @@ inq_msg_level(void)             /* int () */
 
     Macro Returns:
         The 'backspace()' primitive returns non-zero if successful
-        impling the cursor moved, otherwise zero.
+        implying the cursor moved, otherwise zero.
 
     Macro Portability:
         The 'num' option is a Grief extension.
@@ -1405,12 +1405,12 @@ do_throw(void)                  /* void (int|string expr) */
 
         If condition evaluates to the value that is equal to the
         value of one of case expressions, then control is
-        transferred to the statement that is labelled with that
+        transferred to the statement that is labeled with that
         expression.
 
         If condition evaluates to the value that does not match any
         of the 'case' labels, and the 'default' label is present,
-        control is transferred to the statement labelled as the
+        control is transferred to the statement labeled as the
         default label.
 
     Macro Parameters:
@@ -2051,7 +2051,7 @@ do_insert_buffer(void)          /* int (int bufnum, string | expr ....) */
             newlines - Cursor is repositioned on the next line.
 
         This primitive is normally used in conjunction with
-        <assign_to_key> to unassign an ASCII key by making it a
+        <assign_to_key> to unassigned an ASCII key by making it a
         normal, typeable character.
 
     Macro Parameters:

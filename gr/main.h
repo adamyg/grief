@@ -1,11 +1,11 @@
 #ifndef GR_MAIN_H_INCLUDED
 #define GR_MAIN_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_main_h,"$Id: main.h,v 1.35 2024/10/18 05:19:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_main_h,"$Id: main.h,v 1.37 2024/12/09 14:13:08 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: main.h,v 1.35 2024/10/18 05:19:14 cvsuser Exp $
+/* $Id: main.h,v 1.37 2024/12/09 14:13:08 cvsuser Exp $
  * Globals and main process primitives.
  *
  *
@@ -29,7 +29,10 @@ __CBEGIN_DECLS
 /*
  *  Global variables declared in main.c
  */
+
 extern const char *         x_progname;         /* arg0 or better */
+
+extern const char *         x_resource;         /* active resource-file, in any. */
 
 extern const char *         xf_mouse;           /* mouse mode; NULL disabled. */
 
@@ -140,6 +143,7 @@ extern void                 set_curwpbp(WINDOW_t *wp, BUFFER_t *bp);
 
 extern void                 panic(const char *msg, ...) __ATTRIBUTE_FORMAT__((printf, 1, 2));
 extern void                 gr_exit(int);
+extern void                 gr_shutdown(int);
 
 extern void                 main_loop(void);
 extern void                 check_exit(void);
@@ -152,3 +156,4 @@ extern void                 do_suspend(void);
 __CEND_DECLS
 
 #endif /*GR_MAIN_H_INCLUDED*/
+

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_color_c,"$Id: m_color.c,v 1.57 2024/10/08 12:22:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_color_c,"$Id: m_color.c,v 1.58 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_color.c,v 1.57 2024/10/08 12:22:41 cvsuser Exp $
+/* $Id: m_color.c,v 1.58 2024/12/06 15:46:06 cvsuser Exp $
  * Color configuration.
  *
  *
@@ -220,7 +220,7 @@ static const struct attribute   attributes_default[] = {
      *      Note: configuration is a little messy due to the need for compatibility with
      *      the original colour support.
      *
-     *      Order of COL_xxx emumerated attributes *must* not change.
+     *      Order of COL_xxx enumerated attributes *must* not change.
      *
      *  Special Cases:
      *      BACKGROUND          Use only first specification.
@@ -350,7 +350,7 @@ static const struct attribute   attributes_default[] = {
 //  { _A1("spell_caps"),                -1,                     CA_ATTR,        ATTR_SPELL_CAPS,                ATTR_SPELL },
 //  { _A1("spell_local"),               -1,                     CA_ATTR,        ATTR_SPELL_LOCAL,               ATTR_SPELL },
 //  { _A1("spell_special"),             -1,                     CA_ATTR,        ATTR_SPELL_SPECIAL,             ATTR_SPELL },
-        // TODO - additional special attritbutes
+        // TODO - additional special attributes
 
     { _A1("comment"),                   -1,                     CA_ATTR,        ATTR_COMMENT,                   0 },
     { _A1("comment_standout"),          -1,                     CA_ATTR,        ATTR_COMMENT_STANDOUT,          ATTR_STANDOUT },
@@ -868,7 +868,7 @@ do_set_color_pair(void)         /* (string name|int ident, [int|string] fg, [int
         case-insensitive see <set_color> for more details.
 
         The specified attribute color values shall be assigned to the
-        specified arguments 'foreground', 'backbround' and 'style'.
+        specified arguments 'foreground', 'background' and 'style'.
 
     Macro Parameters:
         ident - Attribute identifier.
@@ -1064,7 +1064,7 @@ do_get_color_pair(void)         /* (string name|int ident, [int|string fg], [int
       ! Dark-gray       DKGREY              DarkGray
       ! Dark-blue       DKBLUE              DarkBlue
       ! Dark-green      DKGREEN             DarkGreen
-      ! Dark-cyan       DKCYAN              Darkcyan
+      ! Dark-cyan       DKCYAN              DarkCyan
       ! Dark-red        DKRED               DarkRed
       ! Dark-magenta    DKMAGENTA           DarkMagenta
       ! Dark-yellow     DKYELLOW            DarkYellow
@@ -2720,7 +2720,7 @@ color_value(const char *name, colvalue_t *val, int bg)
  *>         #rrggbb                             RGB value.
  *>         color-<dec>                         where <dec> represents a color value.
  *>         color#<hex>                         where <hex> represents a color value.
- *>         0[X]xx                              Numeric valus (decimal, octal or hex).
+ *>         0[X]xx                              Numeric value (decimal, octal or hex).
  *>         <[%]name>                           Symbolic name, sourced from 'color_labels'.
  *
  *  Parameters:

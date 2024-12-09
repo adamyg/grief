@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_file_c,"$Id: m_file.c,v 1.46 2024/08/01 17:11:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_file_c,"$Id: m_file.c,v 1.47 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_file.c,v 1.46 2024/08/01 17:11:07 cvsuser Exp $
+/* $Id: m_file.c,v 1.47 2024/12/06 15:46:06 cvsuser Exp $
  * File primitives.
  *
  *
@@ -381,7 +381,7 @@ do_searchpath(void)             /* int (string searchpath, string file, [string 
             drive letter, followed by a colon(:).
 
     Macro Returns:
-        The 'splitpath()' primitive returns pothing.
+        The 'splitpath()' primitive returns nothing.
 
     Macro Portability:
         A Grief extension.
@@ -800,7 +800,7 @@ do_file_canon(void)             /* string (string filespec) */
 
     Macro Returns:
         The 'file_match()' primitive returns 1 if file matches the
-        specified pattern; returns 0 if pattern isnt matched. If
+        specified pattern; returns 0 if pattern isn't matched. If
         pattern is a list, then the index into the list that matched
         the expression or -1.
 
@@ -947,7 +947,7 @@ file_match(int parg, int farg, int flags)
 
             ~  -    User name home directory.
 
-            \x -    Quote the next metacharacter 'x'.
+            \x -    Quote the next meta-character 'x'.
 
     Macro Returns:
         The 'glob()' primitive returns a string containing the result
@@ -1846,7 +1846,7 @@ do_exist(void)                  /* int (string path, [int canon = TRUE]) */
         either 1 when *true* otherwise 0.
 
     Macro Portability:
-        A Grief extenions.
+        A Grief extension.
 
     Macro See Also:
         access, exist, stat, chmod, chown
@@ -3137,7 +3137,7 @@ do_filename_realpath(void)      /* string (string pathname) */
 
         Note!:
         Since this primitive is not portable outside of a DOS/Windows
-        environment, its use is not adviced.
+        environment, its use is not advised.
 
     Macro Parameters:
         fullname - A string containing the file-name to be parsed.
@@ -3294,7 +3294,7 @@ do_parse_filename(void)         /* int (string fullname, [string &drive],
         parent directory name of a file pathname, otherwise a
         string containing ".".
 
-    Macro Portiablity:
+    Macro Portability:
         A Grief extension.
 
     Macro See Also:
@@ -3424,7 +3424,7 @@ do_filename(int dirname)        /* (string path, [string suffix]) */
 >           >0 - name1 greater than name2.
 
     Macro Portability:
-        A Grief extenions.
+        A Grief extension.
 
     Macro See Also:
         strcmp

@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: grief.cr,v 1.99 2024/11/24 14:37:53 cvsuser Exp $
+/* $Id: grief.cr,v 1.100 2024/12/09 14:14:19 cvsuser Exp $
  * GRIEF startup macro.
  *
  *
@@ -653,15 +653,39 @@ grief(void)
     }
     display_windows(1);
 
-    /* Options */
-    grinit_onload();
-    refresh();
-
     /* Localised keyboard description */
     envvar = lower(getenv("BKBD"));
     if (envvar != "") {
         load_macro("kbd/" + envvar);
     }
+}
+
+
+int
+grief_resource(string resources)
+{
+    extern int dayone(void);
+
+    if (first_time()) {
+        int ret = 0;
+
+        if (resources == "yes") {               // check resources, unless --norc
+            if (load_macro("dayone")) {
+                if ((ret = dayone()) != 0) {
+                    if (ret < 0) {
+                        return 1;               // dayone event, exit
+                    }
+                }
+            }
+        }
+
+        if (ret == 0) {
+            register_macro(REG_EXIT, "grinit_onexit");
+        }
+        grinit_onload();
+        refresh();
+    }
+    return 0;
 }
 
 
@@ -900,10 +924,8 @@ grinit_onload(void)
     //  guard and register matching completion
     //
     if (! first_time()) {
-         return;
+        return;
     }
-
-    register_macro(REG_EXIT, "grinit_onexit");
 
     //  parse 'inifile'
     //

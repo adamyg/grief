@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_sysinfo_c,"$Id: m_sysinfo.c,v 1.12 2024/07/19 05:04:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_sysinfo_c,"$Id: m_sysinfo.c,v 1.13 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_sysinfo.c,v 1.12 2024/07/19 05:04:22 cvsuser Exp $
+/* $Id: m_sysinfo.c,v 1.13 2024/12/06 15:46:06 cvsuser Exp $
  * System information primitives.
  *
  *
@@ -237,7 +237,7 @@ inq_hostname(void)              /* string () */
     Macro Description:
         The 'uname()' primitive retrieves the strings corresponding to the
         result of a uname system call. On non-POSIX systems, these
-        strings maybe blank unless there is an equilvent value available.
+        strings maybe blank unless there is an equivalent value available.
 
     Macro Parameters:
         sysname  - System name.

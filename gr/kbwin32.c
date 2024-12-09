@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_kbwin32_c,"$Id: kbwin32.c,v 1.1 2024/11/18 13:42:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_kbwin32_c,"$Id: kbwin32.c,v 1.2 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: kbwin32.c,v 1.1 2024/11/18 13:42:22 cvsuser Exp $
+/* $Id: kbwin32.c,v 1.2 2024/12/06 15:46:06 cvsuser Exp $
  * Manipulate key maps and bindings.
  *
  *
@@ -53,7 +53,7 @@ static const struct w32key {
     KEY                 code;                   /* interval key value */
 
 } w32Keys[] = {
-    // Only reportsd as an up event, down redirected to event handler.
+    // Only reported as an up event, down redirected to event handler.
 //  { VK_CANCEL,        MOD_CTRL,           "Ctrl-Break",       KEY_BREAK },
 
 //  { VK_KANA,                              "IME Kana mode",    0 },

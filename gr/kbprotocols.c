@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_kbprotocols_c,"$Id: kbprotocols.c,v 1.3 2024/11/18 15:33:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_kbprotocols_c,"$Id: kbprotocols.c,v 1.4 2024/12/06 15:10:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: kbprotocols.c,v 1.3 2024/11/18 15:33:41 cvsuser Exp $
+/* $Id: kbprotocols.c,v 1.4 2024/12/06 15:10:08 cvsuser Exp $
  * Keyboard input protocols.
  *
  *
@@ -61,7 +61,7 @@ static const struct {
     const char* name;
     size_t namelen;
     int mode;
-} protocols[] = {       // Keyboard procols
+} protocols[] = {       // Keyboard protocols
 #define PROTONAME(__name)       __name, sizeof(__name)-1
         { PROTONAME("none"),        KBPROTOCOL_NONE },
         { PROTONAME("auto"),        KBPROTOCOL_AUTO },
@@ -1092,7 +1092,7 @@ cygwin_to_int(const char *buf)
  *      Decode a MSTerminal specific key escape sequence into our internal key-code.
  *
  *  Parameters:
- *      buf - Escape sequnence buffer.
+ *      buf - Escape sequence buffer.
  *
  *  Results:
  *      nothing
@@ -1207,6 +1207,3 @@ kbprotocols_parse(const char *buf, const unsigned buflen, int force)
 #endif  //USE_KBPROTOCOL
 
 /*end*/
-
-
-

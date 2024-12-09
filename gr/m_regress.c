@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_regress_c,"$Id: m_regress.c,v 1.14 2014/11/16 17:28:41 ayoung Exp $")
+__CIDENT_RCSID(gr_m_regress_c,"$Id: m_regress.c,v 1.15 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_regress.c,v 1.14 2014/11/16 17:28:41 ayoung Exp $
+/* $Id: m_regress.c,v 1.15 2024/12/06 15:46:06 cvsuser Exp $
  * Regression test support macros.
  *
  *
@@ -115,7 +115,7 @@ do_regress_replacement(void)
     Macro Description:
         The '__regress_op()' primitive is an *INTERNAL* function utilised
         using system regression testing, providing access to
-        miscellanous system library functions.
+        miscellaneous system library functions.
 
     Macro Returns:
         n/a
@@ -185,4 +185,5 @@ do_regress_op(void)
         break;
     }
 }
+
 /*end*/
