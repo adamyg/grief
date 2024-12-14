@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.151 2024/11/29 11:51:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.159 2024/12/14 11:03:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.151 2024/11/29 11:51:58 cvsuser Exp $
+/* $Id: ttyterm.c,v 1.159 2024/12/14 11:03:02 cvsuser Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -192,6 +192,7 @@ extern int ospeed;
 #define CURSES_CAST(__x) (char *)(__x)
 #endif
 
+typedef uint32_t TIdentifier_t;
 typedef uint32_t TAttributes_t;
 
 static void             term_open(scrprofile_t *profile);
@@ -203,13 +204,15 @@ static void             term_display(void);
 static int              term_control(int action, int param, ...);
 static void             term_close(void);
 
+static int              isterminal(TIdentifier_t type);
+
 static const char *     ttisetup(void);
 static const char *     ttiname(const TermVal_t *ti);
 static const char *     ttigetstr(const TermVal_t *ti);
 static int              ttigetnum(const TermVal_t *ti);
 static int              ttigetflag(const TermVal_t *ti);
 
-static TAttributes_t    term_xtermlike(const char *term);
+static void             term_xtermlike(const char *term, TIdentifier_t *identifier, TAttributes_t *attributes);
 
 static void             key_enable(void);
 static void             key_config(void);
@@ -306,28 +309,31 @@ static char             tcapstrings[TC_SLEN];   /* termcap local storage */
 /*
  *  Terminate attributes
  */
-#define TA_XTERM                0x00000001
+#define TT_XTERM                0x00000001
+#define TT_LINUX                0x00000010
+#define TT_CYGWIN               0x00000020
+#define TT_KONSOLE              0x00000040
+#define TT_SCREEN               0x00000080
+#define TT_MINTTY               0x00000100      /* see: https://github.com/mintty/mintty/wiki/CtrlSeqs */
+#define TT_PUTTY                0x00000200
+#define TT_MSTERMINAL           0x00000400
+#define TT_GNOME                0x00001000
+#define TT_KITTY                0x00002000
+#define TT_ALACRITTY            0x00004000
+#define TT_ITERM                0x00008000
+#define TT_HTERM                0x00010000
+#define TT_WEZTERM              0x00020000
+#define TT_STTERM               0x00040000
+
 #define TA_VT100LIKE            0x00000002
 #define TA_XTERMLIKE            0x00000004
-#define TA_LINUX                0x00010000
-#define TA_CYGWIN               0x00020000
-#define TA_KONSOLE              0x00040000
-#define TA_SCREEN               0x00080000
-#define TA_MINTTY               0x00100000      /* see: https://github.com/mintty/mintty/wiki/CtrlSeqs */
-#define TA_PUTTY                0x00200000
-#define TA_MSTERMINAL           0x00400000
-#define TA_GNOME                0x01000000
-#define TA_KITTY                0x02000000
-#define TA_ALACRITTY            0x04000000
-#define TA_ITERM                0x08000000
-#define TA_HTERM                0x10000000
-#define TA_WEZTERM              0x20000000
 #define TA_DARK                 0x00000010      /* generally dark background */
 #define TA_LIGHT                0x00000020      /* generally light */
 #define TA_MONO                 0x00000040      /* mono terminal */
 #define TA_LUMINANCE_DARK       0x00000100
 #define TA_LUMINANCE_LIGHT      0x00000200
 
+static TIdentifier_t    t_identifier;           /* terminal identifier */
 static TAttributes_t    t_attributes;           /* attributes */
 static int              t_charout;              /* number of characters output. */
 static unsigned         t_insdel;               /* do we have both insert & delete line? */
@@ -1157,17 +1163,17 @@ static TermKey_t term_keys[] = {                /* keys - termcap/terminfo eleme
     { TC_KNAME(xt),                         NULL, "kDC6",       TC_DESC("shift+control delete-character") },
     { TC_KNAME(xt),                         NULL, "kDC7",       TC_DESC("alt+control delete-character") },
     { TC_KNAME(xt),                         NULL, "kDN",        TC_DESC("shift down-cursor") },
-    { TC_KNAME(xt),                         NULL, "kDN3",       TC_DESC("alt down-cursor") },
+    { TC_KNAME(xt),                         NULL, "kDN3",       TC_DESC("alt down-cursor") /* TC_TOKEN(MOD_META | KEYPAD_DOWN) */ },
     { TC_KNAME(xt),                         NULL, "kDN4",       TC_DESC("shift+alt down-cursor") },
     { TC_KNAME(xt),                         NULL, "kDN5",       TC_DESC("control down-cursor") },
     { TC_KNAME(xt),                         NULL, "kDN6",       TC_DESC("shift+control down-cursor") },
     { TC_KNAME(xt),                         NULL, "kDN7",       TC_DESC("alt+control down-cursor") },
-    { TC_KNAME(xt),                         NULL, "kEND3",      TC_DESC("alt end") },
+    { TC_KNAME(xt),                         NULL, "kEND3",      TC_DESC("alt end") /* TC_TOKEN(MOD_META | KEYPAD_END) */ },
     { TC_KNAME(xt),                         NULL, "kEND4",      TC_DESC("shift+alt end") },
     { TC_KNAME(xt),                         NULL, "kEND5",      TC_DESC("control end") },
     { TC_KNAME(xt),                         NULL, "kEND6",      TC_DESC("shift+control end") },
     { TC_KNAME(xt),                         NULL, "kEND7",      TC_DESC("alt+control end") },
-    { TC_KNAME(xt),                         NULL, "kHOM3",      TC_DESC("alt home") },
+    { TC_KNAME(xt),                         NULL, "kHOM3",      TC_DESC("alt home") /* TC_TOKEN(MOD_META | KEYPAD_HOME) */ },
     { TC_KNAME(xt),                         NULL, "kHOM4",      TC_DESC("shift+alt home") },
     { TC_KNAME(xt),                         NULL, "kHOM5",      TC_DESC("control home") },
     { TC_KNAME(xt),                         NULL, "kHOM6",      TC_DESC("shift+control home") },
@@ -1177,28 +1183,28 @@ static TermKey_t term_keys[] = {                /* keys - termcap/terminfo eleme
     { TC_KNAME(xt),                         NULL, "kIC5",       TC_DESC("control insert-character") },
     { TC_KNAME(xt),                         NULL, "kIC6",       TC_DESC("shift+control insert-character") },
     { TC_KNAME(xt),                         NULL, "kIC7",       TC_DESC("alt+control insert-character") },
-    { TC_KNAME(xt),                         NULL, "kLFT3",      TC_DESC("alt left-cursor") },
+    { TC_KNAME(xt),                         NULL, "kLFT3",      TC_DESC("alt left-cursor") /* TC_TOKEN(MOD_META | KEYPAD_LEFT) */ },
     { TC_KNAME(xt),                         NULL, "kLFT4",      TC_DESC("shift+alt left-cursor") },
     { TC_KNAME(xt),                         NULL, "kLFT5",      TC_DESC("control left-cursor") },
     { TC_KNAME(xt),                         NULL, "kLFT6",      TC_DESC("shift+control left-cursor") },
     { TC_KNAME(xt),                         NULL, "kLFT7",      TC_DESC("alt+control left-cursor") },
-    { TC_KNAME(xt),                         NULL, "kNXT3",      TC_DESC("alt next") },
+    { TC_KNAME(xt),                         NULL, "kNXT3",      TC_DESC("alt next") /* TC_TOKEN(MOD_META | KEYPAD_PAGEDOWN) */ },
     { TC_KNAME(xt),                         NULL, "kNXT4",      TC_DESC("shift+alt next") },
     { TC_KNAME(xt),                         NULL, "kNXT5",      TC_DESC("control next") },
     { TC_KNAME(xt),                         NULL, "kNXT6",      TC_DESC("shift+control next") },
     { TC_KNAME(xt),                         NULL, "kNXT7",      TC_DESC("alt+control next") },
-    { TC_KNAME(xt),                         NULL, "kPRV3",      TC_DESC("alt previous") },
+    { TC_KNAME(xt),                         NULL, "kPRV3",      TC_DESC("alt previous") /* TC_TOKEN(MOD_META | KEYPAD_PAGEUP) */ },
     { TC_KNAME(xt),                         NULL, "kPRV4",      TC_DESC("shift+alt previous") },
     { TC_KNAME(xt),                         NULL, "kPRV5",      TC_DESC("control previous") },
     { TC_KNAME(xt),                         NULL, "kPRV6",      TC_DESC("shift+control previous") },
     { TC_KNAME(xt),                         NULL, "kPRV7",      TC_DESC("alt+control previous") },
-    { TC_KNAME(xt),                         NULL, "kRIT3",      TC_DESC("alt right-cursor") },
+    { TC_KNAME(xt),                         NULL, "kRIT3",      TC_DESC("alt right-cursor") /* TC_TOKEN(MOD_META | KEYPAD_RIGHT) */ },
     { TC_KNAME(xt),                         NULL, "kRIT4",      TC_DESC("shift+alt right-cursor") },
     { TC_KNAME(xt),                         NULL, "kRIT5",      TC_DESC("control right-cursor") },
     { TC_KNAME(xt),                         NULL, "kRIT6",      TC_DESC("shift+control right-cursor") },
     { TC_KNAME(xt),                         NULL, "kRIT7",      TC_DESC("alt+control right-cursor") },
     { TC_KNAME(xt),                         NULL, "kUP",        TC_DESC("shift up-cursor") },
-    { TC_KNAME(xt),                         NULL, "kUP3",       TC_DESC("alt up-cursor") },
+    { TC_KNAME(xt),                         NULL, "kUP3",       TC_DESC("alt up-cursor") /* TC_TOKEN(MOD_META | KEYPAD_UP) */ },
     { TC_KNAME(xt),                         NULL, "kUP4",       TC_DESC("shift+alt up-cursor") },
     { TC_KNAME(xt),                         NULL, "kUP5",       TC_DESC("control up-cursor") },
     { TC_KNAME(xt),                         NULL, "kUP6",       TC_DESC("shift+control up-cursor") },
@@ -1461,7 +1467,8 @@ ttinit(void)
      *  build attributes, non-xterm
      */
     if (tty_isterm(term, "linux")) {            /* linux console */
-        t_attributes = TA_LINUX | TA_DARK;
+        t_attributes = TA_DARK;
+        t_identifier = TT_LINUX;
 
     } else if (tty_isterm(term, "cygwin")) {
         const char *cygwin = ggetenv("CYGWIN");
@@ -1480,20 +1487,23 @@ ttinit(void)
                 }
             }
         }
-        t_attributes = TA_CYGWIN|TA_XTERMLIKE|TA_DARK;
+        t_attributes = TA_XTERMLIKE|TA_DARK;
+        t_identifier = TT_CYGWIN;
 
 #if defined(linux)
     } else if (tty_isterm(term, "console") ||   /* console, con80x25 etc */
             (0 == strncmp(term, "con", 3) && term[3] && isdigit(term[3]))) {
-        t_attributes = TA_LINUX|TA_DARK;
+        t_attributes = TA_DARK;
+        t_identifier = TT_LINUX;
 #endif
 
     } else if (tty_isterm(term, "konsole") ||
                 getenv("KONSOLE_DCOP") || getenv("KONSOLE_DBUS_SESSION")) {
-        t_attributes = TA_KONSOLE|TA_XTERMLIKE;
+        t_attributes = TA_XTERMLIKE;
+        t_identifier = TT_KONSOLE;
 
     } else if (tty_isterm(term, "screen")) {
-        t_attributes = TA_SCREEN;               /* screen[.linux] */
+        t_identifier = TT_SCREEN;               /* screen[.linux] */
         if (0 == tty_isterm(term, "screen.linux")) {
             t_attributes |= TA_DARK;
         }
@@ -1503,10 +1513,11 @@ ttinit(void)
         t_attributes = TA_VT100LIKE;
 
     } else {
-        t_attributes = term_xtermlike(term);
+        term_xtermlike(term, &t_identifier, &t_attributes);
 #if defined(__CYGWIN__)
         if (ggetenv("WT_SESSION")) {
-            t_attributes |= TA_MSTERMINAL|TA_DARK; /* ms-terminal */
+            t_attributes |= TA_DARK;            /* ms-terminal */
+            t_identifier =  TT_MSTERMINAL;
         } else if (ggetenv("COMSPEC")) {
             t_attributes |= TA_DARK;            /* cmd/mintty */
         }
@@ -1520,10 +1531,9 @@ ttinit(void)
         t_attributes |= TA_MONO;                /* m  = monochrome, suppress color support */
     }
 
-    trace_log("terminal: %s (0x%08x=%s%s%s%s%s%s)\n", term, t_attributes,
+    trace_log("terminal: %s (0x%08x=%s%s%s%s%s)\n", term, t_attributes,
         (t_attributes & TA_VT100LIKE ? "vt100like," : ""),
-        (t_attributes & TA_XTERM ? "xterm," : ""),
-            (t_attributes & TA_XTERMLIKE ? "xtermlike," : ""),
+        (t_attributes & TA_XTERMLIKE ? "xtermlike," : ""),
         (t_attributes & TA_LIGHT ? "light," : ""),
         (t_attributes & TA_DARK ? "dark," : ""),
         (t_attributes & TA_MONO ? "mono," : ""));
@@ -1569,13 +1579,13 @@ ttinit(void)
     }
                                                 /* VT2xx+ */
     if (((t_attributes & TA_VT100LIKE) && term[2] != '1') ||
-                (t_attributes & (TA_LINUX|TA_XTERMLIKE)) ) {
+            isterminal(TT_LINUX) || (t_attributes & TA_XTERMLIKE)) {
         if (NULL == tc_pDL) tc_pDL = "\033[%dM";
         if (NULL == tc_pAL) tc_pAL = "\033[%dL";
         if (NULL == tc_cm)  tc_cm  = "\033[%i%d;%dH";
     }
 
-    if (t_attributes & (TA_LINUX|TA_XTERM)) {   /* VT2xx */
+    if (isterminal(TT_LINUX|TT_XTERM)) {        /* VT2xx */
         if (NULL == tc_cb)  tc_cb = "\033[1K";
         if (NULL == tc_ce)  tc_ce = "\033[K";
     }
@@ -1647,12 +1657,15 @@ ttinit(void)
         x_pt.pt_codepage = GetConsoleOutputCP();
         trace_log("\tcodepage: %d\n", x_pt.pt_codepage);
     }
-    if (TA_CYGWIN & t_attributes) {
+    if (isterminal(TT_CYGWIN)) {
         x_pt.pt_attributes |= TF_ACYGWIN;       /* Cygwin terminal */
         tf_xn = 1;
     }
 #endif /*__CYGWIN__*/
 
+    if (ttxtermlike()) {
+        x_pt.pt_attributes |= TF_AXTERMLIKE;
+    }
     if (tf_km) {
         x_pt.pt_attributes |= TF_AMETAKEY;
     }
@@ -1790,7 +1803,7 @@ term_config(void)
 int
 ttxtermlike(void)
 {
-    return ((t_attributes & (TA_XTERM|TA_XTERMLIKE)) ? 1 : 0);
+    return (isterminal(TT_XTERM) || (t_attributes & (TA_XTERMLIKE)) ? 1 : 0);
 }
 
 
@@ -1887,18 +1900,18 @@ term_close(void)
  *      Run-time initialisation.
  *
  *  Parameters:
- *      repaint - *true* if the screen should be repainted.
+ *      vtstate - ready event, VTCREATE, VTRESTORE or VTWINCH.
  *      profile - console profile.
  *
  *  Returns:
  *      nothing.
  */
 static void
-term_ready(int repaint, scrprofile_t *profile)
+term_ready(int vtstate, scrprofile_t *profile)
 {
     static unsigned once;
 
-    trace_log("term_ready(%d)\n", repaint);
+    trace_log("term_ready(%d)\n", vtstate);
 
     /*
      *  dump configuration
@@ -1997,7 +2010,7 @@ term_ready(int repaint, scrprofile_t *profile)
      */
     term_colorreset();
 
-    if (repaint) {
+    if (vtstate == VTCREATE || vtstate == VTRESTORE) {
         if (x_pt.pt_init[0])                    /* terminal specific init */
             ttputctl2(x_pt.pt_init, 0, 0);
         xterm_colors(t_colorsuser);
@@ -2242,7 +2255,7 @@ term_control(int action, int param, ...)
         if (! tty_open) {
             ttopen();
         }
-        term_ready(TRUE, NULL);
+        term_ready(VTRESTORE, NULL);
         break;
 
     case SCR_CTRL_COLORS:       /* color change */
@@ -2252,6 +2265,22 @@ term_control(int action, int param, ...)
         return -1;
     }
     return 0;
+}
+
+
+/*  Function:           isterminal
+ *      Determine terminal type.
+ *
+ *  Parameters:
+ *      id - Terminal identifier.
+ *
+ *  Returns:
+ *      Terminal name on success, otherwise the interface exits.
+ */
+static int
+isterminal(TIdentifier_t id)
+{
+   return (t_identifier & id ? 1 : 0);
 }
 
 
@@ -2523,19 +2552,24 @@ ttcfgkeys(unsigned *count)
 static void
 key_enable(void)
 {
+    char kbprotocols[64];
+
     key_config();                               /* terminal specific selection */
 
-    strxcpy(x_pt.pt_kbprotocol, key_protocolname(xf_kbprotocol, "unknown"), sizeof(x_pt.pt_kbprotocol));
-
-    if (xf_kbprotocol == KBPROTOCOL_NONE)
+    if (xf_kbprotocol == KBPROTOCOL_NONE) {
+        strxcpy(x_pt.pt_kbprotocol, "none", sizeof(x_pt.pt_kbprotocol));
         return;
+    }
 
     if (tc_mm && *tc_mm) {
         ttputpad(tc_mm);                        /* enable metaSendsEscape */
         xf_kbprotocol |= KBPROTOCOL_META;
     }
 
-    if (t_attributes & TA_MINTTY) {
+    key_protocoldecode(xf_kbprotocol, kbprotocols, sizeof(kbprotocols));
+    strxcpy(x_pt.pt_kbprotocol, kbprotocols, sizeof(x_pt.pt_kbprotocol));
+
+    if (isterminal(TT_MINTTY)) {
         if (! xf_mouse) {
             ttpush("\033[?7786h");              /* nomouse, mouse-wheel reports only */
                 // mousewheel events are reported as cursor key presses; https://github.com/mintty/mintty/wiki/CtrlSeqs
@@ -2584,7 +2618,9 @@ key_enable(void)
          *      Pv = 2, extended
          */
         trace_log("\tmok2-mode.\n");
-        ttpush("\x1b[>4;2m");                   /* enable xterm-mok2-mode */
+        if (! isterminal(TT_STTERM)) {
+            ttpush("\x1b[>4;2m");               /* enable xterm-mok2-mode */
+        }
 
     } else if (xf_kbprotocol & KBPROTOCOL_VT100_CURSOR) {
         ttpush("\033[=\033[?1h");               /* enable cursor keys/DECCKM */
@@ -2631,20 +2667,20 @@ key_config(void)
         /*
          *  terminal probe
          */
-        if (t_attributes & TA_CYGWIN) {
+        if (isterminal(TT_CYGWIN)) {
             xf_kbprotocol = KBPROTOCOL_CYGWIN;
 
 #if defined(KBPROTOCOL_MSTERMINAL) //TODO, See issues: https://sourceware.org/pipermail/cygwin-patches/2024q3/012748.html
-        } else if (t_attributes & TA_MSTERMINAL) {
+        } else if (isterminal(TT_MSTERMINAL))
             xf_kbprotocol = KBPROTOCOL_MSTERMINAL;
 #endif
 
 #if defined(KBPROTOCOL_KITTY) //TODO
-        } else if (t_attributes & TA_KITTY) {
+        } else if (isterminal(TT_KITTY)) {
             xf_kbprotocol = KBPROTOCOL_KITTY;
 #endif
 
-        } else if (t_attributes & TA_MINTTY) {
+        } else if (isterminal(TT_MINTTY)) {
             xf_kbprotocol = KBPROTOCOL_MINTTY_MOK2;
 
         } else if (t_attributes & TA_XTERMLIKE) {
@@ -2700,7 +2736,7 @@ key_disable(void)
 //      ttputpad(tc_mo);                        /* disable meta key-codes */
 //  }
 
-    if (t_attributes & TA_MINTTY) {
+    if (isterminal(TT_MINTTY)) {
         if (! xf_mouse) {
             ttpush("\033[?7786l");              /* nomouse, disable mouse-wheel reports */
         }
@@ -2744,7 +2780,9 @@ key_disable(void)
          *      Pv = 1, enables
          *      Pv = 2, extended
          */
-        ttpush("\x1b[>4;0m");                   /* disable xterm-mok2-mode */
+        if (! isterminal(TT_STTERM)) {
+            ttpush("\x1b[>4;0m");               /* disable xterm-mok2-mode */
+        }
     }
 }
 
@@ -2847,8 +2885,8 @@ acs_locale_breaks(void)
                 ((env = ggetenv("TERMCAP")) != 0 && strstr(env, "screen") != 0) &&
                     strstr(env, "hhII00") != 0) {
 
-#define IS_CTRLN(s)         ((s) != 0 && strstr(s, "\016") != 0)
-#define IS_CTRLO(s)         ((s) != 0 && strstr(s, "\017") != 0)
+#define IS_CTRLN(s)     ((s) != 0 && strstr(s, "\016") != 0)
+#define IS_CTRLO(s)     ((s) != 0 && strstr(s, "\017") != 0)
 
             if (IS_CTRLN(tc_acs_start) || IS_CTRLO(tc_acs_start)) {
                 return TRUE;
@@ -2877,30 +2915,32 @@ acs_locale_breaks(void)
  *  Returns:
  *      Associated flags, if any.
  */
-static TAttributes_t
-term_xtermlike(const char *term)
+static void
+term_xtermlike(const char *term, TIdentifier_t *identifier, TAttributes_t *attributes)
 {
-    static const struct {
+    static const struct xtermlink {
         const char *name;
-        TAttributes_t flags;
+        TAttributes_t identifier;
+        TAttributes_t attributes;
     } xtermlike[] = {
          /*
           * many are non-standard, normally represented as "xterm[-256color]"
           */
-        { "xterm", TA_XTERM },                  /* Generic */
-        { "mintty", TA_MINTTY | TA_DARK },
-        { "putty", TA_PUTTY | TA_DARK },
-        { "msterminal", TA_MSTERMINAL | TA_DARK },
-        { "gnome", TA_GNOME },
-        { "vte", TA_GNOME },
-        { "xterm-kitty", TA_KITTY },
-        { "alacritty", TA_ALACRITTY },
-        { "iterm", TA_ITERM },
-        { "iterm2", TA_ITERM },
-        { "iTerm.app", TA_ITERM },
-        { "iTerm2.app", TA_ITERM },
-        { "hterm", TA_HTERM },
-        { "wezterm", TA_WEZTERM },
+        { "xterm", TT_XTERM },                  /* Generic */
+        { "mintty", TT_MINTTY, TA_DARK },
+        { "putty", TT_PUTTY, TA_DARK },
+        { "msterminal", TT_MSTERMINAL, TA_DARK },
+        { "gnome", TT_GNOME },
+        { "vte", TT_GNOME },
+        { "xterm-kitty", TT_KITTY },
+        { "alacritty", TT_ALACRITTY },
+        { "iterm", TT_ITERM },
+        { "iterm2", TT_ITERM },
+        { "iTerm.app", TT_ITERM },
+        { "iTerm2.app", TT_ITERM },
+        { "hterm", TT_HTERM },
+        { "wezterm", TT_WEZTERM },
+        { "st", TT_STTERM },                    /* st-terminal */
         { "aixterm" },                          /* AIX */
         { "rxvt" },                             /* [ou]r xvt */
         { "urxvt" },                            /* Unicode rxvt */
@@ -2912,16 +2952,24 @@ term_xtermlike(const char *term)
     if (term) {
         unsigned i;
 
-        for (i = 0; i < (unsigned)(sizeof(xtermlike)/sizeof(xtermlike[0])); ++i)
-            if (tty_isterm(term, xtermlike[i].name)) {
-                ret = xtermlike[i].flags | TA_XTERMLIKE;
+        for (i = 0; i < (unsigned)(sizeof(xtermlike)/sizeof(xtermlike[0])); ++i) {
+            const struct xtermlink *xt = xtermlike + i;
+
+            if (tty_isterm(term, xt->name)) {
+                if (identifier) {
+                    *identifier = xt->identifier;
+                }
+                if (attributes) {
+                    *attributes = xt->attributes | TA_XTERMLIKE;
+                }
+                ret = 1;
                 break;
             }
+        }
     }
 
     trace_log("\txtermlike(%s) : 0x%lx\n", (term ? term : ""), (unsigned long)ret);
     x_pt.pt_xtcompat = ret;
-    return ret;
 }
 
 
@@ -3296,7 +3344,7 @@ xterm_colors_get(char *buffer, int length)
 {
     int color, len;
 
-    if (0 == (t_attributes & TA_XTERM)) {       /* xterm specific */
+    if (! isterminal(TT_XTERM)) {               /* xterm specific */
         return -1;
     }
 
@@ -3345,6 +3393,10 @@ xterm_colors_set(const char *value)
 
     if (0 == (t_attributes & TA_XTERMLIKE)) {   /* xterm specific */
         return -1;
+    }
+
+    if (NULL == value || !*value) {
+        return 0;
     }
 
     term_flush();                               /* clear existing obuf */
@@ -3409,7 +3461,7 @@ xterm_colors_set(const char *value)
 static void
 term_attributes(void)
 {
-    if ((TA_KITTY|TA_ALACRITTY|TA_WEZTERM) & t_attributes) {
+    if (isterminal(TT_KITTY|TT_ALACRITTY|TT_WEZTERM)) {
         static char xterm_da1x_cmd[] = "\033[?u\033[c";
 #define XTERM_DA1X  (sizeof(xterm_da1x_cmd)-1)
             //
@@ -3453,7 +3505,7 @@ term_attributes(void)
         }
     }
 
-    if (0 == (t_attributes & TA_KITTY)) {
+    if (! isterminal(TT_KITTY)) {
         const char *vte_version_env = ggetenv("VTE_VERSION");
         int vte_version = vte_version_env ? (int)strtol(vte_version_env, NULL, 10) : 0;
 
@@ -3482,7 +3534,7 @@ term_identification(void)
     /*
      *  CYGWIN version
      */
-    if (TA_CYGWIN & t_attributes) {
+    if (isterminal(TT_CYGWIN)) {
         struct utsname u = {0};
         int r1 = 0, r2 = 0;
 
@@ -3499,7 +3551,7 @@ term_identification(void)
     /*
      *  xterm and compatible terminals
      */
-    if (tc_RV || ((TA_VT100LIKE|TA_XTERM|TA_XTERMLIKE) & t_attributes)) {
+    if (tc_RV || isterminal(TT_XTERM) || ((TA_VT100LIKE|TA_XTERMLIKE) & t_attributes)) {
         tty_identification(tc_RV, io_escdelay());
     }
 }
@@ -3519,7 +3571,7 @@ term_luminance(void)
 {
     int ret;
 
-    if (!tf_XT && 0 == ((TA_XTERM|TA_XTERMLIKE) & t_attributes)) {
+    if (!tf_XT && !ttxtermlike()) {
         trace_ilog("ttluminance : not supported\n");
         return -1;                              /* supported */
     }
@@ -3569,10 +3621,10 @@ term_isutf8(void)
     } else if (DISPTYPE_7BIT == xf_disptype || DISPTYPE_8BIT == xf_disptype) {
         ret = 0;                                /* explicitly disabled -- command line */
 
-    } else if (TA_LINUX & t_attributes) {       /* linux console, not supported */
+    } else if (isterminal(TT_LINUX)) {          /* linux console, not supported */
         ret = -2;
 
-    } else if (TA_CYGWIN & t_attributes) {      /* cygwin version (1.7+) */
+    } else if (isterminal(TT_CYGWIN)) {         /* cygwin version (1.7+) */
         if (-3 == x_pt.pt_vtdatype) {
             const int r1 = x_pt.pt_vtdaversion / 100;
             const int r2 = x_pt.pt_vtdaversion % 100;
@@ -3588,7 +3640,7 @@ term_isutf8(void)
     } else if (sys_unicode_locale(TRUE)) {      /* BTERM_LOCAL or LOCALE */
         ret = 4;
 
-    } else if (TA_XTERM & t_attributes) {
+    } else if (isterminal(TT_XTERM)) {
         /*
          *  Write a single utf8 character and check resulting cursor position.
          *
@@ -3809,7 +3861,7 @@ term_move(int row, int col)
              *
              *  Note: this is generally only a visible problem when running borderless mode.
              */
-#define COLUMNOK()  (col > 0 || 0 == (t_attributes & TA_XTERM))
+#define COLUMNOK()  (col > 0 || !isterminal(TT_XTERM))
 
 #define PCOST       4                           /* parameterised version cost */
 
@@ -4184,7 +4236,7 @@ term_ce(void)
 static int
 term_lastsafe(void)
 {
-    if (TA_CYGWIN & t_attributes) {
+    if (isterminal(TT_CYGWIN)) {
         return FALSE;                           /* needs further investigations */
     }
     return (term_ce() || tf_LP > 0 ? TRUE : FALSE);
@@ -5242,6 +5294,14 @@ term_understyle(int enable, colstyles_t style)
         if (understyle & tt_understyles) {      /* an active understyle */
 
             if ((tt_style | understyle) != tt_style) { /* activate? */
+                //
+                //  \\x1b[4:0m      # no underline
+                //  \\x1b[4:1m      # straight underline
+                //  \\x1b[4:2m      # double underline
+                //  \\x1b[4:3m      # curly underline
+                //  \\x1b[4:4m      # dotted underline
+                //  \\x1b[4:5m      # dashed underline
+                //
                 if (x_pt.pt_understyle[0]) {
                     int mode = 0;
 
@@ -6061,6 +6121,7 @@ do_ega(void)                    /* int (int mode) */
 
     Macro Returns:
         nothing
+
 
     Macro Portability:
         A Grief extension; this primitive is subject for removal,

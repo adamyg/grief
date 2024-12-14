@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.86 2024/10/18 05:19:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.87 2024/12/13 14:25:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.86 2024/10/18 05:19:14 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.87 2024/12/13 14:25:37 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -316,8 +316,8 @@ ttdefaultscheme(void)
  *      Runtime initialisation
  *
  *  Parameters:
- *      repaint -           *true* if the screen should be repainted.
- *      profile -           Terminal profile.
+ *      vtstate - VTCREATE, VTRESTORE and VTWINCH.
+ *      profile - Terminal profile.
  *
  *  Returns:
  *      nothing

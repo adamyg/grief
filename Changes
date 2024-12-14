@@ -6,6 +6,10 @@ Sat Dec  7 00:20:15 2024 adamy
 
 	* Tickets
 
+		- st-terminal; #94
+		- mok2, Alt-[ issues; #95
+			- kbprotocols integration
+			- libtrie
 		- grrc and dayone logic; #62, #96
 		- Meta/ESC processing, kbprotocols extensions; #95
 		- ncursesw6 configuration; #93

@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: zenburn.cr,v 1.15 2024/10/10 17:46:54 cvsuser Exp $
+/* $Id: zenburn.cr,v 1.16 2024/12/14 10:04:23 cvsuser Exp $
  * zenburn coloriser, GriefEdit port.
  *
  * References:
@@ -93,7 +93,7 @@ zenburn_spec[] = {
         { 0,    "Todo",                         108,    234,    "bold",             "#dfdfdf",  "bg",       "bold",             NULL            },
         { 0,    "Type",                         187,    NULL,   "bold",             "#dfdfbf",  NULL,       "bold",             NULL            },
         { 0,    "Typedef",                      253,    NULL,   "bold",             "#dfe4cf",  NULL,       "bold",             NULL            },
-        { 0,    "Underlined",                   188,    234,    "underlined",       "#dcdccc",  NULL,       "underline",        NULL            },
+        { 0,    "Underlined",                   188,    234,    "underline" ,       "#dcdccc",  NULL,       "underline",        NULL            },
     //  { 0,    "VertSplit",                    236,    65,     NULL,               "#2e3330",  "#688060",  NULL,               NULL            },
         { 0,    "Frame",  /*GRIEF*/             188,    237,    NULL,               "#2e3330",  "#688060",  NULL,               NULL            },
 

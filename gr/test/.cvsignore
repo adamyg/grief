@@ -1,3 +1,8 @@
+kbprotocols_test
+rc_test
+tokenize
+ttyutil
+regdfa
 .grief.log
 *.ilk
 *.pdb

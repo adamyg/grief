@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_display_c,"$Id: m_display.c,v 1.30 2024/12/06 15:46:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_display_c,"$Id: m_display.c,v 1.31 2024/12/14 10:11:41 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_display.c,v 1.30 2024/12/06 15:46:06 cvsuser Exp $
+/* $Id: m_display.c,v 1.31 2024/12/14 10:11:41 cvsuser Exp $
  * Display primitives.
  *
  *
@@ -696,7 +696,7 @@ void
 do_set_font(void)               /* int (string normalfont, [string italicfont]) */
 {
     const char *norm = get_xstr(1);
-//  const char *italic = get_xstr(2);           /* TODO */        
+//  const char *italic = get_xstr(2);           /* TODO */
     int ret = -1;
 
     if (norm && x_scrfn.scr_font) {

@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: setup.cr,v 1.8 2024/05/11 17:44:46 cvsuser Exp $
+/* $Id: setup.cr,v 1.9 2024/06/23 15:42:02 cvsuser Exp $
  * System setup.
  *
  *
@@ -56,6 +56,7 @@ setup(~int inform)
 
     if (inform) {
         popup_message("Setup",
+            "\n" +
             "This is the either the first time you have run GRIEF\n" +
             "or this specific release of GRIEF has newer features\n" +
             "to your previous version. \n" +
@@ -63,7 +64,7 @@ setup(~int inform)
             "The appropriate environment variables needed to run GRIEF\n" +
             "have not been setup, and may stop you from running GRIEF.\n" +
             "\n" +
-            "GRIEF will now display a Set Up menu where you should\n" +
+            "GRIEF will now display a SetUp menu where you should\n" +
             "configure your terminal type. \n" +
             "\n"+
             "After the Set Up is complete, GRIEF will exit. You should\n" +

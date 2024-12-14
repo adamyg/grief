@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_tty_c,"$Id: tty.c,v 1.34 2024/10/21 15:20:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_tty_c,"$Id: tty.c,v 1.35 2024/12/13 14:25:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: tty.c,v 1.34 2024/10/21 15:20:22 cvsuser Exp $
+/* $Id: tty.c,v 1.35 2024/12/13 14:25:37 cvsuser Exp $
  * Common basic tty functionality.
  *
  *
@@ -210,7 +210,7 @@ ttwinched(int nrows, int ncols)
         if (nrows != orows || ncols != ocols) {
             tty_nrows = nrows;
             tty_ncols = ncols;
-            vtready();
+            vtready(VTWINCH);
             vtwinch(ocols, orows);
             vtupdate();
             return 1;
@@ -225,20 +225,20 @@ ttwinched(int nrows, int ncols)
  *      Ready the terminal interface, run-time (re)initialisation.
  *
  *  Parameters:
- *      repaint -           *true* if the screen should be repainted.
+ *      vtstate - VTCREATE or VTWINCH, non-zero screen should be repainted.
  *
  *  Returns:
  *      nothing.
  */
 void
-ttready(int repaint)
+ttready(int vtstate)
 {
-    trace_log("ttready(%d)\n", repaint);
+    trace_log("ttready(%d)\n", vtstate);
     x_scrprofile.sp_lastsafe = TRUE;            /* assume unless cleared */
     x_scrprofile.sp_rows = x_scrprofile.sp_cols = 0;
     if (x_scrfn.scr_ready) {
-        (*x_scrfn.scr_ready)(repaint, &x_scrprofile);
-    } else if (repaint) {
+        (*x_scrfn.scr_ready)(vtstate, &x_scrprofile);
+    } else if (vtstate) {
         vtgarbled();                            /* force screen update */
     }
 }
@@ -928,3 +928,4 @@ ttstringcopy(char *dp, int dplen, const char *bp, int delim)
 }
 
 /*end*/
+

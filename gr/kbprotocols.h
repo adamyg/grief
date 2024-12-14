@@ -1,11 +1,11 @@
 #ifndef GR_KBPROTOCOLS_H_INCLUDED
 #define GR_KBPROTOCOLS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_kbprotocols_h,"$Id: kbprotocols.h,v 1.1 2024/11/18 13:42:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_kbprotocols_h,"$Id: kbprotocols.h,v 1.2 2024/12/11 15:46:11 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: kbprotocols.h,v 1.1 2024/11/18 13:42:22 cvsuser Exp $
+/* $Id: kbprotocols.h,v 1.2 2024/12/11 15:46:11 cvsuser Exp $
  * Keyboard input protocols.
  *
  *
@@ -30,7 +30,9 @@ extern int                  kbprotocols_parse(const char *buf, unsigned buflen, 
 
 extern int                  key_protocolid(const char *name, int namelen);
 extern const char *         key_protocolname(int mode, const char *def);
+extern const char *         key_protocoldecode(int mode, char *buffer, unsigned buflen);
 
 __CEND_DECLS
 
 #endif /*GR_KBPROTOCOLS_H_INCLUDED*/
+

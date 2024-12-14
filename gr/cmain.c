@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.77 2024/12/09 14:48:39 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.78 2024/12/13 14:25:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.77 2024/12/09 14:48:39 cvsuser Exp $
+/* $Id: cmain.c,v 1.78 2024/12/13 14:25:37 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -576,7 +576,7 @@ cmain(int argc, char **argv)
         spell_init();
     }
     unicode_init();
-    vtready();
+    vtready(VTCREATE);
     if (xf_mouse) {
         if (mouse_init(xf_mouse)) {             /* mouse interface */
             x_display_ctrl |= DC_MOUSE;

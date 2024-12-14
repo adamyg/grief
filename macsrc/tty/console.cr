@@ -45,10 +45,21 @@ console_detect()
     }
 
     if (0 == load_macro("tty/" + term)) {           /* xterm etc */
-        load_macro("tty/tty");
-        term = "tty";
+        /* not specific */
+        int attributes;
 
-    } else { /* retrieve derived/detected name */
+        get_term_feature(TF_ATTRIBUTES, attributes);
+        if (attributes & TF_AXTERMLIKE) { // implied xterm
+            load_macro("tty/xterm");
+            term = "xterm";
+        } else { // generic tty
+            load_macro("tty/tty");
+            term = "tty";
+        }
+    }
+
+    if (term != "tty") {
+        /* retrieve derived/detected name */
         if (0 == get_term_feature(TF_NAME, name)) {
             name = re_translate(SF_GLOBAL, "[ -]+", "_", name);
         }

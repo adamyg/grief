@@ -133,6 +133,7 @@
 #define TF_AGRAPHICCHARACTERS   0x0000001   /* Graphic characteres (ACS defined) */
 #define TF_AFUNCTIONKEYS        0x0000002   /* F1-F10 function keys */
 #define TF_ACYGWIN              0x0000004   /* Cygwin native console */
+#define TF_AXTERMLIKE           0x0000008   /* xterm/xterm-like */
 #define TF_AUTF8ENCODING        0x0000010   /* UTF8 character encoding, Unicode implied */
 #define TF_AUNICODEENCODING     0x0000020   /* Unicode character encoding */
 #define TF_AMETAKEY             0x0000100   /* Meta keys */

@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: grief.cr,v 1.100 2024/12/09 14:14:19 cvsuser Exp $
+/* $Id: grief.cr,v 1.101 2024/12/12 14:12:23 cvsuser Exp $
  * GRIEF startup macro.
  *
  *
@@ -729,7 +729,7 @@ shell_pop(string command)
     int buf = create_buffer("Shell Pop-Up", NULL, 1);
     int line, col;
 
-    create_window(55, 8, 77, 2);                /* XXX - verify display size */
+    create_window(55, 12, 77, 2);               /* XXX - verify display size */
     attach_buffer(buf);
     set_buffer_flags(NULL, BF_MAN);             /* man style highlighting */
     set_buffer_flags(NULL, BF_ANSI);            /* ansi style highlighting */
@@ -979,6 +979,7 @@ grinit_onload(void)
 
             } else if (inq_macro("set_" + key) > 0) {
                 fn = "set_" + key;              // FIXME - security hole, remove?
+
 
             } else {
                 error("unknown configuration key '%s', ignored.", key);

@@ -1,11 +1,11 @@
 #ifndef GR_EDFEATURES_H_INCLUDED
 #define GR_EDFEATURES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edfeatures_h,"$Id: edfeatures.h,v 1.26 2024/10/18 05:19:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_edfeatures_h,"$Id: edfeatures.h,v 1.27 2024/12/13 12:21:34 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edfeatures.h,v 1.26 2024/10/18 05:19:40 cvsuser Exp $
+/* $Id: edfeatures.h,v 1.27 2024/12/13 12:21:34 cvsuser Exp $
  * Editor features.
  *
  *
@@ -141,6 +141,7 @@ __CBEGIN_DECLS
 #define TF_AGRAPHICCHARACTERS   0x0000001       /* Graphic characteres (ACS defined) */
 #define TF_AFUNCTIONKEYS        0x0000002       /* F1-F10 function keys */
 #define TF_ACYGWIN              0x0000004       /* Cygwin native console */
+#define TF_AXTERMLIKE           0x0000008       /* xterm/xterm-like */
 #define TF_AUTF8ENCODING        0x0000010       /* UTF8 character encoding, Unicode implied */
 #define TF_AUNICODEENCODING     0x0000020       /* Unicode character encoding */
 #define TF_AMETAKEY             0x0000100       /* Meta keys */
@@ -278,3 +279,4 @@ __CEND_DECLS
 #endif /*GR_EDFEATURES_H_INCLUDED*/
 
 /*end*/
+

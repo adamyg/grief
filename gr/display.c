@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.90 2024/10/18 15:11:49 cvsuser Exp $")
+__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.91 2024/12/13 14:25:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: display.c,v 1.90 2024/10/18 15:11:49 cvsuser Exp $
+/* $Id: display.c,v 1.91 2024/12/13 14:25:37 cvsuser Exp $
  * High level display interface.
  *
  *
@@ -224,19 +224,19 @@ vtinit(int *argc, char **argv)
  *      Second stage initialisation.
  *
  *  Parameters:
- *      none.
+ *      vtstate - VTCREATE, VTRESTORE or VTWINCH.
  *
  *  Returns:
  *      nothing.
  */
 void
-vtready(void)
+vtready(int vtstate)
 {
     int nrows, ncols;
     VCELL_t *cursor;
     int idx;
 
-    ttready(TRUE);
+    ttready(vtstate);
     nrows = ttrows();
     ncols = ttcols();
     assert(nrows > 2 && nrows <= 250);

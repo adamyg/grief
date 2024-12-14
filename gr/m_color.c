@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_color_c,"$Id: m_color.c,v 1.58 2024/12/06 15:46:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_color_c,"$Id: m_color.c,v 1.59 2024/12/14 10:10:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_color.c,v 1.58 2024/12/06 15:46:06 cvsuser Exp $
+/* $Id: m_color.c,v 1.59 2024/12/14 10:10:02 cvsuser Exp $
  * Color configuration.
  *
  *
@@ -2567,7 +2567,7 @@ col_import(const colors_t *colors, const char *who, const struct attribute *ap, 
             ca->fg = fg;
             ca->bg = bg;
             ca->sf = sf;
-        }      
+        }
 
     } else {
         /*

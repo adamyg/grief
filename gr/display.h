@@ -1,11 +1,11 @@
 #ifndef GR_DISPLAY_H_INCLUDED
 #define GR_DISPLAY_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_display_h,"$Id: display.h,v 1.28 2024/07/29 16:14:45 cvsuser Exp $")
+__CIDENT_RCSID(gr_display_h,"$Id: display.h,v 1.29 2024/12/13 14:25:37 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: display.h,v 1.28 2024/07/29 16:14:45 cvsuser Exp $
+/* $Id: display.h,v 1.29 2024/12/13 14:25:37 cvsuser Exp $
  * Display management.
  *
  *
@@ -33,7 +33,7 @@ typedef uint32_t VFLAG_t;                       /* line flags */
 enum {
     DISPTYPE_UNKNOWN = -1,
     DISPTYPE_7BIT,                              /* 0, 7-bit */
-    DISPTYPE_8BIT,                              /* 1, 8-bit */ 
+    DISPTYPE_8BIT,                              /* 1, 8-bit */
     DISPTYPE_UTF8,                              /* 2, utf-8 encoding */
     DISPTYPE_DBCS,                              /* 3, double byte (variable encoding) */
     DISPTYPE_MBCS,                              /* 4, multiple byte (fixed encoding) */
@@ -60,15 +60,18 @@ enum {
  *  Video driver virtual character cell.
  */
 typedef struct _VCELL {
-    vbyte_t         primary;                    /* primary character */ 
+    vbyte_t         primary;                    /* primary character */
 #define VCOMBINED_MAX       4                   /* combined character (following ncurses limit) */
     vbyte_t *       combined;                   /* combined character(s), optional */
 } VCELL_t;
 
+#define VTCREATE    1
+#define VTRESTORE   2
+#define VTWINCH     3
 
 extern void                 vtinit(int *argcp, char **argv);
 extern int                  vtinited(void);
-extern void                 vtready(void);
+extern void                 vtready(int state);
 extern void                 vtclose(int clear);
 
 extern int                  vtis8bit(void);
@@ -102,3 +105,4 @@ extern int                  xf_termcap;
 __CEND_DECLS
 
 #endif /*GR_DISPLAY_H_INCLUDED*/
+

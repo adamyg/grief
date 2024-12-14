@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttycmd_c,"$Id: ttycmd.c,v 1.5 2024/10/30 16:14:09 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttycmd_c,"$Id: ttycmd.c,v 1.6 2024/12/11 13:57:15 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttycmd.c,v 1.5 2024/10/30 16:14:09 cvsuser Exp $
+/* $Id: ttycmd.c,v 1.6 2024/12/11 13:57:15 cvsuser Exp $
  * TTY common command functions
  *
  *
@@ -147,6 +147,7 @@ isterm(const char *term, const char *name)
  *          libvterm                                              0;100;0
  *          msterminal                0           10              0;10;1c
  *          xterm                     -2(a)
+ *          st                        n/a
  *
  *  Parameters:
  *      RV - Optional request-command string; default applied otherwise.
@@ -211,6 +212,7 @@ tty_identification(const char *RV, int timeoutms)
             }
         }
     }
+    trace_ilog("term_da2() : n/a\n");
     return ret;
 }
 

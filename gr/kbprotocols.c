@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_kbprotocols_c,"$Id: kbprotocols.c,v 1.4 2024/12/06 15:10:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_kbprotocols_c,"$Id: kbprotocols.c,v 1.5 2024/12/11 15:46:11 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: kbprotocols.c,v 1.4 2024/12/06 15:10:08 cvsuser Exp $
+/* $Id: kbprotocols.c,v 1.5 2024/12/11 15:46:11 cvsuser Exp $
  * Keyboard input protocols.
  *
  *
@@ -266,10 +266,11 @@ key_protocolid(const char* name, int namelen)
  *      Map a keyboard identifier to it's protocol.
  *
  *  Parameters:
- *      name - Keyboard protocol name.
+ *      mode - Keyboard protocol identifier.
+ *      def - Default on non-match.
  *
  *  Results:
- *      Protocol identifier, otherwise -1.
+ *      Protocol name, otherwise the default value.
  */
 const char *
 key_protocolname(int mode, const char *def)
@@ -282,6 +283,37 @@ key_protocolname(int mode, const char *def)
         }
     }
     return def;
+}
+
+
+
+/*  Function:           key_protocoldecode
+ *      Keyboard identifier map description.
+ *
+ *  Parameters:
+ *      mode - Keyboard protocol identifier.
+ *      buffer - Destination buffer.
+ *      buflen - Buffer length, in bytes.
+ *
+ *  Results:
+ *      Protocol description.
+ */
+const char *
+key_protocoldecode(int mode, char *buffer, unsigned buflen)
+{
+    if (buffer && buflen) {
+        unsigned p = 0;
+
+        buffer[0] = 0;
+        for (p = 0; p < (sizeof(protocols) / sizeof(protocols[0])); ++p) {
+            if (mode & protocols[p].mode) {
+                if (buffer[0])                  // name[,name]
+                    strxcat(buffer, ",", buflen);
+                strxcat(buffer, protocols[p].name, buflen);
+            }
+        }
+        return buffer;
+    }
 }
 
 
@@ -1207,3 +1239,4 @@ kbprotocols_parse(const char *buf, const unsigned buflen, int force)
 #endif  //USE_KBPROTOCOL
 
 /*end*/
+
