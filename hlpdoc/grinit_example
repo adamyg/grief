@@ -1,0 +1,169 @@
+;
+; GRIEF user configuration -- example.
+;
+version: 2
+
+[GRIEF]
+;  Attributes:
+;
+;       colors:
+;               This attribute maintains your personal color preferences; the arguments
+;               are strings which are passed to the color() macro.
+;
+;       colorschemegui:
+;               Color-scheme utilised on displays supporting true-color.
+;
+;       colorscheme256:
+;               Color-scheme utilised on displays supporting 256 or more colours.
+;
+;       colorscheme88:
+;               Color-scheme utilised on displays supporting 88 or more colours.
+;
+;       colorscheme16:
+;               Color-scheme utilised on displays supporting 16 or more colours.
+;
+;       syntax:
+;               Command line regular expression syntax mode [grief/unix].
+;
+;       case_sensitive:
+;               Search case sensitive [yes/no].
+;
+;       modeline:
+;               Determines whether mode-line processing is enabled [yes/no] (see modeline).
+;
+;       echo_line:
+;               Echo-line flags (see <echo_line>).
+;
+;       borders:
+;               Window borders [yes/no].
+;
+;       menubar:
+;               Menu-bar status [yes/no].
+;
+;       justification:
+;
+;       autoindent:
+;               This attribute determines whether you wish autoindent turned 'on' or 'off' by
+;               default.
+;
+;               To enable 'autoindenting' specify the argument as 'yes'. To disable
+;               'autoindenting' either delete this attribute or set the argument to 'no'.
+;
+;       autosave:
+;               This attribute allows you to enable or disable the autosave feature, in the
+;               the form "<idle> <rebackup>", for example "60 120". The first argument is the
+;               idle time to set <idle>, with the second argument being the rebackup
+;               timeout <rebackup>.
+;
+;       margin:
+;               Default left and right margins.
+;
+;       tabs:
+;               Specifies the tab stops for files.
+;               The argument list is a sequence of file extensions followed by an '=' followed by
+;               the size of the tab stops. The entry 'default' is used for all files which are not
+;               explicitly mentioned.
+;
+;       indents:
+;               Specifies the ident stops for files. The argument list
+;               is a sequence of file extensions followed by an '=' followed by the size of the
+;               tab stops. The entry 'default' is used for all files which are not explicitly
+;               mentioned.
+;
+;       hard_tabs:
+;               Specifies whether you want to use hard physical tabs inside buffers, or whether
+;               you want inserted tabs to be translated to the appropriate number of spaces.
+;
+;       package:
+;               Package specification (see package).
+;
+;       backup:
+;               Backup configuration, the arguments are strings which are passed to
+;               the set_backup_option() macro.
+;
+;               dir=<path>
+;                       Backup directory. 'parameter' should a string containing the backup
+;                       directory path.
+;               versions=<version-number>
+;                       Number of versions to be maintained. 'parameter' should be an integer
+;                       value specifying the number of backup versions to be kept in the
+;                       range [1 .. 99].
+;               ask=<size>
+;                       File-size watermark at which point backups shall be prompted before
+;                       created a backup image. 'parameter' should be a positive integer
+;                       value; being the watermark file-size in bytes, with a value of zero
+;                       disabling any prompts.
+;               dont=<size>
+;                       File-size watermark at which point backups shall not be created
+;                       regardless of the current backup mode. 'parameter' should be a
+;                       positive integer value being the watermark file-size in bytes, with
+;                       a value of zero disabling any affected.
+;               prefix=<prefix>
+;                       Backup filename prefix. 'parameter' should be a string containing
+;                       the prefix, an empty string shall clear the current suffix.
+;               suffix=<suffix>
+;                       Backup filename suffix/extension. 'parameter' should be a string
+;                       containing the suffix, an empty string shall clear the current
+;                       prefix.
+;
+;       restore:
+;               Save and restore editing session configuration
+;
+;               save=[full|mini]
+;                       Complete or mini session restoration mode.
+;               cache=<path>
+;                       Session cache directory. 'parameter' should a string containing the
+;                       session directory path.
+;               age=<days>
+;                       Number of days session cache
+;               scrapper=yes/no
+;                       Save and restore scrap buffer.
+;               savehist=yes/no
+;                       Save and restore command line history.
+;
+;       auditlog:
+;               This attribute determines whether you wish an 'auditlog' to be generated.
+;
+;               To enable 'auditlog' specify the argument as 'yes'. To disable
+;               'auditlog' either delete this attribute or set the argument to 'no'.
+;
+;                       auditlog=[yes/no] [log=<file-name>]
+;
+;               When enabled all file modifications are recorded within the log. The log
+;               'file-name' shall be located by walking up the directory tree looking for
+;               the audit-log named 'Audit.log' by default; the user must manually create
+;               the initial log file.
+;
+;       linenumbers:
+;               This attribute determines whether line-numbers are either enabled or
+;               disabled by default, or the state to be applied for a specific extension.
+;
+;                       default=[yes|no] extension,[extension]:[yes|no] ...
+;
+
+profile: user
+autoindent: no
+autosave: 0 120
+colors: blue light-white light-cyan light-green red magenta light-white white clear clear clear clear:link@message clear:link@hilite clear:link@message clear light-cyan,dynamic-bg:link@message
+colorscheme256: zenburn
+syntax: grief
+modeline: yes
+echo_line: 0x1bb
+menubar: no
+borders: yes
+case_sensitive: yes
+autowrap: yes
+justification: no
+margin: 1,72
+color_index: 0
+window_color: 0
+tabs: default=9
+hard_tabs: default=no
+package: .c.cc.CC.cpp.cr-c:hilite,t 1 1 0 1;.h.hpp-c:hilite;.mk.mak-mak:hilite;.f-f:hilite,t;.default:hilite,r
+indents: .f=2 .m=3 .cr=3 .c=4 .cc=4 .cpp=4 .h=4 .hpp=4 .pl=4 .pm=4 .sh=4 .csh=4 default=0
+restore: save=full cache=~/.gr/restore savehist=yes scrapper=yes
+backup: dir=~/.gr/backup version=9
+auditlog: mode=no
+linenumbers: default=no .ini:yes
+
+;;end

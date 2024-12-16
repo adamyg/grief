@@ -1,11 +1,11 @@
 #ifndef GR_EDCONFIG_H_INCLUDED
 #define GR_EDCONFIG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edconfig_h,"$Id: edconfig.h,v 1.15 2024/04/08 15:07:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_edconfig_h,"$Id: edconfig.h,v 1.16 2024/12/05 18:18:29 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edconfig.h,v 1.15 2024/04/08 15:07:02 cvsuser Exp $
+/* $Id: edconfig.h,v 1.16 2024/12/05 18:18:29 cvsuser Exp $
  * Configuration.
  *
  *  GRINIT_FILE
@@ -56,23 +56,31 @@ __CPRAGMA_ONCE
 #include <edcm.h>
 
 #if defined(DOSISH) || defined(__OS2__)
+#if defined(_WIN32) || defined(WIN32)
+#define GRRC_FILE       ".grrc"
+#define GRRC_ALTFILE    "_grrc"
+#else
+#define GRRC_FILE       "_grrc"
+#endif
 #define GRINIT_FILE     "_grinit"
 #define GRRESTORE_FILE  "_grief"
 #define GRSTATE_FILE    "_grstate"
 #define GRLOG_FILE      "grief.log"
+
 #else
+#define GRRC_FILE       ".grrc"
 #define GRINIT_FILE     ".grinit"
 #define GRRESTORE_FILE  ".grief"
 #define GRSTATE_FILE    ".grstate"
 #define GRLOG_FILE      ".grief.log"
 #endif
 
-#define GRDFA_PATTERN	"/tmp/%s.grdfa" 	/* syntax dfa cache/dump */
+#define GRDFA_PATTERN   "/tmp/%s.grdfa"         /* syntax dfa cache/dump */
 
-#define GRDUMP_MKSTEMP	"/tmp/griefscreen.XXX"	/* screen_dump() */
+#define GRDUMP_MKSTEMP  "/tmp/griefscreen.XXX"  /* screen_dump() */
 #define GRDUMP_DEFAULT  "/tmp/grief.scr"
 
-#define GRPROFILE       ".grief"                /* profile subdirectory */
+#define GRPROFILE       ".grprofile"            /* profile sub-directory */
 
 #define GRSTATE_DB      "grstatedb"             /* restore status database */
 
@@ -80,3 +88,4 @@ __CPRAGMA_ONCE
 #define GRINIT_OBJECT   __CSTRCAT("grief", CM_EXTENSION) /* and associated object */
 
 #endif /*GR_EDCONFIG_H_INCLUDED*/
+

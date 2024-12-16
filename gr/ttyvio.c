@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.80 2024/09/20 14:50:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.87 2024/12/13 14:25:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.80 2024/09/20 14:50:06 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.87 2024/12/13 14:25:37 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -106,9 +106,9 @@ static int              term_dell(int row, int bot, int nlines, vbyte_t fillcolo
 static int              term_eeol(void);
 static void             term_repeat(int cnt, vbyte_t fill, int where);
 static void             term_attribute(const vbyte_t color);
-static unsigned         term_colvalue(const colvalue_t ca, unsigned def);
 static void             term_attr(int fg, int bg);
-static void             term_hue(int fg, int bg);
+static void             term_truecolor(const colattr_t *ca);
+static void             term_legacycolor(const colattr_t *ca);
 
 static void             vio_reference(void);
 static void             vio_image_save(void);
@@ -316,8 +316,8 @@ ttdefaultscheme(void)
  *      Runtime initialisation
  *
  *  Parameters:
- *      repaint -           *true* if the screen should be repainted.
- *      profile -           Terminal profile.
+ *      vtstate - VTCREATE, VTRESTORE and VTWINCH.
+ *      profile - Terminal profile.
  *
  *  Returns:
  *      nothing
@@ -338,9 +338,20 @@ term_ready(int repaint, scrprofile_t *profile)
         VioGetMode(&mi, 0);
         profile->sp_rows = (int)mi.row;
         profile->sp_cols = (int)mi.col;
-        if (mi.color > 0 && mi.color <= 256) {
-            if (-1 == xf_color || mi.attrib <= xf_color) {
+        if (mi.color > 0) {
+            if (COLORMODE_AUTO == xf_color) {
                 tt_colors = mi.color;
+            } else if (COLORMODE_NONE == xf_color) {
+                tt_colors = 2;
+            } else {
+                if ((tt_colors = mi.color) > xf_color) {
+                   tt_colors = xf_color;
+                }
+            }
+            x_pt.pt_truecolor = 0;
+            if (tt_colors > 256) {              /* assume true-color */
+                x_pt.pt_truecolor = 1;
+                tt_colors = 256;
             }
         }
         profile->sp_colors = tt_colors;
@@ -1238,6 +1249,10 @@ term_repeat(int cnt, vbyte_t fill, int where)
 static void
 term_attribute(const vbyte_t attr)
 {
+#if defined(VIO_UNDERLINE)
+    unsigned understyle;
+#endif
+
     assert(attr <= 512);
     if (vtiscolor()) {
         /*
@@ -1247,11 +1262,29 @@ term_attribute(const vbyte_t attr)
         colattr_t ca;
 
         color_definition(attr, &ca);
-        term_hue(term_colvalue(ca.fg, tt_defaultfg), term_colvalue(ca.bg, tt_defaultbg));
+
+        if (x_pt.pt_truecolor) {
+            term_truecolor(&ca);
+        } else {
+            term_legacycolor(&ca);
+        }
+
 #if defined(VIO_UNDERLINE)
-        if (COLORSTYLE_UNDERLINE & ca.sf)       tt_style |= VIO_UNDERLINE;
-        if (COLORSTYLE_ITALIC & ca.sf)          tt_style |= VIO_ITALIC;
-        if (COLORSTYLE_BOLD & ca.sf)            tt_style |= VIO_BOLD;
+        if (0 != (understyle = COLORSTYLE_UNDERSTYLE(ca.sf))) {
+            switch (understyle) {
+            case COLORSTYLE_UNDERSINGLE:    tt_style |= VIO_UNDERLINE | VIO_UNDERSTYLE_SINGLE; break;
+            case COLORSTYLE_UNDERDOUBLE:    tt_style |= VIO_UNDERLINE | VIO_UNDERSTYLE_DOUBLE; break;
+            case COLORSTYLE_UNDERCURLY:     tt_style |= VIO_UNDERLINE | VIO_UNDERSTYLE_CURLY;  break;
+            case COLORSTYLE_UNDERDOTTED:    tt_style |= VIO_UNDERLINE | VIO_UNDERSTYLE_DOTTED; break;
+            case COLORSTYLE_UNDERDASHED:    tt_style |= VIO_UNDERLINE | VIO_UNDERSTYLE_DASHED; break;
+            default:
+                tt_style |= VIO_UNDERLINE;
+                break;
+            }
+        }
+        if (COLORSTYLE_UNDERLINE & ca.sf)   tt_style |= VIO_UNDERLINE;
+        if (COLORSTYLE_ITALIC & ca.sf)      tt_style |= VIO_ITALIC;
+        if (COLORSTYLE_BOLD & ca.sf)        tt_style |= VIO_BOLD;
 #endif
 
     } else {
@@ -1275,15 +1308,27 @@ term_attribute(const vbyte_t attr)
         if (0 == nstyle) {
             term_attr(__NORMAL__);
         } else {
-            if (nstyle & COLORSTYLE_BOLD)      term_attr(__BOLD__);
-            if (nstyle & COLORSTYLE_STANDOUT)  term_attr(__STANDOUT__);
-            if (nstyle & COLORSTYLE_INVERSE)   term_attr(__INVERSE__);
+            if (nstyle & COLORSTYLE_BOLD)       term_attr(__BOLD__);
+            if (nstyle & COLORSTYLE_STANDOUT)   term_attr(__STANDOUT__);
+            if (nstyle & COLORSTYLE_INVERSE)    term_attr(__INVERSE__);
 #if defined(VIO_UNDERLINE)
-            if (nstyle & COLORSTYLE_UNDERLINE) tt_style |= VIO_UNDERLINE;
-            if (nstyle & COLORSTYLE_ITALIC)    tt_style |= VIO_ITALIC;
-            if (nstyle & COLORSTYLE_BOLD)      tt_style |= VIO_BOLD;
+            if (0 != (understyle = COLORSTYLE_UNDERSTYLE(nstyle))) {
+                switch (understyle) {
+                case COLORSTYLE_UNDERSINGLE:    tt_style |= VIO_UNDERLINE | VIO_UNDERSTYLE_SINGLE; break;
+                case COLORSTYLE_UNDERDOUBLE:    tt_style |= VIO_UNDERLINE | VIO_UNDERSTYLE_DOUBLE; break;
+                case COLORSTYLE_UNDERCURLY:     tt_style |= VIO_UNDERLINE | VIO_UNDERSTYLE_CURLY;  break;
+                case COLORSTYLE_UNDERDOTTED:    tt_style |= VIO_UNDERLINE | VIO_UNDERSTYLE_DOTTED; break;
+                case COLORSTYLE_UNDERDASHED:    tt_style |= VIO_UNDERLINE | VIO_UNDERSTYLE_DASHED; break;
+                default:
+                    tt_style |= VIO_UNDERLINE;
+                    break;
+                }
+            }
+            if (nstyle & COLORSTYLE_UNDERLINE)  tt_style |= VIO_UNDERLINE;
+            if (nstyle & COLORSTYLE_ITALIC)     tt_style |= VIO_ITALIC;
+            if (nstyle & COLORSTYLE_BOLD)       tt_style |= VIO_BOLD;
 #endif
-            if (nstyle & COLORSTYLE_REVERSE)   term_attr(__REVERSE__);
+            if (nstyle & COLORSTYLE_REVERSE)    term_attr(__REVERSE__);
         }
 
 #undef  __NORMAL__
@@ -1295,26 +1340,6 @@ term_attribute(const vbyte_t attr)
 }
 
 
-/*import a color value*/
-static unsigned
-term_colvalue(const colvalue_t ca, unsigned def)
-{
-    int color = 0;
-
-    if (COLORSOURCE_SYMBOLIC == ca.source) {
-        if ((color = ca.color) < 0 || color >= COLOR_NONE ||
-                (color = tt_colormap[color]) < 0 || color >= tt_colors) {
-            color = def;
-        }
-    } else {
-        if ((color = ca.color) < 0 || color >= tt_colors) {
-            color = def;
-        }
-    }
-    return (unsigned)color;
-}
-
-
 /*import a standard color value*/
 static void
 term_attr(int fg, int bg)
@@ -1322,24 +1347,86 @@ term_attr(int fg, int bg)
     if ((fg <= COLOR_NONE && (fg = tt_colormap[fg]) < 0) || fg >= tt_colors) {
         fg = tt_defaultfg;
     }
+
     if ((fg <= COLOR_NONE && (bg = tt_colormap[bg]) < 0) || bg >= tt_colors) {
         bg = tt_defaultbg;
     }
-    term_hue(fg, bg);
+
+    tt_hue = VIO_FGBG(fg, bg);
+    tt_style = 0;
 }
 
 
-/*assign the color/hue, guarding against fg and bg issues*/
-static void
-term_hue(int fg, int bg)
+/*import 16/267 a color value*/
+static int
+colvalue(const colvalue_t ca, unsigned def)
 {
-    if (fg == bg) {
-        fg = tt_colormap[tt_defaultfg];
-        bg = tt_colormap[tt_defaultbg];
-        if (fg == bg) {
-            fg = tt_colormap[WHITE];
-            bg = tt_colormap[BLACK];
+    int color = 0;
+
+    if (COLORSOURCE_SYMBOLIC == ca.source) {
+        if ((color = ca.color) < 0 || color >= COLOR_NONE ||
+                (color = tt_colormap[color]) < 0 || color >= tt_colors) {
+            color = (int)def;
         }
+    } else {
+        if ((color = ca.color) < 0 || color >= tt_colors) {
+            color = (int)def;
+        }
+    }
+    return color;
+}
+
+
+/*assign a true-color as the current hue*/
+static void
+term_truecolor(const colattr_t *ca)
+{
+    VIOHUE hue = {0};
+    unsigned rgbcolor;
+
+    /* foreground */
+    rgbcolor = ca->fg.rgbcolor;
+    if (rgbcolor) {                             // RGB
+        hue.Flags = VIO_FRGB;
+        hue.fgrgb = rgbcolor;
+    } else {                                    // legacy
+        hue.fg = (short)colvalue(ca->fg, tt_defaultfg);
+        hue.fgrgb = (COLORREF)-1;
+    }
+
+    /* background */
+    rgbcolor = ca->bg.rgbcolor;
+    if (rgbcolor) {                             // RGB
+        hue.Flags = VIO_FRGB;
+        hue.bgrgb = rgbcolor;
+    } else {                                    // legacy
+        hue.bg = (short)colvalue(ca->bg, tt_defaultbg);
+        hue.bgrgb = (COLORREF)-1;
+    }
+
+    if (0 == hue.Flags) {
+        hue.Flags = VIO_FNORMAL;
+        if (hue.fg == hue.bg) {                 // guard against fg and bg issues
+            hue.fg = tt_colormap[WHITE];
+            hue.bg = tt_colormap[BLACK];
+        }
+    }
+
+    tt_hue = hue;
+    tt_style = 0;
+}
+
+
+/*assign a legacy-color as the current hue*/
+static void
+term_legacycolor(const colattr_t *ca)
+{
+    int fg = colvalue(ca->fg, tt_defaultfg);
+    int bg = colvalue(ca->bg, tt_defaultbg);
+
+    if (fg == bg) {                             // guard against fg and bg issues
+        fg = tt_colormap[WHITE];
+        bg = tt_colormap[BLACK];
     }
     tt_hue = VIO_FGBG(fg, bg);
     tt_style = 0;
@@ -1439,4 +1526,5 @@ do_copy_screen(void)
     }
     chk_free(tmp);
 }
+
 #endif  /*USE_VIO_BUFFER*/

@@ -1,11 +1,11 @@
 #ifndef GR_EDFEATURES_H_INCLUDED
 #define GR_EDFEATURES_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edfeatures_h,"$Id: edfeatures.h,v 1.23 2024/09/25 16:00:42 cvsuser Exp $")
+__CIDENT_RCSID(gr_edfeatures_h,"$Id: edfeatures.h,v 1.27 2024/12/13 12:21:34 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edfeatures.h,v 1.23 2024/09/25 16:00:42 cvsuser Exp $
+/* $Id: edfeatures.h,v 1.27 2024/12/13 12:21:34 cvsuser Exp $
  * Editor features.
  *
  *
@@ -64,7 +64,7 @@ __CBEGIN_DECLS
 #define TF_DEFAULT_FG           32              /* default foreground color */
 #define TF_DEFAULT_BG           33              /* default background color */
 #define TF_SCHEMEDARK           34              /* *true* if the default color is "dark" */
-#define TF_COLORRGB             35              /* *true* if RGB colors are supported */
+#define TF_TRUECOLOR            35              /* *true* if RGB colors are supported/truecolor */
 #define TF_COLORSET_FG          36              /* color set foreground control sequence (ANSI colors) */
 #define TF_COLORSET_BG          37              /* color set background control sequence (ANSI colors) */
 #define TF_COLORMAP             38              /* color map (terminal) */
@@ -72,6 +72,13 @@ __CBEGIN_DECLS
 #define TF_COLORSCHEME          40              /* current color-scheme */
 #define TF_COLORSETRGB_FG       41              /* color set foreground control sequence (RGB colors) */
 #define TF_COLORSETRGB_BG       42              /* color set background control sequence (RGB colors) */
+
+#define TF_UNDERSTYLE           43              /* Smulx; 0=none,1=normal,2=double,3=curly,4=dotted,5=dashed */
+#define TF_UNDEROFF             44              /* t_Ce */
+#define TF_UNDERDOUBLE          45              /* t_Us */
+#define TF_UNDERCURL            46              /* t_Cs */
+#define TF_UNDERDOTTED          47              /* t_ds */
+#define TF_UNDERDASHED          48              /* t_Ds */
 
 #define TF_CLEAR_IS_BLACK       50              /* clear is black */
 #define TF_DISABLE_INSDEL       51              /* disable ins/del scrolling method */
@@ -134,6 +141,7 @@ __CBEGIN_DECLS
 #define TF_AGRAPHICCHARACTERS   0x0000001       /* Graphic characteres (ACS defined) */
 #define TF_AFUNCTIONKEYS        0x0000002       /* F1-F10 function keys */
 #define TF_ACYGWIN              0x0000004       /* Cygwin native console */
+#define TF_AXTERMLIKE           0x0000008       /* xterm/xterm-like */
 #define TF_AUTF8ENCODING        0x0000010       /* UTF8 character encoding, Unicode implied */
 #define TF_AUNICODEENCODING     0x0000020       /* Unicode character encoding */
 #define TF_AMETAKEY             0x0000100       /* Meta keys */
@@ -148,6 +156,9 @@ __CBEGIN_DECLS
  */
 #define PT_ESCMAX               20
 #define PT_NAME                 64
+
+#define COLORIF_TRUECOLOR       1
+#define COLORIF_DIRECT          2
 
 struct _features {
     uint32_t    pt_magic;                       /* Structure magic. */
@@ -200,6 +211,13 @@ struct _features {
     char        pt_init[PT_ESCMAX];             /* STRING,      Escape sequence, init on startup. */
     char        pt_reset[PT_ESCMAX];            /* STRING,      Escape sequence, to reset on exit. */
 
+    char        pt_understyle[PT_ESCMAX];       /* STRING,      Escape sequence, general underline style; 0=none,1=normal,2=double,3=curly,4=dotted,5=dashed. */
+    char        pt_underoff[PT_ESCMAX];         /* STRING,      Escape sequence, clear underline style. */
+    char        pt_underdouble[PT_ESCMAX];      /* STRING,      Escape sequence, double underline style. */
+    char        pt_undercurl[PT_ESCMAX];        /* STRING,      Escape sequence, curly underline style. */
+    char        pt_underdotted[PT_ESCMAX];      /* STRING,      Escape sequence, dotted underline style. */
+    char        pt_underdashed[PT_ESCMAX];      /* STRING,      Escape sequence, dashed underline style. */
+
     /*
      *  options/settings
      */
@@ -209,7 +227,7 @@ struct _features {
     int         pt_0m;                          /* BOOL,        "\033[0m" resets color as well as character attributes. */
     int         pt_color;                       /* BOOL,INT     TRUE if terminal supports color (> 1 states default depth). */
     int         pt_colordepth;                  /* INT,         Color depth (active). */
-    int         pt_colorrgb;                    /* INT,         RGB color support (truecolor/24bit). */
+    int         pt_truecolor;                   /* INT,         RGB color support (truecolor/24bit). */
     int         pt_clrisblack;                  /* BOOL,        Erasing line clears to a black space. */
     int         pt_scroll_disable;              /* BOOL,        Disable scroll regions. */
     int         pt_scroll_max;                  /* INT,         Max scroll region size. */
@@ -259,6 +277,6 @@ typedef struct _features features_t;
 __CEND_DECLS
 
 #endif /*GR_EDFEATURES_H_INCLUDED*/
-/*end*/
 
+/*end*/
 

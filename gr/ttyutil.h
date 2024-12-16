@@ -1,11 +1,11 @@
 #ifndef GR_TTYUTIL_H_INCLUDED
 #define GR_TTYUTIL_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyutil_h,"$Id: ttyutil.h,v 1.4 2024/08/25 06:01:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyutil_h,"$Id: ttyutil.h,v 1.5 2024/10/18 05:19:14 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyutil.h,v 1.4 2024/08/25 06:01:53 cvsuser Exp $
+/* $Id: ttyutil.h,v 1.5 2024/10/18 05:19:14 cvsuser Exp $
  * TTY utility functions
  *
  *
@@ -40,6 +40,7 @@ extern int tty_mouse_sgr(struct MouseEvent *evt, const void *spec);
 
 extern int tty_isterm(const char *term, const char *name);
 extern int tty_hasfeature(const char *term, const char *what);
+extern int tty_hasfeatureplus(const char *term, const char *what);
 
 extern int tty_csi_parse(const char *buffer, size_t buflen,
                 unsigned maxargs, unsigned arguments[], char params[3], unsigned *pnargs);

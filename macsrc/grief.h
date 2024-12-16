@@ -60,7 +60,7 @@
 #define TF_DEFAULT_FG           32          /* default foreground color */
 #define TF_DEFAULT_BG           33          /* default background color */
 #define TF_SCHEMEDARK           34          /* *true* if the default color is "dark" */
-#define TF_COLORRGB             35          /* *true* if RGB colors are supported */
+#define TF_TRUECOLOR            35          /* *true* if RGB colors are supported/truecolor */
 #define TF_COLORSET_FG          36          /* color set foreground control sequence (ANSI colors) */
 #define TF_COLORSET_BG          37          /* color set background control sequence (ANSI colors) */
 #define TF_COLORMAP             38          /* color map (terminal) */
@@ -68,6 +68,13 @@
 #define TF_COLORSCHEME          40          /* current color-scheme */
 #define TF_COLORSETRGB_FG       41          /* color set foreground control sequence (RGB colors) */
 #define TF_COLORSETRGB_BG       42          /* color set background control sequence (RGB colors) */
+
+#define TF_UNDERSTYLE           43          /* Smulx; 0=none,1=normal,2=double,3=curly,4=dotted,5=dashed */
+#define TF_UNDEROFF             44          /* t_Ce */
+#define TF_UNDERDOUBLE          45          /* t_Us */
+#define TF_UNDERCURL            46          /* t_Cs */
+#define TF_UNDERDOTTED          47          /* t_ds */
+#define TF_UNDERDASHED          48          /* t_Ds */
 
 #define TF_CLEAR_IS_BLACK       50          /* clear is black */
 #define TF_DISABLE_INSDEL       51          /* disable ins/del scrolling method */
@@ -126,6 +133,7 @@
 #define TF_AGRAPHICCHARACTERS   0x0000001   /* Graphic characteres (ACS defined) */
 #define TF_AFUNCTIONKEYS        0x0000002   /* F1-F10 function keys */
 #define TF_ACYGWIN              0x0000004   /* Cygwin native console */
+#define TF_AXTERMLIKE           0x0000008   /* xterm/xterm-like */
 #define TF_AUTF8ENCODING        0x0000010   /* UTF8 character encoding, Unicode implied */
 #define TF_AUNICODEENCODING     0x0000020   /* Unicode character encoding */
 #define TF_AMETAKEY             0x0000100   /* Meta keys */
@@ -1456,6 +1464,9 @@ extern string                   CRISP_DIRSEP;
 /*
  *  Profile and configuration names.
  */
+extern const string             GRRC;
+extern const string             GRRC_FILE;
+
 extern const string             GRRESTORE_FILE;
 extern const string             GRSTATE_FILE;
 extern const string             GRSTATE_DB;

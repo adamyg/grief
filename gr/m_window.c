@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_window_c,"$Id: m_window.c,v 1.28 2021/10/18 13:09:48 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_window_c,"$Id: m_window.c,v 1.29 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_window.c,v 1.28 2021/10/18 13:09:48 cvsuser Exp $
+/* $Id: m_window.c,v 1.29 2024/12/06 15:46:06 cvsuser Exp $
  * Window primitives.
  *
  *
@@ -817,7 +817,7 @@ inq_window(void)
 
     Macro Description:
         The 'inq_window_info()' primitive retrieves information
-        associated with the current windowd.
+        associated with the current windowed.
 
     Macro Parameters:
         winnum - An integer variable which shall be populated with the
@@ -1934,7 +1934,7 @@ inq_top_left(void)              /* int ([int &line, [int &column], [int winnum],
     Macro Parameters:
         color - Can be either an integer containing the color numeric
             value or a string containing the color name. If omitted,
-            the next color within the color index sequenence shall be
+            the next color within the color index sequence shall be
             assigned, see <color_index> for details.
 
         winnum - Optional window identifier, if omitted the current
@@ -2038,7 +2038,7 @@ do_window_color(void)           /* ([int color], [int winnum]) */
 
     Macro Portability:
         Unlike BRIEF the assigned attributes is returned, whereas BRIEF
-        returned an encoded colorl the foreground were the lower 4 bits
+        returned an encoded color the foreground were the lower 4 bits
         (nibble) and the background was the upper 4 bits.
 
     Macro See Also:
@@ -2334,4 +2334,5 @@ inq_ctrl_state(void)            /* (int ctrl, [int winnum]) */
     }
     acc_assign_int((accint_t) ret);
 }
+
 /*end*/

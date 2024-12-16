@@ -1,10 +1,9 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.25 2024/07/23 12:00:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyncurses_c,"$Id: ttyncurses.c,v 1.39 2024/11/29 11:51:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyncurses.c,v 1.25 2024/07/23 12:00:35 cvsuser Exp $
+/* $Id: ttyncurses.c,v 1.39 2024/11/29 11:51:58 cvsuser Exp $
  * [n]curses tty driver interface -- alt driver when running under ncurses.
- *
  *
  * This file is part of the GRIEF Editor.
  *
@@ -46,10 +45,11 @@ ttcurses(void)
 #include <edenv.h>                              /* gputenvv(), ggetenv() */
 #include <libstr.h>                             /* str_...()/sxprintf() */
 
-#if defined(HAVE_LIBNCURSESW)
 #ifndef _XOPEN_SOURCE_EXTENDED
-#define _XOPEN_SOURCE_EXTENDED                  /* cchar_t */
+#define _XOPEN_SOURCE_EXTENDED                  /* cchar_t and widechar */
 #endif
+
+#if defined(HAVE_LIBNCURSESW)
 #if defined(HAVE_NCURSESW_CURSES_H)
 #   include <ncursesw/curses.h>
 #   include <ncursesw/termcap.h>
@@ -96,19 +96,18 @@ ttcurses(void)
 #endif
 #endif
 
-#if defined(NCURSES_VERSION) && defined(HAVE_LIBNCURSESW)
-extern int _nc_unicode_locale(void);            /* XXX - private/exported */
-#endif
-
 #include "cmap.h"
 #include "color.h"
 #include "debug.h"                              /* trace_...() */
 #include "display.h"
 #include "getkey.h"
+#include "keyboard.h"
 #include "main.h"
 #include "system.h"                             /* sys_...() */
 #include "tty.h"
 #include "ttyutil.h"
+#include "ttycfg.h"
+#include "ttyrgb.h"
 #include "window.h"
 
 #if defined(NCURSES_CONST)
@@ -117,11 +116,39 @@ extern int _nc_unicode_locale(void);            /* XXX - private/exported */
 #define CURSES_CAST(__x) (char *)(__x)
 #endif
 
-typedef int16_t nccolor_t;
+#if defined(HAVE_LIBNCURSESW) && \
+            (defined(NCURSES_WIDECHAR) || defined(HAVE_CURSES_WIDECHAR))
+#define CURSES_WIDECHAR                         /* wide character support enabled (configure options) and available */
+#endif
+
+#if ((NCURSES_VERSION_MAJOR > 6) || ((NCURSES_VERSION_MAJOR == 6) && (NCURSES_VERSION_MINOR >= 1))) && \
+            defined(NCURSES_EXT_COLORS)
+
+#define CURSES_DIRECT_COLORS 1                  /* ABI6: direct/truecolor support */
+#define CURSES_EXTENDED_COLOR 1                 /* enable extended api */
+
+#define DIRECT_COLORS   16777216                /* direct colors/(0xffffff + 1) */
+#define DIRECT_PAIRS    65536                   /* direct pairs */
+
+#define MaxSCALE        1000                    /* input curses ranges 0..1000 */
+#define MaxRGB          255                     /* output color ranges 0..255 */
+#define ToNCurses(n)    ((NCURSES_COLOR_T)(((n) * MaxSCALE) / MaxRGB))
+#endif
+
+#if defined(CURSES_EXTENDED_COLOR)
+typedef int nccolor_t;
+#else
+typedef short nccolor_t;
+#endif
+
+#if (NCURSES_VERSION_MAJOR >= 5) && defined(CURSES_WIDECHAR)
+extern int _nc_unicode_locale(void);            /* private/exported */
+#endif
 
 static void             nc_init(int *argcp, char **argv);
 static void             nc_open(scrprofile_t *profile);
 static void             nc_ready(int repaint, scrprofile_t *profile);
+static void             nc_keybind(void);
 static void             nc_display(void);
 static void             nc_feature(int ident, scrprofile_t *profile);
 static int              nc_control(int action, int param, ...);
@@ -140,13 +167,18 @@ static int              nc_names(const char *title, const char *icon);
 static void             nc_beep(int freq, int duration);
 
 static void             term_identification(void);
+static int              istruecolor(void);
 static void             term_defaultscheme(void);
 static void             term_dump(void);
 static void             acs_dump(const char *bp);
 
 static void             term_colors(void);
-static nccolor_t        term_color(const colvalue_t ca, int def, int fg, int *attr);
+static int              term_setpair(int attr, const colattr_t *ca);
+static void             term_clearpairs(void);
+static void             term_setpairs(void);
+static nccolor_t        term_color(const colvalue_t *ca, int def, int *attr);
 static int              term_attribute(int sf);
+static void             term_init(void);
 static void             term_start(void);
 static void             term_tidy(void);
 
@@ -185,8 +217,9 @@ static const struct colormap {                  /* GRIEF -> NCURSES palette */
         { /*LTYELLOW,   */    COLOR_YELLOW,       A_DIM,      78,         229     },
         };
 
-static short            tt_pairs        = 0;
+static nccolor_t        tt_pairs        = -1;
 static int              tt_colors       = 0;
+static int              tt_direct       = 0;
 static int              tt_defaultbg    = COLOR_BLACK;
 static int              tt_defaultfg    = COLOR_WHITE;
 static int              tt_active       = 0;
@@ -221,6 +254,8 @@ ttcurses(void)
  *>         -> nc_open
  *>     ttready
  *>         -> nc_read
+ *>     ttkeybind
+ *>         -> nc_keybind
  *>     macro tty/<terminal-type>
  *>         [ttfeature]
  *>     ttdisplay
@@ -269,6 +304,7 @@ nc_init(int *argcp, char **argv)
 
     x_scrfn.scr_open    = nc_open;
     x_scrfn.scr_ready   = nc_ready;
+    x_scrfn.scr_keybind = nc_keybind;
     x_scrfn.scr_display = nc_display;
     x_scrfn.scr_feature = nc_feature;
     x_scrfn.scr_control = nc_control;
@@ -296,18 +332,7 @@ nc_init(int *argcp, char **argv)
 static void
 nc_open(scrprofile_t *profile)
 {
-    unsigned col;
-
-    tt_win = NULL;
-    tt_pairs = 0;
-    tt_colors = 0;
-    tt_defaultbg = COLOR_BLACK;
-    tt_defaultfg = COLOR_WHITE;
-    tt_active = FALSE;
-    tt_cursor = TRUE;
-    for (col = 0; col < (sizeof(tt_colormap)/sizeof(tt_colormap[0])); ++col) {
-        tt_colormap[col] = -1;
-    }
+    term_init();
 
     io_device_add(TTY_INFD);                    /* stream registration */
     sys_initialise();
@@ -332,7 +357,7 @@ nc_ready(int repaint, scrprofile_t *profile)
     profile->sp_lastsafe = FALSE;               /* not safe */
 #endif
 
-#if !defined(NCURSES_VERSION) || !defined(HAVE_LIBNCURSESW)
+#if !defined(CURSES_WIDECHAR)
     if (DISPTYPE_UTF8 == xf_disptype) {
         trace_log("ttync: UTF8 not supported\n");
         xf_disptype = -1;                       /* down-grade */
@@ -340,7 +365,7 @@ nc_ready(int repaint, scrprofile_t *profile)
 #endif
 
     if (DISPTYPE_UNKNOWN == xf_disptype) {
-#if defined(NCURSES_VERSION) && defined(HAVE_LIBNCURSESW)
+#if (NCURSES_VERSION_MAJOR >= 5) && defined(CURSES_WIDECHAR)
         int ncunicode;
 
         if (0 != (ncunicode = _nc_unicode_locale())) {
@@ -376,7 +401,7 @@ nc_ready(int repaint, scrprofile_t *profile)
 #endif
     }
 
-#if !defined(HAVE_LIBNCURSESW)
+#if !defined(CURSES_WIDECHAR)
     x_display_ctrl |= DC_ASCIIONLY;             /* no wide character support */
 #endif
 
@@ -385,12 +410,25 @@ nc_ready(int repaint, scrprofile_t *profile)
 
 
 static void
+nc_keybind(void)
+{
+    const TermKey_t *ti;
+    unsigned count, i;
+
+    if (NULL != (ti = ttcfgkeys(&count))) {     /* load */
+        for (i = 0; i < count; ++i) {
+            if (ti->key && ti->svalue) {
+                key_sequence(ti->key, ti->svalue);
+            }
+            ++ti;
+        }
+    }
+}
+
+
+static void
 nc_display(void)
 {
-    const int colors = tigetnum("colors");
-
-    strxcpy(x_pt.pt_name, longname(), sizeof(x_pt.pt_name));
-
 #if defined(NCURSES_VERSION)
     sxprintf(x_pt.pt_encoding, sizeof(x_pt.pt_encoding), "%s%s", curses_version(),
         (DISPTYPE_UTF8 == xf_disptype ? ".utf-8" : ""));
@@ -400,9 +438,10 @@ nc_display(void)
 #endif
 
     trace_log("ttync:\n");
-    trace_log(" disptype: %d\n", xf_disptype);
-    trace_log(" colors  : %d (%d,%d)\n", tt_colors, COLORS, colors);
-    trace_log(" pairs   : %d\n", COLOR_PAIRS);
+    trace_log(" disptype  : %d\n", xf_disptype);
+    trace_log(" direct    : %d\n", tt_direct);
+    trace_log(" colors    : %d, max=%d, change=%d\n", tt_colors, COLORS, can_change_color());
+    trace_log(" pairs     : %d\n", COLOR_PAIRS);
 
     x_pt.pt_colordepth = tt_colors;
     ttboxcharacters(TRUE);
@@ -420,9 +459,27 @@ nc_close(void)
 static void
 nc_feature(int ident, scrprofile_t *profile)
 {
+    trace_log("ttync: feature(%d)\n", ident);
+
     __CUNUSED(profile)
     switch (ident) {
     case TF_COLORDEPTH:
+        if (x_pt.pt_colordepth > COLORS) {      // system-limit
+            x_pt.pt_colordepth = COLORS;
+        }
+        if (x_pt.pt_colordepth > 256) {
+            x_pt.pt_colordepth = 256;
+        }
+        break;
+
+    case TF_TRUECOLOR:
+        if (! istruecolor()) {
+            x_pt.pt_truecolor = 0;              // not-supported; ignore
+        }
+        break;
+
+    case TF_COLORSCHEME:
+        term_setpairs();                        // reassign pairs
         break;
 
     case TF_COLORMAP: {
@@ -436,14 +493,16 @@ nc_feature(int ident, scrprofile_t *profile)
                 const char *cursor = x_pt.pt_colormap;
                 nccolor_t color = 0, r, g, b;
 
+#if defined(HAVE_RESET_COLOR_PAIRS)
+                reset_color_pairs();
+#endif
                 while ((cursor = foreach_color(cursor, &r, &g, &b)) {
-                    if (r >= 0) {                   /* 0...999 */
-                        init_color(color, r, g, b);
+                    if (r >= 0) {                   /* 0...255 */
+                        init_color(color, ToNCurses(r), ToNCurses(g), ToNCurses(b));
                     }
                     ++color;
                 }
-                rgb_import(const char *name, int length, struct rgbvalue *rgb, 1000);
-#endif
+#endif //TODO
             }
         }
         break;
@@ -471,8 +530,7 @@ nc_feature(int ident, scrprofile_t *profile)
                 tt_colormap[col] = (nccolor_t)val;
             }
             x_pt.pt_xtpalette = -2;
-            color_valueclr(-1);
-            tt_pairs = 0;
+            term_clearpairs();
         }
         break;
 
@@ -481,8 +539,7 @@ nc_feature(int ident, scrprofile_t *profile)
         if (x_pt.pt_defaultfg >= 0 && x_pt.pt_defaultbg >= 0) {
             assume_default_colors(x_pt.pt_defaultfg, x_pt.pt_defaultbg);
             tt_defaultfg = tt_defaultbg = -1;
-            color_valueclr(-1);
-            tt_pairs = 0;
+            term_clearpairs();
         }
         break;
 
@@ -523,10 +580,7 @@ nc_control(int action, int param, ...)
         break;
 
     case SCR_CTRL_COLORS:       /* color change */
-        if (tt_pairs > 0) {
-            color_valueclr(-1);
-            tt_pairs = 0;
-        }
+        term_clearpairs();
         break;
 
     default:
@@ -593,7 +647,6 @@ nc_putc(const struct _VCELL *cell)
 {
     const vbyte_t attr = VBYTE_ATTR_GET(cell->primary);
     vbyte_t c = VBYTE_CHAR_GET(cell->primary);
-    int a;
 
     if (CH_PADDING == c) {                      /* wide character padding */
         return;
@@ -608,36 +661,11 @@ nc_putc(const struct _VCELL *cell)
 
     } else {
         colattr_t ca;
+        int a = 0;
 
-        a = 0;
         if (color_definition(attr, &ca)) {
             if ((a = ca.val) < 0) {             /* assigned palette index */
-                int t_attr = 0;
-                const nccolor_t fg = term_color(ca.fg, tt_defaultfg, TRUE, &t_attr);
-                const nccolor_t bg = term_color(ca.bg, tt_defaultbg, FALSE, &t_attr);
-                short id;
-
-                for (id = tt_pairs; id >= 0; --id) {
-                    nccolor_t t_fg, t_bg;       /* search existing pairs 0 .. tt_pairs */
-
-                    if (OK == pair_content(id, &t_fg, &t_bg) &&
-                            t_fg == fg && t_bg == bg) {
-                        break;
-                    }
-                }
-
-                if (id < 0) {                   /* new pair required */
-                    int ret = init_pair(id = ++tt_pairs, fg, bg);
-
-                    trace_term("ttync: term_color:pair(id:%d,fg:%d/0x%x,bg:%d/0x%x,a:%d/x%x) : %d\n", \
-                        id, (int)fg, (int)fg, (int)bg, (int)bg, (int)a, (int)a, ret);
-                    if (OK != ret) {
-                        --tt_pairs;             /* out of resources (COLOR_PAIRS) */
-                        id = 0;
-                    }
-                }
-                a = COLOR_PAIR(id) | t_attr;
-                color_valueset(attr, a);
+                a = term_setpair(attr, &ca);
             }
             attrset(a | term_attribute(ca.sf));
         }
@@ -658,7 +686,7 @@ nc_putc(const struct _VCELL *cell)
             case CH_RIGHT_JOIN: c = ACS_LTEE;       break;
             case CH_CROSS:      c = ACS_PLUS;       break;
                 break;
-#if defined(HAVE_LIBNCURSESW) && defined(CCHARW_MAX)
+#if defined(CURSES_WIDECHAR) && defined(CCHARW_MAX)
             case CH_HSCROLL:
             case CH_VSCROLL:
             case CH_HTHUMB:
@@ -723,7 +751,7 @@ nograph:;   const char *cp;
     }
 
     if (c > 0) {
-#if defined(HAVE_LIBNCURSESW) && defined(CCHARW_MAX)
+#if defined(CURSES_WIDECHAR) && defined(CCHARW_MAX)
         if ((DISPTYPE_UTF8 == xf_disptype && c <= 0x9f) ||
                 (DISPTYPE_UTF8 != xf_disptype && c <= 0xff)) {
             waddch(tt_win, c);
@@ -779,6 +807,17 @@ nc_names(const char *title, const char *icon)
 }
 
 
+static const char *
+ncigetstr(const char *str)
+{
+    const char *val = tigetstr(str);
+    if (val == (const char *)-1) {
+        val = NULL;
+    }
+    return val;
+}
+
+
 /*
  *  term_identification ---
  *      Request the terminal version/DA2 details.
@@ -786,16 +825,28 @@ nc_names(const char *title, const char *icon)
 static void
 term_identification(void)
 {
-    const char *RV = tigetstr("RV");
+    const char *RV;
 
-    if (NULL == (RV = tigetstr("RV")) || *RV == '\0') {
+    if (NULL == (RV = ncigetstr("RV")) || *RV == '\0') {
         const char *term = ggetenv("TERM");
-        if (NULL == term)                       /* missing, source: vim */
+        if (NULL == term ||
+                (0 == tty_isterm(term, "xterm") && 0 == tty_isterm(term, "kitty"))) {
             return;
-        if (NULL == strstr(term, "xterm") && NULL == strstr(term, "kitty"))
-            return;
+        }
     }
     tty_identification(RV, ESCDELAY);
+}
+
+
+static int
+istruecolor(void)
+{
+#if defined(CURSES_DIRECT_COLORS)
+    if (COLORS == DIRECT_COLORS) {
+        return COLORIF_DIRECT;                  /* direct RGB support. */
+    }
+#endif
+    return 0;
 }
 
 
@@ -837,26 +888,27 @@ term_dump(void)
     static const struct {
         const char *name, *fname;
     } extrastr[] = {
-        { "E3",     "userdef_clear_scrollback" },
-        { "RGB",    "userdef_rgb_number" },
-        { "XM",     "userdef_mouse_enable_disable" },
+        { "E3",     "ud_clear_scrollback" },
+        { "RGB",    "ud_rgb_spec" },
+        { "XM",     "ud_mouse_enable_disable" },
         { NULL, NULL }
         };
 
     static const struct {
         const char *name, *fname;
     } extranum[] = {
-        { "RGB",    "userdef_rgb_num" },
-        { "U8",     "userdef_unicode_line" },
+        { "C0",     "ud_rgb_overlay" },
+        { "RGB",    "ud_rgb_num" },
+        { "U8",     "ud_unicode_line" },
         { NULL, NULL }
         };
 
     static const struct {
         const char *name, *fname;
     } extrabool[] = {
-        { "AX",     "userdef_sgr_default" },
-        { "RGB",    "userdef_rgb_bool" },
-        { "XT",     "userdef_xterm_osc" },
+        { "AX",     "ud_sgr_default" },
+        { "RGB",    "ud_rgb_bool" },
+        { "XT",     "ud_xterm_osc" },
         { NULL, NULL }
         };
     const char *fname;
@@ -972,7 +1024,7 @@ acs_dump(const char *bp)
     while (*p) {
         const char *desc = "unknown";
 
-        ident = *p++;
+            ident = *p++;
         if (! isprint(ident)) continue;
         ch = *p++;
 
@@ -988,14 +1040,93 @@ acs_dump(const char *bp)
 
 
 /*
+ *  term_setpair ---
+ *      initialise a color-pair.
+ */
+static int
+term_setpair(int attr, const colattr_t *ca)
+{
+    int attribute = 0;
+    const nccolor_t fg = term_color(&ca->fg, tt_defaultfg, &attribute);
+    const nccolor_t bg = term_color(&ca->bg, tt_defaultbg, NULL);
+    nccolor_t id;
+    int ret;
+
+    for (id = tt_pairs; id >= 0; --id) {
+        nccolor_t t_fg, t_bg;                   /* search existing pairs 0 .. tt_pairs */
+
+#if defined(CURSES_EXTENDED_COLOR)
+        ret = extended_pair_content(id, &t_fg, &t_bg);
+#else
+        ret = pair_content(id, &t_fg, &t_bg);
+#endif
+        if (OK == ret && t_fg == fg && t_bg == bg) {
+            trace_log("ttync: getpair(id:%3d, fg:%3d/0x%02x, bg:%3d/0x%03x, a:%d/0x%x) : %d\n", \
+                id, (int)fg, (int)fg, (int)bg, (int)bg, (int)attribute, (int)attribute, ret);
+            break;
+        }
+    }
+
+    if (id < 0) {                               /* new pair required */
+        id = ++tt_pairs;
+#if defined(CURSES_EXTENDED_COLOR)
+        ret = init_extended_pair(id, fg, bg);
+#else
+        ret = init_pair(id, fg, bg);
+#endif
+        trace_log("ttync: setpair(id:%3d, fg:%3d/0x%02x, bg:%3d/0x%03x, a:%d/0x%x) : %d\n", \
+            id, (int)fg, (int)fg, (int)bg, (int)bg, (int)attribute, (int)attribute, ret);
+        if (OK != ret) {
+            --tt_pairs;                         /* out of resources (COLOR_PAIRS) */
+            id = 0; //default color
+        }
+    }
+
+    attribute |= COLOR_PAIR(id);
+    color_valueset(attr, attribute);
+    return attribute;
+}
+
+
+static void
+term_clearpairs(void)
+{
+    if (tt_pairs != 0) {
+        tt_pairs = 0;
+        color_valueclr(-1);
+    }
+}
+
+
+static void
+term_setpairs(void)
+{
+    colattr_t ca;
+    unsigned attr;
+
+    term_clearpairs();
+    for (attr = 0; attr < ATTR_MAX; ++attr) {
+        color_definition(attr, &ca);
+        if (ca.bg.color || ca.fg.color || ca.sf) {
+            term_setpair(attr, &ca);
+        }
+    }
+}
+
+
+/*
  *  term_colors ---
  *      Determine the terminal color depth.
  */
 static void
 term_colors(void)
 {
+    int truecolor = 0;
+
+    tt_colors = 2;                              // black&white
+
 #if defined(A_COLOR)
-    if (xf_color > 1 || (-1 == xf_color && has_colors()) ||
+    if (xf_color >= COLORMODE_8 || (COLORMODE_AUTO == xf_color && has_colors()) ||
             x_pt.pt_colordepth > 1) {
 
         tt_defaultfg = COLOR_WHITE;
@@ -1004,6 +1135,16 @@ term_colors(void)
         start_color();
         tt_colors = COLORS;
 
+        if (xf_color == COLORMODE_AUTO || xf_color > COLORMODE_256) {
+            truecolor = istruecolor();          // enable if supported
+        } else if (tt_colors > xf_color) {
+            tt_colors = xf_color;               // limit to configuration
+        }
+
+        if (tt_colors > 256) {
+            tt_colors = 256;                    // base color limit
+        }
+
         if (x_pt.pt_defaultfg >= 0 && x_pt.pt_defaultbg >= 0) {
             assume_default_colors(x_pt.pt_defaultfg, x_pt.pt_defaultbg);
             tt_defaultfg = tt_defaultbg = -1;
@@ -1011,23 +1152,26 @@ term_colors(void)
         } else if (OK == use_default_colors()) {
             tt_defaultfg = tt_defaultbg = -1;
         }
-
-    } else {
-        tt_colors = 2;
     }
-#else
-    tt_colors = 2;
-#endif
 
-    trace_log("ttync: term_colors(depth:%d,fg:%d,bg:%d)\n", tt_colors, tt_defaultfg, tt_defaultbg);
+#if defined(CURSES_DIRECT_COLORS)
+    if (COLORS == DIRECT_COLORS) {              // direct, overlap count
+        if ((tt_direct = tigetnum(CURSES_CAST("CO"))) <= 0)  {
+            tt_direct = 1;
+        }
+    }
+#endif
+#endif //A_COLOR
+
+    trace_log("ttync: colors(depth:%d,truecolor:%d,fg:%d,bg:%d)\n", tt_colors, truecolor, tt_defaultfg, tt_defaultbg);
 
     x_pt.pt_colordepth = tt_colors;
+    x_pt.pt_truecolor = truecolor;
     if (tt_colors > 2) {
         x_display_ctrl |= DC_SHADOW_SHOWTHRU;
     }
 
-    color_valueclr(-1);
-    tt_pairs = 0;
+    term_clearpairs();
 }
 
 
@@ -1036,48 +1180,75 @@ term_colors(void)
  *      Map color-attribute to a terminal color.
  */
 static nccolor_t
-term_color(const colvalue_t ca, int def, int fg, int *attrs)
+term_color(const colvalue_t *ca, int def, int *attributes)
 {
-    nccolor_t color = 0;
-    int attr = *attrs;
+#if defined(CURSES_DIRECT_COLORS)
+    const unsigned rgbcolor = ca->rgbcolor;
+#endif
+    nccolor_t color = (nccolor_t)ca->color;
+    int attribute = 0;
 
-    if (COLORSOURCE_SYMBOLIC == ca.source) {
-        if ((color = (nccolor_t)ca.color) < 0 || color >= COLOR_NONE) {
+#define COLOR_XTERM(_r, _g, _b) \
+    (((unsigned)((unsigned char)(_r) << 16) | ((unsigned)(unsigned char)(_g) << 8) | ((unsigned)(unsigned char)(_b) << 0)))
+
+#if defined(CURSES_DIRECT_COLORS)
+    if (rgbcolor && tt_direct) {
+        nccolor_t r, g, b;
+
+        r = COLOR_RVAL(rgbcolor);
+        g = COLOR_GVAL(rgbcolor);
+        b = COLOR_BVAL(rgbcolor);
+        color = COLOR_XTERM(r, g, b);
+        if (color < tt_direct)
+            color |= 0x010000;                    /* rgb namespace */
+        return color;
+    }
+#endif //CURSES_DIRECT_COLORS
+
+    if (COLORSOURCE_SYMBOLIC == ca->source) {
+        if (color < 0 || color >= COLOR_NONE) {
             color = (nccolor_t)def;
-
         } else {
             if (tt_colormap[color] >= 0) {
                 color = tt_colormap[color];
-
             } else if (tt_colors >= 256) {
                 color = colormap[color].color256;
-
             } else if (tt_colors >= 88) {
                 color = colormap[color].color88;
-
             } else {
-                if (fg) {                       /* foreground */
-                    attr |= colormap[color].attr8;
-                }
+                attribute = colormap[color].attr8;
                 color = colormap[color].color8;
             }
         }
 
     } else {
-        if ((color = (nccolor_t)ca.color) >= tt_colors) {
+        if (color >= tt_colors) {
             if (color >= (tt_colors * 2)) {
                 color = (nccolor_t)def;
             } else {
                 if (8 == tt_colors) {
+                    if (color & ~7)
+                        attribute = A_BOLD;     /* 8 .. 15 */
                     color &= 7;                 /* 0 .. 7 */
-                    if (fg) {
-                        attr |= A_BOLD;         /* 8 .. 15 */
-                    }
                 }
             }
         }
     }
-    *attrs = attr;
+
+#if defined(CURSES_DIRECT_COLORS)
+    if (tt_direct && color >= tt_direct) {
+        struct rgbvalue rgb;
+
+        rgb_256xterm(color, &rgb);              /* index to rgb */
+        color = COLOR_XTERM(rgb.red, rgb.green, rgb.blue);
+        if (color < tt_direct)
+            color |= 0x010000;                  /* rgb namespace */
+    }
+#endif //CURSES_DIRECT_COLORS
+
+    if (attributes) {                           /* foreground; 8-colors */
+        *attributes |= attribute;
+    }
     return color;
 }
 
@@ -1106,6 +1277,60 @@ term_attribute(int sf)
 
 
 /*
+ *  term_init ---
+ *      Terminal session one-shot initialisation.
+ */
+static void
+term_init(void)
+{
+    const char *term;
+    unsigned col;
+    int err = 0;
+
+    tt_win = NULL;
+    tt_colors = 0;
+    tt_defaultbg = COLOR_BLACK;
+    tt_defaultfg = COLOR_WHITE;
+    tt_active = FALSE;
+    tt_cursor = TRUE;
+    for (col = 0; col < (sizeof(tt_colormap)/sizeof(tt_colormap[0])); ++col) {
+        tt_colormap[col] = -1;
+    }
+
+    if (NULL == (term = ggetenv("TERM"))) {
+        fprintf(stderr, "Environment variable TERM not defined!\n");
+        exit(1);
+    }
+
+    if (setupterm((char *)term, fileno(stdout), &err) != 0) {
+        if (0 == err) {
+            fprintf(stderr, "Terminal '%s' not found within terminfo database.\n", term);
+        } else if (1 == err) {
+            fprintf(stderr, "Terminal '%s' is hardcopy, cannot be used for curses applications.\n", term);
+        } else {
+            fprintf(stderr, "Terminfo database not available.\n");
+        }
+        exit(1);
+    }
+
+    term_dump();
+
+#if defined(CURSES_DIRECT_COLORS)
+    if (COLORS > 256) {
+        if (COLORS != CURSES_DIRECT_COLORS || COLOR_PAIRS < (DIRECT_PAIRS/2)) {
+            printf("Terminal '%s' direct color depth of %d not supported.\n", term, COLORS);
+            exit(1);
+        }
+    }
+#endif
+
+    if (x_pt.pt_name[0] == 0) {
+        strxcpy(x_pt.pt_name, longname(), sizeof(x_pt.pt_name));
+    }
+}
+
+
+/*
  *  term_start ---
  *      Terminal start session operation.
  */
@@ -1114,7 +1339,6 @@ term_start(void)
 {
     if (NULL == tt_win) {
         tt_win = initscr();
-        term_dump();
     }
     nonl();
     noecho();
@@ -1146,3 +1370,5 @@ term_tidy(void)
 #endif  /*HAVE_LIBNCURSES*/
 
 /*end*/
+
+

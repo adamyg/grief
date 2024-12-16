@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: startup.cr,v 1.11 2014/10/27 23:28:29 ayoung Exp $
+/* $Id: startup.cr,v 1.12 2024/12/09 14:14:19 cvsuser Exp $
  * Initialisation, tuning and setup macro.
  *
  *
@@ -7,7 +7,7 @@
 
 #include "grief.h"
 
-static int      _compile_loaded = 0;
+static int _compile_loaded = 0;
 
 
 /*
@@ -44,10 +44,11 @@ void
 load_compile(void)
 {
     if (! _compile_loaded++) {
-        if (inq_macro("compile", 0x2) == 2) {   //require unsafe with autoload()
+        if (inq_macro("compile", 0x2) == 2) {   // require unsafe with autoload()
             load_macro("compile");
         }
     }
 }
 
 /*eof*/
+

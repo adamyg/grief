@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_ruler_c,"$Id: m_ruler.c,v 1.17 2022/12/03 16:40:17 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_ruler_c,"$Id: m_ruler.c,v 1.18 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_ruler.c,v 1.17 2022/12/03 16:40:17 cvsuser Exp $
+/* $Id: m_ruler.c,v 1.18 2024/12/06 15:46:06 cvsuser Exp $
  * Ruler primitives.
  *
  *
@@ -844,7 +844,7 @@ inq_ruler(void)                 /* string|list (int bufnum, [int min_count], [in
             shall clear the buffer specific margin.
 
         right - Optional integer right margin. A non-positive value
-            shall clear the buffer speific margin.
+            shall clear the buffer specific margin.
 
         style - Optional justification style.
 

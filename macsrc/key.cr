@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: key.cr,v 1.25 2024/08/25 06:02:04 cvsuser Exp $
+/* $Id: key.cr,v 1.27 2024/11/24 14:38:04 cvsuser Exp $
  * Key definition tools.
  *
  *
@@ -15,6 +15,8 @@ static void             _key_learn_print(list def, string prefix, int quote);
 static list             _key_learn_aa(int alpha);
 static list             _key_learn_kp(~string);
 static list             _key_learn_sp(string what);
+
+static void             tohex(string seq);
 
 #define IsMouse(_k)     (((_k) & RANGE_MASK) == RANGE_BUTTON)
 
@@ -265,7 +267,7 @@ key_test(void)
  *      none
  */
 void
-key_trace()
+key_trace(~ string arg)
 {
     int buf, curbuf;
 
@@ -278,11 +280,19 @@ key_trace()
     attach_buffer(buf);
 
     keyboard_push();
-    assign_to_key("<ESC>", "exit");
-    assign_to_key("<F10>", "exit");
+    if (arg == "" || arg == "--esc")
+         assign_to_key("<ESC>", "exit");
+    if (arg == "" || arg == "--f10")
+         assign_to_key("<F10>", "exit");
     assign_to_key("<unassigned>", "::_key_trace {}"); // <esc> <key>
 
-    message("key_trace: <ESC> or <F10> to exit");
+    if (arg == "--esc") {
+         message("key_trace: <ESC> to exit");
+    } else if (arg == "--f10") {
+         message("key_trace: <F10> to exit");
+    } else {
+         message("key_trace: <ESC> or <F10> to exit");
+    }
     process();
     message("");
     keyboard_pop(1);
@@ -642,7 +652,7 @@ _key_learn_sp(string what)
 }
 
 
-/*  Function:           key_termmapping
+/*  Function:           key_termmap
  *      Generate a keyboard terminal mapping summary.
  *
  *  Parameters:
@@ -652,7 +662,7 @@ _key_learn_sp(string what)
  *      none
  */
 void
-key_termmapping(void)
+key_termmap(void)
 {
     extern int window_offset;
     int curbuf, buf, win;
@@ -665,7 +675,7 @@ key_termmapping(void)
         return;                                 /* MSDOS etc */
     }
 
-    if ((buf = create_buffer("Term Key Mapping", NULL, 1)) < 0) {
+    if ((buf = create_buffer("Terminal Key Mapping", NULL, 1)) < 0) {
         return;
     }
 
@@ -673,24 +683,34 @@ key_termmapping(void)
     set_buffer(buf);
     for (l = 0; l < llen; l += 2) {
         insert(int_to_key(lst[l]));             /* keycode */
-        move_abs(0, 24);
-        insert(lst[l+1]);                       /* escape code */
-        insert("\n");
+        tohex(lst[l+1]);
     }
     delete_line();
     sort_buffer();                              /* ??? */
 
     set_buffer(curbuf);                         /* restore buffer */
     window_offset += 10;
-    win = sized_window( inq_lines(buf), inq_line_length(buf), "<F10> exit." );
+    win = sized_window(inq_lines(buf), inq_line_length(buf), "<F10> exit.");
     select_buffer(buf, win, SEL_NORMAL, NULL, NULL, NULL);
     window_offset -= 10;
 
     delete_buffer(buf);                         /* release local buffer */
 }
 
+
+static void
+tohex(string seq)
+{
+    int i, seqlen = strlen(seq);
+    string h, a;
+
+    for (i = 1; i <= seqlen; ++i) {
+        int ch = characterat(seq, i);
+        h += format("%02X ", ch);
+        a += format("%c", (ch > ' ' && ch < 0xff ? ch : '.'));
+    }
+    move_abs(0, 32);
+    insertf("| %-*s | %-*s \n", 14, a, 14*3, h);
+}
+
 /*end*/
-
-
-
-

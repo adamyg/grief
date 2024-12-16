@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: railscasts.cr,v 1.4 2024/08/04 11:42:44 cvsuser Exp $
+/* $Id: railscasts.cr,v 1.6 2024/10/08 11:40:03 cvsuser Exp $
  * railscasts coloriser, GRIEF port.
  *
  * Original:
@@ -94,6 +94,7 @@ railscasts_colors = {
 void
 colorscheme_railscasts(void)
 {
-    vim_colorscheme("railscasts", 256, NULL, railscasts_colors, TRUE);
+        vim_colorscheme("railscasts", 256, NULL, railscasts_colors, TRUE);
 }
+
 /*end*/

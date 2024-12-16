@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_backup_c,"$Id: m_backup.c,v 1.20 2022/08/10 15:44:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_backup_c,"$Id: m_backup.c,v 1.21 2024/12/05 19:00:11 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_backup.c,v 1.20 2022/08/10 15:44:56 cvsuser Exp $
+/* $Id: m_backup.c,v 1.21 2024/12/05 19:00:11 cvsuser Exp $
  * File backup option/configuration primitives.
  *
  *
@@ -425,7 +425,7 @@ inq_backup(void)                /* int ([int bufnum]) */
                 backups.
 
             o *BK_AUTOSAVE* -
-                Buffer autosave flag. A zero integer 'parameter'
+                Buffer auto-save flag. A zero integer 'parameter'
                 shall disable auto-backups, with a non-zero value
                 enabling auto-backups.
 
@@ -462,10 +462,10 @@ inq_backup(void)                /* int ([int bufnum]) */
                 filtering on backup filenames.
 
             o *BK_ASK* -
-                Filesize watermark at which point backups shall be
+                File-size watermark at which point backups shall be
                 prompted before created a backup image. 'parameter'
                 should be a positive integer value being the
-                watermark filesize in bytes, with a value of zero
+                watermark file-size in bytes, with a value of zero
                 disabling any prompts.
 
             o *BK_DONT* -

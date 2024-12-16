@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_system_c,"$Id: m_system.c,v 1.23 2024/06/09 20:09:49 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_system_c,"$Id: m_system.c,v 1.24 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_system.c,v 1.23 2024/06/09 20:09:49 cvsuser Exp $
+/* $Id: m_system.c,v 1.24 2024/12/06 15:46:06 cvsuser Exp $
  * Basic system primitives.
  *
  *
@@ -337,4 +337,5 @@ inq_clock(void)                 /* (void) */
 
     acc_assign_int(value);
 }
+
 /*end*/

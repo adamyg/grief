@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_config_c,"$Id: config.c,v 1.36 2024/07/11 10:24:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_config_c,"$Id: config.c,v 1.37 2024/12/09 14:13:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: config.c,v 1.36 2024/07/11 10:24:54 cvsuser Exp $
+/* $Id: config.c,v 1.37 2024/12/09 14:13:08 cvsuser Exp $
  * Machine dependent configuration variables.
  *
  *
@@ -35,7 +35,6 @@ __CIDENT_RCSID(gr_config_c,"$Id: config.c,v 1.36 2024/07/11 10:24:54 cvsuser Exp
 #endif
 
 const char *x_grfile        = "GRFILE=newfile";
-const char *x_grflags       = "GRFLAGS=-i60";
 
 #if defined(_VMS)
 const char *x_machtype      = "VMS";

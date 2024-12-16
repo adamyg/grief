@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: xterm_linux.cr,v 1.26 2024/09/20 12:15:16 cvsuser Exp $
+/* $Id: xterm_linux.cr,v 1.27 2024/11/18 13:42:10 cvsuser Exp $
  * terminal description file for the xterm window under X11/Linux.
  *
  *
@@ -164,7 +164,7 @@ main()
         CTRL_KEYPAD_9,      "\x1b[5;5~",    /* pagedown         */
         CTRL_KEYPAD_DEL,    "\x1b[3;5~",    /* delete           */
 
-        MOUSE_KEY,          "\x1b[M",       /* Mouse event      */
+//      MOUSE_KEY,          "\x1b[M",       /* Mouse event      */
 
         BACK_TAB,           "\x1b[Z",       /* Shift-Tab        */
 //      CTRL_BACKSPACE,     "\x08",         /* Ctrl-Backspace   */

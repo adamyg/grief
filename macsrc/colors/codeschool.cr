@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 8; -*- */
-/* $Id: codeschool.cr,v 1.2 2014/11/27 15:54:12 ayoung Exp $
+/* $Id: codeschool.cr,v 1.3 2024/10/07 16:14:59 cvsuser Exp $
  * codeschool coloriser, GRIEF port.
  *
  * Original:
@@ -118,4 +118,5 @@ colorscheme_codeschool(void)
 {
         vim_colorscheme("codeschool", 0, NULL, codeschool_colors, -1);
 }
+
 /*end*/

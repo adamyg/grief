@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_display_c,"$Id: m_display.c,v 1.29 2021/07/05 15:01:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_display_c,"$Id: m_display.c,v 1.31 2024/12/14 10:11:41 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_display.c,v 1.29 2021/07/05 15:01:27 cvsuser Exp $
+/* $Id: m_display.c,v 1.31 2024/12/14 10:11:41 cvsuser Exp $
  * Display primitives.
  *
  *
@@ -69,7 +69,7 @@ static const struct dcflag {        /* display control flags */
     { NFIELD("statusline"),         DC_STATUSLINE },
 
     { NFIELD("unicode"),            DC_UNICODE },           /* UNICODE character encoding available (read-only). */
-    { NFIELD("asciionly"),          DC_ASCIIONLY },         /* ASCII only characters witihin UI/dialogs. */
+    { NFIELD("asciionly"),          DC_ASCIIONLY },         /* ASCII only characters within UI/dialogs. */
 
     { NFIELD("rosuffix"),           DC_ROSUFFIX },          /* Read-only suffix on titles. */
     { NFIELD("modsuffix"),          DC_MODSUFFIX },         /* Modified suffix. */
@@ -136,7 +136,7 @@ static const struct doflag {        /* display overrides */
     DC_SHADOW_SHOWTHRU  showthru        Show-thru shadow around popups.
     DC_STATUSLINE       statusline      Status line.
     DC_UNICODE          unicode         UNICODE character encoding available (ro).
-    DC_ASCIIONLY        asciionly       ASCII only characters witihin UI/dialogs.
+    DC_ASCIIONLY        asciionly       ASCII only characters within UI/dialogs.
     DC_ROSUFFIX         rosuffix        Read-only suffix on titles.
     DC_MODSUFFIX        modsuffix       Modified suffix.
     DC_EOF_DISPLAY      eof_display     Show <EOF> marker.
@@ -328,7 +328,7 @@ do_display_mode(void)           /* int ([int or_mask|string clear-list], [int an
     showthru        DC_SHADOW_SHOWTHRU  Show-thru shadow around popups.
     statusline      DC_STATUSLINE       Status line.
     unicode         DC_UNICODE          UNICODE character encoding available (ro).
-    asciionly       DC_ASCIIONLY        ASCII only characters witihin UI/dialogs.
+    asciionly       DC_ASCIIONLY        ASCII only characters within UI/dialogs.
     rosuffix        DC_ROSUFFIX         Read-only suffix on titles.
     modsuffix       DC_MODSUFFIX        Modified suffix.
     eof_display     DC_EOF_DISPLAY      Show <EOF> marker.
@@ -629,7 +629,7 @@ do_cursor(void)
         Only available when running under a suitable windowing
         system, otherwise this primitive is a no-op.
 
-    Macro Parameterss:
+    Macro Parameters:
         wname - Optional string containing the window name.
         iname - Optional icon name.
 
@@ -696,7 +696,7 @@ void
 do_set_font(void)               /* int (string normalfont, [string italicfont]) */
 {
     const char *norm = get_xstr(1);
-//  const char *italic = get_xstr(2);           /* TODO */        
+//  const char *italic = get_xstr(2);           /* TODO */
     int ret = -1;
 
     if (norm && x_scrfn.scr_font) {

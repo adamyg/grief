@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.138 2024/09/26 12:19:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyterm_c,"$Id: ttyterm.c,v 1.159 2024/12/14 11:03:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyterm.c,v 1.138 2024/09/26 12:19:35 cvsuser Exp $
+/* $Id: ttyterm.c,v 1.159 2024/12/14 11:03:02 cvsuser Exp $
  * TTY driver termcap/terminfo based.
  *
  *
@@ -167,6 +167,7 @@ extern int ospeed;
 #include "eval.h"                               /* get_str() ... */
 #include "getkey.h"                             /* io_... */
 #include "keyboard.h"
+#include "kbprotocols.h"
 #include "line.h"
 #include "main.h"
 #include "map.h"
@@ -177,12 +178,13 @@ extern int ospeed;
 #include "system.h"
 #include "tty.h"
 #include "ttyutil.h"
+#include "ttycfg.h"
 #include "undo.h"
 #include "window.h"
 
-#define ANSI_COLORS             16
-#define XTERM_COLORS            16
-#define NOCOLOR                 0x7fff
+#define ANSI_COLORS      16
+#define XTERM_COLORS     16
+#define NOCOLOR          0x7fff
 
 #if defined(NCURSES_CONST)
 #define CURSES_CAST(__x) (NCURSES_CONST char *)(__x)
@@ -190,55 +192,27 @@ extern int ospeed;
 #define CURSES_CAST(__x) (char *)(__x)
 #endif
 
-typedef struct {
-    const char *        termfname;              /* function name */
-    unsigned            userdef;                /* is userdef attribute */
-    const char *        termcapname;            /* termcap name */
-    const char *        terminfoname;           /* terminfo name */
-    const char *        comment;                /* comment string */
-#define TC_FNAME(__fname)       #__fname, 0
-#define TC_UNAME(__uname)       "userdef_" #__uname, 1
-#define TC_KNAME(__kname)       "keydef_" #__kname, 1
-#define TC_DESC(__desc)         __desc
-} Term_t;
-
-typedef struct {
-    Term_t              term;
-    int                 key;
-#define TC_TOKEN(__token)       __token
-    const char *        svalue;                 /* runtime value */
-} TermKey_t;
-
-typedef struct {
-    Term_t              term;
-    const char **       stoken;
-#define TC_STRING(__token)      __token
-    const char *        svalue;                 /* runtime value */
-} TermString_t;
-
-typedef struct {
-    Term_t              term;
-    int *               itoken;
-#define TC_FLAG(__token)        __token
-    int                 ivalue;                 /* runtime value*/
-} TermNumeric_t;
-
+typedef uint32_t TIdentifier_t;
 typedef uint32_t TAttributes_t;
 
 static void             term_open(scrprofile_t *profile);
 static void             term_ready(int repaint, scrprofile_t *profile);
+static void             term_keybind(void);
+static void             set_understyles(void);
 static void             term_feature(int ident, scrprofile_t *profile);
 static void             term_display(void);
 static int              term_control(int action, int param, ...);
 static void             term_close(void);
 
-static const char *     ttisetup(void);
-static const char *     ttiname(const Term_t *ti);
-static const char *     ttigetstr(const Term_t *ti);
-static int              ttigetnum(const Term_t *ti);
-static int              ttigetflag(const Term_t *ti);
+static int              isterminal(TIdentifier_t type);
 
-static TAttributes_t    term_xtermlike(const char *term);
+static const char *     ttisetup(void);
+static const char *     ttiname(const TermVal_t *ti);
+static const char *     ttigetstr(const TermVal_t *ti);
+static int              ttigetnum(const TermVal_t *ti);
+static int              ttigetflag(const TermVal_t *ti);
+
+static void             term_xtermlike(const char *term, TIdentifier_t *identifier, TAttributes_t *attributes);
 
 static void             key_enable(void);
 static void             key_config(void);
@@ -257,6 +231,8 @@ static void             term_beep(int freq, int duration);
 
 static void             term_config(void);
 static void             term_colors(void);
+static void             term_special(void);
+static int              istruecolor(void);
 static void             term_fgbg(void);
 static const char *     fgbg_value(const char *src, int *result);
 static unsigned         fgbg_import(unsigned edefault, int udefault);
@@ -289,8 +265,15 @@ static int              term_dell(int row, int bot, int nlines, vbyte_t fillcolo
 static void             term_scrollset(int top, int bot);
 static void             term_scrollreset(void);
 static void             term_attr(vbyte_t color);
-static void             term_styleon(unsigned mode);
+static void             term_truecolor(const colattr_t *ca, int mode);
+static void             term_monocolor(const vbyte_t attr);
+static void             term_legacycolor(const colattr_t *ca);
+static void             term_256color(int fg, int bg, const char *reset);
+static void             term_sgrcolor(int fg, int bg, const char *reset);
+static void             term_16color(int fg, int bg, const char **cmds, const char *reset);
+static void             term_styleon(colstyles_t nstyle);
 static void             term_styleoff(void);
+static void             term_understyle(int enable, colstyles_t style);
 static void             term_colorreset(void);
 static int              term_cost(const char *s);
 
@@ -298,7 +281,6 @@ static void             ttputpad(const char *str);
 static void             ttputctl(const char *str, int a);
 static void             ttputctl2(const char *str, int a, int b);
 static void             ttprintf(const char *str, ...);
-static void             ttprintf2(const char *str, ...);
 
 static void             ega_switch(int flag);
 
@@ -327,28 +309,31 @@ static char             tcapstrings[TC_SLEN];   /* termcap local storage */
 /*
  *  Terminate attributes
  */
-#define TA_XTERM                0x00000001
+#define TT_XTERM                0x00000001
+#define TT_LINUX                0x00000010
+#define TT_CYGWIN               0x00000020
+#define TT_KONSOLE              0x00000040
+#define TT_SCREEN               0x00000080
+#define TT_MINTTY               0x00000100      /* see: https://github.com/mintty/mintty/wiki/CtrlSeqs */
+#define TT_PUTTY                0x00000200
+#define TT_MSTERMINAL           0x00000400
+#define TT_GNOME                0x00001000
+#define TT_KITTY                0x00002000
+#define TT_ALACRITTY            0x00004000
+#define TT_ITERM                0x00008000
+#define TT_HTERM                0x00010000
+#define TT_WEZTERM              0x00020000
+#define TT_STTERM               0x00040000
+
 #define TA_VT100LIKE            0x00000002
 #define TA_XTERMLIKE            0x00000004
-#define TA_LINUX                0x00010000
-#define TA_CYGWIN               0x00020000
-#define TA_KONSOLE              0x00040000
-#define TA_SCREEN               0x00080000
-#define TA_MINTTY               0x00100000      /* see: https://github.com/mintty/mintty/wiki/CtrlSeqs */
-#define TA_PUTTY                0x00200000
-#define TA_MSTERMINAL           0x00400000
-#define TA_GNOME                0x01000000
-#define TA_KITTY                0x02000000
-#define TA_ALACRITTY            0x04000000
-#define TA_ITERM                0x08000000
-#define TA_HTERM                0x10000000
-#define TA_WEZTERM              0x20000000
 #define TA_DARK                 0x00000010      /* generally dark background */
 #define TA_LIGHT                0x00000020      /* generally light */
 #define TA_MONO                 0x00000040      /* mono terminal */
 #define TA_LUMINANCE_DARK       0x00000100
 #define TA_LUMINANCE_LIGHT      0x00000200
 
+static TIdentifier_t    t_identifier;           /* terminal identifier */
 static TAttributes_t    t_attributes;           /* attributes */
 static int              t_charout;              /* number of characters output. */
 static unsigned         t_insdel;               /* do we have both insert & delete line? */
@@ -397,13 +382,14 @@ static int
     tf_be,                                      /* back color erase (xterm). */
     tf_xs, tf_xt,                               /* attribute clear mode */
     tf_ms,                                      /* save to move cursor whilst standout/underlined */
-    tf_XT;                                      /* supports xterm OCS and mouse */
+    tf_XT,                                      /* supports xterm OCS and mouse */
+    tf_RGB;                                     /* RGB active; direct mode */
 
 static int
     tn_sg,                                      /* number of glitches, 0 for invisable, -1 for none */
     tn_li, tn_co,                               /* lines/columns */
     tn_NC,                                      /* attributes which dont mix with colors */
-    tn_RGB;                                     /* RGB bits */
+    tn_RGB;                                     /* RGB bits; direct mode */
 
 static const char
     *tc_ti,                                     /* Term init -- start using cursor motion. */
@@ -471,6 +457,9 @@ static const char
     *tc_mr, *tc_ZX,                             /* Reverse (on/off). */
     *tc_sa,                                     /* Attribute set. */
 
+    *tc_Smulx,                                  /* Understyle. */
+    *tc_smxx, *tc_rmxx,                         /* Strikeout/crossed-out. */
+
     *tc_RV;                                     /* XTerm version */
 
 static const char
@@ -489,8 +478,8 @@ static const char
     *tc_box_characters;
 
 static const char
-    *tc_ANSI_Color_Fg, *tc_Color_Fg,            /* color selection */
-    *tc_ANSI_Color_Bg, *tc_Color_Bg;
+    *tc_ANSI_Color[2],                          /* color selection */
+    *tc_Color[2];
 
 typedef struct {
     char                ident;                  /* internal identifier */
@@ -535,7 +524,7 @@ enum {
     TACS_VLINE          = 'x'
     };
 
-static GraphicChars_t term_characters[] =  {    /* graphic characters */
+static GraphicChars_t term_characters[] = {     /* graphic characters */
     { TACS_STERLING,        TC_DESC("UK pound sign") },
     { TACS_DARROW,          TC_DESC("arrow pointing down") },
     { TACS_LARROW,          TC_DESC("arrow pointing left") },
@@ -572,7 +561,8 @@ static GraphicChars_t term_characters[] =  {    /* graphic characters */
 
 static TermString_t term_strings[] = {          /* strings - termcap/terminfo elements */
     /*
-     *  Source: https://invisible-island.net/ncurses/man/terminfo.5.html
+     *  Source:   https://invisible-island.net/ncurses/man/terminfo.5.html
+     *  Examples: https://invisible-island.net/ncurses/terminfo.src.html
      */
     { TC_FNAME(back_tab),                   "bt", "cbt",        TC_DESC("back tab") },
     { TC_FNAME(bell),                       "bl", "bel",        TC_DESC("audible signal (bell)"), TC_STRING(&tc_bl) },
@@ -728,8 +718,8 @@ static TermString_t term_strings[] = {          /* strings - termcap/terminfo el
     { TC_FNAME(initialize_color),           "Ic", "initc",      TC_DESC("initialize color #1 to (#2,#3,#4)") },
     { TC_FNAME(initialize_pair),            "Ip", "initp",      TC_DESC("initialize color pair #1 to fg=(#2,#3,#4), bg=(#5,#6,#7)") },
     { TC_FNAME(set_color_pair),             "sp", "scp",        TC_DESC("set current color pair to #1") },
-    { TC_FNAME(set_foreground),             "Sf", "setf",       TC_DESC("set foreground (color)"), &tc_Color_Fg },
-    { TC_FNAME(set_background),             "Sb", "setb",       TC_DESC("set background (color)"), &tc_Color_Bg },
+    { TC_FNAME(set_foreground),             "Sf", "setf",       TC_DESC("set foreground (color)"), &tc_Color[0] },
+    { TC_FNAME(set_background),             "Sb", "setb",       TC_DESC("set background (color)"), &tc_Color[1] },
     { TC_FNAME(change_char_pitch),          "ZA", "cpi",        TC_DESC("change number of characters per inch") },
     { TC_FNAME(change_line_pitch),          "ZB", "lpi",        TC_DESC("change number of lines per inch") },
     { TC_FNAME(change_res_horz),            "ZC", "chr",        TC_DESC("change horizontal resolution") },
@@ -782,15 +772,15 @@ static TermString_t term_strings[] = {          /* strings - termcap/terminfo el
     { TC_FNAME(zero_motion),                "Zx", "zerom",      TC_DESC("no motion for subsequent character") },
 
        /*
-        *  The following string  capabilities  are  present  in  the  SVr4.0  term
+        *  The following string capabilities are present in the SVr4.0 term
         *  structure, but were originally not documented in the man page.
         */
     { TC_FNAME(char_set_names),             "Zy", "csnm",       TC_DESC("list of character set names") },
     { TC_FNAME(mouse_info),                 "Mi", "minfo",      TC_DESC("mouse status information") },
     { TC_FNAME(req_mouse_pos),              "RQ", "reqmp",      TC_DESC("request mouse position") },
     { TC_FNAME(get_mouse),                  "Gm", "getm",       TC_DESC("curses should get button events") },
-    { TC_FNAME(set_a_foreground),           "AF", "setaf",      TC_DESC("set ANSI color foreground"), &tc_ANSI_Color_Fg },
-    { TC_FNAME(set_a_background),           "AB", "setab",      TC_DESC("set ANSI color background"), &tc_ANSI_Color_Bg },
+    { TC_FNAME(set_a_foreground),           "AF", "setaf",      TC_DESC("set ANSI color foreground"), &tc_ANSI_Color[0] },
+    { TC_FNAME(set_a_background),           "AB", "setab",      TC_DESC("set ANSI color background"), &tc_ANSI_Color[1] },
     { TC_FNAME(pkey_plab),                  "xl", "pfxl",       TC_DESC("program function key #1 to type string #2 and show string #3") },
     { TC_FNAME(device_type),                "dv", "devt",       TC_DESC("indicate language/codeset support") },
     { TC_FNAME(code_set_init),              "ci", "csin",       TC_DESC("init sequence for multiple codesets") },
@@ -898,15 +888,16 @@ static TermString_t term_strings[] = {          /* strings - termcap/terminfo el
     { TC_UNAME(tmux),                       NULL, "Csr",        TC_DESC("change the cursor style, overriding Ss") },
     { TC_UNAME(tmux),                       NULL, "Ms",         TC_DESC("store buffer in the host clipboard") },
     { TC_UNAME(tmux),                       NULL, "Se",         TC_DESC("reset the cursor style") },
-    { TC_UNAME(tmux),                       NULL, "Smulx",      TC_DESC("modify the appearance of underlines in VTE") },
+    { TC_UNAME(tmux),                       NULL, "Smulx",      TC_DESC("modify the appearance of underlines in VTE"), &tc_Smulx },
                                                                         //
-                                                                        // 0 for no underscore,
-                                                                        // 1 for normal underscore,
-                                                                        // 2 for double underscore,
-                                                                        // 3 for curly underscore,
-                                                                        // 4 for dotted underscore and;
-                                                                        // 5 for dashed underscore.
+                                                                        // 0 - no underscore
+                                                                        // 1 - normal underscore
+                                                                        // 2 - double underscore
+                                                                        // 3 - curly underscore
+                                                                        // 4 - dotted underscore
+                                                                        // 5 - dashed underscore
                                                                         //
+    { TC_UNAME(tmux),                       NULL, "Setulc",     TC_DESC("set the underscore color") }, // tmux-3.0+
     { TC_UNAME(tmux),                       NULL, "Ss",         TC_DESC("change the cursor style") },
                                                                         //
                                                                         // 0, 1 or none - blinking block cursor
@@ -916,8 +907,8 @@ static TermString_t term_strings[] = {          /* strings - termcap/terminfo el
                                                                         // 5 - blinking vertical bar cursor
                                                                         // 6 - vertical bar cursor
                                                                         //
-    { TC_UNAME(tmux),                       NULL, "rmxx",       TC_DESC("reset ECMA-48 strikeout/crossed-out attributes") },
-    { TC_UNAME(tmux),                       NULL, "smxx",       TC_DESC("set ECMA-48 strikeout/crossed-out attributes") },
+    { TC_UNAME(tmux),                       NULL, "smxx",       TC_DESC("set ECMA-48 strikeout/crossed-out attributes"), &tc_smxx }, // SGR attribute or VK100-compatible DECSET20.
+    { TC_UNAME(tmux),                       NULL, "rmxx",       TC_DESC("reset ECMA-48 strikeout/crossed-out attributes"), &tc_rmxx },
 
         /* VIM specials */
     { TC_UNAME(vim),                        NULL, "BD",         TC_DESC("disables bracketed paste") },
@@ -930,7 +921,7 @@ static TermString_t term_strings[] = {          /* strings - termcap/terminfo el
     { TC_UNAME(vim),                        NULL, "fe",         TC_DESC("enable xterm focus-events") },
     { TC_UNAME(vim),                        NULL, "rv",         TC_DESC("response to RV, regular expression") },
     { TC_UNAME(vim),                        NULL, "xr",         TC_DESC("response to XR, regular expression") },
-    { TC_UNAME(vim),                        NULL, "SH",         TC_DESC("cursor shape") } //XXX
+    { TC_UNAME(vim),                        NULL, "SH",         TC_DESC("cursor shape") } //TODO
                                                                         //
                                                                         // 0, 1 or none - blinking block cursor
                                                                         // 2 - block cursor
@@ -1005,7 +996,14 @@ static TermNumeric_t term_numbers[] = {         /* numeric - termcap/terminfo el
 
 static TermKey_t term_keys[] = {                /* keys - termcap/terminfo elements */
     /*
-     *  Standard
+     *  Standard:
+     *
+     *      F01-F12 are F1-F12
+     *      F13-F24 are Shift F1-F12
+     *      F25-F36 are Control F1-F12
+     *      F37-F48 are Shift + Control F1-F12
+     *      F49-F60 are Alt F1-F12
+     *      F61-F63 are Alt + Shift F1-F3
      */
     { TC_FNAME(key_backspace),              "kb", "kbs",        TC_DESC("backspace key"), TC_TOKEN(CTRL_H) },
     { TC_FNAME(key_catab),                  "ka", "ktbc",       TC_DESC("clear-all-tabs key") },
@@ -1046,16 +1044,16 @@ static TermKey_t term_keys[] = {                /* keys - termcap/terminfo eleme
     { TC_FNAME(key_c1),                     "K4", "kc1",        TC_DESC("lower left of keypad"), TC_TOKEN(KEYPAD_1) },
     { TC_FNAME(key_c3),                     "K5", "kc3",        TC_DESC("lower right of key-pad"), TC_TOKEN(KEYPAD_3) },
     { TC_FNAME(key_btab),                   "kB", "kcbt",       TC_DESC("back-tab key"), TC_TOKEN(BACK_TAB) },
-    { TC_FNAME(key_beg),                    "@1", "kbeg",       TC_DESC("reference key") },
-    { TC_FNAME(key_cancel),                 "@2", "kcan",       TC_DESC("refresh key") },
-    { TC_FNAME(key_close),                  "@3", "kclo",       TC_DESC("replace key"), TC_TOKEN(KEY_REPLACE) },
-    { TC_FNAME(key_command),                "@4", "kcmd",       TC_DESC("restart key") },
-    { TC_FNAME(key_copy),                   "@5", "kcpy",       TC_DESC("resume key") },
-    { TC_FNAME(key_create),                 "@6", "kcrt",       TC_DESC("save key"), TC_TOKEN(KEY_SAVE) },
-    { TC_FNAME(key_end),                    "@7", "kend",       TC_DESC("suspend key") },
-    { TC_FNAME(key_enter),                  "@8", "kent",       TC_DESC("undo key"), TC_TOKEN(KEY_UNDO_CMD) },
-    { TC_FNAME(key_exit),                   "@9", "kext",       TC_DESC("shifted begin key") },
-    { TC_FNAME(key_find),                   "@0", "kfnd",       TC_DESC("shifted cancel key") },
+    { TC_FNAME(key_beg),                    "@1", "kbeg",       TC_DESC("begin key") },
+    { TC_FNAME(key_cancel),                 "@2", "kcan",       TC_DESC("canel key") },
+    { TC_FNAME(key_close),                  "@3", "kclo",       TC_DESC("close key") },
+    { TC_FNAME(key_command),                "@4", "kcmd",       TC_DESC("command key") },
+    { TC_FNAME(key_copy),                   "@5", "kcpy",       TC_DESC("copy key"), TC_TOKEN(KEY_COPY_CMD) },
+    { TC_FNAME(key_create),                 "@6", "kcrt",       TC_DESC("create key") },
+    { TC_FNAME(key_end),                    "@7", "kend",       TC_DESC("end key") },
+    { TC_FNAME(key_enter),                  "@8", "kent",       TC_DESC("undo key") },
+    { TC_FNAME(key_exit),                   "@9", "kext",       TC_DESC("exit key"), TC_TOKEN(KEY_EXIT) },
+    { TC_FNAME(key_find),                   "@0", "kfnd",       TC_DESC("find key"), TC_TOKEN(KEY_SEARCH) },
     { TC_FNAME(key_help),                   "%1", "khlp",       TC_DESC("help key"), TC_TOKEN(KEY_HELP) },
     { TC_FNAME(key_mark),                   "%2", "kmrk",       TC_DESC("mark key") },                  /* KEY_MARK */
     { TC_FNAME(key_message),                "%3", "kmsg",       TC_DESC("message key") },
@@ -1105,54 +1103,54 @@ static TermKey_t term_keys[] = {                /* keys - termcap/terminfo eleme
     { TC_FNAME(key_sundo),                  "!3", "kUND",       TC_DESC("shifted undo key"), TC_TOKEN(KEY_REDO) },
     { TC_FNAME(key_f11),                    "F1", "kf11",       TC_DESC("F11 function key"), TC_TOKEN(F(11)) },
     { TC_FNAME(key_f12),                    "F2", "kf12",       TC_DESC("F12 function key"), TC_TOKEN(F(12)) },
-    { TC_FNAME(key_f13),                    "F3", "kf13",       TC_DESC("F13 function key") /*, TC_TOKEN(F(13))*/ },
-    { TC_FNAME(key_f14),                    "F4", "kf14",       TC_DESC("F14 function key") /*, TC_TOKEN(F(14))*/ },
-    { TC_FNAME(key_f15),                    "F5", "kf15",       TC_DESC("F15 function key") /*, TC_TOKEN(F(15))*/ },
-    { TC_FNAME(key_f16),                    "F6", "kf16",       TC_DESC("F16 function key") /*, TC_TOKEN(F(16))*/ },
-    { TC_FNAME(key_f17),                    "F7", "kf17",       TC_DESC("F17 function key") /*, TC_TOKEN(F(17))*/ },
-    { TC_FNAME(key_f18),                    "F8", "kf18",       TC_DESC("F18 function key") /*, TC_TOKEN(F(18))*/ },
-    { TC_FNAME(key_f19),                    "F9", "kf19",       TC_DESC("F19 function key") /*, TC_TOKEN(F(19))*/ },
-    { TC_FNAME(key_f20),                    "FA", "kf20",       TC_DESC("F20 function key") /*, TC_TOKEN(F(20))*/ },
-    { TC_FNAME(key_f21),                    "FB", "kf21",       TC_DESC("F21 function key") },
-    { TC_FNAME(key_f22),                    "FC", "kf22",       TC_DESC("F22 function key") },
-    { TC_FNAME(key_f23),                    "FD", "kf23",       TC_DESC("F23 function key") },
-    { TC_FNAME(key_f24),                    "FE", "kf24",       TC_DESC("F24 function key") },
-    { TC_FNAME(key_f25),                    "FF", "kf25",       TC_DESC("F25 function key") },
-    { TC_FNAME(key_f26),                    "FG", "kf26",       TC_DESC("F26 function key") },
-    { TC_FNAME(key_f27),                    "FH", "kf27",       TC_DESC("F27 function key") },
-    { TC_FNAME(key_f28),                    "FI", "kf28",       TC_DESC("F28 function key") },
-    { TC_FNAME(key_f29),                    "FJ", "kf29",       TC_DESC("F29 function key") },
-    { TC_FNAME(key_f30),                    "FK", "kf30",       TC_DESC("F30 function key") },
-    { TC_FNAME(key_f31),                    "FL", "kf31",       TC_DESC("F31 function key") },
-    { TC_FNAME(key_f32),                    "FM", "kf32",       TC_DESC("F32 function key") },
-    { TC_FNAME(key_f33),                    "FN", "kf33",       TC_DESC("F33 function key") },
-    { TC_FNAME(key_f34),                    "FO", "kf34",       TC_DESC("F34 function key") },
-    { TC_FNAME(key_f35),                    "FP", "kf35",       TC_DESC("F35 function key") },
-    { TC_FNAME(key_f36),                    "FQ", "kf36",       TC_DESC("F36 function key") },
-    { TC_FNAME(key_f37),                    "FR", "kf37",       TC_DESC("F37 function key") },
-    { TC_FNAME(key_f38),                    "FS", "kf38",       TC_DESC("F38 function key") },
-    { TC_FNAME(key_f39),                    "FT", "kf39",       TC_DESC("F39 function key") },
-    { TC_FNAME(key_f40),                    "FU", "kf40",       TC_DESC("F40 function key") },
-    { TC_FNAME(key_f41),                    "FV", "kf41",       TC_DESC("F41 function key") },
-    { TC_FNAME(key_f42),                    "FW", "kf42",       TC_DESC("F42 function key") },
-    { TC_FNAME(key_f43),                    "FX", "kf43",       TC_DESC("F43 function key") },
-    { TC_FNAME(key_f44),                    "FY", "kf44",       TC_DESC("F44 function key") },
-    { TC_FNAME(key_f45),                    "FZ", "kf45",       TC_DESC("F45 function key") },
-    { TC_FNAME(key_f46),                    "Fa", "kf46",       TC_DESC("F46 function key") },
-    { TC_FNAME(key_f47),                    "Fb", "kf47",       TC_DESC("F47 function key") },
-    { TC_FNAME(key_f48),                    "Fc", "kf48",       TC_DESC("F48 function key") },
-    { TC_FNAME(key_f49),                    "Fd", "kf49",       TC_DESC("F49 function key") },
-    { TC_FNAME(key_f50),                    "Fe", "kf50",       TC_DESC("F50 function key") },
-    { TC_FNAME(key_f51),                    "Ff", "kf51",       TC_DESC("F51 function key") },
-    { TC_FNAME(key_f52),                    "Fg", "kf52",       TC_DESC("F52 function key") },
-    { TC_FNAME(key_f53),                    "Fh", "kf53",       TC_DESC("F53 function key") },
-    { TC_FNAME(key_f54),                    "Fi", "kf54",       TC_DESC("F54 function key") },
-    { TC_FNAME(key_f55),                    "Fj", "kf55",       TC_DESC("F55 function key") },
-    { TC_FNAME(key_f56),                    "Fk", "kf56",       TC_DESC("F56 function key") },
-    { TC_FNAME(key_f57),                    "Fl", "kf57",       TC_DESC("F57 function key") },
-    { TC_FNAME(key_f58),                    "Fm", "kf58",       TC_DESC("F58 function key") },
-    { TC_FNAME(key_f59),                    "Fn", "kf59",       TC_DESC("F59 function key") },
-    { TC_FNAME(key_f60),                    "Fo", "kf60",       TC_DESC("F60 function key") },
+    { TC_FNAME(key_f13),                    "F3", "kf13",       TC_DESC("F13 function key") /* TC_TOKEN(SF(1))   */ },
+    { TC_FNAME(key_f14),                    "F4", "kf14",       TC_DESC("F14 function key") /* TC_TOKEN(SF(2))   */ },
+    { TC_FNAME(key_f15),                    "F5", "kf15",       TC_DESC("F15 function key") /* TC_TOKEN(SF(3))   */ },
+    { TC_FNAME(key_f16),                    "F6", "kf16",       TC_DESC("F16 function key") /* TC_TOKEN(SF(4))   */ },
+    { TC_FNAME(key_f17),                    "F7", "kf17",       TC_DESC("F17 function key") /* TC_TOKEN(SF(5))   */ },
+    { TC_FNAME(key_f18),                    "F8", "kf18",       TC_DESC("F18 function key") /* TC_TOKEN(SF(6))   */ },
+    { TC_FNAME(key_f19),                    "F9", "kf19",       TC_DESC("F19 function key") /* TC_TOKEN(SF(7))   */ },
+    { TC_FNAME(key_f20),                    "FA", "kf20",       TC_DESC("F20 function key") /* TC_TOKEN(SF(8))   */ },
+    { TC_FNAME(key_f21),                    "FB", "kf21",       TC_DESC("F21 function key") /* TC_TOKEN(SF(9))   */ },
+    { TC_FNAME(key_f22),                    "FC", "kf22",       TC_DESC("F22 function key") /* TC_TOKEN(SF(10))  */ },
+    { TC_FNAME(key_f23),                    "FD", "kf23",       TC_DESC("F23 function key") /* TC_TOKEN(SF(11))  */ },
+    { TC_FNAME(key_f24),                    "FE", "kf24",       TC_DESC("F24 function key") /* TC_TOKEN(SF(12))  */ },
+    { TC_FNAME(key_f25),                    "FF", "kf25",       TC_DESC("F25 function key") /* TC_TOKEN(CF(1))   */ },
+    { TC_FNAME(key_f26),                    "FG", "kf26",       TC_DESC("F26 function key") /* TC_TOKEN(CF(2))   */ },
+    { TC_FNAME(key_f27),                    "FH", "kf27",       TC_DESC("F27 function key") /* TC_TOKEN(CF(3))   */ },
+    { TC_FNAME(key_f28),                    "FI", "kf28",       TC_DESC("F28 function key") /* TC_TOKEN(CF(4))   */ },
+    { TC_FNAME(key_f29),                    "FJ", "kf29",       TC_DESC("F29 function key") /* TC_TOKEN(CF(5))   */ },
+    { TC_FNAME(key_f30),                    "FK", "kf30",       TC_DESC("F30 function key") /* TC_TOKEN(CF(6))   */ },
+    { TC_FNAME(key_f31),                    "FL", "kf31",       TC_DESC("F31 function key") /* TC_TOKEN(CF(7))   */ },
+    { TC_FNAME(key_f32),                    "FM", "kf32",       TC_DESC("F32 function key") /* TC_TOKEN(CF(8))   */ },
+    { TC_FNAME(key_f33),                    "FN", "kf33",       TC_DESC("F33 function key") /* TC_TOKEN(CF(9))   */ },
+    { TC_FNAME(key_f34),                    "FO", "kf34",       TC_DESC("F34 function key") /* TC_TOKEN(CF(10))  */ },
+    { TC_FNAME(key_f35),                    "FP", "kf35",       TC_DESC("F35 function key") /* TC_TOKEN(CF(11))  */ },
+    { TC_FNAME(key_f36),                    "FQ", "kf36",       TC_DESC("F36 function key") /* TC_TOKEN(CF(12))  */ },
+    { TC_FNAME(key_f37),                    "FR", "kf37",       TC_DESC("F37 function key") /* TC_TOKEN(CSF(1))  */ },
+    { TC_FNAME(key_f38),                    "FS", "kf38",       TC_DESC("F38 function key") /* TC_TOKEN(CSF(2))  */ },
+    { TC_FNAME(key_f39),                    "FT", "kf39",       TC_DESC("F39 function key") /* TC_TOKEN(CSF(3))  */ },
+    { TC_FNAME(key_f40),                    "FU", "kf40",       TC_DESC("F40 function key") /* TC_TOKEN(CSF(4))  */ },
+    { TC_FNAME(key_f41),                    "FV", "kf41",       TC_DESC("F41 function key") /* TC_TOKEN(CSF(5))  */ },
+    { TC_FNAME(key_f42),                    "FW", "kf42",       TC_DESC("F42 function key") /* TC_TOKEN(CSF(6))  */ },
+    { TC_FNAME(key_f43),                    "FX", "kf43",       TC_DESC("F43 function key") /* TC_TOKEN(CSF(7))  */ },
+    { TC_FNAME(key_f44),                    "FY", "kf44",       TC_DESC("F44 function key") /* TC_TOKEN(CSF(8))  */ },
+    { TC_FNAME(key_f45),                    "FZ", "kf45",       TC_DESC("F45 function key") /* TC_TOKEN(CSF(9))  */ },
+    { TC_FNAME(key_f46),                    "Fa", "kf46",       TC_DESC("F46 function key") /* TC_TOKEN(CSF(10)) */ },
+    { TC_FNAME(key_f47),                    "Fb", "kf47",       TC_DESC("F47 function key") /* TC_TOKEN(CSF(11)) */ },
+    { TC_FNAME(key_f48),                    "Fc", "kf48",       TC_DESC("F48 function key") /* TC_TOKEN(CSF(12)) */ },
+    { TC_FNAME(key_f49),                    "Fd", "kf49",       TC_DESC("F49 function key") /* TC_TOKEN(AF(1))   */ },
+    { TC_FNAME(key_f50),                    "Fe", "kf50",       TC_DESC("F50 function key") /* TC_TOKEN(AF(2))   */ },
+    { TC_FNAME(key_f51),                    "Ff", "kf51",       TC_DESC("F51 function key") /* TC_TOKEN(AF(3))   */ },
+    { TC_FNAME(key_f52),                    "Fg", "kf52",       TC_DESC("F52 function key") /* TC_TOKEN(AF(4))   */ },
+    { TC_FNAME(key_f53),                    "Fh", "kf53",       TC_DESC("F53 function key") /* TC_TOKEN(AF(5))   */ },
+    { TC_FNAME(key_f54),                    "Fi", "kf54",       TC_DESC("F54 function key") /* TC_TOKEN(AF(6))   */ },
+    { TC_FNAME(key_f55),                    "Fj", "kf55",       TC_DESC("F55 function key") /* TC_TOKEN(AF(7))   */ },
+    { TC_FNAME(key_f56),                    "Fk", "kf56",       TC_DESC("F56 function key") /* TC_TOKEN(AF(8))   */ },
+    { TC_FNAME(key_f57),                    "Fl", "kf57",       TC_DESC("F57 function key") /* TC_TOKEN(AF(9))   */ },
+    { TC_FNAME(key_f58),                    "Fm", "kf58",       TC_DESC("F58 function key") /* TC_TOKEN(AF(10))  */ },
+    { TC_FNAME(key_f59),                    "Fn", "kf59",       TC_DESC("F59 function key") /* TC_TOKEN(AF(11))  */ },
+    { TC_FNAME(key_f60),                    "Fo", "kf60",       TC_DESC("F60 function key") /* TC_TOKEN(AF(12))  */ },
     { TC_FNAME(key_f61),                    "Fp", "kf61",       TC_DESC("F61 function key") },
     { TC_FNAME(key_f62),                    "Fq", "kf62",       TC_DESC("F62 function key") },
     { TC_FNAME(key_f63),                    "Fr", "kf63",       TC_DESC("F63 function key") },
@@ -1165,17 +1163,17 @@ static TermKey_t term_keys[] = {                /* keys - termcap/terminfo eleme
     { TC_KNAME(xt),                         NULL, "kDC6",       TC_DESC("shift+control delete-character") },
     { TC_KNAME(xt),                         NULL, "kDC7",       TC_DESC("alt+control delete-character") },
     { TC_KNAME(xt),                         NULL, "kDN",        TC_DESC("shift down-cursor") },
-    { TC_KNAME(xt),                         NULL, "kDN3",       TC_DESC("alt down-cursor") },
+    { TC_KNAME(xt),                         NULL, "kDN3",       TC_DESC("alt down-cursor") /* TC_TOKEN(MOD_META | KEYPAD_DOWN) */ },
     { TC_KNAME(xt),                         NULL, "kDN4",       TC_DESC("shift+alt down-cursor") },
     { TC_KNAME(xt),                         NULL, "kDN5",       TC_DESC("control down-cursor") },
     { TC_KNAME(xt),                         NULL, "kDN6",       TC_DESC("shift+control down-cursor") },
     { TC_KNAME(xt),                         NULL, "kDN7",       TC_DESC("alt+control down-cursor") },
-    { TC_KNAME(xt),                         NULL, "kEND3",      TC_DESC("alt end") },
+    { TC_KNAME(xt),                         NULL, "kEND3",      TC_DESC("alt end") /* TC_TOKEN(MOD_META | KEYPAD_END) */ },
     { TC_KNAME(xt),                         NULL, "kEND4",      TC_DESC("shift+alt end") },
     { TC_KNAME(xt),                         NULL, "kEND5",      TC_DESC("control end") },
     { TC_KNAME(xt),                         NULL, "kEND6",      TC_DESC("shift+control end") },
     { TC_KNAME(xt),                         NULL, "kEND7",      TC_DESC("alt+control end") },
-    { TC_KNAME(xt),                         NULL, "kHOM3",      TC_DESC("alt home") },
+    { TC_KNAME(xt),                         NULL, "kHOM3",      TC_DESC("alt home") /* TC_TOKEN(MOD_META | KEYPAD_HOME) */ },
     { TC_KNAME(xt),                         NULL, "kHOM4",      TC_DESC("shift+alt home") },
     { TC_KNAME(xt),                         NULL, "kHOM5",      TC_DESC("control home") },
     { TC_KNAME(xt),                         NULL, "kHOM6",      TC_DESC("shift+control home") },
@@ -1185,28 +1183,28 @@ static TermKey_t term_keys[] = {                /* keys - termcap/terminfo eleme
     { TC_KNAME(xt),                         NULL, "kIC5",       TC_DESC("control insert-character") },
     { TC_KNAME(xt),                         NULL, "kIC6",       TC_DESC("shift+control insert-character") },
     { TC_KNAME(xt),                         NULL, "kIC7",       TC_DESC("alt+control insert-character") },
-    { TC_KNAME(xt),                         NULL, "kLFT3",      TC_DESC("alt left-cursor") },
+    { TC_KNAME(xt),                         NULL, "kLFT3",      TC_DESC("alt left-cursor") /* TC_TOKEN(MOD_META | KEYPAD_LEFT) */ },
     { TC_KNAME(xt),                         NULL, "kLFT4",      TC_DESC("shift+alt left-cursor") },
     { TC_KNAME(xt),                         NULL, "kLFT5",      TC_DESC("control left-cursor") },
     { TC_KNAME(xt),                         NULL, "kLFT6",      TC_DESC("shift+control left-cursor") },
     { TC_KNAME(xt),                         NULL, "kLFT7",      TC_DESC("alt+control left-cursor") },
-    { TC_KNAME(xt),                         NULL, "kNXT3",      TC_DESC("alt next") },
+    { TC_KNAME(xt),                         NULL, "kNXT3",      TC_DESC("alt next") /* TC_TOKEN(MOD_META | KEYPAD_PAGEDOWN) */ },
     { TC_KNAME(xt),                         NULL, "kNXT4",      TC_DESC("shift+alt next") },
     { TC_KNAME(xt),                         NULL, "kNXT5",      TC_DESC("control next") },
     { TC_KNAME(xt),                         NULL, "kNXT6",      TC_DESC("shift+control next") },
     { TC_KNAME(xt),                         NULL, "kNXT7",      TC_DESC("alt+control next") },
-    { TC_KNAME(xt),                         NULL, "kPRV3",      TC_DESC("alt previous") },
+    { TC_KNAME(xt),                         NULL, "kPRV3",      TC_DESC("alt previous") /* TC_TOKEN(MOD_META | KEYPAD_PAGEUP) */ },
     { TC_KNAME(xt),                         NULL, "kPRV4",      TC_DESC("shift+alt previous") },
     { TC_KNAME(xt),                         NULL, "kPRV5",      TC_DESC("control previous") },
     { TC_KNAME(xt),                         NULL, "kPRV6",      TC_DESC("shift+control previous") },
     { TC_KNAME(xt),                         NULL, "kPRV7",      TC_DESC("alt+control previous") },
-    { TC_KNAME(xt),                         NULL, "kRIT3",      TC_DESC("alt right-cursor") },
+    { TC_KNAME(xt),                         NULL, "kRIT3",      TC_DESC("alt right-cursor") /* TC_TOKEN(MOD_META | KEYPAD_RIGHT) */ },
     { TC_KNAME(xt),                         NULL, "kRIT4",      TC_DESC("shift+alt right-cursor") },
     { TC_KNAME(xt),                         NULL, "kRIT5",      TC_DESC("control right-cursor") },
     { TC_KNAME(xt),                         NULL, "kRIT6",      TC_DESC("shift+control right-cursor") },
     { TC_KNAME(xt),                         NULL, "kRIT7",      TC_DESC("alt+control right-cursor") },
     { TC_KNAME(xt),                         NULL, "kUP",        TC_DESC("shift up-cursor") },
-    { TC_KNAME(xt),                         NULL, "kUP3",       TC_DESC("alt up-cursor") },
+    { TC_KNAME(xt),                         NULL, "kUP3",       TC_DESC("alt up-cursor") /* TC_TOKEN(MOD_META | KEYPAD_UP) */ },
     { TC_KNAME(xt),                         NULL, "kUP4",       TC_DESC("shift+alt up-cursor") },
     { TC_KNAME(xt),                         NULL, "kUP5",       TC_DESC("control up-cursor") },
     { TC_KNAME(xt),                         NULL, "kUP6",       TC_DESC("shift+control up-cursor") },
@@ -1272,7 +1270,7 @@ static TermNumeric_t term_flags[] = {           /* boolean - termcap/terminfo el
          *  See: ncurses/include/Caps-ncurses
          */
     { TC_UNAME(xt),                         NULL, "NQ",         TC_DESC("terminal does not support query/response") },
-    { TC_UNAME(xt),                         NULL, "RGB",        TC_DESC("RGB color support") },
+    { TC_UNAME(xt),                         NULL, "RGB",        TC_DESC("RGB color support"), TC_FLAG(&tf_RGB) },
 
         /* screen */
     { TC_UNAME(xt),                         NULL, "AN",         TC_DESC("turn on autonuke") },
@@ -1353,7 +1351,8 @@ static int              tt_defaultbg = NOCOLOR;
 
 static int              tt_fg = NOCOLOR;        /* foreground color */
 static int              tt_bg = NOCOLOR;        /* background color */
-static int              tt_style;               /* text standout/underline mode */
+static colstyles_t      tt_style;               /* text standout/underline mode */
+static colstyles_t      tt_understyles;         /* available understyle's */
 
 static int              tt_active = 0;          /* display status */
 static int              tt_cursor = 0;          /* cursor status */
@@ -1439,6 +1438,7 @@ ttinit(void)
      */
     x_scrfn.scr_open    = term_open;
     x_scrfn.scr_ready   = term_ready;
+    x_scrfn.scr_keybind = term_keybind;
     x_scrfn.scr_feature = term_feature;
     x_scrfn.scr_display = term_display;
     x_scrfn.scr_control = term_control;
@@ -1467,7 +1467,8 @@ ttinit(void)
      *  build attributes, non-xterm
      */
     if (tty_isterm(term, "linux")) {            /* linux console */
-        t_attributes = TA_LINUX | TA_DARK;
+        t_attributes = TA_DARK;
+        t_identifier = TT_LINUX;
 
     } else if (tty_isterm(term, "cygwin")) {
         const char *cygwin = ggetenv("CYGWIN");
@@ -1486,20 +1487,23 @@ ttinit(void)
                 }
             }
         }
-        t_attributes = TA_CYGWIN|TA_XTERMLIKE|TA_DARK;
+        t_attributes = TA_XTERMLIKE|TA_DARK;
+        t_identifier = TT_CYGWIN;
 
 #if defined(linux)
     } else if (tty_isterm(term, "console") ||   /* console, con80x25 etc */
             (0 == strncmp(term, "con", 3) && term[3] && isdigit(term[3]))) {
-        t_attributes = TA_LINUX|TA_DARK;
+        t_attributes = TA_DARK;
+        t_identifier = TT_LINUX;
 #endif
 
     } else if (tty_isterm(term, "konsole") ||
                 getenv("KONSOLE_DCOP") || getenv("KONSOLE_DBUS_SESSION")) {
-        t_attributes = TA_KONSOLE|TA_XTERMLIKE;
+        t_attributes = TA_XTERMLIKE;
+        t_identifier = TT_KONSOLE;
 
     } else if (tty_isterm(term, "screen")) {
-        t_attributes = TA_SCREEN;               /* screen[.linux] */
+        t_identifier = TT_SCREEN;               /* screen[.linux] */
         if (0 == tty_isterm(term, "screen.linux")) {
             t_attributes |= TA_DARK;
         }
@@ -1509,10 +1513,11 @@ ttinit(void)
         t_attributes = TA_VT100LIKE;
 
     } else {
-        t_attributes = term_xtermlike(term);
+        term_xtermlike(term, &t_identifier, &t_attributes);
 #if defined(__CYGWIN__)
         if (ggetenv("WT_SESSION")) {
-            t_attributes |= TA_MSTERMINAL|TA_DARK; /* ms-terminal */
+            t_attributes |= TA_DARK;            /* ms-terminal */
+            t_identifier =  TT_MSTERMINAL;
         } else if (ggetenv("COMSPEC")) {
             t_attributes |= TA_DARK;            /* cmd/mintty */
         }
@@ -1526,10 +1531,9 @@ ttinit(void)
         t_attributes |= TA_MONO;                /* m  = monochrome, suppress color support */
     }
 
-    trace_log("terminal: %s (0x%08x=%s%s%s%s%s%s)\n", term, t_attributes,
+    trace_log("terminal: %s (0x%08x=%s%s%s%s%s)\n", term, t_attributes,
         (t_attributes & TA_VT100LIKE ? "vt100like," : ""),
-        (t_attributes & TA_XTERM ? "xterm," : ""),
-            (t_attributes & TA_XTERMLIKE ? "xtermlike," : ""),
+        (t_attributes & TA_XTERMLIKE ? "xtermlike," : ""),
         (t_attributes & TA_LIGHT ? "light," : ""),
         (t_attributes & TA_DARK ? "dark," : ""),
         (t_attributes & TA_MONO ? "mono," : ""));
@@ -1547,12 +1551,12 @@ ttinit(void)
         tf_be = 1;                              /* slang compat override */
     }
 
-    if (NULL == tc_Color_Fg || NULL == tc_Color_Bg) {
-        tc_Color_Fg = tc_Color_Bg = NULL;
+    if (NULL == tc_ANSI_Color[0] || NULL == tc_ANSI_Color[1]) {
+        tc_ANSI_Color[0] = tc_ANSI_Color[1] = NULL;
     }
 
-    if (NULL == tc_ANSI_Color_Fg || NULL == tc_ANSI_Color_Bg) {
-        tc_ANSI_Color_Fg = tc_ANSI_Color_Bg = NULL;
+    if (NULL == tc_Color[0] || NULL == tc_Color[0]) {
+        tc_Color[0] = tc_Color[1] = NULL;
     }
 
     if (NULL == tc_graphic_pairs &&
@@ -1575,13 +1579,13 @@ ttinit(void)
     }
                                                 /* VT2xx+ */
     if (((t_attributes & TA_VT100LIKE) && term[2] != '1') ||
-                (t_attributes & (TA_LINUX|TA_XTERMLIKE)) ) {
+            isterminal(TT_LINUX) || (t_attributes & TA_XTERMLIKE)) {
         if (NULL == tc_pDL) tc_pDL = "\033[%dM";
         if (NULL == tc_pAL) tc_pAL = "\033[%dL";
         if (NULL == tc_cm)  tc_cm  = "\033[%i%d;%dH";
     }
 
-    if (t_attributes & (TA_LINUX|TA_XTERM)) {   /* VT2xx */
+    if (isterminal(TT_LINUX|TT_XTERM)) {        /* VT2xx */
         if (NULL == tc_cb)  tc_cb = "\033[1K";
         if (NULL == tc_ce)  tc_ce = "\033[K";
     }
@@ -1623,7 +1627,7 @@ ttinit(void)
         exit(1);
 
     } else if (tf_hc) {
-        fprintf(stderr, "Hard copy terminal '%s', not supported.\n", term);
+        fprintf(stderr, "Terminal '%s' is hardcopy, cannot be used for curses applications.\n", term);
         exit(1);
 
     } else if (tf_xonoff) {
@@ -1653,12 +1657,15 @@ ttinit(void)
         x_pt.pt_codepage = GetConsoleOutputCP();
         trace_log("\tcodepage: %d\n", x_pt.pt_codepage);
     }
-    if (TA_CYGWIN & t_attributes) {
+    if (isterminal(TT_CYGWIN)) {
         x_pt.pt_attributes |= TF_ACYGWIN;       /* Cygwin terminal */
         tf_xn = 1;
     }
 #endif /*__CYGWIN__*/
 
+    if (ttxtermlike()) {
+        x_pt.pt_attributes |= TF_AXTERMLIKE;
+    }
     if (tf_km) {
         x_pt.pt_attributes |= TF_AMETAKEY;
     }
@@ -1672,7 +1679,7 @@ ttinit(void)
 static void
 term_config(void)
 {
-    unsigned i, fkeys = 0;
+    unsigned i;
     const char *cp;
 
     trace_log("termcap:\n");
@@ -1683,7 +1690,7 @@ term_config(void)
          *  string values
          */
         TermString_t *ti = term_strings + i;
-        const Term_t *term = &ti->term;
+        const TermVal_t *term = &ti->term;
         const char *name = ttiname(term);
 
         if (name && NULL != (cp = ttigetstr(term))) {
@@ -1713,32 +1720,35 @@ term_config(void)
         }
     }
 
-    fkeys = 0;
-    trace_log("  Keys:\n");
-    for (i = 0; i < (sizeof(term_keys)/sizeof(term_keys[0])); ++i) {
-        /*
-         *  keys
-         */
-        TermKey_t *ti = term_keys + i;
-        const Term_t *term = &ti->term;
-        const char *name = ttiname(term);
+    /*
+     *  keys
+     */
+    {
+        const TermKey_t *ti;
+        unsigned count, fkeys = 0;
 
-        if (name && NULL != (cp = ttigetstr(term))) {
-            const size_t kcode = (size_t)ti->key;
+        trace_log("  Keys:\n");
+        if (NULL != (ti = ttcfgkeys(&count))) { /* load */
+            for (i = 0; i < count; ++i) {
+                const TermVal_t *term = &ti->term;
 
-            ti->svalue = cp;                    /* loaded later by ttkeys() */
+                if (NULL != (cp = ti->svalue)) {
+                    const char *name = ttiname(term);
+                    const size_t kcode = (size_t)ti->key;
 
-            trace_log("\t%-24s %-50s%c %-6s : %s\n",
-                term->termfname, term->comment, (kcode ? '*' : ' '), name, c_string(cp));
-
-            if (kcode >= F(1) && kcode <= F(10)) {
-                ++fkeys;
+                    trace_log("\t%-24s %-50s%c %-6s : %s\n",
+                        term->termfname, term->comment, (kcode ? '*' : ' '), name, c_string(cp));
+                    if (kcode >= F(1) && kcode <= F(10)) {
+                        ++fkeys;
+                    }
+                }
+                ++ti;
             }
         }
-    }
 
-    if (fkeys >= 10) {                          /* have all 10 function keys */
-        x_pt.pt_attributes |= TF_AFUNCTIONKEYS;
+        if (fkeys >= 10) {                      /* have all 10 function keys */
+            x_pt.pt_attributes |= TF_AFUNCTIONKEYS;
+        }
     }
 
     trace_log("  Numeric:\n");
@@ -1747,7 +1757,7 @@ term_config(void)
          *  numbers
          */
         TermNumeric_t *ti = term_numbers + i;
-        const Term_t *term = &ti->term;
+        const TermVal_t *term = &ti->term;
         const char *name = ttiname(term);
 
         if (name) {
@@ -1766,7 +1776,7 @@ term_config(void)
          *  flags
          */
         TermNumeric_t *ti = term_flags + i;
-        const Term_t *term = &ti->term;
+        const TermVal_t *term = &ti->term;
         const char *name = ttiname(term);
 
         if (name) {
@@ -1793,7 +1803,7 @@ term_config(void)
 int
 ttxtermlike(void)
 {
-    return ((t_attributes & (TA_XTERM|TA_XTERMLIKE)) ? 1 : 0);
+    return (isterminal(TT_XTERM) || (t_attributes & (TA_XTERMLIKE)) ? 1 : 0);
 }
 
 
@@ -1862,6 +1872,8 @@ term_open(scrprofile_t *profile)
     term_identification();                      /* terminal identification */
     term_luminance();
     term_sizeget(&profile->sp_rows, &profile->sp_cols);
+    term_colors();
+    term_special();
     profile->sp_colors = tt_colors;
 }
 
@@ -1888,18 +1900,18 @@ term_close(void)
  *      Run-time initialisation.
  *
  *  Parameters:
- *      repaint - *true* if the screen should be repainted.
+ *      vtstate - ready event, VTCREATE, VTRESTORE or VTWINCH.
  *      profile - console profile.
  *
  *  Returns:
  *      nothing.
  */
 static void
-term_ready(int repaint, scrprofile_t *profile)
+term_ready(int vtstate, scrprofile_t *profile)
 {
     static unsigned once;
 
-    trace_log("term_ready(%d)\n", repaint);
+    trace_log("term_ready(%d)\n", vtstate);
 
     /*
      *  dump configuration
@@ -1967,16 +1979,18 @@ term_ready(int repaint, scrprofile_t *profile)
             trace_log("\tAlternative character support available.\n");
         }
         if (t_acs_locale_breaks) {
-            trace_log("\tlocale breaks alternative character support.\n");
+            trace_log("\tLocale breaks alternative character support.\n");
         }
 
         if (xf_noinit) {
-            trace_log("\ttermcap init/reinit disabled.\n");
+            trace_log("\tTermcap init/reinit disabled.\n");
         }
 
         if (xf_nokeypad)  {
-            trace_log("\ttermcap keypad init/reinit disabled.\n");
+            trace_log("\tTermcap keypad init/reinit disabled.\n");
         }
+
+        set_understyles();
 
         trace_log("\tDeleting lines using %s\n",
             ((tc_cs) ? "scrolling regions" : t_insdel ? "line del/ins" : "hard refresh"));
@@ -1996,7 +2010,7 @@ term_ready(int repaint, scrprofile_t *profile)
      */
     term_colorreset();
 
-    if (repaint) {
+    if (vtstate == VTCREATE || vtstate == VTRESTORE) {
         if (x_pt.pt_init[0])                    /* terminal specific init */
             ttputctl2(x_pt.pt_init, 0, 0);
         xterm_colors(t_colorsuser);
@@ -2024,6 +2038,66 @@ term_ready(int repaint, scrprofile_t *profile)
 }
 
 
+static void
+set_understyles(void)
+{
+    tt_understyles = 0;                         /* disabled */
+
+    if (xf_understyle & UNDERSTYLE_LINE) {
+        if (xf_understyle & UNDERSTYLE_EXTENDED) {  /* available understyles, otherwise underline */
+            if (x_pt.pt_understyle[0] || tc_Smulx) {
+                tt_understyles |= COLORSTYLE_UNDERMASK;
+
+            } else {
+                tt_understyles |= COLORSTYLE_UNDERSINGLE;
+                if (x_pt.pt_underdouble[0])
+                    tt_understyles |= COLORSTYLE_UNDERDOUBLE;
+                if (x_pt.pt_undercurl[0])
+                    tt_understyles |= COLORSTYLE_UNDERCURLY;
+                if (x_pt.pt_underdotted[0])
+                    tt_understyles |= COLORSTYLE_UNDERDOTTED;
+                if (x_pt.pt_underdashed[0])
+                    tt_understyles |= COLORSTYLE_UNDERDASHED;
+            }
+        }
+
+        if (tc_us || (tt_understyles & COLORSTYLE_UNDERSINGLE)) {
+            tt_understyles |= COLORSTYLE_UNDERLINE;
+        }
+    }
+
+    trace_log("\tUnderstyles=%u:%u,%u,%u,%u,%u\n",
+        !!(tt_understyles & COLORSTYLE_UNDERLINE),
+        !!(tt_understyles & COLORSTYLE_UNDERSINGLE),
+        !!(tt_understyles & COLORSTYLE_UNDERDOUBLE),
+        !!(tt_understyles & COLORSTYLE_UNDERCURLY),
+        !!(tt_understyles & COLORSTYLE_UNDERDOTTED),
+        !!(tt_understyles & COLORSTYLE_UNDERDASHED));
+}
+
+
+/*  Function:           term_keybind
+ *      Map keys from termcap database to our keys. These are often overridden by the term
+ *      macros, but at least we can set up some sensible default that are likely to work.
+ *
+ *  Parameters:
+ *      none
+ *
+ *  Returns:
+ *      nothing.
+ */
+static void
+term_keybind(void)
+{
+    unsigned i;
+
+    for (i = 0; i < (sizeof(term_keys)/sizeof(term_keys[0])); ++i)
+        if (term_keys[i].key && term_keys[i].svalue) {
+            key_sequence(term_keys[i].key, term_keys[i].svalue);
+        }
+}
+
+
 /*  Function:           term_feature
  *      Signal a terminal feature change.
  *
@@ -2037,7 +2111,6 @@ static void
 term_feature(int ident, scrprofile_t *profile)
 {
     trace_log("term_feature(%d)\n", ident);
-
     switch (ident) {
     case TF_INIT:
         if (tty_open && x_pt.pt_init[0]) {
@@ -2053,6 +2126,15 @@ term_feature(int ident, scrprofile_t *profile)
             term_colors();
             profile->sp_colors = tt_colors;
         }
+        break;
+
+    case TF_UNDERSTYLE:                          /* understyle comands */
+    case TF_UNDEROFF:
+    case TF_UNDERDOUBLE:
+    case TF_UNDERCURL:
+    case TF_UNDERDOTTED:
+    case TF_UNDERDASHED:
+        set_understyles();
         break;
 
     case TF_COLORMAP:                           /* terminal color palette */
@@ -2173,7 +2255,7 @@ term_control(int action, int param, ...)
         if (! tty_open) {
             ttopen();
         }
-        term_ready(TRUE, NULL);
+        term_ready(VTRESTORE, NULL);
         break;
 
     case SCR_CTRL_COLORS:       /* color change */
@@ -2183,6 +2265,22 @@ term_control(int action, int param, ...)
         return -1;
     }
     return 0;
+}
+
+
+/*  Function:           isterminal
+ *      Determine terminal type.
+ *
+ *  Parameters:
+ *      id - Terminal identifier.
+ *
+ *  Returns:
+ *      Terminal name on success, otherwise the interface exits.
+ */
+static int
+isterminal(TIdentifier_t id)
+{
+   return (t_identifier & id ? 1 : 0);
 }
 
 
@@ -2207,9 +2305,17 @@ ttisetup(void)
 
 #if defined(HAVE_TERMINFO)
     XF_TERMINFO {
+        int err = 0;
+
         trace_log("TERMINFO(%s) open\n", term);
-        if (setupterm((char *)term, fileno(stdout), NULL) != 0) {
-            fprintf(stderr, "Terminal type '%s' not found in terminfo database.\n", term);
+        if (setupterm((char *)term, fileno(stdout), &err) != 0) {
+            if (0 == err) {
+                fprintf(stderr, "Terminal '%s' not found within terminfo database.\n", term);
+            } else if (1 == err) {
+                fprintf(stderr, "Terminal '%s' is hardcopy, cannot be used for curses applications.\n", term);
+            } else {
+                fprintf(stderr, "Terminfo database not available.\n");
+            }
             exit(1);
         }
     }
@@ -2241,7 +2347,7 @@ ttisetup(void)
  *      Attribute name.
  */
 static const char *
-ttiname(const Term_t *ti)
+ttiname(const TermVal_t *ti)
 {
     const char *name = NULL;
 
@@ -2265,7 +2371,7 @@ ttiname(const Term_t *ti)
  *      Sequence buffer address, otherwis NULL.
  */
 static const char *
-ttigetstr(const Term_t *ti)
+ttigetstr(const TermVal_t *ti)
 {
     char *s = NULL;
 
@@ -2329,7 +2435,7 @@ ttigetstr(const Term_t *ti)
  *      Attribute value, otherwise -1.
  */
 static int
-ttigetnum(const Term_t *ti)
+ttigetnum(const TermVal_t *ti)
 {
     const char *name = "n/a";
     int num = -1;
@@ -2363,7 +2469,7 @@ ttigetnum(const Term_t *ti)
  *      Attribute value of either 0 or 1.
  */
 static int
-ttigetflag(const Term_t *ti)
+ttigetflag(const TermVal_t *ti)
 {
     const char *name = "n/a";
     int flag = -1;
@@ -2411,6 +2517,28 @@ ttisetflag(const char *tag, int taglen, const char *value)
 }
 
 
+TermKey_t *
+ttcfgkeys(unsigned *count)
+{
+    TermKey_t *ti = term_keys;
+    const char *cp;
+    unsigned i;
+
+    for (i = 0; i < (sizeof(term_keys)/sizeof(term_keys[0])); ++i) {
+        const TermVal_t *term = &ti->term;
+
+        if (NULL != (cp = ttigetstr(term))) {
+            ti->svalue = cp;                    /* loaded later by ttkeybind() */
+        }
+        ++ti;
+    }
+
+    if (count) {
+        *count = (sizeof(term_keys)/sizeof(term_keys[0]));
+    }
+    return term_keys;
+}
+
 
 /*  Function:           key_enable/disable
  *      Control alternative key encoding modes, based on xf_kbprotocol.
@@ -2424,17 +2552,24 @@ ttisetflag(const char *tag, int taglen, const char *value)
 static void
 key_enable(void)
 {
+    char kbprotocols[64];
+
     key_config();                               /* terminal specific selection */
 
-    strxcpy(x_pt.pt_kbprotocol, key_protocolname(xf_kbprotocol, "unknown"), sizeof(x_pt.pt_kbprotocol));
-
-    if (xf_kbprotocol == KBPROTOCOL_NONE)
+    if (xf_kbprotocol == KBPROTOCOL_NONE) {
+        strxcpy(x_pt.pt_kbprotocol, "none", sizeof(x_pt.pt_kbprotocol));
         return;
+    }
 
-    ttputpad(tc_mm);                            /* enable meta key-codes */
-    xf_kbprotocol |= KBPROTOCOL_META;
+    if (tc_mm && *tc_mm) {
+        ttputpad(tc_mm);                        /* enable metaSendsEscape */
+        xf_kbprotocol |= KBPROTOCOL_META;
+    }
 
-    if (t_attributes & TA_MINTTY) {
+    key_protocoldecode(xf_kbprotocol, kbprotocols, sizeof(kbprotocols));
+    strxcpy(x_pt.pt_kbprotocol, kbprotocols, sizeof(x_pt.pt_kbprotocol));
+
+    if (isterminal(TT_MINTTY)) {
         if (! xf_mouse) {
             ttpush("\033[?7786h");              /* nomouse, mouse-wheel reports only */
                 // mousewheel events are reported as cursor key presses; https://github.com/mintty/mintty/wiki/CtrlSeqs
@@ -2483,7 +2618,9 @@ key_enable(void)
          *      Pv = 2, extended
          */
         trace_log("\tmok2-mode.\n");
-        ttpush("\x1b[>4;2m");                   /* enable xterm-mok2-mode */
+        if (! isterminal(TT_STTERM)) {
+            ttpush("\x1b[>4;2m");               /* enable xterm-mok2-mode */
+        }
 
     } else if (xf_kbprotocol & KBPROTOCOL_VT100_CURSOR) {
         ttpush("\033[=\033[?1h");               /* enable cursor keys/DECCKM */
@@ -2530,20 +2667,20 @@ key_config(void)
         /*
          *  terminal probe
          */
-        if (t_attributes & TA_CYGWIN) {
+        if (isterminal(TT_CYGWIN)) {
             xf_kbprotocol = KBPROTOCOL_CYGWIN;
 
 #if defined(KBPROTOCOL_MSTERMINAL) //TODO, See issues: https://sourceware.org/pipermail/cygwin-patches/2024q3/012748.html
-        } else if (t_attributes & TA_MSTERMINAL) {
+        } else if (isterminal(TT_MSTERMINAL))
             xf_kbprotocol = KBPROTOCOL_MSTERMINAL;
 #endif
 
 #if defined(KBPROTOCOL_KITTY) //TODO
-        } else if (t_attributes & TA_KITTY) {
+        } else if (isterminal(TT_KITTY)) {
             xf_kbprotocol = KBPROTOCOL_KITTY;
 #endif
 
-        } else if (t_attributes & TA_MINTTY) {
+        } else if (isterminal(TT_MINTTY)) {
             xf_kbprotocol = KBPROTOCOL_MINTTY_MOK2;
 
         } else if (t_attributes & TA_XTERMLIKE) {
@@ -2572,11 +2709,11 @@ key_protocol(const char *term, int termlen)
 
                 protocol = key_protocolid(name, namelen);
                 if (protocol >= 0 && protocol != KBPROTOCOL_AUTO) {
-                    trace_log("\tkbprotocol: %*s=%*s\n", termlen, term, name, namelen);
+                    trace_log("\tkbprotocol: %*s=%*s\n", termlen, term, namelen, name);
                     xf_kbprotocol = protocol;
                     return 0; //success
                 }
-                trace_log("\tkbprotocol: *s, unknown ignored\n", name, namelen);
+                trace_log("\tkbprotocol: %*s, unknown ignored\n", namelen, name);
                 break;
             }
         }
@@ -2595,8 +2732,11 @@ key_disable(void)
     if (xf_kbprotocol <= KBPROTOCOL_AUTO)
         return;
 
-    //ttputpad(tc_mm);                          /* disable meta key-codes */
-    if (t_attributes & TA_MINTTY) {
+//  if (xf_kbprotocol & KBPROTOCOL_META) {
+//      ttputpad(tc_mo);                        /* disable meta key-codes */
+//  }
+
+    if (isterminal(TT_MINTTY)) {
         if (! xf_mouse) {
             ttpush("\033[?7786l");              /* nomouse, disable mouse-wheel reports */
         }
@@ -2613,34 +2753,36 @@ key_disable(void)
 #if defined(KBPROTOCOL_KITTY) //TODO
     } else if (xf_kbprotocol & KBPROTOCOL_KITTY) {
         /*
-            *  kitty progressive enhancement
-            *      0b1 (1)         Disambiguate escape codes.
-            *      0b10 (2)        Report event types.
-            *      0b100 (4)       Report alternate keys.
-            *      0b1000 (8)      Report all keys as escape codes.
-            *      0b10000 (16)    Report associated text.
-            */
+         *  kitty progressive enhancement
+         *      0b1 (1)         Disambiguate escape codes.
+         *      0b10 (2)        Report event types.
+         *      0b100 (4)       Report alternate keys.
+         *      0b1000 (8)      Report all keys as escape codes.
+         *      0b10000 (16)    Report associated text.
+         */
         ttpush("\x1b[<1u");                     /* disable kitty-keyboard-protocol */
 #endif
 
     } else if (xf_kbprotocol & (KBPROTOCOL_XTERM_MOK2|KBPROTOCOL_MINTTY_MOK2)) {
         /*
-            *  XTMODKEYS: set/reset key modifier options (modifyOtherKeys)
-            *      CSI > Pp; Pv m
-            *      CSI > Pp m
-            *
-            *  The first parameter Pp identifies the resource to set/reset.
-            *      Pp = 0, modifyKeyboard.
-            *      Pp = 1, modifyCursorKeys.
-            *      Pp = 2, modifyFunctionKeys.
-            *      Pp = 4, modifyOtherKeys.
-            *
-            *  The second parameter Pv is the value to assign to the resource.
-            *      Pv = 0, disables
-            *      Pv = 1, enables
-            *      Pv = 2, extended
-            */
-        ttpush("\x1b[>4;0m");                   /* disable xterm-mok2-mode */
+         *  XTMODKEYS: set/reset key modifier options (modifyOtherKeys)
+         *      CSI > Pp; Pv m
+         *      CSI > Pp m
+         *
+         *  The first parameter Pp identifies the resource to set/reset.
+         *      Pp = 0, modifyKeyboard.
+         *      Pp = 1, modifyCursorKeys.
+         *      Pp = 2, modifyFunctionKeys.
+         *      Pp = 4, modifyOtherKeys.
+         *
+         *  The second parameter Pv is the value to assign to the resource.
+         *      Pv = 0, disables
+         *      Pv = 1, enables
+         *      Pv = 2, extended
+         */
+        if (! isterminal(TT_STTERM)) {
+            ttpush("\x1b[>4;0m");               /* disable xterm-mok2-mode */
+        }
     }
 }
 
@@ -2743,8 +2885,8 @@ acs_locale_breaks(void)
                 ((env = ggetenv("TERMCAP")) != 0 && strstr(env, "screen") != 0) &&
                     strstr(env, "hhII00") != 0) {
 
-#define IS_CTRLN(s)         ((s) != 0 && strstr(s, "\016") != 0)
-#define IS_CTRLO(s)         ((s) != 0 && strstr(s, "\017") != 0)
+#define IS_CTRLN(s)     ((s) != 0 && strstr(s, "\016") != 0)
+#define IS_CTRLO(s)     ((s) != 0 && strstr(s, "\017") != 0)
 
             if (IS_CTRLN(tc_acs_start) || IS_CTRLO(tc_acs_start)) {
                 return TRUE;
@@ -2773,27 +2915,32 @@ acs_locale_breaks(void)
  *  Returns:
  *      Associated flags, if any.
  */
-static TAttributes_t
-term_xtermlike(const char *term)
+static void
+term_xtermlike(const char *term, TIdentifier_t *identifier, TAttributes_t *attributes)
 {
-    static const struct {
+    static const struct xtermlink {
         const char *name;
-        TAttributes_t flags;
+        TAttributes_t identifier;
+        TAttributes_t attributes;
     } xtermlike[] = {
-        { "xterm", TA_XTERM },                  /* Generic */
-        { "mintty", TA_MINTTY },                /* Non-standard. normally "xterm-256color" */
-        { "putty", TA_PUTTY | TA_DARK },
-        { "msterminal", TA_MSTERMINAL | TA_DARK },
-        { "gnome", TA_GNOME },
-        { "vte", TA_GNOME },
-        { "xterm-kitty", TA_KITTY },
-        { "alacritty", TA_ALACRITTY },
-        { "iterm", TA_ITERM },
-        { "iterm2", TA_ITERM },
-        { "iTerm.app", TA_ITERM },
-        { "iTerm2.app", TA_ITERM },
-        { "hterm", TA_HTERM },
-        { "wezterm", TA_WEZTERM },
+         /*
+          * many are non-standard, normally represented as "xterm[-256color]"
+          */
+        { "xterm", TT_XTERM },                  /* Generic */
+        { "mintty", TT_MINTTY, TA_DARK },
+        { "putty", TT_PUTTY, TA_DARK },
+        { "msterminal", TT_MSTERMINAL, TA_DARK },
+        { "gnome", TT_GNOME },
+        { "vte", TT_GNOME },
+        { "xterm-kitty", TT_KITTY },
+        { "alacritty", TT_ALACRITTY },
+        { "iterm", TT_ITERM },
+        { "iterm2", TT_ITERM },
+        { "iTerm.app", TT_ITERM },
+        { "iTerm2.app", TT_ITERM },
+        { "hterm", TT_HTERM },
+        { "wezterm", TT_WEZTERM },
+        { "st", TT_STTERM },                    /* st-terminal */
         { "aixterm" },                          /* AIX */
         { "rxvt" },                             /* [ou]r xvt */
         { "urxvt" },                            /* Unicode rxvt */
@@ -2805,54 +2952,31 @@ term_xtermlike(const char *term)
     if (term) {
         unsigned i;
 
-        for (i = 0; i < (unsigned)(sizeof(xtermlike)/sizeof(xtermlike[0])); ++i)
-            if (tty_isterm(term, xtermlike[i].name)) {
-                ret = xtermlike[i].flags | TA_XTERMLIKE;
+        for (i = 0; i < (unsigned)(sizeof(xtermlike)/sizeof(xtermlike[0])); ++i) {
+            const struct xtermlink *xt = xtermlike + i;
+
+            if (tty_isterm(term, xt->name)) {
+                if (identifier) {
+                    *identifier = xt->identifier;
+                }
+                if (attributes) {
+                    *attributes = xt->attributes | TA_XTERMLIKE;
+                }
+                ret = 1;
                 break;
             }
+        }
     }
 
     trace_log("\txtermlike(%s) : 0x%lx\n", (term ? term : ""), (unsigned long)ret);
     x_pt.pt_xtcompat = ret;
-    return ret;
 }
 
 
-/*  Function:           ttkeys
- *      Map keys from termcap database to our keys. These are often overridden by the term
- *      macros, but at least we can set up some sensible default that are likely to work.
- *
- *  Parameters:
- *      repaint - *true* if the screen should be repainted.
- *
- *  Returns:
- *      nothing.
- */
-void
-ttkeys(void)
+static void
+term_special(void)
 {
     unsigned i;
-
-    trace_log("ttkeys()\n");
-
-    /*
-     *  Keys
-     */
-    for (i = 0; i < (sizeof(term_keys)/sizeof(term_keys[0])); ++i)
-        if (term_keys[i].svalue && term_keys[i].key) {
-            key_define_key_seq(term_keys[i].key, term_keys[i].svalue);
-        }
-
-    /*
-     *  Color
-     */
-    if (tf_Colors > 2 /*user specification*/ ||
-            (tc_Color_Fg && tc_Color_Bg) || (tc_ANSI_Color_Fg && tc_ANSI_Color_Bg) ||
-                ggetenv("COLORTERM") /*override*/) {
-        x_pt.pt_color = TRUE;
-    }
-
-    term_colors();
 
     /*
      *  Graphic (alt) characters
@@ -2916,12 +3040,19 @@ ttkeys(void)
 static void
 term_colors(void)
 {                                               /* save user color specification */
-    int col, source = 0;
+    int col, source = 0, truecolor = 0;
 
     /* configure color depth */
-    if (xf_color > 1) {
-        tt_colors = xf_color;                   /* command line override */
-        source = 2;
+    if (xf_color >= COLORMODE_NONE) {           /* command line override */
+        if (xf_color == COLORMODE_NONE) {
+            tt_colors = 2;
+        } else if (xf_color > COLORMODE_256) {
+            tt_colors = 256;
+            truecolor = (xf_color == COLORMODE_DIRECT ? COLORIF_DIRECT : COLORIF_TRUECOLOR);
+        } else { // 256, 16 or 8
+            tt_colors = xf_color;
+        }
+        source = 4;
 
     } else if (TA_MONO & t_attributes) {
         tt_colors = 2;                          /* mono feature (xterm-mono) */
@@ -2929,23 +3060,32 @@ term_colors(void)
 
     } else if (x_pt.pt_colordepth > 1) {
         tt_colors = x_pt.pt_colordepth;         /* set_term_feature() */
-        source = 1;
+        truecolor =
+            (x_pt.pt_truecolor > 0 || (tt_colors >= 256 && istruecolor()));
+        source = 2;
 
-    } else if (x_pt.pt_color /*-1 or 1*/) {
-        if (t_attributes & TA_XTERMLIKE) {
+    } else {    /* auto-select */
+        if (x_pt.pt_truecolor > 0) {
+            truecolor = x_pt.pt_truecolor;
+            tt_colors = 256;
+
+        } else if (0 != (truecolor = istruecolor())) {
+            tt_colors = 256;
+
+        } else if (t_attributes & TA_XTERMLIKE) {
             tt_colors = XTERM_COLORS;
 
         } else if (0 == (tt_colors = tf_Colors)) {
-            if (tc_ANSI_Color_Fg && tc_ANSI_Color_Bg) {
+            if (tc_ANSI_Color[0]) {
                 tt_colors = ANSI_COLORS;
-            } else if (tc_Color_Fg && tc_Color_Bg) {
+            } else if (tc_Color[0]) {
                 tt_colors = 8;
             } else {
                 tt_colors = 0;
             }
         }
     }
-    x_pt.pt_colorrgb = (tt_colors >= 256 && tn_RGB > 0 ? 1 : 0);
+    x_pt.pt_truecolor = truecolor;
 
     /* configure colors */
     assert((COLOR_NONE + 1) == (sizeof(tt_colormap)/sizeof(tt_colormap[0])));
@@ -2989,13 +3129,44 @@ term_colors(void)
         assert(color_map[col].ident == col);
     }
 
-    trace_ilog("term_colors(source=%d,depth=%d)\n", source, tt_colors);
+    trace_ilog("term_colors(source=%d,depth=%d,truecolor=%d)\n", source, tt_colors, truecolor);
     x_pt.pt_colordepth = tt_colors;             /* derived depth */
 
     if (tt_colors > 2) {
         x_display_ctrl |= DC_SHADOW_SHOWTHRU;
     }
     term_fgbg();
+}
+
+
+static int
+istruecolor(void)
+{
+    const char *term = ggetenv("TERM"),
+        *colorterm = ggetenv("COLORTERM");
+
+    // https://github.com/termstandard/colors
+    if (tf_RGB || tn_RGB > 0) {                 /* ncurses: term definition */
+        if (tc_ANSI_Color[0]) {
+            if (strchr(tc_ANSI_Color[0], ':')) {
+                return COLORIF_DIRECT;
+            }
+        }
+        return COLORIF_TRUECOLOR;
+    }
+
+    if (term) {                                 /* ncurses: direct<digits> */
+        if (tty_hasfeatureplus(term, "direct")) {
+            return COLORIF_DIRECT;
+        }
+    }
+
+    if (colorterm) {                            /* S-lang: COLORTERM=truecolor || COLORTERM=24bit */
+        if (0 == strcmp(colorterm, "truecolor") || 0 == strcmp(colorterm, "24bit")) {
+            return COLORIF_TRUECOLOR;
+        }
+    }
+    return 0;
 }
 
 
@@ -3173,7 +3344,7 @@ xterm_colors_get(char *buffer, int length)
 {
     int color, len;
 
-    if (0 == (t_attributes & TA_XTERM)) {       /* xterm specific */
+    if (! isterminal(TT_XTERM)) {               /* xterm specific */
         return -1;
     }
 
@@ -3224,6 +3395,10 @@ xterm_colors_set(const char *value)
         return -1;
     }
 
+    if (NULL == value || !*value) {
+        return 0;
+    }
+
     term_flush();                               /* clear existing obuf */
 
     cnt = sprintf((char *)t_buffer, "\033]4");  /* dynamic color command */
@@ -3236,7 +3411,7 @@ xterm_colors_set(const char *value)
             len = term - value;
         }
 
-        trace_ilog("\tset[%d]=%.*s\n", color, len, value );
+        trace_ilog("\tset[%d]=%.*s\n", color, len, value);
         if (len) {
             cnt += sprintf((char *)(t_buffer + cnt), ";%d;%.*s", color, len, value);
         }
@@ -3271,7 +3446,8 @@ xterm_colors_set(const char *value)
  *              9/11    6/3             9/11    0       6/3
  *
  *          Terminal Response:
- *              The terminal responds by sending its architectural class and basic attributes to the host. This response depends on the terminal's current operating VT level.
+ *              The terminal responds by sending its architectural class and basic attributes to the host.
+ *              This response depends on the terminal's current operating VT level.
  *
  *              CSI     ?       6       4       ;       Ps1     ...
  *              9/11    3/15    3/6     3/4     3/11    3/n     ..
@@ -3285,7 +3461,7 @@ xterm_colors_set(const char *value)
 static void
 term_attributes(void)
 {
-    if ((TA_KITTY|TA_ALACRITTY|TA_WEZTERM) & t_attributes) {
+    if (isterminal(TT_KITTY|TT_ALACRITTY|TT_WEZTERM)) {
         static char xterm_da1x_cmd[] = "\033[?u\033[c";
 #define XTERM_DA1X  (sizeof(xterm_da1x_cmd)-1)
             //
@@ -3329,7 +3505,7 @@ term_attributes(void)
         }
     }
 
-    if (0 == (t_attributes & TA_KITTY)) {
+    if (! isterminal(TT_KITTY)) {
         const char *vte_version_env = ggetenv("VTE_VERSION");
         int vte_version = vte_version_env ? (int)strtol(vte_version_env, NULL, 10) : 0;
 
@@ -3358,7 +3534,7 @@ term_identification(void)
     /*
      *  CYGWIN version
      */
-    if (TA_CYGWIN & t_attributes) {
+    if (isterminal(TT_CYGWIN)) {
         struct utsname u = {0};
         int r1 = 0, r2 = 0;
 
@@ -3370,12 +3546,12 @@ term_identification(void)
             trace_ilog("\tcygwin_uname(%s) = %d.%d\n", u.release, r1, r2);
         }
     }
-#endif
+#endif //__CYGWIN__
 
     /*
      *  xterm and compatible terminals
      */
-    if (tc_RV || ((TA_VT100LIKE|TA_XTERM|TA_XTERMLIKE) & t_attributes)) {
+    if (tc_RV || isterminal(TT_XTERM) || ((TA_VT100LIKE|TA_XTERMLIKE) & t_attributes)) {
         tty_identification(tc_RV, io_escdelay());
     }
 }
@@ -3388,20 +3564,27 @@ term_identification(void)
  *      none
  *
  *  Returns:
- *      0 on success, otherwise -1 if not available.
+ *      nothing
  */
 static int
 term_luminance(void)
 {
     int ret;
 
-    if (!tf_XT && 0 == ((TA_XTERM|TA_XTERMLIKE) & t_attributes)) {
+    if (!tf_XT && !ttxtermlike()) {
         trace_ilog("ttluminance : not supported\n");
-        return -1;                              /* supported? */
+        return -1;                              /* supported */
     }
 
     term_flush();
     if ((ret = tty_luminance(io_escdelay())) < 0) {
+        if (0 == ((TA_DARK|TA_LIGHT) & t_attributes)) {
+            ret = tty_defaultscheme();          /* legacy */
+            if (ret >= 0) {
+                t_attributes |= (ret == 1 ? TA_DARK : TA_LIGHT);
+                return 0;
+            }
+        }
         return -1;
     }
 
@@ -3438,10 +3621,10 @@ term_isutf8(void)
     } else if (DISPTYPE_7BIT == xf_disptype || DISPTYPE_8BIT == xf_disptype) {
         ret = 0;                                /* explicitly disabled -- command line */
 
-    } else if (TA_LINUX & t_attributes) {       /* linux console, not supported */
+    } else if (isterminal(TT_LINUX)) {          /* linux console, not supported */
         ret = -2;
 
-    } else if (TA_CYGWIN & t_attributes) {      /* cygwin version (1.7+) */
+    } else if (isterminal(TT_CYGWIN)) {         /* cygwin version (1.7+) */
         if (-3 == x_pt.pt_vtdatype) {
             const int r1 = x_pt.pt_vtdaversion / 100;
             const int r2 = x_pt.pt_vtdaversion % 100;
@@ -3457,7 +3640,7 @@ term_isutf8(void)
     } else if (sys_unicode_locale(TRUE)) {      /* BTERM_LOCAL or LOCALE */
         ret = 4;
 
-    } else if (TA_XTERM & t_attributes) {
+    } else if (isterminal(TT_XTERM)) {
         /*
          *  Write a single utf8 character and check resulting cursor position.
          *
@@ -3485,7 +3668,6 @@ term_isutf8(void)
             trace_ilog("\tisutf8A(%d) = col:%d\n", len, col);
             sys_write(TTY_OUTFD, (void *)xterm_utf8_clean1, XTERM_UTF8_CLEAN1);
         }
-
     }
 
     trace_ilog("UTF8 support=%d\n", ret);
@@ -3679,7 +3861,7 @@ term_move(int row, int col)
              *
              *  Note: this is generally only a visible problem when running borderless mode.
              */
-#define COLUMNOK()  (col > 0 || 0 == (t_attributes & TA_XTERM))
+#define COLUMNOK()  (col > 0 || !isterminal(TT_XTERM))
 
 #define PCOST       4                           /* parameterised version cost */
 
@@ -4054,7 +4236,7 @@ term_ce(void)
 static int
 term_lastsafe(void)
 {
-    if (TA_CYGWIN & t_attributes) {
+    if (isterminal(TT_CYGWIN)) {
         return FALSE;                           /* needs further investigations */
     }
     return (term_ce() || tf_LP > 0 ? TRUE : FALSE);
@@ -4465,7 +4647,7 @@ term_scrollreset(void)
 static void
 term_attr(vbyte_t color)
 {
-    vbyte_t attr = VBYTE_ATTR_GET(color);       /* encode attribute */
+    const vbyte_t attr = VBYTE_ATTR_GET(color);     /* encode attribute */
 
     if (tt_hue == attr) {
         return;
@@ -4473,287 +4655,516 @@ term_attr(vbyte_t color)
     tt_hue = attr;
 
     ED_TERM(("ttattr(%d/0x%x)", attr, attr))
-
     if (! vtiscolor()) {
-        /*
-         *  black-wbite/no-color mode
-         *      \033[0m     Normal.
-         *      \033[1m     Bold (extra bright).
-         *      \033[4m     Underline.
-         *      \033[5m     Blink (appears as Bold on Xterm etc).
-         *      \033[7m     Inverse (hilight).
-         *
-         *  optional:
-         *      \033[22m    Normal (neither bold nor faint).
-         *      \033[24m    End underline.
-         */
-        const int nstyle = ttbandw(attr, tc_us?1:0, tc_ZH?1:0, tc_mb?1:0);
+        term_monocolor(attr);
 
-        if (tt_style != nstyle) {
-            term_styleoff();
-            term_styleon(nstyle);
+    } else {
+        const int truecolor = x_pt.pt_truecolor;
+        colattr_t ca = {0};
+
+        color_definition(attr, &ca);
+        if (truecolor) {
+            term_truecolor(&ca, truecolor);
+        } else {
+            term_legacycolor(&ca);
+        }
+    }
+    ED_TERM(("\n"))
+}
+
+
+/*  Function:           term_truecolor
+ *      true-color/16-million color mode.
+ *
+ *      Controls:
+ *
+ *          \033[0m             Set normal (foreground, background and styles)
+ *          \033[39m            Default foreground color (Implementation defined)
+ *          \033[49m            Default background color (Implementation defined)
+ *
+ *      SGR38 and SRG48/
+ *
+ *          \033[38;2;r;g;bm    Select RGB foreground color
+ *          \033[48;2;r;g;bm    Select RGB background color
+ *
+ *        plus:
+ *
+ *          \033[38;5;#m        Set the foreground color to index #
+ *          \033[48;5;#m        Set the background color to index #
+ *
+ *              0-7:                Standard colors (as in "ESC [ 30-37 m")
+ *              8-15:               High intensity colors (as in "ESC [ 90-97 m")
+ *              16-231:             6x6x6 cube (216 colors)
+ *              232-255:            Grayscale from dark to light in 24 steps.
+ *
+ *      ITU-RGB (xterm/kconsole):
+ *
+ *          \0O3[38:2:[<Color-Space-ID>]:<r>:<g>:<b>:[<unused>]:[<CS tolerance>]m
+ *          \0O3[48:2:[<Color-Space-ID>]:<r>:<g>:<b>:[<unused>]:[<CS tolerance>]m
+ *
+ *      TODO:
+ *
+ *          \033[49;1m          Transparent.
+ *
+ *  Parameters:
+ *      ca - Color attribute.
+ *      mode - Interface mode (ISTRUECOLOR or ISDIRECT).
+ *
+ *  Notes:
+ *      Only background color changes are optimised, on the assumption foreground changes are the primary action.
+ *
+ *  Returns:
+ *      nothing.
+ */
+static void
+term_truecolor(const colattr_t *ca, int mode)
+{
+    static const char *sgrs[2][4] =              // fg-rgb/fg-256/bg-rgb/bg-256
+        {
+            {       // ISO/IEC 8613-6 (ITU Recommendation T.416) - direct
+                    // See:
+                    //  https://en.wikipedia.org/wiki/Talk:ANSI_escape_code#Clarification_for_sentence_in_24-bit_colour_section_sought
+                    //  https://dicom.nema.org/medical/dicom/2019d/output/html/part05.html#sect_6.1.1
+                "\033[38:2::%u:%u:%u",
+                "\033[38:5:%u",
+                    ";48:2::%u:%u:%um",
+                    ";48:5:%um"
+            },
+            {       // defacto standard - truecolor
+                "\033[38;2;%u;%u;%u",
+                "\033[38;5;%u",
+                    ";48;2;%u;%u;%um",
+                    ";48;5;%um"
+            },
+        };
+    const char **sgr = sgrs[mode == COLORIF_TRUECOLOR ? 1 : 0];
+
+    char ebuf[64];                              // max:36
+    const colstyles_t sf = ca->sf;
+    unsigned rgbcolor;
+    int fg, bg;
+    int len;
+
+    /* foreground */
+    rgbcolor = ca->fg.rgbcolor;
+    if (rgbcolor) {                             // RGB
+        len = sxprintf(ebuf, sizeof(ebuf), sgr[0],
+                    COLOR_RVAL(rgbcolor), COLOR_GVAL(rgbcolor), COLOR_BVAL(rgbcolor));
+        fg = (int)rgbcolor;
+
+    } else {
+        fg = (COLORSOURCE_SYMBOLIC == ca->fg.source ? tt_colormap[ca->fg.color] : ca->fg.color);
+
+        if (fg >= 0) {                          // Index
+            len = sxprintf(ebuf, sizeof(ebuf), sgr[1], 0xff & fg);
+        } else {                                // Default
+            len = sxprintf(ebuf, sizeof(ebuf), "\033[39");
+        }
+    }
+
+    /* background, only on change or style */
+    rgbcolor = ca->bg.rgbcolor;
+    if (rgbcolor) {                             // RGB
+        if (tt_bg != (bg = (int)rgbcolor) || sf != tt_style) {
+            len += sxprintf(ebuf+len, sizeof(ebuf)-len, sgr[2],
+                        COLOR_RVAL(rgbcolor), COLOR_GVAL(rgbcolor), COLOR_BVAL(rgbcolor));
+        } else {
+            ebuf[len++] = 'm';
+            ebuf[len] = 0;
         }
 
     } else {
-        const char *reset = (tc_me ? tc_me : "\033[0m");
-        colattr_t ca = {0};
-        int fg, bg, sf;
+        bg = (COLORSOURCE_SYMBOLIC == ca->bg.source ? tt_colormap[ca->bg.color] : ca->bg.color);
 
-        color_definition(attr, &ca);
-        fg = ca.fg.color;
-        bg = ca.bg.color;
-        sf = ca.sf;
-
-        ED_TERM((", curr(fg:%d, bg:%d, sf:%d), attr(fg:%d, bg:%d, sf:%d)", tt_fg, tt_bg, tt_style, fg, bg, sf))
-
-        if (tt_colors >= 88 /*88 or 256*/) {
-            /* 256 color mode
-             *
-             *      \033[0m         Set normal (foreground, background and styles)
-             *      \033[39m        Default foreground color (Implementation defined)
-             *      \033[49m        Default background color (Implementation defined)
-             *
-             *  SGR 38 and 48/
-             *
-             *      \033[38;5;#m    Set the foreground color to index #
-             *      \033[48;5;#m    Set the background color to index #
-             *
-             *          0-7:     Standard colors (as in "ESC [ 30-37 m")
-             *          8-15:    High intensity colors (as in "ESC [ 90-97 m")
-             *          16-231:  6x6x6 cube (216 colors)
-             *          232-255: Grayscale from dark to light in 24 steps.
-             */
-            if (COLORSOURCE_SYMBOLIC == ca.fg.source) fg = tt_colormap[fg];
-            if (COLORSOURCE_SYMBOLIC == ca.bg.source) bg = tt_colormap[bg];
-
-            ED_TERM(("->map256(fg:%d, bg:%d)", fg, bg))
-
-            if (fg != tt_fg || bg != tt_bg || sf != tt_style) {
-                char ebuf[64];
-
-                if (tt_style) term_styleoff();
-
-                if (fg >= 0 && bg >= 0) {       /* foreground,background */
-                //  if (x_pt.pt_colorsetfgbg[0]) {
-                //      sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfgbg, 0xff & fg, 0xff & bg);
-                //
-                //  } else if (x_pt.pt_colorsetfg[0] && x_pt.pt_colorsetbg[0]) {
-                //      int len = sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfg, 0xff & fg);
-                //      sxprintf(ebuf + len, sizeof(ebuf) - len, x_pt.pt_colorsetbg, 0xff & bg);
-                //
-                //  } else {
-                        sxprintf(ebuf, sizeof(ebuf), "\033[38;5;%u;48;5;%um", 0xff & fg, 0xff & bg);
-                //  }
-                    ttputpad(ebuf);
-
-                } else if (fg >= 0) {           /* foreground,normal */
-                //  if (x_pt.pt_colorsetfgbg[0]) {
-                //      sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfgbg, 0xff & fg, 0);
-                //
-                //  } else if (x_pt.pt_colorsetfg[0] && x_pt.pt_colorsetbg[0]) {
-                //      int len = sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfg, 0xff & fg);
-                //      sxprintf(ebuf + len, sizeof(ebuf) - len, x_pt.pt_colorsetbg, 0);
-                //
-                //  } else {
-                        sxprintf(ebuf, sizeof(ebuf), "\033[49;38;5;%um", 0xff & fg);
-                //  }
-                    ttputpad(ebuf);
-
-                } else if (bg >= 0) {           /* normal,background */
-                //  if (x_pt.pt_colorsetfgbg[0]) {
-                //      sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfgbg, 0, 0xff & bg);
-                //
-                //  } else if (x_pt.pt_colorsetfg[0] && x_pt.pt_colorsetbg[0]) {
-                //      int len = sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfg, 0);
-                //      sxprintf(ebuf + len, sizeof(ebuf) - len, x_pt.pt_colorsetbg, 0xff & bg);
-                //
-                //  } else {
-                        sxprintf(ebuf, sizeof(ebuf), "\033[39;48;5;%um", 0xff & bg);
-                //  }
-                    ttputpad(ebuf);
-
-                } else {                        /* normal */
-                    ttputpad(reset);
-                }
-
-                if (sf) term_styleon(sf);
+        if (tt_bg != bg || sf != tt_style) {
+            if (bg >= 0) {                       // Index
+                len += sxprintf(ebuf+len, sizeof(ebuf)-len, sgr[3], 0xff & bg);
+            } else {                             // Default
+                len += sxprintf(ebuf+len, sizeof(ebuf)-len, ";49m");
             }
-
-        } else if ((tt_colors >= 16 && tc_ANSI_Color_Fg) ||
-                        (NULL == tc_Color_Fg && NULL == tc_ANSI_Color_Fg)) {
-            /* 16 color mode (standard - ANSI)
-             *
-             *      \033[0m         Set normal (foreground and background)
-             *      \033[39m        Default foreground color (Implementation defined)
-             *      \033[49m        Default background color (Implementation defined)
-             *
-             *      \033[30m        Set foreground color to Black
-             *      \033[31m        Set foreground color to Red
-             *      \033[32m        Set foreground color to Green
-             *      \033[33m        Set foreground color to Yellow
-             *      \033[34m        Set foreground color to Blue
-             *      \033[35m        Set foreground color to Magenta
-             *      \033[36m        Set foreground color to Cyan
-             *      \033[37m        Set foreground color to White
-             *      \033[38;5;%dm   Set foreground color (0 .. 15)
-             *
-             *      \033[40m        Set background color to Black
-             *      \033[41m        Set background color to Red
-             *      \033[42m        Set background color to Green
-             *      \033[43m        Set background color to Yellow
-             *      \033[44m        Set background color to Blue
-             *      \033[45m        Set background color to Magenta
-             *      \033[46m        Set background color to Cyan
-             *      \033[47m        Set background color to White
-             *      \033[48;5;%dm   Set background color (0 .. 15)
-             */
-            if (COLORSOURCE_SYMBOLIC == ca.fg.source) fg = tt_colormap[fg];
-            if (COLORSOURCE_SYMBOLIC == ca.bg.source) bg = tt_colormap[bg];
-            if (fg == bg && bg >= 0) {
-                if (TA_DARK & t_attributes) {
-                    fg = tt_colormap[WHITE];
-                    bg = tt_colormap[BLACK];
-                } else {
-                    fg = tt_colormap[BLACK];
-                    bg = tt_colormap[WHITE];
-                }
-            }
-
-            ED_TERM(("->map16(fg:%d, bg:%d)", fg, bg))
-
-            if (fg != tt_fg || bg != tt_bg || sf != tt_style) {
-                char ebuf[64];
-                int l = 0;
-
-                if (tt_style) {
-                    if (tc_me) reset = "";
-                    term_styleoff();
-                }
-
-                if (fg > 0 && bg > 0) {         /* foreground (30-37,38+), background (40-47,48+) */
-                    if (fg > 7) {
-                        l = sprintf(ebuf, "\033[38;5;%u;", fg & 0xff);
-                    } else {
-                        l = sprintf(ebuf, "\033[%u;", 30 + (fg & 7));
-                    }
-                    if (bg > 7) {
-                        l += sprintf(ebuf+l, "48;5;%um", bg & 0xff);
-                    } else {
-                        l += sprintf(ebuf+l, "%um", 40 + (bg & 7));
-                    }
-                    ttputpad(ebuf);
-
-                } else if (fg > 0) {            /* normal + foreground (30-37,38+) */
-                    if (fg > 7) {
-                        l = sprintf(ebuf, "%s\033[38;5;%um", reset, fg & 0xff);
-                    } else {
-                        l = sprintf(ebuf, "%s\033[%um", reset, 30 + (fg & 7));
-                    }
-                    ttputpad(ebuf);
-
-                } else if (bg > 0) {            /* normal + background (40-47,48+) */
-                    if (bg > 7) {
-                        l = sprintf(ebuf, "%s\033[48;5;%um", reset, bg & 0xff);
-                    } else {
-                        l = sprintf(ebuf, "%s\033[%um", reset, 40 + (bg & 7));
-                    }
-                    ttputpad(ebuf);
-
-                } else if (*reset) {            /* normal */
-                    ttputpad(reset);
-                }
-                assert(l < sizeof(ebuf));
-
-                if (sf) term_styleon(sf);
-            }
-
-        } else if (tc_ANSI_Color_Fg) {
-            /*
-             *  ANSI - 16+8 color mode
-             */
-            if (COLORSOURCE_SYMBOLIC == ca.fg.source) fg = color_map[fg].c16;
-            if (COLORSOURCE_SYMBOLIC == ca.bg.source) bg = color_map[bg].c16;
-            if (fg == bg && bg >= 0) {
-                if (TA_DARK & t_attributes) {
-                    fg = color_map[WHITE].c16;
-                    bg = color_map[BLACK].c16;
-                } else {
-                    fg = color_map[BLACK].c16;
-                    bg = color_map[WHITE].c16;
-                }
-            }
-
-            ED_TERM(("->mapansi(fg:%d, bg:%d)", fg, bg))
-
-            if (fg != tt_fg || bg != tt_bg || sf != tt_style) {
-                if (tt_style) {
-                    if (tc_me) reset = NULL;
-                    term_styleoff();
-                }
-
-                if (reset && (fg <= 0 || bg <= 0)) {
-                    ttputpad(reset);            /* normal */
-                }
-
-                if (fg > 0) {                   /* foreground */
-                    if (tt_colors == 8) ttputpad((fg & 0x8) ? tc_md : tc_se);
-                    ttputctl(tc_ANSI_Color_Fg, fg);
-                }
-
-                if (bg > 0) {                   /* background */
-                    ttputctl(tc_ANSI_Color_Bg, bg & 7);
-                }
-
-                if (sf) term_styleon(sf);
-            }
-
         } else {
-            /*
-             *  PC - 16+8 color mode
-             *  Note: assumes alternative color mapping.
-             */
-            if (COLORSOURCE_SYMBOLIC == ca.fg.source) fg = color_map[fg].c16_pc;
-            if (COLORSOURCE_SYMBOLIC == ca.bg.source) bg = color_map[bg].c16_pc;
-            if (fg == bg && bg >= 0) {
-                if (TA_DARK & t_attributes) {
-                    fg = color_map[WHITE].c16_pc;
-                    bg = color_map[BLACK].c16_pc;
-                } else {
-                    fg = color_map[BLACK].c16_pc;
-                    bg = color_map[WHITE].c16_pc;
-                }
-            }
-
-            ED_TERM(("->mappc(fg:%d, bg:%d)", fg, bg))
-
-            if (fg != tt_fg || bg != tt_bg || sf != tt_style) {
-                if (tt_style) {
-                    if (tc_me) reset = NULL;
-                    term_styleoff();
-                }
-
-                if (reset && (fg <= 0 || bg <= 0)) {
-                    ttputpad(reset);            /* normal */
-                }
-
-                if (fg > 0) {                   /* foreground */
-                    if (tt_colors == 8) ttputpad((fg & 0x8) ? tc_md : tc_se);
-                    ttputctl(tc_Color_Fg, fg);
-                }
-
-                if (bg > 0) {                   /* background */
-                    ttputctl(tc_Color_Bg, bg & 7);
-                }
-
-                if (sf) term_styleon(sf);
-            }
+            ebuf[len++] = 'm';
+            ebuf[len] = 0;
         }
+    }
 
+    /* apply */
+    ED_TERM((", curr(fg:%d, bg:%d, sf:%u), ->true-color(fg:%d, bg:%d, sf:%u)", tt_fg, tt_bg, tt_style, fg, bg, sf))
+
+    if (fg != tt_fg || bg != tt_bg || sf != tt_style) {
+        const char *reset = (tc_me ? tc_me : "\033[0m");
+
+        if (tt_style) {
+            if (tc_me) reset = "";
+            term_styleoff();
+        }
+        if (len <= 8) {                         // "\033[39;49m"
+            ttputpad(reset);
+        } else {
+            ttputpad(ebuf);
+        }
+        if (sf) {
+            term_styleon(sf);
+        }
         tt_fg = fg;
         tt_bg = bg;
     }
+}
 
-    ED_TERM(("\n"))
+/*  Function:           term_monocolor
+ *      Monochrome colors.
+ *
+ *  Parameters:
+ *      attr - attribute.
+ *
+ *  Returns:
+ *      nothing.
+ */
+static void
+term_monocolor(const vbyte_t attr)
+{
+    /*
+     *  black-white/no-color mode
+     *      \033[0m     Normal.
+     *      \033[1m     Bold (extra bright).
+     *      \033[4m     Underline.
+     *      \033[5m     Blink (appears as Bold on Xterm etc).
+     *      \033[7m     Inverse (hilight).
+     *
+     *  optional:
+     *      \033[22m    Normal (neither bold nor faint).
+     *      \033[24m    End underline.
+     */
+    const int nstyle = ttbandw(attr, tc_us?1:0, tc_ZH?1:0, tc_mb?1:0);
+
+    if (tt_style != nstyle) {
+        term_styleoff();
+        term_styleon(nstyle);
+    }
+}
+
+
+/*  Function:           term_legacycolor
+ *      Standard terminal colors, 256 or less.
+ *
+ *  Parameters:
+ *      ca - Color attribute.
+ *
+ *  Returns:
+ *      nothing.
+ */
+static void
+term_legacycolor(const colattr_t *ca)
+{
+    const char *reset = (tc_me ? tc_me : "\033[0m");
+    const colstyles_t sf = ca->sf;
+    int fg = ca->fg.color;
+    int bg = ca->bg.color;
+
+    ED_TERM((", curr(fg:%d, bg:%d, sf:%u), attr(fg:%d, bg:%d, sf:%u)", tt_fg, tt_bg, tt_style, fg, bg, sf))
+
+    if (tt_colors >= 88) {
+        /*
+         *  SGR - 88/256 color mode
+         */
+        if (COLORSOURCE_SYMBOLIC == ca->fg.source) fg = tt_colormap[fg];
+        if (COLORSOURCE_SYMBOLIC == ca->bg.source) bg = tt_colormap[bg];
+
+        ED_TERM(("->map256(fg:%d, bg:%d)", fg, bg))
+
+        if (fg != tt_fg || bg != tt_bg || sf != tt_style) {
+            if (tt_style) {
+                if (tc_me) reset = "";
+                term_styleoff();
+            }
+            term_256color(fg, bg, reset);
+            if (sf) {
+                term_styleon(sf);
+            }
+            tt_fg = fg;
+            tt_bg = bg;
+        }
+
+    } else if ((tt_colors >= 16 && tc_ANSI_Color[0]) ||
+                    (NULL == tc_ANSI_Color[0] && NULL == tc_Color[0])) {
+        /*
+         *  SGR - 16 color mode
+         */
+        if (COLORSOURCE_SYMBOLIC == ca->fg.source) fg = tt_colormap[fg];
+        if (COLORSOURCE_SYMBOLIC == ca->bg.source) bg = tt_colormap[bg];
+
+        if (fg == bg && bg >= 0) {
+            if (TA_DARK & t_attributes) {
+                fg = tt_colormap[WHITE];
+                bg = tt_colormap[BLACK];
+            } else {
+                fg = tt_colormap[BLACK];
+                bg = tt_colormap[WHITE];
+            }
+        }
+
+        ED_TERM(("->map16(fg:%d, bg:%d)", fg, bg))
+        if (fg != tt_fg || bg != tt_bg || sf != tt_style) {
+            if (tt_style) {
+                if (tc_me) reset = "";
+                term_styleoff();
+            }
+            term_sgrcolor(fg, bg, reset);
+            if (sf) {
+                term_styleon(sf);
+            }
+            tt_fg = fg;
+            tt_bg = bg;
+        }
+
+    } else if (tc_ANSI_Color[0]) {
+        /*
+         *  ANSI - legacy 16+8 color mode.
+         */
+        if (COLORSOURCE_SYMBOLIC == ca->fg.source) fg = color_map[fg].c16;
+        if (COLORSOURCE_SYMBOLIC == ca->bg.source) bg = color_map[bg].c16;
+
+        if (fg == bg && bg >= 0) {
+            if (TA_DARK & t_attributes) {
+                fg = color_map[WHITE].c16;
+                bg = color_map[BLACK].c16;
+            } else {
+                fg = color_map[BLACK].c16;
+                bg = color_map[WHITE].c16;
+            }
+        }
+
+        ED_TERM(("->mapansi(fg:%d, bg:%d)", fg, bg))
+        if (fg != tt_fg || bg != tt_bg || sf != tt_style) {
+            if (tt_style) {
+                if (tc_me) reset = "";
+                term_styleoff();
+            }
+            term_16color(fg, bg, tc_ANSI_Color, reset);
+            if (sf) {
+                term_styleon(sf);
+            }
+            tt_fg = fg;
+            tt_bg = bg;
+        }
+
+    } else {
+        /*
+         *  NON-ANSI/PC - legacy 16+8 color mode.
+         *  Note: assumes alternative color mapping.
+         */
+        if (COLORSOURCE_SYMBOLIC == ca->fg.source) fg = color_map[fg].c16_pc;
+        if (COLORSOURCE_SYMBOLIC == ca->bg.source) bg = color_map[bg].c16_pc;
+
+        if (fg == bg && bg >= 0) {
+            if (TA_DARK & t_attributes) {
+                fg = color_map[WHITE].c16_pc;
+                bg = color_map[BLACK].c16_pc;
+            } else {
+                fg = color_map[BLACK].c16_pc;
+                bg = color_map[WHITE].c16_pc;
+            }
+        }
+
+        ED_TERM(("->mappc(fg:%d, bg:%d)", fg, bg))
+        if (fg != tt_fg || bg != tt_bg || sf != tt_style) {
+            if (tt_style) {
+                if (tc_me) reset = "";
+                term_styleoff();
+            }
+            term_16color(fg, bg, tc_Color, reset);
+            if (sf) term_styleon(sf);
+            tt_fg = fg;
+            tt_bg = bg;
+        }
+    }
+}
+
+
+/*  Function:           term_256color
+ *      256 color mode.
+ *
+ *      Controls:
+ *
+ *          \033[0m             Set normal (foreground, background and styles)
+ *          \033[39m            Default foreground color (Implementation defined)
+ *          \033[49m            Default background color (Implementation defined)
+ *
+ *      SGR 38 and 48/
+ *
+ *          \033[38;5;#m        Set the foreground color to index #
+ *          \033[48;5;#m        Set the background color to index #
+ *
+ *              0-7:                Standard colors (as in "ESC [ 30-37 m")
+ *              8-15:               High intensity colors (as in "ESC [ 90-97 m")
+ *              16-231:             6x6x6 cube (216 colors)
+ *              232-255:            Grayscale from dark to light in 24 steps.
+ *
+ *  Parameters:
+ *      fg, bg - Foreground/background colors.
+ *      reset - Optional reset command.
+ *
+ *  Returns:
+ *      nothing.
+ */
+static void
+term_256color(int fg, int bg, const char *reset)
+{
+    char ebuf[64];
+
+    if (fg >= 0 && bg >= 0) {                   /* foreground,background */
+#if (0)
+//      if (x_pt.pt_colorsetfgbg[0]) {
+//          sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfgbg, 0xff & fg, 0xff & bg);
+//
+//      } else if (x_pt.pt_colorsetfg[0] && x_pt.pt_colorsetbg[0]) {
+//          int len = sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfg, 0xff & fg);
+//          sxprintf(ebuf + len, sizeof(ebuf) - len, x_pt.pt_colorsetbg, 0xff & bg);
+//
+//      } else
+#endif
+            sxprintf(ebuf, sizeof(ebuf), "\033[38;5;%u;48;5;%um", 0xff & fg, 0xff & bg);
+        ttputpad(ebuf);
+
+    } else if (fg >= 0) {                       /* foreground,normal */
+#if (0)
+//      if (x_pt.pt_colorsetfgbg[0]) {
+//          sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfgbg, 0xff & fg, 0);
+//
+//      } else if (x_pt.pt_colorsetfg[0] && x_pt.pt_colorsetbg[0]) {
+//          int len = sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfg, 0xff & fg);
+//          sxprintf(ebuf + len, sizeof(ebuf) - len, x_pt.pt_colorsetbg, 0);
+//
+//      } else
+#endif
+            sxprintf(ebuf, sizeof(ebuf), "\033[49;38;5;%um", 0xff & fg);
+        ttputpad(ebuf);
+
+    } else if (bg >= 0) {                       /* normal,background */
+#if (0)
+//      if (x_pt.pt_colorsetfgbg[0]) {
+//          sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfgbg, 0, 0xff & bg);
+//
+//      } else if (x_pt.pt_colorsetfg[0] && x_pt.pt_colorsetbg[0]) {
+//          int len = sxprintf(ebuf, sizeof(ebuf), x_pt.pt_colorsetfg, 0);
+//          sxprintf(ebuf + len, sizeof(ebuf) - len, x_pt.pt_colorsetbg, 0xff & bg);
+//
+//      } else
+#endif
+            sxprintf(ebuf, sizeof(ebuf), "\033[39;48;5;%um", 0xff & bg);
+        ttputpad(ebuf);
+
+    } else {                                    /* normal */
+        ttputpad(reset);
+    }
+}
+
+
+/*  Function:           term_sgrcolor
+ *      SGR-16 color mode.
+ *
+ *          Standard:
+ *
+ *          \033[0m         Set normal (foreground and background)
+ *          \033[39m        Default foreground color (Implementation defined)
+ *          \033[49m        Default background color (Implementation defined)
+ *
+ *          \033[30m        Set foreground color to Black
+ *          \033[31m        Set foreground color to Red
+ *          \033[32m        Set foreground color to Green
+ *          \033[33m        Set foreground color to Yellow
+ *          \033[34m        Set foreground color to Blue
+ *          \033[35m        Set foreground color to Magenta
+ *          \033[36m        Set foreground color to Cyan
+ *          \033[37m        Set foreground color to White
+ *          \033[38;5;%dm   Set foreground color (0 .. 15)
+ *
+ *          \033[40m        Set background color to Black
+ *          \033[41m        Set background color to Red
+ *          \033[42m        Set background color to Green
+ *          \033[43m        Set background color to Yellow
+ *          \033[44m        Set background color to Blue
+ *          \033[45m        Set background color to Magenta
+ *          \033[46m        Set background color to Cyan
+ *          \033[47m        Set background color to White
+ *          \033[48;5;%dm   Set background color (0 .. 15)
+ *
+ *  Parameters:
+ *      fg, bg - Foreground/background colors.
+ *      reset - Optional reset command.
+ *
+ *  Returns:
+ *      nothing.
+ */
+static void
+term_sgrcolor(int fg, int bg, const char *reset)
+{
+    char ebuf[64];
+    int l = 0;
+
+    if (fg > 0 && bg > 0) {                     /* foreground (30-37,38+), background (40-47,48+) */
+        if (fg > 7) {
+            l = sprintf(ebuf, "\033[38;5;%u;", fg & 0xff);
+        } else {
+            l = sprintf(ebuf, "\033[%u;", 30 + (fg & 7));
+        }
+        if (bg > 7) {
+            l += sprintf(ebuf+l, "48;5;%um", bg & 0xff);
+        } else {
+            l += sprintf(ebuf+l, "%um", 40 + (bg & 7));
+        }
+        ttputpad(ebuf);
+
+    } else if (fg > 0) {                        /* normal + foreground (30-37,38+) */
+        if (fg > 7) {
+            l = sprintf(ebuf, "%s\033[38;5;%um", reset, fg & 0xff);
+        } else {
+            l = sprintf(ebuf, "%s\033[%um", reset, 30 + (fg & 7));
+        }
+        ttputpad(ebuf);
+
+    } else if (bg > 0) {                        /* normal + background (40-47,48+) */
+        if (bg > 7) {
+            l = sprintf(ebuf, "%s\033[48;5;%um", reset, bg & 0xff);
+        } else {
+            l = sprintf(ebuf, "%s\033[%um", reset, 40 + (bg & 7));
+        }
+        ttputpad(ebuf);
+
+    } else {                                    /* normal */
+        ttputpad(reset);
+    }
+
+    assert(l < sizeof(ebuf));
+}
+
+
+/*  Function:           term_16color
+ *      Legacy 16-foreground + 8-background color mode.
+ *
+ *  Parameters:
+ *      fg, bg - Foreground/background colors.
+ *      cmds - Color selection commands, 0=foreground and 1=background.
+ *      reset - Optional reset command.
+ *
+ *  Returns:
+ *      nothing.
+ */
+static void
+term_16color(int fg, int bg, const char **cmds, const char *reset)
+{
+    if (reset && (fg <= 0 || bg <= 0)) {
+        ttputpad(reset);                        /* normal */
+    }
+
+    if (fg > 0) {                               /* foreground */
+        if (tt_colors == 8) ttputpad((fg & 0x8) ? tc_md : tc_se);
+        ttputctl(cmds[0], fg);
+    }
+
+    if (bg > 0) {                               /* background */
+        ttputctl(cmds[1], bg & 7);
+    }
 }
 
 
@@ -4761,18 +5172,14 @@ term_attr(vbyte_t color)
  *      Enable the states styles.
  *
  *  Parameters:
- *      ntype -   New style bitmap.
+ *      nstyle - New style bitmap.
  *
  *  Returns:
  *      nothing.
  */
 static void
-term_styleon(unsigned nstyle)
+term_styleon(colstyles_t nstyle)
 {
-    if (vtiscolor() && tn_NC > 0) {
-        return;                                 /* XXX - color/attributes dont mix, should mask */
-    }
-
 #if defined(HAVE_TERMINFO)
     if (tc_sa && !vtiscolor()) {
         ttputpad(tparm((char *)tc_sa,           /* attribute set, mono only */
@@ -4785,41 +5192,52 @@ term_styleon(unsigned nstyle)
             /*INVISIBLE*/   0,
             /*PROTECT*/     0,
             /*ALTCHAR*/     (t_gmode ? 1 : 0)));
-        tt_style |= nstyle;
+        tt_style = nstyle;
         return;
     }
 #endif  /*HAVE_TERMINFO*/
 
+    if (vtiscolor() && tn_NC > 0) {
+        return;                                 /* color/attributes dont mix */
+    }
+
 #define ACTIVATE_STYLE(x) \
-                ((nstyle & (x)) && 0 == (tt_style & (x)))
+            ((nstyle & (x)) && 0 == (tt_style & (x)))
 
     if (ACTIVATE_STYLE(COLORSTYLE_STANDOUT)) {
+        tt_style |= COLORSTYLE_STANDOUT;
         ttputpad(tc_so);                        /* standout mode. */
     } else if (ACTIVATE_STYLE(COLORSTYLE_INVERSE)) {
+        tt_style |= COLORSTYLE_INVERSE;
         ttputpad(tc_so);
     }
 
     if (ACTIVATE_STYLE(COLORSTYLE_REVERSE)) {
-        ttputpad(tc_mr ? tc_mr : tc_so);        /* reverse  */
+        tt_style |= COLORSTYLE_REVERSE;
+        ttputpad(tc_mr ? tc_mr : tc_so);        /* reverse */
     }
 
-    if (ACTIVATE_STYLE(COLORSTYLE_UNDERLINE)) {
-        ttputpad(tc_us);                        /* underline */
-    }
+    term_understyle(1, nstyle);                 /* underline etc */
 
     if (ACTIVATE_STYLE(COLORSTYLE_BOLD)) {
+        tt_style |= COLORSTYLE_BOLD;
         ttputpad(tc_md);                        /* bold */
     }
 
     if (ACTIVATE_STYLE(COLORSTYLE_BLINK)) {
+        tt_style |= COLORSTYLE_BLINK;
         ttputpad(tc_mb);                        /* blink */
     }
 
     if (ACTIVATE_STYLE(COLORSTYLE_ITALIC)) {
+        tt_style |= COLORSTYLE_ITALIC;
         ttputpad(tc_ZH);                        /* italic */
     }
 
-    tt_style |= nstyle;
+    if (ACTIVATE_STYLE(COLORSTYLE_STRIKEOUT)) {
+        tt_style |= COLORSTYLE_STRIKEOUT;
+        ttputpad(tc_smxx);                      /* strikeout */
+    }
 }
 
 
@@ -4853,15 +5271,111 @@ term_styleoff(void)
             ttputpad(tc_ZX);                    /* reverse */
         }
 
-        if (tt_style & COLORSTYLE_UNDERLINE) {  /* underline */
-            ttputpad(tc_ue);
-        }
+        term_understyle(0, tt_style);           /* underline etc */
 
         if (tt_style & COLORSTYLE_ITALIC) {     /* italic */
             ttputpad(tc_ZR);
         }
+
+        if (tt_style & COLORSTYLE_STRIKEOUT) {  /* strikeout */
+            ttputpad(tc_rmxx);
+       }
     }
     tt_style = 0;
+}
+
+
+static void
+term_understyle(int enable, colstyles_t style)
+{
+    if (enable) {
+        const colstyles_t understyle = COLORSTYLE_UNDERSTYLE(style);
+
+        if (understyle & tt_understyles) {      /* an active understyle */
+
+            if ((tt_style | understyle) != tt_style) { /* activate? */
+                //
+                //  \\x1b[4:0m      # no underline
+                //  \\x1b[4:1m      # straight underline
+                //  \\x1b[4:2m      # double underline
+                //  \\x1b[4:3m      # curly underline
+                //  \\x1b[4:4m      # dotted underline
+                //  \\x1b[4:5m      # dashed underline
+                //
+                if (x_pt.pt_understyle[0]) {
+                    int mode = 0;
+
+                    switch (understyle) {       /* understyle-mode */
+                    case COLORSTYLE_UNDERSINGLE: mode = 1; break;
+                    case COLORSTYLE_UNDERDOUBLE: mode = 2; break;
+                    case COLORSTYLE_UNDERCURLY:  mode = 3; break;
+                    case COLORSTYLE_UNDERDOTTED: mode = 4; break;
+                    case COLORSTYLE_UNDERDASHED: mode = 5; break;
+                    }
+
+//TODO              if (color && x_pt.understylecolor == 58) {
+//                      if (rgbcolor) {        // true-color
+//                          sprintf(";58:2:%u:%u:%u", r, g, b);
+//                      } else {
+//                          sprintf(";58:5:%u", v);
+//                      }
+//                  }
+
+                    ttprintf(x_pt.pt_understyle, mode, "");
+
+                } else if (tc_Smulx) {
+                    int mode = 0;
+
+                    switch (understyle) {       /* understyle-mode */
+                    case COLORSTYLE_UNDERSINGLE: mode = 1; break;
+                    case COLORSTYLE_UNDERDOUBLE: mode = 2; break;
+                    case COLORSTYLE_UNDERCURLY:  mode = 3; break;
+                    case COLORSTYLE_UNDERDOTTED: mode = 4; break;
+                    case COLORSTYLE_UNDERDASHED: mode = 5; break;
+                    }
+                    ttputctl(tc_Smulx, mode);
+
+                } else {
+                    const char *cmd = "";
+
+                    switch (understyle) {       /* understyle-cmd */
+                    case COLORSTYLE_UNDERSINGLE: cmd = tc_us; break;
+                    case COLORSTYLE_UNDERDOUBLE: cmd = x_pt.pt_underdouble; break;
+                    case COLORSTYLE_UNDERCURLY:  cmd = x_pt.pt_undercurl; break;
+                    case COLORSTYLE_UNDERDOTTED: cmd = x_pt.pt_underdotted; break;
+                    case COLORSTYLE_UNDERDASHED: cmd = x_pt.pt_underdashed; break;
+                    }
+                    ttputpad(cmd);
+                }
+                tt_style |= understyle;
+            }
+
+        } else if (tt_understyles & COLORSTYLE_UNDERLINE) {
+            if ((style & COLORSTYLE_UNDERLINE) || understyle /*underline default*/) {
+
+                if (0 == (tt_style & COLORSTYLE_UNDERLINE)) { /* activate? */
+                    tt_style |= COLORSTYLE_UNDERLINE;
+                    ttputpad(tc_us);            /* underline-on */
+                }
+            }
+        }
+
+    } else {
+        if (style & tt_understyles) {
+            if (x_pt.pt_understyle[0]) {        /* underline-none(0) */
+                ttprintf(x_pt.pt_understyle, 0, "");
+            } else if (tc_Smulx) {
+                ttputctl(tc_Smulx, 0);
+            } else if (x_pt.pt_underoff[0]) {
+                ttputpad(x_pt.pt_underoff);
+            } else {
+                ttputpad(tc_ue);
+            }
+
+        } else if (style & COLORSTYLE_UNDERLINE) {
+            ttputpad(tc_ue);                    /* underline-off */
+        }
+    }
 }
 
 
@@ -5608,6 +6122,7 @@ do_ega(void)                    /* int (int mode) */
     Macro Returns:
         nothing
 
+
     Macro Portability:
         A Grief extension; this primitive is subject for removal,
         and has been removed from recent CrispEdit(tm) releases.
@@ -5620,4 +6135,6 @@ do_copy_screen(void)            /* void () */
 {
 }
 
-#endif  /*!USE_VIO_BUFFER && !DJGPP */
+#endif /*!USE_VIO_BUFFER && !DJGPP */
+
+/*end*/

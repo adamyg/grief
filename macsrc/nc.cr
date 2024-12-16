@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: nc.cr,v 1.38 2024/09/26 12:15:32 cvsuser Exp $
+/* $Id: nc.cr,v 1.39 2024/12/12 14:08:49 cvsuser Exp $
  * Norton Commander (NC)/Midnight Commander style directory services
  *
  * TODO: retain marked/position post command.
@@ -23,7 +23,7 @@
 #define SMINCOLUMNS         62                  /* screen width */
 #define SMAXCOLUMNS         142
 #define SFILECOLUMNS        (nc_fwidth)
-#define SINFOCOLUMNS        38
+#define SINFOCOLUMNS        37
 #define TYPEPOS(__base)     (__base + 1)
 
 #if defined(MSDOS)
@@ -295,10 +295,7 @@ NcSize(void)
 {
     inq_screen_size(ncrows, nccols);
     if (nccols > SMINCOLUMNS + 2) {
-        ncwidth = (nccols / 3) * 2;             /* 2/3 width */
-        if (ncwidth >SMAXCOLUMNS) {
-            ncwidth = SMAXCOLUMNS;
-        }
+        ncwidth = (nccols / 8) * 7;             /* 7/8 width */
     } else {
         ncwidth = SMINCOLUMNS;                  /* center window */
     }

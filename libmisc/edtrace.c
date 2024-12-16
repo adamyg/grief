@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edtrace_c,"$Id: edtrace.c,v 1.49 2024/06/13 16:56:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_edtrace_c,"$Id: edtrace.c,v 1.50 2024/11/19 16:18:25 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edtrace.c,v 1.49 2024/06/13 16:56:21 cvsuser Exp $
+/* $Id: edtrace.c,v 1.50 2024/11/19 16:18:25 cvsuser Exp $
  * Simple diagnostic trace.
  *
  *
@@ -107,37 +107,41 @@ trace_flush(void)
 static void
 hex(const unsigned char *data, int length, int offsets, const char *term)
 {
+#define HEXWIDTH 16
+    char buf1[HEXWIDTH * 4], buf2[HEXWIDTH * 2];
     const unsigned char *end = data + length;
-    char buf[12 + (16 * 7) + 1];                /* 16 characters + NUL */
-    int offset = 0, len = 0;
+    unsigned offset = 0, len1, len2;
+    int done;
 
-    if (0 == x_debug_flags) {
+    if (0 == x_debug_flags || 0 == length) {
         return;
     }
 
-    buf[0] = 0;
-    while (data < end) {
+    buf1[len1 = 0] = 0;
+    len2 = 0;
+
+    if (NULL == term) term = "\n";
+    do {
         const unsigned ch = *data++;
+        done = (data == end);
 
-        len += sprintf(buf + len, "%02x %c  ",  /* "xx c  " */
-                  ch, (ch >= ' ' && ch < 0x7f ? ch : '.'));
-        if (offset++ && 0 == (offset % 16)) {
-            if (offsets) {
-                trace_log("%04x: %s\n", offset - 1, buf);
+        len1 += sprintf(buf1 + len1, "%02x ", ch);
+        len2 += sprintf(buf2 + len2, "%c", (ch >= ' ' && ch < 0x7f ? ch : '.'));
+
+        if ((offset++ && 0 == (offset % HEXWIDTH)) || done) {
+            if (offsets < 0) {                  /* unpadded */
+                trace_log("%02x: %s | %s |%s", length, buf1, buf2, term);
             } else {
-                trace_log("%s\n", buf);
+                if (offsets) {
+                    trace_log("%04x: %-*s | %-*s |%s", offset - HEXWIDTH, HEXWIDTH*3, buf1, HEXWIDTH, buf2, term);
+                } else {
+                    trace_log("| %-*s | %-*s |%s", HEXWIDTH*3, buf1, HEXWIDTH, buf2, term);
+                }
             }
-            buf[len = 0] = 0;
+            buf1[len1 = 0] = 0;
+            len2 = 0;
         }
-    }
-
-    if (buf[0]) {
-        if (offsets) {
-            trace_log("%04x: %s%s", offset, buf, term);
-        } else {
-            trace_log("%s%s", buf, term);
-        }
-    }
+    } while (! done);
 }
 
 
@@ -274,7 +278,7 @@ trace_logxv(int level, const char *fmt, va_list ap)
 #if (TODO)
         if (EDDEBUG_TIME & x_debug_flags) {
             const struct tm *tp = tp = my_localtime();
-            
+
             sprintf(buf, "%02d:%02d:%02d.%d:",
                 tp->tm_year + 1900, tp->tm_min, tp->tm_sec, subsec);
         }
@@ -300,7 +304,7 @@ trace_logxv(int level, const char *fmt, va_list ap)
 void
 trace_hex(const void *data, int length)
 {
-    hex(data, length, TRUE, "\n");
+    hex(data, length, (length <= HEXWIDTH ? -1 : 1), "\n");
 }
 
 
@@ -376,4 +380,5 @@ c_string(const char *str)
     *bp = '\0';                                 /* terminate */
     return buf;
 }
+
 /*end*/

@@ -1,11 +1,11 @@
 #ifndef GR_EDALT_H_INCLUDED
 #define GR_EDALT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edalt_h,"$Id: edalt.h,v 1.38 2024/09/02 14:04:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_edalt_h,"$Id: edalt.h,v 1.40 2024/11/29 11:51:51 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edalt.h,v 1.38 2024/09/02 14:04:03 cvsuser Exp $
+/* $Id: edalt.h,v 1.40 2024/11/29 11:51:51 cvsuser Exp $
  * Key definitions.
  * ==noguard==
  *
@@ -112,6 +112,7 @@ typedef int32_t KEY;
 #define KEY_BACKSPACE           __BACKSPACE
 #define KEY_TAB                 __TAB
 #define KEY_ENTER               __ENTER
+#define KEY_SPACE               ' '
 #define KEY_NEWLINE             '\n'
 #define KEY_DELETE              0x7f
 
@@ -150,6 +151,8 @@ typedef int32_t KEY;
 #define KEY_WINCH               0x001ffffe      // winch/resize event
 #define KEY_UNASSIGNED          0x001ffffd      // unassigned hook
 #define KEY_UNICODE             0x001ffff0      // keyboard special
+
+#define UNICODE_REPLACEMENT     0xfffd          // REPLACEMENT CHARACTER
 
 /*
  *  Control characters
@@ -200,9 +203,12 @@ typedef int32_t KEY;
  */
 #define F(__x)                  (RANGE_FUNCTION + (__x) - 1)
 #define SF(__x)                 (MOD_SHIFT | (RANGE_FUNCTION + (__x) - 1))
-#define CF(__x)                 (MOD_CTRL  | (RANGE_FUNCTION + (__x) - 1))
-#define CSF(__x)                (MOD_CTRL  | MOD_SHIFT | (RANGE_FUNCTION + (__x) - 1))
-#define AF(__x)                 (MOD_META  | (RANGE_FUNCTION + (__x) - 1))
+#define CF(__x)                 (MOD_CTRL | (RANGE_FUNCTION + (__x) - 1))
+#define CSF(__x)                (MOD_CTRL | MOD_SHIFT | (RANGE_FUNCTION + (__x) - 1))
+#define AF(__x)                 (MOD_META | (RANGE_FUNCTION + (__x) - 1))
+#define ASF(__x)                (MOD_META | MOD_SHIFT | (RANGE_FUNCTION + (__x) - 1))
+#define ACF(__x)                (MOD_META | MOD_CTRL | (RANGE_FUNCTION + (__x) - 1))
+#define ACSF(__x)               (MOD_META | MOD_CTRL | MOD_SHIFT | (RANGE_FUNCTION + (__x) - 1))
 
 /*
  *  Alt-letter definitions.
@@ -326,6 +332,9 @@ typedef int32_t KEY;
 #define CTRL_KEYPAD_SCROLL      __CTRL_KEYPAD(19)
 #define CTRL_KEYPAD_NUMLOCK     __CTRL_KEYPAD(20)
 
+#define __CTRLSHIFT_KEYPAD(__x) (MOD_SHIFT | MOD_CTRL | RANGE_KEYPAD | (__x))
+#define CTRLSHIFT_KEYPAD_0      __CTRLSHIFT_KEYPAD(0)
+
 #define __ALT_KEYPAD(__x)       (MOD_META | RANGE_KEYPAD | (__x))
 #define ALT_KEYPAD_0            __ALT_KEYPAD(0)
 #define ALT_KEYPAD_1            __ALT_KEYPAD(1)
@@ -337,6 +346,9 @@ typedef int32_t KEY;
 #define ALT_KEYPAD_7            __ALT_KEYPAD(7)
 #define ALT_KEYPAD_8            __ALT_KEYPAD(8)
 #define ALT_KEYPAD_9            __ALT_KEYPAD(9)
+
+#define __ALTSHIFT_KEYPAD(__x)  (MOD_SHIFT | MOD_META | RANGE_KEYPAD | (__x))
+#define ALTSHIFT_KEYPAD_0       __ALTSHIFT_KEYPAD(0)
 
 #define ALT_KEYPAD_END          __ALT_KEYPAD(1)
 #define ALT_KEYPAD_LEFT         __ALT_KEYPAD(4)
@@ -353,6 +365,12 @@ typedef int32_t KEY;
 #define ALT_KEYPAD_PRTSC        __ALT_KEYPAD(18)
 #define ALT_KEYPAD_SCROLL       __ALT_KEYPAD(19)
 #define ALT_KEYPAD_NUMLOCK      __ALT_KEYPAD(20)
+
+#define __ALTCTRL_KEYPAD(__x)   (MOD_CTRL | MOD_META | RANGE_KEYPAD | (__x))
+#define ALTCTRL_KEYPAD_0        __ALTCTRL_KEYPAD(0)
+
+#define __ALTCTRLSHIFT_KEYPAD(__x) (MOD_META | MOD_CTRL | MOD_SHIFT | RANGE_KEYPAD | (__x))
+#define ALTCTRLSHIFT_KEYPAD_0   __ALTCTRLSHIFT_KEYPAD(0)
 
 /*
  *  Shift keypad keys.
@@ -394,10 +412,12 @@ typedef int32_t KEY;
 #define KEY_WUP2                CTRL_KEYPAD_8
 
 /*
- *  Special events, not keys.
+ *  Special events; MOUSE_KEY=Generic
  */
 #define MOUSE_XTERM_KEY         (RANGE_SPECIAL | 1)
 #define MOUSE_SGR_KEY           (RANGE_SPECIAL | 2)
+#define MOUSE_KEY               (RANGE_SPECIAL | 9)
+
 #define PASTE_BRACKETED_EVT     (RANGE_SPECIAL | 10)
 #define MOUSE_FOCUSOUT_KEY      (RANGE_SPECIAL | 11)
 #define MOUSE_FOCUSIN_KEY       (RANGE_SPECIAL | 12)

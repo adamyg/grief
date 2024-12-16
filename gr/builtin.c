@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.71 2024/08/27 12:44:33 cvsuser Exp $")
+__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.72 2024/12/09 14:13:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: builtin.c,v 1.71 2024/08/27 12:44:33 cvsuser Exp $
+/* $Id: builtin.c,v 1.72 2024/12/09 14:13:08 cvsuser Exp $
  * Builtin expresssion evaluation.
  *
  *
@@ -260,13 +260,14 @@ string:;    term = ' ';
 
 
 int
-execute_opendir(const char *path)
+execute_function(const char *function, const char *arg)
 {
     LIST list[LIST_SIZEOF(4)],                  /* 4 atoms */
         *lp = list, *lpend = lp + (sizeof(list) - 1 /*HALT*/);
 
-    lp = atom_push_sym(lp, "opendir");
-    lp = atom_push_str(lp, path && *path ? path : ".");
+    acc_assign_int(-1);
+    lp = atom_push_sym(lp, function);
+    if (arg) lp = atom_push_str(lp, arg);
     assert(lp < lpend);
     atom_push_halt(lp);
     execute_nmacro(list);

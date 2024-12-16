@@ -1,5 +1,5 @@
 /* -*- mode: cr; tabs: 4; -*- */
-/* $Id: grief_tail.h,v 1.24 2024/07/05 18:41:55 cvsuser Exp $
+/* $Id: grief_tail.h,v 1.25 2024/12/05 18:48:25 cvsuser Exp $
  * Common GRIEF macro definitions -- tail.
  * Utilised by the makeinc.pl script.
  *
@@ -130,6 +130,9 @@ extern string                   CRISP_DIRSEP;
 /*
  *  Profile and configuration names.
  */
+extern const string             GRRC;
+extern const string             GRRC_FILE;
+
 extern const string             GRRESTORE_FILE;
 extern const string             GRSTATE_FILE;
 extern const string             GRSTATE_DB;

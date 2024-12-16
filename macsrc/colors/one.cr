@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: one.cr,v 1.4 2024/07/06 18:03:27 cvsuser Exp $
+/* $Id: one.cr,v 1.5 2024/10/07 16:23:06 cvsuser Exp $
 
    Source: https://github.com/rakr/vim-one/
    Version: 1.1.1-pre
@@ -37,12 +37,12 @@
 */
 
 #include "../grief.h"
-#include "rgbmap.h"
+#include "util/rgbmap.h"
 
 void
 main(void)
 {
-    require("colors/rgbmap");
+    require("colors/util/rgbmap");
 }
 
 

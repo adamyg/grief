@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.38 2024/07/30 08:16:09 cvsuser Exp $
+# $Id: Makefile.in,v 1.39 2024/11/24 15:59:02 cvsuser Exp $
 # libbsdmdoc and grmanddoc
 #
 #
@@ -86,7 +86,7 @@ CFLAGS=		@CFLAGS@
 ifeq ("gcc","@CC@")
 CWARN=		$(filter-out -Wshadow -Wmissing-prototypes -Wsign-compare, @CWARN@ $(CWALL))
 CWARN+=		-Wno-sign-compare -Wno-unused-variable -Wno-implicit-fallthrough -Wno-implicit-function-declaration
-CWARN+=		-Wno-deprecated-declarations
+CWARN+=		-Wno-deprecated-declarations -Wno-unused-but-set-variable
 else
 CWARN=		@CWARN@ $(CWALL)
 endif

@@ -1,11 +1,11 @@
 #ifndef GR_TTY_H_INCLUDED
 #define GR_TTY_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_tty_h,"$Id: tty.h,v 1.37 2024/08/25 06:01:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_tty_h,"$Id: tty.h,v 1.40 2024/12/13 14:25:37 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: tty.h,v 1.37 2024/08/25 06:01:53 cvsuser Exp $
+/* $Id: tty.h,v 1.40 2024/12/13 14:25:37 cvsuser Exp $
  * TTY interface.
  *
  *
@@ -53,6 +53,8 @@ typedef struct _scrfn {
 
                                                 /* ready the terminal, run-time (re)initialisation */
     void    (*scr_ready)(int repaint, scrprofile_t *profile);
+
+    void    (*scr_keybind)(void);               /* keybinding */
 
     void    (*scr_display)(void);               /* enable display */
 
@@ -139,8 +141,8 @@ extern void                 ttinit(void);
 extern int                  ttxtermlike(void);
 extern void                 ttopen(void);
 extern void                 ttsizeinit(void);
-extern void                 ttready(int repaint);
-extern void                 ttkeys(void);
+extern void                 ttready(int vtstate);
+extern void                 ttkeybind(void);
 extern void                 ttdisplay(void);
 extern void                 ttclose(void);
 extern void                 ttfeature(int ident);
@@ -150,6 +152,7 @@ extern int                  ttcursor(int visible, int imode, int vspace);
 
 extern int                  ttcolordepth(void);
 extern void                 ttcolornormal(void);
+extern void                 ttsetdefaultscheme(int isdark);
 extern const char *         ttdefaultscheme(void);
 
 extern void                 ttwinch(void);

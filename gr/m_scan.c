@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_scan_c,"$Id: m_scan.c,v 1.27 2024/07/29 16:14:45 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_scan_c,"$Id: m_scan.c,v 1.28 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_scan.c,v 1.27 2024/07/29 16:14:45 cvsuser Exp $
+/* $Id: m_scan.c,v 1.28 2024/12/06 15:46:06 cvsuser Exp $
  * scanf implementation.
  *
  *
@@ -902,7 +902,7 @@ setcook(const unsigned char *fmt, unsigned char *tab)
         } else if ('-' == c) {
             /*
              *  ANSI, the `-' is not considered to define a range if the character
-             *  following is a closiing bracket.
+             *  following is a closing bracket.
              */
             if (*fmt == ']') {
                 tab['-'] = v;

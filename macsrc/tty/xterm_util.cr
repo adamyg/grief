@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: xterm_util.cr,v 1.13 2024/09/20 12:15:16 cvsuser Exp $
+/* $Id: xterm_util.cr,v 1.17 2024/11/24 12:26:43 cvsuser Exp $
  * Standard Xterm features ...
  *
  *
@@ -71,7 +71,7 @@ xterm_graphic(void)
  */
 void
 xterm_color(void)
-{                                                                                                                 
+{
     set_term_feature(TF_COLOR, TRUE);           /* Terminal supports color. */
 }
 
@@ -138,12 +138,12 @@ xterm_altmeta_keys(void)
         ALT_A_Z, quote_list(        /*upper case*/
             "\x1bA",        "\x1bB",        "\x1bC",        "\x1bD",        "\x1bE",
             "\x1bF",        "\x1bG",        "\x1bH",        "\x1bI",        "\x1bJ",
-            "\x1bK",        "\x1bL",        "\x1bM",        "\x1bN",        "\x1b0",
+            "\x1bK",        "\x1bL",        "\x1bM",        "\x1bN",        NULL /*"\x1bO"*/,
             "\x1bP",        "\x1bQ",        "\x1bR",        "\x1bS",        "\x1bT",
             "\x1bU",        "\x1bV",        "\x1bW",        "\x1bX",        "\x1bY",
             "\x1bZ"),
 
-        ALT_0_9, quote_list(
+        ALT_0_9, quote_list(        /* numeric */
             "\x1b0",        "\x1b1",        "\x1b2",        "\x1b3",        "\x1b4",
             "\x1b5",        "\x1b6",        "\x1b7",        "\x1b8",        "\x1b9"),
 
@@ -164,7 +164,7 @@ xterm_altmeta_keys(void)
         __ALT('+'),         "\x1b+",
         __ALT('='),         "\x1b=",
         __ALT('{'),         "\x1b{",
-    //  __ALT('['),         "\x1b[",            /* break other keys */
+   //   __ALT('['),         "\x1b[",         /* break other keys */
         __ALT('}'),         "\x1b}",
         __ALT(']'),         "\x1b]",
         __ALT('|'),         "\x1b|",
@@ -195,7 +195,7 @@ xterm_altmeta_keys(void)
 void
 xterm_256color(void)
 {
-    set_term_feature(TF_COLOR, TRUE);           /* Terminal supports color. */
+    set_term_feature(TF_COLOR, TRUE);           /* terminal supports color. */
     set_term_feature(TF_COLORDEPTH, 256);       /* using a colour depth of 256. */
 }
 
@@ -269,7 +269,7 @@ xterm_unicode(void)
 void
 xterm_mono(void)
 {
-    set_term_feature(TF_COLOR, FALSE);          /* Terminal supports color. */
+    set_term_feature(TF_COLOR, FALSE);          /* terminal supports color. */
 }
 
 
@@ -303,10 +303,15 @@ void
 xterm_arrow(void)
 {
     set_term_keyboard(
+        //  Ins/0           End/1           Down/2          PgDn/3          Left/4
+        //  5               Right/6         Home/7          Up/8            PgUp/9
+        //  Del/.           Plus            Minus           Star            Divide
+        //  Equals          Enter           Pause           PrtSc           Scroll
+        //  NumLock
+        //
         KEYPAD_0_9, quote_list(
-            "\x1b[212z",    "\x1b[220z",    "\x1b[B",       "\x1b[222z",
-            "\x1b[D",       NULL,           "\x1b[C",       "\x1b[214z",
-            "\x1b[A" )
+            "\x1b[212z",    "\x1b[220z",    "\x1b[B",       "\x1b[222z",    "\x1b[D",
+            NULL,           "\x1b[C",       "\x1b[214z",    "\x1b[A" )
         );
 }
 
@@ -322,10 +327,13 @@ void
 openwin(void)
 {
     set_term_keyboard(
+        //  F1,             F2,             F3,             F4,             F5,
+        //  F6,             F7,             F8,             F9,             F10,
+        //  F11,            F12
+        //
         SHIFT_F1_F12, quote_list(
-            "\x1b[224z",    "\x1b[225z",    "\x1b[226z",    "\x1b[227z",
-            "\x1b[228z",    "\x1b[229z",    "\x1b[230z",    "\x1b[231z",
-            "\x1b[232z"),
+            "\x1b[224z",    "\x1b[225z",    "\x1b[226z",    "\x1b[227z",    "\x1b[228z",
+            "\x1b[229z",    "\x1b[230z",    "\x1b[231z",    "\x1b[232z"),
 
         ALT_A_Z,  quote_list(
             "\xe1",         "\xe2",         "\xe3",         "\xe4",         "\xe5",
@@ -349,21 +357,29 @@ void
 sunview(void)
 {
     set_term_keyboard(
+        //  F1,             F2,             F3,             F4,             F5,
+        //  F6,             F7,             F8,             F9,             F10,
+        //  F11,            F12
+        //
         F1_F12, quote_list(
-            "\x1b[224z",    "\x1b[225z",    "\x1b[226z",    "\x1b[227z",
-            "\x1b[228z",    "\x1b[229z",    "\x1b[230z",    "\x1b[231z",
-            "\x1b[232z",    "\x1b[233z"),
+            "\x1b[224z",    "\x1b[225z",    "\x1b[226z",    "\x1b[227z",    "\x1b[228z",
+            "\x1b[229z",    "\x1b[230z",    "\x1b[231z",    "\x1b[232z",    "\x1b[233z",
+            "\x1b[192z",    "\x1b[193z"),
 
+        //  Ins/0           End/1           Down/2          PgDn/3          Left/4
+        //  5               Right/6         Home/7          Up/8            PgUp/9
+        //  Del/.           Plus            Minus           Star            Divide
+        //  Equals          Enter           Pause           PrtSc           Scroll
+        //  NumLock
+        //
         KEYPAD_0_9, quote_list(
-            "\x1b[2z",      "\x1b[220z",    "\x1bOB",       "\x1b[222z",
-            "\x1bOD",       "\x1b[218z",    "\x1bOC",       "\x1b[214z",
-            "\x1bOA",       "\x1b[216z",    "\x1b[P",       "\x1bOk",
-            "\x1bOm",       "\x1b[213z"),
+            "\x1b[2z",      "\x1b[220z",    "\x1bOB",       "\x1b[222z",    "\x1bOD",
+            "\x1b[218z",    "\x1bOC",       "\x1b[214z",    "\x1bOA",       "\x1b[216z",
+            "\x1b[P",       "\x1bOk",       "\x1bOm",       "\x1b[213z"),
 
         CTRL_KEYPAD_0_9, quote_list(
-            NULL,           "\x1b[220C",    "\x1b[221C",    "\x1b[222C",
-            "\x1b[217C",    "\x1b[218C",    "\x1b[219C",    "\x1b[214C",
-            "\x1b[215C",    "\x1b[216C")
+            NULL,           "\x1b[220C",    "\x1b[221C",    "\x1b[222C",    "\x1b[217C",
+            "\x1b[218C",    "\x1b[219C",    "\x1b[214C",    "\x1b[215C",    "\x1b[216C")
     );
 }
 
@@ -440,4 +456,6 @@ xterm_mouse(void)
 }
 
 /*end*/
+
+
 

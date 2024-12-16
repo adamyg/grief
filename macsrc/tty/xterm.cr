@@ -1,120 +1,9 @@
 /* -*- mode: cr; indent-width: 4; tabs: 8; -*-
- * $Id: xterm.cr,v 1.30 2024/09/20 12:15:16 cvsuser Exp $
+ * $Id: xterm.cr,v 1.40 2024/12/09 14:14:19 cvsuser Exp $
  * terminal description file for the xterm window under X11, an VT-100 like emulator.
  *
  *
  */
-
-/**********************************************************************
-
-Example 'xterm' resources allowing full keyboard access.
-
-XTerm*font:			9x15
-XTerm*appKeypadDefault:		true
-XTerm*scrollKey:		true
-Xterm*colormode:		on
-
-XTerm*VT100.Translations:	#override \
-	~Shift<Key>Home:		string(\033[1~)\n\
-	~Shift<Key>End: 		string(\033[4~)\n\
-	~Shift<Key>Prior:		string(\033[5~)\n\
-	~Shift<Key>Next:		string(\033[6~)\n\
-	Shift<Key>Home: 		scroll-back(100,page)\n\
-	Shift<Key>End:			scroll-forw(100,page)\n\
-	Shift<Key>Tab:			string("\033	")\n\
-	~Shift<Key>Tab: 		string("	")\n\
-	Ctrl<Key>=:			string(\033[C=)\n\
-	Ctrl<Key>-:			string(\033[C-)\n\
-	Ctrl<Key>Insert:		string(\033[CR0~)\n\
-	Ctrl<Key>Delete:		string(\033[CRz~)\n\
-	Ctrl<Key>Home:			string(\033[CR7~)\n\
-	Ctrl<Key>End:			string(\033[CR1~)\n\
-	Ctrl<Key>Left:			string(\033[Ot)\n\
-	Ctrl<Key>Down:			string(\033[Or)\n\
-	Ctrl<Key>Up:			string(\033[Ox)\n\
-	Ctrl<Key>Right: 		string(\033[Ov)\n\
-	Shift<Key>F1:			string(\033[SF1~)\n\
-	Shift<Key>F2:			string(\033[SF2~)\n\
-	Shift<Key>F3:			string(\033[SF3~)\n\
-	Shift<Key>F4:			string(\033[SF4~)\n\
-	Shift<Key>F5:			string(\033[SF5~)\n\
-	Shift<Key>F6:			string(\033[SF6~)\n\
-	Shift<Key>F7:			string(\033[SF7~)\n\
-	Shift<Key>F8:			string(\033[SF8~)\n\
-	Shift<Key>F9:			string(\033[SF9~)\n\
-	Shift<Key>F10:			string(\033[SF10~)\n\
-	Shift<Key>F12:			string(\033[SF12~)\n\
-	Ctrl<Key>F1:			string(\033[CF1~)\n\
-	Ctrl<Key>F2:			string(\033[CF2~)\n\
-	Ctrl<Key>F3:			string(\033[CF3~)\n\
-	Ctrl<Key>F4:			string(\033[CF4~)\n\
-	Ctrl<Key>F5:			string(\033[CF5~)\n\
-	Ctrl<Key>F6:			string(\033[CF6~)\n\
-	Ctrl<Key>F7:			string(\033[CF7~)\n\
-	Ctrl<Key>F8:			string(\033[CF8~)\n\
-	Ctrl<Key>F9:			string(\033[CF9~)\n\
-	Ctrl<Key>F10:			string(\033[CF10~)\n\
-	Ctrl<Key>F11:			string(\033[CF11~)\n\
-	Ctrl<Key>F12:			string(\033[CF12~)\n\
-	Meta<Key>F1:			string(\033[AF1~)\n\
-	Meta<Key>F2:			string(\033[AF2~)\n\
-	Meta<Key>F3:			string(\033[AF3~)\n\
-	Meta<Key>F4:			string(\033[AF4~)\n\
-	Meta<Key>F5:			string(\033[AF5~)\n\
-	Meta<Key>F6:			string(\033[AF6~)\n\
-	Meta<Key>F7:			string(\033[AF7~)\n\
-	Meta<Key>F8:			string(\033[AF8~)\n\
-	Meta<Key>F9:			string(\033[AF9~)\n\
-	Meta<Key>F10:			string(\033[AF10~)\n\
-	Meta<Key>F11:			string(\033[AF11~)\n\
-	Meta<Key>F12:			string(\033[AF12~)\n\
-	Shift<Key>KP_0: 		string(\033OP)\n\
-	Shift<Key>KP_1: 		string(\033OQ)\n\
-	Shift<Key>KP_2: 		string(\033OR)\n\
-	Shift<Key>KP_3: 		string(\033OS)\n\
-	Shift<Key>KP_4: 		string(\033OT)\n\
-	Shift<Key>KP_5: 		string(\033OU)\n\
-	Shift<Key>KP_6: 		string(\033OV)\n\
-	Shift<Key>KP_7: 		string(\033OW)\n\
-	Shift<Key>KP_8: 		string(\033OX)\n\
-	Shift<Key>KP_9: 		string(\033OY)\n\
-	Ctrl<Key>KP_0:			string(\033Op)\n\
-	Ctrl<Key>KP_1:			string(\033Oq)\n\
-	Ctrl<Key>KP_2:			string(\033Or)\n\
-	Ctrl<Key>KP_3:			string(\033Os)\n\
-	Ctrl<Key>KP_4:			string(\033Ot)\n\
-	Ctrl<Key>KP_5:			string(\033Ou)\n\
-	Ctrl<Key>KP_6:			string(\033Ov)\n\
-	Ctrl<Key>KP_7:			string(\033Ow)\n\
-	Ctrl<Key>KP_8:			string(\033Ox)\n\
-	Ctrl<Key>KP_9:			string(\033Oy)\n
-
-!  Optional:
-!	None<Key>KP_0:			string(\033[2~)\n\
-!	None<Key>KP_1:			string(\033[OF)\n\
-!	None<Key>KP_2:			string(\033[OB)\n\
-!	None<Key>KP_3:			string(\033[6~)\n\
-!	None<Key>KP_4:			string(\033[OD)\n\
-!	None<Key>KP_5:			string(\033[OX)\n\
-!	None<Key>KP_6:			string(\033[OC)\n\
-!	None<Key>KP_7:			string(\033[OH)\n\
-!	None<Key>KP_8:			string(\033[OA)\n\
-!	None<Key>KP_9:			string(\033[5~)\n\
-!	None<Key>F1:			string(\033[192z)\n\
-!	None<Key>F2:			string(\033[193z)\n\
-!	None<Key>F3:			string(\033[194z)\n\
-!	None<Key>F4:			string(\033[195z)\n\
-!	None<Key>F5:			string(\033[196z)\n\
-!	None<Key>F6:			string(\033[197z)\n\
-!	None<Key>F7:			string(\033[198z)\n\
-!	None<Key>F8:			string(\033[199z)\n\
-!	None<Key>F9:			string(\033[200z)\n\
-!	None<Key>F10:			string(\033[201z)\n\
-!	None<Key>F11:			string(\033[234z)\n\
-!	None<Key>F12:			string(\033[235z)\n\
-!!
-
-.....................................................................*/
 
 #include "tty.h"
 #include "tty_xterm.h"
@@ -170,8 +59,7 @@ main(void)
         xterm_arrow();
         bterm = "aix";
 
-    } else if (bterm == "linux" ||
-                (bterm == "" && (ostype == "linux" || ostype == "linux-gnu" || sysname == "Linux"))) {
+    } else if (bterm == "linux") {
         //
         //  xterm-linux or linux host.
         //
@@ -282,8 +170,8 @@ main(void)
             if (daversion == 115) {             /* kconsole */
                 bterm = "xterm-kconsole";
 
-            } else if (daversion == 136) {      /* PuTTY (mintty) */
-                xterm_load("xterm-mintty");
+            } else if (daversion == 136) {      /* putty */
+                xterm_load("xterm-putty");
                 return;
 
             } else {
@@ -330,6 +218,17 @@ main(void)
         }
     }
 
+    if (bterm == "xterm") {
+        if (ostype == "linux" || ostype == "linux-gnu" || sysname == "Linux") {
+            //
+            // xterm-linux or linux host.
+            //
+            xterm_locale();
+            xterm_load("xterm-linux");
+            return;
+        }
+    }
+
     set_term_feature(TF_NAME, bterm);
     xterm_graphic();
 
@@ -341,6 +240,7 @@ main(void)
     }
 
     xterm_standard();
+    xterm_altmeta_keys();
 
     /*
      *  Define keyboard layout for non-ascii characters.
@@ -382,30 +282,40 @@ main(void)
      *      kUP                                                                                             \E[1;2A     \E[a
      */
     set_term_keyboard(
-        F1_F12, quote_list(                     /* standard */
-            "\x1b[11~",     "\x1b[12~",     "\x1b[13~",     "\x1b[14~",
-            "\x1b[15~",     "\x1b[17~",     "\x1b[18~",     "\x1b[19~",
-            "\x1b[20~",     "\x1b[21~",     "\x1b[23~",     "\x1b[24~"),
+        F1_F12, quote_list(                     /* xterm */
+            "\x1bOP",       "\x1bOQ",       "\x1bOR",       "\x1bOS",       "\x1b[15~",
+            "\x1b[17~",     "\x1b[18~",     "\x1b[19~",     "\x1b[20~",     "\x1b[21~",
+            "\x1b[23~",     "\x1b[24~"),
+
+        F1_F12, quote_list(                     /* rxvt */
+            "\x1b[11~",     "\x1b[12~",     "\x1b[13~",     "\x1b[14~",     "\x1b[15~",
+            "\x1b[17~",     "\x1b[18~",     "\x1b[19~",     "\x1b[20~",     "\x1b[21~",
+            "\x1b[23~",     "\x1b[24~"),
+
+        SHIFT_F1_F12, quote_list(               /* rxvt */
+            "\x1b[25~",     "\x1b[26~",     "\x1b[28~",     "\x1b[29~",     "\x1b[31~",
+            "\x1b[32~",     "\x1b[33~",     "\x1b[34~",     NULL,           NULL,
+            NULL,           NULL),
 
         F1_F12, quote_list(                     /* Sun Function Keys */
-            "\x1b[192z",    "\x1b[193z",    "\x1b[194z",    "\x1b[195z",
-            "\x1b[196z",    "\x1b[197z",    "\x1b[198z",    "\x1b[199z",
-            "\x1b[200z",    "\x1b[201z",    "\x1b[234z",    "\x1b[235z"),
+            "\x1b[192z",    "\x1b[193z",    "\x1b[194z",    "\x1b[195z",    "\x1b[196z",
+            "\x1b[197z",    "\x1b[198z",    "\x1b[199z",    "\x1b[200z",    "\x1b[201z",
+            "\x1b[234z",    "\x1b[235z"),
 
         SHIFT_F1_F12, quote_list(               /* VT100.Trans */
-            "\x1b[SF1~",    "\x1b[SF2~",    "\x1b[SF3~",    "\x1b[SF4~",
-            "\x1b[SF5~",    "\x1b[SF6~",    "\x1b[SF7~",    "\x1b[SF8~",
-            "\x1b[SF9~",    "\x1b[SF10~",   "\x1b[SF11~",   "\x1b[SF12~"),
+            "\x1b[SF1~",    "\x1b[SF2~",    "\x1b[SF3~",    "\x1b[SF4~",    "\x1b[SF5~",
+            "\x1b[SF6~",    "\x1b[SF7~",    "\x1b[SF8~",    "\x1b[SF9~",    "\x1b[SF10~",
+            "\x1b[SF11~",   "\x1b[SF12~"),
 
         CTRL_F1_F12, quote_list(                /* VT100.Trans */
-            "\x1b[CF1~",    "\x1b[CF2~",    "\x1b[CF3~",    "\x1b[CF4~",
-            "\x1b[CF5~",    "\x1b[CF6~",    "\x1b[CF7~",    "\x1b[CF8~",
-            "\x1b[CF9~",    "\x1b[CF10~",   "\x1b[CF11~",   "\x1b[CF12~"),
+            "\x1b[CF1~",    "\x1b[CF2~",    "\x1b[CF3~",    "\x1b[CF4~",    "\x1b[CF5~",
+            "\x1b[CF6~",    "\x1b[CF7~",    "\x1b[CF8~",    "\x1b[CF9~",    "\x1b[CF10~",
+            "\x1b[CF11~",   "\x1b[CF12~"),
 
         ALT_F1_F12, quote_list(                 /* VT100.Trans */
-            "\x1b[AF1~",    "\x1b[AF2~",    "\x1b[AF3~",    "\x1b[AF4~",
-            "\x1b[AF5~",    "\x1b[AF6~",    "\x1b[AF7~",    "\x1b[AF8~",
-            "\x1b[AF9~",    "\x1b[AF10~",   "\x1b[AF11~",   "\x1b[AF12~"),
+            "\x1b[AF1~",    "\x1b[AF2~",    "\x1b[AF3~",    "\x1b[AF4~",    "\x1b[AF5~",
+            "\x1b[AF6~",    "\x1b[AF7~",    "\x1b[AF8~",    "\x1b[AF9~",    "\x1b[AF10~",
+            "\x1b[AF11~",   "\x1b[AF12~"),
 
         ALT_A_Z, quote_list(                    /* X.Org (7bit) (lower case) */
             "\xC3\xA1",     "\xC3\xA2",     "\xC3\xA3",     "\xC3\xA4",     "\xC3\xA5",
@@ -422,22 +332,6 @@ main(void)
             "\xC3\x90",     "\xC3\x91",     "\xC3\x92",     "\xC3\x93",     "\xC3\x94",
             "\xC3\x95",     "\xC3\x96",     "\xC3\x97",     "\xC3\x98",     "\xC3\x99",
             "\xC3\x9A" ),
-
-        ALT_A_Z, quote_list(                    /* 8bit (lower case) Meta */
-            "\x1ba",        "\x1bb",        "\x1bc",        "\x1bd",        "\x1be",
-            "\x1bf",        "\x1bg",        "\x1bh",        "\x1bi",        "\x1bj",
-            "\x1bk",        "\x1bl",        "\x1bm",        "\x1bn",        "\x1bo",
-            "\x1bp",        "\x1bq",        "\x1br",        "\x1bs",        "\x1bt",
-            "\x1bu",        "\x1bv",        "\x1bw",        "\x1bx",        "\x1by",
-            "\x1bz" ),
-
-        ALT_A_Z, quote_list(                    /* 8bit (upper case) Meta */
-            "\x1bA",        "\x1bB",        "\x1bC",        "\x1bD",        "\x1bE",
-            "\x1bF",        "\x1bG",        "\x1bH",        "\x1bI",        "\x1bJ",
-            "\x1bK",        "\x1bL",        "\x1bM",        "\x1bN",        "\x1b0",
-            "\x1bP",        "\x1bQ",        "\x1bR",        "\x1bS",        "\x1bT",
-            "\x1bU",        "\x1bV",        "\x1bW",        "\x1bX",        "\x1bY",
-            "\x1bZ"),
 
         //  Ins/0           End/1           Down/2          PgDn/3          Left/4
         //  5               Right/6         Home/7          Up/8            PgUp/9
@@ -456,13 +350,9 @@ main(void)
             "\xC2\xB0",     "\xC2\xB1",     "\xC2\xB2",     "\xC2\xB3",     "\xC2\xB4",
             "\xC2\xB5",     "\xC2\xB6",     "\xC2\xB7",     "\xC2\xB8",     "\xC2\xB9" ),
 
-        ALT_0_9, quote_list(                    /* XFree */
-            "\x1b0",        "\x1b1",        "\x1b2",        "\x1b3",        "\x1b4",
-            "\x1b5",        "\x1b6",        "\x1b7",        "\x1b8",        "\x1b9" ),
-
-        ALT_0_9, quote_list(                    /* Meta-Numeric */
-            "\x1ba0",       "\x1ba1",       "\x1ba2",       "\x1ba3",       "\x1ba4",
-            "\x1ba5",       "\x1ba6",       "\x1ba7",       "\x1ba8",       "\x1ba9"),
+//      ALT_0_9, quote_list(                    /* Meta-Numeric */
+//          "\x1ba0",       "\x1ba1",       "\x1ba2",       "\x1ba3",       "\x1ba4",
+//          "\x1ba5",       "\x1ba6",       "\x1ba7",       "\x1ba8",       "\x1ba9"),
 
         SHIFT_KEYPAD_0_9, quote_list(           /* VT100.Trans */
             "\x1bOP",       "\x1bOQ",       "\x1bOR",       "\x1bOS",

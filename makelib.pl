@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.148 2024/07/13 13:11:12 cvsuser Exp $
+# $Id: makelib.pl,v 1.149 2024/11/29 19:21:56 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -58,6 +58,7 @@ use Getopt::Long;
 use File::Spec;
 use File::Copy;                                 # copy()
 use File::Basename;
+use File::Which;
 use POSIX 'asctime';
 use Data::Dumper;
 use Text::ParseWords;
@@ -2255,12 +2256,23 @@ CheckCompiler($$)       # (type, env)
 
     if (!defined $$env{COMPILERPATH} || $$env{COMPILERPATH} eq '') {
         if (exists $$env{COMPILERPATHS}) {
-            my @PATHS = split(/\|/, $$env{COMPILERPATHS});
-            foreach (@PATHS) {
-                my $path = ExpandENV($_);
-                if (-e $path && -d $path) {
-                    $$env{COMPILERPATH} = realpath($path);
-                    last;
+            my $compilerpath = which $$env{CC};
+            if ($compilerpath) {                # resolved path
+                $$env{COMPILERPATH} = dirname($compilerpath);
+
+            } else {
+                my @PATHS = split(/\|/, $$env{COMPILERPATHS});
+                foreach (@PATHS) {
+                    my $path = ExpandENV($_);
+                    if (-e $path && -d $path) {
+                        $compilerpath = realpath($path);
+                        my $ccpath = "${compilerpath}/".$$env{CC};
+
+                        if (-f $ccpath || -f "${ccpath}.exe") {
+                            $$env{COMPILERPATH} = $compilerpath;
+                            last;
+                        }
+                    }
                 }
             }
         }
@@ -2271,9 +2283,6 @@ CheckCompiler($$)       # (type, env)
         $x_compiler  = ExpandENV($$env{COMPILERPATH}).'/'
             if (exists $$env{COMPILERPATH});
     }
-
-    $x_compiler  = ExpandENV($$env{COMPILERPATH}).'/'
-        if (exists $$env{COMPILERPATH});
 
     $x_compiler .= $$env{CC};
     $x_compiler =~ s/\//\\/g;

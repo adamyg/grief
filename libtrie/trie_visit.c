@@ -15,12 +15,13 @@ struct buffer {
 static int
 buffer_init(struct buffer *b, const char *prefix)
 {
+    if (NULL == prefix) prefix = "";
     b->fill = strlen(prefix);
-    b->size = b->fill >= 256 ? b->fill * 2 : 256;
+    b->size = (b->fill >= 256 ? b->fill * 2 : 256);
     b->buffer = malloc(b->size);
     if (b->buffer)
         memcpy(b->buffer, prefix, b->fill + 1);
-    return !b->buffer ? -1 : 0;
+    return (NULL == b->buffer ? -1 : 0);
 }
 
 static void
@@ -111,13 +112,13 @@ trie_visit(struct trie *self, const char *prefix, trie_visitor v, void *arg)
 {
     struct trie *start = self;
     struct trieptr *ptr;
-    unsigned char *uprefix = (unsigned char *)prefix;
+    unsigned char *uprefix = (unsigned char *)(prefix ? prefix : "");
     int r, depth = 
         (self->icase ? trie_binary_search_i(self, &start, &ptr, uprefix) :
             trie_binary_search(self, &start, &ptr, uprefix));
-    if (prefix[depth])
+    if (uprefix[depth])
         return 0;
-    r = visit(start, prefix, v, arg);
+    r = visit(start, (const char *)uprefix, v, arg);
     return r >= 0 ? 0 : -1;
 }
 

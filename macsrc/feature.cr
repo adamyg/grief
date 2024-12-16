@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: feature.cr,v 1.32 2015/07/10 21:33:53 cvsuser Exp $
+/* $Id: feature.cr,v 1.33 2024/11/24 12:25:10 cvsuser Exp $
  * Features menu.
  *
  *
@@ -100,6 +100,8 @@ static list             feature_list = {
     "System information",           "sysinfo",
     "TODO Log",                     "todo",
     "Tab buffer",                   "entab",
+    "Terminal Key map",             "key_termmap",
+    "Terminal Key trace",           "key_trace",
     "Texinfo",                      "texinfo",
     "Text search",                  "ts",
     "Tower of Hanoi",               "hanoi",

@@ -1,5 +1,5 @@
 /* -*- indent-width: 4; -*- */
-/* $Id: sysinfo.cr,v 1.16 2024/08/04 10:07:57 cvsuser Exp $
+/* $Id: sysinfo.cr,v 1.19 2024/12/10 11:04:57 cvsuser Exp $
  * System information Dialog.
  *
  *
@@ -40,6 +40,12 @@ sysinfo()
                     DLGA_ALIGN_W,
                 DLGC_LABEL,
                     DLGA_LABEL,         "profile",
+                    DLGA_ALIGN_W,
+                DLGC_LABEL,
+                    DLGA_LABEL,         "grprofile",
+                    DLGA_ALIGN_W,
+                DLGC_LABEL,
+                    DLGA_LABEL,         "grrc",
                     DLGA_ALIGN_W,
                 DLGC_LABEL,
                     DLGA_LABEL,         "grinit",
@@ -96,6 +102,16 @@ sysinfo()
                     DLGA_ALLOW_FILLX,
                 DLGC_LABEL,
                     DLGA_ALIGN_E,
+                    DLGA_NAME,          "grprofile",
+                    DLGA_ROWS,          1,
+                    DLGA_ALLOW_FILLX,
+                DLGC_LABEL,
+                    DLGA_ALIGN_E,
+                    DLGA_NAME,          "grrc",
+                    DLGA_ROWS,          1,
+                    DLGA_ALLOW_FILLX,
+                DLGC_LABEL,
+                    DLGA_ALIGN_E,
                     DLGA_NAME,          "grinit",
                     DLGA_ROWS,          1,
                     DLGA_ALLOW_FILLX,
@@ -135,6 +151,7 @@ sysinfo()
 static void
 sysinfo_cb(int ident, string name, int p1, int p2)
 {
+    extern string GRPROFILE;
     UNUSED(p2);
 
     switch (p1) {
@@ -145,7 +162,7 @@ sysinfo_cb(int ident, string name, int p1, int p2)
             string buf;
 
             version(maj, min, edit, rel, machtype, compiled, cmver, NULL, build);
-            sprintf(buf, "%s v%d.%d.%d.%d (%d)", APPNAME, maj, min, edit, cmver);
+            sprintf(buf, "%s v%d.%d.%d.%d (cm: %d)", APPNAME, maj, min, edit, rel, cmver);
             widget_set(ident, "version", buf);
             widget_set(ident, "compiled", compiled);
             widget_set(ident, "build", build);
@@ -157,6 +174,8 @@ sysinfo_cb(int ident, string name, int p1, int p2)
 
             widget_set(ident, "home", inq_home());
             widget_set(ident, "profile", inq_profile());
+            widget_set(ident, "grprofile", GRPROFILE); // runtime profile
+            widget_set(ident, "grrc", GRRC); // resolved .grrc, if any
             widget_set(ident, "grinit", inq_grinit());
             widget_set(ident, "tmpdir", inq_tmpdir());
             widget_set(ident, "username", inq_username());

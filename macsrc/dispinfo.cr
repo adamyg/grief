@@ -1,5 +1,5 @@
 /* -*- indent-width: 4; -*-/
- * $Id: dispinfo.cr,v 1.8 2024/09/25 15:52:03 cvsuser Exp $
+ * $Id: dispinfo.cr,v 1.10 2024/10/18 05:20:59 cvsuser Exp $
  * Display information/configuration.
  *
  *
@@ -343,22 +343,25 @@ di_callback(int ident, string name, int p1, int p2)
     switch (p1) {
     case DLGE_INIT: {
             string feature, encoding, colorscheme, scheme, kbprotocol;
-            int isdark, lines, cols, colors, escsource;
+            int isdark, lines, cols, colordepth, truecolor, escsource;
             int i;
 
             inq_screen_size(lines, cols);       // display
             get_term_feature(TF_NAME, feature);
-            get_term_feature(TF_COLORDEPTH, colors);
+            get_term_feature(TF_COLORDEPTH, colordepth);
+            get_term_feature(TF_TRUECOLOR, truecolor); // 0=no,1=truecolor,2=direct
             get_term_feature(TF_ENCODING, encoding);
             get_term_feature(TF_SCHEMEDARK, isdark);
             get_term_feature(TF_COLORSCHEME, colorscheme);
             get_term_feature(TF_KBPROTOCOL, kbprotocol);
 
-            sprintf(feature, "%dx%d-%d (%s)", cols, lines, colors, feature);
-            if (colorscheme == "")
-               scheme += (isdark ? "dark" : "light");
-            else
-               sprintf(scheme, "%s (%s)", colorscheme, (isdark ? "dark" : "light"));
+            sprintf(feature, "%dx%d-%d%s (%s)", cols, lines, colordepth,
+                        (truecolor ? (truecolor > 1 ? "-direct" : "-truecolor") : ""), feature);
+            if (colorscheme == "") {
+                scheme += (isdark ? "dark" : "light");
+            } else {
+                sprintf(scheme, "%s (%s)", colorscheme, (isdark ? "dark" : "light"));
+            }
 
             widget_set(NULL, "display", feature);
             inq_font(feature);
@@ -427,7 +430,3 @@ di_callback(int ident, string name, int p1, int p2)
 }
 
 /*eof*/
-
-
-
-

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_userprofile_c,"$Id: m_userprofile.c,v 1.13 2024/05/17 14:19:59 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_userprofile_c,"$Id: m_userprofile.c,v 1.14 2024/12/05 19:00:11 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_userprofile.c,v 1.13 2024/05/17 14:19:59 cvsuser Exp $
+/* $Id: m_userprofile.c,v 1.14 2024/12/05 19:00:11 cvsuser Exp $
  * User profile primitives.
  *
  *
@@ -119,6 +119,7 @@ userprofile(void)
 
         grprofile = chk_salloc(profile ? profile : "~/" GRPROFILE);
     #else
+
         grprofile = "~/" GRPROFILE;
     #endif
     }
@@ -226,8 +227,8 @@ getprofilepath(const char *application, const char *dir, char *buffer, const int
 static int
 profileaccess(char *buffer, int buflen, int leading, const char *application, const char *subdir)
 {
-    (void) _snprintf(buffer + leading, buflen - leading, "/%s/%s",
-                (application ? application : ""), (subdir ? subdir : ""));
+    (void) _snprintf(buffer + leading, buflen - leading, "/%s%s%s",
+                (application ? application : ""), (application ? "/" : ""), (subdir ? subdir : ""));
     buffer[buflen - 1] = 0;
 
     if (0 == _access(buffer, 0) &&

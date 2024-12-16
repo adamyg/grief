@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_getkey_c,"$Id: getkey.c,v 1.50 2024/09/15 14:17:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_getkey_c,"$Id: getkey.c,v 1.53 2024/11/26 15:04:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: getkey.c,v 1.50 2024/09/15 14:17:23 cvsuser Exp $
+/* $Id: getkey.c,v 1.53 2024/11/26 15:04:06 cvsuser Exp $
  * Low level input, both keyboard and mouse.
  *
  *
@@ -818,16 +818,18 @@ do_read_char(void)              /* int ([int ms = 0], [int mode = 0]) */
  *
  *  Parameters:
  *      buf - Current i/o status.
+ *      flag - Sequence processing flag.
  *      multikey - Reply buffer.
- *      noambig - Timeout in milliseconds.
  *
+ *  Returns:
+ *      Keycode, otherwise -1.
  */
 static int
-io_cook(struct IOEvent *evt, int noambig, int *multikey)
+io_cook(struct IOEvent *evt, int flag, int *multikey)
 {
     int key;
 
-    if ((key = key_check((const char *)(evt->sequence.data), evt->sequence.len, multikey, noambig)) > 0) {
+    if ((key = key_check((const char *)(evt->sequence.data), evt->sequence.len, multikey, flag)) > 0) {
         if (IS_SPECIAL(key)) {
             /*
              *  mouse events ...
@@ -911,16 +913,14 @@ io_cook(struct IOEvent *evt, int noambig, int *multikey)
  *      tmo - Timeout, in milliseconds.
  *
  *  Returns:
- *      -1 -                Timeout.
- *      >= 0 -              Key code.
- *
+ *      Key code, otherwise -1 on timeout.
  */
 static int
 io_check(struct IOEvent *evt, int mousemode, accint_t tmo)
 {
     IOTimer_t timer;
     struct IOSequence *seq = &evt->sequence;
-    int state, event, multikey;
+    int state, event, multikey = 0;
     int ch16 = 0, key, ret;
 
     iot_current();
@@ -1070,9 +1070,9 @@ io_check(struct IOEvent *evt, int mousemode, accint_t tmo)
             if (WAIT_2ND & event) {
                 /*
                  *  Awaiting additional character(s) and previous sequence was an
-                 *  ambiguous sequence, eg ABC & ABCD; now check not ambiguous.
+                 *  ambiguous sequence, eg ABC & ABCD; now check as non-ambiguous.
                  */
-                if ((key = io_cook(evt, TRUE, &multikey)) > 0) {
+                if ((key = io_cook(evt, KEYCHECK_END, &multikey)) > 0) {
                     if (EVT_MOUSE == evt->type && !mousemode) {
                         if (tmo <= -1 || iot_expired(&timer)) {
                             evt->type = EVT_TIMEOUT;
@@ -1099,10 +1099,34 @@ io_check(struct IOEvent *evt, int mousemode, accint_t tmo)
 
         iot_current();                          /* update timer */
 
+#if (1)
+        if (ch16 == KEY_ESC) {                  /* <ESC> xxx [...] <ESC> */
+            if ((STATE_2ND & state) &&
+                    seq->len >= 2 && seq->data[0] == KEY_ESC) {
+                /*
+                 *  Secondary Escape, terminate current sequence.
+                 */
+                if ((key = io_cook(evt, KEYCHECK_END, &multikey)) > 0) {
+                    if (KEY_VOID != key) {
+                        playback_store(key);
+                    }
+                    x_pushback = x_pushbuffer;
+                    x_pushbuffer[0] = KEY_ESC;
+                    x_pushbuffer[1] = 0;
+                    seq->len = 1;
+                    return key;
+                }
+                seq->data[seq->len++] = KEY_ESC;
+                seq->data[seq->len] = 0;
+                break;
+            }
+        }
+#endif
+
         seq->data[seq->len++] = (KEYCHAR) ch16;
         seq->data[seq->len] = 0;
 
-        if ((key = io_cook(evt, STATE_2ND & state, &multikey)) <= 0) {
+        if ((key = io_cook(evt, (STATE_2ND & state) ? KEYCHECK_2ND : KEYCHECK_NORM, &multikey)) <= 0) {
             if (0 == key) {
                 break;                          /* no matches */
             }
@@ -1465,7 +1489,7 @@ io_device_add(int fd)
  *      way (e.g. X-Windows).
  *
  *  Parameters:
- *      fd -                File descriptor.
+ *      fd - File descriptor.
  *
  *  Returns:
  *      nothing.

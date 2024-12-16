@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.101 2024/09/19 15:43:53 cvsuser Exp $
+# $Id: Makefile.in,v 1.106 2024/12/04 15:09:38 cvsuser Exp $
 # GRIEF editor makefile.
 #
 #
@@ -236,6 +236,7 @@ CSRC=\
 	accum.c			\
 	anchor.c		\
 	arg.c			\
+	argrc.c			\
 	basic.c			\
 	bookmark.c		\
 	border.c		\
@@ -253,6 +254,10 @@ CSRC=\
 	getkey.c		\
 	getpwd.c		\
 	hilite.c		\
+	kbname.c		\
+	kbsequence.c		\
+	kbprotocols.c		\
+	kbwin32.c		\
 	keyboard.c		\
 	keywd.c			\
 	kill.c			\
@@ -417,16 +422,19 @@ $(D_BIN)/$(TARGET):	$(OBJS)
 		-@mkdir $(@D)
 		@echo "++ do not delete, managed content ++" > $@
 
-artifacts:	grlicense.h gr.manifest.xml
+artifacts:	grlicense.h
+
+ifeq ("win32","@build_os@")
+artifacts:	gr.manifest.xml
+gr.rc:		gr.manifest.xml
 
 XCLEAN +=	gr.manifest.xml
 gr.manifest.xml:	../win32/exe.manifest.in ../include/edbuildinfo.h
 		$(PERL) ../win32/mkmanifest.pl --defines ../include/edbuildinfo.h ../win32/exe.manifest.in gr.manifest.xml
-
-gr.rc:		gr.manifest.xml
+endif #build_os
 
 XCLEAN +=	grlicense.h
-grlicense.h:		Makefile ../util/mklicense.pl ../COPYING 
+grlicense.h:		Makefile ../util/mklicense.pl ../COPYING
 		@$(PERL) ../util/mklicense.pl ../COPYING $@ grlicense
 
 clean:
@@ -455,4 +463,3 @@ $(D_OBJ)/%_res.o:	%.rc
 		$(RC) -o $@ $<
 
 #end
-

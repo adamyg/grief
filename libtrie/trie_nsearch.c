@@ -102,4 +102,45 @@ trie_nsearch(const struct trie *self, const char *key, size_t length)
     return (depth == length ? child->data : NULL);
 }
 
+
+void *
+trie_nsearch_ambiguous(const struct trie *self, const char *key, size_t length, unsigned *ambiguous, void **partial)
+{
+    struct trie *child;
+    struct trieptr *parent;
+    unsigned char *ukey = (unsigned char *)key;
+    const size_t depth =
+        (self->icase ? trie_binary_search_ni((struct trie *)self, &child, &parent, ukey, length) :
+            trie_binary_search_n((struct trie *)self, &child, &parent, ukey, length));
+
+    if (depth != length || 0 == length) {
+        if (ambiguous) {                        // ambiguous count
+            *ambiguous = 0;
+        }
+        if (partial) {                          // partial, first child
+            *partial = NULL;
+        }
+        return NULL;                            // unmatched
+    }
+
+    if (ambiguous) {                            // ambiguous count
+        *ambiguous = child->nchildren;
+    }
+
+    if (partial) {                              // partial, first child
+        struct trie *cursor = child;
+
+        *partial = NULL;
+        while (cursor->nchildren) {             // depth-first search
+            cursor = cursor->children[ (cursor->nchildren - 1) / 2 ].trie;
+            if (cursor->data) {
+                *partial = cursor->data;
+                break;
+            }
+        }
+    }
+    return child->data;                          // match
+}
+
 /*end*/
+

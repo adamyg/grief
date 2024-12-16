@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_debug_c,"$Id: m_debug.c,v 1.40 2020/06/03 16:22:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_debug_c,"$Id: m_debug.c,v 1.41 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_debug.c,v 1.40 2020/06/03 16:22:15 cvsuser Exp $
+/* $Id: m_debug.c,v 1.41 2024/12/06 15:46:06 cvsuser Exp $
  * Debug primitives.
  *
  *
@@ -609,7 +609,7 @@ dbg_inq_var_info(int vartype)
 
 /*
  *  dbg_inq_opcodes ---
- *      Retrieve the current OPCODE desciptions.
+ *      Retrieve the current OPCODE description.
  */
 static void
 dbg_inq_opcodes(void)

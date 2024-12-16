@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_errno_c,"$Id: m_errno.c,v 1.28 2022/08/10 15:44:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_errno_c,"$Id: m_errno.c,v 1.29 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_errno.c,v 1.28 2022/08/10 15:44:57 cvsuser Exp $
+/* $Id: m_errno.c,v 1.29 2024/12/06 15:46:06 cvsuser Exp $
  * errno symbol primitives.
  *
  *
@@ -752,7 +752,7 @@ sym_errno_constants(void)
             populated with the signal manifest.
 
     Macro Returns:
-        The 'strerror' function returns a string descripting the error
+        The 'strerror' function returns a string describing the error
         value, otherwise an empty string if undefined.
 
     Macro Portability:
@@ -831,11 +831,11 @@ do_strerror(void)               /* string ([int errnum], [string &manifest], [in
 
     Macro Returns:
         The 'perror' function returns a string containing the
-        formatted message with a trailing description of the the
+        formatted message with a trailing description of the
         error value.
 
     Macro Portability:
-        A Grief extenions.
+        A Grief extension.
 
     Macro See Also:
         errno, strerror

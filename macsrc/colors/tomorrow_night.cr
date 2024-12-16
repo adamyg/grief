@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 8; -*- */
-/* $Id: tomorrow_night.cr,v 1.4 2024/08/04 11:42:44 cvsuser Exp $
+/* $Id: tomorrow_night.cr,v 1.5 2024/10/07 16:23:06 cvsuser Exp $
  * Tomorrow_Night coloriser, GriefEdit port.
  *
  * Original:
@@ -8,13 +8,13 @@
  */
 
 #include "../grief.h"
-#include "rgbmap.h"
+#include "util/rgbmap.h"
 
 
 void
 main(void)
 {
-        require("colors/rgbmap");
+        require("colors/util/rgbmap");
 }
 
 

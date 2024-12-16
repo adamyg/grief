@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(cr_spplook_c,"$Id: spplook.c,v 1.21 2024/04/17 15:57:15 cvsuser Exp $")
+__CIDENT_RCSID(cr_spplook_c,"$Id: spplook.c,v 1.22 2024/11/26 16:51:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: spplook.c,v 1.21 2024/04/17 15:57:15 cvsuser Exp $
+/* $Id: spplook.c,v 1.22 2024/11/26 16:51:29 cvsuser Exp $
  * libsplay version 2.0 - SPLAY tree implementation.
  *
  *
@@ -30,12 +30,13 @@ __CIDENT_RCSID(cr_spplook_c,"$Id: spplook.c,v 1.21 2024/04/17 15:57:15 cvsuser E
  */
 
 #include "spheaders.h"
+#include "edtrace.h"
 #include <assert.h>
 
 typedef struct {
     const void *    key;
-    int             keylen;
-    int             ambiguous;
+    unsigned        keylen;
+    unsigned        ambiguous;
     SPBLK *         firstambiguous;
 } Ambiguous_t;
 
@@ -44,12 +45,14 @@ static int          cmp_ambiguous(struct _sproot *root, struct _spblk *a, struct
 
 /*
  *  splookup() --
- *      Like splookup(), given key, find a node in a tree. Splays the found
- *      node to the root, but tell us if we found an ambiguity.
+ *      Like splookup(), given key, find a node in a tree.
+ *      Splays the found node to the root, but tell us if we found an ambiguity.
+ *
+ *  XXX: ambiguous results are unstable.
  */
 SPBLK *
 sp_partial_lookup(
-    const void *key, SPTREE * tree, int *ambiguous, SPBLK ** first_sp)
+    const void *key, SPTREE * tree, unsigned *ambiguous, SPBLK ** first_sp)
 {
     _sproot *root = &tree->sp_root;
     SPCOMPARE ocompare;
@@ -73,8 +76,9 @@ sp_partial_lookup(
     tree->sp_compare = ocompare;
 
     *ambiguous = ambig.ambiguous;
-    if (first_sp)
+    if (first_sp) {
         *first_sp = ambig.firstambiguous;
+    }
     return (x);
 }
 
@@ -100,9 +104,9 @@ cmp_ambiguous(
 
     /*
      *  Ambiguous tests
-     */     
+     */
     if (! ambig->ambiguous) {
-        int ambiguous = FALSE;
+        unsigned ambiguous = FALSE;
 
         if (ret) {                              /* no match, test current */
             if (strncmp(ak, bk, ambig->keylen) == 0) {

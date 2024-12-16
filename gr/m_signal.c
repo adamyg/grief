@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_signal_c,"$Id: m_signal.c,v 1.9 2014/10/26 22:13:11 ayoung Exp $")
+__CIDENT_RCSID(gr_m_signal_c,"$Id: m_signal.c,v 1.10 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_signal.c,v 1.9 2014/10/26 22:13:11 ayoung Exp $
+/* $Id: m_signal.c,v 1.10 2024/12/06 15:46:06 cvsuser Exp $
  * Signal symbol primitives.
  *
  *
@@ -394,4 +394,5 @@ str_signal(int signo)
     return strsignal(signo);
 #endif
 }
+
 /*end*/

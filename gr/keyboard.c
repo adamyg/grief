@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.80 2024/09/25 15:51:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.88 2024/11/29 13:37:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keyboard.c,v 1.80 2024/09/25 15:51:54 cvsuser Exp $
+/* $Id: keyboard.c,v 1.88 2024/11/29 13:37:22 cvsuser Exp $
  * Manipulate key maps and bindings.
  *
  *
@@ -21,15 +21,13 @@ __CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.80 2024/09/25 15:51:54 cvsuser
 #include <editor.h>
 #include <assert.h>
 
-#if defined(WIN32)
-#include <windows.h>                            /* window definitions - MUST be before alt.h */
-#elif defined(__CYGWIN__)
-#include <w32api/windows.h>
-#endif
 #include <edalt.h>
 #include <libstr.h>                             /* str_...()/sxprintf() */
 
 #include "keyboard.h"
+#include "kbname.h"
+#include "kbsequence.h"
+#include "kbprotocols.h"
 
 #include "accum.h"
 #include "border.h"
@@ -53,11 +51,6 @@ __CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.80 2024/09/25 15:51:54 cvsuser
 #include "undo.h"
 #include "window.h"
 #include "word.h"
-
-#if !defined(USE_VIO_BUFFER) && !defined(DJGPP)
-#define USE_KBPROTOCOL
-#endif
-
 
 /*
  *  NBLOCK defines the blocking sizes used during buffer allocation.
@@ -98,11 +91,6 @@ static keyboard_t *     x_kbdcur;               /* current keyboard table. */
 static KEYBOARDLIST_t   x_kbdlist;              /* active keyboards. */
 static Head_p           x_kbdstack;             /* keyboard stack. */
 
-static SPTREE *         x_kseqtree;             /* tree of key assignments. */
-
-static int              x_multiseq = 0;         /* unique multi-key identifiers. */
-static char **          x_multitbl;             /* multi-keys definition table. */
-
 ref_t *                 x_push_ref = NULL;      /* keyboard push back buffer. */
 
 int32_t                 x_character = 0;        /* current character typed. */
@@ -122,287 +110,7 @@ static object_t *       key_macro_push(int key, object_t *def);
 static const char *     key_macro_value(const object_t *def);
 static const char *     key_macro_find(int key);
 
-static char *           key_to_char(char *buf, int key);
-#if defined(USE_KBPROTOCOL)
-static int              mok2_to_key(const char *buf, unsigned buflen);
-static int              xterm_to_key(const char *buf, unsigned buflen);
-static unsigned         xterm_modifiers(unsigned mods);
-static int              cygwin_to_int(const char *buf);
-static int              msterminal_to_int(const char *buf);
-#endif
-
 static char *           historyget(int idx);
-
-
-/*
- *  internal codes labels
- */
-static const char *     keypad_names[] = {
-    "Ins",                  /* KEYPAD_0       - 0         */
-    "End",                  /* KEYPAD_1       - 1         */
-    "Down",                 /* KEYPAD_2       - 2         */
-    "PgDn",                 /* KEYPAD_3       - 3         */
-    "Left",                 /* KEYPAD_4       - 4         */
-    "5",                    /* KEYPAD_5       - 5         */
-    "Right",                /* KEYPAD_6       - 6         */
-    "Home",                 /* KEYPAD_7       - 7         */
-    "Up",                   /* KEYPAD_8       - 8         */
-    "PgUp",                 /* KEYPAD_9       - 9         */
-    "Del",                  /* KEYPAD_DEL     - 10 Delete */
-    "Plus",                 /* KEYPAD_PLUS    - 11 +      */
-    "Minus",                /* KEYPAD_MINUS   - 12 -      */
-    "Star",                 /* KEYPAD_STAR    - 13 *      */
-    "Divide",               /* KEYPAD_DIV     - 14 /      */
-    "Equals",               /* KEYPAD_EQUAL   - 15 =      */
-    "Enter",                /* KEYPAD_ENTER   - 16 <cr>   */
-    "Pause",                /* KEYPAD_PAUSE   - 17        */
-    "PrtSc",                /* KEYPAD_PRTSC   - 18        */
-    "Scroll",               /* KEYPAD_SCROLL  - 19        */
-    "NumLock"               /* KEYPAD_NUMLOCK - 20        */
-    };
-
-struct map {
-    int                 len;
-    const char *        name;
-    KEY                 modifier;
-    KEY                 value;
-};
-
-
-/*
- *  key-strings to internal key-codes.
- */
-static const struct map keystring_tbl[] = {
-    { 3,    "ESC",          0,              KEY_ESC },
-    { 1,    "{",            0,              '{' },
-    { 1,    "}",            0,              '}' },
-    { 5,    "SPACE",        0,              ' ' },
-    { 5,    "ENTER",        0,              KEY_ENTER },
-    { 6,    "RETURN",       0,              KEY_ENTER },    /*alias*/
-    { 3,    "TAB",          0,              KEY_TAB },
-    { 5,    "ARROW",        0,              0 },
-    { 4,    "CTRL",         MOD_CTRL,       0 },
-    { 5,    "SHIFT",        MOD_SHIFT,      0 },
-    { 9,    "BACKSPACE",    0,              KEY_BACKSPACE },
-    { 4,    "BACK",         MOD_SHIFT,      0 },            /*must be after BACKSPACE*/
-    { 7,    "PRIVATE",      RANGE_PRIVATE,  0 },
-    { 3,    "ALT",          MOD_META,       0 },
-    { 4,    "META",         MOD_META,       0 },
-    { 6,    "KEYPAD",       RANGE_KEYPAD,   0 },
-    { 4,    "GREY",         RANGE_KEYPAD,   0 },
-    { 2,    "UP",           RANGE_KEYPAD,   KEY_UP },
-    { 4,    "DOWN",         RANGE_KEYPAD,   KEY_DOWN },
-    { 4,    "LEFT",         RANGE_KEYPAD,   KEY_LEFT },
-    { 5,    "RIGHT",        RANGE_KEYPAD,   KEY_RIGHT },
-    { 4,    "HOME",         RANGE_KEYPAD,   KEY_HOME },
-    { 3,    "END",          RANGE_KEYPAD,   KEY_END },
-    { 4,    "PGUP",         RANGE_KEYPAD,   KEY_PAGEUP },
-    { 4,    "PGDN",         RANGE_KEYPAD,   KEY_PAGEDOWN },
-    { 4,    "STAR",         RANGE_KEYPAD,   KEYPAD_STAR },
-    { 5,    "MINUS",        RANGE_KEYPAD,   KEYPAD_MINUS },
-    { 4,    "PLUS",         RANGE_KEYPAD,   KEYPAD_PLUS },
-    { 3,    "DEL",          RANGE_KEYPAD,   KEY_DEL },
-    { 3,    "INS",          RANGE_KEYPAD,   KEY_INS },
-    { 5,    "PRTSC",        RANGE_KEYPAD,   KEYPAD_PRTSC },
-    { 6,    "SCROLL",       RANGE_KEYPAD,   KEYPAD_SCROLL },
-    { 5,    "MOUSE",        RANGE_SPECIAL,  MOUSE_XTERM_KEY },
-    { 5,    "MOUSE",        RANGE_SPECIAL,  MOUSE_SGR_KEY },
-    { 7,    "FOCUSIN",      RANGE_SPECIAL,  MOUSE_FOCUSIN_KEY },
-    { 8,    "FOCUSOUT",     RANGE_SPECIAL,  MOUSE_FOCUSOUT_KEY },
-    { 4,    "UNDO",         RANGE_MISC,     KEY_UNDO_CMD },
-    { 4,    "REDO",         RANGE_MISC,     KEY_REDO },
-    { 4,    "COPY",         RANGE_MISC,     KEY_COPY_CMD },
-    { 3,    "CUT",          RANGE_MISC,     KEY_CUT_CMD },
-    { 5,    "PASTE",        RANGE_MISC,     KEY_PASTE },
-    { 4,    "HELP",         RANGE_MISC,     KEY_HELP },
-    { 6,    "SEARCH",       RANGE_MISC,     KEY_SEARCH },
-    { 7,    "REPLACE",      RANGE_MISC,     KEY_REPLACE },
-    { 6,    "CANCEL",       RANGE_MISC,     KEY_CANCEL },
-    { 7,    "COMMAND",      RANGE_MISC,     KEY_COMMAND },
-    { 4,    "EXIT",         RANGE_MISC,     KEY_EXIT },
-    { 4,    "NEXT",         RANGE_MISC,     KEY_NEXT },
-    { 4,    "PREV",         RANGE_MISC,     KEY_PREV },
-    { 4,    "OPEN",         RANGE_MISC,     KEY_OPEN },
-    { 4,    "SAVE",         RANGE_MISC,     KEY_SAVE },
-    { 4,    "MENU",         RANGE_MISC,     KEY_MENU },
-    { 5,    "BREAK",        RANGE_MISC,     KEY_BREAK },
-    { 10,   "UNASSIGNED",   0,              KEY_UNASSIGNED },
-    { 0, NULL, 0, 0 }
-    };
-
-
-#if defined(WIN32) || defined(__CYGWIN__)
-/*
- *  WIN32 Keyboard mapping table:
- *
- *  Notes:
- *      Enhanced keys for the IBM 101- and 102-key keyboards are the INS, DEL, HOME,
- *      END, PAGE UP, PAGE DOWN, and direction keys in the clusters to the left of the
- *      keypad; and the divide (/) and ENTER keys in the keypad.
- */
-static const struct w32key {
-    WORD                vk;                     /* windows virtual key code */
-    int32_t             mods;                   /* modifiers */
-#define VKMOD_ANY           -1
-#define VKMOD_ENHANCED      -2
-#define VKMOD_NONENHANCED   -3
-#define VKMOD_NONSHIFT      -4
-
-    const char *        desc;                   /* description */
-    KEY                 code;                   /* interval key value */
-
-} w32Keys[] = {
-    // Only reportsd as an up event, down redirected to event handler.
-//  { VK_CANCEL,        MOD_CTRL,           "Ctrl-Break",       KEY_BREAK },
-
-//  { VK_KANA,                              "IME Kana mode",    0 },
-//  { VK_HANGUL,                            "IME Hangul mode",  0 },
-//  { VK_IME_ON,                            "IME On",           0 },
-//  { VK_JUNJA,                             "IME Junja mode",   0 },
-//  { VK_FINAL,                             "IME final mode",   0 },
-//  { VK_HANJA,                             "IME Hanja mode",   0 },
-//  { VK_KANJI,                             "IME Kanji mode",   0 },
-//  { VK_IME_OFF,                           "IME Off",          0 },
-//  { VK_CONVERT,                           "IME convert",      0 },
-//  { VK_NONCONVERT,                        "IME nonconvert",   0 },
-//  { VK_ACCEPT,                            "IME accept",       0 },
-//  { VK_MODECHANGE,                        "IME mode change",  0 },
-
-    { VK_BACK,          0,                  "Back",             KEY_BACKSPACE },
-    { VK_TAB,           0,                  "Tab",              KEY_TAB },
-    { VK_BACK,          MOD_SHIFT,          "Shift-Backspace",  SHIFT_BACKSPACE },
-    { VK_TAB,           MOD_SHIFT,          "Shift-Tab",        BACK_TAB },
-    { VK_BACK,          MOD_CTRL,           "Ctrl-Backspace",   CTRL_BACKSPACE },
-    { VK_TAB,           MOD_CTRL,           "Ctrl-Tab",         CTRL_TAB },
-    { VK_BACK,          MOD_META,           "Alt-Backspace",    ALT_BACKSPACE },
-    { VK_TAB,           MOD_META,           "Alt-Tab",          ALT_TAB },
-    { VK_ESCAPE,        VKMOD_ANY,          "Esc",              KEY_ESC },
-    { VK_RETURN,        VKMOD_ANY,          "Return",           KEY_ENTER },
-    { VK_RETURN,        VKMOD_ENHANCED,     "Return",           KEYPAD_ENTER },
-    { VK_PAUSE,         VKMOD_ANY,          "Pause",            KEYPAD_PAUSE },
-    { VK_PRIOR,         VKMOD_ANY,          "Prior",            KEY_PAGEUP },
-    { VK_NEXT,          VKMOD_ANY,          "Next",             KEY_PAGEDOWN },
-    { VK_END,           VKMOD_ANY,          "End",              KEY_END },
-    { VK_HOME,          VKMOD_ANY,          "Home",             KEY_HOME },
-    { VK_LEFT,          VKMOD_ANY,          "Left",             KEY_LEFT },
-    { VK_UP,            VKMOD_ANY,          "Uo",               KEY_UP },
-    { VK_RIGHT,         VKMOD_ANY,          "Right",            KEY_RIGHT },
-    { VK_DOWN,          VKMOD_ANY,          "Down",             KEY_DOWN },
-    { VK_INSERT,        VKMOD_ANY,          "Insert",           KEY_INS },
-    { VK_DELETE,        VKMOD_ANY,          "Delete",           KEY_DEL },
-    { VK_HELP,          VKMOD_ANY,          "Help",             KEY_HELP },
-
-    /* VK_NUMPAD1 thru VK_NUMPAD0 are ignored allowing user selection via the NumLock */
-
-//  { VK_PRIOR,         VKMOD_NONENHANCED,  "Keypad-PgUp",      KEYPAD_PAGEUP },
-//  { VK_NEXT,          VKMOD_NONENHANCED,  "Keypad-PgDn",      KEYPAD_PAGEDOWN },
-//  { VK_END,           VKMOD_NONENHANCED,  "Keypad-End",       KEYPAD_END },
-//  { VK_HOME,          VKMOD_NONENHANCED,  "Keypad-Home",      KEYPAD_HOME },
-//  { VK_LEFT,          VKMOD_NONENHANCED,  "Keypad-Left",      KEYPAD_LEFT },
-//  { VK_CLEAR,         VKMOD_NONENHANCED,  "Keypad-5",         KEYPAD_5 },
-//  { VK_UP,            VKMOD_NONENHANCED,  "Keypad-Up",        KEYPAD_UP },
-//  { VK_RIGHT,         VKMOD_NONENHANCED,  "Keypad-Right",     KEYPAD_RIGHT },
-//  { VK_DOWN,          VKMOD_NONENHANCED,  "Keypad-Down",      KEYPAD_DOWN },
-//  { VK_INSERT,        VKMOD_NONENHANCED,  "Keypad-Ins",       KEYPAD_INS },
-//  { VK_DELETE,        VKMOD_NONENHANCED,  "Keypad-Delete",    KEYPAD_DEL },
-    { VK_SUBTRACT,      VKMOD_ANY,          "Keypad-Minus",     KEYPAD_MINUS },
-    { VK_MULTIPLY,      VKMOD_ANY,          "Keypad-Star",      KEYPAD_STAR },
-    { VK_ADD,           VKMOD_ANY,          "Keypad-Plus",      KEYPAD_PLUS },
-    { VK_DIVIDE,        VKMOD_ANY,          "Keypad-Divide",    KEYPAD_DIV },
-
-    /* VK_0 thru VK_9 are the same as ASCII '0' thru '9' (0x30 - 0x39) */
-
-    { 0x30,             MOD_CTRL,           "0",                CTRL_0 },
-    { 0x31,             MOD_CTRL,           "1",                CTRL_1 },
-    { 0x32,             MOD_CTRL,           "2",                CTRL_2 },
-    { 0x33,             MOD_CTRL,           "3",                CTRL_3 },
-    { 0x34,             MOD_CTRL,           "4",                CTRL_4 },
-    { 0x35,             MOD_CTRL,           "5",                CTRL_5 },
-    { 0x36,             MOD_CTRL,           "6",                CTRL_6 },
-    { 0x37,             MOD_CTRL,           "7",                CTRL_7 },
-    { 0x38,             MOD_CTRL,           "8",                CTRL_8 },
-    { 0x39,             MOD_CTRL,           "9",                CTRL_9 },
-
-    /* VK_A - VK_Z are the same as ASCII 'A' - 'Z' (0x41 - 0x5A) */
-
-    { VK_F1,            VKMOD_ANY,          "F1",               F(1) },
-    { VK_F2,            VKMOD_ANY,          "F2",               F(2) },
-    { VK_F3,            VKMOD_ANY,          "F3",               F(3) },
-    { VK_F4,            VKMOD_ANY,          "F4",               F(4) },
-    { VK_F5,            VKMOD_ANY,          "F5",               F(5) },
-    { VK_F6,            VKMOD_ANY,          "F6",               F(6) },
-    { VK_F7,            VKMOD_ANY,          "F7",               F(7) },
-    { VK_F8,            VKMOD_ANY,          "F8",               F(8) },
-    { VK_F9,            VKMOD_ANY,          "F9",               F(9) },
-    { VK_F10,           VKMOD_ANY,          "F10",              F(10) },
-    { VK_F11,           VKMOD_ANY,          "F11",              F(11) },
-    { VK_F12,           VKMOD_ANY,          "F12",              F(12) },
-    { VK_F13,           VKMOD_ANY,          "F13",              F(13) },
-    { VK_F14,           VKMOD_ANY,          "F14",              F(14) },
-    { VK_F15,           VKMOD_ANY,          "F15",              F(15) },
-    { VK_F16,           VKMOD_ANY,          "F16",              F(16) },
-    { VK_F17,           VKMOD_ANY,          "F17",              F(17) },
-    { VK_F18,           VKMOD_ANY,          "F18",              F(18) },
-    { VK_F19,           VKMOD_ANY,          "F19",              F(19) },
-    { VK_F20,           VKMOD_ANY,          "F20",              F(20) },
-
-    { VK_NUMLOCK,       VKMOD_ANY,          "Numlock",          KEYPAD_NUMLOCK },
-    { VK_SCROLL,        VKMOD_ANY,          "Scroll",           KEYPAD_SCROLL },
-
-//  { VK_OEM_1,                             // ';:' for US
-//  { VK_OEM_PLUS,      VKMOD_NONSHIFT,     "+"                 '+' },
-//  { VK_OEM_COMMA,     VKMOD_NONSHIFT,     ","                 ',' },
-//  { VK_OEM_MINUS,     VKMOD_NONSHIFT,     "-"                 '-' },
-//  { VK_OEM_PERIOD,    VKMOD_NONSHIFT,     "."                 '.' },
-//  { VK_OEM_2,                             // '/?' for US
-//  { VK_OEM_3,         VKMOD_NONSHIFT,     "~",                '~' },
-//  { VK_OEM_4,                             //  '[{' for US
-//  { VK_OEM_5,                             //  '\|' for US
-//  { VK_OEM_6,                             //  ']}' for US
-//  { VK_OEM_7,                             //  ''"' for US
-
-#ifndef VK_OEM_NEC_EQUAL
-#define VK_OEM_NEC_EQUAL    0x92
-#endif
-#ifndef VK_ICO_CLEAR
-#define VK_ICO_CLEAR        0xE6
-#endif
-#ifndef VK_ICO_HELP
-#define VK_ICO_HELP         0xE3
-#endif
-#ifndef VK_OEM_CLEAR
-#define VK_OEM_CLEAR        0xFE
-#endif
-
-    { VK_OEM_NEC_EQUAL, VKMOD_ANY,          "Keypad-Equal",     KEYPAD_EQUAL },
-//  { VK_ICO_CLEAR,     VKMOD_ANY,          "Clear",            KEYPAD_CLEAR },
-    { VK_ICO_HELP,      VKMOD_ANY,          "Help",             KEY_HELP },
-//  { VK_OEM_CLEAR,     VKMOD_ANY,          "Clear",            KEYPAD_CLEAR },
-
-    };
-#endif  /*WIN32 || __CYGWIN__*/
-
-
-static const struct {
-    const char* name;
-    size_t namelen;
-    int mode;
-} protocols[] = {
-#define PROTONAME(__name)       __name, sizeof(__name)-1
-        { PROTONAME("none"),                KBPROTOCOL_NONE },
-        { PROTONAME("auto"),                KBPROTOCOL_AUTO },
-        { PROTONAME("meta"),                KBPROTOCOL_META },
-        { PROTONAME("cygwin"),              KBPROTOCOL_CYGWIN },
-        { PROTONAME("xterm-mok2"),          KBPROTOCOL_XTERM_MOK2 },
-        { PROTONAME("mintty-mok2"),         KBPROTOCOL_MINTTY_MOK2 },
-#if defined(KBPROTOCOL_MSTERMINAL)
-        { PROTONAME("msterminal"),          KBPROTOCOL_MSTERMINAL },
-#endif
-#if defined(KBPROTOCOL_MSTERMINAL)
-        { PROTONAME("kitty"),               KBPROTOCOL_MSTERMINAL }
-#endif
-#undef PROTONAME
-};
 
 
 /*  Function:           key_init
@@ -445,7 +153,7 @@ key_init(void)
 
     TAILQ_INIT(&x_kbdlist);
     x_kbdstack = ll_init();
-    x_kseqtree = spinit();
+    kbsequence_init();
 
     /*
      *  keyboard_typeables()
@@ -460,8 +168,9 @@ key_init(void)
     keyboard_push(x_kbdcur);
     x_push_ref = r_string("");
 
+    kbprotocols_init();
 #if !defined(DOSISH)
-    ttkeys();                                   /* termcap bindings */
+    ttkeybind();                                /* termcap bindings */
 #endif
 }
 
@@ -482,15 +191,7 @@ key_shutdown(void)
     keyboard_t *kp;
 
     /* key sequence */
-    while (! spempty(x_kseqtree)) {
-        SPBLK *sp = sphead(x_kseqtree);
-
-        spdeq(sp, x_kseqtree);
-        chk_free(sp->data);
-        spfreeblk(sp);
-    }
-    spfree(x_kseqtree);
-    x_kseqtree = NULL;
+    kbsequence_shutdown();
 
     r_dec(x_push_ref);
     x_push_ref = NULL;
@@ -527,101 +228,58 @@ key_typeables(void)
 }
 
 
-/*  Function:           key_define_key_seq
+/*  Function:           key_sequence
  *      Define a key-sequence
  *
  *  Parameters:
  *      key - Key identifier.
- *      str - Control sequence.
+ *      seq - Control sequence.
  *
  *  Returns:
  *      Actual key code assigned if we are given a multi-key code,
  *      or -1 if all entries consumed.
  */
 int
-key_define_key_seq(int key, const char *str)
+key_sequence(int key, const char *seq)
 {
-    const int len = (int)strlen(str);
     int key_code = key;
-    SPBLK *sp;
-    keyseq_t *ks;
+    const keyseq_t *ks;
 
-    if ((sp = splookup(str, x_kseqtree)) != NULL) {
+    if ((ks = kbsequence_lookup(seq)) != NULL) {
         /*
-         *  If we already have a definition for this key sequence, remove it.
-         *  For multi-key sequences we can re-use the entry.
+         *  Existing definition.
+         *    - Multi-key sequences, recycle the association.
+         *    - Duplicate element, ignore update.
          */
-        ks = (keyseq_t *) sp->data;
         if (key < 0) {
-            key_code = ks->ks_code;
+            key_code = ks->ks_code;             /* multi-key, reuse slot */
 
-        } else if (key_code == key) {           /* 15/06/10 */
-            trace_ilog("define_key_seq(%d/0x%x,%s) dup\n", key, key, str);
+        } else if (key_code == key) {           /* duplicate */
+            trace_ilog("key_sequence(%09d/0x%08x,%s,%s) dup\n", key, key, key_code2name(key), seq);
             return key_code;
         }
 
-        trace_ilog("define_key_seq(%d/0x%x,%s) replaced\n", key, key, str);
-        spdeq(sp, x_kseqtree);
-        chk_free(ks);
-        spfreeblk(sp);
+        trace_ilog("key_sequence(%09d/0x%08x,%s,%s) replaced\n", key, key, key_code2name(key), seq);
 
     } else {
         /*
-         *  new
+         *  New element.
+         *    - Multi-key sequences, create definition for int_to_key() usage.
          */
         if (key < 0) {
-            /*
-             *  Make sure we don't run out of room in the multikey range
-             */
-            if (x_multiseq >= MULTIKEY_SIZE) {
-                return -1;
-            }
-            key_code = RANGE_MULTIKEY + x_multiseq++;
-
-            /*
-             *  Keep a pointer to the defining string handy so we can
-             *  implement int_to_key() properly for these sequences.
-             */
-            if (NULL == x_multitbl) {
-                x_multitbl = chk_alloc(sizeof(char *));
-
-            } else {
-                x_multitbl = chk_realloc(x_multitbl, x_multiseq * sizeof(char *));
+            if ((key_code = kbmulti_allocate()) == -1) {
+                return -1;                      /* overflow */
             }
         }
-        trace_ilog("define_key_seq(%d/0x%x,%s) new\n", key, key, str);
+
+        trace_ilog("key_sequence(%09d/0x%08x,%s,%s) new\n", key, key, key_code2name(key), seq);
     }
 
-    /*
-     *  Allocate new node for this entry
-     */
-    sp = spblk(sizeof(keyseq_t) + len);
-    ks = (keyseq_t *) sp->data;
-    ks->ks_code = (KEY) key_code;
-    memcpy(ks->ks_buf, str, len + 1);
-    sp->key = ks->ks_buf;
-    spenq(sp, x_kseqtree);
+    ks = kbsequence_update(seq, key_code);      /* create/update */
     if (key < 0) {
-        x_multitbl[key_code - RANGE_MULTIKEY] = ks->ks_buf;
+        kbmulti_assign(key_code, ks->ks_buf);
     }
     return key_code;
-}
-
-
-/*  Function:           key_get_seq_list
- *      Retrieves the current key-sequence list.
- *
- *  Parameters:
- *      num_syms - Storage populated by the total symbol number.
- *
- *  Results:
- *      Flatten version of the key escape sequence tree.
- */
-void *
-key_get_seq_list(int *num_syms)
-{
-    *num_syms = spsize(x_kseqtree);
-    return (void *)spflatten(x_kseqtree);
 }
 
 
@@ -937,7 +595,7 @@ key_string2code(const char *cp, char *keybuf, int buflen)
 
     } else {                                    /* multi-key */
         char t_keybuf[MAX_KEYBUF] = {0};
-        SPBLK *sp;
+        const keyseq_t *ks;
         int i;
 
         if (NULL == keybuf) {
@@ -946,16 +604,14 @@ key_string2code(const char *cp, char *keybuf, int buflen)
         }
 
         for (i = 0, --buflen; i < size && i < buflen; ++i) {
-            if (keys[i] & ~0xff) {              /* filter 16bit character codes */
+            if (keys[i] & ~0xff) {              /* filter non-8bit characters */
                 continue;
             }
             keybuf[i] = (char) keys[i];
         }
         keybuf[i] = '\0';
                                                 /* code table lookup */
-        if (NULL != (sp = splookup(keybuf, x_kseqtree))) {
-            const keyseq_t *ks = (const keyseq_t *) sp->data;
-
+        if (NULL != (ks = kbsequence_lookup(keybuf))) {
             ret = ks->ks_code;
         }
     }
@@ -996,8 +652,8 @@ key_string2seq(const char *cp, int *sizep)
 
             while (*cp) {
                 if (*cp++ == '>') {             /* closing '>' */
-                    us = (KEY) key_name2code(start, &len);
-                    if (/*us < 0 ||*/ (cp - 1) != (start + len)) {
+                    us = (KEY) kbname_tokey(start, &len);
+                    if (/*us < 0 ||*/ cp != (start + len)) {
                         return NULL;
                     }
                     break;
@@ -1029,163 +685,6 @@ key_string2seq(const char *cp, int *sizep)
         *sizep = r_used(rp) / sizeof(KEY);      /* resulting length */
     }
     return (KEY *) r_ptr(rp);
-}
-
-
-/*  Function:           key_name2code
- *      Attempt to convert a key description to its internal key code;
- *      this function handles the key-type descriptions.
- *
- *  Parameters:
- *      string - Key description buffer.
- *      lenp - Populated with the characters consumed within 'string'.
- *
- *  Results:
- *      keycode
- */
-int
-key_name2code(const char *string, int *lenp)
-{
-    char buf[128], *cp;                         /* MAGIC */
-    const struct map *mp;
-    int flags = 0, key = 0;
-
-    strxcpy(buf, string + 1, sizeof(buf));
-    for (cp = buf; *cp; ++cp) {
-        if (*cp > 0) {                          /* case conversion */
-            *cp = (char)toupper((unsigned char)*cp);
-        }
-    }
-
-    for (cp = buf; *cp;) {
-        /* termination, whitespace and punctuation */
-        if ('>' == *cp) {
-            ++cp;
-            break;
-        } else if (' ' == *cp || '-' == *cp || '\t' == *cp) {
-            ++cp;
-            continue;
-        }
-
-        /* function key, F<xx> */
-        if ('F' == *cp && isdigit(cp[1])) {
-            key = atoi(++cp) - 1;
-            flags |= RANGE_FUNCTION;
-            while (isdigit(*cp)) {
-                ++cp;
-            }
-            continue;
-        }
-
-        /* button keys, Button#[-[Up|Double|Motion|Down]] */
-        if (0 == strncmp(cp, "BUTTON", 6) && isdigit(cp[6])) {
-            const int button = atoi(cp += 6) - 1;
-
-            if (button >= 0 && button <= 4) {
-                if ('-' == *++cp) {
-                    if (0 == strncmp(++cp, "UP", 2)) {
-                        key = button + BUTTON1_UP;
-                        cp += 2;
-                    } else if (0 == strncmp(cp, "DOWN", 4)) {
-                        key = button + BUTTON1_DOWN;
-                        cp += 4;
-                    } else if (0 == strncmp(cp, "DOUBLE", 6)) {
-                        key = button + BUTTON1_DOUBLE;
-                        cp += 6;
-                    } else if (0 == strncmp(cp, "MOTION", 6)) {
-                        key = button + BUTTON1_MOTION;
-                        cp += 6;
-                    }
-                } else {
-                    flags |= RANGE_BUTTON;
-                    key = button;
-                }
-            }
-            if ('>' == *cp) ++cp;
-            break;
-        }
-
-        /* wheel keys, Wheel-[Up|Down] */
-        if (0 == strncmp(cp, "WHEEL", 5)) {
-            cp += 5;
-            if ('-' == *cp) {
-                if (0 == strncmp(++cp, "UP", 2)) {
-                    key = WHEEL_UP;
-                    cp += 2;
-                } else if (0 == strncmp(cp, "DOWN", 4)) {
-                    key = WHEEL_DOWN;
-                    cp += 4;
-                } else if (0 == strncmp(cp, "LEFT", 4)) {
-                    key = WHEEL_LEFT;
-                    cp += 4;
-                } else if (0 == strncmp(cp, "RIGHT", 5)) {
-                    key = WHEEL_RIGHT;
-                    cp += 5;
-                }
-            }
-            flags |= RANGE_MISC;
-            if ('>' == *cp) ++cp;
-            break;
-        }
-
-        /* special keywords (Alt, Ctrl, etc) */
-        for (mp = keystring_tbl; mp->name; ++mp) {
-            const int mlen = mp->len;
-
-            if (0 == strncmp(mp->name, (const char *)cp, mlen) &&
-                    ('>' == cp[mlen] || '-' == cp[mlen])) {
-                cp += mlen;
-                flags |= mp->modifier;
-                key |= mp->value;
-                break;
-            }
-        }
-
-        /* single character */
-        if (NULL == mp->name) {
-            key |= *cp++;
-            if ('>' == *cp) ++cp;
-            break;
-        }
-    }
-
-    /* consumed character count */
-    if (lenp) *lenp = cp - buf;
-
-    /* apply modifiers */
-    if (KEY_TAB == key) {
-        if (MOD_SHIFT == flags) {
-            return BACK_TAB;
-        }
-        if (MOD_CTRL == flags) {
-            return CTRL_TAB;
-        }
-        if (MOD_META == flags) {
-            return ALT_TAB;
-        }
-    }
-
-    if (KEY_BACKSPACE == key) {
-        if (MOD_SHIFT == flags) {
-            return SHIFT_BACKSPACE;
-        }
-        if (MOD_CTRL == flags) {
-            return CTRL_BACKSPACE;
-        }
-        if (MOD_META == flags) {
-            return ALT_BACKSPACE;
-        }
-    }
-
-    if ((RANGE_MASK & flags) == RANGE_KEYPAD && key >= '0' && key <= '9') {
-        key -= '0';                             /* KP-# */
-    }
-
-    if (MOD_CTRL == flags && key >= 0x40 && key <= 0x7f) {
-        return (key & 0x1f);                    /* Ctrl A-Z */
-    }
-
-    return flags | key;
 }
 
 
@@ -1407,7 +906,7 @@ do_assign_to_key(void)          /* int ([string key], [string macro]) */
             acc_assign_int(-1);
             return;
         }
-        key_code = key_define_key_seq(-1, keybuf);
+        key_code = key_sequence(-1, keybuf);
     }
 
     acc_assign_int((accint_t) key_code);
@@ -1863,58 +1362,25 @@ do_key_to_int(void)             /* (string key, int raw) */
 {
     const char *cp = get_str(1);
     const int raw = get_xinteger(2, FALSE);
-    SPBLK *sp;
+    const keyseq_t *ks;
 
     if (! raw) {
         acc_assign_int((accint_t) key_string2code(cp, NULL, -1));
 
+    } else if (NULL != (ks = kbsequence_lookup(cp))) {
+        acc_assign_int((accint_t) ks->ks_code);
+
     } else {
-        if (NULL == (sp = splookup(cp, x_kseqtree))) {
-            int kcode = -1;
+        int kcode = -1;
 
-#if defined(USE_KBPROTOCOL)
-            const int len = strlen(cp);
-
-            kcode = cygwin_to_int(cp);
-#if defined(KBPROTOCOL_MSTERMINAL)
-            if (kcode <= 0) {
-                if (xf_kbprotocol & (KBPROTOCOL_MSTERMINAL)) {
-                    kcode = msterminal_to_int(cp);
-                }
-            }
-#endif
-#if defined(KBPROTOCOL_KITTY)
-            if (xf_kbprotocol & (KBPROTOCOL_KITTY)) {
-                if (kcode <= 0) {
-                    kcode = kitty_to_key(cp, len);
-                }
-            }
-#endif
-            if (xf_kbprotocol & (KBPROTOCOL_MOK2)) {
-                if (kcode <= 0) {
-                    kcode = mok2_to_key(cp, len);
-                }
-            }
-
-            if (kcode <= 0) {
-                kcode = xterm_to_key(cp, len);
-            }
-
-            if (kcode < 0) {
-                kcode = tty_mouse_xterm(NULL, cp);
-            }
-            if (kcode < 0) {
-                kcode = tty_mouse_sgr(NULL, cp);
-            }
-#endif //USE_KBPROTOCOL
-
-            acc_assign_int((accint_t) kcode);
-
-        } else {
-            const keyseq_t *ks = (const keyseq_t *) sp->data;
-
-            acc_assign_int((accint_t) ks->ks_code);
+        kcode = kbprotocols_parse(cp, strlen(cp), TRUE);
+        if (kcode <= 0) {
+            kcode = tty_mouse_xterm(NULL, cp);
         }
+        if (kcode <= 0) {
+            kcode = tty_mouse_sgr(NULL, cp);
+        }
+        acc_assign_int((accint_t) kcode);
     }
 }
 
@@ -1975,10 +1441,8 @@ const char *
 key_code2name(int key)
 {
     static unsigned oneshot = 0;
-    static char buf[128];                       /* MAGIC */
-    char *bp;
+    static char buf[KBNAMELEN * 2];
     SYMBOL *sp;
-    int i;
 
     /*
      *  parse the user definable 'kbd_labels' list, if defined.
@@ -2025,310 +1489,8 @@ key_code2name(int key)
         }
     }
 
-    /* normal character case */
-do_normal:
-    if (IS_CHARACTER(key)) {
-        key_to_char(buf, key);
-        assert(strlen(buf) < sizeof(buf));
-        return buf;
-    }
-
-    buf[0] = '<';
-    buf[1] = '\0';
-
-    if (key & MOD_META) strcat(buf, "Alt-");
-    if (key & MOD_CTRL) strcat(buf, "Ctrl-");
-    if (key & MOD_SHIFT) strcat(buf, "Shift-");
-
-    /* function keys */
-    bp = buf + strlen(buf);
-    switch (key & RANGE_MASK) {
-    case RANGE_SPECIAL: {
-            const char *desc = NULL;
-
-            switch (key) {
-            case MOUSE_XTERM_KEY:
-            case MOUSE_SGR_KEY:
-                desc = "Mouse";
-                break;
-            case PASTE_BRACKETED_EVT:
-                desc = "PasteBracketed";
-                break;
-            case MOUSE_FOCUSOUT_KEY:
-                desc = "FosusOut";
-                break;
-            case MOUSE_FOCUSIN_KEY:
-                desc = "FosusIn";
-                break;
-            default:
-                sprintf(bp, "#%u", key);
-                break;
-            }
-            if (desc) strcpy(bp, desc);
-        }
-        break;
-
-    case RANGE_MISC: {
-            const char *desc = NULL;
-
-            switch (key) {
-            case BACK_TAB:
-                desc = "Back-Tab";
-                break;
-            case CTRL_TAB:
-                desc = "Ctrl-Tab";
-                break;
-            case ALT_TAB:
-                desc = "Alt-Tab";
-                break;
-            case SHIFT_BACKSPACE:
-                desc = "Shift-Backspace";
-                break;
-            case CTRL_BACKSPACE:
-                desc = "Ctrl-Backspace";
-                break;
-            case ALT_BACKSPACE:
-                desc = "Alt-Backspace";
-                break;
-            case KEY_UNDO_CMD:
-            case KEY_UNDO:
-                desc = "Undo";
-                break;
-            case KEY_COPY_CMD:
-            case KEY_COPY:
-                desc = "Copy";
-                break;
-            case KEY_CUT_CMD:
-            case KEY_CUT:
-                desc = "Cut";
-                break;
-            case KEY_PASTE:
-                desc = "Paste";
-                break;
-            case KEY_HELP:
-                desc = "Help";
-                break;
-            case KEY_REDO:
-                desc = "Redo";
-                break;
-            case KEY_SEARCH:
-                desc = "Search";
-                break;
-            case KEY_REPLACE:
-                desc = "Replace";
-                break;
-            case KEY_CANCEL:
-                desc = "Cancel";
-                break;
-            case KEY_COMMAND:
-                desc = "Command";
-                break;
-            case KEY_EXIT:
-                desc = "Exit";
-                break;
-            case KEY_NEXT:
-                desc = "Next";
-                break;
-            case KEY_PREV:
-                desc = "Prev";
-                break;
-            case KEY_OPEN:
-                desc = "Open";
-                break;
-            case KEY_SAVE:
-                desc = "Save";
-                break;
-            case KEY_MENU:
-                desc = "Menu";
-                break;
-            case KEY_BREAK:
-                desc = "Break";
-                break;
-            case WHEEL_UP:
-                desc = "Wheel-Up";
-                break;
-            case WHEEL_DOWN:
-                desc = "Wheel-Down";
-                break;
-            case WHEEL_LEFT:
-                desc = "Wheel-Left";
-                break;
-            case WHEEL_RIGHT:
-                desc = "Wheel-Right";
-                break;
-            default:
-                sprintf(bp, "#%u", key);
-                break;
-            }
-            if (desc) strcpy(bp, desc);
-        }
-        break;
-
-    case RANGE_CHARACTER: {
-            if ((key & KEY_MASK) > 0xff) {
-                sprintf(bp, "#%u", key);
-            } else {
-                const char *desc = NULL,
-                    key8 = (char) (key & KEY_MASK);
-
-                switch (key8) {
-                case KEY_ENTER:
-                    desc = "Enter";
-                    break;
-                case KEY_ESC:
-                    desc = "Esc";
-                    break;
-                case KEY_BACKSPACE:
-                    desc = "Backspace";
-                    break;
-                case KEY_TAB:
-                    desc = "Tab";
-                    break;
-                case ' ':
-                    if (key & (MOD_META|MOD_CTRL|MOD_SHIFT)) {
-                        desc = "Space";
-                    }
-                    break;
-                default:
-                    break;
-                }
-
-                if (desc) {
-                    strcpy(bp, desc);
-                    bp += strlen(desc);
-                } else {
-                    *bp++ = key8;
-                    *bp = '\0';
-                }
-            }
-        }
-        break;
-
-    case RANGE_PRIVATE:
-        sprintf(bp, "Private-%d", key & KEY_MASK);
-        break;
-
-    case RANGE_FUNCTION:
-        sprintf(bp, "F%d", (key & KEY_MASK) + 1);
-        break;
-
-    case RANGE_BUTTON:
-        key &= ~(MOD_META | MOD_CTRL | MOD_SHIFT);
-        if (key >= BUTTON1_MOTION) {
-            sprintf(bp, "Button%u-Motion", (key - BUTTON1_MOTION) + 1);
-
-        } else if (key >= BUTTON1_UP) {
-            sprintf(bp, "Button%u-Up", (key - BUTTON1_UP) + 1);
-
-        } else if (key >= BUTTON1_DOUBLE) {
-            sprintf(bp, "Button%u-Double", (key - BUTTON1_DOUBLE) + 1);
-
-        } else {
-            sprintf(bp, "Button%u-Down", (key - BUTTON1_DOWN) + 1);
-        }
-        break;
-
-    case RANGE_MULTIKEY:
-        if (NULL == x_multitbl || (key >= RANGE_MULTIKEY + x_multiseq)) {
-            strcpy(bp, "undefined");            /* out side range */
-
-        } else {
-            const char *cp = x_multitbl[key - RANGE_MULTIKEY];
-
-            assert(cp);
-            for (bp = buf; *cp; ++cp) {
-                bp = key_to_char(bp, *cp & 0xff);
-            }
-            assert(strlen(buf) < sizeof(buf));
-            *bp = '\0';
-            return buf;
-        }
-        break;
-
-    case RANGE_KEYPAD:
-        i = key & KEY_MASK;
-        if (i < (int) (sizeof(keypad_names) / sizeof(keypad_names[0]))) {
-            const char *cp = keypad_names[i];
-
-            if (isdigit(*cp) || (key & KEY_MASK) >= (KEYPAD_PLUS & KEY_MASK)) {
-                strcpy(bp, "Keypad-");
-                bp += 7;
-            }
-            while (*cp && *cp != '-') {
-                *bp++ = *cp++;
-            }
-            *bp = '\0';
-            break;
-        }
-        strcpy(bp, "Keypad-");
-        bp += 7;
-        /*FALLTHRU*/
-
-    default:
-        sprintf(bp, "#%u", key);
-        break;
-    }
-    strcat(buf, ">");
-    assert(strlen(buf) < sizeof(buf));
-    return buf;
-}
-
-
-/*  Function:           key_to_char
- *      Convert a single 8-bit character into the canonic notation.
- */
-static char *
-key_to_char(char *buf, int key)
-{
-    switch (key) {
-    case KEY_ENTER:
-        strcpy(buf, "<Enter>");
-        break;
-
-    case KEY_ESC:
-        strcpy(buf, "<Esc>");
-        break;
-
-    case KEY_BACKSPACE:
-        strcpy(buf, "<Backspace>");
-        break;
-
-    case KEY_TAB:
-        strcpy(buf, "<Tab>");
-        break;
-
-    case ' ':
-        strcpy(buf, "<Space>");
-        break;
-
-    case '{': case '}':
-    case '#':
-        buf[0] = '<';
-        buf[1] = (char)key;
-        buf[2] = '>';
-        buf[3] = '\0';
-        break;
-
-    case '<':
-    case '\\':
-        buf[0] = '\\';
-        buf[1] = (char)key;
-        buf[2] = '\0';
-        break;
-
-    default:
-        if (key < ' ') {
-            sprintf(buf, "<Ctrl-%c>", key + '@');
-        } else if (key < 0x7f) {
-            buf[0] = (char) key;
-            buf[1] = '\0';
-        } else {
-            sprintf(buf, "#%d", key);
-        }
-        break;
-    }
-    buf += strlen(buf);
-    return buf;
+do_normal:;
+    return kbname_fromkey(key, buf, sizeof(buf));
 }
 
 
@@ -2686,50 +1848,6 @@ inq_local_keyboard(void)        /* int inq_local_keyboard() */
 }
 
 
-
-/*  Function:           key_protocolid
- *      Map a keyboard protocol to its idenifier.
- *
- *  Parameters:
- *      name - Keyboard protocol name.
- *
- *  Results:
- *      Protocol identifier, otherwise -1.
- */
-int
-key_protocolid(const char* name, int namelen)
-{
-    if (name && *name) {
-        unsigned p = 0;
-
-        if (namelen < 0)
-            namelen = strlen(name);
-
-        for (p = 0; p < (sizeof(protocols) / sizeof(protocols[0])); ++p) {
-            if (namelen == (int)protocols[p].namelen &&
-                    0 == memcmp(protocols[p].name, name, namelen)) {
-                return protocols[p].mode;
-            }
-        }
-    }
-    return -1;
-}
-
-
-const char *
-key_protocolname(int mode, const char *def)
-{
-    unsigned p = 0;
-
-    for (p = 0; p < (sizeof(protocols) / sizeof(protocols[0])); ++p) {
-        if (mode == protocols[p].mode) {
-            return protocols[p].name;
-        }
-    }
-    return def;
-}
-
-
 /*  Function:           key_check
  *      Utility used whilst assembling a keystroke to test whether a full key sequence has been encountered.
  *      Return key code if we have an unambiguous keystroke.
@@ -2740,552 +1858,78 @@ key_protocolname(int mode, const char *def)
  *  Parameters:
  *      buf - Key buffer; nul terminated.
  *      buflen - Buffer length, in bytes; excluding nul.
- *      multi - Multiple key flag storage.
- *      noambig - Ambiguity flag.
+ *      multikey - Multiple key flag storage.
+ *      flag - Sequence processing flag; KEYCHECK enumerated values.
  *
  *  Results:
  *      Key code, otherwise -1.
  */
 int
-key_check(const char *buf, unsigned buflen, int *multi, int noambig)
+key_check(const char *buf, unsigned buflen, int *multikey, int flag)
 {
-#if defined(USE_KBPROTOCOL)
-    const char* end = buf + (buflen - 1);
-#endif
-    SPBLK *sp_first, *sp;
-    int kcode, ambig = 0;
+    const int force = (flag == KEYCHECK_END);
+    const keyseq_t *partial, *ks;
+    unsigned ambiguous = 0;
+    int kcode, kcode2;
 
-    *multi = FALSE;
+    // Escape sequence lookup
+    ks = kbsequence_match(buf, buflen, &ambiguous, &partial);
 
-#if defined(USE_KBPROTOCOL)
-    /*
-     *  cygwin:
-     *      <ESC>{0;1;13;28;13;0K
-     */
-    if (xf_kbprotocol & KBPROTOCOL_CYGWIN) {
-        if ('\033' == buf[0] && '{' == buf[1]) {
-             const int isfinal = (buflen >= 4 && (*end == 'K'));
-
-             if (! isfinal) {
-                 *multi = TRUE;
-                 return -1;
-             }
-             kcode = cygwin_to_int(buf);        /* cygwin-raw-mode */
-             return (-1 == kcode ? 0 : kcode);
+    if (multikey) {                             // XXX -- review use-case
+        *multikey = FALSE;
+        if (partial) {
+            if (IS_MULTIKEY(partial->ks_code) && !force) {
+                *multikey = TRUE;
+            }
         }
     }
-#endif //USE_KBPROTOCOL
 
-    trace_log("KEYSEQ=");
+    // Keyboard protocols
+    kcode2 = kbprotocols_parse(buf, buflen, force);
+
+    trace_log("KEYSEQ(flag:%d,ambiguous:%d,multi:%d,key:%d,key2:%d)=",
+        flag, ambiguous, (multikey ? *multikey : -1), (ks ? ks->ks_code : 0), kcode2);
     trace_hex(buf, buflen);
 
-    if (NULL == (sp = sp_partial_lookup(buf, x_kseqtree, &ambig, &sp_first))) {
-        /*
-         *  Keyboard protocols
-         */
-#if defined(USE_KBPROTOCOL)
-#if defined(KBPROTOCOL_MSTERMINAL)
-#define KBPROTOCOL_1 KBPROTOCOL_MSTERMINAL
-#else
-#define KBPROTOCOL_1 0
-#endif
-#if defined(KBPROTOCOL_KITTY)
-#define KBPROTOCOL_2 KBPROTOCOL_KITTY
-#else
-#define KBPROTOCOL_2 0
-#endif
-        if (xf_kbprotocol & (KBPROTOCOL_MOK2|KBPROTOCOL_1|KBPROTOCOL_2)) {
-            if ('\033' == buf[0] && '[' == buf[1]) { // CSI
-                const int isfinal =
-                    (buflen >= 4 && (*end >= 0x40 && *end < 0x80)); // SGR final
-
-                if (! isfinal) {
-                    *multi = TRUE;
-                    return -1;
-                }
-
-                if ('_' == *end) {              /* win32-input-mode */
-#if defined(KBPROTOCOL_MSTERMINAL)
-                    kcode = msterminal_to_int(buf);
-                    return (-1 == kcode ? 0 : kcode);
-#endif
-                } else if ('~' == *end || 'u' == *end) { /* xterm-mok2/mintty-mok2 or kitty-protocol */
-#if defined(KBPROTOCOL_KITTY)
-                    if (xf_kbprotocol & (KBPROTOCOL_KITTY)) {
-                        if ((kcode = kitty_to_key(buf, buflen)) > 0) {
-                            return kcode;
-                        }
-                    }
-#endif
-                    if (xf_kbprotocol & (KBPROTOCOL_MOK2)) {
-                        if ((kcode = mok2_to_key(buf, buflen)) > 0) {
-                            return kcode;
-                        }
-                    }
-
-                } else {                        /* others */
-                    if ((kcode = xterm_to_key(buf, buflen)) > 0) {
-                        return kcode;
-                    }
-                }
-            }
-        }
-#endif //USE_KBPROTOCOL
-
-        if (sp_first) {
-            const keyseq_t *kst = (const keyseq_t *) sp_first->data;
-
-            if (IS_MULTIKEY(kst->ks_code)) {
-                *multi = TRUE;
-            }
-        }
-
-        trace_log("keycode: %d\n", ambig ? -1 : 0);
-        return (ambig ? -1 : 0);
-    }
-
-    if (ambig) trace_log("amig(%d)-", ambig);
-    if (noambig) {
-        ambig = 0;                              /* ignore ambiguity */
-    }
-
-    kcode = (ambig ? -1 : ((const keyseq_t *) sp->data)->ks_code);
-    trace_log("keycode: %d\n", kcode);
-    return kcode;
-}
-
-
-#if defined(USE_KBPROTOCOL)
-/*  Function:           mok2_to_key
- *      Decode a xterm modifyOtherKeys into our internal key-code.
- *
- *  Parameters:
- *      buf - Escape sequence buffer.
- *      buflen - Buffer length in bytes.
- *
- *  Results:
- *      nothing
- */
-static int
-mok2_to_key(const char *buf, unsigned buflen)
-{
-    unsigned args[4] = {0, 0, 0, 0}, nargs = 0;
-    char params[3] = {0};
-
-    /*
-     *  xterm-mok2/mintty-mok2:
-     *      \e[27;<modifier>;<char>~ or     xterm
-     *      \e[<char>;<modifier>u           formatOtherKeys=1 in xterm; which is the mintty default.
-     *
-     *          https://invisible-island.net/xterm/modified-keys-gb-altgr-intl.html#other_modifiable_keycodes
-     *
-     *  plus:
-     *
-     *      \e[<number>;<modifier> ~        Edit, cursor and function keys.
-     */
-    if (tty_csi_parse(buf, buflen, 4, args, params, &nargs)) {
-        unsigned key =
-            ((params[0] == '~' && 3 == nargs && args[0] == 27) ? args[2]
-                : ((params[0] == 'u' &&  2 == nargs) ? args[0] : 0));
-
-        if (key) {
-            unsigned modifiers = xterm_modifiers(args[1]);
-            int kcode;
-
-            if (key == KEY_TAB) {               /* XXX - consider remapping */
-                if (modifiers & MOD_SHIFT) {
-                    key = BACK_TAB;
-                } else if (modifiers & MOD_CTRL) {
-                    key = CTRL_TAB;
-                } else if (modifiers & MOD_META) {
-                    key = ALT_TAB;
-                }
-                modifiers = 0;
-
-            } else if (key == KEY_DELETE) {     /* XXX - consider remapping */
-                if (modifiers & MOD_SHIFT) {
-                    key = SHIFT_BACKSPACE;
-                } else if (modifiers & MOD_CTRL) {
-                    key = CTRL_BACKSPACE;
-                } else if (modifiers & MOD_META) {
-                    key = ALT_BACKSPACE;
-                }
-                modifiers = 0;
-
-            } else if (key >= 'a' && key <= 'z') {
-                if (modifiers) {                /* upper-case, apply shift */
-                    modifiers &= ~MOD_SHIFT;
-                    key += (unsigned)('A' - 'a');
-                }
-
-            } else if (key >= ' ') {
-                modifiers &= ~MOD_SHIFT;
-
-            } else {
-                switch (key) {                  // ^[[#;m~
-             // case 0:  n/a
-                case 1:  key = KEY_SEARCH; break;
-                case 2:  key = KEY_INS; break;
-                case 3:  key = KEY_DELETE; break;
-             // case 4:  n/a
-                case 5:  key = KEY_PAGEUP; break;
-                case 6:  key = KEY_PAGEDOWN; break;
-                case 7:  key = KEY_HOME; break;
-                case 8:  key = KEY_END; break;
-             // case 9:  KEY_TAB
-             // case 10: n/a
-             // case 11: n/a
-             // case 12: n/a
-             // case 13: KEY_ENTER
-             // case 14: n/a
-                case 15: key = F(5); break;
-             // case 16; n/a
-                case 17: key = F(6); break;
-                case 18: key = F(7); break;
-                case 19: key = F(8); break;
-                case 20: key = F(9); break;
-                case 21: key = F(10); break;
-             // case 22: n/a
-                case 23: key = F(11); break;
-                case 24: key = F(12); break;
-             // case 25: n/a
-             // case 26: n/a
-             // case 27: KEY_ESCAPE
-                }
-            }
-
-            kcode = (int)(modifiers | key);
-            trace_log("keycode-mok2: %d\n", kcode);
-            return kcode;
-        }
-    }
-    return -1;
-}
-#endif //USE_KBPROTOCOL
-
-
-#if defined(USE_KBPROTOCOL)
-static int
-xterm_to_key(const char *buf, unsigned buflen)
-{
-    unsigned args[4] = {1,0,0,0}, nargs = 0;
-    char params[3] = {0};
-
-    /*
-     *  CSI 1;m{ABCDFHPQRS} {MXjklmnopqrstuvwxy}
-     */
-    if (tty_csi_parse(buf, buflen, 4, args, params, &nargs)) {
-        if (2 == nargs && args[0] == 1) {
-            const unsigned modifiers = xterm_modifiers(args[1]);
-            int key = 0;
-
-            switch (params[0]) {
-            case 'A': key = KEY_UP; break;          // ^[[1;mA
-            case 'B': key = KEY_DOWN; break;        // ^[[1;mB
-            case 'D': key = KEY_LEFT; break;        // ^[[1;mD
-            case 'C': key = KEY_RIGHT; break;       // ^[[1;mC
-            case 'F': key = KEY_END; break;         // ^[[1;mF
-            case 'H': key = KEY_HOME; break;        // ^[[1;mH
-            case 'P': key = F(1); break;            // ^[[1;mP
-            case 'Q': key = F(2); break;            // ^[[1;mQ
-            case 'R': key = F(3); break;            // ^[[1;mR
-            case 'S': key = F(4); break;            // ^[[1;mS
-
-            case 'M': key = KEYPAD_ENTER; break;    // ^[[1;mM, Enter
-            case 'X': key = KEYPAD_EQUAL; break;    // ^[[1;mX, '='
-            case 'j': key = KEYPAD_STAR; break;     // ^[[1;mj, '*'
-            case 'k': key = KEYPAD_PLUS; break;     // ^[[1;mk, '+'
-            case 'l': key = ','; break;             // ^[[1;ml, ','
-            case 'm': key = KEYPAD_MINUS; break;    // ^[[1;mm, '-'
-            case 'n': key = KEYPAD_DEL; break;      // ^[[1;mn, '.'
-            case 'o': key = KEYPAD_DIV; break;      // ^[[1;mo, '/'
-            case 'p': key = KEYPAD_0; break;        // ^[[1;mp, '0'
-            case 'q': key = KEYPAD_1; break;        // ^[[1;mq, '1'
-            case 'r': key = KEYPAD_2; break;        // ^[[1;mr, '2'
-            case 's': key = KEYPAD_3; break;        // ^[[1;ms, '3'
-            case 't': key = KEYPAD_4; break;        // ^[[1;mt, '4'
-            case 'u': key = KEYPAD_5; break;        // ^[[1;mu, '5'
-            case 'v': key = KEYPAD_6; break;        // ^[[1;mv, '6'
-            case 'w': key = KEYPAD_7; break;        // ^[[1;mw, '7'
-            case 'x': key = KEYPAD_8; break;        // ^[[1;mx, '8'
-            case 'y': key = KEYPAD_9; break;        // ^[[1;my, '9'
-
-            default:
-                break;
-            }
-
-            if (key) {
-                int kcode = (int)(modifiers | key);
-                trace_log("keycode-xt: %d\n", kcode);
+    // Completion logic
+    if (force) {
+        if (ks) {                               // matched; ignore ambiguity
+            if (0 == ambiguous || kcode2 < 0) {
+                kcode = ks->ks_code;
+                trace_log("keycode-end: %d\n", kcode);
                 return kcode;
             }
         }
-    }
-    return -1;
-}
-#endif //USE_KBPROTOCOL
 
-
-#if defined(USE_KBPROTOCOL)
-static unsigned
-xterm_modifiers(unsigned mods)
-{
-    unsigned code = mods - 1, modifiers = 0;
-
-    if (code & 1)
-        modifiers |= MOD_SHIFT;
-    if (code & 2)
-        modifiers |= MOD_META; //ALT
-    if (code & 4)
-        modifiers |= MOD_CTRL;
-    if (code & 8)
-        modifiers |= MOD_META;
-            //generally consumed by system, for example WINKEY/mintty.
-    return modifiers;
-}
-#endif //USE_KBPROTOCOL
-
-
-#if defined(USE_KBPROTOCOL)
-/*  Function:           cygwin_to_int
- *      Decode a cygwin specific key escape sequence into our internal key-code.
- *
- *  Parameters:
- *      buf - Escape sequence buffer.
- *
- *  Results:
- *      nothing
- */
-static int
-cygwin_to_int(const char *buf)
-{
-#if defined(WIN32) || defined(__CYGWIN__)       /* cygwin-raw-mode */
-    if (buf[0] == '\033' && buf[1] == '{') {
-        /*
-         *  \033[2000h - turn on raw keyboard mode,
-         *  \033[2000l - turn off raw keyboard mode.
-         *
-         *  Format:
-         *      <ESC>{Kd;Rc;Vk;Sc;Uc;CsK
-         *
-         *       Kd: the value of bKeyDown.
-         *       Rc: the value of wRepeatCount.
-         *       Vk: the value of wVirtualKeyCode.
-         *       Sc: the value of wVirtualScanCode.
-         *       Uc: the decimal value of UnicodeChar.
-         *       Cs: the value of dwControlKeyState.
-         *
-         *  Example:
-         *      <ESC>{0;1;13;28;13;0K
-         *
-         */
-        unsigned bKeyDown, wRepeatCount;
-        unsigned wVirtKeyCode, wVirtScanCode, UnicodeChar;
-        unsigned dwControlKeyState;
-
-        if (6 == sscanf(buf + 2, "%u;%u;%u;%u;%u;%uK",
-                    &bKeyDown, &wRepeatCount, &wVirtKeyCode, &wVirtScanCode, &UnicodeChar, &dwControlKeyState)) {
-            if (bKeyDown) {
-                const int w32key =
-                    key_mapwin32(dwControlKeyState, wVirtKeyCode, UnicodeChar);
-
-                trace_log("cygkey[%s]=%d/0x%x\n", buf + 2, w32key, w32key);
-                return w32key;
-            }
-            trace_log("cygkey[%s]=up\n", buf + 2);
-            return KEY_VOID;
+        if (kcode2 > 0) {                       // kbprotocol
+            trace_log("keycode2-end: %d\n", kcode2);
+            return kcode2;
         }
-    }
-#else
-    __CUNUSED(buf)
-#endif
-    return -1;
-}
-#endif //USE_KBPROTOCOL
 
-
-#if defined(USE_KBPROTOCOL)
-/*  Function:           msterminal_to_int
- *      Decode a MSTerminal specific key escape sequence into our internal key-code.
- *
- *  Parameters:
- *      buf - Escape sequnence buffer.
- *
- *  Results:
- *      nothing
- */
-
-enum {
-    msVirtualKeyCode,
-    msVirtualScanCode,
-    msUnicodeChar,
-    msKeyDown,
-    msControlKeyState,
-    msRepeatCount,
-    msgArgumentMax
-};
-
-
-static int
-msterminal_args(const char *buffer, unsigned arguments[])
-{
-    const char *cursor = buffer + 2, *value = NULL;
-    unsigned args = 0;
-
-    while (*cursor) {
-        const unsigned char c = *cursor++;
-
-        if (c >= '0' && c <= '9') {
-            if (NULL == value) {
-                value = cursor - 1;             // value
-            }
-
-        } else if (c == ';' || c == '_') {
-            if (args >= msgArgumentMax) {
-                args = 0;                       // overflow
-                break;
-            }
-
-            if (value) {
-                arguments[args] = (unsigned)strtoul((const char *)value, NULL, 10);
-                value = NULL;
-            }
-            ++args;
-            if (c == '_') {
-                break;                          // terminator
-            }
-
-        } else {
-            args = 0;                           // non-digit
-            break;
+    } else {
+        if (ambiguous) {                        // ambiguity
+            trace_log("keycode-ambig: -1\n");
+            return KEYRESULT_MORE;
         }
-    }
-    return (args >= 1);
-}
 
-static int
-msterminal_to_int(const char *buf)
-{
-#if defined(WIN32) || defined(__CYGWIN__)       /* win32-input-mode */
-    if (buf[0] == '\033' && buf[1] == '[') {
-       /*
-        *   Terminal win32-input-mode
-        *
-        *       <ESC>[17;29;0;1;8;1_
-        *
-        *   Format:
-        *
-        *       <ESC>[Vk;Sc;Uc;Kd;Cs;Rc_
-        *
-        *       Vk: the value of wVirtualKeyCode - any number. If omitted, defaults to '0'.
-        *       Sc: the value of wVirtualScanCode - any number. If omitted, defaults to '0'.
-        *       Uc: the decimal value of UnicodeChar - for example, NUL is "0", LF is
-        *           "10", the character 'A' is "65". If omitted, defaults to '0'.
-        *       Kd: the value of bKeyDown - either a '0' or '1'. If omitted, defaults to '0'.
-        *       Cs: the value of dwControlKeyState - any number. If omitted, defaults to '0'.
-        *       Rc: the value of wRepeatCount - any number. If omitted, defaults to '1'.
-        *
-        *   Reference
-        *       https://github.com/microsoft/terminal/blob/main/doc/specs/%234999%20-%20Improved%20keyboard%20handling%20in%20Conpty.md
-        */
-        unsigned args[msgArgumentMax] = { 0, 0, 0, 0, 0, 1 };
-
-        if (msterminal_args(buf, args)) {
-            if (args[msKeyDown]) {
-                const int w32key =
-                    key_mapwin32(args[msControlKeyState], args[msVirtualKeyCode], args[msUnicodeChar]);
-
-                trace_log("winkey[%s]=0x%x/%u\n", buf + 2, w32key, w32key);
-                return w32key;
-            }
-            trace_log("winkey[%s]=up\n", buf + 2);
-            return KEY_VOID;
+        if (ks) {                               // matched; no ambiguity
+            kcode = ks->ks_code;
+            trace_log("keycode: %d\n", kcode);
+            return kcode;
         }
-        trace_log("winkey[%s]=na\n", buf + 2);
-    }
-#else
-    __CUNUSED(buf)
-#endif
-    return -1;
-}
-#endif //USE_KBPROTOCOL
 
-
-#if defined(WIN32) || defined(__CYGWIN__)
-/*  Function:           key_mapwin32
- *      Translate the key press into a GRIEF identifier.
- *
- *  Parameters:
- *      dwCtrlKeyState - Control key status.
- *      wVirtKeyCode - Virtual key code.
- *      CharCode - Character code, if any.
- *
- *  Results:
- *      nothing
- */
-int
-key_mapwin32(unsigned dwCtrlKeyState, unsigned wVirtKeyCode, unsigned CharCode)
-{
-    const struct w32key *key = w32Keys + _countof(w32Keys);
-    int mod = 0, ch = -1;
-
-    /* modifiers */
-    if (dwCtrlKeyState &
-            (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)) {
-        mod |= MOD_META;
-    }
-
-    if (dwCtrlKeyState &
-            (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) {
-        mod |= MOD_CTRL;
-    }
-
-    if (dwCtrlKeyState & (SHIFT_PRESSED)) {
-        mod |= MOD_SHIFT;
-    }
-
-    /* virtual keys */
-    while (--key >= w32Keys) {
-        if (key->vk == wVirtKeyCode &&
-                ((key->mods == VKMOD_ANY) ||
-                 (key->mods == VKMOD_ENHANCED    && 0 != (dwCtrlKeyState & (ENHANCED_KEY))) ||
-                 (key->mods == VKMOD_NONENHANCED && 0 == (dwCtrlKeyState & (ENHANCED_KEY))) ||
-                 (key->mods == VKMOD_NONSHIFT    && 0 == (dwCtrlKeyState & (SHIFT_PRESSED))) ||
-                 (key->mods >= 0 && key->mods == mod) )) {
-            if ((ch = key->code) >= 0) {
-                if (key->mods == VKMOD_ANY) {
-                    ch |= mod;                  /* apply modifiers */
-                }
+        if (kcode2) {                           // kbprotocol
+            if (kcode2 == KEYRESULT_MORE) {
+                trace_log("keycode-more: -1\n");
+                return KEYRESULT_MORE;
             }
-            break;
+            trace_log("keycode2: %d\n", kcode2);
+            return kcode2;
         }
     }
 
-    /* ascii */
-    assert((CharCode & ~KEY_MASK) == 0);
-    if (-1 == ch && (CharCode & KEY_MASK)) {
-        ch = (CharCode & KEY_MASK);             /* UNICODE value */
-
-        if (MOD_META == mod || (MOD_META|MOD_SHIFT) == mod) {
-            /*
-             *  Special handling for ALT-ASCII ..
-             *  other modifiers SHIFT and CONTROL are already applied to the ASCII value.
-             */
-            if (ch >= 'a' && ch <= 'z') {
-                ch = toupper(ch);
-            }
-            ch |= MOD_META;
-        }
-    }
-
-    if (ch != -1) {
-        trace_log("W32KEY %c%c%c = %d/0x%x (%s=%s)\n",
-            (mod & MOD_META ? 'M' : '.'), (mod & MOD_CTRL ? 'C' : '.'), (mod & MOD_SHIFT ? 'S' : '.'),
-                ch, ch, (key >= w32Keys ? key->desc : "ASCII"), key_code2name(ch));
-    }
-    return ch;
+    return KEYRESULT_NONE;
 }
-#endif  /*WIN32 || __CYGWIN__*/
 
 
 /*  Function:           do_keyboard_push
@@ -4066,5 +2710,3 @@ inq_kbd_name(void)              /* string ([int kbdid]) */
 }
 
 /*end*/
-
-

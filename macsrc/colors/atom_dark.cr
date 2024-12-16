@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 8; -*- */
-/* $Id: atom_dark.cr,v 1.1 2021/04/23 12:21:18 cvsuser Exp $
+/* $Id: atom_dark.cr,v 1.2 2024/10/07 16:14:59 cvsuser Exp $
  * atom-dark, GRIEF port.
  *
  * Original:
@@ -1319,16 +1319,16 @@ colorscheme_atom_dark(void)
         get_term_feature(TF_COLORDEPTH, colordepth);
 
         if (colordepth >= 256 && strstr(termname, "kconsole") /*TODO*/) {
-                vim_colorscheme("atom_konsole", 256, NULL, atom_kconsole, TRUE);
+                vim_colorscheme("atom_konsole", 256, NULL, atom_kconsole, -1);
 
         } else if (colordepth >= 256 && strstr(termname, "eterm") /*TODO*/) {
-                vim_colorscheme("atom_eterm", 256, NULL, atom_eterm, TRUE);
+                vim_colorscheme("atom_eterm", 256, NULL, atom_eterm, -1);
 
         } else if (colordepth >= 256) {
-                vim_colorscheme("atom_256", 256, NULL, atom_256, TRUE);
+                vim_colorscheme("atom_256", 256, NULL, atom_256, -1);
 
         } else if (colordepth >= 88) {
-                vim_colorscheme("atom_88",  88,  NULL, atom_88, TRUE);
+                vim_colorscheme("atom_88",  88,  NULL, atom_88, -1);
         }
 }
 

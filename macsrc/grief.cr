@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: grief.cr,v 1.97 2024/09/08 16:25:51 cvsuser Exp $
+/* $Id: grief.cr,v 1.101 2024/12/12 14:12:23 cvsuser Exp $
  * GRIEF startup macro.
  *
  *
@@ -34,6 +34,8 @@ string                  _griget_menubar(void);
 void                    _griset_menubar(string arg);
 string                  _griget_colors(void);
 void                    _griset_colors(string arg);
+void                    _griset_colorschemegui(string arg);
+string                  _griget_colorschemegui(void);
 void                    _griset_colorscheme256(string arg);
 string                  _griget_colorscheme256(void);
 void                    _griset_colorscheme88(string arg);
@@ -69,6 +71,7 @@ static list             gri_properties = {
     "abbrev",                   /* Abbrev list */
     "autoindent",               /* Auto indent setting */
     "autosave",                 /* Autosave times */
+    "colorschemegui",           /* Color scheme (truecolor) */
     "colorscheme256",           /* Color scheme (colors >= 256) */
     "colorscheme88",            /* Color scheme (colors >= 88) */
     "colorscheme16",            /* Color scheme (colors >= 16) */
@@ -115,6 +118,7 @@ static int              gri_menubar = FALSE;
 static int              gri_changed = FALSE;
 
 static int              coloriserenv = FALSE;
+static string           gri_colorisergui = "";
 static string           gri_coloriser256 = "";
 static string           gri_coloriser88 = "";
 static string           gri_coloriser16 = "";
@@ -301,7 +305,7 @@ grief(void)
         "key_val",
         "key_learn_menu",
         "key_learn",
-        "key_termmapping");
+        "key_termmap");
     autoload("linenumbers",
         "_griset_linenumbers");
     autoload("man",
@@ -649,15 +653,39 @@ grief(void)
     }
     display_windows(1);
 
-    /* Options */
-    grinit_onload();
-    refresh();
-
     /* Localised keyboard description */
     envvar = lower(getenv("BKBD"));
     if (envvar != "") {
         load_macro("kbd/" + envvar);
     }
+}
+
+
+int
+grief_resource(string resources)
+{
+    extern int dayone(void);
+
+    if (first_time()) {
+        int ret = 0;
+
+        if (resources == "yes") {               // check resources, unless --norc
+            if (load_macro("dayone")) {
+                if ((ret = dayone()) != 0) {
+                    if (ret < 0) {
+                        return 1;               // dayone event, exit
+                    }
+                }
+            }
+        }
+
+        if (ret == 0) {
+            register_macro(REG_EXIT, "grinit_onexit");
+        }
+        grinit_onload();
+        refresh();
+    }
+    return 0;
 }
 
 
@@ -701,7 +729,7 @@ shell_pop(string command)
     int buf = create_buffer("Shell Pop-Up", NULL, 1);
     int line, col;
 
-    create_window(55, 8, 77, 2);                /* XXX - verify display size */
+    create_window(55, 12, 77, 2);               /* XXX - verify display size */
     attach_buffer(buf);
     set_buffer_flags(NULL, BF_MAN);             /* man style highlighting */
     set_buffer_flags(NULL, BF_ANSI);            /* ansi style highlighting */
@@ -896,10 +924,8 @@ grinit_onload(void)
     //  guard and register matching completion
     //
     if (! first_time()) {
-         return;
+        return;
     }
-
-    register_macro(REG_EXIT, "grinit_onexit");
 
     //  parse 'inifile'
     //
@@ -953,6 +979,7 @@ grinit_onload(void)
 
             } else if (inq_macro("set_" + key) > 0) {
                 fn = "set_" + key;              // FIXME - security hole, remove?
+
 
             } else {
                 error("unknown configuration key '%s', ignored.", key);
@@ -1399,16 +1426,36 @@ _griset_colors(string arg)
 
 
 void
+_griset_colorschemegui(string arg)
+{
+    if (strlen(arg)) {
+        gri_colorisergui = arg;
+        if (!coloriserenv) {
+            int truecolor;
+
+            get_term_feature(TF_TRUECOLOR, truecolor);
+            if (truecolor) {
+                colorscheme(arg);
+            }
+        }
+    }
+}
+
+
+void
 _griset_colorscheme256(string arg)
 {
     if (strlen(arg)) {
         gri_coloriser256 = arg;
         if (!coloriserenv) {
-            int depth;
+            int depth, truecolor;
 
             inq_screen_size(NULL, NULL, depth);
             if (depth >= 256) {
-                colorscheme(arg);
+                get_term_feature(TF_TRUECOLOR, truecolor);
+                if (gri_colorisergui == "" || truecolor == 0) {
+                    colorscheme(arg);
+                }
             }
         }
     }
@@ -1465,6 +1512,13 @@ _griset_colorscheme(string arg)
             }
         }
     }
+}
+
+
+string
+_griget_colorschemegui(void)
+{
+    return gri_colorisergui;
 }
 
 
@@ -1559,5 +1613,3 @@ clear_buffer(void)
 }
 
 /*end*/
-
-

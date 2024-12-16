@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.65 2024/09/25 15:51:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.78 2024/12/13 14:25:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.65 2024/09/25 15:51:54 cvsuser Exp $
+/* $Id: cmain.c,v 1.78 2024/12/13 14:25:37 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -34,6 +34,7 @@ __CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.65 2024/09/25 15:51:54 cvsuser Exp $
 #include "accum.h"                              /* acc_...() */
 #include "anchor.h"
 #include "arg.h"
+#include "argrc.h"
 #include "basic.h"
 #include "bookmark.h"
 #include "buffer.h"                             /* buf_...() */
@@ -47,6 +48,7 @@ __CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.65 2024/09/25 15:51:54 cvsuser Exp $
 #include "file.h"
 #include "getkey.h"
 #include "keyboard.h"
+#include "kbprotocols.h"
 #include "keywd.h"
 #include "kill.h"
 #include "language.h"
@@ -102,7 +104,7 @@ static struct argoption options[] = {
 
     { "noautosave",     arg_none,           NULL,       300,    "Disable autosave" },
 
-    { "compat",         arg_none,           NULL,       'c',    "Compatability mode (dont enable nodelay)" },
+    { "compat",         arg_none,           NULL,       'c',    "Compatibility mode (don't enable nodelay)" },
 
     { "display",        arg_none,           NULL,       'E',    "Enable display on startup" },
 
@@ -130,12 +132,12 @@ static struct argoption options[] = {
 
     { "noscroll",       arg_none,           NULL,       2,      "Disable xterm scrolling" },
 
-    { "color",          arg_optional,       NULL,       3,      "Force color mode",
-                            "=<depth>" },
+    { "color",          arg_optional,       NULL,       3,      "Color depth/mode",
+                            "=<depth>|<truecolor>|<direct>|<none>" },
 
     { "nocolor",        arg_none,           NULL,       3,      "Force black and white display" },
 
-    { "visbell",        arg_none,           NULL,       302,    "Enable visable bell" },
+    { "visbell",        arg_none,           NULL,       302,    "Enable visible bell" },
 
     { "light",          arg_none,           NULL,       4,      "Light color scheme" },
 
@@ -165,7 +167,9 @@ static struct argoption options[] = {
 
     { "nounicode",      arg_none,           NULL,       307,    "Disable use of UNICODE graphic characters" },
 
-    { "nounderline",    arg_none,           NULL,       6,      "Disable use of underline mode" },
+    { "nounderline",    arg_none,           NULL,       323,    "Disable use of all underline/understyle modes" },
+
+    { "noundercurl",    arg_none,           NULL,       324,    "Disable use of extended understyle modes" },
 
     { "nohilite",       arg_none,           NULL,       7,      "Disable syntax hiliting" },
 
@@ -177,6 +181,8 @@ static struct argoption options[] = {
     { "kbconfig",       arg_required,       NULL,       422,    "Keyboard protocol selection config; format \"term:mode[;..]\"" },
 
     { "nosigtrap",      arg_none,           NULL,       17,     "Disable signal trapping (for debugging)" },
+
+    { "norc",           arg_none,           NULL,       18,     "Disable GRFLAGS and resource processing" },
 
     { "term",           arg_required,       NULL,       308,    "Override the TERM setting",
                             "<termname>" },
@@ -215,7 +221,7 @@ static struct argoption options[] = {
     { "lazy",           arg_optional,       NULL,       11,     "Limit vt updates to # lines, delayed until stable; for slow links",
                             "=lines" },
 
-    { "jump",           arg_optional,       NULL,       311,    "Scroll jump, paging content not scolling; for slow links",
+    { "jump",           arg_optional,       NULL,       311,    "Scroll jump, paging content not scrolling; for slow links",
                             "=lines" },
 
     { "visible",        arg_optional,       NULL,       312,    "Visible lines above/below cursor",
@@ -275,11 +281,15 @@ const char *            x_appname = ApplicationName;
 
 const char *            x_progname = "";        /* arg0 */
 
+const char *            x_resource = NULL;      /* active resource-file, in any. */
+
 static int              xf_linenumber = 0;      /* Initial line number. */
 
 static int              xf_dumpstats = FALSE;   /* TRUE if stats reporting on exit. */
 
 static int              xf_dumprefs = FALSE;    /* TRUE if ref status are dumped on exit. */
+
+static int              xf_colorscheme = -1;    /* 0=light,1=dark,-1=default */
 
 #if defined(HAVE_MOUSE) || defined(WIN32)
 const char *            xf_mouse = "";          /* mouse mode; default auto-detect */
@@ -315,7 +325,7 @@ int                     xf_spell = -1;          /* TRUE/FALSE/-1 enable spell. *
                                                 /* TRUE enables tty regions scrolling. */
 int                     xf_scrollregions = FALSE;
 
-int                     xf_color = -1;          /* TRUE/FALSE, user specified color mode. */
+int                     xf_color = COLORMODE_AUTO; /* color depth/mode. */
 
 int                     xf_graph = -1;          /* TRUE/FALSE, user specified graphic mode. */
 
@@ -325,11 +335,13 @@ int                     xf_kbprotocol = KBPROTOCOL_AUTO; /* TRUE/FALSE, raw keyb
 
 const char *            xf_kbconfig = NULL;     /* Optional keyboard configuration. */
 
-int                     xf_sigtrap = TRUE;      /* TRUE/FALSE, control signal traps. */
+int                     xf_sigtrap = TRUE;      /* TRUE/FALSE, signal traps. */
+
+int                     xf_resource = TRUE;     /* TRUE/FALSE, resource processing. */
 
 int                     xf_dumpcore = 0;        /* 1=dumpcore, 2=stack-dump (if available). */
 
-int                     xf_underline = -1;      /* TRUE/FALSE, user specified underline mode. */
+int                     xf_understyle = UNDERSTYLE_LINE|UNDERSTYLE_EXTENDED|UNDERSTYLE_BLINK;
 
 int                     xf_title = -1;          /* TRUE/FALSE, user specified console title mode. */
 
@@ -381,7 +393,6 @@ int                     x_plevel = 0;           /* Process level. */
 
 int                     x_panycb = 0;           /* Change buffer action. */
 
-
 static int              m_cnt = 0;              /* -m count. */
 static const char *     m_profile;              /* User profile. */
 static const char *     m_strings[MAX_M+1];     /* Array of pointer to -m strings. */
@@ -392,12 +403,13 @@ WINDOW_t *              curwp = NULL;           /* Current window. */
 
 static int              isdir(const char *path);
 
+static char *           path_resolve(const char *path, const char *sub);
 static int              path_cat(const char *path, const char *sub, char *buf, int length);
 static char *           path_cook2(const char *name, char *result, int length);
 static char *           path_cook(const char *name);
 
 static void             argv_init(int *argcp, char **argv);
-static int              argv_process(const int doerr, int argc, const char **argv);
+static int              argv_process(int doerr, int argc, const char * const *argv);
 
 static void             unicode_init(void);
 
@@ -520,8 +532,8 @@ cmain(int argc, char **argv)
 
     edbt_init(x_progname, 0, stderr);           /* traceback initialisation */
     env_init();
-    argv_init(&argc, argv);                     /* prelim argument processing */
-    edbt_auto();                                /* enable automatic backtrace if available */
+    argv_init(&argc, argv);                     /* preliminary argument processing */
+    edbt_auto();                                /* enable automatic back-trace if available */
 
     /* core */
     search_init();                              /* regular expression engine */
@@ -552,6 +564,7 @@ cmain(int argc, char **argv)
         //TODO: resource macro?
 
     /* high-level */
+    ttsetdefaultscheme(xf_colorscheme);         /* override */
     color_setscheme(NULL);
     cmap_init();                                /* character map */
     syntax_init();                              /* syntax hilite engine */
@@ -563,7 +576,7 @@ cmain(int argc, char **argv)
         spell_init();
     }
     unicode_init();
-    vtready();
+    vtready(VTCREATE);
     if (xf_mouse) {
         if (mouse_init(xf_mouse)) {             /* mouse interface */
             x_display_ctrl |= DC_MOUSE;
@@ -594,6 +607,11 @@ cmain(int argc, char **argv)
     }
 
     x_plevel = 0;
+    if (execute_function("grief_resource", xf_resource ? "yes" : "no") == 1) {
+        gr_exit(EXIT_SUCCESS);
+        return 0;
+    }
+
     if (NULL == m_profile) {                    /* default user profile */
         m_strings[m_cnt++] =
             (m_profile = chk_salloc("profiles/defaultuser"));
@@ -613,7 +631,8 @@ cmain(int argc, char **argv)
      */
     signals_init(1);
     x_plevel = 0;
-    execute_str("startup");
+
+    execute_function("startup", NULL);
     for (i = 0; i < m_cnt; ++i) {
         const char *macro = m_strings[i];
 
@@ -633,7 +652,7 @@ cmain(int argc, char **argv)
             const char* name = argv[arg_index++];
 
             if (!*name || isdir(name)) {
-                if (execute_opendir(name) >= 1) {
+                if (execute_function("opendir", !*name ? "." : name) >= 1) {
                     if (NULL == firstbp) {
                         firstbp = curbp;
                     }
@@ -723,6 +742,29 @@ panic(const char *fmt, ...)
     fflush(stderr);
     sys_abort();
     exit(1);
+}
+
+
+static char *
+path_resolve(const char *path, const char *sub)
+{
+    char t_path[MAX_PATH] = {0}, t_result[MAX_PATH] = {0};
+
+    strxcpy(t_path, path, sizeof(t_path)-1);
+    path = t_path;
+
+    if (sub) {
+        strxcat(t_path, sub, sizeof(t_path)-1);
+        if (0 == sys_realpath((const char *)t_path, t_result, sizeof(t_result)) && t_result[0]) {
+            path = t_result;
+        }
+    }
+
+    if (0 == sys_access(path, 0)) {
+        return chk_salloc(path);
+    }
+
+    return NULL;
 }
 
 
@@ -913,7 +955,10 @@ argv_init(int *argcp, char **argv)
             } else if (arg[1] == 'P' || 0 == strncmp(arg, "--dflags", 7)) {
                 cook = 2;
 
-            } else if (0 == strncmp(arg, "--restrict", 10)) {
+            } else if (0 == strcmp(arg, "--norc")) {
+                xf_resource = 0;
+
+            } else if (0 == strcmp(arg, "--restrict")) {
                 cook = 1;
 
             } else if (0 == strncmp(arg, "--nosig", 7)) {
@@ -933,9 +978,6 @@ argv_init(int *argcp, char **argv)
                 chdir(getenv("HOME"));          /* exec'ed from Finder, force directory */
                 cook = -1;
 #endif
-
-            } else if (0 == strncmp(arg, "--nosig", 7)) {
-                xf_sigtrap = 0;
             }
 
             if (cook) {
@@ -969,7 +1011,7 @@ argv_init(int *argcp, char **argv)
  *      Process command line arguments.
  */
 static int
-argv_process(const int doerr, int argc, const char **argv)
+argv_process(const int doerr, int argc, const char * const *argv)
 {
     char t_path[MAX_PATH];
     struct argparms args = {0};
@@ -1012,17 +1054,33 @@ argv_process(const int doerr, int argc, const char **argv)
 
         case 3:             /* tty - [no]color=[depth] */
             if ('c' == args.opt) {
-                if (! args.val ||
-                        (xf_color = atoi(args.val)) <= 0) {
-                    xf_color = 1;
+                if (! args.val || 0 == strcmp(args.val, "auto")) {
+                    xf_color = COLORMODE_AUTO;
+                } else if (0 == strcmp(args.val, "none")) {
+                    xf_color = COLORMODE_NONE;
+                } else if (0 == strcmp(args.val, "truecolor") || 0 == strcmp(args.val, "24bit")) {
+                    xf_color = COLORMODE_TRUECOLOR; // semicolon
+                } else if (0 == strcmp(args.val, "direct")) {
+                    xf_color = COLORMODE_DIRECT; // colon
+                } else {
+                    xf_color = (int)strtoul(args.val, NULL, 10);
+                    if (xf_color >= COLORMODE_256) {
+                        xf_color = COLORMODE_256;
+                    } else if (xf_color >= COLORMODE_88) {
+                        xf_color = COLORMODE_88;
+                    } else if (xf_color >= COLORMODE_16) {
+                        xf_color = COLORMODE_16;
+                    } else if (xf_color >= 1) {
+                        xf_color = COLORMODE_8;
+                    }
                 }
             } else {
-                xf_color = 0;
+                xf_color = COLORMODE_NONE;
             }
             break;
 
         case 4:             /* tty - d[ark]|l[ight]. */
-            color_setscheme('d' == args.opt ? "dark" : "light");
+            xf_colorscheme = ('d' == args.opt ? 1 : 0);
             break;
 
         case 5:             /* tty - graphic character. */
@@ -1054,8 +1112,12 @@ argv_process(const int doerr, int argc, const char **argv)
             xf_kbconfig = args.val;
             break;
 
-        case 6:             /* tty - underline mode. */
-            xf_underline = FALSE;
+        case 323:           /* tty - nounderline. */
+            xf_understyle = 0;
+            break;
+
+        case 324:           /* tty - noundercurl. */
+            xf_understyle &= ~UNDERSTYLE_EXTENDED;
             break;
 
         case 7:             /* tty - disable syntax hiliting. */
@@ -1098,7 +1160,7 @@ argv_process(const int doerr, int argc, const char **argv)
             break;
 
         case 13:            /* ESC delay. */
-            xf_escdelay = atoi(args.val);
+            xf_escdelay = (args.val ? atoi(args.val) : 0);
             break;
 
         case 14:            /* strict file-locking. */
@@ -1111,6 +1173,9 @@ argv_process(const int doerr, int argc, const char **argv)
 
         case 17:            /* disable signal trapping */
             xf_sigtrap = FALSE;
+            break;
+
+        case 18:            /* no resource processing */
             break;
 
         case 'a':           /* additional files */
@@ -1134,7 +1199,7 @@ argv_process(const int doerr, int argc, const char **argv)
             break;
 
         case 'D':           /* -D define */
-            if (args.val && 0 != strcmp(args.val, "__XdummyX__")) {
+            if (args.val) {
                 static const struct {
                     const char *from;
                     unsigned    fromlen;
@@ -1146,12 +1211,11 @@ argv_process(const int doerr, int argc, const char **argv)
                     { "GRHELP=",   7, "GRHELP",   1 },
                     { "GRBACKUP=", 9, "GRBACKUP", 1 },
                     { "GRTMP=",    6, "GRTMP",    1 },
-                    /* plus BRIEF definitions; remapped */
+                    /* plus legacy BRIEF definitions; remapped */
                     { "BPATH=",    6, "GRPATH",   1 },
                     { "BHELP=",    6, "GRHELP",   1 },
                     { "BBACKUP=",  8, "GRBACKUP", 1 },
                     { "BTMP=",     5, "GRTMP",    1 },
-                    { "BFLAGS=",   7, "GRFLAGS",  0 },
                     };
                 const char *val = args.val;
                 unsigned v;
@@ -1169,9 +1233,12 @@ argv_process(const int doerr, int argc, const char **argv)
                         break;
                     }
                 }
+
                 if (val) {
                     trace_log("\t==>%s", val);
-                    gputenv(val);
+                    if (env_define(val) == -1) {
+                        gputenv(val);
+                    }
                 }
             }
             break;
@@ -1183,7 +1250,7 @@ argv_process(const int doerr, int argc, const char **argv)
         case 'P': {         /* debug/profile flags */
                 int nflags = trace_flags();
 
-                if (isdigit(args.val[0])) {
+                if (args.val && isdigit(args.val[0])) {
                     nflags |= atoi(args.val);
 
                 } else {
@@ -1242,12 +1309,12 @@ argv_process(const int doerr, int argc, const char **argv)
             trace_flagsset(trace_flags() | DB_FLUSH);
             break;
 
-        case '4':           /* ega43, funct */
+        case '4':           /* ega43, legacy */
             xf_ega43 = TRUE;
             break;
 
         case 'e':           /* echo flags */
-            if (isdigit(args.val[0])) {
+            if (args.val && isdigit(args.val[0])) {
                 xf_echoflags = atoi(args.val);
 
             } else {
@@ -1678,44 +1745,64 @@ env_setup(void)
     }
 
     /* flags/configuration */
-    if (NULL == ggetenv("GRFLAGS")) {
-        gputenv(x_grflags);
-    }
-
     if (NULL == ggetenv("GRFILE")) {
         gputenv(x_grfile);
     }
 
-    if (NULL != (env = ggetenv("GRFLAGS"))) {
-        const char *av[32+2] = {NULL};          /* limit of 32 plus program and term */
-        int ac;
+    /* GRFLAGS or resource-file; mutually exclusion */
+    if (xf_resource) {
+        if (NULL == (env = ggetenv("GRFLAGS"))) {
+            const char *home;
 
-        cp = chk_salloc(env);
-        chk_leak(cp);                           /* cannot free 'cp' as reference(s) maybe taken */
+            if ((env = ggetenv("GRRC")) != NULL) {
+                x_resource = chk_salloc(env);
+            }
 
-        trace_log("GRFLAGS=<%s>\n", cp);
-        ac = arg_split(cp, av + 1, 32);         /* split */
+            if (NULL != (home = sysinfo_homedir(NULL, -1))) {
+                if (x_resource != NULL ||       // GRRC=<path>
+                        (x_resource = path_resolve(home, "/" GRRC_FILE)) != NULL // ~/.grrc
+#if defined(GRRC_ALTFILE)
+                        || (x_resource = path_resolve(home, "/" GRRC_ALTFILE)) != NULL // ~/_grrc
+#endif
+                        )
+                {
+                    struct argrc rc = {0};
 
-        if (ac > 0) {
-            int i;
+                    trace_log("GRRC=<%s>\n", x_resource);
+                    if (argrc_load2(x_progname, x_resource, &rc) > 0) {
+                        unsigned n;
 
-            av[0] = x_progname;                 /* arg0 */
-            ++ac;                               /* include within argument-count */
-
-            for (i = 1; i < ac; ++i) {
-                const char *v = av[i];
-
-                trace_log(" [%d]: %s\n", i, (v ? v : "n/a"));
-                if (v && '-' == v[0] && 'D' == v[1] && v[2]) {
-                    if (0 == env_define(v + 2)) {
-                        /*
-                         *  -DCONST[=value]
-                         */
-                       av[i] = "-D__XdummyX__";
+                        for (n = 1; n < rc.argc; ++n) {
+                            trace_log(" [%d]: %s\n", n, rc.argv[n]);
+                        }
+                        if (rc.argc) {
+                            argv_process(TRUE, rc.argc, rc.argv);
+                        }
+                        argrc_free(&rc);
                     }
                 }
             }
-            argv_process(FALSE, ac, av);       /* cook options */
+        }
+
+        if (NULL != env) {
+            const char *argv[32 + 2] = {NULL};  /* limit of 32 plus program and term */
+            int argc;
+
+            cp = chk_salloc(env);
+            chk_leak(cp);                       /* cannot free, possible reference(s) taken */
+
+            if ((argc = arg_split(cp, argv + 1, 32)) > 0) {
+                int n;
+
+                argv[0] = x_progname;           /* arg0 */
+                ++argc;                         /* include within argument-count */
+
+                trace_log("GRFLAGS=<%s>\n", cp);
+                for (n = 1; n < argc; ++n) {
+                    trace_log(" [%d]: %s\n", n, (argv[n] ? argv[n] : "n/a"));
+                }
+                argv_process(FALSE, argc, argv);
+            }
         }
     }
 
@@ -1753,13 +1840,14 @@ env_iswhite(const char ch)
 static int
 env_define(const char *cp)
 {
-    int type = F_INT;
-    char *name = NULL, *svalue = NULL;
+    char *name, *svalue = NULL;
     accint_t ivalue = 1;
+    int type = F_INT;
     int ret = -1;
 
     /* parser, integer (default of 1) otherwise string */
-    if (NULL == (svalue = strchr(cp, '='))) {
+    name = chk_salloc(cp);
+    if (NULL == (svalue = strchr(name, '='))) {
         type = F_INT;
         ivalue = 1;
 
@@ -1767,48 +1855,53 @@ env_define(const char *cp)
         char *endp = NULL;
 
         errno = 0;
-        *svalue++ = 0;
+        *svalue++ = 0;                          // terminate name
         ivalue = accstrtoi(svalue, &endp, 10);
         if (errno || (*endp && ! env_iswhite(*endp))) {
             type = F_STR;
         }
     }
-    name = chk_salloc(cp);
 
-    /* define CONSTANT */
-#if (TODO_CMDLINE_CONSTANTS)
-    if (! sym_lookup(name)) {
-        SYMBOL *sp;
+    if (0 == strcmp(name, "GRFLAGS") || 0 == strcmp(name, "GRRC")) {
+        ret = 0;                                // consume
 
-        if (NULL != (sp = sym_push(TRUE, (const char *)name, type, SF_CONSTANT))) {
-            if (F_STR == type) {
-               sym_assign_str(sp, (const char *)svalue);
-            } else {
-               sym_assign_int(sp, ivalue);
-            }
-            ret = 0;
-        }
     } else {
-        errorf("redefining '%s', ignored", name);
-    }
+        /* define CONSTANT */
+#if (TODO_CMDLINE_CONSTANTS)
+        if (asvar) {
+            if (! sym_lookup(name)) {
+                SYMBOL *sp;
+
+                if (NULL != (sp = sym_push(TRUE, (const char *)name, type, SF_CONSTANT))) {
+                    if (F_STR == type) {
+                        sym_assign_str(sp, (const char *)svalue);
+                    } else {
+                        sym_assign_int(sp, ivalue);
+                    }
+                    ret = 0;
+                }
+            } else {
+                errorf("redefining '%s', ignored", name);
+            }
+        }
 #endif
 
-    if (F_STR == type) {
-        trace_log("-D%s=%s (string)\n", name, svalue);
-    } else {
-        trace_log("-D%s=%" ACCINT_FMT " (integer)\n", name, ivalue);
+        if (F_STR == type) {
+            trace_log("-D%s=%s (string)\n", name, svalue);
+        } else {
+            trace_log("-D%s=%" ACCINT_FMT " (integer)\n", name, ivalue);
+        }
     }
-    if (svalue) {
-        svalue[-1] = '=';                       /* restore */
-    }
+
+    chk_free(name);
     return ret;
 }
 
 
-void
-gr_exit(int rcode)
+static void
+cexit(int rcode, int dotrigger)
 {
-    if (! xf_dumpcore) {
+    if (dotrigger) {
         LISTV largv[MAX_ARGC];
 
         (void) memset(largv, 0, sizeof(largv));
@@ -1887,6 +1980,20 @@ gr_exit(int rcode)
 #else
     _exit(rcode);
 #endif
+}
+
+
+void
+gr_exit(int rcode)
+{
+    cexit(rcode, xf_dumpcore ? 0 : 1);
+}
+
+
+void
+gr_shutdown(int rcode)
+{
+    cexit(rcode, FALSE);
 }
 
 
@@ -1987,7 +2094,7 @@ usage(int what)
             "\002and (www.crisp.demon.co.uk).",
             "\002",
             "\002Paul Fox no longer maintains nor supports the Crisp 2.2 version.  Crisp was based in part",
-            "\002on a mix of public domain and specialised components. The final source and several earier",
+            "\002on a mix of public domain and specialised components. The final source and several earlier",
             "\002versions can be found on old mail archive sites.",
             "",
 
@@ -2041,17 +2148,19 @@ usage(int what)
             fprintf(stderr, "PROGNAME=%s\n", x_progname);
             fprintf(stderr, "MACHTYPE=%s\n", x_machtype);
             fprintf(stderr, "MAXPATH=%u\n", MAX_PATH);
-            fprintf(stderr, "GRPATH=%s\n",          (NULL != (env = ggetenv("GRPATH")) ? env : ""));
-            fprintf(stderr, "GRHELP=%s\n",          (NULL != (env = ggetenv("GRHELP")) ? env : ""));
-            fprintf(stderr, "GRPROFILE=%s\n",       (NULL != (env = ggetenv("GRPROFILE")) ? env : ""));
-            fprintf(stderr, "GRCOLORSCHEME=%s\n",   (NULL != (env = ggetenv("GRCOLORSCHEME")) ? env : ""));
-            fprintf(stderr, "GRLEVEL=%s\n",         (NULL != (env = ggetenv("GRLEVEL")) ? env : ""));
-            fprintf(stderr, "%s\n", x_grfile);
-            fprintf(stderr, "%s\n", x_grflags);
-            fprintf(stderr, "GRBACKUP=%s\n",        (NULL != (env = ggetenv("GRBACKUP")) ? env : ""));
-            fprintf(stderr, "GRVERSIONS=%s\n",      (NULL != (env = ggetenv("GRVERSIONS")) ? env : ""));
-            fprintf(stderr, "GRDICTIONARIES=%s\n",  (NULL != (env = ggetenv("GRDICTIONARIES")) ? env : ""));
-            fprintf(stderr, "GRDICTIONARY=%s\n",    (NULL != (env = ggetenv("GRDICTIONARY")) ? env : ""));
+            fprintf(stderr, "HOME=%s\n", (NULL != (env = sysinfo_homedir(NULL, -1)) ? env : ""));
+            fprintf(stderr, "GRPATH=%s\n", (NULL != (env = ggetenv("GRPATH")) ? env : ""));
+            fprintf(stderr, "GRHELP=%s\n", (NULL != (env = ggetenv("GRHELP")) ? env : ""));
+            fprintf(stderr, "GRPROFILE=%s\n", (NULL != (env = ggetenv("GRPROFILE")) ? env : ""));
+            fprintf(stderr, "GRCOLORSCHEME=%s\n", (NULL != (env = ggetenv("GRCOLORSCHEME")) ? env : ""));
+            fprintf(stderr, "GRLEVEL=%s\n", (NULL != (env = ggetenv("GRLEVEL")) ? env : ""));
+            fprintf(stderr, "GRFILE=%s\n", (NULL != (env = ggetenv("GRFILE")) ? env : x_grfile));
+            fprintf(stderr, "GRFLAGS=%s\n", (NULL != (env = ggetenv("GRFLAGS")) ? env : ""));
+            fprintf(stderr, "GRRC=%s\n", (NULL != x_resource ? x_resource : ""));
+            fprintf(stderr, "GRBACKUP=%s\n", (NULL != (env = ggetenv("GRBACKUP")) ? env : ""));
+            fprintf(stderr, "GRVERSIONS=%s\n", (NULL != (env = ggetenv("GRVERSIONS")) ? env : ""));
+            fprintf(stderr, "GRDICTIONARIES=%s\n", (NULL != (env = ggetenv("GRDICTIONARIES")) ? env : ""));
+            fprintf(stderr, "GRDICTIONARY=%s\n", (NULL != (env = ggetenv("GRDICTIONARY")) ? env : ""));
             fprintf(stderr, "GR%s\n", x_default_term);
             if (x_features[0]) {
                 unsigned fidx;

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_feature_c,"$Id: m_feature.c,v 1.29 2024/05/17 17:23:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_feature_c,"$Id: m_feature.c,v 1.30 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_feature.c,v 1.29 2024/05/17 17:23:57 cvsuser Exp $
+/* $Id: m_feature.c,v 1.30 2024/12/06 15:46:06 cvsuser Exp $
  * Features.
  *
  *
@@ -391,7 +391,7 @@ do_set_feature(void)            /* (string feature, declare value) */
         inq_feature([int|string feature], [string value])
 
     Macro Description:
-        The 'inq_feature()' primitive tsets the status of the
+        The 'inq_feature()' primitive sets the status of the
         specific feature 'feature', returning its current
         configuration value.
 

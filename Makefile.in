@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.74 2024/06/14 16:40:51 cvsuser Exp $
+# $Id: Makefile.in,v 1.75 2024/12/16 10:22:38 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2024, Adam Young.
@@ -328,6 +328,8 @@ endif
 
 GRUPDATER=	no
 ifeq (vs,$(findstring vs,"@TOOLCHAIN@"))
+GRUPDATER=	yes
+else ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
 GRUPDATER=	yes
 else ifeq ("@TOOLCHAIN@","owc20")
 GRUPDATER=	yes

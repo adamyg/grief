@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_msg_c,"$Id: m_msg.c,v 1.31 2021/07/05 15:01:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_msg_c,"$Id: m_msg.c,v 1.32 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_msg.c,v 1.31 2021/07/05 15:01:27 cvsuser Exp $
+/* $Id: m_msg.c,v 1.32 2024/12/06 15:46:06 cvsuser Exp $
  * Message and formatting primitives.
  *
  *
@@ -411,7 +411,7 @@ __CIDENT_RCSID(gr_m_msg_c,"$Id: m_msg.c,v 1.31 2021/07/05 15:01:27 cvsuser Exp $
         The 'message()' primitive returns the number of characters
         printed.
 
-    Macro Portablility:
+    Macro Portability:
         Many of the format options are Grief extensions, including '%b',
         '%n', '%t', '%B' and '*' support.
 
@@ -702,7 +702,7 @@ do_printf(void)                 /* (string format, ...) */
             Additional arguments are ignored by the primitive.
 
     Macro Returns:
-        The 'dprintf()' primitive returns the number of charaters stored
+        The 'dprintf()' primitive returns the number of characters stored
         within the result string 'buffer'.
 
     Macro Portability:
@@ -773,7 +773,7 @@ do_dprintf(void)                /* (string format, ...) */
             Additional arguments are ignored by the primitive.
 
     Macro Returns:
-        The 'sprintf()' primitive returns the number of charaters stored
+        The 'sprintf()' primitive returns the number of characters stored
         within the result string 'buffer'.
 
     Macro Portability:
@@ -923,7 +923,7 @@ do_format(void)                 /* (string format, ...) */
         'echo' is a Grief extension.
 
     Macro Example:
-        The following examples enables error acknowledgement during the
+        The following examples enables error acknowledgment during the
         execution of the macro 'subshell()' and restores the previous
         status on completion.
 
@@ -1013,7 +1013,7 @@ do_pause_on_error(void)         /* int ([int pause = NULL], [int echo = TRUE]) *
         'echo' is a Grief extension.
 
     Macro Example:
-        The following examples enables error acknowledgement during
+        The following examples enables error acknowledgment during
         the execution of the macro 'subshell()' and restores the
         previous status on completion.
 
@@ -1042,4 +1042,5 @@ do_pause_on_message(void)       /* int ([int pause = NULL], [int echo = TRUE]) *
     }
     acc_assign_int(old);
 }
+
 /*end*/

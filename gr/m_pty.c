@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_pty_c,"$Id: m_pty.c,v 1.27 2024/08/25 06:01:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_pty_c,"$Id: m_pty.c,v 1.28 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_pty.c,v 1.27 2024/08/25 06:01:53 cvsuser Exp $
+/* $Id: m_pty.c,v 1.28 2024/12/06 15:46:06 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -460,7 +460,7 @@ do_send_signal(void)            /* int (int signo = 0) */
             the cursor row.
 
     Macro Returns:
-        The 'inq_process_position()' primitive returns 0 on sucess,
+        The 'inq_process_position()' primitive returns 0 on success,
         otherwise -1 if the current buffer is not attached to a
         process.
 
@@ -1679,7 +1679,7 @@ pty_insertc(int ch)
         }
         return 1;
     }
-    return -1;                                  /* not attched */
+    return -1;                                  /* not attached */
 }
 
 
@@ -1706,4 +1706,5 @@ pty_write(const char *buf, int len)
         } while (n >= 0 || (n < 0 && errno == EINTR));
     }
 }
+
 /*end*/

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttycmd_c,"$Id: ttycmd.c,v 1.2 2024/09/25 15:51:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttycmd_c,"$Id: ttycmd.c,v 1.6 2024/12/11 13:57:15 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttycmd.c,v 1.2 2024/09/25 15:51:54 cvsuser Exp $
+/* $Id: ttycmd.c,v 1.6 2024/12/11 13:57:15 cvsuser Exp $
  * TTY common command functions
  *
  *
@@ -48,26 +48,45 @@ static int isterm(const char *term, const char *name);
 int
 tty_defaultscheme(void)
 {
-    const char *fgbg, *term = ggetenv("TERM");  // TODO/TERM_PROGRAM
+    const char *fgbg, *term = ggetenv("TERM");  // XXX/TERM_PROGRAM
     int isdark = 0;
 
     if (term) {
-        if (isterm(term, "linux") == 0
-            || isterm(term, "screen.linux") == 0
-            || isterm(term, "cygwin") == 0
-            || isterm(term, "putty") == 0
-            || isterm(term, "ms-terminal") == 0
-                || ggetenv("WT_SESSION")
-            || ((fgbg = ggetenv("COLORFGBG")) != NULL && // rxvt, COLORFGBG='0;default;15'
-                    (fgbg = strrchr(fgbg, ';')) != NULL && ((fgbg[1] >= '0' && fgbg[1] <= '6') || fgbg[1] == '8') && fgbg[2] == '\0')) {
+        if (isterm(term, "linux")
+            || isterm(term, "screen.linux")
+            || isterm(term, "cygwin")
+            || isterm(term, "putty")
+            || isterm(term, "ms-terminal")
+                || ggetenv("WT_SESSION")) {
             isdark = 1;
+
+        } else if ((fgbg = ggetenv("COLORFGBG")) != NULL &&
+                            (fgbg = strrchr(fgbg, ';')) != NULL) {
+            // rxvt style COLORFGBG='0;default;15'
+            if (((fgbg[1] >= '0' && fgbg[1] <= '6') || fgbg[1] == '8') && fgbg[2] == '\0') {
+                isdark = 2;
+            }
+
+        } else if (isterm(term, "xterm")) {
+            switch (x_pt.pt_vtdatype) {
+            case 0:   // putty/msterminal
+                if (136 == x_pt.pt_vtdaversion || 10 == x_pt.pt_vtdaversion) {
+                    isdark = 3;
+                }
+                break;
+            case 'M': // mintty
+                isdark = 4;
+                break;
+            }
         }
+
     } else {
 #if defined(WIN32) || defined(__CYGWIN__)
-        isdark = 1;                             /* generally dark */
+        isdark = 5;                             /* generally dark */
 #endif
     }
-    return isdark;
+    trace_ilog("term_defaultscheme : %d\n", isdark);
+    return isdark ? 1 : 0;
 }
 
 
@@ -113,15 +132,22 @@ isterm(const char *term, const char *name)
  *                ^type
  *                   ^version
  *
- *          Terminal                    Type        Version         Example
+ *          Terminal                  Type        Version         Example
  *          ------------------------------------------------------------------
- *          Gnome-terminal (legacy)     1           >= 1115         1;3801;0
- *          PuTTY                       0           136             0;136;0
- *          MinTTY                      77(=M)                      77;20005;0c
- *          rxvt                        82(=R)
- *          screen                      83(=S)                      83;40500;0
- *          urxvt                       85(=U)
- *          xterm                       -2(a)       123             XTERM_VERSION=123
+ *          Gnome-terminal (legacy)   1           >= 1115         1;3801;0
+ *          Gnome-terminal            65(e)       >= 6001         65;6001;1
+ *          PuTTY                     0           136             0;136;0
+ *          kconsole                                              0;115;0
+ *          Terminal.app              1           95              1;95;0
+ *          iTerm2                    0           95              0;95;0
+ *          minTTY                    77(M)                       77;20005;0c ("20000" == 2.0.0)
+ *          rxvt                      82(R)                       82;20703;0c ("20703" == 2.7.3)
+ *          screen                    83(S)                       83;40500;0 (added "30600" == 3.6.0)
+ *          urxvt                     85(U)
+ *          libvterm                                              0;100;0
+ *          msterminal                0           10              0;10;1c
+ *          xterm                     -2(a)
+ *          st                        n/a
  *
  *  Parameters:
  *      RV - Optional request-command string; default applied otherwise.
@@ -186,6 +212,7 @@ tty_identification(const char *RV, int timeoutms)
             }
         }
     }
+    trace_ilog("term_da2() : n/a\n");
     return ret;
 }
 
@@ -225,7 +252,7 @@ tty_luminance(int timeoutms)
      */
     if ((XTERM_OCS11_LEN != tty_write(xterm_ocs11, XTERM_OCS11_LEN)) ||
             (len = tty_read(buffer, sizeof(buffer), timeoutms)) < 1) {
-        trace_ilog("ttluminance : io (tm=%d, len=%d)\n", timeoutms, len);
+        trace_ilog("ttluminance : io (tm=%d, len=%d) : tmr\n", timeoutms, len);
         return -1;
     }
 
@@ -276,7 +303,7 @@ tty_luminance(int timeoutms)
         return 0;                               /* otherwise light */
     }
 
-    trace_ilog("ttluminance(%d, %s) : n/a", len, buffer);
+    trace_ilog("ttluminance(%d, %s) : n/a\n", len, buffer);
     return -1;
 }
 
@@ -398,6 +425,5 @@ tty_read(void *ibuffer, int length, int timeoutms)
 #endif /*!USE_VIO_BUFFER && !DJGPP*/
 
 /*end*/
-
 
 

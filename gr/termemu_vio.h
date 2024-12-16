@@ -1,7 +1,7 @@
 #ifndef TERMEMU_VIO_H_INCLUDED
 #define TERMEMU_VIO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(termemu_vio_h,"$Id: termemu_vio.h,v 1.8 2024/04/16 10:30:36 cvsuser Exp $")
+__CIDENT_RCSID(termemu_vio_h,"$Id: termemu_vio.h,v 1.10 2024/09/28 13:40:11 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -75,13 +75,21 @@ enum vt_colors {
 
 #define VIO_ALTCHARSET      0x0100
 #define VIO_UNDERLINE       0x0200
+
+#define VIO_UNDERSTYLE(_a)  ((_a & VIO_UNDERLINE) ? (_a & 0x0007) : 0)
+#define VIO_UNDERSTYLE_SINGLE   0x0001
+#define VIO_UNDERSTYLE_DOUBLE   0x0002
+#define VIO_UNDERSTYLE_CURLY    0x0003
+#define VIO_UNDERSTYLE_DOTTED   0x0004
+#define VIO_UNDERSTYLE_DASHED   0x0005
+
 #define VIO_BOLD            0x0400
 #define VIO_BLINK           0x0800
 #define VIO_INVERSE         0x1000
 #define VIO_ITALIC          0x2000
 #define VIO_STRIKE          0x4000
 #define VIO_FAINT           0x8000
-#define VIO_ATTRIBUTES      0xff00
+
 #define VIO_MINCOLS         12
 #define VIO_MINROWS         2
 #define VIO_MAXCOLS         1024
@@ -172,3 +180,4 @@ int vio_wcwidth(wchar_t ucs);
 __END_DECLS
 
 #endif //TERMEMU_VIO_H_INCLUDED
+

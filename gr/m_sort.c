@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_sort_c,"$Id: m_sort.c,v 1.18 2020/06/18 14:40:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_sort_c,"$Id: m_sort.c,v 1.19 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_sort.c,v 1.18 2020/06/18 14:40:37 cvsuser Exp $
+/* $Id: m_sort.c,v 1.19 2024/12/06 15:46:06 cvsuser Exp $
  * Sort functionality.
  *
  *
@@ -400,4 +400,5 @@ lsort_compare(const LISTV *lvp1, const LISTV *lvp2)
     }
     return val;
 }
+
 /*end*/

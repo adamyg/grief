@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_unix_c,"$Id: sys_unix.c,v 1.70 2024/09/21 09:05:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_unix_c,"$Id: sys_unix.c,v 1.71 2024/11/29 11:51:58 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_unix.c,v 1.70 2024/09/21 09:05:16 cvsuser Exp $
+/* $Id: sys_unix.c,v 1.71 2024/11/29 11:51:58 cvsuser Exp $
  * System dependent functionality - UNIX.
  *
  *
@@ -1328,7 +1328,7 @@ sys_mouseinit(const char *dev)
             mouse_type = MOUSE_GPM;
 
         } else if (-2 == mouse_fd) {
-            key_define_key_seq(MOUSE_XTERM_KEY, "\x1b[M");
+            key_sequence(MOUSE_XTERM_KEY, "\x1b[M");
             mouse_type = MOUSE_XTERM;
             mouse_fd = -1;
         }
@@ -1421,10 +1421,10 @@ static void
 xterm_mouse_keys(void)
 {
     /* X10 compatibility mode (1000) */
-    key_define_key_seq(MOUSE_XTERM_KEY, "\x1b[M");
+    key_sequence(MOUSE_XTERM_KEY, "\x1b[M");
 
     /* SGR mode (1006) */
-    key_define_key_seq(MOUSE_SGR_KEY, "\x1b[<");
+    key_sequence(MOUSE_SGR_KEY, "\x1b[<");
 
     /* FocusIn/FocusOut (1004):
      *
@@ -1432,8 +1432,8 @@ xterm_mouse_keys(void)
      *  When set, it causes xterm to send "CSI I" when the terminal gains focus, and "CSI O" when it loses focus.
      *
      */
-    key_define_key_seq(MOUSE_FOCUSIN_KEY, "\x1b[I");
-    key_define_key_seq(MOUSE_FOCUSOUT_KEY, "\x1b[O");
+    key_sequence(MOUSE_FOCUSIN_KEY, "\x1b[I");
+    key_sequence(MOUSE_FOCUSOUT_KEY, "\x1b[O");
 }
 
 

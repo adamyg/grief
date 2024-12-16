@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_tokenize_c,"$Id: m_tokenize.c,v 1.29 2024/07/05 18:33:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_tokenize_c,"$Id: m_tokenize.c,v 1.31 2024/12/06 15:46:06 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_tokenize.c,v 1.29 2024/07/05 18:33:16 cvsuser Exp $
+/* $Id: m_tokenize.c,v 1.31 2024/12/06 15:46:06 cvsuser Exp $
  * String primitives.
  *
  *
@@ -143,7 +143,7 @@ static unsigned         tok_trimr(const struct tokenizer *tok, const char *buffe
             control enabling and disabling of this feature.
 
         empties - Upon the 'delim' character being given as a integer
-            value empty split column are not returned witnin the list.
+            value empty split column are not returned within the list.
             When specified the 'empties' optional allows explicit
             control enabling (non-zero) and disabling (zero) to whether
             empties are returned.
@@ -479,7 +479,7 @@ split_isnumeric(char ch)
         o *TOK_NUMERIC_STRICT* -
             Strict conversion of numeric fields where by any invalid
             values, for example trailing non-numeric characters, result
-            in the the field being returned as a string element and not a
+            in the field being returned as a string element and not a
             integer element.
 
       Parsing options::
@@ -489,7 +489,7 @@ split_isnumeric(char ch)
             numeric element.
 
         o *TOK_BACKSLASHES* -
-            Allow backslahes to escape the meaning of any delimiter
+            Allow backslashes to escape the meaning of any delimiter
             characters and both single and double.
 
         o *TOK_ESCAPE* -
@@ -1722,6 +1722,4 @@ main(int argc, char *argv[]) {
 #endif  /*LOCAL_MAIN*/
 
 /*eof*/
-
-
 

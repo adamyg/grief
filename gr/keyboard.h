@@ -1,11 +1,11 @@
 #ifndef GR_KEYBOARD_H_INCLUDED
 #define GR_KEYBOARD_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keyboard_h,"$Id: keyboard.h,v 1.28 2024/09/25 15:51:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_keyboard_h,"$Id: keyboard.h,v 1.32 2024/11/29 11:51:58 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keyboard.h,v 1.28 2024/09/25 15:51:54 cvsuser Exp $
+/* $Id: keyboard.h,v 1.32 2024/11/29 11:51:58 cvsuser Exp $
  * Key maps and binding management.
  *
  *
@@ -38,13 +38,15 @@ struct IOEvent;
 #define KBPROTOCOL_MINTTY_MOK2      0x0020
 #define KBPROTOCOL_MOK2             (KBPROTOCOL_XTERM_MOK2|KBPROTOCOL_MINTTY_MOK2)
 #define KBPROTOCOL_CYGWIN           0x0100
-//  #define KBPROTOCOL_MSTERMINAL       0x0200
-/// #define KBPROTOCOL_KITTY            0x0400
+    // #define KBPROTOCOL_MSTERMINAL        0x0200
+    // #define KBPROTOCOL_KITTY             0x0400
 
-typedef struct keyseq {
-    KEY ks_code;                                /* internal keycode */
-    char ks_buf[1];                             /* array of characters null terminated */
-} keyseq_t;
+#define KEYCHECK_NORM               0x00
+#define KEYCHECK_2ND                0x01
+#define KEYCHECK_END                0x02
+
+#define KEYRESULT_MORE              -1
+#define KEYRESULT_NONE              0
 
 typedef struct mouseevt {
     const char* seq;
@@ -56,13 +58,11 @@ typedef struct mouseevt {
 extern void                 key_init(void);
 extern void                 key_shutdown(void);
 extern void                 key_typeables(void);
-extern int                  key_define_key_seq(int key, const char *str);
-extern void *               key_get_seq_list(int *num_syms);
+extern int                  key_sequence(int key, const char *seq);
 
+extern const char *         key_code2name(int key);
 extern int                  key_string2code(const char *cp, char *buf, int bufsize);
 extern const KEY *          key_string2seq(const char *cp, int *lenp);
-extern const char *         key_code2name(int key);
-extern int                  key_name2code(const char *name, int *lenp);
 
 extern void                 key_cache_key(ref_t *pp, int ch, int front);
 extern void                 key_cache_mouse(ref_t *pp, int ch, int front, const mouseevt_t *evt);
@@ -71,11 +71,8 @@ extern int                  key_cache_pop(ref_t *pp, struct IOEvent *evt);
 
 extern void                 key_execute(int c, const char *seq);
 
-extern int                  key_protocolid(const char *name, int namelen);
-extern const char *         key_protocolname(int mode, const char *def);
-
 extern int                  key_check(const char *buf, unsigned buflen, int *multi, int no_ambig);
-extern int                  key_mapwin32(unsigned, unsigned, unsigned);
+extern int                  key_mapwin32(unsigned, unsigned, unsigned); /*kbwin32.c*/
 
 extern void                 key_local_detach(BUFFER_t *bp);
 

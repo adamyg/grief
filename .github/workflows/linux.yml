@@ -108,15 +108,18 @@ jobs:
       if: startsWith(matrix.config.name, 'Ubuntu Latest')
       shell: bash
       run: |
+        sudo add-apt-repository universe
         sudo apt-get install -y libncurses-dev
-        sudo apt-get install -y libncursesw5-dev
         sudo apt-get install -y libenchant-2-dev
         sudo apt-get install -y libaspell-dev
         sudo apt-get install -y libhunspell-dev
         sudo apt-get install -y libenca-dev
-        sudo apt-get install -y libguess-dev
         sudo apt-get install -y libexplain-dev
         sudo apt-get install -y libarchive-dev
+
+## 24/10: removed
+##  legacy:  sudo apt-get install -y libncursesw5-dev
+##  missing: sudo apt-get install -y libguess-dev
 
     - name: MacOS, setup
       if: startsWith(matrix.config.name, 'MacOS Latest')
@@ -158,7 +161,7 @@ jobs:
       shell: bash
       run: |
         chmod +x configure
-        ./support/config_withncurses
+        ./support/config_withncursesw
 
     - name: Ubuntu, compile
       if: startsWith(matrix.config.name, 'Ubuntu Latest')

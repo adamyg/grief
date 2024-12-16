@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: xterm_gnome.cr,v 1.8 2024/06/18 16:26:25 cvsuser Exp $
+/* $Id: xterm_gnome.cr,v 1.9 2024/11/18 13:42:10 cvsuser Exp $
  * terminal description file for the xterm window under Gnome-terminal.
  *
  *
@@ -65,7 +65,7 @@ main(void)
             "\x1b[23;2~",   "\x1b[24;2~"),
 
         CTRL_F1_F12, quote_list(        // kf25 .. kf36
-            "\x1bO5P",      "\x1bO1;5Q",    "\x1bO1;5R",    "\x1bO1;5S",    "\x1b[15;5~",
+            "\x1bO1;5P",    "\x1bO1;5Q",    "\x1bO1;5R",    "\x1bO1;5S",    "\x1b[15;5~",
             "\x1b[17;5~",   "\x1b[18;5~",   "\x1b[19;5~",   "\x1b[20;5~",   "\x1b[21;5~",
             "\x1b[23;5~",   "\x1b[24;5~"),
 

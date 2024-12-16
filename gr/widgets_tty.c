@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_widgets_tty_c,"$Id: widgets_tty.c,v 1.45 2024/09/15 14:15:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_widgets_tty_c,"$Id: widgets_tty.c,v 1.46 2024/12/13 16:49:19 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: widgets_tty.c,v 1.45 2024/09/15 14:15:54 cvsuser Exp $
+/* $Id: widgets_tty.c,v 1.46 2024/12/13 16:49:19 cvsuser Exp $
  * Dialog widgets, tty interface.
  *
  *
@@ -130,13 +130,13 @@ tty_new(uint32_t size, WIDGETCB_t handler)
  *
  *  Parameters:
  *      w -                 Widget base object.
- *      msg -               Message to tbe sent.
+ *      msg -               Message to be sent.
  *      p1 -                First message parameter.
  *      p2 -                Second message parameter.
  *
  *  Returns:
  *      FALSE(0) if the message wasn't handled, otherwise a non-zero completion code.
- *      Unhandled message are forwarded to the generic widget message handler.
+ *      Unhanded message are forwarded to the generic widget message handler.
  */
 static int
 tty_default(WIDGET_t *w, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETARG_t p2)
