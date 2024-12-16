@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: buildinfo.pl,v 1.9 2024/07/30 05:06:10 cvsuser Exp $
+# $Id: buildinfo.pl,v 1.11 2024/12/16 10:22:46 cvsuser Exp $
 # buildinfo generation
 #
 # Copyright Adam Young 2018 - 2024
@@ -149,6 +149,8 @@ EOT
 
 		print FILE "#define BUILD_TOOLCHAIN \"${buildtoolchain}\"\n";
 		print FILE "#define BUILD_TOOLNAME \"${buildtoolname}\"\n";
+		print FILE "#define BUILD_ARCHITECTURE \"x64\"\n"
+			if ($buildtoolname =~ /64$/);
 	}
 
 	if ($buildtype) {

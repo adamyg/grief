@@ -58,7 +58,24 @@ DefaultGroupName=Grief
 LicenseFile=../COPYING
 
 OutputDir=.
-OutputBaseFilename=grwin32-build{#GR_BUILD_NUMBER}-setup
+; Examples:
+;  gr-3.2.4.28-win-x64-setup.exe
+;  gr-3.2.4.28-win-x86-setup.exe
+;
+#if defined(BUILD_ARCHITECTURE)
+#if (BUILD_ARCHITECTURE == "x64")
+ArchitecturesAllowed=x64
+ArchitecturesInstallIn64BitMode=x64
+#endif
+OutputBaseFilename=gr-{#GR_VERSION}.{#GR_BUILD_NUMBER}-win-{#BUILD_ARCHITECTURE}-setup
+#else
+OutputBaseFilename=gr-{#GR_VERSION}.{#GR_BUILD_NUMBER}-win-x86-setup
+#endif
+
+;	#if defined(BUILD_TOOLNAME)
+;	OutputBaseFilename=gr-{#GR_VERSION}.{#GR_BUILD_NUMBER}-{#BUILD_TOOLNAME}-setup
+;	#endif
+
 Compression=lzma
 SolidCompression=yes
 ChangesEnvironment=true
@@ -89,7 +106,7 @@ Source: "..\{#BinDir}\gm.exe";        DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\grcpp.exe";     DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\grunch.exe";    DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\grmandoc.exe";  DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\{#BinDir}\grwc.exe";      DestDir: "{app}\bin"; Flags: ignoreversion
+	;;Source: "..\{#BinDir}\grwc.exe";      DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\grupdater.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\*.dll";         DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\ctbl\*";        DestDir: "{app}\bin\ctbl"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -99,7 +116,7 @@ Source: "..\macros\*";                DestDir: "{app}\macros"; Flags: ignorevers
 Source: "..\help\*";                  DestDir: "{app}\help"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\COPYING";                 DestDir: "{app}"; Flags: ignoreversion
 Source: "..\Changes";                 DestDir: "{app}"; Flags: ignoreversion isreadme
-; NOTE: Dont use "Flags: ignoreversion" on any shared system files
+	; NOTE: Dont use "Flags: ignoreversion" on any shared system files
 
 [Icons]
 Name: "{group}\Grief"; Filename: "{app}\bin\gr.exe"
