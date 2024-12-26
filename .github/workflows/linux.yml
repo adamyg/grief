@@ -188,6 +188,14 @@ jobs:
         arch: 'x86_64'
         desc: '${{ env.DESC }}'
 
+    - name: Ubuntu, upload
+      if: startsWith(matrix.config.name, 'Ubuntu Latest')
+      with:
+        name: artifact-rpm
+        path: |
+          ./*.rpm
+          !./*-debuginfo-*.rpm
+
     - name: MacOS, generate
       if: startsWith(matrix.config.name, 'MacOS Latest')
       shell: bash
@@ -215,4 +223,5 @@ jobs:
         name: package-${{ matrix.config.package }}
         path: |
           ./bin.${{ matrix.config.toollabel }}/release/*
-          ./*.rpm
+
+#end
