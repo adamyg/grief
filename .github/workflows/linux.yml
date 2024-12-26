@@ -65,14 +65,14 @@ jobs:
       shell: bash
       run: |
         mkdir .snapshot
-        tar  --exclude-vcs --exclude='./.snapshot' --exclude='./win32' --exclude='./contrib' --exclude='./support/*.bat' --exclude='./defunct' -cf .snapshot/source-snapshot.tar .
-        tar  --exclude-vcs -cf .snapshot/contrib-snapshot.tar ./contrib
+        tar --exclude-vcs --exclude='./.snapshot' --exclude='./win32' --exclude='./contrib' --exclude='./support/*.bat' --exclude='./defunct' -cf .snapshot/source-snapshot.tar .
+        tar --exclude-vcs -cf .snapshot/contrib-snapshot.tar ./contrib
 
     - name: Source Snapshot Publish
       if: startsWith(matrix.config.name, 'Ubuntu Latest')
       uses: actions/upload-artifact@v4
       with:
-        name: source-snapshot
+        name: source-snapshot.tar
         path: .snapshot/source-snapshot.tar
         compression-level: 9
 
@@ -80,7 +80,7 @@ jobs:
       if: startsWith(matrix.config.name, 'Ubuntu Latest')
       uses: actions/upload-artifact@v4
       with:
-        name: contrib-snapshot
+        name: contrib-snapshot.tar
         path: .snapshot/contrib-snapshot.tar
         compression-level: 9
 
