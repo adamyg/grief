@@ -190,6 +190,7 @@ jobs:
 
     - name: Ubuntu, upload
       if: startsWith(matrix.config.name, 'Ubuntu Latest')
+      uses: actions/upload-artifact@v4
       with:
         name: artifact-rpm
         path: |
