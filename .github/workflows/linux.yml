@@ -5,6 +5,11 @@ on: [push]
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+  
+env:
+  APP_NAME: 'GriefEdit'
+  MAINTAINER: 'https://github.com/adamyg'
+  DESC: 'GriefEdit, console editor.'
 
 jobs:
   build:
@@ -167,7 +172,20 @@ jobs:
       if: startsWith(matrix.config.name, 'Ubuntu Latest')
       shell: bash
       run: |
-        make release
+        make release prepare_rpm
+        echo "$(cat ./.PKGLABEL)" >> $GITHUB_ENV
+
+    - name: Ubuntu, rpm
+      if: startsWith(matrix.config.name, 'Ubuntu Latest')
+      uses: jiro4989/build-rpm-action@v2
+      with:
+        summary: '${{ env.DESC }}'
+        package: ${{ env.APP_NAME }}
+        package_root: .rpmpkg
+        maintainer: ${{ env.MAINTAINER }}
+        version: ${{ env.VERSION }}
+        arch: 'x86_64'
+        desc: '${{ env.DESC }}'
 
     - name: MacOS, generate
       if: startsWith(matrix.config.name, 'MacOS Latest')

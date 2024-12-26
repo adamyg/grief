@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttycmd_c,"$Id: ttycmd.c,v 1.6 2024/12/11 13:57:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttycmd_c,"$Id: ttycmd.c,v 1.7 2024/12/17 11:13:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttycmd.c,v 1.6 2024/12/11 13:57:15 cvsuser Exp $
+/* $Id: ttycmd.c,v 1.7 2024/12/17 11:13:22 cvsuser Exp $
  * TTY common command functions
  *
  *
@@ -146,6 +146,7 @@ isterm(const char *term, const char *name)
  *          urxvt                     85(U)
  *          libvterm                                              0;100;0
  *          msterminal                0           10              0;10;1c
+ *          wezterm                     :
  *          xterm                     -2(a)
  *          st                        n/a
  *
@@ -425,5 +426,6 @@ tty_read(void *ibuffer, int length, int timeoutms)
 #endif /*!USE_VIO_BUFFER && !DJGPP*/
 
 /*end*/
+
 
 

@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.75 2024/12/16 10:22:38 cvsuser Exp $
+# $Id: Makefile.in,v 1.76 2024/12/26 12:52:07 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2024, Adam Young.
@@ -184,8 +184,8 @@ $(error build type expected as first target; see "make help" for details)
 endif
 endif
 
-.PHONY:				help clean vclean distclean build package install
-help clean vclean distclean build package install:
+.PHONY:				help clean vclean distclean build package install prepare_rpm
+help clean vclean distclean build package install prepare_rpm:
 ifeq ("$(BUILD_TYPES)","")
 	$(usage)
 else
@@ -382,7 +382,7 @@ DIRECTORIES=\
 #########################################################################################
 # Rules
 
-.PHONY:				build directories install
+.PHONY:		build directories
 build:				directories artifacts libs bins import
 		$(MAKE) -C $(D_HLPDOC)
 		$(MAKE) -C $(D_MACSRC)
@@ -455,7 +455,7 @@ else
 BUILD_NUMBER=		$(shell cat ./$(BUILDNUMBER))
 endif
 
-.PHONY:				buildinfo
+.PHONY:		buildinfo
 $(BUILDINFO):		Makefile $(BUILDNUMBER) buildinfo
 buildinfo:
 		@echo updating buildinfo.h ...
@@ -463,7 +463,7 @@ buildinfo:
 			--date="$(BUILD_DATE)" --build="$(BUILD_NUMBER)" --toolchain="@TOOLCHAINEXT@" --type="$(BUILD_TYPE)" \
 			--bindir="$(BINDIR)" --sbindir="$(SBINDIR)" --libexecdir="$(LIBEXECDIR)" --libdir="$(LIBDIR)" --datadir="$(DATADIR)"
 
-.PHONY:				packageinfo
+.PHONY:		packageinfo
 packageinfo:
 		-@$(PERL) ./buildinfo.pl -o $(PACKAGEINFO) --prefix="GR_" --package="$(PACKAGE)" --name="$(PKG_NAME)" --version="$(PKG_VERSION)" \
 			--date="$(BUILD_DATE)" --build="$(BUILD_NUMBER)" --toolchain="@TOOLCHAINEXT@" --type="$(BUILD_TYPE)"
@@ -482,7 +482,7 @@ BUILDNUMBER:
 		@echo $(GITHUB_RUN_NUMBER)>$@
 endif
 
-.PHONY:			new_buildnumber
+.PHONY:		new_buildnumber
 new_buildnumber:
 		-@chmod +w $(BUILDNUMBER)
 
@@ -545,7 +545,7 @@ ifeq ("$(INSTALL_MODE)","")
 INSTALL_MODE=0755
 endif
 
-.PHONY: install
+.PHONY:		install
 install:		build
 		-mkdir -p $(BINDIR)
 		-mkdir -p $(DATADIR)
@@ -564,6 +564,30 @@ install:		build
 		@echo Installing GRIEF macro source...
 		-$(TAR) cf - -C $(D_MACSRC) --mode=+rw --exclude CVS . | ($(TAR) xf - -C $(DATADIR)/src)
 		@echo Install done.
+
+.PHONY:		prepare_rpm
+prepare_rpm:		PKGDIR=.rpmpkg
+prepare_rpm:		build _prepare_pkg
+		@echo Package primed
+
+.PHONY:				_prepare_pkg
+_prepare_pkg:		PKGBIN=$(PKGDIR)/usr/local/bin
+_prepare_pkg:		PKGETC=$(PKGDIR)/usr/local/share/gr
+_prepare_pkg:
+		@echo "VERSION=$(PKG_VERSION).$(file <./BUILDNUMBER.in)" >.PKGLABEL
+		-mkdir -p $(PKGBIN)
+		-mkdir -p $(PKGETC)/help
+		-mkdir -p $(PKGETC)/macro
+		cp $(D_BIN)/gr$(E) $(PKGBIN)
+		cp $(D_BIN)/gm$(E) $(PKGBIN)
+		cp $(D_BIN)/grcpp$(E) $(PKGBIN)
+		cp $(D_BIN)/grmandoc$(E) $(PKGBIN)
+		cp $(D_BIN)/grunch$(E) $(PKGBIN)
+		chmod 0755 $(PKGBIN)/*
+		$(TAR) cf - -C $(D_HELP) --exclude .created --exclude CVS . | ($(TAR) xf - -C $(PKGETC)/help)
+		$(TAR) cf - -C $(D_MACROS) --exclude .created --exclude CVS . | ($(TAR) xf - -C $(PKGETC)/macro)
+		find $(PKGETC) -type d -exec chmod 0755 -- {} +
+		find $(PKGDIR) -type f -exec chmod 0644 -- {} +
 
 clean:
 		@echo $(BUILD_TYPE) clean
