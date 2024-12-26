@@ -7,7 +7,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  APP_NAME: 'GriefEdit'
+  APP_NAME: 'gr'
   MAINTAINER: 'https://github.com/adamyg'
   DESC: 'GriefEdit, console editor.'
 
