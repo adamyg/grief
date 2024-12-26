@@ -122,9 +122,9 @@ jobs:
         sudo apt-get install -y libexplain-dev
         sudo apt-get install -y libarchive-dev
 
-## 24/10: removed
-##  legacy:  sudo apt-get install -y libncursesw5-dev
-##  missing: sudo apt-get install -y libguess-dev
+        ## 24/10: removed
+        ##  legacy:  sudo apt-get install -y libncursesw5-dev
+        ##  missing: sudo apt-get install -y libguess-dev
 
     - name: MacOS, setup
       if: startsWith(matrix.config.name, 'MacOS Latest')
@@ -175,9 +175,11 @@ jobs:
         make release prepare_rpm
         echo "$(cat ./.PKGLABEL)" >> $GITHUB_ENV
 
+    # https://github.com/marketplace/actions/build-rpm-action
     - name: Ubuntu, rpm
+      id: rpm
       if: startsWith(matrix.config.name, 'Ubuntu Latest')
-      uses: jiro4989/build-rpm-action@v2
+      uses: jiro4989/build-rpm-action@v2.5.0
       with:
         summary: '${{ env.DESC }}'
         package: ${{ env.APP_NAME }}
@@ -192,10 +194,9 @@ jobs:
       if: startsWith(matrix.config.name, 'Ubuntu Latest')
       uses: actions/upload-artifact@v4
       with:
-        name: artifact-rpm
+        name: ${{ steps.rpm.outputs.file_name }}
         path: |
-          ./*.rpm
-          !./*-debuginfo-*.rpm
+          ./${{ steps.rpm.outputs.file_name }}
 
     - name: MacOS, generate
       if: startsWith(matrix.config.name, 'MacOS Latest')
