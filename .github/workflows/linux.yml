@@ -5,7 +5,7 @@ on: [push]
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-  
+
 env:
   APP_NAME: 'GriefEdit'
   MAINTAINER: 'https://github.com/adamyg'
@@ -184,6 +184,7 @@ jobs:
         package_root: .rpmpkg
         maintainer: ${{ env.MAINTAINER }}
         version: ${{ env.VERSION }}
+        license: QPL-1.0
         arch: 'x86_64'
         desc: '${{ env.DESC }}'
 
@@ -212,4 +213,6 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: package-${{ matrix.config.package }}
-        path: ./bin.${{ matrix.config.toollabel }}/release/*
+        path: |
+          ./bin.${{ matrix.config.toollabel }}/release/*
+          ./*.rpm
