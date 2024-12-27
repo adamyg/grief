@@ -9,7 +9,8 @@ concurrency:
 env:
   APP_NAME: 'gr'
   MAINTAINER: 'https://github.com/adamyg'
-  DESC: 'GriefEdit, console editor.'
+  HOMEPAGE: 'https://github.com/adamyg/grief'
+  DESC: 'GriefEdit -- console editor.'
 
 jobs:
   build:
@@ -172,31 +173,31 @@ jobs:
       if: startsWith(matrix.config.name, 'Ubuntu Latest')
       shell: bash
       run: |
-        make release prepare_rpm
+        make release prepare_deb
         echo "$(cat ./.PKGLABEL)" >> $GITHUB_ENV
 
-    # https://github.com/marketplace/actions/build-rpm-action
-    - name: Ubuntu, rpm
-      id: rpm
+    # https://github.com/marketplace/actions/build-deb-action
+    - name: Ubuntu, deb
+      id: deb
       if: startsWith(matrix.config.name, 'Ubuntu Latest')
-      uses: jiro4989/build-rpm-action@v2.5.0
+      uses: jiro4989/build-deb-action@v3.1.0
       with:
-        summary: '${{ env.DESC }}'
         package: ${{ env.APP_NAME }}
-        package_root: .rpmpkg
+        package_root: .debpkg
         maintainer: ${{ env.MAINTAINER }}
         version: ${{ env.VERSION }}
         license: QPL-1.0
-        arch: 'x86_64'
+        arch: 'amd64'
         desc: '${{ env.DESC }}'
+        homepage: '${{ env.HOMEPAGE }}'
 
     - name: Ubuntu, upload
       if: startsWith(matrix.config.name, 'Ubuntu Latest')
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ steps.rpm.outputs.file_name }}
+        name: ${{ steps.deb.outputs.file_name }}
         path: |
-          ./${{ steps.rpm.outputs.file_name }}
+          ./${{ steps.deb.outputs.file_name }}
 
     - name: MacOS, generate
       if: startsWith(matrix.config.name, 'MacOS Latest')

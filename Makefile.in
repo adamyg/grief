@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.76 2024/12/26 12:52:07 cvsuser Exp $
+# $Id: Makefile.in,v 1.77 2024/12/27 15:46:03 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2024, Adam Young.
@@ -184,8 +184,8 @@ $(error build type expected as first target; see "make help" for details)
 endif
 endif
 
-.PHONY:				help clean vclean distclean build package install prepare_rpm
-help clean vclean distclean build package install prepare_rpm:
+.PHONY:				help clean vclean distclean build package install prepare_deb prepare_rpm
+help clean vclean distclean build package install prepare_deb prepare_rpm:
 ifeq ("$(BUILD_TYPES)","")
 	$(usage)
 else
@@ -565,10 +565,15 @@ install:		build
 		-$(TAR) cf - -C $(D_MACSRC) --mode=+rw --exclude CVS . | ($(TAR) xf - -C $(DATADIR)/src)
 		@echo Install done.
 
+.PHONY:		prepare_deb
+prepare_deb:		PKGDIR=.debpkg
+prepare_deb:		build _prepare_pkg
+		@echo deb package primed
+
 .PHONY:		prepare_rpm
 prepare_rpm:		PKGDIR=.rpmpkg
 prepare_rpm:		build _prepare_pkg
-		@echo Package primed
+		@echo rpm package primed
 
 .PHONY:				_prepare_pkg
 _prepare_pkg:		PKGBIN=$(PKGDIR)/usr/local/bin
