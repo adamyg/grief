@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.77 2024/12/27 15:46:03 cvsuser Exp $
+# $Id: Makefile.in,v 1.78 2024/12/27 18:02:39 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2024, Adam Young.
@@ -582,15 +582,15 @@ _prepare_pkg:
 		@echo "VERSION=$(PKG_VERSION).$(file <./BUILDNUMBER.in)" >.PKGLABEL
 		-mkdir -p $(PKGBIN)
 		-mkdir -p $(PKGETC)/help
-		-mkdir -p $(PKGETC)/macro
+		-mkdir -p $(PKGETC)/macros
 		cp $(D_BIN)/gr$(E) $(PKGBIN)
 		cp $(D_BIN)/gm$(E) $(PKGBIN)
 		cp $(D_BIN)/grcpp$(E) $(PKGBIN)
 		cp $(D_BIN)/grmandoc$(E) $(PKGBIN)
 		cp $(D_BIN)/grunch$(E) $(PKGBIN)
-		chmod 0755 $(PKGBIN)/*
+		chmod +x $(PKGBIN)/*
 		$(TAR) cf - -C $(D_HELP) --exclude .created --exclude CVS . | ($(TAR) xf - -C $(PKGETC)/help)
-		$(TAR) cf - -C $(D_MACROS) --exclude .created --exclude CVS . | ($(TAR) xf - -C $(PKGETC)/macro)
+		$(TAR) cf - -C $(D_MACROS) --exclude .created --exclude CVS . | ($(TAR) xf - -C $(PKGETC)/macros)
 		find $(PKGETC) -type d -exec chmod 0755 -- {} +
 		find $(PKGDIR) -type f -exec chmod 0644 -- {} +
 

@@ -186,7 +186,6 @@ jobs:
         package_root: .debpkg
         maintainer: ${{ env.MAINTAINER }}
         version: ${{ env.VERSION }}
-        license: QPL-1.0
         arch: 'amd64'
         desc: '${{ env.DESC }}'
         homepage: '${{ env.HOMEPAGE }}'
