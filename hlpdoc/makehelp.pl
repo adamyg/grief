@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makehelp.pl,v 1.27 2025/01/06 01:11:33 cvsuser Exp $
+# $Id: makehelp.pl,v 1.28 2025/01/06 01:43:43 cvsuser Exp $
 # -*- tabs: 8; indent-width: 4; -*-
 # Help collection tool.
 #
@@ -295,7 +295,7 @@ NDPLUSDownloadGH()
     my $ndbin = './ndplus/bin/NaturalDocs';
     my $ndsrc = 'https://github.com/adamyg/ndplus/releases/download/nd-0.8.0/ndplus';
 
-    if (! -f $ndsrc) {
+    if (! -f $ndbin) {
         my $ext =                               # tgz or zip (ActivePerl/Win32)
             ($^O eq 'MSWin32' ? 'zip' : 'tgz');
 
@@ -322,9 +322,9 @@ NDPLUSDownloadGH()
             System("gzip -d -c $name | tar -xvf -");
         }
         chdir('..');
-
-        $o_ndbin = $ndbin;
     }
+
+    $o_ndbin = $ndbin;
 }
 
 
@@ -342,7 +342,7 @@ NDPLUSDownloadSF()
     my $ndbin = './ndplus/bin/NaturalDocs';
     my $ndsrc = 'https://sourceforge.net/projects/ndplus/files/nd+_stable';
 
-    if (! -f $ndsrc) {
+    if (! -f $ndbin) {
         my $ext =                               # tgz or zip (ActivePerl/Win32)
             ($^O eq 'MSWin32' ? 'zip' : 'tgz');
 
@@ -383,9 +383,9 @@ NDPLUSDownloadSF()
             System("gzip -d -c $name | tar -xvf -");
         }
         chdir('..');
-
-        $o_ndbin = $ndbin;
     }
+
+    $o_ndbin = $ndbin;
 }
 
 
