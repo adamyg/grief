@@ -1,10 +1,10 @@
 #!/usr/bin/perl
-# $Id: makehelp.pl,v 1.25 2024/06/14 07:25:51 cvsuser Exp $
+# $Id: makehelp.pl,v 1.26 2025/01/06 00:34:14 cvsuser Exp $
 # -*- tabs: 8; indent-width: 4; -*-
 # Help collection tool.
 #
 #
-# Copyright (c) 1998 - 2024, Adam Young.
+# Copyright (c) 1998 - 2025, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -44,7 +44,7 @@ use Prototype;
 
 my $CWD         = getcwd();
 my $o_version   = undef;
-my $o_ndbin     = 'https://sourceforge.net/projects/ndplus/files/nd+_stable';
+my $o_ndbin     = undef;
 
 my $o_wget      = 'wget';
 my $o_ndwk      = './doc';
@@ -175,6 +175,7 @@ sub
 main()                  #()
 {
     my $o_help = 0;
+    my $o_xhost = 'gh';
 
     my $ret = GetOptions(
         'H|hlpdir:s'    => \$o_hlpdir,
@@ -185,6 +186,7 @@ main()                  #()
         'I|index:s'     => \$o_index,
         'F|feature:s'   => \@o_features,
         'W|wget:s'      => \$o_wget,
+        'X|xhost:s'     => \$o_xhost,
         'verbose'       => \$o_verbose,
         'warnings'      => \$o_warning,
         'debug'         => \$o_debug,
@@ -203,7 +205,14 @@ main()                  #()
         Usage("unexpected arguments $ARGV[1] ...")
             if (scalar @ARGV > 1);
 
-        NDPLUSDownload();
+        if (! $o_ndbin) {
+            if ($o_xhost eq 'sf' || $o_xhost eq 'sourceforge') {
+                NDPLUSDownloadSF();
+            } else {        # gh/github
+                NDPLUSDownloadGH();
+            }
+        }
+
         if ($cmd eq 'prog') {
             MakeProg();
 
@@ -270,7 +279,58 @@ EOT
 
 
 sub
-NDPLUSDownload()
+System($)
+{
+    my $cmd = shift;
+    print "cmd: ${cmd}\n",
+    select()->flush();
+    my $ret = system($cmd);
+    return $ret;
+}
+
+
+sub
+NDPLUSDownloadGH()
+{
+    my $nddir = 'ndplus';
+    my $ndbin = './ndplus/bin/NaturalDocs';
+    my $ndsrc = 'https://github.com/adamyg/ndplus/releases/download/nd-0.8.0/ndplus';
+
+    if (! -f $ndsrc) {
+        my $ext =                               # tgz or zip (ActivePerl/Win32)
+            ($^O eq 'MSWin32' ? 'zip' : 'tgz');
+
+        my $name = 'ndplus.'.$ext;              # local destination
+
+        (-d $nddir || mkdir($nddir, 0777)) or
+            die "hlp: cannot create directory <${nddir}> : $!\n";
+
+        #
+        # Pull the package
+        System("${o_wget} --no-check-certificate -O $nddir/$name ${ndsrc}.${ext}")
+            if (! -f "$nddir/$name");           # download
+
+        unlink("$nddir/$name")                  # cleanup on error; wget may leave an empty image
+            if (-z "$nddir/$name");
+
+        die "hlp: cannot to download <${name}>"
+            if (! -f "$nddir/$name");
+
+        chdir($nddir);
+        if ($ext eq 'zip') {
+            System("unzip $name");
+        } else {
+            System("gzip -d -c $name | tar -xvf -");
+        }
+        chdir('..');
+
+        $o_ndbin = $ndbin;
+    }
+}
+
+
+sub
+NDPLUSDownloadSF()
 {
  ## my $ndauto = 'http://sourceforge.net/projects/ndplus/files/latest/download';
 
@@ -281,51 +341,49 @@ NDPLUSDownload()
 
     my $nddir = 'ndplus';
     my $ndbin = './ndplus/bin/NaturalDocs';
+    my $ndsrc = 'https://sourceforge.net/projects/ndplus/files/nd+_stable';
 
-    if ($o_ndbin =~ /^http/) {
+    if (! -f $ndsrc) {
+        my $ext =                               # tgz or zip (ActivePerl/Win32)
+            ($^O eq 'MSWin32' ? 'zip' : 'tgz');
 
-        if (! -f $ndbin) {
-            my $ext =                           # tgz or zip (ActivePerl/Win32)
-                ($^O eq 'MSWin32' ? 'zip' : 'tgz');
+        my $name = 'ndplus.'.$ext;              # local destination
 
-            my $name = 'ndplus.'.$ext;          # local destination
+        (-d $nddir || mkdir($nddir, 0777)) or
+            die "hlp: cannot create directory <${nddir}> : $!\n";
 
-            (-d $nddir || mkdir($nddir, 0777)) or
-                die "hlp: cannot create directory <${nddir}> : $!\n";
-
-            #
-            # Pull the package
-            if (! -f "$nddir/$name") {
+        #
+        # Pull the package
+        if (! -f "$nddir/$name") {
                                                 # download
-                system("${o_wget} --no-check-certificate -O $nddir/$name ${o_ndbin}.${ext}");
+            System("${o_wget} --no-check-certificate -O $nddir/$name ${ndsrc}.${ext}");
 
                                                 # mirrors
-                foreach my $sfmirror (@sfmirrors) {
-                   system("${o_wget} --no-check-certificate -O $nddir/$name \"${sfmirror}/project/ndplus/nd+_stable.${ext}\"")
-                        if (! -f "$nddir/$name" || -z "$nddir/$name");
-                }
-
-            # auto direct -- no longer functional
-            ##  system("${o_wget} --no-check-certificate -O $nddir/$name ${ndauto}")
-            ##      if (! -f "$nddir/$name" || -z "$nddir/$name");
+            foreach my $sfmirror (@sfmirrors) {
+                System("${o_wget} --no-check-certificate -O $nddir/$name \"${sfmirror}/project/ndplus/nd+_stable.${ext}\"")
+                    if (! -f "$nddir/$name" || -z "$nddir/$name");
             }
 
-            #
-            # FIXME: external unzip, gzip/tar requirements
-            unlink("$nddir/$name")              # cleanup on error; wget may leave an empty image
-                if (-z "$nddir/$name");
-
-            die "hlp: cannot to download <${name}>"
-                if (! -f "$nddir/$name");
-
-            chdir($nddir);
-            if ($ext eq 'zip') {
-                system("unzip $name");
-            } else {
-                system("gzip -d -c $name | tar -xvf -");
-            }
-            chdir('..');
+        # auto direct -- no longer functional
+        ##  System("${o_wget} --no-check-certificate -O $nddir/$name ${ndauto}")
+        ##      if (! -f "$nddir/$name" || -z "$nddir/$name");
         }
+
+        #
+        # FIXME: external unzip, gzip/tar requirements
+        unlink("$nddir/$name")                  # cleanup on error; wget may leave an empty image
+            if (-z "$nddir/$name");
+
+        die "hlp: cannot to download <${name}>"
+            if (! -f "$nddir/$name");
+
+        chdir($nddir);
+        if ($ext eq 'zip') {
+            System("unzip $name");
+        } else {
+            System("gzip -d -c $name | tar -xvf -");
+        }
+        chdir('..');
 
         $o_ndbin = $ndbin;
     }
@@ -707,7 +765,7 @@ BuildMANDOC()           #()
 
     Info("Generating MANDOC documentation ($mandoc)");
     make_path($mandoc);
-    system("perl ${o_ndbin} -t 8 -i ${o_srcdir} -o ManDoc ${mandoc} -r -p ${o_ndwk} --documented-only");
+    System("perl ${o_ndbin} -t 8 -i ${o_srcdir} -o ManDoc ${mandoc} -r -p ${o_ndwk} --documented-only");
 }
 
 
@@ -718,7 +776,7 @@ BuildHTML()             #()
 
     Info("Generating HTML documentation ($htmldoc)");
     make_path($htmldoc);
-    system("perl ${o_ndbin} -t 8 -i ${o_srcdir} -o FramedHTML ${htmldoc} -r -p ${o_ndwk} -s Default Extra hlpsrc2 --documented-only");
+    System("perl ${o_ndbin} -t 8 -i ${o_srcdir} -o FramedHTML ${htmldoc} -r -p ${o_ndwk} -s Default Extra hlpsrc2 --documented-only");
 }
 
 
@@ -1426,4 +1484,3 @@ Debug
 }
 
 #end
-
