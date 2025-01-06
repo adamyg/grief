@@ -187,7 +187,7 @@ jobs:
         maintainer: ${{ env.MAINTAINER }}
         version: ${{ env.VERSION }}
         arch: 'amd64'
-        depends: 'libarchive-dev, libhunspell-dev'
+        depends: 'libhunspell-dev, libarchive13, libncurses6'
         desc: '${{ env.DESC }}'
         homepage: '${{ env.HOMEPAGE }}'
 
