@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makehelp.pl,v 1.26 2025/01/06 00:34:14 cvsuser Exp $
+# $Id: makehelp.pl,v 1.27 2025/01/06 01:11:33 cvsuser Exp $
 # -*- tabs: 8; indent-width: 4; -*-
 # Help collection tool.
 #
@@ -282,10 +282,9 @@ sub
 System($)
 {
     my $cmd = shift;
-    print "cmd: ${cmd}\n",
+    print "cmd: ${cmd}\n";
     select()->flush();
-    my $ret = system($cmd);
-    return $ret;
+    return system($cmd);
 }
 
 
