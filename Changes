@@ -1,5 +1,16 @@
 -*- encoding: utf-8; -*-
 
+Thu Jan  9 21:48:09 2025 adamy
+
+	* build-29
+
+	* Tickets
+
+		- coloriser expansion; #101
+		- readonly grinit example; #100
+		- packaging; #97
+			- deb package
+
 Sat Dec  7 00:20:15 2024 adamy
 
 	* build-28
