@@ -6,6 +6,7 @@ Thu Jan  9 21:48:09 2025 adamy
 
 	* Tickets
 
+                - readonly help source; #102
 		- coloriser expansion; #101
 		- readonly grinit example; #100
 		- packaging; #97
