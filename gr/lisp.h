@@ -1,11 +1,11 @@
 #ifndef GR_LISP_H_INCLUDED
 #define GR_LISP_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_lisp_h,"$Id: lisp.h,v 1.20 2020/04/21 00:01:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_lisp_h,"$Id: lisp.h,v 1.21 2025/01/10 16:51:45 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: lisp.h,v 1.20 2020/04/21 00:01:55 cvsuser Exp $
+/* $Id: lisp.h,v 1.21 2025/01/10 16:51:45 cvsuser Exp $
  * List implementation and primitives.
  *
  *
@@ -25,8 +25,7 @@ __CPRAGMA_ONCE
 
 __CBEGIN_DECLS
 
-#define LIST_SIZEOF(a)      (((a) * 9) + 1)
-#define LIST_MAXLEN         0x7fff              /* 2^15 */
+#define LIST_SIZEOF(a)      (((a) * 9) + 1)     /* FIXME */
 
 extern int                  atom_size(const LIST *lp);
 extern LIST *               atom_push_sym(LIST *lp, const char *svalue);

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crbin_c,"$Id: crbin.c,v 1.25 2022/05/31 16:18:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_crbin_c,"$Id: crbin.c,v 1.26 2025/01/10 16:48:49 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crbin.c,v 1.25 2022/05/31 16:18:22 cvsuser Exp $
+/* $Id: crbin.c,v 1.26 2025/01/10 16:48:49 cvsuser Exp $
  * Binary backend code generator.
  *
  *
@@ -23,10 +23,6 @@ __CIDENT_RCSID(gr_crbin_c,"$Id: crbin.c,v 1.25 2022/05/31 16:18:22 cvsuser Exp $
 
 #define OBJECT_SIZE     4096                    /* Initial size of object code buffer */
 #define OBJECT_INCR     2048                    /* Code buffer increment */
-
-#ifndef LIST_MAXLEN
-#define LIST_MAXLEN     0x7fff                  /* 2^15 */
-#endif
 
 
 /*

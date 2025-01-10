@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_lisp_c,"$Id: lisp.c,v 1.48 2024/07/25 15:38:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_lisp_c,"$Id: lisp.c,v 1.49 2025/01/10 16:51:45 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: lisp.c,v 1.48 2024/07/25 15:38:40 cvsuser Exp $
+/* $Id: lisp.c,v 1.49 2025/01/10 16:51:45 cvsuser Exp $
  * List primitives.
  *
  *
@@ -1317,21 +1317,27 @@ lst_expand(LIST *lp, int leninc)
 
     assert(leninc >= 0);
     if (leninc > 0) {
-        if ((newlen = lh->lh_length + leninc) > lh->lh_alloced) {
-            int min_len = sizeof(struct listhead) + newlen;
-            int alloc_len = alloc_size(newlen);
+        const size_t newlen = lh->lh_length + leninc;
+
+        assert(newlen > 0);
+        assert(newlen <= LIST_MAXLEN);
+        if (newlen > LIST_MAXLEN) {
+            return NULL;
+        }
+
+        if (newlen > (size_t)lh->lh_alloced) {
+            size_t min_len = sizeof(struct listhead) + newlen;
+            size_t alloc_len = alloc_size(newlen);
 
             /* try expanding the block */
-            if ((int) chk_expand(lh, (size_t)alloc_len) >= min_len) {
+            if ((int) chk_expand(lh, alloc_len) >= min_len) {
                 lh->lh_alloced = alloc_len - sizeof(struct listhead);
 
             } else {
                 return NULL;
             }
         }
-        assert(newlen > 0);
-        assert(newlen <= LIST_MAXLEN);
-        lh->lh_length = newlen;
+        lh->lh_length = (int)newlen;
     }
     return (LIST *)lp;
 }

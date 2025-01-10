@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_language_c,"$Id: language.c,v 1.52 2022/08/10 15:44:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_language_c,"$Id: language.c,v 1.53 2025/01/10 16:51:44 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: language.c,v 1.52 2022/08/10 15:44:56 cvsuser Exp $
+/* $Id: language.c,v 1.53 2025/01/10 16:51:44 cvsuser Exp $
  * Module loader and inline compiler for lisp source.
  *
  *
@@ -30,6 +30,7 @@ __CIDENT_RCSID(gr_language_c,"$Id: language.c,v 1.52 2022/08/10 15:44:56 cvsuser
 #include "file.h"
 #include "keywd.h"
 #include "language.h"
+#include "lisp.h"
 #include "system.h"
 #include "word.h"
 
@@ -55,7 +56,7 @@ enum _xxt {
     _XXSYMBOL           =0x02,
     _XXWS               =0x04,
     _XXISPRINT          =0x08,
-    _XXTABESC           =0x10 
+    _XXTABESC           =0x10
 };
 
 enum _ltoks {
@@ -536,7 +537,11 @@ gr_parse1(int base_atom)
             }
 
             len = (new_atom - atom);
-            assert(len < 0xffff);
+            assert(len <= LIST_MAXLEN);
+            if (len > LIST_MAXLEN) {
+                cm_error("List object length exceeded");
+                return 0;
+            }
             LPUT_LEN(first_atom + atom, (uint16_t)len);
             atom = new_atom;
             continue;
