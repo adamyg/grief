@@ -1,13 +1,13 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(cr_env_c,"$Id: env.c,v 1.33 2024/04/27 14:40:05 cvsuser Exp $")
+__CIDENT_RCSID(cr_env_c,"$Id: env.c,v 1.34 2025/01/13 16:06:38 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: env.c,v 1.33 2024/04/27 14:40:05 cvsuser Exp $
+/* $Id: env.c,v 1.34 2025/01/13 16:06:38 cvsuser Exp $
  * Environment related functions.
  *
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

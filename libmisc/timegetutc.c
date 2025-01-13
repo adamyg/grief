@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_timegetutc_c,"$Id: timegetutc.c,v 1.11 2024/07/19 05:05:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_timegetutc_c,"$Id: timegetutc.c,v 1.12 2025/01/13 16:06:38 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: timegetutc.c,v 1.11 2024/07/19 05:05:03 cvsuser Exp $
+/* $Id: timegetutc.c,v 1.12 2025/01/13 16:06:38 cvsuser Exp $
  * Portable (somewhat) method to determine GMT offset.
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

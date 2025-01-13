@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: updateyear.pl,v 1.2 2024/04/16 10:37:41 cvsuser Exp $
+# $Id: updateyear.pl,v 1.3 2025/01/13 16:00:12 cvsuser Exp $
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 # Update the copyright year within the specified files
 #
@@ -41,30 +41,33 @@ exit 0;
 sub
 Main()
 {
+    my $o_directory = '';
     my $o_help = 0;
 
     my $ret
         = GetOptions(
-                'dryrun'    => \$o_dryrun,
-                'run'       => sub {$o_dryrun = 0},
-                'backup',   => \$o_backup,
-                'nobackup', => sub {$o_backup = 0},
-                'glob'      => \$o_glob,
-                'help'      => \$o_help
+                'dryrun'        => \$o_dryrun,
+                'run'           => sub {$o_dryrun = 0},
+                'backup',       => \$o_backup,
+                'nobackup',     => sub {$o_backup = 0},
+                'directory=s'   => \$o_directory,
+                'glob'          => \$o_glob,
+                'help'          => \$o_help
                 );
 
     Usage() if (!$ret || $o_help);
     Usage("expected <file ...>") if (scalar @ARGV < 1);
 
+    $o_directory .= "/" if ($o_directory);
     foreach (@ARGV) {
         if ($o_glob) {                          # internal glob
-            my @files = glob("$_");
+            my @files = glob("${o_directory}$_");
             print "glob: @files\n";
             foreach (@files) {
                 Process($_);
             }
         } else {
-            Process($_);                        # for-each
+            Process("${o_directory}$_");        # for-each
         }
     }
 }
@@ -98,6 +101,7 @@ Options
 
     --[no]backup            Backup original source prior to any modifications (default=yes).
 
+    --directory=<path>      Directory prefix (default: none).
     --glob                  Perform interal glob on specified names.
 
 EOU
@@ -151,15 +155,13 @@ load($$)                # (file)
     while (<IN>) {
         chomp(); chomp();
         if (! $result) {
-            if (/Copyright.*[ -]20[12]\d.*Adam/i) {
+            if (/Copyright.*[ -]+20[12]\d.*Adam/i) {
                 my $org = $_;
-                if (s/-2015/ - 2023/ or
-                    s/ - 2018/ - 2023/ or
-                    s/ - 2019/ - 2023/ or
-                    s/ - 2020/ - 2023/ or
-                    s/ - 2021/ - 2023/ or
-                    s/ - 2022/ - 2023/ or
-                    s/ - 2023/ - 2024/) {
+                if (s/ - 2020/ - 2025/ or
+                    s/ - 2021/ - 2025/ or
+                    s/ - 2022/ - 2025/ or
+                    s/ - 2023/ - 2025/ or
+                    s/ - 2024/ - 2025/) {
                     print "dryrun: update\n- <$org>\n+ <$_>\n"
                         if ($o_dryrun);
                     $result = 1;

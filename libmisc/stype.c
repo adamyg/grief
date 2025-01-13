@@ -1,13 +1,13 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_stype_c,"$Id: stype.c,v 1.24 2024/06/30 14:19:20 cvsuser Exp $")
+__CIDENT_RCSID(gr_stype_c,"$Id: stype.c,v 1.25 2025/01/13 16:06:38 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: stype.c,v 1.24 2024/06/30 14:19:20 cvsuser Exp $
+/* $Id: stype.c,v 1.25 2025/01/13 16:06:38 cvsuser Exp $
  * Simple integer data table.
  *
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

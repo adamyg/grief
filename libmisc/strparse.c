@@ -1,13 +1,13 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strparse_c,"$Id: strparse.c,v 1.18 2024/04/17 15:57:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_strparse_c,"$Id: strparse.c,v 1.19 2025/01/13 16:06:38 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strparse.c,v 1.18 2024/04/17 15:57:14 cvsuser Exp $
+/* $Id: strparse.c,v 1.19 2025/01/13 16:06:38 cvsuser Exp $
  * libstr - String to numeric (float/integer) parser.
  *
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
