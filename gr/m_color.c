@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_color_c,"$Id: m_color.c,v 1.59 2024/12/14 10:10:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_color_c,"$Id: m_color.c,v 1.60 2025/01/13 15:12:17 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_color.c,v 1.59 2024/12/14 10:10:02 cvsuser Exp $
+/* $Id: m_color.c,v 1.60 2025/01/13 15:12:17 cvsuser Exp $
  * Color configuration.
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it

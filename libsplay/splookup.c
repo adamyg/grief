@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(cr_splookup_c,"$Id: splookup.c,v 1.17 2024/04/17 15:57:15 cvsuser Exp $")
+__CIDENT_RCSID(cr_splookup_c,"$Id: splookup.c,v 1.18 2025/01/13 15:19:44 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: splookup.c,v 1.17 2024/04/17 15:57:15 cvsuser Exp $
+/* $Id: splookup.c,v 1.18 2025/01/13 15:19:44 cvsuser Exp $
  * libsplay version 2.0 - SPLAY tree implementation.
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

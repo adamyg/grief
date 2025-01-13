@@ -1,14 +1,14 @@
 #ifndef TERMEMU_VIO_H_INCLUDED
 #define TERMEMU_VIO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(termemu_vio_h,"$Id: termemu_vio.h,v 1.10 2024/09/28 13:40:11 cvsuser Exp $")
+__CIDENT_RCSID(termemu_vio_h,"$Id: termemu_vio.h,v 1.11 2025/01/13 15:12:17 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * libtermemu console driver
  *
- * Copyright (c) 2007, 2012 - 2024 Adam Young.
+ * Copyright (c) 2007, 2012 - 2025 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *

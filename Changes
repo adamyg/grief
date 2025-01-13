@@ -1,11 +1,12 @@
 -*- encoding: utf-8; -*-
 
-Thu Jan  9 21:48:09 2025 adamy
+Fri Jan 10 16:19:18 2025 adamy
 
 	* build-29
 
 	* Tickets
 
+		- 64-bit list limits; #103
                 - readonly help source; #102
 		- coloriser expansion; #101
 		- readonly grinit example; #100

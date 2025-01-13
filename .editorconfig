@@ -1,0 +1,11 @@
+# You can modify the rules from these initially generated values to suit your own policies
+# You can learn more about editorconfig here: https://docs.microsoft.com/en-us/visualstudio/ide/editorconfig-code-style-settings-reference
+
+[*]
+
+# https://devblogs.microsoft.com/visualstudio/improving-the-spell-checker/#customizing-the-spell-checker
+spelling_languages=en-gb,en-us
+
+[*.cs]
+
+#end

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_fileio_c,"$Id: m_fileio.c,v 1.20 2024/12/06 15:46:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_fileio_c,"$Id: m_fileio.c,v 1.21 2025/01/13 15:12:17 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_fileio.c,v 1.20 2024/12/06 15:46:06 cvsuser Exp $
+/* $Id: m_fileio.c,v 1.21 2025/01/13 15:12:17 cvsuser Exp $
  * File i/o primitives.
  *
  *
@@ -321,7 +321,7 @@ do_fclose(void)                 /* (int handle) */
 
     Macro Description:
         The 'fread()' primitive shall read into the array pointed to
-        by ptr up to nitems elements whose size is specified by size
+        by ptr up to bufsize elements whose size is specified by size
         in bytes, from the stream referenced by 'handle'.
 
     Macro Parameters:
@@ -336,7 +336,7 @@ do_fclose(void)                 /* (int handle) */
         of elements successfully read which is less than 'bufsiz'
         only if a read error or end-of-file is encountered.
 
-        If 'nitems' is 0, fread() shall return 0 and the contents of
+        If 'bufsiz' is 0, fread() shall return 0 and the contents of
         the array and the state of the stream remain unchanged.
         Otherwise, if a read error occurs, the error indicator for
         the stream shall be set, and 'errno' shall be set to indicate
@@ -352,7 +352,7 @@ void
 do_fread(void)                  /* (int handle. string buffer, [int bufsiz], [int null = ' ']) */
 {
     int handle = get_xinteger(1, -1);
-    int bufsiz = get_xinteger(3, BUFSIZ);       /* bufsize (optional) */
+    int bufsiz = get_xinteger(3, BUFSIZ);       /* bufsiz (optional) */
     int null = get_xinteger(4, 0);
     int ret = -1;
 

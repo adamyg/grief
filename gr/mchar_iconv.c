@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mchar_iconv_c,"$Id: mchar_iconv.c,v 1.32 2024/07/20 18:18:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_mchar_iconv_c,"$Id: mchar_iconv.c,v 1.33 2025/01/13 15:12:17 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mchar_iconv.c,v 1.32 2024/07/20 18:18:52 cvsuser Exp $
+/* $Id: mchar_iconv.c,v 1.33 2025/01/13 15:12:17 cvsuser Exp $
  * Character-set conversion/mapping interface and adapters.
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it

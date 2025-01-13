@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.39 2024/11/24 15:59:02 cvsuser Exp $
+# $Id: Makefile.in,v 1.40 2025/01/13 15:34:12 cvsuser Exp $
 # libbsdmdoc and grmanddoc
 #
 #
-# Copyright (c) 2014 - 2024, Adam Young.
+# Copyright (c) 2014 - 2025, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.

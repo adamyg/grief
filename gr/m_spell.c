@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_spell_c,"$Id: m_spell.c,v 1.46 2024/07/20 09:22:39 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_spell_c,"$Id: m_spell.c,v 1.47 2025/01/13 15:12:17 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_spell.c,v 1.46 2024/07/20 09:22:39 cvsuser Exp $
+/* $Id: m_spell.c,v 1.47 2025/01/13 15:12:17 cvsuser Exp $
  * Spell primitives.
  *
  *      Enchant - AbiWord spell-checker generic interface
@@ -22,7 +22,7 @@ __CIDENT_RCSID(gr_m_spell_c,"$Id: m_spell.c,v 1.46 2024/07/20 09:22:39 cvsuser E
  *          http://linguscomponent.openoffice.org
  *              OpenOffice original - based on pspell now aspell
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it

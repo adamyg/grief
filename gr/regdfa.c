@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_regdfa_c,"$Id: regdfa.c,v 1.36 2024/04/16 10:30:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_regdfa_c,"$Id: regdfa.c,v 1.37 2025/01/13 15:12:17 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: regdfa.c,v 1.36 2024/04/16 10:30:36 cvsuser Exp $
+/* $Id: regdfa.c,v 1.37 2025/01/13 15:12:17 cvsuser Exp $
  * DFA regular expression engine.
  * Streamlined engine for use by the syntax hiliting code.
  *
@@ -99,7 +99,7 @@ __CIDENT_RCSID(gr_regdfa_c,"$Id: regdfa.c,v 1.36 2024/04/16 10:30:36 cvsuser Exp
  *          xdigit -        A hexadecimal digit.
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it

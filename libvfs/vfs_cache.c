@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_cache_c,"$Id: vfs_cache.c,v 1.16 2024/04/17 16:00:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_cache_c,"$Id: vfs_cache.c,v 1.17 2025/01/13 15:25:26 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_cache.c,v 1.16 2024/04/17 16:00:29 cvsuser Exp $
+/* $Id: vfs_cache.c,v 1.17 2025/01/13 15:25:26 cvsuser Exp $
  * Virtual file system interface - name cache
  *
  *      Names found by directory scans are retained in a cache for future reference.
@@ -12,7 +12,7 @@ __CIDENT_RCSID(gr_vfs_cache_c,"$Id: vfs_cache.c,v 1.16 2024/04/17 16:00:29 cvsus
  *      refers to the directory containing name.
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

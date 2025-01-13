@@ -1,10 +1,10 @@
-# $Id: makeconfig.pm,v 1.8 2024/05/19 06:56:53 cvsuser Exp $
+# $Id: makeconfig.pm,v 1.9 2025/01/13 14:57:54 cvsuser Exp $
 # Makefile generation under Win32.
 # -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
 #
 #
-# Copyright (c) 2020 - 2024, Adam Young.
+# Copyright (c) 2020 - 2025, Adam Young.
 # All rights reserved.
 #
 # This file is part of GRIEF

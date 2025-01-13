@@ -1,9 +1,9 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.21 2024/07/30 10:35:29 cvsuser Exp $
+# $Id: Makefile.in,v 1.22 2025/01/13 15:24:53 cvsuser Exp $
 # libduktape makefile.
 #
 #
-# Copyright (c) 2018 - 2024, Adam Young.
+# Copyright (c) 2018 - 2025, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.

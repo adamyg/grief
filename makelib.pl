@@ -1,11 +1,11 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.149 2024/11/29 19:21:56 cvsuser Exp $
+# $Id: makelib.pl,v 1.150 2025/01/13 14:57:54 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
 #
 #
-# Copyright (c) 1998 - 2024, Adam Young.
+# Copyright (c) 1998 - 2025, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -257,7 +257,7 @@ my %x_environment   = (
             LSWITCH         => '',
             XSWITCH         => '-Fe',
             AR              => 'lib',
-            RC              => 'rc',        # no, /nologo option
+            RC              => 'rc',            # no, /nologo option
             CINCLUDE        => '',
             RTLIBRARY       => '-MDd',
             CFLAGS          => '-nologo @RTLIBRARY@ -Dinline=__inline',
