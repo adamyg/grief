@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.75 2022/07/10 13:13:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.76 2025/01/17 12:38:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: echo.c,v 1.75 2022/07/10 13:13:07 cvsuser Exp $
+/* $Id: echo.c,v 1.76 2025/01/17 12:38:29 cvsuser Exp $
  * Command/echo line implementation/interface.
  *
  *
@@ -1460,8 +1460,11 @@ eprint(const char *prompt, const char *defstr)
     }
 
     if (! vtinited()) {                         /* display initialised? */
-        fprintf(stderr, "\n*** %s\n", prompt);
-        fflush(stderr);
+        const size_t len = strlen(prompt);
+        if (len) {
+            fprintf(stderr, "*** %s%s", prompt, (prompt[len-1] == '\n' ? "" : "\n"));
+            fflush(stderr);
+        }
         return;
     }
 
@@ -2324,7 +2327,7 @@ infof(const char *str, ...)
         va_end(ap);
 
         ewputs(str);
-        if (x_pause_on_message) {
+        if (x_pause_on_message && x_display_enabled > 0) {
             (void)io_get_key(0);
         }
     }
@@ -2336,7 +2339,7 @@ infos(const char *str)
 {
     if (x_msglevel <= 0 || 2 == x_msglevel) {   /* 0 or 2 */
         ewputs(str);
-        if (x_pause_on_message) {
+        if (x_pause_on_message && x_display_enabled > 0) {
             (void)io_get_key(0);
         }
     }
@@ -2363,7 +2366,7 @@ errorf(const char *str, ...)
         va_end(ap);
 
         eeputs(str);
-        if (x_pause_on_error) {
+        if (x_pause_on_error && x_display_enabled > 0) {
             (void)io_get_key(0);
         }
     }
@@ -2391,7 +2394,7 @@ errorfx(const char *fmt, ...)
             strcpy(iobuf + iolen, "..");
         }
         eeputs(iobuf);
-        if (x_pause_on_error) {
+        if (x_pause_on_error && x_display_enabled > 0) {
             (void)io_get_key(0);
         }
     }

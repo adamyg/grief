@@ -1,16 +1,16 @@
 #ifndef GR_EDSTRUCT_H_INCLUDED
 #define GR_EDSTRUCT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.81 2024/09/12 17:29:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.83 2025/01/17 12:40:05 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edstruct.h,v 1.81 2024/09/12 17:29:13 cvsuser Exp $
+/* $Id: edstruct.h,v 1.83 2025/01/17 12:40:05 cvsuser Exp $
  * Window, buffer, line and character-map definitions.
  *
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -541,11 +541,12 @@ enum _dflags {
     DC_WINDOW           =0x00000001,            /* Running under a windowing system (read-only) */
     DC_MOUSE            =0x00000002,            /* Mouse enabled/available (read-only) */
     DC_READONLY         =0x00000004,            /* Read-only mode (read-only) */
-    DC_CHARMODE         =0x00000008,            /* Character-mode with primitive GUI features available (read-only) */
+    DC_CONSOLE          =0x00000008,            /* Character-mode with primitive GUI features available (read-only) */
 
     DC_SHADOW           =0x00000010,            /* Display shadow around popups */
     DC_SHADOW_SHOWTHRU  =0x00000020,            /* Show-thru shadow around popups */
     DC_STATUSLINE       =0x00000040,            /* Utilise window status-lines, when borderless */
+    DC_HEADLESS         =0x00000080,            /* Neither WINDOW nor CONSOLE mode */
 
     DC_UNICODE          =0x00000100,            /* UNICODE character encoding available (read-only) */
     DC_ASCIIONLY        =0x00000200,            /* Only utilise ASCII characters within character-sets/dialogs */

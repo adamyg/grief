@@ -1,11 +1,11 @@
 #ifndef GR_EDTHREADS_WIN32_H_INCLUDED
 #define GR_EDTHREADS_WIN32_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_win32_h,"$Id: edthreads_win32.h,v 1.20 2024/04/08 15:07:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_edthreads_win32_h,"$Id: edthreads_win32.h,v 1.21 2025/01/13 16:20:07 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads_win32.h,v 1.20 2024/04/08 15:07:03 cvsuser Exp $
+/* $Id: edthreads_win32.h,v 1.21 2025/01/13 16:20:07 cvsuser Exp $
  * Threads interface
  * ISO/IEC 9899:201x Committee Draft
  * April 12, 2011 N1570
@@ -86,7 +86,7 @@ __CPRAGMA_ONCE
  *          which is returned by a function to indicate that the requested operation
  *          failed because it was unable to allocate memory.
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

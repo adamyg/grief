@@ -1,11 +1,11 @@
 #ifndef GR_MACROS_H_INCLUDED
 #define GR_MACROS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_macros_h,"$Id: macros.h,v 1.20 2014/10/26 22:13:13 ayoung Exp $")
+__CIDENT_RCSID(gr_macros_h,"$Id: macros.h,v 1.21 2025/01/17 12:38:29 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: macros.h,v 1.20 2014/10/26 22:13:13 ayoung Exp $
+/* $Id: macros.h,v 1.21 2025/01/17 12:38:29 cvsuser Exp $
  * Macro definitions management.
  *
  *
@@ -41,7 +41,7 @@ extern const char *         macro_resolve(const char *name);
 extern const char **        macro_list(unsigned *count);
 extern int                  macro_define(const char *name, int flags, const LIST *list);
 extern int                  macro_delete(const LIST *list);
-extern int                  macro_startup(void);
+extern int                  macro_startup(const char *name);
 extern int                  macro_load(const char *fname);
 extern int                  macro_autoload(MACRO *mptr, int resolve);
 extern int                  macro_loaded(const char * fname);

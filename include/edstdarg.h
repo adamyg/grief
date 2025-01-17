@@ -1,18 +1,18 @@
 #ifndef GR_EDSTDARG_H_INCLUDED
 #define GR_EDSTDARG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edstdarg_h,"$Id: edstdarg.h,v 1.5 2024/08/17 08:36:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_edstdarg_h,"$Id: edstdarg.h,v 1.6 2025/01/13 16:20:06 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edstdarg.h,v 1.5 2024/08/17 08:36:27 cvsuser Exp $
+/* $Id: edstdarg.h,v 1.6 2025/01/13 16:20:06 cvsuser Exp $
  * stdarg() interface/implemenation.
  *
  *
  * Copyright (c) Adam Young.
  * All rights reserved.
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it

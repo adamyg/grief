@@ -176,6 +176,12 @@ jobs:
         make release prepare_deb
         echo "$(cat ./.PKGLABEL)" >> $GITHUB_ENV
 
+    - name: Ubuntu, unit-test
+      if: startsWith(matrix.config.name, 'Ubuntu Latest')
+      shell: bash
+      run: |
+        make release unittest
+
     # https://github.com/marketplace/actions/build-deb-action
     - name: Ubuntu, deb
       id: deb

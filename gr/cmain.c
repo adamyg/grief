@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.78 2024/12/13 14:25:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.82 2025/01/17 15:18:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.78 2024/12/13 14:25:37 cvsuser Exp $
+/* $Id: cmain.c,v 1.82 2025/01/17 15:18:20 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -204,11 +204,16 @@ static struct argoption options[] = {
 
     { "termcap",        arg_none,           NULL,       310,    "Use termcap if available, otherwise terminfo" },
 
-    { "curses",         arg_none,           NULL,       410,    "Enable/force use of curses tty driver" },
+    { "console",        arg_none,           NULL,       410,    "Console mode (default)" },
+
+    { "curses",         arg_none,           NULL,       411,    "or console mode using curses tty driver" },
 
 #if defined(HAVE_LIBX11) && defined(HAVE_X11_XLIB_H)
-    { "x11",            arg_none,           NULL,       411,    "or enable/force use of x11" },
+    { "x11",            arg_none,           NULL,       412,    "or X11 interface" },
 #endif
+
+    { "headless",       arg_optional,       NULL,       413,    "or run without a user interface",
+                            "=<macro-name>" },
 
     { "noinit",         arg_none,           NULL,       9,      "Disable termcap init/deinit strings" },
 
@@ -297,7 +302,8 @@ const char *            xf_mouse = "";          /* mouse mode; default auto-dete
 const char *            xf_mouse = NULL;
 #endif
 
-static int              xf_ttydrv = 't';        /* TTY driver type */
+static int              xf_curses = 0;          /* TTY curses driver */
+static const char *     xf_headless = NULL;
 
 int                     xf_compat = FALSE;      /* TRUE normal stdout I/O otherwise optimised. */
 
@@ -393,14 +399,14 @@ int                     x_plevel = 0;           /* Process level. */
 
 int                     x_panycb = 0;           /* Change buffer action. */
 
-static int              m_cnt = 0;              /* -m count. */
+static unsigned         m_cnt = 0;              /* -m count. */
 static const char *     m_profile;              /* User profile. */
 static const char *     m_strings[MAX_M+1];     /* Array of pointer to -m strings. */
 
 BUFFER_t *              curbp = NULL;           /* Current buffer. */
 WINDOW_t *              curwp = NULL;           /* Current window. */
 
-
+static void             macro_arguments(const char *startup);
 static int              isdir(const char *path);
 
 static char *           path_resolve(const char *path, const char *sub);
@@ -410,6 +416,7 @@ static char *           path_cook(const char *name);
 
 static void             argv_init(int *argcp, char **argv);
 static int              argv_process(int doerr, int argc, const char * const *argv);
+static int              set_display_mode(int dc);
 
 static void             unicode_init(void);
 
@@ -486,7 +493,7 @@ int
 cmain(int argc, char **argv)
 {
     unsigned loaded = 0;
-    int arg_index, i;
+    int arg_index;
 
 #if defined(HAVE_SIGACTION)
     { // XXX - review. move to sys_unix
@@ -555,13 +562,20 @@ cmain(int argc, char **argv)
     /* argument processing */
     env_setup();
     arg_index = argv_process(TRUE, argc, (const char **)argv);
-    if ('c' == xf_ttydrv) ttcurses();
+
+    if (0 == (x_display_ctrl & (DC_WINDOW|DC_HEADLESS))) {
+        x_display_ctrl |= DC_CONSOLE;
+        if (xf_curses) ttcurses();
+    } else if (x_display_ctrl & DC_WINDOW) {
 #if defined(HAVE_LIBX11) && defined(HAVE_X11_XLIB_H)
-    else if ('x' == xf_ttydrv) ttx11();
+        ttx11();
 #endif
+    }
+
     vtinit(&argc, argv);
-    ttopen();
-        //TODO: resource macro?
+    if (0 == (x_display_ctrl & DC_HEADLESS)) {
+        ttopen();
+    }
 
     /* high-level */
     ttsetdefaultscheme(xf_colorscheme);         /* override */
@@ -576,6 +590,18 @@ cmain(int argc, char **argv)
         spell_init();
     }
     unicode_init();
+
+    sym_init();
+    sym_globals();
+    sym_errno_constants();
+
+    if (x_display_ctrl & DC_HEADLESS) {
+        macro_startup(xf_headless ? xf_headless : "headless");
+        macro_arguments(NULL);
+        gr_exit(EXIT_SUCCESS);
+        return 0;
+    }
+
     vtready(VTCREATE);
     if (xf_mouse) {
         if (mouse_init(xf_mouse)) {             /* mouse interface */
@@ -583,11 +609,8 @@ cmain(int argc, char **argv)
         }
         xf_usevmin = TRUE;
     }
-    sym_init();
-    sym_globals();
-    sym_errno_constants();
 
-    if (macro_startup() < 0) {                  /* execute startup macro */
+    if (macro_startup(NULL) < 0) {              /* execute startup macro */
         undo_close();
         vtclose(TRUE);
         fprintf(stderr, "\n" \
@@ -616,34 +639,8 @@ cmain(int argc, char **argv)
         m_strings[m_cnt++] =
             (m_profile = chk_salloc("profiles/defaultuser"));
     }
-    for (i = 0; i < m_cnt; ++i) {
-        const char *macro = m_strings[i];
 
-        x_mflag = TRUE;
-        trace_log("loading macro : %s\n", macro);
-        if (! macro_loaded(macro)) {
-            macro_load(macro);
-        }
-    }
-
-    /*
-     *  Execute startup macro and command line macros before reading in files.
-     */
-    signals_init(1);
-    x_plevel = 0;
-
-    execute_function("startup", NULL);
-    for (i = 0; i < m_cnt; ++i) {
-        const char *macro = m_strings[i];
-
-        if (macro_lookup(macro)) {
-            x_mflag = TRUE;                     /* -m mode, hide errors */
-            x_msglevel = 1;                     /* no warnings */
-            trace_log("executing macro : %s\n", macro);
-            execute_str(macro);
-        }
-    }
-    x_mflag = FALSE;
+    macro_arguments("startup");                 /* command line macros and startup */
 
     if (arg_index < argc) {                     /* load listed files */
         BUFFER_t* firstbp = NULL;
@@ -702,6 +699,43 @@ cmain(int argc, char **argv)
 
     gr_exit(EXIT_SUCCESS);
     return 0;
+}
+
+
+static void
+macro_arguments(const char *startup)
+{
+    unsigned m;
+
+    // load
+    for (m = 0; m < m_cnt; ++m) {
+        const char *macro = m_strings[m];
+
+        x_mflag = TRUE;
+        trace_log("loading macro : %s\n", macro);
+        if (! macro_loaded(macro)) {
+            macro_load(macro);
+        }
+    }
+    x_mflag = FALSE;
+
+    signals_init(1);
+    x_plevel = 0;
+
+    if (startup) {
+        execute_function(startup, NULL);
+    }
+
+    // execute
+    for (m = 0; m < m_cnt; ++m) {
+        const char *macro = m_strings[m];
+
+        x_mflag = TRUE;
+        x_msglevel = 1;                         /* no warnings */
+        trace_log("executing macro : %s\n", macro);
+        execute_str(macro);
+    }
+    x_mflag = FALSE;
 }
 
 
@@ -965,9 +999,7 @@ argv_init(int *argcp, char **argv)
                 xf_sigtrap = 0;
 
             } else if (0 == strcmp(arg, "--x11")) {
-                x_display_ctrl |= DC_WINDOW;
-                xf_ttydrv = 'x';
-                cook = -1;
+                cook = 1;
 
 #if defined(__APPLE__) || defined(MAC_OSX)
             } else if (0 == strncmp(arg, "-psn_", 5)) {
@@ -1583,12 +1615,34 @@ argv_process(const int doerr, int argc, const char * const *argv)
             usage(4);
             break;
 
-        case 410:           /* tty - curses driver. */
-            xf_ttydrv = 'c';
+        case 410:           /* tty - console. */
+            if (! set_display_mode(DC_CONSOLE)) {
+                ++errflag;
+            }
             break;
 
-        case 411:           /* tty - x11 driver. */
-            xf_ttydrv = 'x';
+        case 411:           /* tty - curses driver. */
+            if (set_display_mode(DC_CONSOLE)) {
+                xf_curses = 1;
+            } else {
+                ++errflag;
+            }
+            break;
+
+        case 412:           /* tty - x11 driver. */
+            if (! set_display_mode(DC_WINDOW)) {
+                ++errflag;
+            }
+            break;
+
+        case 413:           /* tty - headless */
+            if (set_display_mode(DC_HEADLESS)) {
+                if (args.val) {
+                    xf_headless = args.val;
+                }
+            } else {
+                ++errflag;
+            }
             break;
 
         case '?':
@@ -1606,6 +1660,24 @@ argv_process(const int doerr, int argc, const char * const *argv)
         usage(2);
     }
     return args.ind;
+}
+
+
+static int
+set_display_mode(int dc)
+{
+    if (x_display_ctrl & (DC_CONSOLE|DC_WINDOW|DC_HEADLESS)) {
+        if ((x_display_ctrl & dc) == 0) {
+#if defined(HAVE_LIBX11) && defined(HAVE_X11_XLIB_H)
+            fprintf(stderr, "%s: --console, --curses, --headless and --x11 are mutually exclusive.\n", x_progname);
+#else
+            fprintf(stderr, "%s: --console, --curses and --headless are mutually exclusive.\n", x_progname);
+#endif
+            return 0;
+        }
+    }
+    x_display_ctrl |= dc;
+    return 1;
 }
 
 

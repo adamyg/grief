@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_display_c,"$Id: m_display.c,v 1.31 2024/12/14 10:11:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_display_c,"$Id: m_display.c,v 1.32 2025/01/17 12:38:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_display.c,v 1.31 2024/12/14 10:11:41 cvsuser Exp $
+/* $Id: m_display.c,v 1.32 2025/01/17 12:38:29 cvsuser Exp $
  * Display primitives.
  *
  *
@@ -57,16 +57,17 @@ static const struct dcflag {        /* display control flags */
     uint32_t            f_value;                /* flag value */
 } dcflagnames[] = {
 #define NFIELD(__x)     __x, (sizeof(__x) - 1)
-#define DC_READONLYBITS (DC_WINDOW|DC_MOUSE|DC_READONLY|DC_CHARMODE|DC_UNICODE)
+#define DC_READONLYBITS (DC_WINDOW|DC_MOUSE|DC_READONLY|DC_CONSOLE|DC_UNICODE|DC_HEADLESS)
 
     { NFIELD("window"),             DC_WINDOW },            /* Running under a windowing system (read-only). */
     { NFIELD("mouse"),              DC_MOUSE },             /* Mouse enabled/available (read-only). */
     { NFIELD("readonly"),           DC_READONLY },          /* Read-only mode (read-only). */
-    { NFIELD("charmode"),           DC_CHARMODE },          /* Character-mode with basic GUI features (read-only). */
+    { NFIELD("console"),            DC_CONSOLE },           /* Character-mode with basic GUI features (read-only). */
 
     { NFIELD("shadow"),             DC_SHADOW },            /* Display shadow around popups. */
     { NFIELD("showthru"),           DC_SHADOW_SHOWTHRU },   /* Show-thru shadow around popups. */
     { NFIELD("statusline"),         DC_STATUSLINE },
+    { NFIELD("headless"),           DC_HEADLESS },
 
     { NFIELD("unicode"),            DC_UNICODE },           /* UNICODE character encoding available (read-only). */
     { NFIELD("asciionly"),          DC_ASCIIONLY },         /* ASCII only characters within UI/dialogs. */

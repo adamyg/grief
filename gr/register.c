@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_register_c,"$Id: register.c,v 1.31 2022/08/10 15:44:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_register_c,"$Id: register.c,v 1.32 2025/01/17 12:38:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: register.c,v 1.31 2022/08/10 15:44:57 cvsuser Exp $
+/* $Id: register.c,v 1.32 2025/01/17 12:38:29 cvsuser Exp $
  * Event handlers.
  *
  *
@@ -73,6 +73,7 @@ register_init(void)
     REGISTERLIST_t *rq;
     unsigned type;
 
+    x_time_last_key = time(NULL);
     for (type = 0, rq = x_reglst; type < MAX_REGISTER; ++type, ++rq) {
         TAILQ_INIT(rq);
     }
@@ -193,7 +194,7 @@ do_call_registered_macro(void)  /* (int num) */
         REG_UNASSIGNED      Unassigned key pressed.
         REG_IDLE            Idle time expired.
         REG_EXIT            About to exit.
-        REG_NEW             New file edited and readin.
+        REG_NEW             New file edited and read.
         REG_CTRLC           CTRL-C (SIGINT) pressed during macro.
         REG_INVALID         Invalid key pressed during response input.
         REG_INTERNAL        Internal error.
@@ -245,7 +246,7 @@ do_call_registered_macro(void)  /* (int num) */
         The 'reregistered_macro()' primitive registers a unique
         function to be invoked upon the trigger of the event type
         'type'. Similar to <register_macro> yet only permits a single
-        instance of the given function tp be registered.
+        instance of the given function to be registered.
 
         This primitive allows macros to unconditionally register
         handlers without need to know whether a previous instance has
@@ -477,7 +478,7 @@ register_remove(REGISTERLIST_t *rq, const char *macro)
  *      type -  Event identifier/type.
  *
  *  Returns:
- *      int - return value of the trigger'ed function(s). If the event in no
+ *      int - return value of the triggered function(s). If the event in no
  *          registered handler then -1 is returned.
  */
 int
@@ -498,8 +499,8 @@ trigger(int type)
  *      ... - Optional parameters.
  *
  *   Returns:
- *      int - return value of the trigger'ed function(s). If the
- *      event in no registered hanlders then -1 is returned.
+ *      int - return value of the triggered function(s). If the
+ *      event in no registered handlers then -1 is returned.
  *
  *<<GRIEF>> [callback]
     Macro: _invalid_key - Invalid key event.
@@ -660,14 +661,14 @@ trigger_idle(void)
         inq_idle_default()
 
     Macro Description:
-        The 'inq_idle_default()' primitives retrieves the current
+        The 'inq_idle_default()' primitive retrieves the current
         keyboard idle interval, see <set_idle_default>.
 
     Macro Parameters:
         none
 
     Macro Returns:
-        The 'inq_idle_default()' primitives returns the current
+        The 'inq_idle_default()' primitive returns the current
         value of the interval timer.
 
     Macro Portability:
@@ -699,8 +700,8 @@ inq_idle_default(void)          /* int () */
         set_idle_default(int internal = 0)
 
     Macro Description:
-        The 'set_idle_default()' primitives set the keyboard idle
-        interval as a measure of seconds betwen the last keystroke
+        The 'set_idle_default()' primitive set the keyboard idle
+        interval as a measure of seconds between the last keystroke
         and when the *REG_IDLE* event is generated, see
         <register_macro> for details.
 
@@ -709,7 +710,7 @@ inq_idle_default(void)          /* int () */
             system default shall be utilised.
 
     Macro Returns:
-        The 'set_idle_default()' primitives returns the previous
+        The 'set_idle_default()' primitive returns the previous
         value of the interval timer.
 
     Macro Portability:
@@ -744,7 +745,7 @@ do_set_idle_default(void)       /* int (int internal) */
         inq_idle_time()
 
     Macro Description:
-        The 'inq_idle_time()' primitives retrieves the number of
+        The 'inq_idle_time()' primitive retrieves the number of
         seconds since the user last pressed a key, representing the
         time keyboard input has been idle.
 

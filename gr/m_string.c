@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.47 2024/11/23 14:02:38 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.48 2025/01/17 12:38:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_string.c,v 1.47 2024/11/23 14:02:38 cvsuser Exp $
+/* $Id: m_string.c,v 1.48 2025/01/17 12:38:29 cvsuser Exp $
  * String primitives.
  *
  *
@@ -938,7 +938,7 @@ do_wfirstof(void)               /* int (string str, string chars [,int &result])
         ch|s - Object to be matched against.
 
     Macro Returns:
-        The 'rindex()' primitives returns the starting offset or 0 if
+        The 'rindex()' primitive returns the starting offset or 0 if
         the character or string was not found.
 
     Macro Portability:

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.72 2024/12/09 14:13:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.73 2025/01/17 12:38:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: builtin.c,v 1.72 2024/12/09 14:13:08 cvsuser Exp $
+/* $Id: builtin.c,v 1.73 2025/01/17 12:38:29 cvsuser Exp $
  * Builtin expresssion evaluation.
  *
  *
@@ -110,7 +110,7 @@ iscsym(int c) /*TODO: compat_iscsym()*/
 
 /*
  *  execute_str ---
- *      Take a string, possiblity entered via the the command prompt, taking the
+ *      Take a string, possibly entered via the command prompt, taking the
  *      form <macro [arguments ... ]>, parse and then execute the specified macro.
  *
  *      Arguments can be either int, float otherwise treated as a string.
@@ -280,7 +280,7 @@ void
 execute_unassigned(const char *spec, int key, const char *seq)
 {
     //
-    //  TODO: general execute_key(), precompile during assign_to_key()
+    //  TODO: general execute_key(), pre-compile during assign_to_key()
     //
 #define UNASSIGNED_ARGV 16
 

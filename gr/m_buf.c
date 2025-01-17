@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_buf_c,"$Id: m_buf.c,v 1.57 2022/08/10 15:44:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_buf_c,"$Id: m_buf.c,v 1.58 2025/01/17 12:38:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_buf.c,v 1.57 2022/08/10 15:44:56 cvsuser Exp $
+/* $Id: m_buf.c,v 1.58 2025/01/17 12:38:29 cvsuser Exp $
  * Buffer primitives.
  *
  *
@@ -922,7 +922,7 @@ flag_lookup(const char *name, int length)
             buffers underlying filename being used.
 
     Macro Returns:
-        The 'set_buffer_title()' primitives return zero on success, 
+        The 'set_buffer_title()' primitive return zero on success,
         otherwise -1 if the specified buffer does not exist.
 
     Macro Portability:

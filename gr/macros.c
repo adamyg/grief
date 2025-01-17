@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_macros_c,"$Id: macros.c,v 1.57 2024/07/05 18:34:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_macros_c,"$Id: macros.c,v 1.58 2025/01/17 12:38:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: macros.c,v 1.57 2024/07/05 18:34:12 cvsuser Exp $
+/* $Id: macros.c,v 1.58 2025/01/17 12:38:29 cvsuser Exp $
  * Manipulating macro definitions.
  *
  *
@@ -1355,13 +1355,14 @@ macro_delete(const LIST *list)
  *      nothing
  */
 int
-macro_startup(void)
+macro_startup(const char *name)
 {
     assert(0 == mac_sd && 0 == mac_sp);
     mac_sp = mac_stack - 1;
 
-    execute_str(GRINIT_MACRO);
-    return macro_lookup(GRINIT_MACRO) == NULL ? -1 : 0;
+    if (NULL == name) name = GRINIT_MACRO;
+    execute_str(name);
+    return macro_lookup(name) == NULL ? -1 : 0;
 }
 
 

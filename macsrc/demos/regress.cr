@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: regress.cr,v 1.44 2024/08/02 12:59:02 cvsuser Exp $
+/* $Id: regress.cr,v 1.45 2025/01/17 12:38:44 cvsuser Exp $
  *
  *  This set of macros are used when debugging and fixing CRISP to aid in regression testing and
  *  catching bugs introduced inadvertently. These tests dont attempt an exhaustive test, yet
@@ -160,7 +160,7 @@ main(void)
 }
 
 
-void
+int
 regress(~string test)
 {
     int num_passed = 0, num_failed = 0, x_lastnum = 0;
@@ -238,10 +238,11 @@ regress(~string test)
 
     message("Tests passed: %d, failed: %d .. ", num_passed, num_failed);
     if (0 == num_failed) {
-        return;                                 /* success */
+        return 0;                               /* success */
     }
 
-    if (edit_file("Regression-Test") > 0) {     /* export results */
+    if (0 == (display_mode() & (DC_HEADLESS)) &&
+           edit_file("Regression-Test") > 0) {  /* export results */
         int maj, min, edit;
         int h, m, s, dy, yr;
         string mn, infobuf;
@@ -259,7 +260,14 @@ regress(~string test)
             insert(failed_list[i++]);
         }
         set_bottom_of_window();
+
+    } else {
+        for (i = 0; i < length_of_list(failed_list);) {
+            error("%s", failed_list[i++]);
+        }
     }
+
+    return num_failed;
 }
 
 
@@ -284,7 +292,7 @@ failed(int num, string statement)
     extern int num_failed, x_lastnum;
 
     if (x_lastnum > 0 && (num - 1) != x_lastnum) {
-        failed_list += "warning: test seq" + num + "from " + x_lastnum + "\n";
+        failed_list += "warning: test seq " + num + " from " + x_lastnum + "\n";
     }
     failed_list += "Test #" + num + ": (" + statement + ") failed.\n";
     x_lastnum = num;
@@ -2675,8 +2683,8 @@ test_history(void)
 {
     const string top = inq_macro_history(0);
 
-                                                /* <Alt-10> or from features */
-    TEST(663, top == "execute_macro" || top == "sel_list");
+                                                /* <Alt-10>, via features or unittest */
+    TEST(663, top == "execute_macro" || top == "sel_list" || top == "unittest");
     TEST(664, inq_command() == inq_macro_history());
     set_macro_history(0, "function1");
     set_macro_history(1, "function2");

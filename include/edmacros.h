@@ -1,14 +1,14 @@
 #ifndef GR_EDMACROS_H_INCLUDED
 #define GR_EDMACROS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edmacros_h,"$Id: edmacros.h,v 1.24 2024/08/17 08:36:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_edmacros_h,"$Id: edmacros.h,v 1.25 2025/01/13 16:20:06 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edmacros.h,v 1.24 2024/08/17 08:36:27 cvsuser Exp $
+/* $Id: edmacros.h,v 1.25 2025/01/13 16:20:06 cvsuser Exp $
  * Macro and symbolic interpreter information.
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

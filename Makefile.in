@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.80 2025/01/13 14:57:54 cvsuser Exp $
+# $Id: Makefile.in,v 1.81 2025/01/17 19:07:47 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2025, Adam Young.
@@ -142,31 +142,32 @@ define usage =
 	|\n\
 	| Targets: \n\
 	|\n\
-	|	contrib - build third-party components. \n\
-	|	build   - build everything. \n"
+	|	contrib  - build third-party components. \n\
+	|	build    - build everything. \n\
+	|	unittest - execute unit tests. \n"
 endef
 
 ifneq ("", "@prefix@")
-usage+="|	install - install; see profile below. \n"
+usage+="|	install  - install; see profile below. \n"
 else
-usage+="|	package - build package. \n"
+usage+="|	package  - build package. \n"
 endif
 
-usage+="|	clean   - delete everything which can be remade. \n\
-	|	vclean  - delete all. \n\
-	|	help    - command line usage. \n\
+usage+="|	clean    - delete everything which can be remade. \n\
+	|	vclean   - delete all. \n\
+	|	help     - command line usage. \n\
 	|\n"
 
 ifneq ("", "@prefix@")
 usage+="| Install configuration: \n\
 	|\n\
-	|	BINDIR  - $(BINDIR) \n\
-	|	DATADIR - $(DATADIR) \n\
+	|	BINDIR   - $(BINDIR) \n\
+	|	DATADIR  - $(DATADIR) \n\
 	|\n\
 	| Default run-time configuration: \n\
 	|\n\
-	|	GRPATH  - $(DATADIR)/macros \n\
-	|	GRHELP  - $(DATADIR)/help \n\
+	|	GRPATH   - $(DATADIR)/macros \n\
+	|	GRHELP   - $(DATADIR)/help \n\
 	|\n"
 endif
 
@@ -184,8 +185,8 @@ $(error build type expected as first target; see "make help" for details)
 endif
 endif
 
-.PHONY:				help clean vclean distclean build package install prepare_deb prepare_rpm
-help clean vclean distclean build package install prepare_deb prepare_rpm:
+.PHONY:				help clean vclean distclean build unittest package install prepare_deb prepare_rpm
+help clean vclean distclean build unittest package install prepare_deb prepare_rpm:
 ifeq ("$(BUILD_TYPES)","")
 	$(usage)
 else
@@ -436,6 +437,11 @@ $(D_BIN)/$(PLBRNAME).dll:	$(LIBPLBRPATH)
 		@echo importing $(LIBPLBRPATH)
 		@$(CP) -f $(subst /,\,$^) $@
 endif
+
+.PHONY:		unittest
+unittest:	build
+	-$(D_BIN)/gr$(E) -DGRPATH=./macros -DGRHELP=./help --config
+	$(D_BIN)/gr$(E) -DGRPATH=./macros -DGRHELP=./help --headless=unittest
 
 .PHONY:		package
 package:	import packageinfo
