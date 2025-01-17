@@ -187,6 +187,12 @@ jobs:
         export LD_LIBRARY_PATH=$(brew --prefix libarchive)/lib:/usr/local/lib:$LD_LIBRARY_PATH
         make release
 
+    - name: MacOS, unit-test
+      if: startsWith(matrix.config.name, 'MacOS Latest')
+      shell: bash
+      run: |
+        make release unittest
+
     - name: Package
       uses: actions/upload-artifact@v4
       with:

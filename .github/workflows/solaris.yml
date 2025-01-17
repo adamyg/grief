@@ -55,6 +55,7 @@ jobs:
           export CFLAGS="-std=gnu11 -D_XOPEN_SOURCE=500 -D__EXTENSIONS__=1"
           ./configure --prefix=/usr
           gmake release build
+          gmake release unittest
 
 ## References:
 ## https://github.com/oracle/solaris-userland/blob/master/make-rules/shared-macros.mk
