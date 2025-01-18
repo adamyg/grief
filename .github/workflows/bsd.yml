@@ -66,6 +66,6 @@ jobs:
           run: |
             ./configure
             cat acdefines.h
-            gmake release
+            gmake release unittest
 
 #end
