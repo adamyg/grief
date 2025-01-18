@@ -1,6 +1,6 @@
 -*- encoding: utf-8; -*-
 
-Fri Jan 10 16:19:18 2025 adamy
+Sat Jan 18 14:20:28 2025 adamy
 
 	* build-29
 
@@ -10,6 +10,7 @@ Fri Jan 10 16:19:18 2025 adamy
                 - readonly help source; #102
 		- coloriser expansion; #101
 		- readonly grinit example; #100
+		- headless mode, plus CI unittest integration; #98
 		- packaging; #97
 			- deb package
 
