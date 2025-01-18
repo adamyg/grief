@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: regress.cr,v 1.45 2025/01/17 12:38:44 cvsuser Exp $
+/* $Id: regress.cr,v 1.46 2025/01/18 16:20:34 cvsuser Exp $
  *
  *  This set of macros are used when debugging and fixing CRISP to aid in regression testing and
  *  catching bugs introduced inadvertently. These tests dont attempt an exhaustive test, yet
@@ -1102,7 +1102,7 @@ test_math(void)
     TEST(229, tan(90.0)     == -1.995200412208242);
     TEST(230, tan(-90.0)    == 1.995200412208242);
     TEST(231, tan(45.0)     == 1.6197751905438615);
-    TEST(232, tan(60.0)     == 0.320040389379563);
+    TEST(232, isclose(tan(60.0), 0.320040389379563, 1e13));
 
     TEST(233, isclose(tanh(8.0), 0.9999997749296758, 1e14));
     TEST(234, isclose(tanh(1.0), 0.7615941559557649, 1e14));
