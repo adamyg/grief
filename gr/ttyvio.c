@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.87 2024/12/13 14:25:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.88 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.87 2024/12/13 14:25:37 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.88 2025/02/07 03:03:22 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -1407,8 +1407,8 @@ term_truecolor(const colattr_t *ca)
     if (0 == hue.Flags) {
         hue.Flags = VIO_FNORMAL;
         if (hue.fg == hue.bg) {                 // guard against fg and bg issues
-            hue.fg = tt_colormap[WHITE];
-            hue.bg = tt_colormap[BLACK];
+            hue.fg = (short)tt_colormap[WHITE];
+            hue.bg = (short)tt_colormap[BLACK];
         }
     }
 

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntaxln_c, "$Id: syntaxln.c,v 1.3 2022/09/13 14:31:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntaxln_c, "$Id: syntaxln.c,v 1.4 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntaxln.c,v 1.3 2022/09/13 14:31:24 cvsuser Exp $
+/* $Id: syntaxln.c,v 1.4 2025/02/07 03:03:22 cvsuser Exp $
  * Syntax support.
  *
  *
@@ -277,7 +277,7 @@ find_nonwhite(struct match_state *ms, int32_t *match)
                 break;
 
             ms->start.col = pos;
-            ms->start.offset = cp - text;
+            ms->start.offset = (LINENO)(cp - text);
             *match = t_ch;
             return 1;
         }
@@ -389,7 +389,7 @@ unstack_tagged(struct match_state *ms)
                 if (elm->tag.length && elm->tag.data[0] == '/') {
                     if (0 == --ms->nesting) {   /* </xxxx */
                         ms->end.line2 = ms->lineno;
-                        ms->end.offset2 = (elm->cursor - ms->text);
+                        ms->end.offset2 = (LINENO)(elm->cursor - ms->text);
                         ms->end.matched = tag_equal(ms, &ms->tag, &elm->tag);
                     }
 
@@ -402,7 +402,7 @@ unstack_tagged(struct match_state *ms)
 
                     if (0 == ms->nesting++) {   /* <xxxx */
                         ms->start.line2 = ms->lineno;
-                        ms->start.offset2 = (elm->cursor - ms->text) + elm->tag.length;
+                        ms->start.offset2 = (LINENO)((elm->cursor - ms->text) + elm->tag.length);
                         ms->tag = elm->tag;
                     }
                 }
@@ -413,7 +413,7 @@ unstack_tagged(struct match_state *ms)
                         ('/' == elm->tag.data[0] || '?' == elm->tag.data[0])) {
                     if (--ms->nesting <= 0) {   /* /> or ?> */
                         ms->end.line2 = ms->lineno;
-                        ms->end.offset2 = (elm->cursor - ms->text) - 1;
+                        ms->end.offset2 = (LINENO)((elm->cursor - ms->text) - 1);
                         ms->end.matched = 2;
                         return elm->cursor;
                     }
@@ -428,7 +428,7 @@ unstack_tagged(struct match_state *ms)
 
                 } else if (1 == ms->nesting) {  /* > */
                     if ((ms->tag.data + ms->tag.length) == elm->cursor) {
-                        ms->start.offset2 = (elm->cursor - ms->text);
+                        ms->start.offset2 = (LINENO)(elm->cursor - ms->text);
                     }
                 }
             }
@@ -542,7 +542,7 @@ find_elements(struct match_state *ms, int32_t match, SyntaxChar_t mask)
             if (ms->stack.top) {                /* unstack */
                 const LINECHAR *cursor = (ms->tagtype ? unstack_tagged(ms) : unstack_pairs(ms));
                 if (cursor) {
-                    ms->end.offset = (cursor - ms->text);
+                    ms->end.offset = (LINENO)(cursor - ms->text);
                     ms->end.line = lineno;
                     ms->end.col = line_column(lineno, ms->end.offset);
                     vm_unlock(lineno);

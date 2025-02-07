@@ -945,7 +945,7 @@ Wvsnprintf(WChar_t *str, size_t size, const char *format, va_list args)
 				switch (cflags) {
 				case PRINT_C_CHAR:
 					charptr = va_arg(args, /*signed*/ WChar_t *);
-					*charptr = len;
+					*charptr = (WChar_t)len;
 					break;
 				case PRINT_C_SHORT:
 					shortptr = va_arg(args, short int *);
@@ -953,7 +953,7 @@ Wvsnprintf(WChar_t *str, size_t size, const char *format, va_list args)
 					break;
 				case PRINT_C_LONG:
 					longptr = va_arg(args, long int *);
-					*longptr = len;
+					*longptr = (long)len;
 					break;
 				case PRINT_C_LLONG:
 					llongptr = va_arg(args, LLONG *);
@@ -980,7 +980,7 @@ Wvsnprintf(WChar_t *str, size_t size, const char *format, va_list args)
 					break;
 				default:
 					intptr = va_arg(args, int *);
-					*intptr = len;
+					*intptr = (int)len;
 					break;
 				}
 				break;

@@ -222,7 +222,7 @@ static void             check_activecolors(void);
 static __inline int     winnormal(const int color);
 static __inline int     vtnormal(const int color);
 
-static void             CopyIn(unsigned pos, unsigned cnt, WCHAR_INFO *image);
+static void             CopyIn(size_t pos, size_t cnt, WCHAR_INFO *image);
 static void             CopyOut(copyoutctx_t *ctx, unsigned offset, unsigned len, unsigned flags);
 #if defined(WIN32_CONSOLEEXT)
 #if defined(WIN32_CONSOLE256)
@@ -1344,7 +1344,7 @@ unicode_remap(uint32_t ch)
 
 
 static void
-CopyIn(unsigned pos, unsigned cnt, WCHAR_INFO *image)
+CopyIn(size_t pos, size_t cnt, WCHAR_INFO *image)
 {
     const int /*rows = vio.rows,*/ cols = vio.cols;
     COORD is = {0}, ic = {0};
@@ -1374,7 +1374,7 @@ CopyIn(unsigned pos, unsigned cnt, WCHAR_INFO *image)
 
     if (0 == rc && ERROR_NOT_ENOUGH_MEMORY == GetLastError()) {
         if (cnt > ((unsigned)cols * 2)) {       /* sub-divide request (max 8k) */
-            const int cnt2 = (cnt / (cols * 2)) * cols;
+            const size_t cnt2 = (cnt / (cols * 2)) * cols;
 
             CopyIn(pos, cnt2, image);
             CopyIn(pos + cnt2, cnt - cnt2, image);
@@ -1943,7 +1943,7 @@ CopyOutEx2(copyoutctx_t *ctx, size_t pos, size_t cnt, unsigned flags)
 {
     const WCHAR_INFO *cursor = vio.image + pos, *end = cursor + cnt;
     HANDLE chandle = vio.chandle;
-    const int cols = vio.cols;
+    const int cols = (int)vio.cols;
     int row = (int)(pos / cols);
 
     WCHAR wcbuf[2 * 1024],                      // ExtTextOut limit
@@ -1993,7 +1993,7 @@ CopyOutEx2(copyoutctx_t *ctx, size_t pos, size_t cnt, unsigned flags)
 #define L_VTESC     L"\x1b"
 #define L_VTCSI     L"\x1b["
 
-    do {    //forearch(row)
+    do {    // foreach(row)
         WCHAR_INFO *ocursor = vio.oimage + (row * cols);
         int start = -1, col = 0;
         struct WCHAR_COLORINFO info = {0};      // accumulator
@@ -2018,7 +2018,7 @@ CopyOutEx2(copyoutctx_t *ctx, size_t pos, size_t cnt, unsigned flags)
                         ++col;
                         continue;               // up-to-date
                     }
-                    wctext = wcbuf + wsprintfW(wcbuf, L_VTCSI L"%u;%uH", row + 1, col + 1);
+                    wctext = wcbuf + wsprintfW(wcbuf, L_VTCSI L"%u;%uH", (unsigned)(row + 1), (unsigned)(col + 1));
                     start = col;
 
                 } else {                        // attribute run
@@ -2704,8 +2704,9 @@ WCHAR_UPDATE(WCHAR_INFO *cursor, const uint32_t ch, const struct WCHAR_COLORINFO
 static int
 parse_color(const char *color, const char *defname, const struct attrmap *map, int *attr)
 {
-    int len = strlen(color);
+    size_t len = strlen(color);
     const char *name, *a;
+    unsigned t_col = 0;
     int c, col = -1;
 
     // color[;attribute[;...]]
@@ -2717,20 +2718,21 @@ parse_color(const char *color, const char *defname, const struct attrmap *map, i
     // optional trailing attributes
     if (NULL != (a = strchr(color, ';'))) {
         *attr = parse_attributes(a);
-        len = (int)(a - color);                 // remove attribute component.
+        len = (size_t)(a - color);              // remove attribute component.
     }
 
     // non-optional color
     while (' ' == *color || '\t' == *color)
         ++color;
 
-    if (0 == sscanf(color, "color%u", &col)) {  // extension
-        for (c = 0; (name = map[c].name) != NULL; ++c) { // search color map
-            if (len == (int)strlen(name) && 0 == strnicmp(color, name, len)) {
-                return map[c].win; // done
-
-            } else if (0 == stricmp(defname, name)) {
-                col = map[c].win;  // apply default
+    if (0 == sscanf(color, "color%u", &t_col)) { // extension
+        if (t_col <= 0xffffff) {
+            for (c = 0; (name = map[c].name) != NULL; ++c) { // search color map
+                if (len == strlen(name) && 0 == strnicmp(color, name, len)) {
+                    return map[c].win;          // done
+                }  else if (0 == stricmp(defname, name)) {
+                    col = map[c].win;           // apply default
+                }
             }
         }
     }

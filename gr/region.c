@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_region_c,"$Id: region.c,v 1.31 2022/08/10 15:44:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_region_c,"$Id: region.c,v 1.32 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: region.c,v 1.31 2022/08/10 15:44:57 cvsuser Exp $
+/* $Id: region.c,v 1.32 2025/02/07 03:03:22 cvsuser Exp $
  * Region primitives.
  *
  *
@@ -855,11 +855,11 @@ do_get_region(void)             /* string ([int bufnum], [int syscopy = FALSE]) 
             rdata.rd_length = r.r_size;
 
             region_transfer(&r, &rdata);
-            acc_assign_str(cursor, r.r_size + 1);
+            acc_assign_nstr(cursor, (size_t)(r.r_size + 1));
         }
     }
 
-    if (!ret) acc_assign_str("", 0);
+    if (!ret) acc_assign_nstr("", 0);
 }
 
 
@@ -964,15 +964,17 @@ do_inside_region(void)          /* int ([int winnum], [int line], [int col]) */
 
 
 static void
-sys_paste_callback(const char *text, int len)
+sys_paste_callback(const char *text, int buflen)
 {
     const char *nl;
+    size_t len;
 
-    len = (len == -1 ? (int)strlen(text) : len);
+    assert(text && buflen >= -1);
+    len = (buflen == -1 ? strlen(text) : (size_t)buflen);
     while (len > 0) {
         if (NULL != (nl = strchr(text, ASCIIDEF_CR)) ||
                 NULL != (nl = strchr(text, ASCIIDEF_LF))) {
-            int n = nl - text;
+            size_t n = nl - text;
 
             if (nl[0] == ASCIIDEF_CR && nl[1] == ASCIIDEF_LF) {
                 len -= n + 2;

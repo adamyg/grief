@@ -1,11 +1,11 @@
 #ifndef GR_DEBUG_H_INCLUDED
 #define GR_DEBUG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_debug_h,"$Id: debug.h,v 1.13 2024/07/29 16:14:45 cvsuser Exp $")
+__CIDENT_RCSID(gr_debug_h,"$Id: debug.h,v 1.14 2025/02/07 03:03:20 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: debug.h,v 1.13 2024/07/29 16:14:45 cvsuser Exp $
+/* $Id: debug.h,v 1.14 2025/02/07 03:03:20 cvsuser Exp $
  * Debugging support.
  *
  *
@@ -81,8 +81,6 @@ enum _dbflags {
 
 extern int                  trace_flags(void);
 extern int                  trace_flagsset(int flags);
-extern void                 trace_ilog(const char *fmt, ...) __ATTRIBUTE_FORMAT__((printf, 1, 2));
-extern void                 trace_term(const char *str, ...) __ATTRIBUTE_FORMAT__((printf, 1, 2));
 extern void                 trace_character(int value, int width, const char *buf, int n);
 extern void                 trace_listv(const LISTV *lvp);
 extern void                 trace_ilist(const LIST *lp);

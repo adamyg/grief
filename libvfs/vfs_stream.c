@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_stream_c,"$Id: vfs_stream.c,v 1.18 2025/01/13 15:25:26 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_stream_c,"$Id: vfs_stream.c,v 1.19 2025/02/07 03:03:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_stream.c,v 1.18 2025/01/13 15:25:26 cvsuser Exp $
+/* $Id: vfs_stream.c,v 1.19 2025/02/07 03:03:23 cvsuser Exp $
  * Virtual file system interface - streams.
  *
  *
@@ -75,7 +75,7 @@ vfs_fdopen(const char *path, int handle, int flags, int mode, unsigned bsize)
 static vfs_file_t *
 fdstream(const char *path, int handle, int flags, int mode, unsigned bsize)
 {
-    const unsigned pathlen = strlen(path);
+    const unsigned pathlen = (unsigned)strlen(path);
     vfs_file_t *file;
 
     __CUNUSED(mode);
@@ -110,25 +110,26 @@ fdstream(const char *path, int handle, int flags, int mode, unsigned bsize)
 
 
 int
-vfs_fwrite(vfs_file_t *file, const void *buffer, unsigned size)
+vfs_fwrite(vfs_file_t *file, const void *buffer, size_t size)
 {
     const char *t_buffer = buffer;
-    unsigned t_size = size;
+    size_t t_size = size;
 
     assert(VFILE_MAGIC == file->f_magic);
-    VFS_TRACE2(("vfs_fwrite(%s, %u, left:%u)", file->f_path, size, file->f_left))
+    VFS_TRACE2(("vfs_fwrite(%s, %u, left:%u)", file->f_path, (unsigned)size, (unsigned)file->f_left))
 
     /* space within cache? */
     if (file->f_left < t_size) {
         const int handle = file->f_handle;
         const unsigned bsize = file->f_bsize;
-        int total = 0, ret;
+        size_t total = 0;
+        int ret;
 
         /* full cache */
         if (file->f_left) {
-            unsigned left = file->f_left;
+            size_t left = file->f_left;
 
-            VFS_TRACE2((" cached(%u/%u)", left, t_size))
+            VFS_TRACE2((" cached(%u/%u)", (unsigned)left, (unsigned)t_size))
             memcpy(file->f_cursor, t_buffer, left);
             t_buffer += left;
             t_size -= left;
@@ -146,7 +147,7 @@ vfs_fwrite(vfs_file_t *file, const void *buffer, unsigned size)
 
         /* write extra buffer(s) */
         while (t_size > bsize) {
-            VFS_TRACE2((" write(%u/%u)", bsize, t_size))
+            VFS_TRACE2((" write(%u/%u)", bsize, (unsigned)t_size))
             if ((ret = vfs_write(handle, t_buffer, bsize)) != (int)bsize) {
                 size = total;
                 goto done;
@@ -159,15 +160,15 @@ vfs_fwrite(vfs_file_t *file, const void *buffer, unsigned size)
 
     /* cache within buffer */
     if (t_size) {
-        VFS_TRACE2((" cached(%u)", t_size))
+        VFS_TRACE2((" cached(%u)", (unsigned)t_size))
         memcpy(file->f_cursor, t_buffer, t_size);
         file->f_cursor += t_size;
         file->f_left -= t_size;
     }
 
 done:;
-    VFS_TRACE2((" : %d\n", size))
-    return size;
+    VFS_TRACE2((" : %d\n", (unsigned)size))
+    return (int /*ssize_t*/)size;
 }
 
 
@@ -175,7 +176,7 @@ int
 vfs_fputc(vfs_file_t *file, char ch)
 {
     assert(VFILE_MAGIC == file->f_magic);
-    VFS_TRACE2(("vfs_fputc(%s, left:%u)", file->f_path, file->f_left))
+    VFS_TRACE2(("vfs_fputc(%s, left:%u)", file->f_path, (unsigned)file->f_left))
 
     if (file->f_left) {
         VFS_TRACE2((": 1\n"))
@@ -197,11 +198,11 @@ vfs_fputs(vfs_file_t *file, const char *str)
 int
 vfs_fclose(vfs_file_t *file)
 {
-    const unsigned final = file->f_bsize - file->f_left;
+    const size_t final = file->f_bsize - file->f_left;
     int ret = 0;
 
     assert(VFILE_MAGIC == file->f_magic);
-    VFS_TRACE2(("vfs_fclose(%s, left:%u, final:%u)", file->f_path, file->f_left, final))
+    VFS_TRACE2(("vfs_fclose(%s, left:%u, final:%u)", file->f_path, (unsigned)file->f_left, (unsigned)final))
 
     if (final) {
         VFS_TRACE2((" flush"))

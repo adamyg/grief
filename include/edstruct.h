@@ -1,11 +1,11 @@
 #ifndef GR_EDSTRUCT_H_INCLUDED
 #define GR_EDSTRUCT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.83 2025/01/17 12:40:05 cvsuser Exp $")
+__CIDENT_RCSID(gr_edstruct_h,"$Id: edstruct.h,v 1.84 2025/02/07 03:03:22 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edstruct.h,v 1.83 2025/01/17 12:40:05 cvsuser Exp $
+/* $Id: edstruct.h,v 1.84 2025/02/07 03:03:22 cvsuser Exp $
  * Window, buffer, line and character-map definitions.
  *
  *
@@ -584,8 +584,8 @@ struct _display {
     uint32_t            d_flags;                /* control flags */
     uint32_t            d_wlen;                 /* Number of characters in waitfor buffer */
     char *              d_waitfor;              /* Queue of characters inserted into buffer from pty */
-    int                 d_curline;              /* Current cursor */
-    int                 d_curcol;
+    LINENO              d_curline;              /* Current cursor */
+    LINENO              d_curcol;
     int                 d_attrline;             /* Last attribute update */
     int                 d_attrcol;
     int                 d_lastchar;             /* last character written (for repeats) */
@@ -600,8 +600,8 @@ struct _display {
 
     /*os specfic*/
 #if defined(_WIN32) || defined(WIN32)
-    int                 d_handle_in;
-    int                 d_handle_out;
+    HANDLE              d_handle_in;
+    HANDLE              d_handle_out;
 #endif
 #if defined(__OS2__)
     unsigned long       d_sema;                 /* Semaphore to wait on */

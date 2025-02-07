@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_regexp_c,"$Id: regexp.c,v 1.50 2024/07/13 09:56:42 cvsuser Exp $")
+__CIDENT_RCSID(gr_regexp_c,"$Id: regexp.c,v 1.51 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: regexp.c,v 1.50 2024/07/13 09:56:42 cvsuser Exp $
+/* $Id: regexp.c,v 1.51 2025/02/07 03:03:22 cvsuser Exp $
  * Regular expression engine.
  *
  *  The orgin of this regular expression implementation has been lost with time,
@@ -163,7 +163,7 @@ typedef struct {
     const char *            start;
 } rematch_t;
 
-typedef int loopstate_t;
+typedef size_t loopstate_t;
 
 static int                  re_compile(recomp_t *rx);
 static const char *         re_atom(recomp_t *rx, const char *pattern);
@@ -171,7 +171,7 @@ static const REGEXPATOM *   re_nextblock(const REGEXPATOM *re);
 static int                  re_escape(const char **patternp, int *result);
 static int                  re_expand(recomp_t *rx, size_t len);
 static void                 re_shiftup(recomp_t *rx, size_t idx);
-static int                  re_match(const rematch_t *match, const REGEXPATOM *re, const char *p, int size, loopstate_t *loopstate);
+static int                  re_match(const rematch_t *match, const REGEXPATOM *re, const char *p, size_t size, loopstate_t *loopstate);
 static void                 re_print(const REGEXPATOM *re);
 static void                 re_printbm(const REGEXPATOM *bm, char *buf, size_t len);
 #if defined(DEBUG_REGEXP)
@@ -179,11 +179,11 @@ static void                 re_printbuf(const char *start, const char *end);
 #endif
 
 static void                 kmp_table(int wordlen, const char *pat, char *word, int16_t *table);
-static const char *         kmp_search(const char *text, int textlen, const char *word, int wordlen, const int16_t *table);
 static void                 kmp_itable(int wordlen, const char *pat, char *word, int16_t *table);
-static const char *         kmp_isearch(const char *text, int textlen, const char *word, int wordlen, const int16_t *table);
+static const char *         kmp_search(const char *text, size_t textlen, const char *word, int wordlen, const int16_t *table);
+static const char *         kmp_isearch(const char *text, size_t textlen, const char *word, int wordlen, const int16_t *table);
 
-static __CINLINE int        strcasematch(const char *s1, const char *s2, int len);
+static __CINLINE int        strcasematch(const char *s1, const char *s2, size_t len);
 
 
 /*  Character Classes:
@@ -548,8 +548,9 @@ static const char *
 re_atom(register recomp_t *rx, const char *pattern)
 {
     const char *MAGIC = (rx->regopts.mode ? MAGIC_UNIX : MAGIC_BRIEF);
-    int patinc = 1, opsize = 3;                 /* pattern increment, operator size (in bytes) */
-    int len = 0, ch;
+    size_t patinc = 1, opsize = 3;              /* pattern increment, operator size (in bytes) */
+    size_t len = 0;
+    int ch;
 
     if (0 == rx->regopts.regexp_chars) {
         goto DEFAULT;
@@ -705,7 +706,7 @@ re_atom(register recomp_t *rx, const char *pattern)
                 } else if ('-' == c) {
                     /*
                      *  The `-' is not considered to define a range if the character
-                     *  following is a closiing bracket.
+                     *  following is a closing bracket.
                      */
                     if (*pattern == ']') {
                         SET('-');
@@ -857,9 +858,9 @@ NORMAL: if (rx->orbranch && len > 1) {
                 opsize = len + ((len + 2) * sizeof(int16_t)) + 5;
                 if (0x01 & table) ++table;      /* word align */
                 if (rx->regopts.case_sense) {
-                    kmp_table(len, pattern, (char *)satom, (int16_t *)table);
+                    kmp_table((int)len, pattern, (char *)satom, (int16_t *)table);
                 } else {
-                    kmp_itable(len, pattern, (char *)satom, (int16_t *)table);
+                    kmp_itable((int)len, pattern, (char *)satom, (int16_t *)table);
                 }
             } else {
                 memcpy(satom + 5, pattern, len);
@@ -910,7 +911,7 @@ re_nextblock(const REGEXPATOM *re)
  *      o fixed
  *
  *          '\e'            ESC
- *          '\f'            Formfeed
+ *          '\f'            Form feed
  *          '\n'            Newline
  *          '\r'            Return
  *          '\t'            Tab
@@ -918,7 +919,7 @@ re_nextblock(const REGEXPATOM *re)
  *
  *      o Numeric
  *
- *          '\x##'          Hexidecimal
+ *          '\x##'          Hexadecimal
  *          '\X####'
  *          '\x{# ...}'
  *          '\0##'          Octal
@@ -971,7 +972,7 @@ re_escape(const char **patternp, int *result)
                     break;
                 }
                 ++pattern;
-                accum = (accum * 16) + (p - hexchrs);
+                accum = (accum * 16) + (int)(p - hexchrs);
             }
             ch = accum;
         }
@@ -985,7 +986,7 @@ re_escape(const char **patternp, int *result)
 
                 if (NULL == p) break;
                 ++pattern;
-                accum = (accum * 8) + (p - octchrs);
+                accum = (accum * 8) + (int)(p - octchrs);
             }
             ch = accum;
         }
@@ -1007,7 +1008,7 @@ re_escape(const char **patternp, int *result)
                     break;
                 }
                 ++pattern;
-                accum = (accum * 8) + (p - octchrs);
+                accum = (accum * 8) + (int)(p - octchrs);
             }
             ch = accum;
         } else {
@@ -1036,7 +1037,7 @@ re_escape(const char **patternp, int *result)
     }
 
     if (escaped) *patternp = pattern;
-    *result = (0xff & ch);
+    *result = (0xff & ch); // XXX/MCHAR
     return escaped;
 }
 
@@ -1128,7 +1129,7 @@ re_shiftup(recomp_t *rx, size_t idx)
  *      Regular expression execution.
  *
  *  Parameters:
- *      prog -              Compiled search expressionn.
+ *      prog -              Compiled search expression.
  *      buf -               Buffer address.
  *      buflen -            Length of search buffer, in bytes.
  *      offset -            Search offset within buffer.
@@ -1137,18 +1138,17 @@ re_shiftup(recomp_t *rx, size_t idx)
  *      *true* on success, otherwise *false* on error/mismatch.
  */
 int
-regexp_exec(REGEXP *prog, const char *buf, int buflen, int offset)
+regexp_exec(REGEXP *prog, const char *buf, size_t buflen, int offset)
 {
     const REGEXPATOM *re = (const REGEXPATOM *)prog->program;
     register const char *p;
-    register int loops;
+    register size_t loops;
     rematch_t match;
     int reincr = 1;
 
     assert(re);
     assert(buf);
-    assert(buflen >= 0);
-    assert(offset >= 0 && offset <= buflen);
+    assert(offset >=0 && ((size_t)offset) <= buflen);
 
     match.prog = prog;
     match.start = buf;
@@ -1162,6 +1162,7 @@ regexp_exec(REGEXP *prog, const char *buf, int buflen, int offset)
             offset = 0;                         /* ignore */
         }
     }
+
     p = buf + offset;
     buflen -= offset;
 
@@ -1177,21 +1178,21 @@ regexp_exec(REGEXP *prog, const char *buf, int buflen, int offset)
             const char *sdata = (const char *)(re + 5);
 
             if (slength > 0) {
-                if (buflen < (int)slength) {
+                if (buflen < slength) {
                     return 0;                   /* no match */
                 }
 
                 if (slength >= 4 && slength <= 0x1fff) {
                     uintptr_t table = (uintptr_t)(re + slength + 5);
-                    int leading;
+                    unsigned leading;
 
                     if (0x01 & table) ++table;  /* word align */
                     if (match.regopts.case_sense) {
-                        if (NULL == (sdata = kmp_search(p, buflen, sdata, slength, (const int16_t *)table))) {
+                        if (NULL == (sdata = kmp_search(p, buflen, sdata, (int)slength, (const int16_t *)table))) {
                             return 0;           /* no match */
                         }
                     } else {
-                        if (NULL == (sdata = kmp_isearch(p, buflen, sdata, slength, (const int16_t *)table))) {
+                        if (NULL == (sdata = kmp_isearch(p, buflen, sdata, (int)slength, (const int16_t *)table))) {
                             return 0;           /* no match */
                         }
                     }
@@ -1202,13 +1203,13 @@ regexp_exec(REGEXP *prog, const char *buf, int buflen, int offset)
                         return 1;
                     }
 
-                    leading = (sdata - p);      /* leading text to skip */
+                    leading = (unsigned)(sdata - p); /* leading text to skip */
                     buflen -= leading;
                     loops -= leading;
                     p = sdata;
 
                  } else {       /* 1, 2 or 3 */
-                    int orig_loops;
+                    size_t orig_loops;
 
                     loops -= (slength - 1);     /* reduce by string length */
                     orig_loops = loops;
@@ -1305,12 +1306,13 @@ is_reword(int ch)
  *  Returns the length of the matched text or -1 if no match was found.
  */
 static int
-re_match(const rematch_t *match, register const REGEXPATOM *re, register const char *p, int size, loopstate_t *loopstate)
+re_match(const rematch_t *match, const REGEXPATOM *re, const char *p, size_t size, loopstate_t *loopstate)
 {
     REGEXP *prog = match->prog;
     const REGEXPATOM *re_start = re;
     const char *p_start = p;
-    int i, ret;
+    size_t i;
+    int ret;
 
 again:;
     for (;; re += LGET16((const LIST *)re)) {
@@ -1319,7 +1321,7 @@ again:;
                 const size_t slength = GET16(re + 3);
                 const char *sdata = (const char *)(re + 5);
 
-                if (size >= (int)slength) {
+                if (size >= slength) {
                     if (match->regopts.case_sense) {
                         if (*sdata == *p &&
                                 (1 == slength || 0 == memcmp(p, sdata, slength))) {
@@ -1368,7 +1370,7 @@ again:;
             return -1;
 
         case RE_FINISH:
-            return (p - p_start);
+            return (int)(p - p_start);
 
         case RE_LOOP:
             if (loopstate && --*loopstate > 0) {
@@ -1407,29 +1409,31 @@ again:;
         case RE_OR:
             do {
                 if ((ret = re_match(match, re + 3, p, size, NULL)) >= 0) {
-                    return (p - p_start) + ret;
+                    return (int)((p - p_start) + ret);
                 }
                 re += LGET16((const LIST *)re);
             } while (RE_OR == *re);
             if ((ret = re_match(match, re, p, size, NULL)) >= 0) {
-                return (p - p_start) + ret;
+                return (int)((p - p_start) + ret);
             }
             return -1;
 
         case RE_STAR: {                         /* minimal */
                 if (match->regopts.regexp_chars > 0) {
-                    for (i = size; i >= 0; --i) {
+                    for (i = size;; --i) {
                         if ((ret = re_match(match, re + 3, p + i, size - i, NULL)) >= 0) {
-                            return (p - p_start) + i + ret;
+                            return (int)((p - p_start) + i + ret);
                         }
+                        if (i == 0) break;
                     }
                 } else {                        /* max */
                     const char *eptr;
 
-                    for (i = size, eptr = p; i >= 0; eptr++, --i) {
+                    for (i = size, eptr = p;; eptr++, --i) {
                         if ((ret = re_match(match, re + 3, eptr, i, NULL)) >= 0) {
-                            return (p - p_start) + i + ret;
+                            return (int)((p - p_start) + i + ret);
                         }
+                        if (i == 0) break;
                     }
                 }
             }
@@ -1454,7 +1458,7 @@ again:;
                     } else {
                         matched_len = ret;
                         saved_regexp = *prog;
-                        if (matched_len >= size)
+                        if ((size_t)matched_len >= size)
                             break;
                         if (match->regopts.regexp_chars > 0)
                             break;              /* minimal -- should only '*' be minimal??? */
@@ -1469,7 +1473,7 @@ again:;
 #if defined(DEBUG_REGEXP)
                 re_printbuf(p, latest_rx->end);
 #endif
-                return (p - p_start) + matched_len;
+                return (int)((p - p_start) + matched_len);
             }
 
         case RE_OPEN + 0:
@@ -1496,10 +1500,12 @@ again:;
         case RE_CLOSE + 7:
         case RE_CLOSE + 8:
         case RE_CLOSE + 9:
-            i = *re - RE_CLOSE;
-            prog->endp[i] = p;
-            if (i > prog->groupno) {
-                prog->groupno = i;
+            {
+                const int group = *re - RE_CLOSE;
+                prog->endp[group] = p;
+                if (group > prog->groupno) {
+                    prog->groupno = group;
+                }
             }
             break;
 
@@ -1720,13 +1726,14 @@ kmp_table(int wordlen, const char *pat, char *word, int16_t *table)
 
 
 static const char *
-kmp_search(const char *text, int textlen, const char *word, int wordlen, const int16_t *table)
+kmp_search(const char *text, size_t textlen, const char *word, int wordlen, const int16_t *table)
 {
     const void *result = NULL;
     const unsigned char *S = (const unsigned char *)text,
             *W = (const unsigned char *)word;
     const int16_t *T = table;
-    int i, j;
+    size_t i;
+    int j;
 
     for (i = j = 0; i < textlen;) {
         if (j < 0 || S[i] == W[j]) {
@@ -1767,13 +1774,14 @@ kmp_itable(int wordlen, const char *pat, char *word, int16_t *table)
 
 
 static const char *
-kmp_isearch(const char *text, int textlen, const char *word, int wordlen, const int16_t *table)
+kmp_isearch(const char *text, size_t textlen, const char *word, int wordlen, const int16_t *table)
 {
     const void *result = NULL;
     const unsigned char *S = (const unsigned char *)text,
             *W = (const unsigned char *)word;
     const int16_t *T = table;
-    int i, j;
+    size_t i;
+    int j;
 
     for (i = j = 0; i < textlen;) {
         if (j < 0 || toupper(S[i]) == W[j]) {
@@ -1794,7 +1802,7 @@ kmp_isearch(const char *text, int textlen, const char *word, int wordlen, const 
  *  Returns TRUE if the string match, otherwise FALSE.
  */
 static __CINLINE int
-strcasematch(const char *s1, const char *s2, int len)
+strcasematch(const char *s1, const char *s2, size_t len)
 {
     register const unsigned char *_s1 = (const unsigned char *)s1,
             *_s2 = (const unsigned char *)s2;

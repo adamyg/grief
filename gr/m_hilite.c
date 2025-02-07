@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_hilite_c,"$Id: m_hilite.c,v 1.18 2022/08/10 15:44:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_hilite_c,"$Id: m_hilite.c,v 1.19 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_hilite.c,v 1.18 2022/08/10 15:44:57 cvsuser Exp $
+/* $Id: m_hilite.c,v 1.19 2025/02/07 03:03:21 cvsuser Exp $
  * Hilite primitives.
  *
  *
@@ -284,7 +284,7 @@ inq_hilite(void)                /* int ([int bufnum], [int line], [int column],
     const BUFFER_t *bp = buf_argument(1);
     const int line = get_xinteger(2, *cur_line);
     const int col = get_xinteger(3, *cur_col);
-    int ret = -1;
+    accint_t ret = -1;
 
     if (bp) {
         const HILITELIST_t *hilites = &bp->b_hilites;

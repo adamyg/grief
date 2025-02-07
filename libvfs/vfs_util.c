@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_util_c,"$Id: vfs_util.c,v 1.24 2025/01/13 15:25:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_util_c,"$Id: vfs_util.c,v 1.25 2025/02/07 03:03:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_util.c,v 1.24 2025/01/13 15:25:27 cvsuser Exp $
+/* $Id: vfs_util.c,v 1.25 2025/02/07 03:03:23 cvsuser Exp $
  * Virtual file system - utility functions.
  *
  *
@@ -165,7 +165,7 @@ vfscwd_set2(const char *mount, const char *path)
         }
         strxcat(x_cwd, path, sizeof(x_cwd));
         vfs_fix_slashes(x_cwd);                 /* XXX - should be mount specific */
-        length = strlen(x_cwd);
+        length = (unsigned)strlen(x_cwd);
         if (length > 0) {
             while (VFS_PATHSEP == x_cwd[length-1]) {
                 x_cwd[--length] = 0;            /* remove trailing seperator(s) */

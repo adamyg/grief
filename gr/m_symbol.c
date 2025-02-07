@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_symbol_c,"$Id: m_symbol.c,v 1.48 2024/12/09 15:38:26 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_symbol_c,"$Id: m_symbol.c,v 1.49 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_symbol.c,v 1.48 2024/12/09 15:38:26 cvsuser Exp $
+/* $Id: m_symbol.c,v 1.49 2025/02/07 03:03:21 cvsuser Exp $
  * Symbol primitives.
  *
  *
@@ -1724,7 +1724,10 @@ do_register(void)               /* (index name ...) */
         /*
          *  locate the symbol and assign symbol to assigned cache index.
          */
-        if (NULL == (lsp = sym_local_lookup(symname))) {
+        if (idx < 0 || idx >= SYM_REGISTER_NUM) {
+            ewprintf("register: invalid index '%d'", (int)idx);
+
+        } else if (NULL == (lsp = sym_local_lookup(symname))) {
             ewprintf("register: '%s' not found at current scope.", symname);
 
         } else if (SYMTST(lsp, SF_REFERENCE)) {
@@ -1734,7 +1737,7 @@ do_register(void)               /* (index name ...) */
             ewprintf("register: system variable '%s'", symname);
 
         } else {
-            sym_rassociate(idx, lsp);
+            sym_rassociate((int)idx, lsp);
         }
     }
 }
@@ -2558,7 +2561,7 @@ do_arg_list(void)               /* ([int eval], [int start = 0], [int end = -1])
     int argi, argc;
     LISTV *argv;
     LIST *new_lp;
-    int len;
+    size_t llen;
 
     acc_assign_null();
     if (! mac_sd) {
@@ -2615,8 +2618,8 @@ do_arg_list(void)               /* ([int eval], [int start = 0], [int end = -1])
     }
 
     /* return results */
-    if (NULL != (new_lp = argv_list(argv, argc, &len))) {
-        acc_donate_list(new_lp, len);
+    if (NULL != (new_lp = argv_list(argv, argc, &llen))) {
+        acc_donate_list(new_lp, llen);
     }
     chk_free((void *)argv);
 }

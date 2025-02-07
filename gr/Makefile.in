@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.107 2025/01/13 15:12:17 cvsuser Exp $
+# $Id: Makefile.in,v 1.108 2025/02/07 03:03:20 cvsuser Exp $
 # GRIEF editor makefile.
 #
 #
@@ -166,7 +166,11 @@ endif	#gcc
 
 XFLAGS=
 CFLAGS=		@CFLAGS@
+ifeq (owc,$(findstring owc,"@TOOLCHAIN@"))
+CWARN+=		-wcd124
+else
 CWARN=		@CWARN@ $(CWALL)
+endif
 CDEBUG=		@CDEBUG@
 CRELEASE=	@CRELEASE@
 CXXFLAGS=	@CXXFLAGS@

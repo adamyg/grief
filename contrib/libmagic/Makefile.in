@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.22 2024/05/25 03:46:44 cvsuser Exp $
+# $Id: Makefile.in,v 1.23 2025/02/07 03:03:20 cvsuser Exp $
 # libmagic makefile
 #
 #
@@ -251,9 +251,9 @@ clean:
 		-@$(RM) $(LIBOBJS) $(UTILOBJS) $(QUIETOUT)
 
 $(D_OBJ)/%$(O):		%$(C)
-		$(CC) $(CFLAGS) -D_CRT_SECURE_NO_DEPRECATE -o $@ -c $<
+		$(CC) $(CFLAGS) -o $@ -c $<
 
 $(D_OBJ)/%.lo:		%.c
-		$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -D_CRT_SECURE_NO_DEPRECATE -o $@ -c $<
+		$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -o $@ -c $<
 
 #end

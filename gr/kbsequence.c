@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_kbsequence_c,"$Id: kbsequence.c,v 1.3 2024/11/26 01:07:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_kbsequence_c,"$Id: kbsequence.c,v 1.4 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: kbsequence.c,v 1.3 2024/11/26 01:07:50 cvsuser Exp $
+/* $Id: kbsequence.c,v 1.4 2025/02/07 03:03:21 cvsuser Exp $
  * Keyboard input sequences.
  *
  *
@@ -164,6 +164,8 @@ replacer(const char *key, void *old_data, void *uarg)
     struct ReplacerArguments *arg = (struct ReplacerArguments *)(uarg);
     keyseq_t *ks = (keyseq_t *)old_data;
 
+    __CUNUSED(key)
+
     if (ks != NULL) {                           // update
         assert(0 == strcmp(ks->ks_buf, arg->seq));
 
@@ -287,7 +289,7 @@ kbsequence_flatten(unsigned *count)
 
 #if defined(USE_LIBTRIE)
     if (x_kseqtrie) {
-        arg.count = trie_count(x_kseqtrie, NULL);
+        arg.count = (unsigned)trie_count(x_kseqtrie, NULL);
         if ((arg.array = chk_alloc((arg.count + 1) * sizeof(keyseq_t *))) != NULL) {
             trie_visit(x_kseqtrie, NULL, flattener, &arg);
             assert(arg.index == arg.count);

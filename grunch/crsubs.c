@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crsubs_c,"$Id: crsubs.c,v 1.31 2024/09/08 16:30:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_crsubs_c,"$Id: crsubs.c,v 1.32 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crsubs.c,v 1.31 2024/09/08 16:30:50 cvsuser Exp $
+/* $Id: crsubs.c,v 1.32 2025/02/07 03:03:22 cvsuser Exp $
  * Parser ultities.
  *
  *
@@ -70,7 +70,7 @@ static enumtype_t   x_enum_type = ENUM_UNKNOWN;
 static symbol_t *   x_enum_sp = NULL;
 static accint_t     x_enum_value = 0;
 
-static node_t *     stringmultiple(node_t *snode, int count);
+static node_t *     stringmultiple(node_t *snode, accint_t count);
 static int          case_typecompare(symtype_t ty1, symtype_t ty2);
 
 
@@ -460,7 +460,7 @@ node_opt(int op, node_t *b, node_t *c)
          */
         switch (op) {
         case O_PLUS: {          /*07/08/08, string concat*/
-                const int blen = strlen(b->atom.sval), clen = strlen(c->atom.sval);
+                const size_t blen = strlen(b->atom.sval), clen = strlen(c->atom.sval);
                 char *snew = chk_alloc(blen + clen + 1);
 
                 strcpy(snew, b->atom.sval);
@@ -541,10 +541,10 @@ node_opt(int op, node_t *b, node_t *c)
  *      Modified string node.
  */
 static node_t *
-stringmultiple(node_t *snode, int count)
+stringmultiple(node_t *snode, accint_t count)
 {
     const char *sold = snode->atom.sval;
-    const int slen = strlen(sold);
+    const size_t slen = strlen(sold);
     char *snew;
 
     assert(node_string == snode->type);

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(cr_env_c,"$Id: env.c,v 1.34 2025/01/13 16:06:38 cvsuser Exp $")
+__CIDENT_RCSID(cr_env_c,"$Id: env.c,v 1.35 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: env.c,v 1.34 2025/01/13 16:06:38 cvsuser Exp $
+/* $Id: env.c,v 1.35 2025/02/07 03:03:22 cvsuser Exp $
  * Environment related functions.
  *
  *
@@ -283,7 +283,7 @@ gputenv(const char * arg)
         int taglen = 0;
 
         if (NULL == eq) {                       /* missing =<value> */
-            if ((taglen = strlen(arg)) >= (int) (sizeof(t_buffer) - 4)) {
+            if ((taglen = (int)strlen(arg)) >= (int)(sizeof(t_buffer) - 4)) {
                 errno = EINVAL;
                 return -1;
             }
@@ -291,7 +291,7 @@ gputenv(const char * arg)
             eq = (arg = t_buffer) + taglen;
 
         } else {
-            taglen = eq - arg;
+            taglen = (int)(eq - arg);
         }
 
         if (eq) {

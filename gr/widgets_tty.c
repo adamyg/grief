@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_widgets_tty_c,"$Id: widgets_tty.c,v 1.46 2024/12/13 16:49:19 cvsuser Exp $")
+__CIDENT_RCSID(gr_widgets_tty_c,"$Id: widgets_tty.c,v 1.47 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: widgets_tty.c,v 1.46 2024/12/13 16:49:19 cvsuser Exp $
+/* $Id: widgets_tty.c,v 1.47 2025/02/07 03:03:22 cvsuser Exp $
  * Dialog widgets, tty interface.
  *
  *
@@ -427,7 +427,7 @@ bt_text(WButtonText_t *b, const char *text)
             str_cpy(h, (const char *)(h + 1));  /* remove '&' marker */
             if ('&' != *h) {
                 b->hotkey = (char)tolower(*h);
-                b->offset = h - b->text;
+                b->offset = (int)(h - b->text);
             }
         }
         b->multiline = (NULL != strchr(b->text, '\n') ? 1 : 0);
@@ -694,7 +694,7 @@ group_callback(WGroup_t *g, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETARG_t p2)
         case KEY_RIGHT:
         case KEY_UP:
         case KEY_DOWN:
-            return group_find(w, p1);
+            return group_find(w, (int)p1);
         }
         break;
 
@@ -955,7 +955,7 @@ pushbutton_callback(WPushButton_t *b, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETARG
         if (b->pb_button.text) {
             w->w_padx    = 1;
             w->w_reqrows = 2;                   /* space vertical */
-            w->w_reqcols = (PBBORDER * 2) + strlen(b->pb_button.text);
+            w->w_reqcols = (PBBORDER * 2) + (int) strlen(b->pb_button.text);
             w->w_flags  |= WIDGET_FTABSTOP;
         }
         return TRUE;
@@ -1054,7 +1054,7 @@ pushbutton_callback(WPushButton_t *b, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETARG
         if (0 == (WIDGET_FHIDDEN & w->w_flags) && b->pb_button.text) {
             WButtonText_t *bt = &b->pb_button;
             const int width = w->w_cols - (PBBORDER * 2);
-            size_t length = strlen(bt->text);
+            int length = (int) strlen(bt->text);
             int ralign;
 
             const char *fmt;
@@ -1290,7 +1290,7 @@ radiobutton_callback(WRadioButton_t *b, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETA
                 WButtonText_t *bt = b->rb_buttons + i;
 
                 if (horiz) {
-                    const size_t len = strlen(bt->text);
+                    const int len = (int)strlen(bt->text);
 
                     bt->pstart = offset;
                     tty_move(w, offset, 0);
@@ -1392,7 +1392,7 @@ checkbox_callback(WCheckBox_t *b, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETARG_t p
 
         if (b->cb_text.text) {
             w->w_reqrows = 1;
-            w->w_reqcols = (b->cb_unicode ? 2 : 4) + strlen(b->cb_text.text);
+            w->w_reqcols = (b->cb_unicode ? 2 : 4) + (int)strlen(b->cb_text.text);
 
             if (w->w_depth <= 1 || TAILQ_FIRST(&w->w_parent->w_children) == w) {
                 w->w_flags |= WIDGET_FTABSTOP;
@@ -1529,7 +1529,7 @@ label_callback(WLabel_t *b, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETARG_t p2)
     case WIDGET_INIT:           /* Initialise */
         if (b->wl_text.text) {
             if (w->w_reqrows <= 0) w->w_reqrows = 1;
-            if (w->w_reqcols <= 0) w->w_reqcols = strlen(b->wl_text.text);
+            if (w->w_reqcols <= 0) w->w_reqcols = (int)strlen(b->wl_text.text);
         }
         return TRUE;
 
@@ -2072,7 +2072,7 @@ lb_item_add(Listbox_t *lb, int32_t pos, uint16_t flags, const char *data)
             }
 
             if (NULL != (delim = strchr(display, '\002'))) {
-                displaylen = delim - display;
+                displaylen = (int)(delim - display);
                 data = delim + 1;
             }
 
@@ -2109,7 +2109,7 @@ lb_item_add(Listbox_t *lb, int32_t pos, uint16_t flags, const char *data)
                 lb->lb_maxlen = datalen;
             }
             display = buffer;
-            displaylen = strlen(buffer);
+            displaylen = (int)strlen(buffer);
         }
 
         trace_log("\t== flags:<%x>,shortcut:<%d>,display:<%d/%s>,data:<%d/%s>\n",
@@ -4142,11 +4142,11 @@ listbox_callback(WListbox_t *l, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETARG_t p2)
         return TRUE;
 
     case WIDGET_KEYDOWN:        /* keyboard event */
-        return lb_key(lb, w, p1);
+        return lb_key(lb, w, (int)p1);
 
     case WIDGET_PAINT:          /* widget display */
         if (0 == (w->w_flags & WIDGET_FHIDDEN)) {
-            lb_paint(lb, w, p1);
+            lb_paint(lb, w, (int)p1);
         }
         return TRUE;
 
@@ -4270,7 +4270,7 @@ editfield_callback(WEditfield_t *e, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETARG_t
         return TRUE;
 
     case WIDGET_KEYDOWN:        /* keyboard event */
-        return ef_key(ef, w, p1, NULL, NULL);
+        return ef_key(ef, w, (int)p1, NULL, NULL);
 
     case WIDGET_PAINT:          /* widget display */
         if (0 == (w->w_flags & WIDGET_FHIDDEN)) {
@@ -4287,7 +4287,7 @@ editfield_callback(WEditfield_t *e, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETARG_t
         return TRUE;
 
     default:
-        return tty_default(w, msg, p1, p2);
+        return tty_default(w, msg, (int)p1, p2);
     }
     return FALSE;
 }
@@ -4394,7 +4394,7 @@ numericfield_callback(WNumericfield_t *n, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGE
         return TRUE;
 
     case WIDGET_KEYDOWN:        /* keyboard event */
-        return ef_key(ef, w, p1, NULL, NULL);
+        return ef_key(ef, w, (int)p1, NULL, NULL);
 
     case WIDGET_PAINT:          /* widget display */
         if (0 == (w->w_flags & WIDGET_FHIDDEN)) {
@@ -4411,7 +4411,7 @@ numericfield_callback(WNumericfield_t *n, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGE
         return TRUE;
 
     default:
-        return tty_default(w, msg, p1, p2);
+        return tty_default(w, msg, (int)p1, p2);
     }
     return FALSE;
 }
@@ -4792,11 +4792,11 @@ combofield_value_get(WCombofield_t *cf, int iscomplete)
             break;
 
         case CB_RELAXMODE_NONBLANK: {
-                int len = (int)strlen(buffer);
+                size_t len = strlen(buffer);
                 const char *trim;
 
                 if ((NULL != (trim = str_trim(buffer, &len)) && len)) {
-                    assert(len < (int)sizeof(cf->cf_buffer));
+                    assert(len < sizeof(cf->cf_buffer));
                     memmove(outbuffer, trim, len);
                     outbuffer[len] = 0;
                     break;                      /* non-blank */
@@ -5044,7 +5044,7 @@ combofield_callback(WCombofield_t *cf, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETAR
 
             case KEY_PAGEUP:        /* <PgUp/PgDn>  - listbox page */
             case KEY_PAGEDOWN:
-                return lb_key(lb, w, p1);
+                return lb_key(lb, w, (int)p1);
 
             case KEY_DOWN:          /* <Up/Down>    - listbox control */
             case KEY_UP:
@@ -5055,7 +5055,7 @@ combofield_callback(WCombofield_t *cf, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETAR
             case WHEEL_DOWN:        /* <Mouse> */
             case WHEEL_UP:
                 if (CB_POPUPSTATE_FOCUS == cf->cf_popupstate) {
-                    return lb_key(lb, w, p1);
+                    return lb_key(lb, w, (int)p1);
                 }
                 break;
 
@@ -5070,14 +5070,14 @@ combofield_callback(WCombofield_t *cf, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETAR
 
             default:
                 if (CB_POPUPSTATE_FOCUS == cf->cf_popupstate) {
-                    return lb_key(lb, w, p1);
+                    return lb_key(lb, w, (int)p1);
                 }
                 break;
             }
         }
 
         if (cf->cf_editable) {
-            return ef_key(ef, w, p1, combofield_autocomplete, (void *)cf);
+            return ef_key(ef, w, (int)p1, combofield_autocomplete, (void *)cf);
         }
         return FALSE;
 
@@ -5105,7 +5105,7 @@ combofield_callback(WCombofield_t *cf, WIDGETMSG_t msg, WIDGETARG_t p1, WIDGETAR
     case WIDGET_PAINT:          /* widget display */
         if (0 == (w->w_flags & WIDGET_FHIDDEN)) {
             if (CB_POPUPSTATE_VISIBLE == cf->cf_popupstate || CB_POPUPSTATE_FOCUS == cf->cf_popupstate) {
-                lb_paint(lb, w, p1);
+                lb_paint(lb, w, (int)p1);
             }
             ef_paint(ef, w);
         }

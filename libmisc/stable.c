@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_stable_c,"$Id: stable.c,v 1.19 2025/01/13 16:06:38 cvsuser Exp $")
+__CIDENT_RCSID(gr_stable_c,"$Id: stable.c,v 1.20 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: stable.c,v 1.19 2025/01/13 16:06:38 cvsuser Exp $
+/* $Id: stable.c,v 1.20 2025/02/07 03:03:22 cvsuser Exp $
  * String tables ...
  *
  *   Linear Hashing is a dynamic hash table algorithm invented by Witold Litwin in 1980.
@@ -177,7 +177,7 @@ strhash(const char *str, int len)
 
 
 static stblnode_t *
-strfind(stable_t *st, const char *str, int len, unsigned hash)
+strfind(stable_t *st, const char *str, unsigned len, unsigned hash)
 {
     unsigned bucket;
     stblnode_t *p;
@@ -252,7 +252,7 @@ strinsert(stable_t *st, const char *str, unsigned hash)
 {
     unsigned bucket;
     stblnode_t *node;
-    int len;
+    unsigned len;
 
     /* pre-existing */
     if (0 == st->buckets) {
@@ -284,7 +284,7 @@ strinsert(stable_t *st, const char *str, unsigned hash)
     strsplit(st);
 
     /* new node */
-    len = strlen(str);
+    len = (unsigned)strlen(str);
     if ((node = chk_alloc(sizeof(stblnode_t) + len + 1)) == 0) {
         return NULL;
     }
@@ -313,7 +313,7 @@ strinsert(stable_t *st, const char *str, unsigned hash)
 stblnode_t *
 stbl_new(stable_t *st, const char *str)
 {
-    const int len = strlen(str);
+    const unsigned len = (unsigned)strlen(str);
     unsigned hash;
     stblnode_t *p;
 
@@ -335,6 +335,7 @@ stbl_nnew(stable_t *st, const char *str, int len)
 
     assert(st);
     assert(st->magic == STMAGIC);
+    assert(str && len > 0);
     hash = strhash(str, len);
     if ((p = strfind(st, str, len, hash)) != NULL) {
         return ((void *) -1);
@@ -346,7 +347,7 @@ stbl_nnew(stable_t *st, const char *str, int len)
 int
 stbl_delete(stable_t *st, const char *str)
 {
-    return stbl_ndelete(st, str, strlen(str));
+    return stbl_ndelete(st, str, (int)strlen(str));
 }
 
 
@@ -417,7 +418,7 @@ stbl_count(stable_t *st)
 const char *
 stbl_insert(stable_t *st, const char *str)
 {
-    const int len = strlen(str);
+    const unsigned len = (unsigned)strlen(str);
     unsigned hash;
     stblnode_t *p;
 
@@ -439,6 +440,7 @@ stbl_ninsert(stable_t *st, const char *str, int len)
 
     assert(st);
     assert(st->magic == STMAGIC);
+    assert(str && len > 0);
     hash = strhash(str, len);
     if ((p = strfind(st, str, len, hash)) == NULL) {
         p = strinsert(st, str, hash);
@@ -450,7 +452,7 @@ stbl_ninsert(stable_t *st, const char *str, int len)
 const char *
 stbl_exist(stable_t *st, const char *str)
 {
-    const int len = strlen(str);
+    const unsigned len = (unsigned)strlen(str);
     stblnode_t *p;
 
     assert(st);
@@ -467,6 +469,7 @@ stbl_nexist(stable_t *st, const char *str, int len)
 
     assert(st);
     assert(st->magic == STMAGIC);
+    assert(str && len > 0);
     p = strfind(st, str, len, strhash(str, len));
     return (p ? p->__str : NULL);
 }
@@ -475,7 +478,7 @@ stbl_nexist(stable_t *st, const char *str, int len)
 stblnode_t *
 stbl_find(stable_t *st, const char *str)
 {
-    const int len = strlen(str);
+    const unsigned len = (unsigned)strlen(str);
 
     return strfind(st, str, len, strhash(str, len));
 }

@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_uname_c,"$Id: w32_uname.c,v 1.23 2024/04/07 06:14:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_uname_c,"$Id: w32_uname.c,v 1.24 2025/02/03 02:27:36 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 uname() system calls
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -465,11 +465,11 @@ uname(struct utsname *u)
             RegCurrentVersion(&cv);
 
             if (cv.ProductName[0]) {
-                _snprintf(u_sysname, sizeof(u_sysname), "%s%s",
+                snprintf(u_sysname, sizeof(u_sysname), "%s%s",
                     cv.ProductName, cv.DisplayVersion);
             } else {
                 if (0 == memcmp(osname, "Win", 3)) osname += 3;
-                _snprintf(u_sysname, sizeof(u_sysname), "Win%s%s%s",
+                snprintf(u_sysname, sizeof(u_sysname), "Win%s%s%s",
                     osname, cv.DisplayVersion, (IsWow64() ? " (Wow64)" : ""));
             }
 

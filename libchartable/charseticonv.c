@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charseticonv_c,"$Id: charseticonv.c,v 1.27 2025/01/13 15:24:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_charseticonv_c,"$Id: charseticonv.c,v 1.28 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* Conversion tables loader/interface.
@@ -89,7 +89,7 @@ __CIDENT_RCSID(gr_charseticonv_c,"$Id: charseticonv.c,v 1.27 2025/01/13 15:24:08
 
 static const char *         __charset_PATH_CXMOD(void);
 static const char *         getpath(const char *application, const char *dir, char *buffer, const int buflen);
-static int                  getexedir(char *buf, int maxlen);
+static int                  getexedir(char *buf, size_t maxlen);
 static void                 dospath(char *path);
 
 #undef  _PATH_GRIEF_CXMOD
@@ -129,7 +129,7 @@ static int                  dlmod_open(const char *name, int flags, const char *
 static int                  dlmod_push(const struct chartable_module *cm, void *handle,
                                     const char *path, const char *name, struct dlmodule **result);
 static const char *         dlmod_error(int xerrno);
-static struct dlmodule *    dlmod_byname(const char *name, int namelen);
+static struct dlmodule *    dlmod_byname(const char *name, size_t namelen);
 static void                 dlmod_close(void *handle, struct dlmodule *mod);
 
 static ModuleList_t         x_modlist;
@@ -216,7 +216,7 @@ charset_iconv_path(const char *path)
 struct charset_iconv *
 charset_iconv_open(const char *name, int flags)
 {
-    int namelen = strlen(name);
+    size_t namelen = 0;
     const char *mod;
 
     if (NULL == name || 0 == name[0]) {
@@ -239,7 +239,7 @@ charset_iconv_open(const char *name, int flags)
         const struct charsettables *ct;
         char canon_buffer[64];
         const char *charset;
-        int charsetlen = 0;
+        size_t charsetlen = 0;
         unsigned c;
 
         if (NULL != (charset = charset_canonicalize(name, namelen, canon_buffer, sizeof(canon_buffer))) ||
@@ -632,7 +632,7 @@ static int
 dlmod_push(const struct chartable_module *cm, void *handle,
         const char *module, const char *path, struct dlmodule **result)
 {
-    const int modulelen = strlen(module), pathlen = strlen(path);
+    const size_t modulelen = strlen(module), pathlen = strlen(path);
     struct dlmodule *dlmod = NULL;
     int ret = 0;
 
@@ -733,7 +733,7 @@ dlmod_error(int xerrno)
 
 
 static struct dlmodule *
-dlmod_byname(const char *name, int namelen)
+dlmod_byname(const char *name, size_t namelen)
 {
     ModuleList_t *modlist = &x_modlist;
     dlmodule_t *dlmod = NULL;
@@ -833,7 +833,7 @@ getpath(const char *application, const char *dir, char *buffer, const int buflen
     // <INSTALLPATH>
     if (! done) {
         if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_PROGRAM_FILES, NULL, 0, buffer))) {
-            len = strlen(buffer);
+            len = (int)strlen(buffer);
             _snprintf(buffer + len, buflen - len, "/%s/%s", application, dir);
             buffer[buflen - 1] = 0;
             if (0 == _access(buffer, 0)) {
@@ -845,7 +845,7 @@ getpath(const char *application, const char *dir, char *buffer, const int buflen
     // <APPDATA>
     if (! done)  {
         if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_COMMON_APPDATA, NULL, 0, buffer))) {
-            len = strlen(buffer);
+            len = (int)strlen(buffer);
             _snprintf(buffer + len, buflen - len, "/%s/%s", application, dir);
             buffer[buflen - 1] = 0;
             if (0 == _access(buffer, 0)) {
@@ -859,7 +859,7 @@ getpath(const char *application, const char *dir, char *buffer, const int buflen
         const char *env;
 
         if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_PROGRAM_FILES, NULL, 0, buffer))) {
-            len = strlen(buffer);
+            len = (int)strlen(buffer);
             _snprintf(buffer + len, buflen - len, "/%s/%s", application, dir);
 
         } else if (NULL != (env = getenv("ProgramFiles"))) {
@@ -878,17 +878,17 @@ getpath(const char *application, const char *dir, char *buffer, const int buflen
 
 
 static int
-getexedir(char *buf, int maxlen)
+getexedir(char *buf, size_t maxlen)
 {
-    if (GetModuleFileName(NULL, buf, maxlen)) {
-        const int len = strlen(buf);
+    if (GetModuleFileName(NULL, buf, (DWORD)maxlen)) {
+        const int len = (int)strlen(buf);
         char *cp;
 
         for (cp = buf + len; (cp > buf) && (*cp != '\\'); cp--)
             /*cont*/;
         if ('\\' == *cp) {
             cp[1] = '\0';                       // remove program
-            return (cp - buf) + 1;
+            return (int)((cp - buf) + 1);
         }
         return len;
     }

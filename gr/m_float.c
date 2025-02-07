@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_float_c,"$Id: m_float.c,v 1.30 2025/01/18 16:25:05 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_float_c,"$Id: m_float.c,v 1.31 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_float.c,v 1.30 2025/01/18 16:25:05 cvsuser Exp $
+/* $Id: m_float.c,v 1.31 2025/02/07 03:03:21 cvsuser Exp $
  * Floating point primitives.
  *
  *
@@ -107,6 +107,9 @@ __CIDENT_RCSID(gr_m_float_c,"$Id: m_float.c,v 1.30 2025/01/18 16:25:05 cvsuser E
         system_errno(ret);
 #endif
 #if defined(_MSC_VER)
+#if (_MSC_VER >= 1900) // analysis mode
+#pragma warning(disable:6320) // : Exception - filter expression is the constant EXCEPTION_EXECUTE_HANDLER.
+#endif
 #define ___XEXEC(__y)       __y
 #define __FEXEC(__x) \
         __try { \
@@ -136,7 +139,7 @@ __CIDENT_RCSID(gr_m_float_c,"$Id: m_float.c,v 1.30 2025/01/18 16:25:05 cvsuser E
 #endif
 
 #if defined(__WATCOMC__)
-unsigned _WCNEAR _chipbug = 0;                  /* suppress Pentuin div checking */
+unsigned _WCNEAR _chipbug = 0;                  /* suppress div checking */
 #endif
 
 #define arg_float1          margv[1].l_float

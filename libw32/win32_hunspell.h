@@ -1,14 +1,14 @@
 #ifndef GR_WIN32_HUNSPELL_H_INCLUDED
 #define GR_WIN32_HUNSPELL_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_hunspell_h,"$Id: win32_hunspell.h,v 1.12 2024/07/30 04:48:03 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_hunspell_h,"$Id: win32_hunspell.h,v 1.13 2025/02/03 02:27:36 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 hunspell dynamic loader.
  *
- * Copyright (c) 1998 - 2022, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

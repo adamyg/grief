@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_caller_c,"$Id: m_caller.c,v 1.15 2022/08/10 15:44:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_caller_c,"$Id: m_caller.c,v 1.16 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_caller.c,v 1.15 2022/08/10 15:44:57 cvsuser Exp $
+/* $Id: m_caller.c,v 1.16 2025/02/07 03:03:21 cvsuser Exp $
  * Caller primitives.
  *
  *
@@ -88,7 +88,7 @@ inq_called(void)                /* (void) */
     const struct mac_stack *stk2 = (mac_sd >= 2 ? mac_stack + (mac_sd - 2) : NULL);
     const char *caller = (stk2 ? (stk2->caller ? stk2->caller : stk2->name) : NULL);
 
-    acc_assign_str(caller ? caller : "", -1);
+    acc_assign_str(caller ? caller : "");
 }
 
 

@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.22 2024/04/16 11:37:13 cvsuser Exp $
+# $Id: Makefile.in,v 1.23 2025/02/07 03:03:20 cvsuser Exp $
 # libz makefile
 #
 #
@@ -72,8 +72,8 @@ LDRELEASE=	@LDRELEASE@
 
 CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
 CEXTRA= 	@DEFS@
-ifeq ("yes","@ISWIN32@")
-CEXTRA+=	-DWIN32 -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
+ifeq (yes,$(findstring yes,"@ISWIN32@ or @ISWIN64@"))
+CEXTRA+=	-DWIN32
 endif
 
 ifeq ("$(BUILD_TYPE)","release")
@@ -165,7 +165,7 @@ $(ZLIB):		$(LIBOBJS)
 
 INSTALLED+=	$(D_BIN)/libz.$(VERSION).dll
 $(ZDLL):		CEXTRA += -DZLIB_DLL
-ifeq ("yes","@ISWIN32@")
+ifeq (yes,$(findstring yes,"@ISWIN32@ or @ISWIN64@"))
 $(ZDLL):		ZDEF = -export-symbols $(ZSRC)/win32/zlib.def --export-fastcall
 endif
 $(ZDLL):		MAPFILE=$(basename $@).map

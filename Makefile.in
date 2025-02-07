@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.81 2025/01/17 19:07:47 cvsuser Exp $
+# $Id: Makefile.in,v 1.82 2025/02/07 02:56:58 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2025, Adam Young.
@@ -135,10 +135,13 @@ endif
 define usage =
 	@$(ECHO) -n -e "\
 	|\n\
-	| make [release or debug] target \n\
+	| make [VERBOSE=1] [release or debug] target \n\
 	|\n\
 	|	Build one or more of the following targets recursively within each sub-directory\n\
-	|	for the toolchain @TOOLCHAIN@. \n\
+	|	for the toolchain "@TOOLCHAINNAME@" (@TOOLCHAIN@). \n\
+	|\n\
+	| Options: \n\
+	|	VERBOSE - increase run-time diagnostics; suppress stderr filtering. \n\
 	|\n\
 	| Targets: \n\
 	|\n\
@@ -215,8 +218,8 @@ endif
 
 D_INC=		$(ROOT)/include
 D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
-D_OBJ=		$(ROOT)/obj@TOOLCHAINEXT@/$(BUILD_TYPE)
 D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_OBJ=		$(ROOT)/obj@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 D_GR=		$(ROOT)/gr
 D_GM=		$(ROOT)/gm
@@ -466,13 +469,13 @@ $(BUILDINFO):		Makefile $(BUILDNUMBER) buildinfo
 buildinfo:
 		@echo updating buildinfo.h ...
 		-@$(PERL) ./buildinfo.pl -o $(BUILDINFO) --prefix="GR_" --package="$(PACKAGE)" --name="$(PKG_NAME)" --version="$(PKG_VERSION)" \
-			--date="$(BUILD_DATE)" --build="$(BUILD_NUMBER)" --toolchain="@TOOLCHAINEXT@" --type="$(BUILD_TYPE)" \
+			--date="$(BUILD_DATE)" --build="$(BUILD_NUMBER)" --toolchain="@TOOLCHAINEXT@" --type="$(BUILD_TYPE)" --iswin64="@ISWIN64@" \
 			--bindir="$(BINDIR)" --sbindir="$(SBINDIR)" --libexecdir="$(LIBEXECDIR)" --libdir="$(LIBDIR)" --datadir="$(DATADIR)"
 
 .PHONY:		packageinfo
 packageinfo:
 		-@$(PERL) ./buildinfo.pl -o $(PACKAGEINFO) --prefix="GR_" --package="$(PACKAGE)" --name="$(PKG_NAME)" --version="$(PKG_VERSION)" \
-			--date="$(BUILD_DATE)" --build="$(BUILD_NUMBER)" --toolchain="@TOOLCHAINEXT@" --type="$(BUILD_TYPE)"
+			--date="$(BUILD_DATE)" --build="$(BUILD_NUMBER)" --toolchain="@TOOLCHAINEXT@" --type="$(BUILD_TYPE)" --iswin64="@ISWIN64@"
 
 buildinfo.h:			BUILDNUMBER buildinfo.pl
 

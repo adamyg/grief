@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_procspawn_c,"$Id: procspawn.c,v 1.26 2024/08/18 10:50:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_procspawn_c,"$Id: procspawn.c,v 1.27 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: procspawn.c,v 1.26 2024/08/18 10:50:36 cvsuser Exp $
+/* $Id: procspawn.c,v 1.27 2025/02/07 03:03:21 cvsuser Exp $
  * Process spawn primitive and management.
  *
  *
@@ -545,9 +545,9 @@ proc_shell_get(void)
 
 
 static int
-cmdis(const char *shell, int slen, const char *cmd)
+cmdis(const char *shell, size_t slen, const char *cmd)
 {
-    const int clen = (int)strlen(cmd);
+    const size_t clen = strlen(cmd);
     const char *p = (shell + slen) - clen;
 
     if (slen == clen || (slen > clen && (p[-1] == '\\' || p[-1] == '/'))) {

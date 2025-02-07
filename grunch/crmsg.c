@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crmsg_c,"$Id: crmsg.c,v 1.11 2020/04/23 12:35:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_crmsg_c,"$Id: crmsg.c,v 1.12 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crmsg.c,v 1.11 2020/04/23 12:35:50 cvsuser Exp $
+/* $Id: crmsg.c,v 1.12 2025/02/07 03:03:22 cvsuser Exp $
  * Compiler messages.
  *
  *
@@ -250,7 +250,7 @@ crerror_line(int __CUNUSEDARGUMENT(msgno), int lineno, const char *str)
                 continue;                       /* find word */
             }
 
-            if (NULL != (symbol = yysymbol(start, str - start))) {
+            if (NULL != (symbol = yysymbol(start, (int)(str - start)))) {
                 if (symbol[1]) {                /* >=2 characters */
                     while (*symbol && p < t_msgend) {
                         *p++ = *symbol++;

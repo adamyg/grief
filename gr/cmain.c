@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.82 2025/01/17 15:18:20 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.85 2025/02/07 03:03:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.82 2025/01/17 15:18:20 cvsuser Exp $
+/* $Id: cmain.c,v 1.85 2025/02/07 03:03:20 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -265,9 +265,10 @@ static struct argoption options[] = {
 
     { "readchar",       arg_none,           NULL,       'w',    "Allow read_char to return -1" },
 
-    { "test",           arg_optional,       NULL,       313,    "test mode" },
+    { "test",           arg_optional,       NULL,       313,    "Test mode",
+                            "=<testcase>" },
 
-    { "restrict",       arg_none,           NULL,       314,    "restrictive mode" },
+    { "restrict",       arg_none,           NULL,       314,    "Testrictive mode" },
 
     { "help",           arg_none,           NULL,       '?',    "Usage information" },
 
@@ -767,7 +768,7 @@ panic(const char *fmt, ...)
     va_start(ap, fmt);
     strcpy(buffer, "PANIC: " ApplicationName " - ");
     len = strlen(buffer);
-    vsxprintf(buffer + len, sizeof(buffer) - len, fmt, ap);
+    vsxprintf(buffer + len, (int)(sizeof(buffer) - len), fmt, ap);
     va_end(ap);
     eeputs(buffer);
     vtclose(FALSE);
@@ -898,7 +899,7 @@ path_cook2(const char *name, char *buffer, int length)
                 const char *var = (delim ? ++name : name),
                         *end = varend(name, delim);
 
-                if (NULL != (var = ggetnenv(var, end - var))) {
+                if (NULL != (var = ggetnenv(var, (int)(end - var)))) {
                     const size_t varlen = strlen(var);
 
                     if (dp < (dpend - varlen)) {
@@ -1379,7 +1380,7 @@ argv_process(const int doerr, int argc, const char * const *argv)
         case 'i': {         /* interval */
                 int t_interval;
 
-                if ((t_interval = atoi(args.val)) < 0) {
+                if (NULL == args.val || (t_interval = atoi(args.val)) < 0) {
                     t_interval = 0;
                 }
                 xf_interval = t_interval;
@@ -1845,7 +1846,7 @@ env_setup(void)
                         unsigned n;
 
                         for (n = 1; n < rc.argc; ++n) {
-                            trace_log(" [%d]: %s\n", n, rc.argv[n]);
+                            trace_log(" [%u]: %s\n", n, rc.argv[n]);
                         }
                         if (rc.argc) {
                             argv_process(TRUE, rc.argc, rc.argv);
@@ -2273,4 +2274,3 @@ usage(int what)
 }
 
 /*end*/
-

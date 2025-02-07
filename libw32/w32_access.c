@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_access_c,"$Id: w32_access.c,v 1.4 2024/03/31 15:57:25 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_access_c,"$Id: w32_access.c,v 1.5 2025/02/03 02:27:35 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win2 access() system calls
  *
- * Copyright (c) 2021 - 2024 Adam Young.
+ * Copyright (c) 2021 - 2025 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

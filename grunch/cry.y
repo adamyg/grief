@@ -1,5 +1,5 @@
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cry.y,v 1.38 2024/10/15 15:50:08 cvsuser Exp $
+/* $Id: cry.y,v 1.39 2025/02/07 03:03:22 cvsuser Exp $
  * grunch/crunch grammer, extended c99
  *
  *
@@ -432,7 +432,7 @@ unary_expression:
                     { $$ = node(O_MINUS_MINUS, $2, NULL); }
                 | unary_operator cast_expression
                     {
-                        const int op = $1;
+                        const int op = (int)$1;
                         node_t *np = NULL;
 
                         /*
@@ -466,7 +466,7 @@ unary_expression:
                         }
 
                         if (NULL == np) {
-                            $$ = node_opt($1, $2, NULL);
+                            $$ = node_opt((int)$1, $2, NULL);
                         }
                     }
                 | K_SIZEOF unary_expression
@@ -597,7 +597,7 @@ assignment_expression:
                   conditional_expression
                     { $$ = $1; }
                 | unary_expression assignment_operator assignment_expression
-                    { $$ = node_lvalue($2, $1, $3); }
+                    { $$ = node_lvalue((int)$2, $1, $3); }
                 ;
 
 assignment_operator:

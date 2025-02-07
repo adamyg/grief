@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.82 2024/10/02 16:24:38 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.83 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_win32.c,v 1.82 2024/10/02 16:24:38 cvsuser Exp $
+/* $Id: sys_win32.c,v 1.83 2025/02/07 03:03:22 cvsuser Exp $
  * WIN32 system support.
  *
  *
@@ -671,7 +671,7 @@ AltGrEvent(const KEY_EVENT_RECORD* key)
  *      On success (0), unless a timeout (-1).
  */
 int
-sys_getevent(struct IOEvent *evt, int tmo)
+sys_getevent(struct IOEvent *evt, accint_t tmo)
 {
     unsigned checks = 1;
     HANDLE hKbd = GetStdHandle(STD_INPUT_HANDLE);
@@ -682,7 +682,7 @@ sys_getevent(struct IOEvent *evt, int tmo)
 
     for (;;) {
 
-        if ((tmticks = tmo) == 0) {
+        if ((tmticks = (DWORD)tmo) == 0) {
             tmticks = INFINITE;                 /* block forever */
         } else if (tmo < 0) {
             tmticks = 0;                        /* no time-out */

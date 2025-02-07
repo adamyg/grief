@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.62 2024/07/18 15:19:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.63 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crmain.c,v 1.62 2024/07/18 15:19:27 cvsuser Exp $
+/* $Id: crmain.c,v 1.63 2025/02/07 03:03:22 cvsuser Exp $
  * grunch command line.
  *
  *
@@ -173,19 +173,19 @@ __CIDENT_RCSID(gr_crmain_c,"$Id: crmain.c,v 1.62 2024/07/18 15:19:27 cvsuser Exp
  *  Prototypes
  */
 static void             arg_push(const char *args[], unsigned count, const char *prefix, const char *val);
-static unsigned         arg_sizeof(const char *args[], unsigned count);
-static unsigned         arg_export(const char *args[], unsigned count, char *buffer, unsigned offset);
-static void             arg_release(const char *args[], unsigned count);
+static size_t           arg_sizeof(const char *args[], size_t count);
+static size_t           arg_export(const char *args[], size_t count, char *buffer, size_t offset);
+static void             arg_release(const char *args[], size_t count);
 
 static int              switch_process(int argc, char *argv[]);
 static void             switch_map(const char *argc);
 
 static void             resolve_self(const char *name);
-static int              resolve_path(char *dst, int dstlen, const char *pp, const char *name, const char *label);
+static int              resolve_path(char *dst, size_t dstlen, const char *pp, const char *name, const char *label);
 static int              compile_file(const char *file);
 static int              verify_object(const char *srcname, struct stat *srcsb, const char *objname, struct stat *objsb);
 
-static const char *     expand_var(const char *var, char *buf, int buflen);
+static const char *     expand_var(const char *var, char *buf, size_t buflen);
 
 static void             usage(void);
 
@@ -284,7 +284,8 @@ main(int argc, char *argv[])
 
     int exit_status = 0;
     const char *ev, *sp;
-    int argi, len, x;
+    size_t len;
+    int argi;
 
 #if defined(__EMX__)
     _response(&argc, &argv);
@@ -365,13 +366,10 @@ main(int argc, char *argv[])
         exit(1);
     }
 
-
-
     arg_release(cc_defines, CC_DEFINES);
     arg_release(cc_includes, CC_INCLUDES);
 
-    x = strlen(cc_buf);
-    sprintf(cc_buf + x, " %s ", cc_args);
+    sprintf(cc_buf + strlen(cc_buf), " %s ", cc_args);
     cc_cmdfile = cc_buf + strlen(cc_buf);
 
     if (NULL == x_outputfile || 0 == x_outputfile[0]) {
@@ -459,7 +457,8 @@ compile_file(const char *srcname)
 #endif
     char m_outname[BUFSIZ], t_outname[BUFSIZ], outname[BUFSIZ];
     struct stat objsb = {0}, srcsb = {0};
-    int len, exit_status = 0, ext_len = 0;
+    size_t len;
+    int exit_status = 0, ext_len = 0;
     int ok = FALSE;
 #if defined(HAVE_MKSTEMP) && \
         (defined(_WIN32) || defined(WIN32) || defined(DOSISH))
@@ -545,7 +544,7 @@ compile_file(const char *srcname)
         defined(_WIN32) || defined(WIN32)
         {
             const char *tmp = get_tmpdir("TMP");
-            int l;
+            size_t l;
 
             if (tmp == NULL || NULL == (tmp = get_tmpdir("TEMP")) ||
                     NULL == (tmp = get_tmpdir("TMPDIR"))) {
@@ -826,10 +825,10 @@ arg_push(const char *args[], unsigned count, const char *val, const char *prefix
 }
 
 
-static unsigned
-arg_sizeof(const char *args[], unsigned count)
+static size_t
+arg_sizeof(const char *args[], size_t count)
 {
-    unsigned length, idx;
+    size_t length, idx;
 
     length = 0;
     for (idx = 0; idx < count; ++idx) {
@@ -841,16 +840,16 @@ arg_sizeof(const char *args[], unsigned count)
 }
 
 
-static unsigned
-arg_export(const char *args[], unsigned count, char *buffer, unsigned offset)
+static size_t
+arg_export(const char *args[], size_t count, char *buffer, size_t offset)
 {
     char *cursor = buffer + offset;
-    unsigned length, idx;
+    size_t length, idx;
 
     length = 0;
     for (idx = 0; idx < count; ++idx) {
         if (args[idx]) {
-            unsigned ilen = strlen(args[idx]);
+            const size_t ilen = strlen(args[idx]);
 
             if (offset || length) {
                 *cursor++ = ' ', ++length;
@@ -864,7 +863,7 @@ arg_export(const char *args[], unsigned count, char *buffer, unsigned offset)
 
 
 static void
-arg_release(const char *args[], unsigned count)
+arg_release(const char *args[], size_t count)
 {
     unsigned idx;
 
@@ -1247,11 +1246,11 @@ resolve_self(const char *name)
  *      TRUE if successful, otherwise FALSE.
  */
 static int
-resolve_path(char *dst, int dstlen, const char *pp, const char *name, const char *label)
+resolve_path(char *dst, size_t dstlen, const char *pp, const char *name, const char *label)
 {
     struct stat sb;
     char t_name[PATHLENGTH];
-    int namelen;
+    size_t namelen;
     char *p;
 
     namelen = strlen(name);
@@ -1322,7 +1321,7 @@ success:;
 #endif
 #if defined(_WIN32) || defined(WIN32)
     if (strchr(dst, ' ')) {                     /* quote arg0 */
-        int len = (int)strlen(dst);
+        size_t len = (int)strlen(dst);
 
         if ((len + 2) < dstlen) {
             memmove(dst + 1, dst, len);
@@ -1351,7 +1350,7 @@ success:;
  *      Address of buffer containing result.
  */
 static const char *
-expand_var(const char *xenv, char *buf, int buflen)
+expand_var(const char *xenv, char *buf, size_t buflen)
 {
     char *p, var[256];
 
@@ -1400,7 +1399,7 @@ expand_var(const char *xenv, char *buf, int buflen)
             strcpy(p, q);                       /* just remove it */
 
         } else {
-            const int l = p - buf,              /* leading length */
+            const size_t l = p - buf,           /* leading length */
                 r = strlen(q),                  /* remaining characters */
                 n = strlen(env);                /* new characters */
 

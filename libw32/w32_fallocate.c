@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_fallocate_c, "$Id: w32_fallocate.c,v 1.2 2024/03/31 15:57:25 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_fallocate_c, "$Id: w32_fallocate.c,v 1.3 2025/02/03 02:27:35 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 posix_fallocate() system calls
  *
- * Copyright (c) 2018 - 2024 Adam Young.
+ * Copyright (c) 2018 - 2025 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *

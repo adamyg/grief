@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_hunspell_c,"$Id: w32_hunspell.c,v 1.22 2024/07/19 18:50:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_hunspell_c,"$Id: w32_hunspell.c,v 1.24 2025/02/07 02:52:45 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 hunspell dynamic loader.
  *
- * Copyright (c) 1998 - 2023, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -87,7 +87,7 @@ static const char *     x_hunspellnames[] = {
 #endif
         };
 
-static void             strxcopy(char *dest, const char *src, int len);
+static void             strxcopy(char *dest, const char *src, size_t len);
 static FARPROC          hunspell_resolve(const char *name);
 
 LIBW32_API void
@@ -219,7 +219,7 @@ w32_hunspell_connect(int verbose)
 
 
 static void
-strxcopy(char *dest, const char *src, int len)
+strxcopy(char *dest, const char *src, size_t len)
 {
     (void) strncpy(dest, src, len);
     if (len > 0) {

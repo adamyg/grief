@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_class_c,"$Id: vfs_class.c,v 1.16 2025/01/13 15:25:26 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_class_c,"$Id: vfs_class.c,v 1.17 2025/02/07 03:03:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_class.c,v 1.16 2025/01/13 15:25:26 cvsuser Exp $
+/* $Id: vfs_class.c,v 1.17 2025/02/07 03:03:23 cvsuser Exp $
  * Virtual file system - utility functions.
  *
  *
@@ -98,8 +98,8 @@ vfs_class_shutdown(void)
 struct vfs_class *
 vfs_class_new(const char *desc, const char *prefix, struct vfs_implementation *impl)
 {
-    unsigned desclength = strlen(desc);
-    unsigned prefixlength = strlen(prefix);
+    unsigned desclength = (unsigned)strlen(desc);
+    unsigned prefixlength = (unsigned)strlen(prefix);
     struct vfs_class *vfs;                      /* instance */
 
     assert(desc);
@@ -189,7 +189,7 @@ vfs_class_get(const char *prefix, unsigned length)
 
     if (prefix && prefix[0]) {
         if (0 == (t_length = length)) {         /* length missing */
-            t_length = strlen(prefix);
+            t_length = (unsigned)strlen(prefix);
         }
 
         for (vfs = TAILQ_FIRST(&x_instanceq); vfs; vfs = TAILQ_NEXT(vfs, v_node)) {

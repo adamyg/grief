@@ -1,9 +1,9 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_debug_c,"$Id: debug.c,v 1.36 2021/07/04 08:39:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_debug_c,"$Id: debug.c,v 1.37 2025/02/07 03:03:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: debug.c,v 1.36 2021/07/04 08:39:16 cvsuser Exp $
- * internal debug/diagnositics.
+/* $Id: debug.c,v 1.37 2025/02/07 03:03:20 cvsuser Exp $
+ * internal debug/diagnostics.
  *
  *
  * This file is part of the GRIEF Editor.
@@ -98,7 +98,11 @@ trace_flagsset(int flags)
  *      nothing
  */
 void
+#if defined(_MSC_VER) && defined(_Printf_format_string_)
+trace_ilog(_Printf_format_string_ const char *fmt, ...)
+#else
 trace_ilog(const char *fmt, ...)
+#endif
 {
     if (x_dflags) {
         va_list ap;
@@ -120,7 +124,11 @@ trace_ilog(const char *fmt, ...)
  *      nothing
  */
 void
+#if defined(_MSC_VER) && defined(_Printf_format_string_)
+trace_term(_Printf_format_string_ const char* fmt, ...)
+#else
 trace_term(const char *fmt, ...)
+#endif
 {
     if (DB_TERMINAL & x_dflags) {
         va_list ap;
@@ -192,7 +200,7 @@ static void
 trace_ref(const ref_t *rp)
 {
     if (DB_REFS & x_dflags) {
-        trace_log("*%p/%d->", rp, r_refs(rp));
+        trace_log("*%p/%u->", rp, r_refs(rp));
     }
 }
 
@@ -529,7 +537,7 @@ trace_list0(const LIST *lp, int level)
             rp = LGET_PTR2(ref_t, lp);
             trace_ref(rp);
             if (x_dflags & DB_REFS) {
-                trace_log("(%u, ", r_used(rp));
+                trace_log("(%u, ", (unsigned)r_used(rp));
             } else {
                 trace_log("(");
             }
@@ -567,7 +575,7 @@ trace_list0(const LIST *lp, int level)
             break;
 
         default:
-            trace_log("<dont-know type=%d - aborting dump> ", *lp);
+            trace_log("<dont-know type=%u - aborting dump> ", *lp);
             return;
         }
         lp += sizeof_atoms[*lp];

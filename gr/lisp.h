@@ -1,11 +1,11 @@
 #ifndef GR_LISP_H_INCLUDED
 #define GR_LISP_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_lisp_h,"$Id: lisp.h,v 1.21 2025/01/10 16:51:45 cvsuser Exp $")
+__CIDENT_RCSID(gr_lisp_h,"$Id: lisp.h,v 1.22 2025/02/07 03:03:21 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: lisp.h,v 1.21 2025/01/10 16:51:45 cvsuser Exp $
+/* $Id: lisp.h,v 1.22 2025/02/07 03:03:21 cvsuser Exp $
  * List implementation and primitives.
  *
  *
@@ -30,7 +30,7 @@ __CBEGIN_DECLS
 extern int                  atom_size(const LIST *lp);
 extern LIST *               atom_push_sym(LIST *lp, const char *svalue);
 extern LIST *               atom_push_str(LIST *lp, const char *svalue);
-extern LIST *               atom_push_nstr(LIST *lp, const char *svalue, int length);
+extern LIST *               atom_push_nstr(LIST *lp, const char *svalue, size_t length);
 extern LIST *               atom_push_const(LIST *lp, const char *svalue);
 extern LIST *               atom_push_int(LIST *lp, accint_t value);
 extern LIST *               atom_push_float(LIST *lp, accfloat_t value);
@@ -53,25 +53,26 @@ extern int                  atom_assign_sym(const LIST *lp, SYMBOL *sp);
 
 extern int                  argv_size(const LISTV *lvp);
 extern int                  argv_copy(LIST *lp, const LISTV *lvp);
-extern int                  argv_make(LISTV *lvp, const LIST *lp);
-extern LIST *               argv_list(const LISTV *lvp, int atoms, int *llen);
+extern size_t               argv_make(LISTV *lvp, const LIST *lp);
+extern LIST *               argv_list(const LISTV *lvp, int atoms, size_t *llenp);
 
-extern LIST *               lst_alloc(int len, int atoms);
-extern LIST *               lst_size(LIST *lp, int newlen, int newatoms);
-extern LIST *               lst_expand(LIST *lp, int llen);
-extern LIST *               lst_extend(LIST *lp, int pleninc, int atomsinc);
+extern LIST *               lst_alloc(size_t len, int atoms);
+extern LIST *               lst_size(LIST *lp, size_t newlen, int newatoms);
+extern LIST *               lst_expand(LIST *lp, size_t llen);
+extern LIST *               lst_extend(LIST *lp, int leninc, int atomsinc);
 extern int                  lst_isnull(const LIST *lp);
 extern int                  lst_atoms_get(const LIST *lp);
-extern int                  lst_check(const LIST *lp);
-extern int                  lst_length(const LIST *lp);
-extern LIST *               lst_join(const LIST *lp, int llen, const LISTV *lvp, int *llenp);
+extern size_t               lst_check(const LIST *lp);
+extern size_t               lst_sizeof(const LIST* lp);
+extern size_t               lst_length(const LIST *lp);
+extern LIST *               lst_join(const LIST *lp, size_t llen, const LISTV *lvp, size_t *llenp);
 extern void                 lst_free(LIST *lp);
-extern LIST *               lst_clone(const LIST *lp, int *llenp);
-extern LIST *               lst_build(const LIST *lp, int llen);
+extern LIST *               lst_clone(const LIST *lp, size_t *llenp);
+extern LIST *               lst_build(const LIST *lp, size_t llen);
 
 extern ref_t *              rlst_create(LIST *lp, int llen);
 extern ref_t *              rlst_clone(const LIST *lp);
-extern ref_t *              rlst_build(const LIST *lp, int llen);
+extern ref_t *              rlst_build(const LIST *lp, size_t llen);
 extern ref_t *              rlst_splice(ref_t *rp, int nth, int datoms, const LISTV *lvp, int natoms, int flat);
 
 extern void                 do_make_list(void);

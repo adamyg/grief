@@ -1,11 +1,11 @@
 #ifndef GR_REGEXP_H_INCLUDED
 #define GR_REGEXP_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_regexp_h,"$Id: regexp.h,v 1.18 2022/08/10 15:44:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_regexp_h,"$Id: regexp.h,v 1.19 2025/02/07 03:03:22 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: regexp.h,v 1.18 2022/08/10 15:44:57 cvsuser Exp $
+/* $Id: regexp.h,v 1.19 2025/02/07 03:03:22 cvsuser Exp $
  * Internal regular expression engine.
  *
  *
@@ -66,7 +66,7 @@ __CBEGIN_DECLS
 
 extern REGEXP *             regexp_comp(const struct regopts *options, const char *pattern);
 extern REGEXP *             regexp_comp2(REGEXP *prog, const struct regopts *options, const char *pattern);
-extern int                  regexp_exec(REGEXP *prog, const char *buf, int buflen, int offset);
+extern int                  regexp_exec(REGEXP *prog, const char *buf, size_t buflen, int offset);
 extern int                  regexp_free(REGEXP *prog);
 
 __CEND_DECLS

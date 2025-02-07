@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_wordimpl_inc,"$Id: wordimpl.h,v 1.5 2025/01/10 16:51:45 cvsuser Exp $")
+__CIDENT_RCSID(gr_wordimpl_inc,"$Id: wordimpl.h,v 1.6 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: wordimpl.h,v 1.5 2025/01/10 16:51:45 cvsuser Exp $
+/* $Id: wordimpl.h,v 1.6 2025/02/07 03:03:22 cvsuser Exp $
  * Portable mappings to and from internal word and byte order.
  *
  *
@@ -183,7 +183,14 @@ LGET_PTR(register const LIST *lp)
 #else
 #error LGET_PTR: missing implementation
 #endif
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4305) // 'type cast' : truncation from 'xxx' to 'void *'
+#endif
     return ((void *)n);
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 }
 
 

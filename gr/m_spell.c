@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_spell_c,"$Id: m_spell.c,v 1.47 2025/01/13 15:12:17 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_spell_c,"$Id: m_spell.c,v 1.48 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_spell.c,v 1.47 2025/01/13 15:12:17 cvsuser Exp $
+/* $Id: m_spell.c,v 1.48 2025/02/07 03:03:21 cvsuser Exp $
  * Spell primitives.
  *
  *      Enchant - AbiWord spell-checker generic interface
@@ -436,7 +436,7 @@ spell_nextword(BUFFER_t *bp,
                 ++t_chars;
                 ch2 = ch;
             }
-            if ((t_wordlen = cursor - start) > 1 &&
+            if ((t_wordlen = (int)(cursor - start)) > 1 &&
                         ch2 < 0xff && 2 == wordtable[ch2]) {
                 --t_wordlen;                    /* trailing punctuation, remove */
                 --t_chars;
@@ -519,7 +519,7 @@ spell_check_string(BUFFER_t *bp, const char *buffer, int length, int tokenize, i
              *      [<word>, <suggest-list|NULL>, <offset>, <column>, <line>, <count>]
              *         :             :              :         :         :       :
              */
-            lp = atom_push_nstr(lp, word, wordlen);
+            lp = atom_push_nstr(lp, word, (size_t)wordlen);
             if (suglst) {                       /* suggest-list|NULL */
                 lp = atom_push_ref(lp, rlst_create(suglst, suglen));
             } else {
@@ -534,9 +534,9 @@ spell_check_string(BUFFER_t *bp, const char *buffer, int length, int tokenize, i
                 stblnode_t *dupword;
 
                 if (NULL != (dupword = stbl_nnew(wordtbl, word, wordlen))) {
-                    dupword->stbl_ui32 = lp - chklst;
+                    dupword->stbl_ui32 = (int32_t)(lp - chklst);
                 }
-                lp = atom_push_int(lp, (accint_t) 1);
+                lp = atom_push_int(lp, 1);
             }
         }
         ED_TRACE(("\t==> word <%.*s> : %d\n", wordlen, word, ret))
@@ -922,9 +922,9 @@ do_spell_check(int mode)        /*   ([string word], [int length], [int tokenize
     case 1:     /* string_string */
         if (isa_string(1)) {                    /* string */
             const char *str    = get_str(1);
-            const int length   = get_xinteger(2, get_strlen(1));
-            const int tokenize = get_xinteger(3, 0);
-            const int suggest  = get_xinteger(4, FALSE);
+            const int length   = (int)get_xinteger(2, (int)get_strlen(1));
+            const int tokenize = (int)get_xinteger(3, 0);
+            const int suggest  = (int)get_xinteger(4, FALSE);
 
             if (0 == tokenize) {                /* word */
                 if (NULL == x_spell) {
@@ -935,13 +935,13 @@ do_spell_check(int mode)        /*   ([string word], [int length], [int tokenize
 
             } else {                            /* line */
                 LIST *lst = NULL;
-                int len = 0;
+                int llen = 0;
 
                 if (NULL == x_spell ||
-                        NULL == (lst = spell_check_string(curbp, str, length, tokenize, suggest, 0, NULL, NULL, &len))) {
+                        NULL == (lst = spell_check_string(curbp, str, length, tokenize, suggest, 0, NULL, NULL, &llen))) {
                     acc_assign_null();
                 } else {
-                    acc_donate_list(lst, len);
+                    acc_donate_list(lst, (size_t)llen);
                 }
             }
             return;
@@ -956,14 +956,14 @@ do_spell_check(int mode)        /*   ([string word], [int length], [int tokenize
             const int tokenize  = get_xinteger(3, 1);
             const int suggest   = get_xinteger(4, FALSE);
             const int unique    = get_xinteger(5, TRUE);
-            LIST *chklp = NULL;
-            int chklen = 0;
+            LIST *lp = NULL;
+            int llen = 0;
 
             if (NULL == x_spell ||
-                    NULL == (chklp = spell_check_buffer(startline, endline, tokenize, suggest, unique, &chklen))) {
+                    NULL == (lp = spell_check_buffer(startline, endline, tokenize, suggest, unique, &llen))) {
                 acc_assign_null();
             } else {
-                acc_donate_list(chklp, chklen);
+                acc_donate_list(lp, (size_t)llen);
             }
             return;
 
@@ -1014,7 +1014,7 @@ void
 do_spell_suggest(void)          /* list (string word, [int length]) */
 {
     const char *word = get_str(1);
-    const int length = get_xinteger(2, get_strlen(1));
+    const int length = get_xinteger(2, (int)get_strlen(1));
 
     if (NULL == x_spell) {
         acc_assign_null();
@@ -1116,7 +1116,7 @@ do_spell_control(void)          /* int (int action, ...) */
             if (x_spell) {
                 desc = x_spell->sf_description;
             }
-            acc_assign_str(desc, -1);
+            acc_assign_str(desc);
         }
         return;
 

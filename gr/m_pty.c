@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_pty_c,"$Id: m_pty.c,v 1.28 2024/12/06 15:46:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_pty_c,"$Id: m_pty.c,v 1.29 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_pty.c,v 1.28 2024/12/06 15:46:06 cvsuser Exp $
+/* $Id: m_pty.c,v 1.29 2025/02/07 03:03:21 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -537,14 +537,15 @@ set_process_position(void)      /* ([int line], [int column]) */
             const accint_t line = get_xinteger(1, 1);
 
             dp->d_curline =
-                (line <= 1 ? 1 : (line < curbp->b_numlines ? line : curbp->b_numlines));
+                (LINENO)(line <= 1 ? 1 : (line < curbp->b_numlines ? line : curbp->b_numlines));
             dp->d_curcol = 1;
         }
 
         if (isa_integer(2)) {
             const accint_t col = get_xinteger(2, 1);
 
-            dp->d_curcol = (col <= 0  ? 1 : col);
+            dp->d_curcol = 
+                (LINENO)(col <= 0  ? 1 : col);
         }
 
         ret = 0;
@@ -1442,7 +1443,7 @@ static char *
 p_flush(const char *start, const char *end)
 {
     DISPLAY_t *dp = curbp->b_display;
-    int size = end - start;
+    size_t size = end - start;
 
     assert(end >= start);
     if (size <= 0 || NULL == start) {
@@ -1486,7 +1487,7 @@ p_sgrlength(const LINECHAR *cp, const LINECHAR *end, char command)
                     ++cp;
                 }
             } else if  ('m' == command) {
-                return (cp - start);
+                return (int)(cp - start);
             }
         }
     }

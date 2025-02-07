@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crlex_c,"$Id: crlex.c,v 1.37 2021/06/07 16:04:23 cvsuser Exp $")
+__CIDENT_RCSID(gr_crlex_c,"$Id: crlex.c,v 1.38 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crlex.c,v 1.37 2021/06/07 16:04:23 cvsuser Exp $
+/* $Id: crlex.c,v 1.38 2025/02/07 03:03:22 cvsuser Exp $
  * Lexical analyser for the GRUNCH language.
  *
  *
@@ -1147,7 +1147,7 @@ bad:;       if (0 == ch) {
 
             value = ch;
             if (nchars < (sizeof(buffer) - 1))
-                buffer[nchars] = ch;
+                buffer[nchars] = (char)ch;
             ++nchars;
 
             if ('\'' == (ch = lexget(lexer))) {

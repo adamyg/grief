@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: updateyear.pl,v 1.3 2025/01/13 16:00:12 cvsuser Exp $
+# $Id: updateyear.pl,v 1.4 2025/02/07 03:03:23 cvsuser Exp $
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 # Update the copyright year within the specified files
 #
@@ -157,11 +157,11 @@ load($$)                # (file)
         if (! $result) {
             if (/Copyright.*[ -]+20[12]\d.*Adam/i) {
                 my $org = $_;
-                if (s/ - 2020/ - 2025/ or
-                    s/ - 2021/ - 2025/ or
-                    s/ - 2022/ - 2025/ or
-                    s/ - 2023/ - 2025/ or
-                    s/ - 2024/ - 2025/) {
+                if (s/ -[ ]*2020/ - 2025/ or
+                    s/ -[ ]*2021/ - 2025/ or
+                    s/ -[ ]*2022/ - 2025/ or
+                    s/ -[ ]*2023/ - 2025/ or
+                    s/ -[ ]*2024/ - 2025/) {
                     print "dryrun: update\n- <$org>\n+ <$_>\n"
                         if ($o_dryrun);
                     $result = 1;

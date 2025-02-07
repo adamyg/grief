@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.88 2024/11/29 13:37:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_keyboard_c,"$Id: keyboard.c,v 1.89 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keyboard.c,v 1.88 2024/11/29 13:37:22 cvsuser Exp $
+/* $Id: keyboard.c,v 1.89 2025/02/07 03:03:21 cvsuser Exp $
  * Manipulate key maps and bindings.
  *
  *
@@ -334,7 +334,7 @@ keyboard_delete(keyboard_t *kp)
 
 
 /*  Function:           keyboard_free
- *      Unreference and delete the keyboard object if no longer referenced.
+ *      Dereference and delete the keyboard object if no longer referenced.
  *
  *  Parameters:
  *      kp - Keyboard object.
@@ -569,7 +569,7 @@ key_macro_find(int key)
 
 
 /*  Function:           key_string2code
- *      Convert a key string in ascii format to the internal key code value.
+ *      Convert a key string in ASCII format to the internal key code value.
  *
  *      If a multi-key is specified more than one key-code wide, return -1.
  *
@@ -689,7 +689,7 @@ key_string2seq(const char *cp, int *sizep)
 
 
 /*  Function:           do_assign_to_key
- *      assign_to_key primitivem, define a macro to be called when
+ *      assign_to_key primitives, define a macro to be called when
  *          the specified key is pressed.
  *
  *  Parameters:
@@ -729,14 +729,14 @@ key_string2seq(const char *cp, int *sizep)
             being assigned.
 
         macro - String containing the command to be invoked, which
-            may optionally contain one or more space seperated
+            may optionally contain one or more space separated
             integer or string arguments, to be passed upon the
             macro upon execution.
 
     Key Sequences:
 
         Generally keys are defined using their associated mnemonic
-        possiblity prefixed with one or modifiers enclosed within a
+        possibility prefixed with one or modifiers enclosed within a
         set of "<>" brackets, examples.
 
             o <F1>
@@ -1029,7 +1029,7 @@ do_keyboard_typeables(void)     /* int (void) */
 void
 do_push_back(void)              /* (int key, [int front], [int x], [int y]) */
 {
-    const accint_t key = get_xinteger(1, 0);
+    const int key = (int)get_xinteger(1, 0);
     const int front = (int)get_xinteger(2, FALSE);
 
     if (key > 0 && key < KEY_VOID) {
@@ -1135,9 +1135,9 @@ key_cache_mouse(ref_t *pp, int code, int front, const mouseevt_t* evt)
 
     assert(1 == r_refs(pp));
     if (TRUE == front) {
-        r_push(pp, (void *)buffer, cursor - buffer, 128);
+        r_push(pp, (void *)buffer, (int)(cursor - buffer), 128);
     } else {
-        r_append(pp, (void *)buffer, cursor - buffer, 128);
+        r_append(pp, (void *)buffer, (int)(cursor - buffer), 128);
     }
 }
 
@@ -1194,7 +1194,7 @@ key_cache_pop(ref_t *pp, struct IOEvent *evt)
         }
     }
 
-    r_pop(pp, cursor - msg);
+    r_pop(pp, (int)(cursor - msg));
     return (evt->code = code);
 }
 
@@ -1373,7 +1373,7 @@ do_key_to_int(void)             /* (string key, int raw) */
     } else {
         int kcode = -1;
 
-        kcode = kbprotocols_parse(cp, strlen(cp), TRUE);
+        kcode = kbprotocols_parse(cp, (unsigned)strlen(cp), TRUE);
         if (kcode <= 0) {
             kcode = tty_mouse_xterm(NULL, cp);
         }
@@ -1424,7 +1424,7 @@ do_key_to_int(void)             /* (string key, int raw) */
 void
 do_int_to_key(void)             /* string (int key) */
 {
-    acc_assign_str(key_code2name(get_xinteger(1, 0)), -1);
+    acc_assign_str(key_code2name(get_xinteger(1, 0)));
 }
 
 
@@ -1659,7 +1659,7 @@ inq_command(void)               /* string () */
 {
     const char *hist = historyget(0);
 
-    acc_assign_str(hist ? hist : "", -1);
+    acc_assign_str(hist ? hist : "");
 }
 
 
@@ -1688,7 +1688,7 @@ inq_command(void)               /* string () */
         (i.e. index 0) is returns.
 
         The 'home' and 'end' macros are good examples of its usage,
-        which modify their behaviour based upon previous operations.
+        which modify their behavior based upon previous operations.
 
     Macro Parameters:
         index - Optional int index.
@@ -1711,7 +1711,7 @@ inq_macro_history(void)         /* string ([int pos]) */
     const int idx = get_xinteger(1, 0);
     const char *hist = historyget(idx);
 
-    acc_assign_str(hist ? hist : "", -1);
+    acc_assign_str(hist ? hist : "");
 }
 
 
@@ -1763,7 +1763,7 @@ do_set_macro_history(void)      /* string ([int index = 0]) */
     const char *str = get_xstr(2);
     char *hist = historyget(idx);
 
-    acc_assign_str(hist ? hist : "", -1);
+    acc_assign_str(hist ? hist : "");
     if (hist) {
         strxcpy(hist, (str ? str : ""), sizeof(x_histbuf[0]));
     }
@@ -1887,7 +1887,7 @@ key_check(const char *buf, unsigned buflen, int *multikey, int flag)
     // Keyboard protocols
     kcode2 = kbprotocols_parse(buf, buflen, force);
 
-    trace_log("KEYSEQ(flag:%d,ambiguous:%d,multi:%d,key:%d,key2:%d)=",
+    trace_log("KEYSEQ(flag:%d,ambiguous:%u,multi:%d,key:%d,key2:%d)=",
         flag, ambiguous, (multikey ? *multikey : -1), (ks ? ks->ks_code : 0), kcode2);
     trace_hex(buf, buflen);
 
@@ -2308,7 +2308,7 @@ inq_assignment(void)            /* string (string key, [int convert]) */
         const int key_code =
             (key ? key_string2code(key, NULL, -1) : get_xinteger(1, -1));
 
-        acc_assign_str(key_macro_find(key_code), -1);
+        acc_assign_str(key_macro_find(key_code));
 
     } else {
         char buf[BUFSIZ];
@@ -2322,9 +2322,9 @@ inq_assignment(void)            /* string (string key, [int convert]) */
         }
 
         if (0 == buf[0]) {
-            acc_assign_str("nothing", 7);
+            acc_assign_nstr("nothing", 7);
         } else {
-            acc_assign_str(buf, -1);
+            acc_assign_str(buf);
         }
     }
 }
@@ -2705,7 +2705,7 @@ inq_kbd_name(void)              /* string ([int kbdid]) */
     }
 
     if (kp) {
-        acc_assign_str(kp->kt_name ? kp->kt_name : "", -1);
+        acc_assign_str(kp->kt_name ? kp->kt_name : "");
     }
 }
 

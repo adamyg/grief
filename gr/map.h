@@ -1,11 +1,11 @@
 #ifndef GR_MAP_H_INCLUDED
 #define GR_MAP_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_map_h,"$Id: map.h,v 1.16 2022/08/10 15:44:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_map_h,"$Id: map.h,v 1.17 2025/02/07 03:03:21 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: map.h,v 1.16 2022/08/10 15:44:57 cvsuser Exp $
+/* $Id: map.h,v 1.17 2025/02/07 03:03:21 cvsuser Exp $
  * Character/line mapping ulitlies.
  *
  *
@@ -42,7 +42,7 @@ __CBEGIN_DECLS
 enum {
     LOFFSET_LASTBYTE        =-2,                /* last byte, including ESC/combined */
     LOFFSET_FIRSTBYTE       =-1,                /* first byte */
-    LOFFSET_NORMAL          =0,                 /* first normal character roffset */
+    LOFFSET_NORMAL          =0,                 /* first normal character offset */
     LOFFSET_NORMAL_MATCH    =1,                 /* first normal and match/update cursor on completion */
     LOFFSET_FILL_VSPACE     =2,                 /* fill virtual-space and EOL */
     LOFFSET_FILL_SPACE      =3                  /* fill virtual-space, tabs and EOL */

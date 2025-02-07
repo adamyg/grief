@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_file_c,"$Id: m_file.c,v 1.47 2024/12/06 15:46:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_file_c,"$Id: m_file.c,v 1.48 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_file.c,v 1.47 2024/12/06 15:46:06 cvsuser Exp $
+/* $Id: m_file.c,v 1.48 2025/02/07 03:03:21 cvsuser Exp $
  * File primitives.
  *
  *
@@ -229,7 +229,7 @@ do_expandpath(void)             /* (string path, [int env = FALSE]) */
     if (get_xinteger(2, FALSE)) {               /* TRUE or FALSE */
         file_getenv(path, sizeof(path));
     }
-    acc_assign_str(path, -1);
+    acc_assign_str(path);
 }
 
 
@@ -295,7 +295,7 @@ do_searchpath(void)             /* int (string searchpath, string file, [string 
             *extension = get_xstr(3);
     const int expand = get_xinteger(5, FALSE);
 //  const int mode = get_xinteger(6, -1);       /* TODO */
-    int ret = -1;
+    accint_t ret = -1;
 
     if (NULL == searchpath) {
         searchpath = ggetenv("GRPATH");
@@ -334,8 +334,8 @@ do_searchpath(void)             /* int (string searchpath, string file, [string 
                             result = abspath;
                         }
                     }
-                    ret = strlen(result);
-                    argv_assign_str(4, result);
+                    ret = (accint_t)strlen(result);
+                    argv_assign_nstr(4, result, (size_t)ret);
                 }
             }
         }
@@ -566,7 +566,7 @@ do_file_canon(void)             /* string (string filespec) */
     if (filespec) {
         filespec = file_canonicalize(filespec, canonicalize, sizeof(canonicalize));
     }
-    acc_assign_str(filespec ? filespec : "", -1);
+    acc_assign_str(filespec ? filespec : "");
 }
 
 
@@ -969,7 +969,7 @@ do_glob(void)                   /* string (string pattern) */
         path[0] = '\0';
     }
     out = wild_glob(path);                      /* FIXME, use bsd_glob() */
-    acc_assign_str((const char *)(out ? out : NULL), -1);
+    acc_assign_str((const char *)(out ? out : NULL));
     wild_globfree(out);
 }
 
@@ -2813,7 +2813,7 @@ do_mode_string(void)            /* string ([int mode], [string path], [int type 
     char buffer[16];
 
     file_modedesc(mode, source, type, buffer, sizeof(buffer));
-    acc_assign_str((const char *)buffer, -1);
+    acc_assign_str((const char *)buffer);
 }
 
 
@@ -2873,7 +2873,7 @@ do_readlink(void)               /* string (string path, [string &link]) */
             acc_assign_int(ret ? ret : 1);
 
         } else {
-            acc_assign_str((const char *)linkpath, -1);
+            acc_assign_str((const char *)linkpath);
         }
     }
 }
@@ -3118,7 +3118,7 @@ do_filename_realpath(void)      /* string (string pathname) */
     if (0 == sys_realpath((const char *)path, t_realpath, sizeof(t_realpath))) {
         name = t_realpath;
     }
-    acc_assign_str((const char *)name, -1);
+    acc_assign_str((const char *)name);
 }
 
 
@@ -3309,13 +3309,13 @@ do_filename(int dirname)        /* (string path, [string suffix]) */
 
     /* if all separators, return a single */
     if (NULL == fname || !*fname) {
-        acc_assign_str(dirname ? "." : "", -1);
+        acc_assign_str(dirname ? "." : "");
         return;
     }
 
     for (p = fname;; ++p) {
         if (!*p) {                              /* EOS */
-            acc_assign_str("/", -1);
+            acc_assign_nstr("/", 1);
             return;
         }
         if (!ISSEP(*p)) {                       /* non-separator */
@@ -3349,7 +3349,7 @@ do_filename(int dirname)        /* (string path, [string suffix]) */
 
     /* dirname mode, return directory */
     if (dirname) {
-        int flen;
+        size_t flen;
 
         if (p > fname) {
             --p;                                /* consume separator */
@@ -3359,9 +3359,9 @@ do_filename(int dirname)        /* (string path, [string suffix]) */
         }
 
         if ((flen = (p - fname) + 1) > 0) {
-            acc_assign_str(fname, flen);
+            acc_assign_nstr(fname, flen);
         } else {
-            acc_assign_str(".", 1);
+            acc_assign_nstr(".", 1);
         }
         return;
     }
@@ -3369,8 +3369,8 @@ do_filename(int dirname)        /* (string path, [string suffix]) */
     /* otherwise basename, if suffix and a match remove */
     ++p;                                        /* consume separator */
     if (suffix) {
-        int slen = strlen(suffix);              /* suffix length */
-        int flen = end - p;                     /* filename (fname) length */
+        size_t slen = strlen(suffix);           /* suffix length */
+        size_t flen = end - p;                  /* filename (fname) length */
 
         if (slen < flen) {
             if (0 == strncmp(suffix, end - slen, slen)) {
@@ -3378,7 +3378,7 @@ do_filename(int dirname)        /* (string path, [string suffix]) */
             }
         }
     }
-    acc_assign_str(p, end - p);
+    acc_assign_nstr(p, end - p);
 }
 
 
@@ -3485,11 +3485,11 @@ do_mktemp(void)                 /* string (string path) */
 
     strxcpy(path, get_str(1), sizeof(path));
     if ((ret = sys_mkstemp(path)) >= 0) {
-        acc_assign_str(path, -1);
+        acc_assign_str(path);
         fileio_close(ret);
 
     } else {
-        acc_assign_str("", -1);
+        acc_assign_nstr("", 0);
     }
 }
 

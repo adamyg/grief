@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.150 2025/01/13 14:57:54 cvsuser Exp $
+# $Id: makelib.pl,v 1.152 2025/02/07 02:54:29 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -78,9 +78,10 @@ my $PROGRAMFILES            = ProgramFiles();
 my $x_libw32                = 'libw32';
 
 my %x_environment   = (
-        'dj'            => {    # DJGPPP
+        'dj'            => {    # DJGPP
             TOOLCHAIN       => 'dj',
             TOOLCHAINEXT    => '.dj',
+            TOOLCHAINNAME   => 'DJGPP',
             CC              => 'gcc',
             CXX             => 'g++',
             AR              => 'ar',
@@ -93,6 +94,7 @@ my %x_environment   = (
         'mingw'         => {    # MingW32 or MingW64 (default os)
             TOOLCHAIN       => 'mingw',
             TOOLCHAINEXT    => '.mingw',
+            TOOLCHAINNAME   => 'mingw-legacy',
             CC              => 'gcc',
             CXX             => 'g++',
             VSWITCH         => '--version',
@@ -123,6 +125,7 @@ my %x_environment   = (
         'mingw32'       => {    # MingW64 (32-bit mode)
             TOOLCHAIN       => 'mingw32',
             TOOLCHAINEXT    => '.mingw32',
+            TOOLCHAINNAME   => 'MingW32',
             CC              => 'gcc',
             CXX             => 'g++',
             VSWITCH         => '--version',
@@ -154,6 +157,7 @@ my %x_environment   = (
             ISWIN64         => 'yes',
             TOOLCHAIN       => 'mingw64',
             TOOLCHAINEXT    => '.mingw64',
+            TOOLCHAINNAME   => 'MingW64',
             CC              => 'gcc',
             CXX             => 'g++',
             VSWITCH         => '--version',
@@ -194,6 +198,7 @@ my %x_environment   = (
         'vc1200'        => {    # Visual Studio 7
             TOOLCHAIN       => 'vs70',
             TOOLCHAINEXT    => '.vs70',
+            TOOLCHAINNAME   => 'Visual Studio 7',
             CC              => 'cl',
             COMPILERPATH    => '%VCINSTALLDIR%/bin',
             OSWITCH         => '-Fo',
@@ -217,6 +222,7 @@ my %x_environment   = (
         'vc1400'        => {    # 2005, Visual Studio 8
             TOOLCHAIN       => 'vs80',
             TOOLCHAINEXT    => '.vs80',
+            TOOLCHAINNAME   => 'Visual Studio 2005',
             CC              => 'cl',
             COMPILERPATH    => '%VCINSTALLDIR%/bin',
             VSWITCH         => '',
@@ -249,6 +255,7 @@ my %x_environment   = (
         'vc1500'        => {   # 2008, Visual Studio 9
             TOOLCHAIN       => 'vs90',
             TOOLCHAINEXT    => '.vs90',
+            TOOLCHAINNAME   => 'Visual Studio 2008',
             CC              => 'cl',
             COMPILERPATH    => '%VCINSTALLDIR%/bin',
             VSWITCH         => '',
@@ -276,6 +283,7 @@ my %x_environment   = (
         'vc1600'        => {    # 2010, Visual Studio 10
             TOOLCHAIN       => 'vs100',
             TOOLCHAINEXT    => '.vs100',
+            TOOLCHAINNAME   => 'Visual Studio 2010',
             CC              => 'cl',
             COMPILERPATH    => '%VCINSTALLDIR%/bin',
             VSWITCH         => '',
@@ -313,6 +321,7 @@ my %x_environment   = (
        'vc1800'        => {    # 2013, Visual Studio 18
             TOOLCHAIN       => 'vs120',
             TOOLCHAINEXT    => '.vs120',
+            TOOLCHAINNAME   => 'Visual Studio 2013',
             CC              => 'cl',
             COMPILERPATH    => '%VCINSTALLDIR%/bin',
             VSWITCH         => '',
@@ -350,6 +359,7 @@ my %x_environment   = (
        'vc1900'        => {    # 2015, Visual Studio 19
             TOOLCHAIN       => 'vs140',
             TOOLCHAINEXT    => '.vs140',
+            TOOLCHAINNAME   => 'Visual Studio 2015',
             CC              => 'cl',
             COMPILERPATHS   => '%VS140COMNTOOLS%/../../VC/bin|%VCINSTALLDIR%/bin',
             COMPILERPATH    => '',
@@ -399,6 +409,7 @@ my %x_environment   = (
        'vc1910'        => {    # 2017, Visual Studio 19.10 -- 19.1x
             TOOLCHAIN       => 'vs150',
             TOOLCHAINEXT    => '.vs150',
+            TOOLCHAINNAME   => 'Visual Studio 2017',
             CC              => 'cl',
             COMPILERPATHS   => '%VS150COMNTOOLS%/../../VC/bin|%VCToolsInstallDir%/bin/Hostx86/x86',
             COMPILERPATH    => '',
@@ -437,6 +448,7 @@ my %x_environment   = (
        'vc1920'        => {     # 2019, Visual Studio 19.2x
             TOOLCHAIN       => 'vs160',
             TOOLCHAINEXT    => '.vs160',
+            TOOLCHAINNAME   => 'Visual Studio 2019',
             CC              => 'cl',
             COMPILERPATHS   => '%VS160COMNTOOLS%/../../VC/bin|%VCToolsInstallDir%/bin/Hostx86/x86',
             COMPILERPATH    => '',
@@ -446,6 +458,7 @@ my %x_environment   = (
             LSWITCH         => '',
             XSWITCH         => '-Fe',
             AR              => 'lib',
+            RC              => 'rc -nologo',    # -nologo option, not /nologo
             CINCLUDE        => '',
             RTLIBRARY       => '-MDd',
             CFLAGS          => '-nologo @RTLIBRARY@ -fp:precise',
@@ -475,6 +488,7 @@ my %x_environment   = (
        'vc1930'        => {     # 2022, Visual Studio 19.3x
             TOOLCHAIN       => 'vs170',
             TOOLCHAINEXT    => '.vs170',
+            TOOLCHAINNAME   => 'Visual Studio 2022',
             CC              => 'cl',
             COMPILERPATHS   => '%VS170COMNTOOLS%/../../VC/bin|%VCToolsInstallDir%/bin/Hostx86/x86',
             COMPILERPATH    => '',
@@ -513,6 +527,7 @@ my %x_environment   = (
         'wc1300'        => {    # Watcom 11
             TOOLCHAIN       => 'wc11',
             TOOLCHAINEXT    => '.wc11',
+            TOOLCHAINNAME   => 'Watcom 11',
             CC              => 'wcl386',
             COMPILERPATH    => '%WATCOM%/binnt',
             VSWITCH         => '-c',
@@ -534,6 +549,7 @@ my %x_environment   = (
         'owc1900'       => {    # Open Watcom 1.9
             TOOLCHAIN       => 'owc19',
             TOOLCHAINEXT    => '.owc19',
+            TOOLCHAINNAME   => 'Open-Watcom 1.9',
             CC              => 'wcl386',
             COMPILERPATH    => '%WATCOM%/binnt',
             VSWITCH         => '-c',
@@ -543,6 +559,7 @@ my %x_environment   = (
             LSWITCH         => '',
             XSWITCH         => '-fe=',
             AR              => 'lib',
+            RC              => 'rc -nologo',    # -nologo option, not /nologo
             CINCLUDE        => '',
 
                 # -q        Operate quietly.
@@ -616,6 +633,7 @@ my %x_environment   = (
         'owc1900_posix' => {    # Open Watcom 1.9 (using owcc)
             TOOLCHAIN       => 'owc19',
             TOOLCHAINEXT    => '.owc19',
+            TOOLCHAINNAME   => 'Open-Watcom 1.9',
             CC              => 'owcc',
             COMPILERPATH    => '%WATCOM%/binnt',
             VSWITCH         => '-v',            # version
@@ -624,6 +642,7 @@ my %x_environment   = (
             LSWITCH         => '-l',
             XSWITCH         => '-o',
             AR              => 'lib',
+            RC              => 'rc -nologo',    # -nologo option, not /nologo
             CINCLUDE        => '',
 
                 # -zq                           Operate quietly.
@@ -668,6 +687,7 @@ my %x_environment   = (
         'owc2000'       => {    # Open Watcom 2.0
             TOOLCHAIN       => 'owc20',
             TOOLCHAINEXT    => '.owc20',
+            TOOLCHAINNAME   => 'Open-Watcom 2.0',
             CC              => 'wcl386',
             COMPILERPATH    => '%WATCOM%/binnt',
             VSWITCH         => '-c',
@@ -677,6 +697,7 @@ my %x_environment   = (
             LSWITCH         => '',
             XSWITCH         => '-fe=',
             AR              => 'lib',
+            RC              => 'rc -nologo',
             CINCLUDE        => '',
 
                 # -q        Operate quietly.
@@ -960,6 +981,7 @@ my @x_headers       = (     #headers
         'stdbool.h',                            # c99
         'stdatomic.h',                          # c11
         'stdalign.h',                           # c11
+        'stdckdint.h', 'intsafe.h',             # integer maths (gnu/win32)
         'threads.h',                            # c11
         'pthread.h',                            # MINGW
         'string.h', 'strings.h',
@@ -988,7 +1010,8 @@ my @x_headers       = (     #headers
         'dirent.h',
         'dlfcn.h',                              # dlopen()
         'pwd.h',
-        'grp.h'
+        'grp.h',
+        'langinfo.h'
         );
 
 my @x_headers2      = (     #headers; check only
@@ -1017,6 +1040,7 @@ my @x_predefines    = (
 
 my @x_decls         = (     #stdint/intypes.h
         'SIZE_MAX',
+        'RSIZE_MAX',
         'SSIZE_MAX',
         'INT16_C',
         'INT16_MIN',
@@ -1074,6 +1098,7 @@ my @x_types         = (     #stdint/inttypes/types.h
         'bool',
         '_Bool:C99BOOL',
         '_bool',
+        'rsize_t',
         'ssize_t',
         'struct option.name;getopt.h,unistd.h'
         );
@@ -1157,7 +1182,8 @@ my @x_functions     = (
         'opendir',
         'mktemp', 'mkstemp',
         'findfirst', '_findfirst',              # msvc
-        'getopt', 'getopt_long'                 # bsd/compat
+        'getopt', 'getopt_long',                # bsd/compat
+        'nl_langinfo'
         );
 
 my @x_commands     = (     # commands explicity converted to <cmd>.exe
@@ -1552,6 +1578,8 @@ Configure($$$)          # (type, version, options)
                 $x_environment{$signature} = $x_environment{$base};
                 $x_environment{$signature}->{TOOLCHAIN} .= '_x64';
                 $x_environment{$signature}->{TOOLCHAINEXT} .= '/x64';
+                $x_environment{$signature}->{ISWIN64} .= 'yes';
+                $x_environment{$signature}->{ISWIN32} .= 'no';
             }
         }
     }
@@ -2128,11 +2156,16 @@ LoadContrib($$$$$)      # (type, version, name, dir, refIncludes)
                 (0 == $cnt++) or
                     die "$def: toolchain must be first element\n";
 
+                $version =~ /^(\d+)/;       # version[_x64]
+                my $version1 = $1;
+
                 if ($val !~ /(^${type}|,${type})(\d*)/) {
                     print "$def: $val [no], toolchain ${type} not supported\n";
                     return 0;
                 }
-                if ($2 && int($version) < int($2)) {
+                my $version2 = $2;
+
+                if ($version2 && int($version1) < int($version2)) {
                     print "$def: $val [no], toolchain version ${version} not supported\n";
                     return 0;
                 }
@@ -3259,6 +3292,11 @@ Makefile($$$)           # (type, dir, file)
                         s/(\$\(CXXFLAGS\).*) -o \$\@/$1 -Fo=\$(subst \/,\\,\$@)/;
                         s/(\$\(LDFLAGS\).*) -o \$@/$1 -Fe=\$(subst \/,\\,\$@)/;
 
+                        if (/\(RC\)/) {         # resource compiler
+                            s/ -fo[ ]?\$@/ -fo="\$(subst \/,\\,\$@)"/;
+                            s/ \$</ "\$<"/;
+                        }
+
                         s/-Fe(.*) \$\(([A-Z_]*OBJS)\)/-Fe$1 \$(subst \/,\\,\$($2))/;
                         s/-Fe(.*) \$\^/-Fe$1 \$(subst \/,\\,\$^)/;
 
@@ -3278,8 +3316,13 @@ Makefile($$$)           # (type, dir, file)
                         # s/-I ([^\s]+)/-i="$1"/g;
                             # gnuwin32 (gmake 3.x) quotes would be retained;
                             # this can not be guaranteed under an alt instance, for example gmake (4.x).
-                        s/-I([^\s]+)/-i=\$(subst \/,\\,$1)/g;
-                        s/-I ([^\s]+)/-i=\$(subst \/,\\,$1)/g;
+                        if (/\(RC\)/) {         # resource compiler (2024/01)
+                            s/-I([^\s]+)/-i="\$(subst \/,\\,$1)"/g;
+                            s/-I ([^\s]+)/-i="\$(subst \/,\\,$1)"/g;
+                        } else {
+                            s/-I([^\s]+)/-i=\$(subst \/,\\,$1)/g;
+                            s/-I ([^\s]+)/-i=\$(subst \/,\\,$1)/g;
+                        }
                     }
 
                     s/\$</\$(subst \/,\\,\$<)/;

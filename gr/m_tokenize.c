@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_tokenize_c,"$Id: m_tokenize.c,v 1.31 2024/12/06 15:46:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_tokenize_c,"$Id: m_tokenize.c,v 1.32 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_tokenize.c,v 1.31 2024/12/06 15:46:06 cvsuser Exp $
+/* $Id: m_tokenize.c,v 1.32 2025/02/07 03:03:21 cvsuser Exp $
  * String primitives.
  *
  *
@@ -84,18 +84,18 @@ struct tokenizer {
 #define tok_delete(_tok) \
     chk_free((_tok)->tk_buffer)
 
-static int              split_buffer(struct split *sp, const char *str, unsigned length);
+static int              split_buffer(struct split *sp, const char *str, size_t length);
 static int              split_isquote(struct split *sp, char ch);
 static int              split_isnumeric(char ch);
 
-static int              tokenize_buffer(struct tokenizer *tokens, const char *buffer, int length);
+static int              tokenize_buffer(struct tokenizer *tokens, const char *buffer, size_t length);
 static void             tok_initialise(struct tokenizer *tok, const char *delims, unsigned flags, const char *whitespace);
 static int              tok_escape(struct tokenizer *tok, const char **cursor);
 static char             tok_isquote(unsigned flags, const char ch);
 static int              tok_isnumeric(const struct tokenizer *tok, const char *cursor);
 static int              tok_iswhitespace(const struct tokenizer *tok, const char ch);
 static const char *     tok_triml(const struct tokenizer *tok, const char *cursor);
-static unsigned         tok_trimr(const struct tokenizer *tok, const char *buffer, unsigned length);
+static size_t           tok_trimr(const struct tokenizer *tok, const char *buffer, size_t length);
 
 
 /*  Function:           do_split
@@ -191,7 +191,7 @@ do_split(void)                  /* (string buffer, string|integer delims, [, int
                                         [, int noquoting = FALSE] [, int empties = FALSE] [, int limit = 0]) */
 {
     const char *buffer = get_str(1);            /* buffer */
-    int length = (buffer ? get_strlen(1) : 0);  /* and its associated length */
+    size_t length = (buffer ? get_strlen(1):0); /* and its associated length */
     const char *delims = get_xstr(2);           /* string|integer */
     int numerics = get_xinteger(3, FALSE);
     int noquoting = get_xinteger(4, FALSE);
@@ -203,7 +203,7 @@ do_split(void)                  /* (string buffer, string|integer delims, [, int
     /*
      *  delimiter as string or character/
      *      if specified as a character then empty columns shall be filtered
-     *      unless 'empties' is explicity stated.
+     *      unless 'empties' is explicitly stated.
      */
     if (NULL == delims) {                       /* allow (string|character) */
         const int xdelim = get_xcharacter(2);
@@ -268,7 +268,7 @@ do_split(void)                  /* (string buffer, string|integer delims, [, int
 
 
 static int
-split_buffer(struct split *sp, const char *str, unsigned length)
+split_buffer(struct split *sp, const char *str, size_t length)
 {
     const char *delims = sp->sp_delims;
     const unsigned numerics = sp->sp_numerics;
@@ -558,7 +558,7 @@ do_tokenize(void)               /* (string str, string delims, int flags = 0, [s
     const char def_whitespace[] = {' ', '\t', '\n', '\r', 0};
 
     const char *buffer = get_str(1);            /* string */
-    int length = (buffer ? get_strlen(1) : 0);  /* and its associated length */
+    size_t length = (buffer ? get_strlen(1):0); /* and its associated length */
     const char *delims = get_xstr(2);           /* delimiters (string|integer) */
     int flags = get_xinteger(3, 0);             /* flags */
     const char *whitespace = get_xstr(4);       /* optional whitespace character override */
@@ -593,7 +593,7 @@ do_tokenize(void)               /* (string str, string delims, int flags = 0, [s
     /*
      *  tokensize/
      *
-     *      XXX - optimise list usage, prealloc and extend verses two passes. Need to
+     *      XXX - optimise list usage, preallocate and extend verses two passes. Need to
      *      profile and determine best approach.  Preallocation mat also result in
      *      higher memory usage.
      */
@@ -625,7 +625,7 @@ do_tokenize(void)               /* (string str, string delims, int flags = 0, [s
 
 
 static int
-tokenize_buffer(struct tokenizer *tok, const char *buffer, int buflen)
+tokenize_buffer(struct tokenizer *tok, const char *buffer, size_t buflen)
 {
     const char *delims = tok->tk_delims;
     const unsigned flags = tok->tk_flags;
@@ -640,7 +640,7 @@ tokenize_buffer(struct tokenizer *tok, const char *buffer, int buflen)
     while (*cursor) {
         const char *start = cursor, *leading = cursor;
         int quoted_string = FALSE;
-        unsigned length;
+        size_t length;
         char quoting, ch;
 
         //  Consume leading whitespace (if required).
@@ -1059,8 +1059,8 @@ tok_triml(const struct tokenizer *tok, const char *cursor)
 
 
 /* right trim*/
-static unsigned
-tok_trimr(const struct tokenizer *tok, const char *buffer, unsigned length)
+static size_t
+tok_trimr(const struct tokenizer *tok, const char *buffer, size_t length)
 {
     const char *end = buffer + length;          /* end of string */
 
@@ -1118,7 +1118,7 @@ static int              ret_test_int(int argi, accint_t value);
 static int              ret_test_str(int argi, const char *value);
 
 LIST *
-lst_alloc(int length, int atoms) {
+lst_alloc(size_t length, int atoms) {
     assert(length > 0);
     assert(atoms >= 0);
     assert(length < sizeof(l_returns));
@@ -1232,7 +1232,7 @@ trace_log(const char *fmt, ...) {
 }
 
 LIST *
-atom_push_nstr(LIST *lp, const char *value, int length) {
+atom_push_nstr(LIST *lp, const char *value, size_t length) {
     struct ATOM *atoms = (struct ATOM *)lp;
     char *str;
 

@@ -1,11 +1,11 @@
 #ifndef GR_LIBMISC_H_INCLUDED
 #define GR_LIBMISC_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libmisc_h,"$Id: libmisc.h,v 1.23 2025/01/13 16:20:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_libmisc_h,"$Id: libmisc.h,v 1.24 2025/02/07 02:48:49 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: libmisc.h,v 1.23 2025/01/13 16:20:07 cvsuser Exp $
+/* $Id: libmisc.h,v 1.24 2025/02/07 02:48:49 cvsuser Exp $
  * libmisc - Miscellaneous library functions.
  *
  *
@@ -47,9 +47,12 @@ extern void                 memswap(void *a, void *b, size_t size);
 
 extern uint32_t             crc32_EDB88320(const void *data, size_t size, uint32_t crc32);
 
-typedef int (* sortcmpr_t)(void *thunk, const void *a, const void *b);
+typedef int (* sortcmpr_t)(const void *a, const void *b, void *thunk);
+typedef int (* osortcmpr_t)(void *thunk, const void *a, const void *b);
 typedef int (* sortcmp_t)(const void *a, const void *b);
 
+extern void                 bsd_qsort_r_compat(void *base, size_t nmemb, size_t size, osortcmpr_t cmp, void *thunk);
+extern int /*errno_t*/      bsd_qsort_s(void *a, size_t /*rsize_t*/ n, size_t /*rsize_t*/ es, sortcmpr_t cmp, void *thunk);
 extern void                 bsd_qsort_r(void *base, size_t nmemb, size_t size, void *thunk, sortcmpr_t cmp);
 extern void                 bsd_qsort(void *base, size_t nmemb, size_t size, sortcmp_t cmp);
 

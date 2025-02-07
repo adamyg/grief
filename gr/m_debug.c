@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_debug_c,"$Id: m_debug.c,v 1.41 2024/12/06 15:46:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_debug_c,"$Id: m_debug.c,v 1.42 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_debug.c,v 1.41 2024/12/06 15:46:06 cvsuser Exp $
+/* $Id: m_debug.c,v 1.42 2025/02/07 03:03:21 cvsuser Exp $
  * Debug primitives.
  *
  *
@@ -51,7 +51,7 @@ static int              x_debug_trap = TRUE;
 
 static const struct dbgflg {
     const char *        f_name;
-    int                 f_length;
+    size_t              f_length;
     int                 f_value;
 
 } x_dbgflgnames[] = {
@@ -75,7 +75,7 @@ static const struct dbgflg {
     };
 
 static int              flag_decode(int mode, const char *spec);
-static const struct dbgflg *flag_lookup(const char *name, int length);
+static const struct dbgflg *flag_lookup(const char *name, size_t length);
 
 
 /*  Function:           do_debug
@@ -312,7 +312,7 @@ flag_decode(int mode, const char *spec)
 
 
 static const struct dbgflg *
-flag_lookup(const char *name, int length)
+flag_lookup(const char *name, size_t length)
 {
     if (NULL != (name = str_trim(name, &length)) && length > 0) {
         unsigned i;

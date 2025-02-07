@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.18 2024/07/20 18:12:39 cvsuser Exp $
+# $Id: Makefile.in,v 1.19 2025/02/07 03:03:22 cvsuser Exp $
 # libonigrx - regular expression makefile.
 #
 #
@@ -123,7 +123,7 @@ RMFLAGS=	-f
 #########################################################################################
 # Targets
 
-ifeq ("yes","@ISWIN32@")
+ifeq (yes,$(findstring yes,"@ISWIN32@ or @ISWIN64@"))
 RELIB=		$(D_LIB)/$(LP)onigrx_static$(A)
 REDLL=		$(D_LIB)/$(LP)onigrx.la
 else
@@ -170,13 +170,13 @@ LIBOBJS+=\
 
 DLLOBJS=\
 	$(subst $(O),.lo,$(LIBOBJS))
-ifeq ("yes","@ISWIN32@")
+ifeq (yes,$(findstring yes,"@ISWIN32@ or @ISWIN64@"))
 DLLOBJS+=\
 	$(D_OBJ)/dllmain.lo
 endif
 OBJS=		$(LIBOBJS) $(UTILOBJS)
 LIBS=		$(RELIB)
-ifeq ("yes","@ISWIN32@")
+ifeq (yes,$(findstring yes,"@ISWIN32@ or @ISWIN64@"))
 LIBS+=		$(REDLL)
 endif
 TSKS=
@@ -200,7 +200,7 @@ $(RELIB):		$(D_OBJ)/.created $(D_OBJ)/enc/.created $(LIBOBJS)
 		$(AR) $(ARFLAGS) $@ $(LIBOBJS)
 		$(RANLIB) $@
 
-ifeq ("yes","@ISWIN32@")
+ifeq (yes,$(findstring yes,"@ISWIN32@ or @ISWIN64@"))
 XCLEAN +=	$(basename $(REDLL)).map
 $(REDLL):		MAPFILE=$(basename $@).map
 $(REDLL):		$(D_OBJ)/.created $(D_OBJ)/enc/.created $(DLLOBJS)
@@ -226,7 +226,7 @@ installinc:
 		-@mkdir $(@D)
 		@echo "do not delete, managed directory" > $@
 
-ifeq ("yes","@ISWIN32@")
+ifeq (yes,$(findstring yes,"@ISWIN32@ or @ISWIN64@"))
 clean:
 		-@$(LIBTOOL) --mode=clean $(RM) $(REDLL) $(DLLOBJS) $(QUIETOUT)
 		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(OBJS) $(CLEAN) $(XCLEAN) $(QUIETOUT)

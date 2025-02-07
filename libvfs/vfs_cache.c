@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_cache_c,"$Id: vfs_cache.c,v 1.17 2025/01/13 15:25:26 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_cache_c,"$Id: vfs_cache.c,v 1.18 2025/02/07 03:03:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_cache.c,v 1.17 2025/01/13 15:25:26 cvsuser Exp $
+/* $Id: vfs_cache.c,v 1.18 2025/02/07 03:03:23 cvsuser Exp $
  * Virtual file system interface - name cache
  *
  *      Names found by directory scans are retained in a cache for future reference.
@@ -142,7 +142,7 @@ vfs_cache_link(struct vfs_cache *cache, struct vfs_node *node, char *abspath)
         assert(NULL == node->v_cache);
 
         if (VNODE_DIR == node->v_type || VNODE_REG == node->v_type) {
-            unsigned abslen = strlen(abspath);
+            unsigned abslen = (unsigned)strlen(abspath);
 
             if (abslen && abslen < VFS_CACHEPATHLEN) {
                 cacherb_t *rb = &cache->c_tree;
@@ -208,7 +208,7 @@ vfs_cache_unlink(struct vfs_node *node)
         RB_REMOVE(cacherb, rb, node);
         TAILQ_REMOVE(lru, node, v_cachelru);
         --cache->c_elem;
-        cache->c_size -= strlen(node->v_cachename);
+        cache->c_size -= (unsigned)strlen(node->v_cachename);
         chk_free((char *)node->v_cachename);
         node->v_cachename = NULL;
         node->v_cachehash = 0;

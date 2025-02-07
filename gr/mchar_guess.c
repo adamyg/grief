@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mchar_guess_c,"$Id: mchar_guess.c,v 1.34 2025/01/13 15:12:17 cvsuser Exp $")
+__CIDENT_RCSID(gr_mchar_guess_c,"$Id: mchar_guess.c,v 1.35 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mchar_guess.c,v 1.34 2025/01/13 15:12:17 cvsuser Exp $
+/* $Id: mchar_guess.c,v 1.35 2025/02/07 03:03:21 cvsuser Exp $
  * Character-set conversion/file type guess logic.
  *
  *
@@ -531,7 +531,7 @@ char *
 mchar_guess_default(void)
 {
     const struct guessdecoder *decoder;
-    unsigned idx, len = 1;
+    size_t idx, len = 1;
     char *guess = NULL;
 
     for (idx = 0, decoder = x_guessdecoders; idx < X_GUESSDECODERS; ++idx, ++decoder) {
@@ -1204,7 +1204,8 @@ guess_marker(guessinfo_t *guess, const void *buffer, unsigned length)
     const unsigned char *cursor = buffer;
     const unsigned char *end = cursor + length;
     const char *marker = NULL;
-    int markerlen = 0, markers = 0;
+    unsigned markerlen = 0;
+    int markers = 0;
 
     if (markerchars(guess)) {
         /*
@@ -1229,7 +1230,7 @@ guess_marker(guessinfo_t *guess, const void *buffer, unsigned length)
         if (1 == markers) {                      /* lookup encoding */
             mcharcharsetinfo_t info;
 
-            trace_ilog("\t==> <%.*s>\n", markerlen, marker);
+            trace_ilog("\t==> <%.*s>\n", (int)markerlen, marker);
             if (mchar_info(&info, (const char *)marker, markerlen)) {
                 if (info.cs_type > 0) {
                     guess->gi_type = (BUFTYPE_t)info.cs_type;
@@ -1292,7 +1293,7 @@ static const void *
 markercheck(const void *text, const void *end, int *encodinglen)
 {
     /*
-     *  chedck and decode at embedded marker
+     *  check and decode at embedded marker
      */
     const unsigned char *buffer = text;
     const int lch = tolower(*buffer);
@@ -1338,7 +1339,7 @@ markercheck(const void *text, const void *end, int *encodinglen)
                     --cursor;
                 }
                 if (cursor > buffer) {          /* match */
-                    *encodinglen = cursor - buffer;
+                    *encodinglen = (int)(cursor - buffer);
                     return buffer;
                 }
             }
@@ -1824,7 +1825,7 @@ guess_bom(guessinfo_t *guess, const void *buffer, unsigned length)
 
         if (NULL != (magic = guess->gi_bommagic)) {
             guess->gi_endian = (SALT_BE & magic->salt ? 1 : 0);
-            setencoding(guess, magic->name, magic->namelen);
+            setencoding(guess, magic->name, (int)magic->namelen);
         } else {
             setencoding(guess, "unsupported", -1);
         }

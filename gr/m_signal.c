@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_signal_c,"$Id: m_signal.c,v 1.10 2024/12/06 15:46:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_signal_c,"$Id: m_signal.c,v 1.11 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_signal.c,v 1.10 2024/12/06 15:46:06 cvsuser Exp $
+/* $Id: m_signal.c,v 1.11 2025/02/07 03:03:21 cvsuser Exp $
  * Signal symbol primitives.
  *
  *
@@ -369,7 +369,7 @@ do_strsignal(void)              /* (int signo, [string &manifest], [int multi = 
         argv_assign_str(2, tag ? tag : "SIGUNKNOWN");
         chk_free(buf);
     }
-    acc_assign_str(str_signal(xsignal), -1);
+    acc_assign_str(str_signal(xsignal));
 }
 
 

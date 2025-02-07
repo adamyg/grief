@@ -1,11 +1,11 @@
 #ifndef GR_VFS_VOPS_H_INCLUDED
 #define GR_VFS_VOPS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_vops_h,"$Id: vfs_vops.h,v 1.15 2025/01/13 15:25:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_vops_h,"$Id: vfs_vops.h,v 1.16 2025/02/07 03:03:23 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_vops.h,v 1.15 2025/01/13 15:25:27 cvsuser Exp $
+/* $Id: vfs_vops.h,v 1.16 2025/02/07 03:03:23 cvsuser Exp $
  * Virtual File System Interface -- ops.
  *
  *
@@ -103,8 +103,8 @@ struct vfs_implementation {
 
     int                     (* i_open)(struct vfs_mount *vfs, const char *fname, int flags, int mode);
     int                     (* i_close)(struct vfs_handle *handle);
-    int                     (* i_read)(struct vfs_handle *handle, void *buffer, unsigned count);
-    int                     (* i_write)(struct vfs_handle *handle, const void *buffer, unsigned count);
+    int                     (* i_read)(struct vfs_handle *handle, void *buffer, size_t count);
+    int                     (* i_write)(struct vfs_handle *handle, const void *buffer, size_t count);
     int                     (* i_seek)(struct vfs_handle *handle, off_t offset, int whence);
     off_t                   (* i_tell)(struct vfs_handle *handle);
     int                     (* i_ioctl)(struct vfs_handle *handle, int op, void *data);

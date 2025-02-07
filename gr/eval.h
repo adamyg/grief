@@ -1,11 +1,11 @@
 #ifndef GR_EVAL_H_INCLUDED
 #define GR_EVAL_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_eval_h,"$Id: eval.h,v 1.20 2020/04/21 00:01:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_eval_h,"$Id: eval.h,v 1.21 2025/02/07 03:03:21 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: eval.h,v 1.20 2020/04/21 00:01:55 cvsuser Exp $
+/* $Id: eval.h,v 1.21 2025/02/07 03:03:21 cvsuser Exp $
  * Expression evaluation.
  *
  *
@@ -44,7 +44,7 @@ extern int                  isa_list(int argi);
 
 extern const char *         get_str(int argi);
 extern const char *         get_xstr(int argi);
-extern int                  get_strlen(int argi);
+extern size_t               get_strlen(int argi);
 extern int                  get_xcharacter(int argi);
 extern int                  get_integer(int argi);
 extern int                  get_xinteger(int argi, int undef);
@@ -53,7 +53,7 @@ extern accint_t             get_xaccint(int argi, accint_t undef);
 extern accfloat_t           get_accfloat(int argi);
 extern accfloat_t           get_xaccfloat(int argi, accfloat_t undef);
 extern const LIST *         get_list(int argi);
-extern int                  get_listlen(int argi);
+extern size_t               get_listlen(int argi);
 extern const LIST *         get_xlist(int argi);
 extern SYMBOL *             get_symbol(int argi);
 

@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bsd_glob_c,"$Id: bsd_glob.c,v 1.8 2021/04/05 08:13:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_bsd_glob_c,"$Id: bsd_glob.c,v 1.9 2025/02/07 02:48:37 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -893,7 +893,7 @@ globextend(const Char *path, glob_t *pglob, struct glob_lim *limitp, struct stat
 	len = (size_t)(p - path);
 	limitp->glim_malloc += len;
 	if ((copy = malloc(len)) != NULL) {
-		if (g_Ctoc(path, copy, len)) {
+		if (g_Ctoc(path, copy, (u_int)len)) {
 			free(copy);
 			return(GLOB_NOSPACE);
 		}

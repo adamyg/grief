@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_userprofile_c,"$Id: m_userprofile.c,v 1.14 2024/12/05 19:00:11 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_userprofile_c,"$Id: m_userprofile.c,v 1.15 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_userprofile.c,v 1.14 2024/12/05 19:00:11 cvsuser Exp $
+/* $Id: m_userprofile.c,v 1.15 2025/02/07 03:03:21 cvsuser Exp $
  * User profile primitives.
  *
  *
@@ -43,8 +43,8 @@ __CIDENT_RCSID(gr_m_userprofile_c,"$Id: m_userprofile.c,v 1.14 2024/12/05 19:00:
 #pragma comment(lib, "shfolder.lib")
 
 static const char *     getprofilepath(const char *application, const char *dir, char *buffer, const int buflen);
-static int              profileaccess(char *buffer, int buflen, int leading, const char *application, const char *subdir);
-static int              exepath(char *buf, int maxlen);
+static BOOL             profileaccess(char *buffer, size_t buflen, size_t leading, const char *application, const char *subdir);
+static size_t           exepath(char *buf, size_t maxlen);
 static char *           unixpath(char *path);
 #endif
 
@@ -101,7 +101,7 @@ static char *           unixpath(char *path);
 void
 inq_profile(void)               /* string () */
 {
-    acc_assign_str(userprofile(), -1);
+    acc_assign_str(userprofile());
 }
 
 
@@ -158,7 +158,7 @@ userprofile(void)
 static const char *
 getprofilepath(const char *application, const char *dir, char *buffer, const int buflen)
 {
-    int len;
+    size_t len;
 
     // CSIDL_APPDATA
     buffer[0] = 0;
@@ -224,8 +224,8 @@ getprofilepath(const char *application, const char *dir, char *buffer, const int
 }
 
 
-static int
-profileaccess(char *buffer, int buflen, int leading, const char *application, const char *subdir)
+static BOOL
+profileaccess(char *buffer, size_t buflen, size_t leading, const char *application, const char *subdir)
 {
     (void) _snprintf(buffer + leading, buflen - leading, "/%s%s%s",
                 (application ? application : ""), (application ? "/" : ""), (subdir ? subdir : ""));
@@ -247,11 +247,11 @@ profileaccess(char *buffer, int buflen, int leading, const char *application, co
 }
 
 
-static int
-exepath(char *buf, int maxlen)
+static size_t
+exepath(char *buf, size_t maxlen)
 {
-    if (GetModuleFileNameA(NULL, buf, maxlen)) {
-        const int len = strlen(buf);
+    if (GetModuleFileNameA(NULL, buf, (DWORD)maxlen)) {
+        const size_t len = strlen(buf);
         char *cp;
 
         for (cp = buf + len; (cp > buf) && (*cp != '\\') && (*cp != '/'); --cp) {
@@ -259,11 +259,11 @@ exepath(char *buf, int maxlen)
         }
         if ('\\' == *cp || '/' == *cp) {
             cp[1] = '\0';                       // remove program
-            return (cp - buf) + 1;
+            return (int)((cp - buf) + 1);
         }
         return len;
     }
-    return -1;
+    return 0;
 }
 
 

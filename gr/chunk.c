@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_chunk_c,"$Id: chunk.c,v 1.25 2025/01/13 15:12:17 cvsuser Exp $")
+__CIDENT_RCSID(gr_chunk_c,"$Id: chunk.c,v 1.26 2025/02/07 03:03:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: chunk.c,v 1.25 2025/01/13 15:12:17 cvsuser Exp $
+/* $Id: chunk.c,v 1.26 2025/02/07 03:03:20 cvsuser Exp $
  * Buffer chunk implementation.
  *
  *
@@ -181,7 +181,7 @@ chunk_new(BUFFER_t *bp, size_t size, void **chunkp)
     chunk->c_magic  = BUFFERCHUNK_MAGIC;
     chunk->c_magic2 = BUFFERCHUNK_MAGIC;
     chunk->c_ident  = ++bp->b_chunk_ident;
-    chunk->c_size   = size;
+    chunk->c_size   = (uint32_t)size;
     chunk->c_refers = 0;
     chunk->c_buffer = bp;
 

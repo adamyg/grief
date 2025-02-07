@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.91 2024/12/13 14:25:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_display_c,"$Id: display.c,v 1.92 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: display.c,v 1.91 2024/12/13 14:25:37 cvsuser Exp $
+/* $Id: display.c,v 1.92 2025/02/07 03:03:21 cvsuser Exp $
  * High level display interface.
  *
  *
@@ -1487,7 +1487,7 @@ vtwindow(WINDOW_t *wp)
 
     /*
      *  Outside current display arena, reposition the window,
-     *      attempt to keep the cursor stationary (ie. relative to top_line)
+     *      attempt to keep the cursor stationary (IE. relative to top_line)
      *      obey minrow settings force a refresh.
      */
     } else if (line < (top_line + minrows) || line > (bottom_line - minrows)) {
@@ -1537,7 +1537,7 @@ vtwindow(WINDOW_t *wp)
     /*
      *  Line insertion.
      */
-    } else if (WFINSL == (status & (WFINSL|WFHARD))) {
+    } else if (WFINSL == (status & (WFINSL|WFHARD)) && bp) {
         /*
          *  case of user hitting <Enter>.
          *
@@ -1547,7 +1547,7 @@ vtwindow(WINDOW_t *wp)
         const LINENO relative = line - top_line;
 
         if (wp->w_maxed == (wp->w_mined + 1) && 0 == left_offset && relative > 0 &&
-                wp->w_line + (wp->w_h / 3) <= wp->w_bufp->b_numlines && relative < (wp->w_h * 3) / 4 &&
+                wp->w_line + (wp->w_h / 3) <= bp->b_numlines && relative < (wp->w_h * 3) / 4 &&
                 FULLSCREEN() && ttinsl(top + relative, bottom, 1, nattr)) {
             const int ins = top + relative;
 
@@ -1950,8 +1950,8 @@ uline(const int row, const VCELL_t *vvp, VCELL_t *pvp, int eflag)
     }
     ++rightv, ++bp;
 
-    left  = leftv - vvp;
-    right = rightv - vvp;
+    left = (int)(leftv - vvp);
+    right = (int)(rightv - vvp);
 
     assert(left  >= 0);
     assert(right <= cols);
@@ -2818,7 +2818,7 @@ draw_window(WINDOW_t *wp, int top, LINENO line, int end, const int bottom, int a
 
                     /* flush results */
                     if (lbuffer != p) {
-                        draw_line(lattr, lattr, lbuffer, NULL, p - lbuffer, DL_BASECMAP);
+                        draw_line(lattr, lattr, lbuffer, NULL, (int)(p - lbuffer), DL_BASECMAP);
                     }
                 }
 
@@ -3949,7 +3949,7 @@ ansidecode(const LINECHAR *cp, const LINECHAR *end, vbyte_t *color, unsigned *fl
                 }
 
                 *flags = (unsigned) nflags;
-                return (cp - start) + 1;
+                return (int)((cp - start) + 1);
 
             } else {
                 break;                          /* other, exit */

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_main_cpp,"$Id: main.cpp,v 1.17 2022/06/13 13:14:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_main_cpp,"$Id: main.cpp,v 1.18 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: cpp; indent-width: 4; -*- */
-/* $Id: main.cpp,v 1.17 2022/06/13 13:14:07 cvsuser Exp $
+/* $Id: main.cpp,v 1.18 2025/02/07 03:03:21 cvsuser Exp $
  * main(), address c/c++ linkage for several environments.
  * Regardless of configuration force binding to the C++ runtime library.
  *
@@ -99,6 +99,8 @@ main(int argc, char **argv)
     }
 
     std::set_terminate(cpp_terminate);
+    cpp_linkage(NULL);
+
     return cmain(argc, argv);
 }
 
@@ -107,7 +109,7 @@ void
 cpp_linkage(const char *str)
 {
     std::ostream *out = &std::cout;
-    *out << str;
+    if (str) *out << str;
 }
 
 /*end*/

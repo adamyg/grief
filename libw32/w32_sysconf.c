@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_sysconf_c,"$Id: w32_sysconf.c,v 1.1 2022/07/08 14:01:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_sysconf_c,"$Id: w32_sysconf.c,v 1.2 2025/02/03 02:27:36 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 interface support
  *
- * Copyright (c) 2021 - 2022 Adam Young.
+ * Copyright (c) 2021 - 2025 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

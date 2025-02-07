@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_lookup_c,"$Id: vfs_lookup.c,v 1.17 2025/01/13 15:25:26 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_lookup_c,"$Id: vfs_lookup.c,v 1.18 2025/02/07 03:03:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_lookup.c,v 1.17 2025/01/13 15:25:26 cvsuser Exp $
+/* $Id: vfs_lookup.c,v 1.18 2025/02/07 03:03:23 cvsuser Exp $
  * Virtual file system interface - node management.
  *
  *
@@ -230,7 +230,7 @@ dirloop:;
     for (cursor = name; *cursor && !VFS_ISSEP(*cursor); ++cursor) {
         ++namlen;
     }
-    if ((namlen = cursor - lk->l_cursor) > VFS_MAXNAME) {
+    if ((namlen = (unsigned)(cursor - lk->l_cursor)) > VFS_MAXNAME) {
         error = ENAMETOOLONG;
         goto bad;
     }

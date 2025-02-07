@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_language_c,"$Id: language.c,v 1.53 2025/01/10 16:51:44 cvsuser Exp $")
+__CIDENT_RCSID(gr_language_c,"$Id: language.c,v 1.54 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: language.c,v 1.53 2025/01/10 16:51:44 cvsuser Exp $
+/* $Id: language.c,v 1.54 2025/02/07 03:03:21 cvsuser Exp $
  * Module loader and inline compiler for lisp source.
  *
  *
@@ -1086,7 +1086,7 @@ gr_include(const char *cp)
     s2 = strrchr(fp_hdr->name, '\\');
     if (s1 || s2) {
         const int pathlen =                     /* length of leading path */
-            ((s1 > s2 ? s1 : s2) - fp_hdr->name) + 1;
+            (int)(((s1 > s2 ? s1 : s2) - fp_hdr->name) + 1);
 
         strxcpy(buf, (const char *)fp_hdr->name, sizeof(buf));
         strxcpy(buf + pathlen, (const char *)incfile, sizeof(buf) - pathlen);

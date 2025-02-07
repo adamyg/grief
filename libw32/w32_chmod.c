@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_chmod_c,"$Id: w32_chmod.c,v 1.3 2024/03/31 15:57:25 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_chmod_c,"$Id: w32_chmod.c,v 1.4 2025/02/03 02:27:35 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 chmod() system calls.
  *
- * Copyright (c) 2020 - 2024 Adam Young.
+ * Copyright (c) 2020 - 2025 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *

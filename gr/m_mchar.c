@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_mchar_c,"$Id: m_mchar.c,v 1.15 2021/07/05 15:01:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_mchar_c,"$Id: m_mchar.c,v 1.16 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_mchar.c,v 1.15 2021/07/05 15:01:27 cvsuser Exp $
+/* $Id: m_mchar.c,v 1.16 2025/02/07 03:03:21 cvsuser Exp $
  * Multibyte/locale primitives.
  *
  *
@@ -262,7 +262,7 @@ inq_encoding(void)              /* string ([int bufnum]) */
 {
     const BUFFER_t *bp = buf_argument(1);
 
-    acc_assign_str(bp && bp->b_encoding ? bp->b_encoding : "", -1);
+    acc_assign_str(bp && bp->b_encoding ? bp->b_encoding : "");
 }
 
 
@@ -339,7 +339,7 @@ do_set_unicode_version(void)
 void
 inq_unicode_version(void)
 {
-    acc_assign_str(ucs_width_version(), -1);
+    acc_assign_str(ucs_width_version());
 }
 
 /*end*/

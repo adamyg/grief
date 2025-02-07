@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_accum_c,"$Id: accum.c,v 1.38 2024/07/21 07:34:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_accum_c,"$Id: accum.c,v 1.39 2025/02/07 03:03:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: accum.c,v 1.38 2024/07/21 07:34:57 cvsuser Exp $
+/* $Id: accum.c,v 1.39 2025/02/07 03:03:20 cvsuser Exp $
  * Accumulator manipulating.
  *
  *
@@ -65,7 +65,7 @@ typedef struct accumulator {
 } accumulator_t;
 
 static __CINLINE void           acc_zap(void);
-static __CINLINE void           acc_size(int len);
+static __CINLINE void           acc_size(size_t len);
 
 static accumulator_t __CCACHEALIGN accum = {    /* global accumulator */
         F_INT
@@ -85,11 +85,10 @@ static accumulator_t __CCACHEALIGN accum = {    /* global accumulator */
  *      Expand the accumulator (if needed) to accomdate at least 'len' bytes.
  */
 void *
-acc_expand(int len)
+acc_expand(size_t len)
 {
-    assert(len >= 0);
     acc_zap();
-    if ((unsigned)len >= accum.ac_memlen)  {
+    if (len >= accum.ac_memlen) {
         accum.ac_memlen = (len | ACC_ALLOCROUND) + 1;
         accum.ac_memptr = chk_realloc(accum.ac_memptr, accum.ac_memlen);
     }
@@ -104,10 +103,8 @@ acc_expand(int len)
  *      Size the accumulator to accomdate 'len' bytes.
  */
 static __CINLINE void
-acc_size(int len)
+acc_size(size_t len)
 {
-    assert(len >= 0);
-
 #if !defined(NDEBUG)
     if ((DB_PURIFY|DB_MEMORY) & x_dflags) {
         /*
@@ -123,7 +120,7 @@ acc_size(int len)
     /*
      *  Reallocate if needed.
      */
-    if ((unsigned)len > accum.ac_memlen) {
+    if (len > accum.ac_memlen) {
         void *ptr;
 
         accum.ac_memlen = (len | ACC_ALLOCROUND) + 1;
@@ -227,10 +224,9 @@ acc_assign_lit(const char *str)
  *      Assign a string to the accumulator.
  */
 void
-acc_assign_str(const char *str, int len)
+acc_assign_nstr(const char *str, size_t len)
 {
     acc_zap();
-    if (len < 0) len = (int)strlen(str);
     acc_size(len + 1);
     accum.ac_sval = accum.ac_memptr;
     memmove(accum.ac_sval, str, (size_t)len);
@@ -239,16 +235,21 @@ acc_assign_str(const char *str, int len)
     ED_ACCTRACE(("acc_assign_str()"))
 }
 
+void
+acc_assign_str(const char *str)
+{
+    acc_assign_nstr(str, strlen(str));
+}
+
 
 /*
  *  acc_assign_strlen ---
  *      Assign the length of the accumulator, excluding NUL.
  */
 void
-acc_assign_strlen(int len)
+acc_assign_strlen(size_t len)
 {
-    assert(len >= 0);
-    assert(len < (int)accum.ac_memlen);
+    assert(len < accum.ac_memlen);
     assert(F_NULL == accum.ac_type);            /* assigned by acc_expand() */
     accum.ac_sval = accum.ac_memptr;
     accum.ac_type = F_STR;
@@ -259,17 +260,16 @@ acc_assign_strlen(int len)
 
 /*
  *  acc_assign_str2 ---
- *      Concat and assign the two strings to the accumulator. If either length
- *      is less then zero, then we need to perform a strlen() on the string.
+ *      Concatenate and assign the two strings to the accumulator.
  */
 void
-acc_assign_str2(const char *str1, int len1, const char *str2, int len2)
+acc_assign_str2(const char *str1, size_t len1, const char *str2, size_t len2)
 {
-    int len;
+    size_t len;
 
     acc_zap();
-    if (len1 < 0) len1 = (int)strlen(str1);
-    if (len2 < 0) len2 = (int)strlen(str2);
+        // if (len1 < 0) len1 = strlen(str1);
+        // if (len2 < 0) len2 = strlen(str2);
     len = len1 + len2;
     acc_size(len + 1);
     accum.ac_sval = accum.ac_memptr;
@@ -297,7 +297,7 @@ acc_assign_argv(const LISTV *lvp)
         break;
     case F_LIT:
     case F_STR:
-        acc_assign_str(lvp->l_str, -1);
+        acc_assign_str(lvp->l_str);
         break;
     case F_RSTR:
     case F_RLIST:
@@ -337,7 +337,7 @@ acc_assign_ref(ref_t *rp)
  *      Assign a list to the accumulator.
  */
 void
-acc_assign_list(const LIST *lp, int llen)
+acc_assign_list(const LIST *lp, size_t llen)
 {
     acc_zap();
     accum.ac_rval = rlst_build(lp, llen);
@@ -352,17 +352,14 @@ acc_assign_list(const LIST *lp, int llen)
  *      list so we don't need to allocate any more memory to it
  */
 void
-acc_donate_list(LIST *lp, int llen)
+acc_donate_list(LIST *lp, size_t llen)
 {
+    __CIFDEBUG(size_t t_llen = lst_length(lp);)
+    assert(llen == t_llen);
+
     acc_zap();
     lst_check(lp);
-    if (-1 == llen) {
-        llen = lst_length(lp);
-    } else {
-        __CIFDEBUG(int t_llen = lst_length(lp);)
-        assert(llen == t_llen);
-    }
-    accum.ac_rval = rlst_create(lp, llen);
+    accum.ac_rval = rlst_create(lp, (int)llen);
     accum.ac_type = F_RLIST;
     ED_ACCTRACE(("acc_donate_list()"))
 }
@@ -399,7 +396,7 @@ acc_assign_object(object_t *obj)
         break;
     case F_LIT:
     case F_STR:
-        acc_assign_str(obj_get_sval(obj), -1);
+        acc_assign_str(obj_get_sval(obj));
         break;
     case F_RSTR:
     case F_RLIST:
@@ -502,7 +499,7 @@ acc_get_sbuf(void)
 {
     switch (accum.ac_type) {
     case F_LIT:
-        acc_assign_str(accum.ac_lval, -1);
+        acc_assign_str(accum.ac_lval);
         return accum.ac_sval;
     case F_STR:
         return accum.ac_sval;
@@ -510,7 +507,7 @@ acc_get_sbuf(void)
         if (1 == r_refs(accum.ac_rval)) {
             return r_ptr(accum.ac_rval);
         }
-        acc_assign_str(r_ptr(accum.ac_rval), r_used(accum.ac_rval));
+        acc_assign_nstr(r_ptr(accum.ac_rval), (size_t)r_used(accum.ac_rval));
         return accum.ac_sval;
     default:
         break;
@@ -553,7 +550,7 @@ acc_trace(void)
             trace_ilog("  sACC='%s'\n", c_string(accum.ac_sval));
             break;
         case F_RSTR:
-            trace_ilog("  SACC%d='%s'\n", r_refs(accum.ac_rval), c_string(r_ptr(accum.ac_rval)));
+            trace_ilog("  SACC%u='%s'\n", (unsigned)r_refs(accum.ac_rval), c_string(r_ptr(accum.ac_rval)));
             break;
         case F_RLIST:
             trace_ilog("  LACC=");

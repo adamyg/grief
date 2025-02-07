@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.29 2024/11/29 11:51:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_terminal_c,"$Id: m_terminal.c,v 1.30 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_terminal.c,v 1.29 2024/11/29 11:51:58 cvsuser Exp $
+/* $Id: m_terminal.c,v 1.30 2025/02/07 03:03:21 cvsuser Exp $
  * Terminal screen and keyboard primitives.
  *
  *
@@ -1094,7 +1094,7 @@ set_term_assign(struct pt_map *p, const LISTV *result)
                     sval[0] = (char) ivalue;
                     sval[1] = 0;
                 } else {
-                    ttstringcopy(sval, p->len-1, svalue, '\0');
+                    ttstringcopy(sval, (int)(p->len-1), svalue, '\0');
                 }
                 trace_ilog("  %s=%s\n", p->desc, sval);
             }
@@ -1274,7 +1274,7 @@ do_set_term_keyboard(void)      /* (list def) */
         }
 
         lp = nextlp;
-        keyno = result.l_int;
+        keyno = (int)result.l_int;
         type = eval(lp, &result);
         switch (type) {
         case F_LIST:

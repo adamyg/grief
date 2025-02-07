@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_register_c,"$Id: register.c,v 1.32 2025/01/17 12:38:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_register_c,"$Id: register.c,v 1.33 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: register.c,v 1.32 2025/01/17 12:38:29 cvsuser Exp $
+/* $Id: register.c,v 1.33 2025/02/07 03:03:22 cvsuser Exp $
  * Event handlers.
  *
  *
@@ -413,7 +413,7 @@ register_ident(void)
         errorf("%s: invalid parameters.", execute_name());
         return -1;
     }
-    return type;
+    return (int)type;
 }
 
 
@@ -553,7 +553,7 @@ triggerx(int type, const char *fmt, ...)
             //      invoked the keystroke awaiting is the invalid key.
             */
             execute_str(_invalid_key);
-            return acc_get_ival();
+            return (int)acc_get_ival();
         }
 
     } else if (REG_TYPED == type) {
@@ -617,7 +617,7 @@ triggerx(int type, const char *fmt, ...)
         check_exit();
     }
 
-    return acc_get_ival();
+    return (int)acc_get_ival();
 }
 
 

@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: cr.cr,v 1.17 2024/06/09 04:10:46 cvsuser Exp $
+/* $Id: cr.cr,v 1.18 2024/07/30 16:29:20 cvsuser Exp $
  * GRIEF/Crisp syntax definition mode.
  *
  *
@@ -32,7 +32,8 @@ main(void)
     syntax_token(SYNT_LINECONT,     "\\");
     syntax_token(SYNT_PREPROCESSOR, "#");
     syntax_token(SYNT_BRACKET,      "([{", ")]}");
-    syntax_token(SYNT_WORD,         "0-9a-zA-Z_");
+    syntax_token(SYNT_KEYWORD,      "a-zA-Z_", "0-9a-zA-Z_");
+    syntax_token(SYNT_WORD,         "a-zA-Z_");
 
     /*
      *  Options/

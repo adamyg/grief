@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.48 2024/04/07 06:14:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.50 2025/02/07 02:52:45 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -7,7 +7,7 @@ __CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.48 2024/04/07 06:14:01 cvsuser Exp
  *
  *      stat, lstat, fstat, readlink, symlink, open
  *
- * Copyright (c) 2007, 2012 - 2024 Adam Young.
+ * Copyright (c) 2007, 2012 - 2025 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -231,7 +231,7 @@ w32_HTOI(HANDLE handle)
 #pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
 #endif
 #if defined(_WIN32) && (_MSC_VER >= 1700)
-    // note: sage to convert HANDLES 64 to 32; only lower 32-bits are used.
+    // note: safe to convert HANDLES 64 to 32; only lower 32-bits are used.
     assert((0xffffffff00000000LLU & (uint64_t)handle) == 0 || handle == INVALID_HANDLE_VALUE);
 #pragma warning(disable:4311)
 #endif

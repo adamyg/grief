@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_fileio_c,"$Id: m_fileio.c,v 1.21 2025/01/13 15:12:17 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_fileio_c,"$Id: m_fileio.c,v 1.22 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_fileio.c,v 1.21 2025/01/13 15:12:17 cvsuser Exp $
+/* $Id: m_fileio.c,v 1.22 2025/02/07 03:03:21 cvsuser Exp $
  * File i/o primitives.
  *
  *
@@ -155,11 +155,7 @@ importflags(const char *flags)
         while (*flags) {
             switch (*flags) {
             case '+':
-                if (nflags & O_RDONLY) {        /* r+ - read/write */
-                    nflags &= ~O_RDONLY;
-                    nflags |= O_RDWR;
-
-                } else if (nflags & O_WRONLY) {
+                if (nflags & O_WRONLY) {
                     if (nflags & O_APPEND) {    /* a+ - append for writing and reading */
                         nflags &= ~O_WRONLY;
                         nflags |= O_RDWR;
@@ -168,6 +164,17 @@ importflags(const char *flags)
                         nflags &= ~O_WRONLY;
                         nflags |= O_RDWR|O_TRUNC;
                     }
+#if (O_RDONLY)  // non-zero
+                } else if (nflags & O_RDONLY) {
+#elif (O_RDWR)  // non-zero
+                } else if (0 == (nflags & O_RDWR)) {
+                    nflags &= ~O_RDONLY;        /* r+ - read/write */
+                    nflags |= O_RDWR;
+#else
+#error unexpected O_RDONLY and O_RDWR values
+#endif
+                    nflags &= ~O_RDONLY;
+                    nflags |= O_RDWR;
                 }
                 break;
             case 'b':
@@ -451,7 +458,7 @@ do_fwrite(void)                 /* (int handle, string buffer, [int length]) */
 {
     int handle = get_xinteger(1, -1);
     const char *buffer = get_str(2);
-    int bufsize = get_strlen(2);                /* FIXME - UTF encoding and NUL's are an issue */
+    accint_t bufsize = get_strlen(2);           /* FIXME - UTF encoding and NUL's are an issue */
   /*int length = get_xinteger(3, -1);*/
     int ret = -1;
 

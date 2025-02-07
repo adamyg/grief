@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntaxdfa_c,"$Id: syntaxdfa.c,v 1.39 2025/01/13 15:12:17 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntaxdfa_c,"$Id: syntaxdfa.c,v 1.40 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntaxdfa.c,v 1.39 2025/01/13 15:12:17 cvsuser Exp $
+/* $Id: syntaxdfa.c,v 1.40 2025/02/07 03:03:22 cvsuser Exp $
  * Deterministic Finite Automata (DFA) based syntax highlighting.
  *
  *
@@ -72,17 +72,17 @@ typedef struct {
     struct dfarule          dfa_rules[DFARULES_MAX];
 } SyntaxDFA_t;
 
-static const struct hloption *  hloption_lookup(const char *name, int length);
+static const struct hloption *  hloption_lookup(const char *name, size_t length);
 
 static int                      syndfa_select(SyntaxTable_t *st, void *object);
 static void                     syndfa_destroy(SyntaxTable_t *st, void *object);
 static const LINECHAR *         syndfa_regex(SyntaxTable_t *st, const SyntaxDFA_t *dfa, const struct dfastate *state,
-                                        int normal, unsigned offset, int *rvalue, const LINECHAR *cursor, const LINECHAR *end);
+                                        int normal, size_t offset, int *rvalue, const LINECHAR *cursor, const LINECHAR *end);
 static int                      syndfa_write(SyntaxTable_t *st, void *object, const LINECHAR *cursor, unsigned offset, const LINECHAR *end);
 static SyntaxDFA_t *            syndfa_resolve(int argi, int create, SyntaxTable_t **st);
-static void                     syndfa_rule(SyntaxDFA_t *syntax, const char *pattern, const char *name, int namelen,
-                                        const char *group, int grouplen, const char *contains, int containslen, unsigned flags, int colour);
-static struct dfarule *         syndfa_find(SyntaxDFA_t *syntax, const char *name, int namelen);
+static void                     syndfa_rule(SyntaxDFA_t *syntax, const char *pattern, const char *name, size_t namelen,
+                                        const char *group, size_t grouplen, const char *contains, size_t containslen, unsigned flags, int colour);
+static struct dfarule *         syndfa_find(SyntaxDFA_t *syntax, const char *name, size_t namelen);
 static void                     syndfa_make(SyntaxDFA_t *syntax);
 static struct dfastate *        syndfa_group(SyntaxDFA_t *syntax, const char *group);
 
@@ -443,7 +443,7 @@ do_syntax_rule(void)            /* void (string pattern, string attribute, [int|
     if (NULL != (syntax = syndfa_resolve(3, 1, NULL)) && !syntax->dfa_built) {
         const char *end, *cursor = attribute;
         const char *name = NULL, *group = NULL, *contains = NULL;
-        int namelen = 0, grouplen = 0, containslen = 0;
+        size_t namelen = 0, grouplen = 0, containslen = 0;
 
         /*
          *  determine end of options, allowing embedded strings.
@@ -473,7 +473,7 @@ do_syntax_rule(void)            /* void (string pattern, string attribute, [int|
             while (cursor < end) {
                 const char *delim = strchr(cursor, ','),
                         *argument = strchr(cursor, '=');
-                int length, arglength = 0;
+                size_t length, arglength = 0;
 
                 if (NULL == delim) delim = end;
                 if (argument > delim) argument = NULL;
@@ -520,14 +520,14 @@ do_syntax_rule(void)            /* void (string pattern, string attribute, [int|
                                 }
 
                             } else {
-                                errorf("syntaxdfa: missing option argument '%.*s'", length, cursor);
+                                errorf("syntaxdfa: missing option argument '%.*s'", (int)length, cursor);
                                 flags |= FLAG_ERROR;
                             }
                         }
                         flags |= flag;
 
                     } else {
-                        errorf("syntaxdfa: unknown attribute option '%.*s'", length, cursor);
+                        errorf("syntaxdfa: unknown attribute option '%.*s'", (int)length, cursor);
                         flags |= FLAG_ERROR;
                     }
                 }
@@ -555,13 +555,13 @@ do_syntax_rule(void)            /* void (string pattern, string attribute, [int|
 
 
 static const struct hloption *
-hloption_lookup(const char *name, int length)
+hloption_lookup(const char *name, size_t length)
 {
     if (NULL != (name = str_trim(name, &length)) && length > 0) {
         unsigned i;
 
         for (i = 0; i < (unsigned)(sizeof(hiliteoptions)/sizeof(hiliteoptions[0])); ++i)
-            if (length == (int)hiliteoptions[i].f_length &&
+            if (length == hiliteoptions[i].f_length &&
                     0 == str_nicmp(hiliteoptions[i].f_name, name, length)) {
                 return hiliteoptions + i;
             }
@@ -708,7 +708,7 @@ syndfa_writex(SyntaxTable_t *st, const struct dfarule *rule,
 
 static const LINECHAR *
 syndfa_regex(SyntaxTable_t *st, const SyntaxDFA_t *dfa, const struct dfastate *state,
-        int normal, unsigned offset, int *preproc, const LINECHAR *cursor, const LINECHAR *end)
+        int normal, size_t offset, int *preproc, const LINECHAR *cursor, const LINECHAR *end)
 {
     const LINECHAR *ocursor = cursor, *nomatch = NULL;
     int ispreproc = *preproc;                   /* TODO -- promote to 2 */
@@ -918,8 +918,8 @@ syndfa_resolve(int argi, int create, SyntaxTable_t **stp)
 
 
 static void
-syndfa_rule(SyntaxDFA_t *syntax, const char *pattern, const char *name, int namelen,
-        const char *group, int grouplen, const char *contains, int containslen, unsigned flags, int colour)
+syndfa_rule(SyntaxDFA_t *syntax, const char *pattern, const char *name, size_t namelen,
+        const char *group, size_t grouplen, const char *contains, size_t containslen, unsigned flags, int colour)
 {
     const int idx = syntax->dfa_count;
     struct dfarule *rule = syntax->dfa_rules + idx;
@@ -935,14 +935,14 @@ syndfa_rule(SyntaxDFA_t *syntax, const char *pattern, const char *name, int name
             errorf("syntaxdfa: contains must be named.");
             return;
         } else if (NULL != contains) {
-            errorf("syntaxdfa: child '%.*s' cannot also be a parent.", namelen, name);
+            errorf("syntaxdfa: child '%.*s' cannot also be a parent.", (int)namelen, name);
             return;
         }
     }
 
     if (name) {
         if (syndfa_find(syntax, name, namelen)) {
-            errorf("syntaxdfa: rule '%.*s' must be unique", namelen, name);
+            errorf("syntaxdfa: rule '%.*s' must be unique", (int)namelen, name);
             return;
         }
     }
@@ -957,7 +957,7 @@ syndfa_rule(SyntaxDFA_t *syntax, const char *pattern, const char *name, int name
         for (g = 0; g < syntax->dfa_grpcnt; ++g) {
             const char *grpname = syntax->dfa_grpnames[g];
 
-            if ((int)strlen(grpname) == grouplen &&
+            if (strlen(grpname) == grouplen &&
                     0 == strncmp(grpname, group, grouplen)) {
                 group = grpname;
                 break;
@@ -1013,7 +1013,7 @@ syndfa_rule(SyntaxDFA_t *syntax, const char *pattern, const char *name, int name
 
 
 static struct dfarule *
-syndfa_find(SyntaxDFA_t *syntax, const char *name, int namelen)
+syndfa_find(SyntaxDFA_t *syntax, const char *name, size_t namelen)
 {
     const unsigned count = syntax->dfa_count;
     struct dfarule *rule = syntax->dfa_rules;
@@ -1023,7 +1023,7 @@ syndfa_find(SyntaxDFA_t *syntax, const char *name, int namelen)
         const char *rulename;
 
         if (NULL != (rulename = rule->name) &&
-                (int)strlen(rulename) == namelen && 0 == strncmp(rulename, name, namelen)) {
+                strlen(rulename) == namelen && 0 == strncmp(rulename, name, namelen)) {
             return rule;
         }
     }
@@ -1121,7 +1121,7 @@ syndfa_group(SyntaxDFA_t *syntax, const char *group)
 
             while (cursor < end) {              /* <child> [; <child> ....] */
                 const char *delim = strchr(cursor, ';');
-                int length;
+                size_t length;
 
                 if (NULL == delim) delim = end;
                 length = delim - cursor;
@@ -1132,7 +1132,7 @@ syndfa_group(SyntaxDFA_t *syntax, const char *group)
                     struct dfarule *child;
 
                     if (NULL == (child = syndfa_find(syntax, cursor, length))) {
-                        errorf("syntaxdfa: referencing non-existent rule '%.*s'", length, cursor);
+                        errorf("syntaxdfa: referencing non-existent rule '%.*s'", (int)length, cursor);
 
                     } else if (0 == (FLAG_CONTAINED & child->flags)) {
                         errorf("syntaxdfa: referencing non-contained rule '%s'", child->name);
@@ -1159,7 +1159,7 @@ syndfa_group(SyntaxDFA_t *syntax, const char *group)
         state->regex = regdfa_create(patterns, cnt,
                          ((SYNF_CASEINSENSITIVE & flags) ? REGDFA_ICASE : 0));
 
-        trace_log("Group:%s, regno:%d\n", state->name, cnt);
+        trace_log("Group:%s, regno:%d\n", state->name, (int)cnt);
 
         for (stateno = 0; stateno < cnt; ++stateno) {
             rule = states[stateno];
@@ -1168,7 +1168,7 @@ syndfa_group(SyntaxDFA_t *syntax, const char *group)
                 rule->flags |= stickyflags;
             }
             state->regst[stateno] = rule;
-            trace_ilog("%2d.%2d] colour:%3d, pattern:%s", groupno, stateno, rule->colour, rule->pattern);
+            trace_ilog("%2u.%2u] colour:%3d, pattern:%s", groupno, stateno, rule->colour, rule->pattern);
             if (rule->name) {
                 trace_log(", name:%s\n", rule->name);
             }
@@ -1218,7 +1218,7 @@ syndfa_save(
         unsigned stateno = 0;
 
         while (rule < end) {
-            fprintf(fd, "%3u; %3u; %3u; 0x%04x; pattern:%s, name:%s, group:%s, contains:%s\n",
+            fprintf(fd, "%3u; %3d; %3d; 0x%04x; pattern:%s, name:%s, group:%s, contains:%s\n",
                 stateno, rule->stateno, rule->colour, rule->flags,
                 (rule->pattern  ? (0x01 == *rule->pattern ? rule->pattern + 1 : rule->pattern) : ""),
                 (rule->name     ? rule->name     : ""),

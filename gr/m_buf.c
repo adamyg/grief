@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_buf_c,"$Id: m_buf.c,v 1.58 2025/01/17 12:38:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_buf_c,"$Id: m_buf.c,v 1.59 2025/02/07 02:49:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_buf.c,v 1.58 2025/01/17 12:38:29 cvsuser Exp $
+/* $Id: m_buf.c,v 1.59 2025/02/07 02:49:21 cvsuser Exp $
  * Buffer primitives.
  *
  *
@@ -64,7 +64,7 @@ enum {                                          /* window directions */
 
 static const struct flag {
     const char *        f_name;                 /* name/label */
-    int                 f_length;
+    size_t              f_length;
     uint32_t            f_set;                  /* associated flag set */
     uint32_t            f_value;                /* flag value */
 
@@ -172,7 +172,7 @@ static const struct flag {
     };
 
 static int                      flag_decode(int mode, const char *spec, uint32_t *values);
-static const struct flag *      flag_lookup(const char *name, int length);
+static const struct flag *      flag_lookup(const char *name, size_t length);
 
 static int                      get_dir(int argi, const char *str);
 static WINDOW_t *               get_window(int dir);
@@ -180,7 +180,7 @@ static WINDOW_t *               get_edge(int dir);
 
 static int                      sortcompare_forward(const void *l1, const void *l2);
 static int                      sortcompare_backward(const void *l1, const void *l2);
-static int                      sortcompare_macro(void *callback, const void *l1, const void *l2);
+static int                      sortcompare_macro(const void *l1, const void *l2, void *callback);
 
 
 /*  Function:           do_create_buffer
@@ -340,7 +340,7 @@ do_create_buffer(int nested)    /* int (string bufname, [string filename],
     const char *raw_name = get_str(1);
     const char *name = file_canonicalize(raw_name, NULL, 0);
     const accint_t sysflag = get_xinteger(3, 0);
-    const accint_t editflags = get_xinteger(4, EDIT_NORMAL);
+    const int32_t editflags = (int32_t)get_xinteger(4, EDIT_NORMAL);
     const char *encoding = get_xstr(5);         /* MCHAR??? */
     BUFFER_t *bp;
 
@@ -875,12 +875,12 @@ flag_decode(int mode, const char *spec, uint32_t *values)
 
 
 static const struct flag *
-flag_lookup(const char *name, int length)
+flag_lookup(const char *name, size_t length)
 {
     if (NULL != (name = str_trim(name, &length)) && length > 0) {
         unsigned i;
 
-        trace_ilog("\t %*s\n", length, name);
+        trace_ilog("\t %*s\n", (int)length, name);
         for (i = 0; i < (unsigned)(sizeof(x_bufflgnames)/sizeof(x_bufflgnames[0])); ++i)
             if (length == x_bufflgnames[i].f_length &&
                     0 == str_nicmp(x_bufflgnames[i].f_name, name, length)) {
@@ -992,7 +992,7 @@ inq_buffer_title(void)          /* string ([int bufnum] */
 {
     BUFFER_t *bp = buf_argument(1);
 
-    acc_assign_str(bp && bp->b_title ? bp->b_title : sys_basename(bp->b_fname), -1);
+    acc_assign_str(bp && bp->b_title ? bp->b_title : sys_basename(bp->b_fname));
 }
 
 
@@ -1113,7 +1113,7 @@ do_set_buffer_type(void)        /* int ([int bufnum], [int type = NULL], [string
                 if (NULL == encoding &&         /* check/derive encoding */
                         NULL == (encoding = buf_type_encoding(nbtype))) {
                     if (bp->b_encoding) {       /* compatible encoding? */
-                        if (mchar_info(&info, bp->b_encoding, -1)) {
+                        if (mchar_info(&info, bp->b_encoding, strlen(bp->b_encoding))) {
                             if (buf_type_base(nbtype) != info.cs_type) {
                                 buf_encoding_set(bp, NULL);
                             }
@@ -1124,7 +1124,7 @@ do_set_buffer_type(void)        /* int ([int bufnum], [int type = NULL], [string
         }
 
         if (encoding) {
-            if (mchar_info(&info, encoding, -1)) {
+            if (mchar_info(&info, encoding, strlen(encoding))) {
                 if (! isa_undef(2)) {           /* implied buffer-type */
                     if (buf_type_base(obtype) != info.cs_type) {
                         buf_type_set(bp, info.cs_type);
@@ -3243,7 +3243,7 @@ sortcompare_backward(const void *l1, const void *l2)
  *      Comparison result.
  */
 static int
-sortcompare_macro(void *callback, const void *l1, const void *l2)
+sortcompare_macro(const void *l1, const void *l2, void *callback)
 {
     const LINE_t *line1 = *((const LINE_t **)l1), *line2 = *((const LINE_t **)l2);
     LIST tmpl[LIST_SIZEOF(5)], *lp = tmpl;      /* 5 atoms */

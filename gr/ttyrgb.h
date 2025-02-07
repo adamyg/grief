@@ -1,11 +1,11 @@
 #ifndef GR_TTYRGB_H_INCLUDED
 #define GR_TTYRGB_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyrgb_h,"$Id: ttyrgb.h,v 1.10 2024/11/18 13:42:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyrgb_h,"$Id: ttyrgb.h,v 1.11 2025/02/07 03:03:22 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyrgb.h,v 1.10 2024/11/18 13:42:22 cvsuser Exp $
+/* $Id: ttyrgb.h,v 1.11 2025/02/07 03:03:22 cvsuser Exp $
  * Color RGB support.
  *
  *
@@ -39,8 +39,8 @@ struct rgbdef {
     uint8_t     blue;
 };
 
-extern int                  rgb_import(const char *name, int length, struct rgbvalue *rgb, int rgbmax);
-extern int                  rgb_export(char *buf, int length, const struct rgbvalue *rgb, int rgbmax);
+extern int                  rgb_import(const char *name, size_t length, struct rgbvalue *rgb, int rgbmax);
+extern int                  rgb_export(char *buf, size_t length, const struct rgbvalue *rgb, int rgbmax);
 
 extern void                 rgb_256win(const int color, struct rgbvalue *rgb);
 extern void                 rgb_256xterm(const int color, struct rgbvalue *rgb);

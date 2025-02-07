@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_wild_c,"$Id: wild.c,v 1.42 2022/08/10 15:44:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_wild_c,"$Id: wild.c,v 1.43 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: wild.c,v 1.42 2022/08/10 15:44:58 cvsuser Exp $
+/* $Id: wild.c,v 1.43 2025/02/07 03:03:22 cvsuser Exp $
  * Wild card and basic pattern (not regexp) matching support.
  *
  *
@@ -381,7 +381,7 @@ shell_wild(const char *file)
                 ++cnt;
             } else {
                 for (k = 0; k < cnt; ++k) {
-                    const int namelen = strlen(names[k]);
+                    const size_t namelen = strlen(names[k]);
 
                     if (0 == namelen || '/' != names[k][namelen-1]) {
                         strcat(names[k], "/");

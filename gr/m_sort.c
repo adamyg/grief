@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_sort_c,"$Id: m_sort.c,v 1.19 2024/12/06 15:46:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_sort_c,"$Id: m_sort.c,v 1.20 2025/02/07 02:49:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_sort.c,v 1.19 2024/12/06 15:46:06 cvsuser Exp $
+/* $Id: m_sort.c,v 1.20 2025/02/07 02:49:21 cvsuser Exp $
  * Sort functionality.
  *
  *
@@ -31,7 +31,7 @@ __CIDENT_RCSID(gr_m_sort_c,"$Id: m_sort.c,v 1.19 2024/12/06 15:46:06 cvsuser Exp
 #include "maths.h"                              /* do_com_op */
 #include "m_sort.h"
 
-static int              lsort_callback(void *callback, const void *l1, const void *l2);
+static int              lsort_callback(const void *l1, const void *l2, void *callback);
 static int              lsort_compare_fwd(const void *l1, const void *l2);
 static int              lsort_compare_bck(const void *l1, const void *l2);
 static int              lsort_compare(const LISTV *lvp1, const LISTV *lpv2);
@@ -63,7 +63,7 @@ static int              lsort_compare(const LISTV *lvp1, const LISTV *lpv2);
         predefined system sort macros.
 
     Sort Method:
-        Grief 2.5.4 and earlier bindly utlilised the system supplied
+        Grief 2.5.4 and earlier blindly utlilised the system supplied
         quicksort algorithm to implement sort. The characteristics of
         the algorithm could not defined as such was normally unstable, 
         plus may have gone quadratic. (Although quicksort's run time
@@ -73,7 +73,7 @@ static int              lsort_compare(const LISTV *lvp1, const LISTV *lpv2);
         Following Perl and Java in 2.5.5 the default sort
         implementation was replaced with a stable mergesort algorithm
         whose worst-case behavior is O(NlogN). In addition quicksort
-        defends against quadratic behaviour by shuffling large arrays
+        defends against quadratic behavior by shuffling large arrays
         before sorting.
 
         A stable sort means that for records that compare equal, the
@@ -156,7 +156,8 @@ do_sort_list(void)              /* list (list, [string callback|int order], [int
     const int type = get_xinteger(3, -1);       /* sort type 1=quicksort,2=mergesort,3=heapsort */
     sortcmp_t cmp = NULL;
     LIST *newlp;
-    int atoms, len, i;
+    size_t llen = 0;
+    int atoms, i;
     LISTV *lvp;
 
     /* verify inputs */
@@ -251,10 +252,10 @@ do_sort_list(void)              /* list (list, [string callback|int order], [int
     }
 
     /* return results */
-    if (0 >= atoms || NULL == (newlp = argv_list(lvp, atoms, &len))) {
+    if (0 >= atoms || NULL == (newlp = argv_list(lvp, atoms, &llen))) {
         acc_assign_null();
     } else {
-        acc_donate_list(newlp, len);
+        acc_donate_list(newlp, llen);
     }
 
     chk_free(lvp);
@@ -275,7 +276,7 @@ do_sort_list(void)              /* list (list, [string callback|int order], [int
  *      second, otherwise a negative value indicates the opposite.
  */
 static int
-lsort_callback(void *callback, const void *l1, const void *l2)
+lsort_callback(const void *l1, const void *l2, void *callback)
 {
     const LISTV *lvp1 = l1, *lvp2 = l2;
     LIST tmpl[LIST_SIZEOF(3)];

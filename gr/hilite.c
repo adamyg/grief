@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_hilite_c,"$Id: hilite.c,v 1.20 2022/09/13 14:31:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_hilite_c,"$Id: hilite.c,v 1.21 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: hilite.c,v 1.20 2022/09/13 14:31:24 cvsuser Exp $
+/* $Id: hilite.c,v 1.21 2025/02/07 03:03:21 cvsuser Exp $
  * Hilite management.
  *
  *
@@ -132,7 +132,7 @@ hilite_create(BUFFER_t *bp, int type, int32_t timeout,
 
         hilite_mined(bp, hp);
 
-        trace_log("hilite_create(type:%d, start:%d/%d, end/%d/%d, attr:%d\n",
+        trace_log("hilite_create(type:%d, start:%d/%d, end/%d/%d, attr:%u\n",
             (int)hp->h_type, sline, scol, eline, ecol, hp->h_attr);
 
         if (first) {                            /* sort by line/col */

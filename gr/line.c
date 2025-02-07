@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_line_c,"$Id: line.c,v 1.48 2025/01/17 12:38:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_line_c,"$Id: line.c,v 1.49 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: line.c,v 1.48 2025/01/17 12:38:29 cvsuser Exp $
+/* $Id: line.c,v 1.49 2025/02/07 03:03:21 cvsuser Exp $
  * Line management.
  *
  *
@@ -675,7 +675,7 @@ linserts(const char *buffer, int length)
                 break;
             }
         }
-        len = cp - buffer;
+        len = (LINENO)(cp - buffer);
         length -= len + 1;
         if (FALSE == linsert(buffer, len, nl)) {
             return -1;

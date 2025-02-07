@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strcompare_c,"$Id: strcompare.c,v 1.18 2025/01/13 16:06:38 cvsuser Exp $")
+__CIDENT_RCSID(gr_strcompare_c,"$Id: strcompare.c,v 1.19 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strcompare.c,v 1.18 2025/01/13 16:06:38 cvsuser Exp $
+/* $Id: strcompare.c,v 1.19 2025/02/07 03:03:22 cvsuser Exp $
  * libstr - String compare utility functions.
  *
  *
@@ -106,7 +106,7 @@ str_icmp(const char *s1, const char *s2)
  *      first string is lexicographically greater than the second string.
  */
 int
-str_nicmp(const char *s1, const char *s2, int len)
+str_nicmp(const char *s1, const char *s2, size_t len)
 {
     if (s1 != s2 && len > 0) {
         register const unsigned char *_s1 = (const unsigned char *)s1,

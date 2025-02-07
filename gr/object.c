@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_object_c,"$Id: object.c,v 1.15 2022/08/10 15:44:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_object_c,"$Id: object.c,v 1.16 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: object.c,v 1.15 2022/08/10 15:44:57 cvsuser Exp $
+/* $Id: object.c,v 1.16 2025/02/07 03:03:21 cvsuser Exp $
  * Functions for manipulating objects.
  *
  *
@@ -382,9 +382,9 @@ obj_donate_list(object_t *obj, LIST *lp, int llen)
     obj_clear(obj);
     lst_check(lp);
     if (-1 == llen) {
-        llen = lst_length(lp);
+        llen = (int)lst_length(lp);
     } else {
-        assert(llen == lst_length(lp));
+        assert((size_t)llen == lst_length(lp));
     }
     obj->obj_rval = rlst_create(lp, llen);
     obj->obj_type = F_RLIST;

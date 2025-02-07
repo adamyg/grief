@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_time_c,"$Id: m_time.c,v 1.20 2024/12/06 15:46:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_time_c,"$Id: m_time.c,v 1.21 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_time.c,v 1.20 2024/12/06 15:46:06 cvsuser Exp $
+/* $Id: m_time.c,v 1.21 2025/02/07 03:03:21 cvsuser Exp $
  * Time primitives.
  *
  *
@@ -366,14 +366,14 @@ do_gmtime(void)                 /* int ([int &time], [int &year], [int &mon], [i
     struct tm result = {0};
 
     tp = sys_gmtime(tmsec, &result);
-    argv_assign_int(2, (accint_t) (tp->tm_year + 1900));
-    argv_assign_int(3, (accint_t) (tp->tm_mon + 1));
-    argv_assign_int(4, (accint_t) tp->tm_mday);
+    argv_assign_int(2, ((accint_t)tp->tm_year) + 1900);
+    argv_assign_int(3, ((accint_t)tp->tm_mon) + 1);
+    argv_assign_int(4, (accint_t)tp->tm_mday);
     argv_assign_str(5, tm_month_name(tp->tm_mon));
     argv_assign_str(6, tm_day_name(tp->tm_wday));
-    argv_assign_int(7, (accint_t) tp->tm_hour);
-    argv_assign_int(8, (accint_t) tp->tm_min);
-    argv_assign_int(9, (accint_t) tp->tm_sec);
+    argv_assign_int(7, (accint_t)tp->tm_hour);
+    argv_assign_int(8, (accint_t)tp->tm_min);
+    argv_assign_int(9, (accint_t)tp->tm_sec);
     acc_assign_int((accint_t) tmsec);
 }
 
@@ -515,12 +515,11 @@ do_strftime(void)               /* string ([string format = NULL], [int time = N
     const struct tm *tp;
     struct tm result = {0};
     char buffer[1024];
-    int ret;
 
+    buffer[0] = 0;
     tp = sys_localtime(tmsec, &result);
-/*XXX, bsd or ICU strftime()*/
-    ret = strftime(buffer, (int)sizeof(buffer), (fmt ? fmt : "%c"), tp);
-    acc_assign_str(buffer, ret);
+    strftime(buffer, sizeof(buffer), (fmt ? fmt : "%c"), tp); //XXX. locale
+    acc_assign_str(buffer);
 }
 
 

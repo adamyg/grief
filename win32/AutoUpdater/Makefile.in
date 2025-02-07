@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.20 2024/04/16 11:37:15 cvsuser Exp $
+# $Id: Makefile.in,v 1.21 2025/02/07 05:10:33 cvsuser Exp $
 # libautoupdater and utils makefile
 #
 #
@@ -213,6 +213,9 @@ $(TESTLIBAPPTSK):	CEXTRA += -I$(UPDATERSRC)
 $(TESTLIBAPPTSK):	MAPFILE=$(basename $@).map
 $(TESTLIBAPPTSK):	$(TESTLIBAPPOBJS)
 		$(LIBTOOL) --mode=link $(CXX) $(LDFLAGS) -o $@ $(TESTLIBAPPOBJS) $(D_LIB)/libautoupdater$(A) $(LDLIBS) @LDMAPFILE@
+
+$(UPDATEROBJS):		../../include/edbuildinfo.h
+$(SIGNATUREOBJS):	../../include/edbuildinfo.h
 
 installinc:		include/.created
 		@echo publishing headers ...

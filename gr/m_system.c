@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_system_c,"$Id: m_system.c,v 1.24 2024/12/06 15:46:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_system_c,"$Id: m_system.c,v 1.25 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_system.c,v 1.24 2024/12/06 15:46:06 cvsuser Exp $
+/* $Id: m_system.c,v 1.25 2025/02/07 03:03:21 cvsuser Exp $
  * Basic system primitives.
  *
  *
@@ -77,7 +77,7 @@ do_getenv(void)                 /* string (string name) */
     const char *cp;
 
     cp = ggetenv(get_str(1));
-    acc_assign_str(cp ? cp : "", -1);
+    acc_assign_str(cp ? cp : "");
 }
 
 

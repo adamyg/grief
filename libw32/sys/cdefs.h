@@ -1,7 +1,7 @@
 #ifndef LIBW32_SYS_CDEFS_H_INCLUDED
 #define LIBW32_SYS_CDEFS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_cdefs_h,"$Id: cdefs.h,v 1.20 2024/03/31 15:57:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_cdefs_h,"$Id: cdefs.h,v 1.21 2025/02/07 03:03:23 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*-
@@ -67,7 +67,7 @@ __CPRAGMA_ONCE
         #ifndef LIBW32_STATIC                   /* verify STATIC/DYNAMIC configuration */
             #error  LIBW32 static library yet LIB32_STATIC not defined.
         #endif
-        #ifdef _WINDLL                          /*verify target configuration */
+        #ifdef _WINDLL                          /* verify target configuration */
             #error  LIBW32 static library yet _WINDLL defined.
         #endif
     #endif

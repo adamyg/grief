@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetalias_c,"$Id: charsetalias.c,v 1.18 2025/01/13 15:24:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetalias_c,"$Id: charsetalias.c,v 1.20 2025/02/07 05:14:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* Locale/multibyte character information.
@@ -76,11 +76,11 @@ struct charset {
 
 static int                  charset_load(struct charsetmap *map, int mode, const char *aliasset);
 
-static struct charset *     charset_get(struct charsetmap *map, const char *name, int namelen);
-static struct charset *     charset_map(struct charsetmap *map, const char *name, int namelen);
-static struct charset *     charset_new(struct charsetmap *map, const char *name, int namelen);
+static struct charset *     charset_get(struct charsetmap *map, const char *name, size_t namelen);
+static struct charset *     charset_map(struct charsetmap *map, const char *name, size_t namelen);
+static struct charset *     charset_new(struct charsetmap *map, const char *name, size_t namelen);
 
-static const char *         charset_lookup(struct charsetmap *map, const char *name, int namelen);
+static const char *         charset_lookup(struct charsetmap *map, const char *name, size_t namelen);
 static void                 charset_dump(struct charsetmap *map);
 
 static const char *         skipwhite(const char *cursor);
@@ -88,7 +88,7 @@ static int                  iswhite(const int c);
 
 static int                  alias_push(struct charset *map, const char *name);
 static const char *         alias_map(const char *name, char *buffer, int bufsiz);
-static int                  alias_compare(const char *primary, const char *name, int namelen);
+static int                  alias_compare(const char *primary, const char *name, size_t namelen);
 
 static struct charsetmap    x_charsetmap;
 
@@ -125,16 +125,16 @@ charset_alias_open(int mode, int paths, const char **dirs, const char *aliasset)
     }
 
     if (paths > 0 && dirs && aliasset) {
-        const int aliaslen = strlen(aliasset);
+        const size_t aliaslen = strlen(aliasset);
+        size_t pathlen = 0, p;
         char *path = NULL;
-        int pathlen = 0, p;
 
-        for (p = 0; -1 == ret && ((paths >= 0 && p < paths) || (paths < 0 && dirs[p])); ++p) {
+        for (p = 0; -1 == ret && ((paths >= 0 && p < (size_t)paths) || (paths < 0 && dirs[p])); ++p) {
             const char *dir;
 
             if (NULL != (dir = dirs[p]) && ('/' == *dir || '\\' == *dir)) {
-                const int dirlen = strlen(dir);
-                int t_pathlen = dirlen + aliaslen + 2;
+                const size_t dirlen = strlen(dir);
+                size_t t_pathlen = dirlen + aliaslen + 2;
 
                 if ((path && t_pathlen <= pathlen) ||
                         (free((void *)path), NULL != (path = malloc(pathlen = t_pathlen)))) {
@@ -215,10 +215,10 @@ charset_alias_load(int mode, const char *aliasset)
 
 
 const char *
-charset_alias_lookup(const char *name, int namelen)
+charset_alias_lookup(const char *name, size_t namelen)
 {
     if (name) {
-        return charset_lookup(&x_charsetmap, name, (namelen > 0 ? namelen : (int)strlen(name)));
+        return charset_lookup(&x_charsetmap, name, (namelen > 0 ? namelen : strlen(name)));
     }
     return NULL;
 }
@@ -288,7 +288,7 @@ charset_load(struct charsetmap *map, int mode, const char *aliasset)
                             char *end = strchr(name, ']');
                             if (*end) *end = 0;
                         }
-                        cs = charset_get(map, name, -1);
+                        cs = charset_get(map, name, strlen(name));
                     }
                 }
             }
@@ -311,13 +311,14 @@ charset_load(struct charsetmap *map, int mode, const char *aliasset)
 
                 switch (mode)  {
                 case CHARSET_MODE_BASIC:        /* <primary> */
-                    charset_get(map, name, -1);
+                    charset_get(map, name, strlen(name));
                     break;
 
                 case CHARSET_MODE_INI:          /* <tag>=<name> */
                     if (cs) {
                         if (0 == strncmp("aliases=", cursor, 6) || ('=' == *cursor)) {
-                            int namelen = ('=' == *cursor ? 1 : 6);
+                            size_t namelen = ('=' == *cursor ? 1 : 6);
+
                             for (;;) {
                                 cursor = skipwhite(cursor + namelen);
                                 if (1 != sscanf(cursor, "%64[^ \t\r\n]", name) ||
@@ -333,7 +334,7 @@ charset_load(struct charsetmap *map, int mode, const char *aliasset)
                     break;
 
                 case CHARSET_MODE_X11: {        /* <primary> <secondary> .... */
-                        int namelen = strlen(name);
+                        size_t namelen = strlen(name);
 
                         if (NULL != (cs = charset_get(map, name, namelen))) {
                             for (;;) {
@@ -355,7 +356,7 @@ charset_load(struct charsetmap *map, int mode, const char *aliasset)
                         cursor = skipwhite(cursor + strlen(name));
                         if (1 == sscanf(cursor, "%64[^ \t\r\n]", name2) &&
                                         name2[0] && NULL == strchr(name2, '.')) {
-                            if (NULL != (cs = charset_get(map, name2, -1))) {
+                            if (NULL != (cs = charset_get(map, name2, strlen(name2)))) {
                                 if (alias_push(cs, name)) {
                                     ++result;
                                 }
@@ -370,7 +371,7 @@ charset_load(struct charsetmap *map, int mode, const char *aliasset)
                                                 /* ignore private/mime, x- */
                         if (NULL != (eq = strchr(name, '='))) {
                             if ('x' != eq[1] && '-' != eq[2])
-                                if (NULL != (cs = charset_get(map, eq + 1, -1))) {
+                                if (NULL != (cs = charset_get(map, eq + 1, strlen(eq + 1)))) {
                                     eq[0] = 0;
                                     if (alias_push(cs, name)) {
                                         ++result;
@@ -397,7 +398,7 @@ charset_load(struct charsetmap *map, int mode, const char *aliasset)
 __DEBUG(("alias: iana,  CS= '%.*s'\n", colon - name, name))
 __DEBUG(("alias: iana, MAP= '%s'\n", name))
                                 } else {
-                                    cs = charset_get(map, name, -1);
+                                    cs = charset_get(map, name, strlen(name));
 __DEBUG(("alias: iana,  cs= '%s'\n", name))
                                 }
                             }
@@ -425,14 +426,10 @@ __DEBUG(("alias: iana, map= '%s'\n", name))
 
 
 static struct charset *
-charset_get(struct charsetmap *map, const char *name, int namelen)
+charset_get(struct charsetmap *map, const char *name, size_t namelen)
 {
     char canonicalize[CS_NAMELEN+1];
     struct charset *cs;
-
-    if (namelen < 0) {
-        namelen = strlen(name);
-    }
 
     if (NULL == (cs = charset_map(map, name, namelen))) {
         /*
@@ -444,7 +441,7 @@ charset_get(struct charsetmap *map, const char *name, int namelen)
             cs = charset_new(map, name, namelen);
 
         } else {
-            const int canonicalizelen = strlen(canonicalize);
+            const size_t canonicalizelen = strlen(canonicalize);
 
             __DEBUG(("alias: charset canonicalize '%s' ==> '%s'\n", name, canonicalize))
             if (NULL == (cs = charset_map(map, canonicalize, canonicalizelen))) {
@@ -458,7 +455,7 @@ charset_get(struct charsetmap *map, const char *name, int namelen)
 
 
 static struct charset *
-charset_map(struct charsetmap *map, const char *name, int namelen)
+charset_map(struct charsetmap *map, const char *name, size_t namelen)
 {
     if (name && namelen > 0) {
         const int count = map->cs_count;
@@ -480,7 +477,7 @@ charset_map(struct charsetmap *map, const char *name, int namelen)
 
 
 static struct charset *
-charset_new(struct charsetmap *map, const char *name, int namelen)
+charset_new(struct charsetmap *map, const char *name, size_t namelen)
 {
     struct charset *cs = NULL;
 
@@ -502,7 +499,7 @@ charset_new(struct charsetmap *map, const char *name, int namelen)
         memset(cs, 0, sizeof(struct charset));
         cs->cs_magic = CS_MAGIC;
         cs->cs_name = nname = malloc(namelen + 1);
-        cs->cs_namelen = namelen;
+        cs->cs_namelen = (unsigned) namelen;
         memcpy(nname, name, namelen);
         nname[namelen] = 0;
         return cs;
@@ -512,7 +509,7 @@ charset_new(struct charsetmap *map, const char *name, int namelen)
 
 
 static const char *
-charset_lookup(struct charsetmap *map, const char *name, int namelen)
+charset_lookup(struct charsetmap *map, const char *name, size_t namelen)
 {
     const int count = map->cs_count;
     
@@ -619,7 +616,7 @@ alias_push(struct charset *cs, const char *name)
 
     if (cs->cs_aliases) {
         const char *aliases = cs->cs_aliases;
-        int length;
+        size_t length;
 
         while (aliases[0] && (length = strlen(aliases)) > 0) {
             if (0 == alias_compare(aliases, name, namelen)) {
@@ -665,7 +662,7 @@ alias_push(struct charset *cs, const char *name)
  *      0 if matched, otherwise a 1.
  */
 static int
-alias_compare(const char *primary, const char *name, int namelen)
+alias_compare(const char *primary, const char *name, size_t namelen)
 {
     return charset_compare(primary, name, namelen);
 }

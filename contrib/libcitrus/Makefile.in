@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.13 2024/06/04 13:28:57 cvsuser Exp $
+# $Id: Makefile.in,v 1.15 2025/02/07 03:05:28 cvsuser Exp $
 # libcitrus and modules makefile
 #
 #
@@ -73,13 +73,14 @@ XFLAGS+=\
 	-Wno-unused-variable \
 	-Wno-implicit-fallthrough \
 	-Wno-unused-but-set-variable \
-	-Wno-sign-compare
+	-Wno-sign-compare \
+	-Wno-pointer-compare
 endif
 
 CINCLUDE=	-I. -I./src -I$(D_INC) @CINCLUDE@
 
 CEXTRA=		$(filter-out -D_WIN32_WINNT%,@DEFS@)
-ifeq ("yes","@ISWIN32@")
+ifeq (yes,$(findstring yes,"@ISWIN32@ or @ISWIN64@"))
 CEXTRA+=	-DWIN32
 endif
 

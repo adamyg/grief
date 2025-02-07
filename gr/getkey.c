@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_getkey_c,"$Id: getkey.c,v 1.53 2024/11/26 15:04:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_getkey_c,"$Id: getkey.c,v 1.54 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: getkey.c,v 1.53 2024/11/26 15:04:06 cvsuser Exp $
+/* $Id: getkey.c,v 1.54 2025/02/07 03:03:21 cvsuser Exp $
  * Low level input, both keyboard and mouse.
  *
  *
@@ -137,7 +137,7 @@ iot_current(void)
 
 
 static void
-iot_start(IOTimer_t *tmr, int tmo)
+iot_start(IOTimer_t *tmr, accint_t tmo)
     {
         if (tmo > 0) tmr->value = x_iotimer + tmo;
         else tmr->value = 0;
@@ -145,7 +145,7 @@ iot_start(IOTimer_t *tmr, int tmo)
 
 
 static void
-iot_starts(IOTimer_t *tmr, int tmo)
+iot_starts(IOTimer_t *tmr, accint_t tmo)
     {
         if (tmo > 0) tmr->value = x_iotimer + ((uint64_t)tmo * 1000);
         else tmr->value = 0;
@@ -232,7 +232,7 @@ io_wait(int state, struct IOEvent *evt, accint_t utmo)
     event = WAIT_TIMEDOUT;
 
     if (STATE_RAW & state) {                    /* 'utmo' is absolute */
-        tmo = utmo;
+        tmo = (int)utmo;
 
     } else if (STATE_2ND & state) {             /* 2nd character, apply esc-delay */
         if (-1 == x_escdelay ) {
@@ -265,7 +265,7 @@ io_wait(int state, struct IOEvent *evt, accint_t utmo)
 
         if (utmo > 0 && utmo < tmo) {
             event = WAIT_TIMEDOUT;
-            tmo = utmo;
+            tmo = (int)utmo;
         }
     }
 

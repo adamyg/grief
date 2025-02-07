@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntax_c, "$Id: syntax.c,v 1.71 2024/08/01 17:11:43 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntax_c, "$Id: syntax.c,v 1.72 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntax.c,v 1.71 2024/08/01 17:11:43 cvsuser Exp $
+/* $Id: syntax.c,v 1.72 2025/02/07 03:03:22 cvsuser Exp $
  * Syntax pre-processor.
  *
  *
@@ -45,7 +45,7 @@ static SyntaxTable_t *          syntax_new(const char *name);
 static void                     syntax_delete(SyntaxTable_t *st);
 static void                     syntax_default(SyntaxTable_t *st);
 static void                     syntax_clear(SyntaxTable_t *st);
-static SyntaxWords_t *          syntax_words(SyntaxTable_t *st, int table, int length, int create);
+static SyntaxWords_t *          syntax_words(SyntaxTable_t *st, int table, size_t length, int create);
 
 static const LINECHAR *         leading_write(SyntaxTable_t *st, const LINECHAR *start, const LINECHAR *end);
 
@@ -63,7 +63,7 @@ static const char *             style_charset(const char *fmt, unsigned char *ta
 
 static const struct flag {
     const char *f_name;                         /* name/label */
-    int f_length;
+    size_t f_length;
     int f_enum;
 
 } stylenames[] = {
@@ -125,7 +125,7 @@ extern "C" {                                    /* MCHAR??? */
 
     static const struct {                       /* Character classes */
         const char *name;
-        unsigned namelen;
+        size_t namelen;
         int (*isa)(int);
     } character_classes[] = {
         { "ascii",  5,  is_ascii },             /* ASCII character. */
@@ -484,7 +484,7 @@ inq_syntax_name(void)           /* [int bufnum = -1]) */
     if (bp) {
         st = bp->b_syntax;
     }
-    acc_assign_str(st ? st->st_name : "", -1);
+    acc_assign_str(st ? st->st_name : "");
 }
 
 
@@ -612,7 +612,7 @@ do_define_keywords(void)        /* ([int|string] keywords, string words|list wor
                                                 /* foreach(word) */
         for (;(nextlp = atom_next(keywordslp)) != keywordslp; keywordslp = nextlp) {
             if (NULL != (word = atom_xstr(keywordslp))) {
-                int wordlen = (int)strlen(word);
+                size_t wordlen = strlen(word);
 
                 word = str_trim(word, &wordlen);
                 if (wordlen) {
@@ -649,7 +649,7 @@ do_define_keywords(void)        /* ([int|string] keywords, string words|list wor
 
             for (;;) {
                 const char *comma = strchr(cursor, ',');
-                int newlength = (comma ? (comma - cursor) : (int)strlen(cursor));
+                const int newlength = (comma ? (int)(comma - cursor) : (int)strlen(cursor));
 
                 if (newlength != length) {      /* length change */
                     if (length && total) {
@@ -844,6 +844,10 @@ keyword_push_pat(SyntaxTable_t *st, int attr, int length, int total, const char 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wint-to-pointer-cast" /*XXX*/
 #endif
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:4312)
+#endif
     if (sep) {
         const char *end = keywords + total + /*seps*/count;
         while (keywords < end) {
@@ -866,6 +870,9 @@ keyword_push_pat(SyntaxTable_t *st, int attr, int length, int total, const char 
     }
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
+#endif
+#if defined(_MSC_VER)
+#pragma warning(pop)
 #endif
 
     return elements;
@@ -991,7 +998,7 @@ do_syntax_token(void)           /* int (int type|string type, [arg1], [arg2], [i
                 } else {
                     charmap[(unsigned char) *s1] |= SYNC_COMMENT;
                     st->comment_blk_val[i][0] = chk_salloc(s1);
-                    st->comment_blk_len[i][0] = strlen(s1);
+                    st->comment_blk_len[i][0] = (int)strlen(s1);
 
                     charmap[(unsigned char) *s2] |= SYNC_COMMENT;
                     st->comment_blk_val[i][1] = chk_salloc(s2);
@@ -1286,7 +1293,7 @@ do_syntax_token(void)           /* int (int type|string type, [arg1], [arg2], [i
                     const char *end = strchr(s2, ',');
                     if (end) {
                         if (end != s2)
-                            trie_ninsert(tags, s2, end - s2, "");
+                            trie_ninsert(tags, s2, (int)(end - s2), "");
                         s2 = end + 1;
                     } else {
                         trie_insert(tags, s2, "");
@@ -1314,7 +1321,7 @@ do_syntax_token(void)           /* int (int type|string type, [arg1], [arg2], [i
 static int
 style_lookup(const char *name)
 {
-    int length = (int)strlen(name);
+    size_t length = strlen(name);
 
     if (NULL != (name = str_trim(name, &length)) && length > 0) {
         unsigned i;
@@ -1622,7 +1629,7 @@ syntax_lookup(const char *name, int err)
 
 
 static SyntaxWords_t *
-syntax_words(SyntaxTable_t *st, int table, int length, int create)
+syntax_words(SyntaxTable_t *st, int table, size_t length, int create)
 {
     SyntaxKeywords_t *keywords;
     SyntaxWords_t *words;
@@ -1702,8 +1709,8 @@ newwords:;
     assert(idx < keywords->kw_used);
     assert(keywords->kw_used <= keywords->kw_total);
 
-    trace_ilog("new syntax_words(%d, %d)[%d] sizing(%u of %u)\n",
-        table, length, idx, keywords->kw_used, keywords->kw_total);
+    trace_ilog("new syntax_words(%d, %u)[%u] sizing(%u of %u)\n",
+        table, (unsigned)length, idx, keywords->kw_used, keywords->kw_total);
 
     words = keywords->kw_words + idx;
     memset(words, 0, sizeof(*words));
@@ -1793,7 +1800,7 @@ const LINECHAR *
 syntax_writex(SyntaxTable_t *st, const LINECHAR *start, const LINECHAR *end, int colour, int flags)
 {
     const int dotabs = (SYNF_HILITE_WS & st->st_flags) ? TRUE : FALSE;
-    const int length = end - start;
+    const size_t length = end - start;
 
     WINDOW_t *wp = curwp;
     BUFFER_t *bp = wp->w_bufp;
@@ -1806,7 +1813,7 @@ syntax_writex(SyntaxTable_t *st, const LINECHAR *start, const LINECHAR *end, int
         int wordlen = 0;
 
         while (NULL != (word =                  /* check each word */
-                (const LINECHAR *)spell_nextword(curbp, (void *)start, length, &wordlen, &t_offset, &t_chars, &t_column))) {
+                (const LINECHAR *)spell_nextword(curbp, (void *)start, (int)length, &wordlen, &t_offset, &t_chars, &t_column))) {
             int t_colour;
 
             if ((t_colour = writex_spell(st, word, wordlen, colour, flags)) >= 0) {
@@ -1814,7 +1821,7 @@ syntax_writex(SyntaxTable_t *st, const LINECHAR *start, const LINECHAR *end, int
                         0 == edit || !(wp->w_col >= t_column && wp->w_col <= (t_column + t_chars))) {
 
                     if (cursor < word) {        /* text prior */
-                        vtwritehl((void *)cursor, word - cursor, colour, dotabs);
+                        vtwritehl((void *)cursor, (int)(word - cursor), colour, dotabs);
                     }
                                                 /* word */
                     vtwritehl((void *)word, wordlen, t_colour, 0);
@@ -1824,11 +1831,11 @@ syntax_writex(SyntaxTable_t *st, const LINECHAR *start, const LINECHAR *end, int
         }
 
         if (cursor < end) {                     /* remaining line */
-            vtwritehl((void *)cursor, end - cursor, colour, dotabs);
+            vtwritehl((void *)cursor, (int)(end - cursor), colour, dotabs);
         }
 
     } else {
-        vtwritehl((void *)start, length, colour, dotabs);
+        vtwritehl((void *)start, (int)length, colour, dotabs);
     }
     return end;
 }
@@ -1926,7 +1933,7 @@ syntax_delete(SyntaxTable_t *st)
 static int
 keyword_table(const char *name)
 {
-    unsigned namelen, i;
+    size_t namelen, i;
     int attr;
 
     if (name && (namelen = strlen(name)) > 0) {
@@ -1954,13 +1961,13 @@ keyword_table(const char *name)
 }
 
 
-static int          keyword_cmplen;
-static int          keyword_same;
+static size_t   keyword_cmplen;
+static int      keyword_same;
 
 static int
 keyword_stricmp(const void * k1, const void * k2)
 {
-    int ret = str_nicmp(k1, k2, keyword_cmplen);
+    int ret = str_nicmp(k1, k2, (int)keyword_cmplen);
     if (0 == ret) {
         ++keyword_same;
     }
@@ -2050,7 +2057,7 @@ syntax_select(void)
                     ++st->keywords_sorted;      /* increase count */
 
                     /* dump word list */
-                    trace_ilog("\tkeywords (level=%d, count=%d, len=%d, dups=%d):\n",
+                    trace_ilog("\tkeywords (level=%d, count=%u, len=%u, dups=%d):\n",
                         table, count, kwlen, keyword_same);
 
                     for (i = n = 0; i < kwlen; i += length) {
@@ -2104,7 +2111,7 @@ syntax_select(void)
  *      Lookup a keyword within a specific range.
  */
 int
-syntax_keywordx(const SyntaxTable_t *st, const LINECHAR *token, int length, int start, int end, int icase)
+syntax_keywordx(const SyntaxTable_t *st, const LINECHAR *token, size_t length, int start, int end, int icase)
 {
     int (*compare)(const void *s1, const void *s2) =
                     ((icase || (st->st_flags & SYNF_CASEINSENSITIVE)) ? keyword_stricmp : keyword_strcmp);
@@ -2147,9 +2154,16 @@ syntax_keywordx(const SyntaxTable_t *st, const LINECHAR *token, int length, int 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpointer-to-int-cast" /*XXX*/
 #endif
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:4311)
+#endif
             return (int)attr;                   /* associated attribute */
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
+#endif
+#if defined(_MSC_VER)
+#pragma warning(pop)
 #endif
         }
     }
@@ -2163,7 +2177,7 @@ syntax_keywordx(const SyntaxTable_t *st, const LINECHAR *token, int length, int 
  *      Lookup a keyword levels.
  */
 int
-syntax_keyword(const SyntaxTable_t *st, const LINECHAR *token, int length)
+syntax_keyword(const SyntaxTable_t *st, const LINECHAR *token, size_t length)
 {
     return syntax_keywordx(st, token, length, SYNK_PRIMARY, SYNK_BOOLEAN, 0);
 }
@@ -2174,7 +2188,7 @@ syntax_keyword(const SyntaxTable_t *st, const LINECHAR *token, int length)
  *      Lookup PREPROCESSOR keywords if defined otherwise level PRIMARY keywords.
  */
 int
-syntax_preprocessor(const SyntaxTable_t *st, const LINECHAR *token, int length)
+syntax_preprocessor(const SyntaxTable_t *st, const LINECHAR *token, size_t length)
 {
     int attr;
 
@@ -2317,7 +2331,7 @@ syntax_string_write(
 
 
 static int
-str_ncmp(const char *s1, const char *s2, int len)
+str_ncmp(const char *s1, const char *s2, size_t len)
 {
     return strncmp(s1, s2, len);
 }
@@ -2337,7 +2351,7 @@ syntax_comment(
 {
     const SyntaxChar_t *charmap = st->syntax_charmap;
 
-    int (*compare)(const char *s1, const char *s2, int len) =
+    int (*compare)(const char *s1, const char *s2, size_t len) =
             ((st->st_flags & SYNF_CASEINSENSITIVE) ? str_nicmp : str_ncmp);
 
     const uint32_t tws = (st->st_flags & SYNF_COMMENTS_TRAILINGWS);

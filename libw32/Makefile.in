@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.35 2024/04/16 11:37:14 cvsuser Exp $
+# $Id: Makefile.in,v 1.36 2025/02/03 02:27:35 cvsuser Exp $
 # libwin32 makefile.
 #
 #
-# Copyright (c) 2007, 2012 - 2024 Adam Young.
+# Copyright (c) 2007, 2012 - 2025 Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -74,8 +74,8 @@ endif
 
 D_INC=		$(ROOT)/include
 D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
-D_OBJ=		$(ROOT)/obj@TOOLCHAINEXT@/$(BUILD_TYPE)/libw32
 D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_OBJ=		$(ROOT)/obj@TOOLCHAINEXT@/$(BUILD_TYPE)/libw32
 
 # Common flags
 

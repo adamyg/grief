@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mchar_info_c,"$Id: mchar_info.c,v 1.25 2025/01/13 15:12:17 cvsuser Exp $")
+__CIDENT_RCSID(gr_mchar_info_c,"$Id: mchar_info.c,v 1.26 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mchar_info.c,v 1.25 2025/01/13 15:12:17 cvsuser Exp $
+/* $Id: mchar_info.c,v 1.26 2025/02/07 03:03:21 cvsuser Exp $
  * Locale/multibyte character information.
  *
  *
@@ -68,10 +68,10 @@ struct charset {
 
 
 static void                 ICU_initialise(void);
-static const char *         ICU_canonicalName(const char *name, int namelen);
-static int                  ICU_charsetinfo(const char *name, int namelen, mcharcharsetinfo_t *info);
+static const char *         ICU_canonicalName(const char *name, size_t namelen);
+static int                  ICU_charsetinfo(const char *name, size_t namelen, mcharcharsetinfo_t *info);
 static const mcharcharsetinfo_t *charsetinfo(const struct charset *map, mcharcharsetinfo_t *info);
-static const struct charset * charset_map(const char *name, int namelen);
+static const struct charset * charset_map(const char *name, size_t namelen);
 
 
 /*
@@ -307,24 +307,22 @@ mchar_list(void)
  *      xxx
  */
 const mcharcharsetinfo_t *
-mchar_info(mcharcharsetinfo_t *info, const char *name, int namelen)
+mchar_info(mcharcharsetinfo_t *info, const char *name, size_t namelen)
 {
     const struct charset *map;
     const char *t_name, *charset;
     char buffer[64];
     int offset;
 
-    if (NULL == name || 0 == *name) {
+    if (NULL == name || 0 == namelen || 0 == *name) {
         return NULL;
-    }
-    if (namelen < 0) {
-        namelen = (int)strlen(name);
     }
     if (name != (t_name = mchar_vim_strip(name))) {
         namelen -= (name - t_name);
         name = t_name;
     }
-    trace_log("\tmchar_info(length:%d, name:%.*s)\n", namelen, namelen, name);
+    trace_log("\tmchar_info(length:%u, name:%.*s)\n",
+        (unsigned)namelen, (int)namelen, name);
 
     /*
      *  canonicalize name
@@ -334,7 +332,7 @@ mchar_info(mcharcharsetinfo_t *info, const char *name, int namelen)
                 NULL != (charset = ICU_canonicalName(name, namelen))) {
         name = charset;
         namelen = (int)strlen(charset);
-        trace_log("\t= name:<%.*s>\n", namelen, name);
+        trace_log("\t= name:<%.*s>\n", (int)namelen, name);
     }
 
     /*
@@ -444,7 +442,7 @@ ICU_initialise(void)
 
 
 static const char *
-ICU_canonicalName(const char *name, int namelen)
+ICU_canonicalName(const char *name, size_t namelen)
 {
 #if defined(HAVE_LIBICU)
     UErrorCode ecode = U_ZERO_ERROR;
@@ -469,7 +467,7 @@ ICU_canonicalName(const char *name, int namelen)
 
 
 static int
-ICU_charsetinfo(const char *name, int namelen, mcharcharsetinfo_t *info)
+ICU_charsetinfo(const char *name, size_t namelen, mcharcharsetinfo_t *info)
 {
 #if defined(HAVE_LIBICU)
 #define ICU2TYPE            (sizeof(icu2type)/sizeof(icu2type[0]))
@@ -596,7 +594,7 @@ charsetinfo(const struct charset *map, mcharcharsetinfo_t *info)
 
 
 static const struct charset *
-charset_map(const char *name, int namelen)
+charset_map(const char *name, size_t namelen)
 {
     const struct charset *maps = x_charactersets;
     unsigned idx;

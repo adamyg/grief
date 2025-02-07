@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: buildinfo.pl,v 1.12 2025/01/13 14:57:54 cvsuser Exp $
+# $Id: buildinfo.pl,v 1.13 2025/02/07 02:53:07 cvsuser Exp $
 # buildinfo generation
 #
 # Copyright 2018 - 2025, Adam Young
@@ -48,6 +48,7 @@ my $buildmday = undef;
 my $buildnumber = "1";
 my $buildtype = undef;
 my $buildtoolchain = undef;
+my $iswin64 = undef;
 
 my $bindir  = undef;
 my $sbindir = undef;
@@ -67,6 +68,7 @@ Usage() if (0 == GetOptions(
 		'date=i'        => \$builddate,
 		'build=i'       => \$buildnumber,
 		'toolchain=s'   => \$buildtoolchain,
+		'iswin64=s'     => \$iswin64,
 		'type:s'        => \$buildtype,
 		'bindir:s'      => \$bindir,
 		'sbindir:s'     => \$sbindir,
@@ -153,6 +155,14 @@ EOT
 			if ($buildtoolname =~ /64$/);
 	}
 
+	if (defined $iswin64) {
+		if ($iswin64 eq 'yes') {
+			print FILE "#define BUILD_ISWIN64 1\n";
+		} else {
+			print FILE "#define BUILD_ISWIN32 1\n";
+		}
+	}
+
 	if ($buildtype) {
 		print FILE "#define BUILD_TYPE \"${buildtype}\"\n";
 
@@ -204,6 +214,7 @@ Options:
     --date <date>           Build date.
     --build <number>        Build number.
     --toolchain <desc>      Toolchain.
+    --iswin64 <yes|no>      Optional architecture, win64 otherwise win32.
 
     --bindir <path>         bindir path.
     --sbindir <path>        sbindir path.

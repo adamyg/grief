@@ -1,11 +1,11 @@
 #ifndef GR_ACCUM_H_INCLUDED
 #define GR_ACCUM_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_accum_h,"$Id: accum.h,v 1.20 2023/01/02 08:19:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_accum_h,"$Id: accum.h,v 1.21 2025/02/07 03:03:20 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: accum.h,v 1.20 2023/01/02 08:19:35 cvsuser Exp $
+/* $Id: accum.h,v 1.21 2025/02/07 03:03:20 cvsuser Exp $
  * Accumulator manipulating.
  *
  *
@@ -25,16 +25,17 @@ __CPRAGMA_ONCE
 
 __CBEGIN_DECLS
 
-extern void *               acc_expand(int len);
-extern void                 acc_assign_str(const char *str, int len);
-extern void                 acc_assign_strlen(int len);
-extern void                 acc_assign_str2(const char *str1, int len1, const char *str2, int len2);
+extern void *               acc_expand(size_t len);
+extern void                 acc_assign_str(const char *str);
+extern void                 acc_assign_nstr(const char *str, size_t len);
+extern void                 acc_assign_strlen(size_t len);
+extern void                 acc_assign_str2(const char *str1, size_t len1, const char *str2, size_t len2);
 extern void                 acc_assign_lit(const char *str);
 extern void                 acc_assign_argv(const LISTV *lvp);
 extern void                 acc_clear(void);
 extern void                 acc_assign_ref(ref_t *rp);
-extern void                 acc_assign_list(const LIST *lp, int len);
-extern void                 acc_donate_list(LIST *lp, int len);
+extern void                 acc_assign_list(const LIST *lp, size_t llen);
+extern void                 acc_donate_list(LIST *lp, size_t llen);
 extern void                 acc_assign_null(void);
 extern void                 acc_assign_int(accint_t val);
 extern void                 acc_assign_float(accfloat_t val);

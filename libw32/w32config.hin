@@ -1,10 +1,10 @@
 #ifndef WIN32_CONFIG_H_INCLUDED
 #define WIN32_CONFIG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.29 2024/11/18 15:39:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.30 2025/02/03 02:27:36 cvsuser Exp $")
 __CPRAGMA_ONCE
 /* -*- mode: c; set-indent: 4; -*- */
-/* $Id: w32config.hin,v 1.29 2024/11/18 15:39:12 cvsuser Exp $
+/* $Id: w32config.hin,v 1.30 2025/02/03 02:27:36 cvsuser Exp $
  * Machine configuration.
  *
  * System dependent <config.h> configuration template,
@@ -125,6 +125,7 @@ __CPRAGMA_ONCE
 #undef HAVE_NDIR_H
 
 /* AC_HEADER_TIME */
+#undef HAVE_TIME_H
 #undef TIME_WITH_SYS_TIME
 #undef HAVE_SYS_TIME_H
 #undef HAVE_UTIME_H
@@ -136,6 +137,9 @@ __CPRAGMA_ONCE
 #undef HAVE_WINCRYPT_H
 #undef HAVE_WINIOCTL_H
 #undef HAVE_BCRYPT_H
+#undef HAVE_AFUNIX_H
+#undef HAVE_INTRIN_H
+#undef HAVE_INTSAFE_H
 
 /* Explicit header checks */
 #undef HAVE_SYS_TYPES_H
@@ -199,6 +203,7 @@ __CPRAGMA_ONCE
 #undef HAVE_STRING_H
 #undef HAVE_UNISTD_H
 #undef HAVE_MATH_H
+#undef HAVE_LANGINFO_H
 
 #undef HAVE_ARGZ_H
 #undef HAVE_LIBGEN_H
@@ -493,10 +498,10 @@ __CPRAGMA_ONCE
 #undef HAVE_STRDUP
 #undef HAVE_STRFTIME
 #undef HAVE_STRTOUL
-#undef HAVE_STRTOULL
 #undef HAVE_STRTOF
 #undef HAVE_STRTOLD
 #undef HAVE_STRTOLL
+#undef HAVE_STRTOULL
 #undef HAVE_STRVERSCMP
 #undef HAVE___STRVERSCMP
 #undef HAVE_STRNLEN

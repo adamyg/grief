@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_realpath_c,"$Id: w32_realpath.c,v 1.8 2024/03/31 15:57:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_realpath_c,"$Id: w32_realpath.c,v 1.9 2025/02/03 02:27:36 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -7,7 +7,7 @@ __CIDENT_RCSID(gr_w32_realpath_c,"$Id: w32_realpath.c,v 1.8 2024/03/31 15:57:27 
  *
  *      realpath
  *
- * Copyright (c) 2018 - 2024, Adam Young.
+ * Copyright (c) 2018 - 2025, Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_playback_c,"$Id: playback.c,v 1.34 2022/08/10 15:44:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_playback_c,"$Id: playback.c,v 1.35 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: playback.c,v 1.34 2022/08/10 15:44:57 cvsuser Exp $
+/* $Id: playback.c,v 1.35 2025/02/07 03:03:21 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -391,7 +391,7 @@ inq_remember_buffer(void)       /* ([int macroid]) */
     char buf[32];
 
     sxprintf(buf, sizeof(buf), "KBD-MACRO-%d", macroid);
-    acc_assign_str(buf, -1);
+    acc_assign_str(buf);
 }
 
 
@@ -517,7 +517,7 @@ inq_keystroke_macro(void)       /* string ([int macroid], [int &bufnum]) */
 
     if (NULL == (pb =
             (isa_undef(1) ? x_playback_current : playback_get(get_xinteger(1, 0), FALSE)))) {
-        acc_assign_str("", 1);
+        acc_assign_nstr("", 0);
         return;
     }
     argv_assign_int(2, (accint_t) pb->p_bufnum);

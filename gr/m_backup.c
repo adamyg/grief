@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_backup_c,"$Id: m_backup.c,v 1.21 2024/12/05 19:00:11 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_backup_c,"$Id: m_backup.c,v 1.22 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_backup.c,v 1.21 2024/12/05 19:00:11 cvsuser Exp $
+/* $Id: m_backup.c,v 1.22 2025/02/07 03:03:21 cvsuser Exp $
  * File backup option/configuration primitives.
  *
  *
@@ -716,7 +716,7 @@ inq_backup_option(void)         /* string|int (int what, [int bufnum]) */
         break;
 
     case BK_DIR:
-        acc_assign_str(bkcfg_dir(bp), -1);
+        acc_assign_str(bkcfg_dir(bp));
         break;
 
     case BK_VERSIONS:
@@ -731,11 +731,11 @@ inq_backup_option(void)         /* string|int (int what, [int bufnum]) */
 #endif
 
     case BK_PREFIX:
-        acc_assign_str(bkcfg_prefix(bp), -1);
+        acc_assign_str(bkcfg_prefix(bp));
         break;
 
     case BK_SUFFIX:
-        acc_assign_str(bkcfg_suffix(bp), -1);
+        acc_assign_str(bkcfg_suffix(bp));
         break;
 
     case BK_ONESUFFIX:

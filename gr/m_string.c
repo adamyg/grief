@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.48 2025/01/17 12:38:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_string_c,"$Id: m_string.c,v 1.49 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_string.c,v 1.48 2025/01/17 12:38:29 cvsuser Exp $
+/* $Id: m_string.c,v 1.49 2025/02/07 03:03:21 cvsuser Exp $
  * String primitives.
  *
  *
@@ -403,10 +403,10 @@ do_itoa(void)                   /* string (int value, int base = 10) */
             }
         }
 
-        acc_assign_str(buffer, cursor - buffer);
+        acc_assign_nstr(buffer, cursor - buffer);
 
     } else {
-        acc_assign_str("", 0);
+        acc_assign_nstr("", 0);
     }
 }
 
@@ -767,7 +767,7 @@ do_index(void)                  /* int (string str, int ch|string s) */
 {
     const char *str = get_str(1);
     const char *cp;
-    int val = 0;
+    accint_t val = 0;
 
     if (isa_integer(2)) {                       /* extension */
         const int ch = get_xinteger(2, 0);
@@ -798,7 +798,7 @@ do_windex(void)                 /* int (string str, int ch|string s) */
 {
     const char *str = get_str(1);
     const char *cp;
-    int val = 0;
+    accint_t val = 0;
 
     if (isa_integer(2)) {                       /* extension */
         const int ch = get_xinteger(2, 0);
@@ -952,7 +952,7 @@ do_rindex(void)                 /* int (string str, int ch|string s) */
 {
     const char *str = get_str(1);
     const char *cp;
-    int val = 0;
+    accint_t val = 0;
 
     if (isa_integer(2)) {                       /* extension 21/04/06 */
         int ch = get_xinteger(2, 0);
@@ -965,7 +965,7 @@ do_rindex(void)                 /* int (string str, int ch|string s) */
 
     } else {
         const char *str2 = get_str(2);
-        int len = get_strlen(2);
+        size_t len = get_strlen(2);
 
         for (cp = str + get_strlen(1) - 1; cp >= str; --cp)
             if (0 == strncmp(cp, str2, len)) {
@@ -983,7 +983,7 @@ do_wrindex(void)                /* int (string str, int ch|string s) */
 {
     const char *str = get_str(1);
     const char *cp;
-    int val = 0;
+    accint_t val = 0;
 
     if (isa_integer(2)) {                       /* extension 21/04/06 */
         int ch = get_xinteger(2, 0);
@@ -996,7 +996,7 @@ do_wrindex(void)                /* int (string str, int ch|string s) */
 
     } else {
         const char *str2 = get_str(2);
-        int len = get_strlen(2);
+        size_t len = get_strlen(2);
 
         for (cp = str + get_strlen(1) - 1; cp >= str; --cp)
             if (0 == utf8ncmp(cp, str2, len)) {
@@ -1058,7 +1058,7 @@ do_lastof(void)                 /* int (string str, string chars [,int &result])
     const char *chars = get_xstr(2);
     SYMBOL *sp = get_symbol(3);
     const char *cp;
-    int val = 0;
+    accint_t val = 0;
 
     while (str > start)  {
         if (NULL != (cp = strchr(chars, *--str))) {
@@ -1078,7 +1078,7 @@ do_wlastof(void)                /* int (string str, string chars [,int &result])
     const char *str = get_str(1),
         *characters = get_xstr(2);
     SYMBOL *sp = get_symbol(3);
-    int position = 0, character = 0;
+    accint_t position = 0, character = 0;
     utf8_int32_t wch, wch2;
 
     if (characters && *characters) {
@@ -1144,10 +1144,10 @@ void
 do_substr(void)                 /* string (string str, [int offset], [int length]) */
 {
     const char *str = get_str(1);
-    int slen = get_strlen(1);
-    int offset = get_xinteger(2, 1);            /* non-optional?? */
+    accint_t slen = get_strlen(1);
+    accint_t offset = get_xinteger(2, 1);       /* non-optional?? */
     const char *cp;
-    int length;
+    accint_t length;
 
     if (--offset < 0) {                         /* index-1 */
         //
@@ -1169,7 +1169,7 @@ do_substr(void)                 /* string (string str, [int offset], [int length
     } else if (length > slen) {
         length = slen;
     }
-    acc_assign_str(cp, length);
+    acc_assign_nstr(cp, length);
 }
 
 
@@ -1177,10 +1177,10 @@ void
 do_wsubstr(void)                /* string (string str, [int offset], [int length]) */
 {                                               /* MCHAR */
     const char *str = get_str(1);
-    const int slen = get_strlen(1);
-    int offset = get_xinteger(2, 1);            /* non-optional?? */
+    const accint_t slen = get_strlen(1);
+    accint_t offset = get_xinteger(2, 1);       /* non-optional?? */
     const char *cp, *cp2, *end = str + slen;
-    int length;
+    accint_t length;
 
     if (--offset < 0) {                         /* index-1/TODO */
         offset = 0;
@@ -1220,7 +1220,7 @@ do_wsubstr(void)                /* string (string str, [int offset], [int length
         break; //error
     }
 
-    acc_assign_str(cp, cp2 - cp);
+    acc_assign_nstr(cp, cp2 - cp);
 }
 
 
@@ -1266,7 +1266,7 @@ acc_ltrim(const char *trimchars)
  *      nothing
  */
 static void
-acc_rtrim(const char *trimchars, int len)
+acc_rtrim(const char *trimchars, size_t len)
 {
     char *acc = acc_get_sbuf();                 /* working image */
 
@@ -1346,10 +1346,10 @@ do_compress(void)               /* (string str, [int trim = FALSE],
                                         [string chars = NULL], [int replacement = ' ']) */
 {
     const char *str = get_xstr(1);
-    const int   len = (str ? get_strlen(1) : 0);
-    const int   dotrim = get_xinteger(2, FALSE);
+    const size_t len = (str ? get_strlen(1) : 0);
+    const accint_t dotrim = get_xinteger(2, FALSE);
     const char *chars = get_xstr(3);
-    const int   replacement = get_xinteger(4, ' ');
+    const accint_t replacement = get_xinteger(4, ' ');
     char *cursor, *acc = acc_expand(len + 1);
 
     if (NULL == chars) chars = space_characters;
@@ -1424,10 +1424,10 @@ do_compress(void)               /* (string str, [int trim = FALSE],
 void
 do_trim(void)                   /* (string str, [string chars = NULL]) */
 {
-    const int len = get_strlen(1);
+    const size_t len = get_strlen(1);
     const char *chars = get_xstr(2);
 
-    acc_assign_str(get_str(1), len);
+    acc_assign_nstr(get_str(1), (size_t)len);
     acc_rtrim(chars, len);
     acc_ltrim(chars);
 }
@@ -1471,10 +1471,10 @@ do_trim(void)                   /* (string str, [string chars = NULL]) */
 void
 do_rtrim(void)                  /* (string str, [string chars = NULL]) */
 {
-    const int len = get_strlen(1);
+    const size_t len = get_strlen(1);
 
-    acc_assign_str(get_str(1), len);
-    acc_rtrim(get_xstr(2), len);
+    acc_assign_nstr(get_str(1), len);
+    acc_rtrim(get_xstr(2), (int)len);
 }
 
 
@@ -1515,7 +1515,7 @@ do_rtrim(void)                  /* (string str, [string chars = NULL]) */
 void
 do_ltrim(void)                  /* (string str, [string chars = NULL]) */
 {
-    acc_assign_str(get_str(1), get_strlen(1));
+    acc_assign_nstr(get_str(1), get_strlen(1));
     acc_ltrim(get_xstr(2));
 }
 
@@ -1568,7 +1568,7 @@ do_upper(void)                  /* (string str|int character, [TODO int capitali
     } else {
         register unsigned char *cp;
 
-        acc_assign_str(get_str(1), get_strlen(1));
+        acc_assign_nstr(get_str(1), get_strlen(1));
         cp = (unsigned char *)acc_get_sbuf();
         for (; *cp; ++cp) {
             const int ch = *cp;
@@ -1589,7 +1589,7 @@ do_wupper(void)                 /* (string str|int character, [TODO int capitali
         acc_assign_int(utf8uprcodepoint(ch));
 
     } else {
-        acc_assign_str(get_str(1), get_strlen(1));
+        acc_assign_nstr(get_str(1), get_strlen(1));
         utf8upr(acc_get_sbuf());
     }
 }
@@ -1643,7 +1643,7 @@ do_lower(void)                  /* string|int (string str|int character) */
     } else {
         register unsigned char *cp;
 
-        acc_assign_str(get_str(1), get_strlen(1));
+        acc_assign_nstr(get_str(1), get_strlen(1));
         cp = (unsigned char *)acc_get_sbuf();
 
         for (; *cp; ++cp) {
@@ -1677,7 +1677,7 @@ do_wlower(void)                 /* string|int (string str|int character) */
         acc_assign_int(utf8lwrcodepoint(ch));
 
     } else {
-        acc_assign_str(get_str(1), get_strlen(1));
+        acc_assign_nstr(get_str(1), get_strlen(1));
         utf8lwr(acc_get_sbuf());
     }
 }
@@ -1781,13 +1781,13 @@ isa(int (*isacmp)(int))         /* (string str|int character) */
 
     } else {
         const unsigned char *cp = (unsigned char *)get_str(1);
-        int length = get_strlen(1);
+        const size_t length = get_strlen(1);
 
         if (cp && *cp) {
             if (isa_integer(2)) {               /* index */
                 const accint_t position = get_xaccint(2, 0);
 
-                if (position >= 1 && position <= length) {
+                if (position >= 1 && ((size_t)position) <= length) {
                     ret = isacmp((int) cp[position - 1]);
                 }
             } else {                            /* 1st charactr */
@@ -3033,7 +3033,7 @@ void
 do_strpop(void)                 /* (string str, [int length = 1], [int encoding]) */
 {
     SYMBOL *sp = get_symbol(1);
-    int length = (int) get_xinteger(2, 1);
+    accint_t length = get_xinteger(2, 1);
 /*- int encoding = (int) get_xinteger(3, -1); -*/
     int val = FALSE;
 
@@ -3048,13 +3048,13 @@ do_strpop(void)                 /* (string str, [int length = 1], [int encoding]
             if (length >= used) {
                 length = used;                  /* trim to symbol length */
             }
-            acc_assign_str((const char *)r_ptr(rp), length);
+            acc_assign_nstr((const char *)r_ptr(rp), (size_t)length);
             val = TRUE;
             if (length > 0) {                   /* remove */
                 if (1 == r_refs(rp)) {
-                    r_pop(rp, length);
+                    r_pop(rp, (int)length);
                 } else {                        /* multiple references, copy */
-                    sp->s_obj = r_nstring(((const char *)r_ptr(rp)) + length, r_used(rp) - length);
+                    sp->s_obj = r_nstring(((const char *)r_ptr(rp)) + length, (int)(r_used(rp) - length));
                     r_dec(rp);
                 }
             }
@@ -3062,7 +3062,7 @@ do_strpop(void)                 /* (string str, [int length = 1], [int encoding]
     }
 
     if (! val) {
-        acc_assign_str("", 0);
+        acc_assign_nstr("", 0);
     }
 }
 
@@ -3435,12 +3435,12 @@ void
 do_characterat(void)            /* int (string str, int index, [int encoding]) */
 {
     const unsigned char *str = (const unsigned char *)get_str(1);
-    int length = get_strlen(1);
+    const size_t length = get_strlen(1);
     accint_t position = get_xinteger(2, -1);
 /*- int encoding = (int) get_xinteger(3, -1); -*/
     accint_t val = -1;
 
-    if (position > 0 && position <= length) {
+    if (position > 0 && ((size_t)position) <= length) {
         val = str[position - 1];
     }
     acc_assign_int(val);
@@ -3475,14 +3475,14 @@ do_wcharacterat(void)
  *      nothing
  */
 void
-string_mul(const char *str, int len, int multiple)
+string_mul(const char *str, size_t len, int multiple)
 {
     char *nstr;
-    int i;
+    size_t i;
 
     if (len <= 0 || multiple <= 0 ||
             NULL == (nstr = acc_expand((multiple * len) + 1))) {
-        acc_assign_str("", 1);
+        acc_assign_nstr("", 0);
         return;
     }
 

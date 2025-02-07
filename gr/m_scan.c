@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_scan_c,"$Id: m_scan.c,v 1.28 2024/12/06 15:46:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_scan_c,"$Id: m_scan.c,v 1.29 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_scan.c,v 1.28 2024/12/06 15:46:06 cvsuser Exp $
+/* $Id: m_scan.c,v 1.29 2025/02/07 03:03:21 cvsuser Exp $
  * scanf implementation.
  *
  *
@@ -448,7 +448,7 @@ endnumber:; if (0 == (flags & (F_HAVEZERO|F_HAVEDIGITS))) {
 
             *p = 0;
 
-            trace_log("\tinteger (base=%u,width=%u,flags=%x) '%s'\n",
+            trace_log("\tinteger (base=%d,width=%u,flags=%x) '%s'\n",
                 base, width, flags, cache);
 
             /* Process the results */
@@ -545,7 +545,7 @@ endnumber:; if (0 == (flags & (F_HAVEZERO|F_HAVEDIGITS))) {
                         }
                     }
                 }
-                acc_assign_str("", 0);
+                acc_assign_nstr("", 0);
                 ++arg;
             }
             break;
@@ -617,7 +617,7 @@ endnumber:; if (0 == (flags & (F_HAVEZERO|F_HAVEDIGITS))) {
                         sym_assign_str(get_symbol(arg), (const char *)p);
                     }
                 }
-                acc_assign_str("", 0);
+                acc_assign_nstr("", 0);
                 ++arg;
             }
             break;
@@ -692,7 +692,7 @@ endnumber:; if (0 == (flags & (F_HAVEZERO|F_HAVEDIGITS))) {
                         sym_assign_str(get_symbol(arg), (const char *)p);
                     }
                 }
-                acc_assign_str("", 0);
+                acc_assign_nstr("", 0);
                 ++arg;
             }
             break;
@@ -771,7 +771,7 @@ setcook(const unsigned char *fmt, unsigned char *tab)
 {
     static const struct {                       /* character classes */
         const char         *name;
-        int                 len;
+        size_t              len;
         int               (*isa)(int);
     } character_classes[] = {
         { "ascii",  5,  is_ascii },             /* ASCII character. */
@@ -872,7 +872,7 @@ setcook(const unsigned char *fmt, unsigned char *tab)
 
             while (0 != (c = *fmt++)) {
                 if (':' == c && ']' == *fmt) {  /* look for closing :] */
-                    const int cclen = (fmt - cc) - 1;
+                    const size_t cclen = (fmt - cc) - 1;
                     int i;
                                                 /* match class and execute */
                     for (i = (sizeof(character_classes)/sizeof(character_classes[0]))-1; i >= 0; --i)
@@ -886,7 +886,7 @@ setcook(const unsigned char *fmt, unsigned char *tab)
                             break;
                         }
                     if (i < 0) {
-                        errorf("scanf: unknown character-class '%.*s'", cclen, cc);
+                        errorf("scanf: unknown character-class '%.*s'", (int)cclen, cc);
                         return NULL;
                     }
                     ++fmt;                      /* consume ']' */
@@ -894,7 +894,7 @@ setcook(const unsigned char *fmt, unsigned char *tab)
                 }
             }
             if (0 == c) {
-                errorf("scanf: unmatched ':]' within '%%[%.*s'", (int)(fmt - start)+1, start);
+                errorf("scanf: unmatched ':]' within '%%[%.*s'", (int)((fmt - start) + 1), start);
                 return NULL;
             }
             lvalue = 0;                         /* cannot be l-value */

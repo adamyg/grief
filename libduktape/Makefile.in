@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.22 2025/01/13 15:24:53 cvsuser Exp $
+# $Id: Makefile.in,v 1.23 2025/02/07 03:03:22 cvsuser Exp $
 # libduktape makefile.
 #
 #
@@ -195,7 +195,7 @@ $(DUKTAPELIB):		Makefile $(D_OBJ)/.created $(LIBOBJS)
 		$(RANLIB) $@
 
 XCLEAN +=	$(basename $(DUKTAPEDLL)).map
-ifeq ("yes","@ISWIN32@")
+ifeq (yes,$(findstring yes,"@ISWIN32@ or @ISWIN64@"))
 $(DUKTAPEDLL):		CEXTRA += -DDUKTAPE_DLL_BUILD
 $(DUKTAPEDLL):		DLLDEF = -export-symbols libduktape.def
 endif

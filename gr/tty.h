@@ -1,11 +1,11 @@
 #ifndef GR_TTY_H_INCLUDED
 #define GR_TTY_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_tty_h,"$Id: tty.h,v 1.40 2024/12/13 14:25:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_tty_h,"$Id: tty.h,v 1.41 2025/02/07 03:03:22 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: tty.h,v 1.40 2024/12/13 14:25:37 cvsuser Exp $
+/* $Id: tty.h,v 1.41 2025/02/07 03:03:22 cvsuser Exp $
  * TTY interface.
  *
  *
@@ -121,7 +121,7 @@ typedef struct _scrfn {
      *  input hooks
      */ 
                                                 /* pending event hook */
-    int     (*scr_event)(struct IOEvent *, int tmo);
+    int     (*scr_event)(struct IOEvent *, accint_t tmo);
 
     int     (*scr_read)(void);                  /* replace read() */
 

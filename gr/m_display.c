@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_display_c,"$Id: m_display.c,v 1.32 2025/01/17 12:38:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_display_c,"$Id: m_display.c,v 1.33 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_display.c,v 1.32 2025/01/17 12:38:29 cvsuser Exp $
+/* $Id: m_display.c,v 1.33 2025/02/07 03:03:21 cvsuser Exp $
  * Display primitives.
  *
  *
@@ -42,8 +42,8 @@ enum override_mode {
 };
 
 static int              flag_decode(const char *who, int mode, const char *spec, uint32_t *value, enum override_mode smode);
-static int *            flag_override(const char *name, int length, int *value);
-static const struct dcflag *flag_lookup(const char *name, int length);
+static int *            flag_override(const char *name, size_t length, int *value);
+static const struct dcflag *flag_lookup(const char *name, size_t length);
 
 static const char       SCROLL_COLS[]  = "scroll_cols";
 static const char       SCROLL_ROWS[]  = "scroll_rows";
@@ -53,7 +53,7 @@ static const char       NUMBER_COLS[]  = "number_cols";
 
 static const struct dcflag {        /* display control flags */
     const char *        f_name;                 /* name/label */
-    int                 f_length;
+    size_t              f_length;
     uint32_t            f_value;                /* flag value */
 } dcflagnames[] = {
 #define NFIELD(__x)     __x, (sizeof(__x) - 1)
@@ -86,7 +86,7 @@ static const struct dcflag {        /* display control flags */
 
 static const struct doflag {        /* display overrides */
     const char *        f_name;                 /* name/label */
-    int                 f_length;
+    size_t              f_length;
     int *               f_value;                /* flag value */
 } doflagnames[] = {
 #define OFIELD(__x)     __x, (sizeof(__x) - 1)
@@ -375,7 +375,7 @@ inq_display_mode(void)          /* int ([string flag], [string ~flags]) */
         const char *str = get_str(1);
         int *override;
 
-        if (NULL != (override = flag_override(str, strlen(str), NULL))) {
+        if (NULL != (override = flag_override(str, (int)strlen(str), NULL))) {
             ret = *override;
         } else {
             uint32_t value = 0;
@@ -471,12 +471,12 @@ flag_decode(const char *who, int mode, const char *spec, uint32_t *value, enum o
 }
 
 static const struct dcflag *
-flag_lookup(const char *name, int length)
+flag_lookup(const char *name, size_t length)
 {
     if (NULL != (name = str_trim(name, &length)) && length > 0) {
         unsigned i;
 
-        trace_ilog("\t %*s\n", length, name);
+        trace_ilog("\t %*s\n", (int)length, name);
         for (i = 0; i < (unsigned)(sizeof(dcflagnames)/sizeof(dcflagnames[0])); ++i)
             if (length == dcflagnames[i].f_length &&
                     0 == str_nicmp(dcflagnames[i].f_name, name, length)) {
@@ -487,7 +487,7 @@ flag_lookup(const char *name, int length)
 }
 
 static int *
-flag_override(const char *name, int length, int *value)
+flag_override(const char *name, size_t length, int *value)
 {
     const char *eq = NULL;
 
@@ -499,10 +499,10 @@ flag_override(const char *name, int length, int *value)
         *value = atoi(eq + 1);
     }
 
-    {   const int namelength = (eq ? (int)(eq - name) : length);
+    {   const size_t namelength = (eq ? (size_t)(eq - name) : length);
         unsigned i;
 
-        trace_ilog(value ? "\t %*s=%d\n" : "\t %*s\n", namelength, name, (value ? *value : -1));
+        trace_ilog(value ? "\t %*s=%d\n" : "\t %*s\n", (int)namelength, name, (value ? *value : -1));
         for (i = 0; i < (unsigned)(sizeof(doflagnames)/sizeof(doflagnames[0])); ++i)
             if (namelength == doflagnames[i].f_length &&
                     0 == str_nicmp(doflagnames[i].f_name, name, namelength)) {

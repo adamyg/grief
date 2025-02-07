@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.48 2025/01/13 16:06:38 cvsuser Exp $
+# $Id: Makefile.in,v 1.49 2025/02/07 03:03:22 cvsuser Exp $
 # libmisc makefile.
 #
 #
@@ -69,7 +69,11 @@ D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 XFLAGS=
 CFLAGS=		@CFLAGS@
+ifeq (owc,$(findstring owc,"@TOOLCHAIN@"))
+CWARN+=		-wcd124
+else
 CWARN=		@CWARN@ $(CWALL)
+endif
 CDEBUG=		@CDEBUG@
 CRELEASE=	@CRELEASE@
 CXXFLAGS=	@CXXFLAGS@
@@ -176,6 +180,7 @@ LIBOBJS=\
 	$(D_OBJ)/bsd_mergesort_r$(O)	\
 	$(D_OBJ)/bsd_qsort$(O)		\
 	$(D_OBJ)/bsd_qsort_r$(O)	\
+	$(D_OBJ)/bsd_qsort_s$(O)	\
 	$(D_OBJ)/bsd_radixsort$(O)
 
 #	$(D_OBJ)/bsd_fts$(O)		\

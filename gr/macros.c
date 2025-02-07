@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_macros_c,"$Id: macros.c,v 1.58 2025/01/17 12:38:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_macros_c,"$Id: macros.c,v 1.59 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: macros.c,v 1.58 2025/01/17 12:38:29 cvsuser Exp $
+/* $Id: macros.c,v 1.59 2025/02/07 03:03:21 cvsuser Exp $
  * Manipulating macro definitions.
  *
  *
@@ -383,10 +383,10 @@ macro_find(const char *name, const char *module)
 
     } else if (NULL != (p = strchr(name, ':')) && ':' == p[1]) {
         char t_module[ MAX_MACRONAME ];
-        int len = (p - name) + 1;
+        const size_t len = (p - name) + 1;
 
-        if (len < (int)sizeof(t_module)) {      /* MAGIC */
-            strxcpy(t_module, name, len);
+        if (len < sizeof(t_module)) {           /* MAGIC */
+            strxcpy(t_module, name, (int)len);
             sp = mac_objsearch(t_module, p + 2);
         }
 
@@ -516,7 +516,7 @@ macro_resolve(const char *cmd)
                 ewprintf("%s: invalid qualifier reference.", name);
 
             } else if (p == name) {             /* qualify exec command */
-                const int len = strlen(mptr->m_module) + strlen(cmd) + 1;
+                const int len = (int)(strlen(mptr->m_module) + strlen(cmd) + 1);
                 char *qbuf;
                                                 /* note; use full 'cmd' */
                 if (NULL != (qbuf = chk_calloc(len, 1))) {
@@ -658,7 +658,7 @@ do_module(void)                 /* int (string namespace) */
             acc_assign_int((accint_t) 1);
 
         } else {                                /* new module namespace */
-            const int namelen = strlen(name_space);
+            const size_t namelen = strlen(name_space);
             sp = (SPBLK *) spblk(sizeof(MNAMESPACE) + namelen + 1);
 
             mp = (MNAMESPACE *) sp->data;
@@ -842,7 +842,7 @@ inq_module(void)                    /* ([int test = 1) */
             break;
         }
     }
-    acc_assign_str(module ? module : "", -1);
+    acc_assign_str(module ? module : "");
 }
 
 
@@ -1644,7 +1644,7 @@ end_of_function:
      *  primitive, then assign the file name to the accumulator.
      */
     if (xf_findmacro && ret >= 0) {
-        acc_assign_str(filepath, -1);
+        acc_assign_str(filepath);
     }
     return ret;
 }
@@ -2234,7 +2234,7 @@ void
 do_find_macro(void)             /* string (string filename) */
 {
     if (mac_find(get_str(1)) < 0) {
-        acc_assign_str("", 0);
+        acc_assign_nstr("", 0);
     }
 }
 

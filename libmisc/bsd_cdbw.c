@@ -1,13 +1,13 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bsd_cdbw_c,"$Id: bsd_cdbw.c,v 1.9 2019/05/05 23:25:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_bsd_cdbw_c,"$Id: bsd_cdbw.c,v 1.10 2025/02/07 02:48:37 cvsuser Exp $")
 
-/* -*- mode: c; indent-width: 4; -*- */
+/* $NetBSD: cdbw.c,v 1.9 2023/08/08 10:34:08 riastradh Exp $ */
 /*-
- * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009, 2010, 2015 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
- * by Joerg Sonnenberger.
+ * by Joerg Sonnenberger and Alexander Nasonov.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,23 +32,87 @@ __CIDENT_RCSID(gr_bsd_cdbw_c,"$Id: bsd_cdbw.c,v 1.9 2019/05/05 23:25:14 cvsuser 
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *  $NetBSD: cdbw.c,v 1.1.8.2 2012/07/25 20:50:44 jdc Exp $
  */
 
-#include <bsd_cdbw.h>
-
 #include <edtypes.h>
+
+#include "bsd_cdbw.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "bsd_endian.h"
-#include "bsd_bitops.h"
-#include "bsd_mivhash.h"
-#include "bsd_queue.h"
 #include <chkalloc.h>
+
+#include "bsd_endian.h"
+#include "bsd_queue.h"
+#include "bsd_mivhash.h"
+
+#if defined(_MSC_VER)
+#pragma warning(disable : 4267)	// conversion from 'size_t' to 'uint32_t', possible loss of data
+#endif
+
+static __CINLINE int
+my_fls32(uint32_t n)
+{
+	int v;
+
+	if (!n)
+		return 0;
+
+	v = 32;
+	if ((n & 0xFFFF0000U) == 0) {
+		n <<= 16;
+		v -= 16;
+	}
+	if ((n & 0xFF000000U) == 0) {
+		n <<= 8;
+		v -= 8;
+	}
+	if ((n & 0xF0000000U) == 0) {
+		n <<= 4;
+		v -= 4;
+	}
+	if ((n & 0xC0000000U) == 0) {
+		n <<= 2;
+		v -= 2;
+	}
+	if ((n & 0x80000000U) == 0) {
+		n <<= 1;
+		v -= 1;
+	}
+	return v;
+}
+
+static __CINLINE void
+fast_divide32_prepare(uint32_t div, uint32_t * m, uint8_t *s1, uint8_t *s2)
+{
+	uint64_t mt;
+	int l;
+
+	l = my_fls32(div - 1);
+	mt = (uint64_t)(0x100000000ULL * ((1ULL << l) - div));
+	*m = (uint32_t)(mt / div + 1);
+	*s1 = (l > 1) ? 1U : (uint8_t)l;
+	*s2 = (l == 0) ? 0 : (uint8_t)(l - 1);
+}
+
+static __CINLINE uint32_t
+fast_divide32(uint32_t v, uint32_t div, uint32_t m, uint8_t s1, uint8_t s2)
+{
+	uint32_t t;
+
+	t = (uint32_t)(((uint64_t)v * m) >> 32);
+	return (t + ((v - t) >> s1)) >> s2;
+}
+
+static __CINLINE uint32_t
+fast_remainder32(uint32_t v, uint32_t div, uint32_t m, uint8_t s1, uint8_t s2)
+{
+
+	return v - div * fast_divide32(v, div, m, s1, s2);
+}
 
 struct key_hash {
 	SLIST_ENTRY(key_hash) link;
@@ -75,7 +139,6 @@ struct cdbw {
  /* Max. data counter that allows the index size to be 32bit. */
 static const uint32_t max_data_counter = 0xccccccccU;
 
-
 struct cdbw *
 bsd_cdbw_open(void)
 {
@@ -100,8 +163,7 @@ bsd_cdbw_open(void)
 }
 
 int
-bsd_cdbw_put(struct cdbw *cdbw, const void *key, size_t keylen,
-                const void *data, size_t datalen)
+bsd_cdbw_put(struct cdbw *cdbw, const void *key, size_t keylen, const void *data, size_t datalen)
 {
 	uint32_t idx;
 	int rv;
@@ -161,7 +223,7 @@ bsd_cdbw_put_data(struct cdbw *cdbw, const void *data, size_t datalen, uint32_t 
 	memcpy(cdbw->data_ptr[cdbw->data_counter], data, datalen);
 	cdbw->data_len[cdbw->data_counter] = datalen;
 	cdbw->data_size += datalen;
-	*idx = cdbw->data_counter++;
+	*idx = (uint32_t) cdbw->data_counter++;
 	return 0;
 }
 
@@ -270,18 +332,30 @@ bsd_cdbw_stable_seeder(void)
 	return 0;
 }
 
-#define unused 0xffffffffU
-
+/*
+ * For each vertex in the 3-graph, the incidence lists needs to be kept.
+ * Avoid storing the full list by just XORing the indices of the still
+ * incident edges and remember the number of such edges as that's all
+ * the peeling computation needs. This is inspired by:
+ *   Cache-Oblivious Peeling of Random Hypergraphs by Djamal Belazzougui,
+ *   Paolo Boldi, Giuseppe Ottaviano, Rossano Venturini, and Sebastiano
+ *   Vigna. https://arxiv.org/abs/1312.0526
+ *
+ * Unlike in the paper, we don't care about external storage and have
+ * the edge list at hand all the time. As such, no ordering is necessary
+ * and the vertices of the edge don't have to be copied.
+ *
+ * The core observation of the paper above is that for a degree of one,
+ * the incident edge can be obtained directly.
+ */
 struct vertex {
-	uint32_t l_edge, m_edge, r_edge;
+	uint32_t degree;
+	uint32_t edges;
 };
 
 struct edge {
+	uint32_t vertices[3];
 	uint32_t idx;
-
-	uint32_t left, middle, right;
-	uint32_t l_prev, m_prev, l_next;
-	uint32_t r_prev, m_next, r_next;
 };
 
 struct state {
@@ -293,69 +367,41 @@ struct state {
 	uint32_t *g;
 	char *visited;
 
-	struct vertex *verts;
+	struct vertex *vertices;
 	struct edge *edges;
 	uint32_t output_index;
 	uint32_t *output_order;
 };
 
-static void
-remove_vertex(struct state *state, struct vertex *v)
+/*
+ * Add (delta == 1) or remove (delta == -1) the edge e
+ * from the incidence lists.
+ */
+static __CINLINE void
+change_edge(struct state *state, int delta, uint32_t e)
 {
-	struct edge *e;
-	struct vertex *vl, *vm, *vr;
+	int i;
+	struct vertex *v;
+	struct edge *e_ = &state->edges[e];
 
-	if (v->l_edge != unused && v->m_edge != unused)
-		return;
-	if (v->l_edge != unused && v->r_edge != unused)
-		return;
-	if (v->m_edge != unused && v->r_edge != unused)
-		return;
-	if (v->l_edge == unused && v->m_edge == unused && v->r_edge == unused)
-		return;
-
-	if (v->l_edge != unused) {
-		e = &state->edges[v->l_edge];
-		if (e->l_next != unused)
-			return;
-	} else if (v->m_edge != unused) {
-		e = &state->edges[v->m_edge];
-		if (e->m_next != unused)
-			return;
-	} else {
-		if (v->r_edge == unused)
-			abort();
-		e = &state->edges[v->r_edge];
-		if (e->r_next != unused)
-			return;
+	for (i = 0; i < 3; ++i) {
+		v = &state->vertices[e_->vertices[i]];
+		v->edges ^= e;
+		v->degree += delta;
 	}
+}
 
-	state->output_order[--state->output_index] = e - state->edges;
+static __CINLINE void
+remove_vertex(struct state *state, uint32_t v)
+{
+	struct vertex *v_ = &state->vertices[v];
+	uint32_t e;
 
-	vl = &state->verts[e->left];
-	vm = &state->verts[e->middle];
-	vr = &state->verts[e->right];
-
-	if (e->l_prev == unused)
-		vl->l_edge = e->l_next;
-	else
-		state->edges[e->l_prev].l_next = e->l_next;
-	if (e->l_next != unused)
-		state->edges[e->l_next].l_prev = e->l_prev;
-
-	if (e->m_prev == unused)
-		vm->m_edge = e->m_next;
-	else
-		state->edges[e->m_prev].m_next = e->m_next;
-	if (e->m_next != unused)
-		state->edges[e->m_next].m_prev = e->m_prev;
-
-	if (e->r_prev == unused)
-		vr->r_edge = e->r_next;
-	else
-		state->edges[e->r_prev].r_next = e->r_next;
-	if (e->r_next != unused)
-		state->edges[e->r_next].r_prev = e->r_prev;
+	if (v_->degree == 1) {
+		e = v_->edges;
+		state->output_order[--state->output_index] = e;
+		change_edge(state, -1, e);
+	}
 }
 
 static int
@@ -363,75 +409,58 @@ build_graph(struct cdbw *cdbw, struct state *state)
 {
 	struct key_hash_head *head;
 	struct key_hash *key_hash;
-	struct vertex *v;
 	struct edge *e;
+	uint32_t entries_m;
+	uint8_t entries_s1, entries_s2;
 	uint32_t hashes[3];
 	size_t i;
+	int j;
+
+	memset(state->vertices, 0, sizeof(*state->vertices) * state->entries);
 
 	e = state->edges;
+	fast_divide32_prepare(state->entries, &entries_m, &entries_s1, &entries_s2);
+
 	for (i = 0; i < cdbw->hash_size; ++i) {
 		head = &cdbw->hash[i];
 		SLIST_FOREACH(key_hash, head, link) {
+			bsd_mi_vector_hash(key_hash->key, key_hash->keylen, state->seed, hashes);
+
+			for (j = 0; j < 3; ++j) {
+				e->vertices[j] = fast_remainder32(hashes[j],
+				    state->entries, entries_m, entries_s1,
+				    entries_s2);
+			}
+
+			if (e->vertices[0] == e->vertices[1])
+				return -1;
+			if (e->vertices[0] == e->vertices[2])
+				return -1;
+			if (e->vertices[1] == e->vertices[2])
+				return -1;
 			e->idx = key_hash->idx;
-			bsd_mi_vector_hash(key_hash->key, key_hash->keylen,
-			    state->seed, hashes);
-			e->left = hashes[0] % state->entries;
-			e->middle = hashes[1] % state->entries;
-			e->right = hashes[2] % state->entries;
-
-			if (e->left == e->middle)
-				return -1;
-			if (e->left == e->right)
-				return -1;
-			if (e->middle == e->right)
-				return -1;
-
 			++e;
 		}
 	}
 
-	for (i = 0; i < state->entries; ++i) {
-		v = state->verts + i;
-		v->l_edge = unused;
-		v->m_edge = unused;
-		v->r_edge = unused;
-	}
-
-	for (i = 0; i < state->keys; ++i) {
-		e = state->edges + i;
-		v = state->verts + e->left;
-		if (v->l_edge != unused)
-			state->edges[v->l_edge].l_prev = i;
-		e->l_next = v->l_edge;
-		e->l_prev = unused;
-		v->l_edge = i;
-
-		v = &state->verts[e->middle];
-		if (v->m_edge != unused)
-			state->edges[v->m_edge].m_prev = i;
-		e->m_next = v->m_edge;
-		e->m_prev = unused;
-		v->m_edge = i;
-
-		v = &state->verts[e->right];
-		if (v->r_edge != unused)
-			state->edges[v->r_edge].r_prev = i;
-		e->r_next = v->r_edge;
-		e->r_prev = unused;
-		v->r_edge = i;
-	}
+	/*
+	 * Do the edge processing separately as there is a good chance
+	 * the degraded edge case above will happen; this avoid
+	 *unnecessary  work.
+	 */
+	for (i = 0; i < state->keys; ++i)
+		change_edge(state, 1, i);
 
 	state->output_index = state->keys;
 	for (i = 0; i < state->entries; ++i)
-		remove_vertex(state, state->verts + i);
+		remove_vertex(state, i);
 
 	i = state->keys;
 	while (i > 0 && i > state->output_index) {
 		--i;
 		e = state->edges + state->output_order[i];
-		remove_vertex(state, state->verts + e->left);
-		remove_vertex(state, state->verts + e->middle);
-		remove_vertex(state, state->verts + e->right);
+		for (j = 0; j < 3; ++j)
+			remove_vertex(state, e->vertices[j]);
 	}
 
 	return state->output_index == 0 ? 0 : -1;
@@ -443,28 +472,35 @@ assign_nodes(struct state *state)
 	struct edge *e;
 	size_t i;
 
+	uint32_t v0, v1, v2, entries_m;
+	uint8_t entries_s1, entries_s2;
+
+	fast_divide32_prepare(state->data_entries, &entries_m, &entries_s1,
+	    &entries_s2);
+
 	for (i = 0; i < state->keys; ++i) {
 		e = state->edges + state->output_order[i];
-
-		if (!state->visited[e->left]) {
-			state->g[e->left] =
-			    (2 * state->data_entries + e->idx
-			    - state->g[e->middle] - state->g[e->right])
-			    % state->data_entries;
-		} else if (!state->visited[e->middle]) {
-			state->g[e->middle] =
-			    (2 * state->data_entries + e->idx
-			    - state->g[e->left] - state->g[e->right])
-			    % state->data_entries;
+		if (!state->visited[e->vertices[0]]) {
+			v0 = e->vertices[0];
+			v1 = e->vertices[1];
+			v2 = e->vertices[2];
+		} else if (!state->visited[e->vertices[1]]) {
+			v0 = e->vertices[1];
+			v1 = e->vertices[0];
+			v2 = e->vertices[2];
 		} else {
-			state->g[e->right] =
-			    (2 * state->data_entries + e->idx
-			    - state->g[e->left] - state->g[e->middle])
-			    % state->data_entries;
+			v0 = e->vertices[2];
+			v1 = e->vertices[0];
+			v2 = e->vertices[1];
 		}
-		state->visited[e->left] = 1;
-		state->visited[e->middle] = 1;
-		state->visited[e->right] = 1;
+		state->g[v0] =
+		    fast_remainder32((2 * state->data_entries + e->idx
+		                      - state->g[v1] - state->g[v2]),
+		        state->data_entries, entries_m,
+		        entries_s1, entries_s2);
+		state->visited[v0] = 1;
+		state->visited[v1] = 1;
+		state->visited[v2] = 1;
 	}
 }
 
@@ -479,18 +515,19 @@ compute_size(uint32_t size)
 		return 4;
 }
 
+
 #if !defined(__predict_false)
-#define __predict_false(exp)	(exp)
+#define __predict_false(__x) __x
 #endif
 
-#define COND_FLUSH_BUFFER(n) do {				\
+#define COND_FLUSH_BUFFER(n) do { 				\
 	if (__predict_false(cur_pos + (n) >= sizeof(buf))) {	\
 		ret = write(fd, buf, cur_pos);			\
 		if (ret == -1 || (size_t)ret != cur_pos)	\
 			return -1;				\
 		cur_pos = 0;					\
 	}							\
-} while (/* CONSTCOND */ 0)
+} while (0)
 
 static int
 print_hash(struct cdbw *cdbw, struct state *state, int fd, const char *descr)
@@ -566,13 +603,13 @@ bsd_cdbw_output(struct cdbw *cdbw, int fd, const char descr[16], uint32_t (*seed
 		return 0;
 	}
 
-//  #if HAVE_NBTOOL_CONFIG_H
+//#if HAVE_NBTOOL_CONFIG_H
 	if (seedgen == NULL)
 		seedgen = bsd_cdbw_stable_seeder;
-//  #else
+//#else
 //	if (seedgen == NULL)
 //		seedgen = arc4random;
-//  #endif
+//#endif
 
 	rv = 0;
 
@@ -585,13 +622,13 @@ bsd_cdbw_output(struct cdbw *cdbw, int fd, const char descr[16], uint32_t (*seed
 #define	NALLOC(var, n)	var = chk_calloc(sizeof(*var), n)
 	NALLOC(state.g, state.entries);
 	NALLOC(state.visited, state.entries);
-	NALLOC(state.verts, state.entries);
-	NALLOC(state.edges, state.entries);
+	NALLOC(state.vertices, state.entries);
+	NALLOC(state.edges, state.keys);
 	NALLOC(state.output_order, state.keys);
 #undef NALLOC
 
-	if (state.g == NULL || state.visited == NULL || state.verts == NULL ||
-	    state.edges == NULL || state.output_order == NULL) {
+	if (state.g == NULL || state.visited == NULL || state.edges == NULL ||
+	    state.vertices == NULL || state.output_order == NULL) {
 		rv = -1;
 		goto release;
 	}
@@ -610,11 +647,11 @@ bsd_cdbw_output(struct cdbw *cdbw, int fd, const char descr[16], uint32_t (*seed
 release:
 	chk_free(state.g);
 	chk_free(state.visited);
-	chk_free(state.verts);
+	chk_free(state.vertices);
 	chk_free(state.edges);
 	chk_free(state.output_order);
 
 	return rv;
 }
 
-/*end*/
+//end

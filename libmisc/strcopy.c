@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strcopy_c,"$Id: strcopy.c,v 1.11 2025/01/13 16:06:38 cvsuser Exp $")
+__CIDENT_RCSID(gr_strcopy_c,"$Id: strcopy.c,v 1.12 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strcopy.c,v 1.11 2025/01/13 16:06:38 cvsuser Exp $
+/* $Id: strcopy.c,v 1.12 2025/02/07 03:03:22 cvsuser Exp $
  * libstr - String copy utility functions.
  *
  *
@@ -63,7 +63,7 @@ __CIDENT_RCSID(gr_strcopy_c,"$Id: strcopy.c,v 1.11 2025/01/13 16:06:38 cvsuser E
  *      Destination buffer.
  */
 char *
-strxcpy(char *dst, const char *src, int len)
+strxcpy(char *dst, const char *src, size_t len)
 {
 #if defined(DO_MEMCCPY)
     if (len--) {    /* reserve nul */
@@ -116,7 +116,7 @@ strxcpy(char *dst, const char *src, int len)
  *      Destination buffer address.
  */
 char *
-strxcat(char *dst, const char *src, int len)
+strxcat(char *dst, const char *src, size_t len)
 {
     if (--len) {
 #if defined(DO_MEMCCPY)

@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: libtool_win32.pl,v 1.45 2024/05/26 13:03:30 cvsuser Exp $
+# $Id: libtool_win32.pl,v 1.46 2025/01/23 14:32:59 cvsuser Exp $
 # libtool emulation for WIN32 builds.
 #
 #   **Warning**
@@ -18,7 +18,7 @@
 #       $(D_LIB)/%.lo:      %.cpp
 #               $(LIBTOOL) --mode=compile $(CXX) $(CXXFLAGS) -o $(D_OBJ)/$@ -c $<
 #
-# Copyright Adam Young 2012-2022
+# Copyright Adam Young 2012 - 2025
 # All rights reserved.
 #
 # The applications are free software: you can redistribute it
@@ -97,6 +97,9 @@ Main
     Help() if (!scalar @ARGV);
 
     Getopt::Long::Configure("require_order");
+
+    $o_verbose = 1                              # optional enable
+        if (defined $ENV{'LIBTOOL_VERBOSE'});
 
     my $ret =
         GetOptions(
@@ -212,8 +215,8 @@ Compile()
             push @INCLUDES, shift @ARGV;
 
         } elsif (/^-d(.*)$/) {                  # -d <define[=value]>
-            if ('wcl386' eq $cc && (/^-d[0-9]/ || /^-db$/)) {
-                push @STUFF, $_;
+            if (('wcl386' eq $cc) && (/^-d[0-3]/ || /^-d[0-3][\+ist]/ || /^-db$/)) {
+                push @STUFF, $_;                # debug level -d1, -d2 and -d3
             } else {
                 push @DEFINES, ($1 ? $1 : shift @ARGV);
             }
@@ -356,6 +359,8 @@ Link()
     my $linktype = 'dll';
     my $cl_ltcg = 0;
     my $cl_debug = undef;
+    my $cl_runtime = 'MT';
+    my $targetarch = '';
     my $gcc_debugger = 0;
     my @OBJECTS;
     my @RESOURCES;
@@ -363,9 +368,16 @@ Link()
     my $DESCRIPTION;
     my @LIBRARIES;
     my @LIBPATHS;
+    my @IGNORED;
     my @STUFF;
 
     $cc = 'gcc' if ('g++' eq $cc);              # alises
+    if ($cc eq 'cl') {
+        if (defined $ENV{'VSCMD_ARG_TGT_ARCH'} && $ENV{'VSCMD_ARG_TGT_ARCH'} eq "x64") {
+            $targetarch = 'x64';
+        }
+    }
+
     while (scalar @ARGV) {
         $_ = shift @ARGV;
 
@@ -484,7 +496,7 @@ Link()
         } elsif (/^-export-dynamic$/) {
             Error("link: $_ not supported\n");
 
-        } elsif (/^-export-fastcall$/) {        # extension
+        } elsif (/^[-]+export-fastcall$/) {     # extension
             if ($wc_fastcall eq -1 or $wc_fastcall eq 1) {
                 $wc_fastcall = 1;
             } else {
@@ -496,7 +508,7 @@ Link()
             Error("link: $_ $val, not a valid symbol file : $!")
                 if (! -f $val);
 
-            if ($val =~ /\.def$/i) {            # <name.def>
+            if ($val =~ /\.def$/i || $val =~ /\.def\./i) { # <name.def> or <name.def.xxx>
                 ParseDefFile($val, \@EXPORTS, \$DESCRIPTION);
             } else {                            # <name.sym>
                 ParseSymFile($val, \@EXPORTS);
@@ -535,7 +547,7 @@ Link()
             }
 
         } elsif (/^-RTC[1csu]+$/ && ('cl' eq $cc)) {
-            push @STUFF, $_;
+            next; # compile-only
 
         } elsif (/^-R(.*)$/) {
             Error("link: $_ not supported\n");
@@ -606,16 +618,33 @@ Link()
                     $cl_ltcg = 1;               # explicit /LTCG
                     next;
 
+                # Runtime library
+                } elsif (/^[-\/]M([TD])$/) {    # /MT or /MD
+                    $cl_runtime = 'M'.$1;
+                    next;
+
+                } elsif (/^[-\/]M([TD])d$/) {   # /MTd or /MDd
+                    $cl_runtime = 'M'.$1.'-debug';
+                    next;
+
                 # Debugger
                 } elsif (/^[-\/]Z([7iI])$/) {   # /Z7, /Zi /ZI, enable debug
                     $cl_debug = "/DEBUG"
                         if (!defined $cl_debug);
                     $cl_ltcg = 0;
+                    next;
 
                 } elsif (/^[-\/]DEBUG$/ || /^[-\/]DEBUG:(.+_)$/) {
                     $cl_debug = $_;             # explicit /DEBUG:NONE, /DEBUG:FULL and /DEBUG:FASTLINK
                     $cl_debug =~ s/^-/\//;
                     $cl_ltcg = 0;
+                    next;
+
+                } elsif (/^[-\/]LINK$/i) {
+                    next;                       # implied
+
+                } elsif (/^[-\/]nologo$/i) {
+                    $o_quiet = 1;
                     next;
                 }
 
@@ -646,24 +675,36 @@ Link()
                     } elsif ($wc_fastcall eq 0) {
                         Error("link: -export-fastcall and compiler switches are incompatible\n");
                     }
+                    next;
 
                 } elsif (/^-[3456]s$/ or /^-ec[cdfprs]$/) {
                     if ($wc_fastcall eq 1) {
                         Error("link: -export-fastcall and compiler switches are incompatible\n");
                     }
+                    next;
 
                 # Target
                 } elsif (/^-bt=(.*)$/) {
                     my $target = uc($1);
                     Error("link: <$_> unexpected target\n")
                         if ($target ne 'NT');
+                    next;
 
                 # Debugger support:
                 #   -h[wcd]     Watcom,Codeview,Dwarf
                 #
                 } elsif (/^-h([wcd])$/) {
                     $wc_debugger = $1;
+                    next;
+                } elsif (/^-d[0-3]/ || /^-d[0-3][\+ist]/) {
+                    next;                       # debug level -d1, -d2 and -d3; compile only
+
+                } elsif (/^[-\/]q$/i) {
+                    $o_quiet = 1;
+                    next;
                 }
+                push @IGNORED, $_;
+                next;
 
             } elsif ('owcc' eq $cc) {
                 # Call convention
@@ -673,31 +714,43 @@ Link()
                     } elsif ($wc_fastcall eq 0) {
                         Error("link: -export-fastcall and compiler switches are incompatible\n");
                     }
+                    push @STUFF, $_;
+                    next;
 
                 } elsif (/^mregparm=0$/) {
                     if ($wc_fastcall eq 1) {
                         Error("link: -export-fastcall and compiler switches are incompatible\n");
                     }
+                    push @STUFF, $_;
+                    next;
 
                 # Target
                 } elsif (/^-b$/) {
                     my $target = uc(shift @ARGV);
                     Error("link: <$_> unexpected target\n")
                         if ($target ne 'NT');
+                    next;
 
                 } elsif (/^-m(console|windows)$/) {
                     my $target = $1;
                     Error("link: <$_> unexpected target\n")
                         if ($target ne 'console');
+                    next;
 
                 # Debugger
                 } elsif (/^-g([wcd])$/) {       # -g[wcd] Watcom,Codeview,Dwarf
                     $wc_debugger = $1;
+                    next;
                 }
 
             } elsif ('gcc' eq $cc) {            # process
                 if (/^-g$/) {                   # -g
                     $gcc_debugger = 1;
+                    next;
+
+                } elsif (/^-static-libstdc++$/ || /^-static-libgcc$/) {
+                    push @STUFF, $_;
+                    next;
                 }
             }
 
@@ -716,11 +769,16 @@ Link()
 
     Verbose "cc:       $cc";
     Verbose "extra:    @STUFF";
+    Verbose "ignored:  @IGNORED";
     Verbose "output:   $output";
     Verbose "objects:";
         foreach(@OBJECTS) {
             Verbose "\t$_";
         }
+
+    MSVCRuntimeX64($cl_runtime, \@LIBRARIES)
+        if ($targetarch eq 'x64' && $cl_runtime);
+
     Verbose "libraries:";
         foreach(@LIBRARIES) { Verbose "\t$_"; }
 
@@ -815,29 +873,40 @@ print "*** non-libtool objects @BAD_OBJECTS is not portable!\n";
         #
         if (defined $ENV{'VCToolsInstallDir'}) { # 2010 plus
             my $toolbase = $ENV{'VCToolsInstallDir'};
-            $cmd = "\"${toolbase}\\bin\\Hostx86\\x86\\link\" \@$cmdfile";
+            my $toolarch = "Hostx86\\x86";
+
+            $toolarch = "Hostx64\\x64"          # x86 or x64
+                if ($targetarch eq 'x64');
+
+            $cmd = "\"${toolbase}\\bin\\${toolarch}\\link\" \@$cmdfile";
 
         } elsif (defined $ENV{'VCINSTALLDIR'}) { # 2008
             my $toolbase = $ENV{'VCINSTALLDIR'};
             $cmd = "\"${toolbase}\\bin\\link\" \@$cmdfile";
 
-        } else {                                 # default
+        } else {                                # default
             $cmd = "link \@$cmdfile";
         }
 
         open(CMD, ">${cmdfile}") or
             die "cannot create <${$cmdfile}>: $!\n";
 
+        print CMD "/MACHINE:${targetarch}\n"
+            if ($targetarch);                   # ARM|ARM64|ARM64X|EBC|X64|X86
+
         if ($linktype eq 'dll') {
             print CMD "/DLL\n";
             print CMD "/SUBSYSTEM:WINDOWS\n";
-            print CMD "/ENTRY:_DllMainCRTStartup\@12"."\n";
+            if ($targetarch eq 'x64') {         # cdecl
+              print CMD "/ENTRY:_DllMainCRTStartup"."\n";
+            } else {                            # STDCALL
+              print CMD "/ENTRY:_DllMainCRTStartup\@12"."\n";
+            }
             print CMD "/OUT:${dllpath}\n";
             print CMD "/IMPLIB:${libpath}\n";
         } else {
             print CMD "/SUBSYSTEM:CONSOLE\n";
             print CMD "/OUT:${output}\n";
-
         }
         print CMD "/MANIFEST\n";
         print CMD "/MANIFESTINPUT:${manifestinput}\n"
@@ -858,6 +927,9 @@ print "*** non-libtool objects @BAD_OBJECTS is not portable!\n";
         print CMD "/INCREMENTAL:NO\n";          # after /DEBUG
         print CMD "/LTCG\n"
             if ($cl_ltcg);
+        print CMD "/IGNORE:4197\n"              # FIXME: warning LNK4197: export 'XXXe' specified multiple times; using first specification
+            if ($targetarch eq 'x64');
+
       foreach(@OBJECTS) {
         print CMD true_object($_)."\n";
       }
@@ -881,7 +953,7 @@ print "*** non-libtool objects @BAD_OBJECTS is not portable!\n";
         #
         #   OpenWatcom
         #
-        $cmd = "wlink \@$cmdfile";
+        $cmd = "wlink @STUFF \@$cmdfile";
 
         open(CMD, ">${cmdfile}") or
             die "cannot create <${$cmdfile}>: $!\n";
@@ -964,7 +1036,7 @@ print "*** non-libtool objects @BAD_OBJECTS is not portable!\n";
         #
         #   MinGW
         #
-        $cmd = "g++ \@${cmdfile}";
+        $cmd = "g++ @STUFF \@${cmdfile}";
 
         $libpath = "${basepath}.a";
         $pdbpath = undef;
@@ -1037,8 +1109,8 @@ print "*** non-libtool objects @BAD_OBJECTS is not portable!\n";
             "#  can be result of an incorrect version of cvtres.exe due to dual VC10/VC2012 installations,\n".
             "#  rename 'C:/Program Files (x86)/Microsoft Visual Studio 10/VC/Bin/cvtres.exe' => cvtres_org.exe\n".
             "#\n";
-#           $o_verbose = 0;
-#           System("which cvtres");
+          # $o_verbose = 0;
+          # System("which cvtres");
         }
         exit ($ret);
     }
@@ -1057,6 +1129,7 @@ print "*** non-libtool objects @BAD_OBJECTS is not portable!\n";
         print LA "dll=${dllpath}\n";
         print LA "pdb=${pdbpath}\n" if ($pdbpath);
         print LA "manifest=${manifestpath}\n" if ($manifestpath);
+        print LA "targetarch=${targetarch}\n" if ($targetarch);
         print LA "[objects]\n";
         foreach(@OBJECTS) {
             print LA true_object($_)."\n";
@@ -1109,6 +1182,38 @@ OpenCommandFile($)
 }
 
 
+sub
+MSVCRuntimeX64($$)          # (cl_runtime, LIBRARIESRef)
+{
+    my ($cl_runtime, $LIBRARIESRef) = @_;
+
+    # MSVC2015+
+    if ($cl_runtime eq 'MT') {
+      push @$LIBRARIESRef, "libcpmt.lib";       # C++ runtime
+      push @$LIBRARIESRef, "libvcruntime.lib";  # C runtime
+      push @$LIBRARIESRef, "libucrt.lib\n";     # UCRT
+
+    } elsif ($cl_runtime eq 'MT-debug') {
+      push @$LIBRARIESRef, "libcpmtd.lib";
+      push @$LIBRARIESRef, "libvcruntimed.lib";
+      push @$LIBRARIESRef, "libucrtd.lib";
+
+    } elsif ($cl_runtime eq 'MD') {
+      push @$LIBRARIESRef, "msvcprt.lib";       # C++ runtime
+      push @$LIBRARIESRef, "vcruntime.lib";     # C runtime
+      push @$LIBRARIESRef, "ucrt.lib";          # UCRT
+
+    } elsif ($cl_runtime eq 'MD-debug') {
+      push @$LIBRARIESRef, "msvcprtd.lib";
+      push @$LIBRARIESRef, "vcruntimed.lib";
+      push @$LIBRARIESRef, "ucrtd.lib";
+
+    } else {
+      die "unknown runtime <${cl_runtime}>\n";
+    }
+}
+
+
 #   Function: ParseDefFile
 #       Parse a definition file.
 #
@@ -1127,7 +1232,7 @@ OpenCommandFile($)
 #       STUB:filename
 #
 sub
-ParseDefFile($$$)
+ParseDefFile($$$)           # (file, EXPORTSRef, DESCRIPTIONRe)
 {
     my ($file, $EXPORTSRef, $DESCRIPTIONRef) = @_;
     my $mode = 0;

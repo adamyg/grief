@@ -62,11 +62,11 @@ OutputDir=.
 ;  gr-3.2.4.28-win-x64-setup.exe
 ;  gr-3.2.4.28-win-x86-setup.exe
 ;
-#if defined(BUILD_ARCHITECTURE)
-#if (BUILD_ARCHITECTURE == "x64")
+#if (BUILD_ARCHITECTURE == "x64" || BUILD_ISWIN64)
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
 #endif
+#if defined(BUILD_ARCHITECTURE)
 OutputBaseFilename=gr-{#GR_VERSION}.{#GR_BUILD_NUMBER}-win-{#BUILD_ARCHITECTURE}-setup
 #else
 OutputBaseFilename=gr-{#GR_VERSION}.{#GR_BUILD_NUMBER}-win-x86-setup

@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.17 2025/01/13 16:19:15 cvsuser Exp $
+# $Id: Makefile.in,v 1.18 2025/02/07 03:03:22 cvsuser Exp $
 # libtre - regular expression library makefile.
 #
 #
@@ -112,7 +112,7 @@ RMDFLAGS=	-rf
 #########################################################################################
 # Targets
 
-ifeq ("yes","@ISWIN32@")
+ifeq (yes,$(findstring yes,"@ISWIN32@ or @ISWIN64@"))
 RELIB=		$(D_LIB)/$(LP)tre_static$(A)
 REDLL=		$(D_LIB)/$(LP)tre.la
 else
@@ -160,7 +160,7 @@ endif
 
 OBJS=		$(LIBOBJS) $(DLLOBJS)
 LIBS=		$(RELIB)
-ifeq ("yes","@ISWIN32@")
+ifeq (yes,$(findstring yes,"@ISWIN32@ or @ISWIN64@"))
 LIBS+=		$(REDLL)
 endif
 TSKS=
@@ -184,7 +184,7 @@ $(RELIB):		$(D_OBJ)/.created $(LIBOBJS)
 		$(AR) $(ARFLAGS) $@ $(LIBOBJS)
 		$(RANLIB) $@
 
-ifeq ("yes","@ISWIN32@")
+ifeq (yes,$(findstring yes,"@ISWIN32@ or @ISWIN64@"))
 $(REDLL):	DLLDEF = -export-symbols tre.def
 endif
 XCLEAN +=	$(basename $(REDLL)).map
@@ -222,7 +222,7 @@ installinc:
 		-@mkdir $(@D)
 		@echo "do not delete, managed directory" > $@
 
-ifeq ("yes","@ISWIN32@")
+ifeq (yes,$(findstring yes,"@ISWIN32@ or @ISWIN64@"))
 clean:
 		-@$(LIBTOOL) --mode=clean $(RM) $(REDLL) $(DLLOBJS) $(QUIETOUT)
 		-@$(RM) $(RMFLAGS) $(BAK) $(TSKS) $(LIBS) $(OBJS) $(CLEAN) $(XCLEAN) $(QUIETOUT)

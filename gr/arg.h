@@ -1,11 +1,11 @@
 #ifndef GR_ARG_H_INCLUDED
 #define GR_ARG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_arg_h,"$Id: arg.h,v 1.13 2024/05/17 16:42:32 cvsuser Exp $")
+__CIDENT_RCSID(gr_arg_h,"$Id: arg.h,v 1.14 2025/02/07 03:03:20 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: arg.h,v 1.13 2024/05/17 16:42:32 cvsuser Exp $
+/* $Id: arg.h,v 1.14 2025/02/07 03:03:20 cvsuser Exp $
  * Command line argument processing functionality.
  *
  *
@@ -79,7 +79,7 @@ extern int                  argx_create(const char **argv, char **argx, int *arg
 extern int                  argx_create_sep(const char **argv, int sep, char **argx, int *args);
 extern int                  argx_destroy(char **argx, int *args);
 extern int                  argx_add(char **argx, int *args, const char *str);
-extern int                  argx_add_sep(char **argx, int *args, const char *str, int sep);
+extern int                  argx_add_sep(char **argx, int *args, const char *str, char sep);
 extern int                  argx_append(char **argx, int *args, const char *buf, int buflen);
 extern int                  argx_insert(char **argx, int *args, const char *cursor, const char *str);
 extern int                  argx_replace(char **argx, int *args, const char *cursor, const char *str);
@@ -89,7 +89,7 @@ extern const char *         argx_next(const char *argx, int args, const char *cu
 extern int                  argx_count(const char *argx, int args);
 extern int                  argx_dump(const char *argx, int args);
 extern int                  argx_extract(const char *argx, const int args, char **argv, int argc);
-extern char *               argx_stringify(char *argx, int args, int sep);
+extern char *               argx_stringify(char *argx, int args, char sep);
 
 __CEND_DECLS
 

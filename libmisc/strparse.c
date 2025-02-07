@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strparse_c,"$Id: strparse.c,v 1.19 2025/01/13 16:06:38 cvsuser Exp $")
+__CIDENT_RCSID(gr_strparse_c,"$Id: strparse.c,v 1.20 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strparse.c,v 1.19 2025/01/13 16:06:38 cvsuser Exp $
+/* $Id: strparse.c,v 1.20 2025/02/07 03:03:22 cvsuser Exp $
  * libstr - String to numeric (float/integer) parser.
  *
  *
@@ -659,7 +659,7 @@ str_numparse(const char *str, double *dp, long *lp, int *len)
 
     if ((ret = chparse(&p)) > NUMPARSE_ERROR) {
         if (len) {
-            *len = (p.p_cursor - p.p_buffer);
+            *len = (int)(p.p_cursor - p.p_buffer);
         }
         if (ret == NUMPARSE_FLOAT) {
             *lp = (long) *dp;
@@ -684,7 +684,7 @@ str_numparsel(const char *str, double *dp, long long *lp, int *len)
 
     if ((ret = chparse(&p)) > NUMPARSE_ERROR) {
         if (len) {
-            *len = (p.p_cursor - p.p_buffer);
+            *len = (int)(p.p_cursor - p.p_buffer);
         }
         if (ret == NUMPARSE_FLOAT) {
             *lp = (long) *dp;
@@ -727,7 +727,7 @@ str_numparsex(int (*get)(void *), int (*unget)(void *, int ch), void *parm, doub
 
     if ((ret = chparse(&p)) > NUMPARSE_ERROR) {
         if (len) {
-            *len = (p.p_cursor - p.p_buffer);
+            *len = (int)(p.p_cursor - p.p_buffer);
         }
         if (ret == NUMPARSE_FLOAT) {
             *lp = (long) *dp;
@@ -751,7 +751,7 @@ str_numparsexl(int (*get)(void *), int (*unget)(void *, int ch), void *parm, dou
 
     if ((ret = chparse(&p)) > NUMPARSE_ERROR) {
         if (len) {
-            *len = (p.p_cursor - p.p_buffer);
+            *len = (int)(p.p_cursor - p.p_buffer);
         }
         if (ret == NUMPARSE_FLOAT) {
             *lp = (long) *dp;
