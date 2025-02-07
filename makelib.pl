@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.152 2025/02/07 02:54:29 cvsuser Exp $
+# $Id: makelib.pl,v 1.153 2025/02/07 18:14:20 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
@@ -1093,6 +1093,7 @@ my @x_types         = (     #stdint/inttypes/types.h
         'uint_fast32_t',
         'uint_fast64_t',
         'wchar_t',
+        'mbstate_t',
         'char16_t',
         'char32_t',
         'bool',

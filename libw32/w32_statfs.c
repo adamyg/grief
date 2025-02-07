@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_statfs_c,"$Id: w32_statfs.c,v 1.24 2025/02/03 02:27:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_statfs_c,"$Id: w32_statfs.c,v 1.25 2025/02/07 18:23:19 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -390,7 +390,7 @@ getmntinfo(struct statfs **psb, int flags)
     }
 
     if (cnt > 0) {                              // drives
-        if (NULL == (sb = calloc(sizeof(struct statfs), cnt)))  {
+        if (NULL == (sb = (struct statfs *)calloc(cnt, sizeof(struct statfs))))  {
             cnt = -1;
         } else {
             for (cnt = 0, p = szDrivesAvail; *p; p += 4) {

@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_wdirent_c,"$Id: w32_wdirent.c,v 1.5 2025/02/03 02:27:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_wdirent_c,"$Id: w32_wdirent.c,v 1.6 2025/02/07 18:23:19 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -365,8 +365,8 @@ dir_alloc(void)
 #endif
     assert(DIRBLKSIZ > MAXNAMLEN);
 
-    if (NULL == (dp = (_WDIR *)calloc(sizeof(_WDIR), 1)) ||
-            NULL == (dp->dd_buf = (void *)calloc(dd_len, 1))) {
+    if (NULL == (dp = (_WDIR *)calloc(1, sizeof(_WDIR))) ||
+            NULL == (dp->dd_buf = (void *)calloc(dd_len, sizeof(char)))) {
         free(dp);
         return (_WDIR *)NULL;
     }

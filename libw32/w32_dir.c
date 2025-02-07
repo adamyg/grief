@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_dir_c,"$Id: w32_dir.c,v 1.17 2025/02/03 02:27:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_dir_c,"$Id: w32_dir.c,v 1.18 2025/02/07 18:23:19 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -681,7 +681,7 @@ w32_lnkexpandA(const char *name, char *buf, size_t buflen, unsigned flags)
     char *t_name;
     BOOL ret = 0;
 
-    if (length > 4 && NULL != (t_name = calloc(sizeof(char), length + 1 /*nul*/))) {
+    if (length > 4 && NULL != (t_name = calloc(length + 1 /*nul*/, sizeof(char)))) {
         char *cursor, *end;
         int dots = 0;
 
@@ -738,7 +738,7 @@ w32_lnkexpandW(const wchar_t *name, wchar_t *buf, size_t buflen, unsigned flags)
     wchar_t *t_name;
     BOOL ret = 0;
 
-    if (length > 4 && NULL != (t_name = calloc(sizeof(wchar_t), length + 1 /*nul*/))) {
+    if (length > 4 && NULL != (t_name = calloc(length + 1 /*nul*/, sizeof(wchar_t)))) {
         wchar_t *cursor, *end;
         int dots = 0;
 

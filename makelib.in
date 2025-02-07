@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.in,v 1.23 2025/02/07 02:53:47 cvsuser Exp $
+# $Id: makelib.in,v 1.24 2025/02/07 18:14:20 cvsuser Exp $
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 # makelib configuration
 #
@@ -263,7 +263,7 @@ Configure()
                 add_system_library('-lIphlpapi');
                 add_system_library('-lVersion');
 
-                push @TESTLIBRARIES, "pthread|LIBTHREAD";
+               #push @TESTLIBRARIES, "pthread|LIBTHREAD";
         }
 }
 

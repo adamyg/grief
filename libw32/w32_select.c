@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_select_c,"$Id: w32_select.c,v 1.20 2025/02/03 02:27:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_select_c,"$Id: w32_select.c,v 1.21 2025/02/07 18:23:19 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -92,7 +92,7 @@ w32_select(
     selcnt = (readfds ? readfds->fd_count : 0) + (writefds ? writefds->fd_count : 0) +
                 (exceptfds ? exceptfds->fd_count : 0);
 
-    if ((selfds = calloc(sizeof(Select_t), selcnt + 1)) == NULL) {
+    if ((selfds = calloc(selcnt + 1, sizeof(Select_t))) == NULL) {
         return -1;
     }
 
