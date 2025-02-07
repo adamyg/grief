@@ -1105,7 +1105,7 @@ TTooppiicc:: FFeeaattuurreess
                        _m_e_n_u_o_f_f command.
      =========================================================================
 
-     $Id: quickstart.txt,v 1.5 2024/05/28 12:44:35 cvsuser Exp $
+     $Id: quickstart.txt,v 1.6 2025/02/07 03:03:20 cvsuser Exp $
 
            ______________________________
 
@@ -1114,4 +1114,4 @@ GGeenneerraall::
 
      <Copyright> (C) _A_d_a_m _Y_o_u_n_g _A_l_l _R_i_g_h_t_s _R_e_s_e_r_v_e_d_.
 
-GRIEF Edit 3.2                    May 28 2024                   GRIEF Edit 3.2
+GRIEF Edit 3.2                  February 7 2025                 GRIEF Edit 3.2

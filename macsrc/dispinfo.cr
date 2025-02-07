@@ -1,5 +1,5 @@
 /* -*- indent-width: 4; -*-/
- * $Id: dispinfo.cr,v 1.10 2024/10/18 05:20:59 cvsuser Exp $
+ * $Id: dispinfo.cr,v 1.11 2025/02/07 16:07:19 cvsuser Exp $
  * Display information/configuration.
  *
  *
@@ -38,7 +38,7 @@ static list                 flagset = {
     "window",
     "mouse",
     "readonly",
-    "charmode",
+    "headless",
     "unicode",
 
     "shadow",

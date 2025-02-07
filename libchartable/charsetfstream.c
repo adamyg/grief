@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetfstream_c,"$Id: charsetfstream.c,v 1.12 2025/01/13 15:24:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetfstream_c,"$Id: charsetfstream.c,v 1.13 2025/02/07 17:22:13 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* iconv FILE stream support.
@@ -76,7 +76,7 @@ stream_fwrite(void *handle, const void *buf, size_t size, int *errcode)
 {
     size_t cnt = fwrite(buf, 1, size, (FILE *)handle);
     *errcode = errno;
-    return (cnt && !ferror((FILE *)handle)) ? cnt : -1;
+    return (cnt && !ferror((FILE *)handle)) ? (ssize_t)cnt : -1;
 }
 
 
@@ -85,6 +85,6 @@ stream_fread(void *handle, void *buf, size_t size, int *errcode)
 {
     size_t cnt = fread(buf, 1, size, (FILE *)handle);
     *errcode = errno;
-    return (!ferror((FILE *)handle)) ? cnt : -1;
+    return (!ferror((FILE *)handle)) ? (ssize_t)cnt : -1;
 }
 #endif  /*HAVE_ICONV_H*/

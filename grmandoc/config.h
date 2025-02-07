@@ -1,7 +1,7 @@
 #ifndef MANDOC_CONFIG_H_INCLUDED
 #define MANDOC_CONFIG_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: config.h,v 1.27 2025/01/13 15:34:12 cvsuser Exp $
+/* $Id: config.h,v 1.29 2025/02/07 09:06:22 cvsuser Exp $
  * mandoc config.h
  *
  * Copyright (c) 2014 - 2025, Adam Young.
@@ -78,12 +78,39 @@
 #include "../include/config.h"
 #endif
 
-/*FIXME: edbuildinfo.h*/
-#define  OSNAME "GRIEF Edit 3.2"
-#define  OSENUM MANDOC_OS_OTHER
-#define  BINM_PAGER "less"
+#include "../include/edbuildinfo.h"
+
+#define OSVERSTRING(__x) __OSVERSTRING(__x)
+#define __OSVERSTRING(__x) #__x
+#define OSNAME GR_PACKAGE_NAME " " OSVERSTRING(GR_VERSION_1) "." OSVERSTRING(GR_VERSION_2)
+#define OSENUM MANDOC_OS_OTHER
+#define BINM_PAGER "less"
 
 #include "mdocversion.h"        /*VERSION and binary names*/
+
+/*
+ *  Toolchain specific
+ */
+     
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wformat="                  // unknown conversion type character 'z' in format
+#pragma GCC diagnostic ignored "-Wformat-extra-args"        // too many arguments for format
+#pragma GCC diagnostic ignored "-Wreturn-type"              // control reaches end of non-void function 
+#pragma GCC diagnostic ignored "-Wsign-compare"             // operand of '?:' changes signedness from 'xxx' to 'yyy   
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"  // variable 'xxx' set but not used
+#endif //__GNUC__
+#if defined(__WATCOMC__)
+#pragma disable_message(124)    // Comparison result always 0
+#pragma disable_message(136)    // Comparison equivalent to 'unsigned == 0'
+#pragma disable_message(202)    // Symbol 'xxx' has been defined, but not referenced
+#pragma disable_message(303)    // Parameter 'xxx' has been defined, but not referenced
+#endif
+#if defined(_MSC_VER)
+#pragma warning(disable:4146)   // unary minus operator applied to unsigned type, result still unsigned
+#pragma warning(disable:4244)   // '=': conversion from 'xxx' to 'yyy', possible loss of data
+#pragma warning(disable:4716)   // 'xxx': must return a value
+#pragma warning(disable:4996)   // 'xxx': was declared deprecated
+#endif
 
 /*
  *  compat_err.c (1.13.4)
