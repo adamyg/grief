@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.85 2025/02/07 03:03:20 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.86 2025/02/08 16:26:15 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.85 2025/02/07 03:03:20 cvsuser Exp $
+/* $Id: cmain.c,v 1.86 2025/02/08 16:26:15 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -534,6 +534,7 @@ cmain(int argc, char **argv)
   //if ((int)x_umask < 0) x_umask = 0;
     fileio_umask(x_umask);
 
+trace_flagsset(1);
     x_progname = argv[0];
     x_startup_time = time(NULL);
     x_progname = sysinfo_execname(x_progname);  /* resolve true name */
@@ -1735,8 +1736,13 @@ env_setup(void)
             const char *home;
 
             if (binpath[0]) {                   /* relative to binary */
-                if (0 == (done = path_cat(binpath, "../macros", buf, sizeof(buf)))) {
-                    done = path_cat(binpath, "../../macros", buf, sizeof(buf));
+#if defined(WIN32) && defined(_WIN64)
+#define MACROS "macros.x64"
+#else
+#define MACROS "macros"
+#endif
+                if (0 == (done = path_cat(binpath, "../" MACROS, buf, sizeof(buf)))) {
+                    done = path_cat(binpath, "../../" MACROS, buf, sizeof(buf));
 #if defined(__CYGWIN__) || defined(__MINGW32__)
                     if (!done) {
 #if defined(LT_OBJDIR)
@@ -1748,7 +1754,7 @@ env_setup(void)
                         const int binlen = strlen(binpath) - (sizeof(lt_subdir) - 1);
 
                         if (binlen > 0 && 0 == strcmp(binpath + binlen, lt_subdir)) {
-                            libtool = done = path_cat(binpath, "../../../macros", buf, sizeof(buf));
+                            libtool = done = path_cat(binpath, "../../../" MACROS, buf, sizeof(buf));
                         }
                     }
 #endif //CYGWIN||MINGW
@@ -1757,8 +1763,8 @@ env_setup(void)
 
             if (NULL != (home = sysinfo_homedir(NULL, -1))) {
                 /* home directory */
-                path_cat(home, "/bin/macros", buf, sizeof(buf));
-                path_cat(home, "/macros", buf, sizeof(buf));
+                path_cat(home, "/bin/" MACROS, buf, sizeof(buf));
+                path_cat(home, "/" MACROS, buf, sizeof(buf));
             }
         }
 
@@ -1892,6 +1898,7 @@ env_setup(void)
 #if defined(HAVE_ENVIRON) || defined(WIN32)
     {
         const char **envp = (const char **)environ;
+
         trace_log("environment:\n");
         if (envp)
             while (*envp) {

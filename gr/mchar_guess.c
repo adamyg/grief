@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mchar_guess_c,"$Id: mchar_guess.c,v 1.35 2025/02/07 03:03:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_mchar_guess_c,"$Id: mchar_guess.c,v 1.36 2025/02/08 16:24:15 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mchar_guess.c,v 1.35 2025/02/07 03:03:21 cvsuser Exp $
+/* $Id: mchar_guess.c,v 1.36 2025/02/08 16:24:15 cvsuser Exp $
  * Character-set conversion/file type guess logic.
  *
  *
@@ -506,7 +506,7 @@ mchar_guess(const char *specification, unsigned flags,
     if (guess.gi_endian >= 0) {
         trace_ilog("   endian: <%s>\n", guess.gi_endian ? "big" : "little");
     }
-    trace_ilog(" termtype: <%d/%s>\n", \
+    trace_ilog(" termtype: <%u/%s>\n", \
         guess.gi_termtype, buf_termtype_desc(guess.gi_termtype, "n/a"));
     trace_ilog("     term: [");
         trace_data(guess.gi_termbuf, guess.gi_termlen, "]\n");

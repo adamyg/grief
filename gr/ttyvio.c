@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.88 2025/02/07 03:03:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.89 2025/02/08 16:24:15 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.88 2025/02/07 03:03:22 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.89 2025/02/08 16:24:15 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -268,7 +268,29 @@ ttinit(void)
     x_scrfn.scr_repeat  = term_repeat;
 
     (void)sprintf(tt_title, "%s (%s)", x_appname, x_version);
+}
+
+
+/*  Function:           term_open
+ *      Open the console
+ *
+ *  Parameters:
+ *      none
+ *
+ *  Returns:
+ *      nothing
+ */
+static void
+term_open(scrprofile_t* profile)
+{
+    tt_open = tt_cursor = TRUE;
     vio_reference();
+    io_device_add(TTY_INFD);
+    if (profile) {
+        term_sizeget(&profile->sp_rows, &profile->sp_cols);
+        profile->sp_colors = tt_colors;
+    }
+    sys_initialise();
 }
 
 
@@ -398,28 +420,6 @@ term_colors(void)
         tt_colormap[col] = color;
         trace_ilog("\t%16s [%2d] = %d\n", color_name(col, "unknown"), col, tt_colormap[col]);
     }
-}
-
-
-/*  Function:           term_open
- *      Open the console
- *
- *  Parameters:
- *      none
- *
- *  Returns:
- *      nothing
- */
-static void
-term_open(scrprofile_t *profile)
-{
-    tt_open = tt_cursor = TRUE;
-    io_device_add(TTY_INFD);
-    if (profile) {
-        term_sizeget(&profile->sp_rows, &profile->sp_cols);
-        profile->sp_colors = tt_colors;
-    }
-    sys_initialise();
 }
 
 

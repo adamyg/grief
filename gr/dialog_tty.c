@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dialog_tty_c,"$Id: dialog_tty.c,v 1.34 2025/02/07 03:03:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_dialog_tty_c,"$Id: dialog_tty.c,v 1.35 2025/02/08 16:25:12 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dialog_tty.c,v 1.34 2025/02/07 03:03:21 cvsuser Exp $
+/* $Id: dialog_tty.c,v 1.35 2025/02/08 16:25:12 cvsuser Exp $
  * Dialog manager, TTY interface.
  *
  *
@@ -1168,7 +1168,7 @@ RequestResize(WIDGET_t *w, int rows, int cols)
 static int
 ReqRows(WIDGET_t *w)
 {
-    if ((w->w_uflags & WTTY_FRESIZE) && w->w_reqrows) {
+    if ((w->w_uflags | WTTY_FRESIZE) && w->w_reqrows) {
         return w->w_reqrows + Border(w);
     }
     return w->w_rows + Border(w);
@@ -1178,7 +1178,7 @@ ReqRows(WIDGET_t *w)
 static int
 ReqCols(WIDGET_t *w)
 {
-    if ((w->w_uflags & WTTY_FRESIZE) && w->w_reqcols) {
+    if ((w->w_uflags | WTTY_FRESIZE) && w->w_reqcols) {
         return w->w_reqcols + Border(w);
     }
     return w->w_cols + Border(w);
