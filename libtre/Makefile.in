@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.18 2025/02/07 03:03:22 cvsuser Exp $
+# $Id: Makefile.in,v 1.21 2025/02/09 18:52:01 cvsuser Exp $
 # libtre - regular expression library makefile.
 #
 #
@@ -32,10 +32,12 @@ top_builddir=	@top_builddir@
 
 # File extensions
 
-O=		.o
+C=		.c
 H=		.h
+O=		.o
 A=		.a
 LP=		lib
+E=		
 
 CLEAN=		*.bak *~ *.BAK *.swp *.tmp core *.core a.out
 XCLEAN=
@@ -91,7 +93,7 @@ CRELEASE=	@CRELEASE@
 LDDEBUG=	@LDDEBUG@
 LDRELEASE=	@LDRELEASE@
 
-CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
+CINCLUDE=	-I. -I$(REINC) -I$(RESRC) -I$(D_INC) @CINCLUDE@
 CEXTRA=		@DEFS@ -DTRE_REGEX_T_FIELD=value
 
 ifeq ("$(BUILD_TYPE)","release")
@@ -101,7 +103,7 @@ else
 CFLAGS+=	$(CDEBUG) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
 LDFLAGS=	$(LDDEBUG) @LDFLAGS@
 endif
-LDLIBS=		-L$(D_LIB) @LIBS@ @LIBMALLOC@ @EXTRALIBS@
+LDLIBS=		-L$(D_LIB) $(LINKLIBS) @LIBS@ @LIBMALLOC@ @EXTRALIBS@
 
 YFLAGS=		-d
 ARFLAGS=	rcv
@@ -125,9 +127,11 @@ REPACKED=	tre-master-202406.zip
 UNPACKEDLABEL=	.unpacked.tre-master
 
 RESRC=		./tre-master/lib
+RETEST_SRC=	./tre-master/tests
 REINC=		./tre-master/local_includes
 XCLEAN+=	./tre.h
 
+VPATH+=		$(RESRC) $(RESRC_TESTS)
 LIBOBJS=\
 	$(D_OBJ)/tre-ast$(O)			\
 	$(D_OBJ)/tre-compile$(O)		\
@@ -142,6 +146,11 @@ LIBOBJS=\
 	$(D_OBJ)/regcomp$(O)			\
 	$(D_OBJ)/regerror$(O)			\
 	$(D_OBJ)/regexec$(O)
+
+VPATH+=		$(RETEST_SRC)
+RETEST_OBJS=	\
+	$(D_OBJ)/retest$(O)			\
+	$(D_OBJ)/xmalloc$(O)
 
 DLLOBJS=\
 	$(subst $(O),.lo,$(LIBOBJS))
@@ -158,12 +167,14 @@ DLLOBJS+=	$(D_OBJ)/tre.res
 endif
 endif
 
-OBJS=		$(LIBOBJS) $(DLLOBJS)
+OBJS=		$(LIBOBJS) $(DLLOBJS) $(RETEST_OBJS)
 LIBS=		$(RELIB)
 ifeq (yes,$(findstring yes,"@ISWIN32@ or @ISWIN64@"))
 LIBS+=		$(REDLL)
 endif
-TSKS=
+
+RETEST=		$(D_BIN)/tre_retest$(E)
+TSKS=		$(RETEST)
 
 
 #########################################################################################
@@ -171,7 +182,7 @@ TSKS=
 
 .PHONY:			build release debug
 build:			source unpacked
-unpacked:		./tre.h $(LIBS) $(TSKS) installinc
+unpacked:		./tre.h $(LIBS) installinc $(TSKS)
 
 release:
 		$(MAKE) BUILD_TYPE=release $(filter-out release, $(MAKECMDGOALS))
@@ -194,6 +205,14 @@ $(REDLL):		$(D_OBJ)/.created $(DLLOBJS)
 		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $(DLLOBJS) -version-number $(VERSIONSPEC) \
 			-rpath $(D_LIB) -bindir $(D_BIN) $(DLLDEF) $(LDLIBS) @LDMAPFILE@
 
+XCLEAN +=	$(basename $(RETEST)).map
+$(RETEST):		CEXTRA += -DLIBTRE_DLL -DMALLOC_DEBUGGING -DLIBTRE_STATIC
+$(RETEST):		MAPFILE=$(basename $@).map
+$(RETEST):		$(LIBRARY)
+$(RETEST):		LINKLIBS=$(RELIB)
+$(RETEST):		$(RETEST_OBJS)
+		$(LIBTOOL) --mode=link $(CC) -I$(REINC) $(LDFLAGS) -o $@ $(RETEST_OBJS) $(LDLIBS) @LDMAPFILE@
+
 source:			$(UNPACKEDLABEL)
 		@$(MAKE) unpacked
 
@@ -213,10 +232,10 @@ $(UNPACKEDLABEL):	$(REPACKED)
 		@gzip -c -d $(REPACKED) | tar -xvf -
 endif
 
-installinc:
+installinc:		../include/tre/.created
 		@echo publishing headers ...
-		@-cp tre.h ../include
-		@-cp tre-config.h ../include
+		@-cp tre.h ../include/tre/tre.h
+		@-cp tre-config.h ../include/tre/tre-config.h
 
 %/.created:
 		-@mkdir $(@D)
@@ -232,16 +251,10 @@ clean:
 endif
 
 ##
-$(D_OBJ)/%$(O):		$(RESRC)/%.c
-		$(CC) $(CFLAGS) -I$(RESRC) -o $@ -c $<
-
 $(D_OBJ)/%$(O):		%.c
 		$(CC) $(CFLAGS) -I$(RESRC) -o $@ -c $<
 
 ##
-$(D_OBJ)/%.lo:		$(RESRC)/%.c
-		$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -I$(RESRC) -o $@ -c $<
-
 $(D_OBJ)/%.lo:		%.c
 		$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -I$(RESRC) -o $@ -c $<
 

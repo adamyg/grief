@@ -1,10 +1,10 @@
-dnl $Id: configure.in,v 1.98 2024/08/25 06:00:04 cvsuser Exp $
+dnl $Id: configure.in,v 1.99 2025/02/09 18:28:05 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: Autoconf; tabs: 8; -*-
 dnl
 dnl Adam Young (c) 1995-2024
 
-AC_REVISION($Revision: 1.98 $)
+AC_REVISION($Revision: 1.99 $)
 AC_SUBST([PACKAGE])
 AC_INIT([GriefEdit],[3.2.3],[https://github.com/adamyg/grief])
 AC_PREREQ([2.69])
@@ -631,7 +631,7 @@ AC_CHECK_TYPE(u_char, unsigned char)
 
 dnl Wide character support
 AC_CHECK_HEADERS(wchar.h wctype.h)
-AC_CHECK_FUNCS(mbrtowc wcrtomb wcscmp wcscpy wcslen wctomb wmemcmp wmemmove wmemcpy wcwidth)
+AC_CHECK_FUNCS(mbrtowc wcrtomb wcsrtombs wcstombs wcscmp wcscpy wcslen wctomb wmemcmp wmemmove wmemcpy wcwidth)
 
 dnl Checks for library functions
 dnl
