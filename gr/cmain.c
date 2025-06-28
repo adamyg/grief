@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.86 2025/02/08 16:26:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.87 2025/06/28 11:08:46 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.86 2025/02/08 16:26:15 cvsuser Exp $
+/* $Id: cmain.c,v 1.87 2025/06/28 11:08:46 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -534,7 +534,6 @@ cmain(int argc, char **argv)
   //if ((int)x_umask < 0) x_umask = 0;
     fileio_umask(x_umask);
 
-trace_flagsset(1);
     x_progname = argv[0];
     x_startup_time = time(NULL);
     x_progname = sysinfo_execname(x_progname);  /* resolve true name */
