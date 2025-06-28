@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_realpath_c,"$Id: w32_realpath.c,v 1.9 2025/02/03 02:27:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_realpath_c,"$Id: w32_realpath.c,v 1.10 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -115,6 +115,10 @@ w32_realpath2(const char *path, char *resolved_path, size_t maxlen)
 
         w32_utf2wc(path, wpath, _countof(wpath));
 
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:6255)
+#endif
         if (NULL != (wresolved_path = alloca(sizeof(wchar_t *) * WIN32_PATH_MAX))) {
             if (w32_realpathW(wpath, wresolved_path, WIN32_PATH_MAX)) {
                 if (NULL == resolved_path) {    // dynamic; implementation specific.
@@ -130,6 +134,10 @@ w32_realpath2(const char *path, char *resolved_path, size_t maxlen)
                 }
             }
         }
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
         return NULL;
     }
 #endif  //UTF8FILENAMES
@@ -157,8 +165,8 @@ w32_realpathA(const char *path, char *resolved_path, size_t maxlen)
 
         if (result) {                           // root
             /*
-             *  Generic chdir("/") behaviour is context specific, meaning goto root of current drive,
-             *  mount point or current UNC. Normalisze this behaviour to root of current/last drive.
+             *  Generic chdir("/") behavior is context specific, meaning goto root of current drive,
+             *  mount point or current UNC. Normalize this behavior to root of current/last drive.
              */
             if (('/' == path[0] || '\\' == path[0]) && 0 == path[1]) {
                 int driveno = w32_getdrive();   // also see chdir()
@@ -174,9 +182,9 @@ w32_realpathA(const char *path, char *resolved_path, size_t maxlen)
             }
         }
 
-        if (result) {                           // resolve symlink component
-            if (w32_lnkexpandA(path, symlink, _countof(symlink), SHORTCUT_COMPONENT)) {
-                path = symlink;
+        if (result) {
+            if (w32_expandlinkA(path, symlink, _countof(symlink), SHORTCUT_COMPONENT)) {
+                path = symlink;                 // expanded short-cut 
             }
         }
 
@@ -211,7 +219,7 @@ w32_realpathA(const char *path, char *resolved_path, size_t maxlen)
             }
 
             //
-            //  GetFullPathNameA() returns 0 if some path resolve problem occured
+            //  GetFullPathNameA() returns 0 if some path resolve problem occurred
             if (0 == size) {
                 switch (GetLastError()) {
                 case ERROR_ACCESS_DENIED:
@@ -282,8 +290,8 @@ w32_realpathW(const wchar_t *path, wchar_t *resolved_path, size_t maxlen)
 
         if (result) {                           // root
             /*
-             *  Generic chdir("/") behaviour is context specific, meaning goto root of current drive,
-             *  mount point or current UNC. Normalisze this behaviour to root of current/last drive.
+             *  Generic chdir("/") behavior is context specific, meaning goto root of current drive,
+             *  mount point or current UNC. Normalize this behavior to root of current/last drive.
              */
             if (('/' == path[0] || '\\' == path[0]) && 0 == path[1]) {
                 int driveno = w32_getdrive();
@@ -299,9 +307,9 @@ w32_realpathW(const wchar_t *path, wchar_t *resolved_path, size_t maxlen)
             }
         }
 
-        if (result) {                           // resolve symlink component
-            if (w32_lnkexpandW(path, symlink, _countof(symlink), SHORTCUT_COMPONENT)) {
-                path = symlink;
+        if (result) {
+            if (w32_expandlinkW(path, symlink, _countof(symlink), SHORTCUT_COMPONENT)) {
+                path = symlink;                 // expanded short-cut
             }
         }
 
@@ -336,7 +344,7 @@ w32_realpathW(const wchar_t *path, wchar_t *resolved_path, size_t maxlen)
             }
 
             //
-            //  GetFullPathNameA() returns 0 if some path resolve problem occured
+            //  GetFullPathNameA() returns 0 if some path resolve problem occurred
             if (0 == size) {
                 switch (GetLastError()) {
                 case ERROR_ACCESS_DENIED:

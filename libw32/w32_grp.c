@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_grp_c,"$Id: w32_grp.c,v 1.17 2025/02/03 02:27:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_grp_c,"$Id: w32_grp.c,v 1.18 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -40,6 +40,7 @@ __CIDENT_RCSID(gr_w32_grp_c,"$Id: w32_grp.c,v 1.17 2025/02/03 02:27:35 cvsuser E
 #endif
 
 #include "win32_internal.h"
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <grp.h>
@@ -59,7 +60,7 @@ static unsigned             x_groups_count;
 static unsigned             x_cursor;           /* getgrent cursor */
 static struct group         x_group;
 static struct group        *x_groups;
-static char                 x_buffer[MAX_PATH * 2];
+static char                 x_buffer[WIN32_PATH_MAX * 2];
 
 
 /*
@@ -480,7 +481,7 @@ fill_groups(void)
     DWORD_PTR resume_handle = 0;
     NET_API_STATUS nStatus;
     unsigned cbufsz = 0;
-    char name[MAX_PATH];
+    char name[WIN32_PATH_MAX];
     int nlen;
 
     fill_group();
@@ -568,6 +569,7 @@ fill_groups(void)
                 for (i = 0; i < dwEntriesRead; ++i) {
                     const PGROUP_INFO_2 group = groups + i;
 
+                    _wcslwr(group->grpi2_name);
                     if ((int)group->grpi2_group_id == x_group.gr_gid ||
                             (nlen = w32_wc2utf(group->grpi2_name, name, sizeof(name))) <= 0) {
                         continue;
@@ -581,7 +583,6 @@ fill_groups(void)
 
                     memset(grp, 0, sizeof(*grp));
                     grp->gr_name = cursor;
-                    _strlwr(cursor);
                     grp->gr_gid = (short) group->grpi2_group_id;
                     cursor += (nlen + 1);
                     bufsz -= (nlen + 1);

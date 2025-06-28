@@ -1,14 +1,15 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: config_windows.pl,v 1.6 2024/05/28 11:18:48 cvsuser Exp $
+# $Id: config_windows.pl,v 1.7 2025/06/28 11:10:00 cvsuser Exp $
 # Configure front-end for native windows targets.
 #
 
 use strict;
 use warnings 'all';
 
-use Cwd;
+use Cwd 'realpath', 'getcwd';
 use File::Which qw(which where);
+use File::Basename;
 
 sub
 ProgramFiles
@@ -25,6 +26,7 @@ ProgramFiles
 my $PROGRAMFILES = ProgramFiles();
 my $olocalutils = 0;
 my $omingw = undef;
+my $trace = 0;
 
 foreach (@ARGV) {
 	if (/^--cfg-localutils$/) {
@@ -39,9 +41,15 @@ foreach (@ARGV) {
 	}
 }
 
+sub
+Trace
+{
+	print "config_windows: (V) " . sprintf(shift, @_) . "\n"
+		if ($trace);
+}
 
 sub
-Resolve 		# (default, apps ...)
+Resolve			# (default, apps ...)
 {
 	my $default = shift;
 	return $default
@@ -101,39 +109,92 @@ Resolve 		# (default, apps ...)
 	return $default;
 }
 
+
+sub
+SugguestCoreUtils	# (app, path)
+{
+	my ($app, $path) = shift;
+
+	$path = "" if (! $path);
+
+	print "config_windows: CoreUtils=${app} missing\n\n";
+	print "Possible solutions include -\n\n";
+	print "  o msys64:\n\n";
+
+	if ($app eq 'msgfmt') {
+		printf "     ${path}pacman -S mingw-w64-i686-gettext-tools\n";
+
+	} elsif ($app eq 'zip' || $app eq 'unzip') {
+		printf "     ${path}pacman -S ${app}\n";
+
+	} else {		# coreutils etc
+		printf "     ${path}pacman -S base-devl\n";
+	}
+
+	print "\n";
+	print "  o Git for Windows:\n\n";
+	print "     winget install --id Git.Git -e --source winget\n";
+
+	print "\n";
+	print "  o Busybox for Windows:\n\n";
+	print "     busybox --install c:/busybox\n";
+
+	print "\n";
+}
+
+
 sub
 ResolveCoreUtils	# ()
 {
 	my @paths = (
-		"",                                 # PATH
-		"c:/msys64/usr",                    # MSYS installation
-		"${PROGRAMFILES}/Git/usr",          # Git for Windows
-		"c:/GnuWin32",                      # https://sourceforge.net/projects/getgnuwin32/files (legacy)
-		"C:/Program Files (x86)/GnuWin32",  # choco install gnuwin32-coreutils.install (legacy)
+		"",					# PATH
+		"c:/msys64/usr",			# MSYS installation(s)
+		"d:/msys64/usr",
+		"${PROGRAMFILES}/Git/usr",		# Git for Windows
+		"c:/Busybox",				# Busybox for Windows (https://frippery.org/busybox/)
+		"c:/Program Files/Busybox",
+		"c:/Program Files (x86)/Busybox",
+		"c:/GnuWin32",				# https://sourceforge.net/projects/getgnuwin32/files (legacy)
+		"c:/Program Files (x86)/GnuWin32",	# choco install gnuwin32-coreutils.install (legacy)
+	     ## "C:/Users/${USERNAME}/AppData/Local/GitHubDesktop/app-x.x.x/resources/app/git/usr/bin"
 		);
-	my @cmds = ("mkdir", "rmdir", "cp", "mv", "rm", "egrep", "gzip", "tar", "unzip", "zip");
+	my @cmds = ("mkdir", "rmdir", "cp", "mv", "rm", "grep", "gzip", "tar", "zip", "unzip", "msgfmt");
 
 	foreach my $path (@paths) {
-		my $success = 1;
-		if (! $path) {
+		if (! $path) {				# PATH
+			my $success = 1;
+			Trace("checking CoreUtils against <PATH>");
 			foreach my $app (@cmds) {
-				if (! which($app) ) {
+				my $resolved = which($app);
+				Trace("  $app=%s", $resolved ? lc $resolved : "(unresolved)");
+				if (! $resolved) {
+					SugguestCoreUtils($app)
+						if ($success > 1);
 					$success = 0;
-					goto LAST;
+					last;
 				}
+				$success++;
 			}
 			if ($success) {
 				print "config_windows: CoreUtils=PATH\n";
 				return "";
 			}
-		} else {
-			my $bin = "${path}/bin";
-			if (-d $bin) {
+
+		} else {				# explicit; test possible solutions
+			my $bin = "${path}/bin/";
+			my $success = (-d $bin);
+			if ($success) {
+				Trace("checking CoreUtils against <${bin}>");
 				foreach my $app (@cmds) {
-					if (! -f "${bin}/${app}") {
+					my $resolved = (-f "${bin}${app}" || "${bin}${app}.exe");
+					Trace("  $app=%s", $resolved ? "${bin}${app}" : "(unresolved)");
+					if (! $resolved) {
+						SugguestCoreUtils($app, $bin)
+							if ($success > 1);
 						$success = 0;
-						goto LAST;
+						last;
 					}
+					$success++;
 				}
 			}
 			if ($success) {
@@ -142,14 +203,17 @@ ResolveCoreUtils	# ()
 			}
 		}
 	}
+
 	die "config_windows: unable to determine coreutils\n";
 }
 
-my $busybox	= Resolve('./win32/busybox', 'busybox');
-my $wget	= Resolve('./win32/wget', 'wget');
+my $perlpath	= undef;
+my $busybox	= Resolve('./support/busybox', 'busybox');
+my $wget	= Resolve('./support/wget', 'wget');
 my $bison	= Resolve('$(D_BIN)/byacc', 'bison', 'yacc');
 my $flex	= Resolve('$(D_BIN)/flex', 'flex');
 my $coreutils	= undef;
+my $inno	= undef;
 
 ##  build command line
 
@@ -164,17 +228,21 @@ my $ohelp = 0;
 
 my $script  = shift @ARGV;
 foreach (@ARGV) {
-	if (/^--busybox=(.*)$/) {
+	if (/^--busybox=(.*)$/) {			# busybox path, otherwise located.
 		$busybox = $1;
-	} elsif (/^--binpath=(.*)$/) {
+	} elsif (/^--perlpath=(.*)$/) {			# Perl binary path, otherwise resolved.
+		$perlpath = $1;
+	} elsif (/^--binpath=(.*)$/) {			# Path to coreutils, otherwise these are assumed to be in the path.
 		$coreutils = $1;
-	} elsif (/^--wget=(.*)$/) {
+	} elsif (/^--wget=(.*)$/) {			# wget installation path.
 		$wget = $1;
-	} elsif (/^--bison=(.*)$/) {
+	} elsif (/^--bison=(.*)$/) {			# yacc/bison installation path.
 		$bison = $1;
-	} elsif (/^--flex=(.*)$/) {
+	} elsif (/^--flex=(.*)$/) {			# flex installation path.
 		$flex = $1;
-	} elsif (/^--cfg-symlink$/) { # undocumented
+	} elsif (/^--inno=(.*)$/) {			# inno-setup installation path.
+		$inno = $1;
+	} elsif (/^--cfg-symlink$/) {			# undocumented
 		# --cfg-symlink, Symlink detected coreutils to ./CoreUtils.
 		$core_symlink = 1;
 	} elsif (/^--cfg-localutils$/) {
@@ -183,8 +251,10 @@ foreach (@ARGV) {
 		# consume
 	} elsif (/^--help$/) {
 		$ohelp = 1;
+	} elsif (/^--trace$/) {
+		$trace = 1;
 	} else {
-		if (/^--/) {
+		if (/^--/) {				# others, pass-thru
 			if (/^--(.*)=(.*)$/) {
 				push @options, "--$1=\"$2\"";
 			} else {
@@ -213,21 +283,42 @@ EOU
 	exit 3;
 }
 
+if (! defined $perlpath) {
+	my $running = lc realpath($^X);
+	my $resolved = dirname(${running});
+
+	my $perl = which("perl");
+	$perl = lc realpath($perl)
+		if (defined $perl);
+
+	if (! $perl || $perl eq 'perl' || $perl ne $running) {
+							# non-found, generic or alternative
+		print "config_windows: Perl=${resolved} (resolved, ${perl})\n";
+		push @options, "--perlpath=\"${resolved}\"";
+	} else {
+		print "config_windows: Perl=PATH (${resolved})\n";
+	}
+} else {
+	print "config_windows: Perl=${perlpath}\n";
+	push @options, "--perlpath=\"${perlpath}\"";
+}
+
 $coreutils = ResolveCoreUtils()
 	if (! $coreutils);
 if ($coreutils) {
 	if ($core_symlink) {
-		if ($coreutils =~ / /) { # spaces, symlink
-			print "config_windows: CoreUtils: ./CoreUtils => ${coreutils} (symlink)\n";
+		if ($coreutils =~ / /) {		# spaces, symlink
+			print "config_windows: coreutils: ./CoreUtils => ${coreutils} (symlink)\n";
 			system "mklink /J CoreUtils \"${coreutils}\""
 				if (! -d "CoreUtils/bin");
-			push @options, "--binpath=./CoreUtils/bin";
+			push @options, "--binpath=\"./CoreUtils/bin\"";
 
 		} else {
-			push @options, "--binpath=${coreutils}/bin";
+			push @options, "--binpath=\"${coreutils}/bin\"";
 		}
 	} else {
-		die "config_windows: coreutils detected yet not in PATH, add <$coreutils/bin> before proceeding.\n";
+		die "config_windows: coreutils detected yet not in PATH,\n".
+		    "   either add <$coreutils/bin> before proceeding or add missing components.\n";
 		return;
 	}
 }
@@ -235,8 +326,14 @@ if ($coreutils) {
 die "config_windows: target missing\n"
 	if (! $otarget);
 
-print "\n$^X ${script}\n => --busybox=\"${busybox}\" --wget=\"${wget}\" --flex=\"${flex}\" --bison=\"${bison}\" @options ${otarget}\n\n";
+push @options, "--busybox=\"${busybox}\"";
+push @options, "--wget=\"${wget}\"";
+push @options, "--flex=\"${flex}\"";
+push @options, "--bison=\"${bison}\"";
+push @options, "--inno=\"${inno}\""
+	if ($inno);
 
-system "$^X ${script} --busybox=\"${busybox}\" --wget=\"${wget}\" --flex=\"${flex}\" --bison=\"${bison}\" @options ${otarget}";
+print "\n$^X ${script}\n => @options ${otarget}\n\n";
+system "$^X ${script} @options ${otarget}";
 
 #end

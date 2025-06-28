@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_prntf_c,"$Id: prntf.c,v 1.19 2025/02/07 03:03:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_prntf_c,"$Id: prntf.c,v 1.20 2025/06/28 11:08:25 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: prntf.c,v 1.19 2025/02/07 03:03:21 cvsuser Exp $
+/* $Id: prntf.c,v 1.20 2025/06/28 11:08:25 cvsuser Exp $
  * Print formatter.
  *
  *
@@ -35,7 +35,7 @@ __CIDENT_RCSID(gr_prntf_c,"$Id: prntf.c,v 1.19 2025/02/07 03:03:21 cvsuser Exp $
 #include "symbol.h"
 
 #define PRINTF_SIZE     512                     /* Base buffer size, in bytes */
-#define PRINTF_INCR     (-2)                    /* Multipler */
+#define PRINTF_INCR     (-2)                    /* Multiplier */
 
 typedef struct {
 #define F_ZEROPAD       0x0001                  /* padding char; ' ' or '0' */

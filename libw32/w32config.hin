@@ -1,10 +1,10 @@
 #ifndef WIN32_CONFIG_H_INCLUDED
 #define WIN32_CONFIG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.32 2025/02/09 18:38:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.33 2025/06/28 11:07:20 cvsuser Exp $")
 __CPRAGMA_ONCE
 /* -*- mode: c; set-indent: 4; -*- */
-/* $Id: w32config.hin,v 1.32 2025/02/09 18:38:53 cvsuser Exp $
+/* $Id: w32config.hin,v 1.33 2025/06/28 11:07:20 cvsuser Exp $
  * Machine configuration.
  *
  * System dependent <config.h> configuration template,
@@ -140,6 +140,8 @@ __CPRAGMA_ONCE
 #undef HAVE_AFUNIX_H
 #undef HAVE_INTRIN_H
 #undef HAVE_INTSAFE_H
+#undef HAVE_NTDEF_H
+#undef HAVE_NTIFS_H
 
 /* Explicit header checks */
 #undef HAVE_SYS_TYPES_H
@@ -502,6 +504,7 @@ __CPRAGMA_ONCE
 #undef HAVE_STRRCHR
 #undef HAVE_STRDUP
 #undef HAVE_STRFTIME
+#undef HAVE_STRPTIME
 #undef HAVE_STRTOUL
 #undef HAVE_STRTOF
 #undef HAVE_STRTOLD
@@ -647,6 +650,7 @@ __CPRAGMA_ONCE
 #undef HAVE_SETLOCALE
 #undef HAVE_LANGINFO_CODESET
 #undef HAVE_LOCALE_CHARSET
+#undef HAVE_NL_LANGINFO
 
 #undef HAVE_VFORK_H
 #undef HAVE_FORK
@@ -676,6 +680,11 @@ __CPRAGMA_ONCE
 
 #undef HAVE_ALLOCA
 #undef HAVE__ALLOCA
+
+#undef HAVE_GETTIMEOFDAY
+#undef HAVE_NANOSLEEP
+#undef HAVE_SLEEP
+#undef HAVE_USLEEP
 
         /* psuedo tty */
 #undef HAVE_PTY_H

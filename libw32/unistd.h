@@ -1,7 +1,7 @@
 #ifndef LIBW32_UNISTD_H_INCLUDED
 #define LIBW32_UNISTD_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_unistd_h,"$Id: unistd.h,v 1.76 2025/02/03 02:27:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_unistd_h,"$Id: unistd.h,v 1.77 2025/06/28 11:07:20 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -40,8 +40,8 @@ __CPRAGMA_ONCE
 #if (_MSC_VER != 1900)                          /* MSVC 19/2015 */
 #if (_MSC_VER <  1910 || _MSC_VER > 1916)       /* MSVC 2017: 19.10 .. 16 */
 #if (_MSC_VER > 1929)                           /* MSVC 2019: 19.20 .. 29 */
-#if (_MSC_VER > 1942)                           /* MSVC 2022: 19.30 .. 42 */
-#error unistd.h: untested MSVC Version (2005 -- 2022 19.42)
+#if (_MSC_VER > 1943)                           /* MSVC 2022: 19.30 .. 43 */
+#error unistd.h: untested MSVC Version (2005 -- 2022 19.43)
 	//see: https://en.wikipedia.org/wiki/Microsoft_Visual_C%2B%2B
 #endif //2022
 #endif //2019
@@ -145,6 +145,29 @@ __CPRAGMA_ONCE
 #if defined(LIBW32_UNISTD_MAP) && !defined(WIN32_UNISTD_MAP)
 #define WIN32_UNISTD_MAP 1
 #endif
+
+#if defined(_LARGEFILE64_SOURCE)
+#if !defined(OFF64_T)
+#define OFF64_T 1
+#define FPOS64_T 1
+#if defined(__WATCOMC__)
+typedef long long off64_t;
+typedef long long fpos64_t;
+#define stat64 _stati64     // Note: sizeof(st_size)==8, sizeof(st_atime)==4
+#else
+typedef __int64 off64_t;
+typedef __int64 fpos64_t;
+#define stat64 _stat64      // Note: sizeof(st_size)==8, sizeof(time_t/st_atime)==8
+#endif
+#endif // OFF64_T
+#endif //_LARGEFILE64_SOURCE
+
+#define EMODEINIT()         UINT __errmode = 0;
+    // 0 - system default, displays all error dialog boxes.
+#define EMODESUPPRESS()     __errmode = SetErrorMode (SEM_FAILCRITICALERRORS|SEM_NOGPFAULTERRORBOX);
+    // SEM_FAILCRITICALERRORS - system does not display the critical-error handler message box.
+    // SEM_NOGPFAULTERRORBOX - system does not invoke Windows Error Reporting.
+#define EMODERESTORE()      SetErrorMode (__errmode);
 
 __BEGIN_DECLS
 
@@ -446,7 +469,7 @@ LIBW32_API int          WIFEXITED (int status);
 LIBW32_API int          WIFSIGNALED (int status);
 LIBW32_API int          WTERMSIG (int status);
 LIBW32_API int          WCOREDUMP (int status);
-LIBW32_API int          WIFSTOPPED(int status);
+LIBW32_API int          WIFSTOPPED (int status);
 #endif
 
 /* <stdlib.h> */
@@ -460,8 +483,8 @@ LIBW32_API int          getsubopt (char **optionp, char * const *tokens, char **
 #define NEED_STRCASECMP                         /*see: w32_string.c*/
 #endif
 #if defined(NEED_STRCASECMP)
-LIBW32_API int          strcasecmp(const char *s1, const char *s2);
-LIBW32_API int          strncasecmp(const char *s1, const char *s2, size_t len);
+LIBW32_API int          strcasecmp (const char *s1, const char *s2);
+LIBW32_API int          strncasecmp (const char *s1, const char *s2, size_t len);
 #endif /*NEED_STRCASECMP*/
 
 #if (defined(_MSC_VER) && (_MSC_VER < 1400)) || \
@@ -534,18 +557,32 @@ LIBW32_API int          w32_utf8filenames_enable (void);
 LIBW32_API int          w32_open (const char *path, int, ...);
 LIBW32_API int          w32_openA (const char *path, int, int);
 LIBW32_API int          w32_openW (const wchar_t *path, int, int);
+
 LIBW32_API int          w32_stat (const char *path, struct stat *sb);
 LIBW32_API int          w32_statA (const char *path, struct stat *sb);
 LIBW32_API int          w32_statW (const wchar_t *path, struct stat *sb);
 LIBW32_API int          w32_lstat (const char *path, struct stat *sb);
 LIBW32_API int          w32_lstatA (const char *path, struct stat *sb);
 LIBW32_API int          w32_lstatW (const wchar_t *path, struct stat *sb);
-LIBW32_API int          w32_fstat (int fd, struct stat *sb);
-LIBW32_API int          w32_fstatA (int fd, struct stat *sb);
-LIBW32_API int          w32_fstatW (int fd, struct stat *sb);
-LIBW32_API int          w32_read (int fd, void *buffer, size_t cnt);
-LIBW32_API int          w32_write (int fd, const void *buffer, size_t cnt);
-LIBW32_API int          w32_close (int fd);
+LIBW32_API int          w32_fstat (int fildes, struct stat *sb);
+LIBW32_API int          w32_fstatA (int fildes, struct stat *sb);
+LIBW32_API int          w32_fstatW (int fildes, struct stat *sb);
+
+#if defined(_LARGEFILE64_SOURCE)
+LIBW32_API int          w32_stat64 (const char *path, struct stat64 *sb);
+LIBW32_API int          w32_stat64A (const char *path, struct stat64 *sb);
+LIBW32_API int          w32_stat64W (const wchar_t *path, struct stat64 *sb);
+LIBW32_API int          w32_lstat64 (const char *path, struct stat64 *sb);
+LIBW32_API int          w32_lstat64A (const char *path, struct stat64 *sb);
+LIBW32_API int          w32_lstat64W (const wchar_t *path, struct stat64 *sb);
+LIBW32_API int          w32_fstat64 (int fildes, struct stat64 *sb);
+LIBW32_API int          w32_fstat64A (int fildes, struct stat64 *sb);
+LIBW32_API int          w32_fstat64W (int fildes, struct stat64 *sb);
+#endif
+
+LIBW32_API int          w32_read (int fildes, void *buffer, size_t cnt);
+LIBW32_API int          w32_write (int fildes, const void *buffer, size_t cnt);
+LIBW32_API int          w32_close (int fildes);
 LIBW32_API const char * w32_strerror (int errnum);
 
 LIBW32_API int          w32_link (const char *from, const char *to);
@@ -555,6 +592,10 @@ LIBW32_API int          w32_linkW (const wchar_t *from, const wchar_t *to);
 LIBW32_API int          w32_unlink (const char *fname);
 LIBW32_API int          w32_unlinkA (const char *fname);
 LIBW32_API int          w32_unlinkW (const wchar_t *fname);
+
+LIBW32_API FILE *       w32_fopen (const char *path, const char *mode);
+LIBW32_API FILE *       w32_fopenA (const char *path, const char *mode);
+LIBW32_API FILE *       w32_fopenW (const wchar_t *path, const wchar_t *mode);
 
 LIBW32_API int          w32_access (const char *fname, int mode);
 LIBW32_API int          w32_accessA (const char *fname, int mode);
@@ -567,21 +608,43 @@ LIBW32_API int          w32_renameW (const wchar_t *ofile, const wchar_t *nfile)
 LIBW32_API ssize_t      pread (int fildes, void *buf, size_t nbyte, off_t offset);
 LIBW32_API ssize_t      pwrite (int fildes, const void *buf, size_t nbyte, off_t offset);
 
-LIBW32_API int          w32_pipe(int fildes[2]);
+#if defined(_LARGEFILE64_SOURCE)
+LIBW32_API off64_t      w32_lseek64 (int fildes, off64_t offset, int whence);
+LIBW32_API off64_t      w32_tell64 (int fildes);
+LIBW32_API off64_t      w32_filelength64 (int fildes);
+
+LIBW32_API off64_t      w32_fseeko64 (FILE *stream, off64_t offset, int whence);
+LIBW32_API off64_t      w32_ftello64 (FILE *stream);
+LIBW32_API int          w32_fgetpos64 (FILE *stream, fpos64_t *pos);
+
+LIBW32_API ssize_t      pread64 (int fildes, void *buf, size_t nbyte, off64_t offset);
+LIBW32_API ssize_t      pwrite64 (int fildes, const void *buf, size_t nbyte, off64_t offset);
+#endif
+
+LIBW32_API int          w32_pipe (int fildes[2]);
 
 #if defined(WIN32_UNISTD_MAP)
 #define open            w32_open
-#define stat(a,b)       w32_stat(a, b)
-#define lstat(a,b)      w32_lstat(a, b)
-#define fstat(a,b)      w32_fstat(a, b)
-#define read(a,b,c)     w32_read(a, b, c)
-#define write(a,b,c)    w32_write(a, b, c)
-#define close(a)        w32_close(a)
-#define link(f,t)       w32_link(f,t)
-#define unlink(p)       w32_unlink(p)
-#define access(p,m)     w32_access(p, m)
-#define rename(a,b)     w32_rename(a,b)
-#define pipe(__f)       w32_pipe(__f)
+#if defined(_LARGEFILE64_SOURCE)
+#define stat(a,b)       w32_stat64 (a, b)
+#define lstat(a,b)      w32_lstat64 (a, b)
+#define fstat(a,b)      w32_fstat64 (a, b)
+#define lseek(a,b,c)    w32_lseek64 (a, b, c)
+#define tell(a)         w32_tell64 (a)
+#define filelength(a)   w32_filelength64 (a)
+#else
+#define stat(a,b)       w32_stat (a, b)
+#define lstat(a,b)      w32_lstat (a, b)
+#define fstat(a,b)      w32_fstat (a, b)
+#endif
+#define read(a,b,c)     w32_read (a, b, c)
+#define write(a,b,c)    w32_write (a, b, c)
+#define close(a)        w32_close (a)
+#define link(f,t)       w32_link (f,t)
+#define unlink(p)       w32_unlink (p)
+#define access(p,m)     w32_access (p, m)
+#define rename(a,b)     w32_rename (a,b)
+#define pipe(__f)       w32_pipe (__f)
 #endif /*WIN32_UNISTD_MAP*/
 
 #if defined(WIN32_UNISTD_MAP) || \
@@ -611,6 +674,14 @@ LIBW32_API char *       w32_getcwdd (char drive, char *path, size_t size);
 LIBW32_API char *       w32_getcwddA (char drive, char *path, size_t size);
 LIBW32_API wchar_t *    w32_getcwddW (char drive, wchar_t *path, size_t size);
 
+LIBW32_API char *       w32_getdirectory (void);
+LIBW32_API char *       w32_getdirectoryA (void);
+LIBW32_API wchar_t *    w32_getdirectoryW (void);
+
+LIBW32_API int          w32_getdrive (void);
+LIBW32_API int          w32_getsystemdrive (void);
+LIBW32_API int          w32_getlastdrive (void);
+
 #if defined(WIN32_UNISTD_MAP)
 #define mkdir(d,m)      w32_mkdir(d, m)
 #define chdir(d)        w32_chdir(d)
@@ -631,9 +702,6 @@ LIBW32_API wchar_t *    w32_getcwddW (char drive, wchar_t *path, size_t size);
 LIBW32_API int          w32_mkstemp (char *path);
 LIBW32_API int          w32_mkstempA (char *path);
 LIBW32_API int          w32_mkstempW (wchar_t *path);
-//#if defined(_MSC_VER)
-//LIBW32_API int          mkstemp (char *path);
-//#endif
 
 LIBW32_API int          w32_mkstemps (char *path, int suffixlen);
 LIBW32_API int          w32_mkstempsA (char *path, int suffixlen);
@@ -655,11 +723,20 @@ LIBW32_API int          ftruncate (int fildes, off_t size);
 LIBW32_API int          truncate (const char *path, off_t length);
 LIBW32_API int          truncateA (const char *path, off_t length);
 LIBW32_API int          truncateW (const wchar_t *path, off_t length);
+#if defined(_LARGEFILE64_SOURCE)
+LIBW32_API int          ftruncate64 (int fildes, off64_t size);
+LIBW32_API int          truncate64 (const char *path, off64_t size);
+LIBW32_API int          truncate64A (const char *path, off64_t length);
+LIBW32_API int          truncate64W (const wchar_t *path, off64_t length);
+#endif
 
 LIBW32_API int          w32_readlink (const char *path, char *name, size_t sz);
 LIBW32_API int          w32_readlinkA (const char *path, char *name, size_t sz);
 LIBW32_API int          w32_readlinkW (const wchar_t *path, wchar_t *name, size_t sz);
+
 LIBW32_API int          w32_symlink (const char *from, const char *to);
+LIBW32_API int          w32_symlinkA (const char *from, const char *to);
+LIBW32_API int          w32_symlinkW (const wchar_t *from, const wchar_t *to);
 
 LIBW32_API char *       w32_realpath (const char *path, char *resolved_path /*PATH_MAX*/);
 LIBW32_API char *       w32_realpath2 (const char *path, char *resolved_path, size_t maxlen);
@@ -690,7 +767,7 @@ LIBW32_API int          mknod (const char *path, int mode, int dev);
 LIBW32_API int          mknodA (const char *path, int mode, int dev);
 LIBW32_API int          mknodW (const wchar_t *path, int mode, int dev);
 
-#if !defined(F_GETFL)   /* match linux definitions */
+#if !defined(F_GETFL)   /* match Linux definitions */
 #define F_GETFL         3       /* get file status flags */
 #define F_SETFL         4       /* set file status flags */
 #endif
@@ -722,8 +799,8 @@ LIBW32_API long long    strtoll (const char * nptr, char ** endptr, int base);
 #endif
 #endif /*_MSC_VER*/
 
-LIBW32_API void         setproctitle(const char *fmt, ...);
-LIBW32_API void         setproctitle_fast(const char *fmt, ...);
+LIBW32_API void         setproctitle (const char *fmt, ...);
+LIBW32_API void         setproctitle_fast (const char *fmt, ...);
 
 __END_DECLS
 

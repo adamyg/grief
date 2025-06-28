@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_uname_c,"$Id: w32_uname.c,v 1.24 2025/02/03 02:27:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_uname_c,"$Id: w32_uname.c,v 1.25 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -81,8 +81,8 @@ struct CurrentVersion {
 static BOOL IsWow64(void);
 static void RegCurrentVersion(struct CurrentVersion *cv);
 
-#if _UTSNAME_LENGTH <= 64
-#define ULENGTH (64 + 1)
+#if _UTSNAME_LENGTH < 64
+#define ULENGTH (64)
 #else
 #define ULENGTH _UTSNAME_LENGTH 
 #endif
@@ -328,7 +328,7 @@ uname(struct utsname *u)
                             if (oviex.wProductType == VER_NT_SERVER ||
                                         oviex.wProductType == VER_NT_DOMAIN_CONTROLLER) {
                                 if (oviex.wSuiteMask & VER_SUITE_DATACENTER) {
-                                    osname = "2000 Dataenter-Server";
+                                    osname = "2000 DataCenter-Server";
                                 } else if (oviex.wSuiteMask & VER_SUITE_ENTERPRISE) {
                                     osname = "2000 Advanced-Server";
                                 } else {
@@ -492,11 +492,18 @@ uname(struct utsname *u)
     if (u) {
         memset(u, 0, sizeof(*u));
 
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
+#endif
         strncpy(u->sysname, u_sysname, sizeof(u->sysname) - 1);
         u->nodename[0] = '\0';                  /* not available */
         strncpy(u->release, u_release, sizeof(u->release) - 1);
         strncpy(u->version, u_version, sizeof(u->version) - 1);
         strncpy(u->machine, u_machine, sizeof(u->machine) - 1);
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic pop
+#endif
     }
     return 0;
 }

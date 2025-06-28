@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_shell_c,"$Id: w32_shell.c,v 1.19 2025/02/03 02:27:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_shell_c,"$Id: w32_shell.c,v 1.20 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -69,6 +69,10 @@ static int              ShellA(const char *shell, const char *cmd, const char *f
 static int              ShellW(const wchar_t *shell, const wchar_t *cmd, const wchar_t *fstdin, const wchar_t *fstdout, const wchar_t *fstderr);
 static const char *     OutDirectA(const char *path, int *append);
 static const wchar_t *  OutDirectW(const wchar_t *path, int *append);
+static HANDLE           OpenInputA(const char* path, SECURITY_ATTRIBUTES *sa);
+static HANDLE           OpenInputW(const wchar_t* path, SECURITY_ATTRIBUTES *sa);
+static HANDLE           OpenOutputA(const char *path, SECURITY_ATTRIBUTES *sa, int append);
+static HANDLE           OpenOutputW(const wchar_t *path, SECURITY_ATTRIBUTES *sa, int append);
 static void             ShellCleanup(void *p);
 
 static int              IsAbsPathA(const char *path);
@@ -92,7 +96,7 @@ static void             InternalError(const char *pszAPI);
 
 /*
  *  w32_shell ---
- *      System specfic shell interface.
+ *      System specific shell interface.
  */
 int
 w32_shell(const char *shell, const char *cmd,
@@ -148,13 +152,25 @@ static int
 ShellA(const char *shell, const char *cmd,
     const char *fstdin, const char *fstdout, const char *fstderr)
 {
-    static const char * sharg[] = {             // shell arguments
-            "/C",       // command
-            "/k"        // interactive
+    static const char *cmdargs[] = {            // Windows command shell arguments
+                "/C",               // Exec command and then terminates.
+                "/k"                // Exec command but remains.
             };
+
+    static const char *pwshargs[][2] = {        // PowerShell arguments
+                { // PowerShell
+                    "-Command",     // -Command
+                    NULL
+                },
+                { // pwsh
+                    "-c",           // -Command | -c
+                    "-i"            // -Interactive | -i
+                }
+            };
+
     const int interactive = ((NULL == cmd || !*cmd) ? 1 : 0);
     char *slash, *shname = WIN32_STRDUP(shell && *shell ? shell : w32_getshell());
-    int xstdout = FALSE, xstderr = FALSE;       // mode (TRUE == append)
+    int outappend = FALSE, errappend = FALSE;   // mode (TRUE == append)
     SECURITY_ATTRIBUTES sa;
     HANDLE hInFile, hOutFile, hErrFile;
     struct procdata pd = {0};
@@ -163,52 +179,30 @@ ShellA(const char *shell, const char *cmd,
     HANDLE hProc = 0;
     int status = 0;
 
-    // sync or async
+    // sync or asynchronous
     sa.nLength = sizeof(sa);
     sa.lpSecurityDescriptor = NULL;
     sa.bInheritHandle = TRUE;                   // inherited
 
-    fstdout = OutDirectA(fstdout, &xstdout);
-    fstderr = OutDirectA(fstderr, &xstderr);
+    fstdout = OutDirectA(fstdout, &outappend);
+    fstderr = OutDirectA(fstderr, &errappend);
 
     // redirection
     hInFile = hOutFile = hErrFile = INVALID_HANDLE_VALUE;
 
     if (fstdin) {                               // O_RDONLY
-        hInFile = CreateFileA(fstdin, GENERIC_READ,
-                        0, &sa, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        hInFile = OpenInputA(fstdin, &sa);
     }
 
-    if (fstdout) {
-        if (! xstdout)  {                       // O_RDWR|O_CREAT|O_TRUNC
-            hOutFile = CreateFileA(fstdout, GENERIC_READ | GENERIC_WRITE,
-                            0, &sa, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-
-        } else {                                // O_RDWR|O_CREAT|O_APPEND
-            hOutFile = CreateFileA(fstdout, GENERIC_READ | GENERIC_WRITE | FILE_APPEND_DATA,
-                            0, &sa, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-        }
+    if (fstdout) {                              // >[>] path
+        hOutFile = OpenOutputA(fstdout, &sa, outappend);
     }
 
-    if (fstderr) {
-        if (! xstderr)  {                       // O_RDWR|O_CREAT|O_TRUNC
-            hErrFile = CreateFileA(fstderr, GENERIC_READ | GENERIC_WRITE,
-                            0, &sa, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (fstderr) {                              // 2>[>] path
+        hErrFile = OpenOutputA(fstderr, &sa, errappend);
 
-        } else {                                // O_RDWR|O_CREAT|O_APPEND
-            hErrFile = CreateFileA(fstderr, GENERIC_READ | GENERIC_WRITE | FILE_APPEND_DATA,
-                            0, &sa, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-        }
-
-    } else if (fstdout) {
-        if (! xstdout)  {                       // O_RDWR|O_CREAT|O_TRUNC
-            hErrFile = CreateFileA(fstdout, GENERIC_READ | GENERIC_WRITE,
-                            0, &sa, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-
-        } else {                                // O_RDWR|O_CREAT|O_APPEND
-            hErrFile = CreateFileA(fstdout, GENERIC_READ | GENERIC_WRITE | FILE_APPEND_DATA,
-                            0, &sa, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-        }
+    } else if (fstdout) {                       // 2>&1
+        hErrFile = OpenOutputA(fstdout, &sa, outappend);
     }
 
                                                 // stdin
@@ -232,11 +226,11 @@ ShellA(const char *shell, const char *cmd,
         }
 
     } else {
-        // Create a duplicate of the output (file) handle for thestd error write handle.
+        // Create a duplicate of the output (file) handle for the std error write handle.
         // This is necessary in case the child application closes one of its std output handles.
         //
         if (! Dup(hOutFile, &pd.hError, TRUE)) {
-            InternalError("shell: dup (fileout)");
+            InternalError("shell: dup (out)");
         }
     }
 
@@ -253,22 +247,43 @@ ShellA(const char *shell, const char *cmd,
         }
 
         if (!interactive &&                     // /C embedded
-                cmd[0] == sharg[0][0] && cmd[1] == sharg[0][1]) {
+                cmd[0] == cmdargs[0][0] && cmd[1] == cmdargs[0][1]) {
             argv[0] = shname;
             argv[1] = cmd;
             argv[2] = NULL;
 
         } else {
             argv[0] = shname;
-            argv[1] = sharg[ interactive ];     // /C or /K
+            argv[1] = cmdargs[ interactive ];   // /C or /K
             argv[2] = cmd;
             argv[3] = NULL;
         }
 
     } else {
-        argv[0] = shname;
-        argv[1] = cmd;
-        argv[2] = NULL;
+        const int pwsh = w32_ispowershellA(shname);
+
+        assert(pwsh >= 0 && pwsh <= 2);
+        if (pwsh) {
+            unsigned idx = 0;
+
+            slash = shname - 1;
+            while ((slash = strchr(slash + 1, XSLASHCHAR)) != NULL) {
+                *slash = SLASHCHAR;             // convert slashes
+            }
+
+            argv[idx++] = shname;
+            if (pwshargs[pwsh - 1][interactive]) {
+                argv[idx++] = pwshargs[pwsh - 1][interactive];
+            }
+
+            argv[idx++] = cmd;
+            argv[idx] = NULL;
+
+        } else {
+            argv[0] = shname;
+            argv[1] = cmd;
+            argv[2] = NULL;
+        }
     }
 
     // create child process
@@ -281,7 +296,7 @@ ShellA(const char *shell, const char *cmd,
 
     } else {
         ShellCleanup((void *)&pd);
-        (void) w32_waitpid(w32_HTOI(hProc), &status, 0);
+        (void) w32_waitpid(w32_htof(hProc), &status, 0);
     }
 
     free(shname);
@@ -290,16 +305,28 @@ ShellA(const char *shell, const char *cmd,
 
 
 static int
-ShellW(const wchar_t *shell, const wchar_t  *cmd,
+ShellW(const wchar_t *shell, const wchar_t *cmd,
     const wchar_t *fstdin, const wchar_t *fstdout, const wchar_t *fstderr)
 {
-    static const wchar_t *sharg[] = {           // shell arguments
-            L"/C",      // command
-            L"/k"       // interactive
+    static const wchar_t *cmdargs[] = {         // Windows command shell arguments
+                L"/C",              // Exec command and then terminates.
+                L"/k"               // Exec command but remains.
             };
+
+    static const wchar_t *pwshargs[][2] = {     // PowerShell arguments
+                { // PowerShell
+                    L"-Command",    // -Command
+                    NULL,
+                },
+                { // pwsh
+                    L"-c",          // -Command | -c
+                    L"-i"           // -Interactive | -i
+                }
+            };
+
     const int interactive = ((NULL == cmd || !*cmd) ? 1 : 0);
     wchar_t *slash, *shname = WIN32_STRDUPW(shell && *shell ? shell : w32_getshellW());
-    int xstdout = FALSE, xstderr = FALSE;       // mode (TRUE == append)
+    int outappend = FALSE, errappend = FALSE;   // mode (TRUE == append)
     SECURITY_ATTRIBUTES sa;
     HANDLE hInFile, hOutFile, hErrFile;
     struct procdata pd = {0};
@@ -308,52 +335,30 @@ ShellW(const wchar_t *shell, const wchar_t  *cmd,
     HANDLE hProc = 0;
     int status = 0;
 
-    // sync or async
+    // sync or asynchronous
     sa.nLength = sizeof(sa);
     sa.lpSecurityDescriptor = NULL;
     sa.bInheritHandle = TRUE;                   // inherited
 
-    fstdout = OutDirectW(fstdout, &xstdout);
-    fstderr = OutDirectW(fstderr, &xstderr);
+    fstdout = OutDirectW(fstdout, &outappend);
+    fstderr = OutDirectW(fstderr, &errappend);
 
     // redirection
     hInFile = hOutFile = hErrFile = INVALID_HANDLE_VALUE;
 
     if (fstdin) {                               // O_RDONLY
-        hInFile = CreateFileW(fstdin, GENERIC_READ,
-                        0, &sa, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        hInFile = OpenInputW(fstdin, &sa);
     }
 
-    if (fstdout) {
-        if (! xstdout)  {                       // O_RDWR|O_CREAT|O_TRUNC
-            hOutFile = CreateFileW(fstdout, GENERIC_READ | GENERIC_WRITE,
-                            0, &sa, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-
-        } else {                                // O_RDWR|O_CREAT|O_APPEND
-            hOutFile = CreateFileW(fstdout, GENERIC_READ | GENERIC_WRITE | FILE_APPEND_DATA,
-                            0, &sa, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-        }
+    if (fstdout) {                              // >[>] path
+        hOutFile = OpenOutputW(fstdout, &sa, outappend);
     }
 
-    if (fstderr) {
-        if (! xstderr)  {                       // O_RDWR|O_CREAT|O_TRUNC
-            hErrFile = CreateFileW(fstderr, GENERIC_READ | GENERIC_WRITE,
-                            0, &sa, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (fstderr) {                              // 2>[>] path
+        hErrFile = OpenOutputW(fstderr, &sa, errappend);
 
-        } else {                                // O_RDWR|O_CREAT|O_APPEND
-            hErrFile = CreateFileW(fstderr, GENERIC_READ | GENERIC_WRITE | FILE_APPEND_DATA,
-                            0, &sa, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-        }
-
-    } else if (fstdout) {
-        if (! xstdout)  {                       // O_RDWR|O_CREAT|O_TRUNC
-            hErrFile = CreateFileW(fstdout, GENERIC_READ | GENERIC_WRITE,
-                            0, &sa, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-
-        } else {                                // O_RDWR|O_CREAT|O_APPEND
-            hErrFile = CreateFileW(fstdout, GENERIC_READ | GENERIC_WRITE | FILE_APPEND_DATA,
-                            0, &sa, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-        }
+    } else if (fstdout) {                       // 2>&1
+        hErrFile = OpenOutputW(fstdout, &sa, outappend);
     }
 
                                                 // stdin
@@ -377,16 +382,16 @@ ShellW(const wchar_t *shell, const wchar_t  *cmd,
         }
 
     } else {
-        // Create a duplicate of the output (file) handle for thestd error write handle.
+        // Create a duplicate of the output (file) handle for the std error write handle.
         // This is necessary in case the child application closes one of its std output handles.
         //
         if (! Dup(hOutFile, &pd.hError, TRUE)) {
-            InternalError("shell: dup (fileout)");
+            InternalError("shell: dup (out)");
         }
     }
 
     // command or interactive
-    (void)memset(&args, 0, sizeof(args));
+    (void) memset(&args, 0, sizeof(args));
 
      if (IsAbsPathW(shname))                     // abs-path
         args.arg0 = shname;
@@ -398,25 +403,44 @@ ShellW(const wchar_t *shell, const wchar_t  *cmd,
         }
 
         if (!interactive &&                     // /C embedded
-                cmd[0] == sharg[0][0] && cmd[1] == sharg[0][1]) {
+                cmd[0] == cmdargs[0][0] && cmd[1] == cmdargs[0][1]) {
             argv[0] = shname;
             argv[1] = cmd;
             argv[2] = NULL;
 
         } else {
             argv[0] = shname;
-            argv[1] = sharg[ interactive ];     // /C or /K
+            argv[1] = cmdargs[ interactive ];   // /C or /K
             argv[2] = cmd;
             argv[3] = NULL;
         }
-
     } else {
-        argv[0] = shname;
-        argv[1] = cmd;
-        argv[2] = NULL;
+        const int pwsh = w32_ispowershellW(shname);
+
+        assert(pwsh >= 0 && pwsh <= 2);
+        if (pwsh) {
+            unsigned idx = 0;
+
+            slash = shname - 1;
+            while ((slash = wcschr(slash + 1, XSLASHCHAR)) != NULL) {
+                *slash = SLASHCHAR;             // convert slashes
+            }
+
+            argv[idx++] = shname;
+            if (pwshargs[pwsh - 1][interactive]) {
+                argv[idx++] = pwshargs[pwsh - 1][interactive];
+            }
+            argv[idx++] = cmd;
+            argv[idx] = NULL;
+
+        } else {
+            argv[0] = shname;
+            argv[1] = cmd;
+            argv[2] = NULL;
+        }
     }
 
-    // create child process   
+    // create child process
     args.argv = argv;
     args._dwFlags = 0;
 
@@ -426,7 +450,7 @@ ShellW(const wchar_t *shell, const wchar_t  *cmd,
 
     } else {
         ShellCleanup((void *)&pd);
-        (void) w32_waitpid(w32_HTOI(hProc), &status, 0);
+        (void) w32_waitpid(w32_htof(hProc), &status, 0);
     }
 
     free(shname);
@@ -439,11 +463,19 @@ OutDirectA(const char *path, int *append)
 {
     *append = FALSE;
     if (path) {
+        while (*path == ' ') {
+            ++path;                             // leading white-space
+        }
+
         if ('>' == *path) {                     // ">name"
             ++path;
             if ('>' == *path) {                 // ">>name"
                 *append = TRUE;
                 ++path;
+            }
+
+            while (*path == ' ') {
+                ++path;                         // embedded white-space
             }
         }
     }
@@ -456,15 +488,125 @@ OutDirectW(const wchar_t *path, int *append)
 {
     *append = FALSE;
     if (path) {
+        while (*path == ' ') {
+            ++path;                             // leading white-space
+        }
+
         if ('>' == *path) {                     // ">name"
             ++path;
             if ('>' == *path) {                 // ">>name"
                 *append = TRUE;
                 ++path;
             }
+
+            while (*path == ' ') {
+                ++path;                         // embedded white-space
+            }
         }
     }
     return path;
+}
+
+
+static HANDLE
+OpenInputA(const char *path, SECURITY_ATTRIBUTES *sa)
+{
+    HANDLE handle = INVALID_HANDLE_VALUE;
+
+    if (path[0] == '/') {
+        if (0 == w32_iostricmpA(path, "/dev/stdin")) {
+            if (Dup(GetStdHandle(STD_INPUT_HANDLE), &handle, TRUE)) {
+                return handle;
+            }
+        }
+    }
+
+    return CreateFileA(path, GENERIC_READ, 0, sa, 
+                OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+}
+
+
+static HANDLE
+OpenInputW(const wchar_t *path, SECURITY_ATTRIBUTES *sa)
+{
+    HANDLE handle = INVALID_HANDLE_VALUE;
+
+    if (path[0] == '/') {
+        if (0 == w32_iostricmpW(path, "/dev/stdin")) {
+            if (Dup(GetStdHandle(STD_INPUT_HANDLE), &handle, TRUE)) {
+                return handle;
+            }
+        }
+    }
+
+    return CreateFileW(path, GENERIC_READ, 0, sa, 
+                OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+}
+
+
+static HANDLE
+OpenOutputA(const char *path, SECURITY_ATTRIBUTES *sa, int append)
+{
+    HANDLE handle = INVALID_HANDLE_VALUE;
+
+    if (path[0] == '/') {
+        if (0 == w32_iostricmpA(path, "/dev/null")) {
+            path = "NUL";
+
+        } else if (0 == w32_iostricmpA(path, "/dev/stdout")) {
+            if (Dup(GetStdHandle(STD_OUTPUT_HANDLE), &handle, TRUE)) {
+                return handle;
+            }
+
+        } else if (0 == w32_iostricmpA(path, "/dev/stderr")) {
+            if (Dup(GetStdHandle(STD_ERROR_HANDLE), &handle, TRUE)) {
+                return handle;
+            }
+        }
+    }
+
+    if (path) {
+        // append = O_RDWR|O_CREAT|O_APPEND, otherwise = O_RDWR|O_CREAT|O_TRUNC
+        const DWORD dwDesiredAccess =
+            GENERIC_READ | GENERIC_WRITE | (append ? FILE_APPEND_DATA : 0);
+
+        handle = CreateFileA(path, dwDesiredAccess, 0, sa, 
+                        CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    }
+    return handle;
+}
+
+
+static HANDLE
+OpenOutputW(const wchar_t *path, SECURITY_ATTRIBUTES *sa, int append)
+{
+    HANDLE handle = INVALID_HANDLE_VALUE;
+
+    if (path[0] == '/') {
+        if (0 == w32_iostricmpW(path, "/dev/null")) {
+            path = L"NUL";
+
+        } else if (0 == w32_iostricmpW(path, "/dev/stdout")) {
+            if (Dup(GetStdHandle(STD_OUTPUT_HANDLE), &handle, TRUE)) {
+                return handle;
+            }
+
+        } else if (0 == w32_iostricmpW(path, "/dev/stderr")) {
+            if (Dup(GetStdHandle(STD_ERROR_HANDLE), &handle, TRUE)) {
+                return handle;
+            }
+        }
+    }
+
+    if (path) {
+        // append = O_RDWR|O_CREAT|O_APPEND, otherwise = O_RDWR|O_CREAT|O_TRUNC
+        const DWORD dwDesiredAccess =
+            GENERIC_READ | GENERIC_WRITE | (append ? FILE_APPEND_DATA : 0);
+
+        handle = CreateFileW(path, dwDesiredAccess, 0, sa,
+                        CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    }
+    return handle;
 }
 
 
@@ -485,7 +627,7 @@ ShellCleanup(void *p)
  *
  *  Parameters:
  *      Stdout -    [in]  Process 'stdout' file descriptor.
- *      Stderr -    [in]  Optional, process 'stderr' file descritor.
+ *      Stderr -    [in]  Optional, process 'stderr' file descriptor.
  *      Stdin -     [out] Storage to the processes 'stdin' pipe.
  *
  *  Returns:
@@ -667,7 +809,7 @@ w32_spawnA2(
             Close(hErrorRead);
         }
     }
-    return w32_HTOI(hProc);
+    return w32_htof(hProc);
 }
 
 
@@ -810,7 +952,7 @@ w32_spawnW2(
             Close(hErrorRead);
         }
     }
-    return w32_HTOI(hProc);
+    return w32_htof(hProc);
 }
 
 
@@ -942,7 +1084,7 @@ ImportArgv(const char **argv)
                     return NULL;
                 }
                 if (0 == argc) {
-                    while (*cursor) {           // convert slashs within arg0.
+                    while (*cursor) {           // convert slashes within arg0.
                         if ('/' == *cursor) *cursor = '\\';
                         ++cursor;
                     }
@@ -1000,7 +1142,7 @@ ImportEnvv(const char **envv)
     }
 
     /*
-     *  Build the environment vector by importing the env collection.
+     *  Build the environment vector by importing the environment collection.
      */
     ret = (const wchar_t **)buffer;
 
@@ -1065,7 +1207,8 @@ w32_execA(win32_exec_t *args)
     }
 
     // Create new output read handle and the input write handles, set as non inheritable.
-    // Otherwise, the child inherits the properties and, as a result, non-closeable handles to the pipes are created.
+    // Otherwise, the child inherits the properties and, as a result,
+    // non-closeable handles to the pipes are created.
     if (! Dup(hInputWriteTmp, &hInputWrite, FALSE) ||
             ! Dup(hOutputReadTmp, &hOutputRead, FALSE) ||
             ! Dup(hErrorReadTmp, &hErrorRead, FALSE)) {
@@ -1089,7 +1232,7 @@ w32_execA(win32_exec_t *args)
     args->hInput  = hInputWrite;
     args->hOutput = hOutputRead;
     args->hError  = hErrorRead;
-    return w32_HTOI(args->hProc);
+    return w32_htof(args->hProc);
 
 einval:;
     Close(hOutputReadTmp); Close(hInputWriteTmp); Close(hErrorReadTmp);
@@ -1123,7 +1266,8 @@ w32_execW(win32_execw_t *args)
     }
 
     // Create new output read handle and the input write handles, set as non inheritable.
-    // Otherwise, the child inherits the properties and, as a result, non-closeable handles to the pipes are created.
+    // Otherwise, the child inherits the properties and, as a result,
+    // non-closeable handles to the pipes are created.
     if (! Dup(hInputWriteTmp, &hInputWrite, FALSE) ||
             ! Dup(hOutputReadTmp, &hOutputRead, FALSE) ||
             ! Dup(hErrorReadTmp, &hErrorRead, FALSE)) {
@@ -1147,7 +1291,7 @@ w32_execW(win32_execw_t *args)
     args->hInput  = hInputWrite;
     args->hOutput = hOutputRead;
     args->hError  = hErrorRead;
-    return w32_HTOI(args->hProc);
+    return w32_htof(args->hProc);
 
 einval:;
     Close(hOutputReadTmp); Close(hInputWriteTmp); Close(hErrorReadTmp);
@@ -1241,18 +1385,24 @@ StartRedirectThread(
     DWORD tid;
     Redirect_t *p;
 
-    if (NULL == (p = malloc(sizeof(*p)))) {
+    if (NULL == (p = (Redirect_t *)malloc(sizeof(*p)))) {
         InternalError("malloc");
+        return -1;
     }
+
     p->what = what;
     p->hPipe = hPipe;
     p->hDupPipe = hDupPipe;
     p->fd = fd;
-    if ((hThread = CreateThread(NULL, 0, RedirectThread, (LPVOID)p, 0, &tid)) == 0) {
+
+    if ((hThread = CreateThread(NULL, 0, RedirectThread, (LPVOID)p, 0, &tid)) == NULL) {
         InternalError("CreateThread");
     }
-    if (!CloseHandle(hThread)) {
-        InternalError("closeHandle (hThread)");
+
+    if (hThread) {
+        if (! CloseHandle(hThread)) {
+            InternalError("closeHandle (hThread)");
+        }
     }
     return 0;
 }

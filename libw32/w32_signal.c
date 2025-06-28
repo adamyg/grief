@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_signal_c,"$Id: w32_signal.c,v 1.22 2025/02/03 02:27:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_signal_c,"$Id: w32_signal.c,v 1.23 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -69,6 +69,7 @@ sigaction(int sig, struct sigaction *sa, struct sigaction *osa)
 {
     switch (sig) {
     case SIGPIPE:
+    case SIGCHLD:
         return 0;
     }
 

@@ -1,7 +1,7 @@
 #ifndef LIBW32_WIN32_CHILD_H_INCLUDED
 #define LIBW32_WIN32_CHILD_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_child_h,"$Id: win32_child.h,v 1.14 2025/02/03 02:27:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_child_h,"$Id: win32_child.h,v 1.15 2025/06/28 11:07:21 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -82,14 +82,20 @@ typedef struct {
 #endif
 
 LIBW32_API const char * w32_getshell (void);
+LIBW32_API const char*  w32_getshellA (void);
 LIBW32_API const wchar_t * w32_getshellW (void);
 
 LIBW32_API const char * w32_gethome (int ignore_env);
+LIBW32_API const char * w32_gethomeA (int ignore_env);
 LIBW32_API const wchar_t * w32_gethomeW (int ignore_env);
 
 LIBW32_API int          w32_iscommand (const char *);
 LIBW32_API int          w32_iscommandA (const char *);
 LIBW32_API int          w32_iscommandW (const wchar_t *);
+
+LIBW32_API int          w32_ispowershell (const char *);
+LIBW32_API int          w32_ispowershellA (const char *);
+LIBW32_API int          w32_ispowershellW (const wchar_t *);
 
 LIBW32_API int          w32_shell (const char *shell, const char *cmd,
                               const char *fstdin, const char *fstdout, const char *fstderr);
@@ -121,6 +127,11 @@ LIBW32_API int          w32_pread_err (FILE *file, char *buf, int length);
 /*unistd.h*/
 LIBW32_API ssize_t      pread (int fildes, void *buf, size_t nbyte, off_t offset);
 LIBW32_API ssize_t      pwrite (int fildes, const void *buf, size_t nbyte, off_t offset);
+
+#if defined(_LARGEFILE64_SOURCE)
+LIBW32_API ssize_t      pread64 (int fildes, void* buf, size_t nbyte, off64_t offset);
+LIBW32_API ssize_t      pwrite64 (int fildes, const void* buf, size_t nbyte, off64_t offset);
+#endif
 
 __END_DECLS
 

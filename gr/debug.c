@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_debug_c,"$Id: debug.c,v 1.37 2025/02/07 03:03:20 cvsuser Exp $")
+__CIDENT_RCSID(gr_debug_c,"$Id: debug.c,v 1.38 2025/06/28 11:08:25 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: debug.c,v 1.37 2025/02/07 03:03:20 cvsuser Exp $
+/* $Id: debug.c,v 1.38 2025/06/28 11:08:25 cvsuser Exp $
  * internal debug/diagnostics.
  *
  *
@@ -65,7 +65,7 @@ trace_flags(void)
 
 
 /*  Function:           trace_flagsset
- *      Configur the trace diagnostics.
+ *      Configure the trace diagnostics.
  *
  *  Parameters:
  *      flag -              Configuration flags.

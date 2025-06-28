@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_close_c,"$Id: w32_close.c,v 1.17 2025/02/03 02:27:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_close_c,"$Id: w32_close.c,v 1.18 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -169,7 +169,7 @@ w32_close(int fildes)
 #define SD_SEND         0x01
 #define SD_BOTH         0x02
 #endif
-        w32_sockfd_close(fildes, s);
+        w32_fdsockclose(fildes, s);
         (void) shutdown(s, SD_BOTH);
         if ((ret = closesocket(s)) == SOCKET_ERROR) {
             w32_neterrno_set();

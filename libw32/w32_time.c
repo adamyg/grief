@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_time_c,"$Id: w32_time.c,v 1.29 2025/02/03 02:27:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_time_c,"$Id: w32_time.c,v 1.30 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -147,16 +147,25 @@ sleepticks(__int64 ticks)
 }
 
 
-int
-usleep(useconds_t useconds)
+LIBW32_API int
+w32_usleep(useconds_t useconds)
 {
     sleepticks(((__int64)useconds) * 10); // usec to 100-nanosecond interval.
     return 0;
 }
 
 
-int
-nanosleep(const struct timespec *rqtp, struct timespec *rmtp /*notused*/)
+#if !defined(__MINGW32__)
+LIBW32_API int
+usleep(useconds_t useconds)
+{
+    return w32_usleep(useconds);
+}
+#endif
+
+
+LIBW32_API int
+w32_nanosleep(const struct timespec *rqtp, struct timespec *rmtp /*notused*/)
 {
     if (!rqtp || rqtp->tv_nsec > 999999999) {
         errno = EINVAL;
@@ -166,6 +175,15 @@ nanosleep(const struct timespec *rqtp, struct timespec *rmtp /*notused*/)
     sleepticks((rqtp->tv_sec * 1000000 * 10) + (rqtp->tv_nsec / 100));
     return 0;
 }
+
+
+#if !defined(__MINGW32__)
+LIBW32_API int
+nanosleep(const struct timespec *rqtp, struct timespec *rmtp /*notused*/)
+{
+    return w32_nanosleep(rqtp, rmtp);
+}
+#endif
 
 
 /*

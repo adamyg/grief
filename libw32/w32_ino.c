@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_ino_c,"$Id: w32_ino.c,v 1.18 2025/02/03 02:27:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_ino_c,"$Id: w32_ino.c,v 1.19 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -50,7 +50,7 @@ __CIDENT_RCSID(gr_w32_ino_c,"$Id: w32_ino.c,v 1.18 2025/02/03 02:27:35 cvsuser E
  *      Generate a file inode based on a simple hash of the specific file-name.
  */
 LIBW32_API ino_t
-w32_ino_hash(const char *name)
+w32_ino_hashA(const char *name)
 {
     const char *p = name;
     short hash = 0;
@@ -77,7 +77,7 @@ w32_ino_hash(const char *name)
  *      Generate a file inode based on a simple hash of the specific file-name.
  */
 LIBW32_API ino_t
-w32_ino_whash(const wchar_t *name)
+w32_ino_hashW(const wchar_t *name)
 {
     const wchar_t *p = name;
     short hash = 0;
@@ -190,11 +190,8 @@ w32_ino_fildes(int fildes)
 {
     HANDLE handle;
 
-    if (fildes < 0) {
-        return 0;
-    } else if (fildes >= WIN32_FILDES_MAX ||
-                (handle = (HANDLE) _get_osfhandle(fildes)) == INVALID_HANDLE_VALUE) {
-        return 0;
+    if ((handle = w32_osfhandle(fildes)) == INVALID_HANDLE_VALUE) {
+        return 0;                               // socket or invalid file-descriptor
     }
     return w32_ino_handle(handle);
 }
@@ -205,7 +202,7 @@ w32_ino_fildes(int fildes)
  *      Generate a file inode for the specified file 'path'.
  */
 LIBW32_API ino_t
-w32_ino_file(const char *path)
+w32_ino_fileA(const char *path)
 {
     HANDLE handle;
 
@@ -222,7 +219,7 @@ w32_ino_file(const char *path)
 
 
 LIBW32_API ino_t
-w32_ino_wfile(const wchar_t *path)
+w32_ino_fileW(const wchar_t *path)
 {
     HANDLE handle;
 

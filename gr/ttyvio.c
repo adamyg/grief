@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.89 2025/02/08 16:24:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.90 2025/06/28 11:08:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.89 2025/02/08 16:24:15 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.90 2025/06/28 11:08:02 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -206,6 +206,7 @@ static int              origCols;
 static USHORT           origRow;
 static USHORT           origCol;
 static const VIOCELL *  origScreen;
+static WORD             origAttributes = (WORD)-1;
 static WCHAR            origTitle[100];
 
 static int              currRows;
@@ -621,8 +622,13 @@ static void
 vio_image_save(void)
 {
 #if defined(WIN32)
-    if (0 == origTitle[0])
+    if (0 == origTitle[0]) {
+        CONSOLE_SCREEN_BUFFER_INFO sbi = { sizeof(CONSOLE_SCREEN_BUFFER_INFO) };       
+        if (GetConsoleScreenBufferInfo(vio_stdout(), &sbi)) {
+            origAttributes = sbi.wAttributes;
+        }
         GetConsoleTitleW(origTitle, _countof(origTitle));
+    }
     vio_save();
 
 #else
@@ -664,9 +670,13 @@ static void
 vio_image_restore(void)
 {
 #if defined(WIN32)
-    if (origTitle[0])
-        SetConsoleTitleW(origTitle);
     vio_restore();
+    if (origTitle[0]) {
+        if ((WORD)-1 != origAttributes) {
+            SetConsoleTextAttribute(vio_stdout(), origAttributes);
+        }
+        SetConsoleTitleW(origTitle);
+    }
 
 #else   //!WIN32
     if (origScreen) {
@@ -887,7 +897,7 @@ term_print(int row, int col, int len, const VCELL_t *vvp)
     static VIOCELL null = { 0 };
 
     if (len > 0) {
-        const int isuc = (DC_CMAPFRAME & x_display_ctrl) || vtisunicode() || vtisutf8();
+        const uint32_t isuc = (DC_CMAPFRAME & x_display_ctrl) || vtisunicode() || vtisutf8();
         VIOCELL *p = currScreen + (row * ttcols()) + col;
         vbyte_t cattr = VBYTE_ATTR_GET(vvp->primary);
 

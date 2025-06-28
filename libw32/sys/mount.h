@@ -1,14 +1,14 @@
 #ifndef LIBW32_SYS_MOUNT_H_INCLUDED
 #define LIBW32_SYS_MOUNT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_mount_h,"$Id: mount.h,v 1.11 2024/03/31 15:57:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_mount_h,"$Id: mount.h,v 1.12 2025/06/28 11:07:21 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 mount() implementation
  *
- * Copyright (c) 2012 - 2024, Adam Young.
+ * Copyright (c) 2012 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

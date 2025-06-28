@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_link_c,"$Id: w32_link.c,v 1.21 2025/02/03 02:27:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_link_c,"$Id: w32_link.c,v 1.22 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -140,19 +140,16 @@ w32_link(const char *path1, const char *path2)
 {
 #if defined(UTF8FILENAMES)
     if (w32_utf8filenames_state()) {
-        wchar_t wpath1[WIN32_PATH_MAX], wpath2[WIN32_PATH_MAX];
+        if (path1 && path2) {
+            wchar_t wpath1[WIN32_PATH_MAX],
+                wpath2[WIN32_PATH_MAX];
 
-        if (NULL == path1 || NULL == path2) {
-            errno = EFAULT;
+            if (w32_utf2wc(path1, wpath1, _countof(wpath1)) > 0 &&
+                w32_utf2wc(path2, wpath2, _countof(wpath2)) > 0) {
+                return w32_linkW(wpath1, wpath2);
+            }
             return -1;
         }
-
-        if (w32_utf2wc(path1, wpath1, _countof(wpath1)) > 0 &&
-                w32_utf2wc(path2, wpath2, _countof(wpath2)) > 0) {
-            return w32_linkW(wpath1, wpath2);
-        }
-
-        return -1;
     }
 #endif  //UTF8FILENAMES
 
@@ -165,13 +162,12 @@ w32_linkW(const wchar_t *path1, const wchar_t *path2)
 {
     int ret = -1;
 
-    if (!path1 || !path2) {
+    if (NULL == path1 || NULL == path2) {
         errno = EFAULT;
 
-    } else if (!*path1 || !*path2) {
         errno = ENOENT;
 
-    } else if (wcslen(path1) > MAX_PATH || wcslen(path2) > MAX_PATH) {
+    } else if (wcslen(path1) > WIN32_PATH_MAX || wcslen(path2) > WIN32_PATH_MAX) {
         errno = ENAMETOOLONG;
 
     } else if (GetFileAttributesW(path2) != INVALID_FILE_ATTRIBUTES /*0xffffffff*/) {
@@ -208,13 +204,13 @@ w32_linkA(const char *path1, const char *path2)
 {
     int ret = -1;
 
-    if (!path1 || !path2) {
+    if (NULL == path1 || NULL == path2) {
         errno = EFAULT;
 
     } else if (!*path1 || !*path2) {
         errno = ENOENT;
 
-    } else if (strlen(path1) > MAX_PATH || strlen(path2) > MAX_PATH) {
+    } else if (strlen(path1) > WIN32_PATH_MAX || strlen(path2) > WIN32_PATH_MAX) {
         errno = ENAMETOOLONG;
 
     } else if (GetFileAttributesA(path2) != INVALID_FILE_ATTRIBUTES /*0xffffffff*/) {
@@ -278,7 +274,7 @@ my_CreateHardLinkImpW(LPCWSTR lpFileName, LPCWSTR lpExistingFileName, LPSECURITY
 {
     __PUNUSED(lpSecurityAttributes)
 
-    if (!__w32_link_backup) {                   /* backup fallback option */
+    if (!__w32_link_backup) {                   /* backup fall-back option */
         SetLastError(ERROR_NOT_SUPPORTED);      // not implemented
         return FALSE;
 
@@ -351,12 +347,12 @@ my_CreateHardLinkImpA(LPCSTR lpFileName, LPCSTR lpExistingFileName, LPSECURITY_A
 {
     __PUNUSED(lpSecurityAttributes)
 
-    if (!__w32_link_backup) {                   /* backup fallback option */
+    if (!__w32_link_backup) {                   /* backup fall-back option */
         SetLastError(ERROR_NOT_SUPPORTED);      // not implemented
         return FALSE;
 
     } else {
-        WCHAR wpath[MAX_PATH] = { 0 };
+        wchar_t wpath[WIN32_PATH_MAX] = { 0 };
         WIN32_STREAM_ID wsi = { 0 };
         void *ctx = NULL;
         HANDLE handle;
@@ -371,7 +367,7 @@ my_CreateHardLinkImpA(LPCSTR lpFileName, LPCSTR lpExistingFileName, LPSECURITY_A
             return FALSE;
         }
 
-        wlen = (DWORD)mbstowcs(wpath, lpFileName, MAX_PATH) * sizeof(WCHAR);
+        wlen = (DWORD) mbstowcs(wpath, lpFileName, _countof(wpath));
         wsi.dwStreamId = BACKUP_LINK;
         wsi.dwStreamAttributes = 0;
         wsi.dwStreamNameSize = 0;

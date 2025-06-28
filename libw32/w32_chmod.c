@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_chmod_c,"$Id: w32_chmod.c,v 1.4 2025/02/03 02:27:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_chmod_c,"$Id: w32_chmod.c,v 1.5 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -32,8 +32,12 @@ __CIDENT_RCSID(gr_w32_chmod_c,"$Id: w32_chmod.c,v 1.4 2025/02/03 02:27:35 cvsuse
 #endif
 
 #include "win32_internal.h"
+#include "win32_io.h"
+
 #include <unistd.h>
 
+static int W32ChmodA(const char *path, mode_t mode);
+static int W32ChmodW(const wchar_t *path, mode_t mode);
 
 /*
 //  NAME
@@ -87,18 +91,14 @@ w32_chmod(const char *pathname, mode_t mode)
 {
 #if defined(UTF8FILENAMES)
     if (w32_utf8filenames_state()) {
-        wchar_t wpathname[WIN32_PATH_MAX];
+        if (pathname) {
+            wchar_t wpathname[WIN32_PATH_MAX];
 
-        if (NULL == pathname) {
-            errno = EFAULT;
+            if (w32_utf2wc(pathname, wpathname, _countof(wpathname)) > 0) {
+                return w32_chmodW(wpathname, mode);
+            }
             return -1;
         }
-
-        if (w32_utf2wc(pathname, wpathname, _countof(wpathname)) > 0) {
-            return w32_chmodW(wpathname, mode);
-        }
-
-        return -1;
     }
 #endif  //UTF8FILENAMES
 
@@ -109,15 +109,100 @@ w32_chmod(const char *pathname, mode_t mode)
 LIBW32_API int
 w32_chmodA(const char *pathname, mode_t mode)
 {
-#undef chmod
-    return chmod(pathname, mode);
+    int ret = -1;                               // success=0, otherwise=-1
+
+    if (NULL == pathname) {
+        errno = EFAULT;
+
+    } else if (!*pathname) {
+        errno = ENOENT;
+
+    } else {
+       char symbuf[WIN32_PATH_MAX];
+
+        if (w32_resolvelinkA(pathname, symbuf, _countof(symbuf), NULL) != NULL) {
+            pathname = symbuf;                  // symlink
+        }
+
+        if ((ret = W32ChmodA(pathname, mode)) == -1) {
+            if (ENOTDIR == errno || ENOENT == errno) {
+                if (pathname != symbuf) {       // component error, expand embedded shortcut
+                    if (w32_expandlinkA(pathname, symbuf, _countof(symbuf), SHORTCUT_COMPONENT)) {
+                        ret = W32ChmodA(symbuf, mode);
+                    }
+                }
+            }
+        }
+    }
+    return ret;
 }
 
 
 LIBW32_API int
 w32_chmodW(const wchar_t *pathname, mode_t mode)
 {
-    return _wchmod(pathname, mode);
+    int ret = -1;                               // success=0, otherwise=-1
+
+    if (NULL == pathname) {
+        errno = EFAULT;
+
+    } else if (!*pathname) {
+        errno = ENOENT;
+
+    } else {
+        wchar_t symbuf[WIN32_PATH_MAX];
+
+        if (w32_resolvelinkW(pathname, symbuf, _countof(symbuf), NULL) != NULL) {
+            pathname = symbuf;                  // symlink
+        }
+
+        if ((ret = W32ChmodW(pathname, mode)) == -1) {
+            if (ENOTDIR == errno || ENOENT == errno) {
+                if (pathname != symbuf) {       // component error, expand embedded shortcut
+                    if (w32_expandlinkW(pathname, symbuf, _countof(symbuf), SHORTCUT_COMPONENT)) {
+                        ret = W32ChmodW(symbuf, mode);
+                    }
+                }
+            }
+        }
+    }
+    return ret;
+}
+
+
+static int 
+W32ChmodA(const char *pathname, mode_t mode)
+{
+    const char *expath;
+    int ret;
+
+    if (NULL != (expath = w32_extendedpathA(pathname))) {
+        pathname = expath;                      // extended abs-path
+    }
+
+#undef chmod
+    ret = chmod(pathname, mode);
+
+    free((void*)expath);
+    return ret;
+}
+
+
+static int
+W32ChmodW(const wchar_t *pathname, mode_t mode)
+{
+    const wchar_t *expath;
+    int ret;
+
+    if (NULL != (expath = w32_extendedpathW(pathname))) {
+        pathname = expath;                      // extended abs-path
+    }
+
+#undef _wchmod
+    ret = _wchmod(pathname, mode);
+
+    free((void*)expath);
+    return ret;
 }
 
 /*end*/

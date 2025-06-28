@@ -1,4 +1,4 @@
-[![Website](https://img.shields.io/badge/View-Website-blue)](https://sourceforge.net/projects/grief/)
+[![Website](https://img.shields.io/badge/View-Website-blue)](https://grief.sourceforge.net/)
 
 [![GitHub release](https://img.shields.io/github/release/Naereen/StrapDown.js.svg)](https://gitHub.com/adamyg/grief/releases/)
 

@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_socket_c,"$Id: w32_socket.c,v 1.24 2025/02/03 02:27:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_socket_c,"$Id: w32_socket.c,v 1.25 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -81,7 +81,7 @@ retry:;
         errno = EMFILE;
     } else {
         SetHandleInformation((HANDLE)s, HANDLE_FLAG_INHERIT, 0);
-        w32_sockfd_open(ret, s);                /* associate file-descriptor */
+        w32_fdsockopen(ret, s);                /* associate file-descriptor */
     }
     return ret;
 }
@@ -216,7 +216,7 @@ w32_accept_fd(int fd, struct sockaddr *addr, int *addrlen)
              *  by child processes by default, so disable.
              */
             SetHandleInformation((HANDLE)s, HANDLE_FLAG_INHERIT, 0);
-            w32_sockfd_open(ret, s); /*associate file-descriptor */
+            w32_fdsockopen(ret, s); /*associate file-descriptor */
         }
     }
     return ret;
@@ -465,7 +465,7 @@ w32_sockclose_fd(int fd)
     if ((osf = w32_sockhandle(fd)) == (SOCKET)INVALID_SOCKET) {
         ret = -1;
     } else {
-        w32_sockfd_close(fd, osf);
+        w32_fdsockclose(fd, osf);
         if ((ret = closesocket(osf)) == -1 /*SOCKET_ERROR*/) {
             w32_sockerror();
         }
@@ -500,7 +500,7 @@ LIBW32_API SOCKET
 w32_sockhandle(int fd)
 {
     SOCKET ret;
-    if ((ret = w32_sockfd_get(fd)) == INVALID_SOCKET) {
+    if ((ret = w32_fdsockget(fd)) == INVALID_SOCKET) {
         errno = EBADF;
     }
     return ret;

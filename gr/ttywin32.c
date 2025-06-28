@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.59 2024/10/10 17:46:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.60 2025/06/28 11:08:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttywin32.c,v 1.59 2024/10/10 17:46:13 cvsuser Exp $
+/* $Id: ttywin32.c,v 1.60 2025/06/28 11:08:02 cvsuser Exp $
  * WIN32 VIO driver.
  *  see: http://www.edm2.com/index.php/Category:Vio
  *
@@ -147,6 +147,12 @@ VioEncoding(void)
         }
     }
 
+    if (DISPTYPE_UNKNOWN == xf_disptype || DISPTYPE_UTF8 == xf_disptype) {
+        if (vio.isConPTY) {                     // promote
+            xf_disptype = DISPTYPE_UNICODE;
+        }
+    }
+
     if (DISPTYPE_UNKNOWN == xf_disptype) {
         switch (cp) {
         case 1200:          // Unicode UTF-16LE
@@ -236,7 +242,7 @@ VioGetMode(VIOMODEINFO *info, HVIO viohandle)
         int rows = 0, cols = 0;
 
         assert(info->cb == sizeof(VIOMODEINFO));
-        vio_size(&rows, &cols);                 // current physical size.
+        vio_size(vio.chandle, &rows, &cols);    // current physical size.
         info->row = (USHORT)rows;
         info->col = (USHORT)cols;
         info->color = (USHORT)vio.activecolors;
@@ -244,7 +250,7 @@ VioGetMode(VIOMODEINFO *info, HVIO viohandle)
 
     if (info && info->color == 256) {
         if (vio.isVirtualConsole) {
-            info->color = 0xffff;               // truecolor available.
+            info->color = 0xffff;               // true-color available.
         }
     }
 
@@ -302,7 +308,7 @@ VioSetMode(VIOMODEINFO *info, HVIO viohandle)
 //      Set the color depth to either 16 or 256 - extension.
 //
 //  Parameters:
-//      colors - Depth depth.
+//      colors - Color depth.
 //
 //  Returns:
 //      nothing.
@@ -331,7 +337,7 @@ VioSetColors(int colors)
 //      Retrieve the color depth to either 16 or 256.
 //
 //  Parameters:
-//      colors - Depth depth.
+//      colors - Color depth.
 //
 //  Returns:
 //      nothing.
@@ -377,7 +383,7 @@ VioGetCp(ULONG reserved, USHORT *cp, HVIO viohandle)
 //      Set the current console font.
 //
 //  Parameters:
-//      fontname - Fontname.
+//      fontname - Font name.
 //
 //  Returns:
 //      0   -   NO_ERROR
@@ -442,7 +448,7 @@ selectconsolefont(int nFont)
 //      Set the current console font.
 //
 //  Parameters:
-//      fontname - Fontname.
+//      fontname - Font name.
 //
 //  Returns:
 //      0   -   NO_ERROR
@@ -592,7 +598,7 @@ VioSetCurType(
 //  Parameters:
 //      row - Row return data.
 //      col - Column return data.
-//      vioHandle - Presentation-space handle.
+//      viohandle - Presentation-space handle.
 //
 //  Returns:
 //      0   -   NO_ERROR
@@ -813,7 +819,7 @@ VioShowBuf(ULONG offset, ULONG length, HVIO viohandle)
     } else if (viohandle) {
         return ERROR_VIO_INVALID_HANDLE;
     } else {
-        copyoutctx_t ctx = {0};                 /* update context */
+        CopyOutCtx_t ctx = {0};                 /* update context */
         const int rows = vio.rows, cols = vio.cols;
         int row;
 
@@ -849,9 +855,9 @@ VioShowInit(VIOSHOW *show, HVIO viohandle)
     } else if (!show || show->cb != sizeof(VIOSHOW)) {
         return ERROR_VIO_INVALID_HANDLE;
     } else {
-        copyoutctx_t *ctx = (copyoutctx_t *)show->opaque;
+        CopyOutCtx_t *ctx = (CopyOutCtx_t *)show->opaque;
 
-        assert(sizeof(show->opaque) >= sizeof(copyoutctx_t));
+        assert(sizeof(show->opaque) >= sizeof(CopyOutCtx_t));
         show->state = 1;
         show->handle = viohandle;
         CopyOutInit(ctx);
@@ -876,7 +882,7 @@ VioShowBlock(ULONG offset, ULONG length, VIOSHOW *show)
     } else if (!show || show->cb != sizeof(VIOSHOW) || 1 != show->state) {
         return ERROR_VIO_INVALID_HANDLE;
     } else {
-        copyoutctx_t *ctx = (copyoutctx_t *)show->opaque;
+        CopyOutCtx_t *ctx = (CopyOutCtx_t *)show->opaque;
         const int rows = vio.rows, cols = vio.cols;
         int row;
 
@@ -907,7 +913,7 @@ VioShowFinal(VIOSHOW *show)
     } else if (!show || show->cb != sizeof(VIOSHOW) || 1 != show->state) {
         return ERROR_VIO_INVALID_HANDLE;
     } else {
-        copyoutctx_t *ctx = (copyoutctx_t *)show->opaque;
+        CopyOutCtx_t *ctx = (CopyOutCtx_t *)show->opaque;
 
         CopyOutFinal(ctx);
         show->state = 0;

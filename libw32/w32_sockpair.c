@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_sockpair_c,"$Id: w32_sockpair.c,v 1.15 2025/02/03 02:27:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_sockpair_c,"$Id: w32_sockpair.c,v 1.16 2025/06/28 11:07:20 cvsuser Exp $")
 
 /*
  * win32 socket file-descriptor support
@@ -185,10 +185,10 @@ w32_socketpair_fd(int af, int type, int proto, int sock[2])
             ret = -1;
 
         } else {
-            w32_sockfd_open(s0, sock[0]);       /* associate file-descriptor */
+            w32_fdsockopen(s0, sock[0]);       /* associate file-descriptor */
             sock[0] = s0;
 
-            w32_sockfd_open(s0, sock[1]);       /* associate file-descriptor */
+            w32_fdsockopen(s0, sock[1]);       /* associate file-descriptor */
             sock[1] = s1;
         }
     }

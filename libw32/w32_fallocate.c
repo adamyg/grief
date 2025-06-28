@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_fallocate_c, "$Id: w32_fallocate.c,v 1.3 2025/02/03 02:27:35 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_fallocate_c, "$Id: w32_fallocate.c,v 1.4 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -32,6 +32,8 @@ __CIDENT_RCSID(gr_w32_fallocate_c, "$Id: w32_fallocate.c,v 1.3 2025/02/03 02:27:
 #endif
 
 #include "win32_internal.h"
+#include "win32_misc.h"
+
 #include <unistd.h>
 
 static BOOL                 FileTell(HANDLE hFile, uint64_t *pos);
@@ -106,20 +108,20 @@ ERRORS
 */
 
 LIBW32_API int
-posix_fallocate(int fd, off_t offset, off_t len)
+posix_fallocate(int fildes, off_t offset, off_t len)
 {
     HANDLE handle;
     int ret = -1;
 
-    if (fd < 0) {
+    if ((handle = w32_osfhandle(fildes)) == INVALID_HANDLE_VALUE) {
         errno = EBADF;
-    } else if (fd >= WIN32_FILDES_MAX ||
-            (handle = (HANDLE) _get_osfhandle(fd)) == INVALID_HANDLE_VALUE) {
-        errno = EBADF;
+
     } else if (0 == (offset + len)) {
         errno = EINVAL;
-    } else if ((offset + len) >= ((16LL * 1028 * 1024 * 1024) - (4 * 1024))) {
+
+    } else if (((int64_t)offset + len) >= ((16LL * 1028 * 1024 * 1024) - (4 * 1024))) {
         errno = EFBIG;                          // 16GB
+
     } else {
 #if (0) //TODO - additional testing
         uint64_t newpos = offset + len, oldpos = 0;

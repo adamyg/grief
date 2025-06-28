@@ -1,7 +1,7 @@
 #ifndef LIBTRE_TRE_CONFIG_H_INCLUDED
 #define LIBTRE_TRE_CONFIG_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: tre-config.h,v 1.3 2025/02/09 18:52:01 cvsuser Exp $
+/* $Id: tre-config.h,v 1.4 2025/06/28 11:11:01 cvsuser Exp $
  * libtre tre-config.h
  *
  *
@@ -31,6 +31,8 @@
 #if !defined(HAVE_WCSRTOMBS) && !defined(HAVE_WCSTOMBS)
 #error either wcsrtombs or wcstombs required for wchar_t support
 #endif
+#define TRE_MBSTATE 1
+
 #endif //RC_INVOKED
 
 /* TRE version string. */

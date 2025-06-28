@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_sysdir_c,"$Id: w32_sysdir.c,v 1.17 2025/02/03 02:27:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_sysdir_c,"$Id: w32_sysdir.c,v 1.18 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -76,7 +76,7 @@ LIBW32_API int
 w32_getsysdirA(int id, char *buf, int maxlen)
 {
     char t_path[ MAX_PATH ], *path = buf;
-    HRESULT hres;
+    BOOL ret;
     int len;
 
     if (NULL == buf || maxlen < 4 ||
@@ -85,8 +85,8 @@ w32_getsysdirA(int id, char *buf, int maxlen)
     }
 
     if (maxlen < MAX_PATH) path = t_path;
-    hres = SHGetSpecialFolderPathA(NULL, path, id, FALSE);
-    if (SUCCEEDED(hres)) {
+    ret = SHGetSpecialFolderPathA(NULL, path, id, FALSE);
+    if (ret) {
         len = (int)strlen(path);
         if (path == buf) {                      // direct
             return len;
@@ -103,7 +103,7 @@ LIBW32_API int
 w32_getsysdirW(int id, wchar_t *buf, int maxlen)
 {
     wchar_t t_path[ MAX_PATH ], *path = buf;
-    HRESULT hres;
+    BOOL ret;
     int len;
 
     if (NULL == buf || maxlen < 4 ||
@@ -112,8 +112,8 @@ w32_getsysdirW(int id, wchar_t *buf, int maxlen)
     }
 
     if (maxlen < MAX_PATH) path = t_path;
-    hres = SHGetSpecialFolderPathW(NULL, path, id, FALSE);
-    if (SUCCEEDED(hres)) {
+    ret = SHGetSpecialFolderPathW(NULL, path, id, FALSE);
+    if (ret) {
         len = (int)wcslen(path);
         if (path == buf) {                      // direct
             return len;
