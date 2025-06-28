@@ -3233,6 +3233,12 @@ ImageSize(VioState_t *state, unsigned rows, unsigned cols)
 /*
  *  Import the screen buffer.
  */
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
+
 static void
 ImageSave(HANDLE console, VioState_t *state, unsigned at, unsigned nrows)
 {
@@ -3311,6 +3317,9 @@ ImageRestore(HANDLE console, VioState_t *state, unsigned at, unsigned nrows)
     }
 }
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 /*
  *  vio_screenbuffersize ---

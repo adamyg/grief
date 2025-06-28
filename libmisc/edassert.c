@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edassert_c,"$Id: edassert.c,v 1.28 2025/01/13 16:06:38 cvsuser Exp $")
+__CIDENT_RCSID(gr_edassert_c,"$Id: edassert.c,v 1.30 2025/06/28 16:43:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edassert.c,v 1.28 2025/01/13 16:06:38 cvsuser Exp $
+/* $Id: edassert.c,v 1.30 2025/06/28 16:43:29 cvsuser Exp $
  *
  *  This macro is useful for putting diagnostics into programs. When it is executed, if
  *  expression is false (zero), edAssert() prints:
@@ -67,6 +67,9 @@ _WCRTLINK extern void _assert(char *, char *, int);
 static edAssertTrap_t       x_trap = NULL;
 static unsigned             x_flags = 0;
 static char                 x_message[1024];
+
+void __edassert(const char *file, unsigned lineno, const char *cond);
+void __edassertf(const char *file, unsigned lineno, const char *fmt, ...);
 
 
 int

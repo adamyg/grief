@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.19 2025/02/07 03:03:20 cvsuser Exp $
+# $Id: Makefile.in,v 1.20 2025/06/28 17:02:02 cvsuser Exp $
 # libarchive makefile
 #
 #
@@ -51,6 +51,9 @@ XFLAGS=
 
 CFLAGS=		@CFLAGS@
 CWARN=		@CWARN@
+ifeq (gcc,$(findstring gcc,$(CC)))
+CWARN+=		-Wno-calloc-transposed-args
+endif
 CDEBUG=		@CDEBUG@
 CRELEASE=	@CRELEASE@
 LDDEBUG=	@LDDEBUG@

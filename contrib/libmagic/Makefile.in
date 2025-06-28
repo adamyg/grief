@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.23 2025/02/07 03:03:20 cvsuser Exp $
+# $Id: Makefile.in,v 1.24 2025/06/28 17:02:23 cvsuser Exp $
 # libmagic makefile
 #
 #
@@ -63,7 +63,7 @@ XFLAGS=
 CFLAGS=		@CFLAGS@
 CWARN=		@CWARN@
 ifeq ("gcc","@CC@")
-CWARN+=		-Wno-unused-const-variable
+CWARN+=		-Wno-unused-const-variable -Wno-unused-variable
 endif
 CDEBUG=		@CDEBUG@
 CRELEASE=	@CRELEASE@

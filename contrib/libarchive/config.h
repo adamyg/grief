@@ -55,6 +55,9 @@
 #endif
 
 #if defined(_MSC_VER) && (_MSC_VER <= 1500)     // 2008; missing Win7 SDK components
+#if !defined(WINDOWS_MEAN_AND_LEAN)
+#define WINDOWS_MEAN_AND_LEAN
+#endif
 #include <windows.h>
 #include <bcrypt.h>
 #ifndef NT_SUCCESS
@@ -121,6 +124,11 @@ NTSTATUS WINAPI BCryptDeriveKeyPBKDF2(BCRYPT_ALG_HANDLE hPrf, PUCHAR pbPassword,
 #endif
 
 #if defined(__MINGW32__)
+#if !defined(WINDOWS_MEAN_AND_LEAN)
+#define WINDOWS_MEAN_AND_LEAN
+#endif
+#include <windows.h>
+#include <bcrypt.h>
 #if defined(__MINGW64_VERSION_MAJOR)
 #include <ntdef.h>
 #endif
