@@ -1,6 +1,6 @@
 /* -*- mode: cr; indent-width: 4; -*- */
 /* charset=utf8
- * $Id: regress2.cr,v 1.30 2024/08/02 12:59:02 cvsuser Exp $
+ * $Id: regress2.cr,v 1.31 2025/06/29 12:54:25 cvsuser Exp $
  * Regression tests ... part2.
  *
  *
@@ -1185,9 +1185,9 @@ test_datetime(void)
 
     sleep(1);
     TEST(1215, time() > curtime);
-    sleep(1);
+    sleep(1, 10);
     TEST(1216, time() > ++curtime);
-    sleep(1);
+    sleep(1, 10);
     TEST(1217, time() > ++curtime);
 
     //  inq_idle_time/sleep

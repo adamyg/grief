@@ -1,7 +1,5 @@
 #ifndef GR_ARGVWIN_H_INCLUDED
 #define GR_ARGVWIN_H_INCLUDED
-#include <edidentifier.h>
-__CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -21,13 +19,15 @@ __CPRAGMA_ONCE
  * License for more details.
  * ==end==
  */
- 
-#include <edsym.h>
-
-__CBEGIN_DECLS
+           
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 extern char **win_GetUTF8Arguments (int *pargc);
 
-__CEND_DECLS
+#if defined(__cplusplus)
+}
+#endif
 
 #endif /*GR_ARGVWIN_H_INCLUDED*/
