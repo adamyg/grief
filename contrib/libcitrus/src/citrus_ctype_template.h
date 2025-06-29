@@ -415,7 +415,7 @@ _FUNCNAME(wcsnrtombs_priv)(_ENCODING_INFO * __restrict ei, char * __restrict s,
 {
 	int cnt = 0, err;
 	char buf[MB_LEN_MAX];
-	size_t siz;
+	size_t siz = 0;
 	const WCHAR_T* pwcs0;
 #if _ENCODING_IS_STATE_DEPENDENT
 	_ENCODING_STATE state;
