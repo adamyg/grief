@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.82 2025/02/07 02:56:58 cvsuser Exp $
+# $Id: Makefile.in,v 1.83 2025/06/29 14:27:08 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2025, Adam Young.
@@ -227,7 +227,11 @@ D_GRCPP=	$(ROOT)/grcpp
 D_GRMANDOC=	$(ROOT)/grmandoc
 D_GRUNCH=	$(ROOT)/grunch
 
+ifeq ("@ISWIN64@","yes")
+D_MACROS=	$(ROOT)/macros.x64
+else
 D_MACROS=	$(ROOT)/macros
+endif
 D_HELP=		$(ROOT)/help
 D_MACSRC=	$(ROOT)/macsrc
 D_HLPDOC=	$(ROOT)/hlpdoc
@@ -443,8 +447,8 @@ endif
 
 .PHONY:		unittest
 unittest:	build
-	-$(D_BIN)/gr$(E) -DGRPATH=./macros -DGRHELP=./help --config
-	$(D_BIN)/gr$(E) -DGRPATH=./macros -DGRHELP=./help --headless=unittest
+	-$(D_BIN)/gr$(E) -DGRPATH=$(D_MACROS) -DGRHELP=$(D_HELP) --config
+	$(D_BIN)/gr$(E) -DGRPATH=$(D_MACROS) -DGRHELP=$(D_HELP) --headless=unittest
 
 .PHONY:		package
 package:	import packageinfo
