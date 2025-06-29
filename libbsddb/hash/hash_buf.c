@@ -134,7 +134,8 @@ __get_buf(
 			return (NULL);
 		if (!prev_bp)
 			segp[segment_ndx] =
-			    (BUFHEAD *)(void *)((u_long)bp | is_disk_mask);
+//			    (BUFHEAD *)(void *)((u_long)bp | is_disk_mask);
+			    (BUFHEAD *)((ptrdiff_t)bp | is_disk_mask);
 	} else {
 		BUF_REMOVE(bp);
 		MRU_INSERT(bp);
