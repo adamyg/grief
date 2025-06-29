@@ -142,11 +142,17 @@ typedef struct htab	 {		/* Memory resident data structure */
 #define ALL_SET			((uint32_t)0xFFFFFFFF)
 #define ALL_CLEAR		0
 
-#define PTROF(X)	((BUFHEAD *)(void *)((u_long)(X)&~0x3))
-#define ISMOD(X)	((uint32_t)(u_long)(X)&0x1)
-#define DOMOD(X)	((X) = (char *)(void *)((u_long)(X)|0x1))
-#define ISDISK(X)	((uint32_t)(u_long)(X)&0x2)
-#define DODISK(X)	((X) = (char *)(void *)((u_long)(X)|0x2))
+//#define PTROF(X)	((BUFHEAD *)(void *)((u_long)(X)&~0x3))
+//#define ISMOD(X)	((uint32_t)(u_long)(X)&0x1)
+//#define DOMOD(X)	((X) = (char *)(void *)((u_long)(X)|0x1))
+//#define ISDISK(X)	((uint32_t)(u_long)(X)&0x2)
+//#define DODISK(X)	((X) = (char *)(void *)((u_long)(X)|0x2))
+
+#define PTROF(X)	((BUFHEAD *)((ptrdiff_t)(X)&~0x3))
+#define ISMOD(X)	((uint32_t)(ptrdiff_t)(X)&0x1)
+#define DOMOD(X)	((X) = (char *)((ptrdiff_t)(X)|0x1))
+#define ISDISK(X)	((uint32_t)(ptrdiff_t)(X)&0x2)
+#define DODISK(X)	((X) = (char *)((ptrdiff_t)(X)|0x2))
 
 #define BITS_PER_MAP	32
 
