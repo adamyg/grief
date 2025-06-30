@@ -59,22 +59,25 @@ LicenseFile=../COPYING
 
 OutputDir=.
 ; Examples:
-;  gr-3.2.4.28-win-x64-setup.exe
-;  gr-3.2.4.28-win-x86-setup.exe
+;  gr-3.2.4.28-x64-mingw64-setup.exe
+;  gr-3.2.4.28-x64-setup.exe
+;  gr-3.2.4.28-x86-setup.exe
 ;
+
+#if !defined(BUILD_ARCHITECTURE)
+#define BUILD_ARCHITECTURE "x86"
+#endif
+
 #if (BUILD_ARCHITECTURE == "x64") || defined(BUILD_ISWIN64)
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
 #endif
-#if defined(BUILD_ARCHITECTURE)
-OutputBaseFilename=gr-{#GR_VERSION}.{#GR_BUILD_NUMBER}-win-{#BUILD_ARCHITECTURE}-setup
-#else
-OutputBaseFilename=gr-{#GR_VERSION}.{#GR_BUILD_NUMBER}-win-x86-setup
-#endif
 
-;	#if defined(BUILD_TOOLNAME)
-;	OutputBaseFilename=gr-{#GR_VERSION}.{#GR_BUILD_NUMBER}-{#BUILD_TOOLNAME}-setup
-;	#endif
+#if defined(BUILD_TOOLNAME)
+OutputBaseFilename=gr-{#GR_VERSION}.{#GR_BUILD_NUMBER}-{#BUILD_ARCHITECTURE}-{#BUILD_TOOLNAME}-setup
+#else
+OutputBaseFilename=gr-{#GR_VERSION}.{#GR_BUILD_NUMBER}-{#BUILD_ARCHITECTURE}-setup
+#endif
 
 Compression=lzma
 SolidCompression=yes
@@ -112,7 +115,11 @@ Source: "..\{#BinDir}\*.dll";         DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\ctbl\*";        DestDir: "{app}\bin\ctbl"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\{#BinDir}\i18n\*";        DestDir: "{app}\bin\i81n"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\macsrc\*";                DestDir: "{app}\macsrc"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "CVS,.*,*.exe,*.obj,*.bat,tests,ref,sav,*.txt,*.pl,*.in*"
+#if defined(BUILD_ISWIN64)
+Source: "..\macros.x64\*";            DestDir: "{app}\macros"; Flags: ignoreversion recursesubdirs createallsubdirs
+#else
 Source: "..\macros\*";                DestDir: "{app}\macros"; Flags: ignoreversion recursesubdirs createallsubdirs
+#endif
 Source: "..\help\*";                  DestDir: "{app}\help"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\COPYING";                 DestDir: "{app}"; Flags: ignoreversion
 Source: "..\Changes";                 DestDir: "{app}"; Flags: ignoreversion isreadme
