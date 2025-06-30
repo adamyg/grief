@@ -62,7 +62,7 @@ OutputDir=.
 ;  gr-3.2.4.28-win-x64-setup.exe
 ;  gr-3.2.4.28-win-x86-setup.exe
 ;
-#if (BUILD_ARCHITECTURE == "x64" || BUILD_ISWIN64)
+#if (BUILD_ARCHITECTURE == "x64") || defined(BUILD_ISWIN64)
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
 #endif

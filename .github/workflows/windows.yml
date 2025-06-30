@@ -243,4 +243,18 @@ jobs:
         path: |
           ./bin.${{ matrix.config.toollabel }}/release/*
 
+    - name: Installer
+      if: startsWith(matrix.config.name, 'Windows Latest OWC')
+      shell: cmd
+      run: |
+        choco install innosetup --version=5.6.1 --force
+        .\win32\gmake-42 release package
+
+    - name: Release
+      if: startsWith(matrix.config.name, 'Windows Latest OWC')
+      uses: softprops/action-gh-release@v2
+      with:
+        files: ./win32/gr-*-setup.exe
+        draft: true
+
 #end
