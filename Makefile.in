@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.84 2025/06/30 19:42:03 cvsuser Exp $
+# $Id: Makefile.in,v 1.85 2025/06/30 20:08:08 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2025, Adam Young.
@@ -265,7 +265,7 @@ INSTALL_DATA=	@INSTALL_DATA@
 ifeq ("win32","@build_os@")
 INNO=		@INNO@
 ifeq ($(INNO),) # Inno5: allowing legacy XP installations
-INNO=		"C:/Program Files (x86)/Inno Setup 5/Compil32"
+INNO=		"C:/Program Files (x86)/Inno Setup 5/iscc"
 endif
 endif
 
