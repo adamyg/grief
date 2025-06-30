@@ -141,7 +141,7 @@ jobs:
         brew install wget
 
     - name: Windows, generate
-      if: startsWith(matrix.config.name, 'Windows Latest')
+      if: startsWith(matrix.config.name, 'Windows')
       shell: cmd
       run: |
         @if "${{ matrix.config.toolchain }}"=="mingw32" set PATH=c:\msys64\mingw32\bin;%PATH%
@@ -152,7 +152,7 @@ jobs:
         c:/Strawberry/perl/bin/perl makelib.pl --perlpath=c:/Strawberry/perl/bin --busybox=./win32/busybox --wget=./win32/wget --bison=c:/msys64/usr/bin/bison --flex=./bin.${{ matrix.config.toollabel }}/release/flex "${{ matrix.config.toolchain }}"
 
     - name: Windows, compile
-      if: startsWith(matrix.config.name, 'Windows Latest')
+      if: startsWith(matrix.config.name, 'Windows')
       shell: cmd
       run: |
         @if "${{ matrix.config.toolchain }}"=="mingw32" set PATH=c:\msys64\mingw32\bin;%PATH%
@@ -163,7 +163,7 @@ jobs:
         .\win32\gmake-42 release
 
     - name: Windows, unit-test
-      if: startsWith(matrix.config.name, 'Windows Latest')
+      if: startsWith(matrix.config.name, 'Windows')
       shell: cmd
       run: |
         @if "${{ matrix.config.toolchain }}"=="mingw32" set PATH=c:\msys64\mingw32\bin;%PATH%
@@ -244,14 +244,15 @@ jobs:
           ./bin.${{ matrix.config.toollabel }}/release/*
 
     - name: Installer
-      if: startsWith(matrix.config.name, 'Windows Latest OWC')
+      if: startsWith(matrix.config.name, 'Windows')
       shell: cmd
       run: |
         choco install innosetup --version=5.6.1 --force
-        .\win32\gmake-42 release package
+        @rem .\win32\gmake-42 release package
+        "%programfiles(x86)%\Inno Setup 5\iscc" ".\win32\gr-inno-setup.iss"
 
     - name: Release
-      if: startsWith(matrix.config.name, 'Windows Latest OWC')
+      if: startsWith(matrix.config.name, 'Windows')
       uses: softprops/action-gh-release@v2
       with:
         files: ./win32/gr-*-setup.exe
