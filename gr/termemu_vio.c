@@ -2728,11 +2728,14 @@ consolefontcreate(int height, int width, int weight, int italic, const char *fac
     const BOOL isTerminal =                     // special terminal/raster support.
         (0 == strcmp(facename, "Terminal"));
 
+    HFONT hFont;
     wchar_t wfacename[64] = {0};
-    for (unsigned i = 0; i < (_countof(wfacename)-1) && facename[i]; ++i)
+    unsigned i;
+
+    for (i = 0; i < (_countof(wfacename)-1) && facename[i]; ++i)
         wfacename[i] = (wchar_t)(facename[i]);
 
-    HFONT hFont = CreateFontW(
+    hFont = CreateFontW(
         height, width -                         // logic (device dependent pixels) height and width.
             (italic ? 3 : (FW_BOLD == weight ? 1 : 0)),
         0, 0, weight,

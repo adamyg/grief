@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.in,v 1.25 2025/06/28 11:11:01 cvsuser Exp $
+# $Id: makelib.in,v 1.26 2025/06/30 10:19:07 cvsuser Exp $
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 # makelib configuration
 #
@@ -226,6 +226,7 @@ Configure()
 
                 add_define('_CRT_SECURE_NO_WARNINGS');
                 add_define('_CRT_SECURE_NO_DEPRECATE');
+                add_define('_CRT_NONSTDC_NO_WARNINGS');
                 add_define('_CRT_NONSTDC_NO_DEPRECATE');
 
 		add_xinclude('$(ROOT)/libw32');		# Extra includes; C and compiler tests.

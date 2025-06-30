@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.88 2025/06/29 13:02:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.89 2025/06/30 11:55:10 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.88 2025/06/29 13:02:22 cvsuser Exp $
+/* $Id: cmain.c,v 1.89 2025/06/30 11:55:10 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -416,7 +416,7 @@ static char *           path_cook2(const char *name, char *result, int length);
 static char *           path_cook(const char *name);
 
 static void             argv_init(int *argcp, char **argv);
-static int              argv_process(int doerr, int argc, const char * const *argv);
+static int              argv_process(const int doerr, int argc, const char * const *argv);
 static int              set_display_mode(int dc);
 
 static void             unicode_init(void);
