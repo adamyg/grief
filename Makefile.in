@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.83 2025/06/29 14:27:08 cvsuser Exp $
+# $Id: Makefile.in,v 1.84 2025/06/30 19:42:03 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2025, Adam Young.
@@ -452,7 +452,7 @@ unittest:	build
 
 .PHONY:		package
 package:	import packageinfo
-	$(INNO) ./win32/gr-inno-setup.iss
+	"$(INNO)" ./win32/gr-inno-setup.iss
 	-$(RM) $(PACKAGEINFO)
 
 
