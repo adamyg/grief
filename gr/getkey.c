@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_getkey_c,"$Id: getkey.c,v 1.54 2025/02/07 03:03:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_getkey_c,"$Id: getkey.c,v 1.55 2025/06/30 10:18:18 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: getkey.c,v 1.54 2025/02/07 03:03:21 cvsuser Exp $
+/* $Id: getkey.c,v 1.55 2025/06/30 10:18:18 cvsuser Exp $
  * Low level input, both keyboard and mouse.
  *
  *
@@ -77,6 +77,10 @@ __CIDENT_RCSID(gr_getkey_c,"$Id: getkey.c,v 1.54 2025/02/07 03:03:21 cvsuser Exp
 #define WAIT_MINUTE     0x0400                  /* minute passed. */
 #define WAIT_TIMEDOUT   0x0800                  /* timeout past to getkey() expired. */
 #define WAIT_2ND        0x1000                  /* second character timeout. */
+
+#if !defined(SIZEOF_INT) || (SIZEOF_INT < 4)
+#error Integers are assumed to 32 bit or greater; key-code/KEY definition
+#endif
 
 enum {
     ESCDELAY_DEFAULT = 0,
@@ -1034,6 +1038,8 @@ io_check(struct IOEvent *evt, int mousemode, accint_t tmo)
                         if (!mousemode || ch16 == KEY_VOID) {
                             continue;           /* consume */
                         }
+                    } else {
+                        playback_store(ch16);
                     }
                     return ch16;
                 }

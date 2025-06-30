@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.84 2025/02/08 16:24:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.85 2025/06/30 10:17:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_win32.c,v 1.84 2025/02/08 16:24:15 cvsuser Exp $
+/* $Id: sys_win32.c,v 1.85 2025/06/30 10:17:08 cvsuser Exp $
  * WIN32 system support.
  *
  *
@@ -688,6 +688,9 @@ sys_getevent(struct IOEvent *evt, accint_t tmo)
             tmticks = 0;                        /* no time-out */
         }
 
+#if defined(_MSC_VER)
+#pragma warning(suppress:28159)
+#endif
         ticks = GetTickCount();                 /* ticks (ms) as start */
         rc = WaitForSingleObject(hKbd, tmticks);
         ticks = DiffTicks(ticks);               /* ticks (ms) as end */

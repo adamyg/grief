@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_playback_c,"$Id: playback.c,v 1.35 2025/02/07 03:03:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_playback_c,"$Id: playback.c,v 1.36 2025/06/30 10:18:18 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: playback.c,v 1.35 2025/02/07 03:03:21 cvsuser Exp $
+/* $Id: playback.c,v 1.36 2025/06/30 10:18:18 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -305,7 +305,7 @@ do_remember(void)               /* int ([string|int overwrite], [int macroid]) *
         char path[MAX_PATH], buf[32];
         BUFFER_t *bp;
 
-        sxprintf(buf, sizeof(buf), "KBD-MACRO-%d", x_playback_current->p_ident);
+        sxprintf(buf, sizeof(buf), "KBD-MACRO-%d", (int)(x_playback_current->p_ident));
         if (NULL == (bp =
                 buf_find_or_create(file_canonicalize(buf, path, sizeof(path))))) {
             return;
@@ -512,7 +512,7 @@ inq_keystroke_macro(void)       /* string ([int macroid], [int &bufnum]) */
 {
     const char *kp;
     playback_t *pb;
-    const uint16_t *usp, *end;
+    const KEY *usp, *end;
     ref_t *rp;
 
     if (NULL == (pb =
@@ -523,8 +523,8 @@ inq_keystroke_macro(void)       /* string ([int macroid], [int &bufnum]) */
     argv_assign_int(2, (accint_t) pb->p_bufnum);
 
     rp = r_string("");
-    usp = (const uint16_t *) r_ptr(pb->p_ref);
-    end = usp + (r_used(pb->p_ref) / sizeof(uint16_t));
+    usp = (const KEY *) r_ptr(pb->p_ref);
+    end = usp + (r_used(pb->p_ref) / sizeof(KEY));
     while (usp < end) {
         kp = key_code2name((int) *usp++);
         r_cat(rp, kp);
@@ -689,9 +689,9 @@ do_save_keystroke_macro(void)   /* int (string filename) */
 void
 playback_store(int ch)
 {
-    const uint16_t us = (uint16_t) ch;
-
     if (x_playback_recording && x_rem_string[0] != 'P') {
+        const KEY us = (KEY)ch;
+
         r_append(x_playback_current->p_ref, (const void *) &us, sizeof(us), PLAYBACK_INCR);
     }
 }
@@ -711,21 +711,21 @@ int
 playback_grab(int popit)
 {
     if (x_playback_playing) {
-        const uint16_t *usp;
-        uint16_t ch;
+        const KEY *usp;
+        KEY ch;
 
         if (x_rem_string[0] == 'P') {
             return 0;
         }
 
-        if (x_playback_current->p_cursor >= (r_used(x_playback_current->p_ref) / sizeof(uint16_t))) {
+        if (x_playback_current->p_cursor >= (r_used(x_playback_current->p_ref) / sizeof(KEY))) {
             x_playback_playing = FALSE;
             u_chain();
             infof("Playback successful.");
             return 0;
         }
 
-        usp = (const uint16_t *) r_ptr(x_playback_current->p_ref);
+        usp = (const KEY *) r_ptr(x_playback_current->p_ref);
         ch = usp[x_playback_current->p_cursor];  /* next character */
         if (popit) {
             ++x_playback_current->p_cursor;      /* consume */
