@@ -76,6 +76,7 @@ jobs:
         location: "C:\\Watcom"
 
     - name: Windows, extra
+      shell: cmd
       run: |
         @if NOT "${{ matrix.config.toolchain }}"=="mingw64" c:\msys64\usr\bin\pacman --noconfirm -S bison
         c:\msys64\usr\bin\pacman --noconfirm -S zip
@@ -117,7 +118,7 @@ jobs:
         @set PERL=c:/Strawberry/perl/bin/perl
         .\win32\gmake-42 release unittest
         c:\msys64\usr\bin\zip pkg-${{ matrix.config.package }}-${{ github.run_number }}.zip ^
-                ./bin.${{ matrix.config.toollabel }}/release/* ./${{ matrix.config.macros }}/* ./help/*
+                ./bin.${{ matrix.config.toollabel }}/release/* ./${{ matrix.config.macros }}/* ./help/* ./macsrc/*
 
     - name: Windows, package
       if: startsWith(matrix.config.name, 'Windows')

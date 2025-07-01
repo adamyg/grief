@@ -91,7 +91,7 @@ jobs:
         make release prepare_deb
         echo "$(cat ./.PKGLABEL)" >> $GITHUB_ENV
         zip pkg-${{ matrix.config.package }}-${{ github.run_number }}.zip \
-                ./bin.${{ matrix.config.toollabel }}/release/* ./macros/* ./help/*
+                ./bin.${{ matrix.config.toollabel }}/release/* ./macros/* ./help/* ./macsrc/*
 
     - name: Ubuntu, unit-test
       if: startsWith(matrix.config.name, 'Ubuntu Latest')
