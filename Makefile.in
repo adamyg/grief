@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.86 2025/07/01 08:37:15 cvsuser Exp $
+# $Id: Makefile.in,v 1.87 2025/07/01 11:11:20 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2025, Adam Young.
@@ -451,7 +451,7 @@ unittest:	build
 
 .PHONY:		package
 package:	import buildinfo
-	"$(INNO)" -DBUILD_TYPE=$(BUILD_TYPE) ./win32/gr-inno-setup.iss
+	"$(INNO)" ./win32/gr-inno-setup.iss
 
 
 #########################################################################################
@@ -462,18 +462,18 @@ ifneq ($(APPVEYOR_BUILD_NUMBER),)
 BUILD_NUMBER=			$(APPVEYOR_BUILD_NUMBER)
 else ifneq ($(GITHUB_RUN_NUMBER),)
 ifeq (master,$(findstring master,$(GITHUB_REF)))
-BUILD_NUMBER=			$(shell $(BUSYBOX) cat BUILDNUMBER)
+BUILD_NUMBER=			$(shell $(BUSYBOX) cat $(BUILDNUMBER))
 else
 BUILD_NUMBER=			$(shell $(BUSYBOX) expr 10000 + $(GITHUB_RUN_NUMBER))
 endif
 else
-BUILD_NUMBER=			$(shell $(BUSYBOX) cat BUILDNUMBER)
+BUILD_NUMBER=			$(shell $(BUSYBOX) cat $(BUILDNUMBER))
 endif
 
 .PHONY:		buildinfo
-$(BUILDINFO):		Makefile $(BUILDNUMBER) buildinfo
+$(BUILDINFO):		buildinfo
 buildinfo:
-		@echo updating buildinfo.h ...
+		@echo updating $(BUILDINFO) ...
 		-@$(PERL) ./buildinfo.pl -o $(BUILDINFO) --prefix="GR_" --package="$(PACKAGE)" --name="$(PKG_NAME)" --version="$(PKG_VERSION)" \
 			--date="$(BUILD_DATE)" --build="$(BUILD_NUMBER)" --toolchain="@TOOLCHAINEXT@" --type="$(BUILD_TYPE)" --iswin64="@ISWIN64@" \
 			--bindir="$(BINDIR)" --sbindir="$(SBINDIR)" --libexecdir="$(LIBEXECDIR)" --libdir="$(LIBDIR)" --datadir="$(DATADIR)"

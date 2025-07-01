@@ -249,7 +249,7 @@ jobs:
       run: |
         choco install innosetup --version=5.6.1 --force
         @rem .\win32\gmake-42 release package
-        "%programfiles(x86)%\Inno Setup 5\iscc" -DBUILD_TYPE=release ".\win32\gr-inno-setup.iss"
+        "%programfiles(x86)%\Inno Setup 5\iscc" ".\win32\gr-inno-setup.iss"
 
     - name: Release
       if: startsWith(matrix.config.name, 'Windows')

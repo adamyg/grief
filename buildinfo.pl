@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: buildinfo.pl,v 1.15 2025/07/01 08:37:24 cvsuser Exp $
+# $Id: buildinfo.pl,v 1.16 2025/07/01 11:11:20 cvsuser Exp $
 # buildinfo generation
 #
 # Copyright 2018 - 2025, Adam Young
@@ -174,19 +174,22 @@ EOT
 			if ($buildtype =~ /release/ && $buildtype =~ /debug/);
 
 		print FILE "#if !defined(BUILD_TYPE)\n";
-		print FILE "#define BUILD_TYPE \"${buildtype}\"\n";
+		if ($buildtype =~ /release/) {
+			print FILE "#define BUILD_TYPE \"release\"\n";
+			print FILE "#define BUILD_TYPE_RELEASE 1\n";
+
+		} else {
+			print FILE "#define BUILD_TYPE \"debug\"\n";
+			print FILE "#define BUILD_TYPE_DEBUG 1\n";
+		}
 		print FILE "#endif\n";
 	}
 
 	print FILE <<"EOT";
-#if !defined(BUILD_TYPE)
-#   error BUILD_TYPE undefined set to either release or debug
-#elif (BUILD_TYPE == "release")
-#   define BUILD_TYPE_RELEASE 1
-#elif (BUILD_TYPE == "debug")
-#   define BUILD_TYPE_DEBUG 1
-#else
+#if !defined(BUILD_TYPE_RELEASE) && !defined(BUILD_TYPE_DEBUG)
 #   error BUILD_TYPE is neither release or debug
+#elif defined(BUILD_TYPE_RELEASE) && defined(BUILD_TYPE_DEBUG)
+#   error BUILD_TYPE both release and debug
 #endif
 EOT
 
