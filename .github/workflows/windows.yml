@@ -117,8 +117,8 @@ jobs:
         @if "${{ matrix.config.toolchain }}"=="owc19"   call .\support\owc19setenv.bat C:\Watcom
         @set PERL=c:/Strawberry/perl/bin/perl
         .\win32\gmake-42 release unittest
-        tar pkg-${{ matrix.config.package }}-${{ github.run_number }}.tar ^
-                bin.${{ matrix.config.toollabel }}/release/* ${{ matrix.config.macros }}/* help/* macsrc/*
+        tar -cvf pkg-${{ matrix.config.package }}-${{ github.run_number }}.tar ^
+             bin.${{ matrix.config.toollabel }}/release/* ${{ matrix.config.macros }}/* help/* macsrc/*
 
     - name: Windows, package
       if: startsWith(matrix.config.name, 'Windows')

@@ -75,7 +75,7 @@ jobs:
     - name: Package
       uses: actions/upload-artifact@v4
       with:
-        name: package-${{ matrix.config.package }}
+        name: pkg-${{ matrix.config.package }}
         path: |
           pkg-${{ matrix.config.package }}-${{ github.run_number }}.tar
 

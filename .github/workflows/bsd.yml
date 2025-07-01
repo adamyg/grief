@@ -29,13 +29,15 @@ jobs:
 #          run: |
 #            ./configure
 #            cat acdefines.h
-#            gmake release
+#            gmake release unittest
+#            tar -cvf pkg-openbsd-${{ github.run_number }}.tar \
+#                 bin.gcc/release/* macros/* help/* macsrc/*
 #      - name: FreeBSD Package
 #        uses: actions/upload-artifact@v4
 #        with:
-#          name: package-freebsd
+#          name: pkg-freebsd
 #          path: |
-#            ./bin.gcc/release/*
+#            pkg-netbsd-${{ github.run_number }}.tar
 
 # Packages: see: https://cdn.openbsd.org/pub/OpenBSD/7.5/packages/amd64/
 #  openbsd:
@@ -52,13 +54,15 @@ jobs:
 #          run: |
 #            ./configure
 #            cat acdefines.h
-#            gmake release
+#            gmake release unittest
+#            tar -cvf pkg-openbsd-${{ github.run_number }}.tar \
+#                 bin.gcc/release/* macros/* help/* macsrc/*
 #      - name: OpenBSD Package
 #        uses: actions/upload-artifact@v4
 #        with:
-#          name: package-openbsd
+#          name: pkg-openbsd
 #          path: |
-#            ./bin.gcc/release/*
+#            pkg-netbsd-${{ github.run_number }}.tar
 
 # Packages: see: https://ftp.netbsd.org/pub/pkgsrc/current/pkgsrc/pkgtools/index.html
   netbsd:
@@ -81,11 +85,11 @@ jobs:
             gmake release unittest
             tar -cvf pkg-netbsd-${{ github.run_number }}.tar \
                  bin.gcc/release/* macros/* help/* macsrc/*
-            
+
       - name: NetBSD, package
         uses: actions/upload-artifact@v4
         with:
-          name: package-netbsd
+          name: pkg-netbsd
           path: |
             pkg-netbsd-${{ github.run_number }}.tar
 
