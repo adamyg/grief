@@ -7,7 +7,7 @@
 #
 
 name: "FreeOpenNetBSD builds"
-on: [push, pull_request]
+on: [push]
 
 #https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
 concurrency:
