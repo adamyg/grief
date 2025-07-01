@@ -44,7 +44,7 @@
 AppId={{1BDBED1A-1B0E-4D87-BD04-31E9E3DA5ADC}}
 AppName=GRIEF
 AppVersion={#GR_VERSION} (build: {#GR_BUILD_DATE}-{#GR_BUILD_NUMBER})
-AppCopyright=Copyright (C) 1998-2024.
+AppCopyright=Copyright (C) 1998-2025.
 AppPublisherURL=http://sourceforge.net/projects/grief/
 AppSupportURL=https://github.com/adamyg/grief
 AppUpdatesURL=https://github.com/adamyg/grief
