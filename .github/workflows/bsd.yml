@@ -19,7 +19,7 @@ jobs:
 #    runs-on: ubuntu-22.04
 #    steps:
 #      - uses: actions/checkout@v4
-#      - name: FreeBSD
+#      - name: FreeBSD Build
 #        uses: vmactions/freebsd-vm@v1
 #        with:
 #          usesh: true
@@ -30,13 +30,19 @@ jobs:
 #            ./configure
 #            cat acdefines.h
 #            gmake release
+#      - name: FreeBSD Package
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: package-freebsd
+#          path: |
+#            ./bin.gcc/release/*
 
 # Packages: see: https://cdn.openbsd.org/pub/OpenBSD/7.5/packages/amd64/
 #  openbsd:
 #    runs-on: ubuntu-22.04
 #    steps:
 #      - uses: actions/checkout@v4
-#      - name: OpenBSD
+#      - name: OpenBSD Build
 #        uses: vmactions/openbsd-vm@v1
 #        with:
 #          usesh: true
@@ -47,13 +53,19 @@ jobs:
 #            ./configure
 #            cat acdefines.h
 #            gmake release
+#      - name: OpenBSD Package
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: package-openbsd
+#          path: |
+#            ./bin.gcc/release/*
 
 # Packages: see: https://ftp.netbsd.org/pub/pkgsrc/current/pkgsrc/pkgtools/index.html
   netbsd:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: NetBSD
+      - name: NetBSD Build
         uses: vmactions/netbsd-vm@v1
         with:
           usesh: true
@@ -67,5 +79,11 @@ jobs:
             ./configure
             cat acdefines.h
             gmake release unittest
+      - name: NetBSD Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-netbsd
+          path: |
+            ./bin.gcc/release/*
 
 #end
