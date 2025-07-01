@@ -34,14 +34,15 @@ jobs:
       if: startsWith(matrix.config.name, 'MacOS Latest')
       shell: bash
       run: |
-        brew install pkg-config
         brew install ncurses
-        brew link ncurses
         brew install enchant
         brew install libspelling
         brew install hunspell
         brew install libarchive
-        brew install wget
+
+##      brew install pkg-config
+##      brew link ncurses
+##      brew install wget
 
     - name: MacOS, generate
       if: startsWith(matrix.config.name, 'MacOS Latest')
