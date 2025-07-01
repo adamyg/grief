@@ -90,7 +90,7 @@ jobs:
       run: |
         make release prepare_deb
         echo "$(cat ./.PKGLABEL)" >> $GITHUB_ENV
-        zip pkg-${{ matrix.config.package }}-${{ github.run_number }}.zip \
+        tar -cvf pkg-${{ matrix.config.package }}-${{ github.run_number }}.tar \
                 ./bin.${{ matrix.config.toollabel }}/release/* ./macros/* ./help/* ./macsrc/*
 
     - name: Ubuntu, unit-test
@@ -127,7 +127,7 @@ jobs:
       with:
         name: pkg-${{ matrix.config.package }}
         path: |
-          pkg-${{ matrix.config.package }}-${{ github.run_number }}.zip
+          pkg-${{ matrix.config.package }}-${{ github.run_number }}.tar
 
 #end
 
