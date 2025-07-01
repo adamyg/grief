@@ -20,11 +20,7 @@
 ; License for more details.
 ;
 
-#if defined(BUILD_INFO)
 #include "../include/edbuildinfo.h"
-#else
-#include "../include/edpackageinfo.h"
-#endif
 
 #if defined(BUILD_TOOLCHAIN)
 #if defined(BUILD_TYPE)
@@ -109,7 +105,8 @@ Source: "..\{#BinDir}\gm.exe";        DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\grcpp.exe";     DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\grunch.exe";    DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\grmandoc.exe";  DestDir: "{app}\bin"; Flags: ignoreversion
-	;;Source: "..\{#BinDir}\grwc.exe";      DestDir: "{app}\bin"; Flags: ignoreversion
+	; False positive, virus
+	; Source: "..\{#BinDir}\grwc.exe";      DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\grupdater.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\*.dll";         DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\ctbl\*";        DestDir: "{app}\bin\ctbl"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -176,7 +173,7 @@ const   ModPathName = 'modifypath';
 function ModPathDir(): TArrayOfString;
 begin
         setArrayLength(Result, 1)
-    	Result[0] := ExpandConstant('{app}\bin');
+        Result[0] := ExpandConstant('{app}\bin');
 end;
 
 procedure DosToUnix();
@@ -193,3 +190,4 @@ begin
 end;
 
 #include "modpath.iss"
+

@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: buildinfo.pl,v 1.14 2025/06/30 18:49:34 cvsuser Exp $
+# $Id: buildinfo.pl,v 1.15 2025/07/01 08:37:24 cvsuser Exp $
 # buildinfo generation
 #
 # Copyright 2018 - 2025, Adam Young
@@ -167,19 +167,28 @@ EOT
 	}
 
 	if ($buildtype) {
-		print FILE "#define BUILD_TYPE \"${buildtype}\"\n";
-
 		die "buildinfo.pm: build type verb 'release' or 'debug' expected.\n"
 			if ($buildtype !~ /release/ && $buildtype !~ /debug/);
 
 		die "buildinfo.pm: build type verbs 'release' and 'debug' are mutually exclusive.\n"
 			if ($buildtype =~ /release/ && $buildtype =~ /debug/);
 
-		print FILE "#define BUILD_TYPE_RELEASE 1\n"
-			if ($buildtype =~ /release/);
-		print FILE "#define BUILD_TYPE_DEBUG 1\n"
-			if ($buildtype =~ /debug/);
+		print FILE "#if !defined(BUILD_TYPE)\n";
+		print FILE "#define BUILD_TYPE \"${buildtype}\"\n";
+		print FILE "#endif\n";
 	}
+
+	print FILE <<"EOT";
+#if !defined(BUILD_TYPE)
+#   error BUILD_TYPE undefined set to either release or debug
+#elif (BUILD_TYPE == "release")
+#   define BUILD_TYPE_RELEASE 1
+#elif (BUILD_TYPE == "debug")
+#   define BUILD_TYPE_DEBUG 1
+#else
+#   error BUILD_TYPE is neither release or debug
+#endif
+EOT
 
 	print FILE "#define ${prefix}BUILD_BINDIR \"${bindir}\"\n"
 		if ($bindir);

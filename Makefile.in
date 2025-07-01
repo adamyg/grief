@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.85 2025/06/30 20:08:08 cvsuser Exp $
+# $Id: Makefile.in,v 1.86 2025/07/01 08:37:15 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2025, Adam Young.
@@ -238,7 +238,6 @@ D_HLPDOC=	$(ROOT)/hlpdoc
 
 BUILDNUMBER=	BUILDNUMBER.in
 BUILDINFO=	include/edbuildinfo.h
-PACKAGEINFO=	include/edpackageinfo.h
 
 # Compilers, programs
 
@@ -451,9 +450,8 @@ unittest:	build
 	$(D_BIN)/gr$(E) -DGRPATH=$(D_MACROS) -DGRHELP=$(D_HELP) --headless=unittest
 
 .PHONY:		package
-package:	import packageinfo
-	"$(INNO)" ./win32/gr-inno-setup.iss
-	-$(RM) $(PACKAGEINFO)
+package:	import buildinfo
+	"$(INNO)" -DBUILD_TYPE=$(BUILD_TYPE) ./win32/gr-inno-setup.iss
 
 
 #########################################################################################
@@ -461,11 +459,15 @@ package:	import packageinfo
 
 BUILD_DATE=		$(shell date +'%Y%m%d')
 ifneq ($(APPVEYOR_BUILD_NUMBER),)
-BUILD_NUMBER=		$(APPVEYOR_BUILD_NUMBER)
+BUILD_NUMBER=			$(APPVEYOR_BUILD_NUMBER)
 else ifneq ($(GITHUB_RUN_NUMBER),)
-BUILD_NUMBER=		$(GITHUB_RUN_NUMBER)
+ifeq (master,$(findstring master,$(GITHUB_REF)))
+BUILD_NUMBER=			$(shell $(BUSYBOX) cat BUILDNUMBER)
 else
-BUILD_NUMBER=		$(shell cat ./$(BUILDNUMBER))
+BUILD_NUMBER=			$(shell $(BUSYBOX) expr 10000 + $(GITHUB_RUN_NUMBER))
+endif
+else
+BUILD_NUMBER=			$(shell $(BUSYBOX) cat BUILDNUMBER)
 endif
 
 .PHONY:		buildinfo
@@ -475,11 +477,6 @@ buildinfo:
 		-@$(PERL) ./buildinfo.pl -o $(BUILDINFO) --prefix="GR_" --package="$(PACKAGE)" --name="$(PKG_NAME)" --version="$(PKG_VERSION)" \
 			--date="$(BUILD_DATE)" --build="$(BUILD_NUMBER)" --toolchain="@TOOLCHAINEXT@" --type="$(BUILD_TYPE)" --iswin64="@ISWIN64@" \
 			--bindir="$(BINDIR)" --sbindir="$(SBINDIR)" --libexecdir="$(LIBEXECDIR)" --libdir="$(LIBDIR)" --datadir="$(DATADIR)"
-
-.PHONY:		packageinfo
-packageinfo:
-		-@$(PERL) ./buildinfo.pl -o $(PACKAGEINFO) --prefix="GR_" --package="$(PACKAGE)" --name="$(PKG_NAME)" --version="$(PKG_VERSION)" \
-			--date="$(BUILD_DATE)" --build="$(BUILD_NUMBER)" --toolchain="@TOOLCHAINEXT@" --type="$(BUILD_TYPE)" --iswin64="@ISWIN64@"
 
 buildinfo.h:			BUILDNUMBER buildinfo.pl
 
