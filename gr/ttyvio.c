@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.90 2025/06/28 11:08:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.91 2025/07/02 13:30:00 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.90 2025/06/28 11:08:02 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.91 2025/07/02 13:30:00 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -113,6 +113,7 @@ static void             term_legacycolor(const colattr_t *ca);
 static void             vio_reference(void);
 static void             vio_image_save(void);
 static void             vio_image_restore(void);
+static void             vio_garbled(void);
 static void             vio_dirty(int row, int col, int erow, int ecol);
 
 #if !defined(WIN32)
@@ -214,6 +215,7 @@ static int              currCols;
 static int              currCodePage = -1;
 static ULONG            currScreenCells;
 static VIOCELL *        currScreen;
+static unsigned         currGarbled = 0;
 static int              currDirtyTop = -1;
 static int              currDirtyEnd = -1;
 static videoset_t       currDirtyFlg;
@@ -527,8 +529,7 @@ term_control(int action, int param, ...)
         break;
 
     case SCR_CTRL_GARBLED:
-        vtgarbled();
-        vio_dirty(0, 0, ttrows() - 1, ttcols() - 1);
+        vio_garbled();
         break;
 
     case SCR_CTRL_SAVE:
@@ -542,8 +543,7 @@ term_control(int action, int param, ...)
 
     case SCR_CTRL_RESTORE:
         term_ready(TRUE, NULL);
-        vtgarbled();
-        vio_dirty(0, 0, ttrows() - 1, ttcols() - 1);
+        vio_garbled();
         break;
 
     case SCR_CTRL_COLORS:       /* color change */
@@ -568,8 +568,10 @@ term_control(int action, int param, ...)
 static void
 term_tidy(void)
 {
-    vio_image_restore();
-    tt_active = 0;
+    if (tt_active) {
+        vio_image_restore();
+        tt_active = 0;
+    }
 }
 
 
@@ -708,6 +710,22 @@ vio_image_restore(void)
         VioSetCurType(&origCursor, 0);
     }
 #endif  //WIN32
+}
+
+
+/*  Function:           vio_garbled
+//      Mark the display as garbled, forcing a full redraw.
+//
+//  Parameters:
+//      none
+//
+//  Returns:
+//      nothing
+*/
+static void
+vio_garbled(void)
+{
+    ++currGarbled;
 }
 
 
@@ -1025,7 +1043,7 @@ term_clear(void)
         }
     }
     ttposset(0, 0);
-    vio_dirty(0, 0, ttrows()-1, ttcols()-1);
+    vio_garbled();
 }
 
 
@@ -1042,7 +1060,7 @@ static void
 term_flush(void)
 {
     const int cols = ttcols(), rows = ttrows();
-    const int garbled = vtisgarbled();
+    const int garbled = vtisgarbled() || currGarbled;
 
 #if defined(HAVE_MOUSE)
     mouse_pointer(0);
@@ -1056,7 +1074,7 @@ term_flush(void)
         const int end = (currDirtyEnd < rows ? currDirtyEnd : rows - 1);
         int top, cnt = 0;
 
-        VioShowInit(&show, 0);                  // show context initialisation.
+        VioShowInit(&show, 0);                  // show context initialisation
 
         // update dirty line sections within dirty arena
         for (top = currDirtyTop, cnt = 0; top <= end; ++top) {
@@ -1085,9 +1103,10 @@ term_flush(void)
         VioShowFinal(&show);                    // completion
     }
 
-    if (garbled || currDirtyTop >= 0) {         // reset dirty metadata
+    if (garbled || currDirtyTop >= 0) {         // reset dirty meta-data
         vset_zero(currDirtyFlg);
         currDirtyTop = -1;
+        currGarbled = 0;
     }
 
     VioSetCurPos((unsigned short)ttatrow(), (unsigned short)ttatcol(), 0);
@@ -1300,7 +1319,7 @@ term_attribute(const vbyte_t attr)
     } else {
         /*
          *  black and white coloriser/
-         *      back-white display emulation, based on linux console.
+         *      back-white display emulation, based on Linux console.
          */
 #define __NORMAL__      GREY,   BLACK
 #define __BOLD__        CYAN,   BLACK

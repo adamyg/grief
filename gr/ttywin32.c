@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.60 2025/06/28 11:08:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.61 2025/07/02 13:30:00 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttywin32.c,v 1.60 2025/06/28 11:08:02 cvsuser Exp $
+/* $Id: ttywin32.c,v 1.61 2025/07/02 13:30:00 cvsuser Exp $
  * WIN32 VIO driver.
  *  see: http://www.edm2.com/index.php/Category:Vio
  *
@@ -272,7 +272,6 @@ VioGetMode(VIOMODEINFO *info, HVIO viohandle)
 //      430 -   ERROR_VIO_ILLEGAL_DURING_POPUP
 //      436 -   ERROR_VIO_INVALID_HANDLE
 //
-
 int
 VioSetMode(VIOMODEINFO *info, HVIO viohandle)
 {
@@ -392,7 +391,7 @@ VioGetCp(ULONG reserved, USHORT *cp, HVIO viohandle)
 //      430 -   ERROR_VIO_ILLEGAL_DURING_POPUP
 //      436 -   ERROR_VIO_INVALID_HANDLE
 //
-static int  selectconsolefont(int nFont);
+static int selectconsolefont(int nFont);
 
 int
 VioSetFont(const char *fontname)
@@ -649,9 +648,9 @@ VioGetCurPos(USHORT *row, USHORT *col, HVIO viohandle)
 int
 VioSetCurPos(USHORT row, USHORT col, HVIO viohandle)
 {
-    HANDLE chandle = vio.chandle;
-    CONSOLE_SCREEN_BUFFER_INFO csbi = {0};
-    COORD coord;
+//  HANDLE chandle = vio.chandle;
+//  CONSOLE_SCREEN_BUFFER_INFO csbi = {0};
+//  COORD coord;
 
     __CUNUSED(viohandle)
 
@@ -664,17 +663,18 @@ VioSetCurPos(USHORT row, USHORT col, HVIO viohandle)
         return ERROR_VIO_INVALID_HANDLE;
     }
 
-    (void) GetConsoleScreenBufferInfo(chandle, &csbi);
-    if (csbi.srWindow.Left > 0 || csbi.srWindow.Top > 0) {
-        coord.X = 0; coord.Y = 0;               // home console
-        (void) SetConsoleCursorPosition(chandle, coord);
-        ++vio.c_trashed;
-    }
+//  (void) GetConsoleScreenBufferInfo(chandle, &csbi);
+//  if (csbi.srWindow.Left > 0 || csbi.srWindow.Top > 0) {
+//      coord.X = 0; coord.Y = 0;               // home console
+//      (void) SetConsoleCursorPosition(chandle, coord);
+//      ++vio.c_trashed;
+//  }
 
+    vio_goto(row, col);
     vio_flush();
 
-    coord.X = col; coord.Y = row;               // true position
-    (void) SetConsoleCursorPosition(chandle, coord);
+//  coord.X = col; coord.Y = row;               // true position
+//  (void) SetConsoleCursorPosition(chandle, coord);
     return 0;
 }
 
@@ -864,7 +864,6 @@ VioShowInit(VIOSHOW *show, HVIO viohandle)
     }
     return 0;
 }
-
 
 
 int

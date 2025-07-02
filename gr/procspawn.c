@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_procspawn_c,"$Id: procspawn.c,v 1.27 2025/02/07 03:03:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_procspawn_c,"$Id: procspawn.c,v 1.28 2025/07/02 13:29:59 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: procspawn.c,v 1.27 2025/02/07 03:03:21 cvsuser Exp $
+/* $Id: procspawn.c,v 1.28 2025/07/02 13:29:59 cvsuser Exp $
  * Process spawn primitive and management.
  *
  *
@@ -596,7 +596,7 @@ proc_prep_stop(int repaint)
 
 /*
  *  proc_prep_start ---
- *      Prepare for subsell spawn or SIGTSTP return.
+ *      Prepare for sub-shell spawn or SIGTSTP return.
  */
 void
 proc_prep_start(void)
@@ -618,4 +618,3 @@ proc_prep_start(void)
 }
 
 /*end*/
-

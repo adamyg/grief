@@ -3116,6 +3116,9 @@ vio_restore_lines(int top, int bottom, int to)
 
             vio.c_screen[to].flags |= flags;
         }
+
+    } else {
+        vio.c_trashed = 1;
     }
 }
 
@@ -3153,6 +3156,9 @@ vio_restore(void)
 
     // original top-of-buffer; alternative screen.
     ImageRestore(console, &vio_state.alt, 0, rows);
+
+    // invalidate buffer
+    vio.c_trashed = 1;
 }
 
 
@@ -3419,7 +3425,7 @@ vio_close(void)
  *  vio_stdin ---
  *      Console input handle.
  **/
-LIBVIO_API HANDLE           
+LIBVIO_API HANDLE
 vio_stdin(void)
 {
     return (vio.inited ?                        // console handle
@@ -3431,7 +3437,7 @@ vio_stdin(void)
  *  vio_stdout ---
  *      Console output handle.
  **/
-LIBVIO_API HANDLE           
+LIBVIO_API HANDLE
 vio_stdout(void)
 {
     return (vio.inited ?                        // console handle
