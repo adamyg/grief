@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.91 2025/07/02 13:30:00 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.92 2025/07/02 15:38:55 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.91 2025/07/02 13:30:00 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.92 2025/07/02 15:38:55 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -1474,8 +1474,6 @@ term_legacycolor(const colattr_t *ca)
 void
 do_ega(void)                /* void (int flag) */
 {
-    static USHORT orows, ocols, mrows, mcols, state;
-
     acc_assign_int((accint_t) xf_ega43);
 
     if (isa_integer(1)) {                       /* (mode < 80 sets rows), otherwise (mode >= 80 sets columns). */
@@ -1483,39 +1481,39 @@ do_ega(void)                /* void (int flag) */
         const int flag = get_xinteger(1, 0);
         VIOMODEINFO mi = { sizeof(VIOMODEINFO) };
 
-        if (flag < 0) {                         /* min/max toggle (-1), restore (-2) used on exit */
-            if (state && (-1 == flag || -2 == flag)) {
-                if (crows == mrows && ccols == mcols) {
-                    mi.row = orows;             /* restore, unless modified */
-                    mi.col = ocols;
+        // maximise (-1), normal (-2) or toggle (0)
+        if (flag <= 0) {
+            if (flag == 0 || (flag == -1 && vio_maximised() == 0) ||
+                    (flag == -2 && vio_maximised() == 1)) {
+                int nrows, ncols;
+
+                if (vio_toggle_size(&nrows, &ncols) >= 0) {
+                    ttwinched(nrows, ncols);
+                    return;
                 }
-                state = 0;
-            } else if (0 == state && (-1 == flag || -3 == flag)) {
-                orows  = crows;                 /* maximise */
-                ocols  = ccols;
-                mi.row = 0xffff;
-                mi.col = 0xffff;
-                state = 1;
             }
+
+            mi.row = 0xffff;
+            mi.col = (flag == -1 ? /*max*/ 1 : (flag == -2 ? /*normal*/ 0 : /*toggle*/ 0xffff));
+            if (VioSetMode(&mi, 0) == 0) {
+                ttwinched(mi.row, mi.col);
+            }
+            return;
+        }
+
+        // lines; legacy
+        mi.row = (USHORT)crows;
+        mi.col = (USHORT)ccols;
+        if (flag >= 80) {                       /* setting columns */
+            mi.col = (USHORT)flag;
         } else {
-            mi.row = (USHORT)crows;
-            mi.col = (USHORT)ccols;
-            if (flag >= 80) {                   /* setting columns */
-                mi.col = (USHORT)flag;
-            } else {
-                mi.row = (USHORT)(flag > 10 ? flag : 10);
-            }
+            mi.row = (USHORT)(flag > 10 ? flag : 10);
         }
 
         if (mi.row && mi.col &&
                 (crows != mi.row || ccols != mi.col)) {
-            vio_restore();
-            VioSetMode(&mi, 0);
-            VioSetCurPos(origRow, origCol, 0);  /* restore cursor, mode changes home */
-            ttwinched(mi.row, mi.col);
-            if (flag < 0 && state) {
-                mrows = mi.row;
-                mcols = mi.col;
+            if (VioSetMode(&mi, 0) == 0) {
+                ttwinched(mi.row, mi.col);
             }
         }
     }

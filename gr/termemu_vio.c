@@ -3546,6 +3546,18 @@ vio_toggle_size(int *rows, int *cols)
 
 
 /*
+ *  vio_maximised ---
+ *      Retrieve the maximised status.
+ **/
+LIBVIO_API int
+vio_maximised(void)
+{
+    if (0 == vio.inited) return -1;             /* uninitialised */
+    return vio.maximised;
+}
+
+
+/*
  *  vio_cursor_show ---
  *      Make the cursor visible.
  **/

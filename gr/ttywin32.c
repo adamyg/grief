@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.61 2025/07/02 13:30:00 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.62 2025/07/02 15:38:55 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttywin32.c,v 1.61 2025/07/02 13:30:00 cvsuser Exp $
+/* $Id: ttywin32.c,v 1.62 2025/07/02 15:38:55 cvsuser Exp $
  * WIN32 VIO driver.
  *  see: http://www.edm2.com/index.php/Category:Vio
  *
@@ -277,27 +277,54 @@ VioSetMode(VIOMODEINFO *info, HVIO viohandle)
 {
     if (info) {                                 // ega_switch support (12/10/2014)
         if (info->row || info->col) {
-            vio_setsize(info->row, info->col);
+            BOOL done = FALSE;
+
+            if (! vio.isConPTY) {
+                // Note: Avoid when running under MSTerminal, as
+                //  ShowWindow() behaviour is undefined; and  
+                //  GetLargestConsoleWindowSize() returns inconsistent values.
+                //
+                if (0xffff == info->row) {
+                    // maximize/normal and toggle.
+                    HWND hWnd = vio.whandle;
+                    WINDOWPLACEMENT wp = {0};
+
+                    if (GetWindowPlacement(hWnd, &wp)) {
+                        if (wp.showCmd == SW_SHOWNORMAL) {
+                            if (0xffff == info->col /*toggle*/ || info->col == 1 /*max*/) {
+                                ShowWindow(hWnd, SW_MAXIMIZE);
+                                done = TRUE;
+                            }
+
+                        } else if (wp.showCmd == SW_SHOWMAXIMIZED) {
+                            if (0xffff == info->col /*toggle*/ || info->col == 0 /*min*/) {
+                                ShowWindow(hWnd, SW_NORMAL);
+                                done = TRUE;
+                            }
+                        }
+                    }
+
+                } else {
+                    // explicit buffer size
+                    done = vio_setsize(info->row, info->col);
+                }
+            }
+
+            if (! done) {
+                return ERROR_VIO_MODE;
+            }
+
             vio_close();
         }
     }
-    VioInitialise();                            // (re)initialise
-    if (info && (info->row || info->col)) {
-        HWND hWnd = vio.whandle;
-        if (0xffff == info->row || 0xffff == info->col) {
-            RECT r = {0};
 
-            GetWindowRect(hWnd, &r);
-            ShowWindow(hWnd, SW_MAXIMIZE);
-            MoveWindow(hWnd, 0, 0, r.right, r.bottom, TRUE);
-        } else {
-            ShowWindow(hWnd, /*SW_RESTORE*/ SW_NORMAL);
-        }
-    }
+    VioInitialise();                            // (re)initialise
+
     if (info) {
         info->row = (USHORT)vio.rows;
         info->col = (USHORT)vio.cols;
     }
+
     VioGetCurType(NULL, viohandle);
     return 0;
 }

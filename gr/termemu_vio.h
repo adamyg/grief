@@ -1,7 +1,7 @@
 #ifndef TERMEMU_VIO_H_INCLUDED
 #define TERMEMU_VIO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(termemu_vio_h,"$Id: termemu_vio.h,v 1.12 2025/06/28 11:08:02 cvsuser Exp $")
+__CIDENT_RCSID(termemu_vio_h,"$Id: termemu_vio.h,v 1.13 2025/07/02 15:38:54 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -141,6 +141,7 @@ LIBVIO_API void             vio_config_truecolor(int truecolor);
 LIBVIO_API int              vio_winch(int *rows, int *cols);
 LIBVIO_API void             vio_get_size(int *rows, int *cols);
 LIBVIO_API int              vio_toggle_size(int *rows, int *cols);
+LIBVIO_API int              vio_maximised(void);
 
 LIBVIO_API void             vio_goto(int row, int col);
 LIBVIO_API void             vio_cursor_show(void);
