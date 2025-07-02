@@ -1,5 +1,5 @@
 /* -*- indent-width: 4; -*- */
-/* $Id: welcome.cr,v 1.15 2024/04/17 15:57:15 cvsuser Exp $
+/* $Id: welcome.cr,v 1.16 2025/07/02 19:12:05 cvsuser Exp $
  * Welcome splash dialog.
  *
  *
@@ -15,32 +15,8 @@ static int              dialog;                 // dialog handle
 void
 main()
 {
-    list welcome_text = {
-            "",
-            "   Glorious Reconfigurable Interactive Editing Facility",
-            "",
-            "                __________  ________________",
-            "               / ____/ __ \\/  _/ ____/ ____/",
-            "              / / __/ /_/ // // __/ / /_",
-            "             / /_/ / _, _// // /___/ __/",
-            "             \\____/_/ |_/___/_____/_/",
-            "",
-            "         1000111 1110010 1101001 1100101 1100110",
-            "",
-            "Copyright (c) 1998 - 2024, Adam Young.",
-            "All Rights Reserved.",
-            "",
-            "Derived from Crisp2.2, by Paul Fox, 1991.",
-            "",
-            "Please help publish and sponsor " + APPNAME + " development!",
-            "",
-            APPNAME + " is open software: you can use, redistribute it",
-            "and/or modify it under the terms of the " + APPNAME + " License.",
-            "",
-            APPNAME + " is distributed in the hope that it will be useful,",
-            "but is PROVIDED \"AS IS\" AND WITHOUT ANY EXPRESS OR IMPLIED",
-            "WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES",
-            "OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.",
+    list welcome_text = grief_license();
+    list extra_text = {
             "",
             "See the License for specific details; available via the command",
             "line options 'authors' and 'license'.",
@@ -49,6 +25,8 @@ main()
             "<F10>sysinfo<Enter> for system information.",
             "<F10>license<Enter> license and distribution conditions."
             };
+
+    welcome_text += extra_text;
 
     int maj, min, edit;
     string verbuf;

@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: grief.cr,v 1.101 2024/12/12 14:12:23 cvsuser Exp $
+/* $Id: grief.cr,v 1.102 2025/07/02 19:12:04 cvsuser Exp $
  * GRIEF startup macro.
  *
  *
@@ -658,6 +658,54 @@ grief(void)
     if (envvar != "") {
         load_macro("kbd/" + envvar);
     }
+}
+
+
+/*
+ *  grief_license ---
+ *      License notice template.
+ */
+list
+grief_license(void)
+{
+    list text = {
+            "",
+            "   Glorious Reconfigurable Interactive Editing Facility",
+            "",
+            "                         __________  ________________",
+            "                        / ____/ __ \\/  _/ ____/ ____/",
+            "                       / / __/ /_/ // // __/ / /_",
+            "                       / /_/ / _, _// // /___/ __/",
+            "                       \\____/_/ |_/___/_____/_/",
+            "",
+            "                   1000111 1110010 1101001 1100101 1100110",
+            "",
+            "Copyright (c) 1998 - 2025, Adam Young.",
+            "All Rights Reserved.",
+            "",
+            "Derived from Crisp2.2, by Paul Fox, 1991.",
+            "",
+            "Please help publish and sponsor " + APPNAME + " development !",
+            "",
+            APPNAME + " is open software: you can use, redistribute it",
+            "and/or modify it under the terms of the " + APPNAME + " License.",
+            "",
+            "THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND",
+            "ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE",
+            "IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE",
+            "ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE",
+            "FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL",
+            "DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS",
+            "OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)",
+            "HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT",
+            "LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY",
+            "OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF",
+            "SUCH DAMAGE.",
+            "",
+            "           ---------------------------------------------------"
+            };
+
+    return text;
 }
 
 

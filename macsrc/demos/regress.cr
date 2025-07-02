@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: regress.cr,v 1.46 2025/01/18 16:20:34 cvsuser Exp $
+/* $Id: regress.cr,v 1.47 2025/07/02 19:12:05 cvsuser Exp $
  *
  *  This set of macros are used when debugging and fixing CRISP to aid in regression testing and
  *  catching bugs introduced inadvertently. These tests dont attempt an exhaustive test, yet
@@ -748,6 +748,8 @@ test_typeof(void)
 
     d1 = NULL;
     TEST(134, typeof(d1) == "NULL");
+    TEST(134, typeof(NULL) == "NULL");
+    TEST(134, typeof() == "NULL");
 
     d1 = quote_list("one", "two");
     TEST(135, typeof(d1) == "list");

@@ -1494,6 +1494,7 @@ extern const string             C_TERM_CHR;
  */
 #if defined(__PROTOTYPES__)
                                 /*grief.cr*/
+extern list                     grief_license(void);
 extern string                   inq_grinit(void);
 extern string                   grinit_query(string section, string key);
 extern int                      grinit_update(string section, string key, string value);
