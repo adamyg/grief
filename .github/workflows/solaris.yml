@@ -34,6 +34,7 @@ jobs:
                 developer/lexer/flex \
                 developer/parser/bison
 
+# vm:generic
 #         pkg install -v system/locale system/header
 #         pkg install -v --accept \
 #               developer/gcc-11 \
@@ -42,11 +43,10 @@ jobs:
 #               developer/build/autoconf \
 #               developer/build/libtool \
 #               developer/build/pkg-config \
-#               developer/lexer/flex \
-#               developer/parser/bison \
 #               library/ncurses
 
-## vm1.0.2: was: gcc-7@7.3.0-11.4.0.0.1.14
+# vm:1.0.2
+#               gcc-7@7.3.0-11.4.0.0.1.14
 
         run: |
           export LC_ALL=C

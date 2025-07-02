@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyx11_c,"$Id: ttyx11.c,v 1.17 2025/01/13 15:12:17 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyx11_c,"$Id: ttyx11.c,v 1.18 2025/07/02 16:52:04 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyx11.c,v 1.17 2025/01/13 15:12:17 cvsuser Exp $ */
+/* $Id: ttyx11.c,v 1.18 2025/07/02 16:52:04 cvsuser Exp $ */
 /*
  * Copyright (c) 2012 - 2025 Adam Young.
  * Copyright (c) 2009 Jeremy Cooper.
@@ -315,7 +315,7 @@ static void             xgr_ready(int repaint, scrprofile_t *profile);
 static void             xgr_display(void);
 static void             xgr_feature(int ident, scrprofile_t *profile);
 static int              xgr_control(int action, int param, ...);
-static int              xgr_event(struct IOEvent *evt, int tmo);
+static int              xgr_event(struct IOEvent *evt, accint_t tmo);
 static void             xgr_close(void);
 
 static int              xgr_cursor(int visible, int imode, int virtual_space);
@@ -2015,7 +2015,7 @@ printf("x11: close\n");
  *  Event queue retrieval.
  */
 static int
-xgr_event(struct IOEvent *evt, int tmo)
+xgr_event(struct IOEvent *evt, accint_t tmo)
 {
     IOTimer_t timer;
 
