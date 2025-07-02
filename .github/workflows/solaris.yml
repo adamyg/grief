@@ -29,9 +29,14 @@ jobs:
           echo ===== Available developer/library packages
           pkg list -a 'developer/*'
           pkg list -a 'library/*'
-#         echo ===== Packages requirements
+          echo ===== Packages requirements
+          pkg install -v --accept \
+                developer/lexer/flex \
+                developer/parser/bison
+
 #         pkg install -v system/locale system/header
 #         pkg install -v --accept \
+#               developer/gcc-11 \
 #               developer/build/gnu-make \
 #               developer/build/make \
 #               developer/build/autoconf \
@@ -40,8 +45,7 @@ jobs:
 #               developer/lexer/flex \
 #               developer/parser/bison \
 #               library/ncurses
- 
-## developer/gcc-11 \
+
 ## vm1.0.2: was: gcc-7@7.3.0-11.4.0.0.1.14
 
         run: |
