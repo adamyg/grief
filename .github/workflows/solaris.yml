@@ -12,8 +12,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Solaris 11.4
-      uses: vmactions/solaris-vm@v1.1.0
+      uses: vmactions/solaris-vm@v1.1.4
       with:
+        release: "11.4-gcc"
         usesh: true
         mem: 6144
         prepare: |
