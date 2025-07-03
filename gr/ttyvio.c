@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.92 2025/07/02 15:38:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.95 2025/07/03 04:45:09 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.92 2025/07/02 15:38:55 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.95 2025/07/03 04:45:09 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -198,17 +198,13 @@ static int              tt_colormap[COLOR_NONE + 1];
  *  Physical buffer, original and current
  */
 #if !defined(WIN32)
-static USHORT           origAttribute;
 static VIOCURSORINFO    origCursor;
 static int              origRows;
 static int              origCols;
 #endif
 
-static USHORT           origRow;
-static USHORT           origCol;
-static const VIOCELL *  origScreen;
 static WORD             origAttributes = (WORD)-1;
-static WCHAR            origTitle[100];
+static WCHAR            origTitle[128];
 
 static int              currRows;
 static int              currCols;
@@ -1533,23 +1529,31 @@ void
 do_copy_screen(void)
 {
     static const char *trim_str = " \t\r\n";
-    BYTE *tmp = chk_alloc(ttcols() + 2);
-    int ccol, crow, cofs;
+    const int nrows = ttrows(), ncols = ttcols();
+    BYTE *tmp;
+    int col, row;
 
-    for (cofs = crow = 0; crow < ttrows(); ++crow) {
-        for (ccol = 0; ccol < ttcols(); ++ccol, ++cofs) {
-            tmp[ccol] = (BYTE) VIO_CHAR(origScreen[cofs]);
+    if (NULL == currScreen ||
+            (tmp = chk_alloc(ncols + 2)) == NULL) {
+        return;
+    }
+
+    for (row = 0; row < nrows; ++row) {
+        // copy line
+        const VIOCELL *line = currScreen + (row * ncols);
+        for (col = 0; col < ncols; ++col) {
+            tmp[col] = (BYTE) VIO_CHAR(line[col]);
         }
 
-        /* Strip off trailing white space */
-        while (--ccol >= 0 && strchr(trim_str, (char) tmp[ccol])) {
+        // strip trailing white space
+        while (--col >= 0 && strchr(trim_str, (char) tmp[col])) {
             ;
         }
 
-        /* Terminate and insert */
-        tmp[++ccol] = '\n';
-        tmp[++ccol] = '\0';
-        linserts((const char *) tmp, ccol);
+        // terminate and insert
+        tmp[++col] = '\n';
+        tmp[++col] = '\0';
+        linserts((const char *) tmp, col);
     }
     chk_free(tmp);
 }
