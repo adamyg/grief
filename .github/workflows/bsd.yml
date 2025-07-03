@@ -6,7 +6,7 @@
 #   https://github.com/vmactions/netbsd-vm
 #
 
-name: "Free-Open-NetBSD builds"
+name: "Free, Open, NetBSD builds"
 on: [push]
 
 #https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-# freebsd:
+  freebsd:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
