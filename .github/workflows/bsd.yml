@@ -39,7 +39,7 @@ jobs:
         shell: bash
         run: |
             tar -czvf pkg-freebsd-${{ github.run_number }}.tar.gz \
-                 bin.gcc/release/* macros/* help/* macsrc/*
+                 bin.*/release/* macros/* help/* macsrc/*
 
       - name: FreeBSD, package
         uses: softprops/action-gh-release@v2
@@ -102,7 +102,7 @@ jobs:
         shell: bash
         run: |
             tar -czvf pkg-netbsd-${{ github.run_number }}.tar.gz \
-                 bin.gcc/release/* macros/* help/* macsrc/*
+                 bin.*/release/* macros/* help/* macsrc/*
 
       - name: NetBSD, package
         uses: softprops/action-gh-release@v2
