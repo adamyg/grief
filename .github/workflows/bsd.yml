@@ -69,6 +69,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+      
       - name: NetBSD, build
         uses: vmactions/netbsd-vm@v1
         with:
@@ -83,14 +84,17 @@ jobs:
             ./configure
             cat acdefines.h
             gmake release unittest
-            tar -cvf pkg-netbsd-${{ github.run_number }}.tar \
+            
+      - name: NetBSD, tarball
+        shell: bash
+        run: |
+            tar -czvf pkg-netbsd-${{ github.run_number }}.tar.gz \
                  bin.gcc/release/* macros/* help/* macsrc/*
 
       - name: NetBSD, package
-        uses: actions/upload-artifact@v4
+        uses: softprops/action-gh-release@v2
         with:
-          name: pkg-netbsd
-          path: |
-            pkg-netbsd-${{ github.run_number }}.tar
+          files: pkg-netbsd-${{ github.run_number }}.tar.gz
+          draft: true
 
 #end

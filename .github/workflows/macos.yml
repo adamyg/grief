@@ -31,7 +31,6 @@ jobs:
         git submodule update --init --recursive
 
     - name: MacOS, setup
-      if: startsWith(matrix.config.name, 'MacOS Latest')
       shell: bash
       run: |
         brew install ncurses
@@ -40,12 +39,7 @@ jobs:
         brew install hunspell
         brew install libarchive
 
-##      brew install pkg-config
-##      brew link ncurses
-##      brew install wget
-
     - name: MacOS, generate
-      if: startsWith(matrix.config.name, 'MacOS Latest')
       shell: bash
       run: |
         export CPATH=$(brew --prefix libarchive)/include:/usr/local/include:$CPATH
@@ -56,7 +50,6 @@ jobs:
         ./support/config_withncurses
 
     - name: MacOS, compile
-      if: startsWith(matrix.config.name, 'MacOS Latest')
       shell: bash
       run: |
         export CPATH=$(brew --prefix libarchive)/include:/usr/local/include:$CPATH
@@ -64,21 +57,23 @@ jobs:
         export LIBRARY_PATH=$(brew --prefix libarchive)/lib:/usr/local/lib:$LIBRARY_PATH
         export LD_LIBRARY_PATH=$(brew --prefix libarchive)/lib:/usr/local/lib:$LD_LIBRARY_PATH
         make release
-        tar -cvf pkg-${{ matrix.config.package }}-${{ github.run_number }}.tar \
-                bin.${{ matrix.config.toollabel }}/release/* macros/* help/* macsrc/*
 
     - name: MacOS, unit-test
-      if: startsWith(matrix.config.name, 'MacOS Latest')
       shell: bash
       run: |
         make release unittest
 
-    - name: Package
-      uses: actions/upload-artifact@v4
+    - name: MacOS, tarball
+      shell: bash
+      run: |
+        tar -czvf pkg-${{ matrix.config.package }}-${{ github.run_number }}.tar.gz \
+                bin.${{ matrix.config.toollabel }}/release/* macros/* help/* macsrc/*
+
+    - name: MacOS, artifacts
+      uses: softprops/action-gh-release@v2
       with:
-        name: pkg-${{ matrix.config.package }}
-        path: |
-          pkg-${{ matrix.config.package }}-${{ github.run_number }}.tar
+        files: pkg-${{ matrix.config.package }}-${{ github.run_number }}.tar.gz
+        draft: true
 
 #end
 

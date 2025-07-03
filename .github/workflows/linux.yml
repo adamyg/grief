@@ -33,7 +33,6 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Snapshot, generate
-      if: startsWith(matrix.config.name, 'Ubuntu Latest')
       shell: bash
       run: |
         mkdir .snapshot
@@ -41,7 +40,6 @@ jobs:
         tar --exclude-vcs -cf .snapshot/contrib-snapshot.tar ./contrib
 
     - name: Snapshot, publish source
-      if: startsWith(matrix.config.name, 'Ubuntu Latest')
       uses: actions/upload-artifact@v4
       with:
         name: source-snapshot.tar
@@ -49,7 +47,6 @@ jobs:
         compression-level: 9
 
     - name: Snapshot, publish contrib
-      if: startsWith(matrix.config.name, 'Ubuntu Latest')
       uses: actions/upload-artifact@v4
       with:
         name: contrib-snapshot.tar
@@ -61,7 +58,6 @@ jobs:
         git submodule update --init --recursive
 
     - name: Ubuntu, setup
-      if: startsWith(matrix.config.name, 'Ubuntu Latest')
       shell: bash
       run: |
         sudo add-apt-repository universe
@@ -78,31 +74,37 @@ jobs:
         ##  missing: sudo apt-get install -y libguess-dev
 
     - name: Ubuntu, generate
-      if: startsWith(matrix.config.name, 'Ubuntu Latest')
       shell: bash
       run: |
         chmod +x configure
         ./support/config_withncursesw
 
     - name: Ubuntu, build
-      if: startsWith(matrix.config.name, 'Ubuntu Latest')
       shell: bash
       run: |
         make release prepare_deb
         echo "$(cat ./.PKGLABEL)" >> $GITHUB_ENV
-        tar -cvf pkg-${{ matrix.config.package }}-${{ github.run_number }}.tar \
-                bin.${{ matrix.config.toollabel }}/release/* macros/* help/* macsrc/*
 
     - name: Ubuntu, unit-test
-      if: startsWith(matrix.config.name, 'Ubuntu Latest')
       shell: bash
       run: |
         make release unittest
+        
+    - name: Ubuntu, tarball
+      shell: bash
+      run: |
+        tar -czvf pkg-${{ matrix.config.package }}-${{ github.run_number }}.tar.gz \
+                bin.${{ matrix.config.toollabel }}/release/* macros/* help/* macsrc/*
+        
+    - name: Ubuntu, artifacts
+      uses: softprops/action-gh-release@v2
+      with:
+        files: pkg-${{ matrix.config.package }}-${{ github.run_number }}.tar.gz
+        draft: true
 
     # https://github.com/marketplace/actions/build-deb-action
     - name: Ubuntu, deb
       id: deb
-      if: startsWith(matrix.config.name, 'Ubuntu Latest')
       uses: jiro4989/build-deb-action@v3.1.0
       with:
         package: ${{ env.APP_NAME }}
@@ -121,13 +123,6 @@ jobs:
         name: ${{ steps.deb.outputs.file_name }}
         path: |
           ./${{ steps.deb.outputs.file_name }}
-
-    - name: Package
-      uses: actions/upload-artifact@v4
-      with:
-        name: pkg-${{ matrix.config.package }}
-        path: |
-          pkg-${{ matrix.config.package }}-${{ github.run_number }}.tar
 
 #end
 

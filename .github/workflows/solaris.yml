@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    
     - name: Solaris 11.4
       uses: vmactions/solaris-vm@v1.1.4
       with:
@@ -60,15 +61,18 @@ jobs:
           ./configure --prefix=/usr
           gmake release build
           gmake release unittest
-          tar -cvf pkg-solaris-${{ github.run_number }}.tar \
+                
+    - name: Solaris, tarball
+      shell: bash
+      run: |
+          tar -czvf pkg-solaris-${{ github.run_number }}.tar.gz \
                 bin.gcc/release/* macros/* help/* macsrc/*
 
-    - name: Package
-      uses: actions/upload-artifact@v4
+    - name: Solaris, artifacts
+      uses: softprops/action-gh-release@v2
       with:
-        name: pkg-solaris
-        path: |
-          pkg-solaris-${{ github.run_number }}.tar
+        files: pkg-solaris-${{ github.run_number }}.tar.gz
+        draft: true
 
 #end
 
