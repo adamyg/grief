@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.89 2025/06/30 11:55:10 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmain_c,"$Id: cmain.c,v 1.90 2025/07/03 09:19:34 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmain.c,v 1.89 2025/06/30 11:55:10 cvsuser Exp $
+/* $Id: cmain.c,v 1.90 2025/07/03 09:19:34 cvsuser Exp $
  * Main body, startup and command-line processing.
  *
  *
@@ -731,11 +731,13 @@ macro_arguments(const char *startup)
     for (m = 0; m < m_cnt; ++m) {
         const char *macro = m_strings[m];
 
-        x_mflag = TRUE;
-        x_msglevel = 1;                         /* no warnings */
-        trace_log("executing macro : %s\n", macro);
-        execute_str(macro);
-    }
+        if (macro != m_profile) {
+            x_mflag = TRUE;
+            x_msglevel = 1;                     /* no warnings */
+            trace_log("executing macro : %s\n", macro);
+            execute_str(sys_basename(macro));
+        }
+    }   
     x_mflag = FALSE;
 }
 
