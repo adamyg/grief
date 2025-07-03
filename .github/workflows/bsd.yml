@@ -30,7 +30,10 @@ jobs:
           run: |
             ./configure
             cat acdefines.h
-            gmake release unittest
+            gmake release
+            
+#gmake release unittest
+#Note: Terminal 'su' missing cursor move capabilities, not supported.
 
       - name: FreeBSD, tarball
         shell: bash
