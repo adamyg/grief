@@ -56,23 +56,23 @@ jobs:
           libarchive-devel
 
     - name: Cygwin, generate
-      shell: bash
+      shell: c:\cygwin\bin\bash.exe --login -o igncr -eo pipefail '{0}'
       run: |
         chmod +x configure
         ./configure
 
     - name: Cygwin, build
-      shell: bash
+      shell: c:\cygwin\bin\bash.exe --login -o igncr -eo pipefail '{0}'
       run: |
         make release
 
     - name: Cygwin, unit-test
-      shell: bash
+      shell: c:\cygwin\bin\bash.exe --login -o igncr -eo pipefail '{0}'
       run: |
         make release unittest
 
     - name: Cygwin, tarball
-      shell: bash
+      shell: c:\cygwin\bin\bash.exe --login -o igncr -eo pipefail '{0}'
       run: |
         tar -czvf pkg-${{ matrix.config.package }}-${{ github.run_number }}.tar.gz \
                 bin.*/release/* macros/* help/* macsrc/*
