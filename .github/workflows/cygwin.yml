@@ -46,13 +46,14 @@ jobs:
           make gcc-core gcc-g++ binutils cygwin-devel w32api-headers w32api-runtime
           perl flex bison
           zlib-devel libzstd-devel
-          libncurses-dev
-          libenchant-2-dev
-          libaspell-dev
-          libhunspell-dev
-          libenca-dev
-          libexplain-dev
-          libarchive-dev
+          libncurses-devel
+          libenchant-2-devel
+          libaspell-devel
+          libhunspell-devel
+          file-devel
+          libenca-devel
+          libexplain-devel
+          libarchive-devel
 
     - name: Cygwin, generate
       shell: bash
