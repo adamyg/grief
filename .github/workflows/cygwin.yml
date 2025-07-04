@@ -1,0 +1,85 @@
+name: "Cygwin builds"
+on: [push]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  APP_NAME: 'gr'
+  MAINTAINER: 'https://github.com/adamyg'
+  HOMEPAGE: 'https://github.com/adamyg/grief'
+  DESC: 'GriefEdit -- console editor.'
+
+jobs:
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matri:
+        config:
+        - {
+           name: "Cygwinx64",
+           platform: x86_64,
+           package: cygwin-x64
+          }
+
+    steps:
+
+    - name: Git setup
+      run: |
+        git config --global core.autocrlf input
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Checkout submodules
+      run: |
+        git submodule update --init --recursive
+
+    - name: Cygwin, prime
+      uses: cygwin/cygwin-install-action@v5
+      with:
+        platform: ${{ matrix.config.platform }}
+        packages: >
+          make gcc-core gcc-g++ binutils cygwin-devel w32api-headers w32api-runtime
+          perl flex bison
+          zlib-devel libzstd-devel
+          libncurses-dev
+          libenchant-2-dev
+          libaspell-dev
+          libhunspell-dev
+          libenca-dev
+          libexplain-dev
+          libarchive-dev
+
+    - name: Cygwin, generate
+      shell: bash
+      run: |
+        chmod +x configure
+        ./configure
+
+    - name: Cygwin, build
+      shell: bash
+      run: |
+        make release
+
+    - name: Cygwin, unit-test
+      shell: bash
+      run: |
+        make release unittest
+
+    - name: Cygwin, tarball
+      shell: bash
+      run: |
+        tar -czvf pkg-${{ matrix.config.package }}-${{ github.run_number }}.tar.gz \
+                bin.*/release/* macros/* help/* macsrc/*
+
+    - name: Cygwin, artifacts
+      uses: softprops/action-gh-release@v2
+      with:
+        files: pkg-${{ matrix.config.package }}-${{ github.run_number }}.tar.gz
+        draft: true
+
+#end
