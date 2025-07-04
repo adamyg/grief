@@ -44,23 +44,23 @@ jobs:
         platform: ${{ matrix.config.platform }}
         packages: >
           make gcc-core gcc-g++ binutils cygwin-devel w32api-headers w32api-runtime
-          perl flex bison
+          perl flex bison wget
           zlib-devel libzstd-devel
           libncurses-devel
-          libenchant-2-devel
+          libenchant-devel
           libaspell-devel
           libhunspell-devel
           file-devel
           libenca-devel
-          libexplain-devel
           libarchive-devel
 
     - name: Cygwin, generate
       shell: c:\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
       run: |
-        ls -la
         chmod +x configure
         ./configure
+
+#cd $GITHUB_WORKSPACE
 
     - name: Cygwin, build
       shell: c:\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
