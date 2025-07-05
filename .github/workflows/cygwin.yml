@@ -76,7 +76,9 @@ jobs:
       shell: c:\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
       run: |
         tar -czvf pkg-${{ matrix.config.package }}-${{ github.run_number }}.tar.gz \
-                bin.*/release/* macros/* help/* macsrc/*
+                bin.*/release/* bin.*/release/.libs/*.exe macros/* help/* macsrc/*
+
+#TODO: local install and tar result.
 
     - name: Cygwin, artifacts
       uses: softprops/action-gh-release@v2
