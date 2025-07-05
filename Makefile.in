@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.87 2025/07/01 11:11:20 cvsuser Exp $
+# $Id: Makefile.in,v 1.88 2025/07/05 11:47:12 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2025, Adam Young.
@@ -258,7 +258,11 @@ YACC=		@YACC@
 WGET=		@WGET@
 
 INSTALL=	@INSTALL@
+ifneq ("@LIBTOOL@","")
+INSTALL_PROGRAM=@LIBTOOL@ --mode=install @INSTALL_PROGRAM@
+else
 INSTALL_PROGRAM=@INSTALL_PROGRAM@
+endif
 INSTALL_DATA=	@INSTALL_DATA@
 
 ifeq ("win32","@build_os@")
