@@ -1,14 +1,14 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_win32_c,"$Id: edthreads_win32.c,v 1.24 2024/04/17 15:57:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_edthreads_win32_c,"$Id: edthreads_win32.c,v 1.26 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads_win32.c,v 1.24 2024/04/17 15:57:13 cvsuser Exp $
+/* $Id: edthreads_win32.c,v 1.26 2025/02/07 03:03:22 cvsuser Exp $
  * C11 threads implementation, for windows
  * based on ISO/IEC 9899:201x Committee Draft, April 12, 2011 N1570
  *
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -872,10 +872,10 @@ timespec_get(struct timespec *ts, int __unused_based)
 
 // typedef VOID (NTAPI *PIMAGE_TLS_CALLBACK) (PVOID DllHandle, DWORD Reason, PVOID Reserved);
 static void WINAPI
-__tss_callback(void *image, DWORD reason, void *pv)
+__tss_callback(PVOID image, DWORD reason, PVOID reserved)
 {
     (void) image;
-    (void) pv;
+    (void) reserved;
 
     if (DLL_THREAD_DETACH == reason) {
         unsigned i;
@@ -908,22 +908,27 @@ __tss_callback(void *image, DWORD reason, void *pv)
 }
 
 
-static void WINAPI
+static int WINAPI
 __tss_init(void)
 {
     LARGE_INTEGER freq;
 
     TAILQ_INIT(&x_tsslist);
+
     (void) InitializeCriticalSectionAndSpinCount(&x_tssguard, 100);
     x_perfscale =                               /* 2000+ */
         (QueryPerformanceFrequency(&freq) ? (unsigned long long)(freq.QuadPart/1000000000.0) : 1);
+
+    return 0; // success
+        // If a nonzero value is returned, it is expected to be one of the runtime error values (_RT_{NAME}, defined in the internal header files).
+        // NOTE: If any function returns nonzero, iteration stops immediately and the nonzero value is returned; TERMINATING the process.
 }
 
 
 /* Need to put the following marker variables into the .CRT section.
+ *
  * The .CRT section contains arrays of function pointers.
- * The compiler creates functions and adds pointers to this section
- * for things like C++ global constructors.
+ * The compiler creates functions and adds pointers to this section for things like C++ global constructors.
  *
  * The XIA, XCA etc are group names with in the section.
  * The compiler sorts the contributions by the group name.
@@ -943,13 +948,33 @@ __tss_init(void)
  *      XPA/XPZ     C pre-terminators
  *      XTA/XTZ     C terminators
  */
-#if defined(_MSC_VER)
-#pragma warning(disable:4152)
-#pragma section(".CRT$XLC",long,read)
-__declspec(allocate(".CRT$XLC")) void *__edthr_xlc = __tss_callback;
 
-#pragma section(".CRT$XIU",long,read)
-__declspec(allocate(".CRT$XIU")) void *__edthr_xiu = __tss_init;
+#if defined(_MSC_VER)
+#if defined(_M_AMD64)           // const segment
+#pragma const_seg(push)
+#pragma const_seg(".CRT$XLC")   // library initialisers
+EXTERN_C const PIMAGE_TLS_CALLBACK __edthr_xlc = __tss_callback;
+#pragma const_seg(".CRT$XIU")   // C initialisers
+EXTERN_C const void * __edthr_xiu = __tss_init;
+#pragma const_seg(pop)
+
+#elif defined(_M_IX86)          // data segment
+    //  #pragma warning(disable:4152)
+    //  #pragma section(".CRT$XLC",long,read)
+    //  __declspec(allocate(".CRT$XLC")) void *__edthr_xlc = __tss_callback;
+    //  #pragma section(".CRT$XIU",long,read)
+    //  __declspec(allocate(".CRT$XIU")) void *__edthr_xiu = __tss_init;
+
+#pragma data_seg(push)
+#pragma data_seg(".CRT$XLC")    // library initialisers
+EXTERN_C PIMAGE_TLS_CALLBACK __edthr_xlc = __tss_callback;
+#pragma data_seg(".CRT$XIU")    // C initialisers
+EXTERN_C void * __edthr_xiu = __tss_init;
+#pragma data_seg(pop)
+
+#else
+#error Unsupported MSC_VER target
+#endif
 
 #elif defined(__MINGW32__)
 #pragma data_seg(".CRT$XLC","DATA")

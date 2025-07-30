@@ -1,14 +1,14 @@
 #ifndef LIBW32_WIN32_ERRNO_H_INCLUDED
 #define LIBW32_WIN32_ERRNO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_errno_h,"$Id: win32_errno.h,v 1.17 2024/05/15 08:27:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_errno_h,"$Id: win32_errno.h,v 1.19 2025/06/28 11:07:21 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * <errno.h>
  *
- * Copyright (c) 2007, 2012 - 2024 Adam Young.
+ * Copyright (c) 2007, 2012 - 2025 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -44,12 +44,15 @@ __CPRAGMA_ONCE
 #pragma message("<system_error.h> is incompatible with _CRT_NO_POSIX_ERROR_CODES.")
 #endif
     /*
-     *  RETHINK, as the following are assumed by the MinGW pthread package:
+     *  Rethink, the following values are assumed by the MinGW pthread package and possibility more;
      *
-     *      #define ETIMEDOUT   138
      *      #define ENOTSUP     129
+     *      #define ETIMEDOUT   138
      *      #define EWOULDBLOCK 140
      */
+#if (ENOTSUP != 129 || ETIMEDOUT != 138 || EWOULDBLOCK != 140)
+#error Unexpected errno definitions
+#endif
 #include "msvc_errno.h"                         /* undef error codes */
 #else
 #error unexpected EADDRINUSE value
@@ -63,17 +66,21 @@ __CPRAGMA_ONCE
  *  import <errno.h>
  */
 #if !defined(_CRT_NO_POSIX_ERROR_CODES)
-#if defined(_MSC_VER) && (_MSC_VER >= 1600) && (_MSC_VER <= 1800)
-#include <errno.h>
-#include "msvc_errno.h"                         /* undef error codes */
-#else 
 #define  _CRT_NO_POSIX_ERROR_CODES              /* disable extended POSIX errno's */
 #include <errno.h>
 #undef   _CRT_NO_POSIX_ERROR_CODES
-#endif
 #else
 #include <errno.h>
 #endif
+
+#if defined(__MINGW32__)
+#if (EADDRINUSE == 100)                         /* _CRT_NO_POSIX_ERROR_CODES was ineffective */
+#if (ENOTSUP != 129 || ETIMEDOUT != 138 || EWOULDBLOCK != 140)
+#error Unexpected errno definitions
+#endif
+#include "msvc_errno.h"
+#endif
+#endif //__MINGW32__
 
 /*
  *  Addition UNIX style errno's, plus Windows Sockets errors redefined as regular Berkeley error constants.
@@ -81,7 +88,7 @@ __CPRAGMA_ONCE
 
     /*
      *  General use error codes,
-     *      which utilise their defined value under MSVC POSIX definition, see <errno.h>
+     *      which utilise their defined value under MSVC (and emulation) POSIX definition, see <errno.h>
      *
      *  MSVC: Their definitions can be disabled using _CRT_NO_POSIX_ERROR_CODES, as many conflict with the
      *      WinSock aliases below, but this generates complication errors within C++ code elements.
@@ -104,6 +111,10 @@ __CPRAGMA_ONCE
 #if (defined(_MSC_VER) && !defined(__WATCOMC__))
 #define ETXTBSY         139                     /* Text file busy; OWC=33. */
 #endif
+
+    /* conflicts */
+#define ETIMEDOUT2      138
+#define EWOULDBLOCK2    140
 
     /* additional 141+ */
 #define EBADFD          141                     /* Bad file descriptor. */
@@ -128,26 +139,81 @@ __CPRAGMA_ONCE
 
 #endif  /*LIBW32_WIN32_ERRNO_H_INCLUDED*/
 
+
+//  -----------------------------------------------------------------------------------------------
+
     /*
      *  Outside include guard, set/verify WinSock error mapping.
      *  Note: Force errors on inconsistent redefinitions
      */
+
+#if !defined(__MAKEDEPEND__)
+#if (EBADMSG != 104)                            /* Bad message. */
+#error Inconsistent EBSDMSG definition ....
+#endif
+#if (ECANCELED != 105)                          /* Operation canceled. */
+#error Inconsistent ECANCELED definition ....
+#endif
+#if (EIDRM != 111)                              /* Identifier removed. */
+#error Inconsistent EIDRM definition ....
+#endif
+#if (ENODATA != 120)                            /* No data. */
+#error Inconsistent ENODATA definition ....
+#endif
+#if (ENOLINK != 121)                            /* Virtual circuit is gone. */
+#error Inconsistent ENOLINK definition ....
+#endif
+#if (ENOMSG != 122)                             /* No message. */
+#error Inconsistent ENOMSG definition ....
+#endif
+#if (ENOSR != 124)                              /* No stream resources. */
+#error Inconsistent ENOSR definition ....
+#endif
+#if (ENOSTR != 125)                             /* Not a stream. */
+#error Inconsistent ENOSTR definition ....
+#endif
+#if (ENOTRECOVERABLE != 127)                    /* Not recoverable. */
+#error Inconsistent ENOTRECOVERABLE definition ....
+#endif
+#if (ENOTSUP != 129)                            /* Not supported. */
+#error Inconsistent ENOTSUP definition ....
+#endif
+#if (EOTHER != 131)                             /* Other error. */
+#error Inconsistent EOTHER definition ....
+#endif
+#if (EOVERFLOW != 132)                          /* Overflow. */
+#error Inconsistent EOVERFLOW definition ....
+#endif
+#if (EOWNERDEAD != 133)                         /* Owner dead. */
+#error Inconsistent EOWNERDEAD definition ....
+#endif
+#if (ETIME != 137)                              /* Stream ioctl timeout. */
+#error Inconsistent ETIME definition ....
+#endif
+#if (EPROTO != 134)
+#error Inconsistent EPROTO definition ....
+#endif
+#endif //__MAKEDEPEND__)
+
+
 #if defined(WSAEINTR) && !defined(__MAKEDEPEND__)
     //  && !defined(LIBW32_ERRNO_WINSOCK)
     //  #define LIBW32_ERRNO_WINSOCK
 
+#define ESTRINGIZE(__x) __ESTRINGIZE(__x)
+#define __ESTRINGIZE(__x) #__x
+
 #if !defined(EWOULDBLOCK)
 #define EWOULDBLOCK     WSAEWOULDBLOCK          /* 10035 "Operation would block" */
 #elif (EWOULDBLOCK != WSAEWOULDBLOCK)
-#define STRINGIZE(__x)  __STRINGIZE(__x)
-#define __STRINGIZE(__x) #__x
-#pragma message("errno: EWOULDBLOCK(" STRINGIZE(EWOULDBLOCK) ") != WSAEWOULDBLOCK(" STRINGIZE(WSAEWOULDBLOCK) ")" )
+#pragma message "errno: EWOULDBLOCK(" ESTRINGIZE(EWOULDBLOCK) ") != WSAEWOULDBLOCK(" ESTRINGIZE(WSAEWOULDBLOCK) ")"
 #error Inconsistent EWOULDBLOCK definition ....
 #endif
 
 #if !defined(EINPROGRESS)
 #define EINPROGRESS     WSAEINPROGRESS          /* 10036 "Operation now in progress" */
 #elif (EINPROGRESS != WSAEINPROGRESS)
+#pragma message "errno: EINPROGRESS(" ESTRINGIZE(EINPROGRESS) ") != WSAEINPROGRESS(" ESTRINGIZE(WSAEINPROGRESS) ")"
 #error Inconsistent EINPROGRESS definition ....
 #endif
 
@@ -465,6 +531,6 @@ __CPRAGMA_ONCE
 #define ELOOP           10062                   /* 10062 "Too many levels of symbolic links" */
 #endif
 
-#endif /*LIBW32_WIN32_ERRNO_H_INCLUDED*/
+#endif //LIBW32_ERRNO_WINSOCK
 
 /*end*/

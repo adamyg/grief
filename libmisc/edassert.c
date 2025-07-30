@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edassert_c,"$Id: edassert.c,v 1.27 2024/05/15 08:46:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_edassert_c,"$Id: edassert.c,v 1.30 2025/06/28 16:43:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edassert.c,v 1.27 2024/05/15 08:46:01 cvsuser Exp $
+/* $Id: edassert.c,v 1.30 2025/06/28 16:43:29 cvsuser Exp $
  *
  *  This macro is useful for putting diagnostics into programs. When it is executed, if
  *  expression is false (zero), edAssert() prints:
@@ -18,7 +18,7 @@ __CIDENT_RCSID(gr_edassert_c,"$Id: edassert.c,v 1.27 2024/05/15 08:46:01 cvsuser
  *
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -67,6 +67,9 @@ _WCRTLINK extern void _assert(char *, char *, int);
 static edAssertTrap_t       x_trap = NULL;
 static unsigned             x_flags = 0;
 static char                 x_message[1024];
+
+void __edassert(const char *file, unsigned lineno, const char *cond);
+void __edassertf(const char *file, unsigned lineno, const char *fmt, ...);
 
 
 int

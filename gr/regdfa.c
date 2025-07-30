@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_regdfa_c,"$Id: regdfa.c,v 1.36 2024/04/16 10:30:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_regdfa_c,"$Id: regdfa.c,v 1.38 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: regdfa.c,v 1.36 2024/04/16 10:30:36 cvsuser Exp $
+/* $Id: regdfa.c,v 1.38 2025/02/07 03:03:22 cvsuser Exp $
  * DFA regular expression engine.
  * Streamlined engine for use by the syntax hiliting code.
  *
@@ -99,7 +99,7 @@ __CIDENT_RCSID(gr_regdfa_c,"$Id: regdfa.c,v 1.36 2024/04/16 10:30:36 cvsuser Exp
  *          xdigit -        A hexadecimal digit.
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -452,7 +452,7 @@ heap_shrink(dfaheap_t *heap)
         assert(NULL == heap->h_head);
 
         size = heap->h_size;
-        used = heap->h_cursor - base;
+        used = (unsigned)(heap->h_cursor - base);
         if (used < size) {
             heap->h_size = used;
             heap->h_end  = base + used;
@@ -1625,7 +1625,7 @@ dfa_states(recompile_t *re, renode_t *rx)
     re->regex->start = dfa;                     /* initial parser state */
 
     /*
-     *  iterate through all states processing umarked states
+     *  iterate through all states processing unmarked states
      */
     for (tail = dfa; dfa; dfa = dfa->next) {
         /*
@@ -1759,11 +1759,11 @@ regdfa_create(const char **patterns, int num_patterns, unsigned flags)
         return NULL;
     }
 
-    /* Join the expressions together, marking the acception state with CSET_ACCEPT[2]
+    /* Join the expressions together, marking the accepting state with CSET_ACCEPT[2]
      *
      *  Expression construction:
      *
-     *      Basicly given a set of expressions are E1,E2,...,En, we construct the
+     *      Basically given a set of expressions are E1,E2,...,En, we construct the
      *      combined regular expression e as;
      *
      *          e = (E1 #1) | (E2 #2) | ... | (En #n)
@@ -1771,13 +1771,13 @@ regdfa_create(const char **patterns, int num_patterns, unsigned flags)
      *      where #1,...,#n as endmarkers for an accept, represented by the
      *      non-character tokens ACCEPT/ACCEPT2. The DFA is then constructed from this
      *      expression. Only the fact of an accept position need be recorded as the
-     *      value can be derived whilst analysising the expression.
+     *      value can be derived whilst analyzing the expression.
      *
      *      Now any state within the "Deterministic finite automata" (DFA) which has a
      *      transition on #k (where k is one of 1,...,n) represents a state which shall
      *      be considered end of an expression.
      *
-     *  Greedyness:
+     *  Greediness:
      *
      *      Generally when running a DFA there is no control on the way the expression
      *      returns a match, always returning the longest-leftmost match, no matter how
@@ -1786,7 +1786,7 @@ regdfa_create(const char **patterns, int num_patterns, unsigned flags)
      *      DFAs compare each character of the input string to the regular expression,
      *      keeping track of all matches in progress. Since each character is examined
      *      at most once, the DFA engine is the fastest as the matching is in linear
-     *      time. The down-side with DFAs is that the alternation metasequence is
+     *      time. The down-side with DFAs is that the alternation meta-sequence is
      *      greedy. When more than one option in an alternation (foo|foobar) matches,
      *      the longest one is selected.
      *

@@ -1,14 +1,14 @@
 #ifndef LIBW32_DIRENT_H_INCLUDED
 #define LIBW32_DIRENT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_dirent_h,"$Id: dirent.h,v 1.21 2024/03/31 15:57:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_dirent_h,"$Id: dirent.h,v 1.23 2025/06/28 11:07:20 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 <dirent.h> implementation
  *
- * Copyright (c) 2007, 2012 - 2024 Adam Young.
+ * Copyright (c) 2007, 2012 - 2025 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -76,6 +76,12 @@ struct dirent {
 #define _DIRENT_HAVE_D_TYPE                     /* BSD extension */
 #endif
 
+#ifndef _GENERIC_DIRSIZ
+#define _GENERIC_DIRLEN(__namlen) \
+            ((offsetof(struct dirent, d_name) + ((__namlen) * sizeof(char)) + 1 + 7) & ~7)
+#define _GENERIC_DIRSIZ(dp) _GENERIC_DIRLEN((dp)->d_namlen)
+#endif
+
 #if defined(_POSIX_SOURCE) && !defined(_DIRENT_SOURCE)
     time_t              d_reserved1;
     time_t              d_reserved2;
@@ -108,6 +114,13 @@ struct _wdirent {
     unsigned long       d_fileno;               /* File number directory */
     unsigned short      d_reclen;               /* Length of this record, in bytes */
     unsigned short      d_namlen;               /* Length of string in d_name, excluding terminating null; in characters. */
+    
+#ifndef _GENERIC_WDIRSIZ
+#define _GENERIC_WDIRLEN(__namlen) \
+            ((offsetof(struct dirent, d_name) + ((__namlen) * sizeof(wchar_t)) + 1 + 7) & ~7)
+#define _GENERIC_WDIRSIZ(dp) _GENERIC_WDIRLEN((dp)->d_namlen)
+#endif    
+    
 #if defined(_POSIX_SOURCE) && !defined(_DIRENT_SOURCE)
     time_t              d_reserved1;
     time_t              d_reserved2;
@@ -231,9 +244,9 @@ LIBW32_API int          _wreaddir_r __P((_WDIR *, struct _wdirent *, struct _wdi
 //LIBW32_API int          alphasort __P((const void *, const void *));
 //LIBW32_API int          scandir __P((void));
 //LIBW32_API int          getdirentries __P((int, char *, int, long *));
+
 #endif  /*_POSIX_SOURCE*/
 
 __END_DECLS
 
 #endif /*LIBW32_DIRENT_H_INCLUDED*/
-

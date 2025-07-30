@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_c,"$Id: vfs.c,v 1.17 2024/04/17 16:00:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_c,"$Id: vfs.c,v 1.19 2025/02/07 03:03:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs.c,v 1.17 2024/04/17 16:00:29 cvsuser Exp $
+/* $Id: vfs.c,v 1.19 2025/02/07 03:03:23 cvsuser Exp $
  * Virtual file system interface.
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -216,9 +216,9 @@ VFS_FPATH(VFS_VOPOPEN, open, int, -1, (const char *path, int mode, int mask), op
 
 VFS_FHANDLE(VFS_VOPCLOSE, close, int, -1, (int handle), close, (vhandle))
 
-VFS_FHANDLE(VFS_VOPREAD, read, int, -1, (int handle, void *buffer, unsigned length), read, (vhandle, buffer, length))
+VFS_FHANDLE(VFS_VOPREAD, read, int, -1, (int handle, void *buffer, size_t length), read, (vhandle, buffer, length))
 
-VFS_FHANDLE(VFS_VOPWRITE, write, int, -1, (int handle, const void *buffer, unsigned length), write, (vhandle, buffer, length))
+VFS_FHANDLE(VFS_VOPWRITE, write, int, -1, (int handle, const void *buffer, size_t length), write, (vhandle, buffer, length))
 
 VFS_FHANDLE(VFS_VOPCLOSE, seek, int, -1, (int handle, off_t offset, int whence), seek, (vhandle, offset, whence))
 
@@ -282,7 +282,7 @@ VFS_FPATH(VFS_VOPRMDIR, rmdir, int, -1, (const char *path), rmdir, (vmount, fnam
 VFS_FPATH(VFS_VOPCHDIR, chdir, int, -1, (const char *path), chdir, (vmount, fname))
 
 char *
-vfs_cwd(char *buffer, unsigned length)
+vfs_cwd(char *buffer, size_t length)
 {
     const char *cwd;
 

@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_iconv_c,"$Id: w32_iconv.c,v 1.24 2024/07/19 18:50:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_iconv_c,"$Id: w32_iconv.c,v 1.26 2025/02/07 04:49:48 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 iconv dynamic loader.
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -50,7 +50,7 @@ __CIDENT_RCSID(gr_w32_iconv_c,"$Id: w32_iconv.c,v 1.24 2024/07/19 18:50:54 cvsus
 #endif
 typedef void *          (DLLLINKAGE * iconvopenfn_t)(const char *to, const char *from);
 typedef void            (DLLLINKAGE * iconvclosefn_t)(void *fd);
-typedef int             (DLLLINKAGE * iconvfn_t)(void *fd, const char **from, size_t *fromlen, char **to, size_t *tolen);
+typedef size_t          (DLLLINKAGE * iconvfn_t)(void *fd, const char **from, size_t *fromlen, char **to, size_t *tolen);
 typedef int             (DLLLINKAGE * iconverrnofn_t)(void);
 
 #if defined(HAVE_LIBCITRUS)
@@ -252,14 +252,14 @@ w32_iconv_close(void *fd)
 }
 
 
-LIBW32_API int
+LIBW32_API size_t
 w32_iconv(void * fd, const char **from, size_t *fromlen, char **to, size_t *tolen)
 {
     if (x_iconv) {
         return (x_iconv)(fd, from, fromlen, to, tolen);
     }
     errno = EIO;
-    return -1;
+    return (size_t)-1;
 }
 
 #endif  /*WIN32*/

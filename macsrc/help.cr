@@ -1,4 +1,4 @@
-/* $Id: help.cr,v 1.52 2024/09/06 14:35:57 cvsuser Exp $
+/* $Id: help.cr,v 1.53 2025/01/09 17:04:46 cvsuser Exp $
  * Help subsystem.
  *
  *
@@ -623,6 +623,7 @@ help_primitive(string topic)
 
     /* Remove text outside section. */
     if (el > sl) {                              /* end > start */
+        set_buffer_flags(NULL, NULL, ~BF_READONLY); /* readable */
         goto_line(el + 1);                      /* trailing */
         drop_anchor(MK_LINE);
         end_of_buffer();

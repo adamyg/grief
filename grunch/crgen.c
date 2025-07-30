@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crgen_c,"$Id: crgen.c,v 1.38 2022/05/27 03:13:33 cvsuser Exp $")
+__CIDENT_RCSID(gr_crgen_c,"$Id: crgen.c,v 1.39 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crgen.c,v 1.38 2022/05/27 03:13:33 cvsuser Exp $
+/* $Id: crgen.c,v 1.39 2025/02/07 03:03:22 cvsuser Exp $
  * generic code generator routines.
  *
  *
@@ -121,7 +121,7 @@ static void gen_end_list() {                    /* list end */
     if (x_bfp) (*t_gen_binary.g_end_list)();
 }
 
-static void gen_int(int n) {                    /* integer constant */
+static void gen_int(accint_t n) {               /* integer constant */
     if (x_afp) (*t_gen_ascii.g_int)(n);
     if (x_bfp) (*t_gen_binary.g_int)(n);
 }
@@ -136,7 +136,7 @@ static void gen_float(double f) {               /* floating point constant */
     if (x_bfp) (*t_gen_binary.g_float)(f);
 }
 
-static void gen_token(int t) {                  /* builtin */
+static void gen_token(int t) {                  /* built-in */
      if (x_afp) (*t_gen_ascii.g_token)(t);
      if (x_bfp) (*t_gen_binary.g_token)(t);
 }

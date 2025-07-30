@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.75 2022/07/10 13:13:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_echo_c,"$Id: echo.c,v 1.77 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: echo.c,v 1.75 2022/07/10 13:13:07 cvsuser Exp $
+/* $Id: echo.c,v 1.77 2025/02/07 03:03:21 cvsuser Exp $
  * Command/echo line implementation/interface.
  *
  *
@@ -721,7 +721,7 @@ cancel:;    ecursor(buf_imode(curbp));
         case WHEEL_UP:
         case WHEEL_DOWN:
 badkey:;    {   const char *oecho_cmdline = echo_cmdline;
-                const int t_bufsiz = Wcslen(buf) * 4;
+                const int t_bufsiz = (int)(Wcslen(buf) * 4);
                 const char *sacc;
                 char *t_buf = NULL;
 
@@ -858,7 +858,7 @@ badkey:;    {   const char *oecho_cmdline = echo_cmdline;
                     ttbeep();                   /* nothing available */
 
                 } else {
-                    const int blen = Wcslen(buf);
+                    const int blen = (int)Wcslen(buf);
                     const int trailing = (bpos < blen ? blen - bpos : 0);
                     const int remaining = bufsiz - (bpos + (imode ? trailing : 0));
 
@@ -918,7 +918,7 @@ badkey:;    {   const char *oecho_cmdline = echo_cmdline;
                 ttbeep();                       /* end-of-buffer */
 
             } else {
-                const int blen = Wcslen(buf);
+                const int blen = (int)Wcslen(buf);
                 const int trailing = (bpos < blen ? blen - bpos : 0);
                 const int remaining = bufsiz - (bpos + (imode ? trailing : 0));
 
@@ -1170,7 +1170,7 @@ inq_message(void)
     char t_echo_line[ECHOLINESZ] = {0};
 
     Wcstoutf8(wecho_line, t_echo_line, sizeof(t_echo_line));
-    acc_assign_str((const char *)t_echo_line, -1);
+    acc_assign_str((const char *)t_echo_line);
 }
 
 
@@ -1250,13 +1250,13 @@ void
 inq_cmd_line(void)
 {
     if (echo_cmdline) {
-        acc_assign_str((const char *)echo_cmdline, -1);
+        acc_assign_str((const char *)echo_cmdline);
 
     } else {
         char t_cmd_line[EBUFSIZ] = {0};
 
         Wcstoutf8(wecho_line + echo_prompt_len, t_cmd_line, sizeof(t_cmd_line));
-        acc_assign_str((const char *)t_cmd_line, -1);
+        acc_assign_str((const char *)t_cmd_line);
     }
 }
 
@@ -1298,7 +1298,7 @@ inq_line_col(void)
     char t_line_col[_countof(lc_state.buffer) * 4] = {0};
 
     Wcstoutf8(lc_state.buffer, t_line_col, sizeof(t_line_col));
-    acc_assign_str(t_line_col, -1);
+    acc_assign_str(t_line_col);
 }
 
 
@@ -1313,7 +1313,11 @@ inq_line_col(void)
  *      nothing
  */
 void
+#if defined(_MSC_VER) && defined(_Printf_format_string_)
+ewprintf(_Printf_format_string_ const char *fmt, ...)
+#else
 ewprintf(const char *fmt, ...)
+#endif
 {
     char iobuf[EBUFSIZ];
     va_list ap;
@@ -1326,7 +1330,11 @@ ewprintf(const char *fmt, ...)
 
 
 void
+#if defined(_MSC_VER) && defined(_Printf_format_string_)
+ewprintx(_Printf_format_string_ const char *fmt, ...)
+#else
 ewprintx(const char *fmt, ...)
+#endif
 {
     const int xerrno = errno;
     char iobuf[EBUFSIZ];
@@ -1355,7 +1363,11 @@ ewprintx(const char *fmt, ...)
  *      nothing
  */
 void
+#if defined(_MSC_VER) && defined(_Printf_format_string_)
+eeprintf(_Printf_format_string_ const char* fmt, ...)
+#else
 eeprintf(const char *fmt, ...)
+#endif
 {
     char iobuf[EBUFSIZ];
     va_list ap;
@@ -1368,7 +1380,11 @@ eeprintf(const char *fmt, ...)
 
 
 void
+#if defined(_MSC_VER) && defined(_Printf_format_string_)
+eeprintx(_Printf_format_string_ const char* fmt, ...)
+#else
 eeprintx(const char *fmt, ...)
+#endif
 {
     const int xerrno = errno;
     char iobuf[EBUFSIZ];
@@ -1460,8 +1476,11 @@ eprint(const char *prompt, const char *defstr)
     }
 
     if (! vtinited()) {                         /* display initialised? */
-        fprintf(stderr, "\n*** %s\n", prompt);
-        fflush(stderr);
+        const size_t len = strlen(prompt);
+        if (len) {
+            fprintf(stderr, "*** %s%s", prompt, (prompt[len-1] == '\n' ? "" : "\n"));
+            fflush(stderr);
+        }
         return;
     }
 
@@ -2258,7 +2277,7 @@ inq_echo_line(void)             /* int () */
 void
 inq_echo_format(void)           /* string () */
 {
-    acc_assign_str(xf_echofmt ? xf_echofmt : "", -1);
+    acc_assign_str(xf_echofmt ? xf_echofmt : "");
 }
 
 
@@ -2305,7 +2324,11 @@ infof_truncated(const char *fmt, const char *filename)
  *      nothing
  */
 void
+#if defined(_MSC_VER) && defined(_Printf_format_string_)
+infof(_Printf_format_string_ const char* str, ...)
+#else
 infof(const char *str, ...)
+#endif
 {
     if (x_msglevel <= 0 || 2 == x_msglevel) {   /* 0 or 2 */
         char lbuf[EBUFSIZ];
@@ -2324,7 +2347,7 @@ infof(const char *str, ...)
         va_end(ap);
 
         ewputs(str);
-        if (x_pause_on_message) {
+        if (x_pause_on_message && x_display_enabled > 0) {
             (void)io_get_key(0);
         }
     }
@@ -2336,7 +2359,7 @@ infos(const char *str)
 {
     if (x_msglevel <= 0 || 2 == x_msglevel) {   /* 0 or 2 */
         ewputs(str);
-        if (x_pause_on_message) {
+        if (x_pause_on_message && x_display_enabled > 0) {
             (void)io_get_key(0);
         }
     }
@@ -2344,7 +2367,11 @@ infos(const char *str)
 
 
 void
+#if defined(_MSC_VER) && defined(_Printf_format_string_)
+errorf(_Printf_format_string_ const char* str, ...)
+#else
 errorf(const char *str, ...)
+#endif
 {
     if (x_msglevel <= 1) {                      /* 0 or 1 */
         char lbuf[EBUFSIZ];
@@ -2363,7 +2390,7 @@ errorf(const char *str, ...)
         va_end(ap);
 
         eeputs(str);
-        if (x_pause_on_error) {
+        if (x_pause_on_error && x_display_enabled > 0) {
             (void)io_get_key(0);
         }
     }
@@ -2371,7 +2398,11 @@ errorf(const char *str, ...)
 
 
 void
+#if defined(_MSC_VER) && defined(_Printf_format_string_)
+errorfx(_Printf_format_string_ const char* fmt, ...)
+#else
 errorfx(const char *fmt, ...)
+#endif
 {
     if (x_msglevel <= 1) {                      /* 0 or 1 */
         const int xerrno = errno;
@@ -2391,7 +2422,7 @@ errorfx(const char *fmt, ...)
             strcpy(iobuf + iolen, "..");
         }
         eeputs(iobuf);
-        if (x_pause_on_error) {
+        if (x_pause_on_error && x_display_enabled > 0) {
             (void)io_get_key(0);
         }
     }
@@ -2803,7 +2834,7 @@ ef_buffer(WChar_t *cp, const char *buf, const struct _estate *s)
 static WChar_t *
 ef_utf8(WChar_t *cp, const char *buf, const struct _estate *s)
 {
-    return cp + (buf ? Wcsfromutf8(buf, cp, buffer_end(s) - cp) : 0);
+    return cp + (buf ? Wcsfromutf8(buf, cp, (int)(buffer_end(s) - cp)) : 0);
 }
 
 

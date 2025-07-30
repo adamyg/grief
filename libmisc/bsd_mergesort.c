@@ -1,10 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bsd_mergesort_c,"$Id: bsd_mergesort.c,v 1.7 2020/06/05 23:29:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_bsd_mergesort_c,"$Id: bsd_mergesort.c,v 1.8 2025/02/07 02:48:37 cvsuser Exp $")
 
 /*- -*- indent-width: 8; tabs: 8; -*-
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
- * Modified version for libmisc
  *
  * This code is derived from software contributed to Berkeley by
  * Peter McIlroy.
@@ -17,7 +18,7 @@ __CIDENT_RCSID(gr_bsd_mergesort_c,"$Id: bsd_mergesort.c,v 1.7 2020/06/05 23:29:5
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -32,8 +33,6 @@ __CIDENT_RCSID(gr_bsd_mergesort_c,"$Id: bsd_mergesort.c,v 1.7 2020/06/05 23:29:5
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * "@(#)merge.c 8.2 (Berkeley) 2/14/94"
  */
 
 #if defined(__linux__)	/* _BSD_SOURCE has been deprecated, glibc >= 2.2 */
@@ -57,29 +56,37 @@ __CIDENT_RCSID(gr_bsd_mergesort_c,"$Id: bsd_mergesort.c,v 1.7 2020/06/05 23:29:5
 /* #define NATURAL to get hybrid natural merge.
  * (The default is pairwise merging.)
  */
-#include <edtypes.h>
-#include <libmisc.h>
+
 
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(_MSC_VER)
+#pragma warning(disable : 4267)	// conversion from 'size_t' to 'int', possible loss of data
+#endif
+
 #ifdef I_AM_MERGESORT_R
-/*
- *	mergesort_r implementation
- */
 #define cmp_t		sortcmpr_t
-#define CMP(a,b)	(*cmp)((thunk), (a), (b))
+#define CMP(x, y)	cmp((x), (y), (thunk))
 
 static void setup(u_char *list1, u_char *list2, size_t n, size_t size, cmp_t cmp, void *thunk);
 static void insertionsort(u_char *a, size_t n , size_t size, cmp_t cmp, void *thunk);
 
 #else
-#define cmp_t		sortcmp_t
-#define CMP(a,b)	(*cmp)((a), (b))
+#ifdef I_AM_MERGESORT_B
+#include "block_abi.h"
+#define	DECLARE_CMP	DECLARE_BLOCK(int, cmp, const void *, const void *)
+typedef DECLARE_BLOCK(int, cmp_t, const void *, const void *);
+#define	CMP(x, y)	CALL_BLOCK(cmp, x, y)
 
-static void setup(u_char *list1, u_char *list2, size_t n, size_t size, cmp_t cmp);
-static void insertionsort(u_char *a, size_t n, size_t size, cmp_t cmp);
+#else
+#define cmp_t		sortcmp_t
+#define	CMP(x, y)	cmp(x, y)
+#endif
+
+static void setup(u_char *, u_char *, size_t, size_t, cmp_t);
+static void insertionsort(u_char *, size_t, size_t, cmp_t);
 #endif
 
 #define ISIZE sizeof(int)
@@ -108,16 +115,19 @@ static void insertionsort(u_char *a, size_t n, size_t size, cmp_t cmp);
  * boundaries.
  */
 /* Assumption: PSIZE is a power of 2. */
+//#define EVAL(p) (u_char **)roundup2((uintptr_t)p, PSIZE)
 #define EVAL(p) (u_char **)						\
 	((u_char *)0 +							\
 	    (((u_char *)p + PSIZE - 1 - (u_char *) 0) & ~(PSIZE - 1)))
 
 /*
- *	Arguments are as for qsort.
+ * Arguments are as for qsort.
  */
 int
-#ifdef I_AM_MERGESORT_R
+#if defined(I_AM_MERGESORT_R)
 bsd_mergesort_r(void *base, size_t nmemb, size_t size, void *thunk, sortcmpr_t cmp)
+#elif defined(I_AM_MERGESORT_B)
+bsd_mergesort_b(void *base, size_t nmemb, size_t size, cmp_t cmp)
 #else
 bsd_mergesort(void *base, size_t nmemb, size_t size, sortcmp_t cmp)
 #endif
@@ -136,11 +146,8 @@ bsd_mergesort(void *base, size_t nmemb, size_t size, sortcmp_t cmp)
 	if (nmemb == 0)
 		return (0);
 
-	/*
-	 * XXX
-	 * Stupid subtraction for the Cray.
-	 */
 	iflag = 0;
+//	if (__is_aligned(size, ISIZE) && __is_aligned(base, ISIZE))
 	if (!(size % ISIZE) && !(((char *)base - (char *)0) % ISIZE))
 		iflag = 1;
 
@@ -182,7 +189,7 @@ bsd_mergesort(void *base, size_t nmemb, size_t size, sortcmp_t cmp)
 	    					goto EXPONENTIAL;
 	    				}
 	    		} else {
-EXPONENTIAL:	    		for (i = size; ; i <<= 1)
+EXPONENTIAL:			for (i = size; ; i <<= 1)
 	    				if ((p = (b + i)) >= t) {
 	    					if ((p = t - size) > b &&
 						    CMP(q, p) <= sense)
@@ -205,7 +212,7 @@ EXPONENTIAL:	    		for (i = size; ; i <<= 1)
 	    					b = p;
 	    			}
 	    			goto COPY;
-FASTCASE:	    		while (i > size)
+FASTCASE:			while (i > size)
 	    				if (CMP(q,
 	    					p = b + (i >>= 1)) <= sense)
 	    					t = p;
@@ -278,19 +285,20 @@ COPY:	    			b = t;
 }
 
 /*
- *	Optional hybrid natural/pairwise first pass.  Eats up list1 in runs of
- *	increasing order, list2 in a corresponding linked list.  Checks for runs
- *	when THRESHOLD/2 pairs compare with same sense.  (Only used when NATURAL
- *	is defined.  Otherwise simple pairwise merging is used.)
+ * Optional hybrid natural/pairwise first pass.  Eats up list1 in runs of
+ * increasing order, list2 in a corresponding linked list.  Checks for runs
+ * when THRESHOLD/2 pairs compare with same sense.  (Only used when NATURAL
+ * is defined.  Otherwise simple pairwise merging is used.)
  */
 static void
 #ifdef I_AM_MERGESORT_R
 setup(u_char *list1, u_char *list2, size_t n,  size_t size, cmp_t cmp, void *thunk)
 #else
-setup(u_char *list1, u_char *list2, size_t n,  size_t size, cmp_t cmp)
+setup(u_char *list1, u_char *list2, size_t n, size_t size, cmp_t cmp)
 #endif
 {
-	int i, length, size2, tmp, sense;
+	int i, length, /*size2,*/ tmp, sense;
+	size_t size2;
 	u_char *f1, *f2, *s, *l2, *last, *p2;
 
 	size2 = size*2;
@@ -303,7 +311,6 @@ setup(u_char *list1, u_char *list2, size_t n,  size_t size, cmp_t cmp)
 		*EVAL(list2) = (u_char*) list2 + n*size;
 		return;
 	}
-
 	/*
 	 * Avoid running pointers out of bounds; limit n to evens
 	 * for simplicity.
@@ -357,7 +364,7 @@ setup(u_char *list1, u_char *list2, size_t n,  size_t size, cmp_t cmp)
 #else		/* pairwise merge only. */
 	for (f1 = list1, p2 = list2; f1 < last; f1 += size2) {
 		p2 = *EVAL(p2) = p2 + size2;
-		if (CMP(f1, f1 + size) > 0)
+		if (CMP (f1, f1 + size) > 0)
 			swap(f1, f1 + size);
 	}
 #endif /* NATURAL */
@@ -385,4 +392,5 @@ insertionsort(u_char *a, size_t n, size_t size, cmp_t cmp)
 			swap(u, t);
 		}
 }
+
 /*end*/

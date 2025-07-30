@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_color_c,"$Id: m_color.c,v 1.59 2024/12/14 10:10:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_color_c,"$Id: m_color.c,v 1.61 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_color.c,v 1.59 2024/12/14 10:10:02 cvsuser Exp $
+/* $Id: m_color.c,v 1.61 2025/02/07 03:03:21 cvsuser Exp $
  * Color configuration.
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -51,7 +51,7 @@ typedef struct attributelinks {
 
 struct attribute {
     const char *        ca_name;                /* enum name */
-    int                 ca_length;              /* .. and length, in bytes */
+    size_t              ca_length;              /* .. and length, in bytes */
     const char *        ca_desc;                /* description (optionally) */
     int                 ca_enum;                /* color identifier (external), -1 if n/a */
     unsigned            ca_flags;
@@ -97,7 +97,7 @@ static colvalue_t               col_dynamic(const colors_t *colors, const colval
 static int                      isclear(const colattr_t *ca);
 
 static struct attribute *       attr_byname(const colors_t *colors, const char *name, int create);
-static struct attribute *       attr_bynname(const colors_t *colors, const char *name, int length, int create);
+static struct attribute *       attr_bynname(const colors_t *colors, const char *name, size_t length, int create);
 static struct attribute *       attr_byenum(const colors_t *colors, int ident);
 static const char *             attr_toname(const colors_t *colors, int ident);
 
@@ -105,23 +105,23 @@ static int                      col_prompt(const colors_t *colors, const struct 
 static colattr_t                col_encode(const colors_t *colors, const struct attribute *ap, const colattr_t *ca);
 static colvalue_t               col_static(const colors_t *colors, const colvalue_t *val);
 static int                      col_import(const colors_t *colors, const char *who, const struct attribute *ap, const char *spec, colattr_t *ca, collinks_t *links);
-static int                      col_export(const colors_t *colors, const struct attribute *ap, const colattr_t *ca, char *buf, int len);
+static size_t                   col_export(const colors_t *colors, const struct attribute *ap, const colattr_t *ca, char *buf, size_t buflen);
 
 static int                      color_value(const char *name, colvalue_t *val, int bg);
-static int                      color_nvalue(const char *name, int length, colvalue_t *val, int bg);
-static const char *             color_label(const char *name, const int length_or_color, colvalue_t *result);
-static colvalue_t               color_numeric(const char *name, unsigned length);
-static int                      color_print(const colvalue_t *val, char *buf, int len);
+static int                      color_nvalue(const char *name, size_t length, colvalue_t *val, int bg);
+static const char *             color_label(const char *name, const size_t length_or_color, colvalue_t *result);
+static colvalue_t               color_numeric(const char *name, size_t length);
+static int                      color_print(const colvalue_t *val, char *buf, size_t len);
 
 static int                      style_import(const colors_t *colors, const char *who, const char *spec, collinks_t *links, const int attr);
-static int                      style_nvalue(const char *name, int length);
-static int                      style_print(int sf, char *buf, int length);
+static int                      style_nvalue(const char *name, size_t length);
+static size_t                   style_print(int sf, char *buf, size_t length);
 
 #define COLOR_NAMES             ((unsigned)(sizeof(x_color_names)/sizeof(x_color_names[0])))
 
 static const struct name {
     const char *        cn_name;                /* name */
-    int                 cn_length;              /* length of name in bytes */
+    unsigned            cn_length;              /* length of name in bytes */
     int                 cn_value;               /* bitmap value */
 
 } x_color_names[] = {
@@ -180,7 +180,7 @@ static const struct name {
 
 static const struct {
     const char *        sn_name;                /* name */
-    int                 sn_length;              /* length of name in bytes */
+    size_t              sn_length;              /* length of name in bytes */
     int                 sn_value;               /* bitmap value */
 
 } x_style_names[] = {
@@ -663,12 +663,12 @@ inq_color(void)                 /* string ([background], [normal], [selected], [
     const struct attribute *ap;
     const unsigned size = ((colors->c_attr_count + 1) * ATTRIBUTES_WIDTH);
     char t_buf[ATTRIBUTES_WIDTH] = {0};
-    unsigned i, len = 0;
+    size_t i, len = 0;
     char *buf;
     int arg;
 
     if (NULL == (buf = (char *)chk_calloc(size, 1))) {
-        acc_assign_str("", -1);
+        acc_assign_nstr("", 0);
         return;
     }
 
@@ -702,7 +702,7 @@ inq_color(void)                 /* string ([background], [normal], [selected], [
         len += col_export(colors, ap, &ca, buf + len, size - len);
     }
 
-    acc_assign_str(buf, -1);
+    acc_assign_str(buf);
     chk_free(buf);
 }
 
@@ -1324,9 +1324,9 @@ do_set_color(void)              /* ([list|string], [int create = TRUE]) */
             char buf[ATTRIBUTES_WIDTH];         /* multi-part */
 
             do {                                /* .. foreach() */
-                const int len = nl - spec;
+                const size_t len = nl - spec;
 
-                if (len > 0 && len < (int)sizeof(buf)) {
+                if (len > 0 && len < sizeof(buf)) {
                     memcpy(buf, spec, len);
                     buf[len] = 0;
                     if (set_color(colors, buf, create, NULL)) {
@@ -1627,7 +1627,7 @@ set_color(colors_t *colors, const char *spec, int create, accint_t *ident)
         if (NULL == ident) {
             errorf("%s: attribute missing", who);
         } else {
-            const int nident = *ident++;        // next identifier
+            const int nident = (int)(*ident++); // next identifier
 
             if (nident >= COL_MAX) {
                 errorf("%s: attribute ident unexpected '%d'", who, nident);
@@ -1796,7 +1796,7 @@ col_encode(const colors_t *colors, const struct attribute *ap, const colattr_t *
     }
 
     col_export(colors, ap, &ret, buf, sizeof(buf));
-    trace_ilog("\tcol_encode(%s, fg:0x%x-%d/%d, bg:0x%x-%d/%d, sf:%d) = %s\n",
+    trace_ilog("\tcol_encode(%s, fg:0x%x-%d/%u, bg:0x%x-%d/%u sf:%u) = %s\n",
         ap->ca_name, ca->fg.color, ca->fg.color, ca->fg.source, ca->bg.color, ca->bg.color, ca->bg.source, ca->sf, buf);
     return ret;
 }
@@ -1835,7 +1835,7 @@ col_static(const colors_t *colors, const colvalue_t *val)
 int
 attribute_value(const char *name)
 {
-    unsigned length = strlen(name);
+    const size_t length = strlen(name);
     const struct attribute *ap;
 
     if (length) {
@@ -1861,7 +1861,7 @@ attribute_value(const char *name)
 int
 attribute_new(const char *name, const char *spec)
 {
-    unsigned length = strlen(name);
+    const size_t length = strlen(name);
     struct attribute *ap;
 
     if (length) {
@@ -2030,7 +2030,7 @@ col_apply(colors_t *colors)
                 char buf[ATTRIBUTES_WIDTH];
 
                 col_export(colors, ap, &ca, buf, sizeof(buf));
-                trace_ilog("  %-24s %4d [fg:%3d/%d, bg:%3d/%d, sf:%03x] = [fg:%3d/%d, bg:%3d/%d, sf:%03x] %s\n",
+                trace_ilog("  %-24s %4d [fg:%3d/%u, bg:%3d/%u, sf:%u] = [fg:%3d/%u, bg:%3d/%u, sf:%u] %s\n",
                     ap->ca_name, attr, val.fg.color, val.fg.source, val.bg.color, val.bg.source, val.sf,
                         ca.fg.color, ca.fg.source, ca.bg.color, ca.bg.source, ca.sf, buf);
 
@@ -2261,12 +2261,12 @@ attr_byname(const colors_t *colors, const char *name, int create)
  *      Attribute object.
  */
 static struct attribute *
-attr_bynname(const colors_t *colors, const char *name, int length, int create)
+attr_bynname(const colors_t *colors, const char *name, size_t length, int create)
 {
     name = str_trim(name, &length);
 
     if (length) {                               /* search */
-        const int trailing = (tolower(name[length - 1]) == 's' ? length - 1 : 0);
+        const size_t trailing = (tolower(name[length - 1]) == 's' ? length - 1 : 0);
         struct attribute *ap;
         unsigned i;
 
@@ -2304,7 +2304,7 @@ attr_bynname(const colors_t *colors, const char *name, int length, int create)
 
         ap = mutable_colors->c_attr_table + mutable_colors->c_attr_count;
         ap->ca_name     = chk_salloc(name);
-        ap->ca_length   = length;
+        ap->ca_length   = (int)length;
         ap->ca_desc     = NULL;
         ap->ca_enum     = -1;
      // ap->ca_flags    = 0;                    // CA_ATTR;
@@ -2522,7 +2522,7 @@ col_import(const colors_t *colors, const char *who, const struct attribute *ap, 
             ret = -1;
 
         } else {
-            const int wordlen = end - spec;
+            const size_t wordlen = end - spec;
 
             if (wordlen == 5 && 0 == str_nicmp(spec, "clear", 5)) {
                 if (comma) {
@@ -2636,16 +2636,17 @@ col_import(const colors_t *colors, const char *who, const struct attribute *ap, 
  *      ap - Attribute object.
  *      ca - Color value.
  *      buf - Destination buffer.
- *      len - Buffer length.
+ *      buflen - Buffer length.
  *
  *  returns:
  *      Resulting buffer length.
  */
-static int
-col_export(const colors_t *colors, const struct attribute *ap, const colattr_t *ca, char *buf, int len)
+static size_t
+col_export(const colors_t *colors, const struct attribute *ap, const colattr_t *ca, char *buf, size_t buflen)
 {
     char delimiter = ':';
-    int val, idx = 0;
+    size_t idx = 0;
+    int val;
 
     /*
      *      clear
@@ -2654,21 +2655,21 @@ col_export(const colors_t *colors, const struct attribute *ap, const colattr_t *
      */
     if (CA_ATTR & ap->ca_flags) {
         if (isclear(ca)) {                      /* clear */
-            idx = sxprintf(buf, len, "clear");
+            idx = sxprintf(buf, buflen, "clear");
         } else {                                /* foreground [,background] */
-            idx = color_print(&ca->fg, buf, len);
+            idx = color_print(&ca->fg, buf, buflen);
             if (ca->bg.color > COLOR_UNKNOWN) {
                 buf[idx++] = ',';
-                idx += color_print(&ca->bg, buf + idx, len - idx);
+                idx += color_print(&ca->bg, buf + idx, buflen - idx);
             }
         }
     } else {                                    /* color */
-        idx = color_print(&ca->fg, buf, len);
+        idx = color_print(&ca->fg, buf, buflen);
     }
 
     /* [:style...] */
     if ((val = ca->sf) > 0) {
-        int sidx = style_print(val, buf + idx, len - idx);
+        const size_t sidx = style_print(val, buf + idx, buflen - idx);
         if (sidx) {
             delimiter = ',';
             idx += sidx;
@@ -2677,12 +2678,12 @@ col_export(const colors_t *colors, const struct attribute *ap, const colattr_t *
 
     /* links */
     if ((val = ap->ca_links.cl_sticky) > 0) {   /* sticky@ attribute */
-        idx += sxprintf(buf + idx, len - idx, "%csticky@%s", delimiter, attr_toname(colors, val));
+        idx += sxprintf(buf + idx, buflen - idx, "%csticky@%s", delimiter, attr_toname(colors, val));
         delimiter = ',';
     }
 
     if ((val = ap->ca_links.cl_undef) > 0) {    /* link@ attribute */
-        idx += sxprintf(buf + idx, len - idx, "%clink@%s", delimiter, attr_toname(colors, val));
+        idx += sxprintf(buf + idx, buflen - idx, "%clink@%s", delimiter, attr_toname(colors, val));
         delimiter = ',';
     }
 
@@ -2733,7 +2734,7 @@ color_value(const char *name, colvalue_t *val, int bg)
  *      TRUE on success and val is populated, otherwise FALSE.
  */
 static int
-color_nvalue(const char *name, int length, colvalue_t *val, int bg)
+color_nvalue(const char *name, size_t length, colvalue_t *val, int bg)
 {
     colvalue_t ca = COLVALUE_INIT;
 
@@ -2802,12 +2803,12 @@ color_nvalue(const char *name, int length, colvalue_t *val, int bg)
  *          :              :
  */
 static const char *
-color_label(const char *name, const int length_or_rgbcolor, colvalue_t *result)
+color_label(const char *name, const size_t length_or_rgbcolor, colvalue_t *result)
 {
     SYMBOL *sp;
 
     if (NULL != (sp = sym_global_lookup("color_labels")) && F_LIST == sp->s_type) {
-        colvalue_t cached_val, val = COLVALUE_INIT;
+        colvalue_t cached_val = COLVALUE_INIT, val = COLVALUE_INIT;
         const LIST *nextlp, *lp = (const LIST *) r_ptr(sp->s_obj);
         const char *cached_key = NULL, *key;
 
@@ -2816,7 +2817,7 @@ color_label(const char *name, const int length_or_rgbcolor, colvalue_t *result)
                 lp = nextlp;
 
                 if ((nextlp = atom_next(lp)) != lp) {
-                    int keylen = (int)strlen(key);
+                    size_t keylen = strlen(key);
 
                     if (NULL != (key = str_trim(key, &keylen)) &&
                             (NULL == name || (keylen == length_or_rgbcolor && 0 == str_icmp(key, name)))) {
@@ -2828,7 +2829,7 @@ color_label(const char *name, const int length_or_rgbcolor, colvalue_t *result)
                             val.source = COLORSOURCE_NUMERIC;
 
                         } else if (NULL != (sval = atom_xstr(lp))) {
-                            int slen = (int)strlen(sval);
+                            size_t slen = strlen(sval);
 
                             sval = str_trim(sval, &slen);
                             val = color_numeric(sval, slen);
@@ -2880,7 +2881,7 @@ isterm(const char *endp)
 
 
 static colvalue_t
-color_numeric(const char *name, unsigned length)
+color_numeric(const char *name, size_t length)
 {
     colvalue_t val = COLVALUE_INIT;
 
@@ -2934,7 +2935,7 @@ color_numeric(const char *name, unsigned length)
 
 
 static int
-color_print(const colvalue_t *val, char *buf, int len)
+color_print(const colvalue_t *val, char *buf, size_t len)
 {
     switch (val->source) {
     case COLORSOURCE_NONE:
@@ -3030,14 +3031,14 @@ color_name(int value, const char *def)
  *      Enumeration value, otherwise -1 if unknown.
  */
 int
-color_enum(const char *name, int length)
+color_enum(const char *name, size_t length)
 {
     if (name && length) {
         const struct name *np;
         unsigned i;
 
         for (i = 0, np = x_color_names; i < COLOR_NAMES; ++i, ++np) {
-            if (length == np->cn_length &&
+            if ((unsigned)length == np->cn_length &&
                     0 == str_nicmp(np->cn_name, name, length)) {
                 return np->cn_value;
             }
@@ -3130,7 +3131,7 @@ style_import(const colors_t *colors, const char *who, const char *spec, collinks
  *      Style index, otherwise -1.
  */
 static int
-style_nvalue(const char *name, int length)
+style_nvalue(const char *name, size_t length)
 {
     int ret = -1;
 
@@ -3150,10 +3151,10 @@ style_nvalue(const char *name, int length)
 }
 
 
-static int
-style_print(int sf, char *buf, int length)
+static size_t
+style_print(int sf, char *buf, size_t length)
 {
-    int idx = 0;
+    size_t idx = 0;
 
     if (sf > 0) {
         char delimiter = ':';

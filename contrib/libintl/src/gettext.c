@@ -354,9 +354,8 @@ lookup_mofile(char *buf, size_t len, const char *dir, const char *lpath,
 			continue;
 #endif
 
-		int rv = snprintf(buf, len, "%s/%s/%s/%s.mo", dir, p,
-		    category, domainname);
-		if (rv > (int)len)
+		if (snprintf(buf, len, "%s/%s/%s/%s.mo", dir, p, 
+		    category, domainname) > (int)len)
 			return NULL;
 		if (stat(buf, &st) < 0)
 			continue;

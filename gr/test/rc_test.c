@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_rc_test_c,"$Id: rc_test.c,v 1.4 2024/12/05 19:18:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_rc_test_c,"$Id: rc_test.c,v 1.5 2025/01/17 12:38:29 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: rc_test.c,v 1.4 2024/12/05 19:18:15 cvsuser Exp $
+/* $Id: rc_test.c,v 1.5 2025/01/17 12:38:29 cvsuser Exp $
  *
  *
  *
@@ -126,6 +126,27 @@ test2(void)
     argrc_free(&rc);
 
     /// 2.3
+    check(2, ++b, argrc_parse("   xxx\n", &rc) == 1 &&
+                        rc.argc == 1 &&
+                        strcmp(rc.argv[0], "xxx") == 0);
+    dump(&rc);
+    argrc_free(&rc);
+
+    /// 2.4
+    check(2, ++b, argrc_parse("xxx   \n", &rc) == 1 &&
+                        rc.argc == 1 &&
+                        strcmp(rc.argv[0], "xxx") == 0);
+    dump(&rc);
+    argrc_free(&rc);
+
+    /// 2.5
+    check(2, ++b, argrc_parse("  xxx  \n", &rc) == 1 &&
+                        rc.argc == 1 &&
+                        strcmp(rc.argv[0], "xxx") == 0);
+    dump(&rc);
+    argrc_free(&rc);
+
+    /// 2.6
     check(2, ++b, argrc_parse("aaa bbb", &rc) == 2 &&
                         rc.argc == 2 &&
                         strcmp(rc.argv[0], "aaa") == 0 &&
@@ -134,7 +155,7 @@ test2(void)
     dump(&rc);
     argrc_free(&rc);
 
-    /// 2.4
+    /// 2.7
     check(2, ++b, argrc_parse("aa\tbb", &rc) == 2 &&
                         rc.argc == 2 &&
                         strcmp(rc.argv[0], "aa") == 0 &&
@@ -143,7 +164,7 @@ test2(void)
     dump(&rc);
     argrc_free(&rc);
 
-    /// 2.5
+    /// 2.8
     check(2, ++b, argrc_parse("a\nb", &rc) == 2 &&
                         rc.argc == 2 &&
                         strcmp(rc.argv[0], "a") == 0 &&
@@ -152,7 +173,7 @@ test2(void)
     dump(&rc);
     argrc_free(&rc);
 
-    /// 2.6
+    /// 2.9
     check(2, ++b, argrc_parse("a\n\rb\n", &rc) == 2 &&
                         rc.argc == 2 &&
                         strcmp(rc.argv[0], "a") == 0 &&
@@ -161,7 +182,7 @@ test2(void)
     dump(&rc);
     argrc_free(&rc);
 
-    /// 2.7
+    /// 2.10
     check(2, ++b, argrc_parse("\na\n\nb\n", &rc) == 2 &&
                         rc.argc == 2 &&
                         strcmp(rc.argv[0], "a") == 0 &&
@@ -170,7 +191,7 @@ test2(void)
     dump(&rc);
     argrc_free(&rc);
 
-    /// 2.8
+    /// 2.11
     check(2, ++b, argrc_parse("yyy\n\nzzz", &rc) == 2 &&
                         rc.argc == 2 &&
                         strcmp(rc.argv[0], "yyy") == 0 &&
@@ -179,7 +200,7 @@ test2(void)
     dump(&rc);
     argrc_free(&rc);
 
-    /// 2.9
+    /// 2.12
     check(2, ++b, argrc_parse("yyy\n  \nzzz", &rc) == 2 &&
                         rc.argc == 2 &&
                         strcmp(rc.argv[0], "yyy") == 0 &&
@@ -188,7 +209,7 @@ test2(void)
     dump(&rc);
     argrc_free(&rc);
 
-    /// 2.10
+    /// 2.13
     check(2, ++b, argrc_parse("yyy\n#comment\nzzz", &rc) == 2 &&
                         rc.argc == 2 &&
                         strcmp(rc.argv[0], "yyy") == 0 &&
@@ -197,7 +218,7 @@ test2(void)
     dump(&rc);
     argrc_free(&rc);
 
-    /// 2.11
+    /// 2.14
     check(2, ++b, argrc_parse("#comment\nyyy\n#comment", &rc) == 1 &&
                         rc.argc == 1 &&
                         strcmp(rc.argv[0], "yyy") == 0 &&
@@ -205,8 +226,28 @@ test2(void)
     dump(&rc);
     argrc_free(&rc);
 
-    /// 2.12
+    /// 2.15
     check(2, ++b, argrc_parse("#comment\nxxx\n#comment\n\nyyy\n#comment\nzzz", &rc) == 3 &&
+                        rc.argc == 3 &&
+                        strcmp(rc.argv[0], "xxx") == 0 &&
+                        strcmp(rc.argv[1], "yyy") == 0 &&
+                        strcmp(rc.argv[2], "zzz") == 0 &&
+                        rc.argv[3] == NULL);
+    dump(&rc);
+    argrc_free(&rc);
+
+    /// 2.16
+    check(2, ++b, argrc_parse("xxx yyy zzz\n", &rc) == 3 &&
+                        rc.argc == 3 &&
+                        strcmp(rc.argv[0], "xxx") == 0 &&
+                        strcmp(rc.argv[1], "yyy") == 0 &&
+                        strcmp(rc.argv[2], "zzz") == 0 &&
+                        rc.argv[3] == NULL);
+    dump(&rc);
+    argrc_free(&rc);
+
+    /// 2.17
+    check(2, ++b, argrc_parse("xxx  \nyyy #comment\nzzz\t#comment", &rc) == 3 &&
                         rc.argc == 3 &&
                         strcmp(rc.argv[0], "xxx") == 0 &&
                         strcmp(rc.argv[1], "yyy") == 0 &&

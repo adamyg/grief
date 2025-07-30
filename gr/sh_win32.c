@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sh_win32_c,"$Id: sh_win32.c,v 1.30 2024/12/09 14:13:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_sh_win32_c,"$Id: sh_win32.c,v 1.31 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sh_win32.c,v 1.30 2024/12/09 14:13:08 cvsuser Exp $
+/* $Id: sh_win32.c,v 1.31 2025/02/07 03:03:22 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -61,9 +61,55 @@ static void             Close(HANDLE handle);
 static BOOL             SendCloseMessage(HANDLE hProc);
 
 
+static __CINLINE int
+HTOI(HANDLE handle)
+{
+#if defined(__MINGW32__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
+#endif
+#if defined(_WIN32) && (_MSC_VER >= 1700)
+    // Note: safe to convert HANDLES 64 to 32; only lower 32-bits are used.
+    assert((0xffffffff00000000LLU & (uint64_t)handle) == 0 || handle == INVALID_HANDLE_VALUE);
+#pragma warning(push)
+#pragma warning(disable:4311)
+#endif
+    if (INVALID_HANDLE_VALUE == handle) return -1;
+    return (int)handle;
+#if defined(__MINGW64__)
+#pragma GCC diagnostic pop
+#endif
+#if defined(_MSC_VER__) && (_MSC_VER >= 1700)
+#pragma warning(pop)
+#endif
+}
+
+
+static __CINLINE HANDLE
+ITOH(int fd)
+{
+#if defined(__MINGW32__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
+#endif
+#if defined(_MSC_VER) && (_MSC_VER >= 1700)
+#pragma warning(push)
+#pragma warning(disable:4312)
+#endif
+    if (-1 == fd) return INVALID_HANDLE_VALUE;
+    return (HANDLE)fd;
+#if defined(__MINGW64__)
+#pragma GCC diagnostic pop
+#endif
+#if defined(_MSC_VER__) && (_MSC_VER >= 1700)
+#pragma warning(pop)
+#endif
+}
+
+
 /*
  *  sys_shell ---
- *      System specfic shell interface.
+ *      System specific shell interface.
  */
 int
 sys_shell(const char *cmd, const char *macro,
@@ -173,9 +219,9 @@ sys_shell(const char *cmd, const char *macro,
 
     } else {
         pd.dwProcessId = args._dwProcessId;     // See SendCloseMessage()
-        proc_add((int)hProc, macro, ShellCleanup, (const void *)&pd, sizeof(pd));
+        proc_add(HTOI(hProc), macro, ShellCleanup, (const void *)&pd, sizeof(pd));
         if (NULL == macro) {
-            status = proc_wait((int)hProc);     // blocking
+            status = proc_wait(HTOI(hProc));    // blocking
         }
     }
 
@@ -281,7 +327,7 @@ enum_proc_callback(int pid, void *u)
      *      return TRUE; to stop enumeration, it must return FALSE.
      */
     info->pid = pid;
-    return w32_child_wait((HANDLE)pid, info->status, TRUE);
+    return w32_child_wait(ITOH(pid), info->status, TRUE);
 }
 
 
@@ -346,7 +392,7 @@ int
 sys_kill(int pid, int value)
 {
     if (pid > 0) {
-        HANDLE hProc = (HANDLE)pid;
+        HANDLE hProc = ITOH(pid);
 
         if (WaitForSingleObject(hProc, 0) != WAIT_TIMEOUT) {
             errno = ESRCH;                      // not running
@@ -420,7 +466,7 @@ SendCloseMessage(HANDLE hProc)
     struct _enum_win_info info = {0};
     struct procdata *pd = NULL;
 
-    if (proc_find((int)hProc, (void **)&pd) == sizeof(struct procdata)) {
+    if (proc_find(HTOI(hProc), (void **)&pd) == sizeof(struct procdata)) {
         if (pd) {                               // locate procdata
             info.hProcess = hProc;
             info.dwProcessId = pd->dwProcessId;

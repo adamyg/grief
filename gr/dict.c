@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dict_c,"$Id: dict.c,v 1.23 2024/07/05 18:33:38 cvsuser Exp $")
+__CIDENT_RCSID(gr_dict_c,"$Id: dict.c,v 1.24 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dict.c,v 1.23 2024/07/05 18:33:38 cvsuser Exp $
+/* $Id: dict.c,v 1.24 2025/02/07 03:03:21 cvsuser Exp $
  * Dictionary functionality.
  *
  *
@@ -465,7 +465,7 @@ do_dict_name(void)              /* string (int obj_id) */
     if (dict) {
         ret = dict->d_name;                     /* string or NULL */
     }
-    acc_assign_str(ret?ret:"", -1);
+    acc_assign_str(ret?ret:"");
 }
 
 
@@ -591,7 +591,7 @@ do_dict_list(void)              /* list (int obj_id, [int keys = TRUE]) */
 
     DICT *dict = dict_lookup(objid);
     LIST *dictlist = NULL;
-    int length = 0;
+    size_t llen = 0;
 
     if (dict) {
         stable_t *stbl = &dict->d_stable;
@@ -602,8 +602,8 @@ do_dict_list(void)              /* list (int obj_id, [int keys = TRUE]) */
             stblnode_t *node;
 
             if (keys) {                         /* item keys */
-                length = (count * sizeof_atoms[F_RSTR]) + sizeof_atoms[F_HALT];
-                if (NULL != (dictlist = lst_alloc(length, count))) {
+                llen = (count * sizeof_atoms[F_RSTR]) + sizeof_atoms[F_HALT];
+                if (NULL != (dictlist = lst_alloc(llen, count))) {
                     LIST *lp = dictlist;
 
                     if (NULL != (node = stbl_first(stbl, &cursor))) {
@@ -617,18 +617,17 @@ do_dict_list(void)              /* list (int obj_id, [int keys = TRUE]) */
                 }
 
             } else {                            /* item values */
-                length = sizeof_atoms[F_HALT];
-
+                llen = sizeof_atoms[F_HALT];
                 if (NULL != (node = stbl_first(stbl, &cursor))) {
                     do {
                         const object_t *obj = (object_t *)node->stbl_uptr;
                         const OPCODE type = obj_get_type(obj);
 
-                        length += sizeof_atoms[type];
+                        llen += sizeof_atoms[type];
                     } while (NULL != (node = stbl_next(&cursor)));
                 }
 
-                if (NULL != (dictlist = lst_alloc(length, count))) {
+                if (NULL != (dictlist = lst_alloc(llen, count))) {
                     LIST *lp = dictlist;
 
                     if (NULL != (node = stbl_first(stbl, &cursor))) {
@@ -668,8 +667,8 @@ do_dict_list(void)              /* list (int obj_id, [int keys = TRUE]) */
         }    
     }
 
-    if (dictlist && length) {
-        acc_donate_list(dictlist, length);
+    if (dictlist && llen) {
+        acc_donate_list(dictlist, llen);
     } else {
         acc_assign_null();
     }
@@ -722,7 +721,7 @@ do_list_of_dictionaries(void)   /* ([bool nonempty = false, bool named = false])
     const int non_empty = get_xinteger(1, FALSE);
     int named = get_xinteger(2, FALSE);         /* extension */
     LIST *dictlist = NULL;
-    int length = 0;
+    size_t llen = 0;
 
     if (x_dicts && stype_used(x_dicts)) {
         int count = 0;
@@ -743,9 +742,8 @@ do_list_of_dictionaries(void)   /* ([bool nonempty = false, bool named = false])
 
         /* build list */
         if (count) {
-            length = (count * sizeof_atoms[F_INT]) + sizeof_atoms[F_HALT];
-
-            if (NULL != (dictlist = lst_alloc(length, count))) {
+            llen = (count * sizeof_atoms[F_INT]) + sizeof_atoms[F_HALT];
+            if (NULL != (dictlist = lst_alloc(llen, count))) {
                 LIST *lp = dictlist;
 
                 if (NULL != (st = stype_first(x_dicts, &cursor)))
@@ -768,8 +766,8 @@ do_list_of_dictionaries(void)   /* ([bool nonempty = false, bool named = false])
         }
     }
 
-    if (dictlist && length) {
-        acc_donate_list(dictlist, length);
+    if (dictlist && llen) {
+        acc_donate_list(dictlist, llen);
     } else {
         acc_assign_null();
     }

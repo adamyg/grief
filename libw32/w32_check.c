@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_check_c,"$Id: w32_check.c,v 1.22 2024/03/31 15:57:25 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_check_c,"$Id: w32_check.c,v 1.24 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 system io functionality
  * Note: NOT CALLED -- purely a compile time check of the mode namespace
  *
- * Copyright (c) 1998 - 2024 Adam Young.
+ * Copyright (c) 1998 - 2025 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -120,7 +120,9 @@ struct __packed_pre__ mypackedstruct {
 } __packed_post__;
 #include <sys/pack0.h>
 
-extern int __w32_check_attr(mode_t mode);
+int __w32_check_attr(mode_t mode);
+int __w32_check_errno(int rc);
+
 
 /*
  *  check for unique mode bits ...
@@ -169,6 +171,25 @@ __w32_check_attr(mode_t mode)
 #if defined(S_IFDOOR) && (S_IFDOOR)
     case S_IFBLK:                               /* solaris special */
 #endif
+        return TRUE;
+    }
+    return FALSE;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+//  errno mapping
+
+#include <errno.h>
+#include "win32_errno.h"
+#include <errno.h>
+#include "win32_errno.h"
+
+int
+__w32_check_errno(int rc)
+{
+    switch (rc) {
+    case ENOTCONN:
         return TRUE;
     }
     return FALSE;

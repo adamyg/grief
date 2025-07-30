@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_child_c,"$Id: w32_child.c,v 1.22 2024/05/15 08:44:05 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_child_c,"$Id: w32_child.c,v 1.24 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 sub-process support
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -51,7 +51,6 @@ __CIDENT_RCSID(gr_w32_child_c,"$Id: w32_child.c,v 1.22 2024/05/15 08:44:05 cvsus
 #pragma warning(disable : 4244) // conversion from 'xxx' to 'xxx', possible loss of data
 #pragma warning(disable : 4312) // type cast' : conversion from 'xxx' to 'xxx' of greater size
 #endif
-
 struct procdata {
     int                 type;
     DWORD               dwProcessId;
@@ -67,9 +66,8 @@ typedef struct {
     int                 fd;
 } Redirect_t;
 
-static int              cmdisA(const char *shell, int slen, const char *cmd);
-static int              cmdisW(const wchar_t *shell, int slen, const wchar_t *cmd);
-static int              TOLOWER(wchar_t ch);
+static int              cmdisA(const char *shell, size_t slen, const char *cmd);
+static int              cmdisW(const wchar_t *shell, size_t slen, const wchar_t *cmd);
 
 static BOOL             SendCloseMessage(HANDLE hProc);
 static BOOL             WASNOT_ENOENT(void);
@@ -321,7 +319,7 @@ w32_waitpid(int pid, int *status, int options)
         /*
          *  wait for the child whose process ID is equal to the value of pid.
          */
-        if (w32_child_wait(w32_ITOH(pid), status, options & WNOHANG)) {
+        if (w32_child_wait(w32_ftoh(pid), status, options & WNOHANG)) {
             ret = pid;
         }
     }
@@ -449,7 +447,7 @@ LIBW32_API int
 w32_kill(int pid, int value)
 {
     if (pid > 0) {
-        HANDLE hProc = w32_ITOH(pid);
+        HANDLE hProc = w32_ftoh(pid);
 
         /* Still running ?? */
         if (WaitForSingleObject(hProc, 0) != WAIT_TIMEOUT) {
@@ -530,7 +528,7 @@ SendCloseMessage(HANDLE hProc)
 
 /*
  *  w32_iscommand ---
- *      Determine the given shell is a DOS/WIN command processor
+ *      Determine whether the given shell is a DOS/WIN command processor.
  */
 LIBW32_API int
 w32_iscommand(const char *shell)
@@ -553,7 +551,7 @@ w32_iscommand(const char *shell)
 LIBW32_API int
 w32_iscommandA(const char *shell)
 {
-    const int slen = (int)strlen(shell);
+    const size_t slen = strlen(shell);
 
     if (cmdisA(shell, slen, "cmd") ||
             cmdisA(shell, slen, "cmd.exe") ||
@@ -569,7 +567,7 @@ w32_iscommandA(const char *shell)
 LIBW32_API int
 w32_iscommandW(const wchar_t *shell)
 {
-    const int slen = (int)wcslen(shell);
+    const size_t slen = wcslen(shell);
 
     if (cmdisW(shell, slen, L"cmd") ||
             cmdisW(shell, slen, L"cmd.exe") ||
@@ -582,10 +580,74 @@ w32_iscommandW(const wchar_t *shell)
 }
 
 
-static int
-cmdisA(const char *shell, int slen, const char *cmd)
+/*
+ *  w32_ispwsh ---
+ *      Determine whether the given shell is from the PowerShell processor family.
+ */
+LIBW32_API int
+w32_ispowershell(const char *shell)
 {
-    const int clen = (int)strlen(cmd);
+#if defined(UTF8FILENAMES)
+    if (w32_utf8filenames_state()) {
+        wchar_t wshell[WIN32_PATH_MAX];
+
+        if (w32_utf2wc(shell, wshell, _countof(wshell)) > 0) {
+            return w32_ispowershellW(wshell);
+        }
+        return -1;
+    }
+#endif  //UTF8FILENAMES
+
+    return w32_ispowershellA(shell);
+}
+
+
+LIBW32_API int
+w32_ispowershellA(const char *shell)
+{
+    const size_t slen = strlen(shell);
+
+    // legacy
+    if (cmdisA(shell, slen, "powershell") ||
+        cmdisA(shell, slen, "powershell.exe")) {
+        return 1;
+    }
+
+    // cross-platform
+    if (cmdisA(shell, slen, "pwsh") |
+        cmdisA(shell, slen, "pwsh.exe")) {
+        return 2;
+    }
+
+    return 0;
+}
+
+
+LIBW32_API int          
+w32_ispowershellW(const wchar_t *shell)
+{
+    const size_t slen = wcslen(shell);
+
+    // legacy
+    if (cmdisW(shell, slen, L"powershell") ||
+        cmdisW(shell, slen, L"powershell.exe")) {
+        return 1;
+    }
+
+    // cross-platform
+    if (cmdisW(shell, slen, L"pwsh") |
+        cmdisW(shell, slen, L"pwsh.exe")) {
+        return 2;
+    }
+
+    return 0;
+}
+
+
+static int
+cmdisA(const char *shell, size_t slen, const char *cmd)
+{
+    const size_t clen = strlen(cmd);
     const char *p = shell + slen - clen;
 
     if (slen == clen || (slen > clen && (p[-1] == '\\' || p[-1] == '/'))) {
@@ -598,9 +660,9 @@ cmdisA(const char *shell, int slen, const char *cmd)
 
 
 static int
-cmdisW(const wchar_t *shell, int slen, const wchar_t *cmd)
+cmdisW(const wchar_t *shell, size_t slen, const wchar_t *cmd)
 {
-    const int clen = (int)wcslen(cmd);
+    const size_t clen = wcslen(cmd);
     const wchar_t *p = shell + slen - clen;
 
     if (slen == clen || (slen > clen && (p[-1] == '\\' || p[-1] == '/'))) {
@@ -610,7 +672,6 @@ cmdisW(const wchar_t *shell, int slen, const wchar_t *cmd)
     }
     return FALSE;
 }
-
 
 
 /*
@@ -631,7 +692,7 @@ w32_child_execA(
     HANDLE hProc = 0;
 
     /*
-     *  Build env and command line.
+     *  Build environment and command line.
      */
     if (NULL == args || (NULL == args->cmd && NULL == args->argv)) {
         errno = EINVAL;
@@ -639,7 +700,7 @@ w32_child_execA(
     }
 
     assert((NULL != args->cmd && NULL == args->argv) || (NULL == args->cmd && NULL != args->argv));
-    if (! BuildVectorsA(args, &argblk, &envblk) != 0) {
+    if (! BuildVectorsA(args, &argblk, &envblk)) {
         InternalError("BuildVector");
         return 0;
     }
@@ -726,8 +787,10 @@ done:;  free(buf);
 
     /* Close any unnecessary handles. */
     if (hProc) {                                // success
-        if (! CloseHandle(pi.hThread)) {
-            InternalError("CloseHandle (thread)");
+        if (pi.hThread) {
+            if (! CloseHandle(pi.hThread)) {
+                InternalError("CloseHandle (thread)");
+            }
         }
     }
 
@@ -755,7 +818,7 @@ w32_child_execW(
     HANDLE hProc = 0;
 
     /*
-     *  Build env and command line.
+     *  Build environment and command line.
      */
     if (NULL == args || (NULL == args->cmd && NULL == args->argv)) {
         errno = EINVAL;
@@ -850,8 +913,10 @@ done:;  free(buf);
 
     /* Close any unnecessary handles. */
     if (hProc) {                                // success
-        if (! CloseHandle(pi.hThread)) {
-            InternalError("CloseHandle (thread)");
+        if (pi.hThread) {
+            if (! CloseHandle(pi.hThread)) {
+                InternalError("CloseHandle (thread)");
+            }
         }
     }
 

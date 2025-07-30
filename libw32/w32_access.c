@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_access_c,"$Id: w32_access.c,v 1.4 2024/03/31 15:57:25 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_access_c,"$Id: w32_access.c,v 1.6 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win2 access() system calls
  *
- * Copyright (c) 2021 - 2024 Adam Young.
+ * Copyright (c) 2021 - 2025 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -29,7 +29,13 @@ __CIDENT_RCSID(gr_w32_access_c,"$Id: w32_access.c,v 1.4 2024/03/31 15:57:25 cvsu
  */
 
 #include "win32_internal.h"
+#include "win32_io.h"
+
 #include <unistd.h>
+
+static int W32AccessA(const char *path, int amode);
+static int W32AccessW(const wchar_t *path, int amode);
+
 
 /*
 //  NAME
@@ -108,18 +114,14 @@ w32_access(const char *path, int amode)
 {
 #if defined(UTF8FILENAMES)
     if (w32_utf8filenames_state()) {
-        wchar_t wpath[WIN32_PATH_MAX];
+        if (path) {
+            wchar_t wpath[WIN32_PATH_MAX];
 
-        if (NULL == path) {
-            errno = EFAULT;
+            if (w32_utf2wc(path, wpath, _countof(wpath)) > 0) {
+                return w32_accessW(wpath, amode);
+            }
             return -1;
         }
-
-        if (w32_utf2wc(path, wpath, _countof(wpath)) > 0) {
-            return w32_accessW(wpath, amode);
-        }
-
-        return -1;
     }
 #endif  //UTF8FILENAMES
 
@@ -130,14 +132,100 @@ w32_access(const char *path, int amode)
 int
 w32_accessA(const char *path, int amode)
 {
-    return _access(path, amode);
+    int ret = -1;                               // success=0, otherwise=-1
+
+    if (NULL == path) {
+        errno = EFAULT;
+
+    } else if (!*path) {
+        errno = ENOENT;
+
+    } else {
+        char symbuf[WIN32_PATH_MAX];
+
+        if (w32_resolvelinkA(path, symbuf, _countof(symbuf), NULL) != NULL) {
+            path = symbuf;                      // symlink
+        }
+
+        if ((ret = W32AccessA(path, amode)) == -1) {
+            if (ENOTDIR == errno || ENOENT == errno) {
+                if (path != symbuf) {           // component error, expand embedded shortcut
+                    if (w32_expandlinkA(path, symbuf, _countof(symbuf), SHORTCUT_COMPONENT)) {
+                        ret = W32AccessA(symbuf, amode);
+                   }
+                }
+            }
+        }
+    }
+    return ret;
 }
 
 
 int
 w32_accessW(const wchar_t *path, int amode)
 {
-    return _waccess(path, amode);
+    int ret = -1;                               // success=0, otherwise=-1
+
+    if (NULL == path) {
+        errno = EFAULT;
+
+    } else if (!*path) {
+        errno = ENOENT;
+
+    } else {
+        wchar_t symbuf[WIN32_PATH_MAX];
+
+        if (w32_resolvelinkW(path, symbuf, _countof(symbuf), NULL) != NULL) {
+            path = symbuf;                      // symlink
+        }
+
+        if ((ret = W32AccessW(path, amode)) == -1) {
+            if (ENOTDIR == errno || ENOENT == errno) {
+                if (path != symbuf) {           // component error, expand embedded shortcut
+                    if (w32_expandlinkW(path, symbuf, _countof(symbuf), SHORTCUT_COMPONENT)) {
+                        ret = W32AccessW(symbuf, amode);
+                   }
+                }
+            }
+        }
+    }
+    return ret;
+}
+
+
+static int
+W32AccessA(const char *path, int amode)
+{
+    const char *expath;
+    int ret;
+
+    if (NULL != (expath = w32_extendedpathA(path))) {
+        path = expath;                          // extended abs-path
+    }
+
+#undef _access
+    ret = _access(path, amode);
+
+    free((void*)expath);
+    return ret;
+}
+
+
+static int 
+W32AccessW(const wchar_t *path, int amode)
+{
+    const wchar_t *expath;
+    int ret;
+
+    if (NULL != (expath = w32_extendedpathW(path))) {
+        path = expath;                          // extended abs-path
+    }
+
+#undef _waccess
+    ret = _waccess(path, amode);
+
+    free((void*)expath);
+    return ret;
 }
 
 /*end*/

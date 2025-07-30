@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strtrim_c,"$Id: strtrim.c,v 1.8 2024/04/17 15:57:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_strtrim_c,"$Id: strtrim.c,v 1.10 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strtrim.c,v 1.8 2024/04/17 15:57:14 cvsuser Exp $
+/* $Id: strtrim.c,v 1.10 2025/02/07 03:03:22 cvsuser Exp $
  * libstr - String trim utilities.
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -40,27 +40,39 @@ __CIDENT_RCSID(gr_strtrim_c,"$Id: strtrim.c,v 1.8 2024/04/17 15:57:14 cvsuser Ex
 static __CINLINE int    is_white(const int ch);
 static __CINLINE int    is_quote(const int ch);
 
-const char *
-str_trim(const char *name, int *length)
-{
-    int len;
 
-    if (name && length && (len = *length) > 0) {
+/*  Function:           str_trim
+ *      Trim leading and return the length excluding any trailing white-space
+ *
+ *  Parameters:
+ *      word - String to be trimming.
+ *      lengthp - Variable populated with the length, excluding trailing white-space
+ *
+ *  Returns:
+ *      Address of first non white-space character.
+ */
+const char *
+str_trim(const char *word, size_t *lengthp)
+{
+    size_t len;
+
+    if (word && lengthp && (len = *lengthp) > 0) {
         int quote = 0;
 
         while (len > 0 && !quote &&
-                (is_white(name[0]) || (quote = is_quote(name[0])))) {
-            ++name, --len;                      /* trim leading, stop at first quote */
+                (is_white(word[0]) || (quote = is_quote(word[0])))) {
+            ++word, --len;                      /* trim leading, stop at first quote */
         }
 
         quote = 0;
         while (len > 0 && !quote &&
-                (is_white(name[len - 1]) || (quote = is_quote(name[len - 1])))) {
+            (is_white(word[len - 1]) || (quote = is_quote(word[len - 1])))) {
             --len;                              /* trim trailing, stop at first quote */
         }
-        *length = len;
+
+        *lengthp = len;
     }
-    return name;
+    return word;
 }
 
 

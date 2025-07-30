@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.in,v 1.22 2024/06/16 16:31:42 cvsuser Exp $
+# $Id: makelib.in,v 1.27 2025/07/24 08:30:17 cvsuser Exp $
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 # makelib configuration
 #
@@ -82,6 +82,7 @@ $PACKAGE_FILE   = 'edpackage.h';
 @MAKEFILES      = (    # local makefiles
         '.',                                    # build order
         'libw32',
+            '^libw32/unittest',
         '^contrib',
         '^contrib/makedepend',
         '^contrib/flex',
@@ -131,6 +132,32 @@ $PACKAGE_FILE   = 'edpackage.h';
 @CONTRIBEXTRA   = (    # additional packages
         '^contrib/libopenssl'
         );
+
+## Build notes
+
+sub
+NOTES()
+{
+        my $notes = <<EOT;
+ -
+
+ Review the options above for accuracy.
+
+ Execute to build:
+
+    "make release"          - build software.
+
+ To generate an installer:
+
+    "make release package"  - build installer.
+
+ Optionally after installation:
+
+    "make release clean"    - remove build tree.
+
+EOT
+        return $notes;
+}
 
 ## Toolchain
 
@@ -186,7 +213,8 @@ Configure()
         ################################################################################
         # Visual studio
 
-        if ($TOOLCHAIN =~ /^vs/) {
+	if ($TOOLCHAIN =~ /^vs/ || $TOOLCHAIN =~ /^clangcl/) {
+                my $version = int($1);                  # vs140 etc
 
                 set_msvc_runtime('dynamic', '$(RTSUFFIX)');
 
@@ -199,10 +227,15 @@ Configure()
 
                 add_define('_CRT_SECURE_NO_WARNINGS');
                 add_define('_CRT_SECURE_NO_DEPRECATE');
+                add_define('_CRT_NONSTDC_NO_WARNINGS');
                 add_define('_CRT_NONSTDC_NO_DEPRECATE');
 
-                add_xinclude('$(ROOT)/libw32');
-                add_xinclude('$(ROOT)/libw32/msvc');    # MSVC specials
+		add_xinclude('$(ROOT)/libw32');		# Extra includes; C and compiler tests.
+                if ($version >= 160) {                  # MSVC specials
+                        add_xinclude('$(ROOT)/libw32/msvc_2019'); # 2019+
+                } else {
+                        add_xinclude('$(ROOT)/libw32/msvc'); # legacy
+                }
                 add_application_library('libw32.lib');
         }
 
@@ -258,7 +291,7 @@ Configure()
                 add_system_library('-lIphlpapi');
                 add_system_library('-lVersion');
 
-                push @TESTLIBRARIES, "pthread|LIBTHREAD";
+               #push @TESTLIBRARIES, "pthread|LIBTHREAD";
         }
 }
 

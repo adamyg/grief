@@ -1,11 +1,11 @@
 #ifndef CR_CONFIG_H_INCLUDED
 #define CR_CONFIG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(config_h, "$Id: config.hin,v 1.68 2024/10/29 14:11:10 cvsuser Exp $")
+__CIDENT_RCSID(config_h, "$Id: config.hin,v 1.69 2025/02/10 02:13:37 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; set-indent: 4; -*- */
-/* $Id: config.hin,v 1.68 2024/10/29 14:11:10 cvsuser Exp $
+/* $Id: config.hin,v 1.69 2025/02/10 02:13:37 cvsuser Exp $
  * Machine configuration.
  *
  *
@@ -527,6 +527,8 @@ __CPRAGMA_ONCE
 
 #undef HAVE_MBRTOWC
 #undef HAVE_WCRTOMB
+#undef HAVE_WCSTOMBS
+#undef HAVE_WCSRTOMBS
 #undef HAVE_WCSCMP
 #undef HAVE_WCSCPY
 #undef HAVE_WCSLEN

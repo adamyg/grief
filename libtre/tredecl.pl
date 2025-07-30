@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: tredecl.pl,v 1.4 2024/06/15 08:23:27 cvsuser Exp $
+# $Id: tredecl.pl,v 1.5 2025/02/09 18:52:01 cvsuser Exp $
 # -*- tabs: 8; indent-width: 4; -*-
 # tre.h import utility
 # extern to cdecl
@@ -85,9 +85,6 @@ main()
    /* static library or cdecl calling convention */
 #  ifdef __GNUC__
 #  elif defined(_MSC_VER)
-#   define TRE_DECL  __declspec(cdecl)
-#  else
-#   define TRE_EXPORT cdecl
 #  endif
 # else
    /* dynamic library, standard calling convention */

@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: assign_literal.cr,v 1.3 2023/03/06 15:28:19 cvsuser Exp $
+/* $Id: assign_literal.cr,v 1.4 2025/01/10 15:12:25 cvsuser Exp $
  *
  * LUA/DukTape/Grunch comparison benchmark
  */
@@ -17,11 +17,11 @@ void
 benchmark_assign_literal(void)
 {
     REGISTER int i;
-    REGISTER int t;
-    REGISTER int this;
+    REGISTER declare t;
+    REGISTER int this = -1;
 
-//  for (i = 0; i < 1e7; i++) {
-    for (i = 0; i < 1e6; ++i) {
+//  for (i = 0; i < 10000000; i++) {
+    for (i = 0; i < 1000000; ++i) {
         t = true;
         t = false;
         t = /*void*/ NULL;
@@ -134,4 +134,4 @@ benchmark_assign_literal(void)
     }
 }
 
- /*end*/
+/*end*/

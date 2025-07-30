@@ -1,14 +1,14 @@
 #ifndef TERMEMU_VIO_H_INCLUDED
 #define TERMEMU_VIO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(termemu_vio_h,"$Id: termemu_vio.h,v 1.10 2024/09/28 13:40:11 cvsuser Exp $")
+__CIDENT_RCSID(termemu_vio_h,"$Id: termemu_vio.h,v 1.13 2025/07/02 15:38:54 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * libtermemu console driver
  *
- * Copyright (c) 2007, 2012 - 2024 Adam Young.
+ * Copyright (c) 2007, 2012 - 2025 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -91,7 +91,7 @@ enum vt_colors {
 #define VIO_FAINT           0x8000
 
 #define VIO_MINCOLS         12
-#define VIO_MINROWS         2
+#define VIO_MINROWS         3
 #define VIO_MAXCOLS         1024
 #define VIO_MAXROWS         500
 
@@ -129,14 +129,19 @@ __BEGIN_DECLS
 
 LIBVIO_API void             vio_save(void);
 LIBVIO_API void             vio_restore(void);
+LIBVIO_API void             vio_save_lines(int active);
+LIBVIO_API void             vio_restore_lines(int top, int bottom, int to);
 LIBVIO_API int              vio_screenbuffersize(void);
 
 LIBVIO_API int              vio_open(int *rows, int *cols);
 LIBVIO_API void             vio_close(void);
+LIBVIO_API HANDLE           vio_stdin(void);
+LIBVIO_API HANDLE           vio_stdout(void);
 LIBVIO_API void             vio_config_truecolor(int truecolor);
 LIBVIO_API int              vio_winch(int *rows, int *cols);
 LIBVIO_API void             vio_get_size(int *rows, int *cols);
 LIBVIO_API int              vio_toggle_size(int *rows, int *cols);
+LIBVIO_API int              vio_maximised(void);
 
 LIBVIO_API void             vio_goto(int row, int col);
 LIBVIO_API void             vio_cursor_show(void);
@@ -180,4 +185,3 @@ int vio_wcwidth(wchar_t ucs);
 __END_DECLS
 
 #endif //TERMEMU_VIO_H_INCLUDED
-

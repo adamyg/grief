@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_arg_c,"$Id: arg.c,v 1.22 2024/05/17 16:42:32 cvsuser Exp $")
+__CIDENT_RCSID(gr_arg_c,"$Id: arg.c,v 1.24 2025/02/07 03:03:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: arg.c,v 1.22 2024/05/17 16:42:32 cvsuser Exp $
+/* $Id: arg.c,v 1.24 2025/02/07 03:03:20 cvsuser Exp $
  * Command line argument processing functionality.
  *
  *
@@ -355,7 +355,7 @@ arg_print(int indent, const struct argoption *p, arg_helper_t description, void 
 
             for (s = d1; *s;) {
                 if (NULL != (nl = strchr(s, '\n'))) {
-                    len = (nl - s) + 1;
+                    len = (int)((nl - s) + 1);
                 } else {
                     len = slen;
                 }
@@ -518,7 +518,7 @@ getoption(struct argparms *p, int nargc, const char *const *nargv,
         return BADCH;
     }
 
-    if (oli[1] != ':' && oli[1] != ';') {       /* no argument */
+    if (oli && oli[1] != ':' && oli[1] != ';') { /* no argument */
         if (! *p->_place) {
             ++p->ind;
         }

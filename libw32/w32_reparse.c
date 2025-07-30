@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_reparse_c,"$Id: w32_reparse.c,v 1.11 2024/03/31 15:57:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_reparse_c,"$Id: w32_reparse.c,v 1.13 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 directory support services
  *
- * Copyright (c) 2007, 2012 - 2024 Adam Young.
+ * Copyright (c) 2007, 2012 - 2025 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -30,7 +30,7 @@ __CIDENT_RCSID(gr_w32_reparse_c,"$Id: w32_reparse.c,v 1.11 2024/03/31 15:57:27 c
  */
 
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT            0x0501
+#define _WIN32_WINNT 0x0501
 #endif
 
 #include "win32_internal.h"
@@ -59,10 +59,10 @@ replace_dir(char *buf, size_t maxlen, const char *original, const char *replacem
 
     if (maxlen-- > 0) {                         /* reserve nul */
         const char *d1 = strrchr(original, '/'), *d2 = strrchr(original, '\\'),
-            *d = (d1 > d2 ? d1 : d2);           /* last delimitor; if any */
+            *d = (d1 > d2 ? d1 : d2);           /* last delimit or; if any */
 
                                                 /* note: wont deal with parent directory references */
-        if (d++) {                              /* include delimitor within result */
+        if (d++) {                              /* include delimiter within result */
             const size_t dirlen =
                 ((size_t)(d - original) < maxlen ? (size_t)(d - original) : maxlen);
 
@@ -84,10 +84,10 @@ replace_wdir(wchar_t *buf, size_t maxlen, const wchar_t *original, const wchar_t
 
     if (maxlen-- > 0) {                         /* reserve nul */
         const wchar_t *d1 = wcsrchr(original, '/'), *d2 = wcsrchr(original, '\\'),
-            *d = (d1 > d2 ? d1 : d2);           /* last delimitor; if any */
+            *d = (d1 > d2 ? d1 : d2);           /* last delimiter; if any */
 
                                                 /* note: wont deal with parent directory references */
-        if (d++) {                              /* include delimitor within result */
+        if (d++) {                              /* include delimiter within result */
             const size_t dirlen =
                 ((size_t)(d - original) < maxlen ? (size_t)(d - original) : maxlen);
 
@@ -114,16 +114,17 @@ memxcpy(char *dst, const char *src, size_t len, size_t maxlen)
 LIBW32_API int
 w32_reparse_readA(const char *name, char *buf, size_t maxlen)
 {
-    BYTE reparseBuffer[MAX_REPARSE_SIZE];       /* XXX: warning: owc crash if = {0} under full optimisation */
-    PREPARSE_DATA_BUFFER rdb = (PREPARSE_DATA_BUFFER)reparseBuffer;
-    HANDLE fileHandle = INVALID_HANDLE_VALUE;
-    DWORD returnedLength = 0;
+    HANDLE handle = INVALID_HANDLE_VALUE;
+    BYTE *reparseBuffer = NULL;
+    DWORD dwret = 0;
     int ret = -1;
 
     assert(24 == sizeof(REPARSE_DATA_BUFFER));
-    memset(reparseBuffer, 0, sizeof(reparseBuffer));
 
-    if ((fileHandle = CreateFileA(name, 0,      /* open the file image */
+    /*
+     *  open resource
+     */
+    if ((handle = CreateFileA(name, 0,      /* open the file image */
             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING,
             FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, NULL)) == INVALID_HANDLE_VALUE) {
         return -1;
@@ -132,8 +133,13 @@ w32_reparse_readA(const char *name, char *buf, size_t maxlen)
     /*
      *  retrieve reparse details
      */
-    if (DeviceIoControl(fileHandle, FSCTL_GET_REPARSE_POINT,
-            NULL, 0, rdb, sizeof(reparseBuffer), &returnedLength, NULL)) {
+    reparseBuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MAX_REPARSE_SIZE);
+    if (reparseBuffer && 
+            DeviceIoControl(handle, FSCTL_GET_REPARSE_POINT,
+                NULL, 0, (LPVOID)reparseBuffer, MAX_REPARSE_SIZE, &dwret, NULL)) {
+
+        const REPARSE_DATA_BUFFER *rdb = (const REPARSE_DATA_BUFFER*)reparseBuffer;
+
         if (IsReparseTagMicrosoft(rdb->ReparseTag)) {
             char resolved[1024] = { 0 };        /* resolved name */
             int length;
@@ -210,24 +216,27 @@ w32_reparse_readA(const char *name, char *buf, size_t maxlen)
         }
     }
 
-    CloseHandle(fileHandle);
+    HeapFree(GetProcessHeap(), 0, reparseBuffer);
+    CloseHandle(handle);
     return ret;
 }
+
 
 
 LIBW32_API int
 w32_reparse_readW(const wchar_t *name, wchar_t *buf, size_t maxlen)
 {
-    BYTE reparseBuffer[MAX_REPARSE_SIZE];       /* XXX: warning: owc crash if = {0} under full optimisation */
-    PREPARSE_DATA_BUFFER rdb = (PREPARSE_DATA_BUFFER)reparseBuffer;
-    HANDLE fileHandle = INVALID_HANDLE_VALUE;
-    DWORD returnedLength = 0;
+    HANDLE handle = INVALID_HANDLE_VALUE;
+    BYTE *reparseBuffer = NULL;
+    DWORD dwret = 0;
     int ret = -1;
 
     assert(24 == sizeof(REPARSE_DATA_BUFFER));
-    memset(reparseBuffer, 0, sizeof(reparseBuffer));
 
-    if ((fileHandle = CreateFileW(name, 0,      /* open the file image */
+    /*
+     *  open resource
+     */
+    if ((handle = CreateFileW(name, 0, /* open the file image */
             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING,
             FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, NULL)) == INVALID_HANDLE_VALUE) {
         return -1;
@@ -236,8 +245,13 @@ w32_reparse_readW(const wchar_t *name, wchar_t *buf, size_t maxlen)
     /*
      *  retrieve reparse details
      */
-    if (DeviceIoControl(fileHandle, FSCTL_GET_REPARSE_POINT,
-            NULL, 0, rdb, sizeof(reparseBuffer), &returnedLength, NULL)) {
+    reparseBuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MAX_REPARSE_SIZE);
+    if (reparseBuffer && 
+            DeviceIoControl(handle, FSCTL_GET_REPARSE_POINT,
+                NULL, 0, (LPVOID)reparseBuffer, MAX_REPARSE_SIZE, &dwret, NULL)) {
+
+        const REPARSE_DATA_BUFFER *rdb = (const REPARSE_DATA_BUFFER *)reparseBuffer;
+
         if (IsReparseTagMicrosoft(rdb->ReparseTag)) {
             int length;
 
@@ -302,7 +316,8 @@ w32_reparse_readW(const wchar_t *name, wchar_t *buf, size_t maxlen)
         }
     }
 
-    CloseHandle(fileHandle);
+    HeapFree(GetProcessHeap(), 0, reparseBuffer);
+    CloseHandle(handle);
     return ret;
 }
 

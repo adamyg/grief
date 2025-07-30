@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetstream_c,"$Id: charsetstream.c,v 1.15 2024/04/17 16:00:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetstream_c,"$Id: charsetstream.c,v 1.17 2025/02/07 17:22:13 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* conversion stream support.
  *
  *
- * Copyright (c) 2010 - 2024, Adam Young.
+ * Copyright (c) 2010 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -172,7 +172,7 @@ iconv_stream_open(iconv_cvtfn_t cnvfn, void *cd, iconv_rdfn_t rdfn, iconv_wrfn_t
 {
     iconv_stream_t *s;
 
-    if (NULL == (s = (iconv_stream_t *)calloc(sizeof(iconv_stream_t), 1))) {
+    if (NULL == (s = (iconv_stream_t *)calloc(1, sizeof(iconv_stream_t)))) {
         return NULL;
     }
     s->s_iconv      = cnvfn;

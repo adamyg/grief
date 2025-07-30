@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_symbol_c,"$Id: symbol.c,v 1.44 2024/05/09 17:22:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_symbol_c,"$Id: symbol.c,v 1.45 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: symbol.c,v 1.44 2024/05/09 17:22:07 cvsuser Exp $
+/* $Id: symbol.c,v 1.45 2025/02/07 03:03:22 cvsuser Exp $
  * Symbol management.
  *
  *
@@ -575,10 +575,10 @@ sym_rassociate(int idx, SYMBOL *sp)
     unsigned slots = 0, nslots;
 
     assert(mac_sd);
-    assert(idx >= 0 && idx < 64);               /* system limit */
+    assert(idx >= 0 && idx < SYM_REGISTER_NUM);  /* system limit */
     assert(sp);
 
-    if (idx >= 0) {
+    if (idx >= 0 && idx < SYM_REGISTER_NUM) {
         if (NULL != (regs = mac_sp->registers) &&
                 (unsigned)idx < (slots = regs->slots)) {
             /*
@@ -586,7 +586,7 @@ sym_rassociate(int idx, SYMBOL *sp)
              */
             assert(REGISTERS_MAGIC == regs->magic);
             assert(NULL == regs->symbols[idx]);
-                /* register's should not be reassociated */
+                /* register's should not be re-associated */
             regs->symbols[idx] = sp;
 
         } else {
@@ -726,12 +726,12 @@ sym_assign_list(SYMBOL *sp, const LIST *lp)
  *      Assign the list to a symbol.
  */
 void
-sym_donate_list(SYMBOL *sp, LIST *lp, int llen)
+sym_donate_list(SYMBOL *sp, LIST *lp, size_t llen)
 {
     assert(F_LIST == sp->s_type);
     sym_clear(sp);
     sp->s_type = F_LIST;
-    sp->s_obj = rlst_create(lp, llen);
+    sp->s_obj = rlst_create(lp, (int)llen);
     trace_sym(sp);
 }
 
@@ -785,12 +785,12 @@ sym_assign_str(SYMBOL *sp, const char *str)
 
 
 void
-sym_assign_nstr(SYMBOL *sp, const char *str, int len)
+sym_assign_nstr(SYMBOL *sp, const char *str, size_t len)
 {
     assert(F_STR == sp->s_type || (sp->s_flags & SF_POLY));
     sym_clear(sp);
     sp->s_type = F_STR;
-    sp->s_obj = r_nstring(str, len);
+    sp->s_obj = r_nstring(str, (int)len);
     trace_ilog("  %s := %s\n", sp->s_name, (const char *)r_ptr(sp->s_obj));
 }
 
@@ -858,7 +858,7 @@ argv_assign_list(int argi, const LIST *list)
  *      nothing
  */
 void
-argv_donate_list(int argi, LIST *lp, int llen)
+argv_donate_list(int argi, LIST *lp, size_t llen)
 {
     assert(argi > 0);
     assert(argi <= MAX_ARGC);
@@ -902,10 +902,10 @@ argv_assign_int(int argi, accint_t val)
  *  Returns:
  *      Length of the assigned string, in bytes; not including NUL terminator.
  */
-int
+size_t
 argv_assign_str(int argi, const char *val)
 {
-    int ret = 0;
+    size_t ret = 0;
 
     assert(argi > 0);
     assert(argi <= MAX_ARGC);
@@ -915,7 +915,6 @@ argv_assign_str(int argi, const char *val)
             sym_assign_nstr(get_symbol(argi), val, ret);
         } else {
             sym_assign_nstr(get_symbol(argi), "", 0);
-            ret = 0;
         }
     }
     return ret;
@@ -923,7 +922,7 @@ argv_assign_str(int argi, const char *val)
 
 
 void
-argv_assign_nstr(int argi, const char *val, int slen)
+argv_assign_nstr(int argi, const char *val, size_t slen)
 {
     assert(argi > 0);
     assert(argi <= MAX_ARGC);

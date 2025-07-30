@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_prntf_c,"$Id: prntf.c,v 1.18 2022/06/16 05:23:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_prntf_c,"$Id: prntf.c,v 1.20 2025/06/28 11:08:25 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: prntf.c,v 1.18 2022/06/16 05:23:29 cvsuser Exp $
+/* $Id: prntf.c,v 1.20 2025/06/28 11:08:25 cvsuser Exp $
  * Print formatter.
  *
  *
@@ -35,7 +35,7 @@ __CIDENT_RCSID(gr_prntf_c,"$Id: prntf.c,v 1.18 2022/06/16 05:23:29 cvsuser Exp $
 #include "symbol.h"
 
 #define PRINTF_SIZE     512                     /* Base buffer size, in bytes */
-#define PRINTF_INCR     (-2)                    /* Multipler */
+#define PRINTF_INCR     (-2)                    /* Multiplier */
 
 typedef struct {
 #define F_ZEROPAD       0x0001                  /* padding char; ' ' or '0' */
@@ -74,14 +74,14 @@ typedef struct {
 
 static int              get_value(const char **fmt, int *arg);
 static void             prtl(io_t *io, const LIST *lp, unsigned level);
-static void             outs(io_t *io, const char *s, int slen);
-static void             wouts(io_t *io, const char *s, int slen);
-static void             Wouts(io_t *io, const char *s, int slen);
+static void             outs(io_t *io, const char *s, size_t slen);
+static void             wouts(io_t *io, const char *s, size_t slen);
+static void             Wouts(io_t *io, const char *s, size_t slen);
 static void             outb(io_t *io, accuint_t ul, const char *p);
 static void             outl(io_t *io, int radix, accint_t lval);
 static void             outf(io_t *io, const char *format, accfloat_t dval);
-static void             outr(io_t *io, const char *s, int len);
-static void             out_check(io_t *io, int n);
+static void             outr(io_t *io, const char *s, size_t len);
+static void             out_check(io_t *io, size_t required);
 static void             uitoa(accuint_t value, char *buffer, int base);
 
 
@@ -91,7 +91,7 @@ static void             uitoa(accuint_t value, char *buffer, int base);
  */
 static char *           buf_ptr;
 
-static int              buf_size;
+static size_t           buf_size;
 
 
 /*  Function:           print_formatted
@@ -107,7 +107,7 @@ static int              buf_size;
  *
  */
 const char *
-print_formatted(int offset, int *length, int *width)
+print_formatted(int offset, size_t *length, size_t *width)
 {
     static const char xBSTR[] = "<bad-string>";
     static const char xNULL[] = "<NULL>";
@@ -118,7 +118,7 @@ print_formatted(int offset, int *length, int *width)
     accint_t lval;
     const char *sval;
     char type;
-    int slen;
+    size_t slen;
 
     if (NULL == buf_ptr) {                      /* prime buffer */
         buf_size = PRINTF_SIZE;
@@ -408,7 +408,7 @@ literal:;   OCHECK(iop, 1);
     }
 
 end_format:; 
-    {   const int olength = OLENGTH(iop);
+    {   const size_t olength = OLENGTH(iop);
         if (length) *length = olength;
         if (width) *width = olength - iop->wadjust;
     }
@@ -450,20 +450,23 @@ get_value(const char **fmt, int *arg)
 
 
 static void
-out_check(io_t *io, int n)
+out_check(io_t *io, size_t required)
 {
-    int offset = io->obp - buf_ptr;
+    size_t offset = io->obp - buf_ptr;
 
-    if (offset + n >= (buf_size - 4) /*spare assumed*/) {
-        int obuf_size = buf_size;
+    if (offset + required >= (buf_size - 4) /*spare assumed*/) {
+        size_t obuf_size = buf_size;
 
         do {
+#if defined(_MSC_VER) && (_MSC_VER >= 1900)
+#pragma warning(disable:6236) // Potential constant comparison
+#endif
             if (PRINTF_INCR < 0) {
                 buf_size *= -PRINTF_INCR;
             } else {
                 buf_size += PRINTF_INCR;
             }
-        } while (obuf_size+n > buf_size);
+        } while ((obuf_size + required) > buf_size);
 
         buf_ptr = (char *) chk_realloc(buf_ptr, buf_size);
         assert(buf_ptr);
@@ -540,14 +543,14 @@ prtl(io_t *io, const LIST *lp, unsigned level)
 
 /* string output */
 static void
-outs(io_t *io, const char *s, int slen)
+outs(io_t *io, const char *s, size_t slen)
 {
     /*
      *  Precision specifies the maximum number of characters to be printed.
      *  Characters in excess of precision are not printed.
      */
     if (io->precision > 0) {
-        if (io->precision < slen) {
+        if ((size_t)io->precision < slen) {
             slen = io->precision;               /* trim */
         }
     }
@@ -557,11 +560,12 @@ outs(io_t *io, const char *s, int slen)
 
 /* long/wide string output - length limited */
 static void
-wouts(io_t *io, const char *s, int slen)
+wouts(io_t *io, const char *s, size_t slen)
 {
     const char *cursor = s, *end = cursor + slen;
     int precision = (io->precision > 0 ? io->precision : INT_MAX);
-    int padding = 0, length = 0, buflen = 0;
+    int padding = 0, length = 0;
+    size_t buflen = 0;
 
     /*
      *  Precision specifies the maximum number of characters to be printed.
@@ -584,18 +588,18 @@ wouts(io_t *io, const char *s, int slen)
     }
 
     if (io->width > length) {
-        padding = io->width - length;
+        padding = io->width - (int)length;
     }
 
     OCHECK(io, padding + buflen);
     if ((io->flags & F_LEFTJUST) == 0)
-        while (padding-- > 0) {
+        for (; padding > 0; --padding) {
             OPUTC(io, ' ');
         }
-    io->wadjust = buflen - length;              /* wchar/char delta */
+    io->wadjust = (int)(buflen - length);       /* wchar/char delta */
     OPUTS(io, s, buflen);
     if (io->flags & F_LEFTJUST)
-        while (padding-- > 0) {
+        for (; padding > 0; --padding) {
             OPUTC(io, ' ');
         }
 }
@@ -603,11 +607,12 @@ wouts(io_t *io, const char *s, int slen)
 
 /* long/wide string output - display width limited */
 static void
-Wouts(io_t *io, const char *s, int slen)
+Wouts(io_t *io, const char *s, size_t slen)
 {
     const char *cursor = s, *end = cursor + slen;
     int precision = (io->precision > 0 ? io->precision : INT_MAX);
-    int padding = 0, width = 0, buflen = 0;
+    int padding = 0, width = 0;
+    size_t buflen = 0;
 
     /*
      *  Precision specifies the maximum number of characters to be printed.
@@ -639,13 +644,13 @@ Wouts(io_t *io, const char *s, int slen)
 
     OCHECK(io, padding + buflen);
     if ((io->flags & F_LEFTJUST) == 0)
-        while (padding-- > 0) {
+        for (; padding > 0; --padding) {
             OPUTC(io, ' ');
         }
-    io->wadjust = buflen - width;               /* wchar/char delta */
+    io->wadjust = (int)(buflen - width);        /* wchar/char delta */
     OPUTS(io, s, buflen);
     if (io->flags & F_LEFTJUST)
-        while (padding-- > 0) {
+        for (; padding > 0; --padding) {
             OPUTC(io, ' ');
         }
 }
@@ -655,7 +660,7 @@ static void
 outb(io_t *io, accuint_t ul, const char *p)
 {
     char numbuf[64], *nbp;                      /* uitoa() buffer */
-    int tmp, n;
+    int n, tmp;
 
     TRESET(io);
 
@@ -685,14 +690,14 @@ outb(io_t *io, accuint_t ul, const char *p)
          *    precision:        minimum number of digits.
          */
         if (io->precision > 0) {
-            padding = io->precision - strlen(numbuf);
+            padding = io->precision - (int)strlen(numbuf);
         } else if (io->width > 0) {
-            padding = io->width - strlen(numbuf);
+            padding = io->width - (int)strlen(numbuf);
         } else {
             padding = -1;
         }
 
-        while (padding-- > 0) {
+        for (; padding > 0; --padding) {
             TSTORE(io, '0');
         }
     }
@@ -706,7 +711,7 @@ outb(io_t *io, accuint_t ul, const char *p)
     if (ul > 0) {
         for (tmp = 0; *p;) {
             n = *p++;
-            if (ul & (1 << (n - 1))) {
+            if (ul & (((accint_t)1) << (n - 1))) {
                 TSTORE(io,  tmp ? ',' : '<');
                 for (; (n = *p) > ' '; ++p) {
                     TSTORE(io,  n);
@@ -810,7 +815,7 @@ outl(io_t *io, int radix, accint_t lval)
             padding = -1;
         }
 
-        while (padding-- > 0) {
+        for (; padding > 0; --padding) {
             TSTORE(io, '0');
         }
     }
@@ -877,7 +882,7 @@ outf(io_t *io, const char *format, accfloat_t fval)
 
 /* string write */
 static void
-outr(io_t *io, const char *s, int length)
+outr(io_t *io, const char *s, size_t length)
 {
     int padding = 0;
 
@@ -894,20 +899,19 @@ outr(io_t *io, const char *s, int length)
      *  is not given, all characters of the value are printed (subject to the precision
      *  specification).
      */
-    assert(length >= 0);
     if (io->width > 0) {
-        padding = io->width - length;           /* width specifies output columns */
+        padding = (int)(io->width - length);    /* width specifies output columns */
         if (padding < 0) padding = 0;           /* wont truncate */
     }
 
     OCHECK(io, padding + length);
     if ((io->flags & F_LEFTJUST) == 0)
-        while (padding-- > 0) {
+        for (; padding > 0; --padding) {
             OPUTC(io, ' ');
         }
     OPUTS(io, s, length);
     if (io->flags & F_LEFTJUST)
-        while (padding-- > 0) {
+        for (; padding > 0; --padding) {
             OPUTC(io, ' ');
         }
 }

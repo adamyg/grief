@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strprint_c,"$Id: strprint.c,v 1.11 2024/04/17 15:57:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_strprint_c,"$Id: strprint.c,v 1.13 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strprint.c,v 1.11 2024/04/17 15:57:14 cvsuser Exp $
+/* $Id: strprint.c,v 1.13 2025/02/07 03:03:22 cvsuser Exp $
  * libstr - String print utilities.
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -63,7 +63,7 @@ static void                 fatal(const char *msg);
  *      represents the number of bytes which would have been written.
  */
 int
-sxprintf(char *buf, int size, const char *fmt, ...)
+sxprintf(char *buf, size_t size, const char *fmt, ...)
 {
     va_list ap;
     int ret;
@@ -76,7 +76,7 @@ sxprintf(char *buf, int size, const char *fmt, ...)
 
 
 int
-sxprintf0(char *buf, int size, const char *fmt, ...)
+sxprintf0(char *buf, size_t size, const char *fmt, ...)
 {
     va_list ap;
     int ret;
@@ -104,7 +104,7 @@ sxprintf0(char *buf, int size, const char *fmt, ...)
  *      the resulting buffer was truncated.
  */
 int
-vsxprintf(char *buf, int size, const char *fmt, va_list ap)
+vsxprintf(char *buf, size_t size, const char *fmt, va_list ap)
 {
     int ret;
 
@@ -117,7 +117,7 @@ vsxprintf(char *buf, int size, const char *fmt, va_list ap)
 #endif
     if (ret < 0) {          /* warning, a few implementations return -1 on a format/overflow conditions */
         fatal("[v]sxprintf underflow");
-    } else if (ret > size) {
+    } else if ((size_t)ret > size) {
         fatal("[v]sxprintf overflow");
     }
     return ret;
@@ -140,7 +140,7 @@ vsxprintf(char *buf, int size, const char *fmt, va_list ap)
  *      the resulting buffer was truncated.
  */
 int
-vsxprintf0(char *buf, int size, const char *fmt, va_list ap)
+vsxprintf0(char *buf, size_t size, const char *fmt, va_list ap)
 {
     int ret;
 
@@ -153,7 +153,7 @@ vsxprintf0(char *buf, int size, const char *fmt, va_list ap)
 #endif
     if (ret < 0) {          /* warning, a few implementations return -1 on a format/overflow conditions */
         fatal("[v]sxprintf0 underflow");
-    } else if (ret > size) {
+    } else if ((size_t)ret > size) {
         fatal("[v]sxprintf0 overflow");
     }
     if (ret && size > 0) {

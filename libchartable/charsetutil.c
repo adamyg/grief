@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetutil_c,"$Id: charsetutil.c,v 1.15 2024/04/17 16:00:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetutil_c,"$Id: charsetutil.c,v 1.18 2025/02/07 05:14:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* utility functions.
  *
  *
- * Copyright (c) 2010 - 2024, Adam Young.
+ * Copyright (c) 2010 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -164,9 +164,9 @@ static const char * const   charsetstd[] = {    /* Other Standards */
         NULL
         };
 
-static int                  compare(const char * const *names, const char *name, int namelen, char *buffer, int bufsiz);
+static int                  compare(const char * const *names, const char *name, size_t namelen, char *buffer, size_t bufsiz);
 
-static void                 strpush(char *buffer, const char *src, int blen, int slen);
+static void                 strpush(char *buffer, const char *src, size_t blen, size_t slen);
 
 
 /*  Functions:              charset_canonicalize
@@ -191,11 +191,11 @@ static void                 strpush(char *buffer, const char *src, int blen, int
  *      Normalised name, otherwise NULL.
  */
 const char *
-charset_canonicalize(const char *name, int namelen, char *buffer, int bufsiz)
+charset_canonicalize(const char *name, size_t namelen, char *buffer, size_t bufsiz)
 {
     char t_name[CS_NAMELEN+1];
-    const char *end = name + (namelen > 0 ? namelen : (int)strlen(name));
-    int t_namelen = 0;
+    const char *end = name + (namelen > 0 ? namelen : strlen(name));
+    size_t t_namelen = 0;
 
     assert(bufsiz >= 16);
     while (name < end && *name && t_namelen < CS_NAMELEN) {
@@ -254,7 +254,7 @@ charset_canonicalize(const char *name, int namelen, char *buffer, int bufsiz)
 
 
 static int
-compare(const char * const *names, const char *name, int namelen, char *buffer, int bufsiz)
+compare(const char * const *names, const char *name, size_t namelen, char *buffer, size_t bufsiz)
 {
     const char *codeset, *first = names[0];
     unsigned idx;
@@ -271,7 +271,7 @@ compare(const char * const *names, const char *name, int namelen, char *buffer, 
 
 
 static void
-strpush(char *buffer, const char *src, int blen, int slen)
+strpush(char *buffer, const char *src, size_t blen, size_t slen)
 {
     if (blen > 1) {
         while (*src && blen-- > 1 && slen-- > 0) {
@@ -302,16 +302,12 @@ strpush(char *buffer, const char *src, int blen, int slen)
  *      0 if matched, otherwise a lexigraphical based -1 or 1.
  */
 int
-charset_compare(const char *primary, const char *name, int namelen)
+charset_compare(const char *primary, const char *name, size_t namelen)
 {
     int ret = 1;
 
     assert(primary);
-    assert(name);
-
-    if (namelen < 0) {
-        namelen = (name ? strlen(name) : 0);
-    }
+    assert(name && namelen);
 
     for (;;) {
         int pch = 0, nch = 0;
@@ -350,4 +346,5 @@ charset_compare(const char *primary, const char *name, int namelen)
     }
     return ret;
 }
+
 /*end*/

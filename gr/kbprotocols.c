@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_kbprotocols_c,"$Id: kbprotocols.c,v 1.5 2024/12/11 15:46:11 cvsuser Exp $")
+__CIDENT_RCSID(gr_kbprotocols_c,"$Id: kbprotocols.c,v 1.6 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: kbprotocols.c,v 1.5 2024/12/11 15:46:11 cvsuser Exp $
+/* $Id: kbprotocols.c,v 1.6 2025/02/07 03:03:21 cvsuser Exp $
  * Keyboard input protocols.
  *
  *
@@ -249,7 +249,7 @@ key_protocolid(const char* name, int namelen)
         unsigned p = 0;
 
         if (namelen < 0) {
-            namelen = strlen(name);
+            namelen = (int)strlen(name);
         }
         for (p = 0; p < (sizeof(protocols) / sizeof(protocols[0])); ++p) {
             if (namelen == (int)protocols[p].namelen &&
@@ -312,8 +312,8 @@ key_protocoldecode(int mode, char *buffer, unsigned buflen)
                 strxcat(buffer, protocols[p].name, buflen);
             }
         }
-        return buffer;
     }
+    return buffer;
 }
 
 

@@ -1,11 +1,11 @@
 #ifndef GR_SYNTAX_H_INCLUDED
 #define GR_SYNTAX_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntax_h,"$Id: syntax.h,v 1.40 2024/08/01 14:10:44 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntax_h,"$Id: syntax.h,v 1.41 2025/02/07 03:03:22 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntax.h,v 1.40 2024/08/01 14:10:44 cvsuser Exp $
+/* $Id: syntax.h,v 1.41 2025/02/07 03:03:22 cvsuser Exp $
  * Syntax hiliting constructs.
  *
  *
@@ -387,9 +387,9 @@ extern SyntaxTable_t *      syntax_current(void);
 extern SyntaxTable_t *      syntax_argument(int argi, int err);
 extern SyntaxTable_t *      syntax_lookup(const char *name, int err);
 extern SyntaxTable_t *      syntax_select(void);
-extern int                  syntax_keywordx(const SyntaxTable_t *st, const LINECHAR *token, int length, int start, int end, int icase);
-extern int                  syntax_keyword(const SyntaxTable_t *st, const LINECHAR *token, int length);
-extern int                  syntax_preprocessor(const SyntaxTable_t *st, const LINECHAR *token, int length);
+extern int                  syntax_keywordx(const SyntaxTable_t *st, const LINECHAR *token, size_t length, int start, int end, int icase);
+extern int                  syntax_keyword(const SyntaxTable_t *st, const LINECHAR *token, size_t length);
+extern int                  syntax_preprocessor(const SyntaxTable_t *st, const LINECHAR *token, size_t length);
 
 extern const LINECHAR *     syntax_write(SyntaxTable_t *st, const LINECHAR *start, const LINECHAR *end, int colour);
 extern const LINECHAR *     syntax_writex(SyntaxTable_t *st, const LINECHAR *start, const LINECHAR *end, int colour, int flags);

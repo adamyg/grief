@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_eval_c,"$Id: eval.c,v 1.39 2022/06/16 10:19:32 cvsuser Exp $")
+__CIDENT_RCSID(gr_eval_c,"$Id: eval.c,v 1.40 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: eval.c,v 1.39 2022/06/16 10:19:32 cvsuser Exp $
+/* $Id: eval.c,v 1.40 2025/02/07 03:03:21 cvsuser Exp $
  * Evaluator.
  *
  *
@@ -215,7 +215,7 @@ eval2(register const LIST *lp)
         return F_FLOAT;
 
     case F_LIT:                     /* string-literals */
-        acc_assign_str(LGET_PTR2(const char, lp), -1);
+        acc_assign_str(LGET_PTR2(const char, lp));
         return F_LIT;
 
     case F_REG:                     /* registers, 01/04/2020 */
@@ -538,7 +538,7 @@ do_cvt_to_object(void)          /* (string value, [string length]) */
             }   
             ++cursor;
         }
-        acc_assign_str(str, cursor - str);
+        acc_assign_nstr(str, (size_t)(cursor - str));
         if (term == *cursor) ++cursor;
 
     } else {                                    /* numeric */
@@ -816,7 +816,7 @@ get_str(int argi)
  *   Returns:
  *      Arguments string length in bytes, otherwise 0.
  */
-int
+size_t
 get_strlen(int argi)
 {
     assert(nullscan());
@@ -828,9 +828,9 @@ get_strlen(int argi)
         switch (lp->l_flags) {
         case F_STR:
         case F_LIT:
-            return (int)strlen(lp->l_str);
+            return strlen(lp->l_str);
         case F_RSTR:
-            return r_used(lp->l_ref);
+            return (size_t)r_used(lp->l_ref);
         case F_INT:
         case F_NULL:
         case F_FLOAT:
@@ -898,7 +898,7 @@ get_xcharacter(int argi)
 
         assert(F_SYM != lp->l_flags);           /* LVAL, use get symbol */
         if (F_INT == lp->l_flags) {
-            value = lp->l_int;
+            value = (int)lp->l_int;
 
         } else if (NULL != (str = get_xstr(argi)) && *str) {
             value = (unsigned char)(*str);      /* return first character */
@@ -1133,9 +1133,9 @@ get_list(int argi)
  *      argi - Argument index.
  *
  *  Returns:
- *      LIST length, otherwise -1.
+ *      LIST length, otherwise 0.
  */
-int
+size_t
 get_listlen(int argi)
 {
     assert(argi > 0);
@@ -1145,7 +1145,7 @@ get_listlen(int argi)
         assert(F_SYM != lp->l_flags);           /* LVAL, use get symbol */
         switch (lp->l_flags) {
         case F_LIST:
-            return -1;
+            return lst_sizeof(lp->l_list);
         case F_RLIST:
             return r_used(lp->l_ref);
         case F_NULL:
@@ -1156,7 +1156,7 @@ get_listlen(int argi)
             break;
         }
     }
-    return -1;
+    return 0;
 }
 
 

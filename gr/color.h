@@ -1,11 +1,11 @@
 #ifndef GR_COLOR_H_INCLUDED
 #define GR_COLOR_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_color_h,"$Id: color.h,v 1.15 2024/10/06 17:01:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_color_h,"$Id: color.h,v 1.16 2025/02/07 03:03:20 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: color.h,v 1.15 2024/10/06 17:01:22 cvsuser Exp $
+/* $Id: color.h,v 1.16 2025/02/07 03:03:20 cvsuser Exp $
  * Color configuration.
  *
  *
@@ -285,7 +285,7 @@ extern void                 color_valueclr(int clr);
 
 extern int                  color_setscheme(const char *scheme);
 extern const char *         color_name(int ident, const char *def);
-extern int                  color_enum(const char *name, int length);
+extern int                  color_enum(const char *name, size_t length);
 
 extern int                  attribute_value(const char *name);
 extern int                  attribute_new(const char *name, const char *spec);

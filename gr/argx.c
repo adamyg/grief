@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_argx_c,"$Id: argx.c,v 1.7 2014/10/22 02:32:52 ayoung Exp $")
+__CIDENT_RCSID(gr_argx_c,"$Id: argx.c,v 1.8 2025/02/07 03:03:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: argx.c,v 1.7 2014/10/22 02:32:52 ayoung Exp $
+/* $Id: argx.c,v 1.8 2025/02/07 03:03:20 cvsuser Exp $
  * Argument vector suppport.
  *
  *
@@ -63,6 +63,10 @@ argx_create(const char **argv, char **argx, int *args)
 int
 argx_create_sep(const char **argv, int sep, char **argx, int *args)
 {
+    __CUNUSED(argv)
+    __CUNUSED(sep)
+    __CUNUSED(argx)
+    __CUNUSED(args)
     return -1;
 }
 
@@ -82,14 +86,21 @@ int
 argx_add(char **argx, int *args, const char *str)
 {
     assert((argx && args > 0) || (NULL == argx && 0 == args));
+    __CUNUSED(argx)
+    __CUNUSED(args)
+    __CUNUSED(str)
     return -1;
 }
 
 
 int
-argx_add_sep(char **argx, int *args, const char *str, int sep)
+argx_add_sep(char **argx, int *args, const char *str, char sep)
 {
     assert((argx && args > 0) || (NULL == argx && 0 == args));
+    __CUNUSED(argx)
+    __CUNUSED(args)
+    __CUNUSED(str)
+    __CUNUSED(sep)
     return -1;
 }
 
@@ -98,6 +109,10 @@ int
 argx_append(char **argx, int *args, const char *buf, int buflen)
 {
     assert((argx && args > 0) || (NULL == argx && 0 == args));
+    __CUNUSED(argx)
+    __CUNUSED(args)
+    __CUNUSED(buf)
+    __CUNUSED(buflen)
     return -1;
 }
 
@@ -106,6 +121,10 @@ int
 argx_insert(char **argx, int *args, const char *cursor, const char *str)
 {
     assert((argx && args > 0) || (NULL == argx && 0 == args));
+    __CUNUSED(argx)
+    __CUNUSED(args)
+    __CUNUSED(cursor)
+    __CUNUSED(str)
     return -1;
 }
 
@@ -114,6 +133,10 @@ int
 argx_replace(char **argx, int *args, const char *cursor, const char *str)
 {
     assert((argx && args > 0) || (NULL == argx && 0 == args));
+    __CUNUSED(argx)
+    __CUNUSED(args)
+    __CUNUSED(cursor)
+    __CUNUSED(str)
     return 0;
 }
 
@@ -147,6 +170,7 @@ argx_remove(char **argx, int *args, const char *cursor)
             }
         }
     }
+    return 0;
 }
 
 
@@ -199,7 +223,7 @@ argx_count(const char *argx, int args)
 int
 argx_dump(const char *argx, int args)
 {
-    int idx = 0;
+    unsigned idx = 0;
 
     if (args > 0) {
         const char *cursor = argx, *end = cursor + args;
@@ -207,7 +231,7 @@ argx_dump(const char *argx, int args)
         while (cursor < end) {
             const size_t len = strlen(cursor) + 1;
 
-            printf("%4u] <%s> (%d)\n", idx, cursor, len);
+            printf("%4u] <%s> (%u)\n", idx, cursor, (unsigned)len);
             cursor += len + 1;
             ++idx;
         }
@@ -219,12 +243,16 @@ argx_dump(const char *argx, int args)
 int
 argx_extract(const char *argx, const int args, char **argv, int argc)
 {
+    __CUNUSED(argc)
+    __CUNUSED(argv)
+    __CUNUSED(args)
+    __CUNUSED(argx)
     return -1;
 }
 
 
 char *
-argx_stringify(char *argx, int args, int sep)
+argx_stringify(char *argx, int args, char sep)
 {
     assert((argx && args > 0) || (NULL == argx && 0 == args));
     assert(sep);

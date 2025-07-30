@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_errno_c,"$Id: w32_errno.c,v 1.26 2024/03/31 15:57:25 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_errno_c,"$Id: w32_errno.c,v 1.28 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 errno mapping support
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -503,8 +503,8 @@ w32_errno_set(void)
 LIBW32_API const char *
 w32_strerror(int errnum)
 {
+    static char errbuffer[32];                  // TODO/TLS
     const char *err = NULL;
-    char errbuffer[32];
 
 #undef strerror
     if (errnum >= 0 && errnum < _sys_nerr) {

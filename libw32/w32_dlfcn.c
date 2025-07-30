@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_dlfcn_c,"$Id: w32_dlfcn.c,v 1.17 2024/03/31 15:57:25 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_dlfcn_c,"$Id: w32_dlfcn.c,v 1.19 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -7,7 +7,7 @@ __CIDENT_RCSID(gr_w32_dlfcn_c,"$Id: w32_dlfcn.c,v 1.17 2024/03/31 15:57:25 cvsus
  *
  *  dlopen, dlsym, dlclose and dlerror
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -215,15 +215,17 @@ LIBW32_API void *
 dlopen(const char *file, int mode)
 {
 #if defined(UTF8FILENAMES)
-    if (file && w32_utf8filenames_state()) {
-        wchar_t *wfile = NULL;
-        void *ret = NULL;
+    if (w32_utf8filenames_state()) {
+        if (file) {
+            wchar_t *wfile = NULL;
+            void *ret = NULL;
 
-        if (NULL != (wfile = w32_utf2wca(file, NULL))) {
-            ret = dlopenW(wfile, mode);
-            free((void *)wfile);
+            if (NULL != (wfile = w32_utf2wca(file, NULL))) {
+                ret = dlopenW(wfile, mode);
+                free((void*)wfile);
+            }
+            return ret;
         }
-        return ret;
     }
 #endif  //UTF8FILENAMES
 
@@ -247,11 +249,11 @@ dlopenA(const char *file, int mode)
         ++x_dlopen;
     }
 
-    if (NULL == file) {				// global handle
+    if (NULL == file) {                         // global handle
         if (! (hm = GetModuleHandle(NULL))) {
             dlerror_lastA("global handle");
         }
-    } else {					// module specific
+    } else {                                    // module specific
         HARD_ERRORS
         const char *cursor;
         char t_file[MAX_PATH];
@@ -315,12 +317,12 @@ dlopenW(const wchar_t *file, int mode)
         ++x_dlopen;
     }
 
-    if (NULL == file) {				// global handle
+    if (NULL == file) {                         // global handle
         if (! (hm = GetModuleHandle(NULL))) {
             dlerror_lastA("global handle");
         }
 
-    } else {					// module specific
+    } else {                                    // module specific
         HARD_ERRORS
         const wchar_t *cursor;
         wchar_t t_file[MAX_PATH*2];
@@ -575,7 +577,7 @@ mod_pushW(HMODULE handle, const wchar_t *file)
     char *t_file = NULL;
 
     if (file && NULL != (t_file = w32_wc2utfa(file, NULL))) {
-        lib = mod_pushA(handle, t_file); 
+        lib = mod_pushA(handle, t_file);
         free(t_file);
     }
     return lib;
@@ -602,7 +604,7 @@ dlerror_lastA(const char *file)
     if (file && *file) {
         int len;
 
-        len = _snprintf(x_dlerror, sizeof(x_dlerror), "%s : ", file);
+        len = _snprintf(x_dlerror, sizeof(x_dlerror)-1, "%s : ", file);
         FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, 0, GetLastError(), 0,
             x_dlerror, sizeof(x_dlerror) - len, NULL);
         x_dlerror[sizeof(x_dlerror)-1] = 0;
@@ -636,3 +638,4 @@ dlerror_lastW(const wchar_t *file)
 }
 
 /*end*/
+

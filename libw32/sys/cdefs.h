@@ -1,14 +1,14 @@
 #ifndef LIBW32_SYS_CDEFS_H_INCLUDED
 #define LIBW32_SYS_CDEFS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_cdefs_h,"$Id: cdefs.h,v 1.20 2024/03/31 15:57:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_cdefs_h,"$Id: cdefs.h,v 1.22 2025/06/28 11:07:21 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*-
  *
  * win32 declaration helpers
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -52,6 +52,7 @@ __CPRAGMA_ONCE
         #else
             #define LIBW32_API __declspec(dllexport)
         #endif
+        #define LIBW32_VAR extern
     #else
         #ifdef __GNUC__
             #define LIBW32_API __attribute__((dllimport)) extern
@@ -60,6 +61,7 @@ __CPRAGMA_ONCE
         #else
             #define LIBW32_API __declspec(dllimport)
         #endif
+        #define LIBW32_VAR LIBW32_API
     #endif
 
 #else   /*static*/
@@ -76,8 +78,6 @@ __CPRAGMA_ONCE
 #ifndef LIBW32_API
 #define LIBW32_API
 #define LIBW32_VAR extern
-#else
-#define LIBW32_VAR LIBW32_API
 #endif
 
 #endif //!LIBW32_API

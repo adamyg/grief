@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_unlink_c,"$Id: w32_unlink.c,v 1.15 2024/03/31 15:57:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_unlink_c,"$Id: w32_unlink.c,v 1.17 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 unlink() system call.
  *
- * Copyright (c) 2007, 2012 - 2024 Adam Young.
+ * Copyright (c) 2007, 2012 - 2025 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -36,7 +36,14 @@ __CIDENT_RCSID(gr_w32_unlink_c,"$Id: w32_unlink.c,v 1.15 2024/03/31 15:57:28 cvs
  */
 
 #include "win32_internal.h"
+#include "win32_io.h"
+
 #include <unistd.h>
+
+static int W32UnlinkA(const char *path);
+static int W32UnlinkW(const wchar_t *path);
+static int W32UnlinkReturn(DWORD rc);
+
 
 /*
 //  NAME
@@ -129,23 +136,20 @@ __CIDENT_RCSID(gr_w32_unlink_c,"$Id: w32_unlink.c,v 1.15 2024/03/31 15:57:28 cvs
 //          The entry to be unlinked is the last directory entry to a pure procedure
 //          (shared text) file that is being executed.
 */
+
 int
 w32_unlink(const char *path)
 {
 #if defined(UTF8FILENAMES)
     if (w32_utf8filenames_state()) {
-        wchar_t wpath[WIN32_PATH_MAX];
+        if (path) {
+            wchar_t wpath[WIN32_PATH_MAX];
 
-        if (NULL == path) {
-            errno = EFAULT;
+            if (w32_utf2wc(path, wpath, _countof(wpath)) > 0) {
+                return w32_unlinkW(wpath);
+            }
             return -1;
         }
-
-        if (w32_utf2wc(path, wpath, _countof(wpath)) > 0) {
-            return w32_unlinkW(wpath);
-        }
-
-        return -1;
     }
 #endif  //UTF8FILENAMES
 
@@ -158,59 +162,20 @@ w32_unlinkA(const char *path)
 {
     int ret = -1;                               // success=0, otherwise=-1
 
-    if (!path) {
+    if (NULL == path) {
         errno = EFAULT;
 
     } else if (!*path) {
         errno = ENOENT;
 
     } else {
-        DWORD attrs, rc = 0;                    // completion code
+        if ((ret = W32UnlinkA(path)) == -1) {
+            if (ENOTDIR == errno) {             // component error, expand embedded shortcut
+                char symbuf[WIN32_PATH_MAX];
 
-#ifndef ERROR_DIRECTORY_NOT_SUPPORTED
-#define ERROR_DIRECTORY_NOT_SUPPORTED 336L      // An operation is not supported on a directory.
-#endif
-
-        if (INVALID_FILE_ATTRIBUTES /*0xffffffff*/
-                    == (attrs = GetFileAttributesA(path)) ) {
-            rc = GetLastError();
-        } else {
-            if (FILE_ATTRIBUTE_DIRECTORY & attrs) {
-                if (FILE_ATTRIBUTE_REPARSE_POINT & attrs) {
-                    if (! RemoveDirectoryA(path)) {
-                        rc = GetLastError();
-                    }
-                } else {
-                    rc = ERROR_DIRECTORY_NOT_SUPPORTED;
+                if (w32_expandlinkA(path, symbuf, _countof(symbuf), SHORTCUT_COMPONENT)) {
+                    ret = W32UnlinkA(symbuf);
                 }
-            } else {
-                if (! DeleteFileA(path) &&
-                        ERROR_ACCESS_DENIED == (rc = GetLastError())) {
-                    (void) WIN32_CHMOD(path, S_IWRITE);
-                    rc = (DeleteFileA(path) ? 0 : GetLastError());
-                }
-            }
-        }
-
-        if (0 == rc) {
-            ret = 0;                            // success
-        } else {
-            switch (rc) {
-            case ERROR_ACCESS_DENIED:
-            case ERROR_SHARING_VIOLATION:
-            case ERROR_PRIVILEGE_NOT_HELD:
-                errno = EACCES;  break;
-            case ERROR_FILE_NOT_FOUND:
-                errno = ENOENT;  break;
-            case ERROR_PATH_NOT_FOUND:
-                errno = ENOTDIR; break;
-            case ERROR_DIRECTORY_NOT_SUPPORTED:
-                errno = EISDIR;  break;
-            case ERROR_NOT_ENOUGH_MEMORY:
-                errno = ENOMEM;  break;
-            default:
-                errno = w32_errno_cnv(rc);
-                break;
             }
         }
     }
@@ -223,63 +188,132 @@ w32_unlinkW(const wchar_t *path)
 {
     int ret = -1;                               // success=0, otherwise=-1
 
-    if (!path) {
+    if (NULL == path) {
         errno = EFAULT;
 
     } else if (!*path) {
         errno = ENOENT;
 
     } else {
-        DWORD attrs, rc = 0;                    // completion code
+        if ((ret = W32UnlinkW(path)) == -1) {
+            if (ENOTDIR == errno) {             // component error, expand embedded shortcut
+                wchar_t symbuf[WIN32_PATH_MAX];
+
+                if (w32_expandlinkW(path, symbuf, _countof(symbuf), SHORTCUT_COMPONENT)) {
+                    ret = W32UnlinkW(symbuf);
+                }
+            }
+        }
+    }
+    return ret;
+}
+
+
+static int
+W32UnlinkA(const char *path)
+{
+    const char *expath;
+    DWORD attrs, rc = 0;                        // completion code
 
 #ifndef ERROR_DIRECTORY_NOT_SUPPORTED
 #define ERROR_DIRECTORY_NOT_SUPPORTED 336L      // An operation is not supported on a directory.
 #endif
 
-        if (INVALID_FILE_ATTRIBUTES /*0xffffffff*/
-                    == (attrs = GetFileAttributesW(path)) ) {
-            rc = GetLastError();
-        } else {
-            if (FILE_ATTRIBUTE_DIRECTORY & attrs) {
-                if (FILE_ATTRIBUTE_REPARSE_POINT & attrs) {
-                    if (! RemoveDirectoryW(path)) {
-                        rc = GetLastError();
-                    }
-                } else {
-                    rc = ERROR_DIRECTORY_NOT_SUPPORTED;
+    if (NULL != (expath = w32_extendedpathA(path))) {
+        path = expath;                          // extended abs-path
+    }
+
+    if (INVALID_FILE_ATTRIBUTES /*0xffffffff*/
+                == (attrs = GetFileAttributesA(path)) ) {
+        rc = GetLastError();
+    } else {
+        if (FILE_ATTRIBUTE_DIRECTORY & attrs) {
+            if (FILE_ATTRIBUTE_REPARSE_POINT & attrs) {
+                if (! RemoveDirectoryA(path)) {
+                    rc = GetLastError();
                 }
             } else {
-                if (! DeleteFileW(path) &&
-                        ERROR_ACCESS_DENIED == (rc = GetLastError())) {
-                    (void) WIN32_WCHMOD(path, S_IWRITE);
-                    rc = (DeleteFileW(path) ? 0 : GetLastError());
-                }
+                rc = ERROR_DIRECTORY_NOT_SUPPORTED;
             }
-        }
-
-        if (0 == rc) {
-            ret = 0;                            // success
         } else {
-            switch (rc) {
-            case ERROR_ACCESS_DENIED:
-            case ERROR_SHARING_VIOLATION:
-            case ERROR_PRIVILEGE_NOT_HELD:
-                errno = EACCES;  break;
-            case ERROR_FILE_NOT_FOUND:
-                errno = ENOENT;  break;
-            case ERROR_PATH_NOT_FOUND:
-                errno = ENOTDIR; break;
-            case ERROR_DIRECTORY_NOT_SUPPORTED:
-                errno = EISDIR;  break;
-            case ERROR_NOT_ENOUGH_MEMORY:
-                errno = ENOMEM;  break;
-            default:
-                errno = w32_errno_cnv(rc);
-                break;
+            if (! DeleteFileA(path) &&
+                    ERROR_ACCESS_DENIED == (rc = GetLastError())) {
+                (void) WIN32_CHMOD(path, S_IWRITE);
+                rc = (DeleteFileA(path) ? 0 : GetLastError());
             }
         }
     }
-    return ret;
+
+    free((void*)expath);
+
+    return W32UnlinkReturn(rc);
+}
+
+
+static int
+W32UnlinkW(const wchar_t *path)
+{
+    const wchar_t *expath;
+    DWORD attrs, rc = 0;                        // completion code
+
+#ifndef ERROR_DIRECTORY_NOT_SUPPORTED
+#define ERROR_DIRECTORY_NOT_SUPPORTED 336L      // An operation is not supported on a directory.
+#endif
+
+    if (NULL != (expath = w32_extendedpathW(path))) {
+        path = expath;                          // extended abs-path
+    }
+
+    if (INVALID_FILE_ATTRIBUTES /*0xffffffff*/
+                == (attrs = GetFileAttributesW(path)) ) {
+        rc = GetLastError();
+    } else {
+        if (FILE_ATTRIBUTE_DIRECTORY & attrs) {
+            if (FILE_ATTRIBUTE_REPARSE_POINT & attrs) {
+                if (! RemoveDirectoryW(path)) {
+                    rc = GetLastError();
+                }
+            } else {
+                rc = ERROR_DIRECTORY_NOT_SUPPORTED;
+            }
+        } else {
+            if (! DeleteFileW(path) &&
+                    ERROR_ACCESS_DENIED == (rc = GetLastError())) {
+                (void) WIN32_WCHMOD(path, S_IWRITE);
+                rc = (DeleteFileW(path) ? 0 : GetLastError());
+            }
+        }
+    }
+
+    free((void*)expath);
+
+    return W32UnlinkReturn(rc);
+}
+
+
+static int
+W32UnlinkReturn(DWORD rc)
+{
+    if (0 == rc) 
+        return 0;                               // success
+    switch (rc) {
+    case ERROR_ACCESS_DENIED:
+    case ERROR_SHARING_VIOLATION:
+    case ERROR_PRIVILEGE_NOT_HELD:
+        errno = EACCES;  break;
+    case ERROR_FILE_NOT_FOUND:
+        errno = ENOENT;  break;
+    case ERROR_PATH_NOT_FOUND:
+        errno = ENOTDIR; break;
+    case ERROR_DIRECTORY_NOT_SUPPORTED:
+        errno = EISDIR;  break;
+    case ERROR_NOT_ENOUGH_MEMORY:
+        errno = ENOMEM;  break;
+    default:
+        errno = w32_errno_cnv(rc);
+        break;
+    }
+    return -1;
 }
 
 /*end*/

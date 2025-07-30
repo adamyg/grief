@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_flock_c,"$Id: w32_flock.c,v 1.4 2024/03/31 15:57:26 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_flock_c,"$Id: w32_flock.c,v 1.6 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 flockc() system calls
  *
- * Copyright (c) 2020 - 2024, Adam Young.
+ * Copyright (c) 2020 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -41,6 +41,8 @@ __CIDENT_RCSID(gr_w32_flock_c,"$Id: w32_flock.c,v 1.4 2024/03/31 15:57:26 cvsuse
 #endif
 
 #include "win32_internal.h"
+#include "win32_misc.h"
+
 #include <sys/file.h>
 #include <unistd.h>
 
@@ -94,17 +96,13 @@ __CIDENT_RCSID(gr_w32_flock_c,"$Id: w32_flock.c,v 1.4 2024/03/31 15:57:26 cvsuse
 */
 
 LIBW32_API int
-w32_flock(int fd, int operation)
+w32_flock(int fildes, int operation)
 {
     HANDLE handle = 0;
     int ret = -1;
 
-    if (fd < 0) {
-        errno = EBADF;
-
-    } else if (fd >= WIN32_FILDES_MAX ||
-            (handle = (HANDLE) _get_osfhandle(fd)) == INVALID_HANDLE_VALUE) {
-        errno = EBADF;
+    if ((handle = w32_osfhandle(fildes)) == INVALID_HANDLE_VALUE) {
+        errno = EBADF;                          // socket or invalid file-descriptor
 
     } else {
         DWORD szLower = 0, szUpper = 0;

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_float_c,"$Id: m_float.c,v 1.29 2024/12/06 15:46:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_float_c,"$Id: m_float.c,v 1.31 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_float.c,v 1.29 2024/12/06 15:46:06 cvsuser Exp $
+/* $Id: m_float.c,v 1.31 2025/02/07 03:03:21 cvsuser Exp $
  * Floating point primitives.
  *
  *
@@ -107,6 +107,9 @@ __CIDENT_RCSID(gr_m_float_c,"$Id: m_float.c,v 1.29 2024/12/06 15:46:06 cvsuser E
         system_errno(ret);
 #endif
 #if defined(_MSC_VER)
+#if (_MSC_VER >= 1900) // analysis mode
+#pragma warning(disable:6320) // : Exception - filter expression is the constant EXCEPTION_EXECUTE_HANDLER.
+#endif
 #define ___XEXEC(__y)       __y
 #define __FEXEC(__x) \
         __try { \
@@ -136,9 +139,9 @@ __CIDENT_RCSID(gr_m_float_c,"$Id: m_float.c,v 1.29 2024/12/06 15:46:06 cvsuser E
 #endif
 
 #if defined(__WATCOMC__)
-unsigned _WCNEAR _chipbug = 0;			/* suppress Pentuin div checking */
+unsigned _WCNEAR _chipbug = 0;                  /* suppress div checking */
 #endif
-      
+
 #define arg_float1          margv[1].l_float
 #define arg_float2          margv[2].l_float
 #define arg_float3          margv[3].l_float
@@ -204,7 +207,7 @@ matherr(struct exception *exc)
  *<<GRIEF>>
     Macro: isnan - Test for a NaN
 
-        int 
+        int
         isnan(float val)
 
     Macro Description:
@@ -249,7 +252,7 @@ do_isnan(void)                  /* int (float val) */
  *<<GRIEF>>
     Macro: isinf - Test for infinity
 
-        int 
+        int
         isinf(float val)
 
     Macro Description:
@@ -296,7 +299,7 @@ do_isinf(void)                  /* int (float val) */
  *<<GRIEF>>
     Macro: isclose - Test for floating point equality
 
-        int 
+        int
         isclose(float v1, float v2, float ~rel_tot, float ~abs_tol)
 
     Macro Description:
@@ -307,9 +310,11 @@ do_isinf(void)                  /* int (float val) */
 
         v2 - Second value to compare against.
 
-        rel_tol - Optional value, used for relative tolerance.
+        rel_tol - Optional non-negative value, used for relative tolerance.
+                  Default value is 1e-09.
 
-        abs_tol - Optional value, used for the minimum absolute tolerance.
+        abs_tol - Optional non-negative value, used for the minimum absolute tolerance,
+                  for values near 0. Default value is 0.0.
 
     Macro Returns:
         The 'isclose()' primitive returns a non-zero value if v1 is close in value to v2,
@@ -318,7 +323,7 @@ do_isinf(void)                  /* int (float val) */
     Macro Portability:
         A Grief extension.
 
-        Result on error are system dependent; where supported 'errno' shall be set to a 
+        Result on error are system dependent; where supported 'errno' shall be set to a
         non-zero manifest constant describing the error.
 */
 
@@ -350,7 +355,7 @@ do_isclose(void)                /* int (float v1, float v2, float rel_tol = 1e09
     } else if (isinf(v1) || isinf(v2)) {        /* infinite never match */
         acc_assign_int(0);
 #elif defined(HAVE__ISINF)
-    } else if (_isinf(v1) || _isinf(v2)) {		/* infinite never match */
+    } else if (_isinf(v1) || _isinf(v2)) {      /* infinite never match */
         acc_assign_int(0);
 #endif
 
@@ -372,7 +377,7 @@ do_isclose(void)                /* int (float v1, float v2, float rel_tol = 1e09
  *<<GRIEF>>
     Macro: isfinite - Test for finite value.
 
-        int 
+        int
         isfinite(float val)
 
     Macro Description:
@@ -413,11 +418,11 @@ do_isfinite(void)               /* int (float val) */
  *<<GRIEF>>
     Macro: acos - Arc cosine
 
-        float 
+        float
         acos(float x)
 
     Macro Description:
-        The 'acos()' primitive shall compute the principal value of the arc cosine of the argument 'x'. 
+        The 'acos()' primitive shall compute the principal value of the arc cosine of the argument 'x'.
         The value of 'x' should be in the range [-1,1].
 
     Macro Returns:
@@ -450,7 +455,7 @@ do_acos(void)                   /* float (float val) */
  *<<GRIEF>>
     Macro: asin - Arc sine
 
-        float 
+        float
         asin(float x)
 
     Macro Description:
@@ -459,7 +464,7 @@ do_acos(void)                   /* float (float val) */
         be in the range [-1,1].
 
     Macro Returns:
-        Upon successful completion shall return the arc sine of 'x', 
+        Upon successful completion shall return the arc sine of 'x',
         in the range [-pi/2,pi/2] radians.
 
     Macro Portability:
@@ -490,7 +495,7 @@ do_asin(void)                   /* float (float x) */
  *<<GRIEF>>
     Macro: atan - Arctangent
 
-        float 
+        float
         atan(float x)
 
     Macro Description:
@@ -527,7 +532,7 @@ do_atan(void)                   /* float (float val) */
  *<<GRIEF>>
     Macro: atan2 - Arctangent division
 
-        float 
+        float
         atan2(float y, float x)
 
     Macro Description:
@@ -569,7 +574,7 @@ do_atan2(void)                  /* float (float y, float x) */
  *<<GRIEF>>
     Macro: ceil - Round up to integral value.
 
-        float 
+        float
         ceil(float x)
 
     Macro Description:
@@ -611,7 +616,7 @@ do_ceil(void)                   /* float (float x) */
  *<<GRIEF>>
     Macro: cos - Cosine
 
-        float 
+        float
         cos(float x)
 
     Macro Description:
@@ -656,7 +661,7 @@ do_cos(void)                    /* float (float val) */
  *<<GRIEF>>
     Macro: cosh - Hyperbolic cosine.
 
-        float 
+        float
         cosh(float x)
 
     Macro Description:
@@ -697,7 +702,7 @@ do_cosh(void)                   /* float (float val) */
  *<<GRIEF>>
     Macro: exp - Exponential function
 
-        float 
+        float
         exp(float x)
 
     Macro Description:
@@ -739,7 +744,7 @@ do_exp(void)                    /* float (float val) */
  *<<GRIEF>>
     Macro: fabs - Floating-point absolute value.
 
-        float 
+        float
         fabs(float x)
 
     Macro Description:
@@ -775,7 +780,7 @@ do_fabs(void)                   /* float (float val) */
  *<<GRIEF>>
     Macro: floor - Round down to integral value.
 
-        float 
+        float
         floor(float x)
 
     Macro Description:
@@ -816,7 +821,7 @@ do_floor(void)                  /* float (float val) */
  *<<GRIEF>>
     Macro: fmod - Floating-point remainder.
 
-        float 
+        float
         fmod(float x, float y)
 
     Macro Description:
@@ -863,7 +868,7 @@ do_fmod(void)                   /* float (float x, float y) */
  *<<GRIEF>>
     Macro: frexp - Extract mantissa and exponent
 
-        float 
+        float
         frexp(float num, int &exp)
 
     Macro Description:
@@ -913,7 +918,7 @@ do_frexp(void)                  /* float (float val, int &exp) */
  *<<GRIEF>>
     Macro: ldexp - Multiply by a power of two.
 
-        float 
+        float
         ldexp(float val, int exp)
 
     Macro Description:
@@ -957,7 +962,7 @@ do_ldexp(void)                  /* float (float val, int exp) */
  *<<GRIEF>>
     Macro: log - Natural logarithm.
 
-        float 
+        float
         log(float x)
 
     Macro Description:
@@ -1002,7 +1007,7 @@ do_log(void)                    /* float (float val) */
  *<<GRIEF>>
     Macro: log10 - Base 10 logarithm function.
 
-        float 
+        float
         log10(float val)
 
     Macro Description:
@@ -1047,7 +1052,7 @@ do_log10(void)                  /* float (float val) */
  *<<GRIEF>>
     Macro: modf - Decompose a floating-point number.
 
-        float 
+        float
         modf(float num, float &mod)
 
     Macro Description:
@@ -1100,7 +1105,7 @@ do_modf(void)                   /* float (float val, float &mod) */
  *<<GRIEF>>
     Macro: pow - Raise to power.
 
-        float 
+        float
         pow(float x, float y)
 
     Macro Description:
@@ -1145,7 +1150,7 @@ do_pow(void)                    /* float (float x, float y) */
  *<<GRIEF>>
     Macro: sin - Sine function.
 
-        float 
+        float
         sin(float val)
 
     Macro Description:
@@ -1183,7 +1188,7 @@ do_sin(void)                    /* float (float val) */
  *<<GRIEF>>
     Macro: sinh - Hyperbolic sine function.
 
-        float 
+        float
         sinh(float val)
 
     Macro Description:
@@ -1222,7 +1227,7 @@ do_sinh(void)                   /* float (float val) */
  *<<GRIEF>>
     Macro: sqrt - Square root function.
 
-        float 
+        float
         sqrt(float val)
 
     Macro Description:
@@ -1261,7 +1266,7 @@ do_sqrt(void)                   /* float (float val) */
  *<<GRIEF>>
     Macro: tan - Tangent function
 
-        float 
+        float
         tan(float val)
 
     Macro Description:
@@ -1299,7 +1304,7 @@ do_tan(void)                    /* float (float val) */
  *<<GRIEF>>
     Macro: tanh - Hyperbolic tangent function.
 
-        float 
+        float
         tanh(float val)
 
     Macro Description:

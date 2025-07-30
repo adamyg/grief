@@ -228,7 +228,7 @@ _findshlib(char *name, int *majorp, int *minorp)
 			continue;
 
 		while ((dp = readdir(dd)) != NULL) {
-			unsigned int	n;
+			unsigned int n = 0;
 
 #if defined(WIN32)
 			/*

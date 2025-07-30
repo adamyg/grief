@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*-
- * $Id: nasm.cr,v 1.11 2014/10/22 02:34:35 ayoung Exp $
+ * $Id: nasm.cr,v 1.12 2024/07/30 16:29:20 cvsuser Exp $
  * GNU assembler (gas) mode
  *
  *
@@ -25,7 +25,7 @@ main()
     syntax_token(SYNT_BRACKET,      "([{", ")]}");
     syntax_token(SYNT_OPERATOR,     "-%+/&*=<>|!~^");
     syntax_token(SYNT_DELIMITER,    ",;.?:");
-    syntax_token(SYNT_WORD,         "0-9a-zA-Z_");
+    syntax_token(SYNT_KEYWORD,      "a-zA-Z_", "0-9a-zA-Z_");
     syntax_token(SYNT_NUMERIC,      "-+0-9a-fA-F.xXL");
 
     /*

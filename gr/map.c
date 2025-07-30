@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_map_c,"$Id: map.c,v 1.36 2022/09/13 14:31:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_map_c,"$Id: map.c,v 1.37 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: map.c,v 1.36 2022/09/13 14:31:24 cvsuser Exp $
+/* $Id: map.c,v 1.37 2025/02/07 03:03:21 cvsuser Exp $
  * High-level character mapping functionality.
  *
  *
@@ -57,7 +57,7 @@ static int                  spacefill(LINE_t *lp, int ins, int del, int dot, int
  *      col - Current cursor position.
  *      cp - Buffer cursor.
  *      end - BUffer end reference.
- *      lengthp - Physical length of the character in bytes.
+ *      lenp - Physical length of the character in bytes.
  *      chp - Cooked character value, for example remapping of illegal character values.
  *      rawp - Raw character value.
  *
@@ -72,7 +72,8 @@ character_decode(int pos, const LINECHAR *cp, const LINECHAR *end, int *lenp, in
 {
     const BUFFER_t *bp = curbp;
     mchar_iconv_t *iconv = bp->b_iconv;
-    int32_t width, length = 1, ch, wraw;
+    int width, length = 1;
+    int ch, wraw;
     const LINECHAR *wcp;                        /* wide character cursor */
     const cmapchr_t *mc;
     int flags;
@@ -85,10 +86,10 @@ character_decode(int pos, const LINECHAR *cp, const LINECHAR *end, int *lenp, in
     }
 
     if ((wcp = iconv->ic_decode(iconv, cp, end, &ch, &wraw)) > cp) {
-        length = wcp - cp;
+        length = (int)(wcp - cp);
         if (ch > 0xff) {                        /* wide character, FIXME - iconv() specific?? */
             width = vtcharwidth(ch, Wcwidth(ch));
-            *lenp = length;
+            *lenp = (int)length;
             if (rawp) *rawp = wraw;
             *chp = ch;
             return width;
@@ -143,7 +144,7 @@ esccombined1:   while (escend < end) {          /* find escape-sequence */
                         goto esccombined1;      /* combine escape sequences */
                     }
                     width = 0;
-                    length = (escend - cp)+1;   /* escape length */
+                    length = (int)(escend - cp) + 1; /* escape length */
                     ch = 0x1b;
                 }
             } else {
@@ -164,7 +165,7 @@ esccombined2:   while (escend < end) {          /* find escape-sequence */
                     width = mc->mc_width;
                     ch = -0x1b;                 /* bad/unknown escape */
                 } else {
-                    length = wcp - cp;          /* escape length */
+                    length = (int)(wcp - cp);   /* escape length */
                     if ((wcp = iconv->ic_decode(iconv, escend, end, &t_ch, &wraw)) > escend) {
                         if (ch == t_ch) {
                             escend = wcp;
@@ -538,7 +539,7 @@ line_offset_fill(LINE_t *lp, const int line, const int col, int fill)
     }
 
     /*
-     *  If ansi escape mode position cursor *after* the escape.
+     *  If ANSI escape mode position cursor *after* the escape.
      *
      *  If UTF-8 consume any combined characters under current character.
      */
@@ -628,14 +629,14 @@ line_offset_fill(LINE_t *lp, const int line, const int col, int fill)
     curbp->b_vline      = line;
     curbp->b_vcol       = col;
     curbp->b_vchar[0]   = (cp >= end ? 0 : ch);
-    curbp->b_voffset    = cp - start;
+    curbp->b_voffset    = (int32_t)(cp - start);
     curbp->b_vcombined  = 0;
     curbp->b_vwidth     = width;
     curbp->b_vlength    = length;
 
     assert(cp >= start);
     assert(cp <= end);
-    offset = cp - start;
+    offset = (int)(cp - start);
 
     ED_ITRACE(("\tco: iterate2 (pos:%d, line:%d, col:%d, ch:%d/0x%x, width:%d, len:%d, virt:%d, cp:%p, start:%p, end:%p, off:%d)\n", \
         pos, line, col, ch, ch, width, length, vstatus, cp, start, end, offset))
@@ -1073,7 +1074,7 @@ line_tab_backfill(void)
              *  Next TAB stop hit ...
              */
             if (spaces > 1) {                   /* something to backfill */
-                const int dot = (cp - start) - spaces;
+                const int dot = (int)((cp - start) - spaces);
                 int edot = 0;
 
                 ED_TRACE2(("\t==> replacing(col:%d, ncol:%d, spaces:%d, dot:%d\n", \

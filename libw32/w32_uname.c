@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_uname_c,"$Id: w32_uname.c,v 1.23 2024/04/07 06:14:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_uname_c,"$Id: w32_uname.c,v 1.27 2025/07/24 08:29:46 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 uname() system calls
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -81,8 +81,8 @@ struct CurrentVersion {
 static BOOL IsWow64(void);
 static void RegCurrentVersion(struct CurrentVersion *cv);
 
-#if _UTSNAME_LENGTH <= 64
-#define ULENGTH (64 + 1)
+#if _UTSNAME_LENGTH < 64
+#define ULENGTH (64)
 #else
 #define ULENGTH _UTSNAME_LENGTH 
 #endif
@@ -328,7 +328,7 @@ uname(struct utsname *u)
                             if (oviex.wProductType == VER_NT_SERVER ||
                                         oviex.wProductType == VER_NT_DOMAIN_CONTROLLER) {
                                 if (oviex.wSuiteMask & VER_SUITE_DATACENTER) {
-                                    osname = "2000 Dataenter-Server";
+                                    osname = "2000 DataCenter-Server";
                                 } else if (oviex.wSuiteMask & VER_SUITE_ENTERPRISE) {
                                     osname = "2000 Advanced-Server";
                                 } else {
@@ -465,11 +465,11 @@ uname(struct utsname *u)
             RegCurrentVersion(&cv);
 
             if (cv.ProductName[0]) {
-                _snprintf(u_sysname, sizeof(u_sysname), "%s%s",
+                snprintf(u_sysname, sizeof(u_sysname), "%s%s",
                     cv.ProductName, cv.DisplayVersion);
             } else {
                 if (0 == memcmp(osname, "Win", 3)) osname += 3;
-                _snprintf(u_sysname, sizeof(u_sysname), "Win%s%s%s",
+                snprintf(u_sysname, sizeof(u_sysname), "Win%s%s%s",
                     osname, cv.DisplayVersion, (IsWow64() ? " (Wow64)" : ""));
             }
 
@@ -492,11 +492,18 @@ uname(struct utsname *u)
     if (u) {
         memset(u, 0, sizeof(*u));
 
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
+#endif
         strncpy(u->sysname, u_sysname, sizeof(u->sysname) - 1);
         u->nodename[0] = '\0';                  /* not available */
         strncpy(u->release, u_release, sizeof(u->release) - 1);
         strncpy(u->version, u_version, sizeof(u->version) - 1);
         strncpy(u->machine, u_machine, sizeof(u->machine) - 1);
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic pop
+#endif
     }
     return 0;
 }

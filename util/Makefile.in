@@ -1,9 +1,9 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.22 2024/09/02 13:40:21 cvsuser Exp $
+# $Id: Makefile.in,v 1.24 2025/01/13 15:10:21 cvsuser Exp $
 # GRIEF utilities makefile.
 #
 #
-# Copyright (c) 1998 - 2024, Adam Young.
+# Copyright (c) 1998 - 2025, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -122,6 +122,8 @@ else
 define Resource
 endef
 endif #build_os
+
+VPATH=		../gr
 
 GRTAGS=		$(D_BIN)/grtags$(E)
 GRTAGSOBJS=	$(D_OBJ)/grtags$(O)	\

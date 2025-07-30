@@ -1,13 +1,13 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.28 2024/04/17 15:57:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_edbt_win32_c,"$Id: edbt_win32.c,v 1.30 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edbt_win32.c,v 1.28 2024/04/17 15:57:13 cvsuser Exp $
+/* $Id: edbt_win32.c,v 1.30 2025/02/07 03:03:22 cvsuser Exp $
  * win32 (include cygwin) backtrace implementation.
  *
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -649,7 +649,7 @@ prt(char *buffer, const char *fmt, ...)
         }
     }
     va_end(ap);
-    return (cursor - buffer);
+    return (int)(cursor - buffer);
 }
 
 
@@ -723,7 +723,9 @@ __edbt_exceptionfilter(EXCEPTION_POINTERS *rec)
 {
     static int edbt_nesting = 0;                // guard recursive entries
     const EXCEPTION_RECORD *ex = rec->ExceptionRecord;
+#if !defined(_WIN64)
     const CONTEXT *context = rec->ContextRecord;
+#endif
     const int fd = fileno(stderr);
     char buf[256];
     int len = 0;
@@ -808,12 +810,17 @@ __edbt_exceptionfilter(EXCEPTION_POINTERS *rec)
 
     case EXCEPTION_FLT_STACK_CHECK:
         // The stack overflowed or underflowed as the result of a floating-point operation.
+#if defined(_WIN64)
+        len += prt(buf+len, "The instruction at %p caused a stack floating point exception.\n",
+                    ex->ExceptionAddress);
+#else
 #if defined(SW_C1)
         len += prt(buf+len, "The instruction at %p caused a stack %s floating point exception.\n",
                     ex->ExceptionAddress, ((context->FloatSave.StatusWord & SW_C1) ? "overflow": " underflow"));
 #else
         len += prt(buf+len, "The instruction at %p caused a stack %u floating point exception.\n",
                     ex->ExceptionAddress, (unsigned)context->FloatSave.StatusWord);
+#endif
 #endif
         break;
 

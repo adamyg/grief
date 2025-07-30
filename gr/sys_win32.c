@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.82 2024/10/02 16:24:38 cvsuser Exp $")
+__CIDENT_RCSID(gr_sys_win32_c,"$Id: sys_win32.c,v 1.85 2025/06/30 10:17:08 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sys_win32.c,v 1.82 2024/10/02 16:24:38 cvsuser Exp $
+/* $Id: sys_win32.c,v 1.85 2025/06/30 10:17:08 cvsuser Exp $
  * WIN32 system support.
  *
  *
@@ -197,7 +197,7 @@ CtrlHandler(DWORD fdwCtrlType)
 {
     switch (fdwCtrlType) {
     case CTRL_CLOSE_EVENT:
-        Beep(600, 200); //TODO: KEY_SHUTDOWN/tigger
+        Beep(600, 200); //TODO: KEY_SHUTDOWN/trigger
         if (buf_anycb() == TRUE) {
             return FALSE;
         }
@@ -469,7 +469,7 @@ MouseProcess(const MOUSE_EVENT_RECORD *mer)
 //
 //      Alt+Keycodes are only reported within the 'UnicodeChar' value of up event on a "ALT" key
 //      post the valid entry of one-or-more hex characters. During KeyCode entry the API unfortunately
-//      does not publiciy indicate this state plus continues to return the associated virtual keys,
+//      does not publicly indicate this state plus continues to return the associated virtual keys,
 //      including the leading 'keypad-plus' and any associated key-code elements, wherefore we need
 //      to filter.  Furthermore, if during the key-code entry an invalid non-hex key combination is
 //      given, the key-code is invalidated and UnicodeChar=0 is returned on the ALT release.
@@ -478,7 +478,7 @@ MouseProcess(const MOUSE_EVENT_RECORD *mer)
 //    o To enable requires the registry REG_SZ value "EnableHexNumpad" under
 //       "HKEY_Current_User/Control Panel/Input Method" to be "1".
 //
-//    o Hex-value overflow goes unreported, limiting input to a 16-bit unicode result.
+//    o Hex-value overflow goes unreported, limiting input to a 16-bit Unicode result.
 //
 
 #pragma comment(lib, "Imm32.lib")
@@ -671,7 +671,7 @@ AltGrEvent(const KEY_EVENT_RECORD* key)
  *      On success (0), unless a timeout (-1).
  */
 int
-sys_getevent(struct IOEvent *evt, int tmo)
+sys_getevent(struct IOEvent *evt, accint_t tmo)
 {
     unsigned checks = 1;
     HANDLE hKbd = GetStdHandle(STD_INPUT_HANDLE);
@@ -682,12 +682,15 @@ sys_getevent(struct IOEvent *evt, int tmo)
 
     for (;;) {
 
-        if ((tmticks = tmo) == 0) {
+        if ((tmticks = (DWORD)tmo) == 0) {
             tmticks = INFINITE;                 /* block forever */
         } else if (tmo < 0) {
             tmticks = 0;                        /* no time-out */
         }
 
+#if defined(_MSC_VER)
+#pragma warning(suppress:28159)
+#endif
         ticks = GetTickCount();                 /* ticks (ms) as start */
         rc = WaitForSingleObject(hKbd, tmticks);
         ticks = DiffTicks(ticks);               /* ticks (ms) as end */
@@ -764,8 +767,10 @@ sys_getevent(struct IOEvent *evt, int tmo)
                 break;
 
             case FOCUS_EVENT:
-                VioSetFocus(k.Event.FocusEvent.bSetFocus);
-                resize = Resize(2);
+                if (tty_open) {
+                    VioSetFocus(k.Event.FocusEvent.bSetFocus);
+                    resize = Resize(2);
+                }
                 break;
 
             case WINDOW_BUFFER_SIZE_EVENT:

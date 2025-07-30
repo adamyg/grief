@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_itimer_c,"$Id: w32_itimer.c,v 1.8 2024/03/31 15:57:26 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_itimer_c,"$Id: w32_itimer.c,v 1.10 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 itimer system calls -- INCOMPLETE, signal interface required.
  *
- * Copyright (c) 2018 - 2024, Adam Young.
+ * Copyright (c) 2018 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -198,7 +198,7 @@ setitimer(int which, const struct itimerval *value, struct itimerval *ovalue)
             //possible initialisation race; rare if never.
 #if defined(USE_THREAD)
         if (NULL != (itimer.handle = CreateEvent(NULL, TRUE, FALSE, NULL))) {
-            if (INVALID_HANDLE_VALUE == (itimer.task = CreateThread(NULL, 0, timer_thread, NULL, 0, NULL))) {
+            if (NULL == (itimer.task = CreateThread(NULL, 0, timer_thread, NULL, 0, NULL))) {
                 CloseHandle(itimer.handle);
                 itimer.handle = NULL;
             }

@@ -1,5 +1,5 @@
 /* -*- indent-width: 4; -*- */
-/* $Id: about.cr,v 1.15 2024/08/04 10:07:57 cvsuser Exp $
+/* $Id: about.cr,v 1.16 2025/07/02 19:12:04 cvsuser Exp $
  * About box.
  *
  *
@@ -17,37 +17,14 @@ static int              dialog;                 // dialog handle
 void
 main()
 {
-    list about_text = {
-            "",
-            "   Glorious Reconfigurable Interactive Editing Facility",
-            "",
-            "                __________  ________________",
-            "               / ____/ __ \\/  _/ ____/ ____/",
-            "              / / __/ /_/ // // __/ / /_",
-            "             / /_/ / _, _// // /___/ __/",
-            "             \\____/_/ |_/___/_____/_/",
-            "",
-            "         1000111 1110010 1101001 1100101 1100110",
-            "",
-            "Copyright (c) 1998 - 2024, Adam Young.",
-            "All Rights Reserved.",
-            "",
-            "Derived from crisp2.2, Paul Fox, 1991.",
-            "",
-            "Please help publish and sponsor " + APPNAME + " development !",
-            "",
-            APPNAME + " is open software: you can use, redistribute it",
-            "and/or modify it under the terms of the " + APPNAME + " License.",
-            "",
-            APPNAME + " is distributed in the hope that it will be useful,",
-            "but is PROVIDED \"AS IS\" AND WITHOUT ANY EXPRESS OR IMPLIED",
-            "WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES",
-            "OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.",
+    list about_extra = {
             "",
             "See the License for specific details; available via the command",
             "line options 'authors' and 'license'.",
             ""
             };
+    list about_text = grief_license();
+    about_text += about_extra;
 
     string machtype, compiled, extra1, extra2;
     int maj, min, rel, edit;

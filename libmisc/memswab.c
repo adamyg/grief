@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_memswab_c,"$Id: memswab.c,v 1.10 2024/04/17 15:57:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_memswab_c,"$Id: memswab.c,v 1.12 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: memswab.c,v 1.10 2024/04/17 15:57:13 cvsuser Exp $
+/* $Id: memswab.c,v 1.12 2025/02/07 03:03:22 cvsuser Exp $
  * Memory block swap
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -38,15 +38,15 @@ memswap(void *a, void *b, size_t size)
 #define SWAPINIT(type,a,b)      type tmp, *atmp = (type *)(a), *btmp = (type *)(b)
 #define SWAPDATA()              tmp = *atmp, *atmp++ = *btmp, *btmp++ = tmp
 
-    if (size > 4) {             /* aligned dwords */
+    if (size > 4) {             /* aligned dword's */
 #if defined(HAVE_UINTPTR_T)
         if (0 == (((uintptr_t)a|(uintptr_t)b) & 3)) {
 #else
         if (0 == (((uint32_t)a|(uint32_t)b) & 3)) {
 #endif
             SWAPINIT(uint32_t, a, b);
-            const int partial = size & (8 - 1);
-            unsigned loops4 = (size + 8 - 1) >> 3;
+            const size_t partial = size & (8 - 1);
+            size_t loops4 = (size + 8 - 1) >> 3;
 
             size -= partial << 3;
             switch (partial) {
@@ -69,8 +69,8 @@ memswap(void *a, void *b, size_t size)
 
     if (size) {                 /* trailing bytes */
         SWAPINIT(uint8_t, a, b);
-        const int partial = size & (4 - 1);
-        unsigned loops1 = (size + 4 - 1) >> 2;
+        const size_t partial = size & (4 - 1);
+        size_t loops1 = (size + 4 - 1) >> 2;
 
         switch (partial) {
         case 0:
@@ -86,4 +86,5 @@ memswap(void *a, void *b, size_t size)
 #undef  SWAPINIT
 #undef  SWAPDATA
 }
+
 /*end*/

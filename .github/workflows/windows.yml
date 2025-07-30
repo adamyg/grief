@@ -6,6 +6,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  APP_NAME: 'gr'
+  MAINTAINER: 'https://github.com/adamyg'
+  HOMEPAGE: 'https://github.com/adamyg/grief'
+  DESC: 'GriefEdit -- console editor.'
+
 jobs:
   build:
     name: ${{ matrix.config.name }}
@@ -15,82 +21,47 @@ jobs:
       matrix:
         config:
         - {
-           name: "Windows Latest MSVC",
+           name: "Windows Latest MSVCx86",
            os: windows-latest,
            toolchain: vc2022,
            toollabel: vs170,
-           package: win32-vs22
+           package: win32-vs22,
+           macros: macros
           }
         - {
-           name: "Windows Latest MinGW",
+           name: "Windows Latest MinGWx64",
            os: windows-latest,
            toolchain: mingw64,
            toollabel: mingw64,
-           package: win32-w64
+           package: win32-w64,
+           macros: macros.x64
           }
         - {
            name: "Windows Latest OWC",
            os: windows-latest,
            toolchain: owc20,
            toollabel: owc20,
-           package: win32-owc
+           package: win32-owc,
+           macros: macros
           }
-#      - {
-#          name: "Ubuntu Latest GCC",
-#          os: ubuntu-latest,
-#          toolchain: gcc,
-#          toollabel: gcc,
-#          package: ubuntu-gcc
-#         }
-#       - {
-#          name: "MacOS Latest GCC",
-#          os: macos-latest,
-#          toolchain: gcc,
-#          toollabel: gcc,
-#          package: macos-gcc
-#         }
 
     steps:
 
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Snapshot Source
-      if: startsWith(matrix.config.name, 'Ubuntu Latest')
-      shell: bash
-      run: |
-        mkdir .snapshot
-        tar  --exclude-vcs --exclude='./.snapshot' --exclude='./win32' --exclude='./contrib' --exclude='./support/*.bat' --exclude='./defunct' -cf .snapshot/source-snapshot.tar .
-        tar  --exclude-vcs -cf .snapshot/contrib-snapshot.tar ./contrib
-
-    - name: Source Snapshot Publish
-      if: startsWith(matrix.config.name, 'Ubuntu Latest')
-      uses: actions/upload-artifact@v4
-      with:
-        name: source-snapshot
-        path: .snapshot/source-snapshot.tar
-        compression-level: 9
-
-    - name: Contrib Snapshot Publish
-      if: startsWith(matrix.config.name, 'Ubuntu Latest')
-      uses: actions/upload-artifact@v4
-      with:
-        name: contrib-snapshot
-        path: .snapshot/contrib-snapshot.tar
-        compression-level: 9
-
     - name: Checkout submodules
       run: |
         git submodule update --init --recursive
 
-    - name: MSVC setup
+    - name: MSVCx86 setup
       uses: ilammy/msvc-dev-cmd@v1.13.0
-      if: startsWith(matrix.config.name, 'Windows Latest MSVC')
+      if: contains(matrix.config.name, 'MSVCx86')
       with:
         arch: x86
 
-    - name: MinGW64 setup
-      if: startsWith(matrix.config.name, 'Windows Latest MinGW')
+    - name: MinGWx64 setup
+      if: contains(matrix.config.name, 'MinGWx64')
       shell: cmd
       run: |
         c:\msys64\usr\bin\pacman --noconfirm -S base-devel
@@ -99,96 +70,82 @@ jobs:
 
     - name: OpenWatcom setup
       uses: open-watcom/setup-watcom@v0
-      if: startsWith(matrix.config.name, 'Windows Latest OWC')
+      if: contains(matrix.config.name, 'OWC')
       with:
         version: "2.0"
         location: "C:\\Watcom"
 
-    - name: Ubuntu, setup
-      if: startsWith(matrix.config.name, 'Ubuntu Latest')
-      shell: bash
+    - name: Windows, extra
+      shell: cmd
       run: |
-        sudo apt-get install -y libncurses-dev
-        sudo apt-get install -y libncursesw5-dev
-        sudo apt-get install -y libenchant-2-dev
-        sudo apt-get install -y libaspell-dev
-        sudo apt-get install -y libhunspell-dev
-        sudo apt-get install -y libenca-dev
-        sudo apt-get install -y libguess-dev
-        sudo apt-get install -y libexplain-dev
-        sudo apt-get install -y libarchive-dev
-
-    - name: MacOS, setup
-      if: startsWith(matrix.config.name, 'MacOS Latest')
-      shell: bash
-      run: |
-        brew install pkg-config
-        brew install ncurses
-        brew link ncurses
-        brew install enchant
-        brew install libspelling
-        brew install hunspell
-        brew install libarchive
-        brew install wget
+        @if NOT "${{ matrix.config.toolchain }}"=="mingw64" c:\msys64\usr\bin\pacman --noconfirm -S bison
+        c:\msys64\usr\bin\pacman --noconfirm -S zip
 
     - name: Windows, generate
-      if: startsWith(matrix.config.name, 'Windows Latest')
+      if: startsWith(matrix.config.name, 'Windows')
       shell: cmd
       run: |
         @if "${{ matrix.config.toolchain }}"=="mingw32" set PATH=c:\msys64\mingw32\bin;%PATH%
         @if "${{ matrix.config.toolchain }}"=="mingw64" set PATH=c:\msys64\mingw64\bin;%PATH%
-        @if "${{ matrix.config.toolchain }}"=="owc20"  call .\support\owc20setenv.bat C:\Watcom
-        @if NOT "${{ matrix.config.toolchain }}"=="mingw64" c:\msys64\usr\bin\pacman --noconfirm -S bison
+        @if "${{ matrix.config.toolchain }}"=="owc20"   call .\support\owc20setenv.bat C:\Watcom
+        @if "${{ matrix.config.toolchain }}"=="owc19"   call .\support\owc19setenv.bat C:\Watcom
         @set PERL=c:/Strawberry/perl/bin/perl
-        c:/Strawberry/perl/bin/perl makelib.pl --perlpath=c:/Strawberry/perl/bin --busybox=./win32/busybox --wget=./win32/wget --bison=c:/msys64/usr/bin/bison --flex=./bin.${{ matrix.config.toollabel }}/release/flex "${{ matrix.config.toolchain }}"
+        c:/Strawberry/perl/bin/perl makelib.pl --perlpath=c:/Strawberry/perl/bin ^
+                --busybox=./win32/busybox --wget=./win32/wget ^
+                --bison=c:/msys64/usr/bin/bison --flex=./bin.${{ matrix.config.toollabel }}/release/flex ^
+                        "${{ matrix.config.toolchain }}"
 
-    - name: Windows, compile
-      if: startsWith(matrix.config.name, 'Windows Latest')
+    - name: Windows, build
+      if: startsWith(matrix.config.name, 'Windows')
       shell: cmd
       run: |
         @if "${{ matrix.config.toolchain }}"=="mingw32" set PATH=c:\msys64\mingw32\bin;%PATH%
         @if "${{ matrix.config.toolchain }}"=="mingw64" set PATH=c:\msys64\mingw64\bin;%PATH%
-        @if "${{ matrix.config.toolchain }}"=="owc20"  call .\support\owc20setenv.bat C:\Watcom
+        @if "${{ matrix.config.toolchain }}"=="owc20"   call .\support\owc20setenv.bat C:\Watcom
+        @if "${{ matrix.config.toolchain }}"=="owc19"   call .\support\owc19setenv.bat C:\Watcom
         @set PERL=c:/Strawberry/perl/bin/perl
         .\win32\gmake-42 release contrib
         .\win32\gmake-42 release
 
-    - name: Ubuntu, generate
-      if: startsWith(matrix.config.name, 'Ubuntu Latest')
-      shell: bash
+    - name: Windows, unit-test
+      if: startsWith(matrix.config.name, 'Windows')
+      shell: cmd
       run: |
-        chmod +x configure
-        ./support/config_withncurses
-
-    - name: Ubuntu, compile
-      if: startsWith(matrix.config.name, 'Ubuntu Latest')
-      shell: bash
+        @if "${{ matrix.config.toolchain }}"=="mingw32" set PATH=c:\msys64\mingw32\bin;%PATH%
+        @if "${{ matrix.config.toolchain }}"=="mingw64" set PATH=c:\msys64\mingw64\bin;%PATH%
+        @if "${{ matrix.config.toolchain }}"=="owc20"   call .\support\owc20setenv.bat C:\Watcom
+        @if "${{ matrix.config.toolchain }}"=="owc19"   call .\support\owc19setenv.bat C:\Watcom
+        @set PERL=c:/Strawberry/perl/bin/perl
+        .\win32\gmake-42 release unittest
+             
+    - name: Windows, tarball
+      if: startsWith(matrix.config.name, 'Windows')
+      shell: cmd
       run: |
-        make release
+        tar -czvf pkg-${{ matrix.config.package }}-${{ github.run_number }}.tar.gz ^
+             bin.${{ matrix.config.toollabel }}/release/* ${{ matrix.config.macros }}/* help/* macsrc/*
 
-    - name: MacOS, generate
-      if: startsWith(matrix.config.name, 'MacOS Latest')
-      shell: bash
-      run: |
-        export CPATH=$(brew --prefix libarchive)/include:/usr/local/include:$CPATH
-        export CPPPATH=$(brew --prefix libarchive)/include:/usr/local/include:$CPATH
-        export LIBRARY_PATH=$(brew --prefix libarchive)/lib:/usr/local/lib:$LIBRARY_PATH
-        export LD_LIBRARY_PATH=$(brew --prefix libarchive)/lib:/usr/local/lib:$LD_LIBRARY_PATH
-        chmod +x configure
-        ./support/config_withncurses
-
-    - name: MacOS, compile
-      if: startsWith(matrix.config.name, 'MacOS Latest')
-      shell: bash
-      run: |
-        export CPATH=$(brew --prefix libarchive)/include:/usr/local/include:$CPATH
-        export CPPPATH=$(brew --prefix libarchive)/include:/usr/local/include:$CPATH
-        export LIBRARY_PATH=$(brew --prefix libarchive)/lib:/usr/local/lib:$LIBRARY_PATH
-        export LD_LIBRARY_PATH=$(brew --prefix libarchive)/lib:/usr/local/lib:$LD_LIBRARY_PATH
-        make release
-
-    - name: Package
-      uses: actions/upload-artifact@v4
+    - name: Windows, artifacts
+      if: startsWith(matrix.config.name, 'Windows')
+      uses: softprops/action-gh-release@v2
       with:
-        name: package-${{ matrix.config.package }}
-        path: ./bin.${{ matrix.config.toollabel }}/release/*
+        files: pkg-${{ matrix.config.package }}-${{ github.run_number }}.tar.gz
+        draft: true
+
+    - name: Windows, installer
+      if: startsWith(matrix.config.name, 'Windows')
+      shell: cmd
+      run: |
+        choco install innosetup --version=5.6.1 --force
+        @rem .\win32\gmake-42 release package
+        "%programfiles(x86)%\Inno Setup 5\iscc" ".\win32\gr-inno-setup.iss"
+
+    - name: Windows, release
+      if: startsWith(matrix.config.name, 'Windows')
+      uses: softprops/action-gh-release@v2
+      with:
+        files: ./win32/gr-*-setup.exe
+        draft: true
+
+#end
+

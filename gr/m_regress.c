@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_regress_c,"$Id: m_regress.c,v 1.15 2024/12/06 15:46:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_regress_c,"$Id: m_regress.c,v 1.16 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_regress.c,v 1.15 2024/12/06 15:46:06 cvsuser Exp $
+/* $Id: m_regress.c,v 1.16 2025/02/07 03:03:21 cvsuser Exp $
  * Regression test support macros.
  *
  *
@@ -79,7 +79,7 @@ do_regress_replacement(void)
         accfloat_t fvalue = 0;
 
         if (NULL != (svalue = get_xstr(argi))) {
-            acc_assign_str(svalue, get_strlen(argi));
+            acc_assign_nstr(svalue, get_strlen(argi));
 
         } else if (NULL != (lvalue = get_xlist(argi))) {
             acc_assign_list(lvalue, get_listlen(argi));
@@ -171,8 +171,15 @@ do_regress_op(void)
         break;
 
     case 9995: {    //null write
+#if defined(_MSC_VER) && (_MSC_VER >= 1900)
+#pragma warning(push)
+#pragma warning(disable:6011) // C6011: Dereferencing NULL pointer
+#endif
             int *iptr = NULL;
             *iptr = 0;
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
         }
         break;
 

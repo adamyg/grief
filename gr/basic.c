@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_basic_c,"$Id: basic.c,v 1.32 2024/09/03 14:08:33 cvsuser Exp $")
+__CIDENT_RCSID(gr_basic_c,"$Id: basic.c,v 1.33 2025/02/07 03:03:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: basic.c,v 1.32 2024/09/03 14:08:33 cvsuser Exp $
+/* $Id: basic.c,v 1.33 2025/02/07 03:03:20 cvsuser Exp $
  * Basic cursor movement.
  *
  *
@@ -426,7 +426,7 @@ do_page_down(void)              /* int ([int pages = 1]) */
         if (pages < 0) {                        /* half pages */
             mov_forwline(lines > 2 ? (lines / 2) : 1);
         } else if (pages) {
-            mov_forwline(pages * lines);
+            mov_forwline((int)(pages * lines));
         } else {
             mov_forwline(lines);
         }
@@ -479,7 +479,7 @@ do_page_up(void)                /* int ([int pages = 1]) */
         if (pages < 0) {                        /* half pages */
             mov_backline(lines > 2 ? (lines / 2) : 1);
         } else if (pages) {
-            mov_backline(pages * lines);
+            mov_backline((int)(pages * lines));
         } else {
             mov_backline(lines);
         }
@@ -584,7 +584,7 @@ do_left(void)                   /* int ([int columns = 1], [int wrap = TRUE) */
     const accint_t wrap = get_xinteger(2, TRUE);
 
     if (columns < 0) mov_forwchar((int)(columns * -1));
-    else mov_backchar((int) (columns >= 1 ? columns : 1), wrap);
+    else mov_backchar((int) (columns >= 1 ? columns : 1), (int)wrap);
 }
 
 
@@ -637,7 +637,7 @@ do_right(void)                  /* int ([int columns = 1], [int wrap = TRUE]) */
     const accint_t columns = get_xinteger(1, 0);
     const accint_t wrap = get_xinteger(2, TRUE);
 
-    if (columns < 0) mov_backchar((int) (columns * -1), wrap);
+    if (columns < 0) mov_backchar((int) (columns * -1), (int)wrap);
     else mov_forwchar((int)(columns >= 1 ? columns : 1));
 }
 

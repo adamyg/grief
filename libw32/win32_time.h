@@ -1,14 +1,14 @@
 #ifndef LIBW32_WIN32_TIME_H_INCLUDED
 #define LIBW32_WIN32_TIME_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_time_h,"$Id: win32_time.h,v 1.22 2024/03/31 15:57:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_time_h,"$Id: win32_time.h,v 1.25 2025/07/24 08:29:46 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 time functionality.
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -57,20 +57,33 @@ LIBW32_API unsigned int sleep(unsigned int);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations" /*useconds_t, POSIX.1-2008*/
 #endif
+LIBW32_API int          w32_usleep(useconds_t useconds);
+#if !defined(HAVE_USLEEP)
+#define HAVE_USLEEP 1
+#if !defined(__MINGW32__)
 LIBW32_API int          usleep(useconds_t useconds);
+#endif
+#endif
 #if defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR)
 #pragma GCC diagnostic pop
 #endif
 
 struct timespec;
+
+LIBW32_API int          w32_nanosleep(const struct timespec *rqtp, struct timespec *rmtp /*notused*/);
+#if !defined(HAVE_NANOSLEEP)
+#define HAVE_NANOSLEEP 1
+#if !defined(__MINGW32__)
 LIBW32_API int          nanosleep(const struct timespec *rqtp, struct timespec *rmtp /*notused*/);
+#endif
+#endif
 
 struct timeval;
 struct timezone;
 
 LIBW32_API int          w32_gettimeofday(struct timeval *tv, struct timezone *tz);
 #if !defined(HAVE_GETTIMEOFDAY)
-#define HAVE_GETTIMEOFDAY
+#define HAVE_GETTIMEOFDAY 1
 #if !defined(__MINGW32__)
 LIBW32_API int          gettimeofday(struct timeval *tv, struct timezone *tz);
 #endif
@@ -93,3 +106,4 @@ LIBW32_API char *       w32_strptime(const char *buf, const char *fmt, struct tm
 __END_DECLS
 
 #endif /*LIBW32_WIN32_TIME_H_INCLUDED*/
+

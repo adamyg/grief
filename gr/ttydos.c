@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttydos_c,"$Id: ttydos.c,v 1.17 2018/10/04 15:39:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttydos_c,"$Id: ttydos.c,v 1.18 2025/07/02 15:38:54 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttydos.c,v 1.17 2018/10/04 15:39:29 cvsuser Exp $
+/* $Id: ttydos.c,v 1.18 2025/07/02 15:38:54 cvsuser Exp $
  * TTY dos implementation.
  *
  *
@@ -222,10 +222,16 @@ VioGetMode(
  *      |     43    |     8x8       |     350      |
  *      +-----------+---------------+---------------
  *      (*) = default
+ * 
+ *  Returns:
+ *      0   -   NO_ERROR
+ *      355 -   ERROR_VIO_MODE
+ *      421 -   ERROR_VIO_INVALID_PARMS
+ *      430 -   ERROR_VIO_ILLEGAL_DURING_POPUP
+ *      436 -   ERROR_VIO_INVALID_HANDLE
  */
 int
-VioSetMode(
-    VIOMODEINFO *info, int page )
+VioSetMode(VIOMODEINFO *info, int page)
 {
     int vga, mode, obios, bios, font, lines;
     int i;
@@ -244,27 +250,35 @@ VioSetMode(
     }
 
     /* locate best match */
-    for (i = (int)(sizeof(viomodes)/sizeof(viomodes[0]))-1; i >= 0; i--)
-        if (vga == viomodes[i].vga &&
+    if (info) {
+        for (i = (int)(sizeof(viomodes) / sizeof(viomodes[0])) - 1; i >= 0; i--)
+            if (vga == viomodes[i].vga &&
                 (viomodes[i].cols == info->col ||
                     (info->col > 80 && viomodes[i].cols == 80)) &&
                 viomodes[i].rows <= info->row) {
-            mode = viomodes[i].mode;
-            bios = viomodes[i].bios;
-            font = viomodes[i].font;
-            lines = viomodes[i].lines;
-            break;
-        }
+                mode = viomodes[i].mode;
+                bios = viomodes[i].bios;
+                font = viomodes[i].font;
+                lines = viomodes[i].lines;
+                break;
+            }
+    }
 
     /* set new video mode */
     LinesSet(lines);                            /* set scan lines */
     obios = ModeGetRaw();
-    if ((obios == mode) || obios & 0x80)
+    if ((obios == mode) || obios & 0x80) {
         bios |= 0x80;                           /* dont clear bit */
+    }
     ModeSetRaw(bios);
     FontSet(font);                              /* set font */
     Config(mode);                               /* update configuration */
-    return (mode);
+
+    if (info) {
+        info->col = vio.cols;
+        info->row = vio.rows;
+    }
+    return 0;
 }
 
 

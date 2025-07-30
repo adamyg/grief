@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_getpwd_c,"$Id: getpwd.c,v 1.5 2024/09/21 09:05:16 cvsuser Exp $")
+__CIDENT_RCSID(gr_getpwd_c,"$Id: getpwd.c,v 1.6 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: getpwd.c,v 1.5 2024/09/21 09:05:16 cvsuser Exp $
+/* $Id: getpwd.c,v 1.6 2025/02/07 03:03:21 cvsuser Exp $
  * Pasword support.
  *
  *
@@ -258,7 +258,6 @@ sys_getpwnam(passwd_t *pwd, const char *user)
 {
     assert(pwd && user);
     if (NULL == pwd || NULL == user) return NULL;
-
     pwd->buffer = pwd->result = NULL;
     return NULL;
 }
@@ -270,6 +269,7 @@ sys_getpwuid(passwd_t *pwd, int uid)
     assert(pwd);
     if (NULL == pwd) return NULL;
     pwd->buffer = pwd->result = NULL;
+    __CUNUSED(uid)
     return NULL;
 }
 
@@ -373,6 +373,3 @@ main()
 #endif  //LOCAL_MAIN
 
 /*end*/
-
-
-

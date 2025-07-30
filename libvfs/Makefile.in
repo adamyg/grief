@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.15 2024/07/13 08:33:23 cvsuser Exp $
+# $Id: Makefile.in,v 1.17 2025/06/29 12:54:36 cvsuser Exp $
 # libvfs makefile.
 #
 #
-# Copyright (c) 1998 - 2024, Adam Young.
+# Copyright (c) 1998 - 2025, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -70,6 +70,9 @@ D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
 XFLAGS=
 CFLAGS=		@CFLAGS@
 CWARN=		@CWARN@ $(CWALL)
+ifeq (gcc,$(findstring gcc,$(CC)))
+CWARN+=		-Wno-stringop-truncation -Wno-unused-variable
+endif
 CDEBUG=		@CDEBUG@
 CRELEASE=	@CRELEASE@
 LDDEBUG=	@LDDEBUG@

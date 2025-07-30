@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_sockbase_c,"$Id: w32_sockbase.c,v 1.11 2024/03/31 15:57:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_sockbase_c,"$Id: w32_sockbase.c,v 1.13 2025/06/28 11:07:20 cvsuser Exp $")
 
 /*
  * win32 socket () system calls
  * Base functionality.
  *
- * Copyright (c) 2007, 2012 - 2024 Adam Young.
+ * Copyright (c) 2007, 2012 - 2025 Adam Young.
  *
  * This file is part of the GRIEF Editor.
  *
@@ -74,7 +74,7 @@ w32_sockinit(void)
         WORD wVersionRequested;
         WSADATA wsaData;
 
-        w32_sockfd_init();                      /* shadow file-descriptors */
+        w32_fdsetinit();                        /* shadow file-descriptors */
         wVersionRequested = MAKEWORD(2, 2);     /* winsock2 */
         if (WSAStartup(wVersionRequested, &wsaData) != 0) {
             w32_sockerror();

@@ -1,7 +1,7 @@
 #ifndef LIBTRE_CONFIG_H_INCLUDED
 #define LIBTRE_CONFIG_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: config.h,v 1.7 2024/07/20 17:41:35 cvsuser Exp $
+/* $Id: config.h,v 1.8 2025/06/30 11:14:11 cvsuser Exp $
  * libtre config.h
  *
  *
@@ -12,8 +12,10 @@
 #include "../libw32/config.h"
 #include <malloc.h>
 
+#if !defined(inline)
 #if defined(_MSC_VER) || defined(__WATCOMC__)
 #define inline _inline
+#endif
 #endif
 
 #if defined(_MSC_VER)

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_wordimpl_inc,"$Id: wordimpl.h,v 1.4 2022/09/28 16:12:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_wordimpl_inc,"$Id: wordimpl.h,v 1.6 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: wordimpl.h,v 1.4 2022/09/28 16:12:50 cvsuser Exp $
+/* $Id: wordimpl.h,v 1.6 2025/02/07 03:03:22 cvsuser Exp $
  * Portable mappings to and from internal word and byte order.
  *
  *
@@ -51,7 +51,7 @@ union word_double_int32 {
 };
 
 WORD_DECL void
-LPUT16(LIST *lp, register const int16_t n)
+LPUT16(LIST *lp, register const uint16_t n)
 {
     register uint8_t *cp = (uint8_t *) lp;
 
@@ -60,7 +60,7 @@ LPUT16(LIST *lp, register const int16_t n)
 }
 
 
-WORD_DECL int16_t
+WORD_DECL uint16_t
 LGET16(register const LIST *lp)
 {
     return (((uint16_t)lp[1] << 8) |
@@ -183,7 +183,14 @@ LGET_PTR(register const LIST *lp)
 #else
 #error LGET_PTR: missing implementation
 #endif
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4305) // 'type cast' : truncation from 'xxx' to 'void *'
+#endif
     return ((void *)n);
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 }
 
 

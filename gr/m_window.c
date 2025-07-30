@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_window_c,"$Id: m_window.c,v 1.29 2024/12/06 15:46:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_window_c,"$Id: m_window.c,v 1.30 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_window.c,v 1.29 2024/12/06 15:46:06 cvsuser Exp $
+/* $Id: m_window.c,v 1.30 2025/02/07 03:03:21 cvsuser Exp $
  * Window primitives.
  *
  *
@@ -44,11 +44,11 @@ __CIDENT_RCSID(gr_m_window_c,"$Id: m_window.c,v 1.29 2024/12/06 15:46:06 cvsuser
 static int              window_build(int flag, const char *title);
 
 static int              flag_decode(const char *who, int mode, const char *spec, uint32_t *values);
-static const struct winflag *flag_lookup(const char *name, int length);
+static const struct winflag *flag_lookup(const char *name, size_t length);
 
 static const struct winflag {
     const char *        f_name;                 /* name/label */
-    int                 f_length;
+    size_t              f_length;
     uint32_t            f_value;                /* flag value */
 
 } winflagnames[] = {
@@ -1189,12 +1189,12 @@ flag_decode(const char *who, int mode, const char *spec, uint32_t *value)
 
 
 static const struct winflag *
-flag_lookup(const char *name, int length)
+flag_lookup(const char *name, size_t length)
 {
     if (NULL != (name = str_trim(name, &length)) && length > 0) {
         unsigned i;
 
-        trace_ilog("\t %*s\n", length, name);
+        trace_ilog("\t %*s\n", (int)length, name);
         for (i = 0; i < (sizeof(winflagnames)/sizeof(winflagnames[0])); ++i)
             if (length == winflagnames[i].f_length &&
                     0 == str_nicmp(winflagnames[i].f_name, name, length)) {

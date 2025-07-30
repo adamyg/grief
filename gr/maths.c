@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_math_c,"$Id: maths.c,v 1.36 2022/08/10 15:44:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_math_c,"$Id: maths.c,v 1.37 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: maths.c,v 1.36 2022/08/10 15:44:57 cvsuser Exp $
+/* $Id: maths.c,v 1.37 2025/02/07 03:03:21 cvsuser Exp $
  * Math operators/primitives.
  *
  *
@@ -573,7 +573,7 @@ ok_check:
                 break;
             case F_LIST: {
                     ref_t *rp;
-                    if (NULL != (rp = rlst_build(lvp_list, -1))) {
+                    if (NULL != (rp = rlst_build(lvp_list, lst_sizeof(lvp_list)))) {
                         sym_donate_ref(sp, rp);
                         acc_assign_ref(rp);
                     }
@@ -1322,11 +1322,11 @@ do_com_op(int op)
 
     register accint_t val = 0;
     accfloat_t float1, float2;
-    int str1len, str2len;
+    size_t str1len, str2len;
     const char *str1, *str2;
     const LIST *lp;
     const LISTV *lvp;
-    int llen;
+    size_t llen;
     char buf[64];
 
     /*
@@ -1445,8 +1445,8 @@ do_com_op(int op)
         case F_RSTR:
             str2 = get_str(2);
             str2len = get_strlen(2);
-            if (MOP_MULTIPLY == op) {           /* string multipler */
-                string_mul(str2, str2len, arg_int1);
+            if (MOP_MULTIPLY == op) {           /* string multiplier */
+                string_mul(str2, str2len, (int)arg_int1);
                 return;
             }
             str1 = buf;
@@ -1569,16 +1569,16 @@ xfloat:     switch (op) {
         }
         break;
 
-    case F_RLIST:       /* list ... */
+    case F_RLIST:           /* list ... */
     case F_LIST:
         lp = get_list(1);
         llen = get_listlen(1);
         lvp = margv + 2;
 
 xlist:  switch (op) {
-        case MOP_PLUS: {                 /* (+)  addition */
+        case MOP_PLUS: {    /* (+) addition */
                 LIST *nlp;
-                int newlen;
+                size_t newlen;
 
                 nlp = lst_join(lp, llen, lvp, &newlen);
                 acc_donate_list(nlp, newlen);
@@ -1619,7 +1619,7 @@ xlist:  switch (op) {
             str1 = get_str(1);
             str1len = get_strlen(1);
             if (MOP_MULTIPLY == op) {
-                string_mul(str1, str1len, arg_int2);
+                string_mul(str1, str1len, (int)arg_int2);
                 return;
             }
             str2 = buf;

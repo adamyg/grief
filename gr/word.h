@@ -1,11 +1,11 @@
 #ifndef GR_WORD_H_INCLUDED
 #define GR_WORD_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_word_h,"$Id: word.h,v 1.20 2022/05/31 16:18:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_word_h,"$Id: word.h,v 1.21 2025/01/10 16:51:45 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: word.h,v 1.20 2022/05/31 16:18:22 cvsuser Exp $
+/* $Id: word.h,v 1.21 2025/01/10 16:51:45 cvsuser Exp $
  * External data representation.
  *
  *
@@ -46,8 +46,8 @@ extern void                 WGET32_block(uint32_t *warray, int size);
 #define  WORDIMPL_INLINE
 #include "wordimpl.h"
 #else
-extern void                 LPUT16(LIST *lp, const int16_t n);
-extern int16_t              LGET16(const LIST *lp);
+extern void                 LPUT16(LIST *lp, const uint16_t n);
+extern uint16_t             LGET16(const LIST *lp);
 
 extern void                 LPUT32(LIST *lp, const int32_t n);
 extern int32_t              LGET32(const LIST *lp);

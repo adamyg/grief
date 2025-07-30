@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_spell_hunspell_c,"$Id: spell_hunspell.c,v 1.19 2022/08/10 15:44:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_spell_hunspell_c,"$Id: spell_hunspell.c,v 1.20 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: spell_hunspell.c,v 1.19 2022/08/10 15:44:58 cvsuser Exp $
+/* $Id: spell_hunspell.c,v 1.20 2025/02/07 03:03:22 cvsuser Exp $
  * Spell implementation - hunspell driver.
  *
  *  http://sourceforge.net/hunspell/projects
@@ -46,7 +46,6 @@ __CIDENT_RCSID(gr_spell_hunspell_c,"$Id: spell_hunspell.c,v 1.19 2022/08/10 15:4
 #include "system.h"
 #include "debug.h"
 #include "file.h"
-
 
 //  Obtaining dictionaries
 //      *Grief* does not currently include any bundled spelling dictionaries. Therefore, if you want
@@ -176,8 +175,8 @@ spell_hunspell_init(const char **langs, const char **bdictionaries)
             const char *name = *langs;
             char *aff;
 
-            if ((bdictionaries && NULL != (aff = hs_dict_resolve(bdictionaries, name, strlen(name), ".aff"))) ||
-                    (NULL != (aff = hs_dict_resolve(x_paths, name, strlen(name), ".aff")))) {
+            if ((bdictionaries && NULL != (aff = hs_dict_resolve(bdictionaries, name, (int)strlen(name), ".aff"))) ||
+                    (NULL != (aff = hs_dict_resolve(x_paths, name, (int)strlen(name), ".aff")))) {
                 if (hs_dict_open(session, name, aff, NULL, NULL) >= 0) {
                     break;                      /* stop at first */
                 }
@@ -231,7 +230,7 @@ hs_language(Spell_t *spell, const char *name, int enable)
     if (enable && -1 == ret) {                  /* append */
         char *aff;
 
-        if (NULL != (aff = hs_dict_resolve(x_paths, name, strlen(name), ".aff"))) {
+        if (NULL != (aff = hs_dict_resolve(x_paths, name, (int)strlen(name), ".aff"))) {
             hs_dict_open(session, name, aff, NULL, NULL);
         }
     }
@@ -525,7 +524,7 @@ hs_dict_resolve(const char **paths, const char *name, int len, const char *ext)
 static char *
 hs_dict_name(const char *aff, int ext)
 {
-    const int len = strlen(aff);
+    const int len = (int)strlen(aff);
     char *dic = NULL;
 
     if (len > 4 && 0 == strcmp(aff + len - 4, ".aff"))
@@ -561,6 +560,7 @@ Spell_t *
 spell_hunspell_init(const char **langs, const char **bdictionaries)
 {
     __CUNUSED(langs)
+    __CUNUSED(bdictionaries)
     return NULL;
 }
 

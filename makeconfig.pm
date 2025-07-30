@@ -1,10 +1,10 @@
-# $Id: makeconfig.pm,v 1.8 2024/05/19 06:56:53 cvsuser Exp $
+# $Id: makeconfig.pm,v 1.10 2025/06/28 11:11:01 cvsuser Exp $
 # Makefile generation under Win32.
 # -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
 #
 #
-# Copyright (c) 2020 - 2024, Adam Young.
+# Copyright (c) 2020 - 2025, Adam Young.
 # All rights reserved.
 #
 # This file is part of GRIEF
@@ -155,6 +155,8 @@ sub LoadConfigure($$$$$$)
     Configure();
     die "${makelib}: PACKAGE not defined\n"
         if (! $PACKAGE);
+
+    $self->{NOTES} = NOTES();
 
     if (defined $PACKAGE_H) {
         print "\n";
@@ -310,6 +312,8 @@ sub __ExportConfigurations
 
     $self->{PACKAGE}        = $PACKAGE if (defined $PACKAGE);
     $self->{PACKAGE_NAME}   = $PACKAGE_NAME;
+    $self->{PACKAGE_VERSION} = $PACKAGE_VERSION;
+
     $self->{PACKAGE_PATH}   = $PACKAGE_PATH if ($PACKAGE_PATH);
     $self->{PACKAGE_H}      = $PACKAGE_H    if ($PACKAGE_H);
     $self->{PACKAGE_FILE}   = $PACKAGE_FILE if ($PACKAGE_FILE);
@@ -516,7 +520,7 @@ set_msvc_runtime($;$)
         if (! defined $suffix);
 
     die "set_msvc_runtime: invalid toolchain <$TOOLCHAIN>\n"
-        if ($TOOLCHAIN !~ /^vs/);
+        if ($TOOLCHAIN !~ /^vs/ && $TOOLCHAIN !~ /^clangcl/);
 
     # Select
     if ($type eq 'dynamic') {

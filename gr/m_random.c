@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_random_c,"$Id: m_random.c,v 1.9 2022/12/03 16:40:17 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_random_c,"$Id: m_random.c,v 1.10 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_random.c,v 1.9 2022/12/03 16:40:17 cvsuser Exp $
+/* $Id: m_random.c,v 1.10 2025/02/07 03:03:21 cvsuser Exp $
  * Random primitives.
  *
  *
@@ -429,7 +429,7 @@ bsd_initstate(unsigned int seed, char *arg_state, size_t n)
         if (rand_type == TYPE_0)
                 state[-1] = rand_type;
         else
-                state[-1] = MAX_TYPES * (rptr - state) + rand_type;
+                state[-1] = MAX_TYPES * (int32_t)(rptr - state) + rand_type;
         if (n < BREAK_0)
                 return(NULL);
         if (n < BREAK_1) {
@@ -459,7 +459,7 @@ bsd_initstate(unsigned int seed, char *arg_state, size_t n)
         if (rand_type == TYPE_0)
                 state[-1] = rand_type;
         else
-                state[-1] = MAX_TYPES*(rptr - state) + rand_type;
+                state[-1] = MAX_TYPES*((int32_t)(rptr - state)) + rand_type;
         return(ostate);
 }
 
@@ -489,7 +489,7 @@ bsd_setstate(const char *arg_state)
         if (rand_type == TYPE_0)
                 state[-1] = rand_type;
         else
-                state[-1] = MAX_TYPES * (rptr - state) + rand_type;
+                state[-1] = MAX_TYPES * (int32_t)(rptr - state) + rand_type;
         switch(type) {
         case TYPE_0:
         case TYPE_1:

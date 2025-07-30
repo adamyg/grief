@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_user_c,"$Id: w32_user.c,v 1.23 2024/03/31 15:57:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_user_c,"$Id: w32_user.c,v 1.25 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 user identification functionality
  *
- * Copyright (c) 2007, 2012 - 2024 Adam Young.
+ * Copyright (c) 2007, 2012 - 2025 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -338,13 +338,12 @@ static void
 initialise_user()
 {
     char login[WIN32_LOGIN_LEN], group[WIN32_GROUP_LEN];
-    char domain[1024 + 1];
 
     TOKEN_USER *tu = NULL;
     TOKEN_PRIMARY_GROUP *pg = NULL;
     HANDLE hToken = NULL;
 
-    login[0] = 0, group[0] = 0, domain[0] = 0;
+    login[0] = 0, group[0]  = 0;
 
     if (x_passwd.pw_uid >= 0) {
         return;
@@ -359,8 +358,13 @@ initialise_user()
     strncpy(x_passwd_gecos, "pcuser", sizeof(x_passwd_gecos) - 1);
     strncpy(x_group_name, "user", sizeof(x_group_name) - 1);
 
+#if defined(_MSC_VER)
+#pragma warning(disable:6255) // alloca() usage
+#endif
+
     // process identify
     if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
+        wchar_t wdomain[128];
         SID_NAME_USE user_type = {0};
         DWORD cbSize, cbSize2;
 
@@ -370,10 +374,12 @@ initialise_user()
                     NULL != (tu = alloca(sizeof(char) + (cbSize + 1)))) {
 
             if (GetTokenInformation(hToken, TokenUser, tu, cbSize, &cbSize2)) {
-                DWORD ulen = sizeof(login), dlen = sizeof(domain);
+                wchar_t wlogin[WIN32_LOGIN_LEN];
+                DWORD ulen = _countof(wlogin), dlen = _countof(wdomain);
 
-                if (! LookupAccountSidA(NULL, tu->User.Sid, login, &ulen, domain, &dlen, &user_type)) {
-                    login[0] = 0;
+                if (LookupAccountSidW(NULL, tu->User.Sid, wlogin, &ulen, wdomain, &dlen, &user_type)) {
+                    _wcslwr(wlogin);
+                    w32_wc2utf(wlogin, login, sizeof(login));
                 }
             }
         }
@@ -384,10 +390,12 @@ initialise_user()
                     NULL != (pg = alloca(sizeof(char) + (cbSize + 1)))) {
 
             if (GetTokenInformation(hToken, TokenPrimaryGroup, pg, cbSize, &cbSize2)) {
-                DWORD glen = sizeof(group), dlen = sizeof(domain);
+                wchar_t wgroup[WIN32_GROUP_LEN];
+                DWORD glen = _countof(wgroup), dlen = _countof(wdomain);
 
-                if (! LookupAccountSidA(NULL, pg->PrimaryGroup, group, &glen, NULL, &dlen, &user_type)) {
-                    group[0] = 0;
+                if (LookupAccountSidW(NULL, pg->PrimaryGroup, wgroup, &glen, wdomain, &dlen, &user_type)) {
+                    _wcslwr(wgroup);
+                    w32_wc2utf(wgroup, group, sizeof(group));
                 }
 
             } else {
@@ -403,6 +411,7 @@ initialise_user()
         char *sid = NULL;
 
         strncpy(x_passwd_name, login, sizeof(x_passwd_name)-1);
+        x_passwd_name[sizeof(x_passwd_name)-1] = 0;
 
         if (0 == _stricmp("Administrator", login)) {
             x_passwd.pw_uid = 500;              // Built-in admin account.
@@ -425,23 +434,38 @@ initialise_user()
         }
 
         if (ConvertSidToStringSidA(tu->User.Sid, &sid)) {
-            strncpy(x_passwd_gecos, sid, sizeof(x_passwd_gecos) - 1);
+            strncpy(x_passwd_gecos, sid, sizeof(x_passwd_gecos)-1);
+            x_passwd_gecos[sizeof(x_passwd_gecos)-1] = 0;
             LocalFree(sid);
         }
 
     // old-school
     } else {
-        DWORD cbBuffer = sizeof(x_passwd_name) - 1;
+        WCHAR t_username[WIN32_LOGIN_LEN];
+        DWORD cbBuffer = _countof(t_username) - 1;
 
-        if (! GetUserNameA(x_passwd_name, &cbBuffer)) {
+        x_passwd_name[0] = 0;
+
+        if (GetUserNameW(t_username, &cbBuffer)) {
+            int ret, maxlen = sizeof(x_passwd_name) - 1;
+
+            _wcslwr(t_username);
+            if ((ret = WideCharToMultiByte(CP_UTF8, 0,
+                            t_username, -1, x_passwd_name, (int)maxlen, NULL, NULL)) >= 0) {
+                x_passwd_name[ret] = 0;
+            }
+        }
+
+        if (0 == x_passwd_name[0]) {
             const char *name = NULL;
 
             if (NULL == name) name = getenv("USER");
             if (NULL == name) name = getenv("USERNAME");
             if (NULL == name) name = "dosuser";
-            strncpy(x_passwd_name, name, sizeof(x_passwd_name) - 1);
+            strncpy(x_passwd_name, name, sizeof(x_passwd_name)-1);
         }
 
+        x_passwd_name[sizeof(x_passwd_name)-1] = 0;
         if (0 == _stricmp("Administrator", x_passwd_name)) {
             x_passwd.pw_uid = 0;
         }
@@ -450,14 +474,12 @@ initialise_user()
     }
 
     // additional account attributes
-    _strlwr(x_passwd_name);
     strncpy(x_passwd_dir, w32_gethome(FALSE), sizeof(x_passwd_dir) - 1);
     strncpy(x_passwd_shell, w32_getshell(), sizeof(x_passwd_shell) - 1);
 
     // group
     if (group[0]) {
         strncpy(x_group_name, group, sizeof(x_group_name) - 1);
-        _strlwr(x_group_name);
     }
     x_group.gr_gid = x_passwd.pw_gid;
     x_group.gr_mem = NULL;

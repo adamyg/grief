@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_word_c,"$Id: word.c,v 1.26 2020/05/03 21:41:54 cvsuser Exp $")
+__CIDENT_RCSID(gr_word_c,"$Id: word.c,v 1.27 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: word.c,v 1.26 2020/05/03 21:41:54 cvsuser Exp $
+/* $Id: word.c,v 1.27 2025/02/07 03:03:22 cvsuser Exp $
  * Portable mappings to and from internal word and byte order.
  *
  *
@@ -137,8 +137,9 @@ WGET32(const uint32_t n)
     assert(sizeof(double) == sizeof(union word_double_int32));
 
     if (sizeof(void *) != sizeof(accint_t)) {
-        printf("WGET32: panic, sizeof(void *) not sizeof(accint_t)\n");
-        sys_abort();
+        printf("WGET32: panic, sizeof(void */%u) not sizeof(accint_t/%u), %u, %u, %u\n",
+            (unsigned)sizeof(void *), (unsigned)sizeof(accint_t), SIZEOF_LONG, SIZEOF_LONG_LONG, SIZEOF_VOID_P);
+            sys_abort();
     }
 
     /*

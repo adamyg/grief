@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.97 2024/12/05 19:00:11 cvsuser Exp $")
+__CIDENT_RCSID(gr_file_c,"$Id: file.c,v 1.98 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: file.c,v 1.97 2024/12/05 19:00:11 cvsuser Exp $
+/* $Id: file.c,v 1.98 2025/02/07 03:03:21 cvsuser Exp $
  * File-buffer primitives and support.
  *
  *
@@ -489,7 +489,7 @@ do_set_terminator(void)         /* int ([int bufnum], [int type|string terminato
     int ret = -1;
 
     if (bp) {
-        ret = file_terminator_set(bp, terminator, (terminator ? get_strlen(1) : 0), termtype);
+        ret = file_terminator_set(bp, terminator, (terminator ? (int)get_strlen(1) : 0), termtype);
     }
     acc_assign_int(ret);
 }
@@ -1306,8 +1306,8 @@ buf_readin(BUFFER_t *bp, int fd, const char *fname, FSIZE_t fsize, int flags, co
     uint32_t chunkrefs = 0;
     void *chunk = NULL;
 
-    const char *ovbuf = NULL;                   /* overflow from previous crunk */
-    uint32_t ovlen = 0;
+    const char *ovbuf = NULL;                   /* overflow from previous chunk */
+    size_t ovlen = 0;
 
     mchar_iconv_t *iconv = NULL;                /* base conversion */
     mchar_istream_t *istream = NULL;            /* stream conversion interface */
@@ -1477,16 +1477,16 @@ buf_readin(BUFFER_t *bp, int fd, const char *fname, FSIZE_t fsize, int flags, co
 
         if (ovlen < chunklen) {                 /* read additional */
             if (NULL == istream) {
-                if ((cnt = vfs_read(fd, buffer + ovlen, chunklen - ovlen)) > 0) {
-                    if ((fleft -= cnt) < 0) fleft = 0;
-                    fcursor += cnt;
+                if ((cnt = vfs_read(fd, buffer + ovlen, (unsigned)(chunklen - ovlen))) > 0) {
+                    if ((fleft -= (FSIZE_t)cnt) < 0) fleft = 0;
+                    fcursor += (FSIZE_t)cnt;
                 }
 
             } else {
                 size_t inbytes = 0;
                 if ((cnt = mchar_stream_read(istream, (char *)(buffer + ovlen), chunklen - ovlen, &inbytes)) > 0) {
-                    if ((fleft -= inbytes) < 0) fleft = 0;
-                    fcursor += inbytes;
+                    if ((fleft -= (FSIZE_t)inbytes) < 0) fleft = 0;
+                    fcursor += (FSIZE_t)inbytes;
                 }
             }
         }
@@ -1514,7 +1514,7 @@ buf_readin(BUFFER_t *bp, int fd, const char *fname, FSIZE_t fsize, int flags, co
         /*
          *  EOL scanner/
          *      Select specialisation based on terminator length and buffer encoding.
-         *      On a EOL condition, determine length remove terminator and optional preceeding CR.
+         *      On a EOL condition, determine length remove terminator and optional preceding CR.
          */
         bpsol = buffer;
         bpend = bpsol + cnt;
@@ -1522,7 +1522,7 @@ buf_readin(BUFFER_t *bp, int fd, const char *fname, FSIZE_t fsize, int flags, co
 
         while (bpsol < bpend) {                 /* iterate chunk, line-by-line */
 
-            if (EDIT_BINARY & flags) {          /* chunksize fixed lines */
+            if (EDIT_BINARY & flags) {          /* chunk-size fixed lines */
                 if ((bpeol = (bpsol + chunksize)) > bpend) {
                     bpeol = bpend;
                 }
@@ -1675,8 +1675,8 @@ done:;      assert(bpsol >= buffer);
             if (llen > 0) {
                 lp->l_text  = (void *)bpsol;
                 if (broken) lflagset(lp, L_BREAK);
-                lp->l_size  = llen;
-                lp->l_used  = llen;
+                lp->l_size = (uint32_t)llen;
+                lp->l_used = (uint32_t)llen;
             }
             lp->l_chunk = chunk;
             ++chunkrefs;
@@ -1695,7 +1695,7 @@ done:;      assert(bpsol >= buffer);
                 percentage(PERCENTAGE_FILE, fcursor, fsize, "Reading", fname);
             }
 
-            bufsize += llen + 1;                /* insert plus EOL */
+            bufsize += (FSIZE_t)(llen + 1);     /* insert plus EOL */
             bpsol = bpeol;                      /* step over line */
         }
     }
@@ -2227,7 +2227,7 @@ do_edit_file(int version)       /* int ([int mode], [string | list file ...]) */
 
             switch (type) {
             case F_INT:         /* mode */
-                flags = result.l_int;           /* flags EDIT_SYSTEM|NORMAL etc */
+                flags = (int)result.l_int;      /* flags EDIT_SYSTEM|NORMAL etc */
                 break;
             case F_STR:         /* file */
             case F_LIT:
@@ -2569,11 +2569,11 @@ void
 inq_file_magic(void)            /* string ([int &isdefault], [int &cost]) */
 {
     if (x_encoding_guess && *x_encoding_guess) {
-        acc_assign_str(x_encoding_guess, -1);
+        acc_assign_str(x_encoding_guess);
 
     } else {
         const char *guess = mchar_guess_default();
-        acc_assign_str(guess, -1);
+        acc_assign_str(guess);
         chk_free((void *)guess);
     }
 }
@@ -3090,7 +3090,7 @@ buf_rollbackups(BUFFER_t *bp, const char *path, int remove_flag)
      */
     filename = sys_basename(path);
     assert(filename > path);
-    dirlen = (filename - path) - 1;             /* length of base directory */
+    dirlen = (int)((filename - path) - 1);      /* length of base directory */
 
     strcpy(oname, path); file_slashes(oname);
     strcpy(nname, path); file_slashes(nname);
@@ -3896,7 +3896,7 @@ file_getenv(char *path, int len)
                 ++name;                         /* consume open */
             }
 
-            if (NULL != (var = ggetnenv(name, end - name))) {
+            if (NULL != (var = ggetnenv(name, (int)(end - name)))) {
                 vlen = strlen(var);
             } else {    /*nomatch*/
                 vlen = 0;
@@ -4199,7 +4199,7 @@ file_canonicalize2(const char *filename, char *path, int length)
 
 #else   /*!VMS*/
 
-    const int filenamelen = strlen(filename) + 1 /*nul*/;
+    const int filenamelen = (int)(strlen(filename) + 1 /*nul*/);
     char *t_filename = alloca(filenamelen);
     int unc = FALSE, len;
     char *p, *s;

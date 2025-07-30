@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.9 2024/04/16 11:37:12 cvsuser Exp $
+# $Id: Makefile.in,v 1.10 2025/02/07 03:03:20 cvsuser Exp $
 # extags makefile
 #
 #
@@ -57,7 +57,7 @@ LDRELEASE=	@LDRELEASE@
 CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
 
 CEXTRA=		@DEFS@
-ifeq ("yes","@ISWIN32@")
+ifeq (yes,$(findstring yes,"@ISWIN32@ or @ISWIN64@"))
 CEXTRA+=	-DWIN32
 endif
 

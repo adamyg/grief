@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.87 2024/12/13 14:25:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyvio_c,"$Id: ttyvio.c,v 1.95 2025/07/03 04:45:09 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyvio.c,v 1.87 2024/12/13 14:25:37 cvsuser Exp $
+/* $Id: ttyvio.c,v 1.95 2025/07/03 04:45:09 cvsuser Exp $
  * TTY VIO implementation.
  *
  *
@@ -113,6 +113,7 @@ static void             term_legacycolor(const colattr_t *ca);
 static void             vio_reference(void);
 static void             vio_image_save(void);
 static void             vio_image_restore(void);
+static void             vio_garbled(void);
 static void             vio_dirty(int row, int col, int erow, int ecol);
 
 #if !defined(WIN32)
@@ -197,22 +198,20 @@ static int              tt_colormap[COLOR_NONE + 1];
  *  Physical buffer, original and current
  */
 #if !defined(WIN32)
-static USHORT           origAttribute;
 static VIOCURSORINFO    origCursor;
 static int              origRows;
 static int              origCols;
 #endif
 
-static USHORT           origRow;
-static USHORT           origCol;
-static const VIOCELL *  origScreen;
-static WCHAR            origTitle[100];
+static WORD             origAttributes = (WORD)-1;
+static WCHAR            origTitle[128];
 
 static int              currRows;
 static int              currCols;
 static int              currCodePage = -1;
 static ULONG            currScreenCells;
 static VIOCELL *        currScreen;
+static unsigned         currGarbled = 0;
 static int              currDirtyTop = -1;
 static int              currDirtyEnd = -1;
 static videoset_t       currDirtyFlg;
@@ -268,7 +267,29 @@ ttinit(void)
     x_scrfn.scr_repeat  = term_repeat;
 
     (void)sprintf(tt_title, "%s (%s)", x_appname, x_version);
+}
+
+
+/*  Function:           term_open
+ *      Open the console
+ *
+ *  Parameters:
+ *      none
+ *
+ *  Returns:
+ *      nothing
+ */
+static void
+term_open(scrprofile_t* profile)
+{
+    tt_open = tt_cursor = TRUE;
     vio_reference();
+    io_device_add(TTY_INFD);
+    if (profile) {
+        term_sizeget(&profile->sp_rows, &profile->sp_cols);
+        profile->sp_colors = tt_colors;
+    }
+    sys_initialise();
 }
 
 
@@ -401,28 +422,6 @@ term_colors(void)
 }
 
 
-/*  Function:           term_open
- *      Open the console
- *
- *  Parameters:
- *      none
- *
- *  Returns:
- *      nothing
- */
-static void
-term_open(scrprofile_t *profile)
-{
-    tt_open = tt_cursor = TRUE;
-    io_device_add(TTY_INFD);
-    if (profile) {
-        term_sizeget(&profile->sp_rows, &profile->sp_cols);
-        profile->sp_colors = tt_colors;
-    }
-    sys_initialise();
-}
-
-
 /*  Function:           term_close
  *      Close the console
  *
@@ -526,8 +525,7 @@ term_control(int action, int param, ...)
         break;
 
     case SCR_CTRL_GARBLED:
-        vtgarbled();
-        vio_dirty(0, 0, ttrows() - 1, ttcols() - 1);
+        vio_garbled();
         break;
 
     case SCR_CTRL_SAVE:
@@ -541,8 +539,7 @@ term_control(int action, int param, ...)
 
     case SCR_CTRL_RESTORE:
         term_ready(TRUE, NULL);
-        vtgarbled();
-        vio_dirty(0, 0, ttrows() - 1, ttcols() - 1);
+        vio_garbled();
         break;
 
     case SCR_CTRL_COLORS:       /* color change */
@@ -567,8 +564,10 @@ term_control(int action, int param, ...)
 static void
 term_tidy(void)
 {
-    vio_image_restore();
-    tt_active = 0;
+    if (tt_active) {
+        vio_image_restore();
+        tt_active = 0;
+    }
 }
 
 
@@ -621,8 +620,13 @@ static void
 vio_image_save(void)
 {
 #if defined(WIN32)
-    if (0 == origTitle[0])
+    if (0 == origTitle[0]) {
+        CONSOLE_SCREEN_BUFFER_INFO sbi = { sizeof(CONSOLE_SCREEN_BUFFER_INFO) };       
+        if (GetConsoleScreenBufferInfo(vio_stdout(), &sbi)) {
+            origAttributes = sbi.wAttributes;
+        }
         GetConsoleTitleW(origTitle, _countof(origTitle));
+    }
     vio_save();
 
 #else
@@ -664,9 +668,13 @@ static void
 vio_image_restore(void)
 {
 #if defined(WIN32)
-    if (origTitle[0])
-        SetConsoleTitleW(origTitle);
     vio_restore();
+    if (origTitle[0]) {
+        if ((WORD)-1 != origAttributes) {
+            SetConsoleTextAttribute(vio_stdout(), origAttributes);
+        }
+        SetConsoleTitleW(origTitle);
+    }
 
 #else   //!WIN32
     if (origScreen) {
@@ -698,6 +706,22 @@ vio_image_restore(void)
         VioSetCurType(&origCursor, 0);
     }
 #endif  //WIN32
+}
+
+
+/*  Function:           vio_garbled
+//      Mark the display as garbled, forcing a full redraw.
+//
+//  Parameters:
+//      none
+//
+//  Returns:
+//      nothing
+*/
+static void
+vio_garbled(void)
+{
+    ++currGarbled;
 }
 
 
@@ -887,7 +911,7 @@ term_print(int row, int col, int len, const VCELL_t *vvp)
     static VIOCELL null = { 0 };
 
     if (len > 0) {
-        const int isuc = (DC_CMAPFRAME & x_display_ctrl) || vtisunicode() || vtisutf8();
+        const uint32_t isuc = (DC_CMAPFRAME & x_display_ctrl) || vtisunicode() || vtisutf8();
         VIOCELL *p = currScreen + (row * ttcols()) + col;
         vbyte_t cattr = VBYTE_ATTR_GET(vvp->primary);
 
@@ -1015,7 +1039,7 @@ term_clear(void)
         }
     }
     ttposset(0, 0);
-    vio_dirty(0, 0, ttrows()-1, ttcols()-1);
+    vio_garbled();
 }
 
 
@@ -1032,7 +1056,7 @@ static void
 term_flush(void)
 {
     const int cols = ttcols(), rows = ttrows();
-    const int garbled = vtisgarbled();
+    const int garbled = vtisgarbled() || currGarbled;
 
 #if defined(HAVE_MOUSE)
     mouse_pointer(0);
@@ -1046,7 +1070,7 @@ term_flush(void)
         const int end = (currDirtyEnd < rows ? currDirtyEnd : rows - 1);
         int top, cnt = 0;
 
-        VioShowInit(&show, 0);                  // show context initialisation.
+        VioShowInit(&show, 0);                  // show context initialisation
 
         // update dirty line sections within dirty arena
         for (top = currDirtyTop, cnt = 0; top <= end; ++top) {
@@ -1075,9 +1099,10 @@ term_flush(void)
         VioShowFinal(&show);                    // completion
     }
 
-    if (garbled || currDirtyTop >= 0) {         // reset dirty metadata
+    if (garbled || currDirtyTop >= 0) {         // reset dirty meta-data
         vset_zero(currDirtyFlg);
         currDirtyTop = -1;
+        currGarbled = 0;
     }
 
     VioSetCurPos((unsigned short)ttatrow(), (unsigned short)ttatcol(), 0);
@@ -1290,7 +1315,7 @@ term_attribute(const vbyte_t attr)
     } else {
         /*
          *  black and white coloriser/
-         *      back-white display emulation, based on linux console.
+         *      back-white display emulation, based on Linux console.
          */
 #define __NORMAL__      GREY,   BLACK
 #define __BOLD__        CYAN,   BLACK
@@ -1407,8 +1432,8 @@ term_truecolor(const colattr_t *ca)
     if (0 == hue.Flags) {
         hue.Flags = VIO_FNORMAL;
         if (hue.fg == hue.bg) {                 // guard against fg and bg issues
-            hue.fg = tt_colormap[WHITE];
-            hue.bg = tt_colormap[BLACK];
+            hue.fg = (short)tt_colormap[WHITE];
+            hue.bg = (short)tt_colormap[BLACK];
         }
     }
 
@@ -1445,8 +1470,6 @@ term_legacycolor(const colattr_t *ca)
 void
 do_ega(void)                /* void (int flag) */
 {
-    static USHORT orows, ocols, mrows, mcols, state;
-
     acc_assign_int((accint_t) xf_ega43);
 
     if (isa_integer(1)) {                       /* (mode < 80 sets rows), otherwise (mode >= 80 sets columns). */
@@ -1454,39 +1477,39 @@ do_ega(void)                /* void (int flag) */
         const int flag = get_xinteger(1, 0);
         VIOMODEINFO mi = { sizeof(VIOMODEINFO) };
 
-        if (flag < 0) {                         /* min/max toggle (-1), restore (-2) used on exit */
-            if (state && (-1 == flag || -2 == flag)) {
-                if (crows == mrows && ccols == mcols) {
-                    mi.row = orows;             /* restore, unless modified */
-                    mi.col = ocols;
+        // maximise (-1), normal (-2) or toggle (0)
+        if (flag <= 0) {
+            if (flag == 0 || (flag == -1 && vio_maximised() == 0) ||
+                    (flag == -2 && vio_maximised() == 1)) {
+                int nrows, ncols;
+
+                if (vio_toggle_size(&nrows, &ncols) >= 0) {
+                    ttwinched(nrows, ncols);
+                    return;
                 }
-                state = 0;
-            } else if (0 == state && (-1 == flag || -3 == flag)) {
-                orows  = crows;                 /* maximise */
-                ocols  = ccols;
-                mi.row = 0xffff;
-                mi.col = 0xffff;
-                state = 1;
             }
+
+            mi.row = 0xffff;
+            mi.col = (flag == -1 ? /*max*/ 1 : (flag == -2 ? /*normal*/ 0 : /*toggle*/ 0xffff));
+            if (VioSetMode(&mi, 0) == 0) {
+                ttwinched(mi.row, mi.col);
+            }
+            return;
+        }
+
+        // lines; legacy
+        mi.row = (USHORT)crows;
+        mi.col = (USHORT)ccols;
+        if (flag >= 80) {                       /* setting columns */
+            mi.col = (USHORT)flag;
         } else {
-            mi.row = (USHORT)crows;
-            mi.col = (USHORT)ccols;
-            if (flag >= 80) {                   /* setting columns */
-                mi.col = (USHORT)flag;
-            } else {
-                mi.row = (USHORT)(flag > 10 ? flag : 10);
-            }
+            mi.row = (USHORT)(flag > 10 ? flag : 10);
         }
 
         if (mi.row && mi.col &&
                 (crows != mi.row || ccols != mi.col)) {
-            vio_restore();
-            VioSetMode(&mi, 0);
-            VioSetCurPos(origRow, origCol, 0);  /* restore cursor, mode changes home */
-            ttwinched(mi.row, mi.col);
-            if (flag < 0 && state) {
-                mrows = mi.row;
-                mcols = mi.col;
+            if (VioSetMode(&mi, 0) == 0) {
+                ttwinched(mi.row, mi.col);
             }
         }
     }
@@ -1506,23 +1529,31 @@ void
 do_copy_screen(void)
 {
     static const char *trim_str = " \t\r\n";
-    BYTE *tmp = chk_alloc(ttcols() + 2);
-    int ccol, crow, cofs;
+    const int nrows = ttrows(), ncols = ttcols();
+    BYTE *tmp;
+    int col, row;
 
-    for (cofs = crow = 0; crow < ttrows(); ++crow) {
-        for (ccol = 0; ccol < ttcols(); ++ccol, ++cofs) {
-            tmp[ccol] = (BYTE) VIO_CHAR(origScreen[cofs]);
+    if (NULL == currScreen ||
+            (tmp = chk_alloc(ncols + 2)) == NULL) {
+        return;
+    }
+
+    for (row = 0; row < nrows; ++row) {
+        // copy line
+        const VIOCELL *line = currScreen + (row * ncols);
+        for (col = 0; col < ncols; ++col) {
+            tmp[col] = (BYTE) VIO_CHAR(line[col]);
         }
 
-        /* Strip off trailing white space */
-        while (--ccol >= 0 && strchr(trim_str, (char) tmp[ccol])) {
+        // strip trailing white space
+        while (--col >= 0 && strchr(trim_str, (char) tmp[col])) {
             ;
         }
 
-        /* Terminate and insert */
-        tmp[++ccol] = '\n';
-        tmp[++ccol] = '\0';
-        linserts((const char *) tmp, ccol);
+        // terminate and insert
+        tmp[++col] = '\n';
+        tmp[++col] = '\0';
+        linserts((const char *) tmp, col);
     }
     chk_free(tmp);
 }

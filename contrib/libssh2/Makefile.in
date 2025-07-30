@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.5 2024/04/16 11:37:13 cvsuser Exp $
+# $Id: Makefile.in,v 1.6 2025/02/07 03:03:20 cvsuser Exp $
 # libssh2 makefile.
 #
 #
@@ -162,7 +162,6 @@ debug:
 ifdef SSH2DEBUG 	# enable LIBSSH2 run-time diagnostics
 CEXTRA		+= -DLIBSSH2DEBUG
 endif
-CEXTRA		+= -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
 
 $(SSH2LIB):		CEXTRA += -DLIBSSH2_STATIC
 $(SSH2LIB):		$(LIBOBJS)

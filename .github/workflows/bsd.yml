@@ -6,8 +6,8 @@
 #   https://github.com/vmactions/netbsd-vm
 #
 
-name: "FreeOpenNetBSD builds"
-on: [push, pull_request]
+name: "Free, Open, NetBSD builds"
+on: [push]
 
 #https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
 concurrency:
@@ -15,28 +15,45 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-# freebsd:
-#    runs-on: ubuntu-22.04
-#    steps:
-#      - uses: actions/checkout@v4
-#      - name: FreeBSD
-#        uses: vmactions/freebsd-vm@v1
-#        with:
-#          usesh: true
-#          prepare: |
-#            pkg install -y bash gmake perl5 autoconf automake libtool pkgconf flex bison wget
-#            pkg install -y gettext libiconv libarchive curl ncurses expat liblz4 lzo2 zstd
-#          run: |
-#            ./configure
-#            cat acdefines.h
-#            gmake release
+  freebsd:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: FreeBSD Build
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          prepare: |
+            pkg install -y bash gmake perl5 autoconf automake libtool pkgconf flex bison wget
+            pkg install -y gettext libiconv libarchive curl ncurses expat liblz4 lzo2 zstd
+          run: |
+            ./configure
+            cat acdefines.h
+            gmake release
+            
+#gmake release unittest
+#Note: Terminal 'su' missing cursor move capabilities, not supported.
+
+      - name: FreeBSD, tarball
+        shell: bash
+        run: |
+            tar -czvf pkg-freebsd-${{ github.run_number }}.tar.gz \
+                 bin.*/release/* macros/* help/* macsrc/*
+
+      - name: FreeBSD, package
+        uses: softprops/action-gh-release@v2
+        with:
+          files: pkg-freebsd-${{ github.run_number }}.tar.gz
+          draft: true
 
 # Packages: see: https://cdn.openbsd.org/pub/OpenBSD/7.5/packages/amd64/
 #  openbsd:
 #    runs-on: ubuntu-22.04
 #    steps:
 #      - uses: actions/checkout@v4
-#      - name: OpenBSD
+#
+#      - name: OpenBSD Build
 #        uses: vmactions/openbsd-vm@v1
 #        with:
 #          usesh: true
@@ -46,14 +63,27 @@ jobs:
 #          run: |
 #            ./configure
 #            cat acdefines.h
-#            gmake release
+#            gmake release unittest
+#
+#      - name: OpenDSD, tarball
+#        shell: bash
+#        run: |
+#            tar -czvf pkg-openbsd-${{ github.run_number }}.tar.gz \
+#                 bin.gcc/release/* macros/* help/* macsrc/*
+#
+#      - name: OpenBSD, package
+#        uses: softprops/action-gh-release@v2
+#        with:
+#          files: pkg-openbsd-${{ github.run_number }}.tar.gz
+#          draft: true
 
 # Packages: see: https://ftp.netbsd.org/pub/pkgsrc/current/pkgsrc/pkgtools/index.html
   netbsd:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: NetBSD
+
+      - name: NetBSD, build
         uses: vmactions/netbsd-vm@v1
         with:
           usesh: true
@@ -66,6 +96,18 @@ jobs:
           run: |
             ./configure
             cat acdefines.h
-            gmake release
+            gmake release unittest
+
+      - name: NetBSD, tarball
+        shell: bash
+        run: |
+            tar -czvf pkg-netbsd-${{ github.run_number }}.tar.gz \
+                 bin.*/release/* macros/* help/* macsrc/*
+
+      - name: NetBSD, package
+        uses: softprops/action-gh-release@v2
+        with:
+          files: pkg-netbsd-${{ github.run_number }}.tar.gz
+          draft: true
 
 #end

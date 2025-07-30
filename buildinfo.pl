@@ -1,9 +1,9 @@
 #!/usr/bin/perl -w
 # -*- mode: perl; -*-
-# $Id: buildinfo.pl,v 1.11 2024/12/16 10:22:46 cvsuser Exp $
+# $Id: buildinfo.pl,v 1.16 2025/07/01 11:11:20 cvsuser Exp $
 # buildinfo generation
 #
-# Copyright Adam Young 2018 - 2024
+# Copyright 2018 - 2025, Adam Young
 # All rights reserved.
 #
 # The applications are free software: you can redistribute it
@@ -48,6 +48,7 @@ my $buildmday = undef;
 my $buildnumber = "1";
 my $buildtype = undef;
 my $buildtoolchain = undef;
+my $iswin64 = undef;
 
 my $bindir  = undef;
 my $sbindir = undef;
@@ -67,6 +68,7 @@ Usage() if (0 == GetOptions(
 		'date=i'        => \$builddate,
 		'build=i'       => \$buildnumber,
 		'toolchain=s'   => \$buildtoolchain,
+		'iswin64=s'     => \$iswin64,
 		'type:s'        => \$buildtype,
 		'bindir:s'      => \$bindir,
 		'sbindir:s'     => \$sbindir,
@@ -149,24 +151,47 @@ EOT
 
 		print FILE "#define BUILD_TOOLCHAIN \"${buildtoolchain}\"\n";
 		print FILE "#define BUILD_TOOLNAME \"${buildtoolname}\"\n";
-		print FILE "#define BUILD_ARCHITECTURE \"x64\"\n"
-			if ($buildtoolname =~ /64$/);
+		if ($buildtoolname =~ /64$/ || ($iswin64 && $iswin64 eq 'yes')) {
+			print FILE "#define BUILD_ARCHITECTURE \"x64\"\n";
+		} else {
+			print FILE "#define BUILD_ARCHITECTURE \"x86\"\n";
+		}
+	}
+
+	if (defined $iswin64) {
+		if ($iswin64 eq 'yes') {
+			print FILE "#define BUILD_ISWIN64 1\n";
+		} else {
+			print FILE "#define BUILD_ISWIN32 1\n";
+		}
 	}
 
 	if ($buildtype) {
-		print FILE "#define BUILD_TYPE \"${buildtype}\"\n";
-
 		die "buildinfo.pm: build type verb 'release' or 'debug' expected.\n"
 			if ($buildtype !~ /release/ && $buildtype !~ /debug/);
 
 		die "buildinfo.pm: build type verbs 'release' and 'debug' are mutually exclusive.\n"
 			if ($buildtype =~ /release/ && $buildtype =~ /debug/);
 
-		print FILE "#define BUILD_TYPE_RELEASE 1\n"
-			if ($buildtype =~ /release/);
-		print FILE "#define BUILD_TYPE_DEBUG 1\n"
-			if ($buildtype =~ /debug/);
+		print FILE "#if !defined(BUILD_TYPE)\n";
+		if ($buildtype =~ /release/) {
+			print FILE "#define BUILD_TYPE \"release\"\n";
+			print FILE "#define BUILD_TYPE_RELEASE 1\n";
+
+		} else {
+			print FILE "#define BUILD_TYPE \"debug\"\n";
+			print FILE "#define BUILD_TYPE_DEBUG 1\n";
+		}
+		print FILE "#endif\n";
 	}
+
+	print FILE <<"EOT";
+#if !defined(BUILD_TYPE_RELEASE) && !defined(BUILD_TYPE_DEBUG)
+#   error BUILD_TYPE is neither release or debug
+#elif defined(BUILD_TYPE_RELEASE) && defined(BUILD_TYPE_DEBUG)
+#   error BUILD_TYPE both release and debug
+#endif
+EOT
 
 	print FILE "#define ${prefix}BUILD_BINDIR \"${bindir}\"\n"
 		if ($bindir);
@@ -204,6 +229,7 @@ Options:
     --date <date>           Build date.
     --build <number>        Build number.
     --toolchain <desc>      Toolchain.
+    --iswin64 <yes|no>      Optional architecture, win64 otherwise win32.
 
     --bindir <path>         bindir path.
     --sbindir <path>        sbindir path.

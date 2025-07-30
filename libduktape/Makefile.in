@@ -1,9 +1,9 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.21 2024/07/30 10:35:29 cvsuser Exp $
+# $Id: Makefile.in,v 1.23 2025/02/07 03:03:22 cvsuser Exp $
 # libduktape makefile.
 #
 #
-# Copyright (c) 2018 - 2024, Adam Young.
+# Copyright (c) 2018 - 2025, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -195,7 +195,7 @@ $(DUKTAPELIB):		Makefile $(D_OBJ)/.created $(LIBOBJS)
 		$(RANLIB) $@
 
 XCLEAN +=	$(basename $(DUKTAPEDLL)).map
-ifeq ("yes","@ISWIN32@")
+ifeq (yes,$(findstring yes,"@ISWIN32@ or @ISWIN64@"))
 $(DUKTAPEDLL):		CEXTRA += -DDUKTAPE_DLL_BUILD
 $(DUKTAPEDLL):		DLLDEF = -export-symbols libduktape.def
 endif

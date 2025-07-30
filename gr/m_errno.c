@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_errno_c,"$Id: m_errno.c,v 1.29 2024/12/06 15:46:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_errno_c,"$Id: m_errno.c,v 1.30 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_errno.c,v 1.29 2024/12/06 15:46:06 cvsuser Exp $
+/* $Id: m_errno.c,v 1.30 2025/02/07 03:03:21 cvsuser Exp $
  * errno symbol primitives.
  *
  *
@@ -798,7 +798,7 @@ do_strerror(void)               /* string ([int errnum], [string &manifest], [in
         argv_assign_str(2, tag ? tag : "");
         chk_free(buf);
     }
-    acc_assign_str(str_error(xerrno), -1);
+    acc_assign_str(str_error(xerrno));
 }
 
 
@@ -843,16 +843,17 @@ do_strerror(void)               /* string ([int errnum], [string &manifest], [in
 void
 do_perror(void)                 /* ([int errno], string format, ...) */
 {
-    int msglen = -1, errlen;
+    size_t msglen = 0;
     const int xerrno = get_xinteger(1, (int) *x_errno_ptr);
     const char *msg = print_formatted(2, &msglen, NULL);
+    int errlen;
     char err[80];
 
     errlen = sxprintf(err, sizeof(err), ": %s (%d)", str_error(xerrno), xerrno);
     if (msg && msglen) {
-        acc_assign_str2(msg, msglen, err, errlen);
+        acc_assign_str2(msg, msglen, err, (size_t)errlen);
     } else {
-        acc_assign_str(err, errlen);
+        acc_assign_nstr(err, (size_t)errlen);
     }
     errorf("%s", acc_get_sval());
 }

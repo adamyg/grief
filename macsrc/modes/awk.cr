@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*-
-/* $Id: awk.cr,v 1.9 2014/10/22 02:34:32 ayoung Exp $
+/* $Id: awk.cr,v 1.10 2024/07/30 16:29:20 cvsuser Exp $
  * AWK programming mode.
  *
  *
@@ -24,7 +24,7 @@ main(void)
     syntax_token(SYNT_BRACKET,    "([{", ")]}");
     syntax_token(SYNT_OPERATOR,   "-%+/&*=<>|!~^`");
     syntax_token(SYNT_DELIMITER,  ";,");
-    syntax_token(SYNT_WORD,       "0-9a-zA-Z_");
+    syntax_token(SYNT_KEYWORD,    "a-zA-Z_", "0-9a-zA-Z_");
     syntax_token(SYNT_NUMERIC,    "-+0-9a-fA-F.xX");
 
     /*

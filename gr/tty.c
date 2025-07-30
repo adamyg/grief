@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_tty_c,"$Id: tty.c,v 1.35 2024/12/13 14:25:37 cvsuser Exp $")
+__CIDENT_RCSID(gr_tty_c,"$Id: tty.c,v 1.36 2025/01/17 12:55:35 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: tty.c,v 1.35 2024/12/13 14:25:37 cvsuser Exp $
+/* $Id: tty.c,v 1.36 2025/01/17 12:55:35 cvsuser Exp $
  * Common basic tty functionality.
  *
  *
@@ -730,7 +730,6 @@ ttspecchar(vbyte_t ch)
 int
 ttrows(void)
 {
-    assert(tty_nrows > 0);
     return tty_nrows;
 }
 
@@ -747,7 +746,6 @@ ttrows(void)
 int
 ttcols(void)
 {
-    assert(tty_ncols > 0);
     return tty_ncols;
 }
 

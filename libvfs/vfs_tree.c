@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_tree_c,"$Id: vfs_tree.c,v 1.24 2024/04/17 16:00:30 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_tree_c,"$Id: vfs_tree.c,v 1.26 2025/02/07 03:03:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_tree.c,v 1.24 2024/04/17 16:00:30 cvsuser Exp $
+/* $Id: vfs_tree.c,v 1.26 2025/02/07 03:03:23 cvsuser Exp $
  * Virtual file system interface - tree management.
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -60,8 +60,8 @@ static int              vfs_tree_vlstat(struct vfs_mount *vmount, const char *pa
 
 static int              vfs_tree_vopen(struct vfs_mount *vmount, const char *path, int mode, int mask);
 static int              vfs_tree_vclose(struct vfs_handle *vhandle);
-static int              vfs_tree_vread(struct vfs_handle *vhandle, void *buffer, unsigned length);
-static int              vfs_tree_vwrite(struct vfs_handle *vhandle, const void *buffer, unsigned length);
+static int              vfs_tree_vread(struct vfs_handle *vhandle, void *buffer, size_t length);
+static int              vfs_tree_vwrite(struct vfs_handle *vhandle, const void *buffer, size_t length);
 static int              vfs_tree_vseek(struct vfs_handle *vhandle, off_t offset, int whence);
 static off_t            vfs_tree_vtell(struct vfs_handle *vhandle);
 static int              vfs_tree_vfstat(struct vfs_handle *vhandle, struct stat *sb);
@@ -233,7 +233,7 @@ vfs_tree_add(struct vfs_tree *tree, struct vfs_node *parent, unsigned type, cons
     assert(name[0]);
 
     if (0 == namlen) {
-        namlen = strlen(name);                  /* name length */
+        namlen = (unsigned)strlen(name);        /* name length */
     }
 
     VFS_TRACE(("\tvfs_tree_add(%p, %p, %u, %.*s, %u)\n", tree, parent, type, namlen, name, namlen))
@@ -243,7 +243,7 @@ vfs_tree_add(struct vfs_tree *tree, struct vfs_node *parent, unsigned type, cons
      */
     namhash = vfs_name_hash(name, namlen);
     if (namlen > VFS_MAXNAME) {
-        VFS_TRACE(("\t== ENAMETOOLONG (%u)\n", namlen))
+        VFS_TRACE(("\t== ENAMETOOLONG (%u)\n", (unsigned)namlen))
         errno = ENAMETOOLONG;                   /* XXX - should we care, verify readdir() implementation */
         return NULL;
     }
@@ -286,7 +286,7 @@ vfs_tree_push(struct vfs_tree *tree, unsigned type, const char *path)
     assert(tree->t_mount);
     assert(path && path[0]);
 
-    pathlen = strlen(path);
+    pathlen = (unsigned)strlen(path);
 
     VFS_LEVELINC()
     VFS_TRACE(("vfs_tree_push(%u/%s, %s, %u)\n", type, vfs_node_type2str(type), path, pathlen))
@@ -295,7 +295,7 @@ vfs_tree_push(struct vfs_tree *tree, unsigned type, const char *path)
         /*
          *  simple case, just lookup under mktree (auto-creation) enabled
          */
-        node = vfs_tree_lookup(tree, path, strlen(path), LK_OMKTREE, 0);
+        node = vfs_tree_lookup(tree, path, (unsigned)strlen(path), LK_OMKTREE, 0);
 
     } else {
         /*
@@ -316,7 +316,7 @@ vfs_tree_push(struct vfs_tree *tree, unsigned type, const char *path)
             if (node) {
                 assert(VNODE_DIR == node->v_type);
                 node = vfs_tree_add(tree, node, type, name, namlen);
-                assert(node == vfs_tree_lookup(tree, path, strlen(path), LK_OLOOKUP, 0));
+                assert(node == vfs_tree_lookup(tree, path, (unsigned)strlen(path), LK_OLOOKUP, 0));
             }
         }
     }
@@ -459,7 +459,7 @@ vfs_tree_search(struct vfs_tree *tree, struct vfs_node *parent, const char *name
         assert(VNODE_DIR == parent->v_type);
 
         if (0 == namlen) {
-            namlen = strlen(name);                  /* name length */
+            namlen = (unsigned)strlen(name);    /* name length */
             namhash = vfs_name_hash(name, namlen);
         } else {
             assert(namhash == vfs_name_hash(name, namlen));
@@ -568,7 +568,7 @@ vfs_tree_vstat(struct vfs_mount *vmount, const char *path, struct stat *sb)
     struct vfs_node *node;
 
     VFS_TRACE(("\ttree_vstat(%s,%s)\n", vmount->mt_mount, path))
-    node = vfs_tree_lookup(tree, path, strlen(path), LK_OLOOKUP, LK_FFOLLOW);
+    node = vfs_tree_lookup(tree, path, (unsigned)strlen(path), LK_OLOOKUP, LK_FFOLLOW);
     if (node) {
         *sb = node->v_st;
         return 0;
@@ -585,7 +585,7 @@ vfs_tree_vlstat(struct vfs_mount *vmount, const char *path, struct stat *sb)
     struct vfs_node *node;
 
     VFS_TRACE(("\ttree_vlstat(%s,%s)\n", vmount->mt_mount, path))
-    node = vfs_tree_lookup(tree, path, strlen(path), LK_OLOOKUP, 0);
+    node = vfs_tree_lookup(tree, path, (unsigned)strlen(path), LK_OLOOKUP, 0);
     if (node) {
         *sb = node->v_st;
         return 0;
@@ -641,7 +641,7 @@ vfs_tree_vchdir(struct vfs_mount *vmount, const char *path)
     struct vfs_node *node;
 
     VFS_TRACE(("\ttree_vchdir(%s,%s)\n", vmount->mt_mount, path))
-    node = vfs_tree_lookup(tree, path, strlen(path), LK_OLOOKUP, LK_FFOLLOW);
+    node = vfs_tree_lookup(tree, path, (unsigned)strlen(path), LK_OLOOKUP, LK_FFOLLOW);
     if (node) {
         if (VNODE_DIR == node->v_type) {
             /*
@@ -664,7 +664,7 @@ vfs_tree_vopendir(struct vfs_mount *vmount, const char *path)
     vfs_node_t *node;
 
     VFS_TRACE(("\ttree_vopendir(%s,%s)\n", vmount->mt_mount, path))
-    node = vfs_tree_lookup(tree, path, strlen(path), LK_OLOOKUP, 0);
+    node = vfs_tree_lookup(tree, path, (unsigned)strlen(path), LK_OLOOKUP, 0);
     if (node) {
         if (VNODE_DIR == node->v_type) {
             struct vfs_handle *vhandle =
@@ -719,7 +719,7 @@ vfs_tree_vreaddir(struct vfs_handle *vhandle)
     if (name) {
         vfs_dirent_t *vdirent = &dir->d_entry;
 
-        vfs_dirent_init(vdirent, fd, name, strlen(name), node ? &node->v_st : NULL);
+        vfs_dirent_init(vdirent, fd, name, (unsigned)strlen(name), node ? &node->v_st : NULL);
         VFS_TRACE(("\ttree_vreaddir(%u, %s) : %p\n", fd, name, vdirent))
         return vdirent;
     }
@@ -791,7 +791,7 @@ vfs_tree_vopen(struct vfs_mount *vmount, const char *path, int mode, int mask)
 {
     struct vfs_tree *tree = vmount->mt_tree;
     struct vfs_node *node = NULL;
-    unsigned pathlen = strlen(path);
+    unsigned pathlen = (unsigned)strlen(path);
     int rwmode = 0;
     int error = 0;
     int fd = -1;
@@ -933,7 +933,7 @@ vfs_tree_vclose(struct vfs_handle *vhandle)
 
 
 int
-vfs_tree_vread(struct vfs_handle *vhandle, void *buffer, unsigned length)
+vfs_tree_vread(struct vfs_handle *vhandle, void *buffer, size_t length)
 {
     struct vfs_tree *tree = (struct vfs_tree *)vhandle->h_phandle;
     int ret = 0;                                /* default return */
@@ -943,16 +943,23 @@ vfs_tree_vread(struct vfs_handle *vhandle, void *buffer, unsigned length)
 
     } else {
         if (vhandle->h_ihandle >= 0) {
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:4267) // 'function': conversion from 'size_t' to 'unsigned int', possible loss of data
+#endif
             ret = vfsio_read(vhandle->h_ihandle, buffer, length);
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
         }
     }
-    VFS_TRACE(("\ttree_vread(%p=>%d,%p,%u) = %d\n", vhandle, vhandle->h_ihandle, buffer, length, ret))
+    VFS_TRACE(("\ttree_vread(%p=>%d,%p,%u) = %d\n", vhandle, vhandle->h_ihandle, buffer, (unsigned)length, ret))
     return ret;
 }
 
 
 int
-vfs_tree_vwrite(struct vfs_handle *vhandle, const void *buffer, unsigned length)
+vfs_tree_vwrite(struct vfs_handle *vhandle, const void *buffer, size_t length)
 {
     struct vfs_tree *tree = (struct vfs_tree *)vhandle->h_phandle;
     int ret = 0;                                /* default return */
@@ -962,10 +969,17 @@ vfs_tree_vwrite(struct vfs_handle *vhandle, const void *buffer, unsigned length)
 
     } else {
         if (vhandle->h_ihandle >= 0) {
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:4267) // 'function': conversion from 'size_t' to 'unsigned int', possible loss of data
+#endif
             ret = vfsio_write(vhandle->h_ihandle, buffer, length);
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
         }
     }
-    VFS_TRACE(("\ttree_vwrite(%p=>%d,%p,%u) = %d\n", vhandle, vhandle->h_ihandle, buffer, length, ret))
+    VFS_TRACE(("\ttree_vwrite(%p=>%d,%p,%u) = %d\n", vhandle, vhandle->h_ihandle, buffer, (unsigned)length, ret))
     return ret;
 }
 

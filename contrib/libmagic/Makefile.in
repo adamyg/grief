@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.22 2024/05/25 03:46:44 cvsuser Exp $
+# $Id: Makefile.in,v 1.25 2025/07/04 17:28:02 cvsuser Exp $
 # libmagic makefile
 #
 #
@@ -29,6 +29,7 @@ RANLIB=		@RANLIB@
 RM=		@RM@
 PERL=		@PERL@
 LIBTOOL=	@LIBTOOL@
+RC=		@RC@
 
 # Configuration
 
@@ -63,7 +64,10 @@ XFLAGS=
 CFLAGS=		@CFLAGS@
 CWARN=		@CWARN@
 ifeq ("gcc","@CC@")
-CWARN+=		-Wno-unused-const-variable
+CWARN+=		-Wno-unused-const-variable -Wno-unused-variable
+endif
+ifeq (clangcl,$(findstring clangcl,"@TOOLCHAIN@"))
+CWARN+=		-Wno-infinite-recursion -Wno-unneeded-internal-declaration
 endif
 CDEBUG=		@CDEBUG@
 CRELEASE=	@CRELEASE@
@@ -105,6 +109,12 @@ MAGICPACKED=	file-$(VERSION).gr.tgz
 MAGICSRC=	./file-$(VERSION)/src
 MAGDIR=		./file-$(VERSION)/magic
 
+VERSION_1	=$(word 1,$(subst ., ,$(VERSION)))
+VERSION_2	=$(word 2,$(subst ., ,$(VERSION)))
+VERSION_3	=$(word 3,$(subst ., ,$(VERSION)))
+ifeq ($(strip $(VERSION_3)),)
+VERSION_3	=0
+endif
 VERSIONSPEC=	$(subst .,:,$(VERSION))
 
 VPATH=		$(MAGICSRC)
@@ -160,10 +170,25 @@ LIBOBJS=\
 DLLOBJS=\
 	$(subst $(O),.lo,$(LIBOBJS))
 
+ifeq ("win32","@build_os@")
+ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
+DLLOBJS+=	$(D_OBJ)/libmagic_res.o
+else
+DLLOBJS+=	$(D_OBJ)/libmagic.res
+endif
+endif
+
 UTILOBJS=\
 	$(D_OBJ)/file$(O)		\
 	$(D_OBJ)/getline$(O)
-##	$(D_OBJ)/getopt_long$(O)
+
+ifeq ("win32","@build_os@")
+ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
+UTILOBJS+=	$(D_OBJ)/file_res.o
+else
+UTILOBJS+=	$(D_OBJ)/file.res
+endif
+endif
 
 XCLEAN+=	$(MAGICDB) magic.mgc
 OBJS=		$(LIBOBJS) $(DLLOBJS) $(UTILOBJS)
@@ -228,7 +253,8 @@ $(MAGICSRC)/magic.h:	$(MAGICSRC)/magic.h.in
 		@$(PERL) magic_header.pl --type=magic --version=$(VERSION) --src=$(MAGICSRC) --output=$(MAGICSRC)
 
 else
-generateinc:		config.h
+.PHONY:		generateinc
+generateinc:
 
 endif
 
@@ -251,9 +277,17 @@ clean:
 		-@$(RM) $(LIBOBJS) $(UTILOBJS) $(QUIETOUT)
 
 $(D_OBJ)/%$(O):		%$(C)
-		$(CC) $(CFLAGS) -D_CRT_SECURE_NO_DEPRECATE -o $@ -c $<
+		$(CC) $(CFLAGS) -o $@ -c $<
 
 $(D_OBJ)/%.lo:		%.c
-		$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -D_CRT_SECURE_NO_DEPRECATE -o $@ -c $<
+		$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -o $@ -c $<
+
+RCEXTRA		= -DMAGIC_VERSION=$(VERSION) -DMAGIC_VERSION_1=$(VERSION_1) -DMAGIC_VERSION_2=$(VERSION_2) -DMAGIC_VERSION_3=$(VERSION_3)
+
+$(D_OBJ)/%.res:		%.rc
+		$(RC) $(RCEXTRA) -fo $@ $<
+
+$(D_OBJ)/%_res.o:	%.rc
+		$(RC) $(RCEXTRA) -o $@ $<
 
 #end

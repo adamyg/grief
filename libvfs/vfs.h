@@ -1,15 +1,15 @@
 #ifndef GR_VFS_H_INCLUDED
 #define GR_VFS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_h,"$Id: vfs.h,v 1.17 2024/04/17 15:43:00 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_h,"$Id: vfs.h,v 1.19 2025/02/07 03:03:23 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs.h,v 1.17 2024/04/17 15:43:00 cvsuser Exp $
+/* $Id: vfs.h,v 1.19 2025/02/07 03:03:23 cvsuser Exp $
  * Virtial File System Interface.
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -87,7 +87,7 @@ typedef struct vfs_file {
     unsigned            f_bsize;                /* Buffer size, in bytes */
     int                 f_flags;                /* Open flags */
     char *              f_cursor;               /* Buffer cursor */
-    unsigned            f_left;                 /* Space left within cache */
+    size_t              f_left;                 /* Space left within cache */
 } vfs_file_t;
 
 //	typedef int vfsssize_t;
@@ -100,8 +100,8 @@ extern int                  vfs_unmount(const char *mountpoint, unsigned flags);
 
 extern int                  vfs_open(const char *path, int mode, int mask);
 extern int                  vfs_reopen(int fd, const char *path, int mode, int mask);
-extern int /*vfsssize_t*/   vfs_read(int handle, void *buffer, unsigned length);
-extern int /*vfsssize_t*/   vfs_write(int handle, const void *buffer, unsigned length);
+extern int /*vfsssize_t*/   vfs_read(int handle, void *buffer, size_t length);
+extern int /*vfsssize_t*/   vfs_write(int handle, const void *buffer, size_t length);
 extern int                  vfs_close(int handle);
 extern int                  vfs_seek(int handle, off_t offset, int whence);
 extern off_t                vfs_tell(int handle);
@@ -119,7 +119,7 @@ extern int                  vfs_closedir(vfs_dir_t *dir);
 extern int                  vfs_mkdir(const char *path, int mode);
 extern int                  vfs_rmdir(const char *path);
 extern int                  vfs_chdir(const char *dir);
-extern char *               vfs_cwd(char *buffer, unsigned length);
+extern char *               vfs_cwd(char *buffer, size_t length);
 
 extern int                  vfs_access(const char *path, int what);
 extern int                  vfs_stat(const char *path, struct stat *sb);
@@ -136,7 +136,7 @@ extern int                  vfs_mknod(const char *path, int mode, int dev);
 
 extern vfs_file_t *         vfs_fopen(const char *path, int flags, int mode, unsigned bsize);
 extern vfs_file_t *         vfs_fdopen(const char *path, int handle, int flags, int mode, unsigned bsize);
-extern int                  vfs_fwrite(vfs_file_t *file, const void *buffer, unsigned size);
+extern int                  vfs_fwrite(vfs_file_t *file, const void *buffer, size_t size);
 extern int                  vfs_fputc(vfs_file_t *file, char ch);
 extern int                  vfs_fputs(vfs_file_t *file, const char *str);
 extern int                  vfs_fclose(vfs_file_t *file);

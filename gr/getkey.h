@@ -1,11 +1,11 @@
 #ifndef GR_GETKEY_H_INCLUDED
 #define GR_GETKEY_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_getkey_h,"$Id: getkey.h,v 1.19 2024/08/25 06:01:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_getkey_h,"$Id: getkey.h,v 1.20 2025/06/30 10:18:18 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: getkey.h,v 1.19 2024/08/25 06:01:53 cvsuser Exp $
+/* $Id: getkey.h,v 1.20 2025/06/30 10:18:18 cvsuser Exp $
  * Keyboard event interface.
  *
  *
@@ -51,7 +51,7 @@ struct IOEvent {
 #define EVT_KEYDOWN         1                   /* key-down event */
 #define EVT_MOUSE           2                   /* mouse event */
 #define EVT_KEYRAW          99                  /* raw key-code */
-    int code;                                   /* key-code, see edalt.h */
+    int code;                                   /* key-code, see edalt.h and KEY */
     unsigned modifiers;                         /* raw modifiers */
     struct IOMouse mouse;                       /* associated mouse details; type=EVT_MOUSE */
     struct IOSequence sequence;                 /* underlying key data */

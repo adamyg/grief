@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.19 2024/05/19 16:18:05 cvsuser Exp $
+# $Id: Makefile.in,v 1.20 2025/01/13 16:21:57 cvsuser Exp $
 # libdlmalloc makefile.
 #
 #
-# Copyright (c) 1998 - 2024, Adam Young.
+# Copyright (c) 1998 - 2025, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.

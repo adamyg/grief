@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bsd_heapsort_c,"$Id: bsd_heapsort.c,v 1.5 2014/10/22 02:33:44 ayoung Exp $")
+__CIDENT_RCSID(gr_bsd_heapsort_c,"$Id: bsd_heapsort.c,v 1.6 2025/02/07 02:48:37 cvsuser Exp $")
 
 /*- -*- indent-width: 4; tabs: 8; -*-
  * Copyright (c) 1991, 1993
@@ -191,4 +191,5 @@ bsd_heapsort(void *vbase, size_t nmemb, size_t size, cmp_t cmp)
         free(k);
         return (0);
 }
+
 /*end*/

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_undo_c,"$Id: undo.c,v 1.53 2024/08/25 06:01:53 cvsuser Exp $")
+__CIDENT_RCSID(gr_undo_c,"$Id: undo.c,v 1.54 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: undo.c,v 1.53 2024/08/25 06:01:53 cvsuser Exp $
+/* $Id: undo.c,v 1.54 2025/02/07 03:03:22 cvsuser Exp $
  * undo and redo facilities.
  *
  *
@@ -162,13 +162,13 @@ static void             uwrite_data(FSIZE_t offset, const char *buf, int len);
 static void             uwrite_ctrl(FSIZE_t offset, undo_t *undo);
 
 static int              slice_read_last(undo_t *undo, UNDO_t *up);
-static int              slice_read(char *buf, int len, FSIZE_t offset);
-static int              slice_write(const char *buf, int len, FSIZE_t offset);
-static int              slice_rdwr(char *buf, int len, FSIZE_t offset, const int rdwr);
+static int              slice_read(char *buf, size_t len, FSIZE_t offset);
+static int              slice_write(const char *buf, size_t len, FSIZE_t offset);
+static int              slice_rdwr(char *buf, size_t len, FSIZE_t offset, const int rdwr);
 static undoslice_t *    slice_find(register FSIZE_t offset, const int rdwr);
 
-static int              upwrite(const char *buf, int len, FSIZE_t offset);
-static int              upread(char *buf, int len, FSIZE_t offset);
+static int              upwrite(const char *buf, size_t len, FSIZE_t offset);
+static int              upread(char *buf, size_t len, FSIZE_t offset);
 
 
 void
@@ -198,6 +198,8 @@ undo_init(void)
         printf("Cannot create undo file (%d):\n", fd);
         perror(u_fname);
         gr_exit(0);
+        //NOTREACHED
+        return;
     }
     u_fh = fileio_fileno(u_fp);
 #if !defined(NO_UNLINK_OPEN)
@@ -633,6 +635,7 @@ undo_command(undo_t *undo, int redo, UNDO_t *up, int pastwrite)
 
     default:
         ewprintf("undo: opcode error");
+        break;
     }
     return 0;
 }
@@ -747,7 +750,7 @@ uwrite_data(FSIZE_t offset, const char *buf, int len)
 static int
 slice_read_last(undo_t *undo, UNDO_t *up)
 {
-    if (slice_read((void *)undo, sizeof(*undo), up->u_last) != sizeof(*undo)) {
+    if (slice_read((void *)undo, sizeof(*undo), up->u_last) == -1) {
         ewprintf("undo: I/O error");
         return -1;
     }
@@ -767,7 +770,7 @@ slice_read_last(undo_t *undo, UNDO_t *up)
  *      0 on success, otherwise -1.
  */
 static int
-slice_read(char *buf, int len, FSIZE_t offset)
+slice_read(char *buf, size_t len, FSIZE_t offset)
 {
     return slice_rdwr(buf, len, offset, TRUE);
 }
@@ -785,7 +788,7 @@ slice_read(char *buf, int len, FSIZE_t offset)
  *      0 on success, otherwise -1.
  */
 static int
-slice_write(const char *buf, int len, FSIZE_t offset)
+slice_write(const char *buf, size_t len, FSIZE_t offset)
 {
     return slice_rdwr((char *)buf, len, offset, FALSE);
 }
@@ -804,10 +807,10 @@ slice_write(const char *buf, int len, FSIZE_t offset)
  *      0 on success, otherwise -1.
  */
 static int
-slice_rdwr(char *buf, int len, FSIZE_t offset, const int rdwr)
+slice_rdwr(char *buf, size_t len, FSIZE_t offset, const int rdwr)
 {
     register undoslice_t *sp;
-    int n, start_len = len;
+    size_t n;
     char *cp;
 
     while (len > 0) {
@@ -819,7 +822,7 @@ slice_rdwr(char *buf, int len, FSIZE_t offset, const int rdwr)
         cp = &sp->sl_buf[offset - sp->sl_offset];
         n = &sp->sl_buf[SLICE_SZE] - cp;
         if (n > len) {
-            n  = len;
+            n = len;
         }
 
         if (rdwr) {
@@ -830,9 +833,9 @@ slice_rdwr(char *buf, int len, FSIZE_t offset, const int rdwr)
 
         len -= n;
         buf += n;
-        offset += n;
+        offset += (FSIZE_t) n;
     }
-    return start_len;
+    return 0;
 }
 
 
@@ -905,7 +908,7 @@ slice_find(FSIZE_t offset, const int rdwr)
  *      0 on success, otherwise -1.
  */
 static int
-upwrite(const char *buf, int len, FSIZE_t offset)
+upwrite(const char *buf, size_t len, FSIZE_t offset)
 {
     if (u_offset != offset || u_need_seek) {
         (void) fseek(u_fp, offset, 0);
@@ -913,7 +916,7 @@ upwrite(const char *buf, int len, FSIZE_t offset)
     if (fwrite(buf, len, 1, u_fp) != 1) {
         return -1;
     }
-    u_offset = offset + len;
+    u_offset = offset + (FSIZE_t) len;
     u_need_seek = FALSE;
     return 0;
 }
@@ -932,18 +935,18 @@ upwrite(const char *buf, int len, FSIZE_t offset)
  *      0 on success, otherwise -1.
  */
 static int
-upread(char *buf, int len, FSIZE_t offset)
+upread(char *buf, size_t len, FSIZE_t offset)
 {
-    int ret;
-
     if (offset != u_offset) {
         (void) fseek(u_fp, offset, 0);
         u_offset = offset;
     }
-    ret = (int) fread(buf, len, 1, u_fp);
-    u_offset += len;
+    if (fread(buf, len, 1, u_fp) != 1) {
+        return -1;
+    }
+    u_offset += (FSIZE_t) len;
     u_need_seek = TRUE;
-    return ret;
+    return 0;
 }
 
 

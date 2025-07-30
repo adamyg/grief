@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_ruler_c,"$Id: m_ruler.c,v 1.18 2024/12/06 15:46:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_ruler_c,"$Id: m_ruler.c,v 1.19 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_ruler.c,v 1.18 2024/12/06 15:46:06 cvsuser Exp $
+/* $Id: m_ruler.c,v 1.19 2025/02/07 03:03:21 cvsuser Exp $
  * Ruler primitives.
  *
  *
@@ -496,7 +496,7 @@ inq_tab(void)                   /* int ([int bufnum]) */
 void
 do_distance_to_tab(void)        /* int ([int column]) */
 {
-    accint_t col = get_xinteger(1, *cur_col);
+    LINENO col = get_xinteger(1, *cur_col);
 
     if (col < 1) col = 1;
     acc_assign_int((accint_t) (ruler_next_tab(curbp, col) - col + 1));
@@ -550,7 +550,7 @@ do_distance_to_tab(void)        /* int ([int column]) */
 void
 do_distance_to_indent(void)     /* int ([int column]) */
 {
-    accint_t col = get_xinteger(1, *cur_col);
+    LINENO col = (LINENO)get_xinteger(1, *cur_col);
 
     if (col < 1) col = 1;
     acc_assign_int((accint_t) (ruler_next_indent(curbp, col) - col + 1));
@@ -1182,7 +1182,7 @@ ruler_export(const LINENO *ruler, int maxtabs, int mincnt, int aslist)
                 ++cnt;
             }
         }
-        acc_assign_str(buf ? buf : "", -1);
+        acc_assign_str(buf ? buf : "");
         chk_free((void *)buf);
     }
 }

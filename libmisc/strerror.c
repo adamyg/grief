@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_strerror_c,"$Id: strerror.c,v 1.13 2024/04/17 15:57:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_strerror_c,"$Id: strerror.c,v 1.14 2025/01/13 16:06:38 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: strerror.c,v 1.13 2024/04/17 15:57:13 cvsuser Exp $
+/* $Id: strerror.c,v 1.14 2025/01/13 16:06:38 cvsuser Exp $
  * libstr - str_error utility functions.
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

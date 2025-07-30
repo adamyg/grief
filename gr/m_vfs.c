@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_vfs_c,"$Id: m_vfs.c,v 1.17 2015/02/24 23:10:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_vfs_c,"$Id: m_vfs.c,v 1.18 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_vfs.c,v 1.17 2015/02/24 23:10:08 cvsuser Exp $
+/* $Id: m_vfs.c,v 1.18 2025/02/07 03:03:21 cvsuser Exp $
  * Virtual file system interface.
  *
  *
@@ -234,4 +234,5 @@ inq_vfs_mounts(void)            /* list () */
 
     acc_donate_list(mountlist, llength);
 }
+
 /*end*/

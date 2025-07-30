@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.72 2024/12/09 14:13:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_builtin_c,"$Id: builtin.c,v 1.74 2025/02/07 03:03:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: builtin.c,v 1.72 2024/12/09 14:13:08 cvsuser Exp $
+/* $Id: builtin.c,v 1.74 2025/02/07 03:03:20 cvsuser Exp $
  * Builtin expresssion evaluation.
  *
  *
@@ -110,7 +110,7 @@ iscsym(int c) /*TODO: compat_iscsym()*/
 
 /*
  *  execute_str ---
- *      Take a string, possiblity entered via the the command prompt, taking the
+ *      Take a string, possibly entered via the command prompt, taking the
  *      form <macro [arguments ... ]>, parse and then execute the specified macro.
  *
  *      Arguments can be either int, float otherwise treated as a string.
@@ -280,14 +280,14 @@ void
 execute_unassigned(const char *spec, int key, const char *seq)
 {
     //
-    //  TODO: general execute_key(), precompile during assign_to_key()
+    //  TODO: general execute_key(), pre-compile during assign_to_key()
     //
 #define UNASSIGNED_ARGV 16
 
     LIST list[LIST_SIZEOF(UNASSIGNED_ARGV)],    // 16 atoms
         *lp = list, *lpend = lp + (sizeof(list) - 1 /*HALT*/);
 
-    const int speclen = strlen(spec) + 1 /*nul*/;
+    const int speclen = (int)(strlen(spec) + 1 /*nul*/);
     char *cp = memcpy(alloca(speclen), spec, speclen);
 
     if (NULL == cp)
@@ -512,7 +512,7 @@ execute_xmacro(register const LIST *lp, const LIST *lp_argv)
         return;
 
     case F_LIT:             /* string literal */
-        acc_assign_str(LGET_PTR2(const char, lp), -1);
+        acc_assign_str(LGET_PTR2(const char, lp));
         return;
 
     case F_ID:              /* builtin */
@@ -729,7 +729,7 @@ execute_builtin(const BUILTIN *bp, const LIST *lp)
                     exectype = execute_expr2(argtype, olp, lap);
                 } else {
                     if (0 == (argtype & ARG_OPT)) {
-                        arg_error(bp, ERR_MISSING, lsaved, ssp, lap - largv);
+                        arg_error(bp, ERR_MISSING, lsaved, ssp, (int)(lap - largv));
                         return;
                     }
                     lap->l_flags = F_NULL;
@@ -790,7 +790,7 @@ execute_builtin(const BUILTIN *bp, const LIST *lp)
                     lap->l_flags = F_INT;
                     break;
                 }
-                arg_error(bp, ERR_INVALID, lsaved, ssp, lap - largv);
+                arg_error(bp, ERR_INVALID, lsaved, ssp, (int)(lap - largv));
                 return;
             default:
                 panic("%s: Unexpected exectype (0x%x/%d)", bp->b_name, exectype, exectype);
@@ -836,7 +836,7 @@ execute_builtin(const BUILTIN *bp, const LIST *lp)
     }
 
     if (argtype) {
-        assert(F_HALT == op && op == *lp);
+        assert(F_HALT == op && lp && op == *lp);
 
         do {                                    /* check for missing mandatory arguments. */
             if (0 == (argtype & ARG_OPT)) {
@@ -846,7 +846,7 @@ execute_builtin(const BUILTIN *bp, const LIST *lp)
 
             /*
              *  NULL pad trailing optional arguments.
-             *  Note: No macros currently requires, could reenable via flags (B_NULLPAD).
+             *  Note: No macros currently requires, could re-enable via flags (B_NULLPAD).
              */
 #if defined(B_NULLPAD)
               if (B_NULLFILL & bp->b_flags) {
@@ -869,9 +869,9 @@ execute_builtin(const BUILTIN *bp, const LIST *lp)
 
     } else {
         assert(0 == argtype && 0 == *argtypes);
-        assert((NULL == lp && op == F_HALT) || op == *lp);
+        assert((NULL == lp && op == F_HALT) || (lp && op == *lp));
 
-        if (F_HALT != op) {                     /* unexpected argments */
+        if (F_HALT != op) {                     /* unexpected arguments */
             arg_error(bp, ERR_TOOMANY, lsaved, ssp, 0);
             return;
         }

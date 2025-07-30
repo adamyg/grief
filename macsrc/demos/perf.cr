@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: perf.cr,v 1.9 2020/04/20 23:14:33 cvsuser Exp $
+/* $Id: perf.cr,v 1.10 2025/01/10 15:12:25 cvsuser Exp $
  * Engine performance monitoring.
  *
  *
@@ -66,21 +66,18 @@ perf(declare arg = 0)
 {
     const int basic_count = length_of_list(basic),
         benchmark_count = length_of_list(benchmarks);
-    int h, m, s;
-    int d, y;
-    int i;
-    int maj, min, edit;
-    string mon;
-    string buf;
+    int h, m, s, d, y, i;
+    int maj, min, edit, rel, cmver;
+    string mon, buf;
     int stime;
 
     date(y, NULL, d, mon);
     time(h, m, s);
     edit_file("PERF.log");
     end_of_buffer();
-    version(maj, min, edit);
-    sprintf(buf, "\n%d %s %d %02d:%02d v%d.%d%c (%s)\n",
-        d, mon, y, h, m, maj, min, edit, (grief_version(1) ? "release" : "debug"));
+    version(maj, min, edit, rel, NULL, NULL, cmver);
+    sprintf(buf, "\n%d %s %d %02d:%02d v%d.%d.%d.%d (cm: %d) <%s>\n",
+        d, mon, y, h, m, maj, min, edit, rel, cmver, (grief_version(1) ? "release" : "debug"));
     insert(buf);
     set_bottom_of_window();
     refresh();
@@ -152,6 +149,7 @@ perf_time(int test, string mac)
     insert(str);
     move_abs(0, 40);
     refresh();
+    message("perf: " + mac);
     s = inq_clock();
     execute_macro("pf_" + mac);
     e = inq_clock();
@@ -173,7 +171,7 @@ benchmark_time(int test, string mac)
     move_abs(0, 40);
     refresh();
     load_macro("benchmarks/" + mac);
-    message(mac);
+    message("benchmark: " + mac);
     s = inq_clock();
     execute_macro("benchmark_" + mac);
     e = inq_clock();
@@ -191,7 +189,6 @@ display_time(int s, int e)
     int usec = (e - s) % UNITS;
     string buf;
 
-//  sprintf(buf, "Time: %d.%02d", sec, usec / 10000);
     sprintf(buf, "Time: %d.%03d", sec, usec / 1000);
     return buf;
 }

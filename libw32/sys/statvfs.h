@@ -1,14 +1,14 @@
 #ifndef LIBW32_SYS_STATVFS_H
 #define LIBW32_SYS_STATVFS_H
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_statvfs_h,"$Id: statvfs.h,v 1.11 2024/03/31 15:57:30 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_statvfs_h,"$Id: statvfs.h,v 1.13 2025/07/24 08:29:14 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 [f]statvfs implementation
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -108,6 +108,7 @@ __CPRAGMA_ONCE
 
 #include <sys/cdefs.h>          /* __BEGIN/__END/.. */
 #include <sys/utypes.h>         /* fsblkcnt_t and fsfilcnt_t */
+#include <wchar.h>
 
 #define FSTYPSZ         16
 
@@ -135,8 +136,11 @@ struct statvfs {
 
 __BEGIN_DECLS
 
-LIBW32_API int          statvfs (const char *path, struct statvfs *fs);
-LIBW32_API int          fstatvfs (int, struct statvfs *);
+LIBW32_API int          statvfs (const char *path, struct statvfs *sb);
+LIBW32_API int          statvfsA (const char *path, struct statvfs *sb);
+LIBW32_API int          statvfsW (const wchar_t *path, struct statvfs *sb);
+
+LIBW32_API int          fstatvfs (int fildes, struct statvfs *sb);
 
 __END_DECLS
 

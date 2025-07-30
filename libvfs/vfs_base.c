@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_base_c,"$Id: vfs_base.c,v 1.28 2024/04/17 16:00:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_base_c,"$Id: vfs_base.c,v 1.30 2025/02/07 03:03:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_base.c,v 1.28 2024/04/17 16:00:29 cvsuser Exp $
+/* $Id: vfs_base.c,v 1.30 2025/02/07 03:03:23 cvsuser Exp $
  * Virtual file system interface - base implementation.
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -54,8 +54,8 @@ static int              vfsbase_unmount(struct vfs_mount *mount);
 
 static int              vfsbase_open(struct vfs_mount *vmount, const char *path, int mode, int mask);
 static int              vfsbase_close(struct vfs_handle *vhandle);
-static int              vfsbase_read(struct vfs_handle *vhandle, void *buffer, unsigned length);
-static int              vfsbase_write(struct vfs_handle *vhandle, const void *buffer, unsigned length);
+static int              vfsbase_read(struct vfs_handle *vhandle, void *buffer, size_t length);
+static int              vfsbase_write(struct vfs_handle *vhandle, const void *buffer, size_t length);
 static int              vfsbase_seek(struct vfs_handle *vhandle, off_t offset, int whence);
 static off_t            vfsbase_tell(struct vfs_handle *vhandle);
 static int              vfsbase_ioctl(struct vfs_handle *vhandle, int op, void *);
@@ -174,16 +174,23 @@ vfsbase_close(struct vfs_handle *vhandle)
 
 
 static int
-vfsbase_read(struct vfs_handle *vhandle, void *buffer, unsigned length)
+vfsbase_read(struct vfs_handle *vhandle, void *buffer, size_t length)
 {
     int fd = vhandle->h_ihandle;
-    const unsigned olength = length;
+    const size_t olength = length;
     char *data = (char *)buffer;
     int cnt;
 
     assert(vhandle->h_ihandle >= 0);
     while (length > 0) {
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:4267) // 'function': conversion from 'size_t' to 'unsigned int', possible loss of data
+#endif
         if ((cnt = vfsio_read(fd, data, length)) <= 0) {
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
             if (cnt < 0 && data == (void *)buffer) {
                 return -1;
             }
@@ -191,12 +198,12 @@ vfsbase_read(struct vfs_handle *vhandle, void *buffer, unsigned length)
         }
         length -= cnt; data += cnt;
     }
-    return (olength - length);
+    return (int /*ssize_t*/)(olength - length);
 }
 
 
 static int
-vfsbase_write(struct vfs_handle *vhandle, const void *buffer, unsigned length)
+vfsbase_write(struct vfs_handle *vhandle, const void *buffer, size_t length)
 {
     int fd = vhandle->h_ihandle;
     const char *data = (const char *)buffer;
@@ -204,7 +211,14 @@ vfsbase_write(struct vfs_handle *vhandle, const void *buffer, unsigned length)
 
     assert(vhandle->h_ihandle >= 0);
     do {                                        /* EINTR safe */
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:4267) // 'function': conversion from 'size_t' to 'unsigned int', possible loss of data
+#endif
         if ((cnt = vfsio_write(fd, data, length)) >= 0) {
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
             data += cnt, total += cnt;
             if ((length -= cnt) == 0) {
                 return total;                   /* success */
@@ -320,7 +334,7 @@ vfsbase_opendir(struct vfs_mount *vmount, const char *path)
 {
     DIR *dir = opendir(path);
     if (dir) {
-        unsigned pathlen = strlen(path);
+        const unsigned pathlen = (unsigned)strlen(path);
         struct vfs_handle *vhandle = vfs_handle_new(vmount, sizeof(vfsbase_dir_t));
 
         if (vhandle) {
@@ -376,7 +390,7 @@ vfsbase_readdir(struct vfs_handle *vhandle)
     }
     if (dent)  {
         name = (const char *)dent->d_name;
-        namlen = strlen(name);
+        namlen = (unsigned)strlen(name);
     }
 
     /* reload mount list, if stale */
@@ -445,7 +459,7 @@ vfsbase_rmdir(struct vfs_mount *vmount, const char *path)
 }
 
 
-extern const char *sys_cwd(char *path, int size);   /*FIXME*/
+extern const char *sys_cwd(char *path, int size);   /*FIXME: system.h*/
 
 static int
 vfsbase_chdir(struct vfs_mount *vmount, const char *path)

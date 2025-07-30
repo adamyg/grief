@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_util_c,"$Id: w32_util.c,v 1.25 2024/03/31 15:57:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_util_c,"$Id: w32_util.c,v 1.28 2025/07/24 08:29:46 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 util unix functionality.
  *
- * Copyright (c) 2007, 2012 - 2024 Adam Young.
+ * Copyright (c) 2007, 2012 - 2025 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -52,8 +52,16 @@ __CIDENT_RCSID(gr_w32_util_c,"$Id: w32_util.c,v 1.25 2024/03/31 15:57:28 cvsuser
  *  w32_getshell ---
  *      Retrieve the default shell.
  */
+
 LIBW32_API const char *
 w32_getshell(void)
+{
+    return w32_getshellA();
+}
+
+
+LIBW32_API const char *
+w32_getshellA(void)
 {
     const char *shname;
 
@@ -63,6 +71,9 @@ w32_getshell(void)
     if (shname == NULL)
         shname = getenv("ComSpec");
     if (shname == NULL) {
+#if defined(_MSC_VER)
+#pragma warning(disable:28159)                  // GetVersion() usage
+#endif
         if (GetVersion() < 0x80000000) {
             shname = "CMD.EXE";                 // Windows NT/2000/XP
         }
@@ -83,6 +94,9 @@ w32_getshellW(void)
     if (shname == NULL)
         shname = _wgetenv(L"ComSpec");
     if (shname == NULL) {
+#if defined(_MSC_VER)
+#pragma warning(disable:28159)                  // GetVersion() usage
+#endif
         if (GetVersion() < 0x80000000) {
             shname = L"CMD.EXE";                // Windows NT/2000/XP
         }
@@ -96,8 +110,34 @@ w32_getshellW(void)
  *  w32_gethome ---
  *      Retrieve the default home directory.
  */
-LIBW32_API const char *
+
+LIBW32_API const char*
 w32_gethome(int ignore_env)
+{
+#if defined(UTF8FILENAMES)
+    static const char *x_home = NULL;
+
+    if (w32_utf8filenames_state()) {
+        const wchar_t *wpath;
+
+        if (x_home) {                           // cached
+            return x_home;
+        }
+
+        if (NULL != (wpath = w32_gethomeW(ignore_env))) {
+            if (NULL != (x_home = w32_wc2utfa(wpath, NULL))) {
+                return x_home;
+            }
+        }
+     }
+#endif  //UTF8FILENAMES
+
+    return w32_gethomeA(ignore_env);
+}
+
+
+LIBW32_API const char *
+w32_gethomeA(int ignore_env)
 {
     static const char *x_home = NULL;
 
@@ -162,7 +202,7 @@ w32_gethome(int ignore_env)
                     t_path[len] = 0;
                 }
             }
-            w32_dos2unix(t_path);
+            w32_dos2unixA(t_path);
         }
 
         x_home = WIN32_STRDUP(done ? t_path : "c:/");
@@ -252,6 +292,10 @@ w32_utf2wc(const char *src, wchar_t *dest, size_t maxlen)
     int ret;
 
     assert(src), assert(dest), assert(maxlen);
+    if (NULL == src || NULL == dest) {
+        errno = EFAULT;
+        return -1;
+    }
 
     dest[0] = 0;
     if ((ret = MultiByteToWideChar(CP_UTF8, 0, src, -1, dest, (int)maxlen)) > 0) {
@@ -289,6 +333,11 @@ w32_utf2wcl(const char *src)
     int ret;
 
     assert(src);
+    if (NULL == src) {
+        errno = EFAULT;
+        return -1;
+    }
+
     if ((ret = MultiByteToWideChar(CP_UTF8, 0, src, -1, NULL, 0)) > 0) {
         return ret;
     } else {
@@ -351,6 +400,10 @@ w32_wc2utf(const wchar_t *src, char *dest, size_t maxlen)
     int ret;
 
     assert(src), assert(dest), assert(maxlen);
+    if (NULL == src || NULL == dest) {
+        errno = EFAULT;
+        return -1;
+    }
 
     dest[0] = 0;
     if ((ret = WideCharToMultiByte(CP_UTF8, 0, src, -1, dest, (int)maxlen, NULL, NULL)) > 0) {
@@ -389,6 +442,10 @@ w32_wc2utfa(const wchar_t *src, size_t *len)
     int ret;
 
     assert(src);
+    if (NULL == src) {
+        errno = EFAULT;
+        return NULL;
+    }
 
     if ((ret = WideCharToMultiByte(CP_UTF8, 0, src, -1, NULL, 0, NULL, NULL)) > 0) {
         char *dest = malloc(sizeof(char) * ret);
@@ -419,6 +476,106 @@ w32_wc2utfa(const wchar_t *src, size_t *len)
 }
 
 
+LIBW32_API char *
+w32_extendedpathA(const char *path)
+{
+    if (NULL == path || !*path)
+        return NULL;
+
+    if (path[1] == ':' && isalpha((unsigned char)path[0]) &&
+                ISSLASH(path[2])) {             // abs path, "X:/"
+        //
+        //  Utilise extended format; long-path(259+) and/or trailing dot/space
+        //
+        const size_t len = strlen(path);
+        const char eol = path[len - 1];
+
+        if (len >= MAX_PATH || eol == '.' || eol == ' ') {
+            char *expath;
+
+            if (NULL != (expath = malloc((len + 5) * sizeof(char)))) {
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:6386) // buffer overflow
+#endif
+                memcpy(expath, "\\\\?\\", 4);
+                memcpy(expath + 4, path, len + 1 /*NUL*/);
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
+                w32_unix2dosA(expath + 4);
+                return expath;
+            }
+        }
+
+    } else if (ISSLASH(path[0]) && ISSLASH(path[1]) && path[2] == '?') {
+        //
+        //  explicit prefix, unix2dos required
+        //
+        const size_t tlen = strlen(path) + 1;
+        char *expath;
+
+        if (NULL != (expath = malloc(tlen * sizeof(char)))) {
+            memcpy(expath, path, tlen);
+
+            w32_unix2dosA(expath + 4);
+            return expath;
+        }
+    }
+    return NULL;
+}
+
+
+LIBW32_API wchar_t *
+w32_extendedpathW(const wchar_t *path)
+{
+    if (NULL == path || !*path)
+        return NULL;
+
+    if (path[1] == ':' && iswalpha(path[0]) &&
+                ISSLASH(path[2])) {             // abs path, "X:/"
+        //
+        //  Utilise extended format; long-path(259+) and/or trailing dot/space
+        //
+        const size_t len = wcslen(path);
+        const wchar_t eol = path[len - 1];
+
+        if (len >= MAX_PATH || eol == '.' || eol == ' ') {
+            wchar_t *expath;
+
+            if (NULL != (expath = malloc((len + 5) * sizeof(wchar_t)))) {
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:6386) // buffer overflow
+#endif
+                wmemcpy(expath, L"\\\\?\\", 4);
+                wmemcpy(expath + 4, path, len + 1 /*NUL*/);
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
+                w32_unix2dosW(expath + 4);
+                return expath;
+            }
+        }
+
+    } else if (ISSLASH(path[0]) && ISSLASH(path[1]) && path[2] == '?') {
+        //
+        //  explicit prefix, unix2dos required
+        //
+        const size_t tlen = wcslen(path) + 1;
+        wchar_t *expath;
+
+        if (NULL != (expath = malloc(tlen * sizeof(wchar_t)))) {
+            wmemcpy(expath, path, tlen);
+            w32_unix2dosW(expath);
+
+            return expath;
+        }            
+    }
+    return NULL;
+}
+
+
 //  int
 //  w32_is64bit(void)
 //  {
@@ -442,8 +599,128 @@ w32_wc2utfa(const wchar_t *src, size_t *len)
 //  }
 
 
+/*
+ *  w32_filenamecmpA --- 
+ *      Lexically compares two filenames to determine whether one is less than, equal to, or greater than the other.   
+ * 
+ *      Comparison assumes case-insensitivity and forward/backwards slashes are equal. 
+ */
+
+LIBW32_API int
+w32_filenamecmpA(const char *f1, const char *f2, unsigned flags)
+{
+    if (f1 != f2) {
+        size_t idx = 0;
+
+        for (;;++idx) {
+            unsigned char c1 = *((const unsigned char *)f1),
+                c2 = *((const unsigned char *)f2);
+
+            if (ISSLASH(c1) && ISSLASH(f1[1])) {
+                if (idx) ++f1;                  // compress slashes; except leading, UNC
+            }
+
+            if (ISSLASH(c2) && ISSLASH(f2[1])) {
+                if (idx) ++f2;                  // compress slashes; except leading, UNC
+            }
+
+            if (c1 != c2) {                     // difference
+
+                if (0 == (flags & FNCMP_CASE_SENSITIVE)) {
+                    c1 = tolower(c1);
+                    c2 = tolower(c2);
+                }
+
+                if (c1 != c2) {
+                    if (!(ISSLASH(c1) && ISSLASH(c2))) {
+
+                        if ((flags & FNCMP_FILENAME) == 0) {
+                                                // trailing slash optional
+                            if (0 == c1 && ISSLASH(c2) && 0 == f2[1]) {
+                                return 0;
+                            }
+                            if (0 == c2 && ISSLASH(c1) && 0 == f1[1]) {
+                                return 0;
+                            }
+                        }
+                        return (c1 - c2);
+                    }
+                }
+            }
+
+            if (c1 == '\0') {
+                break;                          // EOS
+            }
+
+            ++f1, ++f2;
+        }
+    }
+    return 0;                                   // match
+}
+
+
+/*
+ *  w32_filenamecmpW --- 
+ *      Lexically compares two filenames to determine whether one is less than, equal to, or greater than the other.
+ *
+ *      Comparison assumes case-insensitivity and forward/backwards slashes are equal.
+ */
+
+LIBW32_API int
+w32_filenamecmpW(const wchar_t *f1, const wchar_t *f2, unsigned flags)
+{
+    if (f1 != f2) {
+        size_t idx = 0;
+
+        for (;;++idx) {
+            wchar_t c1 = *f1, c2 = *f2;
+
+            if (ISSLASH(c1) && ISSLASH(f1[1])) {
+                if (idx) ++f1;                  // compress slashes; except leading, UNC
+            }
+
+            if (ISSLASH(c2) && ISSLASH(f2[1])) {
+                if (idx) ++f2;                  // compress slashes; except leading, UNC
+            }
+
+            if (c1 != c2) {                     // difference
+
+                if (0 == (flags & FNCMP_CASE_SENSITIVE)) {
+                    c1 = towlower(c1);
+                    c2 = towlower(c2);
+                }
+
+                if (c1 != c2) {
+                    if (!(ISSLASH(c1) && ISSLASH(c2))) {
+
+                        if ((flags & FNCMP_FILENAME) == 0) {
+                                                // trailing slash optional
+                            if (0 == c1 && ISSLASH(c2) && 0 == f2[1]) {
+                                return 0;
+                            }
+
+                            if (0 == c2 && ISSLASH(c1) && 0 == f1[1]) {
+                                return 0;
+                            }
+                        }
+                        return (c1 - c2);
+                    }
+                }
+            }
+
+            if (c1 == '\0') {
+                break;                          // EOS
+            }
+
+            ++f1, ++f2;
+        }
+    }
+    return 0;                                   // match
+}
+
+
 LIBW32_API char *
-w32_dos2unix(char *path)
+w32_dos2unixA(char *path)
 {
     if (path) {
         char *p;
@@ -469,7 +746,7 @@ w32_dos2unixW(wchar_t *path)
 
 
 LIBW32_API char *
-w32_unix2dos(char *path)
+w32_unix2dosA(char *path)
 {
     if (path) {
         char *p;
@@ -495,7 +772,7 @@ w32_unix2dosW(wchar_t *path)
 
 
 LIBW32_API const char *
-w32_strslash(const char *path)
+w32_strslashA(const char *path)
 {
     if (path) {
         for (;*path; ++path) {
@@ -509,7 +786,7 @@ w32_strslash(const char *path)
 
 
 LIBW32_API const wchar_t *
-w32_wcsslash(const wchar_t *path)
+w32_strslashW(const wchar_t *path)
 {
     if (path) {
         for (;*path; ++path) {
@@ -543,9 +820,10 @@ w32_ostype(void)
             break;
 #endif
         case VER_PLATFORM_WIN32_NT:
-            //  Operating system        Version     Version         Other
+            //  Operating system        Version                     Other
             //                          Number      Major   Minor
             //
+            //  Windows 11              10.0*       10      0       OSVERSIONINFOEX.wProductType == VER_NT_WORKSTATION
             //  Windows 10              10.0*       10      0       OSVERSIONINFOEX.wProductType == VER_NT_WORKSTATION
             //  Windows Server 2016     10.0*       10      0       OSVERSIONINFOEX.wProductType != VER_NT_WORKSTATION
             //  Windows 8.1             6.3*        6       3       OSVERSIONINFOEX.wProductType == VER_NT_WORKSTATION
@@ -565,8 +843,8 @@ w32_ostype(void)
             //  2000                    5.0         5       0       Not applicable
             //
             //      * For applications that have been manifested for Windows 8.1 or Windows 10.  Applications not manifested
-            //      for Windows 8.1 or Windows 10 will return the Windows 8 OS version value (6.2). To manifest your applications
-            //      for Windows 8.1 or Windows 10, refer to Targeting your application for Windows.
+            //        for Windows 8.1 or Windows 10 will return the Windows 8 OS version value (6.2). To manifest your applications
+            //        for Windows 8.1 or Windows 10, refer to Targeting your application for Windows.
             //
             platform = OSTYPE_WIN_NT;           // or 2000
 
@@ -598,19 +876,64 @@ w32_ostype(void)
 
 
 LIBW32_API int
-w32_getexedir(char *buf, int maxlen)
+w32_getprogdir(char *buf, int maxlen)
 {
-    if (GetModuleFileNameA(NULL, buf, maxlen)) {
-        const int len = (int)strlen(buf);
-        char *cp;
+#if defined(UTF8FILENAMES)
+    if (w32_utf8filenames_state()) {
+        if (buf && maxlen) {
+            wchar_t wpath[WIN32_PATH_MAX];
+            int len;
 
-        for (cp = buf + len; (cp > buf) && (*cp != '\\'); cp--)
-            /*cont*/;
-        if ('\\' == *cp) {
-            cp[1] = '\0';                       // remove program
-            return (int)((cp - buf) + 1);
+            if ((len = w32_getprogdirW(wpath, _countof(wpath))) > 0) {
+                if ((len = w32_wc2utf(wpath, buf, maxlen)) > 0) {
+                    return len - 1;             // excluding nul.
+                }
+            }
         }
-        return len;
+    }
+#endif  //UTF8FILENAMES
+        
+    return w32_getprogdirA(buf, maxlen);
+}
+
+
+LIBW32_API int
+w32_getprogdirA(char* buf, int maxlen)
+{
+    if (buf && maxlen) {
+        if (GetModuleFileNameA(NULL, buf, maxlen)) {
+            const size_t len = strlen(buf);
+            char *cp;
+
+            for (cp = buf + len; (cp > buf) && (*cp != '\\'); cp--)
+                /*cont*/;
+            if ('\\' == *cp) {
+                cp[1] = '\0';                   // remove program
+                return (int)((cp - buf) + 1);
+            }
+            return (int)len;
+        }
+    }
+    return -1;
+}
+
+
+LIBW32_API int
+w32_getprogdirW(wchar_t *buf, int maxlen)
+{
+    if (buf && maxlen) {
+        if (GetModuleFileNameW(NULL, buf, maxlen)) {
+            const size_t len = wcslen(buf);
+            wchar_t *cp;
+
+            for (cp = buf + len; (cp > buf) && (*cp != '\\'); cp--)
+                /*cont*/;
+            if ('\\' == *cp) {
+                cp[1] = '\0';                   // remove program
+                return (int)((cp - buf) + 1);
+            }
+            return (int)len;
+        }
     }
     return -1;
 }

@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_refobj_c,"$Id: refobj.c,v 1.33 2024/04/17 15:57:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_refobj_c,"$Id: refobj.c,v 1.35 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: refobj.c,v 1.33 2024/04/17 15:57:13 cvsuser Exp $
+/* $Id: refobj.c,v 1.35 2025/02/07 03:03:22 cvsuser Exp $
  * Reference counted objects.
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -43,7 +43,7 @@ static vmpool_t             hd_rstr;
 ref_t *
 r_string(const char *str)
 {
-    return r_init(F_STR, str, strlen(str));
+    return r_init(F_STR, str, (int)strlen(str));
 }
 
 
@@ -247,7 +247,7 @@ ref_t *
 r_cat(ref_t *rp, const char *str)
 {
     if (str) {
-        rp = r_append(rp, str, strlen(str), 0);
+        rp = r_append(rp, str, (int)strlen(str), 0);
     }
     return rp;
 }

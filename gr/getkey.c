@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_getkey_c,"$Id: getkey.c,v 1.53 2024/11/26 15:04:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_getkey_c,"$Id: getkey.c,v 1.55 2025/06/30 10:18:18 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: getkey.c,v 1.53 2024/11/26 15:04:06 cvsuser Exp $
+/* $Id: getkey.c,v 1.55 2025/06/30 10:18:18 cvsuser Exp $
  * Low level input, both keyboard and mouse.
  *
  *
@@ -78,6 +78,10 @@ __CIDENT_RCSID(gr_getkey_c,"$Id: getkey.c,v 1.53 2024/11/26 15:04:06 cvsuser Exp
 #define WAIT_TIMEDOUT   0x0800                  /* timeout past to getkey() expired. */
 #define WAIT_2ND        0x1000                  /* second character timeout. */
 
+#if !defined(SIZEOF_INT) || (SIZEOF_INT < 4)
+#error Integers are assumed to 32 bit or greater; key-code/KEY definition
+#endif
+
 enum {
     ESCDELAY_DEFAULT = 0,
     ESCDELAY_ENV,
@@ -137,7 +141,7 @@ iot_current(void)
 
 
 static void
-iot_start(IOTimer_t *tmr, int tmo)
+iot_start(IOTimer_t *tmr, accint_t tmo)
     {
         if (tmo > 0) tmr->value = x_iotimer + tmo;
         else tmr->value = 0;
@@ -145,7 +149,7 @@ iot_start(IOTimer_t *tmr, int tmo)
 
 
 static void
-iot_starts(IOTimer_t *tmr, int tmo)
+iot_starts(IOTimer_t *tmr, accint_t tmo)
     {
         if (tmo > 0) tmr->value = x_iotimer + ((uint64_t)tmo * 1000);
         else tmr->value = 0;
@@ -232,7 +236,7 @@ io_wait(int state, struct IOEvent *evt, accint_t utmo)
     event = WAIT_TIMEDOUT;
 
     if (STATE_RAW & state) {                    /* 'utmo' is absolute */
-        tmo = utmo;
+        tmo = (int)utmo;
 
     } else if (STATE_2ND & state) {             /* 2nd character, apply esc-delay */
         if (-1 == x_escdelay ) {
@@ -265,7 +269,7 @@ io_wait(int state, struct IOEvent *evt, accint_t utmo)
 
         if (utmo > 0 && utmo < tmo) {
             event = WAIT_TIMEDOUT;
-            tmo = utmo;
+            tmo = (int)utmo;
         }
     }
 
@@ -1034,6 +1038,8 @@ io_check(struct IOEvent *evt, int mousemode, accint_t tmo)
                         if (!mousemode || ch16 == KEY_VOID) {
                             continue;           /* consume */
                         }
+                    } else {
+                        playback_store(ch16);
                     }
                     return ch16;
                 }

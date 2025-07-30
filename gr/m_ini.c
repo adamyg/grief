@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_ini_c,"$Id: m_ini.c,v 1.6 2019/01/28 00:24:41 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_ini_c,"$Id: m_ini.c,v 1.7 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_ini.c,v 1.6 2019/01/28 00:24:41 cvsuser Exp $
+/* $Id: m_ini.c,v 1.7 2025/02/07 03:03:21 cvsuser Exp $
  * INI interface.
  *
  *
@@ -239,7 +239,7 @@ do_iniquery(void)               /* string (int ifd, [string sect = ""], string k
             ret = IniQuery(iifile->file, section_argument(2), key, NULL);
         }
     }
-    acc_assign_str(ret ? ret : "", -1);
+    acc_assign_str(ret ? ret : "");
 }
 
 

@@ -1,4 +1,4 @@
-dnl $Id: libicu.m4,v 1.3 2024/05/02 14:34:31 cvsuser Exp $
+dnl $Id: libicu.m4,v 1.4 2025/07/03 08:40:04 cvsuser Exp $
 dnl Process this file with autoconf to produce a configure script.
 dnl -*- mode: autoconf; tab-width: 8; -*-
 dnl
@@ -60,15 +60,46 @@ AC_DEFUN([CF_LIB_ICU],[
 			AC_PATH_PROG(ICU_CONFIG, icu-config, no)
 		fi
 		if test "$ICU_CONFIG" = "no" ; then
-			echo "*** icu-config script could not be found within your path"
-			echo "*** see http://ibm.com/software/globalization/icu/"
+			AC_CHECK_TOOL([PKG_CONFIG], [pkg-config])
+			if test x"$PKG_CONFIG" != x""; then
+				if $PKG_CONFIG --exists icu-uc 2>/dev/null; then
+					LIBICU_VERSION=`$PKG_CONFIG --modversion icu-uc 2>/dev/null`
+				else
+					LIBICU_VERSION=0
+				fi
+
+				AC_MSG_CHECKING(for ICU verion >= $1)
+					LIBICU_VERSION_CHECK=`expr $LIBICU_VERSION \>\= $1`
+				AC_MSG_RESULT($LIBICU_VERSION)
+
+				if test "$LIBICU_VERSION_CHECK" = "1" ; then
+					AC_MSG_CHECKING(LIBICU_CFLAGS)
+					LIBICU_CFLAGS=`$PKG_CONFIG --cflags icu-i18n 2>/dev/null`
+					AC_MSG_RESULT($LIBICU_CFLAGS)
+
+					AC_MSG_CHECKING(LIBICU_CXXFLAGS)
+					LIBICU_CXXFLAGS=`$PKG_CONFIG --cflags icu-i18n 2>/dev/null`
+					AC_MSG_RESULT($LIBICU_CXXFLAGS)
+
+					AC_MSG_CHECKING(LIBICU)
+					LIBICU=`$PKG_CONFIG --libs-only-l icu-i18n 2>/dev/null`
+					AC_MSG_RESULT($LIBICU)
+
+					have_icu_lib=yes
+				else
+					echo "*** ICU not available"
+				fi
+			else
+				echo "*** neither icu-config or pkg-config could not be found within your path"
+				echo "*** see http://ibm.com/software/globalization/icu/"
+			fi
 		else
 			LIBICU_VERSION=`$ICU_CONFIG --version`
 			AC_MSG_CHECKING(for ICU verion >= $1)
-				VERSION_CHECK=`expr $LIBICU_VERSION \>\= $1`
+				LIBICU_VERSION_CHECK=`expr $LIBICU_VERSION \>\= $1`
 			AC_MSG_RESULT($LIBICU_VERSION)
 
-			if test "$VERSION_CHECK" = "1" ; then
+			if test "$LIBICU_VERSION_CHECK" = "1" ; then
 				AC_MSG_CHECKING(LIBICU_CFLAGS)
 				LIBICU_CFLAGS=`$ICU_CONFIG --cflags`
 				AC_MSG_RESULT($LIBICU_CFLAGS)

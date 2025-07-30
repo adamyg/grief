@@ -11,9 +11,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    
     - name: Solaris 11.4
-      uses: vmactions/solaris-vm@v1.1.0
+      uses: vmactions/solaris-vm@v1.1.4
       with:
+        release: "11.4-gcc"
         usesh: true
         mem: 6144
         prepare: |
@@ -29,20 +31,23 @@ jobs:
           pkg list -a 'developer/*'
           pkg list -a 'library/*'
           echo ===== Packages requirements
-          pkg install -v system/locale system/header
           pkg install -v --accept \
-            developer/gcc-11 \
-            developer/build/gnu-make \
-            developer/build/make \
-            developer/build/autoconf \
-            developer/build/autoconf \
-            developer/build/libtool \
-            developer/build/pkg-config \
-            developer/lexer/flex \
-            developer/parser/bison \
-            library/ncurses
+                developer/lexer/flex \
+                developer/parser/bison
 
-## vm1.0.2: was: gcc-7@7.3.0-11.4.0.0.1.14
+# vm:generic
+#         pkg install -v system/locale system/header
+#         pkg install -v --accept \
+#               developer/gcc-11 \
+#               developer/build/gnu-make \
+#               developer/build/make \
+#               developer/build/autoconf \
+#               developer/build/libtool \
+#               developer/build/pkg-config \
+#               library/ncurses
+
+# vm:1.0.2
+#               gcc-7@7.3.0-11.4.0.0.1.14
 
         run: |
           export LC_ALL=C
@@ -55,6 +60,21 @@ jobs:
           export CFLAGS="-std=gnu11 -D_XOPEN_SOURCE=500 -D__EXTENSIONS__=1"
           ./configure --prefix=/usr
           gmake release build
+          gmake release unittest
+                
+    - name: Solaris, tarball
+      shell: bash
+      run: |
+          tar -czvf pkg-solaris-${{ github.run_number }}.tar.gz \
+                bin.gcc/release/* macros/* help/* macsrc/*
+
+    - name: Solaris, artifacts
+      uses: softprops/action-gh-release@v2
+      with:
+        files: pkg-solaris-${{ github.run_number }}.tar.gz
+        draft: true
+
+#end
 
 ## References:
 ## https://github.com/oracle/solaris-userland/blob/master/make-rules/shared-macros.mk

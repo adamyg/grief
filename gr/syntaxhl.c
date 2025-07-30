@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_syntaxhl_c,"$Id: syntaxhl.c,v 1.38 2024/04/16 10:30:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_syntaxhl_c,"$Id: syntaxhl.c,v 1.40 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: syntaxhl.c,v 1.38 2024/04/16 10:30:36 cvsuser Exp $
+/* $Id: syntaxhl.c,v 1.40 2025/02/07 03:03:22 cvsuser Exp $
  * Basic syntax highlighting.
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -63,8 +63,8 @@ hilite_select(SyntaxTable_t *st, void *object)
 }
 
 
-static int
-trailing(uint32_t flags, const LINECHAR *cursor, const LINECHAR *end, unsigned char ch, unsigned sz)
+static size_t
+trailing(uint32_t flags, const LINECHAR *cursor, const LINECHAR *end, unsigned char ch, size_t sz)
 {
     if (SYNF_MANDOC & flags) {
         cursor += sz;
@@ -86,7 +86,7 @@ hilite_write(
     const SyntaxChar_t *charmap = st->syntax_charmap;
     size_t length = (end - cursor) + offset;    /* true line length */
     const LINECHAR *begin = cursor - offset, *t_cursor;
-    unsigned flength = 0;
+    size_t flength = 0;
 
     __CUNUSED(object)
 
@@ -104,7 +104,7 @@ hilite_write(
 
                 if (st->comment_fixed_char[ch]) {
                     const unsigned rcomment = st->comment_fixed_margin[FIXED_RCOMMENT];
-                    unsigned olength = 0;       /* overflow length */
+                    size_t olength = 0;         /* overflow length */
 
                     if (rcomment > 0) {         /* .. greater then comment right margin */
                         if (length > rcomment) {
@@ -224,7 +224,7 @@ hilite_write(
 
                         if (rcomment > 0) {     /* ... greater then margin 2 */
                             if (end > begin + rcomment) {
-                                olength = (end - begin) - rcomment;
+                                olength = (unsigned)((end - begin) - rcomment);
                                 end = begin + rcomment;
                             }
                         }

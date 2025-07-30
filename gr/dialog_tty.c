@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dialog_tty_c,"$Id: dialog_tty.c,v 1.33 2024/11/29 11:51:58 cvsuser Exp $")
+__CIDENT_RCSID(gr_dialog_tty_c,"$Id: dialog_tty.c,v 1.35 2025/02/08 16:25:12 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dialog_tty.c,v 1.33 2024/11/29 11:51:58 cvsuser Exp $
+/* $Id: dialog_tty.c,v 1.35 2025/02/08 16:25:12 cvsuser Exp $
  * Dialog manager, TTY interface.
  *
  *

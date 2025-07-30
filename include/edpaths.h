@@ -1,11 +1,11 @@
 #ifndef GR_EDPATHS_H_INCLUDED
 #define GR_EDPATHS_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edpaths_h,"$Id: edpaths.h,v 1.23 2024/05/02 16:33:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_edpaths_h,"$Id: edpaths.h,v 1.24 2025/01/13 16:20:06 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edpaths.h,v 1.23 2024/05/02 16:33:27 cvsuser Exp $
+/* $Id: edpaths.h,v 1.24 2025/01/13 16:20:06 cvsuser Exp $
  * Default system paths ...
  *
  *  Example:
@@ -13,7 +13,7 @@ __CPRAGMA_ONCE
  *      o Unix, ROOT=/usr/local/share/gr
  *      o WIN32, ROOT=C:/Program Files/Grief
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

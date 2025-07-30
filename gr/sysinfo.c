@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.57 2024/07/19 05:04:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_sysinfo_c,"$Id: sysinfo.c,v 1.59 2025/02/08 16:24:48 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: sysinfo.c,v 1.57 2024/07/19 05:04:22 cvsuser Exp $
+/* $Id: sysinfo.c,v 1.59 2025/02/08 16:24:48 cvsuser Exp $
  * System information services.
  *
  *
@@ -379,8 +379,10 @@ resolve_execname(const char *name)
     __CUNUSED(cp)
 
 #if defined(WIN32) || defined(__CYGWIN__)
-    namelen = GetModuleFileNameA(NULL, t_name, sizeof(t_name)-1);
-    trace_log("exename: <%s/%u>\n", t_name, (unsigned)namelen);
+    if ((namelen = GetModuleFileNameA(NULL, t_name, sizeof(t_name)-1)) > 0 && t_name[0]) {
+        name = t_name;
+    }
+    trace_log("exename: <%s> (%u)\n", t_name, (unsigned)namelen);
     t_name[namelen] = 0;
 
 #if defined(__CYGWIN__)
@@ -710,13 +712,13 @@ sysinfo_domainname(char *name, int len)
 
         if (NULL == domain) {
             FILE *resolv;
-            char *p, *s;
                                                 /* std unix locations */
             if (NULL != (resolv = (fopen("/etc/resolv.conf", "r"))) ||
                     NULL != (resolv = (fopen("/etc/config/resolv.conf", "r")))) {
 
+                memset(buf, 0, sizeof(buf));
                 while (fgets(buf, sizeof(buf), resolv)) {
-                    p = buf;
+                    char *s, *p = buf;
 
                     /* Comments (and then consume leading white) */
                     if (p[0] == '#') continue;

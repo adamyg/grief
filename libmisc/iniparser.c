@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_iniparser_c,"$Id: iniparser.c,v 1.18 2024/04/17 15:57:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_iniparser_c,"$Id: iniparser.c,v 1.20 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: iniparser.c,v 1.18 2024/04/17 15:57:13 cvsuser Exp $
+/* $Id: iniparser.c,v 1.20 2025/02/07 03:03:22 cvsuser Exp $
  * INI parser.
  *
  *
- * Copyright (c) 2012 - 2024, Adam Young.
+ * Copyright (c) 2012 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -106,16 +106,16 @@ typedef struct _iniSection {
 } IniSection_t;
 
 
-static IniSection_t *   iniSectionNew(IFILE *ifile, const char *name, int nlen, unsigned line);
-static IniSection_t *   iniSectionFnd(IFILE *ifile, const char *name, int nlen);
+static IniSection_t *   iniSectionNew(IFILE *ifile, const char *name, unsigned nlen, unsigned line);
+static IniSection_t *   iniSectionFnd(IFILE *ifile, const char *name, unsigned nlen);
 static void             iniSectionClr(IniSection_t *sect, int comments);
 static void             iniSectionDel(IFILE *ifile, IniSection_t *sect, int root);
 
 static IniProperty_t *  iniPropertyNew(IniSection_t *sect, char delimiter,
-                            const char *key, int klen, const char *dat, int dlen, unsigned line);
+                            const char *key, unsigned klen, const char *dat, unsigned dlen, unsigned line);
 static IniProperty_t *  iniPropertyNewx(IniSection_t *sect, char delimiter,
-                            const char *key, int klen, const char *dat, int dlen, const char *comment, int clen, unsigned line);
-static IniComment_t *   iniCommentNew(ICommentsList_t *comments, const char *text, int tlen, unsigned line);
+                            const char *key, unsigned klen, const char *dat, unsigned dlen, const char *comment, int clen, unsigned line);
+static IniComment_t *   iniCommentNew(ICommentsList_t *comments, const char *text, unsigned tlen, unsigned line);
 
 static int              iniGetx(IFILE *ifile, IniSection_t **iSect);
 static int              iniGetl(IFILE *ifile, const char **special, const char **comment);
@@ -151,7 +151,7 @@ RB_GENERATE_STATIC(_iniSectionTree, _iniSection, s_node, iniSectionCmp);
  *      Section object, otherwise NULL.
  */
 static IniSection_t *
-iniSectionNew(IFILE *ifile, const char *name, int nlen, unsigned line)
+iniSectionNew(IFILE *ifile, const char *name, unsigned nlen, unsigned line)
 {
     ISectionList_t *sections = &ifile->i_sections;
     IniSection_t *sect;
@@ -199,11 +199,11 @@ iniSectionNew(IFILE *ifile, const char *name, int nlen, unsigned line)
  *      Section object, otherwise NULL.
  */
 static IniSection_t *
-iniSectionFnd(IFILE *ifile, const char *name, int nlen)
+iniSectionFnd(IFILE *ifile, const char *name, unsigned nlen)
 {
     IniSection_t t_sect;
 
-    assert(name && nlen >= 0);
+    assert(name);
     if (0 == *name) {
         assert(ifile->i_root);
         return ifile->i_root;
@@ -306,7 +306,7 @@ iniSectionDel(IFILE *ifile, IniSection_t *sect, int root)
  */
 static IniProperty_t *
 iniPropertyNewx(IniSection_t *sect, char delimiter,
-        const char *key, int klen, const char *data, int dlen, const char *comment, int clen, unsigned line)
+        const char *key, unsigned klen, const char *data, unsigned dlen, const char *comment, int clen, unsigned line)
 {
     IniProperty_t *prop;
 
@@ -356,7 +356,7 @@ iniPropertyNewx(IniSection_t *sect, char delimiter,
 
 static IniProperty_t *
 iniPropertyNew(IniSection_t *sect, char delimiter,
-        const char *key, int klen, const char *data, int dlen, unsigned line)
+        const char *key, unsigned klen, const char *data, unsigned dlen, unsigned line)
 {
     return iniPropertyNewx(sect, delimiter, key, klen, data, dlen, NULL, 0, line);
 }
@@ -375,7 +375,7 @@ iniPropertyNew(IniSection_t *sect, char delimiter,
  *      Comment object, otherwise NULL.
  */
 static IniComment_t *
-iniCommentNew(ICommentsList_t *comments, const char *text, int tlen, unsigned line)
+iniCommentNew(ICommentsList_t *comments, const char *text, unsigned tlen, unsigned line)
 {
     IniComment_t *comment;
 
@@ -575,7 +575,7 @@ iniGetx(IFILE *ifile, IniSection_t **iSect)
     *cursor = '\0';
 
     if (cursor > buffer) {
-        const int buflen = cursor - buffer;
+        const unsigned buflen = (unsigned)(cursor - buffer);
         IniSection_t *sect = iniSectionFnd(ifile, buffer, buflen);
 
         if (NULL == (*iSect = sect)) {
@@ -922,7 +922,7 @@ next:;  switch(ch) {
     cursor  = iniTrimr(buffer, cursor);
     *cursor = '\0';
 
-    return ((cursor == buffer && ch < 0) ? -1 : cursor - buffer);
+    return ((cursor == buffer && ch < 0) ? -1 : (int)(cursor - buffer));
 
 #undef  BUFPUSH
 }
@@ -960,11 +960,11 @@ ED_TRACE(("SEC: [%s]\n", ifile->i_buffer))
                     if (special) {              /* key=value */
                         if ('=' == *special || ':' == *special) {
                             const int
-                                klen = special - buffer,
-                                dlen = (comment ? (comment - special) - 1 : (ret - klen) - 1);
+                                klen = (int)(special - buffer),
+                                dlen = (int)(comment ? (comment - special) - 1 : (ret - klen) - 1);
 
                             if (comment && (IFILE_COMMENTS & flags)) {
-                                const int clen = (buffer + ret) - comment;
+                                const int clen = (int)((buffer + ret) - comment);
 
                                 iniPropertyNewx(sect, *special,
                                     buffer, klen, special + 1, dlen, comment, clen, ifile->i_line);
@@ -1266,7 +1266,7 @@ IniFirst(IFILE *ifile, const char *section)
 
         assert(IFILE_MAGIC == ifile->i_magic);
         if (NULL != (sect =
-                (section ? iniSectionFnd(ifile, section, strlen(section)) : TAILQ_FIRST(sections)))) {
+                (section ? iniSectionFnd(ifile, section, (unsigned)strlen(section)) : TAILQ_FIRST(sections)))) {
 
             IPropertiesList_t *properties = &sect->s_properties;
             IniProperty_t *prop = TAILQ_FIRST(properties);
@@ -1437,7 +1437,7 @@ IniPush(IFILE *ifile, const char *section, const char *key,
     assert((key && value) || comment);
 
     if (ifile) {
-        const int sectionlen = strlen(section);
+        const unsigned sectionlen = (unsigned)strlen(section);
         IniSection_t *sect;
 
         assert(IFILE_MAGIC == ifile->i_magic);
@@ -1465,18 +1465,18 @@ IniPush(IFILE *ifile, const char *section, const char *key,
 
                     if (((const char *)-1) == comment && prop && prop->n_comment) {
 ED_TRACE(("PRO+ %s%c%s\t##%s\n", key, delimiter, value, comment))
-                        nprop = iniPropertyNewx(sect, delimiter, key, strlen(key),
-                                    value, strlen(value), prop->n_comment, strlen(prop->n_comment), 0);
+                        nprop = iniPropertyNewx(sect, delimiter, key, (unsigned)strlen(key),
+                                    value, (unsigned)strlen(value), prop->n_comment, (unsigned)strlen(prop->n_comment), 0);
 
                     } else if (comment && *comment) {
 ED_TRACE(("PRO= %s%c%s\t##%s\n", key, delimiter, value, comment))
-                        nprop = iniPropertyNewx(sect, delimiter, key, strlen(key),
-                                    value, strlen(value), comment, strlen(comment), 0);
+                        nprop = iniPropertyNewx(sect, delimiter, key, (unsigned)strlen(key),
+                                    value, (unsigned)strlen(value), comment, (unsigned)strlen(comment), 0);
 
                     } else {
 ED_TRACE(("PRO= %s%c%s\n", key, delimiter, value))
-                        nprop = iniPropertyNew(sect, delimiter, key, strlen(key),
-                                    value, strlen(value), 0);
+                        nprop = iniPropertyNew(sect, delimiter, key, (unsigned)strlen(key),
+                                    value, (unsigned)strlen(value), 0);
                     }
 
                     if (nprop) {
@@ -1492,7 +1492,7 @@ ED_TRACE(("PRO= %s%c%s\n", key, delimiter, value))
             } else {
                 if (comment) {                  /* comment */
 ED_TRACE(("CMT+ %s\n", comment))
-                    iniCommentNew(&sect->s_comments, comment, strlen(comment), 0);
+                    iniCommentNew(&sect->s_comments, comment, (unsigned)strlen(comment), 0);
                     ++ifile->i_modifications;
                     return 0;
                 }
@@ -1512,7 +1512,7 @@ ED_TRACE(("CMT+ %s\n", comment))
  *      section - Section name.
  *      key - Optional key value, if omitted the section properties are removed.
  *      keep - Section keep flag; if *TRUE* keep the section definitions,
- *          removing only the associated properities.
+ *          removing only the associated properties.
  *
  *  Returns:
  *      The number of properties removed, otherwise -1 on error.
@@ -1523,7 +1523,7 @@ IniRemove(IFILE *ifile, const char *section, const char *key, int keep)
     assert(section);
 
     if (ifile) {
-        const int sectionlen = strlen(section);
+        const unsigned sectionlen = (unsigned)strlen(section);
         IniSection_t *sect;
 
         assert(IFILE_MAGIC == ifile->i_magic);
@@ -1641,5 +1641,6 @@ main(void)
         IniClose(ifile);
     }
 }
-#endif  /*LOCAL_MAIN*/
-/*eof*/
+#endif /*LOCAL_MAIN*/
+
+/*end*/

@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.106 2024/12/04 15:09:38 cvsuser Exp $
+# $Id: Makefile.in,v 1.109 2025/06/28 11:08:46 cvsuser Exp $
 # GRIEF editor makefile.
 #
 #
-# Copyright (c) 1998 - 2024, Adam Young.
+# Copyright (c) 1998 - 2025, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -166,7 +166,11 @@ endif	#gcc
 
 XFLAGS=
 CFLAGS=		@CFLAGS@
+ifeq (owc,$(findstring owc,"@TOOLCHAIN@"))
+CWARN+=		-wcd124
+else
 CWARN=		@CWARN@ $(CWALL)
+endif
 CDEBUG=		@CDEBUG@
 CRELEASE=	@CRELEASE@
 CXXFLAGS=	@CXXFLAGS@
@@ -237,6 +241,7 @@ CSRC=\
 	anchor.c		\
 	arg.c			\
 	argrc.c			\
+	argvwin.c		\
 	basic.c			\
 	bookmark.c		\
 	border.c		\

@@ -1,10 +1,10 @@
 #!/usr/bin/perl
-# $Id: configcheck.pl,v 1.2 2024/05/01 14:31:56 cvsuser Exp $
+# $Id: configcheck.pl,v 1.3 2025/01/13 14:57:54 cvsuser Exp $
 # -*- tabs: 8; indent-width: 4; -*-
 # Check config.hin against acdefines.h
 #
 #
-# Copyright (c) 1920 - 2024, Adam Young.
+# Copyright (c) 1920 - 2025, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.

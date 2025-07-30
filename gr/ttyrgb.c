@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttyrgb_c,"$Id: ttyrgb.c,v 1.20 2024/11/18 13:42:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttyrgb_c,"$Id: ttyrgb.c,v 1.21 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttyrgb.c,v 1.20 2024/11/18 13:42:22 cvsuser Exp $
+/* $Id: ttyrgb.c,v 1.21 2025/02/07 03:03:22 cvsuser Exp $
  * Color RGB support.
  *
  *
@@ -123,7 +123,7 @@ Round(double x)
 
 
 int
-rgb_import(const char *name, int length, struct rgbvalue *rgb, int rgbmax)
+rgb_import(const char *name, size_t length, struct rgbvalue *rgb, int rgbmax)
 {
     int r = 0, g = 0, b = 0, ret = COLORRGB_BAD;
 
@@ -410,7 +410,7 @@ rgbhex(const char **cursor, int len, int rgbmax)
 
 
 int
-rgb_export(char *buf, int length, const struct rgbvalue *rgb, int rgbmax)
+rgb_export(char *buf, size_t length, const struct rgbvalue *rgb, int rgbmax)
 {
     int len = 0;
 

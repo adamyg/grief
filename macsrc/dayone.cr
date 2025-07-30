@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: dayone.cr,v 1.4 2024/12/09 14:14:19 cvsuser Exp $
+/* $Id: dayone.cr,v 1.5 2025/01/09 16:35:28 cvsuser Exp $
  * day-one execution.
  *
  *
@@ -272,6 +272,7 @@ grinit_prime(string home)
     }
 
     set_buffer(rcbuf);
+    set_buffer_flags(NULL, NULL, ~BF_READONLY); /* readable */
     if (write_buffer(grinit, WRITE_NOTRIGGER) < 0) {
         error("Couldn't create <%s>.", grinit);
         ret = -1;

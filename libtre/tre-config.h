@@ -1,7 +1,7 @@
 #ifndef LIBTRE_TRE_CONFIG_H_INCLUDED
 #define LIBTRE_TRE_CONFIG_H_INCLUDED
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: tre-config.h,v 1.1 2014/07/08 22:50:18 ayoung Exp $
+/* $Id: tre-config.h,v 1.4 2025/06/28 11:11:01 cvsuser Exp $
  * libtre tre-config.h
  *
  *
@@ -9,7 +9,6 @@
 
 #ifndef RC_INVOKED
 #include "config.h"
-#endif
 
 /* Define if you want to enable approximate matching functionality. */
 #define TRE_APPROX 1
@@ -29,6 +28,12 @@
 
 /* Define to enable wide character (wchar_t) support. */
 #define TRE_WCHAR 1
+#if !defined(HAVE_WCSRTOMBS) && !defined(HAVE_WCSTOMBS)
+#error either wcsrtombs or wcstombs required for wchar_t support
+#endif
+#define TRE_MBSTATE 1
+
+#endif //RC_INVOKED
 
 /* TRE version string. */
 #define TRE_VERSION "0.8.0"

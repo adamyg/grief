@@ -1,11 +1,9 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_timeget_c,"$Id: timeget.c,v 1.6 2024/04/17 15:57:14 cvsuser Exp $")
+__CIDENT_RCSID(gr_timeget_c,"$Id: timeget.c,v 1.8 2025/06/28 14:22:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
- *
- *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -46,7 +44,11 @@ timespec_current(struct timespec *ts)
 
 #elif defined(HAVE_GETTIMEOFDAY)
     struct timeval tv;
+#if defined(_WIN32) && defined(__MINGW32__)
+    (void) mingw_gettimeofday(&tv, NULL);
+#else
     (void) gettimeofday(&tv, NULL);
+#endif
     ts->tv_sec = tv.tv_sec;
     ts->tv_nsec = tv.tv_usec * 1000;
 

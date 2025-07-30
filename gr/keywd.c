@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.111 2024/09/08 16:29:24 cvsuser Exp $")
+__CIDENT_RCSID(gr_keywd_c,"$Id: keywd.c,v 1.112 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: keywd.c,v 1.111 2024/09/08 16:29:24 cvsuser Exp $
+/* $Id: keywd.c,v 1.112 2025/02/07 03:03:21 cvsuser Exp $
  * Keyword table.
  *
  *
@@ -2602,7 +2602,7 @@ builtin_index(const char *str)
 {
     BUILTIN *bp = builtin_lookup(str);
     if (bp) {
-        return bp - builtin;
+        return (int)(bp - builtin);
     }
     return -1;
 }

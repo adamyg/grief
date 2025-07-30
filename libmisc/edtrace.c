@@ -1,13 +1,13 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edtrace_c,"$Id: edtrace.c,v 1.50 2024/11/19 16:18:25 cvsuser Exp $")
+__CIDENT_RCSID(gr_edtrace_c,"$Id: edtrace.c,v 1.51 2025/01/13 16:06:38 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edtrace.c,v 1.50 2024/11/19 16:18:25 cvsuser Exp $
+/* $Id: edtrace.c,v 1.51 2025/01/13 16:06:38 cvsuser Exp $
  * Simple diagnostic trace.
  *
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

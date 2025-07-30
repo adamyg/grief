@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.28 2024/07/30 05:25:48 cvsuser Exp $
+# $Id: Makefile.in,v 1.29 2025/01/13 15:19:04 cvsuser Exp $
 # GRIEF Macro Compiler makefile.
 #
 #
-# Copyright (c) 1998 - 2024, Adam Young.
+# Copyright (c) 1998 - 2025, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.

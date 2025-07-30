@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_charsetlocale_c,"$Id: charsetlocale.c,v 1.14 2024/04/17 16:00:28 cvsuser Exp $")
+__CIDENT_RCSID(gr_charsetlocale_c,"$Id: charsetlocale.c,v 1.17 2025/02/07 05:14:02 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /* libcharset locale map.
  *
  *
- * Copyright (c) 2010 - 2024, Adam Young.
+ * Copyright (c) 2010 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -128,7 +128,7 @@ static const struct charset_altname *   charset_lookup(const char *locale);
  *      Character-set, otherwise NULL if unknown.
  */
 const char *
-charset_map_locale(const char *locale, char *buffer, int bufsiz)
+charset_map_locale(const char *locale, char *buffer, size_t bufsiz)
 {
     const char *codeset = NULL;
 
@@ -233,7 +233,7 @@ charset_lookup(const char *charset)
             *end = (cursor + sizeof(charset_altname_table)/sizeof(charset_altname_table[0]));
 
     while (cursor < end) {
-        if (0 == charset_compare(charset, cursor->charset, -1)) {
+        if (0 == charset_compare(charset, cursor->charset, strlen(cursor->charset))) {
             return cursor;
         }
         ++cursor;

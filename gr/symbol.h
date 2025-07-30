@@ -1,11 +1,11 @@
 #ifndef GR_SYMBOL_H_INCLUDED
 #define GR_SYMBOL_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_symbol_h,"$Id: symbol.h,v 1.25 2024/04/07 15:49:17 cvsuser Exp $")
+__CIDENT_RCSID(gr_symbol_h,"$Id: symbol.h,v 1.26 2025/02/07 03:03:22 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: symbol.h,v 1.25 2024/04/07 15:49:17 cvsuser Exp $
+/* $Id: symbol.h,v 1.26 2025/02/07 03:03:22 cvsuser Exp $
  * Symbol management.
  *
  *
@@ -26,6 +26,7 @@ __CPRAGMA_ONCE
 __CBEGIN_DECLS
 
 #define SYM_FUNCNAME_LEN    128                     /* MAGIC - system limit */
+#define SYM_REGISTER_NUM    64
 
 extern void                 sym_init(void);
 extern void                 sym_globals(void);
@@ -57,18 +58,18 @@ extern void                 sym_dump(void);
 
 extern int                  sym_isconstant(SYMBOL *sp, const char *msg);
 extern void                 sym_assign_list(SYMBOL *sp, const LIST *list);
-extern void                 sym_donate_list(SYMBOL *sp, LIST *lp, int llen);
+extern void                 sym_donate_list(SYMBOL *sp, LIST *lp, size_t llen);
 extern void                 sym_assign_ref(SYMBOL *sp, ref_t *rp);
 extern void                 sym_donate_ref(SYMBOL *sp, ref_t *rp);
 extern void                 sym_assign_str(SYMBOL *sp, const char *str);
-extern void                 sym_assign_nstr(SYMBOL *sp, const char *str, int len);
+extern void                 sym_assign_nstr(SYMBOL *sp, const char *str, size_t len);
 extern void                 sym_assign_int(SYMBOL *sp, accint_t value);
 extern void                 sym_assign_float(SYMBOL *sp, accfloat_t value);
 
 extern void                 argv_assign_list(int argi, const LIST *list);
-extern void                 argv_donate_list(int argi, LIST *lp, int llen);
-extern int                  argv_assign_str(int argi, const char *val);
-extern void                 argv_assign_nstr(int argi, const char *val, int len);
+extern void                 argv_donate_list(int argi, LIST *lp, size_t llen);
+extern size_t               argv_assign_str(int argi, const char *val);
+extern void                 argv_assign_nstr(int argi, const char *val, size_t len);
 extern void                 argv_assign_int(int argi, accint_t val);
 extern void                 argv_assign_float(int argi, accfloat_t val);
 

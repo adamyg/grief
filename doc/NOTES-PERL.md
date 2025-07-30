@@ -1,4 +1,3 @@
-
 Notes on Perl
 =============
 
@@ -20,6 +19,7 @@ On Linux distributions based on Debian, the package `perl` will install the core
 
 On Linux distributions based on RPMs, you will need to install `perl-core` rather than just `perl`.
 
+
 Perl on Windows
 ---------------
 
@@ -28,7 +28,3 @@ There are a number of build targets that can be viewed as "Windows". There are s
 The key recommendation is to use a Perl installation that matches the build environment. For example, if you will build on Cygwin be sure to use the Cygwin package manager to install Perl. For MSYS builds use the MSYS provided Perl. 
 
 For standard target _Strawberry Perl_ is recommend, from <http://strawberryperl.com>. An alternative is ActiveState Perl, from <http://www.activestate.com/ActivePerl>.
-
-Last Update: May/2024
-
-=end=

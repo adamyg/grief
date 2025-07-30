@@ -1,11 +1,11 @@
 #!/usr/bin/perl
-# $Id: makelib.pl,v 1.149 2024/11/29 19:21:56 cvsuser Exp $
+# $Id: makelib.pl,v 1.156 2025/07/30 09:38:27 cvsuser Exp $
 # Makefile generation under WIN32 (MSVC/WATCOMC/MINGW) and DJGPP.
 # -*- perl; tabs: 8; indent-width: 4; -*-
 # Automake emulation for non-unix environments.
 #
 #
-# Copyright (c) 1998 - 2024, Adam Young.
+# Copyright (c) 1998 - 2025, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -78,9 +78,10 @@ my $PROGRAMFILES            = ProgramFiles();
 my $x_libw32                = 'libw32';
 
 my %x_environment   = (
-        'dj'            => {    # DJGPPP
+        'dj'            => {    # DJGPP
             TOOLCHAIN       => 'dj',
             TOOLCHAINEXT    => '.dj',
+            TOOLCHAINNAME   => 'DJGPP',
             CC              => 'gcc',
             CXX             => 'g++',
             AR              => 'ar',
@@ -93,6 +94,7 @@ my %x_environment   = (
         'mingw'         => {    # MingW32 or MingW64 (default os)
             TOOLCHAIN       => 'mingw',
             TOOLCHAINEXT    => '.mingw',
+            TOOLCHAINNAME   => 'mingw-legacy',
             CC              => 'gcc',
             CXX             => 'g++',
             VSWITCH         => '--version',
@@ -109,6 +111,7 @@ my %x_environment   = (
             CXXFLAGS        => '@CXXVER@ -fno-strength-reduce',
             CXXVER          => '-std=c++11',
             CDEBUG          => '-g',
+            CRELEASE        => '-O2 -DNDEBUG',
             CWARN           => '-W -Wall -Wshadow -Wmissing-prototypes',
             CXXWARN         => '-W -Wall -Wshadow',
             LDFLAGS         => '',
@@ -121,8 +124,19 @@ my %x_environment   = (
             },
 
         'mingw32'       => {    # MingW64 (32-bit mode)
+            #
+            #   -D__MINGW_USE_VC2005_COMPAT/
+            #       Disables _USE_32BIT_TIME_T being automatically set for _WIN32 applications.
+            #
+            #    An ABI change introduced with Microsoft Visual C++ 2005 (also known as Visual C++ 8.0)
+            #    switched time_t from 32-bit to 64-bit. It is important to build libaries with 64-bit
+            #    time_t whenever possible, as 32-bit time_t is unable to epresent times past 2038.
+            #
+            #    64-bit systems always have a 64-bit time_t and are not affected by this problem.
+            #
             TOOLCHAIN       => 'mingw32',
             TOOLCHAINEXT    => '.mingw32',
+            TOOLCHAINNAME   => 'MingW32',
             CC              => 'gcc',
             CXX             => 'g++',
             VSWITCH         => '--version',
@@ -132,13 +146,14 @@ my %x_environment   = (
             XSWITCH         => '-o',
             AR              => 'ar',
             RC              => 'windres -DGCC_WINDRES',
-            DEFS            => '-DHAVE_CONFIG_H',
+            DEFS            => '-DHAVE_CONFIG_H -D__MINGW_USE_VC2005_COMPAT',
             CINCLUDE        => '',
             CFLAGS          => '-m32 @CCVER@ -fno-strength-reduce',
             CCVER           => '-std=gnu11',
             CXXFLAGS        => '-m32 @CXXVER@ -fno-strength-reduce',
             CXXVER          => '-std=c++11',
             CDEBUG          => '-g',
+            CRELEASE        => '-O2 -DNDEBUG',
             CWARN           => '-W -Wall -Wshadow -Wmissing-prototypes',
             CXXWARN         => '-W -Wall -Wshadow',
             LDFLAGS         => '',
@@ -154,6 +169,7 @@ my %x_environment   = (
             ISWIN64         => 'yes',
             TOOLCHAIN       => 'mingw64',
             TOOLCHAINEXT    => '.mingw64',
+            TOOLCHAINNAME   => 'MingW64',
             CC              => 'gcc',
             CXX             => 'g++',
             VSWITCH         => '--version',
@@ -170,6 +186,7 @@ my %x_environment   = (
             CXXFLAGS        => '-m64 @CXXVER@ -fno-strength-reduce',
             CXXVER          => '-std=c++11',
             CDEBUG          => '-g',
+            CRELEASE        => '-O2 -DNDEBUG',
             CWARN           => '-W -Wall -Wshadow -Wmissing-prototypes',
             CXXWARN         => '-W -Wall -Wshadow',
             LDFLAGS         => '',
@@ -194,6 +211,7 @@ my %x_environment   = (
         'vc1200'        => {    # Visual Studio 7
             TOOLCHAIN       => 'vs70',
             TOOLCHAINEXT    => '.vs70',
+            TOOLCHAINNAME   => 'Visual Studio 7',
             CC              => 'cl',
             COMPILERPATH    => '%VCINSTALLDIR%/bin',
             OSWITCH         => '-Fo',
@@ -217,6 +235,7 @@ my %x_environment   = (
         'vc1400'        => {    # 2005, Visual Studio 8
             TOOLCHAIN       => 'vs80',
             TOOLCHAINEXT    => '.vs80',
+            TOOLCHAINNAME   => 'Visual Studio 2005',
             CC              => 'cl',
             COMPILERPATH    => '%VCINSTALLDIR%/bin',
             VSWITCH         => '',
@@ -249,6 +268,7 @@ my %x_environment   = (
         'vc1500'        => {   # 2008, Visual Studio 9
             TOOLCHAIN       => 'vs90',
             TOOLCHAINEXT    => '.vs90',
+            TOOLCHAINNAME   => 'Visual Studio 2008',
             CC              => 'cl',
             COMPILERPATH    => '%VCINSTALLDIR%/bin',
             VSWITCH         => '',
@@ -257,7 +277,7 @@ my %x_environment   = (
             LSWITCH         => '',
             XSWITCH         => '-Fe',
             AR              => 'lib',
-            RC              => 'rc',        # no, /nologo option
+            RC              => 'rc',            # no, /nologo option
             CINCLUDE        => '',
             RTLIBRARY       => '-MDd',
             CFLAGS          => '-nologo @RTLIBRARY@ -Dinline=__inline',
@@ -276,6 +296,7 @@ my %x_environment   = (
         'vc1600'        => {    # 2010, Visual Studio 10
             TOOLCHAIN       => 'vs100',
             TOOLCHAINEXT    => '.vs100',
+            TOOLCHAINNAME   => 'Visual Studio 2010',
             CC              => 'cl',
             COMPILERPATH    => '%VCINSTALLDIR%/bin',
             VSWITCH         => '',
@@ -313,6 +334,7 @@ my %x_environment   = (
        'vc1800'        => {    # 2013, Visual Studio 18
             TOOLCHAIN       => 'vs120',
             TOOLCHAINEXT    => '.vs120',
+            TOOLCHAINNAME   => 'Visual Studio 2013',
             CC              => 'cl',
             COMPILERPATH    => '%VCINSTALLDIR%/bin',
             VSWITCH         => '',
@@ -350,6 +372,7 @@ my %x_environment   = (
        'vc1900'        => {    # 2015, Visual Studio 19
             TOOLCHAIN       => 'vs140',
             TOOLCHAINEXT    => '.vs140',
+            TOOLCHAINNAME   => 'Visual Studio 2015',
             CC              => 'cl',
             COMPILERPATHS   => '%VS140COMNTOOLS%/../../VC/bin|%VCINSTALLDIR%/bin',
             COMPILERPATH    => '',
@@ -399,6 +422,7 @@ my %x_environment   = (
        'vc1910'        => {    # 2017, Visual Studio 19.10 -- 19.1x
             TOOLCHAIN       => 'vs150',
             TOOLCHAINEXT    => '.vs150',
+            TOOLCHAINNAME   => 'Visual Studio 2017',
             CC              => 'cl',
             COMPILERPATHS   => '%VS150COMNTOOLS%/../../VC/bin|%VCToolsInstallDir%/bin/Hostx86/x86',
             COMPILERPATH    => '',
@@ -437,6 +461,7 @@ my %x_environment   = (
        'vc1920'        => {     # 2019, Visual Studio 19.2x
             TOOLCHAIN       => 'vs160',
             TOOLCHAINEXT    => '.vs160',
+            TOOLCHAINNAME   => 'Visual Studio 2019',
             CC              => 'cl',
             COMPILERPATHS   => '%VS160COMNTOOLS%/../../VC/bin|%VCToolsInstallDir%/bin/Hostx86/x86',
             COMPILERPATH    => '',
@@ -446,6 +471,7 @@ my %x_environment   = (
             LSWITCH         => '',
             XSWITCH         => '-Fe',
             AR              => 'lib',
+            RC              => 'rc -nologo',    # -nologo option, not /nologo
             CINCLUDE        => '',
             RTLIBRARY       => '-MDd',
             CFLAGS          => '-nologo @RTLIBRARY@ -fp:precise',
@@ -475,6 +501,7 @@ my %x_environment   = (
        'vc1930'        => {     # 2022, Visual Studio 19.3x
             TOOLCHAIN       => 'vs170',
             TOOLCHAINEXT    => '.vs170',
+            TOOLCHAINNAME   => 'Visual Studio 2022',
             CC              => 'cl',
             COMPILERPATHS   => '%VS170COMNTOOLS%/../../VC/bin|%VCToolsInstallDir%/bin/Hostx86/x86',
             COMPILERPATH    => '',
@@ -489,12 +516,12 @@ my %x_environment   = (
             CFLAGS          => '-nologo @RTLIBRARY@ -fp:precise',
             CXXFLAGS        => '-nologo @RTLIBRARY@ -EHsc -fp:precise -Zc:offsetof-',
             CDEBUG          => '-Zi -RTC1 -Od',
-            CRELEASE        => '-O2 -GL -Gy -DNDEBUG',
+            CRELEASE        => '-O2 -Gy -DNDEBUG',
             CWARN           => '-W3',
             CXXWARN         => '-W3',
             LDFLAGS         => '-nologo @RTLIBRARY@',
             LDDEBUG         => '-Zi -RTC1',
-            LDRELEASE       => '-GL',
+            LDRELEASE       => '',
             LDMAPFILE       => '-MAP:$(MAPFILE)',
                         # -Fm:  if positioned before /link
                         # -MAP: if positioned afer /link
@@ -510,9 +537,33 @@ my %x_environment   = (
             MFCLIBS         => ''
             },
 
+        'clangcl'       => {    # clangcl
+            TOOLCHAIN       => 'clangcl',
+            TOOLCHAINEXT    => '.ccl',
+            TOOLCHAINNAME   => 'Clang-cl',
+            COMPILERPATHS   => '%VCINSTALLDIR%/Tools/Llvm/bin',
+            COMPILERPATH    => '',
+            CC              => 'clang-cl',
+            VSWITCH         => '--version',
+            VPATTERN        => 'clang version ([0-9\.]+)'
+            },
+
+        'clangcl_x64'    => {   # clangcl (x64)
+            TOOLCHAIN       => 'clangcl',
+            TOOLCHAINEXT    => '.ccl',
+            TOOLCHAINNAME   => 'Clang-cl',
+            COMPILERPATHS   => '%VCINSTALLDIR%/Tools/Llvm/x64/bin',
+            COMPILERPATH    => '',
+            CC              => 'clang-cl',
+            VSWITCH         => '--version',
+            VPATTERN        => 'clang version ([0-9\.]+)',
+            ISWIN64         => 'yes'
+            },
+
         'wc1300'        => {    # Watcom 11
             TOOLCHAIN       => 'wc11',
             TOOLCHAINEXT    => '.wc11',
+            TOOLCHAINNAME   => 'Watcom 11',
             CC              => 'wcl386',
             COMPILERPATH    => '%WATCOM%/binnt',
             VSWITCH         => '-c',
@@ -534,6 +585,7 @@ my %x_environment   = (
         'owc1900'       => {    # Open Watcom 1.9
             TOOLCHAIN       => 'owc19',
             TOOLCHAINEXT    => '.owc19',
+            TOOLCHAINNAME   => 'Open-Watcom 1.9',
             CC              => 'wcl386',
             COMPILERPATH    => '%WATCOM%/binnt',
             VSWITCH         => '-c',
@@ -543,6 +595,7 @@ my %x_environment   = (
             LSWITCH         => '',
             XSWITCH         => '-fe=',
             AR              => 'lib',
+            RC              => 'rc -nologo',    # -nologo option, not /nologo
             CINCLUDE        => '',
 
                 # -q        Operate quietly.
@@ -616,6 +669,7 @@ my %x_environment   = (
         'owc1900_posix' => {    # Open Watcom 1.9 (using owcc)
             TOOLCHAIN       => 'owc19',
             TOOLCHAINEXT    => '.owc19',
+            TOOLCHAINNAME   => 'Open-Watcom 1.9',
             CC              => 'owcc',
             COMPILERPATH    => '%WATCOM%/binnt',
             VSWITCH         => '-v',            # version
@@ -624,6 +678,7 @@ my %x_environment   = (
             LSWITCH         => '-l',
             XSWITCH         => '-o',
             AR              => 'lib',
+            RC              => 'rc -nologo',    # -nologo option, not /nologo
             CINCLUDE        => '',
 
                 # -zq                           Operate quietly.
@@ -668,6 +723,7 @@ my %x_environment   = (
         'owc2000'       => {    # Open Watcom 2.0
             TOOLCHAIN       => 'owc20',
             TOOLCHAINEXT    => '.owc20',
+            TOOLCHAINNAME   => 'Open-Watcom 2.0',
             CC              => 'wcl386',
             COMPILERPATH    => '%WATCOM%/binnt',
             VSWITCH         => '-c',
@@ -677,6 +733,7 @@ my %x_environment   = (
             LSWITCH         => '',
             XSWITCH         => '-fe=',
             AR              => 'lib',
+            RC              => 'rc -nologo',
             CINCLUDE        => '',
 
                 # -q        Operate quietly.
@@ -925,12 +982,11 @@ my %x_tokens        = (
         );
 
 my %x_tokendefs     = (
+        # token associations, from which defaults are derived
         CXX                 => 'CC',
         CXXFLAGS            => 'CFLAGS',
         CXXDEBUG            => 'CDEBUG',
         CXXRELEASE          => 'CRELEASE'
-    #   CLD                 => 'CC',
-    #   CXXLD               => 'CXX',
         );
 
 my @x_headers       = (     #headers
@@ -960,6 +1016,7 @@ my @x_headers       = (     #headers
         'stdbool.h',                            # c99
         'stdatomic.h',                          # c11
         'stdalign.h',                           # c11
+        'stdckdint.h', 'intsafe.h',             # integer maths (gnu/win32)
         'threads.h',                            # c11
         'pthread.h',                            # MINGW
         'string.h', 'strings.h',
@@ -988,12 +1045,15 @@ my @x_headers       = (     #headers
         'dirent.h',
         'dlfcn.h',                              # dlopen()
         'pwd.h',
-        'grp.h'
+        'grp.h',
+        'langinfo.h'
         );
 
 my @x_headers2      = (     #headers; check only
         'thr/xthreads.h',                       # MSVC +2017, almost C11
         'xthreads.h',
+        'ntifs.h',                              # SDK; optional
+        'ntdef.h',
         'windows.h',
         'wincrypt.h',
         'bcrypt.h',
@@ -1006,6 +1066,7 @@ my @x_predefines    = (
         '_WIN32|_WIN64',
         '__WATCOMC__',
         '__GNUC__|__GNUC_MINOR__',
+        '__clang__|__clang_major__|__clang_minor__',
         '__MINGW32__|__MINGW64__|__MINGW64_VERSION_MAJOR|__MINGW64_VERSION_MINOR',
         '__STDC__|__STDC_VERSION__',
         '_M_IX86|_M_IA64|_M_X64|_M_AMD64|_M_ARM',
@@ -1017,6 +1078,7 @@ my @x_predefines    = (
 
 my @x_decls         = (     #stdint/intypes.h
         'SIZE_MAX',
+        'RSIZE_MAX',
         'SSIZE_MAX',
         'INT16_C',
         'INT16_MIN',
@@ -1069,11 +1131,13 @@ my @x_types         = (     #stdint/inttypes/types.h
         'uint_fast32_t',
         'uint_fast64_t',
         'wchar_t',
+        'mbstate_t',
         'char16_t',
         'char32_t',
         'bool',
         '_Bool:C99BOOL',
         '_bool',
+        'rsize_t',
         'ssize_t',
         'struct option.name;getopt.h,unistd.h'
         );
@@ -1091,6 +1155,12 @@ my @x_sizes         = (
         'time_t'
         );
 
+#TODO
+# HAVE_DECL_ENVIRON:extern char **environ;
+# HAVE_DECL__ENVIRON:extern char **_environ;
+#   unix: <unistd.h> if the _GNU_SOURCE
+#   win32: <stdlib.h>
+
 my @x_functions     = (
         'putenv',
         'setenv',
@@ -1105,7 +1175,7 @@ my @x_functions     = (
         'strncasecmp', '__strncasecmp', 'strnicmp',
         'strnlen',
         'strerror',
-        'strftime',
+        'strftime', 'strptime',
         'strchr', 'strrchr', 'strdup',
         'strlcpy', 'strlcat',                   # bsd/linux
             'strsep', 'strnstr', 'strcasestr', 'strcasestr_l', 'strtonum',
@@ -1130,10 +1200,10 @@ my @x_functions     = (
         '__iscsym',                             # msvc
         'printf', 'vprintf', 'doprnt',
         'snprintf', '_snprintf', 'vsnprintf', '_vsnprintf',
-        'strrchr', 'strdup',
         'asnprintf', 'vasnprintf',
         'setlocale',
-        'mbrtowc', 'wcrtomb', 'wcscmp', 'wcscpy', 'wcslen', 'wctomb', 'wmemcmp', 'wmemmove', 'wmemcpy',
+        'mbrtowc', 'wcrtomb', 'wcsrtombs', 'wcstombs', 'wcscmp', 'wcscpy', 'wcslen', 'wctomb',
+                'wmemcmp', 'wmemmove', 'wmemcpy',
         'wcwidth',
         '_tzset',                               # msvc
         'fgetpos', 'fsetpos',
@@ -1145,6 +1215,7 @@ my @x_functions     = (
               '_get_timezone',
         'mktime',
         'timegm',                               # bsd/linux extensions
+        'gettimeofday', 'nanosleep', 'usleep',
         'feclearexpect',                        # fenv.h/c99
         'fpclassify',                           # math.h/c99
             'isnan', '_isnan',
@@ -1157,7 +1228,8 @@ my @x_functions     = (
         'opendir',
         'mktemp', 'mkstemp',
         'findfirst', '_findfirst',              # msvc
-        'getopt', 'getopt_long'                 # bsd/compat
+        'getopt', 'getopt_long',                # bsd/compat
+        'nl_langinfo'
         );
 
 my @x_commands     = (     # commands explicity converted to <cmd>.exe
@@ -1247,6 +1319,8 @@ sub ImportDLL($$;$$);
 sub Makefile($$$);
 sub MakefileDir($);
 sub Config($$$);
+sub Profile($);
+sub Format($$$$);
 
 exit &main();
 
@@ -1313,6 +1387,14 @@ main()
     elsif ('vc1910' eq $cmd)    { $o_version = 1910; $cmd = 'vc'  } elsif ('vc2017' eq $cmd) { $o_version = 1910; $cmd = 'vc' }
     elsif ('vc1920' eq $cmd)    { $o_version = 1920; $cmd = 'vc'  } elsif ('vc2019' eq $cmd) { $o_version = 1920; $cmd = 'vc' }
     elsif ('vc1930' eq $cmd)    { $o_version = 1930; $cmd = 'vc'  } elsif ('vc2022' eq $cmd) { $o_version = 1930; $cmd = 'vc' }
+    elsif ('clangcl' eq $cmd) {                 # Clang
+        $o_version = 1930;
+        $cmd = 'clangcl';
+    }
+    elsif ($cmd =~ /^clangcl=(\d+)$/) {         # Clang, explicit version
+        $o_version = $1;
+        $cmd = 'clangcl';
+    }
     elsif ('owc19' eq $cmd)     { $o_version = 1900; $cmd = 'owc' }
     elsif ('owc20' eq $cmd)     { $o_version = 2000; $cmd = 'owc' }
     elsif ('mingw' eq $cmd)     { $o_version = 0;    $cmd = 'mingw' }
@@ -1320,16 +1402,36 @@ main()
     elsif ('mingw64' eq $cmd)   { $o_version = 64;   $cmd = 'mingw' }
 
     if (! $o_version) { # default versions
-        if ($cmd eq 'vc')       { $o_version = 1400; } # review???
+        if ($cmd eq 'vc')       { $o_version = 1900; }
         elsif ($cmd eq 'wc')    { $o_version = 1300; }
         elsif ($cmd eq 'owc')   { $o_version = 1900; }
         else { $o_version = 0; }
     }
 
-    $o_version .= '_x64'
-        if ($options && $options =~ /x64/);
+    my $x64 = ($options && $options =~ /x64/);
 
-    if ($cmd eq 'vc' ||
+    if ($cmd eq 'clangcl') {                    # generate profile
+        my $target = ($x64 ? 'clangcl_x64' : 'clangcl');
+        my $source = "vc${o_version}";
+
+        die "makelib:  unknown <${target}> target visual studio tool-chain <${source}\n"
+            if (! exists $x_environment{$source});
+
+        my $senv = $x_environment{$source};
+        my $env = $x_environment{$target};
+
+        foreach my $key (keys %$senv) {
+            $$env{$key} = $$senv{$key}          # import omitted vc profile element
+                if (! exists $$env{$key});
+        }
+
+        $o_version = '';
+    }
+
+    $o_version .= '_x64'
+        if ($x64);
+
+    if ($cmd eq 'vc' || $cmd eq 'clangcl' ||
             $cmd eq 'owc' || $cmd eq 'wc' ||
             $cmd eq 'dj' ||  $cmd eq 'mingw') {
 
@@ -1373,6 +1475,7 @@ main()
         DumpList('LIBS',     \@LIBS);
         DumpList('EXTRALIB', \@EXTRALIBS);
         DumpList('DLLS',     \@DLLS);
+        Profile($config);
 
     } elsif ($cmd eq 'clean') {
         my %env;
@@ -1423,18 +1526,18 @@ EOU
 
     --help                  Command line help.
 
-    --libtool=<path>        Path to libtool_win32.pl.
+    --libtool=<path>        libtool_win32.pl path.
 
-    --binpath=<path>        Path to coreutils, otherwise these are assumed to be in the path.
+    --binpath=<path>        CoreUtils path, otherwise these are assumed to be in the path.
 
     --perlpath=<path>       Perl binary path, otherwise assumed in the path.
 
-    --gnuwin32=<path>       gnuwin32 g++ tool installation path; see --gnulibs
-
     --contib                Enable local contrib libraries (default).
-    or --gnulibs            Search and enable gnuwin32 libraries, using gnuwin32 path.
+    or --gnulibs            Search and enable gnuwin32 libraries, using gnuwin32 path (legacy).
 
-    --version=<version>     compiler version
+    --gnuwin32=<path>       gnuwin32 g++ tool installation path; see --gnulibs (legacy)
+
+    --version=<version>     compiler version.
 
     --clean                 clean build, ignoring cache.
 
@@ -1449,6 +1552,7 @@ Configuration:
     --busybox=<path>        busybox-w32 installation path.
     --bison=<path>          yacc/bison installation path.
     --flex=<path>           flex installation path.
+    --wget=<path>           wget installation path.
     --inno=<path>           inno-setup installation path.
 
 Toolchain / command:
@@ -1547,11 +1651,13 @@ Configure($$$)          # (type, version, options)
 
     if (! exists $x_environment{$signature}) {
          if ($signature =~ /(.*)_x64(.*)/) {    # derive x64 profile
-            my $base  = $1.$2;
+            my $base = $1.$2;
             if (exists $x_environment{$base}) {
                 $x_environment{$signature} = $x_environment{$base};
                 $x_environment{$signature}->{TOOLCHAIN} .= '_x64';
                 $x_environment{$signature}->{TOOLCHAINEXT} .= '/x64';
+                $x_environment{$signature}->{ISWIN64} .= 'yes';
+                $x_environment{$signature}->{ISWIN32} .= 'no';
             }
         }
     }
@@ -1586,7 +1692,7 @@ Configure($$$)          # (type, version, options)
     (-d $x_workdir || mkdir($x_workdir)) or
         die "makelib: unable to access/create workdir <$x_workdir> : $!\n";
 
-    $x_tmpdir = "${x_workdir}/${type}${version}";
+    $x_tmpdir = "${x_workdir}/${signature}";
 
     (-d $x_tmpdir || mkdir($x_tmpdir)) or
         die "makelib: unable to access/create tmpdir <$x_tmpdir> : $!\n";
@@ -1839,7 +1945,10 @@ Configure($$$)          # (type, version, options)
 
     # compiler/environment
     # TODO: move to sub-module .... extension of TESTLIBRARIES
-    if ($type eq 'vc' || $type eq 'wc' || $type eq 'owc' || $type eq 'mingw') {
+    if ($type eq 'vc' || $type eq 'clangcl' ||
+            $type eq 'wc' || $type eq 'owc' || 
+            $type eq 'mingw') {
+                                                # Visual C/C++, Watcom C/C++ and Ming toolchains
         my $gnuwin32lib = undef;
         my $gnuwin32inc = undef;
 
@@ -2128,11 +2237,16 @@ LoadContrib($$$$$)      # (type, version, name, dir, refIncludes)
                 (0 == $cnt++) or
                     die "$def: toolchain must be first element\n";
 
+                $version =~ /^(\d+)/;       # version[_x64]
+                my $version1 = $1;
+
                 if ($val !~ /(^${type}|,${type})(\d*)/) {
                     print "$def: $val [no], toolchain ${type} not supported\n";
                     return 0;
                 }
-                if ($2 && int($version) < int($2)) {
+                my $version2 = $2;
+
+                if ($version2 && int($version1) < int($version2)) {
                     print "$def: $val [no], toolchain version ${version} not supported\n";
                     return 0;
                 }
@@ -2253,29 +2367,34 @@ sub
 CheckCompiler($$)       # (type, env)
 {
     my ($type, $env) = @_;
+    my $CC = undef;
 
-    if (!defined $$env{COMPILERPATH} || $$env{COMPILERPATH} eq '') {
+    if (! defined $$env{COMPILERPATH} || $$env{COMPILERPATH} eq '') {
         if (exists $$env{COMPILERPATHS}) {
             my $compilerpath = which $$env{CC};
+
             if ($compilerpath) {                # resolved path
                 $$env{COMPILERPATH} = dirname($compilerpath);
 
             } else {
                 my @PATHS = split(/\|/, $$env{COMPILERPATHS});
-                foreach (@PATHS) {
+                foreach (@PATHS) {              # search paths
                     my $path = ExpandENV($_);
+
                     if (-e $path && -d $path) {
                         $compilerpath = realpath($path);
                         my $ccpath = "${compilerpath}/".$$env{CC};
 
                         if (-f $ccpath || -f "${ccpath}.exe") {
                             $$env{COMPILERPATH} = $compilerpath;
+                            $CC = $ccpath;
                             last;
                         }
                     }
                 }
             }
         }
+
         $x_compiler  = $$env{COMPILERPATH}.'/'
             if (exists $$env{COMPILERPATH});
 
@@ -2284,12 +2403,24 @@ CheckCompiler($$)       # (type, env)
             if (exists $$env{COMPILERPATH});
     }
 
-    $x_compiler .= $$env{CC};
-    $x_compiler =~ s/\//\\/g;
-    $x_command   = "\"$x_compiler\" ";
+    if ($CC) {                                  # fully resolved path
+        $x_tokens{CC} = $CC;
+        $x_tokens{CC} = "\"${CC}\""
+            if ($CC =~ /[ ]/);
+        $x_compiler = $CC;
+    } else {
+        $x_compiler .= $$env{CC};               # within path.
+    }
 
-    (-1 != System("$x_command junk-command-line >${x_tmpdir}/compiler.out 2>&1")) or
-        die "makelib: unable to access compiler <$x_compiler>\n";
+    $x_compiler =~ s/\//\\/g;
+    if ($x_compiler =~ /[ ]/) {                 # quote argv[0]
+        $x_command  = "\"$x_compiler\"";
+    } else {
+        $x_command  = ${x_compiler};
+    }
+
+    (-1 != System("${x_command} junk-command-line >${x_tmpdir}/compiler.out 2>&1")) or
+        die "makelib: unable to access compiler <${x_compiler}>\n";
 
     if (exists $$env{VPATTERN}) {               # version information
         my $vpattern = $$env{VPATTERN};
@@ -2316,25 +2447,34 @@ CheckCompiler($$)       # (type, env)
         }
     }
 
-    if ($x_compiler eq 'gcc') {
+    if ($type eq 'gcc' || $type eq 'clangcl') {
         #   #include <...> search starts here:
         #    c:\mingw\bin\../lib/gcc/mingw32/9.2.0/include
         #    c:\mingw\bin\../lib/gcc/mingw32/9.2.0/../../../../include
         #    c:\mingw\bin\../lib/gcc/mingw32/9.2.0/include-fixed
         #   End of search list.
-        (-1 != System("gcc -E -Wp,-v - <NUL >${x_tmpdir}/gcc.out 2>&1")) or
-            die "makelib: unable to access compiler <cpp -v>\n";
 
-        open(GCC, "${x_tmpdir}/gcc.out") or
-            die "makelib: cannot open <${x_tmpdir}/gcc.out> : $!";
+        my $out = "${x_tmpdir}/sysincludes.out";
+
+        if ($type eq 'clangcl') {
+            (-1 != System("${x_command} -E /showIncludes -v - <NUL >${out} 2>&1")) or
+                die "makelib: unable to access compiler <cpp -v>\n";
+        } else {
+            (-1 != System("${x_command} -E -Wp,-v - <NUL >${out} 2>&1")) or
+                die "makelib: unable to access compiler <cpp -v>\n";
+        }
+
+        open(SYSINCLUDES, $out) or
+            die "makelib: cannot open <${out}> : $!";
+
         my $line;
-        while (defined($line = <GCC>)) {
+        while (defined($line = <SYSINCLUDES>)) {
             if ($line =~ /^#include </) {
-                while (defined($line = <GCC>)) {
+                while (defined($line = <SYSINCLUDES>)) {
                     last if ($line =~ /^End of/i);
                     $line =~ s/^\s+|\s+$//g;
                     my $path = realpath($line);
-                    print "gccinc:   <$path>\n";
+                    print "sysinc:   <$path>\n";
                     push @x_sysinclude, $path
                         if ($path);
                 }
@@ -2381,7 +2521,7 @@ CheckCompiler($$)       # (type, env)
     print "SysInc:   @{x_sysinclude}\n";
 
     # build final command
-    $x_command  .= "__FLAGS__ ";
+    $x_command  .= " __FLAGS__ ";
     $x_command  .= $INCLUDES;
     $x_command  .= "$$env{OSWITCH}__OBJ__ "
         if ($$env{OSWITCH} ne '');
@@ -3231,7 +3371,7 @@ Makefile($$$)           # (type, dir, file)
             $continuation = (/[\\]$/ ? 1 : 0);
 
         } else {
-            if ($type eq 'vc' || $type eq 'wc') {
+            if ($type eq 'vc' || $type eq 'clangcl' || $type eq 'wc') {
                 if (! /LIBTOOL/) {              # not LIBTOOL command lines
 
                     # option conversion
@@ -3240,7 +3380,7 @@ Makefile($$$)           # (type, dir, file)
 
                     s/(\$\(LDFLAGS\).*) -o \$\@/$1 -Fe\$@ -Fd\$(\@D)\//;
 
-                    if ($type eq 'vc') {
+                    if ($type eq 'vc' || $type eq 'clangcl') {
                         s/-L/\/link \/LIBPATH:/;
                     } else {
                         s/-L([^\s]+)/-"LIBPATH $1"/;
@@ -3258,6 +3398,11 @@ Makefile($$$)           # (type, dir, file)
                         s/(\$\(CFLAGS\).*) -o \$\@/$1 -Fo=\$(subst \/,\\,\$@)/;
                         s/(\$\(CXXFLAGS\).*) -o \$\@/$1 -Fo=\$(subst \/,\\,\$@)/;
                         s/(\$\(LDFLAGS\).*) -o \$@/$1 -Fe=\$(subst \/,\\,\$@)/;
+
+                        if (/\(RC\)/) {         # resource compiler
+                            s/ -fo[ ]?\$@/ -fo="\$(subst \/,\\,\$@)"/;
+                            s/ \$</ "\$<"/;
+                        }
 
                         s/-Fe(.*) \$\(([A-Z_]*OBJS)\)/-Fe$1 \$(subst \/,\\,\$($2))/;
                         s/-Fe(.*) \$\^/-Fe$1 \$(subst \/,\\,\$^)/;
@@ -3278,12 +3423,19 @@ Makefile($$$)           # (type, dir, file)
                         # s/-I ([^\s]+)/-i="$1"/g;
                             # gnuwin32 (gmake 3.x) quotes would be retained;
                             # this can not be guaranteed under an alt instance, for example gmake (4.x).
-                        s/-I([^\s]+)/-i=\$(subst \/,\\,$1)/g;
-                        s/-I ([^\s]+)/-i=\$(subst \/,\\,$1)/g;
+                        if (/\(RC\)/) {         # resource compiler (2024/01)
+                            s/-I([^\s]+)/-i="\$(subst \/,\\,$1)"/g;
+                            s/-I ([^\s]+)/-i="\$(subst \/,\\,$1)"/g;
+                        } else {
+                            s/-I([^\s]+)/-i=\$(subst \/,\\,$1)/g;
+                            s/-I ([^\s]+)/-i=\$(subst \/,\\,$1)/g;
+                        }
                     }
 
-                    s/\$</\$(subst \/,\\,\$<)/;
-                    s/\$\^/\$(subst \/,\\,\$^)/;
+                    if (/\(CC\)/ || /\(CXX\)/ || /\(AR\)/) {
+                        s/\$</\$(subst \/,\\,\$<)/;
+                        s/\$\^/\$(subst \/,\\,\$^)/;
+                    }
 
                 } elsif (/[\\]$/) {
                     $continuation = 1;          # LIBTOOL, continuation?
@@ -3320,7 +3472,8 @@ Makefile($$$)           # (type, dir, file)
     if ('dj' eq $type || 'mingw' eq $type) {    # almost unix
         $text =~ s/\nE=\S*\n/\nE=\t\t.exe\n/g;
 
-    } elsif ($type eq 'vc' || $type eq 'wc' || $type eq 'owc') {
+    } elsif ($type eq 'vc' || $type eq 'clangcl' || 
+                $type eq 'wc' || $type eq 'owc') {
                                                 # Visual C/C++ and Watcom C/C++
         # extensions
         $text =~ s/\nO=\s*\.o/\nO=\t\t.obj/g;
@@ -3567,6 +3720,78 @@ Config($$$)             # (type, dir, file)
 }
 
 
+#   Profile ---
+#       Build profile/summary.
+#
+sub
+Profile($)
+{
+    my ($config) = @_;                          # configuration
+
+    my $env = $x_environment{$x_signature};     # active environment
+    my $libs = Format($x_tokens{LIBS}, " -", 30, 120);
+    my $extralibs = Format($x_tokens{EXTRALIBS}, " -", 30, 120);
+    my $text = <<EOT;
+ -
+ -  Configuration:
+ -
+ -               PackageName: $config->{PACKAGE_NAME}
+ -                   Version: $config->{PACKAGE_VERSION}
+ -
+ -                 ToolChain: $$env{TOOLCHAINNAME}
+ -                  Compiler: $x_tokens{CC}
+ -                        and $x_tokens{CXX}
+ -                    CFLAGS: $x_tokens{CFLAGS}
+ -                  CXXFLAGS: $x_tokens{CXXFLAGS}
+ -                       Release: $x_tokens{CRELEASE}
+ -                       Debug:   $x_tokens{CDEBUG}
+ -                   LDFLAGS: $x_tokens{LDFLAGS}
+ -                      LIBS:$libs
+ -                 EXTRALIBS:$extralibs
+ -
+EOT
+
+    $text .= $config->{NOTES}                   # optional notes
+        if ($config->{NOTES});
+
+    foreach my $entry (keys %x_tokens) {        # resolve tokens
+        my $quoted_entry = quotemeta($entry);
+        my $replace = $x_tokens{$entry};
+
+        $text =~ s/\@$quoted_entry\@/$replace/g;
+    }
+
+    print $text;                                # result
+}
+
+
+sub 
+Format($$$$)            # (value, prefix, margin, length)
+{
+    my ($value, $prefix, $margin, $width) = @_;
+    my @parts = split(/\s+/, $value); 
+    my $llength = $margin;
+    my $result = '';
+    my $line = '';
+
+    foreach my $part (@parts) {
+        my $ilength = length($part);
+
+        if ($line && ($llength + $ilength) > $width) {
+            $result .= $line . "\n";
+            $line = sprintf("%-*s", $margin - 1, $prefix);
+            $llength = length($line);
+        }
+
+        $llength += $ilength + 1;
+        $line .= " " . $part;
+    }
+
+    $result .= $line;
+    return $result;
+}
+
+
 sub
 cannon_path($)          #(name)
 {
@@ -3632,4 +3857,3 @@ systemrcode($)          # (retcode)
 }
 
 #end
-

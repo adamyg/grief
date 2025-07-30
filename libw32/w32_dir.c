@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_dir_c,"$Id: w32_dir.c,v 1.16 2024/03/31 15:57:25 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_dir_c,"$Id: w32_dir.c,v 1.19 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -7,7 +7,7 @@ __CIDENT_RCSID(gr_w32_dir_c,"$Id: w32_dir.c,v 1.16 2024/03/31 15:57:25 cvsuser E
  *
  *      mkdir, rmdir, chdir
  *
- * Copyright (c) 2007, 2012 - 2024 Adam Young.
+ * Copyright (c) 2007, 2012 - 2025 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -147,18 +147,14 @@ w32_mkdir(const char *path, int mode)
 {
 #if defined(UTF8FILENAMES)
     if (w32_utf8filenames_state()) {
-        wchar_t wpath[WIN32_PATH_MAX];
+        if (path) {
+            wchar_t wpath[WIN32_PATH_MAX];
 
-        if (NULL == path) {
-            errno = EFAULT;
+            if (w32_utf2wc(path, wpath, _countof(wpath)) > 0) {
+                return w32_mkdirW(wpath, mode);
+            }
             return -1;
         }
-
-        if (w32_utf2wc(path, wpath, _countof(wpath)) > 0) {
-            return w32_mkdirW(wpath, mode);
-        }
-
-        return -1;
     }
 #endif  //UTF8FILENAMES
 
@@ -170,22 +166,40 @@ w32_mkdir(const char *path, int mode)
 LIBW32_API int
 w32_mkdirA(const char *path, int mode)
 {
+    const char *expath;
+    int ret = 0;
+
+    if (NULL != (expath = w32_extendedpathA(path))) {
+        path = expath;                          // extended abs-path
+    }
+
     (void) mode;
     if (! CreateDirectoryA(path, NULL)) {
-        return w32_errno_set();
+        ret = w32_errno_set();
     }
-    return 0;
+
+    free((void*)expath);
+    return ret;
 }
 
 
 LIBW32_API int
 w32_mkdirW(const wchar_t *path, int mode)
 {
+    const wchar_t *expath;
+    int ret = 0;
+
+    if (NULL != (expath = w32_extendedpathW(path))) {
+        path = expath;                          // extended abs-path
+    }
+
     (void) mode;
     if (! CreateDirectoryW(path, NULL)) {
-        return w32_errno_set();
+        ret = w32_errno_set();
     }
-    return 0;
+
+    free((void*)expath);
+    return ret;
 }
 
 
@@ -249,18 +263,14 @@ w32_chdir(const char *path)
 {
 #if defined(UTF8FILENAMES)
     if (w32_utf8filenames_state()) {
-        wchar_t wpath[WIN32_PATH_MAX];
+        if (path) {
+            wchar_t wpath[WIN32_PATH_MAX];
 
-        if (NULL == path) {
-            errno = EFAULT;
+            if (w32_utf2wc(path, wpath, _countof(wpath)) > 0) {
+                return w32_chdirW(wpath);
+            }
             return -1;
         }
-
-        if (w32_utf2wc(path, wpath, _countof(wpath)) > 0) {
-            return w32_chdirW(wpath);
-        }
-
-        return -1;
     }
 #endif  //UTF8FILENAMES
 
@@ -271,7 +281,9 @@ w32_chdir(const char *path)
 LIBW32_API int
 w32_chdirA(const char *path)
 {
+    const char *expath;
     BOOL success, isunc = FALSE;
+    EMODEINIT()
     int root;
 
     if (NULL == path || !*path) {
@@ -283,22 +295,44 @@ w32_chdirA(const char *path)
         return root;
     }
 
-    success = SetCurrentDirectoryA(path);
+    EMODESUPPRESS()
+    expath = w32_extendedpathA(path);           // abs-path to expanded
+    success = SetCurrentDirectoryA(expath ? expath : path);
+
     if (! success) {                            // possible shortcut.
         char lnkbuf[WIN32_PATH_MAX];
 
         w32_errno_set();
-        if (w32_lnkexpandA(path, lnkbuf, _countof(lnkbuf), SHORTCUT_TRAILING|SHORTCUT_COMPONENT)) {
+        if (w32_expandlinkA(path, lnkbuf, _countof(lnkbuf), SHORTCUT_TRAILING|SHORTCUT_COMPONENT)) {
             success = SetCurrentDirectoryA(lnkbuf);
             if (! success) {
                 w32_errno_set();
             } else {
                 isunc = w32_unc_validA(lnkbuf);
             }
+        } else {
+            HANDLE handle = CreateFileA(expath ? expath : path, 0,
+                                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
+                                    OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_ATTRIBUTE_READONLY, NULL);
+            if (handle != INVALID_HANDLE_VALUE) {
+                BY_HANDLE_FILE_INFORMATION fi = { 0 };
+
+                errno = ENOTDIR;                // Not a directory.
+                if (GetFileInformationByHandle(handle, &fi)) {
+                    if (fi.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+                        errno = ENOTSUP;        // Not supported.
+                    }
+                }
+                CloseHandle(handle);
+            }
         }
     } else {
         isunc = w32_unc_validA(path);
     }
+    EMODERESTORE()
+
+    free((void*)expath);
+    expath = NULL;
 
     if (! success) {
         return set_vfs_directoryA(path);
@@ -314,7 +348,9 @@ w32_chdirA(const char *path)
 LIBW32_API int
 w32_chdirW(const wchar_t *path)
 {
+    const wchar_t *expath;
     BOOL success, isunc = FALSE;
+    EMODEINIT()
     int root;
 
     if (NULL == path || !*path) {
@@ -326,22 +362,44 @@ w32_chdirW(const wchar_t *path)
         return root;
     }
 
-    success = SetCurrentDirectoryW(path);
+    EMODESUPPRESS()
+    expath = w32_extendedpathW(path);           // abs-path to expanded
+    success = SetCurrentDirectoryW(expath ? expath : path);
+
     if (! success) {                            // possible shortcut.
         wchar_t lnkbuf[WIN32_PATH_MAX];
 
         w32_errno_set();
-        if (w32_lnkexpandW(path, lnkbuf, _countof(lnkbuf), SHORTCUT_TRAILING|SHORTCUT_COMPONENT)) {
+        if (w32_expandlinkW(path, lnkbuf, _countof(lnkbuf), SHORTCUT_TRAILING|SHORTCUT_COMPONENT)) {
             success = SetCurrentDirectoryW(lnkbuf);
             if (! success) {
                 w32_errno_set();
             } else {
                 isunc = w32_unc_validW(lnkbuf);
             }
+        } else {
+            HANDLE handle = CreateFileW(expath ? expath : path, 0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
+                            OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_ATTRIBUTE_READONLY, NULL);
+            if (handle != INVALID_HANDLE_VALUE) {
+                BY_HANDLE_FILE_INFORMATION fi = {0};
+
+                errno = ENOTDIR;                // Not a directory.
+                if (GetFileInformationByHandle(handle, &fi)) {
+                    if (fi.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+                        errno = ENOTSUP;        // Not supported.
+                    }
+                }
+                CloseHandle(handle);
+            }
         }
     } else {
         isunc = w32_unc_validW(path);
     }
+    EMODERESTORE()
+
+    free((void*)expath);
+    expath = NULL;
 
     if (! success) {
         return set_vfs_directoryW(path);
@@ -365,8 +423,9 @@ set_root_directoryA(const char *path)
     }
 
     /*
-     *  chdir("/") behaviour is context specific, meaning goto root of current drive,
-     *  mount point or current UNC. Normalisze this behaviour to root of current/last drive.
+     *  chdir("/") behavior is context specific, meaning goto root of current drive, mount point or current UNC. 
+     *  Normalize this behavior to root of current/last drive.
+     * 
      *  Also see realpath() and related opendir() usage.
      */
     {   char npath[4];
@@ -399,8 +458,9 @@ set_root_directoryW(const wchar_t *path)
     }
 
     /*
-     *  Generic chdir("/") behaviour is context specific, meaning goto root of current drive,
-     *  mount point or current UNC. Normalisze this behaviour to root of current/last drive.
+     *  Generic chdir("/") behavior is context specific, meaning goto root of current drive, mount point or current UNC. 
+     *  Normalize this behavior to root of current/last drive.
+     * 
      *  Also see realpath() and related opendir() usage.
      */
     {   wchar_t npath[4];
@@ -471,7 +531,7 @@ set_vfs_directoryW(const wchar_t *path)
                 int i;
 
                 path += 2;                      // "//" or "\\"
-                // Valid characters for hostnames are ASCII(7), letters from a to z,
+                // Valid characters for hostname's are ASCII(7), letters from a to z,
                 // the digits from 0 to 9, and the hyphen (-).
                 *cursor++ = '/'; *cursor++ = '/';
                 for (i = serverlen - 4; i > 0; --i) {
@@ -491,37 +551,44 @@ set_vfs_directoryW(const wchar_t *path)
 static void
 cache_directory()
 {
-    char t_cwd[WIN32_PATH_MAX] = {0};
+    char cwd[WIN32_PATH_MAX];
 
-    if (w32_getcwd(t_cwd, _countof(t_cwd))) {
-        if (isalpha((unsigned char)t_cwd[0]) && ':' == t_cwd[1]) {
-            const unsigned driveno = toupper(t_cwd[0]) - 'A';
-            char env_var[4] = { "=X:" };
+    cwd[0] = 0;
+    if (NULL == w32_getcwd(cwd, _countof(cwd))) {
+        return;
+    }
 
-            /*
-             *  Cache drive specific directory
-             */
-            free((char *)x_w32_cwdd[driveno]);
-            x_w32_cwdd[driveno] = WIN32_STRDUP(t_cwd);
-            x_w32_cwdn = driveno + 1;
+    if (cwd[0] && ':' == cwd[1] && isalpha((unsigned char)cwd[0])) {
+        const unsigned driveno = toupper(cwd[0]) - 'A';
+        char env_var[4] = { "=X:" };
 
-            /*
-             *  Update the environment (=)
-             *      This is required to support the MSVCRT runtime logic based on the current-directory-on-drive
-             *      environment variables. Function like (fullpath, spawn, etc) *may* need them to be set.
-             *
-             *  If associated with a 'drive', the current directory should have the form of the example below:
-             *
-             *       C:\Program and Settings\users\
-             *
-             *  so that the environment variable should be of the form:
-             *
-             *      =C:=C:\Program and Settings\users\
-             */
-            env_var[1] = toupper(t_cwd[0]);
-            w32_unix2dos(t_cwd);
-            (void) SetEnvironmentVariableA(env_var, t_cwd);
-        }
+        /*
+         *  Cache drive specific directory (A=0 .. Z=25)
+         */
+        if (driveno >= _countof(x_w32_cwdd))
+            return;
+
+        free((char *)x_w32_cwdd[driveno]);
+        x_w32_cwdd[driveno] = WIN32_STRDUP(cwd);
+        x_w32_cwdn = driveno + 1;
+
+        /*
+         *  Update the environment (=)
+         *      This is required to support the MSVCRT runtime logic based on the current-directory-on-drive
+         *      environment variables. Function like (fullpath, spawn, etc) *may* need them to be set.
+         *
+         *  If associated with a 'drive', the current directory should have the form of the example below:
+         *
+         *       C:\Program and Settings\users\
+         *
+         *  so that the environment variable should be of the form:
+         *
+         *      =C:=C:\Program and Settings\users\
+         */
+        env_var[1] = toupper(cwd[0]);
+        w32_unix2dosA(cwd);
+
+        (void) SetEnvironmentVariableA(env_var, cwd);
     }
 }
 
@@ -631,18 +698,14 @@ w32_rmdir(const char *path)
 {
 #if defined(UTF8FILENAMES)
     if (w32_utf8filenames_state()) {
-        wchar_t wpath[WIN32_PATH_MAX];
+        if (path) {
+            wchar_t wpath[WIN32_PATH_MAX];
 
-        if (NULL == path) {
-            errno = EFAULT;
+            if (w32_utf2wc(path, wpath, _countof(wpath)) > 0) {
+                return w32_rmdirW(wpath);
+            }
             return -1;
         }
-
-        if (w32_utf2wc(path, wpath, _countof(wpath)) > 0) {
-            return w32_rmdirW(wpath);
-        }
-
-        return -1;
     }
 #endif  //UTF8FILENAMES
 
@@ -653,47 +716,66 @@ w32_rmdir(const char *path)
 LIBW32_API int
 w32_rmdirA(const char *path)
 {
-    if (! RemoveDirectoryA(path)) {
-        return w32_errno_set();
+    const char *expath;
+    int ret = 0;
+
+    if (NULL != (expath = w32_extendedpathA(path))) {
+        path = expath;                          // extended abs-path 
     }
-    return 0;
+
+    if (! RemoveDirectoryA(path)) {
+        ret = w32_errno_set();
+    }
+
+    free((void*)expath);
+    return ret;
 }
 
 
 LIBW32_API int
 w32_rmdirW(const wchar_t *path)
 {
-    if (! RemoveDirectoryW(path)) {
-        return w32_errno_set();
+    const wchar_t *expath;
+    int ret = 0;
+
+    if (NULL != (expath = w32_extendedpathW(path))) {
+        path = expath;                          // extended abs-path
     }
-    return 0;
+
+    if (! RemoveDirectoryW(path)) {
+        ret = w32_errno_set();
+    }
+
+    free((void*)expath);
+    return ret;
 }
 
 
 /*
- *  w32_lnkexpandA ---
- *      expand embedded shortcuts.
+ *  w32_expandlinkA ---
+ *      Expand embedded shortcuts.
  */
 LIBW32_API BOOL
-w32_lnkexpandA(const char *name, char *buf, size_t buflen, unsigned flags)
+w32_expandlinkA(const char *name, char *buf, size_t buflen, unsigned flags)
 {
     const size_t length = strlen(name);
     char *t_name;
     BOOL ret = 0;
 
-    if (length > 4 && NULL != (t_name = calloc(sizeof(char), length + 1 /*nul*/))) {
+    if (length > 4 && NULL != (t_name = calloc(length + 1 /*nul*/, sizeof(char)))) {
         char *cursor, *end;
         int dots = 0;
 
         memcpy(t_name, name, length + 1 /*nul*/);
 
         for (cursor = t_name + length, end = cursor; --cursor >= t_name;) {
-            if ('.' == *cursor) {                   // extension
-                if (1 == ++dots) {                  // last/trailing
-                    if (0 == w32_io_strnicmp(cursor, ".lnk", 4) && (cursor + 4) == end) {
+            if ('.' == *cursor) {               // extension
+                if (1 == ++dots) {              // last/trailing
+                    if (0 == w32_iostrnicmpA(cursor, ".lnk", 4) && (cursor + 4) == end) {
                         //
                         //  <shortcut>.lnk
                         //      - attempt expansion, allowing one within any given path.
+                        //
                         const size_t trailing = length - (end - t_name);
                         const char term = *end;
                         int t_ret;
@@ -702,13 +784,13 @@ w32_lnkexpandA(const char *name, char *buf, size_t buflen, unsigned flags)
 
                         if (flags & (term ? SHORTCUT_COMPONENT : SHORTCUT_TRAILING)) {
 
-                            *end = 0;               // remove trailing component.
+                            *end = 0;           // remove trailing component.
                             if ((t_ret = w32_readlinkA(t_name, buf, buflen)) > 0) {
                                 if (buflen > (t_ret + trailing)) {
                                     if (trailing) { // appending trailing component(s).
                                         *end = term, memcpy(buf + t_ret, end, trailing + 1 /*nul*/);
                                     }
-                                    ret = 1;        // success.
+                                    ret = 1;    // success.
                                 }
                             }
                         }
@@ -717,7 +799,7 @@ w32_lnkexpandA(const char *name, char *buf, size_t buflen, unsigned flags)
                 }
 
             } else if ('/' == *cursor || '\\' == *cursor) {
-                end  = cursor;                      // new component.
+                end  = cursor;                  // new component.
                 dots = 0;
             }
         }
@@ -728,29 +810,30 @@ w32_lnkexpandA(const char *name, char *buf, size_t buflen, unsigned flags)
 
 
 /*
- *  w32_lnkexpandW ---
- *      expand embedded shortcuts.
+ *  w32_expandlinkW ---
+ *      Expand embedded shortcuts.
  */
 LIBW32_API BOOL
-w32_lnkexpandW(const wchar_t *name, wchar_t *buf, size_t buflen, unsigned flags)
+w32_expandlinkW(const wchar_t *name, wchar_t *buf, size_t buflen, unsigned flags)
 {
     const size_t length = wcslen(name);
     wchar_t *t_name;
     BOOL ret = 0;
 
-    if (length > 4 && NULL != (t_name = calloc(sizeof(wchar_t), length + 1 /*nul*/))) {
+    if (length > 4 && NULL != (t_name = calloc(length + 1 /*nul*/, sizeof(wchar_t)))) {
         wchar_t *cursor, *end;
         int dots = 0;
 
         wmemcpy(t_name, name, length + 1 /*nul*/);
 
         for (cursor = t_name + length, end = cursor; --cursor >= t_name;) {
-            if ('.' == *cursor) {                   // extension
-                if (1 == ++dots) {                  // last/trailing
-                    if (0 == w32_io_wstrnicmp(cursor, ".lnk", 4) && (cursor + 4) == end) {
+            if ('.' == *cursor) {               // extension
+                if (1 == ++dots) {              // last/trailing
+                    if (0 == w32_iostrnicmpW(cursor, ".lnk", 4) && (cursor + 4) == end) {
                         //
                         //  <shortcut>.lnk
                         //      - attempt expansion, allowing one within any given path.
+                        //
                         const size_t trailing = length - (end - t_name);
                         const char term = *end;
                         int t_ret;
@@ -759,13 +842,13 @@ w32_lnkexpandW(const wchar_t *name, wchar_t *buf, size_t buflen, unsigned flags)
 
                         if (flags & (term ? SHORTCUT_COMPONENT : SHORTCUT_TRAILING)) {
 
-                            *end = 0;               // remove trailing component.
+                            *end = 0;           // remove trailing component.
                             if ((t_ret = w32_readlinkW(t_name, buf, buflen)) > 0) {
                                 if (buflen > (t_ret + trailing)) {
                                     if (trailing) { // appending trailing component(s).
                                         *end = term, wmemcpy(buf + t_ret, end, trailing + 1 /*nul*/);
                                     }
-                                    ret = 1;        // success.
+                                    ret = 1;    // success.
                                 }
                             }
                         }
@@ -774,7 +857,7 @@ w32_lnkexpandW(const wchar_t *name, wchar_t *buf, size_t buflen, unsigned flags)
                 }
 
             } else if ('/' == *cursor || '\\' == *cursor) {
-                end  = cursor;                      // new component.
+                end  = cursor;                  // new component.
                 dots = 0;
             }
         }

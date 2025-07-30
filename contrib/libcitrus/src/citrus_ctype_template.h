@@ -354,7 +354,7 @@ _FUNCNAME(wcsrtombs_priv)(_ENCODING_INFO * __restrict ei, char * __restrict s,
 {
 	int err;
 	char buf[MB_LEN_MAX];
-	size_t cnt, siz;
+	size_t cnt, siz = 0;
 	const WCHAR_T* pwcs0;
 #if _ENCODING_IS_STATE_DEPENDENT
 	_ENCODING_STATE state;
@@ -415,7 +415,7 @@ _FUNCNAME(wcsnrtombs_priv)(_ENCODING_INFO * __restrict ei, char * __restrict s,
 {
 	int cnt = 0, err;
 	char buf[MB_LEN_MAX];
-	size_t siz;
+	size_t siz = 0;
 	const WCHAR_T* pwcs0;
 #if _ENCODING_IS_STATE_DEPENDENT
 	_ENCODING_STATE state;
@@ -836,7 +836,7 @@ _FUNCNAME(ctype_wctomb)(void * __restrict cl, char * __restrict s, WCHAR_T wc,
 {
 	_ENCODING_STATE *psenc;
 	_ENCODING_INFO *ei;
-	size_t nr, sz;
+	size_t nr = 0, sz = 0;
 #if _ENCODING_IS_STATE_DEPENDENT
 	size_t rsz = 0;
 #endif

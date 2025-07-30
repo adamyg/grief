@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_vfs_mount_c,"$Id: vfs_mount.c,v 1.19 2024/04/17 16:00:30 cvsuser Exp $")
+__CIDENT_RCSID(gr_vfs_mount_c,"$Id: vfs_mount.c,v 1.21 2025/02/07 03:03:23 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: vfs_mount.c,v 1.19 2024/04/17 16:00:30 cvsuser Exp $
+/* $Id: vfs_mount.c,v 1.21 2025/02/07 03:03:23 cvsuser Exp $
  * Virtual file system interface --- mount table management.
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -129,7 +129,7 @@ struct vfs_mount *
 vfs_mount_new(struct vfs_mount *parent,
     const char *mountpoint, struct vfs_class *vfs, unsigned flags, const char *argument)
 {
-    unsigned mntlen = strlen(mountpoint);
+    unsigned mntlen = (unsigned)strlen(mountpoint);
     int appendsep = FALSE;
     struct vfs_mount *vmount;
     char *t_path = NULL;
@@ -292,7 +292,7 @@ vfs_mount_get(const char *mountpoint, unsigned mntlen)
     assert(mountpoint && mountpoint[0]);
 
     if (0 == mntlen) {
-        mntlen = strlen(mountpoint);
+        mntlen = (unsigned)strlen(mountpoint);
     }
     hash = vfs_name_hash(mountpoint, mntlen);
 
@@ -420,7 +420,7 @@ vfs_mount_lookup(const char *path, char *buffer, int length, char **fname)
      *  canonicalize and search against mount table
      */
     canonicalize(path, buffer, length);         /* remove subdir etc */
-    length = strlen(buffer);
+    length = (unsigned)strlen(buffer);
 
     VFS_TRACE(("\tvfs_mount_lookup('%s' -> '%s')\n", path, buffer))
     cursor = buffer + length - 1;               /* cursor */
@@ -443,7 +443,7 @@ vfs_mount_lookup(const char *path, char *buffer, int length, char **fname)
              *  walk backward removing components
              */
             cursor = seperator_prev(buffer, cursor);
-            length = (cursor - buffer) + 1;
+            length = (unsigned)((cursor - buffer) + 1);
             if (NULL != (vmount = vfs_mount_get(buffer, length))) {
                 if (0 == (vmount->mt_flags & VMOUNT_FFULLPATH)) {
                     *cursor++ = 0;              /* remove seperating terminator */
@@ -542,9 +542,9 @@ automount(char *buffer, char **sepp)
     if (NULL != (prefix = strchr(buffer, VFS_PREFIX)) && prefix > buffer) {
         if (NULL != (subpath = seperator_next(prefix + 1)) && subpath > prefix + 1) {
             struct vfs_class *vclass =
-                        vfs_class_get(prefix + 1, (subpath - prefix) -1);
+                        vfs_class_get(prefix + 1, (unsigned)((subpath - prefix) - 1));
 
-            assert(NULL == vfs_mount_get(buffer, prefix - buffer));
+            assert(NULL == vfs_mount_get(buffer, (unsigned)(prefix - buffer)));
             VFS_TRACE(("\td. %.*s:%s\n", (int)((subpath - prefix) - 1), prefix + 1, subpath))
 
             if (vclass) {

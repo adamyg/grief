@@ -1,11 +1,11 @@
 #ifndef GR_REGPROG_H_INCLUDED
 #define GR_REGPROG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_regprog_h,"$Id: regprog.h,v 1.7 2024/07/14 16:07:33 cvsuser Exp $")
+__CIDENT_RCSID(gr_regprog_h,"$Id: regprog.h,v 1.8 2025/02/09 16:16:39 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: regprog.h,v 1.7 2024/07/14 16:07:33 cvsuser Exp $
+/* $Id: regprog.h,v 1.8 2025/02/09 16:16:39 cvsuser Exp $
  * Regular expression program interface.
  *
  *
@@ -24,7 +24,7 @@ __CPRAGMA_ONCE
 #define HAVE_LIBTRE                             /* optional/experimental */
 
 #if defined(HAVE_LIBTRE)
-#include <tre.h>
+#include <tre/tre.h>
 #define  ONIG_ESCAPE_REGEX_T_COLLISION
 #endif
 

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_msg_c,"$Id: m_msg.c,v 1.32 2024/12/06 15:46:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_msg_c,"$Id: m_msg.c,v 1.33 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_msg.c,v 1.32 2024/12/06 15:46:06 cvsuser Exp $
+/* $Id: m_msg.c,v 1.33 2025/02/07 03:03:21 cvsuser Exp $
  * Message and formatting primitives.
  *
  *
@@ -434,7 +434,7 @@ __CIDENT_RCSID(gr_m_msg_c,"$Id: m_msg.c,v 1.32 2024/12/06 15:46:06 cvsuser Exp $
 void
 do_message(void)                /* (string format, ...) */
 {
-    int len = -1;
+    size_t len = 0;
     const char *cp = print_formatted(0, &len, NULL);
 
     if (cp && len) {
@@ -522,7 +522,7 @@ do_message(void)                /* (string format, ...) */
 void
 do_error(void)                  /* int (string format, ...) */
 {
-    int len = -1;
+    size_t len = 0;
     const char *cp = print_formatted(0, &len, NULL);
 
     if (cp && len) {
@@ -787,7 +787,7 @@ do_sprintf(void)                /* int (string buffer, string format, ...) */
 {
     SYMBOL *sp = get_symbol(1);
     const char *cp;
-    int len = 0, width = 0;
+    size_t len = 0, width = 0;
 
     cp = print_formatted(1, &len, &width);
     if (cp) {
@@ -857,10 +857,10 @@ void
 do_format(void)                 /* (string format, ...) */
 {
     const char *cp;
-    int len = 0;
+    size_t len = 0;
 
     cp = print_formatted(0, &len, NULL);
-    acc_assign_str(cp, len);
+    acc_assign_nstr(cp, len);
 }
 
 

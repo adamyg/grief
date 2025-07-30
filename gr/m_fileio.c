@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_fileio_c,"$Id: m_fileio.c,v 1.20 2024/12/06 15:46:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_fileio_c,"$Id: m_fileio.c,v 1.22 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_fileio.c,v 1.20 2024/12/06 15:46:06 cvsuser Exp $
+/* $Id: m_fileio.c,v 1.22 2025/02/07 03:03:21 cvsuser Exp $
  * File i/o primitives.
  *
  *
@@ -155,11 +155,7 @@ importflags(const char *flags)
         while (*flags) {
             switch (*flags) {
             case '+':
-                if (nflags & O_RDONLY) {        /* r+ - read/write */
-                    nflags &= ~O_RDONLY;
-                    nflags |= O_RDWR;
-
-                } else if (nflags & O_WRONLY) {
+                if (nflags & O_WRONLY) {
                     if (nflags & O_APPEND) {    /* a+ - append for writing and reading */
                         nflags &= ~O_WRONLY;
                         nflags |= O_RDWR;
@@ -168,6 +164,17 @@ importflags(const char *flags)
                         nflags &= ~O_WRONLY;
                         nflags |= O_RDWR|O_TRUNC;
                     }
+#if (O_RDONLY)  // non-zero
+                } else if (nflags & O_RDONLY) {
+#elif (O_RDWR)  // non-zero
+                } else if (0 == (nflags & O_RDWR)) {
+                    nflags &= ~O_RDONLY;        /* r+ - read/write */
+                    nflags |= O_RDWR;
+#else
+#error unexpected O_RDONLY and O_RDWR values
+#endif
+                    nflags &= ~O_RDONLY;
+                    nflags |= O_RDWR;
                 }
                 break;
             case 'b':
@@ -321,7 +328,7 @@ do_fclose(void)                 /* (int handle) */
 
     Macro Description:
         The 'fread()' primitive shall read into the array pointed to
-        by ptr up to nitems elements whose size is specified by size
+        by ptr up to bufsize elements whose size is specified by size
         in bytes, from the stream referenced by 'handle'.
 
     Macro Parameters:
@@ -336,7 +343,7 @@ do_fclose(void)                 /* (int handle) */
         of elements successfully read which is less than 'bufsiz'
         only if a read error or end-of-file is encountered.
 
-        If 'nitems' is 0, fread() shall return 0 and the contents of
+        If 'bufsiz' is 0, fread() shall return 0 and the contents of
         the array and the state of the stream remain unchanged.
         Otherwise, if a read error occurs, the error indicator for
         the stream shall be set, and 'errno' shall be set to indicate
@@ -352,7 +359,7 @@ void
 do_fread(void)                  /* (int handle. string buffer, [int bufsiz], [int null = ' ']) */
 {
     int handle = get_xinteger(1, -1);
-    int bufsiz = get_xinteger(3, BUFSIZ);       /* bufsize (optional) */
+    int bufsiz = get_xinteger(3, BUFSIZ);       /* bufsiz (optional) */
     int null = get_xinteger(4, 0);
     int ret = -1;
 
@@ -451,7 +458,7 @@ do_fwrite(void)                 /* (int handle, string buffer, [int length]) */
 {
     int handle = get_xinteger(1, -1);
     const char *buffer = get_str(2);
-    int bufsize = get_strlen(2);                /* FIXME - UTF encoding and NUL's are an issue */
+    accint_t bufsize = get_strlen(2);           /* FIXME - UTF encoding and NUL's are an issue */
   /*int length = get_xinteger(3, -1);*/
     int ret = -1;
 

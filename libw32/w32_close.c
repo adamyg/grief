@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_close_c,"$Id: w32_close.c,v 1.16 2024/03/31 15:57:25 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_close_c,"$Id: w32_close.c,v 1.18 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 close() system calls.
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -169,7 +169,7 @@ w32_close(int fildes)
 #define SD_SEND         0x01
 #define SD_BOTH         0x02
 #endif
-        w32_sockfd_close(fildes, s);
+        w32_fdsockclose(fildes, s);
         (void) shutdown(s, SD_BOTH);
         if ((ret = closesocket(s)) == SOCKET_ERROR) {
             w32_neterrno_set();

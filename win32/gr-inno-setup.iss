@@ -20,11 +20,7 @@
 ; License for more details.
 ;
 
-#if defined(BUILD_INFO)
 #include "../include/edbuildinfo.h"
-#else
-#include "../include/edpackageinfo.h"
-#endif
 
 #if defined(BUILD_TOOLCHAIN)
 #if defined(BUILD_TYPE)
@@ -44,7 +40,7 @@
 AppId={{1BDBED1A-1B0E-4D87-BD04-31E9E3DA5ADC}}
 AppName=GRIEF
 AppVersion={#GR_VERSION} (build: {#GR_BUILD_DATE}-{#GR_BUILD_NUMBER})
-AppCopyright=Copyright (C) 1998-2024.
+AppCopyright=Copyright (C) 1998-2025.
 AppPublisherURL=http://sourceforge.net/projects/grief/
 AppSupportURL=https://github.com/adamyg/grief
 AppUpdatesURL=https://github.com/adamyg/grief
@@ -59,22 +55,25 @@ LicenseFile=../COPYING
 
 OutputDir=.
 ; Examples:
-;  gr-3.2.4.28-win-x64-setup.exe
-;  gr-3.2.4.28-win-x86-setup.exe
+;  gr-3.2.4.28-x64-mingw64-setup.exe
+;  gr-3.2.4.28-x64-setup.exe
+;  gr-3.2.4.28-x86-setup.exe
 ;
-#if defined(BUILD_ARCHITECTURE)
-#if (BUILD_ARCHITECTURE == "x64")
+
+#if !defined(BUILD_ARCHITECTURE)
+#define BUILD_ARCHITECTURE "x86"
+#endif
+
+#if (BUILD_ARCHITECTURE == "x64") || defined(BUILD_ISWIN64)
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
 #endif
-OutputBaseFilename=gr-{#GR_VERSION}.{#GR_BUILD_NUMBER}-win-{#BUILD_ARCHITECTURE}-setup
-#else
-OutputBaseFilename=gr-{#GR_VERSION}.{#GR_BUILD_NUMBER}-win-x86-setup
-#endif
 
-;	#if defined(BUILD_TOOLNAME)
-;	OutputBaseFilename=gr-{#GR_VERSION}.{#GR_BUILD_NUMBER}-{#BUILD_TOOLNAME}-setup
-;	#endif
+#if defined(BUILD_TOOLNAME)
+OutputBaseFilename=gr-{#GR_VERSION}.{#GR_BUILD_NUMBER}-{#BUILD_ARCHITECTURE}-{#BUILD_TOOLNAME}-setup
+#else
+OutputBaseFilename=gr-{#GR_VERSION}.{#GR_BUILD_NUMBER}-{#BUILD_ARCHITECTURE}-setup
+#endif
 
 Compression=lzma
 SolidCompression=yes
@@ -106,13 +105,18 @@ Source: "..\{#BinDir}\gm.exe";        DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\grcpp.exe";     DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\grunch.exe";    DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\grmandoc.exe";  DestDir: "{app}\bin"; Flags: ignoreversion
-	;;Source: "..\{#BinDir}\grwc.exe";      DestDir: "{app}\bin"; Flags: ignoreversion
+	; False positive, virus
+	; Source: "..\{#BinDir}\grwc.exe";      DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\grupdater.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\*.dll";         DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\{#BinDir}\ctbl\*";        DestDir: "{app}\bin\ctbl"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\{#BinDir}\i18n\*";        DestDir: "{app}\bin\i81n"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\macsrc\*";                DestDir: "{app}\macsrc"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "CVS,.*,*.exe,*.obj,*.bat,tests,ref,sav,*.txt,*.pl,*.in*"
+#if defined(BUILD_ISWIN64)
+Source: "..\macros.x64\*";            DestDir: "{app}\macros"; Flags: ignoreversion recursesubdirs createallsubdirs
+#else
 Source: "..\macros\*";                DestDir: "{app}\macros"; Flags: ignoreversion recursesubdirs createallsubdirs
+#endif
 Source: "..\help\*";                  DestDir: "{app}\help"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\COPYING";                 DestDir: "{app}"; Flags: ignoreversion
 Source: "..\Changes";                 DestDir: "{app}"; Flags: ignoreversion isreadme
@@ -169,7 +173,7 @@ const   ModPathName = 'modifypath';
 function ModPathDir(): TArrayOfString;
 begin
         setArrayLength(Result, 1)
-    	Result[0] := ExpandConstant('{app}\bin');
+        Result[0] := ExpandConstant('{app}\bin');
 end;
 
 procedure DosToUnix();
@@ -186,3 +190,4 @@ begin
 end;
 
 #include "modpath.iss"
+

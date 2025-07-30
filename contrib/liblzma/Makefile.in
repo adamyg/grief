@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.15 2024/04/16 11:37:13 cvsuser Exp $
+# $Id: Makefile.in,v 1.18 2025/02/07 17:20:37 cvsuser Exp $
 # liblzma makefile and grxz
 #
 #
@@ -65,8 +65,8 @@ LDRELEASE=	@LDRELEASE@
 CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
 
 CEXTRA=		@DEFS@
-ifeq ("yes","@ISWIN32@")
-CEXTRA+=	-DWIN32 -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
+ifeq (yes,$(findstring yes,"@ISWIN32@ or @ISWIN64@"))
+CEXTRA+=	-DWIN32
 endif
 
 ifeq ("$(BUILD_TYPE)","release")
@@ -248,7 +248,11 @@ TSKS=		$(LZMAUTIL)
 LZMA=no
 ifeq ("@TOOLCHAIN@","owc20")
 else ifeq ("@TOOLCHAIN@","owc19")
+else ifeq ("@TOOLCHAIN@","vs170_x64")
+LZMA=yes
 else ifeq ("@TOOLCHAIN@","vs170")
+LZMA=yes
+else ifeq ("@TOOLCHAIN@","vs160_x64")
 LZMA=yes
 else ifeq ("@TOOLCHAIN@","vs160")
 LZMA=yes
@@ -284,11 +288,11 @@ $(LZMALIB):		$(D_OBJ)/.created $(LIBOBJS)
 $(LZMADLL):		CEXTRA += -D__LIBLZMA_BUILD -DLIBLZMA_DYNAMIC
 $(LZMADLL):		MAPFILE=$(basename $@).map
 $(LZMADLL):		$(DLLOBJS) liblzma.sym
-		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $^ -version-number $(VERSIONSPEC) \
-			-rpath $(D_LIB) -bindir $(D_BIN) -export-symbols=liblzma.sym $(LDLIBS) @LDMAPFILE@
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ -version-number $(VERSIONSPEC) \
+			-rpath $(D_LIB) -bindir $(D_BIN) -export-symbols=liblzma.sym $(DLLOBJS) $(LDLIBS) @LDMAPFILE@
 
 $(LZMAUTIL):		$(UTILOBJS)
-		$(LIBTOOL) --mode=link $(CC) $(CC) $(LDFLAGS) $^ -o $@ $(D_LIB)/liblzma$(A) $(LDLIBS)
+		$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ -o $@ $(D_LIB)/liblzma$(A) $(LDLIBS)
 
 source:			.unpacked.$(VERSION)
 		$(MAKE) unpacked

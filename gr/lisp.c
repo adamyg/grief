@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_lisp_c,"$Id: lisp.c,v 1.48 2024/07/25 15:38:40 cvsuser Exp $")
+__CIDENT_RCSID(gr_lisp_c,"$Id: lisp.c,v 1.50 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: lisp.c,v 1.48 2024/07/25 15:38:40 cvsuser Exp $
+/* $Id: lisp.c,v 1.50 2025/02/07 03:03:21 cvsuser Exp $
  * List primitives.
  *
  *
@@ -45,8 +45,8 @@ struct listhead {
 #define LIST_MAGIC          MKMAGIC('L', 'i', 'S', 't')
 #define LIST_MAGIC2         MKMAGIC('L', 'i', 's', 'T')
 
-    int                 lh_length;              /* current length */
-    int                 lh_alloced;             /* alloced length */
+    size_t              lh_length;              /* current length */
+    size_t              lh_alloced;             /* allocated length */
     int                 lh_atoms;               /* number of atoms (top level) */
     const LIST *        lh_cursor;              /* list_each() cursor */
  // const LIST *        lh_last;                /* pop() cursor -- TODO */
@@ -57,8 +57,7 @@ struct listhead {
     MAGIC_t             lh_magic2;              /* structure magic */
 };
 
-static LIST *           clonelist(const LIST *list, int len);
-static int              lstsizeof(const LIST *lp);
+static LIST *           clonelist(const LIST *list, size_t len);
 static void             rlst_delete(ref_t *rp);
 
 
@@ -136,11 +135,10 @@ atom_push_str(LIST *lp, const char *svalue)
  *      Address of next atom location.
  */
 LIST *
-atom_push_nstr(LIST *lp, const char *svalue, int slength)
+atom_push_nstr(LIST *lp, const char *svalue, size_t slength)
 {
-    assert(slength >= 0);
     *lp = F_RSTR;
-    LPUT_PTR(lp, r_nstring(svalue, slength));
+    LPUT_PTR(lp, r_nstring(svalue, (int)slength));
     return lp + sizeof_atoms[F_RSTR];
 }
 
@@ -556,12 +554,12 @@ atom_assign_acc(const LIST *lp)
         break;
 
     case F_LIT:
-        acc_assign_str(LGET_PTR2(const char, lp), -1);
+        acc_assign_str(LGET_PTR2(const char, lp));
         break;
 
     case F_RSTR: {      /* copy on reference */
             ref_t *rp = LGET_PTR2(ref_t, lp);
-            acc_assign_str(r_ptr(rp), r_used(rp));
+            acc_assign_nstr(r_ptr(rp), (size_t)r_used(rp));
         }
         break;
 
@@ -588,13 +586,13 @@ atom_assign_acc(const LIST *lp)
             const int id = LGET_ID(lp);
             const char *name = builtin[id].b_name;
             assert(id >= 0 || (unsigned)id < builtin_count);
-            acc_assign_str(name, -1);
+            acc_assign_str(name);
         }
         break;
 
     case F_SYM:         /* arg_list() usage */
     case F_REG:
-        acc_assign_str(LGET_PTR2(const char, lp), -1);
+        acc_assign_str(LGET_PTR2(const char, lp));
         break;
 
 //  case F_STR:
@@ -640,7 +638,10 @@ atom_assign_sym(const LIST *lp, SYMBOL *sp)
         break;
 
     case F_LIST:        /* clone */
-        sym_donate_ref(sp, rlst_build(atom_xlist(lp), -1));
+        {
+            const LIST *lp1 = atom_xlist(lp);
+            sym_donate_ref(sp, rlst_build(lp1, lst_sizeof(lp1)));
+        }
         break;
 
     case F_RSTR:        /* reference */
@@ -728,7 +729,7 @@ atom_copy(LIST *dstlp, const LIST *srclp)
             dstlp = atom_push_halt(dstlp);
 
             assert(F_HALT == *srclp);
-            return dstlp - lp;
+            return (int)(dstlp - lp);
         }
 
     case F_NULL:        /* null, opcode only */
@@ -787,7 +788,7 @@ atom_copy_seq(LIST *dstlp, int *atoms, const LIST *srclp)
         ++cnt;
     }
     *atoms += cnt;
-    return dstlp - start;
+    return (int)(dstlp - start);
 }
 
 
@@ -894,7 +895,7 @@ argv_copy(LIST *lp, register const LISTV *lvp)
             assert(srclp == end_lp);
             dstlp = atom_push_halt(dstlp);
             assert(len == (dstlp - lp));
-            return dstlp - lp;
+            return (int)(dstlp - lp);
         }
 
     case F_RSTR:        /* reference */
@@ -940,7 +941,7 @@ argv_copy(LIST *lp, register const LISTV *lvp)
  *  Returns:
  *      int - size of list element in bytes.
  */
-int
+size_t
 argv_make(LISTV *lvp, const LIST *lp)
 {
     register const LIST atom = *lp;
@@ -965,7 +966,7 @@ argv_make(LISTV *lvp, const LIST *lp)
 
     case F_LIST:
         lvp->l_list = lp;
-        return CM_ATOM_LIST_SZ + lstsizeof(lp);
+        return CM_ATOM_LIST_SZ + lst_sizeof(lp);
 
     case F_RSTR:
     case F_RLIST:
@@ -1012,22 +1013,22 @@ argv_make(LISTV *lvp, const LIST *lp)
  *  Parameters:
  *      lvp - Argument vector element.
  *      atoms - element count.
- *      len - refaddr of field populated with the total length.
+ *      llenp - refaddr of field populated with the total length.
  *
  *  Returns:
  *      LIST * address of new list, with *len being the size of the list in bytes.
  */
 LIST *
-argv_list(const LISTV *lvp, int atoms, int *len)
+argv_list(const LISTV *lvp, int atoms, size_t *llenp)
 {
     LIST *newlp;
     register int i;
     register LIST *lp;
-    int new_len = 0;
+    size_t new_len = 0;
 
     ED_TRACE(("argv_list(%p, %d)\n", lvp, atoms))
 
-    /* empty /null ist */
+    /* empty/null list */
     if (atoms <= 0)
         return NULL;
 
@@ -1036,8 +1037,8 @@ argv_list(const LISTV *lvp, int atoms, int *len)
         new_len += argv_size(lvp + i);
     }
     new_len += sizeof_atoms[F_HALT];
-    if (len) {
-        *len = new_len;
+    if (llenp) {
+        *llenp = new_len;
     }
 
     /* allocate memory for new list */
@@ -1059,7 +1060,7 @@ argv_list(const LISTV *lvp, int atoms, int *len)
 
 /*  Function:           alloc_size
  *      Determine the size of the allocated arena needed to maintain a list
- *      containing the specified atom tsorage.
+ *      containing the specified atom storage.
  *
  *      The resulting storage shall include list header overheads and shall
  *      be rounded to either a ^2 size or 1MB alignment, which ever comes first
@@ -1070,10 +1071,10 @@ argv_list(const LISTV *lvp, int atoms, int *len)
  *  Returns:
  *      Length rounded.
  */
-static int
-alloc_size(int len)
+static size_t
+alloc_size(size_t len)
 {
-    int alloc_len = 1;
+    size_t alloc_len = 1;
 
     len += sizeof(struct listhead);             /* overhead */
     if (len > (1 << 20)) {
@@ -1099,14 +1100,13 @@ alloc_size(int len)
  *      Address of the allocation list.
  */
 LIST *
-lst_alloc(int len, int atoms)
+lst_alloc(size_t len, int atoms)
 {
     struct listhead *lh;
-    int alloc_len;
+    size_t alloc_len;
 
-    assert(atoms <= len);
-    assert(len > 0);
-    assert(len <= LIST_MAXLEN);
+    assert(atoms <= (int)len);
+    assert(len && len <= LIST_MAXLEN);
     alloc_len = alloc_size(len);
     if (NULL == (lh = (struct listhead *)chk_calloc((size_t)alloc_len, 1))) {
         return NULL;
@@ -1123,9 +1123,12 @@ lst_alloc(int len, int atoms)
 }
 
 
-/*  Function:           lstsizeof
- *      Return the raw length of a list in allocated bytes.  The origin of the list
- *      is not assumed, as such the length is derived by walking the list atoms.
+/*  Function:           lst_sizeof
+ *      Return the length of a raw list in bytes. 
+ *
+ *  Note:
+ *      Unlike lst_length, the origin of the list is not assumed, 
+ *      as such the length is derived by walking the list atoms. 
  *
  *  Parameters:
  *      list - List atom address, maybe NULL.
@@ -1133,8 +1136,8 @@ lst_alloc(int len, int atoms)
  *  Returns:
  *      Length of the list, in bytes.
  */
-int
-lstsizeof(const LIST *list)
+size_t
+lst_sizeof(const LIST *list)
 {
     register const LIST *lp;
     register LIST atom;
@@ -1151,12 +1154,12 @@ lstsizeof(const LIST *list)
             lp += sizeof_atoms[atom];
         }
     }
-    return (lp - list) + sizeof_atoms[F_HALT];  /* includes terminator */
+    return (int)((lp - list) + sizeof_atoms[F_HALT]); /* includes terminator */
 }
 
 
 /*  Function:           lst_isnull
- *      Determine whether the specifiied list is blank/null, if so assign a null result
+ *      Determine whether the specified list is blank/null, if so assign a null result
  *      to the accumulator.
  *
  *  Parameters:
@@ -1181,7 +1184,7 @@ lst_isnull(const LIST *lp)
  *
  *  Parameters:
  *      lp - List base address.
- *      atoms - Absoluate atom count.
+ *      atoms - Absolute atom count.
  *
  *  Returns:
  *      nothing.
@@ -1263,10 +1266,10 @@ lst_atoms_inc(LIST *lp, int atominc)
  *      Address of the list.
  */
 LIST *
-lst_size(LIST *lp, int newlen, int newatoms)
+lst_size(LIST *lp, size_t newlen, int newatoms)
 {
     struct listhead *lh;
-    __CIFDEBUG(int curlen;)
+    __CIFDEBUG(size_t curlen;)
 
     assert(lp != NULL);
 
@@ -1281,7 +1284,7 @@ lst_size(LIST *lp, int newlen, int newatoms)
     assert(newatoms >= 0);
     lh->lh_length = newlen;
     lh->lh_atoms  = newatoms;
-    assert((curlen = lstsizeof(lp)) == newlen);
+    assert((curlen = lst_sizeof(lp)) == newlen);
     assert(lh->lh_atoms == (newatoms = atom_number(lp)));
     return (LIST *)lp;
 }
@@ -1303,10 +1306,9 @@ lst_size(LIST *lp, int newlen, int newatoms)
  *      allocation services.
  */
 LIST *
-lst_expand(LIST *lp, int leninc)
+lst_expand(LIST *lp, size_t leninc)
 {
     struct listhead *lh;
-    int newlen;
 
     assert(lp != NULL);
 
@@ -1315,30 +1317,35 @@ lst_expand(LIST *lp, int leninc)
     assert(lh->lh_length <= lh->lh_alloced);
     assert(lh->lh_magic2 == LIST_MAGIC2);
 
-    assert(leninc >= 0);
     if (leninc > 0) {
-        if ((newlen = lh->lh_length + leninc) > lh->lh_alloced) {
-            int min_len = sizeof(struct listhead) + newlen;
-            int alloc_len = alloc_size(newlen);
+        const size_t newlen = lh->lh_length + leninc;
+
+        assert(newlen > 0);
+        assert(newlen <= LIST_MAXLEN);
+        if (newlen > LIST_MAXLEN) {
+            return NULL;
+        }
+
+        if (newlen > (size_t)lh->lh_alloced) {
+            size_t min_len = sizeof(struct listhead) + newlen;
+            size_t alloc_len = alloc_size(newlen);
 
             /* try expanding the block */
-            if ((int) chk_expand(lh, (size_t)alloc_len) >= min_len) {
+            if (chk_expand(lh, alloc_len) >= min_len) {
                 lh->lh_alloced = alloc_len - sizeof(struct listhead);
 
             } else {
                 return NULL;
             }
         }
-        assert(newlen > 0);
-        assert(newlen <= LIST_MAXLEN);
-        lh->lh_length = newlen;
+        lh->lh_length = (int)newlen;
     }
     return (LIST *)lp;
 }
 
 
 /*  Function:           lst_extend
- *      Extend list the storage, possiblity relocating the image
+ *      Extend list the storage, possibility relocating the image
  *
  *  Parameters:
  *      lp - List base address.
@@ -1363,10 +1370,10 @@ lst_extend(LIST *lp, int leninc, int atominc)
         assert(nlp == lp);
 
     } else {
-        const int newlen = lh->lh_length + leninc;
-        const int alloc_len = alloc_size(newlen);
+        const size_t newlen = lh->lh_length + leninc;
+        const size_t alloc_len = alloc_size(newlen);
 
-        if (NULL == (lh = chk_realloc(lh, (size_t)alloc_len))) {
+        if (NULL == (lh = chk_realloc(lh, alloc_len))) {
             nlp = NULL;                         /* failure */
 
         } else {                                /* update header */
@@ -1391,17 +1398,17 @@ lst_extend(LIST *lp, int leninc, int atominc)
  *  Returns:
  *      Length of the list in bytes.
  */
-int
+size_t
 lst_check(const LIST *lp)
 {
     const struct listhead *lh;
-    __CIFDEBUG(int length; int atoms;)
+    __CIFDEBUG(size_t length; int atoms;)
 
     lh = ((const struct listhead *)lp)-1;
     assert(lh->lh_magic1 == LIST_MAGIC);
     assert(lh->lh_length <= lh->lh_alloced);
     assert(lh->lh_magic2 == LIST_MAGIC2);
-    assert((length = lstsizeof(lp)) > 0);
+    assert((length = lst_sizeof(lp)) > 0);
     assert(lh->lh_length > 0);
     assert(lh->lh_length <= LIST_MAXLEN);
     assert(F_HALT == lp[lh->lh_length-1]);
@@ -1421,7 +1428,7 @@ lst_check(const LIST *lp)
  *  Returns:
  *      Length of the list in bytes.
  */
-int
+size_t
 lst_length(const LIST *lp)
 {
     const struct listhead *lh;
@@ -1445,7 +1452,7 @@ void
 lst_free(LIST *list)
 {
     register LIST *lp;
-    int list_len, depth = 0;
+    size_t list_len, depth = 0;
 
     list_len = lst_check(list);
     for (lp = list;;) {
@@ -1493,13 +1500,11 @@ lst_free(LIST *list)
  *      List address, otherwise NULL in the event of an empty list.
  */
 static LIST *
-clonelist(const LIST *list, int len)
+clonelist(const LIST *list, size_t len)
 {
     const LIST *lp;
     LIST *newlp;
     int atoms, depth;
-
-    assert(len >= 0);
 
     if (0 == len || NULL == (newlp = lst_alloc(len, -1))) {
         return NULL;
@@ -1559,9 +1564,9 @@ clonelist(const LIST *list, int len)
  *      List address, otherwise NULL in the event of an empty list.
  */
 LIST *
-lst_build(const LIST *list, int llen)
+lst_build(const LIST *list, size_t llen)
 {
-    assert(lstsizeof(list) == llen);
+    assert(lst_sizeof(list) == llen);
     return clonelist(list, llen);
 }
 
@@ -1571,16 +1576,16 @@ lst_build(const LIST *list, int llen)
  *
  *  Parameters;
  *      list - List base address.
- *      lenp - ariable populated with the length of the
+ *      lenp - variable populated with the length of the
  *             returning list, bytes.
  *
  *  Return:
  *      List address, otherwise NULL in the event of an empty list.
  */
 LIST *
-lst_clone(const LIST *list, int *llenp)
+lst_clone(const LIST *list, size_t *llenp)
 {
-    int llen;
+    size_t llen;
 
     llen = lst_check(list);
     if (llenp) {
@@ -1600,17 +1605,17 @@ lst_clone(const LIST *list, int *llenp)
  *  Returns:
  *      Sizeof the current atom in bytes.
  */
-static int
+static size_t
 lvp_size(const LISTV *lvp)
 {
     const OPCODE l_flags = lvp->l_flags;
 
     switch (l_flags) {
     case F_LIST:
-        return lstsizeof(lvp->l_list) - sizeof_atoms[F_HALT];
+        return lst_sizeof(lvp->l_list) - sizeof_atoms[F_HALT];
 
     case F_RLIST:
-        assert(r_used(lvp->l_ref) == lst_check(r_ptr(lvp->l_ref)));
+        assert(r_used(lvp->l_ref) == (int) lst_check(r_ptr(lvp->l_ref)));
         return r_used(lvp->l_ref) - sizeof_atoms[F_HALT];
 
     default:
@@ -1639,7 +1644,7 @@ lvp_copy(LIST *dstlp, int *atoms, const LISTV *lvp)
         return atom_copy_seq(dstlp, atoms, lvp->l_list);
 
     case F_RLIST:
-        assert(r_used(lvp->l_ref) == lst_check(r_ptr(lvp->l_ref)));
+        assert(r_used(lvp->l_ref) == (int) lst_check(r_ptr(lvp->l_ref)));
         return atom_copy_seq(dstlp, atoms, (LIST *) r_ptr(lvp->l_ref));
 
     default:
@@ -1657,27 +1662,23 @@ lvp_copy(LIST *dstlp, int *atoms, const LISTV *lvp)
  *      lp1 - List base address of the first list.
  *      len - Length of the list in bytes.
  *      lvp - List vector.
- *      lenp - Address of variable populated with the length of the
- *             resulting list.
+ *      lenp - Address of variable populated with the length of the resulting list.
  *
  *  Returns:
  *      Address of the new list.
  */
 LIST *
-lst_join(const LIST *lp1, int llen, const LISTV *lvp, int *lenp)
+lst_join(const LIST *lp1, size_t llen, const LISTV *lvp, size_t *lenp)
 {
     const LIST *srclp;
     LIST *dstlp, *newlp;
-    int newllen, atoms, n;
+    size_t newllen = 0;
+    int atoms, n;
 
     lst_check(lp1);
 
     /* Work out how much space is needed for new list */
-    if (llen < 0) {
-        llen = lstsizeof(lp1);
-    }
     newllen = llen + lvp_size(lvp);
-
     if (NULL == (newlp = lst_alloc(newllen, -1))) {
         *lenp = 0;
         return NULL;
@@ -1724,10 +1725,10 @@ rlst_create(LIST *lp, int llen)
 ref_t *
 rlst_clone(const LIST *lp)
 {
-    int llen;
+    size_t llen = 0;
     LIST *newlp = lst_clone(lp, &llen);
 
-    return r_list(newlp, llen, rlst_delete);
+    return r_list(newlp, (int)llen, rlst_delete);
 }
 
 
@@ -1736,10 +1737,10 @@ rlst_clone(const LIST *lp)
  *
  */
 ref_t *
-rlst_build(const LIST *lp, int llen)
+rlst_build(const LIST *lp, size_t llen)
 {
-    if (-1 == llen) llen = lstsizeof(lp);
-    return r_list(lst_build(lp, llen), llen, rlst_delete);
+    assert(llen > 0);
+    return r_list(lst_build(lp, llen), (int)llen, rlst_delete);
 }
 
 
@@ -1802,7 +1803,7 @@ rlst_splice(ref_t *rp, int nth, int datoms, const LISTV *lvp, int natoms, int fl
 {
     const LIST *lp, *movlp, *endlp, *nthlp;
     struct listhead *lh;
-    int llen, newllen, dellen, addlen;
+    size_t llen, newllen, dellen, addlen;
     int t_atoms;
 
     ED_TRACE(("rlst_splice(%p, nth:%d, datoms:%d, lvp:%p, natoms:%d, flat:%d)\n", \
@@ -1969,7 +1970,7 @@ rlst_splice(ref_t *rp, int nth, int datoms, const LISTV *lvp, int natoms, int fl
 
         /* resize */
         lst_size((LIST *)lp, newllen, atoms + (xatoms - datoms));
-        r_incused(rp, newllen - llen);          /* resize symbol */
+        r_incused(rp, (int)(newllen - llen));   /* resize symbol */
 
     } else {
         /*
@@ -2030,7 +2031,7 @@ rlst_splice(ref_t *rp, int nth, int datoms, const LISTV *lvp, int natoms, int fl
         /* size */
         lst_atoms_set(newlp, tatoms);
         assert(newllen == lst_check(newlp));
-        rp = rlst_create(newlp, newllen);
+        rp = rlst_create(newlp, (int)newllen);
     }
     return rp;
 }
@@ -2074,12 +2075,12 @@ void
 do_make_list(void)              /* list (...) */
 {
     LIST *list;
-    int len;
+    size_t llen;
                                                 /* skip arg0 */
-    if (NULL == (list = argv_list(margv + 1, margc - 1, &len)))  {
+    if (NULL == (list = argv_list(margv + 1, margc - 1, &llen)))  {
         acc_assign_null();
     } else {
-        acc_donate_list(list, len);
+        acc_donate_list(list, llen);
     }
 }
 
@@ -2196,7 +2197,7 @@ do_cdr(void)                    /* list (list expr) */
         acc_assign_null();
     } else {
         lp = atom_next(lp);
-        acc_assign_list(lp, -1);                /* FIXME - costly */
+        acc_assign_list(lp, lst_sizeof(lp));    /* FIXME - costly */
     }
 }
 
@@ -2643,30 +2644,30 @@ void
 do_typeof(void)                 /* (declare symbol) */
 {
     if (isa_integer(1)) {
-        acc_assign_str("integer", 7);
+        acc_assign_nstr("integer", 7);
 
     } else if (isa_string(1)) {
-        acc_assign_str("string", 6);
+        acc_assign_nstr("string", 6);
 
     } else if (isa_float(1)) {
-        acc_assign_str("float", 5);
+        acc_assign_nstr("float", 5);
 
 #if defined(F_ARRRAY)
     } else if (isa_array(1)) {
-        acc_assign_str("array", 5);
+        acc_assign_nstr("array", 5);
 #endif
 
     } else if (isa_list(1)) {
-        acc_assign_str("list", 4);
+        acc_assign_nstr("list", 4);
 
     } else if (TRUE == isa_null(1) || NULL == get_symbol(1)) {
-        acc_assign_str("NULL", 4);
+        acc_assign_nstr("NULL", 4);
 
     } else if (isa_undef(1)) {
-        acc_assign_str("undef", 5);
+        acc_assign_nstr("undef", 5);
 
     } else {
-        acc_assign_str("unknown-type", 12);
+        acc_assign_nstr("unknown-type", 12);
     }
 }
 

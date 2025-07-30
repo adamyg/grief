@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crautoload_c,"$Id: crautoload.c,v 1.14 2020/04/23 12:35:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_crautoload_c,"$Id: crautoload.c,v 1.15 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crautoload.c,v 1.14 2020/04/23 12:35:50 cvsuser Exp $
+/* $Id: crautoload.c,v 1.15 2025/02/07 03:03:22 cvsuser Exp $
  * Autoload directive support.
  *
  *
@@ -38,7 +38,7 @@ typedef struct Module {
     unsigned            ml_count;
     time_t              ml_mtime;
     NameList_t          ml_names;
-    unsigned            ml_length;
+    size_t              ml_length;
     char                ml_name[1];
 } Module_t;
 
@@ -50,18 +50,18 @@ typedef struct Name {
     Module_t *          an_owner;
     enum {STATUS_OLD, STATUS_NEW, STATUS_ORG}
                         an_status;
-    unsigned            an_length;
+    size_t              an_length;
     char                an_name[1];
 } Name_t;
 
 static int              autoload_import(void);
 
-static Module_t *       module_new(const char *name, const int length, time_t mtime);
-static Module_t *       module_find(const char *name, const int length);
+static Module_t *       module_new(const char *name, const size_t length, time_t mtime);
+static Module_t *       module_find(const char *name, const size_t length);
 
-static Name_t *         name_new(Module_t *m, const char *name, const int length, int status);
+static Name_t *         name_new(Module_t *m, const char *name, const size_t length, int status);
 static void             name_delete(Name_t *n);
-static Name_t *         name_find(Module_t *m, const char *name, const int length);
+static Name_t *         name_find(Module_t *m, const char *name, const size_t length);
 static int              name_compare(const struct Name *a, const struct Name *b);
 
 RB_PROTOTYPE(NameTree, Name, an_tree, name_compare);
@@ -130,7 +130,7 @@ autoload_import(void)
 {
     Module_t *module = NULL;
     char line[1024], *name, *end;
-    int mtime;
+    time_t mtime = 0;
 
     assert(x_autofp);
 
@@ -209,7 +209,7 @@ autoload_import(void)
 
 
 static Module_t *
-module_new(const char *name, const int length, time_t mtime)
+module_new(const char *name, const size_t length, time_t mtime)
 {
     Module_t *m;
 
@@ -233,14 +233,14 @@ module_new(const char *name, const int length, time_t mtime)
 
 
 static Module_t *
-module_find(const char *name, const int length)
+module_find(const char *name, const size_t length)
 {
     ModuleList_t *modulelist = &x_modulelist;
     Module_t *m;
 
     TAILQ_FOREACH(m, modulelist, ml_node) {
         assert(MODULE_MAGIC == m->ml_magic);
-        if ((unsigned)length == m->ml_length &&
+        if (length == m->ml_length &&
                 0 == memcmp(name, m->ml_name, length)) {
             return m;
         }
@@ -271,7 +271,7 @@ void
 autoload_push(const char *funcname)
 {
     if (x_module) {
-        const int length = strlen(funcname);
+        const size_t length = strlen(funcname);
         Name_t *n;
 
         if (NULL != (n = name_find(x_module, funcname, length))) {
@@ -421,7 +421,7 @@ autoload_close(void)
 
 
 static Name_t *
-name_new(Module_t *m, const char *name, const int length, int status)
+name_new(Module_t *m, const char *name, const size_t length, int status)
 {
     NameTree_t *tree = &x_nametree;
     Name_t *n, *t_n;
@@ -474,7 +474,7 @@ name_delete(Name_t *n)
 
 
 static Name_t *
-name_find(Module_t *m, const char *name, const int length)
+name_find(Module_t *m, const char *name, const size_t length)
 {
     if (m) {
         NameList_t *list = &m->ml_names;

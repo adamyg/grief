@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_sysinfo_c,"$Id: m_sysinfo.c,v 1.13 2024/12/06 15:46:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_sysinfo_c,"$Id: m_sysinfo.c,v 1.14 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_sysinfo.c,v 1.13 2024/12/06 15:46:06 cvsuser Exp $
+/* $Id: m_sysinfo.c,v 1.14 2025/02/07 03:03:21 cvsuser Exp $
  * System information primitives.
  *
  *
@@ -69,7 +69,7 @@ __CIDENT_RCSID(gr_m_sysinfo_c,"$Id: m_sysinfo.c,v 1.13 2024/12/06 15:46:06 cvsus
 void
 inq_home(void)                  /* string () */
 {
-    acc_assign_str(sysinfo_homedir(NULL, -1), -1);
+    acc_assign_str(sysinfo_homedir(NULL, -1));
 }
 
 
@@ -136,7 +136,7 @@ inq_home(void)                  /* string () */
 void
 inq_tmpdir(void)                /* string () */
 {
-    acc_assign_str(sysinfo_tmpdir(), -1);
+    acc_assign_str(sysinfo_tmpdir());
 }
 
 
@@ -174,7 +174,7 @@ inq_tmpdir(void)                /* string () */
 void
 inq_username(void)              /* string () */
 {
-    acc_assign_str(sysinfo_username(NULL, -1), -1);
+    acc_assign_str(sysinfo_username(NULL, -1));
 }
 
 
@@ -213,7 +213,7 @@ inq_username(void)              /* string () */
 void
 inq_hostname(void)              /* string () */
 {
-    acc_assign_str(sysinfo_hostname(NULL, -1), -1);
+    acc_assign_str(sysinfo_hostname(NULL, -1));
 }
 
 

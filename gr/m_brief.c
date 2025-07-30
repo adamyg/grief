@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_brief_c,"$Id: m_brief.c,v 1.11 2024/12/05 19:00:11 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_brief_c,"$Id: m_brief.c,v 1.12 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_brief.c,v 1.11 2024/12/05 19:00:11 cvsuser Exp $
+/* $Id: m_brief.c,v 1.12 2025/02/07 03:03:21 cvsuser Exp $
  * BRIEF compatibility.
  *
  *
@@ -143,7 +143,7 @@ void
 do_set_mouse_action(void)       /* string (string) */
 {
     //TODO
-    acc_assign_str("", 0);
+    acc_assign_nstr("", 0);
 }
 
 
@@ -176,7 +176,7 @@ void
 inq_mouse_action(void)          /* string () */
 {
     //TODO
-    acc_assign_str("", 0);
+    acc_assign_nstr("", 0);
 }
 
 

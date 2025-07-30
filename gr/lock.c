@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_lock_c,"$Id: lock.c,v 1.32 2022/08/10 15:44:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_lock_c,"$Id: lock.c,v 1.33 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: lock.c,v 1.32 2022/08/10 15:44:56 cvsuser Exp $
+/* $Id: lock.c,v 1.33 2025/02/07 03:03:21 cvsuser Exp $
  * File locking support.
 
     When two users edit the same file at the same time, they are likely
@@ -165,9 +165,9 @@ hostlength(const char *host)
     const char *p;
 
     if (NULL == (p = strchr(host, '.')) || p == host) {
-        return strlen(host);
+        return (int)strlen(host);
     }
-    return (p - host);
+    return (int)(p - host);
 }
 
 
@@ -398,7 +398,7 @@ lock_filename(const char *file)
 {
     char t_realpath[MAX_PATH+1];
     const char *dirend, *name;
-    int dirlen, len;
+    size_t dirlen, len;
     char *buf;
 
     /* resolve symlinks (if any) */
@@ -436,7 +436,7 @@ lock_filename(const char *file)
  *      When using file locks, care must be taken to ensure that operations are atomic.
  *      When creating the lock, the process must verify that it does not exist and then
  *      create it, but without allowing another process the opportunity to create it in
- *      the meantime. Hence when stealing the caller must verify that it is truely the
+ *      the meantime. Hence when stealing the caller must verify that it is truly the
  *      owner.
  *
  *  Returns:
@@ -511,7 +511,7 @@ lock_create(int force, const Info_t *i)
  *      Queries the action to take on the specified file.
  *
  *  Description:
- *      Queries the action to take on the specifised file.
+ *      Queries the action to take on the specified file.
  *
  *          y/p             Proceed. Go ahead and edit the file despite its being
  *                          locked by someone else.

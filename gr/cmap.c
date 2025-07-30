@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_cmap_c,"$Id: cmap.c,v 1.34 2021/07/18 23:03:18 cvsuser Exp $")
+__CIDENT_RCSID(gr_cmap_c,"$Id: cmap.c,v 1.35 2025/02/07 03:03:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: cmap.c,v 1.34 2021/07/18 23:03:18 cvsuser Exp $
+/* $Id: cmap.c,v 1.35 2025/02/07 03:03:20 cvsuser Exp $
  * Character map management/primitives.
  *
  *
@@ -102,7 +102,7 @@ static void             cmapchr_int(cmapchr_t *mc, unsigned val);
 void
 cmap_init(void)
 {
-    const size_t map_size =                     /* map storage requirements */
+    const int map_size =                        /* map storage requirements */
             (32 * 3) + (95 * 2) + (1 * 3) + (128 * 5) + 1;
     cmap_t *cmap;
 
@@ -734,7 +734,7 @@ do_create_char_map(void)        /* (int mapid, [int start = 0], [list chars], [l
     if (NULL != (lp = get_xlist(3))) {
         const LIST *nextlp;
         const char *sval = NULL;
-        unsigned idx = (start >= 0 ? start : 0);
+        unsigned idx = (start >= 0 ? (unsigned)start : 0);
         accint_t ival;
 
         while ((nextlp = atom_next(lp)) != lp) {
@@ -744,7 +744,7 @@ do_create_char_map(void)        /* (int mapid, [int start = 0], [list chars], [l
 
                 if (atom_xint(lp, &ival)) {
                     if (ival > 0) {
-                        cmapchr_int(mc, ival);
+                        cmapchr_int(mc, (int)ival);
                     }
 
                 } else if (NULL != (sval = atom_xstr(lp))) {
@@ -755,7 +755,7 @@ do_create_char_map(void)        /* (int mapid, [int start = 0], [list chars], [l
                     }
                 }
 
-                trace_log("\tchar:%d/0x%x = %u/%s\n", /*ACCINT*/
+                trace_log("\tchar:%u/0x%x = %u/%s\n", /*ACCINT*/
                     idx, idx, (unsigned) ival, (sval ? sval : ""));
             }
 
@@ -764,7 +764,7 @@ do_create_char_map(void)        /* (int mapid, [int start = 0], [list chars], [l
         }
 
     } else if (! isa_undef(3)) {                /* undocumented */
-        const unsigned idx = (start >= 0 ? start : 0);
+        const unsigned idx = (start >= 0 ? (unsigned)start : 0);
 
         if (NULL != (mc = cmapchr_get(cmap, idx))) {
             if (isa_integer(3)) {
@@ -843,7 +843,8 @@ do_create_char_map(void)        /* (int mapid, [int start = 0], [list chars], [l
                     }
                 }
 
-                trace_log("\tflag:%d/0x%x = 0x%x/%x\n", idx, idx, (unsigned)ival, (unsigned)ival);
+                trace_log("\tflag:%u/0x%x = 0x%x/%x\n", 
+                    idx, idx, (unsigned)ival, (unsigned)ival);
                 lp = nextlp;
             }
         }

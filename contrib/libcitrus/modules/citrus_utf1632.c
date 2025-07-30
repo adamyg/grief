@@ -98,7 +98,7 @@ _citrus_UTF1632_mbrtowc_priv(_UTF1632EncodingInfo *ei, WCHAR_T *pwc,
 			     size_t *nresult)
 {
 	int chlenbak, endian, needlen;
-	WCHAR_T wc;
+	WCHAR_T wc = 0;
 	size_t result;
 	const char *s0;
 

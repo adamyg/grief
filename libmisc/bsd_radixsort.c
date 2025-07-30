@@ -1,7 +1,9 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_bsd_radixsort_c,"$Id: bsd_radixsort.c,v 1.11 2024/05/28 00:28:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_bsd_radixsort_c,"$Id: bsd_radixsort.c,v 1.12 2025/02/07 02:48:37 cvsuser Exp $")
 
-/*- -*- indent-width: 8; tabs: 8; -*-
+/*-
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -16,7 +18,7 @@ __CIDENT_RCSID(gr_bsd_radixsort_c,"$Id: bsd_radixsort.c,v 1.11 2024/05/28 00:28:
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -32,8 +34,6 @@ __CIDENT_RCSID(gr_bsd_radixsort_c,"$Id: bsd_radixsort.c,v 1.11 2024/05/28 00:28:
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-/*static char sccsid[] = "@(#)radixsort.c	8.2 (Berkeley) 4/28/95";*/
 
 /*
  * Radixsort routines.
@@ -67,6 +67,9 @@ typedef struct {
 
 #if defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wsign-compare"
+#endif
+#if defined(_MSC_VER)
+#pragma warning(disable : 4018) // signed/unsigned mismatch
 #endif
 
 static __CINLINE void simplesort(const u_char **, int, int, const u_char *, u_int);
@@ -135,10 +138,6 @@ bsd_sradixsort(const u_char **a, int n, const u_char *tab, u_int endch)
 /* Unstable, in-place sort. */
 static void
 r_sort_a(const u_char **a, int n, int i, const u_char *tr, u_int endch)
-//	const u_char **a;
-//	int n, i;
-//	const u_char *tr;
-//	u_int endch;
 {
 	static int count[256], nc, bmin;
 	int c;
@@ -160,7 +159,7 @@ r_sort_a(const u_char **a, int n, int i, const u_char *tr, u_int endch)
 
 		/* Make character histogram. */
 		if (nc == 0) {
-			bmin = 255;		/* First occupied bin, excluding eos. */
+			bmin = 255;	/* First occupied bin, excluding eos. */
 			for (ak = a; ak < an;) {
 				c = tr[(*ak++)[i]];
 				if (++count[c] == 1 && c != endch) {
@@ -237,10 +236,6 @@ r_sort_a(const u_char **a, int n, int i, const u_char *tr, u_int endch)
 /* Stable sort, requiring additional memory. */
 static void
 r_sort_b(const u_char **a, const u_char **ta, int n, int i, const u_char *tr, u_int endch)
-//	const u_char **a, **ta;
-//	int n, i;
-//	const u_char *tr;
-//	u_int endch;
 {
 	static int count[256], nc, bmin;
 	int c;
@@ -309,10 +304,6 @@ r_sort_b(const u_char **a, const u_char **ta, int n, int i, const u_char *tr, u_
 
 static __CINLINE void
 simplesort(const u_char **a, int n, int b, const u_char *tr, u_int endch) /* insertion sort */
-//	const u_char **a;
-//	int n, b;
-//	const u_char *tr;
-//	u_int endch;
 {
 	u_char ch;
 	const u_char  **ak, **ai, *s, *t;
@@ -328,4 +319,5 @@ simplesort(const u_char **a, int n, int b, const u_char *tr, u_int endch) /* ins
 			swap(ai[0], ai[-1], s);
 		}
 }
+
 /*end*/

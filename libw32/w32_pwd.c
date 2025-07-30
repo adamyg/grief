@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_pwd_c,"$Id: w32_pwd.c,v 1.19 2024/03/31 15:57:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_pwd_c,"$Id: w32_pwd.c,v 1.21 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 pwd(2) implementation
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -62,7 +62,7 @@ static unsigned             x_passwds_count;
 static int                  x_cursor;           /* getpwent cursor */
 static struct passwd       *x_passwds;
 static struct passwd        x_passwd;
-static char                 x_buffer[MAX_PATH * 5];
+static char                 x_buffer[WIN32_PATH_MAX * 2];
 
 
 /*
@@ -497,7 +497,7 @@ fill_passwds(void)
     DWORD resume_handle = 0;
     NET_API_STATUS nStatus;
     unsigned cbufsz = 0;
-    char name[MAX_PATH];
+    char name[WIN32_PATH_MAX];
     int nlen;
 
     fill_passwd();
@@ -551,10 +551,16 @@ fill_passwds(void)
             // allocate/expand
             if (x_passwds) {
                 struct passwd *t_passwds = (struct passwd *)realloc(x_passwds,
-                                            (sizeof(struct passwd) * ntotal) + cbufsz + bufsz);
+                                                (sizeof(struct passwd) * ntotal) + cbufsz + bufsz);
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wuse-after-free"
+#endif
                 const ptrdiff_t addrdiff = ((char *)t_passwds - (char *)x_passwds) +
-                                            (sizeof(struct passwd) * count);
-
+                                                (sizeof(struct passwd) * count);
+#if defined(GCC_VERSION) && (GCC_VERSION >= 80000)
+#pragma GCC diagnostic pop
+#endif
                 if (NULL == t_passwds) {        // realloc failure
                     NetApiBufferFree(users);
                     break;

@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_progname_c,"$Id: w32_progname.c,v 1.12 2024/03/31 15:57:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_progname_c,"$Id: w32_progname.c,v 1.14 2025/06/28 11:07:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 set/getprogname
  *
- * Copyright (c) 2016 - 2024, Adam Young.
+ * Copyright (c) 2016 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -99,8 +99,9 @@ getprogname(void)
 #if defined(UTF8FILENAMES)
     if (w32_utf8filenames_state()) {
         if (NULL == progname) {
-            char path[1024];
+            char path[WIN32_PATH_MAX];
             const wchar_t *wpath;
+
             if (NULL != (wpath = getprognameW())) {
                 w32_wc2utf(wpath, path, sizeof(path));
                 setprogname(path);
@@ -118,8 +119,9 @@ LIBW32_API const char *
 getprognameA(void)
 {
     if (NULL == progname) {
-        char t_buffer[1024];
+        char t_buffer[WIN32_PATH_MAX];
         DWORD buflen;
+
         if ((buflen = GetModuleFileNameA(NULL, t_buffer, sizeof(t_buffer)-1)) > 0) {
             t_buffer[buflen] = 0;
             setprogname(t_buffer);
@@ -133,8 +135,9 @@ LIBW32_API const wchar_t *
 getprognameW(void)
 {
     if (NULL == wprogname) {
-        wchar_t t_buffer[1024];
+        wchar_t t_buffer[WIN32_PATH_MAX];
         DWORD buflen;
+
         if ((buflen = GetModuleFileNameW(NULL, t_buffer, _countof(t_buffer)-1)) > 0) {
             t_buffer[buflen] = 0;
             setprognameW(t_buffer);

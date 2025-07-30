@@ -1,16 +1,16 @@
 #ifndef WIN32_CONFIG_H_INCLUDED
 #define WIN32_CONFIG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.29 2024/11/18 15:39:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_w32config_h, "$Id: w32config.hin,v 1.33 2025/06/28 11:07:20 cvsuser Exp $")
 __CPRAGMA_ONCE
 /* -*- mode: c; set-indent: 4; -*- */
-/* $Id: w32config.hin,v 1.29 2024/11/18 15:39:12 cvsuser Exp $
+/* $Id: w32config.hin,v 1.33 2025/06/28 11:07:20 cvsuser Exp $
  * Machine configuration.
  *
  * System dependent <config.h> configuration template,
  * Windows targets (see makelib.pl for details).
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -125,6 +125,7 @@ __CPRAGMA_ONCE
 #undef HAVE_NDIR_H
 
 /* AC_HEADER_TIME */
+#undef HAVE_TIME_H
 #undef TIME_WITH_SYS_TIME
 #undef HAVE_SYS_TIME_H
 #undef HAVE_UTIME_H
@@ -136,6 +137,11 @@ __CPRAGMA_ONCE
 #undef HAVE_WINCRYPT_H
 #undef HAVE_WINIOCTL_H
 #undef HAVE_BCRYPT_H
+#undef HAVE_AFUNIX_H
+#undef HAVE_INTRIN_H
+#undef HAVE_INTSAFE_H
+#undef HAVE_NTDEF_H
+#undef HAVE_NTIFS_H
 
 /* Explicit header checks */
 #undef HAVE_SYS_TYPES_H
@@ -169,6 +175,7 @@ __CPRAGMA_ONCE
 #undef HAVE_FEATURES_H
 #undef HAVE_STDALIGN_H
 #undef HAVE_STDATOMIC_H
+#undef HAVE_STDCKDINT_H
 #undef HAVE_THREADS_H
 #undef HAVE_XTHREADS_H
 #undef HAVE_LIBPTHREAD
@@ -199,6 +206,7 @@ __CPRAGMA_ONCE
 #undef HAVE_STRING_H
 #undef HAVE_UNISTD_H
 #undef HAVE_MATH_H
+#undef HAVE_LANGINFO_H
 
 #undef HAVE_ARGZ_H
 #undef HAVE_LIBGEN_H
@@ -312,6 +320,7 @@ __CPRAGMA_ONCE
 #undef HAVE___FORCEINLINE
 
 #undef HAVE_DECL_SIZE_MAX
+#undef HAVE_DECL_RSIZE_MAX
 #undef HAVE_DECL_SSIZE_MAX
 #undef HAVE_DECL_INT16_C
 #undef HAVE_DECL_INT16_MIN
@@ -359,6 +368,8 @@ __CPRAGMA_ONCE
 #undef HAVE___INT32
 #undef HAVE___INT8
 #undef HAVE_WCHAR_T
+#undef HAVE_MBSTATE_T
+#undef HAVE_RSIZE_T
 #undef HAVE_SSIZE_T
 #undef HAVE_C99BOOL
 #undef HAVE_BOOL
@@ -454,6 +465,7 @@ __CPRAGMA_ONCE
 #undef HAVE_FGETPOS
 #undef HAVE_FSETPOS
 #undef HAVE_FGETLN
+#undef HAVE_FSEEKO
 
 #undef HAVE_TRUNCATE
 #undef HAVE_FTRUNCATE
@@ -492,11 +504,12 @@ __CPRAGMA_ONCE
 #undef HAVE_STRRCHR
 #undef HAVE_STRDUP
 #undef HAVE_STRFTIME
+#undef HAVE_STRPTIME
 #undef HAVE_STRTOUL
-#undef HAVE_STRTOULL
 #undef HAVE_STRTOF
 #undef HAVE_STRTOLD
 #undef HAVE_STRTOLL
+#undef HAVE_STRTOULL
 #undef HAVE_STRVERSCMP
 #undef HAVE___STRVERSCMP
 #undef HAVE_STRNLEN
@@ -568,6 +581,8 @@ __CPRAGMA_ONCE
 #undef HAVE_WCWIDTH
 #undef HAVE_MBRTOWC
 #undef HAVE_WCRTOMB
+#undef HAVE_WCSRTOMBS
+#undef HAVE_WCSTOMBS
 #undef HAVE_WCSCMP
 #undef HAVE_WCSCPY
 #undef HAVE_WCSLEN
@@ -629,11 +644,13 @@ __CPRAGMA_ONCE
 #undef HAVE__VSNPRINTF
 #undef HAVE_ASPRINTF
 #undef HAVE_VASPRINTF
+#undef HAVE_SPRINTF_S
 
 #undef HAVE_LOCALE_H
 #undef HAVE_SETLOCALE
 #undef HAVE_LANGINFO_CODESET
 #undef HAVE_LOCALE_CHARSET
+#undef HAVE_NL_LANGINFO
 
 #undef HAVE_VFORK_H
 #undef HAVE_FORK
@@ -663,6 +680,11 @@ __CPRAGMA_ONCE
 
 #undef HAVE_ALLOCA
 #undef HAVE__ALLOCA
+
+#undef HAVE_GETTIMEOFDAY
+#undef HAVE_NANOSLEEP
+#undef HAVE_SLEEP
+#undef HAVE_USLEEP
 
         /* psuedo tty */
 #undef HAVE_PTY_H

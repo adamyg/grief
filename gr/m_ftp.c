@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_m_ftp_c,"$Id: m_ftp.c,v 1.20 2024/04/16 10:30:36 cvsuser Exp $")
+__CIDENT_RCSID(gr_m_ftp_c,"$Id: m_ftp.c,v 1.22 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: m_ftp.c,v 1.20 2024/04/16 10:30:36 cvsuser Exp $
+/* $Id: m_ftp.c,v 1.22 2025/02/07 03:03:21 cvsuser Exp $
  * FTP/HTTP connection primitives -- beta/undocumented.
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -556,9 +556,9 @@ do_ftp_get_file(void)               /* int (id, string remote, string local,
     const int id = get_xinteger(1, -1);
     const char *remote = get_str(2);
     const char *local = get_str(3);
-//  accint_t flags = get_xinteger(4, 0);
+        // accint_t flags = get_xinteger(4, 0);
     accint_t offset = get_xinteger(5, 0);
-//  accint_t mode  = get_xinteger(6, 0);
+        // accint_t mode  = get_xinteger(6, 0);
     IFTP *iftp = iftplookup(id);
     int ret = -1;
 
@@ -570,15 +570,16 @@ do_ftp_get_file(void)               /* int (id, string remote, string local,
             struct url_stat sb = {0};
             fetchIO *io;
 
-            url->offset = offset;               /* source offset */
+            url->offset = (off_t)offset;        /* source offset */
 
             if (NULL != (io = fetchXGet(url, &sb, "v"))) {
                 char buf[BUFSIZ * 4];
-                int len, cnt, fd = -1;
+                ssize_t len, cnt;
+                int fd = -1;
                                                 /* TODO - flags and mode */
                 if ((fd = open(local, O_CREAT|O_TRUNC|O_WRONLY, 0600)) >= 0) {
                     while ((len = fetchIO_read(io, buf, sizeof(buf))) > 0) {
-                        if (len != (cnt = write(fd, buf, len))) {
+                        if (len != (cnt = (ssize_t) write(fd, buf, (unsigned)len))) {
                             break;
                         }
                     }
@@ -621,7 +622,7 @@ do_ftp_directory(void)              /* int (int id, [string pattern], list &file
     const int id = get_xinteger(1, -1);
 //  const char *pattern = get_xstr(2);
     IFTP *iftp = iftplookup(id);
-    int ret = -1;
+    accint_t ret = -1;
 
     if (iftp) {
         struct url *url;
@@ -635,7 +636,7 @@ do_ftp_directory(void)              /* int (int id, [string pattern], list &file
                 const size_t items = list.length;
                 const char **filenames = chk_alloc(sizeof(char *) * items);
                 struct url_ent *urls = list.urls;
-                size_t atoms = 0, it;
+                size_t it, atoms = 0;
 
                 for (it = 0; it < items; ++it) {
                     const char *filename = unquotedURL(urls + it);
@@ -647,11 +648,11 @@ do_ftp_directory(void)              /* int (int id, [string pattern], list &file
                 }
 
                 if (atoms > 0) {
-                    const int llen =
+                    const size_t llen =
                         (atoms * sizeof_atoms[F_RSTR]) + sizeof_atoms[F_HALT];
                     LIST *newlp;
 
-                    if (NULL != (newlp = lst_alloc(llen, atoms))) {
+                    if (NULL != (newlp = lst_alloc(llen, (int)atoms))) {
                         LIST *lp = newlp;
 
                         for (it = 0; it < atoms; ++it) {
@@ -663,14 +664,14 @@ do_ftp_directory(void)              /* int (int id, [string pattern], list &file
                         atom_push_halt(lp);
                     }
                     argv_donate_list(3, newlp, llen);
-                    ret = list.length;
+                    ret = (int)list.length;
                 }
                 chk_free((void *)filenames);
             }
             fetchFreeURLList(&list);
         }
     }
-    ED_TRACE(("ftp_directory() = %d\n", ret))
+    ED_TRACE(("ftp_directory() = %d\n", (int)ret))
     acc_assign_int(ret);
 }
 
@@ -701,10 +702,10 @@ do_ftp_getcwd(void)                 /* int (int id, string &dir) */
 {
     const int id = get_xinteger(1, -1);
     IFTP *iftp = iftplookup(id);
-    int ret = -1;
+    accint_t ret = -1;
 
     if (iftp) {
-        ret = argv_assign_str(2, (iftp->cwd ? iftp->cwd : "/"));
+        ret = (accint_t) argv_assign_str(2, (iftp->cwd ? iftp->cwd : "/"));
     }
     acc_assign_int(ret);
 }
@@ -1148,7 +1149,7 @@ do_ftp_sitename(void)               /* int (int id, [string name]) */
             }
         }
     }
-    acc_assign_str(sitename ? sitename : "", -1);
+    acc_assign_str(sitename ? sitename : "");
 }
 
 

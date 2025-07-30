@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_dialog_c,"$Id: dialog.c,v 1.36 2024/10/01 17:16:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_dialog_c,"$Id: dialog.c,v 1.37 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: dialog.c,v 1.36 2024/10/01 17:16:21 cvsuser Exp $
+/* $Id: dialog.c,v 1.37 2025/02/07 03:03:21 cvsuser Exp $
  * Dialog manager.
  *
  *
@@ -939,7 +939,7 @@ do_widget_set(void)             /* ([int dialog], [int name|string name], declar
     DIALOG_t *d;
     WIDGET_t *w;
 
-    trace_ilog("widget_set(%u)", ident);
+    trace_ilog("widget_set(%d)", ident);
 
     if (NULL == (d = dialog_find(ident))) {
         trace_log(": unknown dialog\n");
@@ -1042,7 +1042,7 @@ do_widget_get(void)             /* declare ([int dialog], [int name|string name]
     DIALOG_t *d;
     WIDGET_t *w;
 
-    trace_ilog("widget_get(%u)", ident);
+    trace_ilog("widget_get(%d)", ident);
 
     acc_assign_null();
 
@@ -1077,12 +1077,12 @@ do_widget_get(void)             /* declare ([int dialog], [int name|string name]
         break;
 
     case D_STR:
-        acc_assign_str(data.d_u.svalue, -1);
+        acc_assign_str(data.d_u.svalue);
         trace_log(" = STR \"%s\"\n", data.d_u.svalue);
         break;
 
     case D_LIST:
-        acc_assign_list(data.d_u.lvalue, -1);
+        acc_assign_list(data.d_u.lvalue, lst_sizeof(data.d_u.lvalue));
         trace_log(" = LIST\n");
         break;
 

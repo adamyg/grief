@@ -1,14 +1,14 @@
 #ifndef GR_ENDIAN_H_INCLUDED
 #define GR_ENDIAN_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_sys_endian_h,"$Id: endian.h,v 1.13 2024/04/12 02:33:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_sys_endian_h,"$Id: endian.h,v 1.14 2025/06/28 11:07:21 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*-
  *
  * win32 <sys/endian.h> implementation
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_line_c,"$Id: line.c,v 1.47 2022/08/10 15:44:56 cvsuser Exp $")
+__CIDENT_RCSID(gr_line_c,"$Id: line.c,v 1.49 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: line.c,v 1.47 2022/08/10 15:44:56 cvsuser Exp $
+/* $Id: line.c,v 1.49 2025/02/07 03:03:21 cvsuser Exp $
  * Line management.
  *
  *
@@ -165,7 +165,7 @@ lsize(LINE_t *lp, LINENO size)
 /*  Function:           lexpand
  *      Expand the size a line buffer increasing the current length of 'size' bytes.
  *
- *      Data within the line shall be moved to the right creating creating a hole of
+ *      Data within the line shall be moved to the right creating a hole of
  *      'len' bytes starting at the offset 'dot'.
  *
  *  Parameters:
@@ -675,7 +675,7 @@ linserts(const char *buffer, int length)
                 break;
             }
         }
-        len = cp - buffer;
+        len = (LINENO)(cp - buffer);
         length -= len + 1;
         if (FALSE == linsert(buffer, len, nl)) {
             return -1;

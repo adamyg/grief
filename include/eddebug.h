@@ -1,16 +1,16 @@
 #ifndef GR_EDDEBUG_H_INCLUDED
 #define GR_EDDEBUG_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_eddebug_h,"$Id: eddebug.h,v 1.30 2024/04/08 15:07:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_eddebug_h,"$Id: eddebug.h,v 1.32 2025/02/07 03:03:22 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: eddebug.h,v 1.30 2024/04/08 15:07:02 cvsuser Exp $
+/* $Id: eddebug.h,v 1.32 2025/02/07 03:03:22 cvsuser Exp $
  * Debug functions.
  *
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -48,10 +48,23 @@ extern const int            x_dflags;
  *      ED_TRACE(("my trace message\n"))
  */
 
-extern int                  trace_log(const char *str, ...) __ATTRIBUTE_FORMAT__((printf, 1, 2));
+#if defined(_MSC_VER) && defined(_Printf_format_string_)
+#if (_MSC_VER >= 1900)
+#pragma warning(push)
+#pragma warning(disable:28301) // No annotations for first declaration of 'trace_log'
+#endif
+extern int                  trace_log(_Printf_format_string_ const char* fmt, ...);
+extern void                 trace_term(_Printf_format_string_ const char* fmt, ...);
+extern void                 trace_ilog(_Printf_format_string_ const char* fmt, ...);
+#if (_MSC_VER >= 1900)
+#pragma warning(pop)
+#endif
+#else
+extern int                  trace_log(const char* str, ...) __ATTRIBUTE_FORMAT__((printf, 1, 2));
+extern void                 trace_term(const char* str, ...) __ATTRIBUTE_FORMAT__((printf, 1, 2));
+extern void                 trace_ilog(const char* fmt, ...) __ATTRIBUTE_FORMAT__((printf, 1, 2));
+#endif
 extern int                  trace_logv(const char *fmt, va_list ap);
-extern void                 trace_term(const char *str, ...) __ATTRIBUTE_FORMAT__((printf, 1, 2));
-extern void                 trace_ilog(const char *fmt, ...) __ATTRIBUTE_FORMAT__((printf, 1, 2));
 extern void                 trace_data(const void *data, int length, const char *term);
 
 #if defined(ED_LEVEL)

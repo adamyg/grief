@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_kbname_c,"$Id: kbname.c,v 1.2 2024/11/29 13:37:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_kbname_c,"$Id: kbname.c,v 1.3 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: kbname.c,v 1.2 2024/11/29 13:37:22 cvsuser Exp $
+/* $Id: kbname.c,v 1.3 2025/02/07 03:03:21 cvsuser Exp $
  * Key names.
  *
  *
@@ -332,7 +332,7 @@ kbname_tokey(const char *string, int *len)
 
                             if (0 == strncmp(kp->name, (const char *)kcp, kplen) &&
                                         ('>' == kcp[kplen] || '-' == kcp[kplen] || 0 == kcp[kplen])) {
-                                const unsigned kpidx = kp - keypad_labels;
+                                const unsigned kpidx = (unsigned)(kp - keypad_labels);
 
                                 cp = kcp + kplen;
                                 flags |= RANGE_KEYPAD;
@@ -370,7 +370,7 @@ next:;  if ('>' == *cp && isopen) {
         ++cp;
     }
 
-    if (len) *len = cp - buf;
+    if (len) *len = (int)(cp - buf);
 
     /* Special mappings */
     if (KEY_TAB == key) {
@@ -448,7 +448,7 @@ kbname_fromkey(KEY key, char *buf, unsigned buflen)
     if (key & MOD_CTRL) strxcat(buf, "Ctrl-", buflen);
     if (key & MOD_SHIFT) strxcat(buf, "Shift-", buflen);
 
-    // Key clases
+    // Key classes
     bp = buf + strlen(buf);
     switch (key & RANGE_MASK) {
     case RANGE_SPECIAL: {
@@ -474,7 +474,7 @@ kbname_fromkey(KEY key, char *buf, unsigned buflen)
                 desc = "FosusIn";
                 break;
             default:
-                sprintf(bp, "#%u", key);
+                sprintf(bp, "#%u", (unsigned)key);
                 break;
             }
             if (desc) strcpy(bp, desc);
@@ -581,7 +581,7 @@ kbname_fromkey(KEY key, char *buf, unsigned buflen)
 
     case RANGE_CHARACTER: {
             if ((key & KEY_MASK) > 0xff) {
-                sprintf(bp, "#%u", key);
+                sprintf(bp, "#%u", (unsigned)key);
             } else {
                 const char *desc = NULL,
                     key8 = (char) (key & KEY_MASK);
@@ -630,16 +630,16 @@ kbname_fromkey(KEY key, char *buf, unsigned buflen)
     case RANGE_BUTTON:
         key &= ~(MOD_META | MOD_CTRL | MOD_SHIFT);
         if (key >= BUTTON1_MOTION) {
-            sprintf(bp, "Button%u-Motion", (key - BUTTON1_MOTION) + 1);
+            sprintf(bp, "Button%u-Motion", (unsigned)(key - BUTTON1_MOTION) + 1);
 
         } else if (key >= BUTTON1_UP) {
-            sprintf(bp, "Button%u-Up", (key - BUTTON1_UP) + 1);
+            sprintf(bp, "Button%u-Up", (unsigned)(key - BUTTON1_UP) + 1);
 
         } else if (key >= BUTTON1_DOUBLE) {
-            sprintf(bp, "Button%u-Double", (key - BUTTON1_DOUBLE) + 1);
+            sprintf(bp, "Button%u-Double", (unsigned)(key - BUTTON1_DOUBLE) + 1);
 
         } else {
-            sprintf(bp, "Button%u-Down", (key - BUTTON1_DOWN) + 1);
+            sprintf(bp, "Button%u-Down", (unsigned)(key - BUTTON1_DOWN) + 1);
         }
         break;
 
@@ -679,7 +679,7 @@ kbname_fromkey(KEY key, char *buf, unsigned buflen)
         /*FALLTHRU*/
 
     default:
-        sprintf(bp, "#%u", key);
+        sprintf(bp, "#%u", (unsigned)key);
         break;
     }
     strcat(buf, ">");

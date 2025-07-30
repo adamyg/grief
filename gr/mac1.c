@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mac1_c,"$Id: mac1.c,v 1.79 2024/12/06 15:46:06 cvsuser Exp $")
+__CIDENT_RCSID(gr_mac1_c,"$Id: mac1.c,v 1.80 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mac1.c,v 1.79 2024/12/06 15:46:06 cvsuser Exp $
+/* $Id: mac1.c,v 1.80 2025/02/07 03:03:21 cvsuser Exp $
  * Basic primitives.
  *
  *
@@ -315,7 +315,7 @@ do_delete_char(void)            /* void ([int num]) */
         /*
          *  delete current 'n' bytes
          */
-        const accint_t n = get_xinteger(1, 0);
+        const FSIZE_t n = (FSIZE_t)get_xinteger(1, 0);
 
         if (n > 0) {                            /* region */
             line_current_offset(LOFFSET_FILL_VSPACE);
@@ -469,7 +469,7 @@ do_goto_line(void)              /* int ([int lineno]) */
         acc_assign_int(-1);
         return;
     }
-    mov_gotoline(lineno > 0 ? lineno : 1);
+    mov_gotoline(lineno > 0 ? (int)lineno : 1);
     acc_assign_int((accint_t) (cline != *cur_line));
 }
 
@@ -1915,7 +1915,7 @@ void
 do_insertf(void)                /* int (string fmt, ...) */
 {
     const char *cp;
-    int len = 0, width = 0;
+    size_t len = 0, width = 0;
 
     if (margc > 1) {
         cp = print_formatted(0, &len, &width);  /* sprintf style output */
@@ -1924,7 +1924,7 @@ do_insertf(void)                /* int (string fmt, ...) */
         len = width = get_strlen(1);
     }
     if (cp) {
-        linserts(cp, len);
+        linserts(cp, (int)len);
     }
     acc_assign_int(width);
 }
@@ -1993,7 +1993,7 @@ do_insert_buffer(void)          /* int (int bufnum, string | expr ....) */
 {
     BUFFER_t *bp;
     const char *cp;
-    int len = 0, width = 0;
+    size_t len = 0, width = 0;
 
     if (NULL == (bp = buf_lookup(get_xinteger(1, -1)))) {
         ewprintf("insert_buffer: no such buffer");
@@ -2014,7 +2014,7 @@ do_insert_buffer(void)          /* int (int bufnum, string | expr ....) */
         if (bp != curbp) {
             set_curbp(bp);
         }
-        linserts(cp, len);
+        linserts(cp, (int)len);
         set_curbp(ocurbp);
     }
     acc_assign_int(width);
@@ -2511,7 +2511,7 @@ do_read(void)                   /* string ([int number], [int &status]) */
 
     if (NULL == (lp = vm_lock_linex(curbp, cline))) {
         trace_ilog("read(line:%d) : -1\n", (int)cline);
-        acc_assign_str("", 0);                  /* eof */
+        acc_assign_nstr("", 0);                 /* eof */
         status = -1;
 
     } else {
@@ -2535,7 +2535,7 @@ do_read(void)                   /* string ([int number], [int &status]) */
 
         // MCHAR/???, iconv->utf8
         if (copy <= 0) {
-            acc_assign_str("\n", 1);            /* empty line */
+            acc_assign_nstr("\n", 1);           /* empty line */
 
         } else {
             const LINECHAR *start = ltext(lp) + dot;
@@ -2562,7 +2562,7 @@ do_read(void)                   /* string ([int number], [int &status]) */
                 if (cp >= end) {                /* EOL + \n */
                     acc_assign_str2((const char *) start, len, "\n", 1);
                 } else {                        /* partial */
-                    acc_assign_str((const char *) start, cp - start);
+                    acc_assign_nstr((const char *) start, (int)(cp - start));
                     status = 0;
                 }
 
@@ -2571,7 +2571,7 @@ do_read(void)                   /* string ([int number], [int &status]) */
                     acc_assign_str2((const char *) start, copy, "\n", 1);
 
                 } else {                        /* partial */
-                    acc_assign_str((const char *) start, copy);
+                    acc_assign_nstr((const char *) start, copy);
                     status = 0;
                 }
             }

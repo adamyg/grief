@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_grp_c,"$Id: w32_grp.c,v 1.16 2024/03/31 15:57:26 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_grp_c,"$Id: w32_grp.c,v 1.19 2025/06/28 16:35:49 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 pwd() implementation
  *
- * Copyright (c) 2007, 2012 - 2024 Adam Young.
+ * Copyright (c) 2007, 2012 - 2025 Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -40,6 +40,7 @@ __CIDENT_RCSID(gr_w32_grp_c,"$Id: w32_grp.c,v 1.16 2024/03/31 15:57:26 cvsuser E
 #endif
 
 #include "win32_internal.h"
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <grp.h>
@@ -59,7 +60,7 @@ static unsigned             x_groups_count;
 static unsigned             x_cursor;           /* getgrent cursor */
 static struct group         x_group;
 static struct group        *x_groups;
-static char                 x_buffer[MAX_PATH * 2];
+static char                 x_buffer[WIN32_PATH_MAX * 2];
 
 
 /*
@@ -480,7 +481,7 @@ fill_groups(void)
     DWORD_PTR resume_handle = 0;
     NET_API_STATUS nStatus;
     unsigned cbufsz = 0;
-    char name[MAX_PATH];
+    char name[WIN32_PATH_MAX];
     int nlen;
 
     fill_group();
@@ -534,10 +535,17 @@ fill_groups(void)
 
             // allocate/expand
             if (x_groups) {
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wuse-after-free"
+#endif
                 struct group *t_groups = (struct group *)realloc(x_groups,
                                             (sizeof(struct group) * ntotal) + cbufsz + bufsz);
                 const ptrdiff_t addrdiff = ((char *)t_groups - (char *)x_groups) +
                                             (sizeof(struct group) * count);
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
                 if (NULL == t_groups) {         // realloc failure
                     NetApiBufferFree(groups);
@@ -568,6 +576,7 @@ fill_groups(void)
                 for (i = 0; i < dwEntriesRead; ++i) {
                     const PGROUP_INFO_2 group = groups + i;
 
+                    _wcslwr(group->grpi2_name);
                     if ((int)group->grpi2_group_id == x_group.gr_gid ||
                             (nlen = w32_wc2utf(group->grpi2_name, name, sizeof(name))) <= 0) {
                         continue;
@@ -581,7 +590,6 @@ fill_groups(void)
 
                     memset(grp, 0, sizeof(*grp));
                     grp->gr_name = cursor;
-                    _strlwr(cursor);
                     grp->gr_gid = (short) group->grpi2_group_id;
                     cursor += (nlen + 1);
                     bufsz -= (nlen + 1);

@@ -1,6 +1,6 @@
 #ifndef DBHASH_NAMESPACE_H_INCLUDED
 #define DBHASH_NAMESPACE_H_INCLUDED
-/* $Id: namespace.h,v 1.13 2024/06/10 08:52:34 cvsuser Exp $
+/* $Id: namespace.h,v 1.14 2024/12/18 07:25:29 cvsuser Exp $
  *
  * libbsdb <namespace.h>
  *
@@ -64,7 +64,7 @@
 #include <edendian.h>
 #if defined(_WIN32) || defined(WIN32)
 #include <sys/utypes.h>
-#include <win32_io.h>
+    //#include <win32_io.h>
 #endif
 #include <string.h>
 #include <errno.h>

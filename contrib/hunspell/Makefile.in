@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.26 2024/04/16 11:37:12 cvsuser Exp $
+# $Id: Makefile.in,v 1.27 2025/02/07 03:03:20 cvsuser Exp $
 # libhunspell, hunspell, hzip and hunzip makefile.
 #
 #
@@ -75,9 +75,6 @@ LDRELEASE=	@LDRELEASE@
 
 CINCLUDE=	-I. -I./win32 -I$(D_INC)
 CEXTRA=		@DEFS@
-ifeq ("yes","@ISWIN32@")
-CEXTRA+=	-D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
-endif
 
 ifeq ("$(BUILD_TYPE)","release")
 CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)

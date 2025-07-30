@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_main_cpp,"$Id: main.cpp,v 1.17 2022/06/13 13:14:07 cvsuser Exp $")
+__CIDENT_RCSID(gr_main_cpp,"$Id: main.cpp,v 1.20 2025/06/28 13:06:24 cvsuser Exp $")
 
 /* -*- mode: cpp; indent-width: 4; -*- */
-/* $Id: main.cpp,v 1.17 2022/06/13 13:14:07 cvsuser Exp $
+/* $Id: main.cpp,v 1.20 2025/06/28 13:06:24 cvsuser Exp $
  * main(), address c/c++ linkage for several environments.
  * Regardless of configuration force binding to the C++ runtime library.
  *
@@ -16,9 +16,10 @@ __CIDENT_RCSID(gr_main_cpp,"$Id: main.cpp,v 1.17 2022/06/13 13:14:07 cvsuser Exp
 #endif //_MSC_VER
 #endif //_CRT_NO_POSIX_ERROR_CODES
 
-#if defined(__MINGW32__) && !defined(__MINGW32_VERSION_MAJOR)
-#include <unistd.h>                             /* before C++ headers, ELOOP/EOVERFLOW redef */
-#endif
+    /* before C++ headers, ELOOP/EOVERFLOW redef */
+//#if defined(__MINGW32__) && !defined(__MINGW32_VERSION_MAJOR)
+//#include <unistd.h>                             
+//#endif
 
 #include <iostream>
 #include <exception>
@@ -31,7 +32,10 @@ __CIDENT_RCSID(gr_main_cpp,"$Id: main.cpp,v 1.17 2022/06/13 13:14:07 cvsuser Exp
 
 #include <editor.h>
 #include <chkalloc.h>
+
+#include "argvwin.h"
 #include "signals.h"
+
 
 extern "C"
 {
@@ -99,6 +103,20 @@ main(int argc, char **argv)
     }
 
     std::set_terminate(cpp_terminate);
+    cpp_linkage(NULL);
+
+#if defined(_WIN32)
+    {
+        int nargc = 0;
+        char **nargv = win_GetUTF8Arguments(&nargc);
+
+        if (nargc && nargv) {
+            argc = nargc;
+            argv = nargv;
+        }
+    }
+#endif //_WIN32
+
     return cmain(argc, argv);
 }
 
@@ -107,7 +125,7 @@ void
 cpp_linkage(const char *str)
 {
     std::ostream *out = &std::cout;
-    *out << str;
+    if (str) *out << str;
 }
 
 /*end*/

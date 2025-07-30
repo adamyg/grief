@@ -1,14 +1,14 @@
 #ifndef LIBW32_WIN32_MISC_H_INCLUDED
 #define LIBW32_WIN32_MISC_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_misc_h,"$Id: win32_misc.h,v 1.18 2024/03/31 15:57:29 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_misc_h,"$Id: win32_misc.h,v 1.20 2025/06/28 11:07:21 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  * win32 public interface
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -55,11 +55,17 @@ enum w32ostype {            /* generalised machine types, ignoring server */
 #define WIN32_PATH_MAX      1024                /* 255, unless UNC names are used */
 #define WIN32_LINK_DEPTH    8
 
-int                         w32_HTOI(HANDLE handle);
-HANDLE                      w32_ITOH(int pid);
+int                         w32_htof(HANDLE handle);
+HANDLE                      w32_ftoh(int pid);
+
+HANDLE                      w32_osfhandle(int fildes);
+int                         w32_osfdup(HANDLE osfhandle, int flags);
 
 LIBW32_API enum w32ostype   w32_ostype(void);
-LIBW32_API int              w32_getexedir(char *buf, int maxlen);
+
+LIBW32_API int              w32_getprogdir(char *buf, int maxlen);
+LIBW32_API int              w32_getprogdirA(char *buf, int maxlen);
+LIBW32_API int              w32_getprogdirW(wchar_t *buf, int maxlen);
 
 LIBW32_API int              w32_getsysdir(int id, char *buf, int maxlen);
 LIBW32_API int              w32_getsysdirA(int id, char *buf, int maxlen);

@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crbin_c,"$Id: crbin.c,v 1.25 2022/05/31 16:18:22 cvsuser Exp $")
+__CIDENT_RCSID(gr_crbin_c,"$Id: crbin.c,v 1.27 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crbin.c,v 1.25 2022/05/31 16:18:22 cvsuser Exp $
+/* $Id: crbin.c,v 1.27 2025/02/07 03:03:22 cvsuser Exp $
  * Binary backend code generator.
  *
  *
@@ -23,10 +23,6 @@ __CIDENT_RCSID(gr_crbin_c,"$Id: crbin.c,v 1.25 2022/05/31 16:18:22 cvsuser Exp $
 
 #define OBJECT_SIZE     4096                    /* Initial size of object code buffer */
 #define OBJECT_INCR     2048                    /* Code buffer increment */
-
-#ifndef LIST_MAXLEN
-#define LIST_MAXLEN     0x7fff                  /* 2^15 */
-#endif
 
 
 /*
@@ -140,14 +136,14 @@ genb_end_list(void)
 
     } else {
         List_p lp = ll_first(hd_list_stack);
-        uint32_t length, offset;
+        size_t length, offset;
 
         assert(lp);
         if (NULL == lp) {
             crerror(RC_ERROR, "internal list stack empty");
             return;
         }        
-        offset = (uint32_t)ll_elem(lp);
+        offset = (size_t)ll_elem(lp);
         push_byte(F_HALT);
         ll_pop(hd_list_stack);                  /* LISTSIZE */
         length = ((byte_ptr - object_code) - offset + 1);
@@ -560,7 +556,7 @@ genb_finish(void)
         uint32_t o = WPUT32(offset);            /* 64/32BIT */
 
         fwrite(&o, sizeof(o), 1, x_bfp);
-        offset += strlen(cp) + 1;
+        offset += (uint32_t)(strlen(cp) + 1);
     }
 
     strp = (const char **) r_ptr(str_table);

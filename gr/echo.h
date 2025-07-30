@@ -1,11 +1,11 @@
 #ifndef GR_ECHO_H_INCLUDED
 #define GR_ECHO_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_echo_h,"$Id: echo.h,v 1.24 2014/10/22 02:32:57 ayoung Exp $")
+__CIDENT_RCSID(gr_echo_h,"$Id: echo.h,v 1.25 2025/02/07 03:03:21 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: echo.h,v 1.24 2014/10/22 02:32:57 ayoung Exp $
+/* $Id: echo.h,v 1.25 2025/02/07 03:03:21 cvsuser Exp $
  * Command/echo line implementation/interface.
  *
  *
@@ -57,10 +57,17 @@ extern int                  ereply1(const char *prompt, char *buf, int nbuf);
 extern int                  equestion(const char *prompt, char *buf, int nbuf);
 extern int                  egetparm(const char *prompt, const char *defstr, char *buf, int nbuf, int one);
 
+#if defined(_MSC_VER) && defined(_Printf_format_string_)
+extern void                 ewprintf(_Printf_format_string_ const char* str, ...);
+extern void                 ewprintx(_Printf_format_string_ const char* str, ...);
+extern void                 eeprintf(_Printf_format_string_ const char* str, ...);
+extern void                 eeprintx(_Printf_format_string_ const char* str, ...);
+#else
 extern void                 ewprintf(const char *str, ...) __ATTRIBUTE_FORMAT__((printf, 1, 2));
 extern void                 ewprintx(const char *str, ...) __ATTRIBUTE_FORMAT__((printf, 1, 2));
 extern void                 eeprintf(const char *str, ...) __ATTRIBUTE_FORMAT__((printf, 1, 2));
 extern void                 eeprintx(const char *str, ...) __ATTRIBUTE_FORMAT__((printf, 1, 2));
+#endif
 extern void                 eeputs(const char *msg);
 extern void                 ewputs(const char *msg);
 extern void                 eclear(void);
@@ -69,10 +76,16 @@ extern void                 elinecol(int flags);
 extern void                 eredraw(void);
 
 extern void                 infof_truncated(const char *fmt, const char *fname);
-extern void                 infof(const char *str, ...)  __ATTRIBUTE_FORMAT__((printf, 1, 2));
 extern void                 infos(const char *str);
-extern void                 errorf(const char *str, ...)  __ATTRIBUTE_FORMAT__((printf, 1, 2));
-extern void                 errorfx(const char *str, ...)  __ATTRIBUTE_FORMAT__((printf, 1, 2));
+#if defined(_MSC_VER) && defined(_Printf_format_string_)
+extern void                 infof(_Printf_format_string_ const char *fmt, ...);
+extern void                 errorf(_Printf_format_string_ const char *fmt, ...);
+extern void                 errorfx(_Printf_format_string_ const char *fmt, ...);
+#else
+extern void                 infof(const char *fmt, ...)  __ATTRIBUTE_FORMAT__((printf, 1, 2));
+extern void                 errorf(const char *fmt, ...)  __ATTRIBUTE_FORMAT__((printf, 1, 2));
+extern void                 errorfx(const char *fmt, ...)  __ATTRIBUTE_FORMAT__((printf, 1, 2));
+#endif
 
 extern void                 set_echo_format(const char *fmt);
 

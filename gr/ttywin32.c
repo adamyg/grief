@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.59 2024/10/10 17:46:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_ttywin32_c,"$Id: ttywin32.c,v 1.62 2025/07/02 15:38:55 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: ttywin32.c,v 1.59 2024/10/10 17:46:13 cvsuser Exp $
+/* $Id: ttywin32.c,v 1.62 2025/07/02 15:38:55 cvsuser Exp $
  * WIN32 VIO driver.
  *  see: http://www.edm2.com/index.php/Category:Vio
  *
@@ -147,6 +147,12 @@ VioEncoding(void)
         }
     }
 
+    if (DISPTYPE_UNKNOWN == xf_disptype || DISPTYPE_UTF8 == xf_disptype) {
+        if (vio.isConPTY) {                     // promote
+            xf_disptype = DISPTYPE_UNICODE;
+        }
+    }
+
     if (DISPTYPE_UNKNOWN == xf_disptype) {
         switch (cp) {
         case 1200:          // Unicode UTF-16LE
@@ -236,7 +242,7 @@ VioGetMode(VIOMODEINFO *info, HVIO viohandle)
         int rows = 0, cols = 0;
 
         assert(info->cb == sizeof(VIOMODEINFO));
-        vio_size(&rows, &cols);                 // current physical size.
+        vio_size(vio.chandle, &rows, &cols);    // current physical size.
         info->row = (USHORT)rows;
         info->col = (USHORT)cols;
         info->color = (USHORT)vio.activecolors;
@@ -244,7 +250,7 @@ VioGetMode(VIOMODEINFO *info, HVIO viohandle)
 
     if (info && info->color == 256) {
         if (vio.isVirtualConsole) {
-            info->color = 0xffff;               // truecolor available.
+            info->color = 0xffff;               // true-color available.
         }
     }
 
@@ -266,33 +272,59 @@ VioGetMode(VIOMODEINFO *info, HVIO viohandle)
 //      430 -   ERROR_VIO_ILLEGAL_DURING_POPUP
 //      436 -   ERROR_VIO_INVALID_HANDLE
 //
-
 int
 VioSetMode(VIOMODEINFO *info, HVIO viohandle)
 {
     if (info) {                                 // ega_switch support (12/10/2014)
         if (info->row || info->col) {
-            vio_setsize(info->row, info->col);
+            BOOL done = FALSE;
+
+            if (! vio.isConPTY) {
+                // Note: Avoid when running under MSTerminal, as
+                //  ShowWindow() behaviour is undefined; and  
+                //  GetLargestConsoleWindowSize() returns inconsistent values.
+                //
+                if (0xffff == info->row) {
+                    // maximize/normal and toggle.
+                    HWND hWnd = vio.whandle;
+                    WINDOWPLACEMENT wp = {0};
+
+                    if (GetWindowPlacement(hWnd, &wp)) {
+                        if (wp.showCmd == SW_SHOWNORMAL) {
+                            if (0xffff == info->col /*toggle*/ || info->col == 1 /*max*/) {
+                                ShowWindow(hWnd, SW_MAXIMIZE);
+                                done = TRUE;
+                            }
+
+                        } else if (wp.showCmd == SW_SHOWMAXIMIZED) {
+                            if (0xffff == info->col /*toggle*/ || info->col == 0 /*min*/) {
+                                ShowWindow(hWnd, SW_NORMAL);
+                                done = TRUE;
+                            }
+                        }
+                    }
+
+                } else {
+                    // explicit buffer size
+                    done = vio_setsize(info->row, info->col);
+                }
+            }
+
+            if (! done) {
+                return ERROR_VIO_MODE;
+            }
+
             vio_close();
         }
     }
-    VioInitialise();                            // (re)initialise
-    if (info && (info->row || info->col)) {
-        HWND hWnd = vio.whandle;
-        if (0xffff == info->row || 0xffff == info->col) {
-            RECT r = {0};
 
-            GetWindowRect(hWnd, &r);
-            ShowWindow(hWnd, SW_MAXIMIZE);
-            MoveWindow(hWnd, 0, 0, r.right, r.bottom, TRUE);
-        } else {
-            ShowWindow(hWnd, /*SW_RESTORE*/ SW_NORMAL);
-        }
-    }
+    VioInitialise();                            // (re)initialise
+
     if (info) {
         info->row = (USHORT)vio.rows;
         info->col = (USHORT)vio.cols;
     }
+
     VioGetCurType(NULL, viohandle);
     return 0;
 }
@@ -302,7 +334,7 @@ VioSetMode(VIOMODEINFO *info, HVIO viohandle)
 //      Set the color depth to either 16 or 256 - extension.
 //
 //  Parameters:
-//      colors - Depth depth.
+//      colors - Color depth.
 //
 //  Returns:
 //      nothing.
@@ -331,7 +363,7 @@ VioSetColors(int colors)
 //      Retrieve the color depth to either 16 or 256.
 //
 //  Parameters:
-//      colors - Depth depth.
+//      colors - Color depth.
 //
 //  Returns:
 //      nothing.
@@ -377,7 +409,7 @@ VioGetCp(ULONG reserved, USHORT *cp, HVIO viohandle)
 //      Set the current console font.
 //
 //  Parameters:
-//      fontname - Fontname.
+//      fontname - Font name.
 //
 //  Returns:
 //      0   -   NO_ERROR
@@ -386,7 +418,7 @@ VioGetCp(ULONG reserved, USHORT *cp, HVIO viohandle)
 //      430 -   ERROR_VIO_ILLEGAL_DURING_POPUP
 //      436 -   ERROR_VIO_INVALID_HANDLE
 //
-static int  selectconsolefont(int nFont);
+static int selectconsolefont(int nFont);
 
 int
 VioSetFont(const char *fontname)
@@ -442,7 +474,7 @@ selectconsolefont(int nFont)
 //      Set the current console font.
 //
 //  Parameters:
-//      fontname - Fontname.
+//      fontname - Font name.
 //
 //  Returns:
 //      0   -   NO_ERROR
@@ -592,7 +624,7 @@ VioSetCurType(
 //  Parameters:
 //      row - Row return data.
 //      col - Column return data.
-//      vioHandle - Presentation-space handle.
+//      viohandle - Presentation-space handle.
 //
 //  Returns:
 //      0   -   NO_ERROR
@@ -643,9 +675,9 @@ VioGetCurPos(USHORT *row, USHORT *col, HVIO viohandle)
 int
 VioSetCurPos(USHORT row, USHORT col, HVIO viohandle)
 {
-    HANDLE chandle = vio.chandle;
-    CONSOLE_SCREEN_BUFFER_INFO csbi = {0};
-    COORD coord;
+//  HANDLE chandle = vio.chandle;
+//  CONSOLE_SCREEN_BUFFER_INFO csbi = {0};
+//  COORD coord;
 
     __CUNUSED(viohandle)
 
@@ -658,17 +690,18 @@ VioSetCurPos(USHORT row, USHORT col, HVIO viohandle)
         return ERROR_VIO_INVALID_HANDLE;
     }
 
-    (void) GetConsoleScreenBufferInfo(chandle, &csbi);
-    if (csbi.srWindow.Left > 0 || csbi.srWindow.Top > 0) {
-        coord.X = 0; coord.Y = 0;               // home console
-        (void) SetConsoleCursorPosition(chandle, coord);
-        ++vio.c_trashed;
-    }
+//  (void) GetConsoleScreenBufferInfo(chandle, &csbi);
+//  if (csbi.srWindow.Left > 0 || csbi.srWindow.Top > 0) {
+//      coord.X = 0; coord.Y = 0;               // home console
+//      (void) SetConsoleCursorPosition(chandle, coord);
+//      ++vio.c_trashed;
+//  }
 
+    vio_goto(row, col);
     vio_flush();
 
-    coord.X = col; coord.Y = row;               // true position
-    (void) SetConsoleCursorPosition(chandle, coord);
+//  coord.X = col; coord.Y = row;               // true position
+//  (void) SetConsoleCursorPosition(chandle, coord);
     return 0;
 }
 
@@ -813,7 +846,7 @@ VioShowBuf(ULONG offset, ULONG length, HVIO viohandle)
     } else if (viohandle) {
         return ERROR_VIO_INVALID_HANDLE;
     } else {
-        copyoutctx_t ctx = {0};                 /* update context */
+        CopyOutCtx_t ctx = {0};                 /* update context */
         const int rows = vio.rows, cols = vio.cols;
         int row;
 
@@ -849,16 +882,15 @@ VioShowInit(VIOSHOW *show, HVIO viohandle)
     } else if (!show || show->cb != sizeof(VIOSHOW)) {
         return ERROR_VIO_INVALID_HANDLE;
     } else {
-        copyoutctx_t *ctx = (copyoutctx_t *)show->opaque;
+        CopyOutCtx_t *ctx = (CopyOutCtx_t *)show->opaque;
 
-        assert(sizeof(show->opaque) >= sizeof(copyoutctx_t));
+        assert(sizeof(show->opaque) >= sizeof(CopyOutCtx_t));
         show->state = 1;
         show->handle = viohandle;
         CopyOutInit(ctx);
     }
     return 0;
 }
-
 
 
 int
@@ -876,7 +908,7 @@ VioShowBlock(ULONG offset, ULONG length, VIOSHOW *show)
     } else if (!show || show->cb != sizeof(VIOSHOW) || 1 != show->state) {
         return ERROR_VIO_INVALID_HANDLE;
     } else {
-        copyoutctx_t *ctx = (copyoutctx_t *)show->opaque;
+        CopyOutCtx_t *ctx = (CopyOutCtx_t *)show->opaque;
         const int rows = vio.rows, cols = vio.cols;
         int row;
 
@@ -907,7 +939,7 @@ VioShowFinal(VIOSHOW *show)
     } else if (!show || show->cb != sizeof(VIOSHOW) || 1 != show->state) {
         return ERROR_VIO_INVALID_HANDLE;
     } else {
-        copyoutctx_t *ctx = (copyoutctx_t *)show->opaque;
+        CopyOutCtx_t *ctx = (CopyOutCtx_t *)show->opaque;
 
         CopyOutFinal(ctx);
         show->state = 0;

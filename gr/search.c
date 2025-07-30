@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_search_c,"$Id: search.c,v 1.61 2024/07/13 10:24:01 cvsuser Exp $")
+__CIDENT_RCSID(gr_search_c,"$Id: search.c,v 1.62 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: search.c,v 1.61 2024/07/13 10:24:01 cvsuser Exp $
+/* $Id: search.c,v 1.62 2025/02/07 03:03:22 cvsuser Exp $
  * Search interface.
  *
  *  TODO:
@@ -1071,7 +1071,7 @@ void
 do_re_result(void)              /* ([int capture], [string &value], [int &offset]) */
 {
     const int capture = get_xinteger(1, -100);
-    int ret = -1;
+    accint_t ret = -1;
 
     if (x_reglast) {
         const struct regprog *prog = &x_reglast->prog;
@@ -1366,7 +1366,7 @@ do_re_translate(void)           /* ([int flags], string pattern, [string replace
         }
 
     } else if (isa_string(4)) {                 /* string, return: string */
-        translate_string(flags, get_str(4), get_strlen(4), 2, 3);
+        translate_string(flags, get_str(4), (int)get_strlen(4), 2, 3);
 
 #if (TODO)
     } else if (isa_list(4)) {
@@ -1445,7 +1445,7 @@ do_re_comp(void)                /* list ([int flags], string pattern, [string &e
     //      maxins=0x7fffffff,
     //      maxsub=0x7fffffff
     //
-    if (! search_comp(&rs, pattern, get_strlen(2))) {
+    if (! search_comp(&rs, pattern, (int)get_strlen(2))) {
         acc_assign_null();
         return;
     }
@@ -1941,9 +1941,10 @@ search_arguments(struct re_state *rs, int pati, int repi)
         if (-1 == search_load(rs, get_integer(abspati))) {
             return FALSE;
         }
-      //pattern = rs->originalpattern;
+      //pattern = rs->originalpattern;          //TODO
+        pattern = "";
     } else {
-        if (! search_comp(rs, pattern, strlen(pattern))) {
+        if (! search_comp(rs, pattern, (int)strlen(pattern))) {
             return FALSE;
         }
     }
@@ -1956,7 +1957,7 @@ search_arguments(struct re_state *rs, int pati, int repi)
 
     SRCH_TRACE(("\tpattern='%s' (%d/%d)\n", pattern, rs->beg_match, rs->end_match))
     if (rs->replacement) {
-        SRCH_TRACE(("\treplacment='%s'\n", rs->replacement))
+        SRCH_TRACE(("\treplacement='%s'\n", rs->replacement))
     }
     return TRUE;
 }
@@ -2383,7 +2384,7 @@ static int
 search_string(struct re_state *rs, int flags, int pati, int stri)
 {
     const char *buf = get_xstr(stri);
-    const int buflen = get_strlen(stri);
+    const int buflen = (int)get_strlen(stri);
     int ret = 0;
 
     if (NULL == buf ||
@@ -2403,11 +2404,11 @@ search_string(struct re_state *rs, int flags, int pati, int stri)
 
         if (search_exec(prog, buf, buflen, 0)) {
             if (prog->setpos) {
-                rs->search_result2 = (prog->end - prog->start);
+                rs->search_result2 = (int)(prog->end - prog->start);
                 prog->start = prog->setpos;     /* explicit position */
             }
-            rs->search_result = (prog->end - prog->start);
-            ret = (prog->start - buf) + 1;
+            rs->search_result = (int)(prog->end - prog->start);
+            ret = (int)((prog->start - buf) + 1);
         }
     }
     return ret;
@@ -2445,7 +2446,7 @@ search_list(struct re_state *rs, int flags, int pati, int listi, int starti)
             const char *str;
 
             if (NULL != (str = atom_xstr(lp))) {
-               if (search_exec(&rs->prog, str, strlen(str), 0)) {
+               if (search_exec(&rs->prog, str, (int)strlen(str), 0)) {
                     return atomno;              /* 0 ... x */
                 }
             }
@@ -2587,12 +2588,12 @@ success:;
     assert(prog->end   <= (const char *)(line_text + line_length));
 
     if (prog->setpos) {
-        rs->search_result2 = prog->end - prog->start;
+        rs->search_result2 = (int)(prog->end - prog->start);
         prog->start = prog->setpos;             /* explicit position */
     }
 
-    rs->search_result = prog->end - prog->start;
-    offset = prog->start - (const char *)line_text;
+    rs->search_result = (int)(prog->end - prog->start);
+    offset = (LINENO)(prog->start - (const char *)line_text);
 
     if (cursor) {                               /* update cursor */
         if (cursor > 1) {                       /* record cursor movement? */
@@ -2642,7 +2643,7 @@ translate_string(int flags, const char *sstr, int slen, int pati, int repi)
     int rlen;
 
     if (FALSE == search_start(&rs, TRUE, flags, pati, repi)) {
-        acc_assign_str("", 1);
+        acc_assign_nstr("", 0);
         goto end_of_function;
     }
 
@@ -2658,7 +2659,7 @@ translate_string(int flags, const char *sstr, int slen, int pati, int repi)
 
         /* copy leading */
         if (prog->start > sstr) {
-            rlen = prog->start - sstr;
+            rlen = (int)(prog->start - sstr);
             if (rlen > (dsiz - dlen)) {
                 dsiz += rlen + 1;
                 dstr = (char *) chk_realloc(dstr, dsiz);
@@ -2678,7 +2679,7 @@ translate_string(int flags, const char *sstr, int slen, int pati, int repi)
 
             rpl = &rs.rpl;
             if (0 != regrpl_comp(rpl, replacement, regopts->mode, regopts->flags)) {
-                acc_assign_str("", 1);
+                acc_assign_nstr("", 0);
                 goto end_of_function;
             }
             SRCH_TRACE(("regrpl_comp(%s)\n", replacement))
@@ -2688,12 +2689,12 @@ translate_string(int flags, const char *sstr, int slen, int pati, int repi)
         }
 
         if (regrpl_exec(prog, rpl) < 0) {
-            acc_assign_str("", 1);
+            acc_assign_nstr("", 0);
             goto end_of_function;
         }
 
         rstr = rpl->buf;
-        rlen = rpl->len;
+        rlen = (int)rpl->len;
 
         if (rlen > (dsiz - dlen)) {
             dsiz += rlen + 1;
@@ -2704,7 +2705,7 @@ translate_string(int flags, const char *sstr, int slen, int pati, int repi)
 
         /* position after matched area */
         sstr = prog->end;
-        slen = prog->bufend - sstr;
+        slen = (int)(prog->bufend - sstr);
         if (flags < 0 || 0 == (SF_GLOBAL & flags)) {
             break;
         }
@@ -2718,7 +2719,7 @@ translate_string(int flags, const char *sstr, int slen, int pati, int repi)
     memcpy(dstr + dlen, sstr, slen);
     dlen += slen;
     dstr[dlen] = '\0';
-    acc_assign_str(dstr, dlen + 1);
+    acc_assign_nstr(dstr, (size_t)(dlen + 1));
 
 end_of_function:
     search_end(&rs);
@@ -2919,7 +2920,7 @@ replace_buffer(struct re_state *rs, int interactive)
         return -1;
     }
     rstr = rpl->buf;
-    rlen = rpl->len;
+    rlen = (int)rpl->len;
 
     /* mark interactive translates as undo'able */
     if (interactive) {

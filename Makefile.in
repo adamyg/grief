@@ -1,8 +1,8 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.75 2024/12/16 10:22:38 cvsuser Exp $
+# $Id: Makefile.in,v 1.89 2025/07/30 09:38:27 cvsuser Exp $
 # GRIEF - top level makefile.
 #
-# Copyright (c) 1998 - 2024, Adam Young.
+# Copyright (c) 1998 - 2025, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -135,38 +135,42 @@ endif
 define usage =
 	@$(ECHO) -n -e "\
 	|\n\
-	| make [release or debug] target \n\
+	| make [VERBOSE=1] [release or debug] target \n\
 	|\n\
 	|	Build one or more of the following targets recursively within each sub-directory\n\
-	|	for the toolchain @TOOLCHAIN@. \n\
+	|	for the toolchain "@TOOLCHAINNAME@" (@TOOLCHAIN@). \n\
+	|\n\
+	| Options: \n\
+	|	VERBOSE - increase run-time diagnostics; suppress stderr filtering. \n\
 	|\n\
 	| Targets: \n\
 	|\n\
-	|	contrib - build third-party components. \n\
-	|	build   - build everything. \n"
+	|	contrib  - build third-party components. \n\
+	|	build    - build everything. \n\
+	|	unittest - execute unit tests. \n"
 endef
 
 ifneq ("", "@prefix@")
-usage+="|	install - install; see profile below. \n"
+usage+="|	install  - install; see profile below. \n"
 else
-usage+="|	package - build package. \n"
+usage+="|	package  - build package. \n"
 endif
 
-usage+="|	clean   - delete everything which can be remade. \n\
-	|	vclean  - delete all. \n\
-	|	help    - command line usage. \n\
+usage+="|	clean    - delete everything which can be remade. \n\
+	|	vclean   - delete all. \n\
+	|	help     - command line usage. \n\
 	|\n"
 
 ifneq ("", "@prefix@")
 usage+="| Install configuration: \n\
 	|\n\
-	|	BINDIR  - $(BINDIR) \n\
-	|	DATADIR - $(DATADIR) \n\
+	|	BINDIR   - $(BINDIR) \n\
+	|	DATADIR  - $(DATADIR) \n\
 	|\n\
 	| Default run-time configuration: \n\
 	|\n\
-	|	GRPATH  - $(DATADIR)/macros \n\
-	|	GRHELP  - $(DATADIR)/help \n\
+	|	GRPATH   - $(DATADIR)/macros \n\
+	|	GRHELP   - $(DATADIR)/help \n\
 	|\n"
 endif
 
@@ -184,8 +188,8 @@ $(error build type expected as first target; see "make help" for details)
 endif
 endif
 
-.PHONY:				help clean vclean distclean build package install
-help clean vclean distclean build package install:
+.PHONY:				help clean vclean distclean build unittest package install prepare_deb prepare_rpm
+help clean vclean distclean build unittest package install prepare_deb prepare_rpm:
 ifeq ("$(BUILD_TYPES)","")
 	$(usage)
 else
@@ -214,8 +218,8 @@ endif
 
 D_INC=		$(ROOT)/include
 D_BIN=		$(ROOT)/bin@TOOLCHAINEXT@/$(BUILD_TYPE)
-D_OBJ=		$(ROOT)/obj@TOOLCHAINEXT@/$(BUILD_TYPE)
 D_LIB=		$(ROOT)/lib@TOOLCHAINEXT@/$(BUILD_TYPE)
+D_OBJ=		$(ROOT)/obj@TOOLCHAINEXT@/$(BUILD_TYPE)
 
 D_GR=		$(ROOT)/gr
 D_GM=		$(ROOT)/gm
@@ -223,14 +227,17 @@ D_GRCPP=	$(ROOT)/grcpp
 D_GRMANDOC=	$(ROOT)/grmandoc
 D_GRUNCH=	$(ROOT)/grunch
 
+ifeq ("@ISWIN64@","yes")
+D_MACROS=	$(ROOT)/macros.x64
+else
 D_MACROS=	$(ROOT)/macros
+endif
 D_HELP=		$(ROOT)/help
 D_MACSRC=	$(ROOT)/macsrc
 D_HLPDOC=	$(ROOT)/hlpdoc
 
 BUILDNUMBER=	BUILDNUMBER.in
 BUILDINFO=	include/edbuildinfo.h
-PACKAGEINFO=	include/edpackageinfo.h
 
 # Compilers, programs
 
@@ -251,13 +258,17 @@ YACC=		@YACC@
 WGET=		@WGET@
 
 INSTALL=	@INSTALL@
+ifneq ("@LIBTOOL@","")
+INSTALL_PROGRAM=@LIBTOOL@ --mode=install @INSTALL_PROGRAM@
+else
 INSTALL_PROGRAM=@INSTALL_PROGRAM@
+endif
 INSTALL_DATA=	@INSTALL_DATA@
 
 ifeq ("win32","@build_os@")
 INNO=		@INNO@
 ifeq ($(INNO),) # Inno5: allowing legacy XP installations
-INNO=		"C:/Program Files (x86)/Inno Setup 5/Compil32"
+INNO=		"C:/Program Files (x86)/Inno Setup 5/iscc"
 endif
 endif
 
@@ -295,7 +306,7 @@ RMDFLAGS=	-rf
 LW=		$(D_LIB)/$(LP)
 
 ifeq ("wcl386","$(CC)")
-ifeq ("@TOOLCHAIN@","owc20")
+ifeq ("owc20","@TOOLCHAIN@")
 CLBRNAME=	clbr20
 MT7RNAME=	mt7r20
 PLBRNAME=	plbr20
@@ -326,14 +337,32 @@ IMPORT+=\
 	$(D_BIN)/$(PLBRNAME).dll
 endif
 
+ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
+GCCBIN=		$(dir $(shell $(BUSYBOX) which gcc 2>/dev/null))
+$(info GCCBIN:  ${GCCBIN})
+$(info GCCDLL:  $(wildcard $(GCCBIN)/lib*.dll))
+  # mingw32 default to dw2 exception handling while mingw64 default to seh.
+  ifeq (mingw64,$(findstring mingw64,"@TOOLCHAIN@"))
+GCCEXPDLL=libgcc_s_seh-1.dll
+  else
+GCCEXPDLL=libgcc_s_dw2-1.dll
+  endif
+GCCSTDDLL=libstdc++-6.dll
+GCCTHRDLL=libwinpthread-1.dll
+IMPORT+=\
+	$(D_BIN)/$(GCCEXPDLL)		\
+	$(D_BIN)/$(GCCSTDDLL)		\
+	$(D_BIN)/$(GCCTHRDLL)
+endif
+
 GRUPDATER=	no
 ifeq (vs,$(findstring vs,"@TOOLCHAIN@"))
 GRUPDATER=	yes
+else ifeq (clangcl,$(findstring clangcl,"@TOOLCHAIN@"))
+GRUPDATER=	yes
+else ifeq (owc,$(findstring owc,"@TOOLCHAIN@"))
+GRUPDATER=	yes
 else ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
-GRUPDATER=	yes
-else ifeq ("@TOOLCHAIN@","owc20")
-GRUPDATER=	yes
-else ifeq ("@TOOLCHAIN@","owc19")
 GRUPDATER=	yes
 endif
 
@@ -382,7 +411,7 @@ DIRECTORIES=\
 #########################################################################################
 # Rules
 
-.PHONY:				build directories install
+.PHONY:		build directories
 build:				directories artifacts libs bins import
 		$(MAKE) -C $(D_HLPDOC)
 		$(MAKE) -C $(D_MACSRC)
@@ -421,12 +450,12 @@ import:				$(IMPORT)
 BUSYBOXEXE=	$(addsuffix .exe, $(basename $(BUSYBOX)))
 $(D_BIN)/grbusybox.exe:		$(BUSYBOXEXE)
 		@echo importing $(BUSYBOXEXE)
-		@$(CP) $^ $@
+		@$(CP) -f $^ $@
 
 ifeq ("wcl386","$(CC)")
 $(D_BIN)/$(CLBRNAME).dll:	$(LIBCLBRPATH)
 		@echo importing $(LIBCLBRPATH)
-		@$(CP) $(subst /,\,$^) $@
+		@$(CP) -f $^ $@
 
 $(D_BIN)/$(MT7RNAME).dll:	$(LIBMT7RPATH)
 		@echo importing $(LIBMT7RPATH)
@@ -434,13 +463,31 @@ $(D_BIN)/$(MT7RNAME).dll:	$(LIBMT7RPATH)
 
 $(D_BIN)/$(PLBRNAME).dll:	$(LIBPLBRPATH)
 		@echo importing $(LIBPLBRPATH)
-		@$(CP) -f $(subst /,\,$^) $@
+		@$(CP) -f $^ $@
 endif
 
+ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
+$(D_BIN)/$(GCCEXPDLL):		$(GCCBIN)/$(GCCEXPDLL)
+		@echo importing $^
+		@$(CP) -f $^ $@
+
+$(D_BIN)/$(GCCSTDDLL):		$(GCCBIN)/$(GCCSTDDLL)
+		@echo importing $^
+		@$(CP) -f $^ $@
+
+$(D_BIN)/$(GCCTHRDLL):		$(GCCBIN)/$(GCCTHRDLL)
+		@echo importing $^
+		@$(CP) -f $^ $@
+endif
+
+.PHONY:		unittest
+unittest:	build
+	-$(D_BIN)/gr$(E) -DGRPATH=$(D_MACROS) -DGRHELP=$(D_HELP) --config
+	$(D_BIN)/gr$(E) -DGRPATH=$(D_MACROS) -DGRHELP=$(D_HELP) --headless=unittest
+
 .PHONY:		package
-package:	import packageinfo
-	$(INNO) ./win32/gr-inno-setup.iss
-	-$(RM) $(PACKAGEINFO)
+package:	import buildinfo
+	"$(INNO)" ./win32/gr-inno-setup.iss
 
 
 #########################################################################################
@@ -448,25 +495,24 @@ package:	import packageinfo
 
 BUILD_DATE=		$(shell date +'%Y%m%d')
 ifneq ($(APPVEYOR_BUILD_NUMBER),)
-BUILD_NUMBER=		$(APPVEYOR_BUILD_NUMBER)
+BUILD_NUMBER=			$(APPVEYOR_BUILD_NUMBER)
 else ifneq ($(GITHUB_RUN_NUMBER),)
-BUILD_NUMBER=		$(GITHUB_RUN_NUMBER)
+ifeq (master,$(findstring master,$(GITHUB_REF)))
+BUILD_NUMBER=			$(shell $(BUSYBOX) cat $(BUILDNUMBER))
 else
-BUILD_NUMBER=		$(shell cat ./$(BUILDNUMBER))
+BUILD_NUMBER=			$(shell $(BUSYBOX) expr 10000 + $(GITHUB_RUN_NUMBER))
+endif
+else
+BUILD_NUMBER=			$(shell $(BUSYBOX) cat $(BUILDNUMBER))
 endif
 
-.PHONY:				buildinfo
-$(BUILDINFO):		Makefile $(BUILDNUMBER) buildinfo
+.PHONY:		buildinfo
+$(BUILDINFO):		buildinfo
 buildinfo:
-		@echo updating buildinfo.h ...
+		@echo updating $(BUILDINFO) ...
 		-@$(PERL) ./buildinfo.pl -o $(BUILDINFO) --prefix="GR_" --package="$(PACKAGE)" --name="$(PKG_NAME)" --version="$(PKG_VERSION)" \
-			--date="$(BUILD_DATE)" --build="$(BUILD_NUMBER)" --toolchain="@TOOLCHAINEXT@" --type="$(BUILD_TYPE)" \
+			--date="$(BUILD_DATE)" --build="$(BUILD_NUMBER)" --toolchain="@TOOLCHAINEXT@" --type="$(BUILD_TYPE)" --iswin64="@ISWIN64@" \
 			--bindir="$(BINDIR)" --sbindir="$(SBINDIR)" --libexecdir="$(LIBEXECDIR)" --libdir="$(LIBDIR)" --datadir="$(DATADIR)"
-
-.PHONY:				packageinfo
-packageinfo:
-		-@$(PERL) ./buildinfo.pl -o $(PACKAGEINFO) --prefix="GR_" --package="$(PACKAGE)" --name="$(PKG_NAME)" --version="$(PKG_VERSION)" \
-			--date="$(BUILD_DATE)" --build="$(BUILD_NUMBER)" --toolchain="@TOOLCHAINEXT@" --type="$(BUILD_TYPE)"
 
 buildinfo.h:			BUILDNUMBER buildinfo.pl
 
@@ -482,7 +528,7 @@ BUILDNUMBER:
 		@echo $(GITHUB_RUN_NUMBER)>$@
 endif
 
-.PHONY:			new_buildnumber
+.PHONY:		new_buildnumber
 new_buildnumber:
 		-@chmod +w $(BUILDNUMBER)
 
@@ -545,7 +591,7 @@ ifeq ("$(INSTALL_MODE)","")
 INSTALL_MODE=0755
 endif
 
-.PHONY: install
+.PHONY:		install
 install:		build
 		-mkdir -p $(BINDIR)
 		-mkdir -p $(DATADIR)
@@ -564,6 +610,35 @@ install:		build
 		@echo Installing GRIEF macro source...
 		-$(TAR) cf - -C $(D_MACSRC) --mode=+rw --exclude CVS . | ($(TAR) xf - -C $(DATADIR)/src)
 		@echo Install done.
+
+.PHONY:		prepare_deb
+prepare_deb:		PKGDIR=.debpkg
+prepare_deb:		build _prepare_pkg
+		@echo deb package primed
+
+.PHONY:		prepare_rpm
+prepare_rpm:		PKGDIR=.rpmpkg
+prepare_rpm:		build _prepare_pkg
+		@echo rpm package primed
+
+.PHONY:				_prepare_pkg
+_prepare_pkg:		PKGBIN=$(PKGDIR)/usr/local/bin
+_prepare_pkg:		PKGETC=$(PKGDIR)/usr/local/share/gr
+_prepare_pkg:
+		@echo "VERSION=$(PKG_VERSION).$(file <./BUILDNUMBER.in)" >.PKGLABEL
+		-mkdir -p $(PKGBIN)
+		-mkdir -p $(PKGETC)/help
+		-mkdir -p $(PKGETC)/macros
+		cp $(D_BIN)/gr$(E) $(PKGBIN)
+		cp $(D_BIN)/gm$(E) $(PKGBIN)
+		cp $(D_BIN)/grcpp$(E) $(PKGBIN)
+		cp $(D_BIN)/grmandoc$(E) $(PKGBIN)
+		cp $(D_BIN)/grunch$(E) $(PKGBIN)
+		chmod 0755 $(PKGBIN)/*
+		$(TAR) cf - -C $(D_HELP) --exclude .created --exclude CVS . | ($(TAR) xf - -C $(PKGETC)/help)
+		$(TAR) cf - -C $(D_MACROS) --exclude .created --exclude CVS . | ($(TAR) xf - -C $(PKGETC)/macros)
+		find $(PKGETC) -type d -exec chmod 0755 -- {} +
+		find $(PKGETC) -type f -exec chmod 0644 -- {} +
 
 clean:
 		@echo $(BUILD_TYPE) clean

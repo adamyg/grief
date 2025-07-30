@@ -1,14 +1,14 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edthreads_pthread_c,"$Id: edthreads_pthread.c,v 1.17 2024/07/27 12:58:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_edthreads_pthread_c,"$Id: edthreads_pthread.c,v 1.18 2025/01/13 16:06:38 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edthreads_pthread.c,v 1.17 2024/07/27 12:58:52 cvsuser Exp $
+/* $Id: edthreads_pthread.c,v 1.18 2025/01/13 16:06:38 cvsuser Exp $
  * C11 threads implementation, for/using pthreads
  * based on ISO/IEC 9899:201x Committee Draft, April 12, 2011
  *
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.

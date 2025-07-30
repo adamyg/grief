@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.10 2024/05/28 15:22:44 cvsuser Exp $
+# $Id: Makefile.in,v 1.11 2025/02/07 03:03:20 cvsuser Exp $
 # libguess makefile
 #
 #
@@ -70,9 +70,6 @@ endif
 
 CINCLUDE=	-I. -I$(D_INC) @CINCLUDE@
 CEXTRA=		@DEFS@
-ifeq ("yes","@ISWIN32@")
-CEXTRA+=	-D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
-endif
 
 ifeq ("$(BUILD_TYPE)","release")
 CFLAGS+=	$(CRELEASE) $(CWARN) $(CINCLUDE) $(CEXTRA) $(XFLAGS)
@@ -118,7 +115,7 @@ LIBOBJS=\
 
 DLLOBJS=\
 	$(subst $(O),.lo,$(LIBOBJS))
-ifeq ("yes","@ISWIN32@")
+ifeq (yes,$(findstring yes,"@ISWIN32@ or @ISWIN64@"))
 DLLOBJS+=\
 	$(D_OBJ)/dllmain.lo
 endif

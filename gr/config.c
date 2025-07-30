@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_config_c,"$Id: config.c,v 1.37 2024/12/09 14:13:08 cvsuser Exp $")
+__CIDENT_RCSID(gr_config_c,"$Id: config.c,v 1.38 2025/02/07 16:48:49 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: config.c,v 1.37 2024/12/09 14:13:08 cvsuser Exp $
+/* $Id: config.c,v 1.38 2025/02/07 16:48:49 cvsuser Exp $
  * Machine dependent configuration variables.
  *
  *
@@ -41,11 +41,7 @@ const char *x_machtype      = "VMS";
 #elif defined(__OS2__)
 const char *x_machtype      = "OS/2";
 #elif defined(_WIN32) || defined(WIN32)
-#if defined(__MINGW32__)
-const char *x_machtype      = "Mingw32";
-#else
 const char *x_machtype      = "Win32";          /* 98,NT,XP etc */
-#endif
 #elif defined(DOSISH)
 const char *x_machtype      = "DOS";
 #elif defined(__APPLE__)
@@ -69,9 +65,7 @@ const char *x_grpath        = _PATH_GRIEF_MACROS ":" _PATH_GRIEF_SOURCE;
 #endif
 
 #if defined(__MSDOS__)
-#if defined(__MINGW32__)
-const char *x_default_term  = "TERM=mingw32";
-#elif defined(_WIN32) || defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 const char *x_default_term  = "TERM=win32";
 #else
 const char *x_default_term  = "TERM=dos";

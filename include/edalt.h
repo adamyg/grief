@@ -1,15 +1,15 @@
 #ifndef GR_EDALT_H_INCLUDED
 #define GR_EDALT_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_edalt_h,"$Id: edalt.h,v 1.40 2024/11/29 11:51:51 cvsuser Exp $")
+__CIDENT_RCSID(gr_edalt_h,"$Id: edalt.h,v 1.42 2025/06/30 10:19:26 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: edalt.h,v 1.40 2024/11/29 11:51:51 cvsuser Exp $
+/* $Id: edalt.h,v 1.42 2025/06/30 10:19:26 cvsuser Exp $
  * Key definitions.
  * ==noguard==
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -71,7 +71,7 @@ typedef int32_t KEY;
 #undef MOD_SHIFT
 #undef MOS_CTRL
 #endif
-#if defined(KEY_DOWN) || defined(KEY_END) ||    /* [n]curses.h refinitions */ \
+#if defined(KEY_DOWN) || defined(KEY_END) ||    /* [n]curses.h redefinitions */ \
         defined(KEY_HELP) || defined(KEY_UNDO) || defined(KEY_COPY)
 #undef KEY_COMMAND
 #undef KEY_HELP

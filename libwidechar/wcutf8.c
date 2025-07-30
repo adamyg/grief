@@ -65,7 +65,7 @@ Wcsfromutf8(const char *mbstr, WChar_t *buf, int buflen)
 	}
         assert(cursor < (buf + buflen));
 	*cursor = 0;
-	return cursor - buf;
+	return (int)(cursor - buf);
 }
 
 
@@ -96,7 +96,7 @@ Wcstoutf8(const WChar_t *wstr, char *buf, int buflen)
 		}
 		assert(cursor < (buf + buflen));
 		*cursor = 0;
-		len = (cursor - buf);
+		len = (int)(cursor - buf);
 	}
 	return len;
 }
@@ -114,7 +114,7 @@ Wcfromutf8(const char *mbstr, WChar_t *wc)
 		return -1;
 	}
 	*wc = ch;
-	return cend - mbstr;
+	return (int)(cend - mbstr);
 }
 
 

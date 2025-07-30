@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_pty_win32_c,"$Id: pty_win32.c,v 1.23 2022/08/10 15:44:57 cvsuser Exp $")
+__CIDENT_RCSID(gr_pty_win32_c,"$Id: pty_win32.c,v 1.24 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: pty_win32.c,v 1.23 2022/08/10 15:44:57 cvsuser Exp $
+/* $Id: pty_win32.c,v 1.24 2025/02/07 03:03:22 cvsuser Exp $
  *
  *
  * This file is part of the GRIEF Editor.
@@ -68,7 +68,14 @@ pty_died(BUFFER_t *bp)
 
     proc_check();                               // handle any terminations
     if (dp) {
-        HANDLE hProcess = (HANDLE)bp->b_display->d_pid;
+#if defined(_MSC_VER) && (_MSC_VER >= 1900)
+#pragma warning(push)
+#pragma warning(disable:4312) // 4312: 'type cast': conversion from 'pid_t' to 'HANDLE' of greater size
+#endif
+        HANDLE hProcess = (HANDLE)(bp->b_display->d_pid);
+#if defined(_MSC_VER) && (_MSC_VER >= 1900)
+#pragma warning(pop)
+#endif
 
         if (WAIT_TIMEOUT == WaitForSingleObject(hProcess, 0)) {
             return FALSE;
@@ -98,7 +105,7 @@ pty_connect(DISPLAY_t *dp, const char *shell, const char *cwd)
 int
 pty_read(BUFFER_t *bp, char *buf, int count)
 {
-    HANDLE hPipe = (HANDLE)bp->b_display->d_handle_in;
+    HANDLE hPipe = bp->b_display->d_handle_in;
     DWORD cnt = 0;
 
     if (PeekNamedPipe(hPipe, NULL, 0, NULL, &cnt, NULL) && cnt <= 0) {
@@ -153,15 +160,15 @@ dpcreate(DISPLAY_t *dp, const char *shell, const char *cwd)
     //      The new process is created without a console.
     //
     assert(sizeof(HANDLE) == sizeof(dp->d_handle_in));
-    in = _open_osfhandle((long) hInputWrite, _O_NOINHERIT);
+    in = _open_osfhandle((intptr_t) hInputWrite, _O_NOINHERIT);
     if ((pid = w32_spawnA(&args, in, -1, &out)) <= 0) {
-        CloseHandle((HANDLE) hInputRead);
+        CloseHandle(hInputRead);
         fileio_close(in);
 
     } else {
         dp->d_cleanup = dpcleanup;
         dp->d_pipe_out = out;                   // process stdin
-        dp->d_handle_in = (int)hInputRead;
+        dp->d_handle_in = hInputRead;
     }
     return (pid <= 0 ? -1 : pid);
 }

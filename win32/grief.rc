@@ -51,15 +51,17 @@ VS_VERSION_INFO VERSIONINFO
 				VALUE "FileVersion",		GR_VERSION ", Build:" GR_BUILD_DATE "-" GR_BUILD_NUMBER
 				VALUE "InternalName",		"GRIEF"
 				VALUE "Copyright",
-					"Copyright (C) 1998-2024, Adam Young. All rights reserved. "
-					"Licensed under the GRIEF License. "
-					"This is free software; see the source for copying conditions. "
-					"There is NO warranty; not even for MERCHANTABILITY "
-					"or FITNESS FOR A PARTICULAR PURPOSE. "
-				VALUE "Maintainers",		"griefedit@gmail.com"
-				VALUE "LegalTrademarks",	"see GRIEF License"
+					"Copyright (C) 1998 - " GR_BUILD_YEAR ", Adam Young. All rights reserved. \n"
+					"Copyright (C) 1990, 1993, The Regents of the University of California. \n"
+					"This is free software; see the source for copying conditions. \n"
+					"There is NO warranty; not even for MERCHANTABILITY \n"
+					"or FITNESS FOR A PARTICULAR PURPOSE. \0"
+				VALUE "LegalTrademarks",	"see the GRIEF License"
+				VALUE "Maintainers",		"https://github.com/adamyg/grief\n"
 				VALUE "OriginalFilename",	"gr.exe"
-				VALUE "ProductName",		"GRIEF"
+				VALUE "ProductName",		"GRIEFEdit"
+				VALUE "ProductVersion", 	GR_VERSION "-win32"
+				VALUE "SpecialBuild",		"gr-win32-native"
 			END
 		END
 

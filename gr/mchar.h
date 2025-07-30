@@ -1,11 +1,11 @@
 #ifndef GR_MCHAR_H_INCLUDED
 #define GR_MCHAR_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mchar_h,"$Id: mchar.h,v 1.17 2021/07/05 15:01:27 cvsuser Exp $")
+__CIDENT_RCSID(gr_mchar_h,"$Id: mchar.h,v 1.18 2025/02/07 03:03:21 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mchar.h,v 1.17 2021/07/05 15:01:27 cvsuser Exp $
+/* $Id: mchar.h,v 1.18 2025/02/07 03:03:21 cvsuser Exp $
  * Multibyte character support.
  *
  *
@@ -165,7 +165,7 @@ extern int                  mchar_guess(const char *specification, unsigned flag
 extern char *               mchar_guess_default(void);
 
 extern const mcharcharsetinfo_t *
-                            mchar_info(mcharcharsetinfo_t *info, const char *name, int namelen);
+                            mchar_info(mcharcharsetinfo_t *info, const char *name, size_t namelen);
        
 extern void                 mchar_iconv_init(void);
 extern mchar_iconv_t *      mchar_iconv_open(const char *encoding);

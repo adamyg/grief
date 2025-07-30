@@ -208,11 +208,11 @@ mnemonic_append_child(mnemonic_t *m, const char *s,
 static void
 mnemonic_destroy(mnemonic_t *m)
 {
-	mnemonic_t *m0;
+	mnemonic_t *m0, *tm0;
 
 	_DIAGASSERT(m != NULL);
 
-	TAILQ_FOREACH(m0, &m->child, entry)
+	TAILQ_FOREACH_SAFE(m0, &m->child, entry, tm0)
 		mnemonic_destroy(m0);
 	free(m);
 }
@@ -365,7 +365,7 @@ _citrus_VIQR_wcrtomb_priv(_VIQREncodingInfo * __restrict ei,
 	_VIQRState * __restrict psenc, size_t * __restrict nresult)
 {
 	mnemonic_t *m;
-	int ch;
+	int ch = 0;
 	const char *p;
 
 	_DIAGASSERT(ei != NULL);

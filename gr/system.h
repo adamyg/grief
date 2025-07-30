@@ -1,11 +1,11 @@
 #ifndef GR_SYSTEM_H_INCLUDED
 #define GR_SYSTEM_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_system_h,"$Id: system.h,v 1.40 2024/06/23 15:41:55 cvsuser Exp $")
+__CIDENT_RCSID(gr_system_h,"$Id: system.h,v 1.41 2025/02/07 03:03:22 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: system.h,v 1.40 2024/06/23 15:41:55 cvsuser Exp $
+/* $Id: system.h,v 1.41 2025/02/07 03:03:22 cvsuser Exp $
  * System interface.
  *
  *
@@ -33,7 +33,7 @@ extern void                 sys_shutdown(void);
 extern void                 sys_cleanup(void);
 
 extern int                  sys_iocheck(struct IOEvent *evt);
-extern int                  sys_getevent(struct IOEvent *evt, int tmo);
+extern int                  sys_getevent(struct IOEvent *evt, accint_t tmo);
 extern int                  sys_getchar(int fd, int *buf, accint_t tmo);
 extern void                 sys_tty_delay(int fd, int state /*0=off, 1=on*/);
 

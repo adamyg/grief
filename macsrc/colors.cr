@@ -1,5 +1,5 @@
 /* -*- mode: cr; indent-width: 4; -*- */
-/* $Id: colors.cr,v 1.26 2024/10/27 06:09:35 cvsuser Exp $
+/* $Id: colors.cr,v 1.27 2025/01/09 12:01:28 cvsuser Exp $
  * Enhanced colour/colorscheme support.
  *
  *
@@ -251,18 +251,30 @@ colorscheme(~ string scheme, ...)
 static list
 coloriser_list(void)
 {
-    string path, name;
+    string path, name, ext;
     list paths, ret;
+    int mode;
 
     path = expandpath("${GRPATH}", TRUE);
     paths = split(path, CRISP_DIRSEP);
     while (list_each(paths, path) >= 0) {
         path = expandpath(path + "/colors/");
-        file_pattern(path + "*" + GREXTENSION);
-        while (find_file(name)) {
-            name = basename(name, GREXTENSION);
-            if (re_search(SF_IGNORE_CASE, "<" + name + ">", ret) < 0) {
-                ret += name;
+        file_pattern(path + "*");
+        while (find_file(name, NULL, NULL, NULL, mode)) {
+            splitpath(name, NULL, NULL, ext);
+            if (S_IFDIR & mode) {               // color-scheme package
+                if (ext == "") {
+                    if (exist(path + name + "/cscheme" + GREXTENSION)) {
+                        ret += name;
+                    }
+                }
+            } else {
+                if (ext == GREXTENSION) {
+                    name = basename(name, GREXTENSION);
+                    if (re_search(SF_IGNORE_CASE, "<" + name + ">", ret) < 0) {
+                        ret += name;
+                    }
+                }
             }
         }
     }
@@ -1106,5 +1118,3 @@ schemeload(string scheme, ~list args, ~string base, ~int flags)
 }
 
 /*end*/
-
-

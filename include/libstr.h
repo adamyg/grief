@@ -1,16 +1,16 @@
 #ifndef GR_LIBSTR_H_INCLUDED
 #define GR_LIBSTR_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_str_h,"$Id: libstr.h,v 1.26 2024/04/08 15:07:13 cvsuser Exp $")
+__CIDENT_RCSID(gr_str_h,"$Id: libstr.h,v 1.28 2025/02/07 03:03:22 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: libstr.h,v 1.26 2024/04/08 15:07:13 cvsuser Exp $
+/* $Id: libstr.h,v 1.28 2025/02/07 03:03:22 cvsuser Exp $
  * libstr - String utility library.
  *
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -38,24 +38,24 @@ __CPRAGMA_ONCE
 
 __CBEGIN_DECLS
 
-extern char *               strxcpy(char *dest, const char *src, int len);
-extern char *               strxcat(char *dest, const char *src, int len);
+extern char *               strxcpy(char *dest, const char *src, size_t len);
+extern char *               strxcat(char *dest, const char *src, size_t len);
 extern size_t               strxlen(const char *str, size_t maxlen);
 
-extern int                  sxprintf(char *buf, int size, const char *fmt, ...) __ATTRIBUTE_FORMAT__((printf, 3, 4));
-extern int                  sxprintf0(char *buf, int size, const char *fmt, ...) __ATTRIBUTE_FORMAT__((printf, 3, 4));
-extern int                  vsxprintf(char *buf, int size, const char *fmt, va_list ap) __ATTRIBUTE_FORMAT__((printf, 3, 0));
-extern int                  vsxprintf0(char *buf, int size, const char *fmt, va_list ap) __ATTRIBUTE_FORMAT__((printf, 3, 0));
+extern int                  sxprintf(char *buf, size_t size, const char *fmt, ...) __ATTRIBUTE_FORMAT__((printf, 3, 4));
+extern int                  sxprintf0(char *buf, size_t size, const char *fmt, ...) __ATTRIBUTE_FORMAT__((printf, 3, 4));
+extern int                  vsxprintf(char *buf, size_t size, const char *fmt, va_list ap) __ATTRIBUTE_FORMAT__((printf, 3, 0));
+extern int                  vsxprintf0(char *buf, size_t size, const char *fmt, va_list ap) __ATTRIBUTE_FORMAT__((printf, 3, 0));
 
 extern long                 str_num(const char *numstr, long minval, long maxval, const char **errp);
 
 extern int                  str_icmp(const char *p1, const char *p2);
-extern int                  str_nicmp(const char *p1, const char *p2, int len);
+extern int                  str_nicmp(const char *p1, const char *p2, size_t len);
 
 extern const char *         str_chrx(const char *p, int c, int *len);
 extern void                 str_cpy(char *dst, const char *src);
 extern char *               str_rev(char *p);
-extern const char *         str_trim(const char *name, int *lengthp);
+extern const char *         str_trim(const char *name, size_t *lengthp);
 
 extern char *               str_upper(char *p);
 extern char *               str_lower(char *p);

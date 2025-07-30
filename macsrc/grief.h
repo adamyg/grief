@@ -379,11 +379,12 @@
 #define DC_WINDOW               0x00000001  /* Running under a windowing system (read-only) */
 #define DC_MOUSE                0x00000002  /* Mouse enabled/available (read-only) */
 #define DC_READONLY             0x00000004  /* Read-only mode (read-only) */
-#define DC_CHARMODE             0x00000008  /* Character-mode with primitive GUI features available (read-only) */
+#define DC_CONSOLE              0x00000008  /* Character-mode with primitive GUI features available (read-only) */
 
 #define DC_SHADOW               0x00000010  /* Display shadow around popups */
 #define DC_SHADOW_SHOWTHRU      0x00000020  /* Show-thru shadow around popups */
 #define DC_STATUSLINE           0x00000040  /* Utilise window status-lines, when borderless */
+#define DC_HEADLESS             0x00000080  /* Neither WINDOW nor CONSOLE mode */
 
 #define DC_UNICODE              0x00000100  /* UNICODE character encoding available (read-only) */
 #define DC_ASCIIONLY            0x00000200  /* Only utilise ASCII characters within character-sets/dialogs */
@@ -1493,6 +1494,7 @@ extern const string             C_TERM_CHR;
  */
 #if defined(__PROTOTYPES__)
                                 /*grief.cr*/
+extern list                     grief_license(void);
 extern string                   inq_grinit(void);
 extern string                   grinit_query(string section, string key);
 extern int                      grinit_update(string section, string key, string value);

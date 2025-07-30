@@ -1,11 +1,11 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_select_c,"$Id: w32_select.c,v 1.19 2024/07/30 08:17:12 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_select_c,"$Id: w32_select.c,v 1.21 2025/02/07 18:23:19 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
  *  Windows 'select' compat interface
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * All rights reserved.
  *
  * This file is part of the GRIEF Editor.
@@ -92,7 +92,7 @@ w32_select(
     selcnt = (readfds ? readfds->fd_count : 0) + (writefds ? writefds->fd_count : 0) +
                 (exceptfds ? exceptfds->fd_count : 0);
 
-    if ((selfds = calloc(sizeof(Select_t), selcnt + 1)) == NULL) {
+    if ((selfds = calloc(selcnt + 1, sizeof(Select_t))) == NULL) {
         return -1;
     }
 

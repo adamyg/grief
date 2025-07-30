@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_crpragma_c,"$Id: crpragma.c,v 1.14 2020/04/23 12:35:50 cvsuser Exp $")
+__CIDENT_RCSID(gr_crpragma_c,"$Id: crpragma.c,v 1.15 2025/02/07 03:03:22 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: crpragma.c,v 1.14 2020/04/23 12:35:50 cvsuser Exp $
+/* $Id: crpragma.c,v 1.15 2025/02/07 03:03:22 cvsuser Exp $
  * Pragma support.
  *
  *
@@ -142,7 +142,7 @@ static void
 pragma_control_message(lexer_t *lexer, int enable)
 {
     if (O_INTEGER_CONST == prlexer(lexer)) {
-        const int msgno = yylval.ival;
+        const int msgno = (int)(yylval.ival);
 
         switch (msgno) {
         case RC_SYNTAX_ERROR:
@@ -424,7 +424,7 @@ pragma_warning(lexer_t *lexer)
                             return;
                         }
                     } else {
-                        xf_warnings = yylval.ival;
+                        xf_warnings = (int)yylval.ival;
                     }
                     token = 0;
                 }

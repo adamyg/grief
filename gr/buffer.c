@@ -1,8 +1,8 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_buffer_c,"$Id: buffer.c,v 1.53 2024/09/06 14:02:02 cvsuser Exp $")
+__CIDENT_RCSID(gr_buffer_c,"$Id: buffer.c,v 1.54 2025/02/07 03:03:20 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: buffer.c,v 1.53 2024/09/06 14:02:02 cvsuser Exp $
+/* $Id: buffer.c,v 1.54 2025/02/07 03:03:20 cvsuser Exp $
  * Buffer managment.
  *
  *
@@ -618,7 +618,7 @@ buf_encoding_set(BUFFER_t *bp, const char *encoding)
             const char *native_encoding = NULL;
 
                                                 /* verify buffer-type against encoding */
-            if (mchar_info(&info, encoding, -1)) {
+            if (mchar_info(&info, encoding, strlen(encoding))) {
                 if (BFTYP_UNDEFINED == type || BFTYP_UNKNOWN == type) {
                     if (BFTYP_SBCS == (type = (BUFTYPE_t)info.cs_type)) {
                         type = BFTYP_DEFAULT;

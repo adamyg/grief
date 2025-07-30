@@ -1,12 +1,12 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_mchar_iconv_c,"$Id: mchar_iconv.c,v 1.32 2024/07/20 18:18:52 cvsuser Exp $")
+__CIDENT_RCSID(gr_mchar_iconv_c,"$Id: mchar_iconv.c,v 1.34 2025/02/07 03:03:21 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
-/* $Id: mchar_iconv.c,v 1.32 2024/07/20 18:18:52 cvsuser Exp $
+/* $Id: mchar_iconv.c,v 1.34 2025/02/07 03:03:21 cvsuser Exp $
  * Character-set conversion/mapping interface and adapters.
  *
  *
- * Copyright (c) 1998 - 2024, Adam Young.
+ * Copyright (c) 1998 - 2025, Adam Young.
  * This file is part of the GRIEF Editor.
  *
  * The GRIEF Editor is free software: you can redistribute it
@@ -383,7 +383,7 @@ stream_rdfn(void *handle, void *buf, size_t nbytes, int *errcode)
         (void) memcpy(buf, is->is_buffer, buflen);
         is->is_buffer = NULL;
 
-        if ((cnt = vfs_read(is->is_filehandle, (char *)buf + buflen, nbytes - buflen)) >= 0) {
+        if ((cnt = vfs_read(is->is_filehandle, (char *)buf + buflen, (unsigned)(nbytes - buflen))) >= 0) {
             is->is_iobytes += (cnt += buflen);
 
         } else if (buflen > 0) {
@@ -394,7 +394,7 @@ stream_rdfn(void *handle, void *buf, size_t nbytes, int *errcode)
         }
 
     } else {
-        if ((cnt = vfs_read(is->is_filehandle, buf, nbytes)) >= 0) {
+        if ((cnt = vfs_read(is->is_filehandle, buf, (unsigned)nbytes)) >= 0) {
             is->is_iobytes += cnt;
 
         } else if (0 == is->is_iobytes) {
@@ -414,7 +414,7 @@ stream_wrfn(void *handle, const void *buf, size_t nbytes, int *errcode)
 
     assert(MCHAR_ISTREAM_MAGIC == is->is_magic);
 
-    cnt = vfs_write(is->is_filehandle, buf, nbytes);
+    cnt = vfs_write(is->is_filehandle, buf, (unsigned)nbytes);
     is->is_iobytes = cnt;
     *errcode = errno;
     return cnt;
