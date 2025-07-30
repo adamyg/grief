@@ -1,5 +1,5 @@
 # -*- mode: mak; -*-
-# $Id: Makefile.in,v 1.88 2025/07/05 11:47:12 cvsuser Exp $
+# $Id: Makefile.in,v 1.89 2025/07/30 09:38:27 cvsuser Exp $
 # GRIEF - top level makefile.
 #
 # Copyright (c) 1998 - 2025, Adam Young.
@@ -306,7 +306,7 @@ RMDFLAGS=	-rf
 LW=		$(D_LIB)/$(LP)
 
 ifeq ("wcl386","$(CC)")
-ifeq ("@TOOLCHAIN@","owc20")
+ifeq ("owc20","@TOOLCHAIN@")
 CLBRNAME=	clbr20
 MT7RNAME=	mt7r20
 PLBRNAME=	plbr20
@@ -337,14 +337,32 @@ IMPORT+=\
 	$(D_BIN)/$(PLBRNAME).dll
 endif
 
+ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
+GCCBIN=		$(dir $(shell $(BUSYBOX) which gcc 2>/dev/null))
+$(info GCCBIN:  ${GCCBIN})
+$(info GCCDLL:  $(wildcard $(GCCBIN)/lib*.dll))
+  # mingw32 default to dw2 exception handling while mingw64 default to seh.
+  ifeq (mingw64,$(findstring mingw64,"@TOOLCHAIN@"))
+GCCEXPDLL=libgcc_s_seh-1.dll
+  else
+GCCEXPDLL=libgcc_s_dw2-1.dll
+  endif
+GCCSTDDLL=libstdc++-6.dll
+GCCTHRDLL=libwinpthread-1.dll
+IMPORT+=\
+	$(D_BIN)/$(GCCEXPDLL)		\
+	$(D_BIN)/$(GCCSTDDLL)		\
+	$(D_BIN)/$(GCCTHRDLL)
+endif
+
 GRUPDATER=	no
 ifeq (vs,$(findstring vs,"@TOOLCHAIN@"))
 GRUPDATER=	yes
+else ifeq (clangcl,$(findstring clangcl,"@TOOLCHAIN@"))
+GRUPDATER=	yes
+else ifeq (owc,$(findstring owc,"@TOOLCHAIN@"))
+GRUPDATER=	yes
 else ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
-GRUPDATER=	yes
-else ifeq ("@TOOLCHAIN@","owc20")
-GRUPDATER=	yes
-else ifeq ("@TOOLCHAIN@","owc19")
 GRUPDATER=	yes
 endif
 
@@ -432,12 +450,12 @@ import:				$(IMPORT)
 BUSYBOXEXE=	$(addsuffix .exe, $(basename $(BUSYBOX)))
 $(D_BIN)/grbusybox.exe:		$(BUSYBOXEXE)
 		@echo importing $(BUSYBOXEXE)
-		@$(CP) $^ $@
+		@$(CP) -f $^ $@
 
 ifeq ("wcl386","$(CC)")
 $(D_BIN)/$(CLBRNAME).dll:	$(LIBCLBRPATH)
 		@echo importing $(LIBCLBRPATH)
-		@$(CP) $(subst /,\,$^) $@
+		@$(CP) -f $^ $@
 
 $(D_BIN)/$(MT7RNAME).dll:	$(LIBMT7RPATH)
 		@echo importing $(LIBMT7RPATH)
@@ -445,7 +463,21 @@ $(D_BIN)/$(MT7RNAME).dll:	$(LIBMT7RPATH)
 
 $(D_BIN)/$(PLBRNAME).dll:	$(LIBPLBRPATH)
 		@echo importing $(LIBPLBRPATH)
-		@$(CP) -f $(subst /,\,$^) $@
+		@$(CP) -f $^ $@
+endif
+
+ifeq (mingw,$(findstring mingw,"@TOOLCHAIN@"))
+$(D_BIN)/$(GCCEXPDLL):		$(GCCBIN)/$(GCCEXPDLL)
+		@echo importing $^
+		@$(CP) -f $^ $@
+
+$(D_BIN)/$(GCCSTDDLL):		$(GCCBIN)/$(GCCSTDDLL)
+		@echo importing $^
+		@$(CP) -f $^ $@
+
+$(D_BIN)/$(GCCTHRDLL):		$(GCCBIN)/$(GCCTHRDLL)
+		@echo importing $^
+		@$(CP) -f $^ $@
 endif
 
 .PHONY:		unittest
