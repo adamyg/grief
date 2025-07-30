@@ -1,18 +1,27 @@
 -*- encoding: utf-8; -*-
 
-Sat Jan 18 14:20:28 2025 adamy
+Wed Jul 30 18:22:18 2025 adamy
 
 	* build-29
 
-	* Tickets
-
-		- 64-bit list limits; #103
-                - readonly help source; #102
-		- coloriser expansion; #101
-		- readonly grinit example; #100
-		- headless mode, plus CI unittest integration; #98
-		- packaging; #97
-			- deb package
+		- mingw-dll (#117)
+		- cygwin application installation (#116)
+		- zlib upgrade (#115)
+		- libappupdater 1.0.4 (#114)
+		- profile: execute error (#113)
+		- legacy full-screen (#112)
+		- vio save/restore (#111)
+		- record/playback (#110); Unicode adaption required.
+		- command line Unicode filenames (#109)
+		- icu-config deprecated (#108)
+		- onig-6.9.10 (#106)
+		- x64, signed/unsigned and size warnings (#105)
+		- grunch - 64-bit list limits (#103)
+		- coloriser expansion (#101)
+		- day-one, unable to create grinit (#100)
+		- build - regression test (#98)
+		- deb packaging (#92)
+		- libw32 merge
 
 Sat Dec  7 00:20:15 2024 adamy
 
