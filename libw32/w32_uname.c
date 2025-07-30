@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_uname_c,"$Id: w32_uname.c,v 1.26 2025/06/30 11:59:15 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_uname_c,"$Id: w32_uname.c,v 1.27 2025/07/24 08:29:46 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -465,11 +465,11 @@ uname(struct utsname *u)
             RegCurrentVersion(&cv);
 
             if (cv.ProductName[0]) {
-                _snprintf(u_sysname, sizeof(u_sysname), "%s%s",
+                snprintf(u_sysname, sizeof(u_sysname), "%s%s",
                     cv.ProductName, cv.DisplayVersion);
             } else {
                 if (0 == memcmp(osname, "Win", 3)) osname += 3;
-                _snprintf(u_sysname, sizeof(u_sysname), "Win%s%s%s",
+                snprintf(u_sysname, sizeof(u_sysname), "Win%s%s%s",
                     osname, cv.DisplayVersion, (IsWow64() ? " (Wow64)" : ""));
             }
 

@@ -1,5 +1,5 @@
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.51 2025/06/28 11:07:20 cvsuser Exp $")
+__CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.52 2025/07/24 08:29:46 cvsuser Exp $")
 
 /* -*- mode: c; indent-width: 4; -*- */
 /*
@@ -98,7 +98,9 @@ __CIDENT_RCSID(gr_w32_io_c,"$Id: w32_io.c,v 1.51 2025/06/28 11:07:20 cvsuser Exp
 
 #pragma comment(lib, "shlwapi.lib")
 #pragma comment(lib, "psapi.lib")
+#pragma comment(lib, "version.lib")
 #pragma comment(lib, "ole32.lib")
+#pragma comment(lib, "oleaut32.lib")
 #pragma comment(lib, "uuid.lib")
 
 #if defined(_MSC_VER)
@@ -144,10 +146,8 @@ static int                  W32StatLinkW(const wchar_t *path, struct StatHandle 
 static int                  W32StatHandle(int fildes, struct StatHandle *sb);
 static void                 W32StatPipe(HANDLE handle, DWORD ftype, struct StatHandle *sb);
 
-static DWORD                my_GetFinalPathNameByHandleW(HANDLE handle, LPWSTR name, int length);
 static DWORD WINAPI         my_GetFinalPathNameByHandleWImp(HANDLE handle, LPWSTR name, DWORD length, DWORD dwFlags);
 
-static DWORD                my_GetFinalPathNameByHandleA(HANDLE handle, LPSTR name, int length);
 static DWORD WINAPI         my_GetFinalPathNameByHandleAImp(HANDLE handle, LPSTR name, DWORD length, DWORD dwFlags);
 
 static DWORD                my_GetFileInformationByHandleEx(HANDLE handle, FILE_INFO_BY_HANDLE_CLASS FileInformationClass, LPVOID lpFileInformation, DWORD dwBufferSize);
@@ -909,7 +909,7 @@ W32StatHandle(int fildes, struct StatHandle *sb)
                     size_t namelen;
 
                     fullname[0] = 0;
-                    namelen = my_GetFinalPathNameByHandleW(handle, fullname, _countof(fullname));
+                    namelen = w32_GetFinalPathNameByHandleW(handle, fullname, _countof(fullname));
                     if (! W32StatCommon(handle, NULL, sb, fullname, namelen)) {
                         ret = -EIO;
                     }
@@ -987,12 +987,12 @@ W32StatPipe(HANDLE handle, DWORD ftype, struct StatHandle *sb)
 
 
 //
-//  my_GetFinalPathNameByHandleW ---
+//  w32_GetFinalPathNameByHandleW ---
 //      GetFinalPathNameByHandleW dynamic binding.
 //
 
-static DWORD
-my_GetFinalPathNameByHandleW(HANDLE handle, LPWSTR path, int length)
+DWORD
+w32_GetFinalPathNameByHandleW(HANDLE handle, LPWSTR path, int length)
 {
     static GetFinalPathNameByHandleW_t x_GetFinalPathNameByHandleW = NULL;
 
@@ -1092,12 +1092,12 @@ my_GetFinalPathNameByHandleWImp(HANDLE handle, LPWSTR path, DWORD length, DWORD 
 
 
 //
-//  my_GetFinalPathNameByHandleA ---
+//  w32_GetFinalPathNameByHandleA ---
 //      GetFinalPathNameByHandleA dynamic binding.
 //
 
-static DWORD
-my_GetFinalPathNameByHandleA(HANDLE handle, char *path, int length)
+DWORD
+w32_GetFinalPathNameByHandleA(HANDLE handle, char *path, int length)
 {
     static GetFinalPathNameByHandleA_t x_GetFinalPathNameByHandleA = NULL;
 
@@ -1293,15 +1293,15 @@ my_GetVolumeInformationByHandleImp(HANDLE hFile,
         LPDWORD lpVolumeSerialNumber, LPDWORD lpMaximumComponentLength, LPDWORD lpFileSystemFlags, LPWSTR lpFileSystemNameBuffer, DWORD nFileSystemNameSize)
 {
     __CUNUSED(hFile)
-        __CUNUSED(lpVolumeNameBuffer)
-        __CUNUSED(nVolumeNameSize)
-        __CUNUSED(lpVolumeSerialNumber)
-        __CUNUSED(lpMaximumComponentLength)
-        __CUNUSED(lpFileSystemFlags)
-        __CUNUSED(lpFileSystemNameBuffer)
-        __CUNUSED(nFileSystemNameSize)
+    __CUNUSED(lpVolumeNameBuffer)
+    __CUNUSED(nVolumeNameSize)
+    __CUNUSED(lpVolumeSerialNumber)
+    __CUNUSED(lpMaximumComponentLength)
+    __CUNUSED(lpFileSystemFlags)
+    __CUNUSED(lpFileSystemNameBuffer)
+    __CUNUSED(nFileSystemNameSize)
 
-        SetLastError(ERROR_NOT_SUPPORTED);          // not implemented
+    SetLastError(ERROR_NOT_SUPPORTED);          // not implemented
     return FALSE;
 }
 
@@ -1561,7 +1561,7 @@ w32_symlink(const char *name1, const char *name2)
 
 
 LIBW32_API int
-w32_symlinkW(const wchar_t* name1, const wchar_t* name2)
+w32_symlinkW(const wchar_t *name1, const wchar_t *name2)
 {
     int ret = -1;
 
@@ -2290,7 +2290,7 @@ static const char *     exec_exclude[]  = {
     ".a",   ".lib", ".dll",                     /* libraries */
                                                 /* archives */
     ".zip", ".gz",  ".tar", ".tgz", ".bz2", ".rar",
-    ".doc", ".txt",                             /* documents */
+    ".doc", ".docx", ".txt", ".html",           /* documents */
     ".hlp", ".chm",                             /* help */
     ".dat"                                      /* data files */
     };
@@ -2813,7 +2813,7 @@ static int
 ReadShortcutA(const char *name, char *buf, size_t maxlen)
 {
     WIN32_FIND_DATA wfd = {0};
-    IShellLinkA *pShLink;
+    IShellLinkA *pShLink = NULL;
     HRESULT hres = FALSE;
 
     (void) CoInitialize(NULL);
@@ -2865,7 +2865,7 @@ static int
 ReadShortcutW(const wchar_t *name, wchar_t *buf, size_t maxlen)
 {
     WIN32_FIND_DATAW wfd = {0};
-    IShellLinkW *pShLink;
+    IShellLinkW *pShLink = NULL;
     HRESULT hres = FALSE;
 
     (void) CoInitialize(NULL);
@@ -2907,7 +2907,7 @@ ReadShortcutW(const wchar_t *name, wchar_t *buf, size_t maxlen)
 static int
 CreateShortcutA(const char *link, const char *name, const char *working, const char *desc)
 {
-    IShellLinkA *pShLink;
+    IShellLinkA *pShLink = NULL;
     HRESULT hres;
 
     (void) CoInitialize(NULL);
@@ -2917,37 +2917,38 @@ CreateShortcutA(const char *link, const char *name, const char *working, const c
                 CLSCTX_INPROC_SERVER, &x_IID_IShellLinkA, (PVOID *) &pShLink);
 
     if (SUCCEEDED(hres)) {
-        IPersistFile *ppf;
+        IPersistFile *ppf = NULL;
 
         // Attributes.
         if (name) {
             char resolved[WIN32_PATH_MAX];
 
-            if (GetFullPathNameA(name, (DWORD)sizeof(resolved), resolved, 0)) {
-                pShLink->lpVtbl->SetPath(pShLink, (LPCSTR)resolved);
+            if (GetFullPathNameA(name, (DWORD)_countof(resolved), resolved, 0)) {
+                pShLink->lpVtbl->SetPath(pShLink, /*(LPCSTR)*/resolved);
             } else {
-                pShLink->lpVtbl->SetPath(pShLink, (LPCSTR)name);
+                pShLink->lpVtbl->SetPath(pShLink, /*(LPCSTR)*/name);
             }
         }
 
         if (working && *working) {
-            pShLink->lpVtbl->SetWorkingDirectory(pShLink, (LPCSTR)working);
+            pShLink->lpVtbl->SetWorkingDirectory(pShLink, /*(LPCSTR)*/working);
         }
 
-        if (desc) {
-            pShLink->lpVtbl->SetDescription(pShLink, (LPCSTR)desc);
+        if (desc && *desc) {
+            pShLink->lpVtbl->SetDescription(pShLink, /*(LPCSTR)*/desc);
         }
 
         // IPersistFile interface, for saving the shortcut in persistent storage.
         hres = pShLink->lpVtbl->QueryInterface(pShLink, &x_IID_IPersistFile, (PVOID *) &ppf);
 
         if (SUCCEEDED(hres)) {
-            wchar_t wlink[WIN32_PATH_MAX];
+            wchar_t wlink[WIN32_PATH_MAX] = {0};
 
             w32_utf2wc(link, wlink, _countof(wlink));
             hres = ppf->lpVtbl->Save(ppf, wlink, TRUE);
             ppf->lpVtbl->Release(ppf);
         }
+
         pShLink->lpVtbl->Release(pShLink);
     }
 
@@ -2960,7 +2961,7 @@ CreateShortcutA(const char *link, const char *name, const char *working, const c
 static int
 CreateShortcutW(const wchar_t *link, const wchar_t *name, const wchar_t *working, const wchar_t *desc)
 {
-    IShellLinkW *pShLink;
+    IShellLinkW *pShLink = NULL;
     HRESULT hres;
 
     (void) CoInitialize(NULL);
@@ -2977,18 +2978,18 @@ CreateShortcutW(const wchar_t *link, const wchar_t *name, const wchar_t *working
             wchar_t resolved[WIN32_PATH_MAX];
 
             if (GetFullPathNameW(name, (DWORD)_countof(resolved), resolved, 0)) {
-                pShLink->lpVtbl->SetPath(pShLink, (LPCWSTR)resolved);
+                pShLink->lpVtbl->SetPath(pShLink, /*(LPCWSTR)*/resolved);
             } else {
-                pShLink->lpVtbl->SetPath(pShLink, (LPCWSTR)name);
+                pShLink->lpVtbl->SetPath(pShLink, /*(LPCWSTR)*/name);
             }
         }
 
         if (working && *working) {
-            pShLink->lpVtbl->SetWorkingDirectory(pShLink, (LPCWSTR)working);
+            pShLink->lpVtbl->SetWorkingDirectory(pShLink, /*(LPCWSTR)*/working);
         }
 
-        if (desc) {
-            pShLink->lpVtbl->SetDescription(pShLink, (LPCWSTR)desc);
+        if (desc && *desc) {
+            pShLink->lpVtbl->SetDescription(pShLink, /*(LPCWSTR)*/desc);
         }
 
         // IPersistFile interface, for saving the shortcut in persistent storage.
@@ -2998,6 +2999,7 @@ CreateShortcutW(const wchar_t *link, const wchar_t *name, const wchar_t *working
             hres = ppf->lpVtbl->Save(ppf, link, TRUE);
             ppf->lpVtbl->Release(ppf);
         }
+
         pShLink->lpVtbl->Release(pShLink);
     }
 
@@ -3128,7 +3130,7 @@ W32StatAFile(const char *name, struct StatHandle *sb)
             }
 
             if (INVALID_HANDLE_VALUE != file) {
-                wnamelen = my_GetFinalPathNameByHandleW(file, resolved.wname, _countof(resolved.wname));
+                wnamelen = w32_GetFinalPathNameByHandleW(file, resolved.wname, _countof(resolved.wname));
                 if (wnamelen) {
                     wfullname = resolved.wname;
                 }
@@ -3314,7 +3316,7 @@ W32StatByNameA(const char *name, struct StatHandle *sb)
         size_t namelen;
 
         fullname[0] = 0;
-        namelen = my_GetFinalPathNameByHandleW(handle, fullname, _countof(fullname));
+        namelen = w32_GetFinalPathNameByHandleW(handle, fullname, _countof(fullname));
         ret = W32StatCommon(handle, NULL, sb, fullname, namelen);
         CloseHandle(handle);
     }
@@ -3349,7 +3351,7 @@ W32StatByNameW(const wchar_t *name, struct StatHandle *sb)
         size_t namelen;
 
         fullname[0] = 0;
-        namelen = my_GetFinalPathNameByHandleW(handle, fullname, _countof(fullname));
+        namelen = w32_GetFinalPathNameByHandleW(handle, fullname, _countof(fullname));
         ret = W32StatCommon(handle, NULL, sb, fullname, namelen);
         CloseHandle(handle);
     }

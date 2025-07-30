@@ -1,7 +1,7 @@
 #ifndef LIBW32_WIN32_INTERNAL_H_INCLUDED
 #define LIBW32_WIN32_INTERNAL_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_internal_h,"$Id: win32_internal.h,v 1.20 2025/06/28 11:07:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_internal_h,"$Id: win32_internal.h,v 1.21 2025/07/24 08:29:46 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -175,8 +175,8 @@ LIBW32_API int          w32_issockfd (int fd, SOCKET *s);
 LIBW32_API int          w32_reparse_readA (const char *name, char *buf, size_t maxlen);
 LIBW32_API int          w32_reparse_readW (const wchar_t *name, wchar_t *buf, size_t maxlen);
 
-int                     w32_link_resolveA (const char* path, char *buf, size_t maxlen);
-int                     w32_link_resolveW (const wchar_t* path, wchar_t *buf, size_t maxlen);
+extern int              w32_link_resolveA (const char* path, char *buf, size_t maxlen);
+extern int              w32_link_resolveW (const wchar_t* path, wchar_t *buf, size_t maxlen);
 
 __END_DECLS
 

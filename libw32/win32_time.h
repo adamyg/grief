@@ -1,7 +1,7 @@
 #ifndef LIBW32_WIN32_TIME_H_INCLUDED
 #define LIBW32_WIN32_TIME_H_INCLUDED
 #include <edidentifier.h>
-__CIDENT_RCSID(gr_libw32_win32_time_h,"$Id: win32_time.h,v 1.24 2025/06/28 11:07:21 cvsuser Exp $")
+__CIDENT_RCSID(gr_libw32_win32_time_h,"$Id: win32_time.h,v 1.25 2025/07/24 08:29:46 cvsuser Exp $")
 __CPRAGMA_ONCE
 
 /* -*- mode: c; indent-width: 4; -*- */
@@ -106,3 +106,4 @@ LIBW32_API char *       w32_strptime(const char *buf, const char *fmt, struct tm
 __END_DECLS
 
 #endif /*LIBW32_WIN32_TIME_H_INCLUDED*/
+

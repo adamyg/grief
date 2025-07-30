@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: makelib.in,v 1.26 2025/06/30 10:19:07 cvsuser Exp $
+# $Id: makelib.in,v 1.27 2025/07/24 08:30:17 cvsuser Exp $
 # -*- mode: perl; tabs: 8; indent-width: 4; -*-
 # makelib configuration
 #
@@ -82,6 +82,7 @@ $PACKAGE_FILE   = 'edpackage.h';
 @MAKEFILES      = (    # local makefiles
         '.',                                    # build order
         'libw32',
+            '^libw32/unittest',
         '^contrib',
         '^contrib/makedepend',
         '^contrib/flex',

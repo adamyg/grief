@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.37 2025/06/28 11:07:20 cvsuser Exp $
+# $Id: Makefile.in,v 1.38 2025/07/24 08:29:46 cvsuser Exp $
 # libwin32 makefile.
 #
 #
@@ -85,6 +85,9 @@ CWARN=		@CWARN@
 ifeq (clangcl,$(findstring clangcl,"@TOOLCHAIN@"))
 CWARN+=		-Wno-deprecated-declarations -Wno-unused-function -Wno-pragma-pack
 endif 
+ifeq (gcc,$(findstring gcc,"@CC@"))
+CWARN+=		-Wno-stringop-truncation
+endif
 CDEBUG=		@CDEBUG@
 CRELEASE=	@CRELEASE@
 CXXFLAGS=	@CXXFLAGS@
