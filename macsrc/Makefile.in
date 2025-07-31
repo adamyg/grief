@@ -1,9 +1,9 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.28 2024/07/05 18:41:28 cvsuser Exp $
+# $Id: Makefile.in,v 1.29 2025/07/31 17:58:58 cvsuser Exp $
 # GRIEF macro library makefile.
 #
 #
-# Copyright (c) 1998 - 2024, Adam Young.
+# Copyright (c) 1998 - 2025, Adam Young.
 # All rights reserved.
 #
 # This file is part of the GRIEF Editor.
@@ -26,7 +26,7 @@
 # ==end==
 #
 
-SHELL=		/bin/sh
+@SET_MAKE@
 ROOT=		@abs_top_builddir@
 top_builddir=	@top_builddir@
 
@@ -62,8 +62,8 @@ SOURCEDIRS=	kbd tty demos benchmarks modes profiles $(COLORDIRS)
 MACRODIRS=	$(MACROS) $(addprefix $(MACROS)/,$(SOURCEDIRS))
 RMACRODIRS=	$(call Reverse, $(MACRODIRS))
 
-#$(info SOURCEDIRS=$(SOURCEDIRS))
-#$(info MACRODIRS=$(MACRODIRS))
+$(info SOURCEDIRS=$(SOURCEDIRS))
+$(info MACRODIRS=$(MACRODIRS))
 
 # Compilers, programs
 
@@ -89,18 +89,29 @@ debug:
 SOURCE=		$(wildcard *.cr) $(foreach dir,$(SOURCEDIRS),$(wildcard $(dir)/*.cr))
 OBJECTS=	$(foreach dir,$(MACRODIRS),$(wildcard $(dir)/*.cm))
 
+$(info SOURCE=$(SOURCE))
+$(info OBJECTS=$(OBJECTS))
+
 DIRECTORIES=	$(addsuffix /.created, $(MACRODIRS))
 RDIRECTORIES=	$(addsuffix /.created, $(RMACRODIRS))
 
+define grunch
+	$(GRUNCH) -w -A autoload.inc $(1) -o $(MACROS) $(wildcard $(2)*.cr)
+
+endef
+
 macros:			$(DIRECTORIES)
-		$(GRUNCH) -w -m -A autoload.inc -o $(MACROS) $(SOURCE)
+		$(call grunch,-m)
+		$(foreach dir,$(SOURCEDIRS),$(call grunch,-m,$(dir)/))
 
 force:			$(DIRECTORIES)
-		${GRUNCH} -w -A autoload.inc -o $(MACROS) $(SOURCE)
+		$(call grunch)
+		$(foreach dir,$(SOURCEDIRS),$(call grunch,,$(dir)/))
 
 withdebug:		$(DIRECTORIES)
-		$(GRUNCH) -w -g -A autoload.inc -o $(MACROS) $(SOURCE)
-		${GRUNCH} -w $(MACROS) grief.cr debug.cr
+		$(call grunch,-g)
+		$(foreach dir,$(SOURCEDIRS),$(call grunch,-g,$(dir)/))
+		${GRUNCH} -w -o $(MACROS) grief.cr debug.cr
 
 %/.created:
 		-@$(MKDIR_P) $(@D)
