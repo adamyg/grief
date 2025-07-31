@@ -62,8 +62,8 @@ SOURCEDIRS=	kbd tty demos benchmarks modes profiles $(COLORDIRS)
 MACRODIRS=	$(MACROS) $(addprefix $(MACROS)/,$(SOURCEDIRS))
 RMACRODIRS=	$(call Reverse, $(MACRODIRS))
 
-#$(info SOURCEDIRS=$(SOURCEDIRS))
-#$(info MACRODIRS=$(MACRODIRS))
+$(info SOURCEDIRS=$(SOURCEDIRS))
+$(info MACRODIRS=$(MACRODIRS))
 
 # Compilers, programs
 
@@ -88,6 +88,9 @@ debug:
 
 SOURCE=		$(wildcard *.cr) $(foreach dir,$(SOURCEDIRS),$(wildcard $(dir)/*.cr))
 OBJECTS=	$(foreach dir,$(MACRODIRS),$(wildcard $(dir)/*.cm))
+
+$(info SOURCE=$(SOURCE))
+$(info OBJECTS=$(OBJECTS))
 
 DIRECTORIES=	$(addsuffix /.created, $(MACRODIRS))
 RDIRECTORIES=	$(addsuffix /.created, $(RMACRODIRS))
