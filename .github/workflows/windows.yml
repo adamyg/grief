@@ -104,8 +104,8 @@ jobs:
         @if "${{ matrix.config.toolchain }}"=="owc20"   call .\support\owc20setenv.bat C:\Watcom
         @if "${{ matrix.config.toolchain }}"=="owc19"   call .\support\owc19setenv.bat C:\Watcom
         @set PERL=c:/Strawberry/perl/bin/perl
-        .\win32\gmake-42 release contrib
-        .\win32\gmake-42 release
+        .\win32\gmake-43 release contrib
+        .\win32\gmake-43 release
 
     - name: Windows, unit-test
       if: startsWith(matrix.config.name, 'Windows')
@@ -116,7 +116,7 @@ jobs:
         @if "${{ matrix.config.toolchain }}"=="owc20"   call .\support\owc20setenv.bat C:\Watcom
         @if "${{ matrix.config.toolchain }}"=="owc19"   call .\support\owc19setenv.bat C:\Watcom
         @set PERL=c:/Strawberry/perl/bin/perl
-        .\win32\gmake-42 release unittest
+        .\win32\gmake-43 release unittest
              
     - name: Windows, tarball
       if: startsWith(matrix.config.name, 'Windows')
@@ -137,7 +137,7 @@ jobs:
       shell: cmd
       run: |
         choco install innosetup --version=5.6.1 --force
-        @rem .\win32\gmake-42 release package
+        @rem .\win32\gmake-43 release package
         "%programfiles(x86)%\Inno Setup 5\iscc" ".\win32\gr-inno-setup.iss"
 
     - name: Windows, release
