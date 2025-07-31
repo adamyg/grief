@@ -26,7 +26,7 @@
 # ==end==
 #
 
-SHELL=		/bin/sh
+@SET_MAKE@
 ROOT=		@abs_top_builddir@
 top_builddir=	@top_builddir@
 
@@ -86,7 +86,11 @@ release:
 debug:
 		$(MAKE) BUILD_TYPE=debug $(filter-out debug, $(MAKECMDGOALS))
 
+SOURCE=		$(wildcard *.cr) $(foreach dir,$(SOURCEDIRS),$(wildcard $(dir)/*.cr))
 OBJECTS=	$(foreach dir,$(MACRODIRS),$(wildcard $(dir)/*.cm))
+
+$(info SOURCE=$(SOURCE))
+$(info OBJECTS=$(OBJECTS))
 
 DIRECTORIES=	$(addsuffix /.created, $(MACRODIRS))
 RDIRECTORIES=	$(addsuffix /.created, $(RMACRODIRS))
