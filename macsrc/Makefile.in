@@ -1,5 +1,5 @@
 # -*- mode: mak; indent-tabs-mode: t; tab-width: 8 -*-
-# $Id: Makefile.in,v 1.29 2025/07/31 17:58:58 cvsuser Exp $
+# $Id: Makefile.in,v 1.31 2025/07/31 19:08:56 cvsuser Exp $
 # GRIEF macro library makefile.
 #
 #
@@ -111,7 +111,7 @@ force:			$(DIRECTORIES)
 withdebug:		$(DIRECTORIES)
 		$(call grunch,-g)
 		$(foreach dir,$(SOURCEDIRS),$(call grunch,-g,$(dir)/))
-		${GRUNCH} -w -o $(MACROS) grief.cr debug.cr
+		$(GRUNCH) -w -o $(MACROS) grief.cr debug.cr
 
 %/.created:
 		-@$(MKDIR_P) $(@D)
